@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import os
 import sys
 
 
-class Hypre(Package):
+class Hypre(Package, CudaPackage):
     """Hypre is a library of high performance preconditioners that
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
@@ -19,7 +19,11 @@ class Hypre(Package):
 
     maintainers = ['ulrikeyang', 'osborn9', 'balay']
 
+    test_requires_compiler = True
+
     version('develop', branch='master')
+    version('2.20.0', sha256='5be77b28ddf945c92cde4b52a272d16fb5e9a7dc05e714fc5765948cba802c01')
+    version('2.19.0', sha256='466b19d8a86c69989a237f6f03f20d35c0c63a818776d2cd071b0a084cffeba5')
     version('2.18.2', sha256='28007b5b584eaf9397f933032d8367788707a2d356d78e47b99e551ab10cc76a')
     version('2.18.1', sha256='220f9c4ad024e815add8dad8950eaa2d8f4f231104788cf2a3c5d9da8f94ba6e')
     version('2.18.0', sha256='62591ac69f9cc9728bd6d952b65bcadd2dfe52b521081612609804a413f49b07')
@@ -56,6 +60,7 @@ class Hypre(Package):
     variant('openmp', default=False, description='Enable OpenMP support')
     variant('debug', default=False,
             description='Build debug instead of optimized version')
+    variant('unified-memory', default=False, description='Use unified memory')
 
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
@@ -66,11 +71,16 @@ class Hypre(Package):
     patch('superlu-dist-link-2.15.0.patch', when='+superlu-dist @2.15:2.16.0')
     patch('superlu-dist-link-2.14.0.patch', when='+superlu-dist @:2.14.0')
     patch('hypre21800-compat.patch', when='@2.18.0')
+    # Patch to get config flags right
+    patch('detect-compiler.patch', when='@2.15.0:2.20.0')
 
     depends_on("mpi", when='+mpi')
     depends_on("blas")
     depends_on("lapack")
     depends_on('superlu-dist', when='+superlu-dist+mpi')
+
+    conflicts('+cuda', when='+int64')
+    conflicts('+unified-memory', when='~cuda')
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
@@ -94,7 +104,8 @@ class Hypre(Package):
 
         return url.format(version)
 
-    def install(self, spec, prefix):
+    def _configure_args(self):
+        spec = self.spec
         # Note: --with-(lapack|blas)_libs= needs space separated list of names
         lapack = spec['lapack'].libs
         blas = spec['blas'].libs
@@ -156,6 +167,43 @@ class Hypre(Package):
         else:
             configure_args.append("--disable-debug")
 
+        if '+cuda' in self.spec:
+            configure_args.extend([
+                '--with-cuda',
+                '--enable-curand',
+                '--enable-cub'
+            ])
+        else:
+            configure_args.extend([
+                '--without-cuda',
+                '--disable-curand',
+                '--disable-cub'
+            ])
+
+        if '+unified-memory' in self.spec:
+            configure_args.append('--enable-unified-memory')
+
+        return configure_args
+
+    def setup_build_environment(self, env):
+        if '+mpi' in self.spec:
+            env.set('CC', self.spec['mpi'].mpicc)
+            env.set('CXX', self.spec['mpi'].mpicxx)
+            env.set('F77', self.spec['mpi'].mpif77)
+
+        if '+cuda' in self.spec:
+            env.set('CUDA_HOME', self.spec['cuda'].prefix)
+            env.set('CUDA_PATH', self.spec['cuda'].prefix)
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            if cuda_arch:
+                arch_sorted = list(sorted(cuda_arch, reverse=True))
+                env.set('HYPRE_CUDA_SM', arch_sorted[0])
+            # In CUDA builds hypre currently doesn't handle flags correctly
+            env.append_flags(
+                'CXXFLAGS', '-O2' if '~debug' in self.spec else '-g')
+
+    def install(self, spec, prefix):
+        configure_args = self._configure_args()
         # Hypre's source is staged under ./src so we'll have to manually
         # cd into it.
         with working_dir("src"):
@@ -171,6 +219,27 @@ class Hypre(Package):
                 sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
                         '-rhsone')
             make("install")
+
+    @run_after('install')
+    def cache_test_sources(self):
+        srcs = ['src/examples']
+        self.cache_extra_test_sources(srcs)
+
+    def test(self):
+        """Perform smoke test on installed HYPRE package."""
+
+        if '+mpi' in self.spec:
+            examples_dir = join_path(self.install_test_root, 'src/examples')
+            with working_dir(examples_dir, create=False):
+                make("HYPRE_DIR=" + self.prefix, "bigint")
+
+                reason = "test: ensuring HYPRE examples run"
+                self.run_test('./ex5big', [], [], installed=True,
+                              purpose=reason, skip_missing=True, work_dir='.')
+                self.run_test('./ex15big', [], [], installed=True,
+                              purpose=reason, skip_missing=True, work_dir='.')
+
+                make("distclean")
 
     @property
     def headers(self):

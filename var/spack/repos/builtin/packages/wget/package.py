@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,15 +6,16 @@
 from spack import *
 
 
-class Wget(AutotoolsPackage):
+class Wget(AutotoolsPackage, GNUMirrorPackage):
     """GNU Wget is a free software package for retrieving files using
     HTTP, HTTPS and FTP, the most widely-used Internet protocols. It is a
     non-interactive commandline tool, so it may easily be called from scripts,
     cron jobs, terminals without X-Windows support, etc."""
 
     homepage = "http://www.gnu.org/software/wget/"
-    url      = "https://ftpmirror.gnu.org/wget/wget-1.19.1.tar.gz"
+    gnu_mirror_path = "wget/wget-1.19.1.tar.gz"
 
+    version('1.21',   sha256='b3bc1a9bd0c19836c9709c318d41c19c11215a07514f49f89b40b9d50ab49325')
     version('1.20.3', sha256='31cccfc6630528db1c8e3a06f6decf2a370060b982841cfab2b8677400a5092e')
     version('1.19.1', sha256='9e4f12da38cc6167d0752d934abe27c7b1599a9af294e73829be7ac7b5b4da40')
     version('1.17',   sha256='3e04ad027c5b6ebd67c616eec13e66fbedb3d4d8cbe19cc29dadde44b92bda55')
@@ -43,7 +44,7 @@ class Wget(AutotoolsPackage):
 
     depends_on('perl@5.12.0:', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     depends_on('valgrind', type='test')
 

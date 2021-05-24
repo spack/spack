@@ -1,0 +1,57 @@
+From ddfa53f3e20218dceaed6e0bfbe307e531ae879f Mon Sep 17 00:00:00 2001
+From: Howard Pritchard <hppritcha@gmail.com>
+Date: Thu, 10 Dec 2020 15:05:33 -0700
+Subject: [PATCH] fix fixed form ftn argument for crayftn patch openmp.F
+
+Signed-off-by: Howard Pritchard <hppritcha@gmail.com>
+
+diff --git a/src/ftests/Makefile b/src/ftests/Makefile
+index 315e1e76..d45fbb6d 100644
+--- a/src/ftests/Makefile
++++ b/src/ftests/Makefile
+@@ -3,7 +3,7 @@
+ include Makefile.target
+ 
+ INCLUDE = -I../testlib -I. -I..
+-FFLAGS	= $(CFLAGS) -ffixed-line-length-132
++FFLAGS	= $(CFLAGS) -N132
+ testlibdir=../testlib
+ TESTLIB= $(testlibdir)/libtestlib.a
+ DOLOOPS= $(testlibdir)/do_loops.o
+diff --git a/src/ftests/openmp.F b/src/ftests/openmp.F
+index 6cd5af23..ccf9030a 100644
+--- a/src/ftests/openmp.F
++++ b/src/ftests/openmp.F
+@@ -18,7 +18,7 @@
+       tests_quiet = get_quiet()
+       es = PAPI_NULL
+ 
+-      call PAPIF_thread_init(omp_get_thread_num, retval)
++      call PAPIF_thread_init(my_thread_num, retval)
+ 
+ 
+       retval = PAPI_VER_CURRENT
+@@ -64,7 +64,6 @@
+ 
+ !$OMP END PARALLEL
+ 
+-
+       call PAPIf_stop(es, values(1), retval)
+       if ( retval .NE. PAPI_OK ) then
+         call ftest_fail(__FILE__, __LINE__,
+@@ -80,3 +79,12 @@
+       call ftests_pass(__FILE__)
+       end
+ 
++      function my_thread_num()
++      use omp_lib
++      integer::my_thread_num
++
++      my_thread_num = omp_get_thread_num()
++
++      end function my_thread_num
++
++
+-- 
+2.26.2
+

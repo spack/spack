@@ -1,0 +1,32 @@
+From 86f6dcdc17a8f5ef2382faaef860cfa5243984fe Mon Sep 17 00:00:00 2001
+From: Yining Karl Li <betajippity@gmail.com>
+Date: Fri, 3 Jul 2020 06:23:18 -0700
+Subject: [PATCH] Add detection of arm64 architecture for macos builds
+
+This commit adds detection of arm64 for macos builds on arm64 hardware.
+The only change necessary is an additional case in the code where
+macos.inc queries and detects the system architecture.
+---
+ build/macos.inc | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/build/macos.inc b/build/macos.inc
+index dde93216f5e7a9337dd83757df1ec734241d044e..2bdcde7e3042390b871fc601a930b3648ccaa124 100644
+--- a/build/macos.inc
++++ b/build/macos.inc
+@@ -36,11 +36,15 @@ ifndef arch
+      export arch:=ppc32
+    endif
+  else
++  ifeq ($(shell /usr/sbin/sysctl -n hw.machine),arm64)
++   export arch:=arm64
++  else
+    ifeq ($(shell /usr/sbin/sysctl -n hw.optional.x86_64 2>/dev/null),1)
+      export arch:=intel64
+    else
+      export arch:=ia32
+    endif
++  endif
+  endif
+ endif
+ 

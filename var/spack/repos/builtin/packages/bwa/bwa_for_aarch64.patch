@@ -1,0 +1,13 @@
+diff --git a/ksw.c b/ksw.c
+index 9793e5e..2eecef4 100644
+--- a/ksw.c
++++ b/ksw.c
+@@ -26,7 +26,7 @@
+ #include <stdlib.h>
+ #include <stdint.h>
+ #include <assert.h>
+-#include <emmintrin.h>
++#include <sse2neon.h>
+ #include "ksw.h"
+ 
+ #ifdef USE_MALLOC_WRAPPERS

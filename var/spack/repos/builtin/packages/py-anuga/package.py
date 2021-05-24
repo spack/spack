@@ -1,5 +1,5 @@
-
 from spack import *
+
 
 class PyAnuga(PythonPackage):
     """ANUGA (pronounced "AHnooGAH") is open-source software for the simulation
@@ -9,7 +9,6 @@ class PyAnuga(PythonPackage):
     homepage = "https://github.com/GeoscienceAustralia/anuga_core"
     url      = "https://github.com/GeoscienceAustralia/anuga_core/archive/2.1.tar.gz"
     git      = "https://github.com/GeoscienceAustralia/anuga_core.git"
-
     maintainers = ['samcom12']
 
     version('master',  branch='master')
@@ -52,4 +51,7 @@ class PyAnuga(PythonPackage):
         elif self.spec['mpi'].name == 'openmpi':
             env.set('ANUGA_PARALLEL', 'openmpi')
         elif self.spec['mpi'].name == 'intel-mpi':
-            env.set('ANUGA_PARALLEL', 'intelmpi')
+           env.set('ANUGA_PARALLEL', 'intelmpi')
+
+    # https://github.com/GeoscienceAustralia/anuga_core/issues/247
+    conflicts('%apple-clang@12:')

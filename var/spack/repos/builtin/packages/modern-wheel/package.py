@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class ModernWheel(CMakePackage):
 
     homepage = "https://github.com/alalazo/modern_wheel"
     url      = "https://github.com/alalazo/modern_wheel/archive/1.2.tar.gz"
+    maintainers = ['alalazo']
 
     version('1.2', sha256='48612f698d7159f0eb10d93ddc3e2682b06a54d3a836ff227636be3261aed15e')
     version('1.1', sha256='d8ba4891257b96108e9b9406a556f8ced3b71ce85c3fcdca6bfd9cc37bf010a3')
@@ -35,11 +36,11 @@ class ModernWheel(CMakePackage):
     depends_on('boost           +system +filesystem', when='@:1.1.999')
     depends_on('boost@:1.65.999 +system +filesystem', when='@1.2:')
 
+    # add virtual destructor to BaseMultiParms class.
+    patch('add_virtual_destructor.patch')
+
     def cmake_args(self):
-        spec = self.spec
         return [
-            '-DBUILD_UNIT_TEST:BOOL={0}'.format(
-                'ON' if '+test' in spec else 'OFF'),
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_UNIT_TEST', 'test'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]

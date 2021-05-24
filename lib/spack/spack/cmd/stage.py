@@ -1,9 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import argparse
 
 import llnl.util.tty as tty
 
@@ -18,13 +16,11 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(
+        subparser, ['no_checksum', 'deprecated', 'specs'])
     subparser.add_argument(
         '-p', '--path', dest='path',
         help="path to stage package, does not add to spack tree")
-
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs of packages to stage")
 
 
 def stage(parser, args):
@@ -42,8 +38,17 @@ def stage(parser, args):
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
 
-    specs = spack.cmd.parse_specs(args.specs, concretize=True)
+    if args.deprecated:
+        spack.config.set('config:deprecated', True, scope='command_line')
+
+    specs = spack.cmd.parse_specs(args.specs, concretize=False)
+
+    # prevent multiple specs from extracting in the same folder
+    if len(specs) > 1 and args.path:
+        tty.die("`--path` requires a single spec, but multiple were provided")
+
     for spec in specs:
+        spec = spack.cmd.matching_spec_from_env(spec)
         package = spack.repo.get(spec)
         if args.path:
             package.path = args.path

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 from spack import *
 import os
 import subprocess
+import sys
 import llnl.util.tty as tty
 
 
@@ -65,11 +66,11 @@ class Catalyst(CMakePackage):
 
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python3', type=('build', 'run'))
-    depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
-    depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python3', type=('build', 'run'))
 
     depends_on('gl@3.2:', when='+rendering')
-    depends_on('mesa+osmesa', when='+rendering+osmesa')
+    depends_on('osmesa', when='+rendering+osmesa')
     depends_on('glx', when='+rendering~osmesa')
     depends_on('cmake@3.3:', type='build')
 
@@ -133,7 +134,12 @@ class Catalyst(CMakePackage):
                                     'Editions')
         catalyst_source_dir = os.path.abspath(self.root_cmakelists_dir)
 
-        command = ['python', catalyst_script,
+        python_path = (os.path.realpath(
+            spec['python3'].command.path if '+python3' in self.spec else
+            spec['python'].command.path if '+python' in self.spec else
+            sys.executable))
+
+        command = [python_path, catalyst_script,
                    '-r', self.stage.source_path,
                    '-o', catalyst_source_dir]
 
@@ -220,12 +226,12 @@ class Catalyst(CMakePackage):
                 '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
                 '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
                 spec['python'].command.path,
-                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON'
             ])
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
-        if spec.platform == 'linux' and spec.target == 'aarch64':
+        if spec.platform == 'linux' and spec.target.family == 'aarch64':
             cmake_args.append('-DCMAKE_CXX_FLAGS=-DPNG_ARM_NEON_OPT=0')
             cmake_args.append('-DCMAKE_C_FLAGS=-DPNG_ARM_NEON_OPT=0')
 

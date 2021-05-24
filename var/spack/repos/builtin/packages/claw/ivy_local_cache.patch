@@ -1,0 +1,25 @@
+diff --git a/cx2t/common-targets.xml b/cx2t/common-targets.xml
+index 28ac8be9..a0fcaa6d 100644
+--- a/cx2t/common-targets.xml
++++ b/cx2t/common-targets.xml
+@@ -28,6 +28,7 @@
+         <pathelement location="../lib/ivy.jar"/>
+       </classpath>
+     </taskdef>
++    <ivy:settings file="../ivysettings.xml"/>
+     <ivy:retrieve log="quiet" file="../ivy.xml"
+                   pattern="../lib/[artifact](-[classifier]).[ext]"/>
+   </target>
+diff --git a/cx2t/ivysettings.xml b/cx2t/ivysettings.xml
+new file mode 100644
+index 00000000..2befe6ff
+--- /dev/null
++++ b/cx2t/ivysettings.xml
+@@ -0,0 +1,7 @@
++<ivysettings>
++    <settings defaultResolver="public"/>
++    <caches defaultCacheDir="${ivy.settings.dir}/ivycache"/>
++    <resolvers>
++        <ibiblio name="public" m2compatible="true"/>
++    </resolvers>
++</ivysettings>

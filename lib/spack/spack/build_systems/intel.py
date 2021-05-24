@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -151,7 +151,7 @@ class IntelPackage(PackageBase):
                 '+advisor':    'advisor',
                 '+inspector':  'inspector',
                 '+itac':       'itac',
-                '+vtune':      'vtune_amplifier',
+                '+vtune':      'vtune_profiler',
             }.items():
                 if variant in self.spec:
                     dirs.append(self.normalize_path(
@@ -202,7 +202,8 @@ class IntelPackage(PackageBase):
             '+itac':      ' intel-itac intel-ta intel-tc'
                           ' intel-trace-analyzer intel-trace-collector',
                           # Trace Analyzer and Collector
-            '+vtune':     ' intel-vtune-amplifier',    # VTune
+            '+vtune':     ' intel-vtune'
+                          # VTune, ..-profiler since 2020, ..-amplifier before
         }.items():
             if variant in self.spec:
                 c += components_to_add
@@ -535,8 +536,9 @@ class IntelPackage(PackageBase):
             [None,              '2016:', 'compilers_and_libraries'],
             ['advisor',         ':2016', 'advisor_xe'],
             ['inspector',       ':2016', 'inspector_xe'],
-            ['vtune_amplifier', ':2017', 'vtune_amplifier_xe'],
+            ['vtune_profiler',  ':2017', 'vtune_amplifier_xe'],
             ['vtune',           ':2017', 'vtune_amplifier_xe'],  # alt.
+            ['vtune_profiler',  ':2019', 'vtune_amplifier'],
             ['itac',            ':',     'itac',  [os.sep + standalone_glob]],
         ]:
             if cs == rename_rule[0] and v.satisfies(ver(rename_rule[1])):
@@ -815,6 +817,7 @@ class IntelPackage(PackageBase):
             # Was supported only up to 2015.
             blacs_lib = 'libmkl_blacs'
         elif ('^mpich@2:' in spec_root or
+              '^cray-mpich' in spec_root or
               '^mvapich2' in spec_root or
               '^intel-mpi' in spec_root or
               '^intel-parallel-studio' in spec_root):
@@ -1017,6 +1020,15 @@ class IntelPackage(PackageBase):
 
         env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
+        if self.spec.name in ('intel', 'intel-parallel-studio'):
+            # this package provides compilers
+            # TODO: fix check above when compilers are dependencies
+            env.set('CC', self.prefix.bin.icc)
+            env.set('CXX', self.prefix.bin.icpc)
+            env.set('FC', self.prefix.bin.ifort)
+            env.set('F77', self.prefix.bin.ifort)
+            env.set('F90', self.prefix.bin.ifort)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         # NB: This function is overwritten by 'mpi' provider packages:
         #
@@ -1048,11 +1060,19 @@ class IntelPackage(PackageBase):
             env_mods = {
                 'MKLROOT': self.normalize_path('mkl'),
                 'SPACK_COMPILER_EXTRA_RPATHS': self.component_lib_dir('mkl'),
+                'CMAKE_PREFIX_PATH': self.normalize_path('mkl'),
+                'CMAKE_LIBRARY_PATH': self.component_lib_dir('mkl'),
+                'CMAKE_INCLUDE_PATH': self.component_include_dir('mkl'),
             }
 
             env.set('MKLROOT', env_mods['MKLROOT'])
             env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                             env_mods['SPACK_COMPILER_EXTRA_RPATHS'])
+            env.append_path('CMAKE_PREFIX_PATH', env_mods['CMAKE_PREFIX_PATH'])
+            env.append_path('CMAKE_LIBRARY_PATH',
+                            env_mods['CMAKE_LIBRARY_PATH'])
+            env.append_path('CMAKE_INCLUDE_PATH',
+                            env_mods['CMAKE_INCLUDE_PATH'])
 
             debug_print("adding/modifying build env:", env_mods)
 
@@ -1065,6 +1085,15 @@ class IntelPackage(PackageBase):
                 # which performs dizzyingly similar but necessarily different
                 # actions, and (b) function code leaves a bit more breathing
                 # room within the suffocating corset of flake8 line length.
+
+                # Intel MPI since 2019 depends on libfabric which is not in the
+                # lib directory but in a directory of its own which should be
+                # included in the rpath
+                if self.version >= ver('2019'):
+                    d = ancestor(self.component_lib_dir('mpi'))
+                    libfabrics_path = os.path.join(d, 'libfabric', 'lib')
+                    env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
+                                    libfabrics_path)
             else:
                 raise InstallError('compilers_of_client arg required for MPI')
 

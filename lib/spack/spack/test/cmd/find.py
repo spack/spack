@@ -1,14 +1,16 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
 import json
+import os
 
 import pytest
 import spack.cmd as cmd
 import spack.cmd.find
+import spack.user_environment as uenv
 from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.util.pattern import Bunch
@@ -87,7 +89,7 @@ def test_query_arguments():
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag1(parser, specs):
 
-    args = parser.parse_args(['--tags', 'tag1'])
+    args = parser.parse_args(['--tag', 'tag1'])
     spack.cmd.find.find(parser, args)
 
     assert len(specs) == 2
@@ -98,7 +100,7 @@ def test_tag1(parser, specs):
 @pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag2(parser, specs):
-    args = parser.parse_args(['--tags', 'tag2'])
+    args = parser.parse_args(['--tag', 'tag2'])
     spack.cmd.find.find(parser, args)
 
     assert len(specs) == 1
@@ -108,7 +110,7 @@ def test_tag2(parser, specs):
 @pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag2_tag3(parser, specs):
-    args = parser.parse_args(['--tags', 'tag2', '--tags', 'tag3'])
+    args = parser.parse_args(['--tag', 'tag2', '--tag', 'tag3'])
     spack.cmd.find.find(parser, args)
 
     assert len(specs) == 0
@@ -207,6 +209,7 @@ def test_find_format(database, config):
 
     output = find('--format', '{name}-{version}-{compiler.name}-{^mpi.name}',
                   'mpileaks')
+    assert "installed package" not in output
     assert set(output.strip().split('\n')) == set([
         "mpileaks-2.3-gcc-zmpi",
         "mpileaks-2.3-gcc-mpich",
@@ -318,3 +321,14 @@ def test_find_prefix_in_env(mutable_mock_env_path, install_mockery, mock_fetch,
         find('-l')
         find('-L')
         # Would throw error on regression
+
+
+def test_find_loaded(database, working_env):
+    output = find('--loaded', '--group')
+    assert output == ''
+
+    os.environ[uenv.spack_loaded_hashes_var] = ':'.join(
+        [x.dag_hash() for x in spack.store.db.query()])
+    output = find('--loaded')
+    expected = find()
+    assert output == expected

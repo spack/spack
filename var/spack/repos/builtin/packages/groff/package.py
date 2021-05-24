@@ -1,19 +1,20 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import re
 
 
-class Groff(AutotoolsPackage):
+class Groff(AutotoolsPackage, GNUMirrorPackage):
     """Groff (GNU troff) is a typesetting system that reads
     plain text mixed with formatting commands and produces
     formatted output. Output may be PostScript or PDF, html, or
     ASCII/UTF8 for display at the terminal."""
 
     homepage = "https://www.gnu.org/software/groff/"
-    url      = "https://ftpmirror.gnu.org/groff/groff-1.22.3.tar.gz"
+    gnu_mirror_path = "groff/groff-1.22.3.tar.gz"
 
     # TODO: add html variant, spack doesn't have netpbm and its too
     # complicated for me to find out at this point in time.
@@ -34,6 +35,19 @@ class Groff(AutotoolsPackage):
     # builds reliably.
     # patch('gropdf.patch')
     parallel = False
+
+    # The perl interpreter line in scripts might be too long as it has
+    # not been transformed yet. Call scripts with spack perl explicitly.
+    patch('BuildFoundries.patch')
+    patch('pdfmom.patch')
+
+    executables = ['^groff$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU groff version\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def configure_args(self):
         args = [

@@ -1,0 +1,98 @@
+diff --git a/aten/src/ATen/cuda/nvrtc_stub/ATenNVRTC.h b/aten/src/ATen/cuda/nvrtc_stub/ATenNVRTC.h
+index 9cd678dfb4cc7..4630465115c7c 100644
+--- a/aten/src/ATen/cuda/nvrtc_stub/ATenNVRTC.h
++++ b/aten/src/ATen/cuda/nvrtc_stub/ATenNVRTC.h
+@@ -67,6 +67,14 @@ namespace at { namespace cuda {
+ //
+ // HIP doesn't have
+ //   cuGetErrorString  (maps to non-functional hipGetErrorString___)
++//
++// HIP from ROCm 3.5 on renamed hipOccupancyMaxActiveBlocksPerMultiprocessor
++// to hipModuleOccupancyMaxActiveBlocksPerMultiprocessor.
++#if HIP_VERSION < 305
++#define HIPOCCUPANCYMAXACTIVEBLOCKSPERMULTIPROCESSOR hipOccupancyMaxActiveBlocksPerMultiprocessor
++#else
++#define HIPOCCUPANCYMAXACTIVEBLOCKSPERMULTIPROCESSOR cuOccupancyMaxActiveBlocksPerMultiprocessor
++#endif
+ 
+ #define AT_FORALL_NVRTC(_)                       \
+   _(nvrtcVersion)                                \
+@@ -76,7 +84,7 @@ namespace at { namespace cuda {
+   _(nvrtcGetPTX)                                 \
+   _(cuModuleLoadData)                            \
+   _(cuModuleGetFunction)                         \
+-  _(cuOccupancyMaxActiveBlocksPerMultiprocessor) \
++  _(HIPOCCUPANCYMAXACTIVEBLOCKSPERMULTIPROCESSOR)\
+   _(nvrtcGetErrorString)                         \
+   _(nvrtcGetProgramLogSize)                      \
+   _(nvrtcGetProgramLog)                          \
+diff --git a/aten/src/ATen/native/cuda/SoftMax.cu b/aten/src/ATen/native/cuda/SoftMax.cu
+index da1995123ecfc..f935eb4ef3d0e 100644
+--- a/aten/src/ATen/native/cuda/SoftMax.cu
++++ b/aten/src/ATen/native/cuda/SoftMax.cu
+@@ -127,8 +127,8 @@ void SpatialSoftMax_getLaunchSizes(
+   uint32_t block_threads = block.x * block.y;
+   smem_size = block.x == 1 ? 0 : block_threads * sizeof(accscalar_t);
+   int max_active_blocks;
+-#ifdef __HIP_PLATFORM_HCC__
+-  // XXX HIP function signature is not compatible yet.
++#if defined(__HIP_PLATFORM_HCC__) && HIP_VERSION < 305
++  // HIP function signature is not compatible yet.
+   uint32_t max_blocks;
+   cudaOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks,
+                                                 k, block_threads, smem_size);
+diff --git a/torch/csrc/jit/codegen/fuser/cuda/fused_kernel.cpp b/torch/csrc/jit/codegen/fuser/cuda/fused_kernel.cpp
+index 5586e49919727..27315ee475277 100644
+--- a/torch/csrc/jit/codegen/fuser/cuda/fused_kernel.cpp
++++ b/torch/csrc/jit/codegen/fuser/cuda/fused_kernel.cpp
+@@ -140,10 +140,10 @@ FusedKernelCUDA::FusedKernelCUDA(
+       nvrtc().cuModuleGetFunction(&function_, module_, name_.c_str()));
+ 
+   // Computes max blocks
+-#ifdef __HIP_PLATFORM_HCC__
+-  // XXX HIP function signature is not compatible yet
++#if defined(__HIP_PLATFORM_HCC__) && HIP_VERSION < 305
++  // HIP function signature is not compatible yet
+   uint32_t max_blocks;
+-  AT_CUDA_DRIVER_CHECK(nvrtc().cuOccupancyMaxActiveBlocksPerMultiprocessor(
++  AT_CUDA_DRIVER_CHECK(nvrtc().hipOccupancyMaxActiveBlocksPerMultiprocessor(
+       &max_blocks, function_, 128, 0));
+   maxBlocks_ = max_blocks;
+ #else
+diff --git a/torch/utils/hipify/cuda_to_hip_mappings.py b/torch/utils/hipify/cuda_to_hip_mappings.py
+index 7e21363cbe6af..26f269d92ae38 100644
+--- a/torch/utils/hipify/cuda_to_hip_mappings.py
++++ b/torch/utils/hipify/cuda_to_hip_mappings.py
+@@ -2890,7 +2890,7 @@
+         (
+             "cuOccupancyMaxActiveBlocksPerMultiprocessor",
+             (
+-                "hipOccupancyMaxActiveBlocksPerMultiprocessor",
++                "hipModuleOccupancyMaxActiveBlocksPerMultiprocessor",
+                 CONV_OCCUPANCY,
+                 API_DRIVER,
+             ),
+@@ -2898,7 +2898,7 @@
+         (
+             "cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",
+             (
+-                "hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",
++                "hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",
+                 CONV_OCCUPANCY,
+                 API_DRIVER,
+                 HIP_UNSUPPORTED,
+@@ -2906,12 +2906,12 @@
+         ),
+         (
+             "cuOccupancyMaxPotentialBlockSize",
+-            ("hipOccupancyMaxPotentialBlockSize", CONV_OCCUPANCY, API_DRIVER),
++            ("hipModuleOccupancyMaxPotentialBlockSize", CONV_OCCUPANCY, API_DRIVER),
+         ),
+         (
+             "cuOccupancyMaxPotentialBlockSizeWithFlags",
+             (
+-                "hipOccupancyMaxPotentialBlockSizeWithFlags",
++                "hipModuleOccupancyMaxPotentialBlockSizeWithFlags",
+                 CONV_OCCUPANCY,
+                 API_DRIVER,
+                 HIP_UNSUPPORTED,

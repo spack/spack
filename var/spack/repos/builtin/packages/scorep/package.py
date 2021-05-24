@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Scorep(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "https://www.vi-hps.org/cms/upload/packages/scorep/scorep-4.1.tar.gz"
 
+    version('7.0',   sha256='68f24a68eb6f94eaecf500e17448f566031946deab74f2cba072ee8368af0996', url='https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.0/scorep-7.0.tar.gz')
     version('6.0',   sha256='5dc1023eb766ba5407f0b5e0845ec786e0021f1da757da737db1fb71fc4236b8')
     version('5.0',   sha256='0651614eacfc92ffbe5264a3efebd0803527ae6e8b11f7df99a56a02c37633e1')
     version('4.1',   sha256='7bb6c1eecdd699b4a3207caf202866778ee01f15ff39a9ec198fcd872578fe63')
@@ -25,36 +26,43 @@ class Scorep(AutotoolsPackage):
     version('1.4.2', sha256='d7f3fcca2efeb2f5d5b5f183b3b2c4775e66cbb3400ea2da841dd0428713ebac')
     version('1.3',   sha256='dcfd42bd05f387748eeefbdf421cb3cd98ed905e009303d70b5f75b217fd1254')
 
-    patch('gcc7.patch', when='@:3')
+    patch('gcc7.patch', when='@1.4:3')
+    patch('gcc10.patch', when='@3.1:6.0')
 
     variant('mpi', default=True, description="Enable MPI support")
     variant('papi', default=True, description="Enable PAPI")
     variant('pdt', default=False, description="Enable PDT")
     variant('shmem', default=False, description='Enable shmem tracing')
+    variant('unwind', default=False,
+            description="Enable sampling via libunwind and lib wrapping")
 
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
     # two components of cube -- cubew and cubelib.
 
+    # SCOREP 7
+    depends_on('otf2@2.3:', when='@7:')
+    depends_on('cubew@4.6:', when='@7:')
+    depends_on('cubelib@4.6:', when='@7:')
+    depends_on('opari2@2.0.6:', when='@7:')
     # SCOREP 6
     depends_on('otf2@2.2:', when='@6:')
     # SCOREP 4 and 5
     depends_on('otf2@2.1:', when='@4:')
-    depends_on('opari2@2.0:', when='@4:')
-    depends_on('cubew@4.4:', when='@4:')
-    depends_on('cubelib@4.4:', when='@4:')
+    depends_on('cubew@4.4:4.5', when='@4:6.99')
+    depends_on('cubelib@4.4:4.5', when='@4:6.99')
     # SCOREP 3
     depends_on('otf2@2:', when='@3:3.99')
-    depends_on('opari2@2:', when='@3:3.99')
-    depends_on('cube@4.3:', when='@3:3.99')
+    depends_on('opari2@2.0:2.0.5', when='@3:6.99')
+    depends_on('cube@4.3:4.3.5', when='@3:3.99')
     # SCOREP 2.0.2
     depends_on('otf2@2.0', when='@2.0.2')
     depends_on('opari2@2.0', when='@2.0.2')
-    depends_on('cube@4.3:4.4', when='@2.0.2')
+    depends_on('cube@4.3:4.3.5', when='@2.0.2')
     # SCOREP 1.4.2
     depends_on('otf2@1.5:1.6', when='@1.4.2')
     depends_on('opari2@1.1.4', when='@1.4.2')
-    depends_on('cube@4.3:4.4', when='@1.4.2')
+    depends_on('cube@4.2.3:4.3.5', when='@1.4.2')
     # SCOREP 1.3
     depends_on("otf2@1.4", when='@1.3')
     depends_on("opari2@1.1.4", when='@1.3')
@@ -63,6 +71,8 @@ class Scorep(AutotoolsPackage):
     depends_on('mpi', when="+mpi")
     depends_on('papi', when="+papi")
     depends_on('pdt', when="+pdt")
+    depends_on('llvm', when="+unwind")
+    depends_on('libunwind', when="+unwind")
 
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
@@ -95,6 +105,10 @@ class Scorep(AutotoolsPackage):
         if "+pdt" in spec:
             config_args.append("--with-pdt=%s" % spec['pdt'].prefix.bin)
 
+        if "+unwind" in spec:
+            config_args.append("--with-libunwind=%s" %
+                               spec['libunwind'].prefix)
+
         config_args += self.with_or_without('shmem')
         config_args += self.with_or_without('mpi')
 
@@ -106,8 +120,8 @@ class Scorep(AutotoolsPackage):
             config_args.append('--with-mpi=openmpi')
 
         config_args.extend([
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
-            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
+            'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.cxx_pic_flag)
         ])
 
         if "+mpi" in spec:

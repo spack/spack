@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ def python_database(mock_packages, mutable_database):
 
 
 @pytest.mark.db
-def test_extensions(mock_packages, python_database, capsys):
+def test_extensions(mock_packages, python_database, config, capsys):
     ext2   = Spec("py-extension2").concretized()
 
     def check_output(ni, na):
@@ -67,6 +67,11 @@ def test_extensions(mock_packages, python_database, capsys):
 
     ext2.package.do_uninstall(force=True)
     check_output(1, 1)
+
+
+def test_extensions_no_arguments(mock_packages):
+    out = extensions()
+    assert 'python' in out
 
 
 def test_extensions_raises_if_not_extendable(mock_packages):

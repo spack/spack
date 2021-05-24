@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,10 @@ import shutil
 import llnl.util.tty as tty
 
 import spack.caches
-import spack.cmd
+import spack.config
+import spack.cmd.test
+import spack.cmd.common.arguments as arguments
+import spack.main
 import spack.repo
 import spack.stage
 from spack.paths import lib_path, var_path
@@ -22,9 +25,9 @@ level = "long"
 
 
 class AllClean(argparse.Action):
-    """Activates flags -s -d -m and -p simultaneously"""
+    """Activates flags -s -d -f -m and -p simultaneously"""
     def __call__(self, parser, namespace, values, option_string=None):
-        parser.parse_args(['-sdmp'], namespace=namespace)
+        parser.parse_args(['-sdfmpb'], namespace=namespace)
 
 
 def setup_parser(subparser):
@@ -35,25 +38,27 @@ def setup_parser(subparser):
         '-d', '--downloads', action='store_true',
         help="remove cached downloads")
     subparser.add_argument(
+        '-f', '--failures', action='store_true',
+        help="force removal of all install failure tracking markers")
+    subparser.add_argument(
         '-m', '--misc-cache', action='store_true',
         help="remove long-lived caches, like the virtual package index")
     subparser.add_argument(
         '-p', '--python-cache', action='store_true',
         help="remove .pyc, .pyo files and __pycache__ folders")
     subparser.add_argument(
-        '-a', '--all', action=AllClean, help="equivalent to -sdmp", nargs=0
-    )
+        '-b', '--bootstrap', action='store_true',
+        help="remove software needed to bootstrap Spack")
     subparser.add_argument(
-        'specs',
-        nargs=argparse.REMAINDER,
-        help="removes the build stages and tarballs for specs"
+        '-a', '--all', action=AllClean, help="equivalent to -sdfmpb", nargs=0
     )
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 def clean(parser, args):
     # If nothing was set, activate the default
-    if not any([args.specs, args.stage, args.downloads, args.misc_cache,
-                args.python_cache]):
+    if not any([args.specs, args.stage, args.downloads, args.failures,
+                args.misc_cache, args.python_cache, args.bootstrap]):
         args.stage = True
 
     # Then do the cleaning falling through the cases
@@ -73,6 +78,10 @@ def clean(parser, args):
         tty.msg('Removing cached downloads')
         spack.caches.fetch_cache.destroy()
 
+    if args.failures:
+        tty.msg('Removing install failure marks')
+        spack.installer.clear_failures()
+
     if args.misc_cache:
         tty.msg('Removing cached information on repositories')
         spack.caches.misc_cache.destroy()
@@ -91,3 +100,10 @@ def clean(parser, args):
                         dname = os.path.join(root, d)
                         tty.debug('Removing {0}'.format(dname))
                         shutil.rmtree(dname)
+
+    if args.bootstrap:
+        msg = 'Removing software in "{0}"'
+        tty.msg(msg.format(spack.paths.user_bootstrap_store))
+        with spack.store.use_store(spack.paths.user_bootstrap_store):
+            uninstall = spack.main.SpackCommand('uninstall')
+            uninstall('-a', '-y')

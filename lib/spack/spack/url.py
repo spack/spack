@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ from six import StringIO
 from six.moves.urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
+from llnl.util.tty.color import cescape, colorize
 
 import spack.error
 import spack.util.compression as comp
@@ -56,7 +56,11 @@ def find_list_urls(url):
     GitLab     https://gitlab.\*/<repo>/<name>/tags
     BitBucket  https://bitbucket.org/<repo>/<name>/downloads/?tab=tags
     CRAN       https://\*.r-project.org/src/contrib/Archive/<name>
+    PyPI       https://pypi.org/simple/<name>/
     =========  =======================================================
+
+    Note: this function is called by `spack versions`, `spack checksum`,
+    and `spack create`, but not by `spack fetch` or `spack install`.
 
     Parameters:
         url (str): The download URL for the package
@@ -91,6 +95,16 @@ def find_list_urls(url):
         # e.g. https://cloud.r-project.org/src/contrib/rgl_0.98.1.tar.gz
         (r'(.*\.r-project\.org/src/contrib)/([^_]+)',
          lambda m: m.group(1) + '/Archive/' + m.group(2)),
+
+        # PyPI
+        # e.g. https://pypi.io/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://www.pypi.io/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.python.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.io/packages/py2.py3/o/opencensus-context/opencensus_context-0.1.1-py2.py3-none-any.whl
+        (r'(?:pypi|pythonhosted)[^/]+/packages/[^/]+/./([^/]+)',
+         lambda m: 'https://pypi.org/simple/' + m.group(1) + '/'),
     ]
 
     list_urls = set([os.path.dirname(url)])
@@ -175,6 +189,7 @@ def strip_version_suffixes(path):
 
         # Download version
         r'release',
+        r'bin',
         r'stable',
         r'[Ff]inal',
         r'rel',
@@ -548,27 +563,23 @@ def parse_version_offset(path):
         # 8th Pass: Query strings
 
         # e.g. https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0
-        (r'\?sha=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
-
+        # e.g. https://gitlab.kitware.com/api/v4/projects/icet%2Ficet/repository/archive.tar.bz2?sha=IceT-2.1.1
         # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
-        (r'\?ref=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
-
         # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
         # e.g. https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-1-0-gf15c1c3ef
-        (r'[?&]version=v?(\d[\da-zA-Z._-]*)$', suffix),
+        (r'[?&](?:sha|ref|version)=[a-zA-Z\d+-]*[_-]?v?(\d[\da-zA-Z._-]*)$', suffix),  # noqa: E501
 
         # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
         # e.g. http://laws-green.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.1_r20171213193219.tgz
-        (r'[?&]filename=[a-zA-Z\d+-]+[_-]v?(\d[\da-zA-Z.]*)', stem),
-
+        # e.g. https://evtgen.hepforge.org/downloads?f=EvtGen-01.07.00.tar.gz
         # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
-        (r'&get=[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.]*)$', stem),  # noqa
+        (r'[?&](?:filename|f|get)=[a-zA-Z\d+-]+[_-]v?(\d[\da-zA-Z.]*)', stem),
 
         # 9th Pass: Version in path
 
         # github.com/repo/name/releases/download/vver/name
         # e.g. https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow
-        (r'github\.com/[^/]+/[^/]+/releases/download/[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)/', path),  # noqa
+        (r'github\.com/[^/]+/[^/]+/releases/download/[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)/', path),  # noqa: E501
 
         # e.g. ftp://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/ncbi.tar.gz
         (r'(\d[\da-zA-Z._-]*)/[^/]+$', path),
@@ -694,6 +705,10 @@ def parse_name_offset(path, v=None):
         # ?filename=name-ver.ver
         # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
         (r'\?filename=([A-Za-z\d+-]+)$', stem),
+
+        # ?f=name-ver.ver
+        # e.g. https://evtgen.hepforge.org/downloads?f=EvtGen-01.07.00.tar.gz
+        (r'\?f=([A-Za-z\d+-]+)$', stem),
 
         # ?package=name
         # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
@@ -897,6 +912,9 @@ def color_url(path, **kwargs):
         errors (bool): Append parse errors at end of string.
         subs (bool): Color substitutions as well as parsed name/version.
     """
+    # Allow URLs containing @ and }
+    path = cescape(path)
+
     errors = kwargs.get('errors', False)
     subs   = kwargs.get('subs', False)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,12 @@
 import sys
 import pytest
 
-from spack.spec import Spec, UnsatisfiableSpecError, SpecError
-from spack.spec import substitute_abstract_variants
-from spack.spec import SpecFormatSigilError, SpecFormatStringError
+from spack.error import SpecError, UnsatisfiableSpecError
+from spack.spec import UnconstrainableDependencySpecError
+from spack.spec import Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.variant import InvalidVariantValueError, UnknownVariantError
 from spack.variant import MultipleValuesInExclusiveVariantError
+from spack.variant import substitute_abstract_variants
 
 import spack.architecture
 import spack.directives
@@ -80,7 +81,8 @@ def check_constrain_not_changed(spec, constraint):
 def check_invalid_constraint(spec, constraint):
     spec = Spec(spec)
     constraint = Spec(constraint)
-    with pytest.raises(UnsatisfiableSpecError):
+    with pytest.raises((UnsatisfiableSpecError,
+                        UnconstrainableDependencySpecError)):
         spec.constrain(constraint)
 
 
@@ -272,30 +274,38 @@ class TestSpecSematics(object):
         check_satisfies('mpich foo=true', 'mpich+foo')
         check_satisfies('mpich~foo', 'mpich foo=FALSE')
         check_satisfies('mpich foo=False', 'mpich~foo')
+        check_satisfies('mpich foo=*', 'mpich~foo')
+        check_satisfies('mpich +foo', 'mpich foo=*')
 
     def test_satisfies_multi_value_variant(self):
         # Check quoting
-        check_satisfies('multivalue_variant foo="bar,baz"',
-                        'multivalue_variant foo="bar,baz"')
-        check_satisfies('multivalue_variant foo=bar,baz',
-                        'multivalue_variant foo=bar,baz')
-        check_satisfies('multivalue_variant foo="bar,baz"',
-                        'multivalue_variant foo=bar,baz')
+        check_satisfies('multivalue-variant foo="bar,baz"',
+                        'multivalue-variant foo="bar,baz"')
+        check_satisfies('multivalue-variant foo=bar,baz',
+                        'multivalue-variant foo=bar,baz')
+        check_satisfies('multivalue-variant foo="bar,baz"',
+                        'multivalue-variant foo=bar,baz')
 
         # A more constrained spec satisfies a less constrained one
-        check_satisfies('multivalue_variant foo="bar,baz"',
-                        'multivalue_variant foo="bar"')
+        check_satisfies('multivalue-variant foo="bar,baz"',
+                        'multivalue-variant foo=*')
 
-        check_satisfies('multivalue_variant foo="bar,baz"',
-                        'multivalue_variant foo="baz"')
+        check_satisfies('multivalue-variant foo=*',
+                        'multivalue-variant foo="bar,baz"')
 
-        check_satisfies('multivalue_variant foo="bar,baz,barbaz"',
-                        'multivalue_variant foo="bar,baz"')
+        check_satisfies('multivalue-variant foo="bar,baz"',
+                        'multivalue-variant foo="bar"')
 
-        check_satisfies('multivalue_variant foo="bar,baz"',
+        check_satisfies('multivalue-variant foo="bar,baz"',
+                        'multivalue-variant foo="baz"')
+
+        check_satisfies('multivalue-variant foo="bar,baz,barbaz"',
+                        'multivalue-variant foo="bar,baz"')
+
+        check_satisfies('multivalue-variant foo="bar,baz"',
                         'foo="bar,baz"')
 
-        check_satisfies('multivalue_variant foo="bar,baz"',
+        check_satisfies('multivalue-variant foo="bar,baz"',
                         'foo="bar"')
 
     def test_satisfies_single_valued_variant(self):
@@ -307,6 +317,7 @@ class TestSpecSematics(object):
         a.concretize()
 
         assert a.satisfies('foobar=bar')
+        assert a.satisfies('foobar=*')
 
         # Assert that an autospec generated from a literal
         # gives the right result for a single valued variant
@@ -325,7 +336,7 @@ class TestSpecSematics(object):
         a.concretize()
         assert '^b' not in a
 
-        mv = Spec('multivalue_variant')
+        mv = Spec('multivalue-variant')
         mv.concretize()
         assert 'a@1.0' not in mv
 
@@ -340,9 +351,9 @@ class TestSpecSematics(object):
         # Depending on whether the spec is concrete or not
 
         a = make_spec(
-            'multivalue_variant foo="bar"', concrete=True
+            'multivalue-variant foo="bar"', concrete=True
         )
-        spec_str = 'multivalue_variant foo="bar,baz"'
+        spec_str = 'multivalue-variant foo="bar,baz"'
         b = Spec(spec_str)
         assert not a.satisfies(b)
         assert not a.satisfies(spec_str)
@@ -350,8 +361,8 @@ class TestSpecSematics(object):
         with pytest.raises(UnsatisfiableSpecError):
             a.constrain(b)
 
-        a = Spec('multivalue_variant foo="bar"')
-        spec_str = 'multivalue_variant foo="bar,baz"'
+        a = Spec('multivalue-variant foo="bar"')
+        spec_str = 'multivalue-variant foo="bar,baz"'
         b = Spec(spec_str)
         # The specs are abstract and they **could** be constrained
         assert a.satisfies(b)
@@ -360,9 +371,9 @@ class TestSpecSematics(object):
         assert a.constrain(b)
 
         a = make_spec(
-            'multivalue_variant foo="bar,baz"', concrete=True
+            'multivalue-variant foo="bar,baz"', concrete=True
         )
-        spec_str = 'multivalue_variant foo="bar,baz,quux"'
+        spec_str = 'multivalue-variant foo="bar,baz,quux"'
         b = Spec(spec_str)
         assert not a.satisfies(b)
         assert not a.satisfies(spec_str)
@@ -370,8 +381,8 @@ class TestSpecSematics(object):
         with pytest.raises(UnsatisfiableSpecError):
             a.constrain(b)
 
-        a = Spec('multivalue_variant foo="bar,baz"')
-        spec_str = 'multivalue_variant foo="bar,baz,quux"'
+        a = Spec('multivalue-variant foo="bar,baz"')
+        spec_str = 'multivalue-variant foo="bar,baz,quux"'
         b = Spec(spec_str)
         # The specs are abstract and they **could** be constrained
         assert a.satisfies(b)
@@ -384,8 +395,8 @@ class TestSpecSematics(object):
             a.concretize()
 
         # This time we'll try to set a single-valued variant
-        a = Spec('multivalue_variant fee="bar"')
-        spec_str = 'multivalue_variant fee="baz"'
+        a = Spec('multivalue-variant fee="bar"')
+        spec_str = 'multivalue-variant fee="baz"'
         b = Spec(spec_str)
         # The specs are abstract and they **could** be constrained,
         # as before concretization I don't know which type of variant
@@ -405,20 +416,20 @@ class TestSpecSematics(object):
 
         # FIXME: these needs to be checked as the new relaxed
         # FIXME: semantic makes them fail (constrain does not raise)
-        # check_unsatisfiable('multivalue_variant +foo',
-        #                     'multivalue_variant foo="bar"')
-        # check_unsatisfiable('multivalue_variant ~foo',
-        #                     'multivalue_variant foo="bar"')
+        # check_unsatisfiable('multivalue-variant +foo',
+        #                     'multivalue-variant foo="bar"')
+        # check_unsatisfiable('multivalue-variant ~foo',
+        #                     'multivalue-variant foo="bar"')
 
         check_unsatisfiable(
-            target_spec='multivalue_variant foo="bar"',
-            constraint_spec='multivalue_variant +foo',
+            target_spec='multivalue-variant foo="bar"',
+            constraint_spec='multivalue-variant +foo',
             target_concrete=True
         )
 
         check_unsatisfiable(
-            target_spec='multivalue_variant foo="bar"',
-            constraint_spec='multivalue_variant ~foo',
+            target_spec='multivalue-variant foo="bar"',
+            constraint_spec='multivalue-variant ~foo',
             target_concrete=True
         )
 
@@ -597,16 +608,21 @@ class TestSpecSematics(object):
 
     def test_constrain_multi_value_variant(self):
         check_constrain(
-            'multivalue_variant foo="bar,baz"',
-            'multivalue_variant foo="bar"',
-            'multivalue_variant foo="baz"'
+            'multivalue-variant foo="bar,baz"',
+            'multivalue-variant foo="bar"',
+            'multivalue-variant foo="baz"'
         )
 
         check_constrain(
-            'multivalue_variant foo="bar,baz,barbaz"',
-            'multivalue_variant foo="bar,barbaz"',
-            'multivalue_variant foo="baz"'
+            'multivalue-variant foo="bar,baz,barbaz"',
+            'multivalue-variant foo="bar,barbaz"',
+            'multivalue-variant foo="baz"'
         )
+
+        check_constrain(
+            'libelf foo=bar,baz', 'libelf foo=bar,baz', 'libelf foo=*')
+        check_constrain(
+            'libelf foo=bar,baz', 'libelf foo=*', 'libelf foo=bar,baz')
 
     def test_constrain_compiler_flags(self):
         check_constrain(
@@ -654,6 +670,7 @@ class TestSpecSematics(object):
         check_invalid_constraint(
             'libelf platform=test target=be os=be', 'libelf target=fe os=fe'
         )
+        check_invalid_constraint('libdwarf', '^%gcc')
 
     def test_constrain_changed(self):
         check_constrain_changed('libelf', '@1.0')
@@ -661,6 +678,7 @@ class TestSpecSematics(object):
         check_constrain_changed('libelf', '%gcc')
         check_constrain_changed('libelf%gcc', '%gcc@4.5')
         check_constrain_changed('libelf', '+debug')
+        check_constrain_changed('libelf', 'debug=*')
         check_constrain_changed('libelf', '~debug')
         check_constrain_changed('libelf', 'debug=2')
         check_constrain_changed('libelf', 'cppflags="-O3"')
@@ -680,6 +698,7 @@ class TestSpecSematics(object):
         check_constrain_not_changed('libelf+debug', '+debug')
         check_constrain_not_changed('libelf~debug', '~debug')
         check_constrain_not_changed('libelf debug=2', 'debug=2')
+        check_constrain_not_changed('libelf debug=2', 'debug=*')
         check_constrain_not_changed(
             'libelf cppflags="-O3"', 'cppflags="-O3"')
 
@@ -734,7 +753,7 @@ class TestSpecSematics(object):
             Spec('libelf foo')
 
     def test_spec_formatting(self):
-        spec = Spec("multivalue_variant cflags=-O2")
+        spec = Spec("multivalue-variant cflags=-O2")
         spec.concretize()
 
         # Since the default is the full spec see if the string rep of
@@ -757,7 +776,7 @@ class TestSpecSematics(object):
         sigil_package_segments = [("{@VERSIONS}", '@' + str(spec.version)),
                                   ("{%compiler}", '%' + str(spec.compiler)),
                                   ("{arch=architecture}",
-                                   ' arch=' + str(spec.architecture))]
+                                   'arch=' + str(spec.architecture))]
 
         compiler_segments = [("{compiler.name}", "name"),
                              ("{compiler.version}", "versions")]
@@ -779,7 +798,7 @@ class TestSpecSematics(object):
         for named_str, prop in package_segments:
             expected = getattr(spec, prop, "")
             actual = spec.format(named_str)
-            assert str(expected) == actual
+            assert str(expected).strip() == actual
 
         for named_str, expected in sigil_package_segments:
             actual = spec.format(named_str)
@@ -806,7 +825,7 @@ class TestSpecSematics(object):
             assert expected == actual
 
     def test_spec_formatting_escapes(self):
-        spec = Spec('multivalue_variant cflags=-O2')
+        spec = Spec('multivalue-variant cflags=-O2')
         spec.concretize()
 
         sigil_mismatches = [
@@ -893,13 +912,14 @@ class TestSpecSematics(object):
                 for x in ('cflags', 'cxxflags', 'fflags')
             )
 
-    def test_any_combination_of(self):
-        # Test that using 'none' and another value raise during concretization
-        spec = Spec('multivalue_variant foo=none,bar')
-        with pytest.raises(spack.error.SpecError) as exc_info:
-            spec.concretize()
+    def test_combination_of_wildcard_or_none(self):
+        # Test that using 'none' and another value raises
+        with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
+            Spec('multivalue-variant foo=none,bar')
 
-        assert "is mutually exclusive with any of the" in str(exc_info.value)
+        # Test that using wildcard and another value raises
+        with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
+            Spec('multivalue-variant foo=*,bar')
 
     @pytest.mark.skipif(
         sys.version_info[0] == 2, reason='__wrapped__ requires python 3'
@@ -946,7 +966,7 @@ class TestSpecSematics(object):
             spec.prefix
 
     def test_forwarding_of_architecture_attributes(self):
-        spec = Spec('libelf').concretized()
+        spec = Spec('libelf target=x86_64').concretized()
 
         # Check that we can still access each member through
         # the architecture attribute
@@ -964,6 +984,74 @@ class TestSpecSematics(object):
         assert spec.target.family == 'x86_64'
         assert 'avx512' not in spec.target
         assert spec.target < 'broadwell'
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice(self, transitive):
+        # Tests the new splice function in Spec using a somewhat simple case
+        # with a variant with a conditional dependency.
+        # TODO: Test being able to splice in different provider for a virtual.
+        # Example: mvapich for mpich.
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+        # Sanity checking that these are not the same thing.
+        assert dep.dag_hash() != spec['splice-h'].dag_hash()
+        assert dep.build_hash() != spec['splice-h'].build_hash()
+        # Do the splice.
+        out = spec.splice(dep, transitive)
+        # Returned spec should still be concrete.
+        assert out.concrete
+        # Traverse the spec and assert that all dependencies are accounted for.
+        for node in spec.traverse():
+            assert node.name in out
+        # If the splice worked, then the full hash of the spliced dep should
+        # now match the full hash of the build spec of the dependency from the
+        # returned spec.
+        out_h_build = out['splice-h'].build_spec
+        assert out_h_build.full_hash() == dep.full_hash()
+        # Transitivity should determine whether the transitive dependency was
+        # changed.
+        expected_z = dep['splice-z'] if transitive else spec['splice-z']
+        assert out['splice-z'].full_hash() == expected_z.full_hash()
+        # Sanity check build spec of out should be the original spec.
+        assert (out['splice-t'].build_spec.full_hash() ==
+                spec['splice-t'].full_hash())
+        # Finally, the spec should know it's been spliced:
+        assert out.spliced
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_input_unchanged(self, transitive):
+        spec = Spec('splice-t').concretized()
+        dep = Spec('splice-h+foo').concretized()
+        orig_spec_hash = spec.full_hash()
+        orig_dep_hash = dep.full_hash()
+        spec.splice(dep, transitive)
+        # Post-splice, dag hash should still be different; no changes should be
+        # made to these specs.
+        assert spec.full_hash() == orig_spec_hash
+        assert dep.full_hash() == orig_dep_hash
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_subsequent(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
+        # Now we attempt a second splice.
+        dep = Spec('splice-z+bar')
+        dep.concretize()
+        # Transitivity shouldn't matter since Splice Z has no dependencies.
+        out2 = out.splice(dep, transitive)
+        assert out2.concrete
+        assert out2['splice-z'].build_hash() != spec['splice-z'].build_hash()
+        assert out2['splice-z'].build_hash() != out['splice-z'].build_hash()
+        assert out2['splice-z'].full_hash() != spec['splice-z'].full_hash()
+        assert out2['splice-z'].full_hash() != out['splice-z'].full_hash()
+        assert (out2['splice-t'].build_spec.full_hash() ==
+                spec['splice-t'].full_hash())
+        assert out2.spliced
 
     @pytest.mark.parametrize('spec,constraint,expected_result', [
         ('libelf target=haswell', 'target=broadwell', False),
@@ -987,3 +1075,26 @@ class TestSpecSematics(object):
         s = Spec('mpileaks +unknown')
         with pytest.raises(UnknownVariantError, match=r'package has no such'):
             s.concretize()
+
+    @pytest.mark.regression('18527')
+    def test_satisfies_dependencies_ordered(self):
+        d = Spec('zmpi ^fake')
+        s = Spec('mpileaks')
+        s._add_dependency(d, ())
+        assert s.satisfies('mpileaks ^zmpi ^fake', strict=True)
+
+
+@pytest.mark.regression('3887')
+@pytest.mark.parametrize('spec_str', [
+    'git', 'hdf5', 'py-flake8'
+])
+def test_is_extension_after_round_trip_to_dict(config, spec_str):
+    # x is constructed directly from string, y from a
+    # round-trip to dict representation
+    x = Spec(spec_str)
+    x.concretize()
+    y = Spec.from_dict(x.to_dict())
+
+    # Using 'y' since the round-trip make us lose build dependencies
+    for d in y.traverse():
+        assert x[d.name].package.is_extension == y[d.name].package.is_extension

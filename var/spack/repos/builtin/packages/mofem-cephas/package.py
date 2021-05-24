@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,7 +42,7 @@ class MofemCephas(CMakePackage):
     depends_on("parmetis")
     # Fixed version of hdf5, to remove some problems with dependent
     # packages, f.e. MED format
-    depends_on("hdf5@:1.8.19+hl+mpi")
+    depends_on("hdf5@:1.8.19+hl+mpi+fortran")
     depends_on("petsc@:3.9.3+mumps+mpi")
     depends_on('slepc', when='+slepc')
     depends_on("moab")
@@ -69,8 +69,7 @@ class MofemCephas(CMakePackage):
             '-DBOOST_DIR=%s' % spec['boost'].prefix])
 
         # build tests
-        options.append('-DMOFEM_BUILD_TESTS={0}'.format(
-            'ON' if self.run_tests else 'OFF'))
+        options.append(self.define('MOFEM_BUILD_TESTS', self.run_tests))
 
         # variant packages
         if '+adol-c' in spec:
@@ -87,6 +86,5 @@ class MofemCephas(CMakePackage):
 
         # copy users modules, i.e. stand alone vs linked users modules
         options.append(
-            '-DSTAND_ALLONE_USERS_MODULES=%s' %
-            ('YES' if '+copy_user_modules' in spec else 'NO'))
+            self.define_from_variant('STAND_ALLONE_USERS_MODULES', 'copy_user_modules'))
         return options

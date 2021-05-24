@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,28 @@ EXTS       = ["gz", "bz2", "xz", "Z"]
 NOTAR_EXTS = ["zip", "tgz", "tbz2", "txz"]
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
-ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(
+ALLOWED_ARCHIVE_TYPES = [".".join(ext) for ext in product(
     PRE_EXTS, EXTS)] + PRE_EXTS + EXTS + NOTAR_EXTS
 
 
 def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
+
+
+def _gunzip(archive_file):
+    """Like gunzip, but extracts in the current working directory
+    instead of in-place.
+
+    Args:
+        archive_file (str): absolute path of the file to be decompressed
+    """
+    import gzip
+    decompressed_file = os.path.basename(archive_file.strip('.gz'))
+    working_dir = os.getcwd()
+    destination_abspath = os.path.join(working_dir, decompressed_file)
+    with gzip.open(archive_file, "rb") as f_in:
+        with open(destination_abspath, "wb") as f_out:
+            f_out.write(f_in.read())
 
 
 def decompressor_for(path, extension=None):
@@ -30,10 +46,12 @@ def decompressor_for(path, extension=None):
         unzip.add_default_arg('-q')
         return unzip
     if extension and re.match(r'gz', extension):
-        gunzip = which('gunzip', required=True)
-        return gunzip
+        return _gunzip
+    if extension and re.match(r'bz2', extension):
+        bunzip2 = which('bunzip2', required=True)
+        return bunzip2
     tar = which('tar', required=True)
-    tar.add_default_arg('-xf')
+    tar.add_default_arg('-oxf')
     return tar
 
 

@@ -1,0 +1,11 @@
+--- a/src/gmt_regexp.c	2020-07-04 15:13:40.000000000 -0500
++++ b/src/gmt_regexp.c	2020-07-05 18:35:02.000000000 -0500
+@@ -217,7 +217,7 @@
+ 		/* this is when errors have been encountered */
+ 		regerror(status, &re, err_msg, MAX_ERR_LENGTH);
+ 		GMT_Report (GMT->parent, GMT_MSG_ERROR, "gmtlib_regexp_match: POSIX ERE matching error: %s\n", err_msg); /* Report error. */
+-		return (-GMT_RUNTIME_ERROR;)
++		return (-GMT_RUNTIME_ERROR);
+ 	}
+ 	return (0); /* No match */
+ 

@@ -25,12 +25,6 @@ modules:
       - MANPATH
     share/aclocal:
       - ACLOCAL_PATH
-    lib:
-      - LIBRARY_PATH
-    lib64:
-      - LIBRARY_PATH
-    include:
-      - CPATH
     lib/pkgconfig:
       - PKG_CONFIG_PATH
     lib64/pkgconfig:

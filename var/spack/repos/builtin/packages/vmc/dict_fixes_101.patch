@@ -1,0 +1,56 @@
+--- spack-src/source/CMakeLists.txt
++++ spack-src/source/CMakeLists.txt
+@@ -45,24 +45,24 @@
+ #
+ ROOT_GENERATE_DICTIONARY(
+   ${library_name}_dict
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TGeoMCBranchArrayContainer.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TGeoMCGeometry.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TMCAutoLock.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TMCManager.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TMCManagerStack.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TMCOptical.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TMCParticleStatus.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TMCParticleType.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TMCProcess.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TMCVerbose.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TMCtls.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TVirtualMC.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TVirtualMCApplication.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TVirtualMCGeometry.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TVirtualMCSensitiveDetector.h
+-  ${CMAKE_CURRENT_SOURCE_DIR}/include/TVirtualMCStack.h
++  TGeoMCBranchArrayContainer.h
++  TGeoMCGeometry.h
++  TMCAutoLock.h
++  TMCManager.h
++  TMCManagerStack.h
++  TMCOptical.h
++  TMCParticleStatus.h
++  TMCParticleType.h
++  TMCProcess.h
++  TMCVerbose.h
++  TMCtls.h
++  TVirtualMC.h
++  TVirtualMCApplication.h
++  TVirtualMCGeometry.h
++  TVirtualMCSensitiveDetector.h
++  TVirtualMCStack.h
+   MODULE ${library_name}
+-  LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/include/LinkDef.h)
++  LINKDEF include/LinkDef.h)
+ 
+ # Files produced by the dictionary generation
+ SET(root_dict
+--- spack-src/source/CMakeLists.txt
++++ spack-src/source/CMakeLists.txt
+@@ -63,6 +63,9 @@
+   TVirtualMCSensitiveDetector.h
+   TVirtualMCStack.h
+   MODULE ${library_name}
++  OPTIONS "-I${CMAKE_INSTALL_PREFIX}/include/${base_name}"
++    -excludePath "${CMAKE_CURRENT_BINARY_DIR}"
++    -excludePath "${PROJECT_SOURCE_DIR}/source"
+   LINKDEF include/LinkDef.h)
+ 
+ # Files produced by the dictionary generation

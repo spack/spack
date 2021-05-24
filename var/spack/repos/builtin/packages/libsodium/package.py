@@ -1,9 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import llnl.util.tty as tty
+import os
 
 
 class Libsodium(AutotoolsPackage):
@@ -13,6 +15,7 @@ class Libsodium(AutotoolsPackage):
     url      = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.13.tar.gz"
     list_url = "https://download.libsodium.org/libsodium/releases/old"
 
+    version('1.0.18', sha256='6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1')
     version('1.0.17', sha256='0cc3dae33e642cc187b5ceb467e0ad0e1b51dcba577de1190e9ffa17766ac2b1')
     version('1.0.16', sha256='eeadc7e1e1bcef09680fb4837d448fbdf57224978f865ac1c16745868fbd0533')
     version('1.0.15', sha256='fb6a9e879a2f674592e4328c5d9f79f082405ee4bb05cb6e679b90afe9e178f4')
@@ -25,8 +28,19 @@ class Libsodium(AutotoolsPackage):
 
     def url_for_version(self, version):
         url = 'https://download.libsodium.org/libsodium/releases/'
-        if version < Version('1.0.4'):
+        if version < Version('1.0.16'):
             url += 'old/unsupported/'
-        elif version < Version('1.0.16'):
+        elif version < Version('1.0.17'):
             url += 'old/'
         return url + 'libsodium-{0}.tar.gz'.format(version)
+
+    def patch(self):
+        # Necessary on ppc64le / aarch64, because Spack tries to execute these scripts
+        # to check if they work (see lib/spack/spack/build_systems/autotools.py).
+        try:
+            os.chmod("build-aux/config.guess", 0o755)
+            os.chmod("build-aux/config.sub", 0o755)
+        except OSError:
+            # Old versions of libsodium don't have these files.
+            tty.debug("Couldn't chmod config.guess or config.sub: file not found")
+            pass
