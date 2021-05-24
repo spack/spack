@@ -44,7 +44,6 @@ def make_installer(parser, args):
                 print("%s does not exist" % spack_source)
                 return
             else:
-                spack_source = posixpath.abspath(spack_source)
                 spack_source = spack_source.replace('\\', '/')
 
         spack_version = args.spack_version
@@ -85,7 +84,7 @@ def make_installer(parser, args):
             return
         try:
             subprocess.check_call(
-                '"%s/bin/light.exe" -ext WixBalExtension "%s/bundle.wixobj" -out "%s/Spack.exe"'
+                '"%s/bin/light.exe" -sw1134 -ext WixBalExtension "%s/bundle.wixobj" -out "%s/Spack.exe"'
                 % (os.environ.get('WIX'), output_dir, output_dir), shell=True)
         except subprocess.CalledProcessError:
             print("Failed to generate installer chain")
