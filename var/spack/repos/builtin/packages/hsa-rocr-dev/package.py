@@ -59,7 +59,7 @@ class HsaRocrDev(CMakePackage):
             args.append(self.define_from_variant('IMAGE_SUPPORT', 'image'))
 
         if '@4.2.0:' in self.spec:
-            bitcode_dir = self.spec['rocm-device-libs'].prefix.amdgcn.bitcode
+            bitcode_dir = self.spec['llvm-amdgpu'].prefix.amdgcn.bitcode
             args.append(self.define('BITCODE_DIR', bitcode_dir))
 
         return args
