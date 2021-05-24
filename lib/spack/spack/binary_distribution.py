@@ -1642,7 +1642,7 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
     deprecated_specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.join(cache_prefix, specfile_name)
     deprecated_specfile_path = os.path.join(cache_prefix,
-        deprecated_specfile_name)
+                                            deprecated_specfile_name)
 
     result_of_error = 'Package ({0}) will {1}be rebuilt'.format(
         spec.short_spec, '' if rebuild_on_errors else 'not ')
@@ -1661,7 +1661,8 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
             'Unable to determine whether {0} needs rebuilding,',
             ' caught exception attempting to read from {1}.',
         ]
-        tty.error(''.join(err_msg).format(spec.short_spec,
+        tty.error(''.join(err_msg).format(
+            spec.short_spec,
             specfile_path if specfile_is_json else deprecated_specfile_path))
         tty.debug(url_err)
         tty.warn(result_of_error)
@@ -1673,8 +1674,8 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
         tty.warn(result_of_error)
         return rebuild_on_errors
 
-    spec_dict = (sjson.load(spec_file_contents) 
-        if specfile_is_json else syaml.load(spec_file_contents))
+    spec_dict = (sjson.load(spec_file_contents)
+                 if specfile_is_json else syaml.load(spec_file_contents))
 
     nodes = spec_dict['spec']['nodes']
     name = spec.name
