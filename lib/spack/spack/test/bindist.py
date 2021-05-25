@@ -318,8 +318,6 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
     buildcache_cmd('install', '-auf', cspec.name)
 
 
-@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
-                    reason='This test requires gpg')
 def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
 
@@ -333,7 +331,7 @@ def test_push_and_fetch_keys(mock_gnupghome):
 
     # dir 1: create a new key, record its fingerprint, and push it to a new
     #        mirror
-    with spack.util.gpg.gnupg_home_override(gpg_dir1):
+    with spack.util.gpg.gnupghome_override(gpg_dir1):
         spack.util.gpg.create(name='test-key',
                               email='fake@test.key',
                               expires='0',
@@ -347,7 +345,7 @@ def test_push_and_fetch_keys(mock_gnupghome):
 
     # dir 2: import the key from the mirror, and confirm that its fingerprint
     #        matches the one created above
-    with spack.util.gpg.gnupg_home_override(gpg_dir2):
+    with spack.util.gpg.gnupghome_override(gpg_dir2):
         assert len(spack.util.gpg.public_keys()) == 0
 
         bindist.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
