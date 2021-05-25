@@ -78,7 +78,7 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 
 #
 # These environment variables are set by
-# set_build_environment_variables and used to pass parameters to
+# set_dependency_env_variables and used to pass parameters to
 # Spack's compiler wrappers.
 #
 SPACK_ENV_PATH = 'SPACK_ENV_PATH'
@@ -319,7 +319,7 @@ def _place_externals_last(spec_container):
     return first + second
 
 
-def set_build_environment_variables(pkg, env, dirty):
+def set_dependency_env_variables(pkg, env):
     """Ensure a clean install environment when we build packages.
 
     This involves unsetting pesky environment variables that may
@@ -329,7 +329,6 @@ def set_build_environment_variables(pkg, env, dirty):
     Args:
         pkg: The package we are building
         env: The build environment
-        dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
     build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
@@ -421,15 +420,6 @@ def set_build_environment_variables(pkg, env, dirty):
         # Add dependencies to CMAKE_PREFIX_PATH
         env.prepend_path('CMAKE_PREFIX_PATH', path)
 
-    # Set environment variables if specified for
-    # the given compiler
-    compiler = pkg.compiler
-    env.extend(spack.schema.environment.parse(compiler.environment))
-
-    if compiler.extra_rpaths:
-        extra_rpaths = ':'.join(compiler.extra_rpaths)
-        env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
-
     # Add bin directories from dependencies to the PATH for the build.
     # These directories are added to the beginning of the search path, and in
     # the order given by 'build_and_supporting_prefixes' (the iteration order
@@ -439,6 +429,26 @@ def set_build_environment_variables(pkg, env, dirty):
             bin_dir = os.path.join(prefix, dirname)
             if os.path.isdir(bin_dir):
                 env.prepend_path('PATH', bin_dir)
+
+    # Add any pkgconfig directories to PKG_CONFIG_PATH
+    for prefix in reversed(build_link_prefixes):
+        for directory in ('lib', 'lib64', 'share'):
+            pcdir = os.path.join(prefix, directory, 'pkgconfig')
+            if os.path.isdir(pcdir):
+                env.prepend_path('PKG_CONFIG_PATH', pcdir)
+
+    return env
+
+
+def set_wrapper_variables(pkg, env):
+    # Set environment variables if specified for
+    # the given compiler
+    compiler = pkg.compiler
+    env.extend(spack.schema.environment.parse(compiler.environment))
+
+    if compiler.extra_rpaths:
+        extra_rpaths = ':'.join(compiler.extra_rpaths)
+        env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
     # Add spack build environment path with compiler wrappers first in
     # the path. We add the compiler wrapper path, which includes default
@@ -477,15 +487,6 @@ def set_build_environment_variables(pkg, env, dirty):
         if not ccache:
             raise RuntimeError("No ccache binary found in PATH")
         env.set(SPACK_CCACHE_BINARY, ccache)
-
-    # Add any pkgconfig directories to PKG_CONFIG_PATH
-    for prefix in reversed(build_link_prefixes):
-        for directory in ('lib', 'lib64', 'share'):
-            pcdir = os.path.join(prefix, directory, 'pkgconfig')
-            if os.path.isdir(pcdir):
-                env.prepend_path('PKG_CONFIG_PATH', pcdir)
-
-    return env
 
 
 def determine_number_of_jobs(
@@ -806,7 +807,8 @@ def setup_package(pkg, dirty, context='build'):
                                            pkg.test_requires_compiler)
     if need_compiler:
         set_compiler_environment_variables(pkg, env)
-        set_build_environment_variables(pkg, env, dirty)
+        set_wrapper_variables(pkg, env)
+        set_dependency_env_variables(pkg, env)
 
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
