@@ -891,9 +891,10 @@ class Openmpi(AutotoolsPackage):
             'shmemrun': ls,
         }
 
-        for exe in checks:
-            options, expected, status = checks[exe]
-            reason = 'test: checking {0} output'.format(exe)
+        for binary in checks:
+            options, expected, status = checks[binary]
+            exe = join_path(self.prefix.bin, binary)
+            reason = 'test: checking {0} output'.format(binary)
             self.run_test(exe, options, expected, status, installed=True,
                           purpose=reason, skip_missing=True)
 
@@ -942,36 +943,28 @@ class Openmpi(AutotoolsPackage):
             'shmemcxx': comp_vers,
         }
 
-        for exe in checks:
-            expected = checks[exe]
+        for binary in checks:
+            expected = checks[binary]
             purpose = 'test: ensuring version of {0} is {1}' \
-                .format(exe, expected)
+                .format(binary, expected)
+            exe = join_path(self.prefix.bin, binary)
             self.run_test(exe, '--version', expected, installed=True,
                           purpose=purpose, skip_missing=True)
 
-    def _test_build_examples(self):
-        # Build the examples copied during installation and return "status"
-        reason = 'test: ensuring ability to build the examples'
-        return self.run_test('make', ['all'], [],
-                             purpose=reason,
-                             work_dir=join_path(self.install_test_root,
-                                                self.extra_install_tests))
-
-    def _test_clean_examples(self):
-        # Clean up any example build files
-        reason = 'test: ensuring copied examples cleaned up'
-        return self.run_test('make', ['clean'], [],
-                             purpose=reason,
-                             work_dir=join_path(self.install_test_root,
-                                                self.extra_install_tests))
+    @property
+    def _cached_tests_work_dir(self):
+        """The working directory for cached test sources."""
+        return join_path(self.test_suite.current_test_cache_dir,
+                         self.extra_install_tests)
 
     def _test_examples(self):
-        # First ensure can build copied examples
-        if not self._test_build_examples():
-            self._test_clean_examples()
-            return
+        """Run test examples copied from source at build-time."""
+        # Build the copied, cached test examples
+        self.run_test('make', ['all'], [],
+                      purpose='test: building cached test examples',
+                      work_dir=self._cached_tests_work_dir)
 
-        # Now run examples with known, simple-to-verify results
+        # Run examples with known, simple-to-verify results
         have_spml = self.spec.satisfies('@2.0.0:2.1.6')
 
         hello_world = (['Hello, world', 'I am', '0 of', '1'], 0)
@@ -1015,14 +1008,11 @@ class Openmpi(AutotoolsPackage):
                 .format(exe, status)
             self.run_test(exe, [], expected, status, installed=False,
                           purpose=reason, skip_missing=True,
-                          work_dir=join_path(self.install_test_root,
-                                             self.extra_install_tests))
-
-        self._test_clean_examples()
+                          work_dir=self._cached_tests_work_dir)
 
     def test(self):
-        """Perform smoke tests on the installed package."""
-        # Simple version check tests on known packages
+        """Perform stand-alone/smoke tests on the installed package."""
+        # Simple version check tests on selected installed binaries
         self._test_check_versions()
 
         # Test the operation of selected executables
