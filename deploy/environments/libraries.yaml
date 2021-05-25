@@ -41,7 +41,7 @@ spack:
     - morpho-kit
     - mvdtool+mpi
     - neuron+mpi~debug%intel
-    - neuron+coreneuron~legacy-unit%nvhpc ^coreneuron+gpu~legacy-unit~report ^py-cython%gcc ^py-numpy%gcc
+    - neuron+coreneuron+debug~legacy-unit+tests%nvhpc ^coreneuron+gpu~legacy-unit~report+tests ^py-cython%gcc ^py-numpy%gcc
     - nlohmann-json +single_header
     - omega-h+trilinos
     - omega-h+gmsh+trilinos
