@@ -344,30 +344,6 @@ def set_dependency_env_variables(pkg, env):
     for build_dep in build_deps:
         build_and_supporting_deps.update(build_dep.traverse(deptype='run'))
 
-    # Establish an arbitrary but fixed ordering of specs so that resulting
-    # environment variable values are stable
-    def _order(specs):
-        return sorted(specs, key=lambda x: x.name)
-
-    # External packages may be installed in a prefix which contains many other
-    # package installs. To avoid having those installations override
-    # Spack-installed packages, they are placed at the end of search paths.
-    # System prefixes are removed entirely later on since they are already
-    # searched.
-    build_deps = _place_externals_last(_order(build_deps))
-    link_deps = _place_externals_last(_order(link_deps))
-    build_link_deps = _place_externals_last(_order(build_link_deps))
-    rpath_deps = _place_externals_last(_order(rpath_deps))
-    build_and_supporting_deps = _place_externals_last(
-        _order(build_and_supporting_deps))
-
-    tty.debug("Build deps: " + " ".join(x.name for x in build_deps))
-    tty.debug("Link deps: " + " ".join(x.name for x in link_deps))
-    tty.debug("Build+Link deps: " + " ".join(x.name for x in build_link_deps))
-    tty.debug("RPATH deps: " + " ".join(x.name for x in rpath_deps))
-    tty.debug("Build+Supporting deps: " + " ".join(
-        x.name for x in build_and_supporting_deps))
-
     link_dirs = []
     include_dirs = []
     rpath_dirs = []
@@ -379,31 +355,48 @@ def set_dependency_env_variables(pkg, env):
         lib_path = os.path.join(pkg.prefix, libdir)
         rpath_dirs.append(lib_path)
 
-    # Set up link, include, RPATH directories that are passed to the
-    # compiler wrapper
-    for dep in link_deps:
-        if is_system_path(dep.prefix):
-            continue
-        query = pkg.spec[dep.name]
-        dep_link_dirs = list()
-        try:
-            dep_link_dirs.extend(query.libs.directories)
-        except NoLibrariesError:
-            tty.debug("No libraries found for {0}".format(dep.name))
+    for dep in pkg.spec.traverse(root=False, order='post'):
+        if dep in link_deps and (not is_system_path(dep.prefix)):
+            query = pkg.spec[dep.name]
+            dep_link_dirs = list()
+            try:
+                dep_link_dirs.extend(query.libs.directories)
+            except NoLibrariesError:
+                tty.debug("No libraries found for {0}".format(dep.name))
 
-        for default_lib_dir in ['lib', 'lib64']:
-            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
-            if os.path.isdir(default_lib_prefix):
-                dep_link_dirs.append(default_lib_prefix)
+            for default_lib_dir in ['lib', 'lib64']:
+                default_lib_prefix = os.path.join(
+                    dep.prefix, default_lib_dir)
+                if os.path.isdir(default_lib_prefix):
+                    dep_link_dirs.append(default_lib_prefix)
 
-        link_dirs.extend(dep_link_dirs)
-        if dep in rpath_deps:
-            rpath_dirs.extend(dep_link_dirs)
+            link_dirs.extend(dep_link_dirs)
+            if dep in rpath_deps:
+                rpath_dirs.extend(dep_link_dirs)
 
-        try:
-            include_dirs.extend(query.headers.directories)
-        except NoHeadersError:
-            tty.debug("No headers found for {0}".format(dep.name))
+            try:
+                include_dirs.extend(query.headers.directories)
+            except NoHeadersError:
+                tty.debug("No headers found for {0}".format(dep.name))
+
+        if dep in build_link_deps and (not is_system_path(dep.prefix)):
+            prefix = dep.prefix
+
+            env.prepend_path('CMAKE_PREFIX_PATH', prefix)
+
+            for directory in ('lib', 'lib64', 'share'):
+                pcdir = os.path.join(prefix, directory, 'pkgconfig')
+                if os.path.isdir(pcdir):
+                    env.prepend_path('PKG_CONFIG_PATH', pcdir)
+
+        if dep in build_and_supporting_deps and (
+                not is_system_path(dep.prefix)):
+            prefix = dep.prefix
+
+            for dirname in ['bin', 'bin64']:
+                bin_dir = os.path.join(prefix, dirname)
+                if os.path.isdir(bin_dir):
+                    env.prepend_path('PATH', bin_dir)
 
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
@@ -412,32 +405,6 @@ def set_dependency_env_variables(pkg, env):
     env.set(SPACK_LINK_DIRS, ':'.join(link_dirs))
     env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ':'.join(rpath_dirs))
-
-    build_and_supporting_prefixes = filter_system_paths(
-        x.prefix for x in build_and_supporting_deps)
-    build_link_prefixes = filter_system_paths(
-        x.prefix for x in build_link_deps)
-
-    for path in reversed(build_link_prefixes):
-        # Add dependencies to CMAKE_PREFIX_PATH
-        env.prepend_path('CMAKE_PREFIX_PATH', path)
-
-    # Add bin directories from dependencies to the PATH for the build.
-    # These directories are added to the beginning of the search path, and in
-    # the order given by 'build_and_supporting_prefixes' (the iteration order
-    # is reversed because each entry is prepended)
-    for prefix in reversed(build_and_supporting_prefixes):
-        for dirname in ['bin', 'bin64']:
-            bin_dir = os.path.join(prefix, dirname)
-            if os.path.isdir(bin_dir):
-                env.prepend_path('PATH', bin_dir)
-
-    # Add any pkgconfig directories to PKG_CONFIG_PATH
-    for prefix in reversed(build_link_prefixes):
-        for directory in ('lib', 'lib64', 'share'):
-            pcdir = os.path.join(prefix, directory, 'pkgconfig')
-            if os.path.isdir(pcdir):
-                env.prepend_path('PKG_CONFIG_PATH', pcdir)
 
     return env
 
