@@ -822,10 +822,6 @@ def setup_package(pkg, dirty, context='build'):
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
 
-    if context == 'test':
-        import spack.user_environment as uenv  # avoid circular import
-        env.extend(uenv.environment_modifications_for_spec(pkg.spec))
-
     # recursive post-order dependency information
     env.extend(
         modifications_from_dependencies(
@@ -839,6 +835,7 @@ def setup_package(pkg, dirty, context='build'):
     if context == 'build':
         pkg.setup_build_environment(env)
     elif context == 'test':
+        pkg.setup_run_environment(env)
         env.prepend_path('PATH', '.')
 
     # Loading modules, in particular if they are meant to be used outside
@@ -895,6 +892,10 @@ def modifications_from_dependencies(spec, context, only=None):
             collected. If not specified, then all modifications from
             dependencies are collected.
     """
+    if only and only not in ['spack', 'external']:
+        raise ValueError(
+            "Expected one of ['spack', 'external', None] for 'only'")
+
     env = EnvironmentModifications()
     pkg = spec.package
 
@@ -909,13 +910,9 @@ def modifications_from_dependencies(spec, context, only=None):
 
     root = context == 'test'
     for dspec in spec.traverse(order='post', root=root, deptype=deptype):
-        if only and only not in ['spack', 'external']:
-            raise ValueError(
-                "Expected one of ['spack', 'external', None] for 'only'")
-
         if dspec.external and only == 'spack':
             continue
-        elif only == 'external':
+        elif (not dspec.external) and only == 'external':
             continue
         dpkg = dspec.package
         set_module_variables_for_package(dpkg)
