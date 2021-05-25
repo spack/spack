@@ -21,11 +21,13 @@ RUN apt-get -yqq update \
         git \
         gnupg2 \
         iproute2 \
+        libpython3-dev \
         lmod \
         locales \
         lua-posix \
         make \
         python3 \
+        python3-distutils \
         python3-pip \
         python3-setuptools \
         tcl \
