@@ -728,9 +728,17 @@ def get_versions(args, name):
             tty.warn("Couldn't detect version in: {0}".format(args.url))
             return hashed_versions, guesser
 
+        # Exclude "newer" than requested (e.g., skip GitHub pre-release).
+        version = parse_version(args.url)
+        flag = []
+        for v in url_dict:
+            if v > version:
+                flag.append(v)
+        for f in flag:
+            url_dict.pop(f)
+
         if not url_dict:
             # If no versions were found, revert to what the user provided
-            version = parse_version(args.url)
             url_dict = {version: args.url}
 
         versions = spack.stage.get_checksums_for_versions(
