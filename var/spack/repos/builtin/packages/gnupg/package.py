@@ -2,8 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
+import os.path
+import re
 
 
 class Gnupg(AutotoolsPackage):
@@ -13,6 +13,13 @@ class Gnupg(AutotoolsPackage):
     url      = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.19.tar.bz2"
 
     maintainers = ['alalazo']
+
+    executables = [
+        # Main command line executable
+        '^gpg$', '^gpg2$',
+        # Configuration command
+        '^gpgconf$', '^gpg2conf$', '^gpgconf2$'
+    ]
 
     version('2.3.1',  sha256='c498db346a9b9a4b399e514c8f56dfc0a888ce8f327f10376ff984452cd154ec')
     version('2.2.27', sha256='34e60009014ea16402069136e0a5f63d9b65f90096244975db5cea74b3d02399')
@@ -42,6 +49,35 @@ class Gnupg(AutotoolsPackage):
     depends_on('pinentry', type='run')
     depends_on('iconv')
     depends_on('zlib')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'\(GnuPG\)\s+(\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        # Check that both gpg and gpgconf are in exes
+        extra_attrs = {}
+        for exe in exes:
+            basename = os.path.basename(exe)
+
+            if 'gpg' not in extra_attrs and re.match(r'^gpg$|^gpg2$', basename):
+                extra_attrs['gpg'] = exe
+
+            if 'gpgconf' not in extra_attrs and re.match(
+                r'^gpgconf$|^gpg2conf$|^gpgconf2$', basename
+            ):
+                extra_attrs['gpgconf'] = exe
+
+        return '', extra_attrs
+
+    @classmethod
+    def validate_detected_spec(cls, spec, extra_attributes):
+        msg = 'could not detect "{0}"'
+        assert 'gpg' in extra_attributes, msg.format('gpg')
+        assert 'gpgconf' in extra_attributes, msg.format('gpgconf')
 
     @run_after('install')
     def add_gpg2_symlink(self):
