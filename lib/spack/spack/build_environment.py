@@ -308,19 +308,6 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
-def _place_externals_last(spec_container):
-    """
-    For a (possibly unordered) container of specs, return an ordered list
-    where all external specs are at the end of the list. External packages
-    may be installed in merged prefixes with other packages, and so
-    they should be deprioritized for any search order (i.e. in PATH, or
-    for a set of -L entries in a compiler invocation).
-    """
-    first = list(x for x in spec_container if not x.external)
-    second = list(x for x in spec_container if x.external)
-    return first + second
-
-
 def set_dependency_env_variables(pkg, env):
     """Ensure a clean install environment when we build packages.
 
