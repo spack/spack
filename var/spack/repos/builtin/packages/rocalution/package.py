@@ -37,9 +37,8 @@ class Rocalution(CMakePackage):
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
         depends_on('rocprim@' + ver, type='link', when='@' + ver)
         depends_on('rocsparse@' + ver, type='link', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), type='build', when='@' + ver)
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
         depends_on('rocrand@' + ver, type='link', when='@' + ver)
@@ -63,9 +62,8 @@ class Rocalution(CMakePackage):
                 filter_file(match, substitute, *files, **kwargs)
 
     def cmake_args(self):
-        args = [
-            '-DSUPPORT_HIP=ON',
-            '-DSUPPORT_MPI=OFF',
-            '-DBUILD_CLIENTS_SAMPLES=OFF'
+        return [
+            self.define('SUPPORT_HIP', 'ON'),
+            self.define('SUPPORT_MPI', 'OFF'),
+            self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
         ]
-        return args
