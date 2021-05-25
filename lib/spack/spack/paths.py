@@ -10,6 +10,7 @@ throughout Spack and should bring in a minimal number of external
 dependencies.
 """
 import os
+import re
 from llnl.util.filesystem import ancestor
 
 #: This file lives in $prefix/lib/spack/spack/__file__
@@ -50,8 +51,12 @@ packages_path      = os.path.join(repos_path, "builtin")
 mock_packages_path = os.path.join(repos_path, "builtin.mock")
 
 #: User configuration location
-user_config_path = os.path.expanduser(os.environ.get('SPACK_USER_CONFIG',
-                                                     '~/.spack'))
+user_config_path = re.sub(r'\$(?:spack\b|\{spack\})',
+                          spack_root,
+                          os.path.expanduser(
+                              os.environ.get(
+                                  'SPACK_USER_CONFIG',
+                                  '~/.spack')))
 
 user_bootstrap_path = os.path.join(user_config_path, 'bootstrap')
 user_bootstrap_store = os.path.join(user_bootstrap_path, 'store')
