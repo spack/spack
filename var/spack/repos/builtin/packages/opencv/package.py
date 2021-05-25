@@ -64,7 +64,7 @@ class Opencv(CMakePackage, CudaPackage):
         'openclamdfft', 'opencl_svm', 'openexr', 'opengl', 'openjpeg', 'openmp',
         'openni', 'openni2', 'openvx', 'plaidml', 'png', 'protobuf', 'pthreads_pf',
         'pvapi', 'qt', 'quirc', 'tbb', 'tiff', 'va', 'va_intel', 'vtk', 'vulcan',
-        'webp', 'ximea'
+        'webp', 'ximea', 'gtk'
     ]
 
     for component in components:
