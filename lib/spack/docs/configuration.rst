@@ -402,13 +402,13 @@ Spack-specific variables
 
 Spack understands several special variables. These are:
 
-* ``$spack``: path to the prefix of this Spack installation
-* ``$tempdir``: default system temporary directory (as specified in
+* ``$spack``: Path to the prefix of this Spack installation
+* ``$tempdir``: Default system temporary directory (as specified in
   Python's `tempfile.tempdir
   <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_
   variable.
-* ``$user``: name of the current user
-* ``$user_config``: name of the current user
+* ``$user``: Name of the current user
+* ``$user_config``: User configuration directory
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:
