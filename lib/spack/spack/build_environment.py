@@ -159,6 +159,8 @@ def clean_environment():
     env.unset('CPLUS_INCLUDE_PATH')
     env.unset('OBJC_INCLUDE_PATH')
 
+    env.unset('CMAKE_PREFIX_PATH')
+
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
     # CNL requires these variables to be set (or at least some of them,
