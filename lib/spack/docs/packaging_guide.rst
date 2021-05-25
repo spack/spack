@@ -4045,31 +4045,31 @@ other checks.
    * - Build System Class
      - Post-Build Phase Method (Runs)
      - Post-Install Phase Method (Runs)
-   * - `AutotoolsPackage <build_systems/autotoolspackage>`
+   * - :ref:`AutotoolsPackage <autotoolspackage>`
      - ``check`` (``make test``, ``make check``)
      - ``installcheck`` (``make installcheck``)
-   * - `CMakePackage <build_systems/cmakepackage>`
+   * - :ref:`CMakePackage <cmakepackage>`
      - ``check`` (``make check``, ``make test``)
      - Not applicable
-   * - `MakefilePackage <build_systems/makefilepackage>`
+   * - :ref:`MakefilePackage <makefilepackage>`
      - ``check`` (``make test``, ``make check``)
      - ``installcheck`` (``make installcheck``)
-   * - `MesonPackage <build_systems/mesonpackage>`
+   * - :ref:`MesonPackage <mesonpackage>`
      - ``check`` (``make test``, ``make check``)
      - Not applicable
-   * - `PerlPackage <build_systems/perlpackage>`
+   * - :ref:`PerlPackage <perlpackage>`
      - ``check`` (``make test``)
      - Not applicable
-   * - `PythonPackage <build_systems/pythonpackage>`
+   * - :ref:`PythonPackage <pythonpackage>`
      - Not applicable
      - ``test`` (module imports)
-   * - `QMakePackage <build_systems/qmakepackage>`
+   * - :ref:`QMakePackage <qmakepackage>`
      - ``check`` (``make check``)
      - Not applicable
-   * - `SConsPackage <build_systems/sconspackage>`
+   * - :ref:`SConsPackage <sconspackage>`
      - ``build_test`` (must be overridden)
      - Not applicable
-   * - `SIPPackage <build_systems/sippackage>`
+   * - :ref:`SIPPackage <sippackage>`
      - Not applicable
      - ``test`` (module imports)
 
