@@ -17,3 +17,6 @@ class PyFusepy(PythonPackage):
     version('2.0.4', sha256='10f5c7f5414241bffecdc333c4d3a725f1d6605cae6b4eaf86a838ff49cdaf6c')
 
     depends_on('py-setuptools', type='build')
+    depends_on('libfuse@2.6:', when='platform=linux')
+    depends_on('libfuse@2.6:', when='platform=cray')
+    depends_on('macfuse@2.6:', when='platform=darwin')
