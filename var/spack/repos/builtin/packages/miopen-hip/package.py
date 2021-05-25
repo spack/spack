@@ -42,10 +42,9 @@ class MiopenHip(CMakePackage):
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), type='build', when='@' + ver)
         depends_on('rocm-clang-ocl@' + ver, type='build', when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='link', when='@' + ver)
 
     def setup_build_environment(self, env):
         if '@3.9.0:' in self.spec:
@@ -53,15 +52,18 @@ class MiopenHip(CMakePackage):
             env.prepend_path('LIBRARY_PATH', lib_dir)
 
     def cmake_args(self):
-        hip_prefix_dir = self.spec['hip'].prefix
-        devicelibs_prefix_dir = self.spec['rocm-device-libs'].prefix
+        if self.spec.version >= Version('3.9.0'):
+            bitcode_dir = self.spec['llvm-amdgpu'].prefix.amdgcn.bitcode
+        else:
+            bitcode_dir = self.spec['llvm-amdgpu'].prefix.lib
         args = [
-            '-DMIOPEN_BACKEND=HIP',
-            '-DCMAKE_CXX_COMPILER={0}/bin/clang++'
-            .format(self.spec['llvm-amdgpu'].prefix),
-            '-DBoost_USE_STATIC_LIBS=Off',
-            '-DHIP_PREFIX_PATH={0}'.format(hip_prefix_dir),
-            '-DDEVICELIBS_PREFIX_PATH={0}/amdgcn/bitcode'
-            .format(devicelibs_prefix_dir)
+            self.define('MIOPEN_BACKEND', 'HIP'),
+            self.define(
+                'CMAKE_CXX_COMPILER',
+                '{0}/bin/clang++'.format(self.spec['llvm-amdgpu'].prefix)
+            ),
+            self.define('Boost_USE_STATIC_LIBS', 'Off'),
+            self.define('HIP_PREFIX_PATH', self.spec['hip'].prefix),
+            self.define('DEVICELIBS_PREFIX_PATH', bitcode_dir)
         ]
         return args
