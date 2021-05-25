@@ -348,14 +348,13 @@ def set_dependency_env_variables(pkg, env):
     include_dirs = []
     rpath_dirs = []
 
-    # The top-level package is always RPATHed. It hasn't been installed yet
-    # so the RPATHs are added unconditionally (e.g. even though lib64/ may
-    # not be created for the install).
-    for libdir in ['lib', 'lib64']:
-        lib_path = os.path.join(pkg.prefix, libdir)
-        rpath_dirs.append(lib_path)
+    def _prepend_all(list_to_modify, items_to_add):
+        # Update the original list (creating a new list would be faster but
+        # may not be convenient)
+        for item in reversed(list(items_to_add)):
+            list_to_modify.insert(0, item)
 
-    for dep in pkg.spec.traverse(root=False, order='post'):
+    def add_modifications_for_dep(dep):
         if dep in link_deps and (not is_system_path(dep.prefix)):
             query = pkg.spec[dep.name]
             dep_link_dirs = list()
@@ -370,12 +369,12 @@ def set_dependency_env_variables(pkg, env):
                 if os.path.isdir(default_lib_prefix):
                     dep_link_dirs.append(default_lib_prefix)
 
-            link_dirs.extend(dep_link_dirs)
+            _prepend_all(link_dirs, dep_link_dirs)
             if dep in rpath_deps:
-                rpath_dirs.extend(dep_link_dirs)
+                _prepend_all(rpath_dirs, dep_link_dirs)
 
             try:
-                include_dirs.extend(query.headers.directories)
+                _prepend_all(include_dirs, query.headers.directories)
             except NoHeadersError:
                 tty.debug("No headers found for {0}".format(dep.name))
 
@@ -397,6 +396,24 @@ def set_dependency_env_variables(pkg, env):
                 bin_dir = os.path.join(prefix, dirname)
                 if os.path.isdir(bin_dir):
                     env.prepend_path('PATH', bin_dir)
+
+    for dspec in pkg.spec.traverse(root=False, order='post'):
+        if dspec.external:
+            add_modifications_for_dep(dspec)
+
+    for dspec in pkg.spec.traverse(root=False, order='post'):
+        # Core env modifications for non-external packages can override
+        # custom modifications of external packages (this can only occur
+        # for modifications to PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH)
+        if not dspec.external:
+            add_modifications_for_dep(dspec)
+
+    # The top-level package is always RPATHed. It hasn't been installed yet
+    # so the RPATHs are added unconditionally (e.g. even though lib64/ may
+    # not be created for the install).
+    for libdir in ['lib64', 'lib']:
+        lib_path = os.path.join(pkg.prefix, libdir)
+        rpath_dirs.insert(0, lib_path)
 
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
