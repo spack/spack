@@ -34,10 +34,12 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
-import spack.user_environment as uenv
 import spack.util.executable
 import spack.util.path
 from spack.util.environment import EnvironmentModifications
+
+#: "spack buildcache" command, initialized lazily
+_buildcache_cmd = None
 
 #: Map a bootstrapper type to the corresponding class
 _bootstrap_methods = {}
@@ -171,6 +173,51 @@ def _fix_ext_suffix(candidate_spec):
         os.symlink(abs_path, link_name)
 
 
+def _executables_in_path(executables):
+    """Return True if at least one of the executables is in PATH,
+    False otherwise.
+    """
+    msg = "[BOOTSTRAP EXECUTABLES {0}] Look if the executables are in the path"
+    executables_str = ', '.join(executables)
+    tty.debug(msg.format(executables_str))
+    found = spack.util.executable.which_string(*executables)
+    if found:
+        msg = "[BOOTSTRAP EXECUTABLES {0}] {1} executable found in PATH"
+        tty.debug(msg.format(executables_str, found))
+        return True
+    return False
+
+
+def _executables_in_store(executables, abstract_spec_str):
+    """Return True if at least one of the executables can be retrieved from
+    a spec in store, False otherwise.
+
+    The different executables must provide the same functionality and are
+    "alternate" to each other, i.e. the function will exit True on the first
+    executable found.
+
+    Args:
+        executables: list of executables to be searched
+        abstract_spec_str: abstract spec that may provide the executable
+    """
+    executables_str = ', '.join(executables)
+    msg = "[BOOTSTRAP EXECUTABLES {0}] Try installed specs with query '{1}'"
+    tty.debug(msg.format(executables_str, abstract_spec_str))
+    installed_specs = spack.store.db.query(abstract_spec_str, installed=True)
+    if installed_specs:
+        for concrete_spec in installed_specs:
+            bin_dir = str(concrete_spec.prefix.bin)
+            if os.path.exists(bin_dir) and os.path.isdir(bin_dir):
+                current_path = os.environ['PATH']
+
+                os.environ['PATH'] = ':'.join([bin_dir, current_path])
+                if _executables_in_path(executables):
+                    return True
+                os.environ['PATH'] = current_path
+
+    return False
+
+
 @_bootstrapper(type='buildcache')
 class _BuildcacheBootstrapper(object):
     """Install the software needed during bootstrapping from a buildcache."""
@@ -178,40 +225,89 @@ class _BuildcacheBootstrapper(object):
         self.name = conf['name']
         self.url = conf['info']['url']
 
+    @staticmethod
+    def _spec_and_platform(abstract_spec_str):
+        """Return the spec object and platform we need to use when
+        querying the buildcache.
+
+        Args:
+            abstract_spec_str: abstract spec string we are looking for
+        """
+        # This import is local since it is needed only on Cray
+        import spack.platforms.linux
+
+        # Try to install from an unsigned binary cache
+        abstract_spec = spack.spec.Spec(abstract_spec_str)
+        # On Cray we want to use Linux binaries if available from mirrors
+        bincache_platform = spack.platforms.real_host()
+        if str(bincache_platform) == 'cray':
+            bincache_platform = spack.platforms.Linux()
+            with spack.platforms.use_platform(bincache_platform):
+                abstract_spec = spack.spec.Spec(abstract_spec_str)
+        return abstract_spec, bincache_platform
+
+    def _read_metadata(self, package_name):
+        """Return metadata about the given package."""
+        json_filename = '{0}.json'.format(package_name)
+        json_path = os.path.join(
+            spack.paths.share_path, 'bootstrap', self.name, json_filename
+        )
+        with open(json_path) as f:
+            data = json.load(f)
+        return data
+
+    def _install_by_hash(self, pkg_hash, pkg_sha256, index, bincache_platform):
+        global _buildcache_cmd
+
+        if _buildcache_cmd is None:
+            _buildcache_cmd = spack.main.SpackCommand('buildcache')
+
+        index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
+        # Reconstruct the compiler that we need to use for bootstrapping
+        compiler_entry = {
+            "modules": [],
+            "operating_system": str(index_spec.os),
+            "paths": {
+                "cc": "/dev/null",
+                "cxx": "/dev/null",
+                "f77": "/dev/null",
+                "fc": "/dev/null"
+            },
+            "spec": str(index_spec.compiler),
+            "target": str(index_spec.target.family)
+        }
+        with spack.platforms.use_platform(bincache_platform):
+            with spack.config.override(
+                    'compilers', [{'compiler': compiler_entry}]
+            ):
+                spec_str = '/' + pkg_hash
+                install_args = [
+                    'install',
+                    '--sha256', pkg_sha256,
+                    '--only-root',
+                    '-a', '-u', '-o', '-f', spec_str
+                ]
+                _buildcache_cmd(*install_args, fail_on_error=False)
+
+    @property
+    def mirror_scope(self):
+        return spack.config.InternalConfigScope(
+            'bootstrap', {'mirrors:': {self.name: self.url}}
+        )
+
     def try_import(self, module, abstract_spec_str):
         if _try_import_from_store(module, abstract_spec_str):
             return True
 
         tty.info("Bootstrapping {0} from pre-built binaries".format(module))
 
-        # Try to install from an unsigned binary cache
-        abstract_spec = spack.spec.Spec(
+        abstract_spec, bincache_platform = self._spec_and_platform(
             abstract_spec_str + ' ^' + spec_for_current_python()
         )
+        data = self._read_metadata(module)
 
-        # On Cray we want to use Linux binaries if available from mirrors
-        bincache_platform = spack.platforms.real_host()
-        if str(bincache_platform) == 'cray':
-            bincache_platform = spack.platforms.Linux()
-            with spack.platforms.use_platform(bincache_platform):
-                abstract_spec = spack.spec.Spec(
-                    abstract_spec_str + ' ^' + spec_for_current_python()
-                )
-
-        # Read information on verified clingo binaries
-        json_filename = '{0}.json'.format(module)
-        json_path = os.path.join(
-            spack.paths.share_path, 'bootstrap', self.name, json_filename
-        )
-        with open(json_path) as f:
-            data = json.load(f)
-
-        buildcache = spack.main.SpackCommand('buildcache')
         # Ensure we see only the buildcache being used to bootstrap
-        mirror_scope = spack.config.InternalConfigScope(
-            'bootstrap_buildcache', {'mirrors:': {self.name: self.url}}
-        )
-        with spack.config.override(mirror_scope):
+        with spack.config.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
             # specs that wwe know by dag hash.
             spack.binary_distribution.binary_index.regenerate_spec_cache()
@@ -234,34 +330,50 @@ class _BuildcacheBootstrapper(object):
                     msg = ('[BOOTSTRAP MODULE {0}] Try installing "{1}" from binary '
                            'cache at "{2}"')
                     tty.debug(msg.format(module, pkg_name, self.url))
-                    index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
-                    # Reconstruct the compiler that we need to use for bootstrapping
-                    compiler_entry = {
-                        "modules": [],
-                        "operating_system": str(index_spec.os),
-                        "paths": {
-                            "cc": "/dev/null",
-                            "cxx": "/dev/null",
-                            "f77": "/dev/null",
-                            "fc": "/dev/null"
-                        },
-                        "spec": str(index_spec.compiler),
-                        "target": str(index_spec.target.family)
-                    }
-                    with spack.platforms.use_platform(bincache_platform):
-                        with spack.config.override(
-                                'compilers', [{'compiler': compiler_entry}]
-                        ):
-                            spec_str = '/' + pkg_hash
-                            install_args = [
-                                'install',
-                                '--sha256', pkg_sha256,
-                                '-a', '-u', '-o', '-f', spec_str
-                            ]
-                            buildcache(*install_args, fail_on_error=False)
-                # TODO: undo installations that didn't complete?
+                    # TODO: undo installations that didn't complete?
+                    self._install_by_hash(
+                        pkg_hash, pkg_sha256, index, bincache_platform
+                    )
 
                 if _try_import_from_store(module, abstract_spec_str):
+                    return True
+        return False
+
+    def try_search_path(self, executables, abstract_spec_str):
+        if _executables_in_store(executables, abstract_spec_str):
+            return True
+
+        abstract_spec, bincache_platform = self._spec_and_platform(
+            abstract_spec_str
+        )
+        data = self._read_metadata(abstract_spec.name)
+
+        executables_str = ', '.join(executables)
+        # Ensure we see only the buildcache being used to bootstrap
+        with spack.config.override(self.mirror_scope):
+            # This index is currently needed to get the compiler used to build some
+            # specs that wwe know by dag hash.
+            spack.binary_distribution.binary_index.regenerate_spec_cache()
+            index = spack.binary_distribution.update_cache_and_get_specs()
+            if not index:
+                raise RuntimeError("The binary index is empty")
+
+            for item in data['verified']:
+                candidate_spec = item['spec']
+                # Skip specs which are not compatible
+                if not abstract_spec.satisfies(candidate_spec):
+                    continue
+
+                for pkg_name, pkg_hash, pkg_sha256 in item['binaries']:
+                    msg = ('[BOOTSTRAP EXECUTABLES {0}] Try installing '
+                           '"{1}" from binary cache at "{2}"')
+                    tty.debug(msg.format(executables_str, pkg_name, self.url))
+                    # TODO: undo installations that didn't complete?
+                    self._install_by_hash(
+                        pkg_hash, pkg_sha256, index, bincache_platform
+                    )
+
+                if _executables_in_store(executables, abstract_spec_str):
                     return True
         return False
 
@@ -306,6 +418,22 @@ class _SourceBootstrapper(object):
         concrete_spec.package.do_install(fail_fast=True)
 
         return _try_import_from_store(module, abstract_spec_str=abstract_spec_str)
+
+    def try_search_path(self, executables, abstract_spec_str):
+        if _executables_in_store(executables, abstract_spec_str):
+            return True
+
+        # Add hint to use frontend operating system on Cray
+        if str(spack.platforms.host()) == 'cray':
+            abstract_spec_str += ' os=fe'
+
+        concrete_spec = spack.spec.Spec(abstract_spec_str)
+        concrete_spec.concretize()
+
+        msg = "[BOOTSTRAP GnuPG] Try installing '{0}' from sources"
+        tty.debug(msg.format(abstract_spec_str))
+        concrete_spec.package.do_install()
+        return _executables_in_store(executables, abstract_spec_str)
 
 
 def _make_bootstrapper(conf):
@@ -418,6 +546,44 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     raise ImportError(msg)
 
 
+def ensure_executables_in_path_or_raise(executables, abstract_spec):
+    """Ensure that some executables are in path or raise.
+
+    Args:
+        executables (list): list of executables to be searched in the PATH,
+            in order. The function exits on the first one found.
+        abstract_spec (str): abstract spec that provides the executables
+
+    Raises:
+        RuntimeError: if the executables cannot be ensured to be in PATH
+    """
+    if _executables_in_path(executables):
+        return
+
+    executables_str = ', '.join(executables)
+    source_configs = spack.config.get('bootstrap:sources', [])
+    for current_config in source_configs:
+        if not _source_is_trusted(current_config):
+            msg = ('[BOOTSTRAP EXECUTABLES {0}] Skipping source "{1}" since it is '
+                   'not trusted').format(executables_str, current_config['name'])
+            tty.debug(msg)
+            continue
+
+        b = _make_bootstrapper(current_config)
+        try:
+            if b.try_search_path(executables, abstract_spec):
+                return
+        except Exception as e:
+            msg = '[BOOTSTRAP EXECUTABLES {0}] Unexpected error "{1}"'
+            tty.debug(msg.format(executables_str, str(e)))
+
+    # We couldn't import in any way, so raise an import error
+    msg = 'cannot bootstrap any of the {0} executables'.format(executables_str)
+    if abstract_spec:
+        msg += ' from spec "{0}"'.format(abstract_spec)
+    raise RuntimeError(msg)
+
+
 def _python_import(module):
     try:
         __import__(module)
@@ -439,6 +605,8 @@ def get_executable(exe, spec=None, install=False):
     install quickly (when using external python) or are guaranteed by Spack
     organization to be in a binary mirror (clingo).
     """
+    import spack.user_environment as uenv
+
     # Search the system first
     runner = spack.util.executable.which(exe)
     if runner:
@@ -624,4 +792,29 @@ def ensure_clingo_importable_or_raise():
     """Ensure that the clingo module is available for import."""
     ensure_module_importable_or_raise(
         module='clingo', abstract_spec=clingo_root_spec()
+    )
+
+
+def gnupg_root_spec():
+    # Construct the root spec that will be used to bootstrap clingo
+    spec_str = 'gnupg@2.3:'
+
+    # Add a proper compiler hint to the root spec. We use GCC for
+    # everything but MacOS.
+    if str(spack.platforms.host()) == 'darwin':
+        spec_str += ' %apple-clang'
+    else:
+        spec_str += ' %gcc'
+
+    target = archspec.cpu.host().family
+    spec_str += ' target={0}'.format(target)
+
+    tty.debug('[BOOTSTRAP ROOT SPEC] gnupg: {0}'.format(spec_str))
+    return spec_str
+
+
+def ensure_gpg_in_path_or_raise():
+    """Ensure gpg or gpg2 are in the PATH or raise."""
+    ensure_executables_in_path_or_raise(
+        executables=['gpg2', 'gpg'], abstract_spec=gnupg_root_spec(),
     )

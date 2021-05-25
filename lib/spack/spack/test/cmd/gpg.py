@@ -9,6 +9,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.bootstrap
 import spack.util.executable
 import spack.util.gpg
 from spack.main import SpackCommand
@@ -48,6 +49,9 @@ def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
 
 def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch):
     monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
+    monkeypatch.setattr(
+        spack.bootstrap, 'ensure_gpg_in_path_or_raise', lambda: None
+    )
     with pytest.raises(spack.util.gpg.SpackGPGError):
         spack.util.gpg.init(force=True)
 
