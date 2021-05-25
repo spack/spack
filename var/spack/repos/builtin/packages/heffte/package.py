@@ -108,10 +108,10 @@ class Heffte(CMakePackage):
                 src_file = '{0}/heffte_example_fftw.f90'.format(
                     self.examples_src_dir)
                 cmkf.write(
-                    'add_executable(hf_ft {0})\n'.format(src_file))
+                    'add_executable(hf_fort {0})\n'.format(src_file))
                 cmkf.write(
-                    'target_link_libraries(hf_ft Heffte::Fortran)\n')
-                exe_files.append('./hf_ft')
+                    'target_link_libraries(hf_fort Heffte::Fortran)\n')
+                exe_files.append('./hf_fort')
                 mpi_procs.append(2)
 
         with working_dir(test_bld_dir, create=True):
@@ -123,5 +123,6 @@ class Heffte(CMakePackage):
                 for exf, procs in zip(exe_files, mpi_procs):
                     test_args[-1] = exf
                     test_args[-2] = str(procs)
+                    reason_str = 'Heffte smoke test, exe: {0}'.format(exf)
                     self.run_test(mpiexe_f.command, test_args,
-                                  purpose='heffte smoke test')
+                                  purpose=reason_str)
