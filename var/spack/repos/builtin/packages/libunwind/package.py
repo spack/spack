@@ -53,15 +53,12 @@ class Libunwind(AutotoolsPackage):
 
         if name == 'cflags':
             # https://github.com/libunwind/libunwind/pull/166
-            if self.spec.satisfies('@:1.4 %gcc@10:'):
+            if ( self.spec.satisfies('@:1.4 %gcc@10:') or
+                 self.spec.satisfies('@:1.4 %cce') ):
                 wrapper_flags.append('-fcommon')
 
             if '+pic' in self.spec:
                 wrapper_flags.append(self.compiler.cc_pic_flag)
-
-        elif name == 'ldflags':
-            if self.spec.satisfies('%cce') and self.spec.satisfies('@1.4.0:'):
-                wrapper_flags.append('-Wl,-z,muldefs')
 
         return (wrapper_flags, None, flags)
 
