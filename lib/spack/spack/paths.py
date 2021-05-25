@@ -50,11 +50,8 @@ packages_path      = os.path.join(repos_path, "builtin")
 mock_packages_path = os.path.join(repos_path, "builtin.mock")
 
 #: User configuration location
-__SPACK_USER_CONFIG = os.environ.get('SPACK_USER_CONFIG')
-if __SPACK_USER_CONFIG:
-    user_config_path = os.path.expanduser(__SPACK_USER_CONFIG)
-else:
-    user_config_path = os.path.expanduser('~/.spack')
+user_config_path = os.path.expanduser(os.environ.get('SPACK_USER_CONFIG',
+                                                     '~/.spack'))
 
 user_bootstrap_path = os.path.join(user_config_path, 'bootstrap')
 user_bootstrap_store = os.path.join(user_bootstrap_path, 'store')
