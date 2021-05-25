@@ -44,3 +44,10 @@ class Iwyu(CMakePackage):
     def cmake_args(self):
         return [self.define('CMAKE_CXX_STANDARD', 14),
                 self.define('CMAKE_CXX_EXTENSIONS', False)]
+
+    @run_after('install')
+    def link_resources(self):
+        # iwyu needs to find Clang's headers
+        # https://github.com/include-what-you-use/include-what-you-use/blob/master/README.md#how-to-install
+        mkdir(self.prefix.lib)
+        symlink(self.spec['llvm'].prefix.lib.clang, self.prefix.lib.clang)
