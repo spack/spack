@@ -28,7 +28,7 @@ class Qucs(AutotoolsPackage):
     variant(
         'simulators', default='qucs', multi=True,
         values=('qucs', 'ngspice', 'xyce'),
-        description='Simulators'
+        description='Circuits simulators (builtin qucsator and external ngspice, xyce)'
     )
 
     depends_on('flex@2.5.9:',     type='build')
