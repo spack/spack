@@ -16,6 +16,7 @@ import os
 import os.path
 import pstats
 import re
+import shlex
 import signal
 import subprocess as sp
 import sys
@@ -48,9 +49,6 @@ from spack.error import SpackError
 
 #: names of profile statistics
 stat_names = pstats.Stats.sort_arg_dict_default
-
-#: top-level aliases for Spack commands
-aliases = {"concretise": "concretize", "containerise": "containerize", "rm": "remove"}
 
 #: help levels in order of detail (i.e., number of commands shown)
 levels = ["short", "long"]
@@ -359,7 +357,10 @@ class SpackArgumentParser(argparse.ArgumentParser):
             module = spack.cmd.get_module(cmd_name)
 
             # build a list of aliases
-            alias_list = [k for k, v in aliases.items() if v == cmd_name]
+            alias_list = []
+            aliases = spack.config.get("config:aliases")
+            if aliases:
+                alias_list = [k for k, v in aliases.items() if shlex.split(v)[0] == cmd_name]
 
             subparser = self.subparsers.add_parser(
                 cmd_name,
@@ -870,6 +871,31 @@ def restore_macos_dyld_vars():
             os.environ[dyld_var] = os.environ[stored_var_name]
 
 
+def resolve_alias(cmd_name, cmd):
+    """Resolves aliases in the given command.
+
+    Args:
+        cmd_name (string): command name.
+        cmd (list): command line arguments.
+
+    Returns:
+        (str, list): new command name and arguments.
+    """
+    if cmd_name not in spack.cmd.all_commands():
+        aliases = spack.config.get("config:aliases")
+        alias = None
+
+        if aliases:
+            alias = aliases.get(cmd_name)
+
+        if alias is not None:
+            alias_parts = shlex.split(alias)
+            cmd_name = alias_parts[0]
+            cmd = alias_parts + cmd[1:]
+
+    return cmd_name, cmd
+
+
 def _main(argv=None):
     """Logic for the main entry point for the Spack command.
 
@@ -962,7 +988,7 @@ def _main(argv=None):
 
     # Try to load the particular command the caller asked for.
     cmd_name = args.command[0]
-    cmd_name = aliases.get(cmd_name, cmd_name)
+    cmd_name, args.command = resolve_alias(cmd_name, args.command)
 
     # set up a bootstrap context, if asked.
     # bootstrap context needs to include parsing the command, b/c things
@@ -974,14 +1000,14 @@ def _main(argv=None):
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
     with bootstrap_context:
-        return finish_parse_and_run(parser, cmd_name, env_format_error)
+        return finish_parse_and_run(parser, cmd_name, args.command, env_format_error)
 
 
-def finish_parse_and_run(parser, cmd_name, env_format_error):
+def finish_parse_and_run(parser, cmd_name, cmd, env_format_error):
     """Finish parsing after we know the command to run."""
     # add the found command to the parser and re-run then re-parse
     command = parser.add_command(cmd_name)
-    args, unknown = parser.parse_known_args()
+    args, unknown = parser.parse_known_args(cmd)
 
     # Now that we know what command this is and what its args are, determine
     # whether we can continue with a bad environment and raise if not.
