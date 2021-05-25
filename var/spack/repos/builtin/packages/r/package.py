@@ -109,17 +109,12 @@ class R(AutotoolsPackage):
     def etcdir(self):
         return join_path(prefix, 'rlib', 'R', 'etc')
 
-    @run_after('build')
-    def build_rmath(self):
-        if '+rmath' in self.spec:
-            with working_dir('src/nmath/standalone'):
-                make()
-
     @run_after('install')
     def install_rmath(self):
         if '+rmath' in self.spec:
             with working_dir('src/nmath/standalone'):
-                make('install')
+                make()
+                make('install', parallel=False)
 
     def configure_args(self):
         spec   = self.spec
@@ -225,12 +220,14 @@ class R(AutotoolsPackage):
                 dependent_spec.prefix, self.r_lib_dir))
 
     def setup_run_environment(self, env):
-        env.prepend_path('LIBRARY_PATH',
-                         join_path(self.prefix, 'rlib', 'R', 'lib'))
         env.prepend_path('LD_LIBRARY_PATH',
                          join_path(self.prefix, 'rlib', 'R', 'lib'))
-        env.prepend_path('CPATH',
-                         join_path(self.prefix, 'rlib', 'R', 'include'))
+        env.prepend_path('PKG_CONFIG_PATH',
+                         join_path(self.prefix, 'rlib', 'pkgconfig'))
+
+        if '+rmath' in self.spec:
+            env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'rlib'))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before R modules' install() methods. In most cases,

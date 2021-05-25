@@ -235,3 +235,20 @@ You can then build the container as your normally would.
 .. code-block:: console
 
     $ sudo singularity build container.sif Singularity 
+
+
+------------------
+Monitoring Offline
+------------------
+
+In the case that you want to save monitor results to your filesystem
+and then upload them later (perhaps you are in an environment where you don't
+have credentials or it isn't safe to use them) you can use the ``--monitor-save-local``
+flag.
+
+.. code-block:: console
+
+    $ spack install --monitor --monitor-save-local hdf5 
+
+This will save results in a subfolder, "monitor" in your designated spack
+reports folder, which defaults to ``$HOME/.spack/reports/monitor``.

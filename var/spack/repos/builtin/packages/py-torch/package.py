@@ -152,6 +152,11 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-six', type='test')
     depends_on('py-psutil', type='test')
 
+    # Fixes build on older systems with glibc <2.12
+    patch('https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/55063.patch',
+          sha256='e17eaa42f5d7c18bf0d7c37d7b0910127a01ad53fdce3e226a92893356a70395',
+          when='@1.1.0:')
+
     # https://github.com/pytorch/pytorch/pull/35607
     # https://github.com/pytorch/pytorch/pull/37865
     # Fixes CMake configuration error when XNNPACK is disabled

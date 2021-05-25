@@ -43,10 +43,14 @@ class Ascent(Package, CudaPackage):
             branch='develop',
             submodules=True)
 
-    version('0.7.0',
-            tag='v0.7.0',
+    version('0.7.1',
+            tag='v0.7.1',
             submodules=True,
             preferred=True)
+
+    version('0.7.0',
+            tag='v0.7.0',
+            submodules=True)
 
     version('0.6.0',
             tag='v0.6.0',
@@ -347,6 +351,23 @@ class Ascent(Package, CudaPackage):
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
         else:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
+
+        # use global spack compiler flags
+        cppflags = ' '.join(spec.compiler_flags['cppflags'])
+        if cppflags:
+            # avoid always ending up with ' ' with no flags defined
+            cppflags += ' '
+        cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
+        if cflags:
+            cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
+        cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
+        if cxxflags:
+            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
+        fflags = ' '.join(spec.compiler_flags['fflags'])
+        if self.spec.satisfies('%cce'):
+            fflags += " -ef"
+        if fflags:
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
 
         #######################
         # Unit Tests

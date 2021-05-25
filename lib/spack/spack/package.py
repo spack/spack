@@ -2603,6 +2603,14 @@ def test_process(pkg, kwargs):
                     except spack.repo.UnknownPackageError:
                         continue
 
+                    # copy installed test sources cache into test cache dir
+                    if spec.concrete:
+                        cache_source = spec_pkg.install_test_root
+                        cache_dir = pkg.test_suite.current_test_cache_dir
+                        if (os.path.isdir(cache_source) and
+                                not os.path.exists(cache_dir)):
+                            fsys.install_tree(cache_source, cache_dir)
+
                     # copy test data into test data dir
                     data_source = Prefix(spec_pkg.package_dir).test
                     data_dir = pkg.test_suite.current_test_data_dir

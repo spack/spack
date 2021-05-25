@@ -17,6 +17,8 @@ class Slepc(Package):
 
     maintainers = ['joseeroman', 'balay']
 
+    test_requires_compiler = True
+
     version('main', branch='main')
     version('3.15.0', sha256='e53783ae13acadce274ea65c67186b5ab12332cf17125a694e21d598aa6b5f00')
     version('3.14.2', sha256='3e54578dda1f4c54d35ac27d02f70a43f6837906cb7604dbcec0e033cfb264c8')
@@ -133,9 +135,35 @@ class Slepc(Package):
         make('install', parallel=False)
 
     def setup_run_environment(self, env):
-        # set SLEPC_DIR in the module file
+        # set SLEPC_DIR & PETSC_DIR in the module file
         env.set('SLEPC_DIR', self.prefix)
+        env.set('PETSC_DIR', self.spec['petsc'].prefix)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        # set up SLEPC_DIR for everyone using SLEPc package
-        env.set('SLEPC_DIR', self.prefix)
+    def run_hello_test(self):
+        """Run stand alone test: hello"""
+        test_dir = self.test_suite.current_test_data_dir
+
+        if not os.path.exists(test_dir):
+            print('Skipping slepc test')
+            return
+
+        exe = 'hello'
+        cc_exe = os.environ['CC']
+
+        self.run_test(exe=cc_exe,
+                      options=['-I{0}'.format(self.prefix.include),
+                               '-L', self.prefix.lib, '-l', 'slepc',
+                               '-L', self.spec['petsc'].prefix.lib, '-l', 'petsc',
+                               '-L', self.spec['mpi'].prefix.lib, '-l', 'mpi',
+                               '-o', exe, join_path(test_dir, 'hello.c')],
+                      purpose='test: compile {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe=exe,
+                      options=[],
+                      expected=['Hello world'],
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_hello_test()

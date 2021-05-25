@@ -15,10 +15,11 @@ class RocmValidationSuite(CMakePackage):
        compatible platform."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
-    url      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-4.0.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-4.2.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.2.0', sha256='b25e58a842a8eb90bfd6c4ae426ca5cfdd5de2f8a091761f83597f7cfc2cd0f3')
     version('4.1.0', sha256='f9618f89384daa0ae897b36638a3737bcfa47e98778e360338267cd1fe2bbc66')
     version('4.0.0', sha256='04743ca8901b94a801759a3c13c8caf3e6ea950ffcda6408173e6f9ef7b86e74')
     version('3.10.0', sha256='9f9a530f7850770663e0b0ec0c786367f2e22500a472ac6652c4fd9fb4df4f64')
@@ -30,7 +31,7 @@ class RocmValidationSuite(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     patch('001-fixes-for-rocblas-rocm-smi-install-prefix-path.patch')
-    patch('002-remove-force-setting-hip-inc-path.patch', when='@4.1.0')
+    patch('002-remove-force-setting-hip-inc-path.patch', when='@4.1.0:')
 
     depends_on('cmake@3.5:', type='build')
     depends_on('zlib', type='link')
@@ -39,7 +40,8 @@ class RocmValidationSuite(CMakePackage):
         spec = self.spec
         build_env.set("HIPCC_PATH", spec['hip'].prefix)
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
