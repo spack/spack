@@ -67,16 +67,18 @@ class Slate(CMakePackage):
             self.cache_extra_test_sources([self.examples_src_dir])
 
     def test(self):
-        if self.spec.satisfies('@master') and '+mpi' in self.spec:
-            test_dir = join_path(self.install_test_root,
-                                 self.examples_src_dir)
-            test_bld_dir = join_path(test_dir, 'build')
-            with working_dir(test_bld_dir, create=True):
-                cmake('..')
-                make()
-                test_args = ['-n', '4', './ex05_blas']
-                mpiexe_f = which('srun', 'mpirun', 'mpiexec')
-                if mpiexe_f:
-                    self.run_test(mpiexe_f.command, test_args,
-                                  purpose='SLATE smoke test')
-                make('clean')
+        if not self.spec.satisfies('@master') or '+mpi' not in self.spec:
+            print('Skipping: stand-alone tests only run on master with +mpi')
+            return
+
+        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        test_bld_dir = join_path(test_dir, 'build')
+        with working_dir(test_bld_dir, create=True):
+            cmake('..')
+            make()
+            test_args = ['-n', '4', './ex05_blas']
+            mpiexe_f = which('srun', 'mpirun', 'mpiexec')
+            if mpiexe_f:
+                self.run_test(mpiexe_f.command, test_args,
+                              purpose='SLATE smoke test')
+            make('clean')
