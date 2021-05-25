@@ -95,11 +95,11 @@ class Hip(CMakePackage):
                 'rocminfo': self.spec['rocminfo'].prefix,
             }
 
-        # `device_lib_path` is the path to the bitcode directory
+        # `device-lib-path` is the path to the bitcode directory
         if '@:3.8.0' in self.spec:
-            paths['device_lib_path'] = paths['llvm-amdgpu'].lib
+            paths['device-lib-path'] = paths['llvm-amdgpu'].lib
         else:
-            paths['device_lib_path'] = paths['llvm-amdgpu'].amdgcn.bitcode
+            paths['device-lib-path'] = paths['llvm-amdgpu'].amdgcn.bitcode
 
         return paths
 
@@ -134,11 +134,11 @@ class Hip(CMakePackage):
         env.set('ROCMINFO_PATH', paths['rocminfo'])
 
         # This one is used in hipcc to run `hipcc --hip-device-lib-path=...`
-        env.set('DEVICE_LIB_PATH', paths['device_lib_path'])
+        env.set('DEVICE_LIB_PATH', paths['device-lib-path'])
 
         # And this is used in clang whenever the --hip-device-lib-path is not
         # used (e.g. when clang is invoked directly)
-        env.set('HIP_DEVICE_LIB_PATH', paths['device_lib_path'])
+        env.set('HIP_DEVICE_LIB_PATH', paths['device-lib-path'])
 
         # Just the prefix of hip (used in hipcc)
         env.set('HIP_PATH', paths['rocm-path'])
@@ -161,6 +161,9 @@ class Hip(CMakePackage):
             env.append_path('HIPCC_COMPILE_FLAGS_APPEND',
                             '--rocm-path={0}'.format(paths['rocm-path']),
                             separator=' ')
+
+    def setup_build_environment(self, env):
+        self.set_variables(env)
 
     def setup_run_environment(self, env):
         self.set_variables(env)
