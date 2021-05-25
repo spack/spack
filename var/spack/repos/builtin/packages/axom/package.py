@@ -57,6 +57,9 @@ class Axom(CachedCMakePackage, CudaPackage):
     variant('debug',    default=False,
             description='Build debug instead of optimized version')
 
+    variant('examples', default=True, description='Build examples')
+    variant('tools',    default=True, description='Build tools')
+
     variant('cpp14',    default=True, description="Build with C++14 support")
 
     variant('fortran',  default=True, description="Build with Fortran support")
@@ -407,6 +410,10 @@ class Axom(CachedCMakePackage, CudaPackage):
 
         options.append(self.define_from_variant(
             'BUILD_SHARED_LIBS', 'shared'))
+        options.append(self.define_from_variant(
+            'AXOM_ENABLE_EXAMPLES', 'examples'))
+        options.append(self.define_from_variant(
+            'AXOM_ENABLE_TOOLS', 'tools'))
 
         return options
 
