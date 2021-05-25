@@ -793,6 +793,13 @@ def load_external_modules(pkg):
 
 def setup_package(pkg, dirty, context='build'):
     """Execute all environment setup routines."""
+    if context not in ['build', 'test']:
+        raise ValueError(
+            "'context' must be one of ['build', 'test'] - got: {0}"
+            .format(context))
+
+    set_module_variables_for_package(pkg)
+
     env = EnvironmentModifications()
 
     if not dirty:
@@ -815,29 +822,23 @@ def setup_package(pkg, dirty, context='build'):
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
 
-    if context == 'build':
-        # recursive post-order dependency information
-        env.extend(
-            modifications_from_dependencies(
-                pkg.spec, context=context, only='spack')
-        )
-
-        if (not dirty) and (not env.is_unset('CPATH')):
-            tty.debug("A dependency has updated CPATH, this may lead pkg-"
-                      "config to assume that the package is part of the system"
-                      " includes and omit it when invoked with '--cflags'.")
-
-        # setup package itself
-        set_module_variables_for_package(pkg)
-        pkg.setup_build_environment(env)
-    elif context == 'test':
+    if context == 'test':
         import spack.user_environment as uenv  # avoid circular import
         env.extend(uenv.environment_modifications_for_spec(pkg.spec))
-        env.extend(
-            modifications_from_dependencies(
-                pkg.spec, context=context, only='spack')
-        )
-        set_module_variables_for_package(pkg)
+
+    # recursive post-order dependency information
+    env.extend(
+        modifications_from_dependencies(
+            pkg.spec, context=context, only='spack')
+    )
+    if (not dirty) and (not env.is_unset('CPATH')):
+        tty.debug("A dependency has updated CPATH, this may lead pkg-"
+                  "config to assume that the package is part of the system"
+                  " includes and omit it when invoked with '--cflags'.")
+
+    if context == 'build':
+        pkg.setup_build_environment(env)
+    elif context == 'test':
         env.prepend_path('PATH', '.')
 
     # Loading modules, in particular if they are meant to be used outside
