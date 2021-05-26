@@ -13,6 +13,8 @@ class PySqlalchemy(PythonPackage):
     pypi = "SQLAlchemy/SQLAlchemy-1.3.9.tar.gz"
 
     # 'sqlalchemy.testing.suite' requires 'pytest'
+    # Attempt to import everything other than 'sqlalchemy.testing'
+    # to avoid unnecessary 'pytest' dependency
     import_modules = [
         'sqlalchemy', 'sqlalchemy.connectors', 'sqlalchemy.databases',
         'sqlalchemy.util', 'sqlalchemy.ext', 'sqlalchemy.ext.declarative',
