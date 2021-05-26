@@ -172,7 +172,7 @@ class SpackMonitorClient:
         env_file = os.path.join(pkg_dir, "install_environment.json")
         build_environment = read_json(env_file)
         if not build_environment:
-            tty.warning(
+            tty.warn(
                 "install_environment.json not found in package folder. "
                 " This means that the current environment metadata will be used."
             )
