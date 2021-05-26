@@ -9,7 +9,7 @@ from spack import *
 class PyGsutilFeedstock(PythonPackage):
     """A command line tool for interacting with cloud storage services."""
 
-    homepage = "https://github.com/conda-forge/gsutil-feedstock"
+    homepage = "https://cloud.google.com/storage/docs/gsutil"
     pypi     = "gsutil/gsutil-4.59.tar.gz"
 
     maintainers = ['dorton21']
