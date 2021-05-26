@@ -858,6 +858,4 @@ def _retry(function):
 
 
 def _input_available(f):
-    if f.readable():
-        return f in select.select([f], [], [], 0)[0]
-    return False
+    return f in select.select([f], [], [], 0)[0]
