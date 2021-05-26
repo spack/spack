@@ -9,11 +9,11 @@ class Irep(CMakePackage):
     format is a set of tables -- Lua's one (and only?) data structure."""
 
     homepage = "https://irep.readthedocs.io/"
-    git      = "https://github.com/LLNL/irep.git"
+    url      = "https://github.com/LLNL/irep/archive/refs/tags/v1.0.0.tar.gz"
 
     maintainers = ['tomstitt', 'kennyweiss']
 
-    version('master', branch='master')
+    version('1.0.0', 'b84203ac92de824dbdc672de45cfdb9609373791c4ee84a5201fa6e4ccecc1a4')
 
     depends_on('lua-luajit', type=('link', 'run'))
     depends_on('lua', type=('link', 'run'))
