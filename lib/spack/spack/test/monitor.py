@@ -141,7 +141,7 @@ def test_spack_monitor_without_auth(mock_monitor_request):
 
 
 def test_spack_monitor_build_env(mock_monitor_request, install_mockery_mutable_config):
-    monitor = spack.monitor.get_client(host="hostname", disable_auth=True)
+    monitor = get_client(host="hostname", disable_auth=True)
     assert hasattr(monitor, "build_environment")
     for key in ["host_os", "platform", "host_target", "hostname", "spack_version",
                 "kernel_version"]:
