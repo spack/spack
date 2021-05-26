@@ -397,6 +397,10 @@ def set_dependency_env_variables(pkg, env, context='build'):
     needs_compiler = context == 'build' or (context == 'test' and
                                             pkg.test_requires_compiler)
 
+    # Note that we want to perform environment modifications in a fixed order.
+    # The Spec.traverse method provides this: i.e. in addition to
+    # the post-order semantics, it also guarantees a fixed traversal order
+    # among dependencies which are not constrained by post-order semantics.
     for dspec in pkg.spec.traverse(root=False, order='post'):
         if dspec.external:
             if needs_compiler:
