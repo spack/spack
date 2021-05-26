@@ -670,11 +670,13 @@ set -l sp_source_file (status -f)  # name of current file
 #
 # Identify and lock the python interpreter
 #
-for cmd in "$SPACK_PYTHON" python3 python python2
-    set -l _sp_python (command -v "$cmd")
-    if test $status -eq 0
-        set -x SPACK_PYTHON $_sp_python
-        break
+if not set -q SPACK_PYTHON
+    for cmd in python3 python python2 /usr/libexec/platform-python
+        set -l _sp_python (command -v "$cmd")
+        if test $status -eq 0
+            set -x SPACK_PYTHON $_sp_python
+            break
+        end
     end
 end
 

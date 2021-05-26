@@ -327,12 +327,14 @@ if [ "$_sp_shell" = bash ]; then
 fi
 
 # Identify and lock the python interpreter
-for cmd in "${SPACK_PYTHON:-}" python3 python python2; do
-    if command -v > /dev/null "$cmd"; then
-        export SPACK_PYTHON="$(command -v "$cmd")"
-        break
-    fi
-done
+if [ -z "${SPACK_PYTHON:-}" ]; then
+    for cmd in python3 python python2 /usr/libexec/platform-python; do
+        if command -v > /dev/null "$cmd"; then
+            export SPACK_PYTHON=$(command -v "$cmd")
+            break
+        fi
+    done
+fi
 
 #
 # make available environment-modules

@@ -60,15 +60,14 @@ alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/patha
 
 # Identify and lock the python interpreter
 if (! $?SPACK_PYTHON) then
-    setenv SPACK_PYTHON ""
+    foreach cmd (python3 python python2 /usr/libexec/platform-python)
+        command -v "$cmd" >& /dev/null
+        if ($status == 0) then
+            setenv SPACK_PYTHON `command -v "$cmd"`
+            break
+        endif
+    end
 endif
-foreach cmd ("$SPACK_PYTHON" python3 python python2)
-    command -v "$cmd" >& /dev/null
-    if ($status == 0) then
-        setenv SPACK_PYTHON `command -v "$cmd"`
-        break
-    endif
-end
 
 # Set variables needed by this script
 _spack_pathadd PATH "$SPACK_ROOT/bin"
