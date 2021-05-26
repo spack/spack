@@ -58,13 +58,13 @@ class Opencv(CMakePackage, CudaPackage):
     components = [
         '1394', 'ade', 'aravis', 'arith_dec', 'arith_enc', 'avfoundation', 'clp',
         'cuda', 'eigen', 'ffmpeg', 'freetype', 'gdal', 'gdcm', 'gphoto2', 'gstreamer',
-        'halide', 'hpx', 'imgcodec_hdr', 'imgcode_pfm', 'imgcodec_pxm',
+        'gtk', 'halide', 'hpx', 'imgcodec_hdr', 'imgcode_pfm', 'imgcodec_pxm',
         'imgcodec_sunraster', 'inf_engine', 'ipp', 'itt', 'jasper', 'jpeg', 'lapack',
         'librealsense', 'mfx', 'ngraph', 'onnx', 'opencl', 'openclamdblas',
         'openclamdfft', 'opencl_svm', 'openexr', 'opengl', 'openjpeg', 'openmp',
         'openni', 'openni2', 'openvx', 'plaidml', 'png', 'protobuf', 'pthreads_pf',
         'pvapi', 'qt', 'quirc', 'tbb', 'tiff', 'va', 'va_intel', 'vtk', 'vulcan',
-        'webp', 'ximea', 'gtk'
+        'webp', 'ximea'
     ]
 
     for component in components:
