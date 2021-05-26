@@ -33,7 +33,7 @@ class Freebayes(MesonPackage):
 
     parallel = False
 
-    @when('@1.1.0:')
+    @when('@:1.1.0')
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
         b = prefix.bin
