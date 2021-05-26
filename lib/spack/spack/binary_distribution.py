@@ -1810,7 +1810,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
                     tty.debug('Failing specfile retrieval back to legacy yaml.')
                     description_url.replace('spec.json', 'spec.yaml')
                     stage = Stage(
-                        description_url, name="build_cache", 
+                        description_url, name="build_cache",
                         path=path, keep=True)
                     try:
                         stage.fetch()

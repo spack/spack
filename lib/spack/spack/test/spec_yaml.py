@@ -39,10 +39,12 @@ def check_yaml_round_trip(spec):
     spec_from_yaml = Spec.from_yaml(yaml_text)
     assert spec.eq_dag(spec_from_yaml)
 
+
 def check_json_round_trip(spec):
     json_text = spec.to_json()
     spec_from_json = Spec.from_json(json_text)
     assert spec.eq_dag(spec_from_json)
+
 
 def test_simple_spec():
     spec = Spec('mpileaks')
@@ -99,7 +101,6 @@ def test_yaml_subdag(config, mock_packages):
     for dep in ('callpath', 'mpich', 'dyninst', 'libdwarf', 'libelf'):
         assert spec[dep].eq_dag(yaml_spec[dep])
         assert spec[dep].eq_dag(json_spec[dep])
-
 
 
 def test_using_ordered_dict(mock_packages):

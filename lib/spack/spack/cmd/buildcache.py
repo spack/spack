@@ -75,8 +75,6 @@ def setup_parser(subparser):
                                             "after building package(s)")
     create.add_argument('-y', '--spec-yaml', default=None,
                         help='Create buildcache entry for spec from yaml file')
-    create.add_argument('-s', '--specfile', default=None,
-                        help='Create buildcache entry for spec from specfile')
     create.add_argument('--only', default='package,dependencies',
                         dest='things_to_install',
                         choices=['package', 'dependencies'],
@@ -463,7 +461,7 @@ def createtarball(args):
                 '"{url}" is not a valid URL'.format(url=output_location))
     add_spec = ('package' in args.things_to_install)
     add_deps = ('dependencies' in args.things_to_install)
-    
+
     # TODO: Rename strategy for this
     spec_file_arg = args.spec_yaml
 

@@ -865,7 +865,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                     json_path = bindist.tarball_name(release_spec, '.spec.json')
                     yaml_path = bindist.tarball_name(release_spec, '.spec.yaml')
                     # TODO: Make sure this works here.
-                    specfile_path = (json_path if os.path.exists(json_path) 
+                    specfile_path = (json_path if os.path.exists(json_path)
                                      else yaml_path)
                     artifact_paths.extend([os.path.join(bc_root, p) for p in [
                         specfile_path,
