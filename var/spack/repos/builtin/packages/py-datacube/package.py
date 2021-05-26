@@ -16,7 +16,7 @@ class PyDatacube(PythonPackage):
 
     version('1.8.3', sha256='d1e1a49c615fdaebf6e6008da7f925bc09e9d7bf94f259a1c596d266d1c36649')
 
-    # 'datacube.utils.aws' requires 'boto3'
+    # Excluding 'datacube.utils.aws' since it requires 'boto3'
     import_modules = [
         'datacube_apps', 'datacube_apps.stacker', 'datacube', 'datacube.ui',
         'datacube.drivers', 'datacube.drivers.rio', 'datacube.drivers.postgres',
