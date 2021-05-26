@@ -308,7 +308,7 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
-def set_dependency_env_variables(pkg, env):
+def set_dependency_env_variables(pkg, env, context='build'):
     """Ensure a clean install environment when we build packages.
 
     This involves unsetting pesky environment variables that may
@@ -384,16 +384,33 @@ def set_dependency_env_variables(pkg, env):
                 if os.path.isdir(bin_dir):
                     env.prepend_path('PATH', bin_dir)
 
+    def custom_modifications_for_dep(dep):
+        dpkg = dep.package
+        set_module_variables_for_package(dpkg)
+        # Allow dependencies to modify the module
+        dpkg.setup_dependent_package(pkg.module, pkg.spec)
+        if context == 'build':
+            dpkg.setup_dependent_build_environment(env, pkg.spec)
+        else:
+            dpkg.setup_dependent_run_environment(env, pkg.spec)
+
+    needs_compiler = context == 'build' or (context == 'test' and
+                                            pkg.test_requires_compiler)
+
     for dspec in pkg.spec.traverse(root=False, order='post'):
         if dspec.external:
-            add_modifications_for_dep(dspec)
+            if needs_compiler:
+                add_modifications_for_dep(dspec)
+            custom_modifications_for_dep(dspec)
 
     for dspec in pkg.spec.traverse(root=False, order='post'):
         # Core env modifications for non-external packages can override
         # custom modifications of external packages (this can only occur
         # for modifications to PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH)
         if not dspec.external:
-            add_modifications_for_dep(dspec)
+            if needs_compiler:
+                add_modifications_for_dep(dspec)
+            custom_modifications_for_dep(dspec)
 
     # The top-level package is always RPATHed. It hasn't been installed yet
     # so the RPATHs are added unconditionally (e.g. even though lib64/ may
@@ -776,28 +793,18 @@ def setup_package(pkg, dirty, context='build'):
     if not dirty:
         clean_environment()
 
-    env.extend(
-        modifications_from_dependencies(
-            pkg.spec, context=context,
-            only='external')
-    )
-
     # setup compilers for build contexts
     need_compiler = context == 'build' or (context == 'test' and
                                            pkg.test_requires_compiler)
     if need_compiler:
         set_compiler_environment_variables(pkg, env)
         set_wrapper_variables(pkg, env)
-        set_dependency_env_variables(pkg, env)
+
+    set_dependency_env_variables(pkg, env, context)
 
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
 
-    # recursive post-order dependency information
-    env.extend(
-        modifications_from_dependencies(
-            pkg.spec, context=context, only='spack')
-    )
     if (not dirty) and (not env.is_unset('CPATH')):
         tty.debug("A dependency has updated CPATH, this may lead pkg-"
                   "config to assume that the package is part of the system"
@@ -848,7 +855,7 @@ def setup_package(pkg, dirty, context='build'):
     env.apply_modifications()
 
 
-def modifications_from_dependencies(spec, context, only=None):
+def modifications_from_dependencies(spec, context):
     """Returns the environment modifications that are required by
     the dependencies of a spec and also applies modifications
     to this spec's package at module scope, if need be.
@@ -857,16 +864,7 @@ def modifications_from_dependencies(spec, context, only=None):
         spec (Spec): spec for which we want the modifications
         context (str): either 'build' for build-time modifications or 'run'
             for run-time modifications
-        only (str): if only is 'external', then only modifications from
-            external dependencies are collected. If only is 'spack', then
-            only modifications from non-external dependencies are
-            collected. If not specified, then all modifications from
-            dependencies are collected.
     """
-    if only and only not in ['spack', 'external']:
-        raise ValueError(
-            "Expected one of ['spack', 'external', None] for 'only'")
-
     env = EnvironmentModifications()
     pkg = spec.package
 
@@ -881,10 +879,6 @@ def modifications_from_dependencies(spec, context, only=None):
 
     root = context == 'test'
     for dspec in spec.traverse(order='post', root=root, deptype=deptype):
-        if dspec.external and only == 'spack':
-            continue
-        elif (not dspec.external) and only == 'external':
-            continue
         dpkg = dspec.package
         set_module_variables_for_package(dpkg)
         # Allow dependencies to modify the module
