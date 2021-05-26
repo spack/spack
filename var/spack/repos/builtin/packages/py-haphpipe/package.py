@@ -17,15 +17,15 @@ class PyHaphpipe(PythonPackage):
 
     version('1.0.3', sha256='9a9e8632a217ff4207c1dea66887a471e0ea04bbb7c0f0d72631acaba214bd37')
 
+    # Deps. taken from
+    # https://github.com/bioconda/bioconda-recipes/blob/master/recipes/haphpipe/meta.yaml
     depends_on('python@3.7:', type=('build', 'run'))
-    depends_on('py-pip')
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-biopython@1.73:', type=('build', 'run'))
     depends_on('py-gsutil-feedstock', type=('build', 'run'))
     depends_on('py-sierrapy', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
 
     depends_on('bowtie2', type=('build', 'run'))
     depends_on('blast-plus', type=('build', 'run'))
