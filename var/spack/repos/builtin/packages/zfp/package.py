@@ -99,7 +99,15 @@ class Zfp(CMakePackage, CudaPackage):
             self.define_from_variant('ZFP_WITH_ALIGNED_ALLOC', 'aligned'),
             self.define_from_variant('ZFP_WITH_CACHE_TWOWAY', 'twoway'),
             self.define_from_variant('ZFP_WITH_CACHE_FAST_HASH', 'fasthash'),
-            self.define_from_variant('ZFP_WITH_CACHE_PROFILE', 'profile')
+            self.define_from_variant('ZFP_WITH_CACHE_PROFILE', 'profile'),
+            self.define_from_variant('ZFP_WITH_CUDA', 'cuda')
         ]
+
+        if '+cuda' in spec:
+            args.append('-DCUDA_BIN_DIR={}'.format(spec['cuda'].prefix.bin))
+
+            if not spec.satisfies('cuda_arch=none'):
+                cuda_arch = spec.variants['cuda_arch'].value
+                args.append('-DCMAKE_CUDA_FLAGS=-arch sm_{}'.format(cuda_arch[0]))
 
         return args
