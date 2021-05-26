@@ -10,7 +10,8 @@ class PyAzureIdentity(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/identity/azure-identity"
     pypi = "azure-identity/azure-identity-1.3.1.zip"
 
-    # 'azure.identity.aio' import doesn't work for some reason
+    # 'azure.identity.aio' import doesn't work for some reason, leave out of
+    # 'import_modules' list to ensure that tests still pass for other imports.
     import_modules = [
         'azure.identity', 'azure.identity._internal', 'azure.identity._credentials'
     ]
