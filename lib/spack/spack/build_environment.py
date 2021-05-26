@@ -309,11 +309,12 @@ def set_compiler_environment_variables(pkg, env):
 
 
 def set_dependency_env_variables(pkg, env, context='build'):
-    """Ensure a clean install environment when we build packages.
+    """Set all environment variables that are both necessary and also
+    helpful for the package to build or run. This includes:
 
-    This involves unsetting pesky environment variables that may
-    affect the build. It also involves setting environment variables
-    used by Spack's compiler wrappers.
+    * CMAKE_PREFIX_PATH, PATH, and PKG_CONFIG_PATH to help build tools find
+      Spack-built packages
+    * Custom environment modifications from dependencies
 
     Args:
         pkg: The package we are building
@@ -377,25 +378,23 @@ def set_dependency_env_variables(pkg, env, context='build'):
 
         if dep in build_and_supporting_deps and (
                 not is_system_path(dep.prefix)):
-            prefix = dep.prefix
+            _make_runnable(dep, env)
 
-            for dirname in ['bin', 'bin64']:
-                bin_dir = os.path.join(prefix, dirname)
-                if os.path.isdir(bin_dir):
-                    env.prepend_path('PATH', bin_dir)
-
+    if context == 'test':
+        deptype = ('run', 'link', 'test')
+    else:
+        deptype = ('build', 'run', 'link')
+    run_deps = set(pkg.spec.dependencies(deptype=deptype))
     def custom_modifications_for_dep(dep):
-        dpkg = dep.package
-        set_module_variables_for_package(dpkg)
-        # Allow dependencies to modify the module
-        dpkg.setup_dependent_package(pkg.module, pkg.spec)
-        if context == 'build':
-            dpkg.setup_dependent_build_environment(env, pkg.spec)
-        else:
-            dpkg.setup_dependent_run_environment(env, pkg.spec)
-
-    needs_compiler = context == 'build' or (context == 'test' and
-                                            pkg.test_requires_compiler)
+        if dep in run_deps:
+            dpkg = dep.package
+            set_module_variables_for_package(dpkg)
+            # Allow dependencies to modify the module
+            dpkg.setup_dependent_package(pkg.module, pkg.spec)
+            if context == 'build':
+                dpkg.setup_dependent_build_environment(env, pkg.spec)
+            else:
+                dpkg.setup_dependent_run_environment(env, pkg.spec)
 
     # Note that we want to perform environment modifications in a fixed order.
     # The Spec.traverse method provides this: i.e. in addition to
@@ -403,8 +402,7 @@ def set_dependency_env_variables(pkg, env, context='build'):
     # among dependencies which are not constrained by post-order semantics.
     for dspec in pkg.spec.traverse(root=False, order='post'):
         if dspec.external:
-            if needs_compiler:
-                add_modifications_for_dep(dspec)
+            add_modifications_for_dep(dspec)
             custom_modifications_for_dep(dspec)
 
     for dspec in pkg.spec.traverse(root=False, order='post'):
@@ -412,8 +410,7 @@ def set_dependency_env_variables(pkg, env, context='build'):
         # custom modifications of external packages (this can only occur
         # for modifications to PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH)
         if not dspec.external:
-            if needs_compiler:
-                add_modifications_for_dep(dspec)
+            add_modifications_for_dep(dspec)
             custom_modifications_for_dep(dspec)
 
     # The top-level package is always RPATHed. It hasn't been installed yet
@@ -803,8 +800,9 @@ def setup_package(pkg, dirty, context='build'):
     if need_compiler:
         set_compiler_environment_variables(pkg, env)
         set_wrapper_variables(pkg, env)
-
-    set_dependency_env_variables(pkg, env, context)
+        set_dependency_env_variables(pkg, env, context)
+    else:
+        env.extend(modifications_from_dependencies(pkg.spec, context))
 
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
@@ -859,6 +857,16 @@ def setup_package(pkg, dirty, context='build'):
     env.apply_modifications()
 
 
+def _make_runnable(pkg, env):
+    """Update PATH environment variable """
+    prefix = pkg.prefix
+
+    for dirname in ['bin', 'bin64']:
+        bin_dir = os.path.join(prefix, dirname)
+        if os.path.isdir(bin_dir):
+            env.prepend_path('PATH', bin_dir)
+
+
 def modifications_from_dependencies(spec, context):
     """Returns the environment modifications that are required by
     the dependencies of a spec and also applies modifications
@@ -873,13 +881,11 @@ def modifications_from_dependencies(spec, context):
     pkg = spec.package
 
     # Maps the context to deptype and method to be called
-    deptype_and_method = {
-        'build': (('build', 'link', 'test'),
-                  'setup_dependent_build_environment'),
-        'run': (('link', 'run'), 'setup_dependent_run_environment'),
-        'test': (('link', 'run', 'test'), 'setup_dependent_run_environment')
+    deptype_for_context = {
+        'run': ('link', 'run'),
+        'test': ('link', 'run', 'test')
     }
-    deptype, method = deptype_and_method[context]
+    deptype = deptype_for_context[context]
 
     root = context == 'test'
     for dspec in spec.traverse(order='post', root=root, deptype=deptype):
@@ -887,7 +893,8 @@ def modifications_from_dependencies(spec, context):
         set_module_variables_for_package(dpkg)
         # Allow dependencies to modify the module
         dpkg.setup_dependent_package(pkg.module, spec)
-        getattr(dpkg, method)(env, spec)
+        dpkg.setup_dependent_run_environment(env, spec)
+        _make_runnable(dpkg, env)
 
     return env
 
