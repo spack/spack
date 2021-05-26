@@ -28,6 +28,6 @@ class PySierrapy(PythonPackage):
     depends_on('py-promise@2.3', type=('build', 'run'))
     depends_on('py-requests@2.23.0', type=('build', 'run'))
     depends_on('py-six@1.14.0', type=('build', 'run'))
-    depends_on('py-tqdm@4.51.0', type=('build', 'run'))
+    depends_on('py-tqdm@4.46.0', type=('build', 'run'))
     depends_on('py-voluptuous@0.11.7', type=('build', 'run'))
-    depends_on('py-urllib3@1.25.10', type=('build', 'run'))
+    depends_on('py-urllib3@1.25.9', type=('build', 'run'))
