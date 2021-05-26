@@ -34,12 +34,13 @@ class Hip(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hip-rocclr@' + ver,  type=('build', 'run'), when='@' + ver)
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('comgr@' + ver, type=('build', 'link', 'run'), when='@' + ver)
-        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), type='build', when='@' + ver)
-        depends_on('rocminfo@' + ver, type=('build', 'run'), when='@' + ver)
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, type='build', when='@{0} ^llvm-amdgpu ~rocm-device-libs'.format(ver))
+        depends_on('rocminfo@' + ver, when='@' + ver)
 
     # hipcc likes to add `-lnuma` by default :(
     # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
@@ -85,7 +86,8 @@ class Hip(CMakePackage):
                 'rocm-path': rocm_prefix,
                 'llvm-amdgpu': rocm_prefix.llvm,
                 'hsa-rocr-dev': rocm_prefix.hsa,
-                'rocminfo': rocm_prefix
+                'rocminfo': rocm_prefix,
+                'rocm-device-libs': rocm_prefix
             }
         else:
             paths = {
@@ -95,11 +97,16 @@ class Hip(CMakePackage):
                 'rocminfo': self.spec['rocminfo'].prefix,
             }
 
-        # `device-lib-path` is the path to the bitcode directory
+            # Allow bundled and standalone device libs
+            if '^rocm-device-libs' in self.spec:
+                paths['rocm-device-libs'] = self.spec['rocm-device-libs'].prefix
+            else:
+                paths['rocm-device-libs'] = self.spec['llvm-amdgpu'].prefix
+
         if '@:3.8.0' in self.spec:
-            paths['device-lib-path'] = paths['llvm-amdgpu'].lib
+            paths['bitcode'] = paths['rocm-device-libs'].lib
         else:
-            paths['device-lib-path'] = paths['llvm-amdgpu'].amdgcn.bitcode
+            paths['bitcode'] = paths['rocm-device-libs'].amdgcn.bitcode
 
         return paths
 
@@ -133,12 +140,12 @@ class Hip(CMakePackage):
         # https://github.com/ROCm-Developer-Tools/HIP/pull/2138
         env.set('ROCMINFO_PATH', paths['rocminfo'])
 
-        # This one is used in hipcc to run `hipcc --hip-device-lib-path=...`
-        env.set('DEVICE_LIB_PATH', paths['device-lib-path'])
+        # This one is used in hipcc to run `clang --hip-device-lib-path=...`
+        env.set('DEVICE_LIB_PATH', paths['bitcode'])
 
         # And this is used in clang whenever the --hip-device-lib-path is not
         # used (e.g. when clang is invoked directly)
-        env.set('HIP_DEVICE_LIB_PATH', paths['device-lib-path'])
+        env.set('HIP_DEVICE_LIB_PATH', paths['bitcode'])
 
         # Just the prefix of hip (used in hipcc)
         env.set('HIP_PATH', paths['rocm-path'])

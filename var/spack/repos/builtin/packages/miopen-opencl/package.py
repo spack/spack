@@ -40,7 +40,7 @@ class MiopenOpencl(CMakePackage):
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
-        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-opencl@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
 
