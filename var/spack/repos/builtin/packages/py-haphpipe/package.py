@@ -23,7 +23,7 @@ class PyHaphpipe(PythonPackage):
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-biopython@1.73:', type=('build', 'run'))
-    depends_on('py-gsutil-feedstock', type=('build', 'run'))
+    depends_on('py-gsutil', type=('build', 'run'))
     depends_on('py-sierrapy', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
