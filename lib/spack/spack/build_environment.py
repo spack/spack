@@ -841,21 +841,40 @@ def modifications_from_dependencies(spec, context):
     env = EnvironmentModifications()
     pkg = spec.package
 
+    # Note: see computation of 'custom_mod_deps' and 'exe_deps' later in this
+    # function; these sets form the building blocks of those collections.
     build_deps      = set(spec.dependencies(deptype=('build', 'test')))
-    link_deps       = set(spec.traverse(root=False, deptype=('link')))
+    link_deps       = set(spec.traverse(root=False, deptype='link'))
     build_link_deps = build_deps | link_deps
     build_and_supporting_deps = set()
     for build_dep in build_deps:
         build_and_supporting_deps.update(build_dep.traverse(deptype='run'))
     run_and_supporting_deps = set(
         spec.traverse(root=False, deptype=('run', 'link')))
+    test_and_supporting_deps = set()
+    for test_dep in set(spec.dependencies(deptype='test')):
+        test_and_supporting_deps.update(test_dep.traverse(deptype='run'))
 
-    deps_of_interest = set()
+    # All dependencies that might have environment modifications to apply
+    custom_mod_deps = set()
     if context == 'build':
-        deps_of_interest.update(build_and_supporting_deps)
+        custom_mod_deps.update(build_and_supporting_deps)
+        # Tests may be performed after build
+        custom_mod_deps.update(test_and_supporting_deps)
     else:
         # test/run context
-        deps_of_interest.update(run_and_supporting_deps)
+        custom_mod_deps.update(run_and_supporting_deps)
+        if context == 'test':
+            custom_mod_deps.update(test_and_supporting_deps)
+    custom_mod_deps.update(link_deps)
+
+    # Determine 'exe_deps': the set of packages with binaries we want to use
+    if context == 'build':
+        exe_deps = build_and_supporting_deps | test_and_supporting_deps
+    elif context == 'run':
+        exe_deps = set(spec.traverse(deptype='run'))
+    elif context == 'test':
+        exe_deps = test_and_supporting_deps
 
     def add_modifications_for_dep(dep):
         if (dep in build_link_deps and
@@ -870,14 +889,14 @@ def modifications_from_dependencies(spec, context):
                 if os.path.isdir(pcdir):
                     env.prepend_path('PKG_CONFIG_PATH', pcdir)
 
-        if (dep in build_and_supporting_deps and
-                not is_system_path(dep.prefix)):
+        if dep in exe_deps and not is_system_path(dep.prefix):
             _make_runnable(dep, env)
 
         # Perform custom modifications here (PrependPath actions performed in
         # the custom method override the default environment modifications
-        # we do to help the build)
-        if dep in deps_of_interest:
+        # we do to help the build, namely for PATH, CMAKE_PREFIX_PATH, and
+        # PKG_CONFIG_PATH)
+        if dep in custom_mod_deps:
             dpkg = dep.package
             set_module_variables_for_package(dpkg)
             # Allow dependencies to modify the module
