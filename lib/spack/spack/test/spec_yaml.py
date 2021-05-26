@@ -39,53 +39,67 @@ def check_yaml_round_trip(spec):
     spec_from_yaml = Spec.from_yaml(yaml_text)
     assert spec.eq_dag(spec_from_yaml)
 
+def check_json_round_trip(spec):
+    json_text = spec.to_json()
+    spec_from_json = Spec.from_json(json_text)
+    assert spec.eq_dag(spec_from_json)
 
 def test_simple_spec():
     spec = Spec('mpileaks')
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_normal_spec(mock_packages):
     spec = Spec('mpileaks+debug~opt')
     spec.normalize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_external_spec(config, mock_packages):
     spec = Spec('externaltool')
     spec.concretize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
     spec = Spec('externaltest')
     spec.concretize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_ambiguous_version_spec(mock_packages):
     spec = Spec('mpileaks@1.0:5.0,6.1,7.3+debug~opt')
     spec.normalize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_concrete_spec(config, mock_packages):
     spec = Spec('mpileaks+debug~opt')
     spec.concretize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_yaml_multivalue(config, mock_packages):
     spec = Spec('multivalue-variant foo="bar,baz"')
     spec.concretize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_yaml_subdag(config, mock_packages):
     spec = Spec('mpileaks^mpich+debug')
     spec.concretize()
     yaml_spec = Spec.from_yaml(spec.to_yaml())
+    json_spec = Spec.from_json(spec.to_json())
 
     for dep in ('callpath', 'mpich', 'dyninst', 'libdwarf', 'libelf'):
         assert spec[dep].eq_dag(yaml_spec[dep])
+        assert spec[dep].eq_dag(json_spec[dep])
+
 
 
 def test_using_ordered_dict(mock_packages):

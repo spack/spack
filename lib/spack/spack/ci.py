@@ -862,8 +862,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
 
                 if enable_artifacts_buildcache:
                     bc_root = 'local_mirror/build_cache'
+                    json_path = bindist.tarball_name(release_spec, '.spec.json')
+                    yaml_path = bindist.tarball_name(release_spec, '.spec.yaml')
+                    # TODO: Make sure this works here.
+                    specfile_path = (json_path if os.path.exists(json_path) 
+                                     else yaml_path)
                     artifact_paths.extend([os.path.join(bc_root, p) for p in [
-                        bindist.tarball_name(release_spec, '.spec.yaml'),
+                        specfile_path,
                         bindist.tarball_name(release_spec, '.cdashid'),
                         bindist.tarball_directory_name(release_spec),
                     ]])
@@ -1283,7 +1288,7 @@ def read_cdashid_from_mirror(spec, mirror_url):
     return int(contents)
 
 
-def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id,
+def push_mirror_contents(env, spec, specfile_path, mirror_url, build_id,
                          sign_binaries):
     if mirror_url:
         try:
@@ -1291,7 +1296,7 @@ def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id,
             tty.debug('Creating buildcache ({0})'.format(
                 'unsigned' if unsigned else 'signed'))
             spack.cmd.buildcache._createtarball(
-                env, spec_yaml=yaml_path, add_deps=False,
+                env, spec_file=specfile_path, add_deps=False,
                 output_location=mirror_url, force=True, allow_root=True,
                 unsigned=unsigned)
             if build_id:
@@ -1332,6 +1337,7 @@ def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
             build_out_src, build_out_dst))
         shutil.copyfile(build_out_src, build_out_dst)
     except Exception as inst:
+        raise
         msg = ('Unable to copy build logs from stage to artifacts '
                'due to exception: {0}').format(inst)
         tty.error(msg)

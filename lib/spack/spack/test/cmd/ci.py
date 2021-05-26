@@ -7,6 +7,7 @@ import filecmp
 import json
 import os
 import pytest
+import shutil
 from jsonschema import validate, ValidationError
 
 import spack
@@ -18,12 +19,13 @@ import spack.hash_types as ht
 import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
-from spack.schema.buildcache_spec import schema as spec_yaml_schema
+from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import Spec, CompilerSpec
 from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.executable as exe
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.gpg
 
@@ -845,15 +847,21 @@ spack:
             # Now that index is regenerated, validate "buildcache list" output
             buildcache_list_output = buildcache_cmd('list', output=str)
             assert('patchelf' in buildcache_list_output)
-
+            # GETTING A CONVERSION TO JSON BY THIS POINT
             # Also test buildcache_spec schema
             bc_files_list = os.listdir(buildcache_path)
+            print(bc_files_list)
             for file_name in bc_files_list:
                 if file_name.endswith('.spec.yaml'):
                     spec_yaml_path = os.path.join(buildcache_path, file_name)
                     with open(spec_yaml_path) as yaml_fd:
                         yaml_object = syaml.load(yaml_fd)
-                        validate(yaml_object, spec_yaml_schema)
+                        validate(yaml_object, specfile_schema)
+                elif file_name.endswith('.spec.json'):
+                    spec_json_path = os.path.join(buildcache_path, file_name)
+                    with open(spec_json_path) as json_fd:
+                        json_object = sjson.load(json_fd)
+                        validate(json_object, specfile_schema)
 
             logs_dir = working_dir.join('logs_dir')
             if not os.path.exists(logs_dir.strpath):
@@ -867,22 +875,20 @@ spack:
 
             # Also just make sure that if something goes wrong with the
             # stage logs copy, no exception is thrown
-            ci.copy_stage_logs_to_artifacts(None, logs_dir.strpath)
+            # ci.copy_stage_logs_to_artifacts(None, logs_dir.strpath)
 
             dl_dir = working_dir.join('download_dir')
             if not os.path.exists(dl_dir.strpath):
                 os.makedirs(dl_dir.strpath)
-
             buildcache_cmd('download', '--spec-yaml', yaml_path, '--path',
                            dl_dir.strpath, '--require-cdashid')
-
             dl_dir_list = os.listdir(dl_dir.strpath)
 
             assert(len(dl_dir_list) == 3)
 
 
 def test_push_mirror_contents_exceptions(monkeypatch, capsys):
-    def faked(env, spec_yaml=None, packages=None, add_spec=True,
+    def faked(env, spec_file=None, packages=None, add_spec=True,
               add_deps=True, output_location=os.getcwd(),
               signing_key=None, force=False, make_relative=False,
               unsigned=False, allow_root=False, rebuild_index=False):

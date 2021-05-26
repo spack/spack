@@ -75,6 +75,8 @@ def setup_parser(subparser):
                                             "after building package(s)")
     create.add_argument('-y', '--spec-yaml', default=None,
                         help='Create buildcache entry for spec from yaml file')
+    create.add_argument('-s', '--specfile', default=None,
+                        help='Create buildcache entry for spec from specfile')
     create.add_argument('--only', default='package,dependencies',
                         dest='things_to_install',
                         choices=['package', 'dependencies'],
@@ -331,12 +333,12 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     return specs_from_cli
 
 
-def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
+def _createtarball(env, spec_file=None, packages=None, add_spec=True,
                    add_deps=True, output_location=os.getcwd(),
                    signing_key=None, force=False, make_relative=False,
                    unsigned=False, allow_root=False, rebuild_index=False):
-    if spec_yaml:
-        with open(spec_yaml, 'r') as fd:
+    if spec_file:
+        with open(spec_file, 'r') as fd:
             yaml_text = fd.read()
             tty.debug('createtarball read spec yaml:')
             tty.debug(yaml_text)
@@ -461,8 +463,11 @@ def createtarball(args):
                 '"{url}" is not a valid URL'.format(url=output_location))
     add_spec = ('package' in args.things_to_install)
     add_deps = ('dependencies' in args.things_to_install)
+    
+    # TODO: Rename strategy for this
+    spec_file_arg = args.spec_yaml
 
-    _createtarball(env, spec_yaml=args.spec_yaml, packages=args.specs,
+    _createtarball(env, spec_file=spec_file_arg, packages=args.specs,
                    add_spec=add_spec, add_deps=add_deps,
                    output_location=output_location, signing_key=args.key,
                    force=args.force, make_relative=args.rel,
@@ -595,7 +600,7 @@ def download_buildcache_files(concrete_spec, local_dest, require_cdashid,
             'path': local_tarball_path,
             'required': True,
         }, {
-            'url': bindist.tarball_name(concrete_spec, '.spec.yaml'),
+            'url': bindist.tarball_name(concrete_spec, '.spec.json'),
             'path': local_dest,
             'required': True,
         }, {
