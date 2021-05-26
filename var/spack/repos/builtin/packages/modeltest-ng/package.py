@@ -19,7 +19,6 @@ class ModeltestNg(CMakePackage):
 
     variant('mpi', default=False, description="Enable MPI")
 
-    depends_on('cmake', type='build')
     depends_on('glib')
     depends_on('bison')
     depends_on('flex')
@@ -27,5 +26,4 @@ class ModeltestNg(CMakePackage):
 
     def cmake_args(self):
         return [
-            self.define_from_variant('ENABLE_MPI', 'mpi')
-                ]
+            self.define_from_variant('ENABLE_MPI', 'mpi')]
