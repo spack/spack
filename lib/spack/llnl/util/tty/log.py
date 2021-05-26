@@ -781,20 +781,21 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                             line_count += 1
 
                             # find control characters and strip them.
-                            controls = control.findall(line)
-                            line = control.sub('', line)
+                            clean_line, num_controls = control.subn('', line)
 
                             # Echo to stdout if requested or forced.
                             if echo or force_echo:
-                                sys.stdout.write(line)
+                                sys.stdout.write(clean_line)
 
                             # Stripped output to log file.
-                            log_file.write(_strip(line))
+                            log_file.write(_strip(clean_line))
 
-                            if xon in controls:
-                                force_echo = True
-                            if xoff in controls:
-                                force_echo = False
+                            if num_controls > 0:
+                                controls = control.findall(line)
+                                if xon in controls:
+                                    force_echo = True
+                                if xoff in controls:
+                                    force_echo = False
 
                             if not _input_available(in_pipe):
                                 break
