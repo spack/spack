@@ -17,7 +17,5 @@ class PyRx(PythonPackage):
     version('3.2.0', sha256='b657ca2b45aa485da2f7dcfd09fac2e554f7ac51ff3c2f8f2ff962ecd963d91c')
     version('1.6.1', sha256='13a1d8d9e252625c173dc795471e614eadfe1cf40ffc684e08b8fff0d9748c23')
 
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest')
-    depends_on('py-coveralls')
-    depends_on('py-flake8')
