@@ -11,7 +11,8 @@ class PyApplicationinsights(PythonPackage):
     homepage = "https://github.com/Microsoft/ApplicationInsights-Python"
     pypi = "applicationinsights/applicationinsights-0.11.9.tar.gz"
 
-    # 'applicationinsights.django' requires 'django'
+    # 'applicationinsights.django' requires 'django', but 'django' isn't listed as a
+    # dependency. Leave out of 'import_modules' list to avoid unnecessary dependency.
     import_modules = [
         'applicationinsights', 'applicationinsights.flask',
         'applicationinsights.exceptions', 'applicationinsights.requests',
