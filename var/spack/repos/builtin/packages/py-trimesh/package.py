@@ -18,4 +18,5 @@ class PyTrimesh(PythonPackage):
 
     depends_on('py-networkx', type='run')
     depends_on('py-numpy', type='run')
+    depends_on('py-shapely', type='run')
     depends_on('py-scipy', type='run')
