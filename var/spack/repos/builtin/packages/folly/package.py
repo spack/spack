@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Folly(AutotoolsPackage):
+class Folly(CMakePackage):
     """Folly (acronymed loosely after Facebook Open Source Library) is a
     library of C++11 components designed with practicality and efficiency
     in mind.
@@ -18,8 +18,9 @@ class Folly(AutotoolsPackage):
     """
 
     homepage = "https://github.com/facebook/folly"
-    url = "https://github.com/facebook/folly/archive/v2017.06.05.00.tar.gz"
-
+    url = "https://github.com/facebook/folly/releases/download/v2021.05.24.00/folly-v2021.05.24.00.tar.gz"
+    
+    version('2021.05.24.00', sha256='9d308adefe4670637f5c7d96309b3b394ac3fa129bc954f5dfbdd8b741c02aad')
     version('2017.06.05.00', sha256='d22ceda4dfe33583828be1193fa3929d70c51998f0797236e293c44ef828c6d0')
     version('2016.11.14.00', sha256='cde5b3e1a38d181f7c4e52d590de1c1aca58da7b27b3020d08e9aa45b4c3ed74')
     version('2016.11.07.00', sha256='4400d7f0fead90d88ce4caee9f0e9aeb8008c9954ea9034e19ae7226175206ba')
@@ -36,11 +37,12 @@ class Folly(AutotoolsPackage):
     # TODO: folly requires gcc 4.9+ and a version of boost compiled with
     # TODO: C++14 support (but there's no neat way to check that these
     # TODO: constraints are met right now)
-    depends_on('boost')
+    depends_on('boost+context cxxstd=11')
 
     depends_on('gflags')
     depends_on('glog')
     depends_on('double-conversion')
     depends_on('libevent')
+    depends_on('fmt')
 
     configure_directory = 'folly'
