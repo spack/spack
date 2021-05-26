@@ -366,52 +366,13 @@ def set_dependency_env_variables(pkg, env, context='build'):
             except NoHeadersError:
                 tty.debug("No headers found for {0}".format(dep.name))
 
-        if dep in build_link_deps and (not is_system_path(dep.prefix)):
-            prefix = dep.prefix
-
-            env.prepend_path('CMAKE_PREFIX_PATH', prefix)
-
-            for directory in ('lib', 'lib64', 'share'):
-                pcdir = os.path.join(prefix, directory, 'pkgconfig')
-                if os.path.isdir(pcdir):
-                    env.prepend_path('PKG_CONFIG_PATH', pcdir)
-
-        if dep in build_and_supporting_deps and (
-                not is_system_path(dep.prefix)):
-            _make_runnable(dep, env)
-
-    if context == 'test':
-        deptype = ('run', 'link', 'test')
-    else:
-        deptype = ('build', 'run', 'link')
-    run_deps = set(pkg.spec.dependencies(deptype=deptype))
-    def custom_modifications_for_dep(dep):
-        if dep in run_deps:
-            dpkg = dep.package
-            set_module_variables_for_package(dpkg)
-            # Allow dependencies to modify the module
-            dpkg.setup_dependent_package(pkg.module, pkg.spec)
-            if context == 'build':
-                dpkg.setup_dependent_build_environment(env, pkg.spec)
-            else:
-                dpkg.setup_dependent_run_environment(env, pkg.spec)
-
-    # Note that we want to perform environment modifications in a fixed order.
-    # The Spec.traverse method provides this: i.e. in addition to
-    # the post-order semantics, it also guarantees a fixed traversal order
-    # among dependencies which are not constrained by post-order semantics.
     for dspec in pkg.spec.traverse(root=False, order='post'):
         if dspec.external:
             add_modifications_for_dep(dspec)
-            custom_modifications_for_dep(dspec)
 
     for dspec in pkg.spec.traverse(root=False, order='post'):
-        # Core env modifications for non-external packages can override
-        # custom modifications of external packages (this can only occur
-        # for modifications to PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH)
         if not dspec.external:
             add_modifications_for_dep(dspec)
-            custom_modifications_for_dep(dspec)
 
     # The top-level package is always RPATHed. It hasn't been installed yet
     # so the RPATHs are added unconditionally (e.g. even though lib64/ may
@@ -801,8 +762,8 @@ def setup_package(pkg, dirty, context='build'):
         set_compiler_environment_variables(pkg, env)
         set_wrapper_variables(pkg, env)
         set_dependency_env_variables(pkg, env, context)
-    else:
-        env.extend(modifications_from_dependencies(pkg.spec, context))
+
+    env.extend(modifications_from_dependencies(pkg.spec, context))
 
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
@@ -880,21 +841,66 @@ def modifications_from_dependencies(spec, context):
     env = EnvironmentModifications()
     pkg = spec.package
 
-    # Maps the context to deptype and method to be called
-    deptype_for_context = {
-        'run': ('link', 'run'),
-        'test': ('link', 'run', 'test')
-    }
-    deptype = deptype_for_context[context]
+    build_deps      = set(spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(spec.traverse(root=False, deptype=('link')))
+    build_link_deps = build_deps | link_deps
+    build_and_supporting_deps = set()
+    for build_dep in build_deps:
+        build_and_supporting_deps.update(build_dep.traverse(deptype='run'))
+    run_and_supporting_deps = set(
+        spec.traverse(root=False, deptype=('run', 'link')))
 
-    root = context == 'test'
-    for dspec in spec.traverse(order='post', root=root, deptype=deptype):
-        dpkg = dspec.package
-        set_module_variables_for_package(dpkg)
-        # Allow dependencies to modify the module
-        dpkg.setup_dependent_package(pkg.module, spec)
-        dpkg.setup_dependent_run_environment(env, spec)
-        _make_runnable(dpkg, env)
+    deps_of_interest = set()
+    if context == 'build':
+        deps_of_interest.update(build_and_supporting_deps)
+    else:
+        # test/run context
+        deps_of_interest.update(run_and_supporting_deps)
+
+    def add_modifications_for_dep(dep):
+        if (dep in build_link_deps and
+                not is_system_path(dep.prefix) and
+                context == 'build'):
+            prefix = dep.prefix
+
+            env.prepend_path('CMAKE_PREFIX_PATH', prefix)
+
+            for directory in ('lib', 'lib64', 'share'):
+                pcdir = os.path.join(prefix, directory, 'pkgconfig')
+                if os.path.isdir(pcdir):
+                    env.prepend_path('PKG_CONFIG_PATH', pcdir)
+
+        if (dep in build_and_supporting_deps and
+                not is_system_path(dep.prefix)):
+            _make_runnable(dep, env)
+
+        # Perform custom modifications here (PrependPath actions performed in
+        # the custom method override the default environment modifications
+        # we do to help the build)
+        if dep in deps_of_interest:
+            dpkg = dep.package
+            set_module_variables_for_package(dpkg)
+            # Allow dependencies to modify the module
+            dpkg.setup_dependent_package(spec.package.module, spec)
+            if context == 'build':
+                dpkg.setup_dependent_build_environment(env, spec)
+            else:
+                dpkg.setup_dependent_run_environment(env, spec)
+
+    # Note that we want to perform environment modifications in a fixed order.
+    # The Spec.traverse method provides this: i.e. in addition to
+    # the post-order semantics, it also guarantees a fixed traversal order
+    # among dependencies which are not constrained by post-order semantics.
+    for dspec in spec.traverse(root=False, order='post'):
+        if dspec.external:
+            add_modifications_for_dep(dspec)
+
+    for dspec in spec.traverse(root=False, order='post'):
+        # Core env modifications for non-external packages can override
+        # custom modifications of external packages (this can only occur
+        # for modifications to PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH)
+        if not dspec.external:
+            add_modifications_for_dep(dspec)
 
     return env
 
