@@ -14,7 +14,8 @@ class PyPint(PythonPackage):
 
     pypi = "pint/Pint-0.11.tar.gz"
 
-    # 'pint' requires 'xarray', creating a circular dependency
+    # 'pint' requires 'xarray', creating a circular dependency. Don't bother attempting
+    # any import tests for this package.
     import_modules = []
 
     version('0.11', sha256='308f1070500e102f83b6adfca6db53debfce2ffc5d3cbe3f6c367da359b5cf4d')
