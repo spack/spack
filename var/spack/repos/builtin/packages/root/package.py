@@ -350,7 +350,10 @@ class Root(CMakePackage):
             define('shared', True),
             define('soversion', True),
             define('testing', self.run_tests),
-            define_from_variant('thread', 'threads')
+            define_from_variant('thread', 'threads'),
+            # The following option makes sure that Cling will call the compiler
+            # it was compiled with at run time; see #17488, #18078 and #23886
+            define('CLING_CXX_PATH', self.compiler.cxx),
         ]
 
         # Options related to ROOT's ability to download and build its own
