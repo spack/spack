@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import re
 
 
 class Nvshmem(MakefilePackage, CudaPackage):
@@ -78,9 +77,6 @@ class Nvshmem(MakefilePackage, CudaPackage):
                 env.append_flags(
                     'NVSHMEM_MPI_IS_OMPI', '0')
 
-        # TODO: not sure where to handle shmem dependency. MPI works, but only if it is installs
-        # a copy of the shmem.h header in its include dir which does not seem to be the case for Spack
-        # default installed MPI.
         if '+shmem' in self.spec:
             env.append_flags(
                 'NVSHMEM_SHMEM_SUPPORT', '1')
