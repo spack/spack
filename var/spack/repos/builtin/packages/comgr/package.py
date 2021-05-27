@@ -48,7 +48,7 @@ class Comgr(CMakePackage):
 
         # aomp may not build rocm-device-libs as part of llvm-amdgpu, so make
         # that a conditional dependency
-        depends_on('rocm-device-libs@' + ver, type='build', when='@{0} ^llvm-amdgpu ~rocm-device-libs'.format(ver))
+        depends_on('rocm-device-libs@' + ver, when='@{0} ^llvm-amdgpu ~rocm-device-libs'.format(ver))
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     root_cmakelists_dir = join_path('lib', 'comgr')

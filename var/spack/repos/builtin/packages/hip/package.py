@@ -38,7 +38,7 @@ class Hip(CMakePackage):
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
-        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
 
     # hipcc likes to add `-lnuma` by default :(

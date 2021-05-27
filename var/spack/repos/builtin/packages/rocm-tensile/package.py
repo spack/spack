@@ -38,18 +38,17 @@ class RocmTensile(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        # used in Tensile
-        depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver + '+openmp')
-        depends_on('llvm-amdgpu@' + ver + '~openmp', type='build', when='@' + ver + '~openmp')
+        depends_on('hip@' + ver,                      when='@' + ver)
+        depends_on('comgr@' + ver,                    when='@' + ver)
+        depends_on('rocm-smi-lib@' + ver,             when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,              when='@' + ver + '+openmp')
+        depends_on('llvm-amdgpu@' + ver + '~openmp',  when='@' + ver + '~openmp')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
-        depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-smi@' + ver, when='@' + ver)
 
     for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     root_cmakelists_dir = 'Tensile/Source'
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087

@@ -41,11 +41,11 @@ class RocmDebugAgent(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('hsakmt-roct@' + ver, type='link', when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
-        depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
+        depends_on('rocm-dbgapi@' + ver, when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
 
     # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4

@@ -67,6 +67,6 @@ class Mivisionx(CMakePackage):
         spec = self.spec
         protobuf = spec['protobuf'].prefix.include
         args = [
-            '-DCMAKE_CXX_FLAGS:String=-I{0}'.format(protobuf)
+            self.define('CMAKE_CXX_FLAGS', '-I{0}'.format(protobuf))
         ]
         return args

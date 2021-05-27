@@ -39,12 +39,12 @@ class MiopenHip(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-cmake@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, when='@' + ver)
-        depends_on('rocm-clang-ocl@' + ver, when='@' + ver)
-        depends_on('rocblas@' + ver, when='@' + ver)
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver,                      when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
+        depends_on('comgr@' + ver,                    when='@' + ver)
+        depends_on('rocm-clang-ocl@' + ver,           when='@' + ver)
+        depends_on('rocblas@' + ver,                  when='@' + ver)
 
     def setup_build_environment(self, env):
         if '@3.9.0:' in self.spec:

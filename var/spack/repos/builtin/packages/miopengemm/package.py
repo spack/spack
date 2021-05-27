@@ -35,9 +35,9 @@ class Miopengemm(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('rocm-cmake@3.5.0', type='build', when='@1.1.6')
-    depends_on('rocm-opencl@3.5.0', type='build', when='@1.1.6')
+    depends_on('rocm-opencl@3.5.0',              when='@1.1.6')
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-opencl@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-opencl@' + ver,              when='@' + ver)

@@ -30,18 +30,18 @@ class Hipsparse(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('rocsparse@' + ver, type='link', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
+        depends_on('hip@' + ver,                      when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
+        depends_on('rocsparse@' + ver,                when='@' + ver)
+        depends_on('comgr@' + ver,                    when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver,             when='@' + ver)
 
     for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
-        depends_on('rocprim@' + ver, type='link', when='@' + ver)
+        depends_on('rocprim@' + ver, when='@' + ver)
 
     for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     patch('e79985dccde22d826aceb3badfc643a3227979d2.patch', when='@3.5.0')
     patch('530047af4a0f437dafc02f76b3a17e3b1536c7ec.patch', when='@3.5.0')

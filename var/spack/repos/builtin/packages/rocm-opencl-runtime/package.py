@@ -31,10 +31,10 @@ class RocmOpenclRuntime(CMakePackage):
     depends_on('numactl', type='link', when="@3.7.0:")
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', 'master']:
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, when='@' + ver)
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and '@3.7.0:' in self.spec:

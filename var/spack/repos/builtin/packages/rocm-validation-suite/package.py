@@ -42,15 +42,15 @@ class RocmValidationSuite(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('rocminfo@' + ver, type='build', when='@' + ver)
-        depends_on('rocblas@' + ver, type='link', when='@' + ver)
-        depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver, when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, when='@' + ver)
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('rocminfo@' + ver, when='@' + ver)
+        depends_on('rocblas@' + ver, when='@' + ver)
+        depends_on('rocm-smi-lib@' + ver, when='@' + ver)
 
     def cmake_args(self):
         return [

@@ -37,19 +37,19 @@ class MiopenOpencl(CMakePackage):
     depends_on('miopengemm@1.1.6', type='link', when='@3.5.0')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='link', when='@' + ver)
-        depends_on('rocm-opencl@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
+        depends_on('hip@' + ver,                      when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
+        depends_on('comgr@' + ver,                    when='@' + ver)
+        depends_on('rocm-opencl@' + ver,              when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver,             when='@' + ver)
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('miopengemm@' + ver, type='link', when='@' + ver)
+        depends_on('miopengemm@' + ver, when='@' + ver)
 
     for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     def cmake_args(self):
         args = [

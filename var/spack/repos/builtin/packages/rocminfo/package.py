@@ -31,8 +31,8 @@ class Rocminfo(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', 'master']:
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
 
     def cmake_args(self):
         return [self.define('ROCM_DIR', self.spec['hsa-rocr-dev'].prefix)]
