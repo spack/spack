@@ -500,7 +500,7 @@ class ViewDescriptor(object):
 
     @property
     def _current_root(self):
-        if not os.path.exists(self.root):
+        if not os.path.islink(self.root):
             return None
 
         root = os.readlink(self.root)
