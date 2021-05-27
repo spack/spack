@@ -743,7 +743,8 @@ def setup_package(pkg, dirty, context='build'):
         set_compiler_environment_variables(pkg, env)
         set_wrapper_variables(pkg, env)
 
-    env.extend(modifications_from_dependencies(pkg.spec, context))
+    env.extend(modifications_from_dependencies(
+        pkg.spec, context, custom_mods_only=False))
 
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
@@ -808,28 +809,34 @@ def _make_runnable(pkg, env):
             env.prepend_path('PATH', bin_dir)
 
 
-def modifications_from_dependencies(spec, context):
+def modifications_from_dependencies(spec, context, custom_mods_only=True):
     """Returns the environment modifications that are required by
     the dependencies of a spec and also applies modifications
     to this spec's package at module scope, if need be.
 
     Environment modifications include:
 
-    * Updating PATH so that executables can be found
-    * Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
+    - Updating PATH so that executables can be found
+    - Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
       tools can find Spack-built dependencies
-    * Running custom package environment modifications
+    - Running custom package environment modifications
 
     Custom package modifications can conflict with the default PATH changes
     we make (specifically for the PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH
     environment variables), so this applies changes in a fixed order:
 
-    * All modifications (custom and default) from external deps first
-    * All modifications from non-external deps afterwards
+    - All modifications (custom and default) from external deps first
+    - All modifications from non-external deps afterwards
 
     With that order, `PrependPath` actions from non-external default
     environment modifications will take precedence over custom modifications
     from external packages.
+
+    A secondary constraint is that custom and defualt modifications are
+    grouped on a per-package basis: combined with the post-order traversal this
+    means that default modifications of dependents can override custom
+    modifications of dependencies (again, this would only occur for PATH,
+    CMAKE_PREFIX_PATH, or PKG_CONFIG_PATH).
 
     Args:
         spec (Spec): spec for which we want the modifications
@@ -873,7 +880,7 @@ def modifications_from_dependencies(spec, context):
     elif context == 'test':
         exe_deps = test_and_supporting_deps
 
-    def add_modifications_for_dep(dep):
+    def default_modifications_for_dep(dep):
         if (dep in build_link_deps and
                 not is_system_path(dep.prefix) and
                 context == 'build'):
@@ -888,6 +895,14 @@ def modifications_from_dependencies(spec, context):
 
         if dep in exe_deps and not is_system_path(dep.prefix):
             _make_runnable(dep, env)
+
+    def add_modifications_for_dep(dep):
+        # Some callers of this function only want the custom modifications.
+        # For callers that want both custom and default modifications, we want
+        # to perform the default modifications here (this groups custom
+        # and default modifications together on a per-package basis).
+        if not custom_mods_only:
+            default_modifications_for_dep(dep)
 
         # Perform custom modifications here (PrependPath actions performed in
         # the custom method override the default environment modifications
