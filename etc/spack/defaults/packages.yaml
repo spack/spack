@@ -24,6 +24,7 @@ packages:
       elf: [elfutils]
       fftw-api: [fftw, amdfftw]
       flame: [libflame, amdlibflame]
+      fuse: [libfuse]
       gl: [mesa+opengl, mesa18, opengl]
       glu: [mesa-glu, openglu]
       glx: [mesa+glx, mesa18+glx, opengl]
