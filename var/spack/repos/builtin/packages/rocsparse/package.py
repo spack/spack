@@ -33,6 +33,7 @@ class Rocsparse(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
         depends_on('hip@' + ver, when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('rocprim@' + ver, type='build', when='@' + ver)
         depends_on('hsakmt-roct@' + ver, type='link', when='@' + ver)
