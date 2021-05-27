@@ -820,6 +820,24 @@ def modifications_from_dependencies(spec, context):
     the dependencies of a spec and also applies modifications
     to this spec's package at module scope, if need be.
 
+    Environment modifications include:
+
+    * Updating PATH so that executables can be found
+    * Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
+      tools can find Spack-built dependencies
+    * Running custom package environment modifications
+
+    Custom package modifications can conflict with the default PATH changes
+    we make (specifically for the PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH
+    environment variables), so this applies changes in a fixed order:
+
+    * All modifications (custom and default) from external deps first
+    * All modifications from non-external deps afterwards
+
+    With that order, `PrependPath` actions from non-external default
+    environment modifications will take precedence over custom modifications
+    from external packages.
+
     Args:
         spec (Spec): spec for which we want the modifications
         context (str): either 'build' for build-time modifications or 'run'
@@ -902,7 +920,7 @@ def modifications_from_dependencies(spec, context):
             add_modifications_for_dep(dspec)
 
     for dspec in spec.traverse(root=False, order='post'):
-        # Core env modifications for non-external packages can override
+        # Default env modifications for non-external packages can override
         # custom modifications of external packages (this can only occur
         # for modifications to PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH)
         if not dspec.external:
