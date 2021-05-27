@@ -145,7 +145,7 @@ def first_existing(dictionary, keys):
     try:
         return next(k for k in keys if k in dictionary)
     except StopIteration:
-        raise KeyError("None of %s is in dict!" % keys)
+        raise KeyError("None of %s is in dict!" % str(keys))
 
 
 class ConfigScope(object):

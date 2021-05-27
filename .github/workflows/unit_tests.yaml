@@ -283,8 +283,6 @@ jobs:
           useradd spack-test
           chown -R spack-test .
     - name: Run unit tests
-      env:
-          SPACK_PYTHON: /usr/libexec/platform-python
       shell: runuser -u spack-test -- bash {0}
       run: |
           source share/spack/setup-env.sh

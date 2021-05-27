@@ -226,7 +226,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         # SUNDIALS solvers
         for pkg in self.sun_solvers:
-            args.extend(['-DBUILD_%s=%s' % (pkg, on_off('+' + pkg))])
+            args.append(self.define_from_variant('BUILD_' + pkg, pkg))
 
         # precision
         args.extend([
@@ -243,13 +243,13 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                 args.extend(['-DSUNDIALS_INDEX_TYPE=int32_t'])
 
         # Fortran interface
-        args.extend(['-DF77_INTERFACE_ENABLE=%s' % on_off('+fcmix')])
-        args.extend(['-DF2003_INTERFACE_ENABLE=%s' % on_off('+f2003')])
+        args.extend([self.define_from_variant('F77_INTERFACE_ENABLE', 'fcmix')])
+        args.extend([self.define_from_variant('F2003_INTERFACE_ENABLE', 'f2003')])
 
         # library type
         args.extend([
-            '-DBUILD_SHARED_LIBS=%s' % on_off('+shared'),
-            '-DBUILD_STATIC_LIBS=%s' % on_off('+static')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('BUILD_STATIC_LIBS', 'static')
         ])
 
         # generic (std-c) math libraries
@@ -259,14 +259,14 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         # Monitoring
         args.extend([
-            '-DSUNDIALS_BUILD_WITH_MONITORING=%s' % on_off('+monitoring')
+            self.define_from_variant('SUNDIALS_BUILD_WITH_MONITORING', 'monitoring')
         ])
 
         # parallelism
         args.extend([
-            '-DMPI_ENABLE=%s'     % on_off('+mpi'),
-            '-DOPENMP_ENABLE=%s'  % on_off('+openmp'),
-            '-DPTHREAD_ENABLE=%s' % on_off('+pthread')
+            self.define_from_variant('MPI_ENABLE', 'mpi'),
+            self.define_from_variant('OPENMP_ENABLE', 'openmp'),
+            self.define_from_variant('PTHREAD_ENABLE', 'pthread')
         ])
 
         if '+cuda' in spec:
@@ -423,8 +423,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         # Examples
         if spec.satisfies('@3.0.0:'):
             args.extend([
-                '-DEXAMPLES_ENABLE_C=%s'      % on_off('+examples'),
-                '-DEXAMPLES_ENABLE_CXX=%s'    % on_off('+examples'),
+                self.define_from_variant('EXAMPLES_ENABLE_C', 'examples'),
+                self.define_from_variant('EXAMPLES_ENABLE_CXX', 'examples'),
                 '-DEXAMPLES_ENABLE_CUDA=%s'   % on_off('+examples+cuda'),
                 '-DEXAMPLES_ENABLE_F77=%s'    % on_off('+examples+fcmix'),
                 '-DEXAMPLES_ENABLE_F90=%s'    % on_off('+examples+fcmix'),
@@ -432,8 +432,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             ])
         else:
             args.extend([
-                '-DEXAMPLES_ENABLE=%s' % on_off('+examples'),
-                '-DCXX_ENABLE=%s'      % on_off('+examples'),
+                self.define_from_variant('EXAMPLES_ENABLE', 'examples'),
+                self.define_from_variant('CXX_ENABLE', 'examples'),
                 '-DF90_ENABLE=%s'      % on_off('+examples+fcmix')
             ])
 

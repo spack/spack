@@ -383,6 +383,7 @@ class Python(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         config_args = []
+        cflags = []
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
@@ -444,7 +445,7 @@ class Python(AutotoolsPackage):
             config_args.append('--without-ensurepip')
 
         if '+pic' in spec:
-            config_args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
+            cflags.append(self.compiler.cc_pic_flag)
 
         if '+ssl' in spec:
             if spec.satisfies('@3.7:'):
@@ -478,6 +479,12 @@ class Python(AutotoolsPackage):
         # https://docs.python.org/3.8/library/sqlite3.html#f1
         if spec.satisfies('@3.2: +sqlite3'):
             config_args.append('--enable-loadable-sqlite-extensions')
+
+        if spec.satisfies('%oneapi'):
+            cflags.append('-fp-model=strict')
+
+        if cflags:
+            config_args.append('CFLAGS={0}'.format(' '.join(cflags)))
 
         return config_args
 

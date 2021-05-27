@@ -190,10 +190,8 @@ def default_log_file(spec):
     """
     fmt = 'test-{x.name}-{x.version}-{hash}.xml'
     basename = fmt.format(x=spec, hash=spec.dag_hash())
+    dirname = fs.os.path.join(spack.paths.reports_path, 'junit')
 
-    dirname = fs.os.path.join(spack.paths.user_config_path,
-                              'var/spack',
-                              'junit-report')
     fs.mkdirp(dirname)
     return fs.os.path.join(dirname, basename)
 
@@ -308,6 +306,8 @@ environment variables:
             host=args.monitor_host,
             prefix=args.monitor_prefix,
             disable_auth=args.monitor_disable_auth,
+            tags=args.monitor_tags,
+            save_local=args.monitor_save_local,
         )
 
     reporter = spack.report.collect_info(

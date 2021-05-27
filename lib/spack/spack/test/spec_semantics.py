@@ -776,7 +776,7 @@ class TestSpecSematics(object):
         sigil_package_segments = [("{@VERSIONS}", '@' + str(spec.version)),
                                   ("{%compiler}", '%' + str(spec.compiler)),
                                   ("{arch=architecture}",
-                                   ' arch=' + str(spec.architecture))]
+                                   'arch=' + str(spec.architecture))]
 
         compiler_segments = [("{compiler.name}", "name"),
                              ("{compiler.version}", "versions")]
@@ -798,7 +798,7 @@ class TestSpecSematics(object):
         for named_str, prop in package_segments:
             expected = getattr(spec, prop, "")
             actual = spec.format(named_str)
-            assert str(expected) == actual
+            assert str(expected).strip() == actual
 
         for named_str, expected in sigil_package_segments:
             actual = spec.format(named_str)

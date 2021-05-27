@@ -12,6 +12,16 @@ class PyDistributed(PythonPackage):
     homepage = "https://distributed.dask.org/"
     pypi = "distributed/distributed-2.10.0.tar.gz"
 
+    # 'distributed.dashboard.components' requires 'bokeh', but 'bokeh' is not listed as
+    # a dependency. Leave out of 'import_modules' list to avoid unnecessary dependency.
+    import_modules = [
+        'distributed', 'distributed.deploy', 'distributed.comm',
+        'distributed.comm.tests', 'distributed.protocol', 'distributed.cli',
+        'distributed.dashboard', 'distributed.http', 'distributed.http.tests',
+        'distributed.http.scheduler', 'distributed.http.scheduler.prometheus',
+        'distributed.http.worker', 'distributed.diagnostics'
+    ]
+
     version('2020.12.0', sha256='2a0b6acc921cd4e0143a7c4383cdcbed7defbc4bd9dc3aab0c7f1c45f14f80e1')
     version('2.10.0', sha256='2f8cca741a20f776929cbad3545f2df64cf60207fb21f774ef24aad6f6589e8b')
     version('1.28.1', sha256='3bd83f8b7eb5938af5f2be91ccff8984630713f36f8f66097e531a63f141c48a')

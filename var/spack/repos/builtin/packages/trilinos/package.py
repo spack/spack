@@ -223,6 +223,8 @@ class Trilinos(CMakePackage, CudaPackage):
     # External package options
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
+    variant('scorec',       default=False,
+            description='Enable SCOREC')
     variant('mesquite',     default=False,
             description='Enable Mesquite')
 
@@ -243,6 +245,11 @@ class Trilinos(CMakePackage, CudaPackage):
              placement='DataTransferKit',
              submodules=True,
              when='+dtk @develop')
+    resource(name='scorec',
+             git='https://github.com/SCOREC/core.git',
+             commit='73c16eae073b179e45ec625a5abe4915bc589af2',  # tag v2.2.5
+             placement='SCOREC',
+             when='+scorec')
     resource(name='mesquite',
              url='https://github.com/trilinos/mesquite/archive/trilinos-release-12-12-1.tar.gz',
              sha256='e0d09b0939dbd461822477449dca611417316e8e8d8268fd795debb068edcbb5',
@@ -355,6 +362,13 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
 
+    # SCOREC requires parmetis, shards, stk, and zoltan
+    conflicts('+scorec', when='~metis')
+    conflicts('+scorec', when='~mpi')
+    conflicts('+scorec', when='~shards')
+    conflicts('+scorec', when='~stk')
+    conflicts('+scorec', when='~zoltan')
+
     # All compilers except for pgi are in conflict:
     for __compiler in spack.compilers.supported_compilers():
         if __compiler != 'clang':
@@ -428,7 +442,13 @@ class Trilinos(CMakePackage, CudaPackage):
     patch('xlf_tpetra.patch', when='@12.12.1%clang')
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
     patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
-    patch('cray_secas.patch', when='@12.14.1:12.18.1%cce')
+    patch('cray_secas.patch', when='@12.14.1:%cce')
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%cce'):
+            if name == 'ldflags':
+                flags.append('-fuse-ld=gold')
+        return (None, None, flags)
 
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
     # avoid calling deprecated functions with CUDA-11
@@ -543,6 +563,7 @@ class Trilinos(CMakePackage, CudaPackage):
             define_trilinos_enable('ROL'),
             define_trilinos_enable('Rythmos'),
             define_trilinos_enable('Sacado'),
+            define_trilinos_enable('SCOREC'),
             define_trilinos_enable('Shards'),
             define_trilinos_enable('ShyLU'),
             define_trilinos_enable('STK'),
@@ -885,6 +906,8 @@ class Trilinos(CMakePackage, CudaPackage):
 
         if sys.platform == 'darwin':
             options.append(define('Trilinos_ENABLE_FEI', False))
+            if '+stk' in spec:
+                cxx_flags.extend(['-DSTK_NO_BOOST_STACKTRACE'])
 
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader

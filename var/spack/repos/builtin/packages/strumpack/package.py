@@ -97,24 +97,21 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
 
-        def on_off(varstr):
-            return 'ON' if varstr in spec else 'OFF'
-
         args = [
-            '-DSTRUMPACK_USE_MPI=%s' % on_off('+mpi'),
-            '-DSTRUMPACK_USE_OPENMP=%s' % on_off('+openmp'),
-            '-DSTRUMPACK_USE_CUDA=%s' % on_off('+cuda'),
-            '-DSTRUMPACK_USE_HIP=%s' % on_off('+rocm'),
-            '-DTPL_ENABLE_PARMETIS=%s' % on_off('+parmetis'),
-            '-DTPL_ENABLE_SCOTCH=%s' % on_off('+scotch'),
-            '-DTPL_ENABLE_BPACK=%s' % on_off('+butterflypack'),
-            '-DSTRUMPACK_COUNT_FLOPS=%s' % on_off('+count_flops'),
-            '-DSTRUMPACK_TASK_TIMERS=%s' % on_off('+task_timers'),
-            '-DSTRUMPACK_DEV_TESTING=%s' % on_off('+build_dev_tests'),
-            '-DSTRUMPACK_BUILD_TESTS=%s' % on_off('+build_tests'),
+            self.define_from_variant('STRUMPACK_USE_MPI', 'mpi'),
+            self.define_from_variant('STRUMPACK_USE_OPENMP', 'openmp'),
+            self.define_from_variant('STRUMPACK_USE_CUDA', 'cuda'),
+            self.define_from_variant('STRUMPACK_USE_HIP', 'rocm'),
+            self.define_from_variant('TPL_ENABLE_PARMETIS', 'parmetis'),
+            self.define_from_variant('TPL_ENABLE_SCOTCH', 'scotch'),
+            self.define_from_variant('TPL_ENABLE_BPACK', 'butterflypack'),
+            self.define_from_variant('STRUMPACK_COUNT_FLOPS', 'count_flops'),
+            self.define_from_variant('STRUMPACK_TASK_TIMERS', 'task_timers'),
+            self.define_from_variant('STRUMPACK_DEV_TESTING', 'build_dev_tests'),
+            self.define_from_variant('STRUMPACK_BUILD_TESTS', 'build_tests'),
             '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
             '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
-            '-DBUILD_SHARED_LIBS=%s' % on_off('+shared')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
 
         if '+mpi' in spec:
@@ -130,7 +127,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                     '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
                 ])
             args.extend([
-                '-DSTRUMPACK_C_INTERFACE=%s' % on_off('+c_interface'),
+                self.define_from_variant('STRUMPACK_C_INTERFACE', 'c_interface'),
             ])
 
         if '+cuda' in spec:
