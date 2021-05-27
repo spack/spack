@@ -27,9 +27,11 @@ def setup_parser(subparser):
 
 
 def stage(parser, args):
-    custom_path = os.path.realpath(args.path) if args.path else None
+    # We temporarily modify the working directory when setting up a stage, so we need to
+    # convert this to an absolute path here in order for it to remain valid later.
+    custom_path = os.path.abspath(args.path) if args.path else None
     if custom_path:
-        spack.stage.ensure_external_stage_path(custom_path)
+        spack.stage.create_stage_root(custom_path)
 
     if not args.specs:
         env = ev.get_env(args, 'stage')
