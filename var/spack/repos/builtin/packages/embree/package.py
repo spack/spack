@@ -48,17 +48,19 @@ class Embree(CMakePackage):
         # code selection and defines controlling namespace names are based on
         # defines controlled by compiler flags, so disable ISAs below compiler
         # flags chosen by spack
-        if spec.target >= 'nehalem':
+        if spec.target >= 'x86_64_v2':
             args.append('-DEMBREE_ISA_SSE2=OFF')
         else:
             args.append('-DEMBREE_ISA_SSE2=ON')
 
-        if spec.target >= 'sandybridge':
+        if spec.target >= 'sandybridge' \
+                or spec.target >= 'bulldozer' \
+                or spec.target >= 'x86_64_v3':
             args.append('-DEMBREE_ISA_SSE42=OFF')
         else:
             args.append('-DEMBREE_ISA_SSE42=ON')
 
-        if spec.target >= 'haswell':
+        if spec.target >= 'x86_64_v3':
             args.append('-DEMBREE_ISA_AVX=OFF')
         else:
             args.append('-DEMBREE_ISA_AVX=ON')
