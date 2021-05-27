@@ -307,6 +307,7 @@ def set_compiler_environment_variables(pkg, env):
 
     return env
 
+
 def set_wrapper_variables(pkg, env):
     """Set environment variables used by the Spack compiler wrapper
        (generally prefixed with SPACK_) and also add the compiler wrappers
@@ -360,16 +361,8 @@ def set_wrapper_variables(pkg, env):
         env.set(SPACK_CCACHE_BINARY, ccache)
 
     # Gather information about various types of dependencies
-    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
-    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
-    build_link_deps = build_deps | link_deps
-    rpath_deps      = get_rpath_deps(pkg)
-    # This includes all build dependencies and any other dependencies that
-    # should be added to PATH (e.g. supporting executables run by build
-    # dependencies)
-    build_and_supporting_deps = set()
-    for build_dep in build_deps:
-        build_and_supporting_deps.update(build_dep.traverse(deptype='run'))
+    link_deps  = set(pkg.spec.traverse(root=False, deptype=('link')))
+    rpath_deps = get_rpath_deps(pkg)
 
     link_dirs = []
     include_dirs = []
@@ -844,7 +837,6 @@ def modifications_from_dependencies(spec, context):
             for run-time modifications
     """
     env = EnvironmentModifications()
-    pkg = spec.package
 
     # Note: see computation of 'custom_mod_deps' and 'exe_deps' later in this
     # function; these sets form the building blocks of those collections.
