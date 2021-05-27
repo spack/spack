@@ -20,8 +20,8 @@ class ModeltestNg(CMakePackage):
     variant('mpi', default=False, description="Enable MPI")
 
     depends_on('glib')
-    depends_on('bison')
-    depends_on('flex')
+    depends_on('bison', type='build')
+    depends_on('flex', type='build')
     depends_on('openmpi', when='+mpi')
 
     def cmake_args(self):
