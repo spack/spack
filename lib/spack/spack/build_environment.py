@@ -310,7 +310,7 @@ def set_compiler_environment_variables(pkg, env):
 
 def set_wrapper_variables(pkg, env):
     """Set environment variables used by the Spack compiler wrapper
-       (generally prefixed with SPACK_) and also add the compiler wrappers
+       (which have the prefix `SPACK_`) and also add the compiler wrappers
        to PATH.
     """
     # Set environment variables if specified for
