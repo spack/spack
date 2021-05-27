@@ -188,7 +188,7 @@ class InstallRecord(object):
             explicit=False,
             installation_time=None,
             deprecated_for=None,
-            cache_exists=False,
+            in_buildcache=False,
     ):
         self.spec = spec
         self.path = str(path) if path else None
@@ -197,7 +197,7 @@ class InstallRecord(object):
         self.explicit = explicit
         self.installation_time = installation_time or _now()
         self.deprecated_for = deprecated_for
-        self.cache_exists = cache_exists
+        self.in_buildcache = in_buildcache
 
     def install_type_matches(self, installed):
         installed = InstallStatuses.canonicalize(installed)
@@ -284,10 +284,10 @@ _query_docstring = """
             hashes (container): list or set of hashes that we can use to
                 restrict the search
 
-            cached (bool or any, optional): Specs that are marked in this
-                database as part of an associated binary cache are ``cached``.
-                All other specs are not. This field is used for querying mirror
-                indices. Default is ``any``.
+            in_buildcache (bool or any, optional): Specs that are marked in
+                this database as part of an associated binary cache are
+                ``in_buildcache``. All other specs are not. This field is used
+                for querying mirror indices. Default is ``any``.
 
         Returns:
             list of specs that match the query
@@ -1433,7 +1433,7 @@ class Database(object):
             start_date=None,
             end_date=None,
             hashes=None,
-            cached=any,
+            in_buildcache=any,
     ):
         """Run a query on the database."""
 
@@ -1465,7 +1465,7 @@ class Database(object):
             if not rec.install_type_matches(installed):
                 continue
 
-            if cached is not any and rec.cache_exists != cached:
+            if in_buildcache is not any and rec.in_buildcache != in_buildcache:
                 continue
 
             if explicit is not any and rec.explicit != explicit:
