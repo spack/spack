@@ -19,6 +19,9 @@ class PyUcsfPyem(PythonPackage):
     version('2021-04-07', commit='ed0527f98657d21d887357426b74e5240d477fae')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.14:', type=('build', 'run'))
+    depends_on('py-scipy@1.2:', type=('build', 'run'))
+    depends_on('py-matplotlib@2.2:', type=('build', 'run'))
     depends_on('py-future@0.15:', type=('build', 'run'))
     depends_on('py-numba@0.41:', type=('build', 'run'))
     depends_on('py-seaborn@0.9:', type=('build', 'run'))
@@ -32,8 +35,3 @@ class PyUcsfPyem(PythonPackage):
     @run_after('install')
     def extraction(self):
         install_tree('.', self.prefix.bin)
-
-    # Example useage
-    # "projection_subtraction.py --help"
-    def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.prefix.bin)
