@@ -34,7 +34,10 @@ class HsaRocrDev(CMakePackage):
     variant('image', default=True, description='build with or without image support')
 
     depends_on('cmake@3:', type="build")
-    depends_on('xxd', when='@3.7: +image', type='build')
+
+    # Note, technically only necessary when='@3.7: +image', but added to all
+    # to work around https://github.com/spack/spack/issues/23951
+    depends_on('xxd', when='+image', type='build')
     depends_on('libelf@0.8:', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
