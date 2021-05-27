@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import glob
 import os
 import sys
 import platform
@@ -433,6 +434,45 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
 
     assert rebuild
+
+
+@pytest.mark.usefixtures(
+    'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
+)
+def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
+    """Ensure spack buildcache index only reports available packages"""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+    spack.config.set('mirrors', {'test': mirror_url})
+
+    s = Spec('libdwarf').concretized()
+
+    # Install a package
+    install_cmd('--no-cache', s.name)
+
+    # Create a buildcache and update index
+    buildcache_cmd('create', '-uad', mirror_dir.strpath, s.name)
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Check package and dependency in buildcache
+    cache_list = buildcache_cmd('list', '--allarch')
+    assert 'libdwarf' in cache_list
+    assert 'libelf' in cache_list
+
+    # Remove dependency from cache
+    libelf_files = glob.glob(
+        os.path.join(mirror_dir.join('build_cache').strpath, '*libelf*'))
+    os.remove(*libelf_files)
+
+    # Update index
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Check dependency not in buildcache
+    cache_list = buildcache_cmd('list', '--allarch')
+    assert 'libdwarf' in cache_list
+    assert 'libelf' not in cache_list
 
 
 def test_generate_indices_key_error(monkeypatch, capfd):
