@@ -800,7 +800,8 @@ def setup_package(pkg, dirty, context='build'):
 
 
 def _make_runnable(pkg, env):
-    """Update PATH environment variable """
+    # Helper method which prepends a Package's bin/ prefix to the PATH
+    # environment variable
     prefix = pkg.prefix
 
     for dirname in ['bin', 'bin64']:
