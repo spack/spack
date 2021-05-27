@@ -73,7 +73,7 @@ def setup_parser(subparser):
     create.add_argument('--rebuild-index', action='store_true',
                         default=False, help="Regenerate buildcache index " +
                                             "after building package(s)")
-    create.add_argument('-y', '--spec-yaml', default=None,
+    create.add_argument('--spec-file', default=None,
                         help='Create buildcache entry for spec from yaml file')
     create.add_argument('--only', default='package,dependencies',
                         dest='things_to_install',
@@ -159,7 +159,7 @@ def setup_parser(subparser):
         help='Check single spec instead of release specs file')
 
     check.add_argument(
-        '-y', '--spec-yaml', default=None,
+        '--spec-file', default=None,
         help='Check single spec from yaml file instead of release specs file')
 
     check.add_argument(
@@ -175,7 +175,7 @@ def setup_parser(subparser):
         '-s', '--spec', default=None,
         help="Download built tarball for spec from mirror")
     dltarball.add_argument(
-        '-y', '--spec-yaml', default=None,
+        '--spec-file', default=None,
         help="Download built tarball for spec (from yaml file) from mirror")
     dltarball.add_argument(
         '-p', '--path', default=None,
@@ -192,7 +192,7 @@ def setup_parser(subparser):
         '-s', '--spec', default=None,
         help='Spec string for which buildcache name is desired')
     getbuildcachename.add_argument(
-        '-y', '--spec-yaml', default=None,
+        '--spec-file', default=None,
         help='Path to spec yaml file for which buildcache name is desired')
     getbuildcachename.set_defaults(func=get_buildcache_name)
 
@@ -219,7 +219,7 @@ def setup_parser(subparser):
         '--base-dir', default=None,
         help='Path to mirror directory (root of existing buildcache)')
     copy.add_argument(
-        '--spec-yaml', default=None,
+        '--spec-file', default=None,
         help='Path to spec yaml file representing buildcache entry to copy')
     copy.add_argument(
         '--destination-url', default=None,
@@ -462,10 +462,7 @@ def createtarball(args):
     add_spec = ('package' in args.things_to_install)
     add_deps = ('dependencies' in args.things_to_install)
 
-    # TODO: Rename strategy for this
-    spec_file_arg = args.spec_yaml
-
-    _createtarball(env, spec_file=spec_file_arg, packages=args.specs,
+    _createtarball(env, spec_file=args.spec_file, packages=args.specs,
                    add_spec=add_spec, add_deps=add_deps,
                    output_location=output_location, signing_key=args.key,
                    force=args.force, make_relative=args.rel,
@@ -557,7 +554,7 @@ def check_binaries(args):
     its result, specifically, if the exit code is non-zero, then at least
     one of the indicated specs needs to be rebuilt.
     """
-    if args.spec or args.spec_yaml:
+    if args.spec or args.spec_file:
         specs = [get_concrete_spec(args)]
     else:
         env = ev.get_env(args, 'buildcache', required=True)
@@ -594,15 +591,16 @@ def download_buildcache_files(concrete_spec, local_dest, require_cdashid,
 
     files_to_fetch = [
         {
-            'url': tarball_path_name,
+            'url': [tarball_path_name],
             'path': local_tarball_path,
             'required': True,
         }, {
-            'url': bindist.tarball_name(concrete_spec, '.spec.json'),
+            'url': [bindist.tarball_name(concrete_spec, '.spec.json'),
+                    bindist.tarball_name(concrete_spec, '.spec.yaml')],
             'path': local_dest,
             'required': True,
         }, {
-            'url': bindist.tarball_name(concrete_spec, '.cdashid'),
+            'url': [bindist.tarball_name(concrete_spec, '.cdashid')],
             'path': local_dest,
             'required': require_cdashid,
         },
@@ -618,7 +616,7 @@ def get_tarball(args):
     least one of the required buildcache components.  Normally, just the
     tarball and .spec.yaml files are required, but if the --require-cdashid
     argument was provided, then a .cdashid file is also required."""
-    if not args.spec and not args.spec_yaml:
+    if not args.spec and not args.spec_file:
         tty.msg('No specs provided, exiting.')
         sys.exit(0)
 
@@ -635,7 +633,7 @@ def get_tarball(args):
 
 def get_concrete_spec(args):
     spec_str = args.spec
-    spec_yaml_path = args.spec_yaml
+    spec_yaml_path = args.spec_file
 
     if not spec_str and not spec_yaml_path:
         tty.msg('Must provide either spec string or path to ' +
@@ -704,10 +702,10 @@ def buildcache_copy(args):
     """Copy a buildcache entry and all its files from one mirror, given as
     '--base-dir', to some other mirror, specified as '--destination-url'.
     The specific buildcache entry to be copied from one location to the
-    other is identified using the '--spec-yaml' argument."""
+    other is identified using the '--spec-file' argument."""
     # TODO: This sub-command should go away once #11117 is merged
 
-    if not args.spec_yaml:
+    if not args.spec_file:
         tty.msg('No spec yaml provided, exiting.')
         sys.exit(1)
 
@@ -727,12 +725,12 @@ def buildcache_copy(args):
         sys.exit(1)
 
     try:
-        with open(args.spec_yaml, 'r') as fd:
+        with open(args.spec_file, 'r') as fd:
             spec = Spec.from_yaml(fd.read())
     except Exception as e:
         tty.debug(e)
         tty.error('Unable to concrectize spec from yaml {0}'.format(
-            args.spec_yaml))
+            args.spec_file))
         sys.exit(1)
 
     dest_root_path = dest_url

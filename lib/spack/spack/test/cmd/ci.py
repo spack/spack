@@ -786,6 +786,7 @@ spack:
             with open(yaml_path, 'w') as ypfd:
                 ypfd.write(spec_yaml)
 
+            # I believe this is where the YAML gets converted to JSON.
             install_cmd('--keep-stage', yaml_path)
 
             # env, spec, yaml_path, mirror_url, build_id, sign_binaries
@@ -846,7 +847,6 @@ spack:
             # Now that index is regenerated, validate "buildcache list" output
             buildcache_list_output = buildcache_cmd('list', output=str)
             assert('patchelf' in buildcache_list_output)
-            # GETTING A CONVERSION TO JSON BY THIS POINT
             # Also test buildcache_spec schema
             bc_files_list = os.listdir(buildcache_path)
             print(bc_files_list)
@@ -879,7 +879,7 @@ spack:
             dl_dir = working_dir.join('download_dir')
             if not os.path.exists(dl_dir.strpath):
                 os.makedirs(dl_dir.strpath)
-            buildcache_cmd('download', '--spec-yaml', yaml_path, '--path',
+            buildcache_cmd('download', '--spec-file', yaml_path, '--path',
                            dl_dir.strpath, '--require-cdashid')
             dl_dir_list = os.listdir(dl_dir.strpath)
 

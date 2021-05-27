@@ -411,7 +411,7 @@ _spack_buildcache() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --rebuild-index -y --spec-yaml --only"
+        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --rebuild-index --spec-file --only"
     else
         _all_packages
     fi
@@ -449,15 +449,15 @@ _spack_buildcache_preview() {
 }
 
 _spack_buildcache_check() {
-    SPACK_COMPREPLY="-h --help -m --mirror-url -o --output-file --scope -s --spec -y --spec-yaml --rebuild-on-error"
+    SPACK_COMPREPLY="-h --help -m --mirror-url -o --output-file --scope -s --spec --spec-file --rebuild-on-error"
 }
 
 _spack_buildcache_download() {
-    SPACK_COMPREPLY="-h --help -s --spec -y --spec-yaml -p --path -c --require-cdashid"
+    SPACK_COMPREPLY="-h --help -s --spec --spec-file -p --path -c --require-cdashid"
 }
 
 _spack_buildcache_get_buildcache_name() {
-    SPACK_COMPREPLY="-h --help -s --spec -y --spec-yaml"
+    SPACK_COMPREPLY="-h --help -s --spec --spec-file"
 }
 
 _spack_buildcache_save_yaml() {
@@ -465,7 +465,7 @@ _spack_buildcache_save_yaml() {
 }
 
 _spack_buildcache_copy() {
-    SPACK_COMPREPLY="-h --help --base-dir --spec-yaml --destination-url"
+    SPACK_COMPREPLY="-h --help --base-dir --spec-file --destination-url"
 }
 
 _spack_buildcache_update_index() {

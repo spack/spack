@@ -1792,37 +1792,27 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
 
 def _download_buildcache_entry(mirror_root, descriptions):
     for description in descriptions:
-        description_url = os.path.join(mirror_root, description['url'])
-        path = description['path']
-        fail_if_missing = description['required']
+        missing = 0
+        for url in description['url']:
+            description_url = os.path.join(mirror_root, url)
+            path = description['path']
+            fail_if_missing = description['required']
 
-        mkdirp(path)
+            mkdirp(path)
 
-        stage = Stage(
-            description_url, name="build_cache", path=path, keep=True)
+            stage = Stage(
+                description_url, name="build_cache", path=path, keep=True)
 
-        try:
-            stage.fetch()
-        except fs.FetchError as e:
-            tty.debug(e)
-            if fail_if_missing:
-                if description_url.endswith('spec.json'):
-                    tty.debug('Failing specfile retrieval back to legacy yaml.')
-                    description_url.replace('spec.json', 'spec.yaml')
-                    stage = Stage(
-                        description_url, name="build_cache",
-                        path=path, keep=True)
-                    try:
-                        stage.fetch()
-                    except fs.FetchError as e:
-                        tty.debug(e)
-                        tty.error('Failed to download required url {0}'.format(
-                            description_url))
-                        return False
-                    return True
-                tty.error('Failed to download required url {0}'.format(
-                    description_url))
-                return False
+            try:
+                stage.fetch()
+                break
+            except fs.FetchError as e:
+                missing += 1
+                tty.debug(e)
+                if fail_if_missing and missing == len(description[url]):
+                    tty.error('Failed to download required url {0}'.format(
+                        description_url))
+                    return False
     return True
 
 
