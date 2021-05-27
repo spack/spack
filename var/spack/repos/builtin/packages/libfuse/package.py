@@ -34,6 +34,7 @@ class Libfuse(MesonPackage):
         "which typically sets up udev rules and "
         "and init script in /etc/init.d"))
 
+    provides('fuse')
     conflicts("+useroot", when='~system_install', msg="useroot requires system_install")
     conflicts('platform=darwin', msg='libfuse does not support OS-X, use macfuse instead')
 

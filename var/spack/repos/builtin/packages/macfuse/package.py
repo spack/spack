@@ -15,6 +15,7 @@ class Macfuse(Package):
 
     version('4.1.2')
 
+    provides('fuse')
     conflicts('platform=linux', msg='macfuse does not support linux, use libfuse instead')
     conflicts('platform=cray', msg='macfuse does not support cray, use libfuse instead')
 
