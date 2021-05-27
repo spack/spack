@@ -28,3 +28,4 @@ class PyPint(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'), when='@0.10:')
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm', type=('build', 'run'))
+    depends_on('py-packaging', type=('build', 'run'), when='@0.17:')
