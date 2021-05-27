@@ -10,6 +10,7 @@ The spack package class structure is based strongly on Homebrew
 packages.
 
 """
+
 import base64
 import collections
 import contextlib
