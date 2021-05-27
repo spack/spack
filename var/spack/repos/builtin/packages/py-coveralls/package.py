@@ -18,6 +18,7 @@ class PyCoveralls(PythonPackage):
 
     variant('pyyaml', default=False, description="Enable useage of pyyaml")
 
+    depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-pyyaml', type=('build', 'run'), when='+pyyaml')
     depends_on('py-coverage@4.1:5.999', type=('build', 'run'))
