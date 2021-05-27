@@ -51,12 +51,13 @@ class Cairo(AutotoolsPackage):
 
     # patch from https://gitlab.freedesktop.org/cairo/cairo/issues/346
     patch('fontconfig.patch', when='@1.16.0:1.17.2')
-
-    def setup_build_environment(self, env):
-        env.set('NOCONFIGURE', "1")
+    # don't override gtkdocize environment variable
+    patch('autogen.patch', when='@1.16.0')
 
     def autoreconf(self, spec, prefix):
-        which('sh')('./autogen.sh')
+        # Regenerate, directing the script *not* to call configure before Spack
+        # does
+        which('sh')('./autogen.sh', extra_env={'NOCONFIGURE': '1'})
 
     def configure_args(self):
         args = [
