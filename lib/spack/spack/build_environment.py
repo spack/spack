@@ -78,7 +78,7 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 
 #
 # These environment variables are set by
-# set_dependency_env_variables and used to pass parameters to
+# set_wrapper_variables and used to pass parameters to
 # Spack's compiler wrappers.
 #
 SPACK_ENV_PATH = 'SPACK_ENV_PATH'
