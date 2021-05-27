@@ -381,7 +381,7 @@ def set_wrapper_variables(pkg, env):
         for item in reversed(list(items_to_add)):
             list_to_modify.insert(0, item)
 
-    def add_modifications_for_dep(dep):
+    def add_compiler_args_for_dep(dep):
         if dep in link_deps and (not is_system_path(dep.prefix)):
             query = pkg.spec[dep.name]
             dep_link_dirs = list()
@@ -407,11 +407,11 @@ def set_wrapper_variables(pkg, env):
 
     for dspec in pkg.spec.traverse(root=False, order='post'):
         if dspec.external:
-            add_modifications_for_dep(dspec)
+            add_compiler_args_for_dep(dspec)
 
     for dspec in pkg.spec.traverse(root=False, order='post'):
         if not dspec.external:
-            add_modifications_for_dep(dspec)
+            add_compiler_args_for_dep(dspec)
 
     # The top-level package is always RPATHed. It hasn't been installed yet
     # so the RPATHs are added unconditionally (e.g. even though lib64/ may
