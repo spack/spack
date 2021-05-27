@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import pytest
 from spack.main import SpackCommand
 import spack.environment as ev
@@ -31,15 +32,17 @@ def test_stage_spec(monkeypatch):
     assert len(expected) == 0
 
 
-def test_stage_path(monkeypatch):
+def test_stage_path(monkeypatch, tmpdir):
     """Verify that --path only works with single specs."""
+    expected_path = os.path.join(str(tmpdir), 'x')
 
     def fake_stage(pkg, mirror_only=False):
-        assert pkg.path == 'x'
+        assert pkg.path == expected_path
+        assert os.path.isdir(expected_path), expected_path
 
     monkeypatch.setattr(spack.package.PackageBase, 'do_stage', fake_stage)
 
-    stage('--path=x', 'trivial-install-test-package')
+    stage('--path={0}'.format(expected_path), 'trivial-install-test-package')
 
 
 def test_stage_path_errors_multiple_specs(monkeypatch):
