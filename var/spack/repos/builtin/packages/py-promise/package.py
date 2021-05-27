@@ -20,10 +20,5 @@ class PyPromise(PythonPackage):
     version('2.3', sha256='dfd18337c523ba4b6a58801c164c1904a9d4d1b1747c7d5dbf45b693a49d93d0')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest@2.7.3:', type='test')
-    depends_on('py-pytest-cov', type='test')
-    depends_on('py-pytest-benchmark', type='test')
-    depends_on('py-futures', type=('build', 'run'), when='@2.7')
-    depends_on('py-mock', type=('build', 'run'))
-    depends_on('py-coveralls', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
+    depends_on('py-typing@3.6.4:', when='^python@:3.4.999', type=('build', 'run'))
