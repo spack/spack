@@ -17,4 +17,7 @@ class PyKeyboard(PythonPackage):
     version('0.13.5', sha256='63ed83305955939ca5c9a73755e5cc43e8242263f5ad5fd3bb7e0b032f3d308b')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pyobjc', when='platform=darwin', type=('build', 'run'))
+    # depends_on('py-pyobjc', when='platform=darwin', type=('build', 'run'))
+
+    # Until py-pyobjc can be created, specifying conflict with platform=darwin
+    conflict('platform=darwin')
