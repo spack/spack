@@ -1,7 +1,7 @@
 # This file is currently being customized for quartz/toss_3_x86_64_ib.
 
 spack:
-  concretization: together   # separately
+  concretization: separately
   view: false
   config:
     concretizer: original    # clingo
@@ -18,40 +18,40 @@ spack:
       providers:
         mpi: [mvapich2]   # white238
         #mpi: [mvapich2, openmpi]  # Is this why craylib-sci shows up?
-        # Spack defaults (since limiting the scope)
-        D: [ldc]
-        awk: [gawk]
-        blas: [openblas, amdblis]
-        daal: [intel-daal]
-        elf: [elfutils]
-        fftw-api: [fftw, amdfftw]
-        flame: [libflame, amdlibflame]
-        gl: [mesa+opengl, mesa18, opengl]
-        glx: [mesa+glx, mesa18+glx, opengl]
-        glu: [mesa-glu, openglu]
-        golang: [gcc]
-        iconv: [libiconv]
-        ipp: [intel-ipp]
-        java: [openjdk, jdk, ibm-java]
-        jpeg: [libjpeg-turbo, libjpeg]
-        lapack: [openblas, amdlibflame]
-        mariadb-client: [mariadb-c-client, mariadb]
-        mkl: [intel-mkl]
-        mpe: [mpe2]
+        ## Spack defaults (since limiting the scope)
+        #D: [ldc]
+        #awk: [gawk]
+        #blas: [openblas, amdblis]
+        #daal: [intel-daal]
+        #elf: [elfutils]
+        #fftw-api: [fftw, amdfftw]
+        #flame: [libflame, amdlibflame]
+        #gl: [mesa+opengl, mesa18, opengl]
+        #glx: [mesa+glx, mesa18+glx, opengl]
+        #glu: [mesa-glu, openglu]
+        #golang: [gcc]
+        #iconv: [libiconv]
+        #ipp: [intel-ipp]
+        #java: [openjdk, jdk, ibm-java]
+        #jpeg: [libjpeg-turbo, libjpeg]
+        #lapack: [openblas, amdlibflame]
+        #mariadb-client: [mariadb-c-client, mariadb]
+        #mkl: [intel-mkl]
+        #mpe: [mpe2]
         #mpi: [openmpi, mpich]
-        mysql-client: [mysql, mariadb-c-client]
-        opencl: [pocl]
-        osmesa: [mesa+osmesa, mesa18+osmesa]
-        pil: [py-pillow]
-        pkgconfig: [pkgconf, pkg-config]
-        rpc: [libtirpc]
-        scalapack: [netlib-scalapack, amdscalapack]
-        sycl: [hipsycl]
-        szip: [libszip, libaec]
-        tbb: [intel-tbb]
-        unwind: [libunwind]
-        yacc: [bison, byacc]
-        uuid: [util-linux-uuid, libuuid]
+        #mysql-client: [mysql, mariadb-c-client]
+        #opencl: [pocl]
+        #osmesa: [mesa+osmesa, mesa18+osmesa]
+        #pil: [py-pillow]
+        #pkgconfig: [pkgconf, pkg-config]
+        #rpc: [libtirpc]
+        #scalapack: [netlib-scalapack, amdscalapack]
+        #sycl: [hipsycl]
+        #szip: [libszip, libaec]
+        #tbb: [intel-tbb]
+        #unwind: [libunwind]
+        #yacc: [bison, byacc]
+        #uuid: [util-linux-uuid, libuuid]
   definitions:
     #- compilers: ['%gcc@8.3.1', '%clang@10.0.0']
     - compilers: ['%gcc@7.5.0']
@@ -59,12 +59,12 @@ spack:
     # Note skipping spot since no spack package for it
     - radiuss:
       - ascent  # ^conduit@0.6.0
-      - axom
+      #- axom
       #- blt
       #- caliper
       #- care
       #- chai
-      - conduit  # ^hdf5+shared
+      #- conduit  # ^hdf5+shared
       #- flux-core
       #- flux-sched
       #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm
@@ -76,7 +76,7 @@ spack:
       #- py-maestrowf
       #- py-merlin
       #- py-shroud
-      - raja
+      #- raja
       #- samrai
       #- scr
       #- sundials
