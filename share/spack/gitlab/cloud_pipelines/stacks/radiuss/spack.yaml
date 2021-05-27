@@ -4,7 +4,6 @@ spack:
   concretization: separately
   view: false
   config:
-    concretizer: original    # clingo
     install_tree:
       root: /home/software/radiuss
       padded_length: 512
