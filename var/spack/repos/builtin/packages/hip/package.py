@@ -38,8 +38,7 @@ class Hip(CMakePackage):
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@{0} ^llvm-amdgpu ~rocm-device-libs'.format(ver))
+        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), type='build', when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
 
     # hipcc likes to add `-lnuma` by default :(
@@ -95,13 +94,8 @@ class Hip(CMakePackage):
                 'llvm-amdgpu': self.spec['llvm-amdgpu'].prefix,
                 'hsa-rocr-dev': self.spec['hsa-rocr-dev'].prefix,
                 'rocminfo': self.spec['rocminfo'].prefix,
+                'rocm-device-libs': self.spec['llvm-amdgpu'].prefix
             }
-
-            # Allow bundled and standalone device libs
-            if '^rocm-device-libs' in self.spec:
-                paths['rocm-device-libs'] = self.spec['rocm-device-libs'].prefix
-            else:
-                paths['rocm-device-libs'] = self.spec['llvm-amdgpu'].prefix
 
         if '@:3.8.0' in self.spec:
             paths['bitcode'] = paths['rocm-device-libs'].lib

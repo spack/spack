@@ -54,17 +54,24 @@ class HsaRocrDev(CMakePackage):
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
-        libelf_include = self.spec['libelf'].prefix.include.libelf
+        spec = self.spec
+
+        libelf_include = spec['libelf'].prefix.include.libelf
         args = [
             self.define('LIBELF_INCLUDE_DIRS', libelf_include),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
 
-        if '@3.7.0:' in self.spec:
+        if '@3.7.0:' in spec:
             args.append(self.define_from_variant('IMAGE_SUPPORT', 'image'))
 
-        if '@4.2.0:' in self.spec:
-            bitcode_dir = self.spec['llvm-amdgpu'].prefix.amdgcn.bitcode
+        if '@4.2.0:' in spec:
+            # device libs is bundled with llvm-amdgpu (default) or standalone
+            if '^rocm-device-libs' in spec:
+                bitcode_dir = spec['rocm-device-libs'].prefix.amdgcn.bitcode
+            else:
+                bitcode_dir = spec['llvm-amdgpu'].prefix.amdgcn.bitcode
+
             args.append(self.define('BITCODE_DIR', bitcode_dir))
 
         return args

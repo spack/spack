@@ -56,17 +56,11 @@ class MiopenHip(CMakePackage):
     def get_bitcode_dir(self):
         spec = self.spec
 
-        # device libs is bundled with llvm-amdgpu (default) or standalone
-        if '^rocm-device-libs' in spec:
-            bitcode_prefix = spec['rocm-device-libs'].prefix
-        else:
-            bitcode_prefix = spec['llvm-amdgpu'].prefix
-
         # and the exact location of its bitcode depends on the version
         if spec.version >= Version('3.9.0'):
-            return bitcode_prefix.amdgcn.bitcode
+            return spec['llvm-amdgpu'].prefix.amdgcn.bitcode
         else:
-            return bitcode_prefix.lib
+            return spec['llvm-amdgpu'].prefix.lib
 
     def cmake_args(self):
         spec = self.spec
