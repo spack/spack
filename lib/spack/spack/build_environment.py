@@ -748,13 +748,13 @@ def setup_package(pkg, dirty, context='build'):
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
 
-    if (not dirty) and (not env.is_unset('CPATH')):
-        tty.debug("A dependency has updated CPATH, this may lead pkg-"
-                  "config to assume that the package is part of the system"
-                  " includes and omit it when invoked with '--cflags'.")
-
     if context == 'build':
         pkg.setup_build_environment(env)
+
+        if (not dirty) and (not env.is_unset('CPATH')):
+            tty.debug("A dependency has updated CPATH, this may lead pkg-"
+                      "config to assume that the package is part of the system"
+                      " includes and omit it when invoked with '--cflags'.")
     elif context == 'test':
         pkg.setup_run_environment(env)
         env.prepend_path('PATH', '.')
