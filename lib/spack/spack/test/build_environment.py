@@ -225,7 +225,7 @@ def test_package_inheritance_module_setup(config, mock_packages, working_env):
     assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
 
 
-def test_set_dependency_env_variables(
+def test_wrapper_variables(
         config, mock_packages, working_env, monkeypatch,
         installation_dir_with_headers
 ):
@@ -264,7 +264,7 @@ def test_set_dependency_env_variables(
     try:
         pkg = root.package
         env_mods = EnvironmentModifications()
-        spack.build_environment.set_dependency_env_variables(
+        spack.build_environment.set_wrapper_variables(
             pkg, env_mods)
 
         env_mods.apply_modifications()
@@ -324,7 +324,7 @@ dt-diamond-left:
     )
 
     env_mods = EnvironmentModifications()
-    spack.build_environment.set_dependency_env_variables(
+    spack.build_environment.set_wrapper_variables(
         top.package, env_mods)
 
     env_mods.apply_modifications()

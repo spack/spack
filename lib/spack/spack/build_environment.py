@@ -307,19 +307,58 @@ def set_compiler_environment_variables(pkg, env):
 
     return env
 
-
-def set_dependency_env_variables(pkg, env, context='build'):
-    """Set all environment variables that are both necessary and also
-    helpful for the package to build or run. This includes:
-
-    * CMAKE_PREFIX_PATH, PATH, and PKG_CONFIG_PATH to help build tools find
-      Spack-built packages
-    * Custom environment modifications from dependencies
-
-    Args:
-        pkg: The package we are building
-        env: The build environment
+def set_wrapper_variables(pkg, env):
+    """Set environment variables used by the Spack compiler wrapper
+       (generally prefixed with SPACK_) and also add the compiler wrappers
+       to PATH.
     """
+    # Set environment variables if specified for
+    # the given compiler
+    compiler = pkg.compiler
+    env.extend(spack.schema.environment.parse(compiler.environment))
+
+    if compiler.extra_rpaths:
+        extra_rpaths = ':'.join(compiler.extra_rpaths)
+        env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
+
+    # Add spack build environment path with compiler wrappers first in
+    # the path. We add the compiler wrapper path, which includes default
+    # wrappers (cc, c++, f77, f90), AND a subdirectory containing
+    # compiler-specific symlinks.  The latter ensures that builds that
+    # are sensitive to the *name* of the compiler see the right name when
+    # we're building with the wrappers.
+    #
+    # Conflicts on case-insensitive systems (like "CC" and "cc") are
+    # handled by putting one in the <build_env_path>/case-insensitive
+    # directory.  Add that to the path too.
+    env_paths = []
+    compiler_specific = os.path.join(
+        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
+    for item in [spack.paths.build_env_path, compiler_specific]:
+        env_paths.append(item)
+        ci = os.path.join(item, 'case-insensitive')
+        if os.path.isdir(ci):
+            env_paths.append(ci)
+
+    tty.debug("Adding compiler bin/ paths: " + " ".join(env_paths))
+    for item in env_paths:
+        env.prepend_path('PATH', item)
+    env.set_path(SPACK_ENV_PATH, env_paths)
+
+    # Working directory for the spack command itself, for debug logs.
+    if spack.config.get('config:debug'):
+        env.set(SPACK_DEBUG, 'TRUE')
+    env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
+    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('{name}-{hash:7}'))
+    env.set(SPACK_DEBUG_LOG_DIR, spack.main.spack_working_dir)
+
+    # Find ccache binary and hand it to build environment
+    if spack.config.get('config:ccache'):
+        ccache = Executable('ccache')
+        if not ccache:
+            raise RuntimeError("No ccache binary found in PATH")
+        env.set(SPACK_CCACHE_BINARY, ccache)
+
     # Gather information about various types of dependencies
     build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
     link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
@@ -388,57 +427,6 @@ def set_dependency_env_variables(pkg, env, context='build'):
     env.set(SPACK_LINK_DIRS, ':'.join(link_dirs))
     env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ':'.join(rpath_dirs))
-
-    return env
-
-
-def set_wrapper_variables(pkg, env):
-    # Set environment variables if specified for
-    # the given compiler
-    compiler = pkg.compiler
-    env.extend(spack.schema.environment.parse(compiler.environment))
-
-    if compiler.extra_rpaths:
-        extra_rpaths = ':'.join(compiler.extra_rpaths)
-        env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
-
-    # Add spack build environment path with compiler wrappers first in
-    # the path. We add the compiler wrapper path, which includes default
-    # wrappers (cc, c++, f77, f90), AND a subdirectory containing
-    # compiler-specific symlinks.  The latter ensures that builds that
-    # are sensitive to the *name* of the compiler see the right name when
-    # we're building with the wrappers.
-    #
-    # Conflicts on case-insensitive systems (like "CC" and "cc") are
-    # handled by putting one in the <build_env_path>/case-insensitive
-    # directory.  Add that to the path too.
-    env_paths = []
-    compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
-    for item in [spack.paths.build_env_path, compiler_specific]:
-        env_paths.append(item)
-        ci = os.path.join(item, 'case-insensitive')
-        if os.path.isdir(ci):
-            env_paths.append(ci)
-
-    tty.debug("Adding compiler bin/ paths: " + " ".join(env_paths))
-    for item in env_paths:
-        env.prepend_path('PATH', item)
-    env.set_path(SPACK_ENV_PATH, env_paths)
-
-    # Working directory for the spack command itself, for debug logs.
-    if spack.config.get('config:debug'):
-        env.set(SPACK_DEBUG, 'TRUE')
-    env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
-    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('{name}-{hash:7}'))
-    env.set(SPACK_DEBUG_LOG_DIR, spack.main.spack_working_dir)
-
-    # Find ccache binary and hand it to build environment
-    if spack.config.get('config:ccache'):
-        ccache = Executable('ccache')
-        if not ccache:
-            raise RuntimeError("No ccache binary found in PATH")
-        env.set(SPACK_CCACHE_BINARY, ccache)
 
 
 def determine_number_of_jobs(
@@ -761,7 +749,6 @@ def setup_package(pkg, dirty, context='build'):
     if need_compiler:
         set_compiler_environment_variables(pkg, env)
         set_wrapper_variables(pkg, env)
-        set_dependency_env_variables(pkg, env, context)
 
     env.extend(modifications_from_dependencies(pkg.spec, context))
 
