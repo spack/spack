@@ -14,8 +14,7 @@ class PyGql(PythonPackage):
     pypi     = "gql/gql-2.0.0.tar.gz"
 
     version('3.0.0a1', sha256='ecd8fd0b6a5a8bb5c9e1a97eefad3f267fc889bd03316211193640d49b3e4525')
-    version('0.4.0', sha256='259b0c66d8dfe61feb06fe45b57713da0fe2e5ca13fa500a1fafc9bf2f195e81',
-            deprecated=True)
+    version('0.4.0', sha256='259b0c66d8dfe61feb06fe45b57713da0fe2e5ca13fa500a1fafc9bf2f195e81')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-aiohttp@3.6.2', type=('build', 'run'), when='@3.0:')
