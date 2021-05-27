@@ -16,10 +16,10 @@ class PyCoveralls(PythonPackage):
 
     version('3.0.1', sha256='cbb942ae5ef3d2b55388cb5b43e93a269544911535f1e750e1c656aef019ce60')
 
+    variant('pyyaml', default=False, description="Enable useage of pyyaml")
+
     depends_on('py-setuptools', type='build')
-    depends_on('py-mock', type=('build', 'run'))
-    depends_on('py-responses', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-pyyaml', type=('build', 'run'))
-    depends_on('py-coverage', type=('build', 'run'))
-    depends_on('py-docopt', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'), when='+pyyaml')
+    depends_on('py-coverage@4.1:5.999', type=('build', 'run'))
+    depends_on('py-docopt@0.6.1:', type=('build', 'run'))
+    depends_on('py-pyyaml@1.0.0:', type=('build', 'run'))
