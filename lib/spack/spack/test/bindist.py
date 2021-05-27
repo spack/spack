@@ -472,7 +472,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     # Check dependency not in buildcache
     cache_list = buildcache_cmd('list', '--allarch')
     assert 'libdwarf' in cache_list
-    assert 'libelf' not  in cache_list
+    assert 'libelf' not in cache_list
 
 
 def test_generate_indices_key_error(monkeypatch, capfd):

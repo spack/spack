@@ -1266,7 +1266,7 @@ class Database(object):
     def mark(self, spec, key, value):
         """Mark an arbitrary record on a spec."""
         with self.write_transaction():
-            return  self._mark(spec, key, value)
+            return self._mark(spec, key, value)
 
     def _mark(self, spec, key, value):
         record = self._data[self._get_matching_spec_key(spec)]
