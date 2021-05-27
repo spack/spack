@@ -40,8 +40,6 @@ class Spla(CMakePackage):
     depends_on('cuda', when='+cuda')
     depends_on('rocblas', when='+rocm')
     depends_on('hip', when='+rocm')
-    depends_on('hsakmt-roct', when='+rocm', type='link')
-    depends_on('hsa-rocr-dev', when='+rocm', type='link')
 
     # Propagate openmp to blas
     depends_on('openblas threads=openmp', when='+openmp ^openblas')

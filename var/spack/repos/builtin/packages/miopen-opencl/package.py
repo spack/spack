@@ -40,7 +40,7 @@ class MiopenOpencl(CMakePackage):
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-opencl@' + ver,              when='@' + ver)
-        
+
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
         depends_on('miopengemm@' + ver, when='@' + ver)

@@ -33,16 +33,8 @@ class Rocblas(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-<<<<<<< HEAD
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-=======
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        # used in Tensile
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
->>>>>>> parent of f2ece830ae... Bring back dep on llvm-amdgpu s.t. spack passes CMAKE_PREFIX_PATH to these packages for it to locate device libs
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('rocm-smi@' + ver, when='@' + ver)
@@ -97,7 +89,10 @@ class Rocblas(CMakePackage):
             self.define('Tensile_COMPILER', 'hipcc'),
             self.define('Tensile_LOGIC', 'asm_full'),
             self.define('Tensile_CODE_OBJECT_VERSION', 'V3'),
-            self.define('BUILD_WITH_TENSILE_HOST', 'ON' if '@3.7.0:' in self.spec else 'OFF')
+            self.define(
+                'BUILD_WITH_TENSILE_HOST',
+                'ON' if '@3.7.0:' in self.spec else 'OFF'
+            )
         ]
 
         if '@3.7.0:' in self.spec:
