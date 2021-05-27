@@ -19,6 +19,8 @@ class PyHaphpipe(PythonPackage):
 
     # Deps. taken from
     # https://github.com/bioconda/bioconda-recipes/blob/master/recipes/haphpipe/meta.yaml
+    # http://bioconda.github.io/recipes/haphpipe/README.html
+    # https://github.com/gwcbi/haphpipe/blob/master/environment.yml
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
@@ -42,6 +44,6 @@ class PyHaphpipe(PythonPackage):
     depends_on('flash@1.2.11:', type=('build', 'run'))
     depends_on('mummer@3.23:', type=('build', 'run'))
     depends_on('bwa', type=('build', 'run'))
-    depends_on('samtools', type=('build', 'run'))
+    depends_on('samtools@1.9:', type=('build', 'run'))
     depends_on('mafft', type=('build', 'run'))
     depends_on('picard', type=('build', 'run'))
