@@ -41,8 +41,6 @@ class MiopenHip(CMakePackage):
                 '4.2.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                      when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
-        depends_on('comgr@' + ver,                    when='@' + ver)
         depends_on('rocm-clang-ocl@' + ver,           when='@' + ver)
         depends_on('rocblas@' + ver,                  when='@' + ver)
 
