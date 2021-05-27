@@ -44,6 +44,14 @@ _source_path_subdir = 'spack-src'
 stage_prefix = 'spack-stage-'
 
 
+def ensure_external_stage_path(stage_root):
+    # type: (str) -> None
+    """Ensure that a directory structure exists for a user-specified stage path.
+
+    This is used when running `spack stage -p <PATH>`."""
+    mkdirp(os.path.join(stage_root, _source_path_subdir))
+
+
 def _create_stage_root(path):
     """Create the stage root directory and ensure appropriate access perms."""
     assert path.startswith(os.path.sep) and len(path.strip()) > 1
