@@ -844,6 +844,11 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
         context (str): either 'build' for build-time modifications or 'run'
             for run-time modifications
     """
+    if context not in ['build', 'run', 'test']:
+        raise ValueError(
+            "Expecting context to be one of ['build', 'run', 'test'], "
+            "got: {0}".format(context))
+
     env = EnvironmentModifications()
 
     # Note: see computation of 'custom_mod_deps' and 'exe_deps' later in this
