@@ -23,3 +23,4 @@ class PyHealpy(PythonPackage):
     depends_on('py-astropy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
+    depends_on('cfitsio', type=('build', 'run'))
