@@ -1270,18 +1270,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return spack.architecture.arch_for_spec(self.spec.architecture)
 
     @property
+    @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
 
-        if not hasattr(self, '_compiler'):
-            self._compiler = spack.compilers.compiler_for_spec(
-                self.spec.compiler,
-                self.spec.architecture
-            )
-
-        return self._compiler
+        return spack.compilers.compiler_for_spec(self.spec.compiler,
+                                                 self.spec.architecture)
 
     def url_version(self, version):
         """
