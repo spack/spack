@@ -575,11 +575,8 @@ class Qt(Package):
         ])
 
         if MACOS_VERSION:
-            config_args.extend([
-                '-no-xcb-xlib',
-                '-no-pulseaudio',
-                '-no-alsa',
-            ])
+            if version < Version('5.9'):
+                config_args.append('-no-xcb-xlib')
             if version < Version('5.12'):
                 config_args.append('-no-xinput2')
         elif version < Version('5.15') and '+gui' in spec:
@@ -614,6 +611,14 @@ class Qt(Package):
 
             if version >= Version('5.15'):
                 config_args.extend(['-skip', 'qtlocation'])
+        elif MACOS_VERSION:
+            # These options are only valid if 'multimedia' is enabled, i.e.
+            # +opengl is selected. Force them to be off on macOS, but let other
+            # platforms decide for themselves.
+            config_args.extend([
+                '-no-pulseaudio',
+                '-no-alsa',
+            ])
 
         configure(*config_args)
 
