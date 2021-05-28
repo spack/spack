@@ -44,10 +44,10 @@ class Embree(CMakePackage):
             # code selection and defines controlling namespace names are based on
             # defines controlled by compiler flags, so disable ISAs below compiler
             # flags chosen by spack
-            self.define('EMBREE_ISA_SSE2', not 'sse4_2' in spec.target),
-            self.define('EMBREE_ISA_SSE42', not 'avx' in spec.target),
-            self.define('EMBREE_ISA_AVX', not 'avx2' in spec.target),
-            self.define('EMBREE_ISA_AVX2', not 'avx512' in spec.target),
+            self.define('EMBREE_ISA_SSE2', 'sse4_2' not in spec.target),
+            self.define('EMBREE_ISA_SSE42', 'avx' not in spec.target),
+            self.define('EMBREE_ISA_AVX', 'avx2' not in spec.target),
+            self.define('EMBREE_ISA_AVX2', 'avx512' not in spec.target),
             self.define('EMBREE_ISA_AVX512SKX', True),
         ]
 
