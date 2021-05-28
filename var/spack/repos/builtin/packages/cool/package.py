@@ -29,7 +29,7 @@ class Cool(CMakePackage):
 
     # BINARY_TAG is a combination of target, os, compiler name and build type (opt/dbg)
     # If you override it, please also override it for CORAL
-    variant('binary_tag', default='auto', 
+    variant('binary_tag', default='auto',
             description='Force specific BINARY_TAG, "auto" ' +
                         'will determine the correct value at buildtime')
 
