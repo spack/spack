@@ -28,5 +28,5 @@ class PyGsutil(PythonPackage):
     depends_on('py-mock@2.0.0', type=('build', 'run'))
     depends_on('py-monotonic@1.4:', type=('build', 'run'))
     depends_on('py-pyopenssl@0.13:', type=('build', 'run'))
-    depends_on('py-retry-decorator@1.0.0:', type=('build', 'run')) 
+    depends_on('py-retry-decorator@1.0.0:', type=('build', 'run'))
     depends_on('py-six@1.12.0:', type=('build', 'run'))
