@@ -11,12 +11,13 @@ class PySlepc4py(PythonPackage):
     """
 
     homepage = "https://gitlab.com/slepc/slepc4py"
-    url      = "https://slepc.upv.es/download/distrib/slepc4py-3.15.0.tar.gz"
+    url      = "https://slepc.upv.es/download/distrib/slepc4py-3.15.1.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['dalcinl', 'joseeroman', 'balay']
 
     version('main', branch='main')
+    version('3.15.1', sha256='bcdab6d2101ae00e189f4b33072805358cee2dda806a6b6a8e3c2f1b9f619dfd')
     version('3.15.0', sha256='2f5f5cc25ab4dd3782046c65e97265b39be0cf9cc74c5c0100c3c580c3c32395')
     version('3.13.0', sha256='780eff0eea1a5217642d23cd563786ef22df27e1d772a1b0bb4ccc5701df5ea5')
     version('3.12.0', sha256='d8c06953b7d00f529a9a7fd016dfa8efdf1d05995baeea7688d1d59611f424f7')
