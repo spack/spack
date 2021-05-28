@@ -10,7 +10,7 @@ class PyRetryDecorator(PythonPackage):
     """Decorator for retrying when exceptions occur"""
 
     homepage = "https://github.com/pnpnpn/retry-decorator"
-    pypi     = "retry_decorator/retry_decorator-1.1.1.tar.gz"
+    pypi     = "retry-decorator/retry_decorator-1.1.1.tar.gz"
 
     maintainers = ['dorton21']
 
