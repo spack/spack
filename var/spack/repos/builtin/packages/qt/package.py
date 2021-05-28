@@ -199,7 +199,7 @@ class Qt(Package):
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
     else:
-        conflicts('platform=darwin', when='@4.8.6',
+        conflicts('platform=darwin', when='@:4.8.6',
                   msg="QT 4 for macOS is only patched for 4.8.7")
 
     use_xcode = True
@@ -412,6 +412,13 @@ class Qt(Package):
 
         with open(conf_file, 'a') as f:
             f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+
+    @when('@5.9 platform=darwin')
+    def patch(self):
+        # 'javascriptcore' is in the include path, so its file named 'version'
+        # interferes with the standard library
+        os.unlink(join_path(self.stage.source_path,
+                            'qtscript/src/3rdparty/javascriptcore/version'))
 
     @property
     def common_config_args(self):
