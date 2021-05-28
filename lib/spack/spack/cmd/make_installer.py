@@ -44,6 +44,7 @@ def make_installer(parser, args):
                 print("%s does not exist" % spack_source)
                 return
             else:
+                spack_source = posixpath.abspath(spack_source)
                 spack_source = spack_source.replace('\\', '/')
 
         spack_version = args.spack_version
