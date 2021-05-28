@@ -829,7 +829,7 @@ class PackageInstaller(object):
         if restage and task.pkg.stage.managed_by_spack:
             task.pkg.stage.destroy()
 
-        if not partial and self.layout.check_installed(task.pkg.spec) and (
+        if not partial and task.pkg.installed and (
                 rec.spec.dag_hash() not in task.request.overwrite or
                 rec.installation_time > task.request.overwrite_time
         ):
