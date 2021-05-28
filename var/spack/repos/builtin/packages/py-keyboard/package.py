@@ -20,4 +20,4 @@ class PyKeyboard(PythonPackage):
     # depends_on('py-pyobjc', when='platform=darwin', type=('build', 'run'))
 
     # Until py-pyobjc can be created, specifying conflict with platform=darwin
-    conflict('platform=darwin')
+    conflicts('platform=darwin')
