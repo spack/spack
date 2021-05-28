@@ -602,6 +602,7 @@ class Qt(Package):
             config_args.extend(['-skip', 'wayland'])
 
         if '~opengl' in spec:
+            config_args.extend(['-skip', 'multimedia'])
             if version >= Version('5.10'):
                 config_args.extend([
                     '-skip', 'webglplugin',
