@@ -669,13 +669,7 @@ def test_ci_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
     with open(signing_key_path) as fd:
         signing_key = fd.read()
 
-    storages = {
-        'one': 'temporary-storage-url-prefix: {0}'.format(temp_storage_url),
-        'two': 'enable-artifacts-buildcache: True'
-    }
-
-    for name, storage in storages.items():
-        spack_yaml_contents = """
+    spack_yaml_contents = """
 spack:
  definitions:
    - packages: [archive-files]
@@ -685,7 +679,7 @@ spack:
    test-mirror: {0}
  gitlab-ci:
    broken-specs-url: {1}
-   {2}
+   temporary-storage-url-prefix: {2}
    mappings:
      - match:
          - archive-files
@@ -698,114 +692,173 @@ spack:
    url: https://my.fake.cdash
    project: Not used
    site: Nothing
-""".format(mirror_url, broken_specs_url, storage)
+""".format(mirror_url, broken_specs_url, temp_storage_url)
 
-        filename = str(tmpdir.join('spack.yaml'))
-        with open(filename, 'w') as f:
-            f.write(spack_yaml_contents)
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write(spack_yaml_contents)
 
-        env_name = 'test_{0}'.format(name)
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        with ev.read('test') as env:
+            with env.write_transaction():
+                env.concretize()
+                env.write()
 
-        with tmpdir.as_cwd():
-            env_cmd('create', env_name, './spack.yaml')
-            with ev.read(env_name) as env:
-                with env.write_transaction():
-                    env.concretize()
-                    env.write()
+            if not os.path.exists(env_dir.strpath):
+                os.makedirs(env_dir.strpath)
 
-                if not os.path.exists(env_dir.strpath):
-                    os.makedirs(env_dir.strpath)
+            shutil.copyfile(env.manifest_path,
+                            os.path.join(env_dir.strpath, 'spack.yaml'))
+            shutil.copyfile(env.lock_path,
+                            os.path.join(env_dir.strpath, 'spack.lock'))
 
-                shutil.copyfile(env.manifest_path,
-                                os.path.join(env_dir.strpath, 'spack.yaml'))
-                shutil.copyfile(env.lock_path,
-                                os.path.join(env_dir.strpath, 'spack.lock'))
+            root_spec_build_hash = None
+            job_spec_dag_hash = None
 
-                root_spec_build_hash = None
-                job_spec_dag_hash = None
+            for h, s in env.specs_by_hash.items():
+                if s.name == 'archive-files':
+                    root_spec_build_hash = h
+                    job_spec_dag_hash = s.dag_hash()
 
-                for h, s in env.specs_by_hash.items():
-                    if s.name == 'archive-files':
-                        root_spec_build_hash = h
-                        job_spec_dag_hash = s.dag_hash()
+            assert root_spec_build_hash
+            assert job_spec_dag_hash
 
-                assert root_spec_build_hash
-                assert job_spec_dag_hash
+    def fake_cdash_register(build_name, base_url, project, site, track):
+        return ('fakebuildid', 'fakestamp')
 
-        def fake_cdash_register(build_name, base_url, project, site, track):
-            return ('fakebuildid', 'fakestamp')
+    monkeypatch.setattr(ci, 'register_cdash_build', fake_cdash_register)
 
-        monkeypatch.setattr(ci, 'register_cdash_build', fake_cdash_register)
+    monkeypatch.setattr(spack.cmd.ci, 'CI_REBUILD_INSTALL_BASE_ARGS', [
+        'notcommand'
+    ])
 
-        monkeypatch.setattr(spack.cmd.ci, 'CI_REBUILD_INSTALL_BASE_ARGS', [
-            'notcommand'
-        ])
+    with env_dir.as_cwd():
+        env_cmd('activate', '--without-view', '--sh', '-d', '.')
 
-        with env_dir.as_cwd():
-            env_cmd('activate', '--without-view', '--sh', '-d', '.')
+        # Create environment variables as gitlab would do it
+        set_env_var('SPACK_ARTIFACTS_ROOT', working_dir.strpath)
+        set_env_var('SPACK_JOB_LOG_DIR', log_dir)
+        set_env_var('SPACK_JOB_REPRO_DIR', repro_dir)
+        set_env_var('SPACK_LOCAL_MIRROR_DIR', mirror_dir.strpath)
+        set_env_var('SPACK_CONCRETE_ENV_DIR', env_dir.strpath)
+        set_env_var('CI_PIPELINE_ID', '7192')
+        set_env_var('SPACK_SIGNING_KEY', signing_key)
+        set_env_var('SPACK_ROOT_SPEC', root_spec_build_hash)
+        set_env_var('SPACK_JOB_SPEC_DAG_HASH', job_spec_dag_hash)
+        set_env_var('SPACK_JOB_SPEC_PKG_NAME', 'archive-files')
+        set_env_var('SPACK_COMPILER_ACTION', 'NONE')
+        set_env_var('SPACK_CDASH_BUILD_NAME', '(specs) archive-files')
+        set_env_var('SPACK_RELATED_BUILDS_CDASH', '')
+        set_env_var('SPACK_REMOTE_MIRROR_URL', mirror_url)
+        set_env_var('SPACK_IS_DEVELOP_PIPELINE', 'True')
+
+        ci_cmd('rebuild', fail_on_error=False)
+
+        expected_repro_files = [
+            'install.sh',
+            'root.yaml',
+            'archive-files.yaml',
+            'spack.yaml',
+            'spack.lock'
+        ]
+        repro_files = os.listdir(repro_dir)
+        assert(all([f in repro_files for f in expected_repro_files]))
+
+        install_script_path = os.path.join(repro_dir, 'install.sh')
+        install_line = None
+        with open(install_script_path) as fd:
+            for line in fd:
+                if line.startswith('"notcommand"'):
+                    install_line = line
+
+        assert(install_line)
+
+        def mystrip(s):
+            return s.strip('"').rstrip('\n').rstrip('"')
+
+        install_parts = [mystrip(s) for s in install_line.split(' ')]
+
+        assert('--keep-stage' in install_parts)
+        assert('--require-full-hash-match' in install_parts)
+        assert('--no-check-signature' not in install_parts)
+        assert('--no-add' in install_parts)
+        assert('-f' in install_parts)
+        flag_index = install_parts.index('-f')
+        assert('archive-files.yaml' in install_parts[flag_index + 1])
+
+        env_cmd('deactivate')
+
+
+def test_ci_nothing_to_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
+                               install_mockery, mock_packages, monkeypatch,
+                               mock_fetch):
+    working_dir = tmpdir.join('working_dir')
+
+    mirror_dir = working_dir.join('mirror')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    spack_yaml_contents = """
+spack:
+ definitions:
+   - packages: [archive-files]
+ specs:
+   - $packages
+ mirrors:
+   test-mirror: {0}
+ gitlab-ci:
+   enable-artifacts-buildcache: True
+   mappings:
+     - match:
+         - archive-files
+       runner-attributes:
+         tags:
+           - donotcare
+         image: donotcare
+""".format(mirror_url)
+
+    install_cmd('archive-files')
+    buildcache_cmd('create', '-a', '-f', '-u', '--mirror-url',
+                   mirror_url, 'archive-files')
+
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write(spack_yaml_contents)
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        with ev.read('test') as env:
+            env.concretize()
+            root_spec_build_hash = None
+            job_spec_dag_hash = None
+
+            for h, s in env.specs_by_hash.items():
+                if s.name == 'archive-files':
+                    root_spec_build_hash = h
+                    job_spec_dag_hash = s.dag_hash()
 
             # Create environment variables as gitlab would do it
             set_env_var('SPACK_ARTIFACTS_ROOT', working_dir.strpath)
-            set_env_var('SPACK_JOB_LOG_DIR', log_dir)
-            set_env_var('SPACK_JOB_REPRO_DIR', repro_dir)
+            set_env_var('SPACK_JOB_LOG_DIR', 'log_dir')
+            set_env_var('SPACK_JOB_REPRO_DIR', 'repro_dir')
             set_env_var('SPACK_LOCAL_MIRROR_DIR', mirror_dir.strpath)
-            set_env_var('SPACK_CONCRETE_ENV_DIR', env_dir.strpath)
-            set_env_var('CI_PIPELINE_ID', '7192')
-            set_env_var('SPACK_SIGNING_KEY', signing_key)
+            set_env_var('SPACK_CONCRETE_ENV_DIR', tmpdir.strpath)
             set_env_var('SPACK_ROOT_SPEC', root_spec_build_hash)
             set_env_var('SPACK_JOB_SPEC_DAG_HASH', job_spec_dag_hash)
             set_env_var('SPACK_JOB_SPEC_PKG_NAME', 'archive-files')
             set_env_var('SPACK_COMPILER_ACTION', 'NONE')
-            set_env_var('SPACK_CDASH_BUILD_NAME', '(specs) archive-files')
-            set_env_var('SPACK_RELATED_BUILDS_CDASH', '')
             set_env_var('SPACK_REMOTE_MIRROR_URL', mirror_url)
-            set_env_var('SPACK_IS_DEVELOP_PIPELINE', 'True')
 
-            ci_cmd('rebuild', fail_on_error=False)
+            def fake_dl_method(spec, dest, require_cdashid, m_url=None):
+                print('fake download buildcache {0}'.format(spec.name))
 
-            expected_repro_files = [
-                'install.sh',
-                'root.yaml',
-                'archive-files.yaml',
-                'spack.yaml',
-                'spack.lock'
-            ]
-            repro_files = os.listdir(repro_dir)
-            assert(all([f in repro_files for f in expected_repro_files]))
+            monkeypatch.setattr(
+                buildcache, 'download_buildcache_files', fake_dl_method)
 
-            install_script_path = os.path.join(repro_dir, 'install.sh')
-            install_line = None
-            with open(install_script_path) as fd:
-                for line in fd:
-                    if line.startswith('"notcommand"'):
-                        install_line = line
+            ci_out = ci_cmd('rebuild', output=str)
 
-            assert(install_line)
-
-            def mystrip(s):
-                return s.strip('"').rstrip('\n').rstrip('"')
-
-            install_parts = [mystrip(s) for s in install_line.split(' ')]
-
-            assert('--keep-stage' in install_parts)
-            assert('--require-full-hash-match' in install_parts)
-            assert('--no-check-signature' not in install_parts)
-            assert('--no-add' in install_parts)
-            assert('-f' in install_parts)
-            flag_index = install_parts.index('-f')
-            assert('archive-files.yaml' in install_parts[flag_index + 1])
-
-            if 'artifacts' in storage:
-                install_cmd('archive-files')
-                buildcache_cmd('create', '-a', '-f', '-u', '--mirror-url',
-                               mirror_url, 'archive-files')
-
-                def fake_dl_method(spec, dest, require_cdashid, m_url=None):
-                    assert(spec.name == 'archive-files')
-
-                monkeypatch.setattr(
-                    buildcache, 'download_buildcache_files', fake_dl_method)
-                ci_cmd('rebuild')
+            assert('No need to rebuild archive-files' in ci_out)
+            assert('fake download buildcache archive-files' in ci_out)
 
             env_cmd('deactivate')
 
