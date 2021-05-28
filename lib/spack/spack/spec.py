@@ -4615,35 +4615,49 @@ class SpecLexer(spack.parse.Lexer):
 
     """Parses tokens that make up spack specs."""
 
+    # TODO: Determine whether using >2 lexer modes would allow us to create
+    # a separate entry (likely defined the same as `spec_id_re` at first) to
+    # specifically match version strings, variant names, compiler dependency
+    # names (with '%').
     def __init__(self):
         super(SpecLexer, self).__init__([
-            (r'\^', lambda scanner, val: self.token(DEP,   val)),
-            (r'\@', lambda scanner, val: self.token(AT,    val)),
-            (r'\:', lambda scanner, val: self.token(COLON, val)),
-            (r'\,', lambda scanner, val: self.token(COMMA, val)),
-            (r'\+', lambda scanner, val: self.token(ON,    val)),
-            (r'\-', lambda scanner, val: self.token(OFF,   val)),
-            (r'\~', lambda scanner, val: self.token(OFF,   val)),
-            (r'\%', lambda scanner, val: self.token(PCT,   val)),
-            (r'\=', lambda scanner, val: self.token(EQ,    val)),
+            ([
+                # '^': dependency, or "AND":
+                (r'\^', lambda scanner, val: self.token(DEP,   val)),
+                # '@': begin a Version, VersionRange, or VersionList:
+                (r'\@', lambda scanner, val: self.token(AT,    val)),
+                # VersionRange syntax:
+                (r'\:', lambda scanner, val: self.token(COLON, val)),
+                # VersionList syntax:
+                (r'\,', lambda scanner, val: self.token(COMMA, val)),
+                # variant syntax:
+                (r'\+', lambda scanner, val: self.token(ON,    val)),
+                (r'\-', lambda scanner, val: self.token(OFF,   val)),
+                (r'\~', lambda scanner, val: self.token(OFF,   val)),
+                # Compiler dependency syntax:
+                (r'\%', lambda scanner, val: self.token(PCT,   val)),
 
-            # Filenames match before identifiers, so no initial filename
-            # component is parsed as a spec (e.g., in subdir/spec.yaml/json)
-            (r'[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*',
-             lambda scanner, v: self.token(FILE, v)),
+                # This is *not* used in version string parsing.
+                (r'\=', lambda scanner, val: self.token(EQ,    val)),
 
-            # Hash match after filename. No valid filename can be a hash
-            # (files end w/.yaml), but a hash can match a filename prefix.
-            (r'/', lambda scanner, val: self.token(HASH, val)),
+                # Filenames match before identifiers, so no initial filename
+                # component is parsed as a spec (e.g., in subdir/spec.{yaml/json})
+                (r'[/\w.-]*/[/\w/-]+\.yaml[^\b]*',
+                 lambda scanner, v: self.token(FILE, v)),
 
-            # Identifiers match after filenames and hashes.
-            (spec_id_re, lambda scanner, val: self.token(ID, val)),
+                # Hash match after filename. No valid filename can be a hash
+                # (files end w/.yaml), but a hash can match a filename prefix.
+                (r'/', lambda scanner, val: self.token(HASH, val)),
 
-            (r'\s+', lambda scanner, val: None)],
-            [EQ],
-            [(r'[\S].*', lambda scanner, val: self.token(VAL,    val)),
-             (r'\s+', lambda scanner, val: None)],
-            [VAL])
+                # Identifiers match after filenames and hashes.
+                (spec_id_re, lambda scanner, val: self.token(ID, val)),
+
+                # Gobble up all remaining whitespace between tokens.
+                (r'\s+', lambda scanner, val: None),
+            ], {1: [EQ]}),
+            ([(r'[\S].*', lambda scanner, val: self.token(VAL,    val)),
+              (r'\s+', lambda scanner, val: None)],
+             {0: [VAL]})])
 
 
 # Lexer is always the same for every parser.
