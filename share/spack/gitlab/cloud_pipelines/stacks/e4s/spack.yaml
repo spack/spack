@@ -43,16 +43,16 @@ spack:
     - argobots
     # - ascent
     # - axom
-    # - bolt
+    - bolt
     # - caliper
     # - darshan-runtime
     - darshan-util
     # - dyninst
-    # - faodel
+    - faodel
     # - flecsi+cinch
     # - flit
     # - gasnet
-    # - ginkgo
+    - ginkgo
     # - globalarrays
     # - gotcha
     # - hdf5
@@ -68,7 +68,7 @@ spack:
     # - mercury
     # - mfem
     # - mpifileutils@develop~xattr
-    # - ninja
+    - ninja
     # - omega-h
     # - openmpi
     # - openpmd-api
@@ -115,14 +115,15 @@ spack:
     - - $e4s
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/e4s-new-cluster" }
+  mirrors: { "mirror": "s3://spack-binaries-develop/e4s" }
 
   gitlab-ci:
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
-      - cd share/spack/gitlab/cloud_pipelines/stacks/e4s
+      - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - spack -d ci rebuild
     mappings:
       - match: [cuda, dyninst, hpx, precice, strumpack, sundials, trilinos, vtk-h, vtk-m]
@@ -134,6 +135,7 @@ spack:
           image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
           tags: ["spack", "public", "large", "x86_64"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"

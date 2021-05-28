@@ -130,50 +130,12 @@ def setup_parser(subparser):
 def mirror_add(args):
     """Add a mirror to Spack."""
     url = url_util.format(args.url)
-
-    mirrors = spack.config.get('mirrors', scope=args.scope)
-    if not mirrors:
-        mirrors = syaml_dict()
-
-    if args.name in mirrors:
-        tty.die("Mirror with name %s already exists." % args.name)
-
-    items = [(n, u) for n, u in mirrors.items()]
-    items.insert(0, (args.name, url))
-    mirrors = syaml_dict(items)
-    spack.config.set('mirrors', mirrors, scope=args.scope)
+    spack.mirror.add(args.name, url, args.scope)
 
 
 def mirror_remove(args):
     """Remove a mirror by name."""
-    name = args.name
-
-    mirrors = spack.config.get('mirrors', scope=args.scope)
-    if not mirrors:
-        mirrors = syaml_dict()
-
-    if name not in mirrors:
-        tty.die("No mirror with name %s" % name)
-
-    old_value = mirrors.pop(name)
-    spack.config.set('mirrors', mirrors, scope=args.scope)
-
-    debug_msg_url = "url %s"
-    debug_msg = ["Removed mirror %s with"]
-    values = [name]
-
-    try:
-        fetch_value = old_value['fetch']
-        push_value = old_value['push']
-
-        debug_msg.extend(("fetch", debug_msg_url, "and push", debug_msg_url))
-        values.extend((fetch_value, push_value))
-    except TypeError:
-        debug_msg.append(debug_msg_url)
-        values.append(old_value)
-
-    tty.debug(" ".join(debug_msg) % tuple(values))
-    tty.msg("Removed mirror %s." % name)
+    spack.mirror.remove(args.name, args.scope)
 
 
 def mirror_set_url(args):
