@@ -67,6 +67,7 @@ class PyShapely(PythonPackage):
     def test_install(self):
         python('-m', 'pytest')
 
-    def setup_run_environment(self, env):
-        env.set('GEOS_CONFIG',
-                join_path(self.spec['geos'].prefix.bin, 'geos-config'))
+    setup_run_environment = setup_build_environment
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
