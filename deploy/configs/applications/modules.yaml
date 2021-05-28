@@ -75,6 +75,7 @@ modules:
       - py-simwriter
       - py-sonata-network-reduction
       - py-pytouchreader
+      - py-visual-cortex-analysis
       - regiodesics
       - reportinglib
       - spatial-index
