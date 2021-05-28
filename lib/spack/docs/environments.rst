@@ -723,6 +723,8 @@ Spack Environment managed views are updated every time the environment
 is written out to the lock file ``spack.lock``, so the concrete
 environment and the view are always compatible.
 
+.. _configuring_environment_views:
+
 """""""""""""""""""""""""""""
 Configuring environment views
 """""""""""""""""""""""""""""
