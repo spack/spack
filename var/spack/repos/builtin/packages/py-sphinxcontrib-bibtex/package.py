@@ -11,6 +11,9 @@ class PySphinxcontribBibtex(PythonPackage):
 
     pypi = "sphinxcontrib-bibtex/sphinxcontrib-bibtex-0.3.5.tar.gz"
 
+    version('2.2.1', sha256='00d474092e04b1d941e645cf6c027632a975cd0b9337cf47d379f63a5928f334')
+    version('2.2.0', sha256='7500843e154d76983c23bca5ca7380965e0725c46b8f484c1322d0b58a6ce3b2')
+    version('2.1.4', sha256='f53ec0cd534d2c8f0a51b4b3473ced46e9cb0dd99a7c5019249fe0ef9cbef18e')
     version('2.0.0', sha256='98e18eb0b088d3f556199f3fbb91d3d48ebb7596fe86b6c37cc4c4dc5419b7a1')
     version('1.0.0', sha256='629612b001f86784669d65e662377a482052decfd9a0a17c46860878eef7b9e0')
     version('0.3.5', sha256='c93e2b4a0d14f0ab726f95f0a33c1675965e9df3ed04839635577b8f978206cd')
