@@ -34,4 +34,5 @@ class PyUcsfPyem(PythonPackage):
     # Extracts files into bin for proper useage
     @run_after('install')
     def extraction(self):
-        install_tree('.', self.prefix.bin)
+        mkdir(self.prefix.bin)
+        install('*.py', self.prefix.bin)
