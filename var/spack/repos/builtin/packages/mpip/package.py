@@ -62,7 +62,10 @@ class Mpip(AutotoolsPackage):
     #  Ideally would use libunwind, but provide backtrace and
     #    setjmp functionality, if needed
     #  depends_on('unwind')
-    depends_on('libunwind', when='@3.5: +libunwind')
+
+    # The '~sethmp' when criteria is from below
+    #  '+setjmp' adds '--disable-libunwind' to the confiure args
+    depends_on('libunwind', when='@3.5: +libunwind ~setjmp')
 
     @when('@3.5:')
     def configure_args(self):
