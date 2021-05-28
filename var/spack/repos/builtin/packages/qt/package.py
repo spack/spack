@@ -579,6 +579,10 @@ class Qt(Package):
                 config_args.append('-no-xcb-xlib')
             if version < Version('5.12'):
                 config_args.append('-no-xinput2')
+            if spec.satisfies('@5.9'):
+                # Errors on bluetooth even when bluetooth is disabled...
+                # at least on apple-clang%12
+                config_args.extend(['-skip', 'connectivity'])
         elif version < Version('5.15') and '+gui' in spec:
             # Linux-only QT5 dependencies
             config_args.append('-system-xcb')
