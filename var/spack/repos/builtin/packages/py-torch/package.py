@@ -16,10 +16,13 @@ class PyTorch(PythonPackage, CudaPackage):
 
     maintainers = ['adamjstewart']
 
-    # Exact set of modules is version- and variant-specific
+    # Exact set of modules is version- and variant-specific, just attempt to import the
+    # core libraries to ensure that the package was successfully installed.
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.8.1', tag='v1.8.1', submodules=True)
+    version('1.8.0', tag='v1.8.0', submodules=True)
     version('1.7.1', tag='v1.7.1', submodules=True)
     version('1.7.0', tag='v1.7.0', submodules=True)
     version('1.6.0', tag='v1.6.0', submodules=True)
@@ -93,9 +96,10 @@ class PyTorch(PythonPackage, CudaPackage):
     # Use Ninja generator to speed up build times
     # Automatically used if found
     depends_on('ninja@1.5:', type='build')
-    depends_on('python@3.6.1:', when='@1.6:', type=('build', 'run'))
-    depends_on('python@3.5:', when='@1.5:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on('python@3.6.2:', when='@1.7.1:', type=('build', 'link', 'run'))
+    depends_on('python@3.6.1:', when='@1.6:', type=('build', 'link', 'run'))
+    depends_on('python@3.5:', when='@1.5:', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-future', when='@1.5:', type=('build', 'run'))
@@ -105,6 +109,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-typing-extensions', when='@1.7:', type=('build', 'run'))
     depends_on('py-pybind11', when='@0.4:', type=('build', 'link', 'run'))
     depends_on('py-dataclasses', when='@1.7: ^python@3.6.0:3.6.999', type=('build', 'run'))
+    depends_on('py-tqdm', type='run')
     depends_on('blas')
     depends_on('lapack')
     depends_on('protobuf', when='@0.4:')
@@ -148,6 +153,11 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-six', type='test')
     depends_on('py-psutil', type='test')
 
+    # Fixes build on older systems with glibc <2.12
+    patch('https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/55063.patch',
+          sha256='e17eaa42f5d7c18bf0d7c37d7b0910127a01ad53fdce3e226a92893356a70395',
+          when='@1.1.0:')
+
     # https://github.com/pytorch/pytorch/pull/35607
     # https://github.com/pytorch/pytorch/pull/37865
     # Fixes CMake configuration error when XNNPACK is disabled
@@ -185,6 +195,13 @@ class PyTorch(PythonPackage, CudaPackage):
         headers = find_all_headers(root)
         headers.directories = [root]
         return headers
+
+    @when('@1.5.0:')
+    def patch(self):
+        # https://github.com/pytorch/pytorch/issues/52208
+        filter_file('torch_global_deps PROPERTIES LINKER_LANGUAGE C',
+                    'torch_global_deps PROPERTIES LINKER_LANGUAGE CXX',
+                    'caffe2/CMakeLists.txt')
 
     def setup_build_environment(self, env):
         def enable_or_disable(variant, keyword='USE', var=None, newer=False):

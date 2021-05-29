@@ -30,6 +30,9 @@ class Libzmq(AutotoolsPackage):
     variant("libsodium", default=True,
             description="Build with message encryption support via libsodium")
 
+    variant("drafts", default=False,
+            description="Build and install draft classes and methods")
+
     depends_on("libsodium", when='+libsodium')
     depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
 
@@ -57,6 +60,9 @@ class Libzmq(AutotoolsPackage):
 
     def configure_args(self):
         config_args = []
+
+        config_args.extend(self.enable_or_disable("drafts"))
+
         if '+libsodium' in self.spec:
             config_args.append('--with-libsodium')
         if 'clang' in self.compiler.cc:

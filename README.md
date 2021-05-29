@@ -1,12 +1,11 @@
 # <img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
 
-[![MacOS Tests](https://github.com/spack/spack/workflows/macos%20tests/badge.svg)](https://github.com/spack/spack/actions)
-[![Linux Tests](https://github.com/spack/spack/workflows/linux%20tests/badge.svg)](https://github.com/spack/spack/actions)
+[![Unit Tests](https://github.com/spack/spack/workflows/linux%20tests/badge.svg)](https://github.com/spack/spack/actions)
 [![Linux Builds](https://github.com/spack/spack/workflows/linux%20builds/badge.svg)](https://github.com/spack/spack/actions)
 [![macOS Builds (nightly)](https://github.com/spack/spack/workflows/macOS%20builds%20nightly/badge.svg?branch=develop)](https://github.com/spack/spack/actions?query=workflow%3A%22macOS+builds+nightly%22)
 [![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
-[![Slack](https://spackpm.herokuapp.com/badge.svg)](https://spackpm.herokuapp.com)
+[![Slack](https://slack.spack.io/badge.svg)](https://slack.spack.io)
 
 Spack is a multi-platform package manager that builds and installs
 multiple versions and configurations of software. It works on Linux,
@@ -59,7 +58,7 @@ packages to bugfixes, documentation, or even new core features.
 Resources:
 
 * **Slack workspace**: [spackpm.slack.com](https://spackpm.slack.com).
-  To get an invitation, [**click here**](https://spackpm.herokuapp.com).
+  To get an invitation, visit [slack.spack.io](https://slack.spack.io).
 * **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
 * **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!
@@ -73,7 +72,7 @@ When you send your request, make ``develop`` the destination branch on the
 
 Your PR must pass Spack's unit tests and documentation tests, and must be
 [PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant.  We enforce
-these guidelines with our CI process. To run these tests locally, and for 
+these guidelines with our CI process. To run these tests locally, and for
 helpful tips on git, see our
 [Contribution Guide](https://spack.readthedocs.io/en/latest/contribution_guide.html).
 

@@ -20,7 +20,9 @@ class Ucx(AutotoolsPackage, CudaPackage):
     version('1.9-dev', branch='v1.9.x')
 
     # Current
-    version('1.9.0', sha256='a7a2c8841dc0d5444088a4373dc9b9cc68dbffcd917c1eba92ca8ed8e5e635fb', preferred=True)
+    version('1.10.1', sha256='ae9a108af6842ca135e7ec9b6131469adf9f1e50f899349fafcc69a215368bc9', preferred=True)
+    version('1.10.0', sha256='b885e24b1b94724c03cb213c355381e98df1e2d1fd7f633cf8055b6dd05db92d')
+    version('1.9.0', sha256='a7a2c8841dc0d5444088a4373dc9b9cc68dbffcd917c1eba92ca8ed8e5e635fb')
     version('1.8.1', sha256='a48820cb8d0761b5ccf3e7ba03a7c8c1dde6276017657178829e07ffc35b556a')
     version('1.8.0', sha256='e400f7aa5354971c8f5ac6b881dc2846143851df868088c37d432c076445628d')
     version('1.7.0', sha256='6ab81ee187bfd554fe7e549da93a11bfac420df87d99ee61ffab7bb19bdd3371')
@@ -60,6 +62,22 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description='Enable KNEM support')
     variant('xpmem', default=False,
             description='Enable XPMEM support')
+    variant('cma', default=False,
+            description="nable Cross Memory Attach")
+    variant('rc', default=False,
+            description="Compile with IB Reliable Connection support")
+    variant('dc', default=False,
+            description="Compile with IB Dynamic Connection support")
+    variant('ud', default=False,
+            description="Compile with IB Unreliable Datagram support")
+    variant('mlx5-dv', default=False,
+            description="Compile with mlx5 Direct Verbs support")
+    variant('ib-hw-tm', default=False,
+            description="Compile with IB Tag Matching support")
+    variant('dm', default=False,
+            description="Compile with Device Memory support")
+    variant('cm', default=False,
+            description="Compile with IB Connection Manager support")
 
     depends_on('numactl')
     depends_on('rdma-core')
@@ -88,16 +106,34 @@ class Ucx(AutotoolsPackage, CudaPackage):
         else:
             config_args.append('--disable-mt')
 
+        if '+cma' in spec:
+            config_args.append('--enable-cma')
+        else:
+            config_args.append('--disable-cma')
+
         if '+paramter_checking' in spec:
             config_args.append('--enable-params-check')
         else:
             config_args.append('--disable-params-check')
+
+        # Activate SIMD based on properties of the target
+        if 'avx' in self.spec.target:
+            config_args.append('--with-avx')
+        else:
+            config_args.append('--without-avx')
 
         config_args.extend(self.enable_or_disable('optimizations'))
         config_args.extend(self.enable_or_disable('assertions'))
         config_args.extend(self.enable_or_disable('logging'))
 
         config_args.extend(self.with_or_without('pic'))
+        config_args.extend(self.with_or_without('rc'))
+        config_args.extend(self.with_or_without('ud'))
+        config_args.extend(self.with_or_without('dc'))
+        config_args.extend(self.with_or_without('mlx5-dv'))
+        config_args.extend(self.with_or_without('ib-hw-tm'))
+        config_args.extend(self.with_or_without('dm'))
+        config_args.extend(self.with_or_without('cm'))
         config_args.extend(self.with_or_without('java',
                                                 activation_value='prefix'))
         config_args.extend(self.with_or_without('cuda',

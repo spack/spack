@@ -29,6 +29,11 @@ class MultivalueVariant(Package):
         multi=False
     )
 
+    variant(
+        'libs', default='shared', values=('shared', 'static'), multi=True,
+        description='Type of libraries to install'
+    )
+
     depends_on('mpi')
     depends_on('callpath')
     depends_on('a')

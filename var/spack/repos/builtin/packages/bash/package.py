@@ -14,6 +14,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers = ['adamjstewart']
 
+    version('5.1', sha256='cc012bc860406dcf42f64431bcd3d2fa7560c02915a601aba9cd597a39329baa')
     version('5.0', sha256='b4a80f2ac66170b2913efbfb9f2594f1f76c7b1afd11f799e22035d63077fb4d')
     version('4.4', sha256='d86b3392c1202e8ff5a423b302e6284db7f8f435ea9f39b5b1b20fd3ac36dfcb')
     version('4.3', sha256='afc687a28e0e24dc21b988fa159ff9dbcf6b7caa92ade8645cc6d5605cd024d4')
@@ -23,6 +24,15 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
     depends_on('iconv')
 
     patches = [
+        ('5.1', '001', 'ebb07b3dbadd98598f078125d0ae0d699295978a5cdaef6282fe19adef45b5fa'),
+        ('5.1', '002', '15ea6121a801e48e658ceee712ea9b88d4ded022046a6147550790caf04f5dbe'),
+        ('5.1', '003', '22f2cc262f056b22966281babf4b0a2f84cb7dd2223422e5dcd013c3dcbab6b1'),
+        ('5.1', '004', '9aaeb65664ef0d28c0067e47ba5652b518298b3b92d33327d84b98b28d873c86'),
+        ('5.1', '005', 'cccbb5e9e6763915d232d29c713007a62b06e65126e3dd2d1128a0dc5ef46da5'),
+        ('5.1', '006', '75e17d937de862615c6375def40a7574462210dce88cf741f660e2cc29473d14'),
+        ('5.1', '007', 'acfcb8c7e9f73457c0fb12324afb613785e0c9cef3315c9bbab4be702f40393a'),
+        ('5.1', '008', 'f22cf3c51a28f084a25aef28950e8777489072628f972b12643b4534a17ed2d1'),
+
         ('5.0', '001', 'f2fe9e1f0faddf14ab9bfa88d450a75e5d028fedafad23b88716bd657c737289'),
         ('5.0', '002', '87e87d3542e598799adb3e7e01c8165bc743e136a400ed0de015845f7ff68707'),
         ('5.0', '003', '4eebcdc37b13793a232c5f2f498a5fcbf7da0ecb3da2059391c096db620ec85b'),

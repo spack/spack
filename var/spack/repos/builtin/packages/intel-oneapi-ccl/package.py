@@ -3,25 +3,30 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from sys import platform
 
 from spack import *
-
-releases = {
-    '2021.1.1': {'irc_id': '17391', 'build': '54'}}
 
 
 class IntelOneapiCcl(IntelOneApiLibraryPackage):
     """Intel oneAPI CCL."""
 
-    maintainers = ['rscohn2']
+    maintainers = ['rscohn2', 'danvev']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/oneccl.html'
 
-    version('2021.1.1', sha256='de732df57a03763a286106c8b885fd60e83d17906936a8897a384b874e773f49', expand=False)
+    depends_on('intel-oneapi-mpi')
 
-    def __init__(self, spec):
-        self.component_info(dir_name='ccl',
-                            components='intel.oneapi.lin.ccl.devel',
-                            releases=releases,
-                            url_name='oneapi_ccl')
-        super(IntelOneapiCcl, self).__init__(spec)
+    if platform == 'linux':
+        version('2021.2.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17731/l_oneapi_ccl_p_2021.2.0.269_offline.sh',
+                sha256='18b7875030243295b75471e235e91e5f7b4fc15caf18c07d941a6d47fba378d7',
+                expand=False)
+        version('2021.1.1',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17391/l_oneapi_ccl_p_2021.1.1.54_offline.sh',
+                sha256='de732df57a03763a286106c8b885fd60e83d17906936a8897a384b874e773f49',
+                expand=False)
+
+    @property
+    def component_dir(self):
+        return 'ccl'

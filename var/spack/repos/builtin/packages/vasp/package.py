@@ -17,6 +17,7 @@ class Vasp(MakefilePackage):
 
     homepage = "http://vasp.at"
     url      = "file://{0}/vasp.5.4.4.pl2.tgz".format(os.getcwd())
+    manual_download = True
 
     version('6.1.1', sha256='e37a4dfad09d3ad0410833bcd55af6b599179a085299026992c2d8e319bf6927')
     version('5.4.4.pl2', sha256='98f75fd75399a23d76d060a6155f4416b340a1704f256a00146f89024035bc8e')
@@ -57,6 +58,7 @@ class Vasp(MakefilePackage):
             make_include = join_path('arch', 'makefile.include.linux_gnu')
         elif '%nvhpc' in spec:
             make_include = join_path('arch', 'makefile.include.linux_pgi')
+            filter_file('-pgc++libs', '-c++libs', make_include, string=True)
             filter_file('pgcc', spack_cc, make_include)
             filter_file('pgc++', spack_cxx, make_include, string=True)
             filter_file('pgfortran', spack_fc, make_include)
@@ -124,11 +126,16 @@ class Vasp(MakefilePackage):
         fflags = []
         if '%gcc' in spec or '%intel' in spec:
             fflags.append('-w')
+        elif '%nvhpc' in spec:
+            fflags.extend(['-Mnoupcase', '-Mbackslash', '-Mlarge_arrays'])
 
         spack_env.set('BLAS', spec['blas'].libs.ld_flags)
         spack_env.set('LAPACK', spec['lapack'].libs.ld_flags)
         spack_env.set('FFTW', spec['fftw'].prefix)
         spack_env.set('MPI_INC', spec['mpi'].prefix.include)
+
+        if '%nvhpc' in spec:
+            spack_env.set('QD', spec['qd'].prefix)
 
         if '+scalapack' in spec:
             cpp_options.append('-DscaLAPACK')

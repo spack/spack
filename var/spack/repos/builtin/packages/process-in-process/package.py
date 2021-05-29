@@ -29,6 +29,7 @@ class ProcessInProcess(Package):
 
     # packages required for building PiP-gdb
     depends_on('texinfo', type='build')
+    depends_on('systemtap')
 
     # resources for PiP version 2
     #  PiP-glibc resource

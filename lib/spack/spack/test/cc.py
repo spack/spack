@@ -350,15 +350,15 @@ def test_ccld_deps_isystem():
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
                  SPACK_LINK_DIRS='xlib:ylib:zlib'):
-        mytest_args = test_args + ['-isystemfooinc']
+        mytest_args = test_args + ['-isystem', 'fooinc']
         check_args(
             cc, mytest_args,
             [real_cc] +
             test_include_paths +
-            ['-isystemfooinc',
-             '-isystemxinc',
-             '-isystemyinc',
-             '-isystemzinc'] +
+            ['-isystem', 'fooinc',
+             '-isystem', 'xinc',
+             '-isystem', 'yinc',
+             '-isystem', 'zinc'] +
             test_library_paths +
             ['-Lxlib',
              '-Lylib',
@@ -432,20 +432,20 @@ def test_ccld_with_system_dirs_isystem():
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
                  SPACK_LINK_DIRS='xlib:ylib:zlib'):
 
-        sys_path_args = ['-isystem/usr/include',
+        sys_path_args = ['-isystem', '/usr/include',
                          '-L/usr/local/lib',
                          '-Wl,-rpath,/usr/lib64',
-                         '-isystem/usr/local/include',
+                         '-isystem', '/usr/local/include',
                          '-L/lib64/']
         check_args(
             cc, sys_path_args + test_args,
             [real_cc] +
             test_include_paths +
-            ['-isystemxinc',
-             '-isystemyinc',
-             '-isystemzinc'] +
-            ['-isystem/usr/include',
-             '-isystem/usr/local/include'] +
+            ['-isystem', 'xinc',
+             '-isystem', 'yinc',
+             '-isystem', 'zinc'] +
+            ['-isystem', '/usr/include',
+             '-isystem', '/usr/local/include'] +
             test_library_paths +
             ['-Lxlib',
              '-Lylib',
@@ -622,3 +622,24 @@ def test_filter_enable_new_dtags(wrapper_flags):
         result = cc(*(test_args + ['-Wl,--enable-new-dtags']), output=str)
         result = result.strip().split('\n')
         assert '-Wl,--enable-new-dtags' not in result
+
+
+@pytest.mark.regression('22643')
+def test_linker_strips_loopopt(wrapper_flags):
+    with set_env(SPACK_TEST_COMMAND='dump-args'):
+        # ensure that -loopopt=0 is not present in ld mode
+        result = ld(*(test_args + ["-loopopt=0"]), output=str)
+        result = result.strip().split('\n')
+        assert '-loopopt=0' not in result
+
+        # ensure that -loopopt=0 is not present in ccld mode
+        result = cc(*(test_args + ["-loopopt=0"]), output=str)
+        result = result.strip().split('\n')
+        assert '-loopopt=0' not in result
+
+        # ensure that -loopopt=0 *is* present in cc mode
+        # The "-c" argument is needed for cc to be detected
+        # as compile only (cc) mode.
+        result = cc(*(test_args + ["-loopopt=0", "-c", "x.c"]), output=str)
+        result = result.strip().split('\n')
+        assert '-loopopt=0' in result

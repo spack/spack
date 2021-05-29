@@ -11,11 +11,13 @@ class CBlosc2(CMakePackage):
        other bells and whistles"""
 
     homepage = "http://www.blosc.org"
+    url      = "https://github.com/Blosc/c-blosc2/archive/refs/tags/v2.0.0.rc1.tar.gz"
     git      = "https://github.com/Blosc/c-blosc2.git"
 
     maintainers = ['ax3l']
 
     version('develop', branch='master')
+    version('2.0.0.rc1', sha256='c30b72af5446f052bad1791000e5a44d156c96b0e39b4bc8e9f97a013c7d1b69')
 
     variant('avx2', default=True, description='Enable AVX2 support')
 
@@ -58,12 +60,9 @@ class CBlosc2(CMakePackage):
             '-DPREFER_EXTERNAL_ZSTD=ON',
             '-DDEACTIVATE_AVX2={0}'.format(
                 'ON' if '~avx2' in spec else 'OFF'),
-            '-DBUILD_TESTS={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
-            '-DBUILD_BENCHMARKS={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
-            '-DBUILD_EXAMPLES={0}'.format(
-                'ON' if self.run_tests else 'OFF')
+            self.define('BUILD_TESTS', self.run_tests),
+            self.define('BUILD_BENCHMARKS', self.run_tests),
+            self.define('BUILD_EXAMPLES', self.run_tests)
         ]
 
         return args

@@ -20,7 +20,7 @@ class RBookdown(RPackage):
     version('0.12', sha256='38eb4c5b877ccd85b16cfe74a48c3bc53de2f276da98e5515f37e7a06e065bb0')
     version('0.5', sha256='b7331fd56f64bd2bddc34e2a188fc491f9ff5308f44f7e3151721247f21ca67e')
 
-    depends_on('pandoc@1.17.2:')
+    depends_on('r+X', type=('build', 'run'))
     depends_on('r-htmltools@0.3.6:', type=('build', 'run'))
     depends_on('r-knitr@1.22:', type=('build', 'run'))
     depends_on('r-rmarkdown@1.12:', when='@:0.12', type=('build', 'run'))
@@ -30,3 +30,4 @@ class RBookdown(RPackage):
     depends_on('r-tinytex@0.12:', when='@0.12:', type=('build', 'run'))
     depends_on('r-yaml@2.1.14:', when='@:0.12', type=('build', 'run'))
     depends_on('r-yaml@2.1.19:', when='@0.21:', type=('build', 'run'))
+    depends_on('pandoc@1.17.2:')

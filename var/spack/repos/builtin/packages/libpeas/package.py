@@ -37,7 +37,7 @@ class Libpeas(AutotoolsPackage):
     depends_on('pango')
     depends_on('gnome-common')
     depends_on('py-pygobject@3:', type='build')
-    depends_on('python@3:', type='build')
+    depends_on('python@3:3.7.9', type='build')
 
     def url_for_version(self, version):
         url  = 'https://download.gnome.org/sources/libpeas/'
@@ -86,7 +86,7 @@ class Libpeas(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         autoreconf_args = ['-ivf']
-        aclocal_pkg_list = ['pkg-config',
+        aclocal_pkg_list = ['pkgconfig',
                             'gettext',
                             'intltool',
                             'glib',

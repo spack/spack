@@ -918,8 +918,12 @@ class Repo(object):
     @autospec
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
-        if not self.exists(spec.name):
-            raise UnknownPackageError(spec.name)
+        # NOTE: we only check whether the package is None here, not whether it
+        # actually exists, because we have to load it anyway, and that ends up
+        # checking for existence. We avoid constructing FastPackageChecker,
+        # which will stat all packages.
+        if spec.name is None:
+            raise UnknownPackageError(None, self)
 
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownPackageError(spec.name, self.namespace)
@@ -1064,7 +1068,16 @@ class Repo(object):
 
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists."""
-        return pkg_name in self._pkg_checker
+        if pkg_name is None:
+            return False
+
+        # if the FastPackageChecker is already constructed, use it
+        if self._fast_package_checker:
+            return pkg_name in self._pkg_checker
+
+        # if not, check for the package.py file
+        path = self.filename_for_package_name(pkg_name)
+        return os.path.exists(path)
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
@@ -1260,23 +1273,6 @@ def set_path(repo):
 
 
 @contextlib.contextmanager
-def swap(repo_path):
-    """Temporarily use another RepoPath."""
-    global path
-
-    # swap out _path for repo_path
-    saved = path
-    remove_from_meta = set_path(repo_path)
-
-    yield
-
-    # restore _path and sys.meta_path
-    if remove_from_meta:
-        sys.meta_path.remove(repo_path)
-    path = saved
-
-
-@contextlib.contextmanager
 def additional_repository(repository):
     """Adds temporarily a repository to the default one.
 
@@ -1286,6 +1282,34 @@ def additional_repository(repository):
     path.put_first(repository)
     yield
     path.remove(repository)
+
+
+@contextlib.contextmanager
+def use_repositories(*paths_and_repos):
+    """Use the repositories passed as arguments within the context manager.
+
+    Args:
+        *paths_and_repos: paths to the repositories to be used, or
+            already constructed Repo objects
+
+    Returns:
+        Corresponding RepoPath object
+    """
+    global path
+
+    # Construct a temporary RepoPath object from
+    temporary_repositories = RepoPath(*paths_and_repos)
+
+    # Swap the current repository out
+    saved = path
+    remove_from_meta = set_path(temporary_repositories)
+
+    yield temporary_repositories
+
+    # Restore _path and sys.meta_path
+    if remove_from_meta:
+        sys.meta_path.remove(temporary_repositories)
+    path = saved
 
 
 class RepoError(spack.error.SpackError):
@@ -1320,7 +1344,7 @@ class UnknownPackageError(UnknownEntityError):
         long_msg = None
         if name:
             if repo:
-                msg = "Package '{0}' not found in repository '{1}'"
+                msg = "Package '{0}' not found in repository '{1.root}'"
                 msg = msg.format(name, repo)
             else:
                 msg = "Package '{0}' not found.".format(name)

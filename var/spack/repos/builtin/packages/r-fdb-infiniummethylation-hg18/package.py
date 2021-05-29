@@ -7,7 +7,9 @@ from spack import *
 
 
 class RFdbInfiniummethylationHg18(RPackage):
-    """Compiled HumanMethylation27 and HumanMethylation450 annotations"""
+    """Annotation package for Illumina Infinium DNA methylation probes
+
+    Compiled HumanMethylation27 and HumanMethylation450 annotations"""
 
     # This is a bioconductor package but there is no available git repository
     homepage = "http://bioconductor.org/packages/release/data/annotation/html/FDb.InfiniumMethylation.hg18.html"

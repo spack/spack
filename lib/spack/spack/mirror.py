@@ -455,6 +455,51 @@ def create(path, specs, skip_unstable_versions=False):
     return mirror_stats.stats()
 
 
+def add(name, url, scope):
+    """Add a named mirror in the given scope"""
+    mirrors = spack.config.get('mirrors', scope=scope)
+    if not mirrors:
+        mirrors = syaml_dict()
+
+    if name in mirrors:
+        tty.die("Mirror with name %s already exists." % name)
+
+    items = [(n, u) for n, u in mirrors.items()]
+    items.insert(0, (name, url))
+    mirrors = syaml_dict(items)
+    spack.config.set('mirrors', mirrors, scope=scope)
+
+
+def remove(name, scope):
+    """Remove the named mirror in the given scope"""
+    mirrors = spack.config.get('mirrors', scope=scope)
+    if not mirrors:
+        mirrors = syaml_dict()
+
+    if name not in mirrors:
+        tty.die("No mirror with name %s" % name)
+
+    old_value = mirrors.pop(name)
+    spack.config.set('mirrors', mirrors, scope=scope)
+
+    debug_msg_url = "url %s"
+    debug_msg = ["Removed mirror %s with"]
+    values = [name]
+
+    try:
+        fetch_value = old_value['fetch']
+        push_value = old_value['push']
+
+        debug_msg.extend(("fetch", debug_msg_url, "and push", debug_msg_url))
+        values.extend((fetch_value, push_value))
+    except TypeError:
+        debug_msg.append(debug_msg_url)
+        values.append(old_value)
+
+    tty.debug(" ".join(debug_msg) % tuple(values))
+    tty.msg("Removed mirror %s." % name)
+
+
 class MirrorStats(object):
     def __init__(self):
         self.present = {}

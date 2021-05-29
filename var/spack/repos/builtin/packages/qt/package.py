@@ -15,9 +15,11 @@ MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
 
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
-    homepage = 'http://qt.io'
-    # Alternative location 'http://download.qt.io/official_releases/qt/'
-    url      = 'http://download.qt.io/archive/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz'
+    homepage = 'https://qt.io'
+
+    # Supported releases: 'https://download.qt.io/official_releases/qt/'
+    # Older archives: 'https://download.qt.io/new_archive/qt/'
+    url      = 'https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz'
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
     maintainers = ['sethrj']
@@ -26,23 +28,26 @@ class Qt(Package):
 
     version('5.15.2', sha256='3a530d1b243b5dec00bc54937455471aaa3e56849d2593edb8ded07228202240')
     version('5.14.2', sha256='c6fcd53c744df89e7d3223c02838a33309bd1c291fcb6f9341505fe99f7f19fa')
-    version('5.14.1', sha256='6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8')
-    version('5.14.0', sha256='be9a77cd4e1f9d70b58621d0753be19ea498e6b0da0398753e5038426f76a8ba')
-    version('5.13.1', sha256='adf00266dc38352a166a9739f1a24a1e36f1be9c04bf72e16e142a256436974e')
-    version('5.12.7', sha256='873783a0302129d98a8f63de9afe4520fb5f8d5316be8ad7b760c59875cd8a8d')
-    version('5.12.5', sha256='a2299e21db7767caf98242767bffb18a2a88a42fee2d6a393bedd234f8c91298')
-    version('5.12.2', sha256='59b8cb4e728450b21224dcaaa40eb25bafc5196b6988f2225c394c6b7f881ff5')
-    version('5.11.3', sha256='859417642713cee2493ee3646a7fee782c9f1db39e41d7bb1322bba0c5f0ff4d')
-    version('5.11.2', sha256='c6104b840b6caee596fa9a35bc5f57f67ed5a99d6a36497b6fe66f990a53ca81')
-    version('5.10.0', sha256='936d4cf5d577298f4f9fdb220e85b008ae321554a5fcd38072dc327a7296230e')
-    version('5.9.1',  sha256='7b41a37d4fe5e120cdb7114862c0153f86c07abbec8db71500443d2ce0c89795')
-    version('5.9.0',  sha256='f70b5c66161191489fc13c7b7eb69bf9df3881596b183e7f6d94305a39837517')
-    version('5.8.0',  sha256='9dc5932307ae452855863f6405be1f7273d91173dcbe4257561676a599bd58d3')
-    version('5.7.1',  sha256='c86684203be61ae7b33a6cf33c23ec377f246d697bd9fb737d16f0ad798f89b7')
-    version('5.7.0',  sha256='4661905915d6265243e17fe59852930a229cf5b054ce5af5f48b34da9112ab5f')
-    version('5.5.1',  sha256='c7fad41a009af1996b62ec494e438aedcb072b3234b2ad3eeea6e6b1f64be3b3')
-    version('5.4.2',  sha256='cfc768c55f0a0cd232bed914a9022528f8f2e50cb010bf0e4f3f62db3dfa17bd')
-    version('5.4.0',  sha256='1739633424bde3d89164ae6ff1c5c913be38b9997e451558ef873aac4bbc408a')
+    version('5.14.1', sha256='6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8', deprecated=True)
+    version('5.14.0', sha256='be9a77cd4e1f9d70b58621d0753be19ea498e6b0da0398753e5038426f76a8ba', deprecated=True)
+    version('5.13.1', sha256='adf00266dc38352a166a9739f1a24a1e36f1be9c04bf72e16e142a256436974e', deprecated=True)
+    version('5.12.10', sha256='3e0ee1e57f5cf3eeb038d0b4b22c7eb442285c62639290756b39dc93a1d0e14f')
+    version('5.12.7', sha256='873783a0302129d98a8f63de9afe4520fb5f8d5316be8ad7b760c59875cd8a8d', deprecated=True)
+    version('5.12.5', sha256='a2299e21db7767caf98242767bffb18a2a88a42fee2d6a393bedd234f8c91298', deprecated=True)
+    version('5.12.2', sha256='59b8cb4e728450b21224dcaaa40eb25bafc5196b6988f2225c394c6b7f881ff5', deprecated=True)
+    version('5.11.3', sha256='859417642713cee2493ee3646a7fee782c9f1db39e41d7bb1322bba0c5f0ff4d', deprecated=True)
+    version('5.11.2', sha256='c6104b840b6caee596fa9a35bc5f57f67ed5a99d6a36497b6fe66f990a53ca81', deprecated=True)
+    version('5.10.0', sha256='936d4cf5d577298f4f9fdb220e85b008ae321554a5fcd38072dc327a7296230e', deprecated=True)
+    version('5.9.9',  sha256='5ce285209290a157d7f42ec8eb22bf3f1d76f2e03a95fc0b99b553391be01642')
+    version('5.9.1',  sha256='7b41a37d4fe5e120cdb7114862c0153f86c07abbec8db71500443d2ce0c89795', deprecated=True)
+    version('5.9.0',  sha256='f70b5c66161191489fc13c7b7eb69bf9df3881596b183e7f6d94305a39837517', deprecated=True)
+    version('5.8.0', sha256='0f4c54386d3dbac0606a936a7145cebb7b94b0ca2d29bc001ea49642984824b6', deprecated=True)
+    version('5.7.1', sha256='46ebca977deb629c5e69c2545bc5fe13f7e40012e5e2e451695c583bd33502fa', deprecated=True)
+    version('5.7.0', sha256='a6a2632de7e44bbb790bc3b563f143702c610464a7f537d02036749041fd1800', deprecated=True)
+    version('5.6.3',  sha256='2fa0cf2e5e8841b29a4be62062c1a65c4f6f2cf1beaf61a5fd661f520cd776d0')
+    version('5.5.1',  sha256='c7fad41a009af1996b62ec494e438aedcb072b3234b2ad3eeea6e6b1f64be3b3', deprecated=True)
+    version('5.4.2',  sha256='cfc768c55f0a0cd232bed914a9022528f8f2e50cb010bf0e4f3f62db3dfa17bd', deprecated=True)
+    version('5.4.0',  sha256='1739633424bde3d89164ae6ff1c5c913be38b9997e451558ef873aac4bbc408a', deprecated=True)
     version('5.3.2',  sha256='c8d3fd2ead30705c6673c5e4af6c6f3973346b4fb2bd6079c7be0943a5b0282d')
     version('5.2.1',  sha256='84e924181d4ad6db00239d87250cc89868484a14841f77fb85ab1f1dbdcd7da1')
     version('4.8.7',  sha256='e2882295097e47fe089f8ac741a95fef47e0a73a3f3cdf21b56990638f626ea0')
@@ -118,10 +123,24 @@ class Qt(Package):
     patch('qt5-11-intel-overflow.patch', when='@5.11 %intel')
     patch('qt5-12-intel-overflow.patch', when='@5.12:5.14.0 %intel')
     # https://bugreports.qt.io/browse/QTBUG-78937
-    patch('qt5-12-configure.patch', when='@5.12')
+    patch('qt5-12-configure.patch', when='@5.12.7')
     # https://bugreports.qt.io/browse/QTBUG-93402
     patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@8:')
     patch('qt514.patch', when='@5.14')
+    patch('qt514-isystem.patch', when='@5.14.2')
+    # https://bugreports.qt.io/browse/QTBUG-90395
+    patch('https://src.fedoraproject.org/rpms/qt5-qtbase/raw/6ae41be8260f0f5403367eb01f7cd8319779674a/f/qt5-qtbase-gcc11.patch',
+          sha256='9378afd071ad5c0ec8f7aef48421e4b9fab02f24c856bee9c0951143941913c5',
+          working_dir='qtbase',
+          when='@5.14: %gcc@11:')
+    patch('https://src.fedoraproject.org/rpms/qt5-qtdeclarative/raw/593481a2541d3218f285dd7b46bdc5f4c76075ab/f/qt5-qtdeclarative-gcc11.patch',
+          sha256='2081e9cb85f6712be9b63c70204efa3da954c07d857283eeae16d1b0409704bd',
+          working_dir='qtdeclarative',
+          when='@5.14: %gcc@11:')
+    patch('https://src.fedoraproject.org/rpms/qt5-qtwebsockets/raw/f54f4ce6fa27941e9e6d606103d32056078edc74/f/qt5-qtwebsockets-gcc11.patch',
+          sha256='84b099109d08adf177adf9d3542b6215ec3e42138041d523860dbfdcb59fdaae',
+          working_dir='qtwebsockets',
+          when='@5.14: %gcc@11:')
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
 
     # Build-only dependencies
@@ -141,6 +160,7 @@ class Qt(Package):
     depends_on("gperf", when='+webkit')
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
+    depends_on("python@2.7.5:2.999", when='@5.14: +webkit', type='build')
     depends_on("sqlite+column_metadata", when='+sql', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
@@ -193,7 +213,14 @@ class Qt(Package):
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
-        url = self.list_url
+        url = self.list_url.replace('http:', 'https:')
+
+        if version < Version('5.12') and version.up_to(2) != Version('5.9'):
+            # As of 28 April 2021:
+            # - new_archive contains 1-5.8, 5.10-5.11
+            # - archive contains 1-5.1, 5.9, 5.12-6.0
+            # - official_releases containis 5.9, 5.12, 5.15, 6.0
+            url = url.replace('archive', 'new_archive')
 
         if version >= Version('4.0'):
             url += str(version.up_to(2)) + '/'
@@ -220,8 +247,8 @@ class Qt(Package):
         elif version >= Version('3'):
             url += 'free-'
 
-        # 5.9 only has xz format. From 5.2.1 -> 5.8.0 .gz or .xz were possible
-        if version >= Version('5.9'):
+        # 5.6.3 and 5.9 only has xz format. Some older versions have only .gz
+        if version >= Version('5.6'):
             url += str(version) + '.tar.xz'
         else:
             url += str(version) + '.tar.gz'
@@ -242,9 +269,15 @@ class Qt(Package):
 
     def setup_run_environment(self, env):
         env.set('QTDIR', self.prefix)
+        env.set('QTINC', self.prefix.inc)
+        env.set('QTLIB', self.prefix.lib)
+        env.prepend_path('QT_PLUGIN_PATH', self.prefix.plugins)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('QTDIR', self.prefix)
+        env.set('QTINC', self.prefix.inc)
+        env.set('QTLIB', self.prefix.lib)
+        env.prepend_path('QT_PLUGIN_PATH', self.prefix.plugins)
 
     def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
@@ -408,9 +441,6 @@ class Qt(Package):
             use_spack_dep('freetype')
             if not MACOS_VERSION:
                 config_args.append('-fontconfig')
-            elif version < Version('5.15'):
-                # Linux-only QT5 dependencies
-                config_args.append('-system-xcb')
         else:
             config_args.append('-no-freetype')
             config_args.append('-no-gui')
@@ -552,6 +582,9 @@ class Qt(Package):
             ])
             if version < Version('5.12'):
                 config_args.append('-no-xinput2')
+        elif version < Version('5.15') and '+gui' in spec:
+            # Linux-only QT5 dependencies
+            config_args.append('-system-xcb')
 
         if '~webkit' in spec:
             config_args.extend([

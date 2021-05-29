@@ -26,7 +26,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="do not remove the install prefix if installation fails")
@@ -97,6 +97,9 @@ def dev_build(self, args):
     # disable checksumming if requested
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
+
+    if args.deprecated:
+        spack.config.set('config:deprecated', True, scope='command_line')
 
     tests = False
     if args.test == 'all':

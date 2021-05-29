@@ -31,6 +31,8 @@ class PkgConfig(AutotoolsPackage):
 
     parallel = False
 
+    tags = ['build-tools']
+
     executables = ['^pkg-config$']
 
     @classmethod

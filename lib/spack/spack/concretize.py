@@ -73,9 +73,7 @@ class Concretizer(object):
         if not dev_info:
             return False
 
-        path = dev_info['path']
-        path = path if os.path.isabs(path) else os.path.join(
-            env.path, path)
+        path = os.path.normpath(os.path.join(env.path, dev_info['path']))
 
         if 'dev_path' in spec.variants:
             assert spec.variants['dev_path'].value == path
@@ -714,16 +712,36 @@ def _compiler_concretization_failure(compiler_spec, arch):
         raise UnavailableCompilerVersionError(compiler_spec, arch)
 
 
-def concretize_specs_together(*abstract_specs):
+def concretize_specs_together(*abstract_specs, **kwargs):
     """Given a number of specs as input, tries to concretize them together.
 
     Args:
+        tests (bool or list or set): False to run no tests, True to test
+            all packages, or a list of package names to run tests for some
         *abstract_specs: abstract specs to be concretized, given either
             as Specs or strings
 
     Returns:
         List of concretized specs
     """
+    if spack.config.get('config:concretizer') == 'original':
+        return _concretize_specs_together_original(*abstract_specs, **kwargs)
+    return _concretize_specs_together_new(*abstract_specs, **kwargs)
+
+
+def _concretize_specs_together_new(*abstract_specs, **kwargs):
+    import spack.solver.asp
+    result = spack.solver.asp.solve(abstract_specs)
+
+    if not result.satisfiable:
+        result.print_cores()
+        tty.die("Unsatisfiable spec.")
+
+    opt, i, answer = min(result.answers)
+    return [answer[s.name].copy() for s in abstract_specs]
+
+
+def _concretize_specs_together_original(*abstract_specs, **kwargs):
     def make_concretization_repository(abstract_specs):
         """Returns the path to a temporary repository created to contain
         a fake package that depends on all of the abstract specs.
@@ -757,7 +775,7 @@ def concretize_specs_together(*abstract_specs):
     with spack.repo.additional_repository(concretization_repository):
         # Spec from a helper package that depends on all the abstract_specs
         concretization_root = spack.spec.Spec('concretizationroot')
-        concretization_root.concretize()
+        concretization_root.concretize(tests=kwargs.get('tests', False))
         # Retrieve the direct dependencies
         concrete_specs = [
             concretization_root[spec.name].copy() for spec in abstract_specs

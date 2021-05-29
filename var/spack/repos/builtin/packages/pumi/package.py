@@ -67,13 +67,12 @@ class Pumi(CMakePackage):
 
         args = [
             '-DSCOREC_CXX_WARNINGS=OFF',
-            '-DENABLE_ZOLTAN=%s' % ('ON' if '+zoltan' in spec else 'OFF'),
+            self.define_from_variant('ENABLE_ZOLTAN', 'zoltan'),
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            '-DPUMI_FORTRAN_INTERFACE=%s' %
-            ('ON' if '+fortran' in spec else 'OFF'),
+            self.define_from_variant('PUMI_FORTRAN_INTERFACE', 'fortran'),
             '-DMDS_ID_TYPE=%s' % ('long' if '+int64' in spec else 'int'),
             '-DSKIP_SIMMETRIX_VERSION_CHECK=%s' %
             ('ON' if '~simmodsuite_version_check' in spec else 'OFF'),

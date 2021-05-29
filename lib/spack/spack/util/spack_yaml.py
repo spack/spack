@@ -13,7 +13,8 @@
 
 """
 import ctypes
-import collections
+import re
+import sys
 from typing import List  # novm
 
 from ordereddict_backport import OrderedDict
@@ -25,6 +26,13 @@ from ruamel.yaml import RoundTripLoader, RoundTripDumper
 from llnl.util.tty.color import colorize, clen, cextra
 
 import spack.error
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Mapping  # novm
+else:
+    from collections import Mapping
+
 
 # Only export load and dump
 __all__ = ['load', 'dump', 'SpackYAMLError']
@@ -178,6 +186,12 @@ class OrderedLineDumper(RoundTripDumper):
         """Make the dumper NEVER print YAML aliases."""
         return True
 
+    def represent_data(self, data):
+        result = super(OrderedLineDumper, self).represent_data(data)
+        if data is None:
+            result.value = syaml_str("null")
+        return result
+
     def represent_str(self, data):
         if hasattr(data, 'override') and data.override:
             data = data + ':'
@@ -255,19 +269,18 @@ class LineAnnotationDumper(OrderedLineDumper):
     def represent_data(self, data):
         """Force syaml_str to be passed through with marks."""
         result = super(LineAnnotationDumper, self).represent_data(data)
-        if isinstance(result.value, string_types):
+        if data is None:
+            result.value = syaml_str("null")
+        elif isinstance(result.value, string_types):
             result.value = syaml_str(data)
         if markable(result.value):
             mark(result.value, data)
         return result
 
-    def write_stream_start(self):
-        super(LineAnnotationDumper, self).write_stream_start()
-        _annotations.append(colorize('@K{---}'))
-
     def write_line_break(self):
         super(LineAnnotationDumper, self).write_line_break()
-        if not self.saved:
+        if self.saved is None:
+            _annotations.append(colorize('@K{---}'))
             return
 
         # append annotations at the end of each line
@@ -315,7 +328,10 @@ def dump_annotated(data, stream=None, *args, **kwargs):
 
     sio = StringIO()
     yaml.dump(data, sio, *args, **kwargs)
-    lines = sio.getvalue().rstrip().split('\n')
+
+    # write_line_break() is not called by YAML for empty lines, so we
+    # skip empty lines here with \n+.
+    lines = re.split(r"\n+", sio.getvalue().rstrip())
 
     getvalue = None
     if stream is None:
@@ -344,7 +360,7 @@ def sorted_dict(dict_like):
     """
     result = syaml_dict(sorted(dict_like.items()))
     for key, value in result.items():
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, Mapping):
             result[key] = sorted_dict(value)
     return result
 
