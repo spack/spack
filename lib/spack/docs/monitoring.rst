@@ -102,3 +102,19 @@ more tags to your build, you can do:
     # Add two tags, "pizza" and "pasta"
     $ spack install --monitor --monitor-tags pizza,pasta hdf5
 
+
+------------------
+Monitoring Offline
+------------------
+
+In the case that you want to save monitor results to your filesystem
+and then upload them later (perhaps you are in an environment where you don't
+have credentials or it isn't safe to use them) you can use the ``--monitor-save-local``
+flag.
+
+.. code-block:: console
+
+    $ spack install --monitor --monitor-save-local hdf5 
+
+This will save results in a subfolder, "monitor" in your designated spack
+reports folder, which defaults to ``$HOME/.spack/reports/monitor``.

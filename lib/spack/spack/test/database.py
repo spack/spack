@@ -424,7 +424,7 @@ def test_005_db_exists(database):
 def test_010_all_install_sanity(database):
     """Ensure that the install layout reflects what we think it does."""
     all_specs = spack.store.layout.all_specs()
-    assert len(all_specs) == 14
+    assert len(all_specs) == 15
 
     # Query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
@@ -545,7 +545,8 @@ def test_041_ref_counts_deprecate(mutable_database):
 def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
     # query everything
-    assert len(spack.store.db.query()) == 16
+    total_specs = len(spack.store.db.query())
+    assert total_specs == 17
 
     # query specs with multiple configurations
     mpileaks_specs = database.query('mpileaks')
@@ -571,10 +572,10 @@ def test_050_basic_query(database):
     assert len(database.query('mpileaks ^zmpi')) == 1
 
     # Query by date
-    assert len(database.query(start_date=datetime.datetime.min)) == 16
+    assert len(database.query(start_date=datetime.datetime.min)) == total_specs
     assert len(database.query(start_date=datetime.datetime.max)) == 0
     assert len(database.query(end_date=datetime.datetime.min)) == 0
-    assert len(database.query(end_date=datetime.datetime.max)) == 16
+    assert len(database.query(end_date=datetime.datetime.max)) == total_specs
 
 
 def test_060_remove_and_add_root_package(mutable_database):

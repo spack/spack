@@ -10,6 +10,7 @@ import itertools
 import json
 import os
 import os.path
+import re
 import shutil
 import tempfile
 import xml.etree.ElementTree
@@ -19,7 +20,7 @@ import pytest
 
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
-from llnl.util.filesystem import mkdirp, remove_linked_tree
+from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 
 import spack.architecture
 import spack.compilers
@@ -43,6 +44,20 @@ import spack.util.spack_yaml as syaml
 from spack.util.pattern import Bunch
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
+
+
+#
+# Return list of shas for latest two git commits in local spack repo
+#
+@pytest.fixture
+def last_two_git_commits(scope='session'):
+    git = spack.util.executable.which('git', required=True)
+    spack_git_path = spack.paths.prefix
+    with working_dir(spack_git_path):
+        git_log_out = git('log', '-n', '2', output=str, error=os.devnull)
+
+    regex = re.compile(r"^commit\s([^\s]+$)", re.MULTILINE)
+    yield regex.findall(git_log_out)
 
 
 @pytest.fixture(autouse=True)
@@ -567,6 +582,7 @@ def _populate(mock_db):
     _install('mpileaks ^mpich2')
     _install('mpileaks ^zmpi')
     _install('externaltest')
+    _install('trivial-smoke-test')
 
 
 @pytest.fixture(scope='session')
@@ -763,11 +779,11 @@ class MockConfig(object):
         self._configuration = configuration
         self.writer_key = writer_key
 
-    def configuration(self):
+    def configuration(self, module_set_name):
         return self._configuration
 
-    def writer_configuration(self):
-        return self.configuration()[self.writer_key]
+    def writer_configuration(self, module_set_name):
+        return self.configuration(module_set_name)[self.writer_key]
 
 
 class ConfigUpdate(object):
@@ -780,7 +796,9 @@ class ConfigUpdate(object):
     def __call__(self, filename):
         file = os.path.join(self.root_for_conf, filename + '.yaml')
         with open(file) as f:
-            mock_config = MockConfig(syaml.load_config(f), self.writer_key)
+            config_settings = syaml.load_config(f)
+        spack.config.set('modules:default', config_settings)
+        mock_config = MockConfig(config_settings, self.writer_key)
 
         self.monkeypatch.setattr(
             spack.modules.common,

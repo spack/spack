@@ -34,7 +34,9 @@ class Libfuse(MesonPackage):
         "which typically sets up udev rules and "
         "and init script in /etc/init.d"))
 
+    provides('fuse')
     conflicts("+useroot", when='~system_install', msg="useroot requires system_install")
+    conflicts('platform=darwin', msg='libfuse does not support OS-X, use macfuse instead')
 
     # Drops the install script which does system configuration
     patch('0001-Do-not-run-install-script.patch', when='@3: ~system_install')
@@ -68,12 +70,10 @@ class Libfuse(MesonPackage):
             "INIT_D_PATH={0}".format(self.prefix.etc),
         ]
 
-        if 'default_library=shared' in self.spec:
-            args.extend(['--enable-shared', '--disable-static'])
-        elif 'default_library=static' in self.spec:
-            args.extend(['--disable-shared', '--enable-static'])
-        else:
-            args.extend(['--enable-shared', '--enable-static'])
+        args.append('--enable-static' if 'libs=static' in self.spec
+                    else '--disable-static')
+        args.append('--enable-shared' if 'libs=shared' in self.spec
+                    else '--disable-shared')
 
         configure(*args)
 

@@ -7,6 +7,8 @@
 https://github.com/spack/spack-monitor/blob/main/script/spackmoncli.py
 """
 
+from datetime import datetime
+import hashlib
 import base64
 import os
 import re
@@ -18,11 +20,13 @@ except ImportError:
     from urllib2 import urlopen, Request, URLError  # type: ignore  # novm
 
 import spack
+import spack.config
 import spack.hash_types as ht
 import spack.main
 import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.path
 import llnl.util.tty as tty
 from copy import deepcopy
 
@@ -31,7 +35,8 @@ from copy import deepcopy
 cli = None
 
 
-def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=None):
+def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=None,
+               save_local=False):
     """
     Get a monitor client for a particular host and prefix.
 
@@ -47,26 +52,25 @@ def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=No
     """
     global cli
     cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail,
-                             tags=tags)
+                             tags=tags, save_local=save_local)
 
     # If we don't disable auth, environment credentials are required
-    if not disable_auth:
+    if not disable_auth and not save_local:
         cli.require_auth()
 
-    # We will exit early if the monitoring service is not running
-    info = cli.service_info()
+    # We will exit early if the monitoring service is not running, but
+    # only if we aren't doing a local save
+    if not save_local:
+        info = cli.service_info()
 
-    # If we allow failure, the response will be done
-    if info:
-        tty.debug("%s v.%s has status %s" % (
-            info['id'],
-            info['version'],
-            info['status'])
-        )
-        return cli
-
-    else:
-        tty.debug("spack-monitor server not found, continuing as allow_fail is True.")
+        # If we allow failure, the response will be done
+        if info:
+            tty.debug("%s v.%s has status %s" % (
+                info['id'],
+                info['version'],
+                info['status'])
+            )
+    return cli
 
 
 def get_monitor_group(subparser):
@@ -82,6 +86,9 @@ def get_monitor_group(subparser):
     monitor_group.add_argument(
         '--monitor', action='store_true', dest='use_monitor', default=False,
         help="interact with a montor server during builds.")
+    monitor_group.add_argument(
+        '--monitor-save-local', action='store_true', dest='monitor_save_local',
+        default=False, help="save monitor results to .spack instead of server.")
     monitor_group.add_argument(
         '--monitor-no-auth', action='store_true', dest='monitor_disable_auth',
         default=False, help="the monitoring server does not require auth.")
@@ -110,7 +117,8 @@ class SpackMonitorClient:
     to the client on init.
     """
 
-    def __init__(self, host=None, prefix="ms1", allow_fail=False, tags=None):
+    def __init__(self, host=None, prefix="ms1", allow_fail=False, tags=None,
+                 save_local=False):
         self.host = host or "http://127.0.0.1"
         self.baseurl = "%s/%s" % (self.host, prefix.strip("/"))
         self.token = os.environ.get("SPACKMON_TOKEN")
@@ -120,9 +128,34 @@ class SpackMonitorClient:
         self.spack_version = spack.main.get_version()
         self.capture_build_environment()
         self.tags = tags
+        self.save_local = save_local
 
         # We keey lookup of build_id by full_hash
         self.build_ids = {}
+        self.setup_save()
+
+    def setup_save(self):
+        """Given a local save "save_local" ensure the output directory exists.
+        """
+        if not self.save_local:
+            return
+
+        save_dir = spack.util.path.canonicalize_path(
+            spack.config.get('config:monitor_dir', '~/.spack/reports/monitor'))
+
+        # Name based on timestamp
+        now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%s')
+        self.save_dir = os.path.join(save_dir, now)
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
+
+    def save(self, obj, filename):
+        """
+        Save a monitor json result to the save directory.
+        """
+        filename = os.path.join(self.save_dir, filename)
+        write_json(obj, filename)
+        return {"message": "Build saved locally to %s" % filename}
 
     def load_build_environment(self, spec):
         """
@@ -174,7 +207,7 @@ class SpackMonitorClient:
 
         The token and username must not be unset
         """
-        if not self.token or not self.username:
+        if not self.save_local and (not self.token or not self.username):
             tty.die("You are required to export SPACKMON_TOKEN and SPACKMON_USER")
 
     def set_header(self, name, value):
@@ -346,8 +379,14 @@ class SpackMonitorClient:
                 spec.concretize()
             as_dict = {"spec": spec.to_dict(hash=ht.full_hash),
                        "spack_version": self.spack_version}
-            response = self.do_request("specs/new/", data=sjson.dump(as_dict))
-            configs[spec.package.name] = response.get('data', {})
+
+            if self.save_local:
+                filename = "spec-%s-%s-config.json" % (spec.name, spec.version)
+                self.save(sjson.dump(as_dict), filename)
+            else:
+                response = self.do_request("specs/new/", data=sjson.dump(as_dict))
+                configs[spec.package.name] = response.get('data', {})
+
         return configs
 
     def new_build(self, spec):
@@ -384,6 +423,27 @@ class SpackMonitorClient:
             spec_file = os.path.join(meta_dir, "spec.yaml")
             data['spec'] = syaml.load(read_file(spec_file))
 
+        if self.save_local:
+            return self.get_local_build_id(data, full_hash, return_response)
+        return self.get_server_build_id(data, full_hash, return_response)
+
+    def get_local_build_id(self, data, full_hash, return_response):
+        """
+        Generate a local build id based on hashing the expected data
+        """
+        hasher = hashlib.md5()
+        hasher.update(str(data).encode('utf-8'))
+        bid = hasher.hexdigest()
+        filename = "build-metadata-%s.json" % full_hash
+        response = self.save(sjson.dump(data), filename)
+        if return_response:
+            return response
+        return bid
+
+    def get_server_build_id(self, data, full_hash, return_response=False):
+        """
+        Retrieve a build id from the spack monitor server
+        """
         response = self.do_request("builds/new/", data=sjson.dump(data))
 
         # Add the build id to the lookup
@@ -403,6 +463,10 @@ class SpackMonitorClient:
         successful install. This endpoint can take a general status to update.
         """
         data = {"build_id": self.get_build_id(spec), "status": status}
+        if self.save_local:
+            filename = "build-%s-status.json" % data['build_id']
+            return self.save(sjson.dump(data), filename)
+
         return self.do_request("builds/update/", data=sjson.dump(data))
 
     def fail_task(self, spec):
@@ -444,6 +508,10 @@ class SpackMonitorClient:
                      "output": read_file(phase_output_file),
                      "phase_name": phase_name})
 
+        if self.save_local:
+            filename = "build-%s-phase-%s.json" % (data['build_id'], phase_name)
+            return self.save(sjson.dump(data), filename)
+
         return self.do_request("builds/phases/update/", data=sjson.dump(data))
 
     def upload_specfile(self, filename):
@@ -459,6 +527,11 @@ class SpackMonitorClient:
         # We load as json just to validate it
         spec = read_json(filename)
         data = {"spec": spec, "spack_verison": self.spack_version}
+
+        if self.save_local:
+            filename = "spec-%s-%s.json" % (spec.name, spec.version)
+            return self.save(sjson.dump(data), filename)
+
         return self.do_request("specs/new/", data=sjson.dump(data))
 
 
