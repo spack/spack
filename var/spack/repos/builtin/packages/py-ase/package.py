@@ -33,4 +33,5 @@ class PyAse(PythonPackage):
     depends_on('py-numpy@1.11.3:', type=('build', 'run'))
     depends_on('py-matplotlib@2.0.0:', type=('build', 'run'))
     depends_on('py-scipy@0.18.1:', type=('build', 'run'))
+    depends_on('py-flask', type=('build', 'run'), when='@:3.18.0')
     depends_on('py-setuptools', type='build')
