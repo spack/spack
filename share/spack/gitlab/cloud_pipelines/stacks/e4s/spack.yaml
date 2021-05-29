@@ -335,6 +335,7 @@ spack:
         - dyninst
         - hpx
         - llvm
+        - llvm-amdgpu
         - precice
         - rocblas
         - rocsolver
