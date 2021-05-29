@@ -267,9 +267,7 @@ spack:
     - py-warpx ^warpx dims=2
     - py-warpx ^warpx dims=3
     - py-warpx ^warpx dims=rz
-    - qt
     - qthreads scheduler=distrib
-    - qwt
     - raja
     - rempi
     - scr
@@ -295,6 +293,8 @@ spack:
     #- dealii
     #- geopm
     #- llvm-doe@doe +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang
+    #- qt
+    #- qwt
     #- umpire # unsatisfiable concretization conflict w/ blt
     #- variorum # root fails
     #- veloc # issue filed
