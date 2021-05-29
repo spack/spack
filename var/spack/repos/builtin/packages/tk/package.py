@@ -8,13 +8,12 @@ import os
 
 
 class Tk(AutotoolsPackage, SourceforgePackage):
-    """Tk is a graphical user interface toolkit that takes developing
-       desktop applications to a higher level than conventional
-       approaches. Tk is the standard GUI not only for Tcl, but for
-       many other dynamic languages, and can produce rich, native
-       applications that run unchanged across Windows, Mac OS X, Linux
-       and more."""
-    homepage = "http://www.tcl.tk"
+    """Tk is a graphical user interface toolkit that takes developing desktop
+    applications to a higher level than conventional approaches. Tk is the standard GUI
+    not only for Tcl, but for many other dynamic languages, and can produce rich, native
+    applications that run unchanged across Windows, Mac OS X, Linux and more."""
+
+    homepage = "https://www.tcl.tk"
     sourceforge_mirror_path = "tcl/tk8.6.5-src.tar.gz"
 
     version('8.6.11', sha256='5228a8187a7f70fa0791ef0f975270f068ba9557f57456f51eb02d9d4ea31282')
@@ -70,12 +69,26 @@ class Tk(AutotoolsPackage, SourceforgePackage):
                               root=self.prefix, recursive=True)
 
     def setup_run_environment(self, env):
-        # When using Tkinter from within spack provided python+tkinter, python
-        # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        env.set('TK_LIBRARY', self.spec['tk'].libs.directories[0])
+        """Set TK_LIBRARY to the directory containing tk.tcl.
+
+        For further info, see:
+
+        * https://www.tcl-lang.org/man/tcl/TkCmd/tkvars.htm
+        """
+        # When using tkinter from within spack provided python+tkinter,
+        # python will not be able to find Tk unless TK_LIBRARY is set.
+        env.set('TK_LIBRARY', join_path(self.spec['tk'].libs.directories[0],
+                                        'tk{0}'.format(self.version.up_to(2))))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('TK_LIBRARY', self.spec['tk'].libs.directories[0])
+        """Set TK_LIBRARY to the directory containing tk.tcl.
+
+        For further info, see:
+
+        * https://www.tcl-lang.org/man/tcl/TkCmd/tkvars.htm
+        """
+        env.set('TK_LIBRARY', join_path(self.spec['tk'].libs.directories[0],
+                                        'tk{0}'.format(self.version.up_to(2))))
 
     def configure_args(self):
         spec = self.spec
