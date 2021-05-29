@@ -19,6 +19,7 @@ class PySphinxRtdTheme(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-sphinx', when='@0.4.1:', type=('build', 'run'))
+    depends_on('py-docutils@:0.16', when='@0.5.2:', type=('build', 'run'))
 
     def setup_build_environment(self, env):
         # Hack to prevent usage of npm in 0.5+
