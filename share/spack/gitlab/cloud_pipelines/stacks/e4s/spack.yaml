@@ -313,9 +313,9 @@ spack:
     - - $cuda_specs
     - - $arch
 
-  - matrix:
-    - - $rocm_specs
-    - - $arch
+  # - matrix:
+  #   - - $rocm_specs
+  #   - - $arch
 
   mirrors: { "mirror": "s3://spack-binaries-develop/e4s" }
 
