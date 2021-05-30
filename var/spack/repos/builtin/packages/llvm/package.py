@@ -57,6 +57,7 @@ class Llvm(CMakePackage, CudaPackage):
     version('3.5.1', sha256='5d739684170d5b2b304e4fb521532d5c8281492f71e1a8568187bfa38eb5909d')
     # fmt: on
 
+    generator = 'Ninja'
     # NOTE: The debug version of LLVM is an order of magnitude larger than
     # the release version, and may take up 20-30 GB of space. If you want
     # to save space, build with `build_type=Release`.
@@ -153,6 +154,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
+    depends_on("ninja", type="build")
     depends_on("python@2.7:2.8", when="@:4.999 ~python", type="build")
     depends_on("python", when="@5: ~python", type="build")
     depends_on("pkgconfig", type="build")
@@ -587,12 +589,13 @@ class Llvm(CMakePackage, CudaPackage):
     @run_before("build")
     def pre_install(self):
         with working_dir(self.build_directory):
-            # When building shared libraries these need to be installed first
-            make("install-LLVMTableGen")
-            if self.spec.version >= Version("4.0.0"):
-                # LLVMDemangle target was added in 4.0.0
-                make("install-LLVMDemangle")
-            make("install-LLVMSupport")
+            if "+shared_libs" in self.spec:
+               # When building shared libraries these need to be installed first
+               make("install-LLVMTableGen")
+               if self.spec.version >= Version("4.0.0"):
+                   # LLVMDemangle target was added in 4.0.0
+                   make("install-LLVMDemangle")
+               make("install-LLVMSupport")
 
     @run_after("install")
     def post_install(self):
