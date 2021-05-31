@@ -1,5 +1,5 @@
 ﻿cmake_minimum_required (VERSION 3.13)
-project(spack_installer)
+project(spack_installer NONE)
 
 set(PYTHON_VERSION "3.9.0" CACHE STRING "Version of Python to build.")
 set(PY_DOWNLOAD_LINK "https://www.paraview.org/files/dependencies")
