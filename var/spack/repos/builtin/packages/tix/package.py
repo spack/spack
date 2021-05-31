@@ -77,3 +77,9 @@ class Tix(AutotoolsPackage):
         * http://tix.sourceforge.net/docs/pdf/TixUser.pdf
         """
         env.set('TIX_LIBRARY', os.path.dirname(find(self.prefix, 'Tix.tcl')[0]))
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if 'platform=darwin' in self.spec:
+            fix_darwin_install_name(self.prefix.lib.Tix + str(self.version))
