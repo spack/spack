@@ -102,9 +102,6 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('spla+cuda', when='@7.0.0:+cuda')
     depends_on('spla+rocm', when='@7.0.0:+rocm')
 
-    depends_on('elpa+openmp', when='+elpa+openmp')
-    depends_on('elpa~openmp', when='+elpa~openmp')
-
     depends_on('nlcglib', when='+nlcglib')
 
     depends_on('libvdwxc+mpi', when='+vdwxc')
@@ -125,6 +122,16 @@ class Sirius(CMakePackage, CudaPackage):
     conflicts('+shared', when='@6.3.0:6.4.999')
     conflicts('+boost_filesystem', when='~apps')
     conflicts('^libxc@5.0.0')  # known to produce incorrect results
+
+    # Propagate openmp
+    depends_on('openblas threads=openmp', when='+openmp ^openblas')
+    depends_on('amdblis threads=openmp', when='+openmp ^amdblis')
+    depends_on('blis threads=openmp', when='+openmp ^blis')
+    depends_on('intel-mkl threads=openmp', when='+openmp ^intel-mkl')
+    depends_on('spfft+openmp', when='+openmp')
+    depends_on('elpa+openmp', when='+elpa+openmp')
+    depends_on('elpa~openmp', when='+elpa~openmp')
+
 
     # TODO:
     # add support for CRAY_LIBSCI, testing
