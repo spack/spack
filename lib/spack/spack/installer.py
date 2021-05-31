@@ -814,6 +814,10 @@ class PackageInstaller(object):
         # Determine if the spec is flagged as installed in the database
         rec, installed_in_db = self._check_db(task.pkg.spec)
 
+        # Check for an install prefix collision
+        if not installed_in_db and self.store.db.has_path(task.pkg.spec.prefix):
+            raise Exception("<not overwriting install prefix from different spec>")
+
         # Make sure the installation directory is in the desired state
         # for uninstalled specs.
         partial = False
