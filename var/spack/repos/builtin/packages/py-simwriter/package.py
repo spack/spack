@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PySimwriter(PythonPackage):
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/project/proj1/simwriter'
     git      = 'ssh://bbpcode.epfl.ch/project/proj1/simwriter'
 
-    version('1.0.1', commit='5e6ed1a3e58894bdc7869d5685a1027c745e8eeb')
+    version('1.1.0', tag='simwriter-v1.1.0')
 
     depends_on('py-setuptools', type=('build'))
 
