@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyCiInfo(PythonPackage):
-    """Continuous Integration Information
+    """Continuous Integration Information.
 
     A Python implementation of watson/ci-info. Get details about the current
     Continuous Integration environment.
