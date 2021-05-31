@@ -32,8 +32,8 @@ def test_stage_spec(monkeypatch):
     assert len(expected) == 0
 
 
-def test_stage_path(monkeypatch, tmpdir):
-    """Verify that --path only works with single specs."""
+@pytest.fixture(scope='function')
+def tmp_stage_path(monkeypatch, tmpdir):
     expected_path = os.path.join(str(tmpdir), 'x')
 
     def fake_stage(pkg, mirror_only=False):
@@ -42,19 +42,20 @@ def test_stage_path(monkeypatch, tmpdir):
 
     monkeypatch.setattr(spack.package.PackageBase, 'do_stage', fake_stage)
 
-    stage('--path={0}'.format(expected_path), 'trivial-install-test-package')
+    return expected_path
 
 
-def test_stage_path_errors_multiple_specs(monkeypatch):
+def test_stage_path(tmp_stage_path):
     """Verify that --path only works with single specs."""
+    stage('--path={0}'.format(tmp_stage_path), 'trivial-install-test-package')
 
-    def fake_stage(pkg, mirror_only=False):
-        pass
 
-    monkeypatch.setattr(spack.package.PackageBase, 'do_stage', fake_stage)
-
+def test_stage_path_errors_multiple_specs(tmp_stage_path):
+    """Verify that --path only works with single specs."""
     with pytest.raises(spack.main.SpackCommandError):
-        stage('--path=x', 'trivial-install-test-package', 'mpileaks')
+        stage('--path={0}'.format(tmp_stage_path),
+              'trivial-install-test-package',
+              'mpileaks')
 
 
 def test_stage_with_env_outside_env(mutable_mock_env_path, monkeypatch):
