@@ -32,7 +32,7 @@ def make_installer(parser, args):
     """
        Use CMake to generate WIX installer in newly created build directory
     """
-    if(sys.platform == 'win32'):
+    if sys.platform == 'win32':
         output_dir = args.output_dir
         cmake_spec = Spec('cmake')
         cmake_spec.concretize()
@@ -44,7 +44,8 @@ def make_installer(parser, args):
                 print("%s does not exist" % spack_source)
                 return
             else:
-                spack_source = posixpath.abspath(spack_source)
+                if not os.path.isabs(spack_source):
+                    spack_source = posixpath.abspath(spack_source)
                 spack_source = spack_source.replace('\\', '/')
 
         spack_version = args.spack_version
