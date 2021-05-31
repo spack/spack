@@ -50,7 +50,9 @@ class PyBluepy(PythonPackage):
     depends_on('py-voxcell@2.7.4:2.99', type='run', when='@0.14.16:0.16.0')
 
     # bluepysnap
-    depends_on('py-bluepysnap@0.12.0:', type='run', when='@2.0.0:')
+    depends_on('py-bluepysnap@0.12.0:0.999', type='run', when='@2.3.0:')
+    depends_on('py-bluepysnap@0.10.0:0.999', type='run', when='@2.2.0:')
+    depends_on('py-bluepysnap@0.8.0:0.999', type='run', when='@2.0.0:')
     depends_on('py-bluepysnap@0.4.1:0.7.1', type='run', when='@:1.0.0')
 
     # lazy / cached properties (change of backend for caching)

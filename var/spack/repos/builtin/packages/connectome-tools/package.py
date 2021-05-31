@@ -12,8 +12,8 @@ class ConnectomeTools(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/connectome-tools"
     git = "git@bbpgitlab.epfl.ch:nse/connectome-tools.git"
 
-    version('develop', branch='master')
-    version('0.4.0', tag='connectome-tools-v0.4.0')
+    version('develop', branch='main')
+    version('0.5.0', tag='connectome-tools-v0.5.0')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
@@ -26,5 +26,9 @@ class ConnectomeTools(PythonPackage):
     depends_on('py-psutil@5.7.2:', type='run')
     depends_on('py-pyyaml@5.3.1:', type='run')
 
-    depends_on('py-bluepy@2.0:2.999', type='run')
     depends_on('py-voxcell@3.0:3.999', type='run')
+
+    depends_on('py-bluepy@2.2.0', type='run', when='@0.5.0')
+    depends_on('py-neurom@1.8.0', type='run', when='@0.5.0')
+    depends_on('py-morph-tool@2.4.1', type='run', when='@0.5.0')
+    depends_on('py-bluepysnap@0.11.0', type='run', when='@0.5.0')
