@@ -20,8 +20,6 @@ class REmmeans(RPackage):
 
     homepage = "https://github.com/rvlenth/emmeans"
     cran     = "emmeans"
-    url = "https://cloud.r-project.org/src/contrib/emmeans_1.6.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/emmeans"
 
     version('1.6.0', sha256='201bb7b008dde94231ed60bcc6a32749442faaab4baeea99ad28b97c951b3c1e')
 
