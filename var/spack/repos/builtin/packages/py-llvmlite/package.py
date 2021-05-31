@@ -34,7 +34,8 @@ class PyLlvmlite(PythonPackage):
     depends_on('llvm@7.0:7.0.99', when='@0.27.0:0.28.99')
     depends_on('llvm@6.0:6.0.99', when='@0.23.0:0.26.99')
     depends_on('llvm@4.0:4.0.99', when='@0.17.0:0.20.99')
-    depends_on('binutils', type='build')
+    # as llvm requires +ld+plugin, use it here to avoid concretizer issue
+    depends_on('binutils+plugins+ld', type='build')
 
     def setup_build_environment(self, env):
         # Need to set PIC flag since this is linking statically with LLVM
