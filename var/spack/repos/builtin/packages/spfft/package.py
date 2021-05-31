@@ -60,12 +60,6 @@ class Spfft(CMakePackage, CudaPackage):
     # FindHIP cmake script only works for < 4.1
     depends_on('hip@:4.0', when='@:1.0.1 +rocm')
 
-    # Propagate openmp to blas
-    depends_on('openblas threads=openmp', when='+openmp ^openblas')
-    depends_on('amdblis threads=openmp', when='+openmp ^amdblis')
-    depends_on('blis threads=openmp', when='+openmp ^blis')
-    depends_on('intel-mkl threads=openmp', when='+openmp ^intel-mkl')
-
     # Fix compilation error in some cases due to missing include statement
     # before version 1.0.3
     patch('0001-fix-missing-limits-include.patch', when='@:1.0.2')

@@ -94,13 +94,15 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('magma', when='+magma')
     depends_on('boost cxxstd=14 +filesystem', when='+boost_filesystem')
 
-    depends_on('spfft', when='@6.4.0:')
-    depends_on('spfft+cuda', when='@6.4.0:+cuda')
-    depends_on('spfft+rocm', when='@6.4.0:+rocm')
+    depends_on('spfft+mpi', when='@6.4.0:')
+    depends_on('spfft+cuda', when='+cuda ^spfft')
+    depends_on('spfft+rocm', when='+rocm ^spfft')
+    depends_on('spfft+openmp', when='+openmp ^spfft')
 
     depends_on('spla', when='@7.0.0:')
-    depends_on('spla+cuda', when='@7.0.0:+cuda')
-    depends_on('spla+rocm', when='@7.0.0:+rocm')
+    depends_on('spla+cuda', when='+cuda ^spla')
+    depends_on('spla+rocm', when='+rocm ^spla')
+    depends_on('spla+openmp', when='+openmp ^spla')
 
     depends_on('nlcglib', when='+nlcglib')
 
@@ -123,12 +125,12 @@ class Sirius(CMakePackage, CudaPackage):
     conflicts('+boost_filesystem', when='~apps')
     conflicts('^libxc@5.0.0')  # known to produce incorrect results
 
-    # Propagate openmp
+    # Propagate openmp to blas
     depends_on('openblas threads=openmp', when='+openmp ^openblas')
     depends_on('amdblis threads=openmp', when='+openmp ^amdblis')
     depends_on('blis threads=openmp', when='+openmp ^blis')
     depends_on('intel-mkl threads=openmp', when='+openmp ^intel-mkl')
-    depends_on('spfft+openmp', when='+openmp')
+
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
 
