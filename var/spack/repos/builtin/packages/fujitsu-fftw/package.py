@@ -41,7 +41,7 @@ class FujitsuFftw(FftwBase):
 
     depends_on('texinfo')
 
-    provides('fftw-api@3', when='@2:')
+    provides('fftw-api@3')
 
     conflicts('precision=quad', when='%fj', msg="Fujitsu Compiler doesn't support quad precision")
     conflicts('precision=long_double', when='%fj', msg="ARM-SVE vector instructions only works in single or double precision")

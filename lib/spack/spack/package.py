@@ -1269,11 +1269,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise ValueError("Can only get the arch for concrete package.")
         return spack.architecture.arch_for_spec(self.spec.architecture)
 
-    @property
+    @property  # type: ignore
+    @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
+
         return spack.compilers.compiler_for_spec(self.spec.compiler,
                                                  self.spec.architecture)
 
