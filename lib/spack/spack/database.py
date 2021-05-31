@@ -382,6 +382,10 @@ class Database(object):
                                 desc='database')
         self._data = {}
 
+        # Set of install prefixes: used to ensure that every unique spec has a
+        # unique install directory.
+        self._path_set = set()
+
         self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
 
         # whether there was an error at the start of a read transaction
@@ -774,6 +778,7 @@ class Database(object):
 
         # Pass 1: Iterate through database and build specs w/o dependencies
         data = {}
+        path_set = set()
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
@@ -784,6 +789,9 @@ class Database(object):
                 # TODO: would a more immmutable spec implementation simplify
                 #       this?
                 data[hash_key] = InstallRecord.from_dict(spec, rec)
+
+                if not spec.external:
+                    path_set.add(rec['path'])
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -805,6 +813,7 @@ class Database(object):
             rec.spec._mark_root_concrete()
 
         self._data = data
+        self._path_set = path_set
 
     def reindex(self, directory_layout):
         """Build database index from scratch based on a directory layout.
@@ -824,6 +833,7 @@ class Database(object):
             except CorruptDatabaseError as e:
                 self._error = e
                 self._data = {}
+                self._path_set = set()
 
         transaction = lk.WriteTransaction(
             self.lock, acquire=_read_suppress_error, release=self._write
@@ -838,12 +848,14 @@ class Database(object):
                 self._error = None
 
             old_data = self._data
+            old_path_set = self._path_set
             try:
                 self._construct_from_directory_layout(
                     directory_layout, old_data)
             except BaseException:
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
+                self._path_set = old_path_set
                 raise
 
     def _construct_entry_from_directory_layout(self, directory_layout,
@@ -880,6 +892,7 @@ class Database(object):
         with directory_layout.disable_upstream_check():
             # Initialize data in the reconstructed DB
             self._data = {}
+            self._path_set = set()
 
             # Start inspecting the installed prefixes
             processed_specs = set()
@@ -1087,6 +1100,8 @@ class Database(object):
             path = None
             if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
+                if path in self._path_set:
+                    raise Exception("Install prefix collision.")
                 try:
                     directory_layout.check_installed(spec)
                     installed = True
@@ -1094,6 +1109,7 @@ class Database(object):
                     tty.warn(
                         'Dependency missing: may be deprecated or corrupted:',
                         path, str(e))
+                self._path_set.add(path)
             elif spec.external_path:
                 path = spec.external_path
 
@@ -1173,6 +1189,7 @@ class Database(object):
 
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
+            del self._path_set[rec.path]
             for dep in spec.dependencies(_tracked_deps):
                 self._decrement_ref_count(dep)
 
@@ -1195,6 +1212,7 @@ class Database(object):
             return rec.spec
 
         del self._data[key]
+        del self._path_set[rec.path]
         for dep in rec.spec.dependencies(_tracked_deps):
             # FIXME: the two lines below needs to be updated once #11983 is
             # FIXME: fixed. The "if" statement should be deleted and specs are
@@ -1537,6 +1555,11 @@ class Database(object):
         key = spec.dag_hash()
         upstream, record = self.query_by_spec_hash(key)
         return record and not record.installed
+
+    def has_path(self, path):
+        """Returns true when the path is attached to an installed spec"""
+        with self.read_transaction():
+            return path in self._path_set
 
     @property
     def unused_specs(self):
