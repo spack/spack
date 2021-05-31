@@ -86,9 +86,8 @@ class Extrae(AutotoolsPackage):
                 "--with-binutils=%s" % spec['binutils'].prefix]
 
         if '^intel-oneapi-mpi' in spec:
-                mpiroot = spec['mpi'].prefix
-                args += ["--with-mpi-headers=%s" % os.path.join(mpiroot, "mpi/latest/include")]
-                args += ["--with-mpi-libs=%s" % os.path.join(mpiroot, "mpi/latest/lib/release")]
+            args += ["--with-mpi-headers=%s" % spec['mpi'].headers.directories[0]]
+            args += ["--with-mpi-libs=%s" % spec['mpi'].libs.directories[0]]
 
         args += (["--with-papi=%s" % spec['papi'].prefix]
                  if '+papi' in self.spec else
