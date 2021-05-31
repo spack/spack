@@ -26,8 +26,6 @@ class RAfex(RPackage):
 
     homepage = "https://github.com/singmann/afex"
     cran     = "afex"
-    url      = "https://cran.r-project.org/src/contrib/afex_0.28-1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/afex"
 
     version('0.28-1', sha256='cfb0b79bfa01b590afc3354a5b2ad3640d2f4974b036d6c256fa8e684bc69c2e')
 
