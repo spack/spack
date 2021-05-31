@@ -72,6 +72,7 @@ spack:
     - reportinglib%intel
     - spatial-index
     - spykfunc
+    - spykfunc@0.16.0 ^spark@3.0.0 ^py-pyspark@3.0.0
     - steps+petsc
     - synapsetool
     - touchdetector

@@ -67,6 +67,10 @@ class Spykfunc(PythonPackage):
     patch('properties-spark3.patch', when='@:0.15.6 ^spark@3:')
     patch('bogus-h5py.patch', when='@0.15.2:0.15.9')
 
+    def patch(self):
+        if self.spec.satisfies('@:0.16.0'):
+            filter_file('srun', 'srun --mpi=none', 'scripts/sm_cluster')
+
     def setup_build_environment(self, env):
         # This is a rather ugly setup to run spykfunc without having to
         # activate all python packages.
