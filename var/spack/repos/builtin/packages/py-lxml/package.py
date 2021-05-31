@@ -29,7 +29,7 @@ class PyLxml(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('libxml2@2.9.2:', type=('build', 'link', 'run'))
-    depends_on('libxslt@1.1.28:', type=('build', 'link', 'run'))
+    depends_on('libxslt@1.1.27:', type=('build', 'link', 'run'))
     depends_on('py-cython@0.29.7:', type=('build', 'run'))
     depends_on('py-html5lib', when='+html5', type=('build', 'run'))
     depends_on('py-beautifulsoup4', when='+htmlsoup', type=('build', 'run'))
