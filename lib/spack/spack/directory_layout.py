@@ -586,14 +586,6 @@ class InconsistentInstallDirectoryError(DirectoryLayoutError):
             message, long_msg)
 
 
-class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
-    """Raised when create_install_directory is called unnecessarily."""
-
-    def __init__(self, path):
-        super(InstallDirectoryAlreadyExistsError, self).__init__(
-            "Install path %s already exists!" % path)
-
-
 class SpecReadError(DirectoryLayoutError):
     """Raised when directory layout can't read a spec."""
 
