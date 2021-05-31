@@ -94,11 +94,11 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('magma', when='+magma')
     depends_on('boost cxxstd=14 +filesystem', when='+boost_filesystem')
 
-    depends_on('spfft@1.0.3:', when='@6.4.0:')
+    depends_on('spfft', when='@6.4.0:')
     depends_on('spfft+cuda', when='@6.4.0:+cuda')
     depends_on('spfft+rocm', when='@6.4.0:+rocm')
 
-    depends_on('spla@1.4.0:', when='@7.0.0:')
+    depends_on('spla', when='@7.0.0:')
     depends_on('spla+cuda', when='@7.0.0:+cuda')
     depends_on('spla+rocm', when='@7.0.0:+rocm')
 
