@@ -815,7 +815,10 @@ class PackageInstaller(object):
         rec, installed_in_db = self._check_db(task.pkg.spec)
 
         # Check for an install prefix collision
-        if not installed_in_db and self.store.db.has_path(task.pkg.spec.prefix):
+        available = spack.store.db.is_occupied_install_prefix(task.pkg.spec.prefix)
+
+        # TODO: nicer error handling.
+        if not installed_in_db and available:
             raise Exception("<not overwriting install prefix from different spec>")
 
         # Make sure the installation directory is in the desired state
