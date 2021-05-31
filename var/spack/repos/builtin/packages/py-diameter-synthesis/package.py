@@ -12,7 +12,7 @@ class PyDiameterSynthesis(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/cells/diameter-synthesis"
     git      = "ssh://bbpcode.epfl.ch/cells/diameter-synthesis"
 
-    version('0.2.3', tag='diameter-synthesis-v0.2.3')
+    version('0.2.4', tag='diameter-synthesis-v0.2.4')
     version('0.1.11', tag='diameter-synthesis-v0.1.11')
     version('0.1.7', tag='diameter-synthesis-v0.1.7')
 
