@@ -18,7 +18,5 @@ class REstimability(RPackage):
 
     homepage = "https://github.com/rvlenth/estimability"
     cran = "estimability"
-    url = "https://cran.r-project.org/src/contrib/estimability_1.3.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/estimability"
 
     version('1.3', sha256='a33179c5fbd6a1a623d90cb6f1743148f92c09429fac466867f3ea70946a2e32')
