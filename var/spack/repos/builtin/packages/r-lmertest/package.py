@@ -19,8 +19,6 @@ class RLmertest(RPackage):
 
     homepage = "https://github.com/runehaubo/lmerTestR"
     cran     = "lmerTest"
-    url      = "https://cran.r-project.org/src/contrib/lmerTest_3.1-3.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/lmerTest"
 
     version('3.1-3', sha256='35aa75e9f5f2871398ff56a482b013e6828135ef04916ced7d1d7e35257ea8fd')
 
