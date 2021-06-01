@@ -141,6 +141,10 @@ class Petsc(Package):
             description='Activates support for Saws')
     variant('libyaml', default=False,
             description='Activates support for YAML')
+    variant('openmp', default=False,
+            description='Activates support for openmp')
+    variant('hwloc', default=False,
+            description='Activates support for hwloc')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -247,8 +251,10 @@ class Petsc(Package):
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@main+superlu-dist+mpi~int64')
     depends_on('superlu-dist@develop+int64', when='@main+superlu-dist+mpi+int64')
-    depends_on('mumps+mpi~int64~metis~parmetis', when='+mumps~metis')
-    depends_on('mumps+mpi~int64+metis+parmetis', when='+mumps+metis')
+    depends_on('mumps+mpi~int64~metis~parmetis~openmp', when='+mumps~metis~openmp')
+    depends_on('mumps+mpi~int64+metis+parmetis~openmp', when='+mumps+metis~openmp')
+    depends_on('mumps+mpi~int64~metis~parmetis+openmp', when='+mumps~metis+openmp')
+    depends_on('mumps+mpi~int64+metis+parmetis+openmp', when='+mumps+metis+openmp')
     depends_on('scalapack', when='+mumps')
     depends_on('trilinos@12.6.2:+mpi', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+trilinos+mpi')
@@ -272,6 +278,7 @@ class Petsc(Package):
     depends_on('p4est+mpi', when='+p4est+mpi')
     depends_on('saws', when='+saws')
     depends_on('libyaml', when='+libyaml')
+    depends_on('hwloc', when='+hwloc')
 
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
@@ -368,6 +375,9 @@ class Petsc(Package):
                 '--with-scalapack=0'
             ])
 
+        if spec.satisfies('+openmp'):
+            options.append('--with-openmp=1')
+
         # Activates library support if needed (i.e. direct dependency)
         if '^libjpeg-turbo' in spec:
             jpeg_library = 'libjpeg-turbo'
@@ -378,7 +388,7 @@ class Petsc(Package):
                         'trilinos', 'fftw', 'valgrind', 'gmp', 'libpng',
                         'giflib', 'mpfr', 'netcdf-c', 'parallel-netcdf',
                         'moab', 'random123', 'exodusii', 'cgns', 'memkind',
-                        'p4est', 'saws', 'libyaml', jpeg_library):
+                        'p4est', 'saws', 'libyaml', 'hwloc', jpeg_library):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
             library_requested = library in spec.dependencies_dict()
