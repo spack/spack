@@ -33,7 +33,7 @@ def test_stage_spec(monkeypatch):
 
 
 @pytest.fixture(scope='function')
-def tmp_stage_path(monkeypatch, tmpdir):
+def check_stage_path(monkeypatch, tmpdir):
     expected_path = os.path.join(str(tmpdir), 'x')
 
     def fake_stage(pkg, mirror_only=False):
@@ -45,15 +45,15 @@ def tmp_stage_path(monkeypatch, tmpdir):
     return expected_path
 
 
-def test_stage_path(tmp_stage_path):
+def test_stage_path(check_stage_path):
     """Verify that --path only works with single specs."""
-    stage('--path={0}'.format(tmp_stage_path), 'trivial-install-test-package')
+    stage('--path={0}'.format(check_stage_path), 'trivial-install-test-package')
 
 
-def test_stage_path_errors_multiple_specs(tmp_stage_path):
+def test_stage_path_errors_multiple_specs(check_stage_path):
     """Verify that --path only works with single specs."""
     with pytest.raises(spack.main.SpackCommandError):
-        stage('--path={0}'.format(tmp_stage_path),
+        stage('--path={0}'.format(check_stage_path),
               'trivial-install-test-package',
               'mpileaks')
 
