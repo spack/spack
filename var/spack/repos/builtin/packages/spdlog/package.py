@@ -12,6 +12,10 @@ class Spdlog(CMakePackage):
     homepage = "https://github.com/gabime/spdlog"
     url = "https://github.com/gabime/spdlog/archive/v0.9.0.tar.gz"
 
+    version('1.8.5', sha256='944d0bd7c763ac721398dca2bb0f3b5ed16f67cef36810ede5061f35a543b4b8')
+    version('1.8.4', sha256='d19cff06a3d235efcb451e04193a925bebc6ef7e7bd4a56ca27096acbab3cf3b')
+    version('1.8.3', sha256='6f5b88ca4c9b96264e6c961716fec6f1a7b94c80a5edce667c3e42507caa8a82')
+    version('1.8.2', sha256='e20e6bd8f57e866eaf25a5417f0a38a116e537f1a77ac7b5409ca2b180cec0d5')
     version('1.8.1', sha256='5197b3147cfcfaa67dd564db7b878e4a4b3d9f3443801722b3915cdeced656cb')
     version('1.8.0', sha256='1e68e9b40cf63bb022a4b18cdc1c9d88eb5d97e4fd64fa981950a9cacf57a4bf')
     version('1.7.0', sha256='f0114a4d3c88be9e696762f37a7c379619443ce9d668546c61b21d41affe5b62')
@@ -39,7 +43,8 @@ class Spdlog(CMakePackage):
     variant('shared', default=True,
             description='Build shared libraries (v1.4.0+)')
 
-    depends_on('cmake@3.2:', type='build')
+    depends_on('cmake@3.2:', when='@:1.7.0', type='build')
+    depends_on('cmake@3.10:', when='@1.8.0:', type='build')
 
     def cmake_args(self):
         args = []

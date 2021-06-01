@@ -942,6 +942,30 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
     return env
 
 
+def get_cmake_prefix_path(pkg):
+    # Note that unlike modifications_from_dependencies, this does not include
+    # any edits to CMAKE_PREFIX_PATH defined in custom
+    # setup_dependent_build_environment implementations of dependency packages
+    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
+    build_link_deps = build_deps | link_deps
+    first = []
+    second = []
+    # modifications_from_dependencies updates CMAKE_PREFIX_PATH by first
+    # prepending all externals and then all non-externals
+    for dspec in spec.traverse(root=False, order='post'):
+        if dspec in build_link_deps:
+            if dspec.external:
+                second.insert(0, dspec)
+            else:
+                first.insert(0, dspec)
+
+    ordered_build_link_deps = first + second
+    build_link_prefixes = filter_system_paths(
+        x.prefix for x in ordered_build_link_deps)
+    return build_link_prefixes
+
+
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
                        input_multiprocess_fd):
 

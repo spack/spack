@@ -261,7 +261,7 @@ def install_specs(cli_args, kwargs, specs):
                     with env.write_transaction():
                         specs_to_install.append(
                             env.concretize_and_add(abstract, concrete))
-                        env.write(regenerate_views=False)
+                        env.write(regenerate=False)
 
             # Install the validated list of cli specs
             if specs_to_install:
@@ -306,6 +306,7 @@ environment variables:
             prefix=args.monitor_prefix,
             disable_auth=args.monitor_disable_auth,
             tags=args.monitor_tags,
+            save_local=args.monitor_save_local,
         )
 
     reporter = spack.report.collect_info(
@@ -339,7 +340,7 @@ environment variables:
 
                     # save view regeneration for later, so that we only do it
                     # once, as it can be slow.
-                    env.write(regenerate_views=False)
+                    env.write(regenerate=False)
 
             specs = env.all_specs()
             if not args.log_file and not reporter.filename:
@@ -353,9 +354,9 @@ environment variables:
             tty.debug("Regenerating environment views for {0}"
                       .format(env.name))
             with env.write_transaction():
-                # It is not strictly required to synchronize view regeneration
-                # but doing so can prevent redundant work in the filesystem.
-                env.regenerate_views()
+                # write env to trigger view generation and modulefile
+                # generation
+                env.write()
             return
         else:
             msg = "install requires a package argument or active environment"

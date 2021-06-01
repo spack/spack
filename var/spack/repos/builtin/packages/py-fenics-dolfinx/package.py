@@ -11,24 +11,32 @@ class PyFenicsDolfinx(PythonPackage):
     environment"""
 
     homepage = "https://github.com/FEniCS/dolfinx"
+    url = "https://github.com/FEniCS/dolfinx/archive/0.1.0.tar.gz"
     git = "https://github.com/FEniCS/dolfinx.git"
     maintainers = ["js947", "chrisrichardson"]
 
     version("main", branch="main")
+    version("0.1.0", sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33")
 
     depends_on("cmake@3.9:", type="build")
     depends_on("pkgconfig", type=("build", "run"))
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on("py-setuptools", type="build")
-    depends_on("fenics-dolfinx@main")
-    depends_on("fenics-basix@main", type=("build", "run"))
+    depends_on("fenics-dolfinx", when="@main")
+    depends_on("fenics-dolfinx@0.1.0", when="@0.1.0")
+    depends_on("fenics-basix", type=("build", "run"), when="@main")
+    depends_on("fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-petsc4py", type=("build", "run"))
-    depends_on("py-pybind11", type=("build", "run"))
+    depends_on("py-pybind11@2.6.1:2.6.99", type=("build", "run"))
 
     depends_on("py-fenics-ffcx", type=("run"))
+    depends_on("py-fenics-ffcx@0.1.0", type=("run"), when="@0.1.0")
     depends_on("py-fenics-basix", type=("run"))
+    depends_on("py-fenics-basix@0.1.0", type=("run"), when="@0.1.0")
     depends_on("py-fenics-ufl", type=("run"))
+    depends_on("py-fenics-ufl@2021.1.0", type=("run"), when="@0.1.0")
+
     depends_on("py-cffi", type=("run"))
     depends_on("py-numpy", type=("run"))
 

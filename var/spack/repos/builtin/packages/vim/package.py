@@ -49,6 +49,8 @@ class Vim(AutotoolsPackage):
     variant('cscope', default=False, description="build with cscope support")
     depends_on('cscope', when='+cscope', type='run')
 
+    provides('xxd')
+
     # TODO: Once better support for multi-valued variants is added, add
     # support for auto/no/gtk2/gnome2/gtk3/motif/athena/neXtaw/photon/carbon
     variant('gui', default=False, description="build with gui (gvim)")

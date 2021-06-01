@@ -34,7 +34,9 @@ class HsaRocrDev(CMakePackage):
     variant('image', default=True, description='build with or without image support')
 
     depends_on('cmake@3:', type="build")
+    depends_on('xxd', when='@3.7: +image', type='build')
     depends_on('libelf@0.8:', type='link')
+
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', 'master']:
         depends_on('hsakmt-roct@' + ver, type=('link', 'run'), when='@' + ver)
@@ -51,12 +53,13 @@ class HsaRocrDev(CMakePackage):
 
     def cmake_args(self):
         libelf_include = self.spec['libelf'].prefix.include.libelf
-        args = ['-DLIBELF_INCLUDE_DIRS=%s' % libelf_include]
-
-        self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
+        args = [
+            self.define('LIBELF_INCLUDE_DIRS', libelf_include),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
+        ]
 
         if '@3.7.0:' in self.spec:
-            self.define_from_variant('IMAGE_SUPPORT', 'image')
+            args.append(self.define_from_variant('IMAGE_SUPPORT', 'image'))
 
         if '@4.2.0:' in self.spec:
             bitcode_dir = self.spec['rocm-device-libs'].prefix.amdgcn.bitcode

@@ -57,6 +57,9 @@ class Axom(CachedCMakePackage, CudaPackage):
     variant('debug',    default=False,
             description='Build debug instead of optimized version')
 
+    variant('examples', default=True, description='Build examples')
+    variant('tools',    default=True, description='Build tools')
+
     variant('cpp14',    default=True, description="Build with C++14 support")
 
     variant('fortran',  default=True, description="Build with Fortran support")
@@ -128,10 +131,10 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("llvm+clang@10.0.0", when="+devtools", type='build')
 
     # Conduit's cmake config files moved and < 0.4.0 can't find it
-    conflicts("conduit@0.7.2:", when="@:0.4.0")
+    conflicts("^conduit@0.7.2:", when="@:0.4.0")
 
     # Sidre requires conduit_blueprint_mpi.hpp
-    conflicts("conduit@:0.6.0", when="@0.5.0:")
+    conflicts("^conduit@:0.6.0", when="@0.5.0:")
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies('%cce') and name == 'fflags':
@@ -407,6 +410,10 @@ class Axom(CachedCMakePackage, CudaPackage):
 
         options.append(self.define_from_variant(
             'BUILD_SHARED_LIBS', 'shared'))
+        options.append(self.define_from_variant(
+            'AXOM_ENABLE_EXAMPLES', 'examples'))
+        options.append(self.define_from_variant(
+            'AXOM_ENABLE_TOOLS', 'tools'))
 
         return options
 

@@ -13,6 +13,7 @@ class PyAstroid(PythonPackage):
     homepage = "https://github.com/PyCQA/astroid"
     url      = "https://github.com/PyCQA/astroid/archive/astroid-1.4.5.tar.gz"
 
+    version('2.5.6', sha256='7fa655511c3726ce7058e9908065c385bcada47cb4cb31d5d6a7248b1fea58fa')
     version('2.4.2', sha256='34d480d364dcf3e176bc302da56c5ef585ab45d4460f5a2761f960d2fd7b624c')
     version('2.3.3', sha256='3a82983cf34dcbfe42ebcffeb98739e8a7bb868f03c1d9e298c530179b5075e7')
     version('2.2.5', sha256='232c2cfc72bae18a28de6541bbd560a1a3f42e08c52e41bd3f1f00ed74b0a4a6')
@@ -33,6 +34,7 @@ class PyAstroid(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', when='@:1.999', type=('build', 'run'))
     depends_on('python@3.4:', when='@2.0.0:', type=('build', 'run'))
     depends_on('python@3.5:', when='@2.3.3:', type=('build', 'run'))
+    depends_on('python@3.6:', when='@2.5.6:', type=('build', 'run'))
     depends_on('py-lazy-object-proxy', type=('build', 'run'))
     # Starting with astroid 2.3.1, astroid's dependencies were restricted
     # to a given minor version, c.f. commit e1b4e11.
@@ -40,7 +42,7 @@ class PyAstroid(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-six@1.12:1.999', when='@2.3.3:', type=('build', 'run'))
     depends_on('py-wrapt', when='@:2.2.999', type=('build', 'run'))
-    depends_on('py-wrapt@1.11:1.11.999', when='@2.3.3:', type=('build', 'run'))
+    depends_on('py-wrapt@1.11:1.12.999', when='@2.3.3:', type=('build', 'run'))
     depends_on('py-enum34@1.1.3:', when='^python@:3.3.99', type=('build', 'run'))
     depends_on('py-singledispatch', when='^python@:3.3.99', type=('build', 'run'))
     depends_on('py-backports-functools-lru-cache', when='^python@:3.2.99', type=('build', 'run'))
