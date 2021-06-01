@@ -75,7 +75,6 @@ class Rocblas(CMakePackage):
     patch('0001-Fix-compilation-error-with-StringRef-to-basic-string.patch', when='@:3.8')
 
     def setup_build_environment(self, env):
-        env.set('TENSILE_ROCM_ASSEMBLER_PATH', join_path(self.spec['llvm-amdgpu'].prefix, 'bin', 'clang++'))
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
