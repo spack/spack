@@ -32,7 +32,8 @@ def grouper(iterable, n, fillvalue=None):
     "Collect data into fixed-length chunks or blocks"
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
-    return zip_longest(*args, fillvalue=fillvalue)
+    for group in zip_longest(*args, fillvalue=fillvalue):
+        yield filter(None, group)
 
 
 #: List of directories to exclude from checks.
@@ -135,6 +136,19 @@ def setup_parser(subparser):
         help="exclude untracked files from checks",
     )
     subparser.add_argument(
+        "-f",
+        "--fix",
+        action="store_true",
+        default=False,
+        help="If the tool supports automatically editing file contents, do that.",
+    )
+    subparser.add_argument(
+        "--no-isort",
+        dest="isort",
+        action="store_false",
+        help="Do not run isort, default is run isort if available",
+    )
+    subparser.add_argument(
         "--no-flake8",
         dest="flake8",
         action="store_false",
@@ -213,7 +227,6 @@ def run_flake8(file_list, args):
     # run in chunks of 100 at a time to avoid line length limit
     # filename parameter in config *does not work* for this reliably
     for chunk in grouper(file_list, 100):
-        chunk = filter(lambda e: e is not None, chunk)
 
         output = flake8_cmd(
             # use .flake8 implicitly to work around bug in flake8 upstream
@@ -242,7 +255,7 @@ def run_mypy(file_list, args):
         return 1
 
     print_tool_header("mypy")
-    mpy_args = ["--package", "spack", "--package", "llnl"]
+    mpy_args = ["--package", "spack", "--package", "llnl", "--show-error-codes"]
     # not yet, need other updates to enable this
     # if any([is_package(f) for f in file_list]):
     #     mpy_args.extend(["--package", "packages"])
@@ -259,6 +272,35 @@ def run_mypy(file_list, args):
     return returncode
 
 
+def run_isort(file_list, args):
+    isort_cmd = which("isort")
+    if isort_cmd is None:
+        tty.error("style: isort is not available in path, skipping")
+        return 1
+
+    print_tool_header("isort")
+    # TODO: isort apparently decides to avoid writing colored output at all unless the
+    # output is a tty, even when --color is provided.
+    check_fix_args = () if args.fix else ("--check", "--diff", "--color")
+
+    pat = re.compile("ERROR: (.*) Imports are incorrectly sorted and/or formatted")
+    replacement = "ERROR: {0} Imports are incorrectly sorted and/or formatted"
+    returncode = 0
+    for chunk in grouper(file_list, 100):
+        # TODO: py2 does not support multiple * unpacking expressions in a single call.
+        packed_args = check_fix_args + chunk
+        output = isort_cmd(*packed_args, fail_on_error=False, output=str, error=str)
+        returncode |= isort_cmd.returncode
+
+        rewrite_and_print_output(output, args, pat, replacement)
+
+    if returncode == 0:
+        tty.msg("isort style checks were clean")
+    else:
+        tty.error("isort checks found errors")
+    return returncode
+
+
 def run_black(file_list, args):
     black_cmd = which("black")
     if black_cmd is None:
@@ -266,6 +308,7 @@ def run_black(file_list, args):
         return 1
 
     print_tool_header("black")
+    check_fix_args = () if args.fix else ("--check", "--diff", "--color")
 
     pat = re.compile("would reformat +(.*)")
     replacement = "would reformat {0}"
@@ -274,11 +317,9 @@ def run_black(file_list, args):
     # run in chunks of 100 at a time to avoid line length limit
     # filename parameter in config *does not work* for this reliably
     for chunk in grouper(file_list, 100):
-        chunk = filter(lambda e: e is not None, chunk)
-
-        output = black_cmd(
-            "--check", "--diff", *chunk, fail_on_error=False, output=str, error=str
-        )
+        # TODO: py2 does not support multiple * unpacking expressions in a single call.
+        packed_args = check_fix_args + chunk
+        output = black_cmd(*packed_args, fail_on_error=False, output=str, error=str)
         returncode |= black_cmd.returncode
 
         rewrite_and_print_output(output, args, pat, replacement)
@@ -306,8 +347,13 @@ def style(parser, args):
         if not file_list:
             file_list = changed_files(args.base, args.untracked, args.all)
         print_style_header(file_list, args)
+        if args.isort:
+            # We run isort before flake8, assuming that #23947 with flake8-import-order
+            # is also in, to allow flake8 to double-check the result of executing isort,
+            # if --fix was provided.
+            returncode = run_isort(file_list, args)
         if args.flake8:
-            returncode = run_flake8(file_list, args)
+            returncode |= run_flake8(file_list, args)
         if args.mypy:
             returncode |= run_mypy(file_list, args)
         if args.black:
