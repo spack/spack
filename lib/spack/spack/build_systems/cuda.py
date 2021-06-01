@@ -162,15 +162,8 @@ class CudaPackage(PackageBase):
     conflicts('%xl@:12,14:15,17:', when='+cuda ^cuda@9.2')
     conflicts('%xl@:12,17:', when='+cuda ^cuda@:11.1.0')
 
-    # Mac OS X
-    # platform = ' platform=darwin'
-    # Apple XCode clang vs. LLVM clang are difficult to specify
-    # with spack syntax. Xcode clang name is `clang@x.y.z-apple`
-    # which precludes ranges being specified. We have proposed
-    # rename XCode clang to `clang@apple-x.y.z` or even
-    # `clang-apple@x.y.z as a possible fix.
-    # Compiler conflicts will be eventual taken from here:
-    # https://docs.nvidia.com/cuda/cuda-installation-guide-mac-os-x/index.html#abstract
+    # Darwin.
+    # TODO: add missing conflicts for %apple-clang cuda@:10
     conflicts('platform=darwin', when='+cuda ^cuda@11.0.2:')
 
     # Make sure cuda_arch can not be used without +cuda
