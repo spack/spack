@@ -42,14 +42,19 @@ pytestmark = pytest.mark.maybeslow
 
 
 @pytest.fixture()
-def project_dir_env():
-    def _set_project_dir(path):
-        os.environ['CI_PROJECT_DIR'] = path
+def env_vars():
+    _items_to_remove = {}
 
-    yield _set_project_dir
+    def _set_environment(env_mapping):
+        for key, val in env_mapping.items():
+            _items_to_remove[key] = val
+            os.environ[key] = val
 
-    if 'CI_PROJECT_DIR' in os.environ:
-        os.environ.pop('CI_PROJECT_DIR')
+    yield _set_environment
+
+    for key, val in _items_to_remove.items():
+        if key in os.environ:
+            del os.environ[key]
 
 
 @pytest.fixture()
@@ -57,10 +62,6 @@ def env_deactivate():
     yield
     spack.environment._active_environment = None
     os.environ.pop('SPACK_ENV', None)
-
-
-def set_env_var(key, val):
-    os.environ[key] = val
 
 
 def test_specs_staging(config):
@@ -123,10 +124,14 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
 
 def test_ci_generate_with_env(tmpdir, mutable_mock_env_path, env_deactivate,
-                              install_mockery, mock_packages, project_dir_env):
+                              install_mockery, mock_packages, env_vars):
     """Make sure we can get a .gitlab-ci.yml from an environment file
        which has the gitlab-ci, cdash, and mirrors sections."""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     mirror_url = 'https://my.fake.mirror'
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -205,24 +210,34 @@ def _validate_needs_graph(yaml_contents, needs_graph, artifacts):
     for job_name, job_def in yaml_contents.items():
         for needs_def_name, needs_list in needs_graph.items():
             if job_name.startswith(needs_def_name):
-                # check job needs against the expected needs definition
+                # check job needs against the expected needs definition, but
+                # ignore the need which depends on the upstream pipeline
+                # generation job for the concrete environment directory it
+                # provides
                 j_needs = job_def['needs']
                 assert all([job_needs['job'][:job_needs['job'].index('/')]
-                           in needs_list for job_needs in j_needs])
+                           in needs_list for job_needs in j_needs
+                           if 'pipeline' not in job_needs])
                 assert(all([nl in
-                           [n['job'][:n['job'].index('/')] for n in j_needs]
+                           [n['job'][:n['job'].index('/')] for n in j_needs
+                               if 'pipeline' not in n]
                            for nl in needs_list]))
                 assert all([job_needs['artifacts'] == artifacts
-                           for job_needs in j_needs])
+                           for job_needs in j_needs
+                           if 'pipeline' not in job_needs])
                 break
 
 
 def test_ci_generate_bootstrap_gcc(tmpdir, mutable_mock_env_path,
                                    env_deactivate, install_mockery,
-                                   mock_packages, project_dir_env):
+                                   mock_packages, env_vars):
     """Test that we can bootstrap a compiler and use it as the
     compiler for a spec in the environment"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -284,10 +299,14 @@ def test_ci_generate_bootstrap_artifacts_buildcache(tmpdir,
                                                     env_deactivate,
                                                     install_mockery,
                                                     mock_packages,
-                                                    project_dir_env):
+                                                    env_vars):
     """Test that we can bootstrap a compiler when artifacts buildcache
     is turned on"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -349,9 +368,13 @@ spack:
 
 def test_ci_generate_with_env_missing_section(tmpdir, mutable_mock_env_path,
                                               env_deactivate, install_mockery,
-                                              mock_packages, project_dir_env):
+                                              mock_packages, env_vars):
     """Make sure we get a reasonable message if we omit gitlab-ci section"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -369,14 +392,20 @@ spack:
 
         with ev.read('test'):
             output = ci_cmd('generate', fail_on_error=False, output=str)
+
             assert(expect_out in output)
 
 
 def test_ci_generate_with_cdash_token(tmpdir, mutable_mock_env_path,
                                       env_deactivate, install_mockery,
-                                      mock_packages, project_dir_env):
+                                      mock_packages, env_vars):
     """Make sure we it doesn't break if we configure cdash"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42',
+        'SPACK_CDASH_AUTH_TOKEN': 'notreallyatokenbutshouldnotmatter'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -405,16 +434,11 @@ spack:
         env_cmd('create', 'test', './spack.yaml')
 
         with ev.read('test'):
-            fake_token = 'notreallyatokenbutshouldnotmatter'
-            os.environ['SPACK_CDASH_AUTH_TOKEN'] = fake_token
             copy_to_file = str(tmpdir.join('backup-ci.yml'))
-            try:
-                output = ci_cmd('generate', '--copy-to', copy_to_file, output=str)
-            finally:
-                del os.environ['SPACK_CDASH_AUTH_TOKEN']
-            # That fake token should still have resulted in being unable to
-            # register build group with cdash, but the workload should
-            # still have been generated.
+            output = ci_cmd('generate', '--copy-to', copy_to_file, output=str)
+            # The fake token env var should still have resulted in being unable
+            # to register build group with cdash, but the workload should still
+            # have been generated.
             expect = 'Problem populating buildgroup'
             assert(expect in output)
 
@@ -430,9 +454,13 @@ spack:
 def test_ci_generate_with_custom_scripts(tmpdir, mutable_mock_env_path,
                                          env_deactivate, install_mockery,
                                          mock_packages, monkeypatch,
-                                         project_dir_env):
+                                         env_vars):
     """Test use of user-provided scripts"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -520,9 +548,13 @@ spack:
 
 def test_ci_generate_pkg_with_deps(tmpdir, mutable_mock_env_path,
                                    env_deactivate, install_mockery,
-                                   mock_packages, project_dir_env):
+                                   mock_packages, env_vars):
     """Test pipeline generation for a package w/ dependencies"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -575,11 +607,17 @@ spack:
 def test_ci_generate_for_pr_pipeline(tmpdir, mutable_mock_env_path,
                                      env_deactivate, install_mockery,
                                      mock_packages, monkeypatch,
-                                     project_dir_env):
+                                     env_vars):
     """Test that PR pipelines do not include a final stage job for
     rebuilding the mirror index, even if that job is specifically
     configured"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42',
+        'SPACK_IS_PR_PIPELINE': 'True',
+        'SPACK_PR_BRANCH': 'fake-test-branch'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -612,15 +650,9 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
-            os.environ['SPACK_IS_PR_PIPELINE'] = 'True'
-            os.environ['SPACK_PR_BRANCH'] = 'fake-test-branch'
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
-            try:
-                ci_cmd('generate', '--output-file', outputfile)
-            finally:
-                del os.environ['SPACK_IS_PR_PIPELINE']
-                del os.environ['SPACK_PR_BRANCH']
+            ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
             contents = f.read()
@@ -637,9 +669,13 @@ spack:
 def test_ci_generate_with_external_pkg(tmpdir, mutable_mock_env_path,
                                        env_deactivate, install_mockery,
                                        mock_packages, monkeypatch,
-                                       project_dir_env):
+                                       env_vars):
     """Make sure we do not generate jobs for external pkgs"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -678,8 +714,7 @@ spack:
 
 def test_ci_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
                     install_mockery, mock_packages, monkeypatch,
-                    mock_gnupghome, mock_fetch, project_dir_env):
-    project_dir_env(tmpdir.strpath)
+                    mock_gnupghome, mock_fetch, env_vars):
     working_dir = tmpdir.join('working_dir')
 
     log_dir = os.path.join(working_dir.strpath, 'logs')
@@ -761,25 +796,29 @@ spack:
         'notcommand'
     ])
 
+    # Create environment variables as gitlab would do it
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42',
+        'SPACK_ARTIFACTS_ROOT': working_dir.strpath,
+        'SPACK_JOB_LOG_DIR': log_dir,
+        'SPACK_JOB_REPRO_DIR': repro_dir,
+        'SPACK_LOCAL_MIRROR_DIR': mirror_dir.strpath,
+        'SPACK_CONCRETE_ENV_DIR': env_dir.strpath,
+        'SPACK_SIGNING_KEY': signing_key,
+        'SPACK_ROOT_SPEC': root_spec_build_hash,
+        'SPACK_JOB_SPEC_DAG_HASH': job_spec_dag_hash,
+        'SPACK_JOB_SPEC_PKG_NAME': 'archive-files',
+        'SPACK_COMPILER_ACTION': 'NONE',
+        'SPACK_CDASH_BUILD_NAME': '(specs) archive-files',
+        'SPACK_RELATED_BUILDS_CDASH': '',
+        'SPACK_REMOTE_MIRROR_URL': mirror_url,
+        'SPACK_IS_DEVELOP_PIPELINE': 'True'
+    })
+
     with env_dir.as_cwd():
         env_cmd('activate', '--without-view', '--sh', '-d', '.')
-
-        # Create environment variables as gitlab would do it
-        set_env_var('SPACK_ARTIFACTS_ROOT', working_dir.strpath)
-        set_env_var('SPACK_JOB_LOG_DIR', log_dir)
-        set_env_var('SPACK_JOB_REPRO_DIR', repro_dir)
-        set_env_var('SPACK_LOCAL_MIRROR_DIR', mirror_dir.strpath)
-        set_env_var('SPACK_CONCRETE_ENV_DIR', env_dir.strpath)
-        set_env_var('CI_PIPELINE_ID', '7192')
-        set_env_var('SPACK_SIGNING_KEY', signing_key)
-        set_env_var('SPACK_ROOT_SPEC', root_spec_build_hash)
-        set_env_var('SPACK_JOB_SPEC_DAG_HASH', job_spec_dag_hash)
-        set_env_var('SPACK_JOB_SPEC_PKG_NAME', 'archive-files')
-        set_env_var('SPACK_COMPILER_ACTION', 'NONE')
-        set_env_var('SPACK_CDASH_BUILD_NAME', '(specs) archive-files')
-        set_env_var('SPACK_RELATED_BUILDS_CDASH', '')
-        set_env_var('SPACK_REMOTE_MIRROR_URL', mirror_url)
-        set_env_var('SPACK_IS_DEVELOP_PIPELINE', 'True')
 
         ci_cmd('rebuild', fail_on_error=False)
 
@@ -820,8 +859,8 @@ spack:
 
 def test_ci_nothing_to_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
                                install_mockery, mock_packages, monkeypatch,
-                               mock_fetch, project_dir_env):
-    project_dir_env(tmpdir.strpath)
+                               mock_fetch, env_vars):
+    # Create environment variables as gitlab would do it
     working_dir = tmpdir.join('working_dir')
 
     mirror_dir = working_dir.join('mirror')
@@ -866,23 +905,25 @@ spack:
                     root_spec_build_hash = h
                     job_spec_dag_hash = s.dag_hash()
 
-            # Create environment variables as gitlab would do it
-            set_env_var('SPACK_ARTIFACTS_ROOT', working_dir.strpath)
-            set_env_var('SPACK_JOB_LOG_DIR', 'log_dir')
-            set_env_var('SPACK_JOB_REPRO_DIR', 'repro_dir')
-            set_env_var('SPACK_LOCAL_MIRROR_DIR', mirror_dir.strpath)
-            set_env_var('SPACK_CONCRETE_ENV_DIR', tmpdir.strpath)
-            set_env_var('SPACK_ROOT_SPEC', root_spec_build_hash)
-            set_env_var('SPACK_JOB_SPEC_DAG_HASH', job_spec_dag_hash)
-            set_env_var('SPACK_JOB_SPEC_PKG_NAME', 'archive-files')
-            set_env_var('SPACK_COMPILER_ACTION', 'NONE')
-            set_env_var('SPACK_REMOTE_MIRROR_URL', mirror_url)
-
             def fake_dl_method(spec, dest, require_cdashid, m_url=None):
                 print('fake download buildcache {0}'.format(spec.name))
 
             monkeypatch.setattr(
                 buildcache, 'download_buildcache_files', fake_dl_method)
+
+            env_vars({
+                'CI_PROJECT_DIR': tmpdir.strpath,
+                'SPACK_ARTIFACTS_ROOT': working_dir.strpath,
+                'SPACK_JOB_LOG_DIR': 'log_dir',
+                'SPACK_JOB_REPRO_DIR': 'repro_dir',
+                'SPACK_LOCAL_MIRROR_DIR': mirror_dir.strpath,
+                'SPACK_CONCRETE_ENV_DIR': tmpdir.strpath,
+                'SPACK_ROOT_SPEC': root_spec_build_hash,
+                'SPACK_JOB_SPEC_DAG_HASH': job_spec_dag_hash,
+                'SPACK_JOB_SPEC_PKG_NAME': 'archive-files',
+                'SPACK_COMPILER_ACTION': 'NONE',
+                'SPACK_REMOTE_MIRROR_URL': mirror_url
+            })
 
             ci_out = ci_cmd('rebuild', output=str)
 
@@ -895,8 +936,12 @@ spack:
 @pytest.mark.disable_clean_stage_check
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
                               install_mockery, mock_packages, mock_fetch,
-                              mock_stage, mock_gnupghome, project_dir_env):
-    project_dir_env(tmpdir.strpath)
+                              mock_stage, mock_gnupghome, env_vars):
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     working_dir = tmpdir.join('working_dir')
 
     mirror_dir = working_dir.join('mirror')
@@ -1066,12 +1111,16 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
 def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,
                                            env_deactivate, install_mockery,
                                            mock_packages, monkeypatch,
-                                           project_dir_env):
+                                           env_vars):
     """Test that we get the behavior we want with respect to the provision
        of runner attributes like tags, variables, and scripts, both when we
        inherit them from the top level, as well as when we override one or
        more at the runner level"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -1209,9 +1258,13 @@ spack:
 def test_ci_generate_with_workarounds(tmpdir, mutable_mock_env_path,
                                       env_deactivate, install_mockery,
                                       mock_packages, monkeypatch,
-                                      project_dir_env):
+                                      env_vars):
     """Make sure the post-processing cli workarounds do what they should"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -1237,6 +1290,7 @@ spack:
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+
             ci_cmd('generate', '--output-file', outputfile, '--dependencies')
 
             with open(outputfile) as f:
@@ -1310,14 +1364,18 @@ spack:
 def test_ci_generate_bootstrap_prune_dag(
         install_mockery_mutable_config, mock_packages, mock_fetch,
         mock_archive, mutable_config, monkeypatch, tmpdir,
-        mutable_mock_env_path, env_deactivate, project_dir_env):
+        mutable_mock_env_path, env_deactivate, env_vars):
     """Test compiler bootstrapping with DAG pruning.  Specifically, make
        sure that if we detect the bootstrapped compiler needs to be rebuilt,
        we ensure the spec we want to build with that compiler is scheduled
        for rebuild as well."""
 
     # Create a temp mirror directory for buildcache usage
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     mirror_dir = tmpdir.join('mirror_dir')
     mirror_url = 'file://{0}'.format(mirror_dir.strpath)
 
@@ -1441,9 +1499,13 @@ spack:
 
 def test_ci_subcommands_without_mirror(tmpdir, mutable_mock_env_path,
                                        env_deactivate, mock_packages,
-                                       install_mockery, project_dir_env):
+                                       install_mockery, env_vars):
     """Make sure we catch if there is not a mirror and report an error"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -1468,6 +1530,7 @@ spack:
             # Check the 'generate' subcommand
             output = ci_cmd('generate', '--output-file', outputfile,
                             output=str, fail_on_error=False)
+
             ex = 'spack ci generate requires an env containing a mirror'
             assert(ex in output)
 
@@ -1520,9 +1583,13 @@ def test_ensure_only_one_temporary_storage():
 def test_ci_generate_temp_storage_url(tmpdir, mutable_mock_env_path,
                                       env_deactivate, install_mockery,
                                       mock_packages, monkeypatch,
-                                      project_dir_env):
+                                      env_vars):
     """Verify correct behavior when using temporary-storage-url-prefix"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -1574,9 +1641,13 @@ spack:
 def test_ci_generate_read_broken_specs_url(tmpdir, mutable_mock_env_path,
                                            env_deactivate, install_mockery,
                                            mock_packages, monkeypatch,
-                                           project_dir_env):
+                                           env_vars):
     """Verify that `broken-specs-url` works as intended"""
-    project_dir_env(tmpdir.strpath)
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     spec_a = Spec('a')
     spec_a.concretize()
     a_full_hash = spec_a.full_hash()
@@ -1616,6 +1687,7 @@ spack:
         with ev.read('test'):
             # Check output of the 'generate' subcommand
             output = ci_cmd('generate', output=str, fail_on_error=False)
+
             assert('known to be broken' in output)
 
             ex = '({0})'.format(a_full_hash)
@@ -1627,8 +1699,12 @@ spack:
 
 def test_ci_reproduce(tmpdir, mutable_mock_env_path, env_deactivate,
                       install_mockery, mock_packages, monkeypatch,
-                      last_two_git_commits, project_dir_env):
-    project_dir_env(tmpdir.strpath)
+                      last_two_git_commits, env_vars):
+    env_vars({
+        'CI_PROJECT_DIR': tmpdir.strpath,
+        'CI_JOB_NAME': 'generate-pipeline',
+        'CI_PIPELINE_ID': '42'
+    })
     working_dir = tmpdir.join('repro_dir')
     image_name = 'org/image:tag'
 

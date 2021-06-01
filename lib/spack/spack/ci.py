@@ -877,11 +877,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 if prune_dag and not rebuild_spec:
                     continue
 
-                if artifacts_root:
-                    job_dependencies.append({
-                        'job': generate_job_name,
-                        'pipeline': '{0}'.format(parent_pipeline_id)
-                    })
+                # We depend on the pipeline generation job in the upstream
+                # pipeline so we get the concrete environment directory as an
+                # artifact.
+                job_dependencies.append({
+                    'job': generate_job_name,
+                    'pipeline': '{0}'.format(parent_pipeline_id)
+                })
 
                 job_vars['SPACK_SPEC_NEEDS_REBUILD'] = str(rebuild_spec)
 

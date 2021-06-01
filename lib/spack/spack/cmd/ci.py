@@ -480,13 +480,9 @@ def ci_rebuild(args):
 
     # Run the generated install.sh shell script as if it were being run in
     # a login shell.
-    try:
-        install_process  = subprocess.Popen(['bash', '-l', './install.sh'])
-        install_process.wait()
-        install_exit_code = install_process.returncode
-    except (ValueError, subprocess.CalledProcessError, OSError) as inst:
-        tty.error('Encountered error running install script')
-        tty.error(inst)
+    install_process  = subprocess.Popen(['bash', '-l', './install.sh'])
+    install_process.wait()
+    install_exit_code = install_process.returncode
 
     # Now do the post-install tasks
     tty.debug('spack install exited {0}'.format(install_exit_code))
