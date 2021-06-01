@@ -14,6 +14,10 @@ class Berkeleygw(MakefilePackage):
 
     homepage = "https://berkeleygw.org"
 
+    version('3.0',
+            'ab411acead5e979fd42b8d298dbb0a12ce152e7be9eee0bb87e9e5a06a638e2a',
+            url='https://berkeley.box.com/shared/static/lp6hj4kxr459l5a6t05qfuzl2ucyo03q.gz',
+            expand=False)
     version('2.1',
             '31f3b643dd937350c3866338321d675d4a1b1f54c730b43ad74ae67e75a9e6f2',
             url='https://berkeley.box.com/shared/static/ze3azi5vlyw7hpwvl9i5f82kaiid6g0x.gz',
@@ -77,8 +81,9 @@ class Berkeleygw(MakefilePackage):
         copy(join_path(self.stage.source_path, 'config', 'generic.mpi.linux.mk'),
              'arch.mk')
 
-        # don't try to install missing file
-        filter_file('install manual.html', '#install manual.html', 'Makefile')
+        if self.version == Version('2.1'):
+            # don't try to install missing file
+            filter_file('install manual.html', '#install manual.html', 'Makefile')
 
         # don't rebuild in the install and test steps
         filter_file('install: all', 'install:', 'Makefile')
