@@ -217,7 +217,12 @@ def _unknown_variants_in_directives(pkgs, error_cls):
         for conflict, triggers in pkg.conflicts.items():
             for trigger, _ in triggers:
                 vrn = spack.spec.Spec(conflict)
-                vrn.constrain(trigger)
+                try:
+                    vrn.constrain(trigger)
+                except Exception as e:
+                    msg = 'Generic error in conflict for package "{0}": '
+                    errors.append(error_cls(msg.format(pkg.name), [str(e)]))
+                    continue
                 errors.extend(_analyze_variants_in_directive(
                     pkg, vrn, directive='conflicts', error_cls=error_cls
                 ))
