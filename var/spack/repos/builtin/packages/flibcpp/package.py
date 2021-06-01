@@ -12,7 +12,7 @@ class Flibcpp(CMakePackage):
 
     homepage = "https://flibcpp.readthedocs.io/en/latest"
     git = "https://github.com/swig-fortran/flibcpp.git"
-    url = "https://github.com/swig-fortran/flibcpp/archive/v0.3.1.tar.gz"
+    url = "https://github.com/swig-fortran/flibcpp/archive/v1.0.1.tar.gz"
 
     version('1.0.1', sha256='8569c71eab0257097a6aa666a6d86bdcb6cd6e31244d32cc5b2478d0e936ca7a')
     version('0.5.2', sha256='b9b4eb6431d5b56a54c37f658df7455eafd3d204a5534903b127e0c8a1c9b827')
@@ -78,4 +78,3 @@ class Flibcpp(CMakePackage):
             self.run_test(join_path(example_src_dir, 'run-examples.sh'),
                           [], [], installed=False,
                           purpose='test: installation')
-
