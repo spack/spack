@@ -51,7 +51,7 @@ setlocal enabledelayedexpansion
 :: subcommands will never start with '-'
 :: everything after the subcommand is an arg
 for %%x in (%*) do (
-    set "t=%%x"
+    set t="%%~x"
     if "!t:~0,1!" == "-" (
         if defined _sp_subcommand (
             :: We already have a subcommand, processing args now
@@ -92,9 +92,12 @@ endlocal
 set /p _sp_subcommand=<subcmd
 set /p _sp_flags=<flags
 set /p _sp_args=<args
-if "%_sp_subcommand%"=="ECHO is off." (set "_sp_subcommand=")
-if "%_sp_flags%"=="ECHO is off." (set "_sp_flags=")
-if "%_sp_args%"=="ECHO is off." (set "_sp_args=")
+set str_subcommand=%_sp_subcommand:"='%
+set str_flags=%_sp_flags:"='%
+set str_args=%_sp_args:"='%
+if "%str_subcommand%"=="ECHO is off." (set "_sp_subcommand=")
+if "%str_flags%"=="ECHO is off." (set "_sp_flags=")
+if "%str_args%"=="ECHO is off." (set "_sp_args=")
 del subcmd
 del flags
 del args
