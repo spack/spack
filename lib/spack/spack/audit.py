@@ -151,6 +151,15 @@ def run_check(tag, **kwargs):
     return CALLBACKS[tag].run(**kwargs)
 
 
+#: Generic checks relying on global state
+generic = AuditClass(
+    group='generic',
+    tag='GENERIC',
+    description='Generic checks relying on global variables',
+    kwargs=()
+)
+
+
 #: Sanity checks on compilers.yaml
 config_compiler = AuditClass(
     group='configs',
