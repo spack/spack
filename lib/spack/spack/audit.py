@@ -45,6 +45,9 @@ except ImportError:
 #: Map an audit tag to a list of callables implementing checks
 CALLBACKS = {}
 
+#: Map a group of checks to the list of related audit tags
+GROUPS = collections.defaultdict(list)
+
 
 class Error(object):
     """Information on an error reported in a test."""
@@ -68,11 +71,12 @@ class Error(object):
 
 
 class AuditClass(Sequence):
-    def __init__(self, tag, description, kwargs):
+    def __init__(self, group, tag, description, kwargs):
         """Return an object that acts as a decorator to register functions
         associated with a specific class of sanity checks.
 
         Args:
+            group (str): group in which this check is to be inserted
             tag (str): tag uniquely identifying the class of sanity checks
             description (str): description of the sanity checks performed
                 by this tag
@@ -83,6 +87,7 @@ class AuditClass(Sequence):
             msg = 'audit class "{0}" already registered'
             raise ValueError(msg.format(tag))
 
+        self.group = group
         self.tag = tag
         self.description = description
         self.kwargs = kwargs
@@ -90,6 +95,9 @@ class AuditClass(Sequence):
 
         # Init the list of hooks
         CALLBACKS[self.tag] = self
+
+        # Update the list of tags in the group
+        GROUPS[self.group].append(self.tag)
 
     def __call__(self, func):
         self.callbacks.append(func)
@@ -113,15 +121,46 @@ class AuditClass(Sequence):
         return errors
 
 
+def run_group(group, **kwargs):
+    """Run the checks that are part of the group passed as argument.
+
+    Args:
+        group (str): group of checks to be run
+        **kwargs: keyword arguments forwarded to the checks
+
+    Returns:
+        List of (tag, errors) that failed.
+    """
+    reports = []
+    for check in GROUPS[group]:
+        errors = run_check(check, **kwargs)
+        reports.append((check, errors))
+    return reports
+
+
+def run_check(tag, **kwargs):
+    """Run the checks associated with a single tag.
+
+    Args:
+        tag (str): tag of the check
+        **kwargs: keyword arguments forwarded to the checks
+
+    Returns:
+        Errors occurred during the checks
+    """
+    return CALLBACKS[tag].run(**kwargs)
+
+
 #: Sanity checks on compilers.yaml
-audit_cfgcmp = AuditClass(
+config_compiler = AuditClass(
+    group='configs',
     tag='CFG-COMPILER',
     description='Sanity checks on compilers.yaml',
     kwargs=()
 )
 
 
-@audit_cfgcmp
+@config_compiler
 def _search_duplicate_compilers(error_cls):
     """Report compilers with the same spec and two different definitions"""
     import spack.config
@@ -148,14 +187,15 @@ def _search_duplicate_compilers(error_cls):
 
 
 #: Sanity checks on packages.yaml
-audit_cfgpkg = AuditClass(
+config_packages = AuditClass(
+    group='configs',
     tag='CFG-PACKAGES',
     description='Sanity checks on packages.yaml',
     kwargs=()
 )
 
 
-@audit_cfgpkg
+@config_packages
 def _search_duplicate_specs_in_externals(error_cls):
     """Search for duplicate specs declared as externals"""
     import spack.config
@@ -195,14 +235,15 @@ def _search_duplicate_specs_in_externals(error_cls):
 
 
 #: Sanity checks on package directives
-audit_pkgdirectives = AuditClass(
+package_directives = AuditClass(
+    group='packages',
     tag='PKG-DIRECTIVES',
     description='Sanity checks on specs used in directives',
     kwargs=('pkgs',)
 )
 
 
-@audit_pkgdirectives
+@package_directives
 def _unknown_variants_in_directives(pkgs, error_cls):
     """Report unknown or wrong variants in directives for this package"""
     import llnl.util.lang
@@ -253,7 +294,7 @@ def _unknown_variants_in_directives(pkgs, error_cls):
     return llnl.util.lang.dedupe(errors)
 
 
-@audit_pkgdirectives
+@package_directives
 def _unknown_variants_in_dependencies(pkgs, error_cls):
     """Report unknown dependencies and wrong variants for dependencies"""
     import spack.repo

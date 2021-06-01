@@ -11,11 +11,6 @@ description = "audit configuration files, packages, etc."
 section = "system"
 level = "short"
 
-CHECKS = {
-    'configs': ['CFG-COMPILER', 'CFG-PACKAGES'],
-    'packages': ['PKG-DIRECTIVES']
-}
-
 
 def setup_parser(subparser):
     # Top level flags, valid for every audit class
@@ -36,21 +31,18 @@ def setup_parser(subparser):
 
 
 def configs(parser, args):
-    checks = CHECKS[args.subcommand]
-    reports = _run_checks(checks)
+    reports = spack.audit.run_group(args.subcommand)
     _process_reports(reports)
 
 
 def packages(parser, args):
-    checks = CHECKS[args.subcommand]
     pkgs = args.name or spack.repo.path.all_package_names()
-
-    reports = _run_checks(checks, pkgs=pkgs)
+    reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
     _process_reports(reports)
 
 
 def list(parser, args):
-    for subcommand, check_tags in CHECKS.items():
+    for subcommand, check_tags in spack.audit.GROUPS.items():
         print(cl.colorize('@*b{' + subcommand + '}:'))
         for tag in check_tags:
             audit_obj = spack.audit.CALLBACKS[tag]
@@ -69,14 +61,6 @@ def audit(parser, args):
         'list': list
     }
     subcommands[args.subcommand](parser, args)
-
-
-def _run_checks(checks, **kwargs):
-    reports = []
-    for check in checks:
-        errors = spack.audit.CALLBACKS[check].run(**kwargs)
-        reports.append((check, errors))
-    return reports
 
 
 def _process_reports(reports):
