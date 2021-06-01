@@ -771,28 +771,39 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                                 raise
 
                 if in_pipe in rlist:
-                    # Handle output from the calling process.
-                    line = _retry(in_pipe.readline)()
-                    if not line:
-                        break
+                    line_count = 0
+                    try:
+                        while line_count < 100:
+                            # Handle output from the calling process.
+                            line = _retry(in_pipe.readline)()
+                            if not line:
+                                return
+                            line_count += 1
 
-                    # find control characters and strip them.
-                    controls = control.findall(line)
-                    line = control.sub('', line)
+                            # find control characters and strip them.
+                            clean_line, num_controls = control.subn('', line)
 
-                    # Echo to stdout if requested or forced.
-                    if echo or force_echo:
-                        sys.stdout.write(line)
-                        sys.stdout.flush()
+                            # Echo to stdout if requested or forced.
+                            if echo or force_echo:
+                                sys.stdout.write(clean_line)
 
-                    # Stripped output to log file.
-                    log_file.write(_strip(line))
-                    log_file.flush()
+                            # Stripped output to log file.
+                            log_file.write(_strip(clean_line))
 
-                    if xon in controls:
-                        force_echo = True
-                    if xoff in controls:
-                        force_echo = False
+                            if num_controls > 0:
+                                controls = control.findall(line)
+                                if xon in controls:
+                                    force_echo = True
+                                if xoff in controls:
+                                    force_echo = False
+
+                            if not _input_available(in_pipe):
+                                break
+                    finally:
+                        if line_count > 0:
+                            if echo or force_echo:
+                                sys.stdout.flush()
+                            log_file.flush()
 
     except BaseException:
         tty.error("Exception occurred in writer daemon!")
@@ -844,3 +855,7 @@ def _retry(function):
                     continue
                 raise
     return wrapped
+
+
+def _input_available(f):
+    return f in select.select([f], [], [], 0)[0]
