@@ -35,7 +35,7 @@ class Rmgdft(CMakePackage):
                         'enabled but some compilers are slow when '
                         'this is on so provide a disable option.')
 
-    # RMGDFT 4.0.0 or later requires support for C++14
+    # RMGDFT 4.0.0 or later requires compiler support for C++14
     compiler_warning = 'RMGDFT 4.0.0 or later requires a ' \
                        'compiler with support for C++14'
     conflicts('%gcc@:4', when='@3.6.0:', msg=compiler_warning)
@@ -43,12 +43,20 @@ class Rmgdft(CMakePackage):
     conflicts('%pgi@:17', when='@3.6.0:', msg=compiler_warning)
     conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
 
-    depends_on('cmake@3.18.1', type='build')
-    depends_on('boost@1.74.0:')
+    depends_on('cmake', type='build')
+    depends_on('boost@1.66.0:')
     depends_on('fftw-api@3')
-    depends_on('openblas threads=openmp')
     depends_on('mpi')
     depends_on('hdf5')
+
+    # RMG is a hybrid MPI/threads code and performance is
+    # highly dependent on the threading model of the blas
+    # libraries. Openblas-openmp is known to work well
+    # so if spack yields a non-performant build you can
+    # try to adjust your system config to use it.
+    depends_on('blas')
+    conflicts('^atlas',
+              msg='The atlas threading model is incompatible with RMG')
 
     @property
     def build_targets(self):
