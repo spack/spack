@@ -51,6 +51,7 @@ class Rocblas(CMakePackage):
     depends_on('py-pyyaml', type='build')
     depends_on('py-wheel', type='build')
     depends_on('py-msgpack', type='build')
+    depends_on('py-pip', type='build')
 
     for t_version, t_commit in [
         ('@3.5.0',  'f842a1a4427624eff6cbddb2405c36dec9a210cd'),
