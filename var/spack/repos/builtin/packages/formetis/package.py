@@ -67,5 +67,5 @@ class Formetis(CMakePackage):
         with working_dir(test_build_dir, create=True):
             cmake(*cmake_args)
             make()
-            self.run_test('ctest', ['-V'], [], installed=False,
+            self.run_test('metis', [], [], installed=False,
                           purpose='test: installation')
