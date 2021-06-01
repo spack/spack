@@ -580,16 +580,16 @@ If this project does not have public pipelines, you will need to first:
         print(reproduce_msg)
 
     # Tie job success/failure to the success/failure of building the spec
-    sys.exit(install_exit_code)
+    return install_exit_code
 
 
 def ci_reproduce(args):
     job_url = args.job_url
     work_dir = args.working_dir
 
-    spack_ci.reproduce_ci_job(job_url, work_dir)
+    return spack_ci.reproduce_ci_job(job_url, work_dir)
 
 
 def ci(parser, args):
     if args.func:
-        args.func(args)
+        return args.func(args)
