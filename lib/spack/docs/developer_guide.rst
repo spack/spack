@@ -799,7 +799,17 @@ a GitHub action that makes it easy to see that there are spelling errors. If you
 contribution has errors, they will be printed clearly in the CI output along
 with suggested changes. If you need to add custom words, you can use
 a `_typos.toml <https://github.com/marketplace/actions/typos-action#false-positives>`_
-file.
+file. When you see an error, you can fix locally manually, or you can `install
+typos <https://github.com/crate-ci/typos#install>`_ and have it correct for you!
+
+.. code-block:: console
+
+    # preview changes first!
+    typos ./lib/spack/docs
+
+    # write changes
+    typos ./lib/spack/docs --write-changes
+    
 
 
 
