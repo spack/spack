@@ -64,7 +64,7 @@ def init(gnupghome=None, force=False):
     GPG.add_default_env('GNUPGHOME', GNUPGHOME)
     if GPGCONF:
         GPGCONF.add_default_env('GNUPGHOME', GNUPGHOME)
-        # Set the socket dir is not using GnuPG defaults
+        # Set the socket dir if not using GnuPG defaults
         SOCKET_DIR = _socket_dir(GPGCONF)
 
     # Make sure that the GNUPGHOME exists
