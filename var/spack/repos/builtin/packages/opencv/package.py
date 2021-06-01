@@ -181,6 +181,10 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts('+videoio', when='~imgcodecs')
     conflicts('+world', when='~core')
 
+
+    # OpenCV component conflicts
+    conflicts('+gtk', when='platform=darwin')
+
     conflicts('+python2', when='+python3')
     conflicts('+python3', when='+python2')
 
