@@ -55,18 +55,16 @@ class PyPykokkosBase(CMakePackage, PythonPackage):
         spec = self.spec
 
         args = [
-            "-DENABLE_INTERNAL_KOKKOS=OFF",
-            "-DENABLE_INTERNAL_PYBIND11=OFF",
-            "-DPYTHON_EXECUTABLE={0}".format(spec["python"].command.path),
-            "-DPython3_EXECUTABLE={0}".format(spec["python"].command.path),
-            "-DENABLE_VIEW_RANKS={0}".format(spec.variants["view_ranks"].value),
+            self.define('ENABLE_INTERNAL_KOKKOS', False),
+            self.define('ENABLE_INTERNAL_PYBIND11', False),
+            self.define('PYTHON_EXECUTABLE', spec['python'].command.path),
+            self.define('Python3_EXECUTABLE', spec['python'].command.path),
+            self.define_from_variant('ENABLE_VIEW_RANKS', 'view_ranks'),
         ]
 
         for dep in ("layouts", "memory_traits"):
             args.append(
-                "-DENABLE_{0}={1}".format(
-                    dep.upper(), "ON" if "+{0}".format(dep) in spec else "OFF"
-                )
+                self.define_from_variant("ENABLE_' + dep.upper(), dep)
             )
 
         return args
