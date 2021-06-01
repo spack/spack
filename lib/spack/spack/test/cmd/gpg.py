@@ -41,24 +41,20 @@ def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
     monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
     if version == 'undetectable' or version.endswith('1.3.4'):
         with pytest.raises(spack.util.gpg.SpackGPGError):
-            spack.util.gpg.ensure_gpg(reevaluate=True)
+            spack.util.gpg.init(force=True)
     else:
-        spack.util.gpg.ensure_gpg(reevaluate=True)
-        gpg_exe = spack.util.gpg.get_global_gpg_instance().gpg_exe
-        assert isinstance(gpg_exe, spack.util.executable.Executable)
-        gpgconf_exe = spack.util.gpg.get_global_gpg_instance().gpgconf_exe
-        assert isinstance(gpgconf_exe, spack.util.executable.Executable)
+        spack.util.gpg.init(force=True)
+        assert spack.util.gpg.GPG is not None
+        assert spack.util.gpg.GPGCONF is not None
 
 
 def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch):
     monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
     with pytest.raises(spack.util.gpg.SpackGPGError):
-        spack.util.gpg.ensure_gpg(reevaluate=True)
+        spack.util.gpg.init(force=True)
 
 
 @pytest.mark.maybeslow
-@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
-                    reason='These tests require gnupg2')
 def test_gpg(tmpdir, mock_gnupghome):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):

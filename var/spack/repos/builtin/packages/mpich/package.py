@@ -189,7 +189,7 @@ spack package at this time.''',
     conflicts('+libxml2', when='@:3.2~hydra')
 
     # see https://github.com/pmodels/mpich/pull/5031
-    conflicts('%clang@:7', when='@3.4:')
+    conflicts('%clang@:7', when='@3.4:3.4.1')
 
     @run_after('configure')
     def patch_cce(self):

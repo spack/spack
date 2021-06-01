@@ -647,8 +647,6 @@ spack:
         assert not any('externaltool' in key for key in yaml_contents)
 
 
-@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
-                    reason='This test requires gpg')
 def test_ci_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
                     install_mockery, mock_packages, monkeypatch,
                     mock_gnupghome, mock_fetch):
@@ -864,8 +862,6 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
-@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
-                    reason='This test requires gpg')
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
                               install_mockery, mock_packages, mock_fetch,
                               mock_stage, mock_gnupghome):
