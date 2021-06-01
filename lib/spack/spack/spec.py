@@ -153,7 +153,7 @@ compiler_color = '@g'          #: color for highlighting compilers
 version_color = '@c'           #: color for highlighting versions
 architecture_color = '@m'      #: color for highlighting architectures
 enabled_variant_color = '@B'   #: color for highlighting enabled variants
-disabled_variant_color = '@r'  #: color for highlighting disabled varaints
+disabled_variant_color = '@r'  #: color for highlighting disabled variants
 dependency_color = '@.'        #: color for highlighting dependencies
 hash_color = '@K'              #: color for highlighting package hashes
 

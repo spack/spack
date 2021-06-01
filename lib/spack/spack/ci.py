@@ -245,7 +245,7 @@ def stage_spec_jobs(specs, check_index_only=False):
             all configured mirrors are searched to see if binaries for specs
             are up to date on those mirrors.  This flag limits that search to
             the binary cache indices on those mirrors to speed the process up,
-            even though there is no garantee the index is up to date.
+            even though there is no guarantee the index is up to date.
 
     Returns: A tuple of information objects describing the specs, dependencies
         and stages:
@@ -1358,7 +1358,7 @@ def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id,
             # that exception type here, since users of the
             # `spack ci rebuild' may not need or want any dependency
             # on boto3.  So we use the first non-boto exception type
-            # in the heirarchy:
+            # in the hierarchy:
             #     boto3.exceptions.S3UploadFailedError
             #     boto3.exceptions.Boto3Error
             #     Exception

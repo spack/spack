@@ -777,6 +777,32 @@ This is not to say that this would be the best way to implement an integration
 with the logger (you'd probably want to write a custom logger, or you could
 have the hook defined within the logger) but serves as an example of writing a hook. 
 
+.. _documentation:
+
+-------------
+Documentation
+-------------
+
+Documentation can be found in ``lib/spack/docs``, and consists of rendered 
+restructured syntax files (extension .rst). To write documentation, you
+should first decide where it best fits. Developer documentation can
+go into this file that you are currently reading, and user documentation
+generally goes into ``basic_usage.rst``. If you have a question about where to
+put something, ask someone on the spack Slack.
+
+^^^^^^^^^^^
+Spell Check
+^^^^^^^^^^^
+
+Spelling is checked with `crate-ci/typos <https://github.com/marketplace/actions/typos-action>`_,
+a GitHub action that makes it easy to see that there are spelling errors. If your
+contribution has errors, they will be printed clearly in the CI output along
+with suggested changes. If you need to add custom words, you can use
+a `_typos.toml <https://github.com/marketplace/actions/typos-action#false-positives>`_
+file.
+
+
+
 ----------
 Unit tests
 ----------

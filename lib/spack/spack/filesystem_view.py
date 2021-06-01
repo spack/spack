@@ -31,7 +31,7 @@ from spack.directory_layout import ExtensionAlreadyInstalledError
 from spack.directory_layout import YamlViewExtensionsLayout
 
 
-# compatability
+# compatibility
 if sys.version_info < (3, 0):
     from itertools import imap as map
     from itertools import ifilter as filter
@@ -103,9 +103,9 @@ class FilesystemView(object):
         Governs a filesystem view that is located at certain root-directory.
 
         Packages are linked from their install directories into a common file
-        hierachy.
+        hierarchy.
 
-        In distributed filesystems, loading each installed package seperately
+        In distributed filesystems, loading each installed package separately
         can lead to slow-downs due to too many directories being traversed.
         This can be circumvented by loading all needed modules into a common
         directory structure.

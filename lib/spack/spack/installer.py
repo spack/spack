@@ -73,7 +73,7 @@ STATUS_FAILED = 'failed'
 #: process)
 STATUS_INSTALLING = 'installing'
 
-#: Build status indicating the spec was sucessfully installed
+#: Build status indicating the spec was successfully installed
 STATUS_INSTALLED = 'installed'
 
 #: Build status indicating the task has been popped from the queue

@@ -75,7 +75,7 @@ spack:
   specs: []
   view: true
 """
-#: regex for validating enviroment names
+#: regex for validating environment names
 valid_environment_name_re = r'^\w[\w-]*$'
 
 #: version of the lockfile format. Must increase monotonically.
@@ -272,7 +272,7 @@ def find_environment(args):
     If an environment is found, read it in.  If not, return None.
 
     Arguments:
-        args (Namespace): argparse namespace wtih command arguments
+        args (Namespace): argparse namespace with command arguments
 
     Returns:
         (Environment): a found environment, or ``None``
@@ -322,7 +322,7 @@ def get_env(args, cmd_name, required=False):
     message that says the calling command *needs* an active environment.
 
     Arguments:
-        args (Namespace): argparse namespace wtih command arguments
+        args (Namespace): argparse namespace with command arguments
         cmd_name (str): name of calling command
         required (bool): if ``True``, raise an exception when no environment
             is found; if ``False``, just return ``None``
@@ -1889,7 +1889,7 @@ class Environment(object):
         # TODO: rethink where this needs to happen along with
         # writing. For some of the commands (like install, which write
         # concrete specs AND regen) this might as well be a separate
-        # call.  But, having it here makes the views consistent witht the
+        # call.  But, having it here makes the views consistent with the
         # concretized environment for most operations.  Which is the
         # special case?
         if regenerate:

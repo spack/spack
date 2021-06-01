@@ -429,7 +429,7 @@ Note about "no-op" jobs
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 If no specs in an environment need to be rebuilt during a given pipeline run
-(meaning all are already up to date on the mirror), a single succesful job
+(meaning all are already up to date on the mirror), a single successful job
 (a NO-OP) is still generated to avoid an empty pipeline (which GitLab
 considers to be an error).  An optional ``service-job-attributes`` section
 can be added to your ``spack.yaml`` where you can provide ``tags`` and

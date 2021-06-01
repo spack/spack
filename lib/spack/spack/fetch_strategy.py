@@ -490,7 +490,7 @@ class URLFetchStrategy(FetchStrategy):
         # NOTE: The tar program on Mac OS X will encode HFS metadata in
         # hidden files, which can end up *alongside* a single top-level
         # directory.  We initially ignore presence of hidden files to
-        # accomodate these "semi-exploding" tarballs but ensure the files
+        # accommodate these "semi-exploding" tarballs but ensure the files
         # are copied to the source directory.
         files = os.listdir(tarball_container)
         non_hidden = [f for f in files if not f.startswith('.')]

@@ -526,7 +526,7 @@ class SpackMonitorClient:
         """
         # We load as json just to validate it
         spec = read_json(filename)
-        data = {"spec": spec, "spack_verison": self.spack_version}
+        data = {"spec": spec, "spack_version": self.spack_version}
 
         if self.save_local:
             filename = "spec-%s-%s.json" % (spec.name, spec.version)

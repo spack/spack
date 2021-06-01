@@ -197,7 +197,7 @@ class Stage(object):
 
     When used as a context manager, the stage is automatically
     destroyed if no exception is raised by the context. If an
-    excpetion is raised, the stage is left in the filesystem and NOT
+    exception is raised, the stage is left in the filesystem and NOT
     destroyed, for potential reuse later.
 
     You can also use the stage's create/destroy functions manually,
