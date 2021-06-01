@@ -1532,9 +1532,11 @@ linux distro.
 Spack On Windows
 ----------------
 
-Windows support for Spack is currently under development.  While this work is still in an early stage,
-it is currently possible to set up Spack and perform a few operations on Windows.  This section will guide
-you through the steps needed to install Spack and start running it on a fresh Windows machine. 
+Windows support for Spack is currently under development. While this work is
+still in an early stage, it is currently possible to set up Spack and
+perform a few operations on Windows. This section will guide
+you through the steps needed to install Spack and start running it on a
+fresh Windows machine.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1: Install prerequisites
@@ -1543,32 +1545,34 @@ Step 1: Install prerequisites
 To use Spack on Windows, you will need the following packages:
 
 * Microsoft Visual Studio
-* Python 
+* Python
 * Git
 
 """""""""""""""""""""""
 Microsoft Visual Studio
 """""""""""""""""""""""
 
-Microsoft Visual Studio provides the Windows C/C++ compiler that is currently supported by Spack.
+Microsoft Visual Studio provides the Windows C/C++ compiler that is
+currently supported by Spack.
 
-We require several specific components to be included in the Visual Studio installation.
-One is the C/C++ toolset, which can be selected as "Desktop development with C++" or "C++ build tools,"
-depending on installation type (Professional, Build Tools, etc.)  The other required component is
-"C++ CMake tools for Windows," which can be selected from among the optional packages.
-This provides CMake and Ninja for use during Spack configuration.
+We require several specific components to be included in the Visual Studio
+installation. One is the C/C++ toolset, which can be selected as "Desktop
+development with C++" or "C++ build tools," depending on installation type
+(Professional, Build Tools, etc.)  The other required component is
+"C++ CMake tools for Windows," which can be selected from among the optional
+packages. This provides CMake and Ninja for use during Spack configuration.
 
-If you already have Visual Studio installed, you can make sure these components are installed by
-rerunning the installer.  Next to your installation, select "Modify" and look at the
-"Installation details" pane on the right.
+If you already have Visual Studio installed, you can make sure these
+components are installed by rerunning the installer. Next to your
+installation, select "Modify" and look at the "Installation details" pane on the right.
 
 """"""
 Python
 """"""
 
-As Spack is a Python-based package, an installation of Python will be needed to run it.
-Python 3 can be downloaded and installed from the Windows Store, and will be automatically added
-to your ``PATH`` in this case.
+As Spack is a Python-based package, an installation of Python will be needed
+to run it. Python 3 can be downloaded and installed from the Windows Store,
+and will be automatically added to your ``PATH`` in this case.
 
 """
 Git
@@ -1576,7 +1580,8 @@ Git
 
 A bash console and GUI can be downloaded from https://git-scm.com/downloads.
 If you are unfamiliar with Git, there are a myriad of resources online to help
-guide you through checking out repositories and switching development branches.
+guide you through checking out repositories and switching development
+branches.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 2: Install and setup Spack
@@ -1588,8 +1593,8 @@ it ``spack_install`` in this tutorial. Inside this directory, use Git to
 clone the Spack repo, hosted at https://github.com/spack/spack.git.
 
 The files and scripts used for Windows installation are on the
-features/windows-support branch; ``cd`` into the repo and use 
-``git checkout`` to switch to it. Then navigate to 
+``features/windows-support`` branch; ``cd`` into the repo and use
+``git checkout`` to switch to it. Then navigate to
 ``lib\spack\spack\cmd\installer`` and copy the ``scripts`` directory and
 ``spack_cmd.bat`` up to the top-level ``spack_install`` directory.
 
@@ -1608,11 +1613,12 @@ steps:
 Step 3: Run and configure Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To use Spack, run ``spack_cmd.bat`` (you may need to Run as Administrator).  This will provide
-a Windows command prompt with an environment properly set up with Spack and its prerequisites.
-If you receive a warning message that Python is not in your ``PATH`` (which may happen if you
-installed Python from the website and not the Windows Store) add the location of the Python executable
-to your ``PATH`` now.
+To use Spack, run ``spack_cmd.bat`` (you may need to Run as Administrator).
+This will provide a Windows command prompt with an environment properly set
+up with Spack and its prerequisites. If you receive a warning message that
+Python is not in your ``PATH`` (which may happen if you installed Python
+from the website and not the Windows Store) add the  location of the Python
+executable to your ``PATH`` now.
 
 To configure Spack, first run the following command inside the Spack console:
 
@@ -1620,13 +1626,15 @@ To configure Spack, first run the following command inside the Spack console:
 
    spack compiler find
 
-This creates a ``.spack`` directory in our home directory, along with a ``windows`` subdirectory
-containing a ``compilers.yaml`` file. On a fresh Windows install, the only compiler that
-should be found is your installation of Microsoft Visual Studio.
+This creates a ``.spack`` directory in our home directory, along with a
+``windows`` subdirectory containing a ``compilers.yaml`` file. On a fresh
+Windows install, the only compiler that should be found is your installation
+of Microsoft Visual Studio.
 
-We need to provide the ``config.yaml`` and ``packages.yaml`` configurations by ourselves. These
-go in the ``.spack\windows`` directory in your home directory. Open 
-your text editor of choice and enter the following lines for ``config.yaml``:
+We need to provide the ``config.yaml`` and ``packages.yaml`` configurations
+by ourselves. These go in the ``.spack\windows`` directory in your home
+directory. Open  your text editor of choice and enter the following lines
+for ``config.yaml``:
 
 .. code-block:: yaml
 
@@ -1638,13 +1646,15 @@ your text editor of choice and enter the following lines for ``config.yaml``:
          all: '${ARCHITECTURE}\${COMPILERNAME}-${COMPILERVER}\${PACKAGE}-${VERSION}-${HASH}'
 
 (These settings are identical to those in the default ``config.yaml``
-provided with your Spack checkout, except with forward slashes replaced by backslashes for
-Windows compatibility.) It is important that all indentions in .yaml files are done with spaces
-and not tabs, so take care when editing one by hand.
+provided with your Spack checkout, except with forward slashes replaced by
+backslashes for Windows compatibility.) It is important that all indentions
+in .yaml files are done with spaces and not tabs, so take care when editing
+one by hand.
 
-For the ``packages.yaml`` file, we need to direct spack towards the CMake and Ninja installations
-we set up with Visual Studio. Therefore, your ``packages.yaml`` file will look something
-like this, with possibly slight variants in the paths to CMake and Ninja:
+For the ``packages.yaml`` file, we need to direct spack towards the CMake
+and Ninja installations we set up with Visual Studio. Therefore, your
+``packages.yaml`` file will look something like this, with possibly slight
+variants in the paths to CMake and Ninja:
 
 .. code-block:: yaml
 
@@ -1661,16 +1671,16 @@ like this, with possibly slight variants in the paths to CMake and Ninja:
        buildable: False
 
 You can also use an separate installation of CMake if you have one and prefer
-to use it. If you don't have a path to Ninja analogous to the above, then you can
-obtain it by running the Visual Studio Insaller and following the instructions
-at the start of this section.
+to use it. If you don't have a path to Ninja analogous to the above, then
+you can obtain it by running the Visual Studio Installer and following the
+instructions at the start of this section.
 
 ^^^^^^^^^^^^^^^^^
 Step 4: Use Spack
 ^^^^^^^^^^^^^^^^^
 
-Once the configuration is complete, it is time to give the installation a test.  Install a basic package though the
-Spack console via:
+Once the configuration is complete, it is time to give the installation a
+test. Install a basic package through the Spack console via:
 
 .. code-block:: console
 
@@ -1680,8 +1690,9 @@ Spack console via:
 Windows Compatible Packages
 """""""""""""""""""""""""""
 
-Many Spack packages are not currently compatible with Windows, due to Unix dependencies
-or incompatible build tools like autoconf. Here are several packages known to work on Windows:
+Many Spack packages are not currently compatible with Windows, due to Unix
+dependencies or incompatible build tools like autoconf. Here are several
+packages known to work on Windows:
 
 * abseil-cpp
 * cpuinfo
@@ -1691,6 +1702,7 @@ or incompatible build tools like autoconf. Here are several packages known to wo
 For developers
 ^^^^^^^^^^^^^^
 
-The intent is to provide a Windows installer that will automatically set up Python, Git, and Spack, instead of
-requiring the user to do so manually.  Instructions for creating the installer are at
+The intent is to provide a Windows installer that will automatically set up
+Python, Git, and Spack, instead of requiring the user to do so manually.
+Instructions for creating the installer are at
 https://github.com/spack/spack/blob/features/windows-support/lib/spack/spack/cmd/installer/README.md.
