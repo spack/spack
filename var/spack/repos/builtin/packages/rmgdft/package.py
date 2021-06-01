@@ -16,6 +16,7 @@ class Rmgdft(CMakePackage):
     maintainers = ['elbriggs']
     tags = ['ecp', 'ecp-apps']
     version('master', branch='master')
+    version('4.2.2', tag='v4.2.2')
     version('4.2.1', tag='v4.2.1')
 
     variant('build_type', default='Release',
