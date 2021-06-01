@@ -40,6 +40,7 @@ class Hipace(CMakePackage):
     depends_on('fftw +mpi', when='+mpi compute=omp')
     depends_on('mpi', when='+mpi')
     depends_on('openpmd-api@hipace', when='+openpmd')
+    depends_on('openpmd-api ~mpi', when='+openpmd ~mpi')
     depends_on('openpmd-api +mpi', when='+openpmd +mpi')
     depends_on('pkgconfig', type='build', when='compute=omp')
     depends_on('rocfft', when='compute=hip')
