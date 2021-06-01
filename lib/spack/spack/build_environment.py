@@ -953,7 +953,7 @@ def get_cmake_prefix_path(pkg):
     second = []
     # modifications_from_dependencies updates CMAKE_PREFIX_PATH by first
     # prepending all externals and then all non-externals
-    for dspec in spec.traverse(root=False, order='post'):
+    for dspec in pkg.spec.traverse(root=False, order='post'):
         if dspec in build_link_deps:
             if dspec.external:
                 second.insert(0, dspec)
