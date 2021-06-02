@@ -16,4 +16,3 @@ class PyHttplib2(PythonPackage):
     version('0.13.1', sha256='6901c8c0ffcf721f9ce270ad86da37bc2b4d32b8802d4a9cec38274898a64044')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pyparsing@2.4.2:2.999.999', type=('build', 'run'))
