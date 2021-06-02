@@ -17,7 +17,7 @@ class PyNilearn(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
-    variant('plotting', default=True, description='Enable plotting functionalities')
+    variant('plotting', default=False, description='Enable plotting functionalities')
 
     depends_on('py-numpy@1.11:', type=('build', 'run'))
     depends_on('py-scipy@0.19:', type=('build', 'run'))
