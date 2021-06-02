@@ -85,11 +85,17 @@ Finally, to build the highest performing installation of Legion requires an appr
 
 ### Processor Architecture Support (e.g., GPUs)
 
+##### CUDA 
+
 * **`cuda`**: This variant supports `on` or `off` and enables CUDA support within Legion.  `default=off`
 
 * **`cuda_arch`**: This variant specifics the specific CUDA architecture to support within the Legion build/installation.  Currently this variant must be one of [`60`, `70`, `75`, or `80`].  Where `60` is the Pascal architecture, `70` is for Volta, `75` is for Turing, and `80` is for `Volta`. `default=70`
 
 * **`cuda_hijack`**:  This variant supports `on` or `off` and determines if the build enables performance enhancements by "*hijacking* entry points into CUDA's runtime API; thus, it obviously implies `+cuda`.This is a performance enhancement and not necessary but suggested for production use cases on NVIDIA-based systems.  `default=off`
+
+##### AMD/HIP
+
+* **`hip`** (BETA): This variant supports `on` or `off` and enables HIP (AMD GPU) support within Legion.  `default=off`  **Note**: *Building and installing the HIP dependencies across numerous OS releases still seems a bit unstable and finkey (largely system dependent).  Consider this an early drop of support from Legion and we will update details as HIP and the HIP package evolve along with our understanding of the issues.* 
 
 ### External Library Support
 
