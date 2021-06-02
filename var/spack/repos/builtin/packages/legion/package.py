@@ -43,7 +43,7 @@ class Legion(CMakePackage):
     depends_on('cuda@10.0:11.9', when='+cuda')
     depends_on('hip@4.1.0', when='+hip')
     depends_on('hdf5', when='+hdf5')
-    depends_on('hwloc', when='+hwloc')
+    depends_on('hwloc@1.11.13', when='+hwloc')
 
     # cuda-centric
     # reminder for arch numbers to names: 60=pascal, 70=volta, 75=turing, 80=ampere
