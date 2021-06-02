@@ -262,7 +262,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
 
     patch('piclibs.patch', when='+piclibs')
-    patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
+    patch('gcc-backport.patch', when='@4.7:4.9.3,5:5.3')
 
     # Backport libsanitizer patch for glibc >= 2.31 and 5.3.0 <= gcc <= 9.2.0
     # https://bugs.gentoo.org/708346
