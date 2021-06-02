@@ -63,8 +63,7 @@ spack:
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
-      #- cd ${SPACK_CONCRETE_ENV_DIR}   # Once directory no longer empty
-      - cd share/spack/gitlab/cloud_pipelines/stacks/radiuss
+      - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - spack -d ci rebuild
@@ -85,7 +84,6 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        #- cd ${SPACK_CONCRETE_ENV_DIR}   # Once directory no longer empty
         - cd share/spack/gitlab/cloud_pipelines/stacks/radiuss
         - spack env activate --without-view .
       tags: ["spack", "public", "medium", "x86_64"]
