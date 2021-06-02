@@ -578,11 +578,11 @@ def _populate(mock_db):
         s = spack.spec.Spec(spec).concretized()
         pkg = spack.repo.get(s)
         pkg.do_install(fake=True, explicit=True)
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        _install('mpileaks ^mpich')
-        _install('mpileaks ^mpich2')
-        _install('mpileaks ^zmpi')
-        _install('externaltest')
+
+    _install('mpileaks ^mpich')
+    _install('mpileaks ^mpich2')
+    _install('mpileaks ^zmpi')
+    _install('externaltest')
 
     _install('trivial-smoke-test')
 
