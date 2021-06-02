@@ -23,7 +23,9 @@ class Ampl(Package):
 
     # Licensing
     license_required = True
-    license_files    = ['./ampl.lic']
+    license_comment = '#'
+    license_files    = ['ampl.lic']
+    license_url = 'https://ampl.com/resources/floating-licenses/installation/'
 
     resourceList = [
         # [version, name, destination, placement, url ,sha256sum]
