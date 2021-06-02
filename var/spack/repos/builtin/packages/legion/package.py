@@ -154,7 +154,9 @@ class Legion(CMakePackage):
     variant('hip', default=False,
             description="Enable HIP support.")
     conflicts('+hip', when='+cuda')
-    
+    conflicts('+hip', when='+cuda_hijack')
+    conflicts('+hip', when='+cuda_arch')
+
     variant('fortran', default=False,
             description="Enable Fortran bindings.")
 
@@ -260,7 +262,7 @@ class Legion(CMakePackage):
         if '+hip' in spec:
             options.append('-DLegion_USE_HIP=ON')
             options.append('-DLegion_HIP_TARGET=ROCM')
-        
+
         if '+fortran' in spec:
             # default is off.
             options.append('-DLegion_USE_Fortran=ON')
