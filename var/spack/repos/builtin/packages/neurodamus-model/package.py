@@ -36,6 +36,17 @@ class NeurodamusModel(SimModel):
     variant('synapsetool', default=True,  description="Enable SynapseTool reader (for edges)")
     variant('mvdtool',     default=True,  description="Enable MVDTool reader (for nodes)")
     variant('common_mods', default='default', description="Source of common mods. '': no change, other string: alternate path")
+    variant('ngv',         default=False, description="Include NGV mod files")
+
+    conflicts("+coreneuron", when="+ngv")
+
+    resource(
+        name='common_mods',
+        git='ssh://bbpcode.epfl.ch/sim/models/common',
+        branch='master',
+        destination='ngv'
+    )
+
     # Note: We dont request link to MPI so that mpicc can do what is best
     # and dont rpath it so we stay dynamic.
     # 'run' mode will load the same mpi module
@@ -71,6 +82,9 @@ class NeurodamusModel(SimModel):
         if spec.variants['common_mods'].value != 'default':
             shutil.move('common', '_common_orig')
             force_symlink(spec.variants['common_mods'].value, 'common')
+
+        if spec.satisfies("+ngv"):
+            copy_all("ngv/common/mod/ngv", "mod")
 
     def build_model(self, spec, prefix):
         """Build and install the bare model.
