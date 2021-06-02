@@ -156,6 +156,8 @@ class Legion(CMakePackage):
     conflicts('+hip', when='+cuda')
     conflicts('+hip', when='+cuda_hijack')
     conflicts('+hip', when='+cuda_arch')
+    # TODO: awaiting upstreamed code to land in legion for '+hip +kokkos'
+    conflicts('+kokkos', when='+hip')
 
     variant('fortran', default=False,
             description="Enable Fortran bindings.")
