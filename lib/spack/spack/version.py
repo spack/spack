@@ -138,8 +138,12 @@ class VersionStrComponent(object):
         if isinstance(other, int):
             return True
 
-        # if we get here, other should be str
-        return self < VersionStrComponent(other)
+        if isinstance(other, str):
+            return self < VersionStrComponent(other)
+        # If we get here, it's an unsupported comparison
+
+        raise ValueError("VersionStrComponent can only be compared with itself, "
+                         "int and str")
 
     def __gt__(self, other):
         return not self.__lt__(other)

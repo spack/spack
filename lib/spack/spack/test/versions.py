@@ -565,3 +565,12 @@ def test_list_highest():
     assert vl2.highest_numeric() is None
     assert vl2.preferred() == Version('develop')
     assert vl2.lowest() == Version('master')
+
+
+def test_verification():
+    with pytest.raises(ValueError):
+        Version("foo 1.2.0")
+    with pytest.raises(ValueError):
+        Version("!")
+    with pytest.raises(ValueError):
+        Version("1!2")
