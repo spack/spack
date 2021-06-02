@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RQuantro(RPackage):
-    """A test for when to use quantile normalization.
+    """A test for when to use quantile normalization
 
        A data-driven test for the assumptions of quantile normalization using
        raw data such as objects that inherit eSets (e.g. ExpressionSet,
@@ -19,6 +19,7 @@ class RQuantro(RPackage):
     homepage = "https://bioconductor.org/packages/quantro"
     git      = "https://git.bioconductor.org/packages/quantro.git"
 
+    version('1.24.0', commit='c7c0180292156a01722d91b353da44324e72d68f')
     version('1.18.0', commit='f6553c2296289eed31e4b2f32a082e990bdb8359')
     version('1.16.0', commit='cfc2e853bdc3cc90fd35e153fe243892d50d61c6')
     version('1.14.0', commit='2d43264b2a95ae8ca51a69d7768fe43b9f1b77bb')
@@ -26,6 +27,7 @@ class RQuantro(RPackage):
     version('1.10.0', commit='111337c0aba052aa49c3d2e2d3042794b28858c9')
 
     depends_on('r@3.1.3:', type=('build', 'run'))
+    depends_on('r@4.0:', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-minfi', type=('build', 'run'))
     depends_on('r-doparallel', type=('build', 'run'))

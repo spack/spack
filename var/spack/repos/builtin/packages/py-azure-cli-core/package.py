@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureCliCore(PythonPackage):
     """Microsoft Azure Command-Line Tools Core Module."""
 
     homepage = "https://github.com/Azure/azure-cli"
-    url      = "https://pypi.io/packages/source/a/azure-cli-core/azure-cli-core-2.9.1.tar.gz"
+    pypi = "azure-cli-core/azure-cli-core-2.9.1.tar.gz"
 
     version('2.9.1', sha256='8618a30f7ea2188506f29801220c06396d731c26e4de92c327e6b0e8cc790db5')
 
@@ -36,4 +36,3 @@ class PyAzureCliCore(PythonPackage):
     depends_on('py-ndg-httpsclient', when='^python@:2.7.8', type=('build', 'run'))
     depends_on('py-pyasn1', when='^python@:2.7.8', type=('build', 'run'))
     depends_on('py-futures', when='^python@:2', type=('build', 'run'))
-    depends_on('py-mock', type='test')

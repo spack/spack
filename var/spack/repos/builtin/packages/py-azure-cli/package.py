@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureCli(PythonPackage):
     """Microsoft Azure Command-Line Tools."""
 
     homepage = "https://github.com/Azure/azure-cli"
-    url      = "https://pypi.io/packages/source/a/azure-cli/azure-cli-2.9.1.tar.gz"
+    pypi = "azure-cli/azure-cli-2.9.1.tar.gz"
 
     version('2.9.1', sha256='749d850f73ea8956ab510288c1061dd7066180a8583081a6d560fdc7ac8314d6')
 
@@ -99,4 +99,3 @@ class PyAzureCli(PythonPackage):
     depends_on('py-xmltodict@0.12:0.999', type=('build', 'run'))
     depends_on('py-javaproperties@0.5.1', type=('build', 'run'))
     depends_on('py-jsondiff@1.2.0', type=('build', 'run'))
-    depends_on('py-mock@4.0:4.999', type='test')

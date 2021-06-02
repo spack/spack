@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,14 +16,6 @@ class PyPyqt5(SIPPackage):
     list_url = "https://www.riverbankcomputing.com/software/pyqt/download5"
 
     sip_module = 'PyQt5.sip'
-    import_modules = [
-        'PyQt5', 'PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtHelp',
-        'PyQt5.QtMultimedia', 'PyQt5.QtMultimediaWidgets', 'PyQt5.QtNetwork',
-        'PyQt5.QtOpenGL', 'PyQt5.QtPrintSupport', 'PyQt5.QtQml',
-        'PyQt5.QtQuick', 'PyQt5.QtSvg', 'PyQt5.QtTest', 'PyQt5.QtWebChannel',
-        'PyQt5.QtWebSockets', 'PyQt5.QtWidgets', 'PyQt5.QtXml',
-        'PyQt5.QtXmlPatterns'
-    ]
 
     version('5.13.1', sha256='54b7f456341b89eeb3930e786837762ea67f235e886512496c4152ebe106d4af')
     version('5.13.0', sha256='0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSomaticsignatures(RPackage):
-    """Somatic Signatures.
+    """Somatic Signatures
 
        The SomaticSignatures package identifies mutational signatures of single
        nucleotide variants (SNVs). It provides a infrastructure related to the
@@ -17,6 +17,7 @@ class RSomaticsignatures(RPackage):
     homepage = "https://bioconductor.org/packages/SomaticSignatures"
     git      = "https://git.bioconductor.org/packages/SomaticSignatures.git"
 
+    version('2.26.0', commit='9d4bed6e118ac76755ffb7abd058b09bac58a9d7')
     version('2.20.0', commit='dbedc30d92b600b3a17de596ebe38d15982c70c6')
     version('2.18.0', commit='facccd67eee5202fcbe6ad32e667546546e7ccff')
     version('2.16.0', commit='4ae348d9fa096c0ec307df95149991edf6044977')
@@ -34,6 +35,7 @@ class RSomaticsignatures(RPackage):
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-ggbio', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r-nmf', when='@2.26.0:', type=('build', 'run'))
     depends_on('r-pcamethods', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-proxy', type=('build', 'run'))

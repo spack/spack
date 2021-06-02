@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,8 +28,8 @@ class Ethminer(CMakePackage):
     depends_on('mesa', when='+opencl')
 
     def cmake_args(self):
-        spec = self.spec
         return [
-            '-DETHASHCL=%s' % ('YES' if '+opencl' in spec else 'NO'),
-            '-DETHASHCUDA=%s' % ('YES' if '+cuda' in spec else 'NO'),
-            '-DETHSTRATUM=%s' % ('YES' if '+stratum' in spec else 'NO')]
+            self.define_from_variant('ETHASHCL', 'opencl'),
+            self.define_from_variant('ETHASHCUDA', 'cuda'),
+            self.define_from_variant('ETHSTRATUM', 'stratum')
+        ]

@@ -1,0 +1,13 @@
+--- client/frontier_config.c	2020-07-28 09:20:59.456311478 +0200
++++ client/frontier_config.c	2020-07-28 09:26:49.147996572 +0200
+@@ -47,8 +47,8 @@
+ 
+ #define ENV_BUF_SIZE	1024
+ 
+-void *(*frontier_mem_alloc)(size_t size);
+-void (*frontier_mem_free)(void *ptr);
++extern void *(*frontier_mem_alloc)(size_t size);
++extern void (*frontier_mem_free)(void *ptr);
+ 
+ int frontier_pacparser_init(void);
+ 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -372,6 +372,9 @@ def test_intersect_with_containment():
 
     check_intersection('1.6:1.6.5', ':1.6.5', '1.6')
     check_intersection('1.6:1.6.5', '1.6', ':1.6.5')
+
+    check_intersection('11.2', '11', '11.2')
+    check_intersection('11.2', '11.2', '11')
 
 
 def test_union_with_containment():

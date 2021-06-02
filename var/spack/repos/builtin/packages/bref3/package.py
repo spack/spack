@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Bref3(Package):
 
     homepage = "http://faculty.washington.edu/browning/beagle/beagle.html"
 
-    version('2019-11-25', sha256='969c0881050c4a48d19be9ea64bf49fa68c1403b69f9f739bbfd865dda639b2d', 
+    version('2019-11-25', sha256='969c0881050c4a48d19be9ea64bf49fa68c1403b69f9f739bbfd865dda639b2d',
             expand=False, url='http://faculty.washington.edu/browning/beagle/bref3.25Nov19.28d.jar')
     version('2019-07-12', sha256='8a9c3b6c38e36ef4c05a61108f083005fd985026c67d75a8173088f88816a202',
             expand=False, url='https://faculty.washington.edu/browning/beagle/bref3.12Jul19.0df.jar')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class BlastLegacy(Package):
     homepage = "https://www.ncbi.nlm.nih.gov/"
     url      = "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/ncbi.tar.gz"
 
-    version('2.2.26', sha256='d8fffac25efc8ca894c707c840a4797a8a949ae6fd983d2f91c9972f788efb7d')
+    version('2.2.26', sha256='d8fffac25efc8ca894c707c840a4797a8a949ae6fd983d2f91c9972f788efb7d', deprecated=True)
 
     depends_on('tcsh', type='build')
 

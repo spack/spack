@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiocneighbors(RPackage):
-    """Nearest Neighbor Detection for Bioconductor Packages.
+    """Nearest Neighbor Detection for Bioconductor Packages
 
        Implements exact and approximate methods for nearest neighbor detection,
        in a framework that allows them to be easily switched within
@@ -22,14 +22,15 @@ class RBiocneighbors(RPackage):
     homepage = "https://bioconductor.org/packages/BiocNeighbors"
     git      = "https://git.bioconductor.org/packages/BiocNeighbors.git"
 
+    version('1.8.2', commit='889bc91f8cb45d210b47ae5c0b9cfb86fb071ca2')
     version('1.2.0', commit='f754c6300f835142536a4594ddf750481e0fe273')
     version('1.0.0', commit='e252fc04b6d22097f2c5f74406e77d85e7060770')
 
     depends_on('r@3.5:', when='@1.0.0', type=('build', 'run'))
-    depends_on('r-biocparallel', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r-rcppannoy', type=('build', 'run'))
-
-    depends_on('r-biocgenerics', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r-biocparallel', type=('build', 'run'))
+    depends_on('r-matrix', when='@1.8.2:', type=('build', 'run'))
     depends_on('r-rcpphnsw', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r-rcppannoy', when='@:1.2.0', type=('build', 'run'))
+    depends_on('r-biocgenerics', when='@1.2.0', type=('build', 'run'))

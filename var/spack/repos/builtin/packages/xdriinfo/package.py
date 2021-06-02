@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,6 @@ class Xdriinfo(AutotoolsPackage, XorgPackage):
     depends_on('libxfixes')
     depends_on('pcre')
 
-    depends_on('glproto', type='build')
+    depends_on('glproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

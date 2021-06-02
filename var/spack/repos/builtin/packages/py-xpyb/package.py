@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,4 +19,4 @@ class PyXpyb(AutotoolsPackage):
 
     depends_on('libxcb@1.5:')
 
-    depends_on('xcb-proto@1.7.1:', type='build')
+    depends_on('xcb-proto@1.7.1:')

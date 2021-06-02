@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,8 +22,8 @@ class Libxfont(AutotoolsPackage, XorgPackage):
     depends_on('libfontenc')
     depends_on('freetype')
 
-    depends_on('xtrans', type='build')
-    depends_on('xproto', type='build')
-    depends_on('fontsproto@2.1.3:', type='build')
+    depends_on('xtrans')
+    depends_on('xproto')
+    depends_on('fontsproto@2.1.3:')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

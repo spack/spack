@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,6 +54,10 @@ class Nlopt(CMakePackage):
         # On is default
         if '-shared' in spec:
             args.append('-DBUILD_SHARED_LIBS:Bool=OFF')
+
+        # On is default
+        if '-octave' in spec:
+            args.append('-DNLOPT_OCTAVE:Bool=OFF')
 
         if '+cxx' in spec:
             args.append('-DNLOPT_CXX:BOOL=ON')

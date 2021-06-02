@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,8 @@ class Pdt(AutotoolsPackage):
 
     variant('pic', default=False, description="Builds with pic")
 
+    patch('cray_configure.patch', when='%cce')
+
     def patch(self):
         spec = self.spec
         if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
@@ -50,6 +52,8 @@ class Pdt(AutotoolsPackage):
             options.append('-GNU')
         elif self.compiler.name == 'clang':
             options.append('-clang')
+        elif self.compiler.name == 'cce':
+            options.append('-CC')
         else:
             raise InstallError('Unknown/unsupported compiler family')
 

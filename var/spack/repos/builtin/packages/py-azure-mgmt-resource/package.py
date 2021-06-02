@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtResource(PythonPackage):
     """Microsoft Azure Resource Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-resource/azure-mgmt-resource-10.0.0.zip"
+    pypi = "azure-mgmt-resource/azure-mgmt-resource-10.0.0.zip"
 
     version('10.0.0', sha256='bd9a3938f5423741329436d2da09693845c2fad96c35fadbd7c5ae5213208345')
 

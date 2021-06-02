@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,7 +43,7 @@ def parse_log_events(stream, context=6, jobs=None, profile=False):
 
 
 #: lazily constructed CTest log parser
-parse_log_events.ctest_parser = None
+parse_log_events.ctest_parser = None  # type: ignore[attr-defined]
 
 
 def _wrap(text, width):
@@ -107,7 +107,7 @@ def make_log_context(log_events, width=None):
         for i in range(start, event.end):
             # wrap to width
             lines = _wrap(event[i], wrap_width)
-            lines[1:] = [indent + l for l in lines[1:]]
+            lines[1:] = [indent + ln for ln in lines[1:]]
             wrapped_line = line_fmt % (i, '\n'.join(lines))
 
             if i in error_lines:

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyGoogleCloudStorage(PythonPackage):
     """Google Cloud Storage API client library."""
 
     homepage = "https://github.com/GoogleCloudPlatform/google-cloud-python"
-    url      = "https://pypi.io/packages/source/g/google-cloud-storage/google-cloud-storage-1.18.0.tar.gz"
+    pypi = "google-cloud-storage/google-cloud-storage-1.18.0.tar.gz"
 
     version('1.18.0', sha256='9fb3dc68948f4c893c2b16f5a3db3daea2d2f3b8e9d5c2d505fe1523758009b6')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyNeotime(PythonPackage):
     """Nanosecond resolution temporal types"""
 
     homepage = "https://neotime.readthedocs.io/"
-    url      = "https://pypi.io/packages/source/n/neotime/neotime-1.7.4.tar.gz"
+    pypi = "neotime/neotime-1.7.4.tar.gz"
 
     version('1.7.4', sha256='4e0477ba0f24e004de2fa79a3236de2bd941f20de0b5db8d976c52a86d7363eb')
 

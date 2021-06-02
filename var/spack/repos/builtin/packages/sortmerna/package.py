@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,10 +16,13 @@ class Sortmerna(CMakePackage):
     version('2017-07-13', commit='8bde6fa113a5d99a23ae81b48eeea6760e966094')
 
     depends_on('zlib')
+    depends_on('sse2neon', when='target=aarch64:')
+
+    patch('for_aarch64.patch', when='target=aarch64:')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with working_dir(join_path('spack-build', 'src', 'indexdb')):
+        with working_dir(join_path(self.build_directory, 'src', 'indexdb')):
             install('indexdb', prefix.bin)
-        with working_dir(join_path('spack-build', 'src', 'sortmerna')):
+        with working_dir(join_path(self.build_directory, 'src', 'sortmerna')):
             install('sortmerna', prefix.bin)

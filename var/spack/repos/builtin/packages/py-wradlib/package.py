@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyWradlib(PythonPackage):
     attenuation) and visualising the data."""
 
     homepage = "https://docs.wradlib.org"
-    url      = "https://pypi.io/packages/source/w/wradlib/wradlib-1.5.0.tar.gz"
+    pypi = "wradlib/wradlib-1.5.0.tar.gz"
 
     version('1.5.0', sha256='9bf0742d7235ea830e83c2269f6b5d1afd83d92696efce0a7bcdb0c4f6604784')
 

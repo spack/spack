@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,12 +29,13 @@ class Tfel(CMakePackage):
     """
 
     homepage = "http://tfel.sourceforge.net"
-    url      = "https://github.com/thelfer/tfel/archive/TFEL-3.3.0.tar.gz"
+    url      = "https://github.com/thelfer/tfel/archive/TFEL-3.4.0.tar.gz"
     git      = "https://github.com/thelfer/tfel.git"
     maintainers = ['thelfer']
 
     # development branches
     version("master", branch="master")
+    version("rliv-3.4", branch="rliv-3.4")
     version("rliv-3.3", branch="rliv-3.3")
     version("rliv-3.2", branch="rliv-3.2")
     version("rliv-3.1", branch="rliv-3.1")
@@ -43,6 +44,8 @@ class Tfel(CMakePackage):
     version("rliv-1.2", branch="rliv-1.2")
 
     # released version
+    version('3.4.0', sha256='176feb4c1726d0f21f4c656b20620dce6f99ab7f5f09a66905aeb643a316bbc1')
+    version('3.3.1', sha256='ad07329c25874832fbacc999b5f88d9b9ab84415bc897a6f3cae5b4afcd7661f')
     version('3.3.0', sha256='884ad68b0fbbededc3a602d559433c24114ae4534dc9f0a759d31ca3589dace0')
     version('3.2.2', sha256='69b01ae0d1f9140b619aaa9135948284ff40d4654672c335e55ab4934c02eb43')
     version('3.2.1', sha256='12786480524a7fe86889120fb334fa00211dfd44ad5ec71e2279e7adf1ddc807')
@@ -69,6 +72,8 @@ class Tfel(CMakePackage):
     variant('abaqus', default=True,
             description='Enables Abaqus/Standard and ' +
             'Abaqus/Explicit interfaces')
+    variant('calculix', default=True,
+            description='Enables CalculiX interfaces')
     variant('ansys', default=True,
             description='Enables Ansys APDL interface')
     variant('europlexus', default=True,
@@ -101,13 +106,15 @@ class Tfel(CMakePackage):
                type=('build', 'link', 'run'))
     depends_on('python', when='+python_bindings',
                type=('build', 'link', 'run'))
-    depends_on('boost+python', when='+python_bindings')
+    depends_on('boost+python+numpy', when='+python_bindings')
 
     extends('python', when='+python_bindings')
 
     def cmake_args(self):
 
         args = []
+
+        args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")
 
         for i in ['fortran', 'java', 'aster', 'abaqus', 'calculix',
                   'ansys', 'europlexus', 'cyrano', 'lsdyna', 'python',

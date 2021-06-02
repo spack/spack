@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class CudaPackage(PackageBase):
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list
     # https://developer.nvidia.com/cuda-gpus
     # https://en.wikipedia.org/wiki/CUDA#GPUs_supported
-    cuda_arch_values = [
+    cuda_arch_values = (
         '10', '11', '12', '13',
         '20', '21',
         '30', '32', '35', '37',
@@ -27,7 +27,7 @@ class CudaPackage(PackageBase):
         '60', '61', '62',
         '70', '72', '75',
         '80', '86'
-    ]
+    )
 
     # FIXME: keep cuda and cuda_arch separate to make usage easier until
     # Spack has depends_on(cuda, when='cuda_arch!=None') or alike

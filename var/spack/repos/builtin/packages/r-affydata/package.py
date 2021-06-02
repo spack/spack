@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffydata(RPackage):
-    """Affymetrix Data for Demonstration Purpose.
+    """Affymetrix Data for Demonstration Purpose
 
        Example datasets of a slightly large size. They represent 'real world
        examples', unlike the artificial examples included in the package
@@ -16,6 +16,7 @@ class RAffydata(RPackage):
     homepage = "https://bioconductor.org/packages/affydata"
     git      = "https://git.bioconductor.org/packages/affydata.git"
 
+    version('1.38.0', commit='b5e843b2514789d0d87bea44d762c89a95314ee7')
     version('1.32.0', commit='c7cef93f6edd23024f4b1985b90e89058874c2bd')
     version('1.30.0', commit='d5408d84b37ebae73b40a448dd52baf7b4a13bea')
     version('1.28.0', commit='a106a5514c352bf0bbc624ded58a93886d4ce96f')

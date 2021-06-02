@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyDnaio(PythonPackage):
     """Read and write FASTQ and FASTA"""
 
     homepage = "https://github.com/marcelm/dnaio"
-    url      = "https://pypi.io/packages/source/d/dnaio/dnaio-0.3.tar.gz"
+    pypi = "dnaio/dnaio-0.3.tar.gz"
     git      = "https://github.com/marcelm/dnaio.git"
 
     version('0.4.2', sha256='fa55a45bfd5d9272409b714158fb3a7de5dceac1034a0af84502c7f503ee84f8')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,8 @@ class IntelTbb(Package):
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 
-    version('2020.3', sha256='ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3')
+    version('2020.3', sha256='ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3',
+            preferred=True)
     version('2020.2', sha256='4804320e1e6cbe3a5421997b52199e3c1a3829b2ecb6489641da4b8e32faf500')
     version('2020.1', sha256='7c96a150ed22bc3c6628bc3fef9ed475c00887b26d37bca61518d76a56510971')
     version('2020.0', sha256='57714f2d2cf33935db33cee93af57eb3ecd5a7bef40c1fb7ca4a41d79684b118')
@@ -103,14 +104,20 @@ class IntelTbb(Package):
     patch("gcc_generic-pedantic-4.4.patch",  level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
-    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:')
+    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:2021.0')
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.7:2019.4')
 
     # Restore the debug targets.
-    patch("makefile-debug.patch", when="@2020:")
+    patch("makefile-debug.patch", when="@2020:2021.0")
 
     # Some very old systems don't support transactional memory.
     patch("disable-tm.patch", when='~tm')
+
+    # Add support for building on arm64 macOS,
+    # also included in hombrew and already available upstream:
+    # https://github.com/oneapi-src/oneTBB/pull/258
+    # https://github.com/oneapi-src/oneTBB/commit/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch?full_index=1
+    patch("macos-arm64.patch", when="@:2021.0")
 
     # Version and tar file names:
     #  2020.0 --> v2020.0.tar.gz  starting with 2020

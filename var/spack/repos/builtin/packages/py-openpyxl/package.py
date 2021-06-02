@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyOpenpyxl(PythonPackage):
     """A Python library to read/write Excel 2010 xlsx/xlsm files"""
 
     homepage = "http://openpyxl.readthedocs.org/"
-    url      = "https://pypi.io/packages/source/o/openpyxl/openpyxl-3.0.3.tar.gz"
+    pypi = "openpyxl/openpyxl-3.0.3.tar.gz"
 
     version('3.0.3', sha256='547a9fc6aafcf44abe358b89ed4438d077e9d92e4f182c87e2dc294186dc4b64')
     version('2.4.5', sha256='78c331e819fb0a63a1339d452ba0b575d1a31f09fdcce793a31bec7e9ef4ef21')

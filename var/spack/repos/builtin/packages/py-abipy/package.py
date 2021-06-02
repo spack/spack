@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyAbipy(PythonPackage):
     the results."""
 
     homepage = "https://github.com/abinit/abipy"
-    url      = "https://pypi.io/packages/source/a/abipy/abipy-0.2.0.tar.gz"
+    pypi = "abipy/abipy-0.2.0.tar.gz"
 
     version('0.2.0', sha256='c72b796ba0f9ea4299eac3085bede092d2652e9e5e8074d3badd19ef7b600792')
 

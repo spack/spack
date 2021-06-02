@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,9 @@ class PyExtension1(PythonPackage):
 
     homepage = "http://www.example.com"
     url      = "http://www.example.com/extension1-1.0.tar.gz"
+
+    # Override settings in base class
+    maintainers = []
 
     version('1.0', 'hash-extension1-1.0')
     version('2.0', 'hash-extension1-2.0')

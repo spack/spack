@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,11 @@ class MultivalueVariant(Package):
         default='bar',
         values=('bar', 'baz', 'barbaz'),
         multi=False
+    )
+
+    variant(
+        'libs', default='shared', values=('shared', 'static'), multi=True,
+        description='Type of libraries to install'
     )
 
     depends_on('mpi')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,7 @@ class LlvmOpenmpOmpt(CMakePackage):
     depends_on('llvm', when='~standalone')
     depends_on('ninja@1.5:', type='build')
     depends_on('perl@5.22.0:', type='build')
-    depends_on('libelf', when='+libomptarget')
+    depends_on('elf', when='+libomptarget')
     depends_on('libffi', when='+libomptarget')
 
     generator = 'Ninja'
