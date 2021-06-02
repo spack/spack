@@ -8,6 +8,8 @@ import tempfile
 import shutil
 import sys
 
+import ctypes.wintypes
+
 import llnl.util.filesystem as fs
 
 __win32_can_symlink__ = None
@@ -29,8 +31,12 @@ def symlink(real_path, link_path):
             # If all else fails, fall back to copying files
             shutil.copyfile(real_path, link_path)
 
+def islink(path):
+    return os.path.islink(path) or _win32_is_junction(path)
 
-# Based on https://github.com/Erotemic/ubelt/blob/master/ubelt/util_links.py
+# '_win32' functions based on
+# https://github.com/Erotemic/ubelt/blob/master/ubelt/util_links.py
+
 def _win32_junction(path, link):
     # junctions require absolute paths
     if not os.path.isabs(link):
@@ -46,7 +52,7 @@ def _win32_junction(path, link):
         path = os.path.abspath(path)
 
     if os.path.isdir(path):
-        # try using a junction (directory hard link)
+        # try using a junction
         command = 'mklink /J "{}" "{}"'.format(link, path)
     else:
         # try using a hard link
@@ -89,6 +95,24 @@ def _win32_can_symlink():
 
     return __win32_can_symlink__
 
+
+def _win32_is_junction(path):
+    """
+    Determines if a path is a win32 junction
+    """
+    if os.path.islink(path):
+        return false
+
+    GetFileAttributes = ctypes.windll.kernel32.GetFileAttributesW
+    GetFileAttributes.argtypes = (ctypes.wintypes.LPWSTR,)
+    GetFileAttributes.restype = ctypes.wintypes.DWORD
+
+    INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF
+    FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+
+    res = GetFileAttributes(path)
+    return res != INVALID_FILE_ATTRIBUTES and \
+           bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
 
 # Based on https://github.com/Erotemic/ubelt/blob/master/ubelt/util_cmd.py
 def _cmd(command):
