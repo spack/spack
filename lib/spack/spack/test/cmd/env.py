@@ -1927,7 +1927,7 @@ env:
       root: %s
       select: ['%%gcc']
       exclude: [callpath]
-      link: 'roots'
+      include_implicits: false
       projections:
         'all': '{name}/{version}-{compiler.name}'""" % viewdir)
     with tmpdir.as_cwd():
@@ -1968,7 +1968,7 @@ env:
       root: %s
       select: ['%%gcc']
       exclude: [callpath]
-      link: 'all'
+      include_implicits: true
       projections:
         'all': '{name}/{version}-{compiler.name}'""" % viewdir)
     with tmpdir.as_cwd():
