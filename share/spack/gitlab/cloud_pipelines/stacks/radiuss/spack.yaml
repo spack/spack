@@ -24,8 +24,8 @@ spack:
     # Note skipping spot since no spack package for it
     - radiuss:
       - ascent  # ^conduit@0.6.0
-      - axom
-      - blt
+      #- axom
+      #- blt
       #- caliper
       #- care
       #- chai
@@ -48,7 +48,7 @@ spack:
       #- umpire ~openmp
       #- visit   # ^mesa-glu@9.0.0
       #- xbraid
-      - zfp
+      #- zfp
 
   mirrors:
     mirror: "s3://spack-binaries-develop/radiuss"
