@@ -122,9 +122,8 @@ schema = {
                                             'root': {
                                                 'type': 'string'
                                             },
-                                            'link': {
-                                                'type': 'string',
-                                                'pattern': '(roots|all)',
+                                            'include_implicits': {
+                                                'type': 'boolean'
                                             },
                                             'select': {
                                                 'type': 'array',

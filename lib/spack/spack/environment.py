@@ -87,7 +87,8 @@ user_speclist_name = 'specs'
 # The name of the default view (the view loaded on env.activate)
 default_view_name = 'default'
 # Default behavior to link all packages into views (vs. only root packages)
-default_view_link = 'all'
+# This was previously "all" and False would be "root"
+default_include_implicits = True
 
 
 def valid_env_name(name):
@@ -455,13 +456,13 @@ def _eval_conditional(string):
 
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
-                 link=default_view_link):
+                 include_implicits=default_include_implicits):
         self.base = base_path
         self.root = spack.util.path.canonicalize_path(root)
         self.projections = projections
         self.select = select
         self.exclude = exclude
-        self.link = link
+        self.include_implicits = include_implicits
 
     def select_fn(self, spec):
         return any(spec.satisfies(s) for s in self.select)
@@ -474,7 +475,7 @@ class ViewDescriptor(object):
                     self.projections == other.projections,
                     self.select == other.select,
                     self.exclude == other.exclude,
-                    self.link == other.link])
+                    self.include_implicits == other.include_implicits])
 
     def to_dict(self):
         ret = syaml.syaml_dict([('root', self.root)])
@@ -489,8 +490,8 @@ class ViewDescriptor(object):
             ret['select'] = self.select
         if self.exclude:
             ret['exclude'] = self.exclude
-        if self.link != default_view_link:
-            ret['link'] = self.link
+        if self.include_implicits != default_include_implicits:
+            ret['include_implicits'] = self.include_implicits
         return ret
 
     @staticmethod
@@ -500,7 +501,7 @@ class ViewDescriptor(object):
                               d.get('projections', {}),
                               d.get('select', []),
                               d.get('exclude', []),
-                              d.get('link', default_view_link))
+                              d.get('include_implicits', default_include_implicits))
 
     @property
     def _current_root(self):
@@ -585,7 +586,7 @@ class ViewDescriptor(object):
 
     def specs_for_view(self, all_specs, roots):
         specs_for_view = []
-        specs = all_specs if self.link == 'all' else roots
+        specs = all_specs if self.include_implicits else roots
 
         for spec in specs:
             # The view does not store build deps, so if we want it to
