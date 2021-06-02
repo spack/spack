@@ -56,4 +56,3 @@ class Ampl(Package):
         install_tree('.', prefix)
         install_tree('amplapi', prefix)
         install_tree('amplide', prefix)
-
