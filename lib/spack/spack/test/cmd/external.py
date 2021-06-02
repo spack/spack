@@ -246,6 +246,24 @@ def test_new_entries_are_reported_correctly(
     assert 'No new external packages detected' in output
 
 
+def test_find_with_in_config_option(
+        mock_executable, mutable_config, monkeypatch
+):
+    # Prepare an environment to detect a fake gcc
+    gcc_exe = mock_executable('gcc', output="echo 4.2.1")
+    prefix = os.path.dirname(gcc_exe)
+    monkeypatch.setenv('PATH', prefix)
+
+    # Add the external gcc
+    output = external('find', 'gcc')
+    assert 'The following specs have been' in output
+
+    # Check for an external gcc
+    output = external('find', '--in-config')
+    assert 'The following external specs are defined' in output
+    assert 'gcc@4.2.1' in output
+
+
 @pytest.mark.parametrize('command_args', [
     ('-t', 'build-tools'),
     ('-t', 'build-tools', 'cmake'),
