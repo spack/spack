@@ -387,13 +387,6 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope='function')
-def win_locks():
-    if sys.platform == 'win32':
-        with spack.config.override('config:locks', False):
-            yield
-
-
-@pytest.fixture(scope='function')
 def mock_packages(mock_repo_path, mock_pkg_install):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
     with spack.repo.use_repositories(mock_repo_path) as mock_repo:

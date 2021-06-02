@@ -601,7 +601,7 @@ env:
     assert 'test' not in out
 
 
-def test_env_with_config(win_locks):
+def test_env_with_config():
     test_config = """\
 env:
   specs:
@@ -620,7 +620,7 @@ env:
                for x in e._get_environment_specs())
 
 
-def test_with_config_bad_include(env_deactivate, capfd, win_locks):
+def test_with_config_bad_include(env_deactivate, capfd):
     env_name = 'test_bad_include'
     test_config = """\
 spack:
@@ -683,7 +683,7 @@ def test_env_with_include_config_files_same_basename():
     assert(environment_specs[1].satisfies('mpileaks@2.2'))
 
 
-def test_env_with_included_config_file(win_locks):
+def test_env_with_included_config_file():
     test_config = """\
 env:
   include:
@@ -708,7 +708,7 @@ packages:
                for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_scope(win_locks):
+def test_env_with_included_config_scope():
     config_scope_path = os.path.join(ev.root('test'), 'config')
     test_config = """\
 env:
@@ -737,7 +737,7 @@ packages:
                for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_var_path(win_locks):
+def test_env_with_included_config_var_path():
     config_var_path = os.path.join('$tempdir', 'included-config.yaml')
     test_config = """\
 env:
@@ -766,7 +766,7 @@ packages:
                for x in e._get_environment_specs())
 
 
-def test_env_config_precedence(win_locks):
+def test_env_config_precedence():
     test_config = """\
 env:
   packages:
@@ -856,10 +856,9 @@ env:
         assert './spack.yaml:2' in str(e)
         assert "'spacks' was unexpected" in str(e)
 
-
-def test_env_loads(install_mockery, mock_fetch, win_locks):
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='locking ranges not supported on windows')
+def test_env_loads(install_mockery, mock_fetch):
     env('create', 'test')
 
     with ev.read('test'):
@@ -920,9 +919,9 @@ def test_env_commands_die_with_no_env_arg():
     env('status')
 
 
-def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery, win_locks):
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
+def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
         add('mpileaks')
@@ -943,9 +942,9 @@ def test_roots_display_with_variants():
 
     assert "boost +shared" in out
 
-def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery, win_locks):
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
+def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
         add('mpileaks')
@@ -1137,7 +1136,7 @@ def test_store_different_build_deps():
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_updates_view_install(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1150,7 +1149,7 @@ def test_env_updates_view_install(
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_view_fails(
-        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1163,7 +1162,7 @@ def test_env_view_fails(
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_without_view_install(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     # Test enabling a view after installing specs
     env('create', '--without-view', 'test')
 
@@ -1207,7 +1206,7 @@ env:
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_updates_view_install_package(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1219,7 +1218,7 @@ def test_env_updates_view_install_package(
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_updates_view_add_concretize(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -1232,7 +1231,7 @@ def test_env_updates_view_add_concretize(
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_updates_view_uninstall(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1249,7 +1248,7 @@ def test_env_updates_view_uninstall(
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_updates_view_uninstall_referenced_elsewhere(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -1268,7 +1267,7 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_updates_view_remove_concretize(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -1288,7 +1287,7 @@ def test_env_updates_view_remove_concretize(
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_updates_view_force_remove(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1799,7 +1798,7 @@ env:
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
 def test_stack_combinatorial_view(tmpdir, mock_fetch, mock_packages,
-                                  mock_archive, install_mockery, win_locks):
+                                  mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1833,7 +1832,7 @@ env:
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
 def test_stack_view_select(tmpdir, mock_fetch, mock_packages,
-                           mock_archive, install_mockery, win_locks):
+                           mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1873,7 +1872,7 @@ env:
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
 def test_stack_view_exclude(tmpdir, mock_fetch, mock_packages,
-                            mock_archive, install_mockery, win_locks):
+                            mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1912,7 +1911,7 @@ env:
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
 def test_stack_view_select_and_exclude(tmpdir, mock_fetch, mock_packages,
-                                       mock_archive, install_mockery, win_locks):
+                                       mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1953,7 +1952,7 @@ env:
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
 def test_view_link_roots(tmpdir, mock_fetch, mock_packages, mock_archive,
-                         install_mockery, win_locks):
+                         install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1996,7 +1995,7 @@ env:
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,
-                       install_mockery, win_locks):
+                       install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2039,7 +2038,7 @@ env:
                     reason='Not supported on Windows (yet)')
 def test_stack_view_activate_from_default(tmpdir, mock_fetch, mock_packages,
                                           mock_archive, install_mockery,
-                                          env_deactivate, win_locks):
+                                          env_deactivate):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2074,7 +2073,7 @@ env:
 def test_stack_view_no_activate_without_default(tmpdir, mock_fetch,
                                                 mock_packages, mock_archive,
                                                 install_mockery,
-                                                env_deactivate, win_locks):
+                                                env_deactivate):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2106,7 +2105,7 @@ env:
                     reason='Not supported on Windows (yet)')
 def test_stack_view_multiple_views(tmpdir, mock_fetch, mock_packages,
                                    mock_archive, install_mockery,
-                                   env_deactivate, win_locks):
+                                   env_deactivate):
     filename = str(tmpdir.join('spack.yaml'))
     default_viewdir = str(tmpdir.join('default-view'))
     combin_viewdir = str(tmpdir.join('combinatorial-view'))
