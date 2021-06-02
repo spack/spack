@@ -78,6 +78,14 @@ class CudaPackage(PackageBase):
 
     depends_on('cuda@11.0:',    when='cuda_arch=80')
     depends_on('cuda@11.1:',    when='cuda_arch=86')
+    
+    # From the NVIDIA install guide we know of conflicts for
+    # particular platforms (linux, darwin), architectures
+    # (x86, powerpc) and compilers (gcc, clang).
+    # We don't restrict %gcc and %clang conflicts to platform=linux,
+    # since they should also apply to platform=cray, and may
+    # apply to platform=darwin. We currently do not provide
+    # conflicts for platform=darwin with %apple-clang.
 
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
