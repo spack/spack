@@ -246,7 +246,7 @@ def test_new_entries_are_reported_correctly(
     assert 'No new external packages detected' in output
 
 
-def test_find_with_in_config_option(
+def test_show(
         mock_executable, mutable_config, monkeypatch
 ):
     # Prepare an environment to detect a fake gcc
@@ -259,7 +259,7 @@ def test_find_with_in_config_option(
     assert 'The following specs have been' in output
 
     # Check for an external gcc
-    output = external('find', '--in-config')
+    output = external('show')
     assert 'The following external specs are defined' in output
     assert 'gcc@4.2.1' in output
 

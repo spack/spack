@@ -914,14 +914,14 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find list"
+        SPACK_COMPREPLY="find list show"
     fi
 }
 
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --in-config --not-buildable --scope -t --tag"
+        SPACK_COMPREPLY="-h --help --not-buildable --scope -t --tag"
     else
         _all_packages
     fi
@@ -929,6 +929,10 @@ _spack_external_find() {
 
 _spack_external_list() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_external_show() {
+    SPACK_COMPREPLY="-h --help --scope"
 }
 
 _spack_fetch() {
