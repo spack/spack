@@ -41,7 +41,7 @@ class Legion(CMakePackage):
     depends_on('mpi', when='conduit=mpi')
     depends_on('cuda@10.0:11.9', when='+cuda_unsupported_compiler')
     depends_on('cuda@10.0:11.9', when='+cuda')
-    depends_on('hip@4.1.0', when='+hip')
+    depends_on('hip@4.1.0:', when='+hip')
     depends_on('hdf5', when='+hdf5')
     depends_on('hwloc@1.11', when='+hwloc')
 
