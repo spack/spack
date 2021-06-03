@@ -40,6 +40,7 @@ class PyIbmCloudSdkCore(PythonPackage):
     # if you need specific versions. A generic python dependency is
     # added implicity by the PythonPackage class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-requests@2.20:2.999', type=('build', 'run'))
     depends_on('py-python-dateutil@2.5.3:2.999', type=('build', 'run'))
