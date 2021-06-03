@@ -228,7 +228,4 @@ class Flecsi(CMakePackage, CudaPackage):
         else:
             options.append('-DENABLE_COVERAGE_BUILD=OFF')
 
-        if spec.satisfies('@:1.9'):
-            pass
-
         return options
