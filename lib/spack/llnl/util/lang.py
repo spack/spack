@@ -921,3 +921,12 @@ def elide_list(line_list, max_num=10):
         return line_list[:max_num - 1] + ['...'] + line_list[-1:]
     else:
         return line_list
+
+
+def enum(**kwargs):
+    """Return an enum-like class.
+
+    Args:
+        **kwargs: explicit dictionary of enums
+    """
+    return type('Enum', (object,), kwargs)
