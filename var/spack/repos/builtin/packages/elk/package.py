@@ -29,12 +29,11 @@ class Elk(MakefilePackage):
     """
 
     homepage = "https://elk.sourceforge.io/"
-    url      = "https://sourceforge.net/projects/elk/files/elk-7.1.14.tgz/download"
+    url      = "https://downloads.sourceforge.net/project/elk/elk-7.1.14.tgz"
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
-
     version('7.1.14', sha256='7c2ff30f4b1d72d5dc116de9d70761f2c206700c69d85dd82a17a5a6374453d2')
  
 
@@ -50,7 +49,8 @@ class Elk(MakefilePackage):
     #are supported, and besides MKL also interacts with fft capabilities
     #so the only supported options ATM are 'internal' and 'openblas'
     #Consult upstream before changing this.
-
+    #NOTE: weird messages about illegal preprocessing instructions 
+    #were observed during compilation of internal linal libs. Didn't test
     variant('linal', default='internal'
             , description='linear algebra libraries to use'
             , values=('internal', 'openblas')
@@ -58,7 +58,9 @@ class Elk(MakefilePackage):
             )
     depends_on('openblas', when='linal=openblas')
     
-    #Add MKL FFT support if possible but see the previous comment.
+    #elk comes with internal FFT lib. It also can use libfftw and MKL FFT
+    #currently only internal fft and fftw libs are supported
+    #TODO:Add MKL FFT support if possible but see the previous comment.
     variant('fft', default='internal'
             , description='fft library to use;'
             , values=('internal','fftw')
@@ -115,11 +117,11 @@ class Elk(MakefilePackage):
         if '+mpi' in spec :
             elk_f77     = spec['mpi'].mpif77
             elk_f90     = spec['mpi'].mpifc
-            elk_src_mpi = ' '
+            src_mpi     = ' '
         else :
-            elk_f77     = spec.f77
-            elk_f90     = spec.fc
-            elk_src_mpi = 'mpi_stub.f90'
+            elk_f77     = spack_f77
+            elk_f90     = spack_fc
+            src_mpi     = 'mpi_stub.f90'
         #elk blas+lapack
         #elk requires specific stubs for missing openblas and mkl
         #we do not support linking against mkl yet.
@@ -140,6 +142,8 @@ class Elk(MakefilePackage):
             inc.write('{0} = {1} \n'.format('MAKE',      'make' ))
             inc.write('{0} = {1} \n'.format('F77',       elk_f77))
             inc.write('{0} = {1} \n'.format('F90',       elk_f90 ))
+            inc.write('{0} = {1} \n'.format('F77_OPTS',  dfflags ))
+            inc.write('{0} = {1} \n'.format('F90_OPTS',  dfflags ))
             inc.write('{0} = {1} \n'.format('LIB_LPK',   lib_lpk ))
             inc.write('{0} = {1} \n'.format('LIB_FFT',   lib_fft ))
             inc.write('{0} = {1} \n'.format('SRC_FFT',   src_fft ))
@@ -152,14 +156,14 @@ class Elk(MakefilePackage):
             inc.write('{0} = {1} \n'.format('SRC_W90S',  src_w90s ))
             inc.write('{0} = {1} \n'.format('LIB_W90',   lib_w90))
 #            inc.write('{0} = {1} \n'.format('', ))
-            #end def edit
+        #end with open
+    #end def edit
 
-        def install(self, spec, prefix):
-            mkdir(prefix.bin)
-            install('src/elk',                   prefix.bin)
-            install('src/eos/eos',               prefix.bin)
-            install('src/spacegroup/spacegroup', prefix.bin)
-
-            install_tree('examples', join_path(prefix, 'examples'))
-            install_tree('species',  join_path(prefix, 'species'))
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        install('src/elk',                   prefix.bin)
+        install('src/eos/eos',               prefix.bin)
+        install('src/spacegroup/spacegroup', prefix.bin)
+        install_tree('examples', join_path(prefix, 'examples'))
+        install_tree('species',  join_path(prefix, 'species'))
 
