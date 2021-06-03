@@ -112,6 +112,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('freetype', when='+freetype')
     depends_on('gdal', when='+gdal')
+    depends_on('gtkplus', when='+gtk')
     depends_on('libpng', when='+png')
     depends_on('jpeg', when='+jpeg')
     depends_on('openjpeg@2:', when='+openjpeg')
@@ -180,7 +181,6 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts('+videoio', when='~imgproc')
     conflicts('+videoio', when='~imgcodecs')
     conflicts('+world', when='~core')
-
 
     # OpenCV component conflicts
     conflicts('+gtk', when='platform=darwin')
