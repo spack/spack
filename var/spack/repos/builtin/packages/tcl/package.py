@@ -140,7 +140,7 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
             if d.package.extends(self.spec):
                 # Tcl libraries may be installed in lib or lib64, see #19546
                 for lib in ['lib', 'lib64']:
-                    tcllibpath = join_path(dependent_spec.prefix, lib)
+                    tcllibpath = join_path(d.prefix, lib)
                     if os.path.exists(tcllibpath):
                         env.prepend_path('TCLLIBPATH', tcllibpath, separator=' ')
 
@@ -152,11 +152,10 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
 
         * https://wiki.tcl-lang.org/page/TCLLIBPATH
         """
-        # For run time environment set only the path for
-        # dependent_spec and prepend it to TCLLIBPATH
-        if dependent_spec.package.extends(self.spec):
-            # Tcl libraries may be installed in lib or lib64, see #19546
-            for lib in ['lib', 'lib64']:
-                tcllibpath = join_path(dependent_spec.prefix, lib)
-                if os.path.exists(tcllibpath):
-                    env.prepend_path('TCLLIBPATH', tcllibpath, separator=' ')
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
+            if d.package.extends(self.spec):
+                # Tcl libraries may be installed in lib or lib64, see #19546
+                for lib in ['lib', 'lib64']:
+                    tcllibpath = join_path(d.prefix, lib)
+                    if os.path.exists(tcllibpath):
+                        env.prepend_path('TCLLIBPATH', tcllibpath, separator=' ')

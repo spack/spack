@@ -59,6 +59,12 @@ class Tix(AutotoolsPackage):
         if 'platform=darwin' in self.spec:
             fix_darwin_install_name(self.prefix.lib.Tix + str(self.version))
 
+    def test(self):
+        test_data_dir = self.test_suite.current_test_data_dir
+        test_file = test_data_dir.join('test.tcl')
+        self.run_test(self.spec['tcl'].command.path, test_file,
+                      purpose='test that tix can be loaded')
+
     @property
     def libs(self):
         return find_libraries(['libTix{0}'.format(self.version)],

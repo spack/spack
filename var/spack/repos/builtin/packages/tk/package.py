@@ -86,6 +86,11 @@ class Tk(AutotoolsPackage, SourceforgePackage):
         self.run_test(self.spec['tk'].command.path, ['-h'],
                       purpose='test wish command')
 
+        test_data_dir = self.test_suite.current_test_data_dir
+        test_file = test_data_dir.join('test.tcl')
+        self.run_test(self.spec['tcl'].command.path, test_file,
+                      purpose='test that tk can be loaded')
+
     @property
     def command(self):
         """Returns the wish command.
