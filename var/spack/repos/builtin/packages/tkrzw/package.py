@@ -38,7 +38,3 @@ class Tkrzw(AutotoolsPackage):
     version('0.9.1',  sha256='1062502f93d4a9b387372d89265a9ede1704c6bcadd9aac23f5fc8383e26045a')
 
     conflicts('%gcc@:7.2.0')  # need C++17 standard
-
-    def configure_args(self):
-        args = ['--enable-optarch']
-        return args
