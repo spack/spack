@@ -15,7 +15,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     url      = "https://github.com/AMReX-Codes/amrex/releases/download/20.05/amrex-20.05.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
 
-    maintainers = ['WeiqunZhang', 'mic84', 'asalmgren']
+    maintainers = ['WeiqunZhang', 'asalmgren']
 
     version('develop', branch='development')
     version('21.06', sha256='6982c22837d7c0bc4583065d9da55e0aebcf07b54386e4b90a779391fe73fd53')
