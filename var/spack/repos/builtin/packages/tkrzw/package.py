@@ -9,7 +9,6 @@ from spack import *
 class Tkrzw(AutotoolsPackage):
     """Tkrzw is a C++ library implementing database managers with various algorithms."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://dbmx.net/tkrzw/"
     url      = "https://dbmx.net/tkrzw/pkg/tkrzw-0.9.22.tar.gz"
     git      = "https://github.com/estraier/tkrzw.git"
