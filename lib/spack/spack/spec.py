@@ -792,6 +792,8 @@ class _EdgeMap(Mapping):
         msg = 'unexpected value for "store_by" argument'
         assert store_by in ('child', 'parent'), msg
 
+        #: This dictionary maps a package name to a list of edges
+        #: i.e. to a list of DependencySpec objects
         self.edges = {}
         self.store_by_child = (store_by == 'child')
 
@@ -1290,10 +1292,12 @@ class Spec(object):
                     dep._dependents.add(edge)
 
     def _get_dependency(self, name):
-        # TODO: revisit for the case of multiple dependencies
-        # TODO: from the same package? Check if this function
-        # TODO: is used only in contexts going back to the
-        # TODO: original concretization algorithm
+        # WARNING: This function is an implementation detail of the
+        # WARNING: original concretizer. Since with that greedy
+        # WARNING: algorithm we don't allow multiple nodes from
+        # WARNING: the same package in a DAG, here we hard-code
+        # WARNING: using index 0 i.e. we assume that we have only
+        # WARNING: one edge from package "name"
         dep = self._dependencies.get(name)
         if dep is not None:
             return dep[0]
@@ -3436,9 +3440,12 @@ class Spec(object):
         for name in self.common_dependencies(other):
             changed |= self[name].constrain(other[name], deps=False)
             if name in self._dependencies:
-                # TODO: revisit the lines below, they may need to change
-                # TODO: in case of multiple nodes from the same package
-                # TODO: For now hard-code using index 0
+                # WARNING: This function is an implementation detail of the
+                # WARNING: original concretizer. Since with that greedy
+                # WARNING: algorithm we don't allow multiple nodes from
+                # WARNING: the same package in a DAG, here we hard-code
+                # WARNING: using index 0 i.e. we assume that we have only
+                # WARNING: one edge from package "name"
                 edges_from_name = self._dependencies[name]
                 changed |= edges_from_name[0].update_deptypes(
                     other._dependencies[name][0].deptypes)
