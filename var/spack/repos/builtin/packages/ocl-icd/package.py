@@ -43,6 +43,16 @@ OpenCL ICD loaders."""
     provides('opencl@:2.1', when='@2.2.8:2.2.11+headers')
     provides('opencl@:2.0', when='@2.2.3:2.2.7+headers')
 
+    def configure_args(self):
+        # use Khronos OpenCL headers provided in the sources instead of OpenCL
+        # headers installed on the system or via spack package opencl-headers
+        # to avoid build problems with incompatible OpenCL headers, ie if they
+        # to not match the exact version as the configure script only checks if
+        # the headers support >= 3.0
+        args = ['--enable-official-khronos-headers']
+
+        return args
+
     def flag_handler(self, name, flags):
         if name == 'cflags' and self.spec.satisfies('@:2.2.12'):
             # https://github.com/OCL-dev/ocl-icd/issues/8
