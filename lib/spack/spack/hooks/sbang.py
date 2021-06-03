@@ -56,6 +56,11 @@ def shebang_too_long(path):
         bytes = script.read(2)
         if bytes != b'#!':
             return False
+        bytes = bytes + script.read(1)
+        while bytes.endswith(b' ') or bytes.endswith(b'\t'):
+            bytes = bytes + script.read(1)
+        if not bytes.endswith(b'/'):
+            return False
 
         line = bytes + script.readline()
         return len(line) > shebang_limit
