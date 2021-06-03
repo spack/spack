@@ -702,9 +702,9 @@ set -xg _sp_shell "fish"
 #
 # Check whether we need environment-variables (module) <= `use` is not available
 #
-set -l need_module "no"
+set -l need_module "yes"
 if not functions -q use; and not functions -q module
-    set need_module "yes"
+    set need_module "no"
 end
 
 

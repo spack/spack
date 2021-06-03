@@ -306,9 +306,9 @@ _spack_fn_exists() {
     LANG= type $1 2>&1 | grep -q 'function'
 }
 
-need_module="no"
+need_module="yes"
 if ! _spack_fn_exists use && ! _spack_fn_exists module; then
-    need_module="yes"
+    need_module="no"
 fi;
 
 # Define the spack shell function with some informative no-ops, so when users
