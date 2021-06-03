@@ -34,6 +34,7 @@ class PyIbmCloudSdkCore(PythonPackage):
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
+    version('3.10.0', sha256='ab9520be99066ec41a24e31ac653c28953adc8fc349f0fa53a598e1802a79cd6')
     version('3.9.0', sha256='51403f33003254d83d5028d8cebd7617f5cca82af85b6e9c4ad553eccd079dbf')
 
     # FIXME: Add dependencies if required. Only add the python dependency
