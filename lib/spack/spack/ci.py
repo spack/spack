@@ -507,7 +507,7 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
                 'job': get_job_name(phase_name,
                                     strip_compilers,
                                     dep_job,
-                                    osname,
+                                    dep_job.architecture,
                                     build_group),
                 'artifacts': enable_artifacts_buildcache,
             })
