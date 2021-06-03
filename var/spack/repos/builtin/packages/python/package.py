@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 import platform
 import re
@@ -836,6 +837,12 @@ class Python(AutotoolsPackage):
 
     @property
     def site_packages_dir(self):
+        # This path is not robust and likely won't work on many systems.
+        # RHEL and Fedora like to install Python libraries to lib64
+        # instead of lib, see issues #18520 and #17126.
+        # Debian likes to install Python libraries to dist-packages
+        # instead of site-packages, see issue #24076.
+        # TODO: Figure out a better way to handle this. Can we query Python?
         return join_path(self.python_lib_dir, 'site-packages')
 
     @property
@@ -860,18 +867,28 @@ class Python(AutotoolsPackage):
         if not is_system_path(path):
             env.prepend_path('PATH', path)
 
-        python_paths = []
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
-                # Python libraries may be installed in lib or lib64
-                # See issues #18520 and #17126
-                for lib in ['lib', 'lib64']:
-                    python_paths.append(join_path(
-                        d.prefix, lib, 'python' + str(self.version.up_to(2)),
-                        'site-packages'))
+                # RHEL and Fedora like to install Python libraries to lib64
+                # instead of lib, see issues #18520 and #17126.
+                # Debian likes to install Python libraries to dist-packages
+                # instead of site-packages, see issue #24076.
+                # Don't use a glob for Python version since multiple versions
+                # could be installed in the same directory.
+                dirs = glob.glob(join_path(
+                    d.prefix, 'lib*', 'python' + str(self.version.up_to(2)),
+                    '*-packages'))
+                if dirs:
+                    env.prepend_path('PYTHONPATH', dirs[0])
 
-        pythonpath = ':'.join(python_paths)
-        env.set('PYTHONPATH', pythonpath)
+        # We also need to set PYTHONPATH for the package we are installing so
+        # that the import tests can pass, but we can't check path existence
+        # before the package is actually installed, so add all possible paths.
+        for lib in ['lib', 'lib64']:
+            for site in ['site', 'dist']:
+                env.prepend_path('PYTHONPATH', join_path(
+                    self.prefix, lib, 'python' + str(self.version.up_to(2)),
+                    site + '-packages'))
 
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
@@ -929,20 +946,19 @@ class Python(AutotoolsPackage):
                 env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        python_paths = []
-        for d in dependent_spec.traverse(deptype='run'):
+        for d in dependent_spec.traverse(deptype=('run')):
             if d.package.extends(self.spec):
-                # Python libraries may be installed in lib or lib64
-                # See issues #18520 and #17126
-                for lib in ['lib', 'lib64']:
-                    root = join_path(
-                        d.prefix, lib, 'python' + str(self.version.up_to(2)),
-                        'site-packages')
-                    if os.path.exists(root):
-                        python_paths.append(root)
-
-        pythonpath = ':'.join(python_paths)
-        env.prepend_path('PYTHONPATH', pythonpath)
+                # RHEL and Fedora like to install Python libraries to lib64
+                # instead of lib, see issues #18520 and #17126.
+                # Debian likes to install Python libraries to dist-packages
+                # instead of site-packages, see issue #24076.
+                # Don't use a glob for Python version since multiple versions
+                # could be installed in the same directory.
+                dirs = glob.glob(join_path(
+                    d.prefix, 'lib*', 'python' + str(self.version.up_to(2)),
+                    '*-packages'))
+                if dirs:
+                    env.prepend_path('PYTHONPATH', dirs[0])
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods.
@@ -978,17 +994,17 @@ class Python(AutotoolsPackage):
         ignore_arg = args.get('ignore', lambda f: False)
 
         # Always ignore easy-install.pth, as it needs to be merged.
-        patterns = [r'site-packages/easy-install\.pth$']
+        patterns = [r'(site|dist)-packages/easy-install\.pth$']
 
         # Ignore pieces of setuptools installed by other packages.
         # Must include directory name or it will remove all site*.py files.
         if ext_pkg.name != 'py-setuptools':
             patterns.extend([
                 r'bin/easy_install[^/]*$',
-                r'site-packages/setuptools[^/]*\.egg$',
-                r'site-packages/setuptools\.pth$',
-                r'site-packages/site[^/]*\.pyc?$',
-                r'site-packages/__pycache__/site[^/]*\.pyc?$'
+                r'(site|dist)-packages/setuptools[^/]*\.egg$',
+                r'(site|dist)-packages/setuptools\.pth$',
+                r'(site|dist)-packages/site[^/]*\.pyc?$',
+                r'(site|dist)-packages/__pycache__/site[^/]*\.pyc?$'
             ])
         if ext_pkg.name != 'py-pygments':
             patterns.append(r'bin/pygmentize$')
