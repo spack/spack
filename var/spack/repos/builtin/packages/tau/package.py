@@ -179,6 +179,8 @@ class Tau(Package):
 
         if '+pdt' in spec:
             options.append("-pdt=%s" % spec['pdt'].prefix)
+            if spec['pdt'].satisfies("%intel"):
+                options.append("-pdt_c++=icpc")
 
         if '+scorep' in spec:
             options.append("-scorep=%s" % spec['scorep'].prefix)

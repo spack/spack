@@ -73,6 +73,14 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # --disable-ld flag
     conflicts('~ld', '+gold')
 
+    def setup_build_environment(self, env):
+
+        if self.spec.satisfies('%cce'):
+            env.append_flags('LDFLAGS', '-Wl,-z,muldefs')
+
+        if '+nls' in self.spec:
+            env.append_flags('LDFLAGS', '-lintl')
+
     def configure_args(self):
         spec = self.spec
 
@@ -101,7 +109,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
         if '+nls' in spec:
             args.append('--enable-nls')
-            args.append('LDFLAGS=-lintl')
         else:
             args.append('--disable-nls')
 

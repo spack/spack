@@ -73,6 +73,16 @@ class Git(AutotoolsPackage):
             'sha256_manpages': '22b2380842ef75e9006c0358de250ead449e1376d7e5138070b9a3073ef61d44'
         },
         {
+            'version': '2.23.0',
+            'sha256': 'e3396c90888111a01bf607346db09b0fbf49a95bc83faf9506b61195936f0cfe',
+            'sha256_manpages': 'a5b0998f95c2290386d191d34780d145ea67e527fac98541e0350749bf76be75'
+        },
+        {
+            'version': '2.22.0',
+            'sha256': 'a4b7e4365bee43caa12a38d646d2c93743d755d1cea5eab448ffb40906c9da0b',
+            'sha256_manpages': 'f6a5750dfc4a0aa5ec0c0cc495d4995d1f36ed47591c3941be9756c1c3a1aa0a'
+        },
+        {
             'version': '2.21.0',
             'sha256': '85eca51c7404da75e353eba587f87fea9481ba41e162206a6f70ad8118147bee',
             'sha256_manpages': '14c76ebb4e31f9e55cf5338a04fd3a13bced0323cd51794ccf45fc74bd0c1080'

@@ -15,7 +15,7 @@ class PyHatchet(PythonPackage):
 
     maintainers = ["slabasan", "bhatele", "tgamblin"]
 
-    version('1.3.0', sha256='d38212aec6272558e25538ff23b54ec0f2b4dbf6ef4b0e77f7f05c37c0d17815')
+    version('1.3.0', sha256='d77d071fc37863fdc9abc3fd9ea1088904cd98c6980a014a31e44595d2deac5e')
     version('1.2.0', sha256='1d5f80abfa69d1a379dff7263908c5c915023f18f26d50b639556e2f43ac755e')
     version('1.1.0', sha256='71bfa2881ef295294e5b4493acb8cce98d14c354e9ae59b42fb56a76d8ec7056')
     version('1.0.1', sha256='e5a4b455ab6bfbccbce3260673d9af8d1e4b21e19a2b6d0b6c1e1d7727613b7a')

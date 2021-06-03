@@ -10,7 +10,8 @@ class PyIpython(PythonPackage):
 
     pypi = "ipython/ipython-7.18.1.tar.gz"
 
-    # IPython.kernel is deprecated and fails to import
+    # 'IPython.kernel' is deprecated and fails to import, leave out of 'import_modules'
+    # to ensure that import tests pass.
     import_modules = [
         'IPython', 'IPython.core', 'IPython.core.tests', 'IPython.core.magics',
         'IPython.sphinxext', 'IPython.terminal',

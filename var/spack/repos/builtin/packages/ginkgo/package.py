@@ -73,22 +73,21 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
                 InstallError('Ginkgo requires a C++14-compliant C++ compiler')
 
         spec = self.spec
+        from_variant = self.define_from_variant
         args = [
-            '-DGINKGO_BUILD_CUDA=%s' % ('ON' if '+cuda' in spec else 'OFF'),
-            '-DGINKGO_BUILD_HIP=%s' % ('ON' if '+rocm' in spec else 'OFF'),
-            '-DGINKGO_BUILD_OMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
-            '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
-            '-DGINKGO_JACOBI_FULL_OPTIMIZATIONS=%s' % (
-                'ON' if '+full_optimizations' in spec else 'OFF'),
-            '-DGINKGO_BUILD_HWLOC=%s' % ('ON' if '+hwloc' in spec else 'OFF'),
-            '-DGINKGO_DEVEL_TOOLS=%s' % (
-                'ON' if '+develtools' in spec else 'OFF'),
+            from_variant('GINKGO_BUILD_CUDA', 'cuda'),
+            from_variant('GINKGO_BUILD_HIP', 'rocm'),
+            from_variant('GINKGO_BUILD_OMP', 'openmp'),
+            from_variant('BUILD_SHARED_LIBS', 'shared'),
+            from_variant('GINKGO_JACOBI_FULL_OPTIMIZATIONS', 'full_optimizations'),
+            from_variant('GINKGO_BUILD_HWLOC', 'hwloc'),
+            from_variant('GINKGO_DEVEL_TOOLS', 'develtools'),
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.
             '-DGINKGO_BUILD_BENCHMARKS=OFF',
             '-DGINKGO_BUILD_DOC=OFF',
             '-DGINKGO_BUILD_EXAMPLES=OFF',
-            '-DGINKGO_BUILD_TESTS=%s' % ('ON' if self.run_tests else 'OFF'),
+            self.define('GINKGO_BUILD_TESTS', self.run_tests),
             # Let spack handle the RPATH
             '-DGINKGO_INSTALL_RPATH=OFF'
         ]

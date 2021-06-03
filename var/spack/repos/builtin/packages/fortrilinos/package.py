@@ -29,6 +29,8 @@ class Fortrilinos(CMakePackage):
 
     maintainers = ['sethrj', 'aprokop']
 
+    test_requires_compiler = True
+
     version('2.0.0', sha256='9af3b3eea9934e44d74654a5fa822de08bd0efa43e06e4a4e35a777781f542d6')
     # Note: spack version comparison implies Version('2.0.0') <
     # Version('2.0.0-dev1'), so this is the best workaround I could find.
@@ -72,3 +74,27 @@ class Fortrilinos(CMakePackage):
             self.define('ForTrilinos_EXAMPLES', self.run_tests),
             self.define('ForTrilinos_TESTING', self.run_tests),
         ]
+
+    examples_src_dir = 'example/test-installation'
+
+    @run_after('install')
+    def setup_smoke_tests(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([self.examples_src_dir])
+
+    def test(self):
+        example_src_dir = join_path(self.install_test_root,
+                                    self.examples_src_dir)
+        test_build_dir = join_path(self.test_suite.stage,
+                                   'build_example')
+        with working_dir(test_build_dir, create=True):
+            cmake(
+                self.define('CMAKE_PREFIX_PATH', self.prefix),
+                self.define('CMAKE_CXX_COMPILER', self.compiler.cxx),
+                self.define('CMAKE_Fortran_COMPILER', self.compiler.fc),
+                example_src_dir
+            )
+            make()
+            self.run_test('ctest', ['-V'], [], installed=False,
+                          purpose='test: installation')

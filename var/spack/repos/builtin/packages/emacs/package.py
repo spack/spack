@@ -16,6 +16,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
     version('master', branch='master')
+    version('27.2', sha256='80ff6118fb730a6d8c704dccd6915a6c0e0a166ab1daeef9fe68afa9073ddb73')
     version('27.1', sha256='ffbfa61dc951b92cf31ebe3efc86c5a9d4411a1222b8a4ae6716cfd0e2a584db')
     version('26.3', sha256='09c747e048137c99ed35747b012910b704e0974dde4db6696fde7054ce387591')
     version('26.2', sha256='4f99e52a38a737556932cc57479e85c305a37a8038aaceb5156625caf102b4eb')

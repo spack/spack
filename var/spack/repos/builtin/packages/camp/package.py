@@ -56,7 +56,6 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
         else:
             options.append('-DENABLE_HIP=OFF')
 
-        options.append('-DENABLE_TESTS={0}'.format(
-            'ON' if '+tests' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_TESTS', 'tests'))
 
         return options

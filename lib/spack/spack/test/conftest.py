@@ -10,6 +10,7 @@ import itertools
 import json
 import os
 import os.path
+import re
 import shutil
 import tempfile
 import xml.etree.ElementTree
@@ -19,7 +20,7 @@ import pytest
 
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
-from llnl.util.filesystem import mkdirp, remove_linked_tree
+from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 
 import spack.architecture
 import spack.compilers
@@ -43,6 +44,20 @@ import spack.util.spack_yaml as syaml
 from spack.util.pattern import Bunch
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
+
+
+#
+# Return list of shas for latest two git commits in local spack repo
+#
+@pytest.fixture
+def last_two_git_commits(scope='session'):
+    git = spack.util.executable.which('git', required=True)
+    spack_git_path = spack.paths.prefix
+    with working_dir(spack_git_path):
+        git_log_out = git('log', '-n', '2', output=str, error=os.devnull)
+
+    regex = re.compile(r"^commit\s([^\s]+$)", re.MULTILINE)
+    yield regex.findall(git_log_out)
 
 
 @pytest.fixture(autouse=True)
@@ -567,6 +582,7 @@ def _populate(mock_db):
     _install('mpileaks ^mpich2')
     _install('mpileaks ^zmpi')
     _install('externaltest')
+    _install('trivial-smoke-test')
 
 
 @pytest.fixture(scope='session')
@@ -826,8 +842,14 @@ def mock_gnupghome(monkeypatch):
     # have to make our own tmpdir with a shorter name than pytest's.
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
+    try:
+        spack.util.gpg.init()
+    except spack.util.gpg.SpackGPGError:
+        if not spack.util.gpg.GPG:
+            pytest.skip('This test requires gpg')
+
     short_name_tmpdir = tempfile.mkdtemp()
-    with spack.util.gpg.gnupg_home_override(short_name_tmpdir):
+    with spack.util.gpg.gnupghome_override(short_name_tmpdir):
         yield short_name_tmpdir
 
     # clean up, since we are doing this manually

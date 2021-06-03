@@ -24,10 +24,7 @@ else:
     from itertools import zip_longest  # novm
 
 
-description = (
-    "runs source code style checks on Spack. Requires flake8, mypy, black for "
-    + "their respective checks"
-)
+description = "runs source code style checks on spack"
 section = "developer"
 level = "long"
 

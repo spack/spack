@@ -42,6 +42,7 @@ class Conduit(CMakePackage):
     # is to bridge any spack dependencies that are still using the name master
     version('master', branch='develop', submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version('0.7.2', sha256='359fd176297700cdaed2c63e3b72d236ff3feec21a655c7c8292033d21d5228a')
     version('0.7.1', sha256='460a480cf08fedbf5b38f707f94f20828798327adadb077f80dbab048fd0a07d')
     version('0.7.0', sha256='ecaa9668ebec5d4efad19b104d654a587c0adbd5f502128f89601408cb4d7d0c')
     version('0.6.0', sha256='078f086a13b67a97e4ab6fe1063f2fef2356df297e45b43bb43d74635f80475d')

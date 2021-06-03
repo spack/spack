@@ -91,4 +91,30 @@ This could mean that if a request fails, you only have partial or no data
 added to your monitoring database. This setting will not be applied to the
 first request to check if the server is running, but to subsequent requests.
 If you don't have a monitor server running and you want to build, simply
-don't provide the ``--monitor`` flag!
+don't provide the ``--monitor`` flag! Finally, if you want to provide one or
+more tags to your build, you can do:
+
+.. code-block:: console
+
+    # Add one tag, "pizza"
+    $ spack install --monitor --monitor-tags pizza hdf5
+
+    # Add two tags, "pizza" and "pasta"
+    $ spack install --monitor --monitor-tags pizza,pasta hdf5
+
+
+------------------
+Monitoring Offline
+------------------
+
+In the case that you want to save monitor results to your filesystem
+and then upload them later (perhaps you are in an environment where you don't
+have credentials or it isn't safe to use them) you can use the ``--monitor-save-local``
+flag.
+
+.. code-block:: console
+
+    $ spack install --monitor --monitor-save-local hdf5 
+
+This will save results in a subfolder, "monitor" in your designated spack
+reports folder, which defaults to ``$HOME/.spack/reports/monitor``.

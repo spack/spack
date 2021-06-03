@@ -508,6 +508,20 @@ def test_read_config_override_all(mock_low_high_config, write_config_file):
     }
 
 
+@pytest.mark.regression('23663')
+def test_read_with_default(mock_low_high_config):
+    # this very synthetic example ensures that config.get(path, default)
+    # returns default if any element of path doesn't exist, regardless
+    # of the type of default.
+    spack.config.set('modules', {'enable': []})
+
+    default_conf = spack.config.get('modules:default', 'default')
+    assert default_conf == 'default'
+
+    default_enable = spack.config.get('modules:default:enable', [])
+    assert default_enable == []
+
+
 def test_read_config_override_key(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_key, 'high')

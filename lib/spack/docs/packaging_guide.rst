@@ -4045,31 +4045,31 @@ other checks.
    * - Build System Class
      - Post-Build Phase Method (Runs)
      - Post-Install Phase Method (Runs)
-   * - `AutotoolsPackage <build_systems/autotoolspackage>`
+   * - :ref:`AutotoolsPackage <autotoolspackage>`
      - ``check`` (``make test``, ``make check``)
      - ``installcheck`` (``make installcheck``)
-   * - `CMakePackage <build_systems/cmakepackage>`
+   * - :ref:`CMakePackage <cmakepackage>`
      - ``check`` (``make check``, ``make test``)
      - Not applicable
-   * - `MakefilePackage <build_systems/makefilepackage>`
+   * - :ref:`MakefilePackage <makefilepackage>`
      - ``check`` (``make test``, ``make check``)
      - ``installcheck`` (``make installcheck``)
-   * - `MesonPackage <build_systems/mesonpackage>`
+   * - :ref:`MesonPackage <mesonpackage>`
      - ``check`` (``make test``, ``make check``)
      - Not applicable
-   * - `PerlPackage <build_systems/perlpackage>`
+   * - :ref:`PerlPackage <perlpackage>`
      - ``check`` (``make test``)
      - Not applicable
-   * - `PythonPackage <build_systems/pythonpackage>`
+   * - :ref:`PythonPackage <pythonpackage>`
      - Not applicable
      - ``test`` (module imports)
-   * - `QMakePackage <build_systems/qmakepackage>`
+   * - :ref:`QMakePackage <qmakepackage>`
      - ``check`` (``make check``)
      - Not applicable
-   * - `SConsPackage <build_systems/sconspackage>`
+   * - :ref:`SConsPackage <sconspackage>`
      - ``build_test`` (must be overridden)
      - Not applicable
-   * - `SIPPackage <build_systems/sippackage>`
+   * - :ref:`SIPPackage <sippackage>`
      - Not applicable
      - ``test`` (module imports)
 
@@ -4192,9 +4192,11 @@ outputs can be added for use in these tests.
 Configuring the test stage directory
 """"""""""""""""""""""""""""""""""""
 
-The default stand-alone test stage directory, ``~/.spack/test``, is
-defined in :ref:`etc/spack/defaults/config.yaml <config-yaml>`.
-You can change the location in the high-level ``config`` by adding
+Stand-alone tests rely on a stage directory for building, running,
+and tracking results.
+The default directory, ``~/.spack/test``, is defined in
+:ref:`etc/spack/defaults/config.yaml <config-yaml>`.
+You can configure the location in the high-level ``config`` by adding
 or changing the ``test_stage`` path in the appropriate ``config.yaml``
 file such that:
 
@@ -4202,6 +4204,16 @@ file such that:
 
    config:
      test_stage: /path/to/stage
+
+The package can access this path **during test processing** using
+`self.test_suite.stage`. 
+
+.. note::
+
+   The test stage path is established for the entire suite. That
+   means it is the root directory for all specs being installed
+   with the same `spack test run` command. Each spec gets its
+   own stage subdirectory.
 
 """""""""""""""""""""""""
 Enabling test compilation
@@ -4281,19 +4293,37 @@ can be implemented as shown below.
 
 In this case, the method copies the associated files from the build
 stage **after** the software is installed to the package's metadata
-directory. The result is the following directory and files will be
-available for use in stand-alone tests:
+directory. The result is the directory and files will be cached in
+paths under ``self.install_test_root`` as follows:
 
-* ``join_path(self.install_test_root, 'tests')`` along with its files and subdirectories
+* ``join_path(self.install_test_root, 'tests')`` along with its files
+  and subdirectories
 * ``join_path(self.install_test_root, 'examples', 'foo.c')``
 * ``join_path(self.install_test_root, 'examples', 'bar.c')``
+
+These paths are **automatically copied** to the test stage directory
+where they are available to the package's ``test`` method through the
+``self.test_suite.current_test_cache_dir`` property. In our example,
+the method can access the directory and files using the following
+paths:
+
+* ``join_path(self.test_suite.current_test_cache_dir, 'tests')``
+* ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
+* ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'bar.c')``
+
+.. note::
+
+    Library developers will want to build the associated tests under
+    the ``self.test_suite.current_test_cache_dir`` and against their
+    **installed** libraries before running them.
 
 .. note::
 
     While source and input files are generally recommended, binaries
     **may** also be cached by the build process for install testing.
     Only you, as the package writer or maintainer, know whether these
-    would be appropriate stand-alone tests.
+    would be appropriate for ensuring the installed software continues
+    to work as the underlying system evolves.
 
 .. note::
 
@@ -4315,11 +4345,12 @@ Examples include:
 - expected test output
 
 These extra files should be added to the ``test`` subdirectory of the
-package in the Spack repository. Spack will automatically copy any files
-in that directory to the test staging directory during stand-alone testing.
+package in the Spack repository. 
 
-The ``test`` method can access those files from the
-``self.test_suite.current_test_data_dir`` directory.
+Spack will **automatically copy** the contents of that directory to the
+test staging directory for stand-alone testing. The ``test`` method can
+access those files using the ``self.test_suite.current_test_data_dir``
+property.
 
 .. _expected_test_output_from_file:
 
@@ -4518,13 +4549,17 @@ where each argument has the following meaning:
   
   The default of ``None`` corresponds to the current directory (``'.'``).
 
+"""""""""""""""""""""""""""""""""""""""""
+Accessing package- and test-related files
+"""""""""""""""""""""""""""""""""""""""""
+
 You may need to access files from one or more locations when writing
-the tests. This can happen if the software's repository does not
+stand-alone tests. This can happen if the software's repository does not
 include test source files or includes files but no way to build the
 executables using the installed headers and libraries. In these
 cases, you may need to reference the files relative to one or more
-root directory and associated package property. These are given in
-the table below.
+root directory. The properties containing package- and test-related
+directory paths are provided in the table below.
 
 .. list-table:: Directory-to-property mapping
    :header-rows: 1
@@ -4538,10 +4573,16 @@ the table below.
    * - Package Dependency's Files
      - ``self.spec['<dependency-package>'].prefix``
      - ``self.spec['trilinos'].prefix.include``
-   * - Copied Build-time Files
+   * - Test Suite Stage Files
+     - ``self.test_suite.stage``
+     - ``join_path(self.test_suite.stage, 'results.txt')``
+   * - Cached Build-time Files
      - ``self.install_test_root``
      - ``join_path(self.install_test_root, 'examples', 'foo.c')``
-   * - Custom Package Files
+   * - Staged Cached Build-time Files
+     - ``self.test_suite.current_test_cache_dir``
+     - ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
+   * - Staged Custom Package Files
      - ``self.test_suite.current_test_data_dir``
      - ``join_path(self.test_suite.current_test_data_dir, 'hello.f90')``
 
@@ -4788,10 +4829,10 @@ Filtering functions
 
      .. code-block:: python
 
-        filter_file(r'^CC\s*=.*',  spack_cc,  'Makefile')
-        filter_file(r'^CXX\s*=.*', spack_cxx, 'Makefile')
-        filter_file(r'^F77\s*=.*', spack_f77, 'Makefile')
-        filter_file(r'^FC\s*=.*',  spack_fc,  'Makefile')
+        filter_file(r'^\s*CC\s*=.*',  'CC = '  + spack_cc,  'Makefile')
+        filter_file(r'^\s*CXX\s*=.*', 'CXX = ' + spack_cxx, 'Makefile')
+        filter_file(r'^\s*F77\s*=.*', 'F77 = ' + spack_f77, 'Makefile')
+        filter_file(r'^\s*FC\s*=.*',  'FC = '  + spack_fc,  'Makefile')
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 

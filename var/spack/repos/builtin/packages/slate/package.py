@@ -21,6 +21,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['G-Ragghianti', 'mgates3']
 
     version('master', branch='master')
+    version('2021.05.02', sha256='29667a9e869e41fbc22af1ae2bcd425d79b4094bbb3f21c411888e7adc5d12e3')
     version('2021.05.01', sha256='d9db2595f305eb5b1b49a77cc8e8c8e43c3faab94ed910d8387c221183654218')
     version('2020.10.00', sha256='ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab')
 
