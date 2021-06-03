@@ -222,7 +222,7 @@ spack:
     - darshan-util
     - dyninst
     - faodel
-    - flecsi +cinch
+    - flecsi@1.4.2 +external_cinch
     - flit
     - fortrilinos ^trilinos +nox +superlu-dist +stratimikos
     - gasnet
