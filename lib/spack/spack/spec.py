@@ -777,6 +777,10 @@ def _sort_by_dep_types(dspec):
     )
 
 
+#: Enum for edge directions
+EdgeDirection = lang.enum(parent=0, child=1)
+
+
 @lang.lazy_lexicographic_ordering
 class _EdgeMap(Mapping):
     """Represent a collection of edges (DependencySpec objects) in the DAG.
@@ -787,15 +791,15 @@ class _EdgeMap(Mapping):
 
     Edges are stored in a dictionary and keyed by package name.
     """
-    def __init__(self, store_by='child'):
+    def __init__(self, store_by=EdgeDirection.child):
         # Sanitize input arguments
         msg = 'unexpected value for "store_by" argument'
-        assert store_by in ('child', 'parent'), msg
+        assert store_by in (EdgeDirection.child, EdgeDirection.parent), msg
 
         #: This dictionary maps a package name to a list of edges
         #: i.e. to a list of DependencySpec objects
         self.edges = {}
-        self.store_by_child = (store_by == 'child')
+        self.store_by_child = (store_by == EdgeDirection.child)
 
     def __getitem__(self, key):
         return self.edges[key]
@@ -1190,8 +1194,8 @@ class Spec(object):
         self.architecture = None
         self.compiler = None
         self.compiler_flags = FlagMap(self)
-        self._dependents = _EdgeMap(store_by='parent')
-        self._dependencies = _EdgeMap(store_by='child')
+        self._dependents = _EdgeMap(store_by=EdgeDirection.parent)
+        self._dependencies = _EdgeMap(store_by=EdgeDirection.child)
         self.namespace = None
 
         self._hash = None
@@ -3715,8 +3719,8 @@ class Spec(object):
             else None
         self.compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
-            self._dependents = _EdgeMap(store_by='parent')
-            self._dependencies = _EdgeMap(store_by='child')
+            self._dependents = _EdgeMap(store_by=EdgeDirection.parent)
+            self._dependencies = _EdgeMap(store_by=EdgeDirection.child)
         self.compiler_flags = other.compiler_flags.copy()
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
