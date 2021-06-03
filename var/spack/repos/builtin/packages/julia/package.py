@@ -168,6 +168,8 @@ class Julia(Package):
                 ]
             else:
                 target_str = str(spec.target).replace('_', '-')
+                if target_str == "zen":
+                    target_str = "znver1"
                 if target_str == "zen2":
                     target_str = "znver2"
                 options += [
