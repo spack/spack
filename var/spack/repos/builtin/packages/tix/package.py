@@ -19,8 +19,8 @@ class Tix(AutotoolsPackage):
 
     version('8.4.3', sha256='562f040ff7657e10b5cffc2c41935f1a53c6402eb3d5f3189113d734fd6c03cb')
 
-    extends('tcl')
-    depends_on('tk')
+    extends('tcl', type=('build', 'link', 'run'))
+    depends_on('tk', type=('build', 'link', 'run'))
 
     patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tix/files/panic.patch',
           sha256='1be1a1c7453f6ab8771f90d7e7c0f8959490104752a16a8755bbb7287a841a96',
@@ -53,6 +53,12 @@ class Tix(AutotoolsPackage):
         ]
         return args
 
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if 'platform=darwin' in self.spec:
+            fix_darwin_install_name(self.prefix.lib.Tix + str(self.version))
+
     @property
     def libs(self):
         return find_libraries(['libTix{0}'.format(self.version)],
@@ -77,9 +83,3 @@ class Tix(AutotoolsPackage):
         * http://tix.sourceforge.net/docs/pdf/TixUser.pdf
         """
         env.set('TIX_LIBRARY', os.path.dirname(find(self.prefix, 'Tix.tcl')[0]))
-
-    @run_after('install')
-    def darwin_fix(self):
-        # The shared library is not installed correctly on Darwin; fix this
-        if 'platform=darwin' in self.spec:
-            fix_darwin_install_name(self.prefix.lib.Tix + str(self.version))

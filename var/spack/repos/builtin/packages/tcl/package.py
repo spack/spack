@@ -83,7 +83,11 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
         Returns:
             Executable: the tclsh command
         """
-        return Executable(os.path.realpath(self.prefix.bin.tclsh))
+        # Although we symlink tclshX.Y to tclsh, we also need to support external
+        # installations that may not have this symlink, or may have multiple versions
+        # of Tcl installed in the same directory.
+        return Executable(os.path.realpath(self.prefix.bin.join(
+            'tclsh{0}'.format(self.version.up_to(2)))))
 
     def setup_run_environment(self, env):
         """Set TCL_LIBRARY to the directory containing init.tcl.
@@ -126,7 +130,9 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
 
         # WARNING: Tcl and Tcl extensions like Tk install their configuration files
         # in subdirectories like `<prefix>/lib/tcl8.6`. However, Tcl is aware of this,
-        # and $TCLLIBPATH should only contain `<prefix>/lib`.
+        # and $TCLLIBPATH should only contain `<prefix>/lib`. $TCLLIBPATH is only needed
+        # because we install Tcl extensions to different directories than Tcl. See:
+        # https://core.tcl-lang.org/tk/tktview/447bd3e4abe17452d19a80e6840dcc8a2603fcbc
         env.prepend_path(
             'TCLLIBPATH', self.spec['tcl'].libs.directories[0], separator=' ')
 
