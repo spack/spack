@@ -2504,7 +2504,7 @@ spack:
         install()
 
         spec = e.specs_by_hash[e.concretized_order[0]]
-        view_prefix = e.default_view.view().get_projection_for_spec(spec)
+        view_prefix = e.default_view.get_projection_for_spec(spec)
         modules_glob = '%s/modules/**/*' % e.path
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
@@ -2539,7 +2539,7 @@ spack:
         install()
 
         spec = e.specs_by_hash[e.concretized_order[0]]
-        view_prefix = e.default_view.view().get_projection_for_spec(spec)
+        view_prefix = e.default_view.get_projection_for_spec(spec)
         modules_glob = '%s/modules/**/*' % e.path
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
