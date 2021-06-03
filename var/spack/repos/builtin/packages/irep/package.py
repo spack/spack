@@ -15,5 +15,4 @@ class Irep(CMakePackage):
 
     version('1.0.0', 'b84203ac92de824dbdc672de45cfdb9609373791c4ee84a5201fa6e4ccecc1a4')
 
-    depends_on('lua-luajit', type=('link', 'run'))
-    depends_on('lua', type=('link', 'run'))
+    depends_on('lua-lang')

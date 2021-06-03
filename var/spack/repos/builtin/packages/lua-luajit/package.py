@@ -18,6 +18,8 @@ class LuaLuajit(MakefilePackage):
 
     conflicts('@:2.0.5', when='target=aarch64:')
 
+    provides('lua-lang')
+
     @property
     def headers(self):
         hdrs = find_headers('luajit', self.prefix.include, recursive=True)
