@@ -505,7 +505,8 @@ class Llvm(CMakePackage, CudaPackage):
             cmake_args.append("-DLINK_POLLY_INTO_TOOLS:Bool=ON")
 
         if "+shared_libs" in spec:
-            cmake_args.append("-DBUILD_SHARED_LIBS:Bool=ON")
+            if not "+llvm_dylib" in sepc:
+                   cmake_args.append("-DBUILD_SHARED_LIBS:Bool=ON")
         if "+llvm_dylib" in spec:
             cmake_args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
         if "+omp_debug" in spec:
