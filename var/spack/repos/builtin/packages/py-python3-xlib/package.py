@@ -9,7 +9,6 @@ from spack import *
 class PyPython3Xlib(PythonPackage):
     """python3-xlib is python3 version of python-xlib."""
 
-    homepage = "https://pypi.org/project/python3-xlib/"
     pypi     = "python3-xlib/python3-xlib-0.15.tar.gz"
 
     version('0.15', sha256='dc4245f3ae4aa5949c1d112ee4723901ade37a96721ba9645f2bfa56e5b383f8')
