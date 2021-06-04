@@ -511,6 +511,11 @@ class ViewDescriptor(object):
                               d.get('keep', _default_keep))
 
     @property
+    def _impl_dir(self):
+        root_dir, root_name = os.path.split(self.root)
+        return os.path.join(root_dir, '._%s' % root_name)
+
+    @property
     def _current_root(self):
         if not os.path.islink(self.root):
             return None
@@ -524,9 +529,7 @@ class ViewDescriptor(object):
 
     def _next_root(self, specs):
         content_hash = self.content_hash(specs)
-        root_dir = os.path.dirname(self.root)
-        root_name = os.path.basename(self.root)
-        return os.path.join(root_dir, '._%s' % root_name, content_hash)
+        return os.path.join(self._impl_dir, content_hash)
 
     def content_hash(self, specs):
         d = syaml.syaml_dict([
@@ -644,7 +647,7 @@ class ViewDescriptor(object):
                            with_dependencies=False)
 
             # create symlink from tmpname to new_root
-            root_dirname, root_basename = os.path.split(self.root)
+            root_dirname = os.path.dirname(self.root)
             tmp_symlink_name = os.path.join(root_dirname, '._view_link')
             if os.path.exists(tmp_symlink_name):
                 os.unlink(tmp_symlink_name)
@@ -660,9 +663,8 @@ class ViewDescriptor(object):
             # If we have more than the number of views to keep in the directory
             # delete the oldest until the correct number remain. Do not count
             # things that aren't named as a root would be.
-            root_impl_dir = os.path.join(root_dirname, '._%s' % root_basename)
-            roots = [os.path.join(root_impl_dir, entry)
-                     for entry in os.listdir(root_impl_dir)
+            roots = [os.path.join(self._impl_dir, entry)
+                     for entry in os.listdir(self._impl_dir)
                      if re.match(r'[a-z0-9]{32}', entry)]
 
             num_to_remove = len(roots) - self.keep
