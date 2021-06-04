@@ -1,5 +1,3 @@
-# This file is currently being customized for quartz/toss_3_x86_64_ib.
-
 spack:
   concretization: separately
   view: false
@@ -88,8 +86,8 @@ spack:
         - spack env activate --without-view .
       tags: ["spack", "public", "medium", "x86_64"]
 
-  #cdash:
-  #  build-group: RADIUSS
-  #  url: https://cdash.spack.io
-  #  project: Spack RADIUSS Testing
-  #  site: Cloud Gitlab Infrastructure
+  cdash:
+    build-group: RADIUSS
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure
