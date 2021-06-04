@@ -33,7 +33,7 @@ class Msvc(Compiler):
     version_argument = ''
 
     #: Regex used to extract version from compiler's output
-    version_regex = '([1-9][0-9]*\.[0-9]*\.[0-9]*)'
+    version_regex = r'([1-9][0-9]*\.[0-9]*\.[0-9]*)'
 
     # Initialize, deferring to base class but then adding the vcvarsallfile
     # file based on compiler executable path.
@@ -56,13 +56,15 @@ class Msvc(Compiler):
     def setup_custom_environment(self, pkg, env):
         """Set environment variables for MSVC using the Microsoft-provided
         script."""
-
+        if sys.version_info[:2] > (2, 6):
         # Capture output from batch script and DOS environment dump
-        out = subprocess.check_output(
-            'cmd /u /c "{}" {} && set'.format(self.vcvarsallfile, 'amd64'),
-            stderr=subprocess.STDOUT)
-        if sys.version_info[0] >= 3:
-            out = out.decode('utf-16le', errors='replace')
+            out = subprocess.check_output(
+                'cmd /u /c "{0}" {1} && set'.format(self.vcvarsallfile, 'amd64'),
+                stderr=subprocess.STDOUT)
+            if sys.version_info[0] >= 3:
+                out = out.decode('utf-16le', errors='replace')
+        else:
+            print("Cannot pull msvc compiler information in Python 2.6 or below")
 
         # Process in to nice Python dictionary
         vc_env = {

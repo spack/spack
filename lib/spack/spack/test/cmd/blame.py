@@ -45,6 +45,7 @@ def test_blame_file(mock_packages):
     assert 'AUTHOR' in out
     assert 'EMAIL' in out
 
+
 def test_blame_json(mock_packages):
     """Ensure that we can output json as a blame."""
     with working_dir(spack.paths.prefix):
@@ -68,7 +69,7 @@ def test_blame_json(mock_packages):
         assert key in loaded['authors'][0]
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason = "git hangs")
+@pytest.mark.skipif(sys.platform == 'win32', reason="git hangs")
 def test_blame_by_git(mock_packages, capfd):
     """Sanity check the blame command to make sure it works."""
     with capfd.disabled():
