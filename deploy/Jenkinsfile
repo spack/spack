@@ -291,9 +291,11 @@ pipeline {
 
         stage('Post-Mortem') {
             parallel {
-                stage('Build Documentation') {
+                stage('Check Python Dependencies') {
                     steps {
-                        sh "ls"
+                        withEnv(["PATH+DEPLOY=${BASEDIR}/bin"]) {
+                            sh "spack-check ${DEPLOYMENT_ROOT}/config/modules.sh"
+                        }
                     }
                 }
 
