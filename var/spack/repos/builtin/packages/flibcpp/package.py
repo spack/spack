@@ -61,20 +61,28 @@ class Flibcpp(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
-    def test(self):
-        example_src_dir = join_path(self.install_test_root,
-                                    self.examples_src_dir)
-        test_build_dir = join_path(self.test_suite.stage,
-                                   'build_example')
+    @property
+    def cached_tests_work_dir(self):
+        """The working directory for cached test sources."""
+        return join_path(self.test_suite.current_test_cache_dir,
+                         self.examples_src_dir)
 
+    def test(self):
+        """Perform stand-alone/smoke tests."""
         cmake_args = [
             self.define('CMAKE_PREFIX_PATH', self.prefix),
             self.define('CMAKE_Fortran_COMPILER', self.compiler.fc),
         ]
-        cmake_args.append(example_src_dir)
-        with working_dir(test_build_dir, create=True):
-            cmake(*cmake_args)
-            make()
-            self.run_test(join_path(example_src_dir, 'run-examples.sh'),
-                          [], [], installed=False,
-                          purpose='test: installation')
+        cmake_args.append(self.cached_tests_work_dir)
+
+        self.run_test("cmake", cmake_args,
+                      purpose="test: calling cmake",
+                      work_dir=self.cached_tests_work_dir)
+
+        self.run_test("make", [],
+                      purpose="test: building the tests",
+                      work_dir=self.cached_tests_work_dir)
+
+        self.run_test("run-examples.sh", [],
+                      purpose="test: running the examples",
+                      work_dir=self.cached_tests_work_dir)
