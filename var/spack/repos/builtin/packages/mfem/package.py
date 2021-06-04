@@ -150,6 +150,10 @@ class Mfem(Package):
             description='Build and install examples')
     variant('miniapps', default=False,
             description='Build and install miniapps')
+    variant('axom', default=False,
+            description='Build and install axom')
+    variant('camp', default=False,
+            description='Build and install camp')
 
     conflicts('+shared', when='@:3.3.2')
     conflicts('~static~shared')
@@ -196,6 +200,8 @@ class Mfem(Package):
 
     depends_on('cuda', when='+cuda')
 
+    depends_on('axom', when='+axom')
+    depends_on('camp', when='+camp')
     depends_on('sundials@2.7.0', when='@:3.3.0+sundials~mpi')
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
     depends_on('sundials@2.7.0:', when='@3.3.2:+sundials~mpi')
@@ -377,7 +383,9 @@ class Mfem(Package):
             'MFEM_USE_RAJA=%s' % yes_no('+raja'),
             'MFEM_USE_AMGX=%s' % yes_no('+amgx'),
             'MFEM_USE_CEED=%s' % yes_no('+libceed'),
-            'MFEM_USE_UMPIRE=%s' % yes_no('+umpire')]
+            'MFEM_USE_UMPIRE=%s' % yes_no('+umpire'),
+            'MFEM_USE_CAMP=%s' % yes_no('+camp'),
+            'MFEM_USE_SIDRE=%s' % yes_no('+axom'),]
 
         cxxflags = spec.compiler_flags['cxxflags']
 
@@ -529,6 +537,17 @@ class Mfem(Package):
             options += [
                 'NETCDF_OPT=-I%s' % spec['netcdf-c'].prefix.include,
                 'NETCDF_LIB=%s' % lib_flags]
+
+        if '+camp' in spec:
+            options += [
+                'CAMP_OPT=-I%s' % spec['camp'].prefix.include,
+            ]
+
+        if '+axom' in spec:
+            options += [
+                'SIDRE_OPT=-I%s' % spec['axom'].prefix.include,
+                'SIDRE_LIB=%s' % ld_flags_from_library_list(spec['axom'].libs)
+            ]
 
         if '+zlib' in spec:
             if "@:3.3.2" in spec:
