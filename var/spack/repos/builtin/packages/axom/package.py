@@ -94,7 +94,7 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("conduit~hdf5", when="~hdf5")
 
     # HDF5 needs to be the same as Conduit's
-    depends_on("hdf5@1.8.19:1.8.999~cxx~shared~fortran", when="+hdf5")
+    depends_on("hdf5@1.8.19:1.8.999~cxx~fortran", when="+hdf5")
 
     depends_on("lua", when="+lua")
 
