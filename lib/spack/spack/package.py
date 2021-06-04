@@ -1529,8 +1529,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # should this attempt to download the source and set one? This
             # probably only happens for source repositories which are
             # referenced by branch name rather than tag or commit ID.
-            message = 'Missing a source id for {s.name}@{s.version}'
-            tty.warn(message.format(s=self))
+            if not self.spec.external:
+                message = 'Missing a source id for {s.name}@{s.version}'
+                tty.warn(message.format(s=self))
             hash_content.append(''.encode('utf-8'))
         else:
             hash_content.append(source_id.encode('utf-8'))

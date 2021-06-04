@@ -35,6 +35,12 @@ class Texlive(AutotoolsPackage):
     # Add information for new versions below.
     releases = [
         {
+            'version': '20210325',
+            'year': '2021',
+            'sha256_source': '7aefd96608d72061970f2d73f275be5648ea8ae815af073016d3106acc0d584b',
+            'sha256_texmf': 'ff12d436c23e99fb30aad55924266104356847eb0238c193e839c150d9670f1c',
+        },
+        {
             'version': '20200406',
             'year': '2020',
             'sha256_source': 'e32f3d08cbbbcf21d8d3f96f2143b64a1f5e4cb01b06b761d6249c8785249078',
