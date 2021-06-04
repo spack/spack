@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -186,6 +186,13 @@ class TestSuite(object):
 
     def test_dir_for_spec(self, spec):
         return self.stage.join(self.test_pkg_id(spec))
+
+    @property
+    def current_test_cache_dir(self):
+        assert self.current_test_spec and self.current_base_spec
+        test_spec = self.current_test_spec
+        base_spec = self.current_base_spec
+        return self.test_dir_for_spec(base_spec).cache.join(test_spec.name)
 
     @property
     def current_test_data_dir(self):

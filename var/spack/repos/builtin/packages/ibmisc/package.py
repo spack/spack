@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,12 +50,12 @@ class Ibmisc(CMakePackage):
     depends_on('doxygen', type='build')
 
     def cmake_args(self):
-        spec = self.spec
         return [
-            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
-            '-DUSE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
-            '-DUSE_BLITZ=%s' % ('YES' if '+blitz' in spec else 'NO'),
-            '-DUSE_NETCDF=%s' % ('YES' if '+netcdf' in spec else 'NO'),
-            '-DUSE_BOOST=%s' % ('YES' if '+boost' in spec else 'NO'),
-            '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
-            '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
+            self.define_from_variant('USE_EVERYTRACE', 'everytrace'),
+            self.define_from_variant('USE_PROJ4', 'proj'),
+            self.define_from_variant('USE_BLITZ', 'blitz'),
+            self.define_from_variant('USE_NETCDF', 'netcdf'),
+            self.define_from_variant('USE_BOOST', 'boost'),
+            self.define_from_variant('USE_UDUNITS2', 'udunits2'),
+            self.define_from_variant('USE_GTEST', 'googletest'),
+        ]

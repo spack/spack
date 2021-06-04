@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,6 +44,7 @@ class Postgresql(AutotoolsPackage):
     variant('tcl', default=False, description='Enable Tcl bindings.')
     variant('gssapi', default=False,
             description='Build with GSSAPI functionality.')
+    variant('xml', default=False, description='Build with XML support.')
 
     depends_on('readline', when='lineedit=readline')
     depends_on('libedit', when='lineedit=libedit')
@@ -51,6 +52,7 @@ class Postgresql(AutotoolsPackage):
     depends_on('tcl', when='+tcl')
     depends_on('perl', when='+perl')
     depends_on('python', when='+python')
+    depends_on('libxml2', when='+xml')
 
     def configure_args(self):
         config_args = ["--with-openssl"]
@@ -76,6 +78,9 @@ class Postgresql(AutotoolsPackage):
 
         if '+tcl' in self.spec:
             config_args.append('--with-tcl')
+
+        if '+xml' in self.spec:
+            config_args.append('--with-libxml')
 
         return config_args
 

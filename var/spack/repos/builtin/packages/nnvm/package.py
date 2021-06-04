@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,6 @@ class Nnvm(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         return [
-            '-DUSE_SHARED_NNVM=%s' % ('ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('USE_SHARED_NNVM', 'shared'),
             '-DUSE_STATIC_NNVM=%s' % ('ON' if '~shared' in spec else 'OFF'),
         ]

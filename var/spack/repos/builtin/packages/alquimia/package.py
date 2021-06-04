@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,8 +44,7 @@ class Alquimia(CMakePackage):
         options = ['-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
                    '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
                    '-DUSE_XSDK_DEFAULTS=YES',
-                   '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                       'ON' if '+shared' in spec else 'OFF'),
+                   self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
                    '-DTPL_ENABLE_MPI:BOOL=ON',
                    '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
                    '-DTPL_ENABLE_HDF5:BOOL=ON',

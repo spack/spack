@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyVisdom(PythonPackage):
     experimentation."""
 
     homepage = "https://github.com/facebookresearch/visdom"
-    url      = "https://pypi.io/packages/source/v/visdom/visdom-0.1.8.9.tar.gz"
+    pypi = "visdom/visdom-0.1.8.9.tar.gz"
 
     version('0.1.8.9', sha256='c73ad23723c24a48156899f78dd76bd4538eba3edf9120b6c65a9528fa677126')
 

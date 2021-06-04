@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ OpenCL ICD loaders."""
     homepage = "https://github.com/OCL-dev/ocl-icd"
     url      = "https://github.com/OCL-dev/ocl-icd/archive/v2.2.12.tar.gz"
 
+    version('2.2.14', sha256='46df23608605ad548e80b11f4ba0e590cef6397a079d2f19adf707a7c2fbfe1b')
     version('2.2.13', sha256='f85d59f3e8327f15637b91e4ae8df0829e94daeff68c647b2927b8376b1f8d92')
     version('2.2.12', sha256='17500e5788304eef5b52dbe784cec197bdae64e05eecf38317840d2d05484272')
     version('2.2.11', sha256='c1865ef7701b8201ebc6930ed3ac757c7e5cb30f3aa4c1e742a6bc022f4f2292')
@@ -34,9 +35,10 @@ OpenCL ICD loaders."""
     depends_on('ruby',     type='build')
     depends_on('asciidoc-py3', type='build')
     depends_on('xmlto',    type='build')
-    depends_on('opencl-headers@2.2:', when='+headers')
+    depends_on('opencl-headers@3.0:', when='+headers')
 
-    provides('opencl@:2.2', when='@2.2.12:+headers')
+    provides('opencl@:3.0', when='@2.2.13:+headers')
+    provides('opencl@:2.2', when='@2.2.12+headers')
     provides('opencl@:2.1', when='@2.2.8:2.2.11+headers')
     provides('opencl@:2.0', when='@2.2.3:2.2.7+headers')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class RTmixclust(RPackage):
     """Time Series Clustering of Gene Expression with Gaussian Mixed-Effects
-       Models and Smoothing Splines.
+       Models and Smoothing Splines
 
        Implementation of a clustering method for time series gene expression
        data based on mixed-effects models with Gaussian variables and non-
@@ -19,6 +19,7 @@ class RTmixclust(RPackage):
     homepage = "https://bioconductor.org/packages/TMixClust"
     git      = "https://git.bioconductor.org/packages/TMixClust.git"
 
+    version('1.12.0', commit='982b31bd7e22a3dc638bbda0336546220444f0c2')
     version('1.6.0', commit='9f5f78e52538d15f402c8f6e4c60f7212c7bc548')
     version('1.4.0', commit='a52fcae6e7a5dd41e7afbe128f35397e8bc8cb12')
     version('1.2.0', commit='0250c0b238f08077b5b9ff17c2f3b7633c67dc3c')

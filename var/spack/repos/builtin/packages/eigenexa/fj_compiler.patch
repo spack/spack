@@ -1,0 +1,64 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -200,7 +200,7 @@ AC_SUBST(DEBUG)
+ ## fortran compiler
+ #
+ 
+-eigenexa_default_fc="mpifrtpx mpiifort mpixlf90_r sxmpif90 mpif90"
++eigenexa_default_fc="mpifrt mpifrtpx mpiifort mpixlf90_r sxmpif90 mpif90"
+ 
+ # check usablility
+ AC_PROG_F77($eigenexa_default_fc)
+@@ -221,7 +221,6 @@ AC_MSG_CHECKING([for actual compiler])
+ 
+ fc_ver_info=$(${F77} -E --version)
+ for vtok in ${fc_ver_info} ; do
+-
+   if test x"${vtok}" = x"ifort"; then
+     FC_ACT="ifort"
+     break
+@@ -230,12 +229,16 @@ for vtok in ${fc_ver_info} ; do
+     FC_ACT="gfortran"
+     break
+ 
++  elif test x"${vtok}" = x"(FRT)"; then
++    FC_ACT="mpifrtpx"
++    break
++
+   fi
+ 
+ done
+ 
+ if test -z "${FC_ACT}"; then
+-  FC_ACT=${F77}
++  FC_ACT=`basename ${F77}`
+ fi
+ 
+ if test x"${FC_ACT}" = x"ifort"; then
+@@ -260,7 +263,7 @@ fi
+ ## C compiler
+ #
+ 
+-eigenexa_default_cc="mpifccpx mpiicc mpixlc_r sxmpic++ mpicc"
++eigenexa_default_cc="mpifcc mpifccpx mpiicc mpixlc_r sxmpic++ mpicc"
+ 
+ # check usablility
+ AC_PROG_CC($eigenexa_default_cc)
+@@ -423,7 +426,7 @@ fi
+ ## For Fujitsu compiler architecture-oriented options
+ if test x"${FC_ACT}" = x"mpifrtpx"; then
+   F_ARCH=""
+-  F_BASE="-Kopenmp,openmp_ordered_reduction"
++  F_BASE="-Kopenmp"
+ fi
+ 
+ 
+@@ -489,7 +492,7 @@ elif test x"${FC_ACT}" = x"gfortran"; th
+   FFLAGS0=${G_BASE}" -O0"
+   
+ elif test x"${FC_ACT}" = x"mpifrtpx"; then
+-  FFLAGS0="-Kopenmp,openmp_ordered_reduction -Cpp"
++  FFLAGS0="-Kopenmp -Cpp"
+   
+ elif test x"${FC_ACT}" = x"mpixlf90_r"; then
+   FFLAGS0="-qfixed -qsmp=omp -qthreaded -O0 -qessl -qstrict"

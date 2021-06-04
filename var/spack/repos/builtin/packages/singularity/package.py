@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,13 +23,18 @@ class Singularity(MakefilePackage):
        tail -15 $(spack location -i singularity)/.spack/spack-build-out.txt
     '''
 
-    homepage = "https://www.sylabs.io/singularity/"
-    url      = "https://github.com/sylabs/singularity/releases/download/v3.6.4/singularity-3.6.4.tar.gz"
-    git      = "https://github.com/sylabs/singularity.git"
+    homepage = "https://sylabs.io/singularity/"
+    url      = "https://github.com/hpcng/singularity/releases/download/v3.6.4/singularity-3.6.4.tar.gz"
+    git      = "https://github.com/hpcng/singularity.git"
 
     maintainers = ['alalazo']
     version('master', branch='master')
 
+    version('3.7.4', sha256='c266369a8bf2747f44e0759858c3fc3b2325b975a8818b2668f0b97b124d0164')
+    version('3.7.3', sha256='6667eb8875d2b66d73504f40c956b42b1351744f488d164204376215d885da5c')
+    version('3.7.2', sha256='36916222e26fb934404f0766e0ff368edac36d7fc31ca571f5f609466609066b')
+    version('3.7.1', sha256='82d2c65063560195ec34551931be3c325b95e8e2009e92755fd7daad346e083c')
+    version('3.7.0', sha256='fb96aaf5f462a56a4a5bd2951287bcbbefe8cf543e228e4e955428f386a8d478')
     version('3.6.4', sha256='71233a81d6bb4d686d8dc636b3e3e962a372f54001921c89a12b062cefd9e79f')
     version('3.6.3', sha256='b1a985757a9907d8db0f102fc170a25387e715f7ff31957be964bf47914ea2fd')
     version('3.6.2', sha256='dfd7ec7376ca0321c47787388fb3e781034edf99068f66efc36109e516024d9b')
@@ -47,7 +52,7 @@ class Singularity(MakefilePackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('go')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('libgpg-error')
     depends_on('libseccomp')
     depends_on('squashfs', type='run')

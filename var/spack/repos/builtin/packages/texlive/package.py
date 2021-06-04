@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,12 @@ class Texlive(AutotoolsPackage):
 
     # Add information for new versions below.
     releases = [
+        {
+            'version': '20210325',
+            'year': '2021',
+            'sha256_source': '7aefd96608d72061970f2d73f275be5648ea8ae815af073016d3106acc0d584b',
+            'sha256_texmf': 'ff12d436c23e99fb30aad55924266104356847eb0238c193e839c150d9670f1c',
+        },
         {
             'version': '20200406',
             'year': '2020',

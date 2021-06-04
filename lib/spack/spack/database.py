@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ import six
 import socket
 import sys
 import time
+from typing import Dict  # novm
+
 try:
     import uuid
     _use_uuid = True
@@ -185,7 +187,8 @@ class InstallRecord(object):
             ref_count=0,
             explicit=False,
             installation_time=None,
-            deprecated_for=None
+            deprecated_for=None,
+            in_buildcache=False,
     ):
         self.spec = spec
         self.path = str(path) if path else None
@@ -194,6 +197,7 @@ class InstallRecord(object):
         self.explicit = explicit
         self.installation_time = installation_time or _now()
         self.deprecated_for = deprecated_for
+        self.in_buildcache = in_buildcache
 
     def install_type_matches(self, installed):
         installed = InstallStatuses.canonicalize(installed)
@@ -280,6 +284,11 @@ _query_docstring = """
             hashes (container): list or set of hashes that we can use to
                 restrict the search
 
+            in_buildcache (bool or any, optional): Specs that are marked in
+                this database as part of an associated binary cache are
+                ``in_buildcache``. All other specs are not. This field is used
+                for querying mirror indices. Default is ``any``.
+
         Returns:
             list of specs that match the query
 
@@ -289,10 +298,10 @@ _query_docstring = """
 class Database(object):
 
     """Per-process lock objects for each install prefix."""
-    _prefix_locks = {}
+    _prefix_locks = {}  # type: Dict[str, lk.Lock]
 
     """Per-process failure (lock) objects for each install prefix."""
-    _prefix_failures = {}
+    _prefix_failures = {}  # type: Dict[str, lk.Lock]
 
     def __init__(self, root, db_dir=None, upstream_dbs=None,
                  is_upstream=False, enable_transaction_locking=True,
@@ -793,7 +802,7 @@ class Database(object):
         # do it *while* we're constructing specs,it causes hashes to be
         # cached prematurely.
         for hash_key, rec in data.items():
-            rec.spec._mark_concrete()
+            rec.spec._mark_root_concrete()
 
         self._data = data
 
@@ -1254,6 +1263,16 @@ class Database(object):
         self._data[spec_key] = spec_rec
 
     @_autospec
+    def mark(self, spec, key, value):
+        """Mark an arbitrary record on a spec."""
+        with self.write_transaction():
+            return self._mark(spec, key, value)
+
+    def _mark(self, spec, key, value):
+        record = self._data[self._get_matching_spec_key(spec)]
+        setattr(record, key, value)
+
+    @_autospec
     def deprecate(self, spec, deprecator):
         """Marks a spec as deprecated in favor of its deprecator"""
         with self.write_transaction():
@@ -1413,7 +1432,8 @@ class Database(object):
             explicit=any,
             start_date=None,
             end_date=None,
-            hashes=None
+            hashes=None,
+            in_buildcache=any,
     ):
         """Run a query on the database."""
 
@@ -1445,6 +1465,9 @@ class Database(object):
             if not rec.install_type_matches(installed):
                 continue
 
+            if in_buildcache is not any and rec.in_buildcache != in_buildcache:
+                continue
+
             if explicit is not any and rec.explicit != explicit:
                 continue
 
@@ -1452,11 +1475,12 @@ class Database(object):
                     rec.spec.name) != known:
                 continue
 
-            inst_date = datetime.datetime.fromtimestamp(
-                rec.installation_time
-            )
-            if not (start_date < inst_date < end_date):
-                continue
+            if start_date or end_date:
+                inst_date = datetime.datetime.fromtimestamp(
+                    rec.installation_time
+                )
+                if not (start_date < inst_date < end_date):
+                    continue
 
             if (query_spec is any or
                 rec.spec.satisfies(query_spec, strict=True)):
@@ -1464,6 +1488,8 @@ class Database(object):
 
         return results
 
+    if _query.__doc__ is None:
+        _query.__doc__ = ""
     _query.__doc__ += _query_docstring
 
     def query_local(self, *args, **kwargs):
@@ -1471,6 +1497,8 @@ class Database(object):
         with self.read_transaction():
             return sorted(self._query(*args, **kwargs))
 
+    if query_local.__doc__ is None:
+        query_local.__doc__ = ""
     query_local.__doc__ += _query_docstring
 
     def query(self, *args, **kwargs):
@@ -1489,6 +1517,8 @@ class Database(object):
 
         return sorted(results)
 
+    if query.__doc__ is None:
+        query.__doc__ = ""
     query.__doc__ += _query_docstring
 
     def query_one(self, query_spec, known=any, installed=True):

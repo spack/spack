@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,8 +35,7 @@ class Aspect(CMakePackage):
 
     def cmake_args(self):
         return [
-            '-DASPECT_USE_FP_EXCEPTIONS=%s' %
-            ('ON' if '+fpe' in self.spec else 'OFF')
+            self.define_from_variant('ASPECT_USE_FP_EXCEPTIONS', 'fpe')
         ]
 
     def setup_run_environment(self, env):

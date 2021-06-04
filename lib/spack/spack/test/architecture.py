@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,14 @@
 """ Test checks if the architecture class is created correctly and also that
     the functions are looking for the correct architecture name
 """
+import itertools
 import os
 import platform as py_platform
 
 import pytest
 
 import spack.architecture
+import spack.concretize
 from spack.spec import Spec
 from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux
@@ -115,20 +117,26 @@ def test_user_defaults(config):
     assert default_target == default_spec.architecture.target
 
 
-@pytest.mark.parametrize('operating_system', [
-    x for x in spack.architecture.platform().operating_sys
-] + ["fe", "be", "frontend", "backend"])
-@pytest.mark.parametrize('target', [
-    x for x in spack.architecture.platform().targets
-] + ["fe", "be", "frontend", "backend"])
-def test_user_input_combination(config, operating_system, target):
-    platform = spack.architecture.platform()
-    spec = Spec("libelf os=%s target=%s" % (operating_system, target))
-    spec.concretize()
-    assert spec.architecture.os == str(
-        platform.operating_system(operating_system)
-    )
-    assert spec.architecture.target == platform.target(target)
+def test_user_input_combination(config):
+    valid_keywords = ["fe", "be", "frontend", "backend"]
+
+    possible_targets = ([x for x in spack.architecture.platform().targets]
+                        + valid_keywords)
+
+    possible_os = ([x for x in spack.architecture.platform().operating_sys]
+                   + valid_keywords)
+
+    for target, operating_system in itertools.product(
+        possible_targets, possible_os
+    ):
+        platform = spack.architecture.platform()
+        spec_str = "libelf os={0} target={1}".format(operating_system, target)
+        spec = Spec(spec_str)
+        spec.concretize()
+        assert spec.architecture.os == str(
+            platform.operating_system(operating_system)
+        )
+        assert spec.architecture.target == platform.target(target)
 
 
 def test_operating_system_conversion_to_dict():
@@ -223,3 +231,29 @@ def test_satisfy_strict_constraint_when_not_concrete(
     architecture = spack.spec.ArchSpec(architecture_tuple)
     constraint = spack.spec.ArchSpec(constraint_tuple)
     assert not architecture.satisfies(constraint, strict=True)
+
+
+@pytest.mark.parametrize('root_target_range,dep_target_range,result', [
+    (('x86_64:nocona', 'x86_64:core2', 'nocona')),  # pref not in intersection
+    (('x86_64:core2', 'x86_64:nocona', 'nocona')),
+    (('x86_64:haswell', 'x86_64:mic_knl', 'core2')),  # pref in intersection
+    (('ivybridge', 'nocona:skylake', 'ivybridge')),  # one side concrete
+    (('haswell:icelake', 'broadwell', 'broadwell')),
+    # multiple ranges in lists with multiple overlaps
+    (('x86_64:nocona,haswell:broadwell', 'nocona:haswell,skylake:',
+      'nocona')),
+    # lists with concrete targets, lists compared to ranges
+    (('x86_64,haswell', 'core2:broadwell', 'haswell'))
+])
+@pytest.mark.usefixtures('mock_packages', 'config')
+def test_concretize_target_ranges(
+        root_target_range, dep_target_range, result
+):
+    # use foobar=bar to make the problem simpler for the old concretizer
+    # the new concretizer should not need that help
+    spec = Spec('a %%gcc@10 foobar=bar target=%s ^b target=%s' %
+                (root_target_range, dep_target_range))
+    with spack.concretize.disable_compiler_existence_check():
+        spec.concretize()
+
+    assert str(spec).count('arch=test-debian6-%s' % result) == 2

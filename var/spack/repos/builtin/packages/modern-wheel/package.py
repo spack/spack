@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,10 +40,7 @@ class ModernWheel(CMakePackage):
     patch('add_virtual_destructor.patch')
 
     def cmake_args(self):
-        spec = self.spec
         return [
-            '-DBUILD_UNIT_TEST:BOOL={0}'.format(
-                'ON' if '+test' in spec else 'OFF'),
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_UNIT_TEST', 'test'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]

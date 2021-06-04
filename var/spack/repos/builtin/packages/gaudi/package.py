@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,7 +48,7 @@ class Gaudi(CMakePackage):
     depends_on('cppgsl')
     depends_on('fmt', when='@33.2:')
     depends_on('intel-tbb')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('nlohmann-json', when="@35.0:")
     depends_on('python', type=('build', 'run'))
     depends_on('python@:3.7.99', when='@32.2:34.99', type=('build', 'run'))
@@ -90,13 +90,14 @@ class Gaudi(CMakePackage):
         args = [
             self.define_from_variant("BUILD_TESTING",             "optional"),
             self.define_from_variant("GAUDI_USE_AIDA",            "optional"),
-            self.define_from_variant("GAUDI_USE_CLHEP",           "optional"),
             self.define_from_variant("GAUDI_USE_CPPUNIT",         "optional"),
             self.define_from_variant("GAUDI_USE_HEPPDT",          "optional"),
             self.define_from_variant("GAUDI_USE_JEMALLOC",        "optional"),
             self.define_from_variant("GAUDI_USE_UNWIND",          "optional"),
             self.define_from_variant("GAUDI_USE_XERCESC",         "optional"),
             self.define_from_variant("GAUDI_USE_DOXYGEN",         "docs"),
+            # needed to build core services like rndmsvc
+            self.define("GAUDI_USE_CLHEP", True),
             self.define("GAUDI_USE_PYTHON_MAJOR",
                         str(self.spec['python'].version.up_to(1))),
             # todo:

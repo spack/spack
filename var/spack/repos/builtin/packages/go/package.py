@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,9 +38,22 @@ class Go(Package):
     extendable = True
     executables = ['^go$']
 
+    version('1.16.4', sha256='ae4f6b6e2a1677d31817984655a762074b5356da50fb58722b99104870d43503')
+    version('1.16.3', sha256='b298d29de9236ca47a023e382313bcc2d2eed31dfa706b60a04103ce83a71a25')
+    version('1.16.2', sha256='37ca14287a23cb8ba2ac3f5c3dd8adbc1f7a54b9701a57824bf19a0b271f83ea')
+    version('1.16', sha256='7688063d55656105898f323d90a79a39c378d86fe89ae192eb3b7fc46347c95a')
+    version('1.15.12', sha256='1c6911937df4a277fa74e7b7efc3d08594498c4c4adc0b6c4ae3566137528091')
+    version('1.15.11', sha256='f25b2441d4c76cf63cde94d59bab237cc33e8a2a139040d904c8630f46d061e5')
+    version('1.15.8', sha256='540c0ab7781084d124991321ed1458e479982de94454a98afab6acadf38497c2')
+    version('1.15.7', sha256='8631b3aafd8ecb9244ec2ffb8a2a8b4983cf4ad15572b9801f7c5b167c1a2abc')
+    version('1.15.6', sha256='890bba73c5e2b19ffb1180e385ea225059eb008eb91b694875dd86ea48675817')
+    version('1.15.5', sha256='c1076b90cf94b73ebed62a81d802cd84d43d02dea8c07abdc922c57a071c84f1')
     version('1.15.2', sha256='28bf9d0bcde251011caae230a4a05d917b172ea203f2a62f2c2f9533589d4b4d')
     version('1.15.1', sha256='d3743752a421881b5cc007c76b4b68becc3ad053e61275567edab1c99e154d30')
     version('1.15', sha256='69438f7ed4f532154ffaf878f3dfd83747e7a00b70b3556eddabf7aaee28ac3a')
+    version('1.14.14', sha256='6204bf32f58fae0853f47f1bd0c51d9e0ac11f1ffb406bed07a0a8b016c8a76f')
+    version('1.14.13', sha256='ba1d244c6b5c0ed04aa0d7856d06aceb89ed31b895de6ff783efb1cc8ab6b177')
+    version('1.14.12', sha256='b34f4b7ad799eab4c1a52bdef253602ce957125a512f5a1b28dce43c6841b971')
     version('1.14.9', sha256='c687c848cc09bcabf2b5e534c3fc4259abebbfc9014dd05a1a2dc6106f404554')
     version('1.14.8', sha256='d9a613fb55f508cf84e753456a7c6a113c8265839d5b7fe060da335c93d6e36a')
     version('1.14.6', sha256='73fc9d781815d411928eccb92bf20d5b4264797be69410eac854babe44c94c09')
@@ -171,19 +184,18 @@ class Go(Package):
             tty.warn('GOROOT is set, this is not recommended')
 
         # Set to include paths of dependencies
-        path_components = []
+        path_components = [dependent_spec.prefix]
         for d in dependent_spec.traverse():
             if d.package.extends(self.spec):
                 path_components.append(d.prefix)
-        return path_components
+        return ':'.join(path_components)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # This *MUST* be first, this is where new code is installed
-        env.set('GOPATH', ':'.join(self.generate_path_components(
-            dependent_spec)))
+        env.prepend_path('GOPATH', self.generate_path_components(
+            dependent_spec))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         # Allow packages to find this when using module files
-        env.prepend_path('GOPATH', ':'.join(
-            [dependent_spec.prefix] + self.generate_path_components(
-                dependent_spec)))
+        env.prepend_path('GOPATH', self.generate_path_components(
+            dependent_spec))

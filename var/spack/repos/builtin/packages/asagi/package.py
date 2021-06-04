@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,15 +59,13 @@ class Asagi(CMakePackage):
         args = ['-DMAX_DIMENSIONS=' + spec.variants['max_dimensions'].value,
                 '-DSHARED_LIB=' + ('ON' if 'shared' in link_type else 'OFF'),
                 '-DSTATIC_LIB=' + ('ON' if 'static' in link_type else 'OFF'),
-                '-DFORTRAN_SUPPORT=' + ('ON' if '+fortran' in spec else 'OFF'),
-                '-DTHREADSAFE=' + ('ON' if '+threadsafe' in spec else 'OFF'),
+                self.define_from_variant('FORTRAN_SUPPORT', 'fortran'),
+                self.define_from_variant('THREADSAFE', 'threadsafe'),
                 '-DNOMPI=' + ('ON' if '~mpi' in spec else 'OFF'),
-                '-DMPI3=' + ('ON' if '+mpi3' in spec else 'OFF'),
+                self.define_from_variant('MPI3', 'mpi3'),
                 '-DNONUMA=' + ('ON' if '~numa' in spec else 'OFF'),
-                '-DTESTS=' + ('ON' if '+tests' in spec else 'OFF'),
-                '-DEXAMPLES=' + ('ON' if '+examples' in spec else 'OFF'),
-                '-DTHREADSAFE_COUNTER='
-                + ('ON' if '+threadsafe_counter' in spec else 'OFF'),
-                '-DTHREADSAFE_MPI='
-                + ('ON' if '+threadsafe_mpi' in spec else 'OFF'), ]
+                self.define_from_variant('TESTS', 'tests'),
+                self.define_from_variant('EXAMPLES', 'examples'),
+                self.define_from_variant('THREADSAFE_COUNTER', 'threadsafe_counter'),
+                self.define_from_variant('THREADSAFE_MPI', 'threadsafe_mpi'), ]
         return args

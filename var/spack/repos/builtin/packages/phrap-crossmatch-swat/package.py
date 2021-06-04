@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class PhrapCrossmatchSwat(MakefilePackage):
 
     homepage = "http://www.phrap.org/phredphrapconsed.html"
     url      = "file://{0}/phrap-crossmatch-swat-1.090518.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('1.090518', sha256='81f50c4410e8604cdefcc34ef6dc7b037be3bb45b94c439611a5590c1cf83665')
 

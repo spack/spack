@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,6 @@ class MsgpackC(CMakePackage):
         args = [
             "-DCMAKE_CXX_FLAGS=-Wno-implicit-fallthrough",
             "-DCMAKE_C_FLAGS=-Wno-implicit-fallthrough",
-            '-DMSGPACK_BUILD_TESTS:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF')
+            self.define('MSGPACK_BUILD_TESTS', self.run_tests)
         ]
         return args

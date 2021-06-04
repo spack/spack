@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
     homepage = "http://www.tcl.tk"
     sourceforge_mirror_path = "tcl/tk8.6.5-src.tar.gz"
 
+    version('8.6.11', sha256='5228a8187a7f70fa0791ef0f975270f068ba9557f57456f51eb02d9d4ea31282')
     version('8.6.10', sha256='63df418a859d0a463347f95ded5cd88a3dd3aaa1ceecaeee362194bc30f3e386')
     version('8.6.8',  sha256='49e7bca08dde95195a27f594f7c850b088be357a7c7096e44e1158c7a5fd7b33')
     version('8.6.6',  sha256='d62c371a71b4744ed830e3c21d27968c31dba74dd2c45f36b9b071e6d88eb19d')
@@ -37,6 +38,13 @@ class Tk(AutotoolsPackage, SourceforgePackage):
     depends_on('libxscrnsaver', when='+xss')
 
     configure_directory = 'unix'
+
+    # https://core.tcl-lang.org/tk/tktview/3598664fffffffffffff
+    # https://core.tcl-lang.org/tk/info/8b679f597b1d17ad
+    # https://core.tcl-lang.org/tk/info/997b17c343444e48
+    patch('https://github.com/macports/macports-ports/blob/master/x11/tk/files/patch-unix-Makefile.in.diff',
+          sha256='54bba3d2b3550b7e2c636881c1a3acaf6e1eb743f314449a132864ff47fd0010',
+          level=0, when='@:8.6.11 platform=darwin')
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
