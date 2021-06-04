@@ -46,9 +46,6 @@ class HdfEos5(AutotoolsPackage):
     conflicts('~static', when='~shared',
               msg='At least one of +static or +shared must be set')
 
-    # payerle: I am adding myself as a maintainer because I initially wrote
-    # the spack recipe, but I am not really an user of the code, so please
-    # consider becoming a maintainer if you use this code.
     maintainers = ['payerle']
 
     # Build dependencies
@@ -97,7 +94,7 @@ class HdfEos5(AutotoolsPackage):
 
         # Provide config args for dependencies
         extra_args.append('--with-hdf5={0}'.format(self.spec['hdf5'].prefix))
-        if 'libszip' in self.spec:
+        if 'szip' in self.spec:
             extra_args.append('--with-szlib={0}'.format(
                 self.spec['libszip'].prefix))
         if 'zlib' in self.spec:
