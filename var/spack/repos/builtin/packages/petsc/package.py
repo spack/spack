@@ -5,7 +5,7 @@
 import os
 
 
-class Petsc(Package):
+class Petsc(Package, CudaPackage, ROCmPackage):
     """PETSc is a suite of data structures and routines for the scalable
     (parallel) solution of scientific applications modeled by partial
     differential equations.
@@ -76,7 +76,6 @@ class Petsc(Package):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
     variant('mpi',     default=True,  description='Activates MPI support')
-    variant('cuda',    default=False, description='Activates CUDA support')
     variant('double',  default=True,
             description='Switches between single and double precision')
     variant('complex', default=False, description='Build with complex numbers')
@@ -192,6 +191,9 @@ class Petsc(Package):
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
+    depends_on('hip', when='+rocm')
+    depends_on('hipblas', when='+rocm')
+    depends_on('hipsparse', when='+rocm')
 
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
@@ -375,40 +377,57 @@ class Petsc(Package):
                 '--with-scalapack=0'
             ])
 
-        if spec.satisfies('+openmp'):
-            options.append('--with-openmp=1')
-
         # Activates library support if needed (i.e. direct dependency)
         if '^libjpeg-turbo' in spec:
-            jpeg_library = 'libjpeg-turbo'
+            jpeg_library = ('libjpeg-turbo', 'libjpeg')
         else:
             jpeg_library = 'libjpeg'
 
-        for library in ('cuda', 'metis', 'hypre', 'parmetis', 'mumps',
-                        'trilinos', 'fftw', 'valgrind', 'gmp', 'libpng',
-                        'giflib', 'mpfr', 'netcdf-c', 'parallel-netcdf',
-                        'moab', 'random123', 'exodusii', 'cgns', 'memkind',
-                        'p4est', 'saws', 'libyaml', 'hwloc', jpeg_library):
+        for library in (
+                'cuda',
+                'hip',
+                'metis',
+                'hypre',
+                'parmetis',
+                'mumps',
+                'trilinos',
+                'fftw',
+                'valgrind',
+                'gmp',
+                'libpng',
+                'giflib',
+                'mpfr',
+                ('netcdf-c', 'netcdf'),
+                ('parallel-netcdf', 'pnetcdf'),
+                'moab',
+                'openmp',
+                'random123',
+                'exodusii',
+                'cgns',
+                'memkind',
+                'p4est',
+                'saws',
+                ('libyaml', 'yaml'),
+                'hwloc',
+                jpeg_library,
+        ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
+            if isinstance(library, tuple):
+                library, petsclibname = library
+            else:
+                petsclibname = library
+
             library_requested = library in spec.dependencies_dict()
             options.append(
                 '--with-{library}={value}'.format(
-                    library=('libjpeg' if library == 'libjpeg-turbo'
-                             else 'netcdf' if library == 'netcdf-c'
-                             else 'pnetcdf' if library == 'parallel-netcdf'
-                             else 'yaml' if library == 'libyaml'
-                             else library),
+                    library=petsclibname,
                     value=('1' if library_requested else '0'))
             )
             if library_requested:
                 options.append(
                     '--with-{library}-dir={path}'.format(
-                        library=('libjpeg' if library == 'libjpeg-turbo'
-                                 else 'netcdf' if library == 'netcdf-c'
-                                 else 'pnetcdf' if library == 'parallel-netcdf'
-                                 else 'yaml' if library == 'libyaml'
-                                 else library), path=spec[library].prefix)
+                        library=petsclibname, path=spec[library].prefix)
                 )
 
         # PETSc does not pick up SuperluDist from the dir as they look for

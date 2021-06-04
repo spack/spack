@@ -40,6 +40,8 @@ def stage(parser, args):
             for spec in env.specs_by_hash.values():
                 for dep in spec.traverse():
                     dep.package.do_stage()
+                    tty.msg("Staged {0} in {1}".format(dep.package.name,
+                                                       dep.package.stage.path))
             return
         else:
             tty.die("`spack stage` requires a spec or an active environment")
@@ -62,3 +64,4 @@ def stage(parser, args):
         if custom_path:
             package.path = custom_path
         package.do_stage()
+        tty.msg("Staged {0} in {1}".format(package.name, package.stage.path))
