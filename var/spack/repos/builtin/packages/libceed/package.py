@@ -30,7 +30,7 @@ class Libceed(Package, CudaPackage, ROCmPackage):
 
     conflicts('+libxsmm', when='@:0.2')
     conflicts('+magma', when='@:0.5')
-    conflicts('+hip', when='@:0.6')
+    conflicts('+rocm', when='@:0.6')
 
     depends_on('cuda', when='+cuda')
     depends_on('hip@3.8.0', when='@0.7:0.7.99+rocm')
