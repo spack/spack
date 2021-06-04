@@ -14,7 +14,7 @@ class Formetis(CMakePackage):
 
     maintainers = ['sethrj']
 
-    version('0.0.2', sha256='d0d778fd76185d395041f8bc0ecc2b1f3785cf55db31eb77323bd7cce741c5cb')
+    version('0.0.2', sha256='0067c03ca822f4a3955751acb470f21eed489256e2ec5ff24741eb2b638592f1')
 
     variant('mpi', default=False, description='Enable ParMETIS support')
     variant('shared', default=True, description='Build shared libraries')
