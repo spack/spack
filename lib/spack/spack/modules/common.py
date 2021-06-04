@@ -221,8 +221,8 @@ def root_path(name, module_set_name):
         root folder for module file installation
     """
     defaults = {
-        'lmod': '$spack/share/spack/modules',
-        'tcl': '$spack/share/spack/lmod',
+        'lmod': '$spack/share/spack/lmod',
+        'tcl': '$spack/share/spack/modules',
     }
     # Root folders where the various module files should be written
     roots = spack.config.get('modules:%s:roots' % module_set_name, {})
