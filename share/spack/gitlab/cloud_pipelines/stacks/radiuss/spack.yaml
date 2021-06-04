@@ -88,8 +88,8 @@ spack:
         - spack env activate --without-view .
       tags: ["spack", "public", "medium", "x86_64"]
 
-  cdash:
-    build-group: RADIUSS
-    url: https://cdash.spack.io
-    project: Spack RADIUSS Testing
-    site: Cloud Gitlab Infrastructure
+  #cdash:
+  #  build-group: RADIUSS
+  #  url: https://cdash.spack.io
+  #  project: Spack RADIUSS Testing
+  #  site: Cloud Gitlab Infrastructure
