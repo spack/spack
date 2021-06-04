@@ -37,7 +37,9 @@ class PyLlvmlite(PythonPackage):
     depends_on('llvm@7.0:7.0.99~flang', when='@0.27.0:0.28.99')
     depends_on('llvm@6.0:6.0.99~flang', when='@0.23.0:0.26.99')
     depends_on('llvm@4.0:4.0.99~flang', when='@0.17.0:0.20.99')
-    depends_on('binutils', type='build')
+    # FIXME dependencies on +gold and +ld are only needed for the default
+    # concretizer, not when clingo is used
+    depends_on('binutils+gold+ld', type='build')
 
     def setup_build_environment(self, env):
         if self.spec.satisfies('%fj'):
