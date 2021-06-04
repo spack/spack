@@ -36,6 +36,7 @@ class PyPyprecice(PythonPackage):
     patch("deactivate-version-check-via-pip.patch", when="@:2.1.1.1")
 
     depends_on("precice@develop", when="@develop")
+    depends_on("precice@2.2.1", when="@2.2.1.1:2.2.1.99")
     depends_on("precice@2.2.0", when="@2.2.0.1:2.2.0.99")
     depends_on("precice@2.1.1", when="@2.1.1.1:2.1.1.99")
     depends_on("precice@2.1.0", when="@2.1.0.1:2.1.0.99")
