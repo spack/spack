@@ -125,6 +125,7 @@ module_config_properties = {
         {'type': 'string'},
         {'type': 'boolean'}
     ]},
+    'arch_folder': {'type': 'boolean'},
     'prefix_inspections': {
         'type': 'object',
         'additionalProperties': False,
