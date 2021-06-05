@@ -22,6 +22,7 @@ class Warpx(CMakePackage):
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
 
+    # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
     version('21.06', sha256='a26039dc4061da45e779dd5002467c67a533fc08d30841e01e7abb3a890fbe30')
     version('21.05', sha256='f835f0ae6c5702550d23191aa0bb0722f981abb1460410e3d8952bc3d945a9fc')
