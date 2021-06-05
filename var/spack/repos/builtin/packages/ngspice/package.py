@@ -124,9 +124,10 @@ class Ngspice(AutotoolsPackage):
         return args
 
     def flag_handler(self, name, flags):
+        iflags = []
         if self.spec.satisfies('%nvhpc') and name == 'cflags':
-            flags.append('-Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes')
-            flags.append('-Wnested-externs -Wredundant-decls')
+            iflags.append('-Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes')
+            iflags.append('-Wnested-externs -Wredundant-decls')
             if 'debug=yes' in self.spec:
-                flags.append('-g')
-        return (None, None, flags)
+                iflags.append('-g')
+        return (iflags, None, flags)

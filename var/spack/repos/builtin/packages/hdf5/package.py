@@ -175,20 +175,21 @@ class Hdf5(AutotoolsPackage):
         return url.format(version.up_to(2), version)
 
     def flag_handler(self, name, flags):
+        iflags = []
         if '+pic' in self.spec:
             if name == "cflags":
-                flags.append(self.compiler.cc_pic_flag)
+                iflags.append(self.compiler.cc_pic_flag)
             elif name == "cxxflags":
-                flags.append(self.compiler.cxx_pic_flag)
+                iflags.append(self.compiler.cxx_pic_flag)
             elif name == "fflags":
-                flags.append(self.compiler.fc_pic_flag)
+                iflags.append(self.compiler.fc_pic_flag)
 
         # Quiet warnings/errors about implicit declaration of functions in C99
         if name == "cflags":
             if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
-                flags.append("-Wno-implicit-function-declaration")
+                iflags.append("-Wno-implicit-function-declaration")
 
-        return (None, None, flags)
+        return (iflags, None, flags)
 
     @when('@develop')
     def autoreconf(self, spec, prefix):

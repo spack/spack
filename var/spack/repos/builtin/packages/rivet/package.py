@@ -156,10 +156,10 @@ class Rivet(AutotoolsPackage):
         env.prepend_path('LD_LIBRARY_PATH', fjcontrib_home.lib)
 
     def flag_handler(self, name, flags):
+        iflags = []
         if self.spec.satisfies('@3.1.2:') and name == 'cxxflags':
-            flags.append('-faligned-new')
-            return (None, None, flags)
-        return (flags, None, None)
+            iflags.append('-faligned-new')
+        return (iflags, None, flags)
 
     def configure_args(self):
         args = []

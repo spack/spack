@@ -43,13 +43,14 @@ OpenCL ICD loaders."""
     provides('opencl@:2.0', when='@2.2.3:2.2.7+headers')
 
     def flag_handler(self, name, flags):
+        iflags = []
         if name == 'cflags' and self.spec.satisfies('@:2.2.12'):
             # https://github.com/OCL-dev/ocl-icd/issues/8
             # this is fixed in version grater than 2.2.12
-            flags.append('-O2')
+            iflags.append('-O2')
             # gcc-10 change the default from -fcommon to fno-common
             # This is fixed in versions greater than 2.2.12:
             # https://github.com/OCL-dev/ocl-icd/commit/4667bddd365bcc1dc66c483835971f0083b44b1d
             if self.spec.satisfies('%gcc@10:'):
-                flags.append('-fcommon')
-        return (flags, None, None)
+                iflags.append('-fcommon')
+        return (iflags, None, flags)

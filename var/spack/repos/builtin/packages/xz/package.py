@@ -36,9 +36,10 @@ class Xz(AutotoolsPackage, SourceforgePackage):
         return self.enable_or_disable('libs')
 
     def flag_handler(self, name, flags):
+        iflags = []
         if name == 'cflags' and '+pic' in self.spec:
-            flags.append(self.compiler.cc_pic_flag)
-        return (flags, None, None)
+            iflags.append(self.compiler.cc_pic_flag)
+        return (iflags, None, flags)
 
     @property
     def libs(self):

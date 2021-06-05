@@ -55,9 +55,8 @@ class Squashfuse(AutotoolsPackage):
         if name == 'cflags' and '+min_size' in self.spec:
             if '-Os' in self.compiler.opt_flags:
                 flags.append('-Os')
-                return (None, None, flags)
 
-        return (flags, None, None)
+        return (None, None, flags)
 
     def configure_args(self):
         args = ['--disable-demo']

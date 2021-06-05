@@ -42,13 +42,13 @@ class Harfbuzz(AutotoolsPackage):
 
     # Function borrowed from superlu
     def flag_handler(self, name, flags):
-        flags = list(flags)
+        iflags = []
         if name == 'cxxflags':
-            flags.append(self.compiler.cxx11_flag)
+            iflags.append(self.compiler.cxx11_flag)
         if name == 'cflags':
             if '%pgi' not in self.spec and self.spec.satisfies('%gcc@:5.1'):
-                flags.append('-std=gnu99')
-        return (None, None, flags)
+                iflags.append('-std=gnu99')
+        return (iflags, None, flags)
 
     def configure_args(self):
         args = []

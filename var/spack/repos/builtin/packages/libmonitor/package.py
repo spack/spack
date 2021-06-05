@@ -41,21 +41,6 @@ class Libmonitor(AutotoolsPackage):
 
     signals = 'SIGBUS, SIGSEGV, SIGPROF, 36, 37, 38'
 
-    # Set default cflags (-g -O2) and move to the configure line.
-    def flag_handler(self, name, flags):
-        if name != 'cflags':
-            return (flags, None, None)
-
-        if '-g' not in flags:
-            flags.append('-g')
-        for flag in flags:
-            if flag.startswith('-O'):
-                break
-        else:
-            flags.append('-O2')
-
-        return (None, None, flags)
-
     def configure_args(self):
         args = []
 

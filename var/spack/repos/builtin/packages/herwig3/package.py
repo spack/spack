@@ -68,13 +68,11 @@ class Herwig3(AutotoolsPackage):
         return args
 
     def flag_handler(self, name, flags):
+        iflags = []
         if name == 'fcflags':
-            flags.append('-std=legacy')
-            return (None, flags, None)
-        elif name in ['cflags', 'cxxflags', 'cppflags']:
-            return (None, flags, None)
+            iflags.append('-std=legacy')
 
-        return (flags, None, None)
+        return (iflags, None, flags)
 
     def setup_build_environment(self, env):
         thepeg_home = self.spec['thepeg'].prefix

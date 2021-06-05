@@ -39,12 +39,13 @@ class NetcdfCxx4(AutotoolsPackage):
     force_autoreconf = True
 
     def flag_handler(self, name, flags):
+        iflags = []
         if name == 'cflags' and '+pic' in self.spec:
-            flags.append(self.compiler.cc_pic_flag)
+            iflags.append(self.compiler.cc_pic_flag)
         elif name == 'cppflags':
-            flags.append('-I' + self.spec['netcdf-c'].prefix.include)
+            iflags.append('-I' + self.spec['netcdf-c'].prefix.include)
 
-        return (None, None, flags)
+        return (iflags, None, flags)
 
     @property
     def libs(self):

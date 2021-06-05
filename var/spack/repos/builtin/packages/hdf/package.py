@@ -114,13 +114,14 @@ class Hdf(AutotoolsPackage):
         return libs
 
     def flag_handler(self, name, flags):
+        iflags = []
         if '+pic' in self.spec:
             if name == 'cflags':
-                flags.append(self.compiler.cc_pic_flag)
+                iflags.append(self.compiler.cc_pic_flag)
             elif name == 'fflags':
-                flags.append(self.compiler.f77_pic_flag)
+                iflags.append(self.compiler.f77_pic_flag)
 
-        return flags, None, None
+        return (iflags, None, flags)
 
     def configure_args(self):
         config_args = ['--enable-production',

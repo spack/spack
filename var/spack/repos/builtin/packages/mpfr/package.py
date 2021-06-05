@@ -53,11 +53,12 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
               when='@' + ver, sha256=checksum)
 
     def flag_handler(self, name, flags):
+        iflags = []
         # Work around macOS Catalina / Xcode 11 code generation bug
         # (test failure t-toom53, due to wrong code in mpn/toom53_mul.o)
         if self.spec.satisfies('os=catalina') and name == 'cflags':
-            flags.append('-fno-stack-check')
-        return (flags, None, None)
+            iflags.append('-fno-stack-check')
+        return (iflags, None, flags)
 
     def configure_args(self):
         args = [

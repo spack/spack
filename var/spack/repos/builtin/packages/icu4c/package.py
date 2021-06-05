@@ -49,13 +49,14 @@ class Icu4c(AutotoolsPackage):
         return url.format(version.dashed, version.underscored)
 
     def flag_handler(self, name, flags):
+        iflags = []
         if name == 'cxxflags':
             # Control of the C++ Standard is via adding the required "-std"
             # flag to CXXFLAGS in env
-            flags.append(getattr(self.compiler,
-                         'cxx{0}_flag'.format(
-                             self.spec.variants['cxxstd'].value)))
-        return (None, flags, None)
+            iflags.append(getattr(self.compiler,
+                          'cxx{0}_flag'.format(
+                              self.spec.variants['cxxstd'].value)))
+        return (iflags, None, flags)
 
     # Need to make sure that locale is UTF-8 in order to process source
     # files in UTF-8.

@@ -168,18 +168,15 @@ class FluxCore(AutotoolsPackage):
         return args
 
     def flag_handler(self, name, flags):
+        iflags = []
         if name == 'cflags':
             # https://github.com/flux-framework/flux-core/issues/3482
             if self.spec.satisfies('%gcc@10:') and \
                self.spec.satisfies('@0.23.0:0.23.99'):
-                if flags is None:
-                    flags = []
-                flags.append('-Wno-error=stringop-truncation')
+                iflags.append('-Wno-error=stringop-truncation')
 
             if self.spec.satisfies('%gcc@8:') and \
                self.spec.satisfies('@0.23.0'):
-                if flags is None:
-                    flags = []
-                flags.append('-Wno-error=maybe-uninitialized')
+                iflags.append('-Wno-error=maybe-uninitialized')
 
-        return (flags, None, None)
+        return (iflags, None, flags)

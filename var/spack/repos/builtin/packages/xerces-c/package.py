@@ -62,18 +62,19 @@ class XercesC(AutotoolsPackage):
     # the xerces default will override the spack wrapper.
     def flag_handler(self, name, flags):
         spec = self.spec
+        iflags = []
 
         # Need to pass -std flag explicitly
         if name == 'cxxflags' and spec.variants['cxxstd'].value != 'default':
-            flags.append(getattr(self.compiler,
-                         'cxx{0}_flag'.format(
-                             spec.variants['cxxstd'].value)))
+            iflags.append(getattr(self.compiler,
+                          'cxx{0}_flag'.format(
+                              spec.variants['cxxstd'].value)))
 
         # There is no --with-pkg for gnuiconv.
         if name == 'ldflags' and 'transcoder=gnuiconv' in spec:
-            flags.append(spec['iconv'].libs.ld_flags)
+            iflags.append(spec['iconv'].libs.ld_flags)
 
-        return (None, None, flags)
+        return (iflags, None, flags)
 
     def configure_args(self):
         spec = self.spec

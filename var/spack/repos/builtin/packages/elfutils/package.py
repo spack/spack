@@ -85,8 +85,6 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         files = glob.glob(os.path.join('*', 'Makefile.in'))
         filter_file('-Werror', '', *files)
 
-    flag_handler = AutotoolsPackage.build_system_flags
-
     def configure_args(self):
         spec = self.spec
         args = []

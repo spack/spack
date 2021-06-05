@@ -35,22 +35,11 @@ class Libiberty(AutotoolsPackage, GNUMirrorPackage):
     # Set default cflags (-g -O2), add -fPIC if requested, and move to
     # the configure line.
     def flag_handler(self, name, flags):
-        if name != 'cflags':
-            return (flags, None, None)
-
-        if '-g' not in flags:
-            flags.append('-g')
-
-        for flag in flags:
-            if flag.startswith('-O'):
-                break
-        else:
-            flags.append('-O2')
-
+        iflags = []
         if '+pic' in self.spec:
-            flags.append(self.compiler.cc_pic_flag)
+            iflags.append(self.compiler.cc_pic_flag)
 
-        return (None, None, flags)
+        return (iflags, None, flags)
 
     def configure_args(self):
         args = ['--enable-install-libiberty']

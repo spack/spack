@@ -61,17 +61,17 @@ class NetcdfFortran(AutotoolsPackage):
     patch('no_parallel_build.patch', when='@4.5.2')
 
     def flag_handler(self, name, flags):
-        config_flags = None
+        iflags = []
 
         if name == 'cflags':
             if '+pic' in self.spec:
-                flags.append(self.compiler.cc_pic_flag)
+                iflags.append(self.compiler.cc_pic_flag)
         elif name == 'fflags':
             if '+pic' in self.spec:
-                flags.append(self.compiler.f77_pic_flag)
+                iflags.append(self.compiler.f77_pic_flag)
             if self.spec.satisfies('%gcc@10:'):
                 # https://github.com/Unidata/netcdf-fortran/issues/212
-                flags.append('-fallow-argument-mismatch')
+                iflags.append('-fallow-argument-mismatch')
             elif self.compiler.name == 'cce':
                 # Cray compiler generates module files with uppercase names by
                 # default, which is not handled by the makefiles of
@@ -79,16 +79,16 @@ class NetcdfFortran(AutotoolsPackage):
                 # https://github.com/Unidata/netcdf-fortran/pull/221.
                 # The following flag forces the compiler to produce module
                 # files with lowercase names.
-                flags.append('-ef')
+                iflags.append('-ef')
         elif name == 'ldflags':
             # We need to specify LDFLAGS to get correct dependency_libs
             # in libnetcdff.la, so packages that use libtool for linking
             # could correctly link to all the dependencies even when the
             # building takes place outside of Spack environment, i.e.
             # without Spack's compiler wrappers.
-            config_flags = [self.spec['netcdf-c'].libs.search_flags]
+            flags.append(self.spec['netcdf-c'].libs.search_flags)
 
-        return flags, None, config_flags
+        return (iflags, None, flags)
 
     @property
     def libs(self):

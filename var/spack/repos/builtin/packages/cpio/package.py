@@ -30,12 +30,13 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
 
     def flag_handler(self, name, flags):
         spec = self.spec
+        iflags = []
 
         if name == 'cflags':
             if '%intel@:17.999' in spec:
-                flags.append('-no-gcc')
+                iflags.append('-no-gcc')
 
             elif '%clang' in spec or '%fj' in spec:
-                flags.append('--rtlib=compiler-rt')
+                iflags.append('--rtlib=compiler-rt')
 
-        return (flags, None, None)
+        return (iflags, None, flags)

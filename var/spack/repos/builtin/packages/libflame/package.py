@@ -52,10 +52,11 @@ class LibflameBase(AutotoolsPackage):
     patch('Makefile_5.2.0_darwin.patch', when='@5.2.0')
 
     def flag_handler(self, name, flags):
+        iflags = []
         # -std=gnu99 at least required, old versions of GCC default to -std=c90
         if self.spec.satisfies('%gcc@:5.1') and name == 'cflags':
-            flags.append('-std=gnu99')
-        return (flags, None, None)
+            iflags.append('-std=gnu99')
+        return (iflags, None, flags)
 
     def enable_or_disable_threads(self):
         opt_val = self.spec.variants['threads'].value

@@ -83,6 +83,10 @@ class AutotoolsPackage(PackageBase):
     #: after the installation. If True instead it installs them.
     install_libtool_archives = False
 
+    #: Pass flags to configure by default
+    # Need to work around mypy issue: https://github.com/python/mypy/issues/708
+    flag_handler = PackageBase.build_system_flags  # type: ignore
+
     @property
     def _removed_la_files_log(self):
         """File containing the list of remove libtool archives"""

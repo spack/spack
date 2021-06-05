@@ -127,8 +127,6 @@ class Hpctoolkit(AutotoolsPackage):
           sha256='fd0fd7419f66a1feba8046cff9df7f27abce8629ee2708b8a9daa12c1b51243c',
           when='@2019.08.01:2021.03.99 %gcc@11.0:')
 
-    flag_handler = AutotoolsPackage.build_system_flags
-
     def configure_args(self):
         spec = self.spec
 

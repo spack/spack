@@ -316,14 +316,13 @@ class Mvapich2(AutotoolsPackage):
         return opts
 
     def flag_handler(self, name, flags):
+        iflags = []
         if name == 'fflags':
             # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
             if self.spec.satisfies('%gcc@10:'):
-                if flags is None:
-                    flags = []
-                flags.append('-fallow-argument-mismatch')
+                iflags.append('-fallow-argument-mismatch')
 
-        return (flags, None, None)
+        return (iflags, None, flags)
 
     def setup_build_environment(self, env):
         # mvapich2 configure fails when F90 and F90FLAGS are set

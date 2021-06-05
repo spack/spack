@@ -32,14 +32,15 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     force_autoreconf = True
 
     def flag_handler(self, name, flags):
+        iflags = []
         # Work around macOS Catalina / Xcode 11 code generation bug
         # (test failure t-toom53, due to wrong code in mpn/toom53_mul.o)
         if self.spec.satisfies('os=catalina') and name == 'cflags':
-            flags.append('-fno-stack-check')
+            iflags.append('-fno-stack-check')
         # This flag is necessary for the Intel build to pass `make check`
         elif self.spec.satisfies('%intel') and name == 'cxxflags':
-            flags.append('-no-ftz')
-        return (flags, None, None)
+            iflags.append('-no-ftz')
+        return (iflags, None, flags)
 
     def configure_args(self):
         return ['--enable-cxx']

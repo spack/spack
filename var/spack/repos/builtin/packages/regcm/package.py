@@ -61,11 +61,12 @@ class Regcm(AutotoolsPackage):
     parallel = False
 
     def flag_handler(self, name, flags):
+        iflags = []
         if name == 'fflags' and self.compiler.fc.endswith('gfortran'):
-            flags.extend(['-Wall', '-Wextra', '-Warray-temporaries',
-                          '-Wconversion', '-fimplicit-none', '-fbacktrace',
-                          '-ffree-line-length-0', '-finit-real=nan',
-                          '-ffpe-trap=zero,overflow,underflow', '-fcheck=all'])
+            iflags.extend(['-Wall', '-Wextra', '-Warray-temporaries',
+                           '-Wconversion', '-fimplicit-none', '-fbacktrace',
+                           '-ffree-line-length-0', '-finit-real=nan',
+                           '-ffpe-trap=zero,overflow,underflow', '-fcheck=all'])
 
         elif name == 'ldlibs':
             flags.extend(['-lnetcdff', '-lnetcdf'])
@@ -74,7 +75,7 @@ class Regcm(AutotoolsPackage):
             else:
                 flags.extend(['-lhdf5_hl', '-lhdf5', '-lz'])
 
-        return (None, None, flags)
+        return (iflags, None, flags)
 
     def configure_args(self):
         args = ['--enable-shared']

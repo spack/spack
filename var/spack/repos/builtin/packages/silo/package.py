@@ -50,21 +50,22 @@ class Silo(AutotoolsPackage):
     patch('H5FD_class_t-terminate.patch', when='^hdf5@1.10.0:')
 
     def flag_handler(self, name, flags):
+        iflags = []
         spec = self.spec
         if name == 'ldflags':
             if '+hdf5' in spec:
                 if spec['hdf5'].satisfies('~shared'):
-                    flags.append('-ldl')
-            flags.append(spec['readline'].libs.search_flags)
+                    iflags.append('-ldl')
+            iflags.append(spec['readline'].libs.search_flags)
 
         if '+pic' in spec:
             if name == 'cflags':
-                flags.append(self.compiler.cc_pic_flag)
+                iflags.append(self.compiler.cc_pic_flag)
             elif name == 'cxxflags':
-                flags.append(self.compiler.cxx_pic_flag)
+                iflags.append(self.compiler.cxx_pic_flag)
             elif name == 'fcflags':
-                flags.append(self.compiler.fc_pic_flag)
-        return (flags, None, None)
+                iflags.append(self.compiler.fc_pic_flag)
+        return (iflags, None, flags)
 
     @when('%clang@9:')
     def patch(self):

@@ -372,13 +372,14 @@ class Python(AutotoolsPackage):
         env.unset('PYTHONHOME')
 
     def flag_handler(self, name, flags):
+        iflags = []
         # python 3.8 requires -fwrapv when compiled with intel
         if self.spec.satisfies('@3.8: %intel'):
             if name == 'cflags':
-                flags.append('-fwrapv')
+                iflags.append('-fwrapv')
 
         # allow flags to be passed through compiler wrapper
-        return (flags, None, None)
+        return (iflags, None, flags)
 
     def configure_args(self):
         spec = self.spec
