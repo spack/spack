@@ -40,6 +40,7 @@ class DarshanRuntime(Package):
     variant('slurm', default=False, description='Use Slurm Job ID')
     variant('cobalt', default=False, description='Use Coblat Job Id')
     variant('pbs', default=False, description='Use PBS Job Id')
+    variant('sge', default=False, description='Use SGE Job Id')
     variant('mpi', default=True, description='Compile with MPI support')
     variant('hdf5', default=False, description='Compile with HDF5 module')
     variant('apmpi', default=False, description='Compile with AutoPerf MPI module')
@@ -64,6 +65,8 @@ class DarshanRuntime(Package):
             job_id = 'COBALT_JOBID'
         if '+pbs' in spec:
             job_id = 'PBS_JOBID'
+        if '+sge' in spec:
+            job_id = 'JOB_ID'
 
         # TODO: BG-Q and other platform configure options
         options = []
