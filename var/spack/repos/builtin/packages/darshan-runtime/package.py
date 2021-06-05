@@ -37,15 +37,18 @@ class DarshanRuntime(Package):
     depends_on('hdf5', when='+hdf5')
     depends_on('papi', when='+apxc')
 
-    variant('slurm', default=False, description='Use Slurm Job ID')
-    variant('cobalt', default=False, description='Use Coblat Job Id')
-    variant('pbs', default=False, description='Use PBS Job Id')
-    variant('sge', default=False, description='Use SGE Job Id')
     variant('mpi', default=True, description='Compile with MPI support')
     variant('hdf5', default=False, description='Compile with HDF5 module')
     variant('apmpi', default=False, description='Compile with AutoPerf MPI module')
     variant('apmpi_sync', default=False, description='Compile with AutoPerf MPI module (with collective synchronization timing)')
     variant('apxc', default=False, description='Compile with AutoPerf XC module')
+    variant(
+        'scheduler',
+        default='NONE',
+        description='queue system scheduler JOB ID',
+        values=('NONE', 'cobalt', 'pbs', 'sge', 'slurm'),
+        multi=False
+    )
 
     conflicts('+hdf5', when='@:3.1.8',
               msg='+hdf5 variant only available starting from version 3.2.0')
