@@ -47,6 +47,13 @@ for further documentation regarding the spec syntax, see:
         choices=['build_hash', 'full_hash', 'dag_hash'],
         help='generate spec with a particular hash type.')
     subparser.add_argument(
+        '--test', default=None,
+        choices=['all', 'root'],
+        help=""" If 'all' is chosen, concretize with test dependencies for all packages.
+                 If 'root' is chosen, concretiz with test dependencies only for the root
+                 spec(s). If nothing is chosen, don't add test dependencies for any packages."""
+    )
+    subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
     arguments.add_common_arguments(subparser, ['specs'])
@@ -106,5 +113,12 @@ def spec(parser, args):
             kwargs['hashes'] = args.long or args.very_long
             print("Concretized")
             print("--------------------------------")
-            spec.concretize()
+            # setup add_test_deps from arguments
+            if not args.test:
+                add_test_deps = False
+            elif args.test == 'all':
+              add_test_deps = True
+            elif args.test == 'root':
+              add_test_deps = spec.name
+            spec.concretize(tests=add_test_deps)
             print(spec.tree(**kwargs))
