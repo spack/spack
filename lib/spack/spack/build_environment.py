@@ -949,18 +949,18 @@ def get_cmake_prefix_path(pkg):
     build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
     link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
     build_link_deps = build_deps | link_deps
-    first = []
-    second = []
+    spack_built = []
+    externals = []
     # modifications_from_dependencies updates CMAKE_PREFIX_PATH by first
     # prepending all externals and then all non-externals
     for dspec in pkg.spec.traverse(root=False, order='post'):
         if dspec in build_link_deps:
             if dspec.external:
-                second.insert(0, dspec)
+                externals.insert(0, dspec)
             else:
-                first.insert(0, dspec)
+                spack_built.insert(0, dspec)
 
-    ordered_build_link_deps = first + second
+    ordered_build_link_deps = spack_built + externals
     build_link_prefixes = filter_system_paths(
         x.prefix for x in ordered_build_link_deps)
     return build_link_prefixes
