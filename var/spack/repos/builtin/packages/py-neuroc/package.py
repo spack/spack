@@ -15,6 +15,7 @@ class PyNeuroc(PythonPackage):
     git = "ssh://bbpcode.epfl.ch/nse/NeuroC"
 
     version('develop', branch='master')
+    version('0.2.7', tag='neuroc-v0.2.7')
     version('0.2.6', tag='neuroc-v0.2.6')
     version('0.2.4', tag='neuroc-v0.2.4')
 
