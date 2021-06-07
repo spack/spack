@@ -289,6 +289,7 @@ spack:
     - umap
     - unifyfs@0.9.1
     - upcxx
+    - veloc
     - zfp
     #- dealii
     #- geopm
@@ -297,7 +298,6 @@ spack:
     #- qwt
     #- umpire # unsatisfiable concretization conflict w/ blt
     #- variorum # root fails
-    #- veloc # issue filed
 
   - arch:
     - '%gcc@7.5.0 arch=linux-ubuntu18.04-x86_64'
