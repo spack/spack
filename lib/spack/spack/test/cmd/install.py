@@ -59,7 +59,8 @@ def test_install_package_and_dependency(
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_notests(monkeypatch, mock_packages, install_mockery, win_locks):
+def test_install_runtests_notests(monkeypatch, mock_packages,
+                                  install_mockery, win_locks):
     def check(pkg):
         assert not pkg.run_tests
     monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
@@ -505,7 +506,8 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd, win_locks):
+def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
+                                  capfd, win_locks):
     # capfd interferes with Spack's capturing of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -523,7 +525,8 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd, wi
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd, win_locks):
+def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery,
+                                   capfd, win_locks):
     # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():

@@ -88,7 +88,8 @@ def test_load_includes_run_env(install_mockery, mock_fetch, mock_archive,
     assert 'setenv FOOBAR mpileaks' in csh_out
 
 
-def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages, win_locks):
+def test_load_first(install_mockery, mock_fetch, mock_archive,
+                    mock_packages, win_locks):
     """Test with and without the --first option"""
     install('libelf@0.8.12')
     install('libelf@0.8.13')

@@ -606,6 +606,7 @@ def _populate(mock_db):
 
     _install('trivial-smoke-test')
 
+
 @pytest.fixture(scope='session')
 def _store_dir_and_cache(tmpdir_factory):
     """Returns the directory where to build the mock database and
