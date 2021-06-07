@@ -269,7 +269,7 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
         if hasattr(pkg, 'executables'):
             for exe in pkg.executables:
                 if sys.platform == 'win32':
-                    exe = exe.replace('$', '\.exe$')
+                    exe = exe.replace('$', r'\.exe$')
                 exe_pattern_to_pkgs[exe].append(pkg)
 
     pkg_to_found_exes = defaultdict(set)

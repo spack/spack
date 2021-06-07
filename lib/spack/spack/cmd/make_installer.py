@@ -56,7 +56,7 @@ def make_installer(parser, args):
         spack_license = posixpath.join(posix_root, "LICENSE-APACHE")
 
         spack_logo = posixpath.join(posix_root,
-                                  "share/spack/logo/favicon.ico")
+                                    "share/spack/logo/favicon.ico")
 
         try:
             subprocess.check_call(
@@ -79,14 +79,16 @@ def make_installer(parser, args):
             return
         try:
             subprocess.check_call(
-                '"%s/bin/candle.exe" -ext WixBalExtension "%s/bundle.wxs" -out "%s/bundle.wixobj"'
+                '"%s/bin/candle.exe" -ext WixBalExtension "%s/bundle.wxs"'
+                ' -out "%s/bundle.wixobj"'
                 % (os.environ.get('WIX'), output_dir, output_dir), shell=True)
         except subprocess.CalledProcessError:
             print("Failed to generate installer chain")
             return
         try:
             subprocess.check_call(
-                '"%s/bin/light.exe" -sw1134 -ext WixBalExtension "%s/bundle.wixobj" -out "%s/Spack.exe"'
+                '"%s/bin/light.exe" -sw1134 -ext WixBalExtension "%s/bundle.wixobj"'
+                ' -out "%s/Spack.exe"'
                 % (os.environ.get('WIX'), output_dir, output_dir), shell=True)
         except subprocess.CalledProcessError:
             print("Failed to generate installer chain")

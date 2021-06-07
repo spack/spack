@@ -43,6 +43,7 @@ if sys.platform == 'win32':
 else:
     sep = os.sep
 
+
 def check_mpileaks_and_deps_in_view(viewdir):
     """Check that the expected install directories exist."""
     assert os.path.exists(str(viewdir.join('.spack', 'mpileaks')))
@@ -629,7 +630,7 @@ env:
         e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
-                for x in e._get_environment_specs())
+               for x in e._get_environment_specs())
 
 
 def test_with_config_bad_include(env_deactivate, capfd, win_locks):
@@ -717,7 +718,7 @@ packages:
         e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
-                for x in e._get_environment_specs())
+               for x in e._get_environment_specs())
 
 
 def test_env_with_included_config_scope(win_locks):
@@ -746,7 +747,7 @@ packages:
         e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
-                for x in e._get_environment_specs())
+               for x in e._get_environment_specs())
 
 
 def test_env_with_included_config_var_path(win_locks):
@@ -775,7 +776,7 @@ packages:
         e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
-                for x in e._get_environment_specs())
+               for x in e._get_environment_specs())
 
 
 def test_env_config_precedence(win_locks):
@@ -2480,7 +2481,8 @@ def test_rewrite_rel_dev_path_new_dir(tmpdir):
     env('create', '-d', str(dest_env), str(spack_yaml))
     with ev.Environment(str(dest_env)) as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
-        assert e.dev_specs['mypkg2']['path'] == sep+os.path.join('some', 'other', 'path')
+        assert e.dev_specs['mypkg2']['path'] == sep + os.path.join('some',
+                                                                   'other', 'path')
 
 
 def test_rewrite_rel_dev_path_named_env(tmpdir):
@@ -2490,7 +2492,8 @@ def test_rewrite_rel_dev_path_named_env(tmpdir):
     env('create', 'named_env', str(spack_yaml))
     with ev.read('named_env') as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
-        assert e.dev_specs['mypkg2']['path'] == sep+os.path.join('some', 'other', 'path')
+        assert e.dev_specs['mypkg2']['path'] == sep + os.path.join('some',
+                                                                   'other', 'path')
 
 
 def test_rewrite_rel_dev_path_original_dir(tmpdir):
