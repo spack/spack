@@ -31,12 +31,13 @@ def symlink(real_path, link_path):
             # If all else fails, fall back to copying files
             shutil.copyfile(real_path, link_path)
 
+
 def islink(path):
     return os.path.islink(path) or _win32_is_junction(path)
 
+
 # '_win32' functions based on
 # https://github.com/Erotemic/ubelt/blob/master/ubelt/util_links.py
-
 def _win32_junction(path, link):
     # junctions require absolute paths
     if not os.path.isabs(link):
@@ -101,7 +102,7 @@ def _win32_is_junction(path):
     Determines if a path is a win32 junction
     """
     if os.path.islink(path):
-        return false
+        return False
 
     GetFileAttributes = ctypes.windll.kernel32.GetFileAttributesW
     GetFileAttributes.argtypes = (ctypes.wintypes.LPWSTR,)
@@ -112,7 +113,8 @@ def _win32_is_junction(path):
 
     res = GetFileAttributes(path)
     return res != INVALID_FILE_ATTRIBUTES and \
-           bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
+        bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
+
 
 # Based on https://github.com/Erotemic/ubelt/blob/master/ubelt/util_cmd.py
 def _cmd(command):
