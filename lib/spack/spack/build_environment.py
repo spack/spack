@@ -159,6 +159,10 @@ def clean_environment():
     env.unset('CPLUS_INCLUDE_PATH')
     env.unset('OBJC_INCLUDE_PATH')
 
+    # Avoid that libraries of build dependencies get hijacked.
+    env.unset('LD_PRELOAD')
+    env.unset('DYLD_INSERT_LIBRARIES')
+
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
     # CNL requires these variables to be set (or at least some of them,
