@@ -5,7 +5,6 @@
 
 import copy
 import os
-import sys
 import shutil
 
 import pytest
@@ -138,7 +137,8 @@ def test_fetch(type_of_test,
 
 
 @pytest.mark.parametrize("type_of_test", ['branch', 'commit'])
-def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config, win_locks):
+def test_debug_fetch(mock_packages, type_of_test, mock_git_repository,
+                     config, win_locks):
     """Fetch the repo with debug enabled."""
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
