@@ -833,7 +833,7 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
     environment modifications will take precedence over custom modifications
     from external packages.
 
-    A secondary constraint is that custom and defualt modifications are
+    A secondary constraint is that custom and default modifications are
     grouped on a per-package basis: combined with the post-order traversal this
     means that default modifications of dependents can override custom
     modifications of dependencies (again, this would only occur for PATH,
