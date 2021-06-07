@@ -1786,7 +1786,8 @@ def build_process(pkg, kwargs):
                         # We assume loggers share echo True/False
                         echo = logger.echo
 
-                    # After log, we can get all output/error files from the package stage
+                    # After log, we can get all output/error files from
+                    # the package stage
                     combine_phase_logs(pkg.phase_log_files, pkg.log_path)
                     log(pkg)
                 else:

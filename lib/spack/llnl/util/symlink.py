@@ -29,6 +29,7 @@ def symlink(real_path, link_path):
             # If all else fails, fall back to copying files
             shutil.copyfile(real_path, link_path)
 
+
 # Based on https://github.com/Erotemic/ubelt/blob/master/ubelt/util_links.py
 def _win32_junction(path, link):
     # junctions require absolute paths
