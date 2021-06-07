@@ -312,6 +312,15 @@ def set_wrapper_variables(pkg, env):
     """Set environment variables used by the Spack compiler wrapper
        (which have the prefix `SPACK_`) and also add the compiler wrappers
        to PATH.
+
+       This determines the injected -L/-I/-rpath options; each
+       of these specifies a search order and this function computes these
+       options in a manner that is intended to match the DAG traversal order
+       in `modifications_from_dependencies`: that method uses a post-order
+       traversal so that `PrependPath` actions from dependencies take lower
+       precedence; we use a post-order traversal here to match the visitation
+       order of `modifications_from_dependencies` (so we are visiting the
+       lowest priority packages first).
     """
     # Set environment variables if specified for
     # the given compiler
