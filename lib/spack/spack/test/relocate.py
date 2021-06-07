@@ -240,7 +240,7 @@ def test_make_relative_paths(start_path, path_root, paths, expected):
     # and then normalized
     ('/usr/bin/test',
      ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'],
-     [os.sep+os.path.join('usr', 'lib'), os.sep+os.path.join('usr','lib64'),
+     [os.sep + os.path.join('usr', 'lib'), os.sep + os.path.join('usr', 'lib64'),
       '/opt/local/lib']),
     # Relative path without $ORIGIN
     ('/usr/bin/test', ['../local/lib'], ['../local/lib']),

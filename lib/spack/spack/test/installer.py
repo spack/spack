@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-
 import py
 import pytest
 import sys
@@ -405,7 +404,8 @@ def test_ensure_locked_new_lock(
         assert lock._writes == writes
 
 
-def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys, win_locks):
+def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir,
+                                capsys, win_locks):
     orig_pl = spack.database.Database.prefix_lock
 
     def _pl(db, spec, timeout):
