@@ -1790,6 +1790,7 @@ def build_process(pkg, kwargs):
 
                         # We assume loggers share echo True/False
                         echo = logger.echo
+
                 else:
                     with winlog(pkg.log_path, True, True,
                                 env=unmodified_env) as logger:
