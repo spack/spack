@@ -57,7 +57,7 @@ class Msvc(Compiler):
         """Set environment variables for MSVC using the Microsoft-provided
         script."""
         if sys.version_info[:2] > (2, 6):
-        # Capture output from batch script and DOS environment dump
+            # Capture output from batch script and DOS environment dump
             out = subprocess.check_output(
                 'cmd /u /c "{0}" {1} && set'.format(self.vcvarsallfile, 'amd64'),
                 stderr=subprocess.STDOUT)

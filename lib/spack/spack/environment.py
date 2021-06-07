@@ -45,7 +45,7 @@ from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
 from spack.variant import UnknownVariantError
-from llnl.util.symlink import symlink
+from llnl.util.symlink import symlink, islink
 
 
 #: environment variable used to indicate the active environment
@@ -573,13 +573,17 @@ class ViewDescriptor(object):
             tmp_symlink_name = os.path.join(root_dirname, '._view_link')
             if os.path.exists(tmp_symlink_name):
                 os.unlink(tmp_symlink_name)
-            os.symlink(new_root, tmp_symlink_name)
+            symlink(new_root, tmp_symlink_name)
 
             # mv symlink atomically over root symlink to old_root
-            if os.path.exists(self.root) and not os.path.islink(self.root):
+            if os.path.exists(self.root) and not islink(self.root):
                 msg = "Cannot create view: "
                 msg += "file already exists and is not a link: %s" % self.root
                 raise SpackEnvironmentViewError(msg)
+            # On Windows, os.rename will fail if the destination file
+            # already exists
+            if sys.platform == "win32" and os.path.exists(self.root):
+                os.remove(self.root)
             os.rename(tmp_symlink_name, self.root)
 
             # remove old_root
