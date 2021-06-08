@@ -77,3 +77,14 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         for lib_version in ['debug', 'release', 'release_mt', 'debug_mt']:
             file = join_path(self.component_path, 'lib', lib_version, 'libmpi.so')
             subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, file])
+
+        # fix I_MPI_SUBSTITUTE_INSTALLDIR and
+        #   __EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
+        scripts = ["mpif77", "mpif90", "mpigcc", "mpigxx", "mpiicc", "mpiicpc",
+                   "mpiifort"]
+        for script in scripts:
+            file = join_path(self.component_path, 'bin', script)
+            filter_file('I_MPI_SUBSTITUTE_INSTALLDIR',
+                        self.component_path, file, backup=False)
+            filter_file('__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__',
+                        self.component_path, file, backup=False)

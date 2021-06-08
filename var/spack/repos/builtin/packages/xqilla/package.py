@@ -18,6 +18,10 @@ class Xqilla(AutotoolsPackage, SourceforgePackage):
     variant('debug', default=False, description='Build a debugging version.')
     variant('shared', default=True, description='Build shared libraries.')
 
+    # see https://sourceforge.net/p/xqilla/bugs/48/
+    patch('https://src.fedoraproject.org/rpms/xqilla/raw/1f2f53305f429aa3db2ab078d9613fbc367b402d/f/0004-xerces-3.2.0-casts.patch', sha256='78997e098f041bf41def6fab436ea406b2dceaa15ae3ec8a8d2aa7ed356a0bb9', when='@:2.3.3')
+    patch('https://src.fedoraproject.org/rpms/xqilla/raw/1f2f53305f429aa3db2ab078d9613fbc367b402d/f/0005-xqilla-gcc11.patch', sha256='52e5f03012fe9ae5b0f90d04eff042fb2082aa8f366a47d9e6be0d452de87b73', when='%gcc@11:')
+
     depends_on('xerces-c')
 
     def configure_args(self):

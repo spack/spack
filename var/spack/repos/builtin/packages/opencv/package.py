@@ -15,6 +15,7 @@ class Opencv(CMakePackage, CudaPackage):
     maintainers = ['bvanessen', 'adamjstewart']
 
     version('master', branch='master')
+    version('4.5.2',    sha256='ae258ed50aa039279c3d36afdea5c6ecf762515836b27871a8957c610d0424f8')
     version('4.5.1',    sha256='e27fe5b168918ab60d58d7ace2bd82dd14a4d0bd1d3ae182952c2113f5637513')
     version('4.5.0',    sha256='dde4bf8d6639a5d3fe34d5515eab4a15669ded609a1d622350c7ff20dace1907')
     version('4.2.0',    sha256='9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec')
@@ -60,7 +61,7 @@ class Opencv(CMakePackage, CudaPackage):
     components = [
         '1394', 'ade', 'aravis', 'arith_dec', 'arith_enc', 'avfoundation', 'clp',
         'cuda', 'eigen', 'ffmpeg', 'freetype', 'gdal', 'gdcm', 'gphoto2', 'gstreamer',
-        'halide', 'hpx', 'imgcodec_hdr', 'imgcode_pfm', 'imgcodec_pxm',
+        'gtk', 'halide', 'hpx', 'imgcodec_hdr', 'imgcode_pfm', 'imgcodec_pxm',
         'imgcodec_sunraster', 'inf_engine', 'ipp', 'itt', 'jasper', 'jpeg', 'lapack',
         'librealsense', 'mfx', 'ngraph', 'onnx', 'opencl', 'openclamdblas',
         'openclamdfft', 'opencl_svm', 'openexr', 'opengl', 'openjpeg', 'openmp',
@@ -114,6 +115,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('freetype', when='+freetype')
     depends_on('gdal', when='+gdal')
+    depends_on('gtkplus', when='+gtk')
     depends_on('libpng', when='+png')
     depends_on('jpeg', when='+jpeg')
     depends_on('openjpeg@2:', when='+openjpeg')
@@ -182,6 +184,9 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts('+videoio', when='~imgproc')
     conflicts('+videoio', when='~imgcodecs')
     conflicts('+world', when='~core')
+
+    # OpenCV component conflicts
+    conflicts('+gtk', when='platform=darwin')
 
     conflicts('+python2', when='+python3')
     conflicts('+python3', when='+python2')

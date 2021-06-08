@@ -565,3 +565,14 @@ def test_list_highest():
     assert vl2.highest_numeric() is None
     assert vl2.preferred() == Version('develop')
     assert vl2.lowest() == Version('master')
+
+
+@pytest.mark.parametrize('version_str', [
+    "foo 1.2.0",
+    "!",
+    "1!2"
+])
+def test_invalid_versions(version_str):
+    """Ensure invalid versions are rejected with a ValueError"""
+    with pytest.raises(ValueError):
+        Version(version_str)

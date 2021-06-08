@@ -42,7 +42,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
     # https://core.tcl-lang.org/tk/tktview/3598664fffffffffffff
     # https://core.tcl-lang.org/tk/info/8b679f597b1d17ad
     # https://core.tcl-lang.org/tk/info/997b17c343444e48
-    patch('https://github.com/macports/macports-ports/blob/master/x11/tk/files/patch-unix-Makefile.in.diff',
+    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tk/files/patch-unix-Makefile.in.diff',
           sha256='54bba3d2b3550b7e2c636881c1a3acaf6e1eb743f314449a132864ff47fd0010',
           level=0, when='@:8.6.11 platform=darwin')
 

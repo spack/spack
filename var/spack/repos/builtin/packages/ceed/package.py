@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Ceed(BundlePackage):
+class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     """Ceed is a collection of benchmarks, miniapps, software libraries and
        APIs for efficient high-order finite element and spectral element
        discretizations for exascale applications developed in the Department of
@@ -18,12 +18,11 @@ class Ceed(BundlePackage):
 
     maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
 
+    version('4.0.0')
     version('3.0.0')
     version('2.0.0')
     version('1.0.0')
 
-    variant('cuda', default=False,
-            description='Enable CUDA support')
     variant('mfem', default=True, description='Build MFEM, Laghos and Remhos')
     variant('nek', default=True,
             description='Build Nek5000, GSLIB, Nekbone, and NekCEM')
@@ -38,6 +37,17 @@ class Ceed(BundlePackage):
     # TODO: Add 'int64' variant?
 
     # LibCEED
+    # ceed 4.0
+    depends_on('libceed@0.8~cuda', when='@4.0.0~cuda')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('libceed@0.8+cuda+magma cuda_arch={0}'.format(arch),
+                   when='@4.0.0+cuda cuda_arch={0}'.format(arch))
+    depends_on('libceed@0.8~rocm', when='@4.0.0~rocm')
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on('libceed@0.8+rocm amdgpu_target={0}'.format(target),
+                   when='@4.0.0+rocm amdgpu_target={0}'.format(target))
+    depends_on('libceed@0.8+occa', when='@4.0.0+occa')
+    depends_on('libceed@0.8~occa', when='@4.0.0~occa')
     # ceed-3.0
     depends_on('libceed@0.6~cuda', when='@3.0.0~cuda')
     depends_on('libceed@0.6+cuda+magma', when='@3.0.0+cuda')
@@ -55,6 +65,9 @@ class Ceed(BundlePackage):
     depends_on('libceed@0.2~occa', when='@1.0.0~occa')
 
     # OCCA
+    # ceed-4.0
+    depends_on('occa@1.1.0~cuda', when='@4.0.0+occa~cuda')
+    depends_on('occa@1.1.0+cuda', when='@4.0.0+occa+cuda')
     # ceed-3.0
     depends_on('occa@1.0.9~cuda', when='@3.0.0+occa~cuda')
     depends_on('occa@1.0.9+cuda', when='@3.0.0+occa+cuda')
@@ -65,13 +78,23 @@ class Ceed(BundlePackage):
     depends_on('occa@1.0.0-alpha.5~cuda', when='@1.0.0+occa~cuda')
     depends_on('occa@1.0.0-alpha.5+cuda', when='@1.0.0+occa+cuda')
 
+    # NekRS
+    # ceed-4.0
+    depends_on('nekrs@21.0', when='@4.0.0+nek')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('nekrs@21.0+cuda cuda_arch={0}'.format(arch),
+                   when='@4.0.0+nek+cuda cuda_arch={0}'.format(arch))
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on('nekrs@21.0+rocm amdgpu_target={0}'.format(target),
+                   when='@4.0.0+nek+rocm amdgpu_target={0}'.format(target))
+
     # Nek5000, GSLIB, Nekbone, and NekCEM
-    # ceed-3.0
-    depends_on('nek5000@19.0', when='@3.0.0+nek')
-    depends_on('nektools@19.0%gcc', when='@3.0.0+nek')
-    depends_on('gslib@1.0.6', when='@3.0.0+nek')
-    depends_on('nekbone@17.0', when='@3.0.0+nek')
-    depends_on('nekcem@c8db04b', when='@3.0.0+nek')
+    # ceed-3.0 and ceed-4.0
+    depends_on('nek5000@19.0', when='@3.0.0:4.99+nek')
+    depends_on('nektools@19.0%gcc', when='@3.0.0:4.99+nek')
+    depends_on('gslib@1.0.6', when='@3.0.0:4.99+nek')
+    depends_on('nekbone@17.0', when='@3.0.0:4.99+nek')
+    depends_on('nekcem@c8db04b', when='@3.0.0:4.99+nek')
     # ceed-2.0
     depends_on('nek5000@17.0', when='@2.0.0+nek')
     depends_on('nektools@17.0%gcc', when='@2.0.0+nek')
@@ -86,6 +109,17 @@ class Ceed(BundlePackage):
     depends_on('nekcem@0b8bedd', when='@1.0.0+nek')
 
     # PETSc
+    # ceed 4.0
+    depends_on('petsc@3.15.0:3.15.99', when='@4.0.0:4.99.99+petsc')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('petsc+cuda cuda_arch={0}'.format(arch),
+                   when='@4.0.0+petsc+cuda cuda_arch={0}'.format(arch))
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on('petsc@3.15.0:3.15.99+rocm amdgpu_target={0}'.format(target),
+                   when='@4.0.0:4.99.99+petsc+rocm amdgpu_target={0}'.format(target))
+    depends_on('petsc@3.15.0:3.15.99~hdf5~superlu-dist',
+               when='@4.0.0+petsc+quickbuild')
+    depends_on('petsc@3.15.0:3.15.99+mpi+double~int64', when='@4.0.0:4.99.99+petsc~mfem')
     # ceed-3.0
     depends_on('petsc+cuda', when='@3.0.0+petsc+cuda')
     # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
@@ -125,6 +159,10 @@ class Ceed(BundlePackage):
     depends_on('hpgmg@a0a5510df23b+fe', when='@1.0.0+petsc')
 
     # MAGMA
+    # ceed-4.0
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('magma@2.5.4 cuda_arch={0}'.format(arch),
+                   when='@4.0.0+cuda cuda_arch={0}'.format(arch))
     # ceed-3.0
     depends_on('magma@2.5.3', when='@3.0.0+cuda')
     # ceed-2.0
@@ -133,6 +171,8 @@ class Ceed(BundlePackage):
     depends_on('magma@2.3.0', when='@1.0.0+cuda')
 
     # PUMI
+    # ceed-4.0
+    depends_on('pumi@2.2.5', when='@4.0.0+pumi')
     # ceed-3.0
     depends_on('pumi@2.2.2', when='@3.0.0+pumi')
     # ceed-2.0
@@ -141,6 +181,22 @@ class Ceed(BundlePackage):
     depends_on('pumi@2.1.0', when='@1.0.0+pumi')
 
     # MFEM, Laghos, Remhos
+    # ceed-4.0
+    depends_on('mfem@4.2.0+mpi+examples+miniapps', when='@4.0.0+mfem~petsc')
+    depends_on('mfem@4.2.0+mpi+petsc+examples+miniapps',
+               when='@4.0.0+mfem+petsc')
+    depends_on('mfem@4.2.0+pumi', when='@4.0.0+mfem+pumi')
+    depends_on('mfem@4.2.0+gslib', when='@4.0.0+mfem+nek')
+    depends_on('mfem@4.2.0+libceed', when='@4.0.0+mfem')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('mfem@4.2.0+cuda cuda_arch={0}'.format(arch),
+                   when='@4.0.0+mfem+cuda cuda_arch={0}'.format(arch))
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on('mfem@4.2.0+rocm amdgpu_target={0}'.format(target),
+                   when='@4.0.0+mfem+rocm amdgpu_target={0}'.format(target))
+    depends_on('mfem@4.2.0+occa', when='@4.0.0+mfem+occa')
+    depends_on('laghos@3.1', when='@4.0.0+mfem')
+    depends_on('remhos@1.0', when='@4.0.0+mfem')
     # ceed-3.0
     depends_on('mfem@4.1.0+mpi+examples+miniapps', when='@3.0.0+mfem~petsc')
     depends_on('mfem@4.1.0+mpi+petsc+examples+miniapps',

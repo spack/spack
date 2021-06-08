@@ -30,6 +30,10 @@ class Vbfnlo(AutotoolsPackage):
     depends_on('gsl')
     depends_on('lhapdf')
     depends_on('looptools')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('m4', type='build')
+    depends_on('libtool', type='build')
 
     @when('@2.7.1')
     def setup_build_environment(self, env):

@@ -359,7 +359,7 @@ class Root(CMakePackage):
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
         options += [
-            define('builtin_afterimage', True),
+            define_from_variant('builtin_afterimage', 'x'),
             define('builtin_cfitsio', False),
             define('builtin_davix', False),
             define('builtin_fftw3', False),

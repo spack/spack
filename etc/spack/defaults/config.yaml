@@ -51,7 +51,6 @@ config:
   template_dirs:
     - $spack/share/spack/templates
 
-
   # Temporary locations Spack can try to use for builds.
   #
   # Recommended options are given below.
