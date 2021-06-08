@@ -21,6 +21,8 @@ class Netpbm(MakefilePackage):
     homepage = "http://netpbm.sourceforge.net"
     url      = "https://sourceforge.net/projects/netpbm/files/super_stable/10.73.35/netpbm-10.73.35.tgz"
 
+    maintainers = ['cessenat']
+
     version('10.73.35', sha256='628dbe8490bc43557813d1fedb2720dfdca0b80dd3f2364cb2a45c6ff04b0f18')
 
     # As a default we wish to commpile absolutely everything at once.
