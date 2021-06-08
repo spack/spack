@@ -1216,19 +1216,12 @@ Fetching a date
 
      version('2021.4.22', branch='branchname', date='2021-04-22')
 
-  This download method is untrusted.
-
   Unfortunately, CVS does not identify repository-wide commits via a
   revision or hash like Subversion, Git, or Mercurial do. This makes
-  it impossible to specify an exact commit to check out. (There are
-  branches and tags, but these can be modified.) There is no way to
-  guarantee that the download you get is the same as the download used
-  when the package was created. Use at your own risk.
+  it impossible to specify an exact commit to check out.
 
 CVS has more features, but since CVS is rarely used these days, Spack
-does not support all of them. Missing features could be added as
-needed, although (in practice) it might be easier to convert a CVS
-repository to Git.
+does not support all of them.
 
 .. _go-fetch:
 
