@@ -6,6 +6,7 @@ import inspect
 import itertools
 import os
 import os.path
+import stat
 from subprocess import PIPE
 from subprocess import check_call
 from typing import List  # novm
@@ -174,7 +175,10 @@ class AutotoolsPackage(PackageBase):
         # Copy the good files over the bad ones
         for abs_path in to_be_patched:
             name = os.path.basename(abs_path)
+            mode = os.stat(abs_path).st_mode
+            os.chmod(abs_path, stat.S_IWUSR)
             fs.copy(substitutes[name], abs_path)
+            os.chmod(abs_path, mode)
 
     @run_before('configure')
     def _set_autotools_environment_variables(self):
@@ -341,8 +345,11 @@ class AutotoolsPackage(PackageBase):
         """Makes the build targets specified by
         :py:attr:``~.AutotoolsPackage.build_targets``
         """
+        # See https://autotools.io/automake/silent.html
+        params = ['V=1']
+        params += self.build_targets
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make(*self.build_targets)
+            inspect.getmodule(self).make(*params)
 
     def install(self, spec, prefix):
         """Makes the install targets specified by

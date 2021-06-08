@@ -17,7 +17,8 @@ class PyAzuremlSdk(Package):
     version('1.8.0',  sha256='61107db1403ce2c1a12064eb0fa31a1d075debbf32dd17cb93b7639b615b7839', expand=False)
 
     extends('python')
-    depends_on('python@3.5:3.999', type=('build', 'run'))
+    # https://github.com/Azure/MachineLearningNotebooks/issues/1285
+    depends_on('python@3.5:3.8.999', type=('build', 'run'))
     depends_on('py-pip', type='build')
 
     depends_on('py-azureml-core@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))

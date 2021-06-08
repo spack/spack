@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.util.environment import is_system_path
 
 
 class Silo(AutotoolsPackage):
@@ -27,11 +28,17 @@ class Silo(AutotoolsPackage):
             description='Produce position-independent code (for shared libs)')
     variant('mpi', default=True,
             description='Compile with MPI Compatibility')
+    variant('hdf5', default=True,
+            description='Use the HDF5 for database')
+    variant('hzip', default=True,
+            description='Enable hzip support')
+    variant('fpzip', default=True,
+            description='Enable fpzip support')
 
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5@:1.10.999', when='@:4.10.2')
-    depends_on('hdf5~mpi', when='~mpi')
-    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5@:1.10.999', when='@:4.10.2+hdf5')
+    depends_on('hdf5~mpi', when='~mpi+hdf5')
+    depends_on('hdf5+mpi', when='+mpi+hdf5')
     depends_on('qt+gui~framework@4.8:4.9', when='+silex')
     depends_on('libx11', when='+silex')
     # Xmu dependency is required on Ubuntu 18-20
@@ -45,8 +52,9 @@ class Silo(AutotoolsPackage):
     def flag_handler(self, name, flags):
         spec = self.spec
         if name == 'ldflags':
-            if spec['hdf5'].satisfies('~shared'):
-                flags.append('-ldl')
+            if '+hdf5' in spec:
+                if spec['hdf5'].satisfies('~shared'):
+                    flags.append('-ldl')
             flags.append(spec['readline'].libs.search_flags)
 
         if '+pic' in spec:
@@ -73,6 +81,10 @@ class Silo(AutotoolsPackage):
         # hasn't yet made it into silo.
         # https://github.com/LLNL/fpzip/blob/master/src/pcmap.h
 
+        if self.spec.satisfies('@4.10.2-bsd'):
+            # The files below don't exist in the BSD licenced version
+            return
+
         def repl(match):
             # Change macro-like uppercase to title-case.
             return match.group(1).title()
@@ -94,15 +106,30 @@ class Silo(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         config_args = [
-            '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include,
-                                   spec['hdf5'].prefix.lib),
-            '--with-zlib=%s,%s' % (spec['zlib'].prefix.include,
-                                   spec['zlib'].prefix.lib),
             '--enable-install-lite-headers',
             '--enable-fortran' if '+fortran' in spec else '--disable-fortran',
             '--enable-silex' if '+silex' in spec else '--disable-silex',
             '--enable-shared' if '+shared' in spec else '--disable-shared',
+            '--enable-hzip' if '+hzip' in spec else '--disable-hzip',
+            '--enable-fpzip' if '+fpzip' in spec else '--disable-fpzip',
         ]
+
+        # Do not specify the prefix of zlib if it is in a system directory
+        # (see https://github.com/spack/spack/pull/21900).
+        zlib_prefix = self.spec['zlib'].prefix
+        if is_system_path(zlib_prefix):
+            config_args.append('--with-zlib=yes')
+        else:
+            config_args.append(
+                '--with-zlib=%s,%s' % (zlib_prefix.include,
+                                       zlib_prefix.lib),
+            )
+
+        if '+hdf5' in spec:
+            config_args.append(
+                '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include,
+                                       spec['hdf5'].prefix.lib),
+            )
 
         if '+silex' in spec:
             x = spec['libx11']
@@ -119,3 +146,10 @@ class Silo(AutotoolsPackage):
             config_args.append('FC=%s' % spec['mpi'].mpifc)
 
         return config_args
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries(
+            "libsilo*", root=self.prefix, shared=shared, recursive=True
+        )

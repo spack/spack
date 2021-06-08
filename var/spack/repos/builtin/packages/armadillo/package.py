@@ -14,6 +14,7 @@ class Armadillo(CMakePackage):
     homepage = "http://arma.sourceforge.net/"
     url = "http://sourceforge.net/projects/arma/files/armadillo-8.100.1.tar.xz"
 
+    version('10.5.0', sha256='ea990c34dc6d70d7c95b4354d9f3b0819bde257dbb67796348e91e196082cb87')
     version('9.800.3', sha256='a481e1dc880b7cb352f8a28b67fe005dc1117d4341277f12999a2355d40d7599')
     version('8.100.1', sha256='54773f7d828bd3885c598f90122b530ded65d9b195c9034e082baea737cd138d')
     version('7.950.1', sha256='a32da32a0ea420b8397a53e4b40ed279c1a5fc791dd492a2ced81ffb14ad0d1b')
@@ -32,6 +33,33 @@ class Armadillo(CMakePackage):
     # E.g. `/path/linux-x86_64/dir` -> `/path/1-x86_64/dir` if/when a linux
     # platform's compiler is adding `#define linux 1`.
     patch('undef_linux.patch', when='platform=linux')
+
+    def patch(self):
+        # Do not include Find{BLAS_type} because we are specifying the
+        # BLAS/LAPACK libraries explicitly.
+        filter_file(r'include(ARMA_FindMKL)',
+                    '#include(ARMA_FindMKL)',
+                    'CMakeLists.txt',
+                    string=True)
+        filter_file(r'include(ARMA_FindOpenBLAS)',
+                    '#include(ARMA_FindOpenBLAS)',
+                    'CMakeLists.txt',
+                    string=True)
+        filter_file(r'include(ARMA_FindATLAS)',
+                    '#include(ARMA_FindATLAS)',
+                    'CMakeLists.txt',
+                    string=True)
+
+        # Comment out deprecated call to GET_FILENAME_COMPONENT. This allows
+        # armadillo to be built with MKL.
+        with working_dir(join_path(self.stage.source_path,
+                                   'cmake_aux', 'Modules')):
+            filter_file('GET_FILENAME_COMPONENT',
+                        '#GET_FILENAME_COMPONENT',
+                        'ARMA_FindBLAS.cmake')
+            filter_file('GET_FILENAME_COMPONENT',
+                        '#GET_FILENAME_COMPONENT',
+                        'ARMA_FindLAPACK.cmake')
 
     def cmake_args(self):
         spec = self.spec

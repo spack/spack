@@ -21,6 +21,14 @@ import platform
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    '21.5': {
+        'Linux-aarch64': ('1a1748cd7cf538199d92ab3b1208935fa4a62708ba21125aeadb328ddc7380d4', 'https://developer.download.nvidia.com/hpc-sdk/21.5/nvhpc_2021_215_Linux_aarch64_cuda_multi.tar.gz'),
+        'Linux-ppc64le': ('4674931a5ce28724308cb9cebd546eefa3f0646d3d08adbea28ba5ad27f0c163', 'https://developer.download.nvidia.com/hpc-sdk/21.5/nvhpc_2021_215_Linux_ppc64le_cuda_multi.tar.gz'),
+        'Linux-x86_64': ('21989e52c58a6914743631c8200de1fec7e10b3449c6c1833f3032ee74b85f8e', 'https://developer.download.nvidia.com/hpc-sdk/21.5/nvhpc_2021_215_Linux_x86_64_cuda_multi.tar.gz')},
+    '21.3': {
+        'Linux-aarch64': ('88e0dbf8fcdd06a2ba06aacf65ae1625b8683688f6593ed3bf8ce129ce1b17b7', 'https://developer.download.nvidia.com/hpc-sdk/21.3/nvhpc_2021_213_Linux_aarch64_cuda_multi.tar.gz'),
+        'Linux-ppc64le': ('08cd0cd6c80d633f107b44f88685ada7f014fbf6eac19ef5ae4a7952cabe4037', 'https://developer.download.nvidia.com/hpc-sdk/21.3/nvhpc_2021_213_Linux_ppc64le_cuda_multi.tar.gz'),
+        'Linux-x86_64': ('391d5604a70f61bdd4ca6a3e4692f6f2391948990c8a35c395b6867341890031', 'https://developer.download.nvidia.com/hpc-sdk/21.3/nvhpc_2021_213_Linux_x86_64_cuda_multi.tar.gz')},
     '21.2': {
         'Linux-aarch64': ('fe19c0232f7c9534f8699b7432483c9cc649f1e92e7f0961d1aa7c54d83297ff', 'https://developer.download.nvidia.com/hpc-sdk/21.2/nvhpc_2021_212_Linux_aarch64_cuda_multi.tar.gz'),
         'Linux-ppc64le': ('6b69b6e4ebec6a91b9f1627384c50adad79ebdd25dfb20a5f64cf01c3a07f11a', 'https://developer.download.nvidia.com/hpc-sdk/21.2/nvhpc_2021_212_Linux_ppc64le_cuda_multi.tar.gz'),
@@ -110,7 +118,6 @@ class Nvhpc(Package):
         env.set('FC',  join_path(prefix.bin, 'nvfortran'))
 
         env.prepend_path('PATH',            prefix.bin)
-        env.prepend_path('CPATH',           prefix.include)
         env.prepend_path('LIBRARY_PATH',    prefix.lib)
         env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
         env.prepend_path('MANPATH',         prefix.man)
@@ -120,7 +127,21 @@ class Nvhpc(Package):
                                           'Linux_%s' % self.spec.target.family,
                                           self.version, 'comm_libs', 'mpi'))
             env.prepend_path('PATH', mpi_prefix.bin)
-            env.prepend_path('CPATH', mpi_prefix.include)
+            env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        prefix = Prefix(join_path(self.prefix,
+                                  'Linux_%s' % self.spec.target.family,
+                                  self.version, 'compilers'))
+
+        env.prepend_path('LIBRARY_PATH',    prefix.lib)
+        env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
+
+        if '+mpi' in self.spec:
+            mpi_prefix = Prefix(join_path(self.prefix,
+                                          'Linux_%s' % self.spec.target.family,
+                                          self.version, 'comm_libs', 'mpi'))
+
             env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
 
     def setup_dependent_package(self, module, dependent_spec):

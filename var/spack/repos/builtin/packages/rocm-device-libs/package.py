@@ -11,10 +11,14 @@ class RocmDeviceLibs(CMakePackage):
     """set of AMD specific device-side language runtime libraries"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs"
-    url      = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-4.0.0.tar.gz"
+    git      = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git"
+    url      = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-4.2.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='amd-stg-open')
+    version('4.2.0', sha256='34a2ac39b9bb7cfa8175cbab05d30e7f3c06aaffce99eed5f79c616d0f910f5f')
+    version('4.1.0', sha256='f5f5aa6bfbd83ff80a968fa332f80220256447c4ccb71c36f1fbd2b4a8e9fc1b')
     version('4.0.0', sha256='d0aa495f9b63f6d8cf8ac668f4dc61831d996e9ae3f15280052a37b9d7670d2a')
     version('3.10.0', sha256='bca9291385d6bdc91a8b39a46f0fd816157d38abb1725ff5222e6a0daa0834cc')
     version('3.9.0', sha256='c99f45dacf5967aef9a31e3731011b9c142446d4a12bac69774998976f2576d7')
@@ -27,8 +31,10 @@ class RocmDeviceLibs(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('zlib', type='link', when='@3.9.0:')
     depends_on('texinfo', type='link', when='@3.9.0:')
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0', 'master']:
+        depends_on('llvm-amdgpu@' + ver, type=('build', 'link'), when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     def cmake_args(self):

@@ -17,6 +17,8 @@ class Spfft(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('1.0.3', sha256='4f87734e3582ef96ddc0402d0db78cfc173bed9cab3e0d9c6a6bf8b660d69559')
+    version('1.0.2', sha256='9b1296bda0b9ec3d37c74fd64354a01ebc6e2da7cb026c1f821882160b03c692')
     version('1.0.1', sha256='f8ab706309776cfbd2bfd8e29a6a9ffb5c8f3cd62399bf82db1e416ae5c490c8')
     version('1.0.0', sha256='bd98897aa6734563ec63cd84168e731ef2e2bbc01a574c6dc59b74475742b6ee')
     version('0.9.13', sha256='5ccc93c9362bec14cfb6e31dd0e7ae7e48db0453ab49ebc9722041b69db759ef')
@@ -54,6 +56,13 @@ class Spfft(CMakePackage, CudaPackage):
     variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets)
 
     depends_on('cuda@:10', when='@:0.9.11 +cuda')
+
+    # FindHIP cmake script only works for < 4.1
+    depends_on('hip@:4.0', when='@:1.0.1 +rocm')
+
+    # Fix compilation error in some cases due to missing include statement
+    # before version 1.0.3
+    patch('0001-fix-missing-limits-include.patch', when='@:1.0.2')
 
     def cmake_args(self):
         spec = self.spec

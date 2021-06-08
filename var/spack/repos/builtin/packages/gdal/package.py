@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import sys
+
 
 class Gdal(AutotoolsPackage):
     """GDAL (Geospatial Data Abstraction Library) is a translator library for
@@ -20,8 +23,10 @@ class Gdal(AutotoolsPackage):
     list_depth = 1
 
     maintainers = ['adamjstewart']
-    import_modules = ['osgeo', 'osgeo.utils']
 
+    version('3.3.0',  sha256='190c8f4b56afc767f43836b2a5cd53cc52ee7fdc25eb78c6079c5a244e28efa7')
+    version('3.2.3',  sha256='d9ec8458fe97fd02bf36379e7f63eaafce1005eeb60e329ed25bb2d2a17a796f')
+    version('3.2.2',  sha256='a7e1e414e5c405af48982bf4724a3da64a05770254f2ce8affb5f58a7604ca57')
     version('3.2.1',  sha256='6c588b58fcb63ff3f288eb9f02d76791c0955ba9210d98c3abd879c770ae28ea')
     version('3.2.0',  sha256='b051f852600ffdf07e337a7f15673da23f9201a9dbb482bd513756a3e5a196a6')
     version('3.1.4',  sha256='7b82486f71c71cec61f9b237116212ce18ef6b90f068cbbf9f7de4fc50b576a8')
@@ -169,13 +174,28 @@ class Gdal(AutotoolsPackage):
 
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
-    executables = ['^gdal-config$']
+    conflicts('+jasper', when='@3.5:', msg='JPEG2000 driver removed in GDAL 3.5')
+    conflicts('+openjpeg', when='@3.5:', msg='JPEG2000 driver removed in GDAL 3.5')
+    conflicts('+perl', when='@3.5:', msg='Perl bindings removed in GDAL 3.5')
 
-    import_modules = PythonPackage.import_modules
+    # https://github.com/OSGeo/gdal/issues/3782
+    patch('https://github.com/OSGeo/gdal/pull/3786.patch', when='@3.3.0', level=2,
+          sha256='5e14c530289bfa1257277357baa8d485f852ea480152fb150d152c85af8d01f8')
+
+    executables = ['^gdal-config$']
 
     @classmethod
     def determine_version(cls, exe):
         return Executable(exe)('--version', output=str, error=str).rstrip()
+
+    @property
+    def import_modules(self):
+        modules = ['osgeo']
+        if self.spec.satisfies('@3.3:'):
+            modules.append('osgeo_utils')
+        else:
+            modules.append('osgeo.utils')
+        return modules
 
     def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
@@ -189,6 +209,17 @@ class Gdal(AutotoolsPackage):
             class_paths = find(self.prefix, '*.jar')
             classpath = os.pathsep.join(class_paths)
             env.prepend_path('CLASSPATH', classpath)
+
+        # `spack test run gdal+python` requires these for the Python bindings
+        # to find the correct libraries
+        libs = []
+        for dep in self.spec.dependencies(deptype='link'):
+            query = self.spec[dep.name]
+            libs.extend(query.libs.directories)
+        if sys.platform == 'darwin':
+            env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', ':'.join(libs))
+        else:
+            env.prepend_path('LD_LIBRARY_PATH', ':'.join(libs))
 
     def patch(self):
         if '+java platform=darwin' in self.spec:
@@ -219,7 +250,7 @@ class Gdal(AutotoolsPackage):
             else:
                 args.append('--disable-driver-grib')
         else:
-            args.append('--without-bsb')
+            args.append('--with-bsb=no')
 
             if '+grib' in spec:
                 args.append('--with-grib=yes')
@@ -477,14 +508,17 @@ class Gdal(AutotoolsPackage):
             '--with-dods-root=no',
             '--with-spatialite=no',
             '--with-idb=no',
-            # https://trac.osgeo.org/gdal/wiki/Epsilon
-            '--with-epsilon=no',
             '--with-webp=no',
             '--with-freexl=no',
             '--with-pam=no',
             '--with-podofo=no',
             '--with-rasdaman=no',
         ])
+
+        # TODO: add packages for these dependencies (only for 3.2 and older)
+        if spec.satisfies('@:3.2'):
+            # https://trac.osgeo.org/gdal/wiki/Epsilon
+            args.append('--with-epsilon=no')
 
         # TODO: add packages for these dependencies (only for 3.1 and older)
         if spec.satisfies('@:3.1'):

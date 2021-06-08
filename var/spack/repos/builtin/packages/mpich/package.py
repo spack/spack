@@ -24,6 +24,7 @@ class Mpich(AutotoolsPackage):
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
+    version('3.4.2', sha256='5c19bea8b84e8d74cca5f047e82b147ff3fba096144270e3911ad623d6c587bf')
     version('3.4.1', sha256='8836939804ef6d492bcee7d54abafd6477d2beca247157d92688654d13779727')
     version('3.4',   sha256='ce5e238f0c3c13ab94a64936060cff9964225e3af99df1ea11b130f20036c24b')
     version('3.3.2', sha256='4bfaf8837a54771d3e4922c84071ef80ffebddbb6971a006038d91ee7ef959b9')
@@ -79,9 +80,11 @@ spack package at this time.''',
             description='Enable Argobots support')
     variant('fortran', default=True, description='Enable Fortran support')
 
-    provides('mpi')
-    provides('mpi@:3.0', when='@3:')
-    provides('mpi@:1.3', when='@1:')
+    provides('mpi@:3.1')
+    provides('mpi@:3.0', when='@:3.1')
+    provides('mpi@:2.2', when='@:1.2')
+    provides('mpi@:2.1', when='@:1.1')
+    provides('mpi@:2.0', when='@:1.0')
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -188,7 +191,18 @@ spack package at this time.''',
     conflicts('+libxml2', when='@:3.2~hydra')
 
     # see https://github.com/pmodels/mpich/pull/5031
-    conflicts('%clang@:7', when='@3.4:')
+    conflicts('%clang@:7', when='@3.4:3.4.1')
+
+    @run_after('configure')
+    def patch_cce(self):
+        # Configure misinterprets output from the cce compiler
+        # Patching configure instead should be possible, but a first
+        # implementation failed in obscure ways that were not worth
+        # tracking down when this worked
+        if self.spec.satisfies('%cce'):
+            filter_file('-L -L', '', 'config.lt', string=True)
+            filter_file('-L -L', '', 'libtool', string=True)
+            filter_file('-L -L', '', 'config.status', string=True)
 
     @classmethod
     def determine_version(cls, exe):
@@ -274,12 +288,9 @@ spack package at this time.''',
             elif re.search(r'--with-pmix', output):
                 variants += ' pmi=pmix'
 
-            match = re.search(r'MPICH Device:\s+(\S+)', output)
+            match = re.search(r'MPICH Device:\s+(ch3|ch4)', output)
             if match:
-                if match.group(1) == 'ch3:nemesis':
-                    variants += ' device=ch3'
-                else:
-                    variants += ' device=' + match.group(1)
+                variants += ' device=' + match.group(1)
 
             match = re.search(r'--with-device=ch.\S+(ucx|ofi|mxm|tcp)', output)
             if match:
@@ -302,6 +313,8 @@ spack package at this time.''',
             env.set('FFLAGS', '-fallow-argument-mismatch')
         # Same fix but for macOS - avoids issue #17934
         if self.spec.satisfies('%apple-clang@11:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+        if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
     def setup_run_environment(self, env):

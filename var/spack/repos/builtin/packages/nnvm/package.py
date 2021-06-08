@@ -26,6 +26,6 @@ class Nnvm(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         return [
-            '-DUSE_SHARED_NNVM=%s' % ('ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('USE_SHARED_NNVM', 'shared'),
             '-DUSE_STATIC_NNVM=%s' % ('ON' if '~shared' in spec else 'OFF'),
         ]
