@@ -51,7 +51,8 @@ for further documentation regarding the spec syntax, see:
         choices=['all', 'root'],
         help=""" If 'all' is chosen, concretize with test dependencies for all packages.
                  If 'root' is chosen, concretiz with test dependencies only for the root
-                 spec(s). If nothing is chosen, don't add test dependencies for any packages."""
+                 spec(s). If nothing is chosen, don't add test dependencies
+                 for any packages."""
     )
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
@@ -117,8 +118,8 @@ def spec(parser, args):
             if not args.test:
                 add_test_deps = False
             elif args.test == 'all':
-              add_test_deps = True
+                add_test_deps = True
             elif args.test == 'root':
-              add_test_deps = spec.name
+                add_test_deps = spec.name
             spec.concretize(tests=add_test_deps)
             print(spec.tree(**kwargs))
