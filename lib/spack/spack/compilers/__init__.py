@@ -27,6 +27,7 @@ import spack.architecture
 
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
+from spack.util.path import substitute_path_variables
 
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 _flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
@@ -342,8 +343,8 @@ def compiler_from_dict(items):
     compiler_paths = []
     for c in _path_instance_vars:
         compiler_path = items['paths'][c]
-        if compiler_path != 'None':
-            compiler_paths.append(compiler_path)
+        if compiler_path is not None and compiler_path != 'None':
+            compiler_paths.append(substitute_path_variables(compiler_path))
         else:
             compiler_paths.append(None)
 
