@@ -621,6 +621,7 @@ class BaseFileLayout(object):
         # Return the absolute path
         return os.path.join(self.dirname(), filename)
 
+
 class BaseContext(tengine.Context):
     """Provides the base context needed for template rendering.
 
