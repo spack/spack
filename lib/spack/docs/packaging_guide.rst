@@ -1218,10 +1218,12 @@ Fetching a date
 
   This download method is untrusted.
 
-  Unfortunately, CVS has no commit hashing scheme like Git and
-  Mercurial do, so there is no way to guarantee that the download you
-  get is the same as the download used when the package was created.
-  Use at your own risk.
+  Unfortunately, CVS does not identify repository-wide commits via a
+  revision or hash like Subversion, Git, or Mercurial do. This makes
+  it impossible to specify an exact commit to check out. (There are
+  branches and tags, but these can be modified.) There is no way to
+  guarantee that the download you get is the same as the download used
+  when the package was created. Use at your own risk.
 
 CVS has more features, but since CVS is rarely used these days, Spack
 does not support all of them. Missing features could be added as

@@ -948,7 +948,8 @@ def mock_cvs_repository(tmpdir_factory):
                     # First branch name found
                     branch = tag
                 elif tag == branch:
-                    # Later branch name found; all branch names agree
+                    # Later branch name found; all branch names found so far
+                    # agree
                     pass
                 else:
                     # Later branch name found; branch names differ
@@ -966,11 +967,9 @@ def mock_cvs_repository(tmpdir_factory):
             m = re.search(r'Working revision:\s+(\S+)', line)
             if m:
                 rev = m.group(1)
-                try:
+                if rev in revision_date:
                     rdate = revision_date[rev]
                     date = max(date, rdate)
-                except Exception:
-                    pass
         return format_date(date)
 
     checks = {

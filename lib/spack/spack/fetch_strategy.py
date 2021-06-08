@@ -967,7 +967,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
         super(CvsFetchStrategy, self).__init__(**forwarded_args)
 
         self._cvs = None
-        self._expect = None
         if self.branch is not None:
             self.branch = str(self.branch)
         if self.date is not None:
@@ -980,16 +979,13 @@ class CvsFetchStrategy(VCSFetchStrategy):
         return self._cvs
 
     @property
-    def expect(self):
-        if not self._expect:
-            self._expect = which('expect', required=True)
-        return self._expect
-
-    @property
     def cachable(self):
         return self.cache_enabled and (bool(self.branch) or bool(self.date))
 
     def source_id(self):
+        if not (self.branch or self.date):
+            # We need a branch or a date to make a checkout reproducible
+            return None
         id = 'id'
         if self.branch:
             id += '-branch=' + self.branch
@@ -998,6 +994,9 @@ class CvsFetchStrategy(VCSFetchStrategy):
         return id
 
     def mirror_id(self):
+        if not (self.branch or self.date):
+            # We need a branch or a date to make a checkout reproducible
+            return None
         repo_path = url_util.parse(self.url).path
         result = os.path.sep.join(['cvs', repo_path])
         if self.branch:
@@ -1016,13 +1015,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
 
         with temp_cwd():
             url, module = self.url.split('%module=')
-            if url.startswith(':pserver:'):
-                # Log in
-                cmds = ['-c', 'spawn cvs -q -d ' + url + ' login',
-                        '-c', 'expect',
-                        '-c', 'send "anonymous\n"',
-                        '-c', 'expect eof']
-                self.expect(*cmds, ignore_quotes=True)
             # Check out files
             args = ['-z9', '-d', url, 'checkout']
             if self.branch is not None:
