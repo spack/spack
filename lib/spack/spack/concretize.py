@@ -737,8 +737,7 @@ def _concretize_specs_together_new(*abstract_specs, **kwargs):
         result.print_cores()
         tty.die("Unsatisfiable spec.")
 
-    opt, i, answer = min(result.answers)
-    return [answer[s.name].copy() for s in abstract_specs]
+    return result.specs
 
 
 def _concretize_specs_together_original(*abstract_specs, **kwargs):
