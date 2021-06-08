@@ -50,8 +50,8 @@ for further documentation regarding the spec syntax, see:
         '--test', default=None,
         choices=['all', 'root'],
         help=""" If 'all' is chosen, concretize with test dependencies for all packages.
-                 If 'root' is chosen, concretiz with test dependencies only for the root
-                 spec(s). If nothing is chosen, don't add test dependencies
+                 If 'root' is chosen, concretize with test dependencies only for the
+                 root spec(s). If nothing is chosen, don't add test dependencies
                  for any packages."""
     )
     subparser.add_argument(
