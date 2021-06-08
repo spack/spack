@@ -5,7 +5,6 @@
 
 import os
 import pytest
-import sys
 
 import spack.config as spack_config
 import spack.fetch_strategy as spack_fs

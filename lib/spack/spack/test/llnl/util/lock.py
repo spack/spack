@@ -403,6 +403,7 @@ def test_write_lock_timeout_on_write_3(lock_path):
         TimeoutWrite(lock_path),
         TimeoutWrite(lock_path))
 
+
 def test_write_lock_timeout_on_write_ranges(lock_path):
     multiproc_test(
         AcquireWrite(lock_path, 0, 1),

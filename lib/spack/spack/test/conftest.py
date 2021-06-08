@@ -11,7 +11,6 @@ import json
 import os
 import os.path
 import re
-import sys
 import shutil
 import tempfile
 import xml.etree.ElementTree

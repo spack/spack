@@ -6,7 +6,6 @@
 import filecmp
 import json
 import os
-import sys
 import pytest
 from jsonschema import validate, ValidationError
 import shutil

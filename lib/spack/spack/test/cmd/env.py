@@ -147,8 +147,9 @@ def test_concretize():
     env_specs = e._get_environment_specs()
     assert any(x.name == 'mpileaks' for x in env_specs)
 
+
 @pytest.mark.skipif(sys.platform == 'win32',
-    reason="Error: Package 'ninja' not found.")
+                    reason="Error: Package 'ninja' not found.")
 def test_env_uninstalled_specs(install_mockery, mock_fetch):
     e = ev.create('test')
     e.add('cmake-client')
@@ -856,6 +857,7 @@ env:
         assert './spack.yaml:2' in str(e)
         assert "'spacks' was unexpected" in str(e)
 
+
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='locking ranges not supported on windows')
 def test_env_loads(install_mockery, mock_fetch):
@@ -941,6 +943,7 @@ def test_roots_display_with_variants():
         out = find(output=str)
 
     assert "boost +shared" in out
+
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
@@ -1159,6 +1162,7 @@ def test_env_view_fails(
                            match='merge blocked by file'):
             install('--fake')
 
+
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_without_view_install(
@@ -1203,6 +1207,7 @@ env:
     view = e.default_view.view()
     assert view.get_spec('mpileaks')
 
+
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
 def test_env_updates_view_install_package(
@@ -1227,6 +1232,7 @@ def test_env_updates_view_add_concretize(
         concretize()
 
     check_mpileaks_and_deps_in_view(view_dir)
+
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason='locking ranges not supported on windows')
@@ -1907,6 +1913,7 @@ env:
                 assert not os.path.exists(
                     os.path.join(viewdir, spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
+
 
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')

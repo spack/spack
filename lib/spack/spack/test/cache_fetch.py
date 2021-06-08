@@ -5,7 +5,6 @@
 
 import os
 import pytest
-import sys
 
 from llnl.util.filesystem import mkdirp, touch
 

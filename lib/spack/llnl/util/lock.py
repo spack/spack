@@ -17,7 +17,6 @@ if _platform != "win32":
 else:
     import win32con
     import win32file
-    import win32security
     import pywintypes
 
 __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
@@ -227,7 +226,7 @@ class Lock(object):
             if _platform == "win32":
                 hfile = win32file._get_osfhandle(self._file.fileno())
                 win32file.LockFileEx(hfile,
-                                     op | self.LOCK_NB, # flags
+                                     op | self.LOCK_NB,  # flags
                                      0,
                                      0xffff0000,
                                      pywintypes.OVERLAPPED())
