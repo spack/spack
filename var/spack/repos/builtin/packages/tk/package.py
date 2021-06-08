@@ -3,18 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Tk(AutotoolsPackage, SourceforgePackage):
-    """Tk is a graphical user interface toolkit that takes developing
-       desktop applications to a higher level than conventional
-       approaches. Tk is the standard GUI not only for Tcl, but for
-       many other dynamic languages, and can produce rich, native
-       applications that run unchanged across Windows, Mac OS X, Linux
-       and more."""
-    homepage = "http://www.tcl.tk"
+    """Tk is a graphical user interface toolkit that takes developing desktop
+    applications to a higher level than conventional approaches. Tk is the standard GUI
+    not only for Tcl, but for many other dynamic languages, and can produce rich, native
+    applications that run unchanged across Windows, Mac OS X, Linux and more."""
+
+    homepage = "https://www.tcl.tk"
     sourceforge_mirror_path = "tcl/tk8.6.5-src.tar.gz"
 
     version('8.6.11', sha256='5228a8187a7f70fa0791ef0f975270f068ba9557f57456f51eb02d9d4ea31282')
@@ -25,14 +25,12 @@ class Tk(AutotoolsPackage, SourceforgePackage):
     version('8.6.3',  sha256='ba15d56ac27d8c0a7b1a983915a47e0f635199b9473cf6e10fbce1fc73fd8333')
     version('8.5.19', sha256='407af1de167477d598bd6166d84459a3bdccc2fb349360706154e646a9620ffa')
 
-    variant('xft', default=True,
-            description='Enable X FreeType')
-    variant('xss', default=True,
-            description='Enable X Screen Saver')
+    variant('xft', default=True, description='Enable X FreeType')
+    variant('xss', default=True, description='Enable X Screen Saver')
 
-    extends('tcl')
+    extends('tcl', type=('build', 'link', 'run'))
 
-    depends_on('tcl@8.6:', when='@8.6:')
+    depends_on('tcl@8.6:', type=('build', 'link', 'run'), when='@8.6:')
     depends_on('libx11')
     depends_on('libxft', when='+xft')
     depends_on('libxscrnsaver', when='+xss')
@@ -45,6 +43,21 @@ class Tk(AutotoolsPackage, SourceforgePackage):
     patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tk/files/patch-unix-Makefile.in.diff',
           sha256='54bba3d2b3550b7e2c636881c1a3acaf6e1eb743f314449a132864ff47fd0010',
           level=0, when='@:8.6.11 platform=darwin')
+    patch('https://raw.githubusercontent.com/macports/macports-ports/master/x11/tk/files/patch-dyld_fallback_library_path.diff',
+          sha256='9ce6512f1928db9987986f4d3540207c39429395d5234bd6489ba9d86a6d9c31',
+          level=0, when='platform=darwin')
+
+    def configure_args(self):
+        spec = self.spec
+        config_args = [
+            '--with-tcl={0}'.format(spec['tcl'].libs.directories[0]),
+            '--x-includes={0}'.format(spec['libx11'].headers.directories[0]),
+            '--x-libraries={0}'.format(spec['libx11'].libs.directories[0])
+        ]
+        config_args += self.enable_or_disable('xft')
+        config_args += self.enable_or_disable('xss')
+
+        return config_args
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
@@ -64,32 +77,54 @@ class Tk(AutotoolsPackage, SourceforgePackage):
                 stage_src, installed_src,
                 join_path(self.spec['tk'].libs.directories[0], 'tkConfig.sh'))
 
+    @run_after('install')
+    def symlink_wish(self):
+        with working_dir(self.prefix.bin):
+            symlink('wish{0}'.format(self.version.up_to(2)), 'wish')
+
+    def test(self):
+        self.run_test(self.spec['tk'].command.path, ['-h'],
+                      purpose='test wish command')
+
+        test_data_dir = self.test_suite.current_test_data_dir
+        test_file = test_data_dir.join('test.tcl')
+        self.run_test(self.spec['tcl'].command.path, test_file,
+                      purpose='test that tk can be loaded')
+
+    @property
+    def command(self):
+        """Returns the wish command.
+
+        Returns:
+            Executable: the wish command
+        """
+        # Although we symlink wishX.Y to wish, we also need to support external
+        # installations that may not have this symlink, or may have multiple versions
+        # of Tk installed in the same directory.
+        return Executable(os.path.realpath(self.prefix.bin.join(
+            'wish{0}'.format(self.version.up_to(2)))))
+
     @property
     def libs(self):
         return find_libraries(['libtk{0}'.format(self.version.up_to(2))],
                               root=self.prefix, recursive=True)
 
     def setup_run_environment(self, env):
-        # When using Tkinter from within spack provided python+tkinter, python
-        # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        env.set('TK_LIBRARY', self.spec['tk'].libs.directories[0])
+        """Set TK_LIBRARY to the directory containing tk.tcl.
+
+        For further info, see:
+
+        * https://www.tcl-lang.org/man/tcl/TkCmd/tkvars.htm
+        """
+        # When using tkinter from within spack provided python+tkinter,
+        # python will not be able to find Tk unless TK_LIBRARY is set.
+        env.set('TK_LIBRARY', os.path.dirname(sorted(find(self.prefix, 'tk.tcl'))[0]))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('TK_LIBRARY', self.spec['tk'].libs.directories[0])
+        """Set TK_LIBRARY to the directory containing tk.tcl.
 
-    def configure_args(self):
-        spec = self.spec
-        config_args = [
-            '--with-tcl={0}'.format(spec['tcl'].libs.directories[0]),
-            '--x-includes={0}'.format(spec['libx11'].headers.directories[0]),
-            '--x-libraries={0}'.format(spec['libx11'].libs.directories[0])
-        ]
-        config_args += self.enable_or_disable('xft')
-        config_args += self.enable_or_disable('xss')
+        For further info, see:
 
-        return config_args
-
-    @run_after('install')
-    def symlink_wish(self):
-        with working_dir(self.prefix.bin):
-            symlink('wish{0}'.format(self.version.up_to(2)), 'wish')
+        * https://www.tcl-lang.org/man/tcl/TkCmd/tkvars.htm
+        """
+        env.set('TK_LIBRARY', os.path.dirname(sorted(find(self.prefix, 'tk.tcl'))[0]))
