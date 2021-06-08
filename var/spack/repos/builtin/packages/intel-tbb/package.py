@@ -300,18 +300,22 @@ class IntelTbb(CMakePackage):
         return options
     @run_after('install')
     def install_pkgconfig(self):
-        libdir = self.spec['tbb'].libs.directories[0]
-        pkg_path = join_path(libdir, 'pkgconfig')
-        mkdirp(pkg_path)
+        # pkg-config generation is introduced in May 5, 2021.
+        # It must not be overwritten by spack-generated tbb.pc.
+        # https://github.com/oneapi-src/oneTBB/commit/478de5b1887c928e52f029d706af6ea640a877be
+        if self.spec.satisfies('@:2021.2.0', strict=True):
+            libdir = self.spec['tbb'].libs.directories[0]
+            pkg_path = join_path(libdir, 'pkgconfig')
+            mkdirp(pkg_path)
 
-        with open(join_path(pkg_path, 'tbb.pc'), 'w') as f:
-            f.write('prefix={0}\n'.format(self.prefix))
-            f.write('exec_prefix=${prefix}\n')
-            f.write('libdir={0}\n'.format(libdir))
-            f.write('includedir={0}\n'.format(self.prefix.include))
-            f.write('\n')
-            f.write('Name: Threading Building Blocks\n')
-            f.write('Description: Intel\'s parallelism library for C++\n')
-            f.write('Version: {0}\n'.format(self.spec.version))
-            f.write('Cflags: -I${includedir}\n')
-            f.write('Libs: -L${libdir} -ltbb -latomic\n')
+            with open(join_path(pkg_path, 'tbb.pc'), 'w') as f:
+                f.write('prefix={0}\n'.format(self.prefix))
+                f.write('exec_prefix=${prefix}\n')
+                f.write('libdir={0}\n'.format(libdir))
+                f.write('includedir={0}\n'.format(self.prefix.include))
+                f.write('\n')
+                f.write('Name: Threading Building Blocks\n')
+                f.write('Description: Intel\'s parallelism library for C++\n')
+                f.write('Version: {0}\n'.format(self.spec.version))
+                f.write('Cflags: -I${includedir}\n')
+                f.write('Libs: -L${libdir} -ltbb -latomic\n')
