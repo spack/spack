@@ -73,6 +73,13 @@ schema = {
                             'type': 'string'
                         },
                     },
+                    'include_environment': {
+                        'type': 'array',
+                        'default': [],
+                        'items': {
+                            'type': 'string'
+                        },
+                    },
                     'develop': {
                         'type': 'object',
                         'default': {},
