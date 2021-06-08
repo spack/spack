@@ -968,7 +968,7 @@ def mock_cvs_repository(tmpdir_factory):
             if m:
                 rev = m.group(1)
                 if rev in revision_date:
-                    rdate = revision_date[rev]
+                    rdate = datetime.fromisoformat(revision_date[rev])
                     date = max(date, rdate)
         return format_date(date)
 
