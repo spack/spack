@@ -24,19 +24,23 @@ from spack import *
 
 
 class Ddcmdconverter(PythonPackage):
-    """DdcMD converter."""
+    """ddcMD Converter: a Python tool to convert GROMACS files to ddcMD inputs.."""
         
-    homepage = "https://lc.llnl.gov/bitbucket/projects/XZR/repos/ddcmdconvertor/browse"
-    url      = ""
+    homepage = "https://github.com/LLNL/ddcMDconverter"
+    url      = "https://github.com/LLNL/ddcMDconverter/archive/refs/tags/v1.0.5.tar.gz"
+    git      = "git@github.com:LLNL/ddcMDconverter.git"
+    maintainers = ['bhatiaharsh']
 
-    version('1.0.4',  git='git@github.com:LLNL/ddcMDconverter.git', tag='v1.0.4')
-                
+    version('1.0.5', sha256='332059215144d9b8b2ec89df64853e96419fcd62d462058635e1369f48ba13f5')
+    '''
+    # older versions linked to the internal repo
     #version('master', git='ssh://git@cz-bitbucket.llnl.gov:7999/xzr/ddcmdconvertor.git')
     version('1.0.3',  git='ssh://git@cz-bitbucket.llnl.gov:7999/xzr/ddcmdconvertor.git', tag='v1.0.3')
     version('1.0.1.dev0',  git='ssh://git@cz-bitbucket.llnl.gov:7999/xzr/ddcmdconvertor.git', commit='2ad0498dd5e')
     version('1.0.1',  git='ssh://git@cz-bitbucket.llnl.gov:7999/xzr/ddcmdconvertor.git', tag='v1.0.1')
     version('1.0.0',  git='ssh://git@cz-bitbucket.llnl.gov:7999/xzr/ddcmdconvertor.git', tag='v1.0.0')
-                                
+    '''
+
     depends_on('py-setuptools')
     depends_on('py-six')
     depends_on('py-numpy')

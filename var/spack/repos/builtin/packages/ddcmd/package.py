@@ -15,6 +15,7 @@ class Ddcmd(CMakePackage, CudaPackage):
 
     version('develop', branch='develop', submodules=True)
     version('20210510', tag='Campaign4', submodules=True)
+    version('20210520', tag='Campaign4-1', submodules=True)
 
     depends_on('cmake', type='build')
     depends_on('mpi')
