@@ -29,7 +29,7 @@ class OpenkimModels(CMakePackage):
     depends_on('kim-api@:2.0.2', when='@:2019-03-29')
 
     version(
-        '2021-01-28',
+        '2021.01.28',
         sha256='8824adee02ae4583bd378cc81140fbb49515c5965708ee98d856d122d48dd95f')
     version(
         '2019-07-25',
