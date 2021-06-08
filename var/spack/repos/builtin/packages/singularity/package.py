@@ -43,3 +43,5 @@ class Singularity(SingularityBase):
     version('3.3.0', sha256='070530a472e7e78492f1f142c8d4b77c64de4626c4973b0589f0d18e1fcf5b4f')
     version('3.2.1', sha256='d4388fb5f7e0083f0c344354c9ad3b5b823e2f3f27980e56efa7785140c9b616')
     version('3.1.1', sha256='7f0df46458d8894ba0c2071b0848895304ae6b1137d3d4630f1600ed8eddf1a4')
+
+    patch('singularity_v3.4.0_remove_root_check.patch', level=0, when='@3.4.0:3.4.1')
