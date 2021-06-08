@@ -31,6 +31,11 @@ class OsuMicroBenchmarks(AutotoolsPackage):
     depends_on('mpi')
     depends_on('cuda', when='+cuda')
 
+    def url_for_version(self, version):
+        ext = "tar.gz" if version < Version('5.7.1') else "tgz"
+        url = "http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-{0}.{1}"
+        return url.format(version, ext)
+
     def configure_args(self):
         spec = self.spec
         config_args = [
