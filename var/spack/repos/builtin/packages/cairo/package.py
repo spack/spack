@@ -51,7 +51,7 @@ class Cairo(AutotoolsPackage):
 
     # patch from https://gitlab.freedesktop.org/cairo/cairo/issues/346
     patch('fontconfig.patch', when='@1.16.0:1.17.2')
-    # We don't want to regenerate docs for Cairo because that adds a dependency on gtk-doc
+    # Don't regenerate docs to avoid a dependency on gtk-doc
     patch('disable-gtk-docs.patch', when='^autoconf@2.70:')
 
     def autoreconf(self, spec, prefix):
