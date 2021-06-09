@@ -10,7 +10,7 @@ class Libpng(AutotoolsPackage):
     """libpng is the official PNG reference library."""
 
     homepage = "http://www.libpng.org/pub/png/libpng.html"
-    url = "http://prdownloads.sourceforge.net/libpng/libpng-1.6.37.tar.gz"
+    url = "https://prdownloads.sourceforge.net/libpng/libpng-1.6.37.tar.gz"
     git = "https://github.com/glennrp/libpng.git"
 
     version('1.6.37', sha256='daeb2620d829575513e35fecc83f0d3791a620b9b93d800b763542ece9390fb4')
