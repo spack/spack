@@ -190,6 +190,11 @@ class LmodConfiguration(BaseConfiguration):
             provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
             provides['compiler'].name = 'clang'
 
+        # Special case for OneAPI to allow a hierarchy with %intel
+        if self.spec.name == 'intel-oneapi-compilers':
+            provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
+            provides['compiler'].name = 'intel'
+
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:
             if self.spec.package.provides(x):
