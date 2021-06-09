@@ -15,7 +15,7 @@ install = spack.main.SpackCommand('install')
 
 
 def test_build_tarball_overwrite(
-        install_mockery, mock_fetch, monkeypatch, tmpdir, win_locks):
+        install_mockery, mock_fetch, monkeypatch, tmpdir):
 
     with tmpdir.as_cwd():
         spec = spack.spec.Spec('trivial-install-test-package').concretized()

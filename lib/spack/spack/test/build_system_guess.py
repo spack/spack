@@ -51,7 +51,7 @@ def url_and_build_system(request, tmpdir):
     orig_dir.chdir()
 
 
-def test_build_systems(url_and_build_system, win_locks):
+def test_build_systems(url_and_build_system):
     url, build_system = url_and_build_system
     with spack.stage.Stage(url) as stage:
         stage.fetch()

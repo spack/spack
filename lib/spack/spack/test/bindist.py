@@ -422,7 +422,7 @@ def fake_full_hash(spec):
     'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
     'test_mirror'
 )
-def test_spec_needs_rebuild(monkeypatch, tmpdir, win_locks):
+def test_spec_needs_rebuild(monkeypatch, tmpdir):
     """Make sure needs_rebuild properly compares remote full_hash
     against locally computed one, avoiding unnecessary rebuilds"""
 
@@ -538,7 +538,7 @@ def test_generate_indices_exception(monkeypatch, capfd):
 
 
 @pytest.mark.usefixtures('mock_fetch', 'install_mockery')
-def test_update_sbang(tmpdir, test_mirror, win_locks):
+def test_update_sbang(tmpdir, test_mirror):
     """Test the creation and installation of buildcaches with default rpaths
     into the non-default directory layout scheme, triggering an update of the
     sbang.

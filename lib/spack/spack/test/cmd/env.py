@@ -66,10 +66,9 @@ def env_deactivate():
 
 
 def test_add():
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        e = ev.create('test')
-        e.add('mpileaks')
-        assert Spec('mpileaks') in e.user_specs
+    e = ev.create('test')
+    e.add('mpileaks')
+    assert Spec('mpileaks') in e.user_specs
 
 
 def test_env_add_virtual():
@@ -141,14 +140,15 @@ def test_env_remove(capfd):
 
 
 def test_concretize():
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        e = ev.create('test')
-        e.add('mpileaks')
-        e.concretize()
-        env_specs = e._get_environment_specs()
-        assert any(x.name == 'mpileaks' for x in env_specs)
+    e = ev.create('test')
+    e.add('mpileaks')
+    e.concretize()
+    env_specs = e._get_environment_specs()
+    assert any(x.name == 'mpileaks' for x in env_specs)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Error: Package 'ninja' not found.")
 def test_env_uninstalled_specs(install_mockery, mock_fetch):
     e = ev.create('test')
     e.add('cmake-client')
@@ -165,16 +165,17 @@ def test_env_uninstalled_specs(install_mockery, mock_fetch):
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
 def test_env_install_all(install_mockery, mock_fetch):
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        e = ev.create('test')
-        e.add('cmake-client')
-        e.concretize()
-        e.install_all()
-        env_specs = e._get_environment_specs()
-        spec = next(x for x in env_specs if x.name == 'cmake-client')
-        assert spec.package.installed
+    e = ev.create('test')
+    e.add('cmake-client')
+    e.concretize()
+    e.install_all()
+    env_specs = e._get_environment_specs()
+    spec = next(x for x in env_specs if x.name == 'cmake-client')
+    assert spec.package.installed
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_env_install_single_spec(install_mockery, mock_fetch):
     env('create', 'test')
     install = SpackCommand('install')
@@ -210,6 +211,8 @@ def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     assert len(explicit) == 2
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_modifications_error_on_activate(
         install_mockery, mock_fetch, monkeypatch, capfd):
     env('create', 'test')
@@ -232,6 +235,8 @@ def test_env_modifications_error_on_activate(
     assert "Warning: couldn't get environment settings" in err
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_activate_adds_transitive_run_deps_to_path(
         install_mockery, mock_fetch, monkeypatch):
     env('create', 'test')
@@ -245,6 +250,8 @@ def test_activate_adds_transitive_run_deps_to_path(
     assert 'DEPENDENCY_ENV_VAR=1' in cmds
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_install_same_spec_twice(install_mockery, mock_fetch):
     env('create', 'test')
 
@@ -259,6 +266,8 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch):
         assert 'already installed' in out
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Logging error')
 def test_env_install_two_specs_same_dep(
         install_mockery, mock_fetch, tmpdir, capsys):
     """Test installation of two packages that share a dependency with no
@@ -426,30 +435,28 @@ def test_env_activate_broken_view(
 
 
 def test_to_lockfile_dict():
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        e = ev.create('test')
-        e.add('mpileaks')
-        e.concretize()
-        context_dict = e._to_lockfile_dict()
+    e = ev.create('test')
+    e.add('mpileaks')
+    e.concretize()
+    context_dict = e._to_lockfile_dict()
 
-        e_copy = ev.create('test_copy')
+    e_copy = ev.create('test_copy')
 
-        e_copy._read_lockfile_dict(context_dict)
-        assert e.specs_by_hash == e_copy.specs_by_hash
+    e_copy._read_lockfile_dict(context_dict)
+    assert e.specs_by_hash == e_copy.specs_by_hash
 
 
 def test_env_repo():
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        e = ev.create('test')
-        e.add('mpileaks')
-        e.write()
+    e = ev.create('test')
+    e.add('mpileaks')
+    e.write()
 
-        with ev.read('test'):
-            concretize()
+    with ev.read('test'):
+        concretize()
 
-        package = e.repo.get('mpileaks')
-        assert package.name == 'mpileaks'
-        assert package.namespace == 'builtin.mock'
+    package = e.repo.get('mpileaks')
+    assert package.name == 'mpileaks'
+    assert package.namespace == 'builtin.mock'
 
 
 def test_user_removed_spec():
@@ -462,29 +469,28 @@ env:
   - libelf
 """)
 
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        before = ev.create('test', initial_yaml)
-        before.concretize()
-        before.write()
+    before = ev.create('test', initial_yaml)
+    before.concretize()
+    before.write()
 
-        # user modifies yaml externally to spack and removes hypre
-        with open(before.manifest_path, 'w') as f:
-            f.write("""\
-    env:
-      specs:
-      - mpileaks
-      - libelf
-    """)
+    # user modifies yaml externally to spack and removes hypre
+    with open(before.manifest_path, 'w') as f:
+        f.write("""\
+env:
+  specs:
+  - mpileaks
+  - libelf
+""")
 
-        after = ev.read('test')
-        after.concretize()
-        after.write()
+    after = ev.read('test')
+    after.concretize()
+    after.write()
 
-        env_specs = after._get_environment_specs()
-        read = ev.read('test')
-        env_specs = read._get_environment_specs()
+    env_specs = after._get_environment_specs()
+    read = ev.read('test')
+    env_specs = read._get_environment_specs()
 
-        assert not any(x.name == 'hypre' for x in env_specs)
+    assert not any(x.name == 'hypre' for x in env_specs)
 
 
 def test_init_from_lockfile(tmpdir):
@@ -496,22 +502,23 @@ env:
   - hypre
   - libelf
 """)
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        e1 = ev.create('test', initial_yaml)
-        e1.concretize()
-        e1.write()
 
-        e2 = ev.Environment(str(tmpdir), e1.lock_path)
+    e1 = ev.create('test', initial_yaml)
+    e1.concretize()
+    e1.write()
 
-        for s1, s2 in zip(e1.user_specs, e2.user_specs):
-            assert s1 == s2
+    e2 = ev.Environment(str(tmpdir), e1.lock_path)
 
-        for h1, h2 in zip(e1.concretized_order, e2.concretized_order):
-            assert h1 == h2
-            assert e1.specs_by_hash[h1] == e2.specs_by_hash[h2]
+    for s1, s2 in zip(e1.user_specs, e2.user_specs):
+        assert s1 == s2
 
-        for s1, s2 in zip(e1.concretized_user_specs, e2.concretized_user_specs):
-            assert s1 == s2
+    for h1, h2 in zip(e1.concretized_order, e2.concretized_order):
+        assert h1 == h2
+        assert e1.specs_by_hash[h1] == e2.specs_by_hash[h2]
+
+    for s1, s2 in zip(e1.concretized_user_specs,
+                      e2.concretized_user_specs):
+        assert s1 == s2
 
 
 def test_init_from_yaml(tmpdir):
@@ -523,19 +530,18 @@ env:
   - hypre
   - libelf
 """)
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        e1 = ev.create('test', initial_yaml)
-        e1.concretize()
-        e1.write()
+    e1 = ev.create('test', initial_yaml)
+    e1.concretize()
+    e1.write()
 
-        e2 = ev.Environment(str(tmpdir), e1.manifest_path)
+    e2 = ev.Environment(str(tmpdir), e1.manifest_path)
 
-        for s1, s2 in zip(e1.user_specs, e2.user_specs):
-            assert s1 == s2
+    for s1, s2 in zip(e1.user_specs, e2.user_specs):
+        assert s1 == s2
 
-        assert not e2.concretized_order
-        assert not e2.concretized_user_specs
-        assert not e2.specs_by_hash
+    assert not e2.concretized_order
+    assert not e2.concretized_user_specs
+    assert not e2.specs_by_hash
 
 
 @pytest.mark.skipif(sys.platform == "win32",
@@ -616,7 +622,7 @@ env:
     assert 'test' not in out
 
 
-def test_env_with_config(win_locks):
+def test_env_with_config():
     test_config = """\
 env:
   specs:
@@ -635,7 +641,7 @@ env:
                for x in e._get_environment_specs())
 
 
-def test_with_config_bad_include(env_deactivate, capfd, win_locks):
+def test_with_config_bad_include(env_deactivate, capfd):
     env_name = 'test_bad_include'
     test_config = """\
 spack:
@@ -698,7 +704,7 @@ def test_env_with_include_config_files_same_basename():
     assert(environment_specs[1].satisfies('mpileaks@2.2'))
 
 
-def test_env_with_included_config_file(win_locks):
+def test_env_with_included_config_file():
     test_config = """\
 env:
   include:
@@ -723,7 +729,7 @@ packages:
                for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_scope(win_locks):
+def test_env_with_included_config_scope():
     config_scope_path = os.path.join(ev.root('test'), 'config')
     test_config = """\
 env:
@@ -752,7 +758,7 @@ packages:
                for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_var_path(win_locks):
+def test_env_with_included_config_var_path():
     config_var_path = os.path.join('$tempdir', 'included-config.yaml')
     test_config = """\
 env:
@@ -781,7 +787,7 @@ packages:
                for x in e._get_environment_specs())
 
 
-def test_env_config_precedence(win_locks):
+def test_env_config_precedence():
     test_config = """\
 env:
   packages:
@@ -872,7 +878,9 @@ env:
         assert "'spacks' was unexpected" in str(e)
 
 
-def test_env_loads(install_mockery, mock_fetch, win_locks):
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='locking ranges not supported on windows')
+def test_env_loads(install_mockery, mock_fetch):
     env('create', 'test')
 
     with ev.read('test'):
@@ -893,6 +901,8 @@ def test_env_loads(install_mockery, mock_fetch, win_locks):
         assert 'module load mpileaks' in contents
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 @pytest.mark.disable_clean_stage_check
 def test_stage(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
@@ -931,7 +941,9 @@ def test_env_commands_die_with_no_env_arg():
     env('status')
 
 
-def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery, win_locks):
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
+def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
         add('mpileaks')
@@ -953,7 +965,9 @@ def test_roots_display_with_variants():
     assert "boost +shared" in out
 
 
-def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery, win_locks):
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
+def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
         add('mpileaks')
@@ -999,10 +1013,9 @@ def create_v1_lockfile_dict(roots, all_specs):
 def test_read_old_lock_and_write_new(tmpdir):
     build_only = ('build',)
 
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        mock_repo = MockPackageMultiRepo()
-        y = mock_repo.add_package('y', [], [])
-        mock_repo.add_package('x', [y], [build_only])
+    mock_repo = MockPackageMultiRepo()
+    y = mock_repo.add_package('y', [], [])
+    mock_repo.add_package('x', [y], [build_only])
 
     with spack.repo.use_repositories(mock_repo):
         x = Spec('x')
@@ -1032,9 +1045,9 @@ def test_read_old_lock_creates_backup(tmpdir):
     """When reading a version-1 lockfile, make sure that a backup of that file
     is created.
     """
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        mock_repo = MockPackageMultiRepo()
-        y = mock_repo.add_package('y', [], [])
+
+    mock_repo = MockPackageMultiRepo()
+    y = mock_repo.add_package('y', [], [])
 
     with spack.repo.use_repositories(mock_repo):
         y = Spec('y')
@@ -1064,15 +1077,14 @@ def test_indirect_build_dep():
     default = ('build', 'link')
     build_only = ('build',)
 
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        mock_repo = MockPackageMultiRepo()
-        z = mock_repo.add_package('z', [], [])
-        y = mock_repo.add_package('y', [z], [build_only])
-        mock_repo.add_package('x', [y], [default])
+    mock_repo = MockPackageMultiRepo()
+    z = mock_repo.add_package('z', [], [])
+    y = mock_repo.add_package('y', [z], [build_only])
+    mock_repo.add_package('x', [y], [default])
 
-        def noop(*args):
-            pass
-        setattr(mock_repo, 'dump_provenance', noop)
+    def noop(*args):
+        pass
+    setattr(mock_repo, 'dump_provenance', noop)
 
     with spack.repo.use_repositories(mock_repo):
         x_spec = Spec('x')
@@ -1106,15 +1118,14 @@ def test_store_different_build_deps():
     default = ('build', 'link')
     build_only = ('build',)
 
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        mock_repo = MockPackageMultiRepo()
-        z = mock_repo.add_package('z', [], [])
-        y = mock_repo.add_package('y', [z], [build_only])
-        mock_repo.add_package('x', [y, z], [default, build_only])
+    mock_repo = MockPackageMultiRepo()
+    z = mock_repo.add_package('z', [], [])
+    y = mock_repo.add_package('y', [z], [build_only])
+    mock_repo.add_package('x', [y, z], [default, build_only])
 
-        def noop(*args):
-            pass
-        setattr(mock_repo, 'dump_provenance', noop)
+    def noop(*args):
+        pass
+    setattr(mock_repo, 'dump_provenance', noop)
 
     with spack.repo.use_repositories(mock_repo):
         y_spec = Spec('y ^z@3')
@@ -1145,8 +1156,10 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_updates_view_install(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1156,8 +1169,10 @@ def test_env_updates_view_install(
     check_mpileaks_and_deps_in_view(view_dir)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_view_fails(
-        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1168,8 +1183,10 @@ def test_env_view_fails(
             install('--fake')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_without_view_install(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     # Test enabling a view after installing specs
     env('create', '--without-view', 'test')
 
@@ -1211,8 +1228,10 @@ env:
     assert view.get_spec('mpileaks')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_updates_view_install_package(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1221,8 +1240,10 @@ def test_env_updates_view_install_package(
     assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_updates_view_add_concretize(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -1233,8 +1254,10 @@ def test_env_updates_view_add_concretize(
     check_mpileaks_and_deps_in_view(view_dir)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_updates_view_uninstall(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1248,8 +1271,10 @@ def test_env_updates_view_uninstall(
     check_viewdir_removal(view_dir)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_updates_view_uninstall_referenced_elsewhere(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -1265,8 +1290,10 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
     check_viewdir_removal(view_dir)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_updates_view_remove_concretize(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -1283,8 +1310,10 @@ def test_env_updates_view_remove_concretize(
     check_viewdir_removal(view_dir)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_env_updates_view_force_remove(
-        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1792,8 +1821,10 @@ env:
         assert 'zmpi' not in packages_lists[1]['packages']
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_stack_combinatorial_view(tmpdir, mock_fetch, mock_packages,
-                                  mock_archive, install_mockery, win_locks):
+                                  mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1824,8 +1855,10 @@ env:
                              (spec.version, spec.compiler.name)))
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_stack_view_select(tmpdir, mock_fetch, mock_packages,
-                           mock_archive, install_mockery, win_locks):
+                           mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1862,8 +1895,10 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_stack_view_exclude(tmpdir, mock_fetch, mock_packages,
-                            mock_archive, install_mockery, win_locks):
+                            mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1900,8 +1935,10 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_stack_view_select_and_exclude(tmpdir, mock_fetch, mock_packages,
-                                       mock_archive, install_mockery, win_locks):
+                                       mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1939,8 +1976,10 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_view_link_roots(tmpdir, mock_fetch, mock_packages, mock_archive,
-                         install_mockery, win_locks):
+                         install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1980,6 +2019,8 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 @pytest.mark.parametrize('link_type', ['hardlink', 'copy', 'symlink'])
 def test_view_link_type(link_type, tmpdir, mock_fetch, mock_packages, mock_archive,
                         install_mockery):
@@ -2009,8 +2050,10 @@ env:
             assert os.path.islink(file_to_test)  == (link_type == 'symlink')
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,
-                       install_mockery, win_locks):
+                       install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2049,9 +2092,11 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_stack_view_activate_from_default(tmpdir, mock_fetch, mock_packages,
                                           mock_archive, install_mockery,
-                                          env_deactivate, win_locks):
+                                          env_deactivate):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2081,10 +2126,12 @@ env:
         assert 'FOOBAR=mpileaks' in shell
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_stack_view_no_activate_without_default(tmpdir, mock_fetch,
                                                 mock_packages, mock_archive,
                                                 install_mockery,
-                                                env_deactivate, win_locks):
+                                                env_deactivate):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2112,9 +2159,11 @@ env:
         assert viewdir not in shell
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_stack_view_multiple_views(tmpdir, mock_fetch, mock_packages,
                                    mock_archive, install_mockery,
-                                   env_deactivate, win_locks):
+                                   env_deactivate):
     filename = str(tmpdir.join('spack.yaml'))
     default_viewdir = str(tmpdir.join('default-view'))
     combin_viewdir = str(tmpdir.join('combinatorial-view'))
@@ -2160,6 +2209,8 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_env_activate_sh_prints_shell_output(
         tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate
 ):
@@ -2181,6 +2232,8 @@ def test_env_activate_sh_prints_shell_output(
     assert "alias despacktivate=" in out
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_env_activate_csh_prints_shell_output(
         tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate
 ):
@@ -2217,55 +2270,52 @@ def test_env_activate_default_view_root_unconditional(env_deactivate,
 
 
 def test_concretize_user_specs_together():
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        e = ev.create('coconcretization')
-        e.concretization = 'together'
+    e = ev.create('coconcretization')
+    e.concretization = 'together'
 
-        # Concretize a first time using 'mpich' as the MPI provider
-        e.add('mpileaks')
-        e.add('mpich')
-        e.concretize()
+    # Concretize a first time using 'mpich' as the MPI provider
+    e.add('mpileaks')
+    e.add('mpich')
+    e.concretize()
 
-        assert all('mpich' in spec for _, spec in e.concretized_specs())
-        assert all('mpich2' not in spec for _, spec in e.concretized_specs())
+    assert all('mpich' in spec for _, spec in e.concretized_specs())
+    assert all('mpich2' not in spec for _, spec in e.concretized_specs())
 
-        # Concretize a second time using 'mpich2' as the MPI provider
-        e.remove('mpich')
-        e.add('mpich2')
-        e.concretize()
+    # Concretize a second time using 'mpich2' as the MPI provider
+    e.remove('mpich')
+    e.add('mpich2')
+    e.concretize()
 
-        assert all('mpich2' in spec for _, spec in e.concretized_specs())
-        assert all('mpich' not in spec for _, spec in e.concretized_specs())
+    assert all('mpich2' in spec for _, spec in e.concretized_specs())
+    assert all('mpich' not in spec for _, spec in e.concretized_specs())
 
-        # Concretize again without changing anything, check everything
-        # stays the same
-        e.concretize()
+    # Concretize again without changing anything, check everything
+    # stays the same
+    e.concretize()
 
-        assert all('mpich2' in spec for _, spec in e.concretized_specs())
-        assert all('mpich' not in spec for _, spec in e.concretized_specs())
+    assert all('mpich2' in spec for _, spec in e.concretized_specs())
+    assert all('mpich' not in spec for _, spec in e.concretized_specs())
 
 
 def test_cant_install_single_spec_when_concretizing_together():
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        e = ev.create('coconcretization')
-        e.concretization = 'together'
+    e = ev.create('coconcretization')
+    e.concretization = 'together'
 
-        with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
-            e.concretize_and_add('zlib')
-            e.install_all()
+    with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
+        e.concretize_and_add('zlib')
+        e.install_all()
 
 
 def test_duplicate_packages_raise_when_concretizing_together():
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        e = ev.create('coconcretization')
-        e.concretization = 'together'
+    e = ev.create('coconcretization')
+    e.concretization = 'together'
 
-        e.add('mpileaks+opt')
-        e.add('mpileaks~opt')
-        e.add('mpich')
+    e.add('mpileaks+opt')
+    e.add('mpileaks~opt')
+    e.add('mpich')
 
-        with pytest.raises(ev.SpackEnvironmentError, match=r'cannot contain more'):
-            e.concretize()
+    with pytest.raises(ev.SpackEnvironmentError, match=r'cannot contain more'):
+        e.concretize()
 
 
 def test_env_write_only_non_default():
@@ -2402,6 +2452,8 @@ spack:
     env('update', '-y', str(abspath.dirname))
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 @pytest.mark.regression('18338')
 def test_newline_in_commented_sequence_is_not_an_issue(tmpdir):
     spack_yaml = """
@@ -2424,18 +2476,17 @@ spack:
         _, dyninst = next(iter(environment.specs_by_hash.items()))
         return dyninst['libelf'].build_hash()
 
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        # Concretize a first time and create a lockfile
-        with ev.Environment(str(tmpdir)) as e:
-            concretize()
-            libelf_first_hash = extract_build_hash(e)
+    # Concretize a first time and create a lockfile
+    with ev.Environment(str(tmpdir)) as e:
+        concretize()
+        libelf_first_hash = extract_build_hash(e)
 
-        # Check that a second run won't error
-        with ev.Environment(str(tmpdir)) as e:
-            concretize()
-            libelf_second_hash = extract_build_hash(e)
+    # Check that a second run won't error
+    with ev.Environment(str(tmpdir)) as e:
+        concretize()
+        libelf_second_hash = extract_build_hash(e)
 
-        assert libelf_first_hash == libelf_second_hash
+    assert libelf_first_hash == libelf_second_hash
 
 
 @pytest.mark.regression('18441')
@@ -2454,26 +2505,25 @@ spack:
     spack_yaml.write(raw_yaml)
     spack_lock = tmpdir.join('spack.lock')
 
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        # Concretize a first time and create a lockfile
-        with ev.Environment(str(tmpdir)):
-            concretize()
-        assert os.path.exists(str(spack_lock))
+    # Concretize a first time and create a lockfile
+    with ev.Environment(str(tmpdir)):
+        concretize()
+    assert os.path.exists(str(spack_lock))
 
-        # If I run concretize again and there's an error during write,
-        # the spack.lock file shouldn't disappear from disk
-        def _write_helper_raise(self, x, y):
-            raise RuntimeError('some error')
+    # If I run concretize again and there's an error during write,
+    # the spack.lock file shouldn't disappear from disk
+    def _write_helper_raise(self, x, y):
+        raise RuntimeError('some error')
 
-        monkeypatch.setattr(
-            ev.Environment, '_update_and_write_manifest', _write_helper_raise
-        )
-        with ev.Environment(str(tmpdir)) as e:
-            e.concretize(force=True)
-            with pytest.raises(RuntimeError):
-                e.clear()
-                e.write()
-        assert os.path.exists(str(spack_lock))
+    monkeypatch.setattr(
+        ev.Environment, '_update_and_write_manifest', _write_helper_raise
+    )
+    with ev.Environment(str(tmpdir)) as e:
+        e.concretize(force=True)
+        with pytest.raises(RuntimeError):
+            e.clear()
+            e.write()
+    assert os.path.exists(str(spack_lock))
 
 
 def _setup_develop_packages(tmpdir):
@@ -2572,6 +2622,8 @@ def test_custom_version_concretize_together(tmpdir):
     assert any('hdf5@myversion' in spec for _, spec in e.concretized_specs())
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_modules_relative_to_views(tmpdir, install_mockery, mock_fetch):
     spack_yaml = """
 spack:
@@ -2603,6 +2655,8 @@ spack:
     assert spec.prefix not in contents
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_multiple_modules_post_env_hook(tmpdir, install_mockery, mock_fetch):
     spack_yaml = """
 spack:
