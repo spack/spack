@@ -61,25 +61,9 @@ def test_urlfetchstrategy_sans_url(use_curl):
 def test_urlfetchstrategy_bad_url(tmpdir, use_curl):
     """Ensure fetch with bad URL fails as expected."""
     testpath = str(tmpdir)
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        with spack.config.override('config:use_curl', use_curl):
-            with pytest.raises(fs.FailedDownloadError):
-                fetcher = fs.URLFetchStrategy(url='file:///does-not-exist')
-                assert fetcher is not None
-
-                with Stage(fetcher, path=testpath) as stage:
-                    assert stage is not None
-                    assert fetcher.archive_file is None
-                    fetcher.fetch()
-
-
-def test_fetch_options(tmpdir, mock_archive):
-    testpath = str(tmpdir)
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        with spack.config.override('config:use_curl', True):
-            fetcher = fs.URLFetchStrategy(url=mock_archive.url,
-                                          fetch_options={'cookie': 'True',
-                                                         'timeout': 10})
+    with spack.config.override('config:use_curl', use_curl):
+        with pytest.raises(fs.FailedDownloadError):
+            fetcher = fs.URLFetchStrategy(url='file:///does-not-exist')
             assert fetcher is not None
 
             with Stage(fetcher, path=testpath) as stage:
@@ -88,29 +72,42 @@ def test_fetch_options(tmpdir, mock_archive):
                 fetcher.fetch()
 
 
+def test_fetch_options(tmpdir, mock_archive):
+    testpath = str(tmpdir)
+    with spack.config.override('config:use_curl', True):
+        fetcher = fs.URLFetchStrategy(url=mock_archive.url,
+                                      fetch_options={'cookie': 'True',
+                                                     'timeout': 10})
+        assert fetcher is not None
+
+        with Stage(fetcher, path=testpath) as stage:
+            assert stage is not None
+            assert fetcher.archive_file is None
+            fetcher.fetch()
+
+
 @pytest.mark.parametrize('use_curl', [True, False])
 def test_archive_file_errors(tmpdir, mock_archive, use_curl):
     """Ensure FetchStrategy commands may only be used as intended"""
     testpath = str(tmpdir)
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        with spack.config.override('config:use_curl', use_curl):
-            fetcher = fs.URLFetchStrategy(url=mock_archive.url)
-            assert fetcher is not None
-            with pytest.raises(fs.FailedDownloadError):
-                with Stage(fetcher, path=testpath) as stage:
-                    assert stage is not None
-                    assert fetcher.archive_file is None
-                    with pytest.raises(fs.NoArchiveFileError):
-                        fetcher.archive(testpath)
-                    with pytest.raises(fs.NoArchiveFileError):
-                        fetcher.expand()
-                    with pytest.raises(fs.NoArchiveFileError):
-                        fetcher.reset()
-                    stage.fetch()
-                    with pytest.raises(fs.NoDigestError):
-                        fetcher.check()
-                    assert fetcher.archive_file is not None
-                    fetcher._fetch_from_url('file:///does-not-exist')
+    with spack.config.override('config:use_curl', use_curl):
+        fetcher = fs.URLFetchStrategy(url=mock_archive.url)
+        assert fetcher is not None
+        with pytest.raises(fs.FailedDownloadError):
+            with Stage(fetcher, path=testpath) as stage:
+                assert stage is not None
+                assert fetcher.archive_file is None
+                with pytest.raises(fs.NoArchiveFileError):
+                    fetcher.archive(testpath)
+                with pytest.raises(fs.NoArchiveFileError):
+                    fetcher.expand()
+                with pytest.raises(fs.NoArchiveFileError):
+                    fetcher.reset()
+                stage.fetch()
+                with pytest.raises(fs.NoDigestError):
+                    fetcher.check()
+                assert fetcher.archive_file is not None
+                fetcher._fetch_from_url('file:///does-not-exist')
 
 
 files = [('.tar.gz', 'z'), ('.tgz', 'z')]
@@ -134,37 +131,36 @@ def test_fetch(
 ):
     """Fetch an archive and make sure we can checksum it."""
 
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        mock_archive.url
-        mock_archive.path
+    mock_archive.url
+    mock_archive.path
 
-        algo = crypto.hash_fun_for_algo(checksum_type)()
-        with open(mock_archive.archive_file, 'rb') as f:
-            algo.update(f.read())
-        checksum = algo.hexdigest()
+    algo = crypto.hash_fun_for_algo(checksum_type)()
+    with open(mock_archive.archive_file, 'rb') as f:
+        algo.update(f.read())
+    checksum = algo.hexdigest()
 
-        # Get a spec and tweak the test package with new chcecksum params
-        spec = Spec('url-test')
-        spec.concretize()
+    # Get a spec and tweak the test package with new chcecksum params
+    spec = Spec('url-test')
+    spec.concretize()
 
-        pkg = spack.repo.get('url-test')
-        pkg.url = mock_archive.url
-        pkg.versions[ver('test')] = {checksum_type: checksum, 'url': pkg.url}
-        pkg.spec = spec
+    pkg = spack.repo.get('url-test')
+    pkg.url = mock_archive.url
+    pkg.versions[ver('test')] = {checksum_type: checksum, 'url': pkg.url}
+    pkg.spec = spec
 
-        # Enter the stage directory and check some properties
-        with pkg.stage:
-            with spack.config.override('config:verify_ssl', secure):
-                with spack.config.override('config:use_curl', use_curl):
-                    pkg.do_stage()
-                    with working_dir(pkg.stage.source_path):
-                        assert os.path.exists('configure')
-                        assert is_exe('configure')
+    # Enter the stage directory and check some properties
+    with pkg.stage:
+        with spack.config.override('config:verify_ssl', secure):
+            with spack.config.override('config:use_curl', use_curl):
+                pkg.do_stage()
+                with working_dir(pkg.stage.source_path):
+                    assert os.path.exists('configure')
+                    assert is_exe('configure')
 
-                        with open('configure') as f:
-                            contents = f.read()
-                        assert contents.startswith('#!/bin/sh')
-                        assert 'echo Building...' in contents
+                    with open('configure') as f:
+                        contents = f.read()
+                    assert contents.startswith('#!/bin/sh')
+                    assert 'echo Building...' in contents
 
 
 @pytest.mark.parametrize('spec,url,digest', [
@@ -244,30 +240,28 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
 
     monkeypatch.setattr(sys.stdout, 'isatty', is_true)
     monkeypatch.setattr(tty, 'msg_enabled', is_true)
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        with spack.config.override('config:use_curl', True):
-            fetcher = fs.URLFetchStrategy(mock_archive.url)
+    with spack.config.override('config:use_curl', True):
+        fetcher = fs.URLFetchStrategy(mock_archive.url)
 
-            with Stage(fetcher, path=testpath) as stage:
-                assert fetcher.archive_file is None
-                stage.fetch()
+        with Stage(fetcher, path=testpath) as stage:
+            assert fetcher.archive_file is None
+            stage.fetch()
 
-            status = capfd.readouterr()[1]
-            assert '##### 100' in status
+        status = capfd.readouterr()[1]
+        assert '##### 100' in status
 
 
 @pytest.mark.parametrize('use_curl', [True, False])
 def test_url_extra_fetch(tmpdir, mock_archive, use_curl):
     """Ensure a fetch after downloading is effectively a no-op."""
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        with spack.config.override('config:use_curl', use_curl):
-            testpath = str(tmpdir)
-            fetcher = fs.URLFetchStrategy(mock_archive.url)
-            with Stage(fetcher, path=testpath) as stage:
-                assert fetcher.archive_file is None
-                stage.fetch()
-                assert fetcher.archive_file is not None
-                fetcher.fetch()
+    with spack.config.override('config:use_curl', use_curl):
+        testpath = str(tmpdir)
+        fetcher = fs.URLFetchStrategy(mock_archive.url)
+        with Stage(fetcher, path=testpath) as stage:
+            assert fetcher.archive_file is None
+            stage.fetch()
+            assert fetcher.archive_file is not None
+            fetcher.fetch()
 
 
 @pytest.mark.parametrize('url,urls,version,expected', [
@@ -307,13 +301,12 @@ def test_missing_curl(tmpdir, monkeypatch):
     # (spack.util.executable) module's symbol.
     monkeypatch.setattr(fs, 'which', _which)
 
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        testpath = str(tmpdir)
-        url = 'http://github.com/spack/spack'
-        with spack.config.override('config:use_curl', True):
-            fetcher = fs.URLFetchStrategy(url=url)
-            assert fetcher is not None
-            with pytest.raises(TypeError, match='object is not callable'):
-                with Stage(fetcher, path=testpath) as stage:
-                    out = stage.fetch()
-                assert err_fmt.format('curl') in out
+    testpath = str(tmpdir)
+    url = 'http://github.com/spack/spack'
+    with spack.config.override('config:use_curl', True):
+        fetcher = fs.URLFetchStrategy(url=url)
+        assert fetcher is not None
+        with pytest.raises(TypeError, match='object is not callable'):
+            with Stage(fetcher, path=testpath) as stage:
+                out = stage.fetch()
+            assert err_fmt.format('curl') in out

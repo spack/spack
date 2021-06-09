@@ -17,7 +17,6 @@ if _platform != "win32":
 else:
     import win32con
     import win32file
-    import win32security
     import pywintypes
 
 __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
@@ -164,35 +163,28 @@ class Lock(object):
         """
         assert op in self.lock_type
 
-        if _platform == "win32":
-            if self._start != 0 or self._length != 0:
-                raise LockError("Locking ranges not supported on Windows")
         self._log_acquiring('{0} LOCK'.format(self.lock_type[op].upper()))
         timeout = timeout or self.default_timeout
 
         # Create file and parent directories if they don't exist.
         if self._file is None:
-            if _platform != "win32":
-                parent = self._ensure_parent_directory()
-                # Open writable files as 'r+' so we can upgrade to write later
-                os_mode, fd_mode = (os.O_RDWR | os.O_CREAT), 'r+'
-                if os.path.exists(self.path):
-                    if not os.access(self.path, os.W_OK):
-                        if op == self.LOCK_SH:
-                            # can still lock read-only files if we open 'r'
-                            os_mode, fd_mode = os.O_RDONLY, 'r'
-                        else:
-                            raise LockROFileError(self.path)
+            parent = self._ensure_parent_directory()
+            # Open writable files as 'r+' so we can upgrade to write later
+            os_mode, fd_mode = (os.O_RDWR | os.O_CREAT), 'r+'
+            if os.path.exists(self.path):
+                if not os.access(self.path, os.W_OK):
+                    if op == self.LOCK_SH:
+                        # can still lock read-only files if we open 'r'
+                        os_mode, fd_mode = os.O_RDONLY, 'r'
+                    else:
+                        raise LockROFileError(self.path)
 
-                elif not os.access(parent, os.W_OK):
-                    raise CantCreateLockError(self.path)
+            elif not os.access(parent, os.W_OK):
+                raise CantCreateLockError(self.path)
 
-                fd = os.open(self.path, os_mode)
-                self._file = os.fdopen(fd, fd_mode)
-                self._file_mode = fd_mode
-            else:
-                # TODO: Need to check for read only files on Windows
-                pass
+            fd = os.open(self.path, os_mode)
+            self._file = os.fdopen(fd, fd_mode)
+            self._file_mode = fd_mode
 
         elif op == self.LOCK_EX and self._file_mode == 'r':
             # Attempt to upgrade to write lock w/a read-only file.
@@ -232,44 +224,11 @@ class Lock(object):
         try:
             # Try to get the lock (will raise if not available.)
             if _platform == "win32":
-                if self._file is None:
-                    self._ensure_parent_directory()
-
-                    secur_att = win32security.SECURITY_ATTRIBUTES()
-                    secur_att.Initialize()
-
-                    if op == self.LOCK_SH:
-                        share_mode = \
-                            win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE
-                    else:
-                        share_mode = 0
-
-                    self._file_mode = 'r+'
-                    access = win32con.GENERIC_READ | win32con.GENERIC_WRITE
-                    if os.path.exists(self.path):
-                        if not os.access(self.path, os.W_OK):
-                            if op == self.LOCK_SH:
-                                # can still lock read-only files if we open 'r'
-                                self._file_mode = 'r'
-                                access = win32con.GENERIC_READ
-                            else:
-                                raise LockROFileError(self.path)
-                    if os.path.exists(self.path):
-                        creationDisposition = win32con.OPEN_EXISTING
-                    else:
-                        creationDisposition = win32con.OPEN_ALWAYS
-                    self._file = win32file.CreateFile(
-                        self.path,  # filename
-                        access,  # access
-                        share_mode,  # mode
-                        secur_att,  # securityAttributes
-                        creationDisposition,  # creationDisposition
-                        win32con.FILE_ATTRIBUTE_NORMAL,  # flagsAndAttributes
-                        0)  # templateFile
-                win32file.LockFileEx(self._file,
-                                     op | self.LOCK_NB,
+                hfile = win32file._get_osfhandle(self._file.fileno())
+                win32file.LockFileEx(hfile,
+                                     op | self.LOCK_NB,  # flags
                                      0,
-                                     0,
+                                     0xffff0000,
                                      pywintypes.OVERLAPPED())
             else:
                 fcntl.lockf(self._file, op | self.LOCK_NB,
@@ -361,9 +320,10 @@ class Lock(object):
 
         """
         if _platform == "win32":
-            win32file.UnlockFileEx(self._file,
+            hfile = win32file._get_osfhandle(self._file.fileno())
+            win32file.UnlockFileEx(hfile,
                                    0,
-                                   0,
+                                   0xffff0000,
                                    pywintypes.OVERLAPPED())
         else:
             fcntl.lockf(self._file, self.LOCK_UN,

@@ -61,8 +61,7 @@ def test_install_package_and_dependency(
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_notests(monkeypatch, mock_packages,
-                                  install_mockery, win_locks):
+def test_install_runtests_notests(monkeypatch, mock_packages, install_mockery):
     def check(pkg):
         assert not pkg.run_tests
     monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', check)
@@ -70,7 +69,7 @@ def test_install_runtests_notests(monkeypatch, mock_packages,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_root(monkeypatch, mock_packages, install_mockery, win_locks):
+def test_install_runtests_root(monkeypatch, mock_packages, install_mockery):
     def check(pkg):
         assert pkg.run_tests == (pkg.name == 'dttop')
 
@@ -79,7 +78,7 @@ def test_install_runtests_root(monkeypatch, mock_packages, install_mockery, win_
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_runtests_all(monkeypatch, mock_packages, install_mockery, win_locks):
+def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
     def check(pkg):
         assert pkg.run_tests
 
@@ -225,7 +224,7 @@ def test_install_overwrite(
 
 
 def test_install_overwrite_not_installed(
-        mock_packages, mock_archive, mock_fetch, config, install_mockery, win_locks
+        mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
     # Try to install a spec and then to reinstall it.
     spec = Spec('libdwarf')
@@ -238,7 +237,7 @@ def test_install_overwrite_not_installed(
 
 
 def test_install_overwrite_multiple(
-        mock_packages, mock_archive, mock_fetch, config, install_mockery, win_locks
+        mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
     # Try to install a spec and then to reinstall it.
     libdwarf = Spec('libdwarf')
@@ -349,7 +348,7 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
     ('RuntimeError', 'something weird happened'),
     ('ValueError', 'spec is not concrete')
 ])
-def test_junit_output_with_failures(tmpdir, exc_typename, msg, win_locks):
+def test_junit_output_with_failures(tmpdir, exc_typename, msg):
     with tmpdir.as_cwd():
         install(
             '--log-format=junit', '--log-file=test.xml',
@@ -382,7 +381,7 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg, win_locks):
 def test_junit_output_with_errors(
         exc_typename, msg,
         mock_packages, mock_archive, mock_fetch, install_mockery,
-        config, tmpdir, monkeypatch, win_locks):
+        config, tmpdir, monkeypatch):
 
     def just_throw(*args, **kwargs):
         exc_type = getattr(builtins, exc_typename)
@@ -484,7 +483,7 @@ def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
-                                  capfd, win_locks):
+                                  capfd):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -503,8 +502,7 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
-                                  capfd, win_locks):
+def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -522,8 +520,7 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery,
-                                   capfd, win_locks):
+def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -545,7 +542,7 @@ def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd, win_locks):
+def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -569,7 +566,7 @@ def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd, win_
 @pytest.mark.disable_clean_stage_check
 def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
                                       capfd, mock_packages, mock_archive,
-                                      config, win_locks):
+                                      config):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -605,7 +602,7 @@ def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_build_error_output(tmpdir, mock_fetch, install_mockery, capfd, win_locks):
+def test_build_error_output(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
         msg = ''
         try:
@@ -619,7 +616,7 @@ def test_build_error_output(tmpdir, mock_fetch, install_mockery, capfd, win_lock
 
 
 @pytest.mark.disable_clean_stage_check
-def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd, win_locks):
+def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
         msg = ''
         try:
@@ -658,7 +655,7 @@ def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
     assert not os.path.exists(root.prefix)
 
 
-def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd, win_locks):
+def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
     msg = ''
     with capfd.disabled():
         try:
@@ -670,7 +667,7 @@ def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd, win_lo
     assert '1 uninstalled dependency' in msg
 
 
-def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery, win_locks):
+def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery):
     dep = Spec('dependency-install').concretized()
     root = Spec('dependent-install').concretized()
 
@@ -684,7 +681,7 @@ def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery, win_lock
 
 @pytest.mark.regression('12002')
 def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
-                                          mutable_mock_env_path, win_locks):
+                                          mutable_mock_env_path):
     env('create', 'test')
 
     with ev.read('test'):
@@ -699,7 +696,7 @@ def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
 
 @pytest.mark.regression('12002')
 def test_install_only_dependencies_of_all_in_env(
-    tmpdir, mock_fetch, install_mockery, mutable_mock_env_path, win_locks
+    tmpdir, mock_fetch, install_mockery, mutable_mock_env_path
 ):
     env('create', '--without-view', 'test')
 
@@ -841,7 +838,7 @@ def test_install_help_cdash(capsys):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_auth_token(tmpdir, install_mockery, capfd, win_locks):
+def test_cdash_auth_token(tmpdir, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with tmpdir.as_cwd():
         with capfd.disabled():
@@ -855,7 +852,7 @@ def test_cdash_auth_token(tmpdir, install_mockery, capfd, win_locks):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd, win_locks):
+def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -875,7 +872,7 @@ def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd, win
 
 def test_compiler_bootstrap(
         install_mockery_mutable_config, mock_packages, mock_fetch,
-        mock_archive, mutable_config, monkeypatch, win_locks):
+        mock_archive, mutable_config, monkeypatch):
     monkeypatch.setattr(spack.concretize.Concretizer,
                         'check_for_compiler_existence', False)
     spack.config.set('config:install_missing_compilers', True)
@@ -887,7 +884,7 @@ def test_compiler_bootstrap(
 
 def test_compiler_bootstrap_from_binary_mirror(
         install_mockery_mutable_config, mock_packages, mock_fetch,
-        mock_archive, mutable_config, monkeypatch, tmpdir, win_locks):
+        mock_archive, mutable_config, monkeypatch, tmpdir):
     """
     Make sure installing compiler from buildcache registers compiler
     """
@@ -926,7 +923,7 @@ def test_compiler_bootstrap_from_binary_mirror(
 @pytest.mark.regression('16221')
 def test_compiler_bootstrap_already_installed(
         install_mockery_mutable_config, mock_packages, mock_fetch,
-        mock_archive, mutable_config, monkeypatch, win_locks):
+        mock_archive, mutable_config, monkeypatch):
     monkeypatch.setattr(spack.concretize.Concretizer,
                         'check_for_compiler_existence', False)
     spack.config.set('config:install_missing_compilers', True)
@@ -971,7 +968,7 @@ def fake_full_hash(spec):
 
 def test_cache_install_full_hash_match(
         install_mockery_mutable_config, mock_packages, mock_fetch,
-        mock_archive, mutable_config, monkeypatch, tmpdir, win_locks):
+        mock_archive, mutable_config, monkeypatch, tmpdir):
     """Make sure installing from cache respects full hash argument"""
 
     # Create a temp mirror directory for buildcache usage
@@ -1028,7 +1025,7 @@ def test_cache_install_full_hash_match(
 
 
 def test_install_env_with_tests_all(tmpdir, mock_packages, mock_fetch,
-                                    install_mockery, mutable_mock_env_path, win_locks):
+                                    install_mockery, mutable_mock_env_path):
     env('create', 'test')
     with ev.read('test'):
         test_dep = Spec('test-dependency').concretized()
@@ -1038,7 +1035,7 @@ def test_install_env_with_tests_all(tmpdir, mock_packages, mock_fetch,
 
 
 def test_install_env_with_tests_root(tmpdir, mock_packages, mock_fetch,
-                                     install_mockery, mutable_mock_env_path, win_locks):
+                                     install_mockery, mutable_mock_env_path):
     env('create', 'test')
     with ev.read('test'):
         test_dep = Spec('test-dependency').concretized()
