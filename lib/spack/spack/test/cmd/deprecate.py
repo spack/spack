@@ -15,7 +15,7 @@ find = SpackCommand('find')
 activate = SpackCommand('activate')
 
 
-def test_deprecate(mock_packages, mock_archive, mock_fetch, install_mockery, win_locks):
+def test_deprecate(mock_packages, mock_archive, mock_fetch, install_mockery):
     install('libelf@0.8.13')
     install('libelf@0.8.10')
 
@@ -31,7 +31,7 @@ def test_deprecate(mock_packages, mock_archive, mock_fetch, install_mockery, win
 
 
 def test_deprecate_fails_no_such_package(mock_packages, mock_archive,
-                                         mock_fetch, install_mockery, win_locks):
+                                         mock_fetch, install_mockery):
     """Tests that deprecating a spec that is not installed fails.
 
     Tests that deprecating without the ``-i`` option in favor of a spec that
@@ -48,7 +48,7 @@ def test_deprecate_fails_no_such_package(mock_packages, mock_archive,
 
 
 def test_deprecate_install(mock_packages, mock_archive, mock_fetch,
-                           install_mockery, win_locks):
+                           install_mockery):
     """Tests that the ```-i`` option allows us to deprecate in favor of a spec
     that is not yet installed."""
     install('libelf@0.8.10')
@@ -66,7 +66,7 @@ def test_deprecate_install(mock_packages, mock_archive, mock_fetch,
 
 
 def test_deprecate_deps(mock_packages, mock_archive, mock_fetch,
-                        install_mockery, win_locks):
+                        install_mockery):
     """Test that the deprecate command deprecates all dependencies properly."""
     install('libdwarf@20130729 ^libelf@0.8.13')
     install('libdwarf@20130207 ^libelf@0.8.10')
@@ -90,8 +90,7 @@ def test_deprecate_deps(mock_packages, mock_archive, mock_fetch,
 
 
 def test_deprecate_fails_active_extensions(mock_packages, mock_archive,
-                                           mock_fetch, install_mockery,
-                                           win_locks):
+                                           mock_fetch, install_mockery):
     """Tests that active extensions and their extendees cannot be
     deprecated."""
     install('extendee')
@@ -110,7 +109,7 @@ def test_deprecate_fails_active_extensions(mock_packages, mock_archive,
 
 
 def test_uninstall_deprecated(mock_packages, mock_archive, mock_fetch,
-                              install_mockery, win_locks):
+                              install_mockery):
     """Tests that we can still uninstall deprecated packages."""
     install('libelf@0.8.13')
     install('libelf@0.8.10')
@@ -126,7 +125,7 @@ def test_uninstall_deprecated(mock_packages, mock_archive, mock_fetch,
 
 
 def test_deprecate_already_deprecated(mock_packages, mock_archive, mock_fetch,
-                                      install_mockery, win_locks):
+                                      install_mockery):
     """Tests that we can re-deprecate a spec to change its deprecator."""
     install('libelf@0.8.13')
     install('libelf@0.8.12')
@@ -151,7 +150,7 @@ def test_deprecate_already_deprecated(mock_packages, mock_archive, mock_fetch,
 
 
 def test_deprecate_deprecator(mock_packages, mock_archive, mock_fetch,
-                              install_mockery, win_locks):
+                              install_mockery):
     """Tests that when a deprecator spec is deprecated, its deprecatee specs
     are updated to point to the new deprecator."""
     install('libelf@0.8.13')
@@ -181,7 +180,7 @@ def test_deprecate_deprecator(mock_packages, mock_archive, mock_fetch,
 
 
 def test_concretize_deprecated(mock_packages, mock_archive, mock_fetch,
-                               install_mockery, win_locks):
+                               install_mockery):
     """Tests that the concretizer throws an error if we concretize to a
     deprecated spec"""
     install('libelf@0.8.13')

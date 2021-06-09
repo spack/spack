@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import sys
 
 import pytest
 
@@ -18,6 +19,8 @@ install = SpackCommand('install')
 spack_test = SpackCommand('test')
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_test_package_not_installed(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery_mutable_config, mock_test_stage):
@@ -39,8 +42,10 @@ def test_test_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
-                     install_mockery_mutable_config, win_locks):
+                     install_mockery_mutable_config):
     """Ensure output printed from pkgs is captured by output redirection."""
     install('printing-package')
     spack_test('run', 'printing-package')
@@ -64,9 +69,11 @@ def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
     assert "FAILED" not in output
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_test_output_on_error(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
-    capfd, mock_test_stage, win_locks
+    capfd, mock_test_stage
 ):
     install('test-error')
     # capfd interferes with Spack's capturing
@@ -77,9 +84,11 @@ def test_test_output_on_error(
     assert "Command exited with status 1" in out
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_test_output_on_failure(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
-    capfd, mock_test_stage, win_locks
+    capfd, mock_test_stage
 ):
     install('test-fail')
     with capfd.disabled():
@@ -89,9 +98,11 @@ def test_test_output_on_failure(
     assert "TestFailure" in out
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_show_log_on_error(
     mock_packages, mock_archive, mock_fetch,
-    install_mockery_mutable_config, capfd, mock_test_stage, win_locks
+    install_mockery_mutable_config, capfd, mock_test_stage
 ):
     """Make sure spack prints location of test log on failure."""
     install('test-error')
@@ -102,6 +113,8 @@ def test_show_log_on_error(
     assert mock_test_stage in out
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 @pytest.mark.usefixtures(
     'mock_packages', 'mock_archive', 'mock_fetch',
     'install_mockery_mutable_config'
@@ -110,7 +123,7 @@ def test_show_log_on_error(
     ('test-error', ['FAILED: Command exited', 'TestFailure']),
     ('test-fail', ['FAILED: Expected', 'TestFailure'])
 ])
-def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs, win_locks):
+def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
     install(pkg_name)
     with tmpdir.as_cwd():
         spack_test('run',
@@ -134,9 +147,11 @@ def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs, win
         assert msg in content
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_cdash_output_test_error(
         tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
-        mock_archive, mock_test_stage, capfd, win_locks):
+        mock_archive, mock_test_stage, capfd):
     install('test-error')
     with tmpdir.as_cwd():
         spack_test('run',
@@ -152,9 +167,11 @@ def test_cdash_output_test_error(
         assert 'FAILED: Command exited with status 1' in content
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_cdash_upload_clean_test(
         tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
-        mock_archive, mock_test_stage, win_locks):
+        mock_archive, mock_test_stage):
     install('printing-package')
     with tmpdir.as_cwd():
         spack_test('run',
@@ -196,8 +213,10 @@ def test_test_list_all(mock_packages):
     ])
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_test_list(
-    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config, win_locks
+    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config
 ):
     pkg_with_tests = 'printing-package'
     install(pkg_with_tests)
