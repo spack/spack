@@ -905,11 +905,12 @@ def mock_cvs_repository(tmpdir_factory):
 
     def format_date(date):
         return date.strftime('%Y-%m-%d %H:%M:%S')
+
     def parse_date(string):
         return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
-    revision_date = {}
 
     # Initialize the repository
+    revision_date = {}
     with sourcedir.as_cwd():
         cvs('-d', cvsroot, 'init')
         cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit',
