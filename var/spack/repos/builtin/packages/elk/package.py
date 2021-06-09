@@ -27,7 +27,7 @@ from spack import *
 class Elk(MakefilePackage):
     """An all-electron full-potential linearised augmented-plane wave (LAPW)
     code with many advanced features. Written originally at
-    Karl-Franzens-Universität Graz as a milestone of the EXCITING EU Research
+    Karl-Franzens-Universitat Graz as a milestone of the EXCITING EU Research
     and Training Network, the code is designed to be as simple as possible so
     that new developments in the field of density functional theory (DFT) can
     be added quickly and reliably. The code is freely available under the GNU
