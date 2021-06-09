@@ -1,6 +1,7 @@
 spack:
   concretization: separately
   view: false
+
   config:
     install_tree:
       root: /home/software/radiuss
@@ -10,11 +11,11 @@ spack:
 
   packages:
     all:
-      permissions:
-        read: world
+      target: [x86_64]
+
       providers:
-        mpi: [mvapich2]   # white238
-        #mpi: [mvapich2, openmpi]  # Is this why craylib-sci shows up?
+        mpi: [mvapich2]
+
   definitions:
     #- compilers: ['%gcc@8.3.1', '%clang@10.0.0']
     - compilers: ['%gcc@7.5.0']
@@ -22,31 +23,31 @@ spack:
     # Note skipping spot since no spack package for it
     - radiuss:
       - ascent  # ^conduit@0.6.0
-      #- axom
-      #- blt
-      #- caliper
-      #- care
-      #- chai
+      - axom
+      - blt
+      - caliper
+      - care
+      - chai
       - conduit  # ^hdf5+shared
-      #- flux-core
-      #- flux-sched
-      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm
-      #- hypre
-      #- lbann
-      #- lvarray # ^raja~openmp  # per Ben Corbett Issue #23192
-      #- mfem
-      #- py-hatchet
-      #- py-maestrowf
-      #- py-merlin
-      #- py-shroud
-      #- raja
-      #- samrai
-      #- scr
-      #- sundials
-      #- umpire ~openmp
-      #- visit   # ^mesa-glu@9.0.0
-      #- xbraid
-      #- zfp
+      - flux-core
+      - flux-sched
+      - glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm
+      - hypre
+      - lbann
+      - lvarray # ^raja~openmp  # per Ben Corbett Issue #23192
+      - mfem
+      - py-hatchet
+      - py-maestrowf
+      - py-merlin
+      - py-shroud
+      - raja
+      - samrai
+      - scr
+      - sundials
+      - umpire ~openmp
+      - visit   # ^mesa-glu@9.0.0
+      - xbraid
+      - zfp
 
   mirrors:
     mirror: "s3://spack-binaries-develop/radiuss"
@@ -66,17 +67,13 @@ spack:
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - spack -d ci rebuild
     mappings:
-      #- match: [sundials, umpire, vtk-h, vtk-m]
-      - match: [ascent, axom, vtk-h, vtk-m]
+      - match: [ascent, axom, sundials, umpire, vtk-h, vtk-m]
         runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
           tags: ["spack", "public", "xlarge", "x86_64"]
-      - match: ['os=ubuntu18.04']
+      - match: ['@:']
         runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
           tags: ["spack", "public", "large", "x86_64"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
-    broken-specs-url: "s3://spack-binaries-prs/broken-specs"
     service-job-attributes:
       image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
       before_script:
@@ -90,4 +87,4 @@ spack:
     build-group: RADIUSS
     url: https://cdash.spack.io
     project: Spack Testing
-    site: Spack Gitlab Cloud Infrastructure
+    site: Cloud Gitlab Infrastructure
