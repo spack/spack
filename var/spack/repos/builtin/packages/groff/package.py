@@ -34,12 +34,17 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gmake', type='build')
     depends_on('sed',   type='build')
     depends_on('ghostscript', when='+pdf')
-    # iconv is being asked whatever this release
+    # iconv is being asked whatever the release
     depends_on('iconv', type=('build', 'link'))
     # makeinfo is being searched for
     depends_on('texinfo', type='build', when='@1.22.4:')
     # configure complains when there is no uchardet that enhances preconv
     depends_on('uchardet', type=('build', 'link'), when='@1.22.4:')
+
+    depends_on('libice', when='+x')
+    depends_on('libxaw', when='+x')
+    depends_on('libxmu', when='+x')
+    depends_on('libx11', when='+x')
 
     # The perl interpreter line in scripts might be too long as it has
     # not been transformed yet. Call scripts with spack perl explicitly.
@@ -65,3 +70,8 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
             args.extend(self.with_or_without('uchardet'))
         args.append('--with-libiconv-prefix={0}'.format(self.spec['iconv'].prefix))
         return args
+
+    @when('+x')
+    def setup_run_environment(self, env):
+        dir = join_path(self.prefix.lib, 'X11', 'app-defaults')
+        env.set_path('XFILESEARCHPATH', dir)
