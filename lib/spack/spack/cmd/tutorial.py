@@ -73,7 +73,7 @@ def tutorial(parser, args):
 
     tty.msg("Ensuring that we trust tutorial binaries",
             "spack gpg trust %s" % tutorial_key)
-    spack.util.gpg.Gpg().trust(tutorial_key)
+    spack.util.gpg.trust(tutorial_key)
 
     # Note that checkout MUST be last. It changes Spack under our feet.
     # If you don't put this last, you'll get import errors for the code

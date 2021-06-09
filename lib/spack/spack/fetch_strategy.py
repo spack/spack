@@ -780,8 +780,9 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def git_version(self):
-        vstring = self.git('--version', output=str).lstrip('git version ')
-        return Version(vstring)
+        output = self.git('--version', output=str, error=str)
+        match = re.search(r'git version (\S+)', output)
+        return Version(match.group(1)) if match else None
 
     @property
     def git(self):

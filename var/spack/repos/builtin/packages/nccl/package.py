@@ -14,6 +14,8 @@ class Nccl(MakefilePackage, CudaPackage):
 
     maintainers = ['adamjstewart']
 
+    version('2.9.9-1', sha256='01629a1bdadbadb2828e26023ba7685bbc07678468cb7df63cc96460f5337e08')
+    version('2.9.8-1', sha256='f6e5d9c10e6e54ee21f9707d2df684083d0cccf87bd5a4dbc795803da2bc9f5a')
     version('2.9.6-1', sha256='c4b1f5a88f03c0ac8f1dcbe27723cd75cfe051754078d83629efaaed10ce8731')
     version('2.8.4-1', sha256='a5c1b4da6e1608ee63baa87f6df424bba7a8b1cedad597a25d5b4cf8d56d0865')
     version('2.8.3-1', sha256='3ae89ddb2956fff081e406a94ff54ae5e52359f5d645ce977c7eba09b3b782e6')
@@ -30,8 +32,8 @@ class Nccl(MakefilePackage, CudaPackage):
     version('2.4.2-1', sha256='e3dd04b22eb541394bd818e5f78ac23a09cc549690d5d55d6fccc1a36155385a')
     version('2.3.7-1', sha256='e6eff80d9d2db13c61f8452e1400ca2f098d2dfe42857cb23413ce081c5b9e9b')
     version('2.3.5-5', sha256='bac9950b4d3980c25baa8e3e4541d2dfb4d21edf32ad3b89022d04920357142f')
-    version('1.3.4-1', sha256='11e4eb44555bb28b9cbad973dacb4640b82710c9769e719afc2013b63ffaf884')
-    version('1.3.0-1', sha256='53f36151061907bdcafad1c26c1d9370a0a8400f561a83704a5138213ba51003')
+    version('1.3.4-1', sha256='11e4eb44555bb28b9cbad973dacb4640b82710c9769e719afc2013b63ffaf884', deprecated=True)
+    version('1.3.0-1', sha256='53f36151061907bdcafad1c26c1d9370a0a8400f561a83704a5138213ba51003', deprecated=True)
 
     variant('cuda', default=True, description='Build with CUDA')
 

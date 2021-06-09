@@ -92,7 +92,7 @@ class EcpDataVisSdk(BundlePackage):
 
     depends_on('parallel-netcdf+shared+fortran', when='+pnetcdf')
 
-    variants2deps('unifyfs+fortran', '+unifyfs', ['hdf5'])
+    variants2deps('unifyfs', '+unifyfs ', ['hdf5'])
 
     depends_on('veloc', when='+veloc')
 

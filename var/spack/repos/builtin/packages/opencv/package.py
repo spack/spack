@@ -59,7 +59,7 @@ class Opencv(CMakePackage, CudaPackage):
     components = [
         '1394', 'ade', 'aravis', 'arith_dec', 'arith_enc', 'avfoundation', 'clp',
         'cuda', 'eigen', 'ffmpeg', 'freetype', 'gdal', 'gdcm', 'gphoto2', 'gstreamer',
-        'halide', 'hpx', 'imgcodec_hdr', 'imgcode_pfm', 'imgcodec_pxm',
+        'gtk', 'halide', 'hpx', 'imgcodec_hdr', 'imgcode_pfm', 'imgcodec_pxm',
         'imgcodec_sunraster', 'inf_engine', 'ipp', 'itt', 'jasper', 'jpeg', 'lapack',
         'librealsense', 'mfx', 'ngraph', 'onnx', 'opencl', 'openclamdblas',
         'openclamdfft', 'opencl_svm', 'openexr', 'opengl', 'openjpeg', 'openmp',
@@ -113,6 +113,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('freetype', when='+freetype')
     depends_on('gdal', when='+gdal')
+    depends_on('gtkplus', when='+gtk')
     depends_on('libpng', when='+png')
     depends_on('jpeg', when='+jpeg')
     depends_on('openjpeg@2:', when='+openjpeg')
@@ -181,6 +182,9 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts('+videoio', when='~imgproc')
     conflicts('+videoio', when='~imgcodecs')
     conflicts('+world', when='~core')
+
+    # OpenCV component conflicts
+    conflicts('+gtk', when='platform=darwin')
 
     conflicts('+python2', when='+python3')
     conflicts('+python3', when='+python2')

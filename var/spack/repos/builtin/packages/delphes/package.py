@@ -20,9 +20,8 @@ class Delphes(CMakePackage):
     maintainers = ['drbenmorgan', 'vvolkl', 'selvaggi']
 
     version('master', branch='master')
-    version('3.4.3pre08', tag='3.4.3pre08')
-    version('3.4.3pre06', tag='3.4.3pre06')
-    version('3.4.2', sha256='d46a7c5474de650befdb89377115feee31f1743107ceb3d8da699be9d48c097b', preferred=True)
+    version('3.5.0', sha256='37685b945ef43aab09217d70b0ac7f9c5d3c2c27cf3b3f8d64c4e6eb5c5fd9aa')
+    version('3.4.2', sha256='d46a7c5474de650befdb89377115feee31f1743107ceb3d8da699be9d48c097b')
     version('3.4.1', sha256='4b5a2aeac326643f45b6d45c39ba2302e323eeb86d8cb58843c6e73949b1208a')
     version('3.4.0', sha256='c0f9500663a0c3a5c1eddcee598a67b5bcfc9318303195c6cacc0590b4023fa1')
     version('3.3.3', sha256='404de818a6b7852b01187ccf598d8ac19d308b9361f128751ef003cde248ff00')

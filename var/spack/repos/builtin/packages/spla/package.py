@@ -43,6 +43,12 @@ class Spla(CMakePackage):
     depends_on('hsakmt-roct', when='+rocm', type='link')
     depends_on('hsa-rocr-dev', when='+rocm', type='link')
 
+    # Propagate openmp to blas
+    depends_on('openblas threads=openmp', when='+openmp ^openblas')
+    depends_on('amdblis threads=openmp', when='+openmp ^amdblis')
+    depends_on('blis threads=openmp', when='+openmp ^blis')
+    depends_on('intel-mkl threads=openmp', when='+openmp ^intel-mkl')
+
     def cmake_args(self):
         args = [
             self.define_from_variant('SPLA_OMP', 'openmp'),
