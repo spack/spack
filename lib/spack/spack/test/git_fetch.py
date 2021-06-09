@@ -72,7 +72,7 @@ def mock_bad_git(monkeypatch):
     yield
 
 
-def test_bad_git(tmpdir, mock_bad_git, win_locks):
+def test_bad_git(tmpdir, mock_bad_git):
     """Trigger a SpackError when attempt a fetch with a bad git."""
     testpath = str(tmpdir)
 
@@ -89,7 +89,7 @@ def test_fetch(type_of_test,
                mock_git_repository,
                config,
                mutable_mock_repo,
-               git_version, win_locks):
+               git_version):
     """Tries to:
 
     1. Fetch the repo using a fetch strategy constructed with
@@ -137,8 +137,7 @@ def test_fetch(type_of_test,
 
 
 @pytest.mark.parametrize("type_of_test", ['branch', 'commit'])
-def test_debug_fetch(mock_packages, type_of_test, mock_git_repository,
-                     config, win_locks):
+def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config):
     """Fetch the repo with debug enabled."""
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
@@ -156,7 +155,7 @@ def test_debug_fetch(mock_packages, type_of_test, mock_git_repository,
             assert os.path.isdir(pkg.stage.source_path)
 
 
-def test_git_extra_fetch(tmpdir, win_locks):
+def test_git_extra_fetch(tmpdir):
     """Ensure a fetch after 'expanding' is effectively a no-op."""
     testpath = str(tmpdir)
 
@@ -177,7 +176,7 @@ def test_needs_stage():
 
 @pytest.mark.parametrize("get_full_repo", [True, False])
 def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
-                       config, mutable_mock_repo, win_locks):
+                       config, mutable_mock_repo):
     """Ensure that we can clone a full repository."""
 
     if git_version < ver('1.7.1'):
