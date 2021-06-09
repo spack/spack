@@ -904,7 +904,9 @@ def mock_cvs_repository(tmpdir_factory):
     sourcedir = sourcedirparent.join(module)
 
     def format_date(date):
-        return date.__format__('%Y-%m-%d %H:%M:%S')
+        return date.strftime('%Y-%m-%d %H:%M:%S')
+    def parse_date(string):
+        return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
     revision_date = {}
 
     # Initialize the repository
@@ -968,7 +970,7 @@ def mock_cvs_repository(tmpdir_factory):
             if m:
                 rev = m.group(1)
                 if rev in revision_date:
-                    rdate = datetime.fromisoformat(revision_date[rev])
+                    rdate = parse_date(revision_date[rev])
                     date = max(date, rdate)
         return format_date(date)
 
