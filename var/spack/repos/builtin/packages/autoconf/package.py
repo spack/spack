@@ -84,12 +84,3 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
                        'ifnames']
         for name in executables:
             setattr(module, name, self._make_executable(name))
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        if (self.spec.satisfies('@2.71:')
-            and not dependent_spec.satisfies('^gtk-doc')):
-            # If an autoconf script calls GTK_DOC_CHECK, newer
-            # versions of autoreconf try to call `gtkdocize --copy`, which
-            # would require an extra dependency on `gtk-doc`, even if
-            # documentation is disabled at configure time.
-            env.set('GTKDOCIZE', 'echo')
