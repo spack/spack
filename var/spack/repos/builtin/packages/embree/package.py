@@ -13,6 +13,7 @@ class Embree(CMakePackage):
     url      = "https://github.com/embree/embree/archive/v3.7.0.tar.gz"
     maintainers = ['aumuell']
 
+    version('3.13.0', sha256='4d86a69508a7e2eb8710d571096ad024b5174834b84454a8020d3a910af46f4f')
     version('3.12.1', sha256='0c9e760b06e178197dd29c9a54f08ff7b184b0487b5ba8b8be058e219e23336e')
     version('3.12.0', sha256='f3646977c45a9ece1fb0cfe107567adcc645b1c77c27b36572d0aa98b888190c')
     version('3.11.0', sha256='2ccc365c00af4389aecc928135270aba7488e761c09d7ebbf1bf3e62731b147d')
@@ -34,40 +35,27 @@ class Embree(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = []
+        args = [
+            '-DBUILD_TESTING=OFF',
+            '-DEMBREE_TUTORIALS=OFF',
+            '-DEMBREE_IGNORE_CMAKE_CXX_FLAGS=ON',
+            self.define_from_variant('EMBREE_ISPC_SUPPORT', 'ispc'),
 
-        args.append('-DBUILD_TESTING=OFF')
-        args.append('-DEMBREE_TUTORIALS=OFF')
-        args.append('-DEMBREE_IGNORE_CMAKE_CXX_FLAGS=ON')
+            # code selection and defines controlling namespace names are based on
+            # defines controlled by compiler flags, so disable ISAs below compiler
+            # flags chosen by spack
+            self.define('EMBREE_ISA_SSE2', 'sse4_2' not in spec.target),
+            self.define('EMBREE_ISA_SSE42', 'avx' not in spec.target),
+            self.define('EMBREE_ISA_AVX', 'avx2' not in spec.target),
+            self.define('EMBREE_ISA_AVX2', 'avx512' not in spec.target),
+            self.define('EMBREE_ISA_AVX512SKX', True),
+        ]
 
-        if 'ispc' in spec:
-            args.append('-DEMBREE_ISPC_SUPPORT=ON')
-        else:
-            args.append('-DEMBREE_ISPC_SUPPORT=OFF')
-
-        # code selection and defines controlling namespace names are based on
-        # defines controlled by compiler flags, so disable ISAs below compiler
-        # flags chosen by spack
-        if spec.target >= 'nehalem':
-            args.append('-DEMBREE_ISA_SSE2=OFF')
-        else:
-            args.append('-DEMBREE_ISA_SSE2=ON')
-
-        if spec.target >= 'sandybridge':
-            args.append('-DEMBREE_ISA_SSE42=OFF')
-        else:
-            args.append('-DEMBREE_ISA_SSE42=ON')
-
-        if spec.target >= 'haswell':
-            args.append('-DEMBREE_ISA_AVX=OFF')
-        else:
-            args.append('-DEMBREE_ISA_AVX=ON')
-
-        if spec.target >= 'skylake_avx512':
-            args.append('-DEMBREE_ISA_AVX2=OFF')
-        else:
-            args.append('-DEMBREE_ISA_AVX2=ON')
-
-        args.append('-DEMBREE_ISA_AVX512SKX=ON')
+        if spec.satisfies('%gcc@:7.99'):
+            # remove unsupported -mprefer-vector-width=256, otherwise copied
+            # from common/cmake/gnu.cmake
+            args.append('-DFLAGS_AVX512SKX=-mavx512f -mavx512dq -mavx512cd'
+                        ' -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt'
+                        ' -mbmi -mbmi2')
 
         return args

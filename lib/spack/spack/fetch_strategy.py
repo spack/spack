@@ -292,7 +292,15 @@ class URLFetchStrategy(FetchStrategy):
 
     @property
     def candidate_urls(self):
-        return [self.url] + (self.mirrors or [])
+        urls = []
+
+        for url in [self.url] + (self.mirrors or []):
+            if url.startswith('file://'):
+                path = urllib_parse.quote(url[len('file://'):])
+                url = 'file://' + path
+            urls.append(url)
+
+        return urls
 
     @_needs_stage
     def fetch(self):
@@ -772,8 +780,9 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def git_version(self):
-        vstring = self.git('--version', output=str).lstrip('git version ')
-        return Version(vstring)
+        output = self.git('--version', output=str, error=str)
+        match = re.search(r'git version (\S+)', output)
+        return Version(match.group(1)) if match else None
 
     @property
     def git(self):

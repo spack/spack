@@ -39,7 +39,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools flake8 mypy>=0.800 black
+        pip install --upgrade pip six setuptools flake8 mypy>=0.800 black types-six
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
@@ -283,8 +283,6 @@ jobs:
           useradd spack-test
           chown -R spack-test .
     - name: Run unit tests
-      env:
-          SPACK_PYTHON: /usr/libexec/platform-python
       shell: runuser -u spack-test -- bash {0}
       run: |
           source share/spack/setup-env.sh

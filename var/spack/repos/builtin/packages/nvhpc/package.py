@@ -21,6 +21,10 @@ import platform
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    '21.5': {
+        'Linux-aarch64': ('1a1748cd7cf538199d92ab3b1208935fa4a62708ba21125aeadb328ddc7380d4', 'https://developer.download.nvidia.com/hpc-sdk/21.5/nvhpc_2021_215_Linux_aarch64_cuda_multi.tar.gz'),
+        'Linux-ppc64le': ('4674931a5ce28724308cb9cebd546eefa3f0646d3d08adbea28ba5ad27f0c163', 'https://developer.download.nvidia.com/hpc-sdk/21.5/nvhpc_2021_215_Linux_ppc64le_cuda_multi.tar.gz'),
+        'Linux-x86_64': ('21989e52c58a6914743631c8200de1fec7e10b3449c6c1833f3032ee74b85f8e', 'https://developer.download.nvidia.com/hpc-sdk/21.5/nvhpc_2021_215_Linux_x86_64_cuda_multi.tar.gz')},
     '21.3': {
         'Linux-aarch64': ('88e0dbf8fcdd06a2ba06aacf65ae1625b8683688f6593ed3bf8ce129ce1b17b7', 'https://developer.download.nvidia.com/hpc-sdk/21.3/nvhpc_2021_213_Linux_aarch64_cuda_multi.tar.gz'),
         'Linux-ppc64le': ('08cd0cd6c80d633f107b44f88685ada7f014fbf6eac19ef5ae4a7952cabe4037', 'https://developer.download.nvidia.com/hpc-sdk/21.3/nvhpc_2021_213_Linux_ppc64le_cuda_multi.tar.gz'),

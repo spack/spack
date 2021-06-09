@@ -12,6 +12,19 @@ class PySqlalchemy(PythonPackage):
     homepage = 'http://www.sqlalchemy.org/'
     pypi = "SQLAlchemy/SQLAlchemy-1.3.9.tar.gz"
 
+    # 'sqlalchemy.testing.suite' requires 'pytest'
+    # Attempt to import everything other than 'sqlalchemy.testing'
+    # to avoid unnecessary 'pytest' dependency
+    import_modules = [
+        'sqlalchemy', 'sqlalchemy.connectors', 'sqlalchemy.databases',
+        'sqlalchemy.util', 'sqlalchemy.ext', 'sqlalchemy.ext.declarative',
+        'sqlalchemy.dialects', 'sqlalchemy.dialects.sybase',
+        'sqlalchemy.dialects.postgresql', 'sqlalchemy.dialects.oracle',
+        'sqlalchemy.dialects.sqlite', 'sqlalchemy.dialects.mysql',
+        'sqlalchemy.dialects.mssql', 'sqlalchemy.dialects.firebird', 'sqlalchemy.orm',
+        'sqlalchemy.engine', 'sqlalchemy.pool', 'sqlalchemy.event', 'sqlalchemy.sql'
+    ]
+
     version('1.3.19', sha256='3bba2e9fbedb0511769780fe1d63007081008c5c2d7d715e91858c94dbaa260e')
     version('1.3.9', sha256='272a835758908412e75e87f75dd0179a51422715c125ce42109632910526b1fd')
     version('1.2.19', sha256='5bb2c4fc2bcc3447ad45716c66581eab982c007dcf925482498d8733f86f17c7')

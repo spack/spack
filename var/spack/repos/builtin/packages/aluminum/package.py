@@ -66,6 +66,10 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
 
         if '+cuda' in spec:
             args.append('-DCMAKE_CUDA_STANDARD=14')
+            archs = spec.variants['cuda_arch'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+            args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
 
         if spec.satisfies('@0.5:'):
             args.extend([

@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import glob
 import os
 import sys
 import platform
@@ -317,8 +318,6 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
     buildcache_cmd('install', '-auf', cspec.name)
 
 
-@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
-                    reason='This test requires gpg')
 def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
 
@@ -332,7 +331,7 @@ def test_push_and_fetch_keys(mock_gnupghome):
 
     # dir 1: create a new key, record its fingerprint, and push it to a new
     #        mirror
-    with spack.util.gpg.gnupg_home_override(gpg_dir1):
+    with spack.util.gpg.gnupghome_override(gpg_dir1):
         spack.util.gpg.create(name='test-key',
                               email='fake@test.key',
                               expires='0',
@@ -346,7 +345,7 @@ def test_push_and_fetch_keys(mock_gnupghome):
 
     # dir 2: import the key from the mirror, and confirm that its fingerprint
     #        matches the one created above
-    with spack.util.gpg.gnupg_home_override(gpg_dir2):
+    with spack.util.gpg.gnupghome_override(gpg_dir2):
         assert len(spack.util.gpg.public_keys()) == 0
 
         bindist.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
@@ -433,6 +432,45 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
 
     assert rebuild
+
+
+@pytest.mark.usefixtures(
+    'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
+)
+def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
+    """Ensure spack buildcache index only reports available packages"""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+    spack.config.set('mirrors', {'test': mirror_url})
+
+    s = Spec('libdwarf').concretized()
+
+    # Install a package
+    install_cmd('--no-cache', s.name)
+
+    # Create a buildcache and update index
+    buildcache_cmd('create', '-uad', mirror_dir.strpath, s.name)
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Check package and dependency in buildcache
+    cache_list = buildcache_cmd('list', '--allarch')
+    assert 'libdwarf' in cache_list
+    assert 'libelf' in cache_list
+
+    # Remove dependency from cache
+    libelf_files = glob.glob(
+        os.path.join(mirror_dir.join('build_cache').strpath, '*libelf*'))
+    os.remove(*libelf_files)
+
+    # Update index
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Check dependency not in buildcache
+    cache_list = buildcache_cmd('list', '--allarch')
+    assert 'libdwarf' in cache_list
+    assert 'libelf' not in cache_list
 
 
 def test_generate_indices_key_error(monkeypatch, capfd):

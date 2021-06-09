@@ -15,10 +15,12 @@ class PyPyprecice(PythonPackage):
     homepage = "https://www.precice.org"
     git = "https://github.com/precice/python-bindings.git"
     url = "https://github.com/precice/python-bindings/archive/v2.0.0.1.tar.gz"
-    maintainers = ["ajaust", "BenjaminRodenberg"]
+    maintainers = ["ajaust", "BenjaminRodenberg", "IshaanDesai"]
 
     # Always prefer final version of release candidate
     version("develop", branch="develop")
+    version('2.2.1.1', sha256='481715c9e90660d3d97e63ee590a3b74a17564cd5cac3bfceceb59788fd11b14')
+    version('2.2.0.2', sha256='2287185f9ad7500dced53459543d27bb66bd2438c2e4bf81ee3317e6a00513d5')
     version('2.2.0.1', sha256='032fa58193cfa69e3be37557977056e8f507d89b40c490a351d17271269b25ad')
     version('2.1.1.2', sha256='363eb3eeccf964fd5ee87012c1032353dd1518662868f2b51f04a6d8a7154045')
     version("2.1.1.1", sha256="972f574549344b6155a8dd415b6d82512e00fa154ca25ae7e36b68d4d2ed2cf4")
@@ -34,6 +36,7 @@ class PyPyprecice(PythonPackage):
     patch("deactivate-version-check-via-pip.patch", when="@:2.1.1.1")
 
     depends_on("precice@develop", when="@develop")
+    depends_on("precice@2.2.1", when="@2.2.1.1:2.2.1.99")
     depends_on("precice@2.2.0", when="@2.2.0.1:2.2.0.99")
     depends_on("precice@2.1.1", when="@2.1.1.1:2.1.1.99")
     depends_on("precice@2.1.0", when="@2.1.0.1:2.1.0.99")

@@ -9,14 +9,13 @@ from spack.util.environment import is_system_path
 
 
 class Tcl(AutotoolsPackage, SourceforgePackage):
-    """Tcl (Tool Command Language) is a very powerful but easy to
-       learn dynamic programming language, suitable for a very wide
-       range of uses, including web and desktop applications,
-       networking, administration, testing and many more. Open source
-       and business-friendly, Tcl is a mature yet evolving language
-       that is truly cross platform, easily deployed and highly
-       extensible."""
-    homepage = "http://www.tcl.tk"
+    """Tcl (Tool Command Language) is a very powerful but easy to learn dynamic
+    programming language, suitable for a very wide range of uses, including web and
+    desktop applications, networking, administration, testing and many more. Open source
+    and business-friendly, Tcl is a mature yet evolving language that is truly cross
+    platform, easily deployed and highly extensible."""
+
+    homepage = "https://www.tcl.tk/"
     sourceforge_mirror_path = "tcl/tcl8.6.11-src.tar.gz"
 
     version('8.6.11', sha256='8c0486668586672c5693d7d95817cb05a18c5ecca2f40e2836b9578064088258')
@@ -38,7 +37,7 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
         with working_dir(self.build_directory):
             make('install')
 
-            # http://wiki.tcl.tk/17463
+            # https://wiki.tcl-lang.org/page/kitgen
             if self.spec.satisfies('@8.6:'):
                 make('install-headers')
 
@@ -81,22 +80,39 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
     def command(self):
         """Returns the tclsh command.
 
-        :returns: The tclsh command
-        :rtype: Executable
+        Returns:
+            Executable: the tclsh command
         """
-        return Executable(os.path.realpath(self.prefix.bin.tclsh))
+        # Although we symlink tclshX.Y to tclsh, we also need to support external
+        # installations that may not have this symlink, or may have multiple versions
+        # of Tcl installed in the same directory.
+        return Executable(os.path.realpath(self.prefix.bin.join(
+            'tclsh{0}'.format(self.version.up_to(2)))))
 
     def setup_run_environment(self, env):
-        # When using Tkinter from within spack provided python+tkinter, python
-        # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
-        env.set('TCL_LIBRARY', self.spec['tcl'].libs.directories[0])
+        """Set TCL_LIBRARY to the directory containing init.tcl.
+
+        For further info see:
+
+        * https://wiki.tcl-lang.org/page/TCL_LIBRARY
+        """
+        # When using tkinter from within spack provided python+tkinter,
+        # python will not be able to find Tcl unless TCL_LIBRARY is set.
+        env.set('TCL_LIBRARY', os.path.dirname(
+            sorted(find(self.prefix, 'init.tcl'))[0]))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        """Set TCLLIBPATH to include the tcl-shipped directory for
+        """Set TCL_LIBRARY to the directory containing init.tcl.
+        Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
-        For further info see: https://wiki.tcl.tk/1787"""
 
-        env.set('TCL_LIBRARY', self.spec['tcl'].libs.directories[0])
+        For further info see:
+
+        * https://wiki.tcl-lang.org/page/TCL_LIBRARY
+        * https://wiki.tcl-lang.org/page/TCLLIBPATH
+        """
+        env.set('TCL_LIBRARY', os.path.dirname(
+            sorted(find(self.prefix, 'init.tcl'))[0]))
 
         # If we set TCLLIBPATH, we must also ensure that the corresponding
         # tcl is found in the build environment. This to prevent cases
@@ -106,35 +122,40 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
         if not is_system_path(self.prefix.bin):
             env.prepend_path('PATH', self.prefix.bin)
 
-        tcl_paths = [join_path(self.spec['tcl'].libs.directories[0],
-                               'tcl{0}'.format(self.version.up_to(2)))]
+        # WARNING: paths in $TCLLIBPATH must be *space* separated,
+        # its value is meant to be a Tcl list, *not* an env list
+        # as explained here: https://wiki.tcl-lang.org/page/TCLLIBPATH:
+        # "TCLLIBPATH is a Tcl list, not some platform-specific
+        # colon-separated or semi-colon separated format"
+
+        # WARNING: Tcl and Tcl extensions like Tk install their configuration files
+        # in subdirectories like `<prefix>/lib/tcl8.6`. However, Tcl is aware of this,
+        # and $TCLLIBPATH should only contain `<prefix>/lib`. $TCLLIBPATH is only needed
+        # because we install Tcl extensions to different directories than Tcl. See:
+        # https://core.tcl-lang.org/tk/tktview/447bd3e4abe17452d19a80e6840dcc8a2603fcbc
+        env.prepend_path(
+            'TCLLIBPATH', self.spec['tcl'].libs.directories[0], separator=' ')
 
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
                 # Tcl libraries may be installed in lib or lib64, see #19546
                 for lib in ['lib', 'lib64']:
-                    tcl_paths.append(join_path(
-                        d.prefix, lib, 'tcl{0}'.format(self.version.up_to(2))))
-
-        # WARNING: paths in $TCLLIBPATH must be *space* separated,
-        # its value is meant to be a Tcl list, *not* an env list
-        # as explained here: https://wiki.tcl.tk/1787:
-        # "TCLLIBPATH is a Tcl list, not some platform-specific
-        # colon-separated or semi-colon separated format"
-        tcllibpath = ' '.join(tcl_paths)
-        env.set('TCLLIBPATH', tcllibpath)
+                    tcllibpath = join_path(d.prefix, lib)
+                    if os.path.exists(tcllibpath):
+                        env.prepend_path('TCLLIBPATH', tcllibpath, separator=' ')
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         """Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
-        For further info see: https://wiki.tcl.tk/1787"""
 
-        # For run time environment set only the path for
-        # dependent_spec and prepend it to TCLLIBPATH
-        if dependent_spec.package.extends(self.spec):
-            # Tcl libraries may be installed in lib or lib64, see #19546
-            for lib in ['lib', 'lib64']:
-                tcllibpath = join_path(
-                    self.prefix, lib, 'tcl{0}'.format(self.version.up_to(2)))
-                if os.path.exists(tcllibpath):
-                    env.prepend_path('TCLLIBPATH', tcllibpath, separator=' ')
+        For further info see:
+
+        * https://wiki.tcl-lang.org/page/TCLLIBPATH
+        """
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
+            if d.package.extends(self.spec):
+                # Tcl libraries may be installed in lib or lib64, see #19546
+                for lib in ['lib', 'lib64']:
+                    tcllibpath = join_path(d.prefix, lib)
+                    if os.path.exists(tcllibpath):
+                        env.prepend_path('TCLLIBPATH', tcllibpath, separator=' ')

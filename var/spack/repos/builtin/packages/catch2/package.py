@@ -93,8 +93,7 @@ class Catch2(CMakePackage):
             args.append('-DNO_SELFTEST={0}'.format(
                 'OFF' if self.run_tests else 'ON'))
         elif spec.satisfies('@2.1.1:'):
-            args.append('-DBUILD_TESTING:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF'))
+            args.append(self.define('BUILD_TESTING', self.run_tests))
         return args
 
     @when('@:1.6.99')

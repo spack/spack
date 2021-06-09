@@ -22,7 +22,9 @@ class Warpx(CMakePackage):
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
 
+    # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    version('21.06', sha256='a26039dc4061da45e779dd5002467c67a533fc08d30841e01e7abb3a890fbe30')
     version('21.05', sha256='f835f0ae6c5702550d23191aa0bb0722f981abb1460410e3d8952bc3d945a9fc')
     version('21.04', sha256='51d2d8b4542eada96216e8b128c0545c4b7527addc2038efebe586c32c4020a0')
 
@@ -82,11 +84,12 @@ class Warpx(CMakePackage):
     depends_on('lapackpp', when='+psatd dims=rz')
     depends_on('mpi', when='+mpi')
     depends_on('openpmd-api@0.13.1:,dev', when='+openpmd')
+    depends_on('openpmd-api ~mpi', when='+openpmd ~mpi')
     depends_on('openpmd-api +mpi', when='+openpmd +mpi')
     depends_on('pkgconfig', type='build', when='+psatd compute=omp')
     depends_on('rocfft', when='+psatd compute=hip')
-    depends_on('rocprim', when='+psatd compute=hip')
-    depends_on('rocrand', when='+psatd compute=hip')
+    depends_on('rocprim', when='compute=hip')
+    depends_on('rocrand', when='compute=hip')
     depends_on('llvm-openmp', when='%apple-clang compute=omp')
 
     conflicts('~qed +qedtablegen',
@@ -99,36 +102,25 @@ class Warpx(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DCMAKE_INSTALL_LIBDIR=lib',
             # variants
-            '-DWarpX_APP:BOOL={0}'.format(
-                'ON' if '+app' in spec else 'OFF'),
-            '-DWarpX_ASCENT:BOOL={0}'.format(
-                'ON' if '+ascent' in spec else 'OFF'),
+            self.define_from_variant('WarpX_APP', 'app'),
+            self.define_from_variant('WarpX_ASCENT', 'ascent'),
             '-DWarpX_COMPUTE={0}'.format(
                 spec.variants['compute'].value.upper()),
             '-DWarpX_DIMS={0}'.format(
                 spec.variants['dims'].value.upper()),
-            '-DWarpX_EB:BOOL={0}'.format(
-                'ON' if '+eb' in spec else 'OFF'),
-            '-DWarpX_LIB:BOOL={0}'.format(
-                'ON' if '+lib' in spec else 'OFF'),
-            '-DWarpX_MPI:BOOL={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
-            '-DWarpX_MPI_THREAD_MULTIPLE:BOOL={0}'.format(
-                'ON' if '+mpithreadmultiple' in spec else 'OFF'),
-            '-DWarpX_OPENPMD:BOOL={0}'.format(
-                'ON' if '+openpmd' in spec else 'OFF'),
+            self.define_from_variant('WarpX_EB', 'eb'),
+            self.define_from_variant('WarpX_LIB', 'lib'),
+            self.define_from_variant('WarpX_MPI', 'mpi'),
+            self.define_from_variant('WarpX_MPI_THREAD_MULTIPLE', 'mpithreadmultiple'),
+            self.define_from_variant('WarpX_OPENPMD', 'openpmd'),
             '-DWarpX_PRECISION={0}'.format(
                 spec.variants['precision'].value.upper()),
-            '-DWarpX_PSATD:BOOL={0}'.format(
-                'ON' if '+psatd' in spec else 'OFF'),
-            '-DWarpX_QED:BOOL={0}'.format(
-                'ON' if '+qed' in spec else 'OFF'),
-            '-DWarpX_QED_TABLE_GEN:BOOL={0}'.format(
-                'ON' if '+qedtablegen' in spec else 'OFF'),
+            self.define_from_variant('WarpX_PSATD', 'psatd'),
+            self.define_from_variant('WarpX_QED', 'qed'),
+            self.define_from_variant('WarpX_QED_TABLE_GEN', 'qedtablegen'),
         ]
 
         return args

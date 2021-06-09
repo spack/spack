@@ -25,7 +25,7 @@ class Upcxx(Package):
     homepage = "https://upcxx.lbl.gov"
     maintainers = ['bonachea']
 
-    git = 'https://bonachea@bitbucket.org/berkeleylab/upcxx.git'
+    git = 'https://bitbucket.org/berkeleylab/upcxx.git'
     version('develop', branch='develop')
     version('master',  branch='master')
 
@@ -49,6 +49,13 @@ class Upcxx(Package):
     conflicts('cross=none', when='platform=cray',
               msg='cross=none is unacceptable on Cray.' +
                   'Please specify an appropriate "cross" value')
+
+    # UPC++ always relies on GASNet-EX.
+    # The default (and recommendation) is to use the implicit, embedded version.
+    # This variant allows overriding with a particular version of GASNet-EX sources.
+    variant('gasnet', default=False,
+            description="Override embedded GASNet-EX version")
+    depends_on('gasnet conduits=none', when='+gasnet')
 
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
@@ -120,6 +127,8 @@ class Upcxx(Package):
                     env['CXX'] = spec['mpi'].mpicxx
             else:
                 env['CXX'] = self.compiler.cxx
+            if '+gasnet' in self.spec:
+                env['GASNET'] = spec['gasnet'].prefix.src
             installsh = Executable("./install")
             installsh(prefix)
         else:
@@ -150,12 +159,18 @@ class Upcxx(Package):
             env['CC'] = real_cc
             env['CXX'] = real_cxx
 
-            installsh = Executable("./configure")
-            installsh('--prefix=' + prefix)
+            options = ["--prefix=%s" % prefix]
+
+            if '+gasnet' in self.spec:
+                options.append('--with-gasnet=' + spec['gasnet'].prefix.src)
+
+            configure(*options)
 
             make()
 
             make('install')
+
+        install_tree('example', prefix.example)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -175,3 +190,15 @@ class Upcxx(Package):
             if 'cross=none' in self.spec:
                 make('run-tests', 'NETWORKS=smp')  # runs tests for smp backend
             make('tests-clean')  # cleanup
+
+    def test(self):
+        if self.spec.version <= Version('2019.9.0'):
+            spack.main.send_warning_to_tty(
+                "post-install tests not supported in UPC++ version " +
+                self.spec.version.string + " -- SKIPPED")
+        else:   # run post-install smoke test:
+            test_install = join_path(self.prefix.bin, 'test-upcxx-install.sh')
+            self.run_test(test_install, expected=['SUCCESS'], status=0,
+                          installed=True,
+                          purpose='Checking UPC++ compile+link ' +
+                                  'for all installed backends')

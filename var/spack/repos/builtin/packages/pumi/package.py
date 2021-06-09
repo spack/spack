@@ -38,6 +38,7 @@ class Pumi(CMakePackage):
     variant('shared', default=False, description='Build shared libraries')
     variant('zoltan', default=False, description='Enable Zoltan Features')
     variant('fortran', default=False, description='Enable FORTRAN interface')
+    variant('testing', default=False, description='Enable tests')
     variant('simmodsuite', default='none',
             values=('none', 'base', 'kernels', 'full'),
             description="Enable Simmetrix SimModSuite Support: 'base' enables "
@@ -67,18 +68,20 @@ class Pumi(CMakePackage):
 
         args = [
             '-DSCOREC_CXX_WARNINGS=OFF',
-            '-DENABLE_ZOLTAN=%s' % ('ON' if '+zoltan' in spec else 'OFF'),
+            self.define_from_variant('ENABLE_ZOLTAN', 'zoltan'),
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            '-DPUMI_FORTRAN_INTERFACE=%s' %
-            ('ON' if '+fortran' in spec else 'OFF'),
+            self.define_from_variant('PUMI_FORTRAN_INTERFACE', 'fortran'),
             '-DMDS_ID_TYPE=%s' % ('long' if '+int64' in spec else 'int'),
             '-DSKIP_SIMMETRIX_VERSION_CHECK=%s' %
             ('ON' if '~simmodsuite_version_check' in spec else 'OFF'),
-            '-DMESHES=%s' % join_path(self.stage.source_path, 'pumi_meshes')
+            self.define_from_variant('IS_TESTING', 'testing'),
+            '-DMESHES=%s' % join_path(self.stage.source_path, 'pumi-meshes')
         ]
+        if spec.satisfies('@2.2.3'):
+            args += ['-DCMAKE_CXX_STANDARD=11']
         if self.spec.satisfies('simmodsuite=base'):
             args.append('-DENABLE_SIMMETRIX=ON')
         if self.spec.satisfies('simmodsuite=kernels') or \

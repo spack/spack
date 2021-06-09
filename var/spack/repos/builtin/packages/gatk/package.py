@@ -78,20 +78,31 @@ class Gatk(Package):
     )
     version(
         "3.8-1",
-        sha256="a0829534d2d0ca3ebfbd3b524a9b50427ff238e0db400d6e9e479242d98cbe5c",
+        sha256='a0829534d2d0ca3ebfbd3b524a9b50427ff238e0db400d6e9e479242d98cbe5c',
         extension="tar.bz2",
-        url="https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-1-0-gf15c1c3ef",
+        url="https://storage.googleapis.com/gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2",
     )
     version(
         "3.8-0",
         sha256="d1017b851f0cc6442b75ac88dd438e58203fa3ef1d1c38eb280071ae3803b9f1",
-        extension="tar.gz",
-        url="https://software.broadinstitute.org/gatk/download/auth?package=GATK",
+        extension="tar.bz2",
+        url="https://storage.googleapis.com/gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-0-ge9d806836.tar.bz2"
     )
+
+    # Make r a variant. According to the gatk docs it is not essential and not
+    # tested.
+    # https://github.com/broadinstitute/gatk#R
+    # Using R to generate plots
+    # Certain GATK tools may optionally generate plots using the R installation
+    # provided within the conda environment. If you are uninterested in plotting,
+    # R is still required by several of the unit tests. Plotting is currently
+    # untested and should be viewed as a convenience rather than a primary
+    # output.
+    variant('r', default=False, description='Use R for plotting')
 
     depends_on("java@8", type="run")
     depends_on("python@2.6:2.8,3.6:", type="run", when="@4.0:")
-    depends_on("r@3.2:", type="run", when="@4.0:")
+    depends_on("r@3.2:", type="run", when="@4.0: +r")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
