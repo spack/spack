@@ -39,7 +39,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     # makeinfo is being searched for
     depends_on('texinfo', type='build', when='@1.22.4:')
     # configure complains when there is no uchardet that enhances preconv
-    depends_on('uchardet', type=('build', 'link'), when='@1.22.4:')
+    depends_on('uchardet', when='@1.22.4:')
 
     depends_on('libice', when='+x')
     depends_on('libxaw', when='+x')
