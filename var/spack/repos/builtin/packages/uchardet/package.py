@@ -31,11 +31,13 @@ class Uchardet(CMakePackage):
             url = "https://github.com/BYVoid/uchardet/archive/v0.0.5.tar.gz"
         return url
 
-    @when('platform=darwin')
     def cmake_args(self):
         args = []
-        # From https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/uchardet.rb
-        args.append('-DCMAKE_INSTALL_NAME_DIR={0}'.format(self.prefix.lib))
-        # From https://github.com/mutationpp/Mutationpp/issues/26
-        args.append('-DCMAKE_MACOSX_RPATH=ON')
+        if self.spec.satisfies('platform=darwin'):
+            args += [
+                # From https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/uchardet.rb
+                self.define('CMAKE_INSTALL_NAME_DIR', self.prefix.lib),
+                # From https://github.com/mutationpp/Mutationpp/issues/26
+                self.define('CMAKE_MACOSX_RPATH', 'ON')
+            ]
         return args
