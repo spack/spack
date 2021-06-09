@@ -35,7 +35,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     depends_on('sed',   type='build')
     depends_on('ghostscript', when='+pdf')
     # iconv is being asked whatever the release
-    depends_on('iconv', type=('build', 'link'))
+    depends_on('iconv')
     # makeinfo is being searched for
     depends_on('texinfo', type='build', when='@1.22.4:')
     # configure complains when there is no uchardet that enhances preconv
