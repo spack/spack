@@ -399,26 +399,26 @@ class TestStage(object):
 
     stage_name = 'spack-test-stage'
 
-    def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive, win_locks):
+    def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive):
         archive = mock_stage_archive()
         with Stage(archive.url, name=self.stage_name) as stage:
             check_setup(stage, self.stage_name, archive)
         check_destroy(stage, self.stage_name)
 
-    def test_setup_and_destroy_name_without_tmp(self, mock_stage_archive, win_locks):
+    def test_setup_and_destroy_name_without_tmp(self, mock_stage_archive):
         archive = mock_stage_archive()
         with Stage(archive.url, name=self.stage_name) as stage:
             check_setup(stage, self.stage_name, archive)
         check_destroy(stage, self.stage_name)
 
-    def test_setup_and_destroy_no_name_with_tmp(self, mock_stage_archive, win_locks):
+    def test_setup_and_destroy_no_name_with_tmp(self, mock_stage_archive):
         archive = mock_stage_archive()
         with Stage(archive.url) as stage:
             check_setup(stage, None, archive)
         check_destroy(stage, None)
 
     def test_noexpand_stage_file(
-            self, mock_stage_archive, mock_noexpand_resource, win_locks):
+            self, mock_stage_archive, mock_noexpand_resource):
         """When creating a stage with a nonexpanding URL, the 'archive_file'
         property of the stage should refer to the path of that file.
         """
@@ -501,7 +501,7 @@ class TestStage(object):
         # Perform a little cleanup
         shutil.rmtree(root_stage.path)
 
-    def test_setup_and_destroy_no_name_without_tmp(self, mock_stage_archive, win_locks):
+    def test_setup_and_destroy_no_name_without_tmp(self, mock_stage_archive):
         archive = mock_stage_archive()
         with Stage(archive.url) as stage:
             check_setup(stage, None, archive)
@@ -629,7 +629,7 @@ class TestStage(object):
         assert os.path.isdir(path)
 
     @pytest.mark.disable_clean_stage_check
-    def test_no_keep_with_exceptions(self, mock_stage_archive, win_locks):
+    def test_no_keep_with_exceptions(self, mock_stage_archive):
         class ThisMustFailHere(Exception):
             pass
 
@@ -644,7 +644,7 @@ class TestStage(object):
             assert os.path.isdir(path)
 
     @pytest.mark.disable_clean_stage_check
-    def test_keep_exceptions(self, mock_stage_archive, win_locks):
+    def test_keep_exceptions(self, mock_stage_archive):
         class ThisMustFailHere(Exception):
             pass
 
@@ -864,7 +864,7 @@ class TestStage(object):
             with Stage(None):
                 pass
 
-    def test_stage_constructor_with_path(self, tmpdir, win_locks):
+    def test_stage_constructor_with_path(self, tmpdir):
         """Ensure Stage constructor with a path uses it."""
         testpath = str(tmpdir)
         with Stage('file:///does-not-exist', path=testpath) as stage:
