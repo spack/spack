@@ -29,7 +29,7 @@ def create_projection_file(tmpdir, projection):
                                  'copy', 'relocate'])
 def test_view_link_type(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, cmd, win_locks):
+        install_mockery, cmd, ):
     install('libdwarf')
     viewpath = str(tmpdir.mkdir('view_{0}'.format(cmd)))
     view(cmd, viewpath, 'libdwarf')
@@ -45,7 +45,7 @@ def test_view_link_type(
                                      'copy', 'relocate'])
 def test_view_link_type_remove(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, add_cmd, win_locks):
+        install_mockery, add_cmd, ):
     install('needs-relocation')
     viewpath = str(tmpdir.mkdir('view_{0}'.format(add_cmd)))
     view(add_cmd, viewpath, 'needs-relocation')
@@ -60,7 +60,7 @@ def test_view_link_type_remove(
                                  'copy', 'relocate'])
 def test_view_projections(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, cmd, win_locks):
+        install_mockery, cmd, ):
     install('libdwarf@20130207')
 
     viewpath = str(tmpdir.mkdir('view_{0}'.format(cmd)))
@@ -83,7 +83,7 @@ def test_view_projections(
 
 def test_view_multiple_projections(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, win_locks):
+        install_mockery, ):
     install('libdwarf@20130207')
     install('extendee@1.0%gcc')
 
@@ -105,7 +105,7 @@ def test_view_multiple_projections(
 
 def test_view_multiple_projections_all_first(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, win_locks):
+        install_mockery, ):
     install('libdwarf@20130207')
     install('extendee@1.0%gcc')
 
@@ -136,7 +136,7 @@ def test_view_external(
 
 def test_view_extension(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, win_locks):
+        install_mockery, ):
     install('extendee')
     install('extension1@1.0')
     install('extension1@2.0')
@@ -162,7 +162,7 @@ def test_view_extension(
 
 def test_view_extension_projection(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, win_locks):
+        install_mockery, ):
     install('extendee@1.0')
     install('extension1@1.0')
     install('extension1@2.0')
@@ -195,7 +195,7 @@ def test_view_extension_projection(
 
 def test_view_extension_remove(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, win_locks):
+        install_mockery, ):
     install('extendee')
     install('extension1@1.0')
     viewpath = str(tmpdir.mkdir('view'))
@@ -214,7 +214,7 @@ def test_view_extension_remove(
 
 def test_view_extension_conflict(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, win_locks):
+        install_mockery, ):
     install('extendee')
     install('extension1@1.0')
     install('extension1@2.0')
@@ -226,7 +226,7 @@ def test_view_extension_conflict(
 
 def test_view_extension_conflict_ignored(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, win_locks):
+        install_mockery, ):
     install('extendee')
     install('extension1@1.0')
     install('extension1@2.0')
@@ -239,7 +239,7 @@ def test_view_extension_conflict_ignored(
 
 def test_view_extension_global_activation(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, win_locks):
+        install_mockery, ):
     install('extendee')
     install('extension1@1.0')
     install('extension1@2.0')
@@ -268,7 +268,7 @@ def test_view_extension_global_activation(
 
 def test_view_extendee_with_global_activations(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery, win_locks):
+        install_mockery, ):
     install('extendee')
     install('extension1@1.0')
     install('extension1@2.0')

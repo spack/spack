@@ -53,13 +53,12 @@ def check_spec(abstract, concrete):
 
 
 def check_concretize(abstract_spec):
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        abstract = Spec(abstract_spec)
-        concrete = abstract.concretized()
-        assert not abstract.concrete
-        assert concrete.concrete
-        check_spec(abstract, concrete)
-        return concrete
+    abstract = Spec(abstract_spec)
+    concrete = abstract.concretized()
+    assert not abstract.concrete
+    assert concrete.concrete
+    check_spec(abstract, concrete)
+    return concrete
 
 
 @pytest.fixture(

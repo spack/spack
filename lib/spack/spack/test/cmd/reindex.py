@@ -13,7 +13,7 @@ reindex = SpackCommand('reindex')
 
 
 def test_reindex_basic(mock_packages, mock_archive, mock_fetch,
-                       install_mockery, win_locks):
+                       install_mockery):
     install('libelf@0.8.13')
     install('libelf@0.8.12')
 
@@ -25,7 +25,7 @@ def test_reindex_basic(mock_packages, mock_archive, mock_fetch,
 
 
 def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch,
-                            install_mockery, win_locks):
+                            install_mockery):
     install('libelf@0.8.13')
     install('libelf@0.8.12')
 
@@ -38,7 +38,7 @@ def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch,
 
 
 def test_reindex_with_deprecated_packages(mock_packages, mock_archive,
-                                          mock_fetch, install_mockery, win_locks):
+                                          mock_fetch, install_mockery):
     install('libelf@0.8.13')
     install('libelf@0.8.12')
 
