@@ -18,7 +18,16 @@ class LuaLuajit(MakefilePackage):
 
     conflicts('@:2.0.5', when='target=aarch64:')
 
-    provides('lua-lang')
+    variant('lualinks', default=False, description="add symlinks to make lua-luajit a drop-in lua replacement")
+
+    provides("lua-lang", when="+lualinks")
+
+    @run_after("install")
+    @when("+lualinks")
+    def install_links(self):
+        # make symlinks as shown above
+        with working_dir(prefix.bin):
+            symlink('lua-luajit', 'lualinks')
 
     @property
     def headers(self):
