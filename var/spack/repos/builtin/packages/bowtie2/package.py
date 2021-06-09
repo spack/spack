@@ -25,8 +25,8 @@ class Bowtie2(MakefilePackage):
     depends_on('perl', type='run')
     depends_on('python', type='run')
     depends_on('zlib', when='@2.3.1:')
-    depends_on('simde', when='target=aarch64:', type='link')
-    depends_on('simde', when='target=ppc64le:', type='link')
+    depends_on('simde', when='@2.4.0: target=aarch64:', type='link')
+    depends_on('simde', when='@2.4.0: target=ppc64le:', type='link')
 
     patch('bowtie2-2.2.5.patch', when='@2.2.5', level=0)
     patch('bowtie2-2.3.1.patch', when='@2.3.1', level=0)
@@ -53,7 +53,8 @@ class Bowtie2(MakefilePackage):
         files = ['bowtie2-build', 'bowtie2-inspect']
         filter_file(match, substitute, *files, **kwargs)
 
-        if 'aarch64' in spec.target.family or 'ppc64' in spec.target.family:
+        if (self.spec.satisfies('@2.4.0: target=aarch64:') or
+            self.spec.satisfies('@2.4.0: target=ppc64le')):
             match = '-Ithird_party/simde'
             simdepath = spec['simde'].prefix.include
             substitute = "-I{simdepath}".format(simdepath=simdepath)
