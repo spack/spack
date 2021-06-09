@@ -37,9 +37,8 @@ class Elk(MakefilePackage):
     homepage = "https://elk.sourceforge.io/"
     url      = "https://downloads.sourceforge.net/project/elk/elk-7.1.14.tgz"
 
-# FIXME: Add a list of GitHub accounts to
-# notify when the package is updated.
-# maintainers = ['github_user1', 'github_user2']
+# NOTE: This is a community package, it doesn't have dedicated maintainers
+
     version('7.1.14', sha256='7c2ff30f4b1d72d5dc116de9d70761f2c206700c69d85dd82a17a5a6374453d2')
 
 # parallel builds might fail
