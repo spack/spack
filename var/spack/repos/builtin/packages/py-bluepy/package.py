@@ -40,7 +40,7 @@ class PyBluepy(PythonPackage):
     depends_on('py-pylru@1.2:', type='run', when='@:2.2.9')
 
     # morph-tool
-    depends_on('py-morph-tool@2.4.3:2.999', type='run', when='@2.3.0:')
+    depends_on('py-morph-tool@2.5.1:2.999', type='run', when='@2.3.0:')
 
     # morphio
     depends_on('py-morphio@3.0.1:3.999', type='run', when='@2.3.0:')

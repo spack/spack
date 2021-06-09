@@ -22,7 +22,7 @@ class PyMorphValidator(PythonPackage):
     depends_on('py-numpy@1.14:', type='run')
     depends_on('py-scipy@1.3:', type='run')
     depends_on('py-lxml@4.3.4:', type='run')
-    depends_on('py-morph-tool@2.4.2:', type='run')
+    depends_on('py-morph-tool@2.5.1:', type='run')
     depends_on('py-neurom@2.0:2.999', type='run')
     depends_on('py-bluepy@2.0.0:', type='run')
     depends_on('py-seaborn@0.10.1:', type='run')

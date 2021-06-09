@@ -45,7 +45,7 @@ class PyBluepysnap(PythonPackage):
     # morphologies
     depends_on('py-neurom@1.3:1.5.99', type='run', when='@:0.7.9')
     depends_on('py-neurom@1.6:1.99.99', type='run', when='@0.8.0:0.11.0')
-    depends_on('py-morph-tool@2.4.3:2.999', type='run', when='@0.12.0:')
+    depends_on('py-morph-tool@2.5.1:2.999', type='run', when='@0.12.0:')
     depends_on('py-morphio@3.0.0:3.999', type='run', when='@0.12.0:')
 
     # python2 only so only < 0.8.0
