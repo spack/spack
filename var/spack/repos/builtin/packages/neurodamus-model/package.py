@@ -83,12 +83,14 @@ class NeurodamusModel(SimModel):
             shutil.move('common', '_common_orig')
             force_symlink(spec.variants['common_mods'].value, 'common')
 
-        if spec.satisfies("+ngv"):
-            copy_all("ngv/common/mod/ngv", "mod")
-
     def build_model(self, spec, prefix):
         """Build and install the bare model.
         """
+        # NGV must overwrite other mods, even from the specific
+        # models, e.g. ProbAMPANMDA
+        if spec.satisfies("+ngv"):
+            copy_all("ngv/common/mod/ngv", "mod")
+
         SimModel._build_mods(self, 'mod', dependencies=[])  # No dependencies
         # Dont install intermediate src.
         SimModel.install(self, spec, prefix, install_src=False)
