@@ -17,6 +17,11 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     git         = "git://git.code.sf.net/p/saga-gis/code"
 
     version('develop',  branch='master')
+    version('7.9.0',    branch='release-7.9.0')
+    version('7.8.0',    branch='release-7.8.0')
+    version('7.7.0',    branch='release-7.7.0')
+    version('7.6.0',    branch='release-7.6.0')
+    version('7.5.0',    branch='release-7.5.0')
     version('7.4.0',    branch='release-7.4.0')
     version('7.3.0',    branch='release-7.3.0')
     version('7.1.1',    branch='release-7.1.1')
@@ -56,6 +61,7 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('opengl',   type='build')
     depends_on('libsm',    type='link')
 
     depends_on('libharu')
