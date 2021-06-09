@@ -71,7 +71,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
         args.append('--with-libiconv-prefix={0}'.format(self.spec['iconv'].prefix))
         return args
 
-    @when('+x')
     def setup_run_environment(self, env):
-        dir = join_path(self.prefix.lib, 'X11', 'app-defaults')
-        env.set_path('XFILESEARCHPATH', dir)
+        if self.spec.satisfies('+x'):
+            dir = join_path(self.prefix.lib, 'X11', 'app-defaults')
+            env.set_path('XFILESEARCHPATH', dir)
