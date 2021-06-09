@@ -1,0 +1,26 @@
+From e946737f211cf09db900b8940ef5b3263ae9e6dd Mon Sep 17 00:00:00 2001
+From: Nicolas Cornu <nicolac76@yahoo.fr>
+Date: Tue, 8 Jun 2021 15:48:21 +0200
+Subject: [PATCH] Fix parsing of version for nvhpc
+
+As the first line of the version is empty it crashes,
+so delete first line if it is empty
+---
+ cmake/EigenTesting.cmake | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/cmake/EigenTesting.cmake b/cmake/EigenTesting.cmake
+index 3d0074c71..8e9df7fe6 100644
+--- a/cmake/EigenTesting.cmake
++++ b/cmake/EigenTesting.cmake
+@@ -550,6 +550,7 @@ macro(ei_get_compilerver VAR)
+ 
+     execute_process(COMMAND ${CMAKE_CXX_COMPILER} ${EIGEN_CXX_FLAG_VERSION}
+                     OUTPUT_VARIABLE eigen_cxx_compiler_version_string OUTPUT_STRIP_TRAILING_WHITESPACE)
++    string(REGEX REPLACE "^[ \n\r]+" "" eigen_cxx_compiler_version_string ${eigen_cxx_compiler_version_string})
+     string(REGEX REPLACE "[\n\r].*"  ""  eigen_cxx_compiler_version_string  ${eigen_cxx_compiler_version_string})
+ 
+     ei_get_compilerver_from_cxx_version_string("${eigen_cxx_compiler_version_string}" CNAME CVER)
+-- 
+2.32.0
+
