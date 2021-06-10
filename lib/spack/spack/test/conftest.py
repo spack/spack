@@ -909,8 +909,15 @@ def mock_cvs_repository(tmpdir_factory):
     def parse_date(string):
         return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
 
-    # Initialize the repository
+    # We use this to record the times when we create CVS revisions, so that we
+    # can later check that we retrieve the proper revision when specifying a
+    # date. (CVS guarantees checking out the lastest revision before or on the
+    # specified date). As we create each revision, we separately record the
+    # time. We expect that, for a sequence of CVS invocations and
+    # datetime.now() calls, the resulting timestamps have the same ordering.
     revision_date = {}
+
+    # Initialize the repository
     with sourcedir.as_cwd():
         cvs('-d', cvsroot, 'init')
         cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit',
