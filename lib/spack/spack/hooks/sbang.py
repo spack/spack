@@ -66,7 +66,18 @@ def filter_shebang(path):
     with open(path, 'rb') as original_file:
         original = original_file.read()
         if sys.version_info >= (2, 7):
-            original = original.decode(encoding='UTF-8')
+            try:
+                original = original.decode(encoding='UTF-8')
+            except Exception:
+                try:
+                    original = original.rstrip("\n").decode("UTF-16")
+                except Exception:
+                    tty.debug('Encoding not UTF, trying latin')
+                    try:
+                        original = original.decode(encoding='latin-1')
+                    except Exception:
+                        raise Exception("Failed to detect encoding "
+                                        "file={0}".format(path))
         else:
             original = original.decode('UTF-8')
 
