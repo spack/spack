@@ -1,3 +1,7 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 class PyMeshpy(PythonPackage):
     """
@@ -30,6 +34,6 @@ class PyMeshpy(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-pybind11', type=('build', 'run'))    
     depends_on('py-pybind11', type=('build', 'run'))
-
-    conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
+    conflicts('%gcc@:4.7', msg='GCC 4.8+ required')    
