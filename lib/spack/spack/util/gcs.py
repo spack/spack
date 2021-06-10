@@ -73,8 +73,6 @@ class GCSBlob:
         try:
            bucket = self.storage_client.bucket(self.bucket_name)
            blob = bucket.blob(self.blob_path.lstrip("/"))
-           tty.warn("local file {}".format(local_file_path))
-           tty.warn("blob path {}".format(self.blob_path.lstrip("/")))
            blob.upload_from_filename(local_file_path)
         except Exception as ex:
            tty.error("{}, Could not upload {} to gcs blob storage".format(ex, local_file_path))
