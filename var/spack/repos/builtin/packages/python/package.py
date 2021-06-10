@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
 import os
 import platform
 import re
@@ -712,23 +711,53 @@ class Python(AutotoolsPackage):
 
         return self.command('-c', cmd, output=str).strip()
 
-    def get_python_inc(self):
+    def get_python_inc(self, plat_specific=False, prefix=None):
         """Return the directory for either the general or platform-dependent C
         include files. Wrapper around ``distutils.sysconfig.get_python_inc()``.
+
+        Parameters:
+            plat_specific (bool): if true, the platform-dependent include directory
+                is returned, else the platform-independent directory is returned
+            prefix (str): prefix to use instead of ``distutils.sysconfig.PREFIX``
+
+        Returns:
+            str: include files directory
         """
+        # Wrap strings in quotes
+        if prefix is not None:
+            prefix = '"{0}"'.format(prefix)
+
+        args = 'plat_specific={0}, prefix={1}'.format(plat_specific, prefix)
 
         cmd = 'from distutils.sysconfig import get_python_inc; '
-        cmd += self.print_string('get_python_inc()')
+        cmd += self.print_string('get_python_inc({0})'.format(args))
 
         return self.command('-c', cmd, output=str).strip()
 
-    def get_python_lib(self):
+    def get_python_lib(self, plat_specific=False, standard_lib=False, prefix=None):
         """Return the directory for either the general or platform-dependent
-        library installation. Wrapper around
-        ``distutils.sysconfig.get_python_lib()``."""
+        library installation. Wrapper around ``distutils.sysconfig.get_python_lib()``.
+
+        Parameters:
+            plat_specific (bool): if true, the platform-dependent library directory
+                is returned, else the platform-independent directory is returned
+            standard_lib (bool): if true, the directory for the standard library is
+                returned rather than the directory for the installation of
+                third-party extensions
+            prefix (str): prefix to use instead of ``distutils.sysconfig.PREFIX``
+
+        Returns:
+            str: library installation directory
+        """
+        # Wrap strings in quotes
+        if prefix is not None:
+            prefix = '"{0}"'.format(prefix)
+
+        args = 'plat_specific={0}, standard_lib={1}, prefix={2}'.format(
+            plat_specific, standard_lib, prefix)
 
         cmd = 'from distutils.sysconfig import get_python_lib; '
-        cmd += self.print_string('get_python_lib()')
+        cmd += self.print_string('get_python_lib({0})'.format(args))
 
         return self.command('-c', cmd, output=str).strip()
 
@@ -828,22 +857,61 @@ class Python(AutotoolsPackage):
         return headers
 
     @property
-    def python_lib_dir(self):
-        return join_path('lib', 'python{0}'.format(self.version.up_to(2)))
+    def python_include_dir(self):
+        """Directory for the include files.
+
+        On most systems, and for Spack-installed Python, this will look like:
+
+            ``include/pythonX.Y``
+
+        However, some systems append a ``m`` to the end of this path.
+
+        Returns:
+            str: include files directory
+        """
+        return self.get_python_inc(prefix='')
 
     @property
-    def python_include_dir(self):
-        return join_path('include', 'python{0}'.format(self.version.up_to(2)))
+    def python_lib_dir(self):
+        """Directory for the standard library.
+
+        On most systems, and for Spack-installed Python, this will look like:
+
+            ``lib/pythonX.Y``
+
+        On RHEL/CentOS/Fedora, when using the system Python, this will look like:
+
+            ``lib64/pythonX.Y``
+
+        On Debian/Ubuntu, when using the system Python, this will look like:
+
+            ``lib/pythonX``
+
+        Returns:
+            str: standard library directory
+        """
+        return self.get_python_lib(standard_lib=True, prefix='')
 
     @property
     def site_packages_dir(self):
-        # This path is not robust and likely won't work on many systems.
-        # RHEL and Fedora like to install Python libraries to lib64
-        # instead of lib, see issues #18520 and #17126.
-        # Debian likes to install Python libraries to dist-packages
-        # instead of site-packages, see issue #24076.
-        # TODO: Figure out a better way to handle this. Can we query Python?
-        return join_path(self.python_lib_dir, 'site-packages')
+        """Directory where third-party extensions should be installed.
+
+        On most systems, and for Spack-installed Python, this will look like:
+
+            ``lib/pythonX.Y/site-packages``
+
+        On RHEL/CentOS/Fedora, when using the system Python, this will look like:
+
+            ``lib64/pythonX.Y/site-packages``
+
+        On Debian/Ubuntu, when using the system Python, this will look like:
+
+            ``lib/pythonX/dist-packages``
+
+        Returns:
+            str: site-packages directory
+        """
+        return self.get_python_lib(prefix='')
 
     @property
     def easy_install_file(self):
@@ -855,8 +923,8 @@ class Python(AutotoolsPackage):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
-        extension and any other python extensions it depends on."""
-
+        extension and any other python extensions it depends on.
+        """
         # If we set PYTHONHOME, we must also ensure that the corresponding
         # python is found in the build environment. This to prevent cases
         # where a system provided python is run against the standard libraries
@@ -867,28 +935,10 @@ class Python(AutotoolsPackage):
         if not is_system_path(path):
             env.prepend_path('PATH', path)
 
-        for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test'), root=True):
             if d.package.extends(self.spec):
-                # RHEL and Fedora like to install Python libraries to lib64
-                # instead of lib, see issues #18520 and #17126.
-                # Debian likes to install Python libraries to dist-packages
-                # instead of site-packages, see issue #24076.
-                # Don't use a glob for Python version since multiple versions
-                # could be installed in the same directory.
-                dirs = glob.glob(join_path(
-                    d.prefix, 'lib*', 'python' + str(self.version.up_to(2)),
-                    '*-packages'))
-                if dirs:
-                    env.prepend_path('PYTHONPATH', dirs[0])
-
-        # We also need to set PYTHONPATH for the package we are installing so
-        # that the import tests can pass, but we can't check path existence
-        # before the package is actually installed, so add all possible paths.
-        for lib in ['lib', 'lib64']:
-            for site in ['site', 'dist']:
                 env.prepend_path('PYTHONPATH', join_path(
-                    self.prefix, lib, 'python' + str(self.version.up_to(2)),
-                    site + '-packages'))
+                    d.prefix, self.site_packages_dir))
 
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
@@ -946,26 +996,16 @@ class Python(AutotoolsPackage):
                 env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        for d in dependent_spec.traverse(deptype=('run')):
+        """Set PYTHONPATH to include the site-packages directory for the
+        extension and any other python extensions it depends on.
+        """
+        for d in dependent_spec.traverse(deptype=('run'), root=True):
             if d.package.extends(self.spec):
-                # RHEL and Fedora like to install Python libraries to lib64
-                # instead of lib, see issues #18520 and #17126.
-                # Debian likes to install Python libraries to dist-packages
-                # instead of site-packages, see issue #24076.
-                # Don't use a glob for Python version since multiple versions
-                # could be installed in the same directory.
-                dirs = glob.glob(join_path(
-                    d.prefix, 'lib*', 'python' + str(self.version.up_to(2)),
-                    '*-packages'))
-                if dirs:
-                    env.prepend_path('PYTHONPATH', dirs[0])
+                env.prepend_path('PYTHONPATH', join_path(
+                    d.prefix, self.site_packages_dir))
 
     def setup_dependent_package(self, module, dependent_spec):
-        """Called before python modules' install() methods.
-
-        In most cases, extensions will only need to have one line::
-
-        setup_py('install', '--prefix={0}'.format(prefix))"""
+        """Called before python modules' install() methods."""
 
         module.python = self.command
         module.setup_py = Executable(
