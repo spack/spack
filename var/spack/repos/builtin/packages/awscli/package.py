@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,7 @@ class Awscli(PythonPackage):
     """This package provides a unified command line interface to
        Amazon Web Services"""
 
-    homepage = "https://pypi.org/project/awscli/"
-    url      = "https://pypi.io/packages/source/a/awscli/awscli-1.16.308.tar.gz"
+    pypi = "awscli/awscli-1.16.308.tar.gz"
 
     version('1.16.308', sha256='3632fb1db2538128509a7b5e89f2a2c4ea3426bec139944247bddc4d79bf7603')
     version('1.16.179', sha256='6a87114d1325358d000abe22b2103baae7b91f053ff245b9fde33cb0affb5e4f')

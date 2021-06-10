@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,12 +38,13 @@ def build_info(image, spack_version):
     """
     # Don't handle error here, as a wrong image should have been
     # caught by the JSON schema
-    image_data = data()[image]
+    image_data = data()["images"][image]
     build_image = image_data['build']
 
     # Try to check if we have a tag for this Spack version
     try:
-        build_tag = image_data['build_tags'][spack_version]
+        # Translate version from git to docker if necessary
+        build_tag = image_data['build_tags'].get(spack_version, spack_version)
     except KeyError:
         msg = ('the image "{0}" has no tag for Spack version "{1}" '
                '[valid versions are {2}]')
@@ -54,19 +55,30 @@ def build_info(image, spack_version):
     return build_image, build_tag
 
 
-def package_info(image):
-    """Returns the commands used to update system repositories, install
-    system packages and clean afterwards.
+def os_package_manager_for(image):
+    """Returns the name of the OS package manager for the image
+    passed as argument.
 
     Args:
         image (str): image to be used at run-time. Should be of the form
             <image_name>:<image_tag> e.g. "ubuntu:18.04"
 
     Returns:
+        Name of the package manager, e.g. "apt" or "yum"
+    """
+    name = data()["images"][image]["os_package_manager"]
+    return name
+
+
+def commands_for(package_manager):
+    """Returns the commands used to update system repositories, install
+    system packages and clean afterwards.
+
+    Args:
+        package_manager (str): package manager to be used
+
+    Returns:
         A tuple of (update, install, clean) commands.
     """
-    image_data = data()[image]
-    update = image_data['update']
-    install = image_data['install']
-    clean = image_data['clean']
-    return update, install, clean
+    info = data()["os_package_managers"][package_manager]
+    return info['update'], info['install'], info['clean']

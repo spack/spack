@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,16 +42,16 @@ class Plasma(CMakePackage):
     depends_on("blas")
     depends_on("lapack")
 
-    conflicts("atlas")  # does not have LAPACKE interface
+    conflicts("^atlas")  # does not have LAPACKE interface
 
     # missing LAPACKE features and/or CBLAS headers
-    conflicts("netlib-lapack@:3.5.999")
+    conflicts("^netlib-lapack@:3.5.999")
 
     # clashes with OpenBLAS declarations and has a problem compiling on its own
-    conflicts("cblas")
+    conflicts("^cblas")
 
-    conflicts("openblas-with-lapack")  # incomplete LAPACK implementation
-    conflicts("veclibfort")
+    conflicts("^openblas-with-lapack")  # incomplete LAPACK implementation
+    conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
     conflicts("%gcc@:4.8.99", when='@:17.1')

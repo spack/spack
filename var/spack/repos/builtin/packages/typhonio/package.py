@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class Typhonio(CMakePackage):
     version('develop', branch='cmake_build')
     version('1.6_CMake', sha256='c9b7b2a7f4fa0b786f6b69c6426b67f42efc4ea6871323139d52cd44f4d0ff7c')
 
-    variant('build_type', default='Release', description='The build type to build',
-        values=('Debug', 'Release'))
+    variant('build_type', default='Release', values=('Debug', 'Release'),
+            description='The build type to build')
     variant('fortran', default=False, description='Enable Fortran support')
     variant('shared', default=False, description='Build shared libraries')
     variant('doc', default=False, description='Build user guide and doxygen documentation')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,5 +16,7 @@ class Graphite2(CMakePackage):
     url      = "https://github.com/silnrsi/graphite/releases/download/1.3.13/graphite2-1.3.13.tgz"
 
     version('1.3.13', sha256='dd63e169b0d3cf954b397c122551ab9343e0696fb2045e1b326db0202d875f06')
+
+    depends_on('python@3.6:', type='test')
 
     patch('regparm.patch')

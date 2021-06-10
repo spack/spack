@@ -21,10 +21,10 @@ packages:
     - gcc
     - intel
     providers:
-      elf:
-      - libelf
-      unwind:
-      - apple-libunwind
+      elf: [libelf]
+      fuse: [macfuse]
+      unwind: [apple-libunwind]
+      uuid: [apple-libuuid]
   apple-libunwind:
     buildable: false
     externals:
@@ -32,3 +32,10 @@ packages:
     # although the version number used here isn't critical
     - spec: apple-libunwind@35.3
       prefix: /usr
+  apple-libuuid:
+    buildable: false
+    externals:
+    # Apple bundles libuuid in libsystem_c version 1353.100.2,
+    # although the version number used here isn't critical
+    - spec: apple-libuuid@1353.100.2
+      prefix: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk

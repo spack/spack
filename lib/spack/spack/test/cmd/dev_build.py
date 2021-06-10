@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import pytest
 import spack.spec
 import llnl.util.filesystem as fs
 import spack.environment as ev
-from spack.main import SpackCommand, SpackCommandError
+from spack.main import SpackCommand
 
 dev_build = SpackCommand('dev-build')
 install = SpackCommand('install')
@@ -18,6 +18,8 @@ env = SpackCommand('env')
 def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
     spec.concretize()
+
+    assert 'dev_path' in spec.variants
 
     with tmpdir.as_cwd():
         with open(spec.package.filename, 'w') as f:
@@ -87,7 +89,7 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
     assert os.path.exists(str(tmpdir))
 
 
-def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
+def test_dev_build_before_until(tmpdir, mock_packages, install_mockery, capsys):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
     spec.concretize()
 
@@ -99,29 +101,40 @@ def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
             dev_build('-u', 'edit', '-b', 'edit',
                       'dev-build-test-install@0.0.0')
 
-        with pytest.raises(SpackCommandError):
-            dev_build('-u', 'phase_that_does_not_exist',
-                      'dev-build-test-install@0.0.0')
+        bad_phase = 'phase_that_does_not_exist'
+        not_allowed = 'is not a valid phase'
+        not_installed = 'was not installed'
+        out = dev_build('-u', bad_phase, 'dev-build-test-install@0.0.0',
+                        fail_on_error=False)
+        assert bad_phase in out
+        assert not_allowed in out
+        assert not_installed in out
 
-        with pytest.raises(SpackCommandError):
-            dev_build('-b', 'phase_that_does_not_exist',
-                      'dev-build-test-install@0.0.0')
+        out = dev_build('-b', bad_phase, 'dev-build-test-install@0.0.0',
+                        fail_on_error=False)
+        assert bad_phase in out
+        assert not_allowed in out
+        assert not_installed in out
+
+
+def print_spack_cc(*args):
+    # Eat arguments and print environment variable to test
+    print(os.environ.get('CC', ''))
+
+
+# `module unload cray-libsci` in test environment causes failure
+# It does not fail for actual installs
+# build_environment.py imports module directly, so we monkeypatch it there
+# rather than in module_cmd
+def mock_module_noop(*args):
+    pass
 
 
 def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
                            install_mockery):
-    def print_spack_cc(*args):
-        # Eat arguments and print environment variable to test
-        print(os.environ.get('CC', ''))
     monkeypatch.setattr(os, 'execvp', print_spack_cc)
 
-    # `module unload cray-libsci` in test environment causes failure
-    # It does not fail for actual installs
-    # build_environment.py imports module directly, so we monkeypatch it there
-    # rather than in module_cmd
-    def module(*args):
-        pass
-    monkeypatch.setattr(spack.build_environment, 'module', module)
+    monkeypatch.setattr(spack.build_environment, 'module', mock_module_noop)
 
     with tmpdir.as_cwd():
         output = dev_build('-b', 'edit', '--drop-in', 'sh',
@@ -189,7 +202,7 @@ env:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: %s
-""" % build_dir)
+""" % os.path.relpath(str(build_dir), start=str(envdir)))
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
@@ -315,7 +328,7 @@ env:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: %s
-""" % build_dir)
+""" % os.path.relpath(str(build_dir), start=str(envdir)))
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
@@ -330,7 +343,7 @@ env:
     assert dep_spec.package.filename in os.listdir(dep_spec.prefix)
     assert os.path.exists(spec.prefix)
 
-    # Ensure variants set properly
+    # Ensure variants set properly; ensure build_dir is absolute and normalized
     for dep in (dep_spec, spec['dev-build-test-install']):
         assert dep.satisfies('dev_path=%s' % build_dir)
     assert spec.satisfies('^dev_path=*')

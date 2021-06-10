@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Madgraph5amc(Package):
     homepage = "https://launchpad.net/mg5amcnlo"
     url      = "https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz"
 
+    tags = ['hep']
+
     version('2.8.1', sha256='acda34414beba201e529b8c03f87f4893fb3f99ed2956a131d60a387e76c5b8c',
             url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.1.tar.gz")
     version('2.8.0', sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
@@ -26,7 +28,7 @@ class Madgraph5amc(Package):
     version('2.7.3.py2', sha256='0b665356f4d9359e6e382e0f408dc11db594734567c6b2f0ec0e0697f2dbe099',
             url="https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz")
 
-    variant('atlas', default=False, description='Apply changes requested by ' + 
+    variant('atlas', default=False, description='Apply changes requested by ' +
             "the ATLAS experimenent on LHC")
     variant('ninja', default=False, description='Use external installation' +
             " of Ninja")

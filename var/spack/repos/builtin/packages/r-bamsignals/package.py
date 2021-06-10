@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBamsignals(RPackage):
-    """Extract read count signals from bam files.
+    """Extract read count signals from bam files
 
        This package allows to efficiently obtain count vectors from indexed bam
        files. It counts the number of reads in given genomic ranges and it
@@ -17,6 +17,7 @@ class RBamsignals(RPackage):
     homepage = "https://bioconductor.org/packages/bamsignals"
     git      = "https://git.bioconductor.org/packages/bamsignals.git"
 
+    version('1.22.0', commit='5f533969c84212406bcb3ebf725ebb6d77e9947a')
     version('1.16.0', commit='dba9a4ae1613d2700f122ade1e9b90ca8fce5657')
     version('1.14.0', commit='3107d3a35830e879eeddf127a81016ea1ca9b53d')
     version('1.12.1', commit='06b6282df377cf9db58e8016be4ac8ddcc960939')
@@ -30,7 +31,9 @@ class RBamsignals(RPackage):
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-zlibbioc', type=('build', 'run'))
     depends_on('r-rhtslib', type=('build', 'run'))
-
     depends_on('r-rhtslib@1.12.1:', when='@1.12.1:', type=('build', 'run'))
-
     depends_on('r-rhtslib@1.13.1:', when='@1.14.0:', type=('build', 'run'))
+    depends_on('gmake', type='build')
+
+    # this is no listed but is needed
+    depends_on('curl')

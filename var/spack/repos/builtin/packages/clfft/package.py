@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,15 +20,14 @@ class Clfft(CMakePackage):
     depends_on('opencl@1.2:')
     depends_on('boost@1.33.0:', when='+client')
 
+    patch('https://github.com/clMathLibraries/clFFT/commit/eea7dbc888367b8dbea602ba539eb1a9cbc118d9.patch',
+          sha256='3148d5937077def301b30b913bc2437df869204fca1de4385ccd46e3b98b13aa', when='@2.12.2')
+
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
-        spec = self.spec
-
         args = [
-            '-DBUILD_CLIENT:BOOL={0}'.format((
-                'ON' if '+client' in spec else 'OFF')),
-            '-DBUILD_CALLBACK_CLIENT:BOOL={0}'.format((
-                'ON' if '+client' in spec else 'OFF'))
+            self.define_from_variant('BUILD_CLIENT', 'client'),
+            self.define_from_variant('BUILD_CALLBACK_CLIENT', 'client')
         ]
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class IntelMkl(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2020.4.304', sha256='2314d46536974dbd08f2a4e4f9e9a155dc7e79e2798c74e7ddfaad00a5917ea5',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16917/l_mkl_2020.4.304.tgz')
     version('2020.3.279', sha256='2b8e434ecc9462491130ba25a053927fd1a2eca05e12acb5936b08c486857a04',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16903/l_mkl_2020.3.279.tgz')
     version('2020.2.254', sha256='ed00a267af362a6c14212bd259ab1673d64337e077263033edeef8ac72c10223',

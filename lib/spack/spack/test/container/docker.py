@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,20 +22,22 @@ def test_build_and_run_images(minimal_configuration):
 
     # Test the output of the build property
     build = writer.build
-    assert build.image == 'spack/ubuntu-bionic'
-    assert build.tag == 'latest'
+    assert build.image == 'spack/ubuntu-bionic:latest'
 
 
 def test_packages(minimal_configuration):
     # In this minimal configuration we don't have packages
     writer = writers.create(minimal_configuration)
-    assert writer.os_packages is None
+    assert writer.os_packages_build is None
+    assert writer.os_packages_final is None
 
     # If we add them a list should be returned
     pkgs = ['libgomp1']
-    minimal_configuration['spack']['container']['os_packages'] = pkgs
+    minimal_configuration['spack']['container']['os_packages'] = {
+        'final': pkgs
+    }
     writer = writers.create(minimal_configuration)
-    p = writer.os_packages
+    p = writer.os_packages_final
     assert p.update
     assert p.install
     assert p.clean

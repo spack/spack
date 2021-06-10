@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyCsvkit(PythonPackage):
     formats"""
 
     homepage = 'http://csvkit.rtfd.org/'
-    url      = "https://pypi.io/packages/source/c/csvkit/csvkit-0.9.1.tar.gz"
+    pypi = "csvkit/csvkit-0.9.1.tar.gz"
 
     version('1.0.4', sha256='1353a383531bee191820edfb88418c13dfe1cdfa9dd3dc46f431c05cd2a260a0')
     version('0.9.1', sha256='92f8b8647becb5cb1dccb3af92a13a4e85702d42ba465ce8447881fb38c9f93a')

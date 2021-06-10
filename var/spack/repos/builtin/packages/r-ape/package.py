@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RApe(RPackage):
-    """Functions for reading, writing, plotting, and manipulating phylogenetic
+    """Analyses of Phylogenetics and Evolution
+
+    Functions for reading, writing, plotting, and manipulating phylogenetic
     trees, analyses of comparative data in a phylogenetic framework, ancestral
     character analyses, analyses of diversification and macroevolution,
     computing distances from DNA sequences, reading and writing nucleotide
@@ -27,6 +29,7 @@ class RApe(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ape_4.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ape"
 
+    version('5.4-1', sha256='f0316c8e74ce900053e8b3e8c9322b9d10e7730f3be2150365f74630bee7eee4')
     version('5.3', sha256='08b0df134c523feb00a86896d1aa2a43f0f0dab20a53bc6b5d6268d867988b23')
     version('5.2', sha256='27eb02856c130d59de6e06276be4981709923756319e465a7f2d4756d4f46415')
     version('5.1', sha256='b7d5dca66881638227a40aa59533904aa5efe0f4b867851b248e8f948a01a26e')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,7 @@ def edit_package(name, repo_path, namespace):
     if os.path.exists(path):
         if not os.path.isfile(path):
             tty.die("Something is wrong. '{0}' is not a file!".format(path))
-        if not os.access(path, os.R_OK | os.W_OK):
+        if not os.access(path, os.R_OK):
             tty.die("Insufficient permissions on '%s'!" % path)
     else:
         tty.die("No package for '{0}' was found.".format(spec.name),

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSpem(RPackage):
-    """S-system parameter estimation method.
+    """S-system parameter estimation method
 
        This package can optimize the parameter in S-system models given time
        series data"""
@@ -15,6 +15,7 @@ class RSpem(RPackage):
     homepage = "https://bioconductor.org/packages/SPEM"
     git      = "https://git.bioconductor.org/packages/SPEM.git"
 
+    version('1.30.0', commit='6b2eb64bfe6287846b1408297dd46dc772431031')
     version('1.24.0', commit='537ed19e466008f2972a246479b327c95177a99e')
     version('1.22.0', commit='fddb7cd1f81e47eae603724ea149c2adca5b3eb4')
     version('1.20.0', commit='b0e1049c61a35da00882d21026f4c1eb03b17517')

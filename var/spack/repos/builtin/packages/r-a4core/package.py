@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,15 @@ from spack import *
 
 
 class RA4core(RPackage):
-    """Automated Affymetrix Array Analysis Core Package."""
+    """Automated Affymetrix Array Analysis Core Package
+
+    Utility functions for the Automated Affymetrix Array Analysis set of
+    packages."""
 
     homepage = "https://bioconductor.org/packages/a4Core"
     git      = "https://git.bioconductor.org/packages/a4Core.git"
 
+    version('1.38.0', commit='a027dcd3486c64950815ec7c7271f1f65ba3d8a1')
     version('1.32.0', commit='2916a29723bdd514d5d987f89725d141d1d2dfce')
     version('1.30.0', commit='e392b1b4339a34f93d5d9bc520a1a9385ea63141')
     version('1.28.0', commit='39b6ee29bc2f2fdc5733438c14dc02f8abc6460b')

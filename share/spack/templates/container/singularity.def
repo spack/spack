@@ -1,8 +1,17 @@
 Bootstrap: docker
-From: {{ build.image }}:{{ build.tag }}
+From: {{ build.image }}
 Stage: build
 
 %post
+{% if os_packages_build.list %}
+  # Update, install and cleanup of system packages needed at build-time
+  {% if os_package_update %}
+  {{ os_packages_build.update }}
+  {% endif %}
+  {{ os_packages_build.install }} {{ os_packages_build.list | join | replace('\n', ' ') }}
+  {{ os_packages_build.clean }}
+
+{% endif %}
   # Create the manifest file for the installation in /opt/spack-environment
   mkdir {{ paths.environment }} && cd {{ paths.environment }}
   cat << EOF > spack.yaml
@@ -29,7 +38,6 @@ EOF
 {{ extra_instructions.build }}
 {% endif %}
 
-
 {% if apps %}
 {% for application, help_text in apps.items() %}
 
@@ -52,39 +60,41 @@ Stage: final
   {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
 
 %post
-{% if os_packages.list %}
-  # Update, install and cleanup of system packages
-  {{ os_packages.update }}
-  {{ os_packages.install }} {{ os_packages.list | join | replace('\n', ' ') }}
-  {{ os_packages.clean }}
+{% if os_packages_final.list %}
+  # Update, install and cleanup of system packages needed at run-time
+  {% if os_package_update %}
+  {{ os_packages_final.update }}
+  {% endif %}
+  {{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }}
+  {{ os_packages_final.clean }}
 {% endif %}
   # Modify the environment without relying on sourcing shell specific files at startup
   cat {{ paths.environment }}/environment_modifications.sh >> $SINGULARITY_ENVIRONMENT
 {% if extra_instructions.final %}
 {{ extra_instructions.final }}
 {% endif %}
-
 {% if runscript %}
+
 %runscript
 {{ runscript }}
 {% endif %}
-
 {% if startscript %}
+
 %startscript
 {{ startscript }}
 {% endif %}
-
 {% if test %}
+
 %test
 {{ test }}
 {% endif %}
-
 {% if help %}
+
 %help
 {{ help }}
 {% endif %}
-
 {% if labels %}
+
 %labels
 {% for label, value in labels.items() %}
   {{ label }} {{ value }}

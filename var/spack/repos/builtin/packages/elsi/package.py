@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class Elsi(CMakePackage):
     )
     variant(
         'elpa2_kernel', default="none", description="ELPA2 Kernel",
-        values=('AVX', 'AVX2', 'AVX512'), multi=False
+        values=('none', 'AVX', 'AVX2', 'AVX512'), multi=False
     )
     variant(
         'enable_pexsi', default=False, description='Enable PEXSI support'

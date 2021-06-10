@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -191,44 +191,24 @@ Environment has been activated. Similarly, the ``install`` and
   ==> 0 installed packages
 
   $ spack install zlib@1.2.11
-  ==> Installing zlib
-  ==> Searching for binary cache of zlib
-  ==> Warning: No Spack mirrors are currently configured
-  ==> No binary for zlib found: installing from source
-  ==> Fetching http://zlib.net/fossils/zlib-1.2.11.tar.gz
-  ######################################################################## 100.0%
-  ==> Staging archive: /spack/var/spack/stage/zlib-1.2.11-3r4cfkmx3wwfqeof4bc244yduu2mz4ur/zlib-1.2.11.tar.gz
-  ==> Created stage in /spack/var/spack/stage/zlib-1.2.11-3r4cfkmx3wwfqeof4bc244yduu2mz4ur
-  ==> No patches needed for zlib
-  ==> Building zlib [Package]
-  ==> Executing phase: 'install'
-  ==> Successfully installed zlib
-    Fetch: 0.36s.  Build: 11.58s.  Total: 11.93s.
-  [+] /spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/zlib-1.2.11-3r4cfkmx3wwfqeof4bc244yduu2mz4ur
+  ==> Installing zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv
+  ==> No binary for zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv found: installing from source
+  ==> zlib: Executing phase: 'install'
+  [+] ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv
 
   $ spack env activate myenv
 
   $ spack find
   ==> In environment myenv
   ==> No root specs
-
   ==> 0 installed packages
 
   $ spack install zlib@1.2.8
-  ==> Installing zlib
-  ==> Searching for binary cache of zlib
-  ==> Warning: No Spack mirrors are currently configured
-  ==> No binary for zlib found: installing from source
-  ==> Fetching http://zlib.net/fossils/zlib-1.2.8.tar.gz
-  ######################################################################## 100.0%
-  ==> Staging archive: /spack/var/spack/stage/zlib-1.2.8-y2t6kq3s23l52yzhcyhbpovswajzi7f7/zlib-1.2.8.tar.gz
-  ==> Created stage in /spack/var/spack/stage/zlib-1.2.8-y2t6kq3s23l52yzhcyhbpovswajzi7f7
-  ==> No patches needed for zlib
-  ==> Building zlib [Package]
-  ==> Executing phase: 'install'
-  ==> Successfully installed zlib
-    Fetch: 0.26s.  Build: 2.08s.  Total: 2.35s.
-  [+] /spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/zlib-1.2.8-y2t6kq3s23l52yzhcyhbpovswajzi7f7
+  ==> Installing zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x
+  ==> No binary for zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x found: installing from source
+  ==> zlib: Executing phase: 'install'
+  [+] ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x
+  ==> Updating view at ~/spack/var/spack/environments/myenv/.spack-env/view
 
   $ spack find
   ==> In environment myenv
@@ -236,14 +216,16 @@ Environment has been activated. Similarly, the ``install`` and
   zlib@1.2.8
 
   ==> 1 installed package
-  -- linux-rhel7-x86_64 / gcc@4.9.3 -------------------------------
+  -- linux-rhel7-broadwell / gcc@8.1.0 ----------------------------
   zlib@1.2.8
 
   $ despacktivate
+
   $ spack find
   ==> 2 installed packages
-  -- linux-rhel7-x86_64 / gcc@4.9.3 -------------------------------
+  -- linux-rhel7-broadwell / gcc@8.1.0 ----------------------------
   zlib@1.2.8  zlib@1.2.11
+
 
 Note that when we installed the abstract spec ``zlib@1.2.8``, it was
 presented as a root of the Environment. All explicitly installed
@@ -266,9 +248,9 @@ Users can add abstract specs to an Environment using the ``spack add``
 command. The most important component of an Environment is a list of
 abstract specs.
 
-Adding a spec adds to the manifest (the ``spack.yaml`` file) and to
-the roots of the Environment, but does not affect the concrete specs
-in the lockfile, nor does it install the spec.
+Adding a spec adds to the manifest (the ``spack.yaml`` file), which is
+used to define the roots of the Environment, but does not affect the
+concrete specs in the lockfile, nor does it install the spec.
 
 The ``spack add`` command is environment aware. It adds to the
 currently active environment. All environment aware commands can also
@@ -349,6 +331,9 @@ installed specs using the ``-c`` (``--concretized``) flag.
 
   ==> 0 installed packages
 
+
+.. _installing-environment:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Installing an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -370,6 +355,18 @@ of build logs related to that environment. The ``spack install``
 command also stores a Spack repo containing the ``package.py`` file
 used at install time for each package in the ``repos/`` directory in
 the Environment.
+
+The ``--no-add`` option can be used in a concrete environment to tell
+spack to install specs already present in the environment but not to
+add any new root specs to the environment.  For root specs provided
+to ``spack install`` on the command line, ``--no-add`` is the default,
+while for dependency specs on the other hand, it is optional.  In other
+words, if there is an unambiguous match in the active concrete environment
+for a root spec provided to ``spack install`` on the command line, spack
+does not require you to specify the ``--no-add`` option to prevent the spec
+from being added again.  At the same time, a spec that already exists in the
+environment, but only as a dependency, will be added to the environment as a
+root spec without the ``--no-add`` option.
 
 ^^^^^^^
 Loading
@@ -414,6 +411,12 @@ There are two ways to include configuration information in a Spack Environment:
 
 #. Included in the ``spack.yaml`` file from another file.
 
+Many Spack commands also affect configuration information in files
+automatically. Those commands take a ``--scope`` argument, and the
+environment can be specified by ``env:NAME`` (to affect environment
+``foo``, set ``--scope env:foo``). These commands will automatically
+manipulate configuration inline in the ``spack.yaml`` file.
+
 """""""""""""""""""""
 Inline configurations
 """""""""""""""""""""
@@ -456,8 +459,8 @@ Environments can include files with either relative or absolute
 paths. Inline configurations take precedence over included
 configurations, so you don't have to change shared configuration files
 to make small changes to an individual Environment. Included configs
-listed later will have higher precedence, as the included configs are
-applied in order.
+listed earlier will have higher precedence, as the included configs are
+applied in reverse order.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Manually Editing the Specs List
@@ -720,6 +723,8 @@ Spack Environment managed views are updated every time the environment
 is written out to the lock file ``spack.lock``, so the concrete
 environment and the view are always compatible.
 
+.. _configuring_environment_views:
+
 """""""""""""""""""""""""""""
 Configuring environment views
 """""""""""""""""""""""""""""
@@ -830,8 +835,10 @@ environment for Spack commands. The arguments ``-v,--with-view`` and
 behavior is to activate with the environment view if there is one.
 
 The environment variables affected by the ``spack env activate``
-command and the paths that are used to update them are in the
-following table.
+command and the paths that are used to update them are determined by
+the :ref:`prefix inspections <customize-env-modifications>` defined in
+your modules configuration; the defaults are summarized in the following
+table.
 
 =================== =========
 Variable            Paths

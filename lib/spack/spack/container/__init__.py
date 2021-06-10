@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,11 +38,11 @@ def validate(configuration_file):
     env_dict = spack.environment.config_dict(config)
     env_dict.setdefault('container', {
         'format': 'docker',
-        'base': {'image': 'ubuntu:18.04', 'spack': 'develop'}
+        'images': {'os': 'ubuntu:18.04', 'spack': 'develop'}
     })
     env_dict['container'].setdefault('format', 'docker')
     env_dict['container'].setdefault(
-        'base', {'image': 'ubuntu:18.04', 'spack': 'develop'}
+        'images', {'os': 'ubuntu:18.04', 'spack': 'develop'}
     )
 
     # Remove attributes that are not needed / allowed in the

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,10 @@ class Yoda(AutotoolsPackage):
     homepage = "https://yoda.hepforge.org/"
     url      = "https://yoda.hepforge.org/downloads/?f=YODA-1.8.3.tar.bz2"
 
+    tags = ['hep']
+
+    version('1.8.5', sha256='4c2e6b8571fc176271515a309b45687a2981af1b07ff3f00d0b035a597aa32fd')
+    version('1.8.4', sha256='9d24a41c9b7cc6eb14cab0a48f65d2fca7ec9d794afe0922ceb158d0153c150e')
     version('1.8.3', sha256='d9dd0ea5e0f630cdf4893c09a40c78bd44455777c2125385ecc26fa9a2acba8a')
     version('1.8.2', sha256='89558c11cf9b88b0899713e5b4bf8781fdcecc480ff155985ebbf148c6d80bdb')
     version('1.8.1', sha256='51472e12065b9469f13906f0dc609e036d0c1dbd2a8e445e7d654aba73660112')
@@ -59,7 +63,10 @@ class Yoda(AutotoolsPackage):
     depends_on('python', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
     depends_on('boost', when='@:1.6.0', type=('build', 'run'))
-    depends_on('py-cython', type='build')
+    depends_on('py-cython@0.18:', type='build', when='@:1.4.0')
+    depends_on('py-cython@0.20:', type='build', when='@1.4.0:1.6.5')
+    depends_on('py-cython@0.23.5:', type='build', when='@1.6.5:1.8.0')
+    depends_on('py-cython@0.24:', type='build', when='@1.8.0:')
     depends_on('py-matplotlib', when='@1.3.0:', type=('build', 'run'))
     depends_on('root', type=('build', 'run'), when='+root')
 

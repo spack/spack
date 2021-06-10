@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,6 +41,8 @@ class Macsio(CMakePackage):
     depends_on('silo', when="+pdb")
     depends_on('typhonio', when="+typhonio")
     depends_on('scr', when="+scr")
+    # macsio@1.1 has bug with ~mpi configuration
+    conflicts('~mpi', when='@1.1')
 
     # Ref: https://github.com/LLNL/MACSio/commit/51b8c40cd9813adec5dd4dd6cee948bb9ddb7ee1
     patch('cast.patch', when='@1.1')

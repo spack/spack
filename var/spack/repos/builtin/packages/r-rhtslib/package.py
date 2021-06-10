@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRhtslib(RPackage):
-    """HTSlib high-throughput sequencing library as an R package.
+    """HTSlib high-throughput sequencing library as an R package
 
        This package provides version 1.7 of the 'HTSlib' C library for high-
        throughput sequence analysis. The package is primarily useful to
@@ -18,6 +18,7 @@ class RRhtslib(RPackage):
     homepage = "https://bioconductor.org/packages/Rhtslib"
     git      = "https://git.bioconductor.org/packages/Rhtslib.git"
 
+    version('1.22.0', commit='899b79faa54d42c7c9b9a2bc49972109637d367f')
     version('1.18.1', commit='751a2ebaed43b7991204b27bd6c7870645001d82')
     version('1.16.3', commit='3ed0b5db2ee3cf0df1c6096fde8855c8485eebd4')
     version('1.14.1', commit='4be260720f845a34d0ac838278fce1363f645230')
@@ -26,7 +27,6 @@ class RRhtslib(RPackage):
     version('1.8.0', commit='3b5493473bed42958614091c58c739932ffcfa79')
 
     depends_on('r-zlibbioc', type=('build', 'run'))
-
     depends_on('bzip2', type=('build', 'link', 'run'))
     depends_on('xz', type=('build', 'link', 'run'))
     depends_on('curl', type=('build', 'link', 'run'))

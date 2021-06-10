@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,11 +9,13 @@ import collections
 import functools
 import time
 import traceback
+import os
 
 import llnl.util.lang
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package
+from spack.install_test import TestSuite
 from spack.reporter import Reporter
 from spack.reporters.cdash import CDash
 from spack.reporters.junit import JUnit
@@ -33,19 +35,23 @@ __all__ = [
 ]
 
 
-def fetch_package_log(pkg):
+def fetch_log(pkg, do_fn, dir):
+    log_files = {
+        '_install_task': pkg.build_log_path,
+        'do_test': os.path.join(dir, TestSuite.test_log_name(pkg.spec)),
+    }
     try:
-        with codecs.open(pkg.build_log_path, 'r', 'utf-8') as f:
+        with codecs.open(log_files[do_fn.__name__], 'r', 'utf-8') as f:
             return ''.join(f.readlines())
     except Exception:
-        return 'Cannot open build log for {0}'.format(
+        return 'Cannot open log for {0}'.format(
             pkg.spec.cshort_spec
         )
 
 
 class InfoCollector(object):
-    """Decorates PackageInstaller._install_task, which is called by
-    PackageBase.do_install for each spec, to collect information
+    """Decorates PackageInstaller._install_task, which is called via
+    PackageBase.do_install for individual specs, to collect information
     on the installation of certain specs.
 
     When exiting the context this change will be rolled-back.
@@ -58,15 +64,20 @@ class InfoCollector(object):
         specs (list of Spec): specs whose install information will
            be recorded
     """
-    #: Backup of PackageInstaller._install_task
-    _backup__install_task = spack.package.PackageInstaller._install_task
-
-    def __init__(self, specs):
-        #: Specs that will be installed
+    def __init__(self, wrap_class, do_fn, specs, dir):
+        #: Class for which to wrap a function
+        self.wrap_class = wrap_class
+        #: Action to be reported on
+        self.do_fn = do_fn
+        #: Backup of PackageBase function
+        self._backup_do_fn = getattr(self.wrap_class, do_fn)
+        #: Specs that will be acted on
         self.input_specs = specs
         #: This is where we record the data that will be included
         #: in our report.
         self.specs = []
+        #: Record directory for test log paths
+        self.dir = dir
 
     def __enter__(self):
         # Initialize the spec report with the data that is available upfront.
@@ -98,30 +109,37 @@ class InfoCollector(object):
                 Property('compiler', input_spec.compiler))
 
             # Check which specs are already installed and mark them as skipped
-            for dep in filter(lambda x: x.package.installed,
-                              input_spec.traverse()):
-                package = {
-                    'name': dep.name,
-                    'id': dep.dag_hash(),
-                    'elapsed_time': '0.0',
-                    'result': 'skipped',
-                    'message': 'Spec already installed'
-                }
-                spec['packages'].append(package)
+            # only for install_task
+            if self.do_fn == '_install_task':
+                for dep in filter(lambda x: x.package.installed,
+                                  input_spec.traverse()):
+                    package = {
+                        'name': dep.name,
+                        'id': dep.dag_hash(),
+                        'elapsed_time': '0.0',
+                        'result': 'skipped',
+                        'message': 'Spec already installed'
+                    }
+                    spec['packages'].append(package)
 
-        def gather_info(_install_task):
-            """Decorates PackageInstaller._install_task to gather useful
-            information on PackageBase.do_install for a CI report.
+        def gather_info(do_fn):
+            """Decorates do_fn to gather useful information for
+            a CI report.
 
             It's defined here to capture the environment and build
             this context as the installations proceed.
             """
-            @functools.wraps(_install_task)
-            def wrapper(installer, task, *args, **kwargs):
-                pkg = task.pkg
+            @functools.wraps(do_fn)
+            def wrapper(instance, *args, **kwargs):
+                if isinstance(instance, spack.package.PackageBase):
+                    pkg = instance
+                elif hasattr(args[0], 'pkg'):
+                    pkg = args[0].pkg
+                else:
+                    raise Exception
 
                 # We accounted before for what is already installed
-                installed_on_entry = pkg.installed
+                installed_already = pkg.installed
 
                 package = {
                     'name': pkg.name,
@@ -135,13 +153,12 @@ class InfoCollector(object):
                 start_time = time.time()
                 value = None
                 try:
-
-                    value = _install_task(installer, task, *args, **kwargs)
+                    value = do_fn(instance, *args, **kwargs)
                     package['result'] = 'success'
-                    package['stdout'] = fetch_package_log(pkg)
+                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['installed_from_binary_cache'] = \
                         pkg.installed_from_binary_cache
-                    if installed_on_entry:
+                    if do_fn.__name__ == '_install_task' and installed_already:
                         return
 
                 except spack.build_environment.InstallError as e:
@@ -149,7 +166,7 @@ class InfoCollector(object):
                     # didn't work correctly)
                     package['result'] = 'failure'
                     package['message'] = e.message or 'Installation failure'
-                    package['stdout'] = fetch_package_log(pkg)
+                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['stdout'] += package['message']
                     package['exception'] = e.traceback
 
@@ -157,7 +174,7 @@ class InfoCollector(object):
                     # Everything else is an error (the installation
                     # failed outside of the child process)
                     package['result'] = 'error'
-                    package['stdout'] = fetch_package_log(pkg)
+                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['message'] = str(e) or 'Unknown error'
                     package['exception'] = traceback.format_exc()
 
@@ -184,15 +201,14 @@ class InfoCollector(object):
 
             return wrapper
 
-        spack.package.PackageInstaller._install_task = gather_info(
-            spack.package.PackageInstaller._install_task
-        )
+        setattr(self.wrap_class, self.do_fn, gather_info(
+            getattr(self.wrap_class, self.do_fn)
+        ))
 
     def __exit__(self, exc_type, exc_val, exc_tb):
 
-        # Restore the original method in PackageInstaller
-        spack.package.PackageInstaller._install_task = \
-            InfoCollector._backup__install_task
+        # Restore the original method in PackageBase
+        setattr(self.wrap_class, self.do_fn, self._backup_do_fn)
 
         for spec in self.specs:
             spec['npackages'] = len(spec['packages'])
@@ -225,22 +241,26 @@ class collect_info(object):
 
             # The file 'junit.xml' is written when exiting
             # the context
-            specs = [Spec('hdf5').concretized()]
-            with collect_info(specs, 'junit', 'junit.xml'):
+            s = [Spec('hdf5').concretized()]
+            with collect_info(PackageBase, do_install, s, 'junit', 'a.xml'):
                 # A report will be generated for these specs...
-                for spec in specs:
-                    spec.do_install()
+                for spec in s:
+                    getattr(class, function)(spec)
                 # ...but not for this one
                 Spec('zlib').concretized().do_install()
 
     Args:
+        class: class on which to wrap a function
+        function: function to wrap
         format_name (str or None): one of the supported formats
-        args (dict): args passed to spack install
+        args (dict): args passed to function
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
-    def __init__(self, format_name, args):
+    def __init__(self, cls, function, format_name, args):
+        self.cls = cls
+        self.function = function
         self.filename = None
         if args.cdash_upload_url:
             self.format_name = 'cdash'
@@ -253,13 +273,19 @@ class collect_info(object):
                              .format(self.format_name))
         self.report_writer = report_writers[self.format_name](args)
 
+    def __call__(self, type, dir=os.getcwd()):
+        self.type = type
+        self.dir = dir
+        return self
+
     def concretization_report(self, msg):
         self.report_writer.concretization_report(self.filename, msg)
 
     def __enter__(self):
         if self.format_name:
-            # Start the collector and patch PackageInstaller._install_task
-            self.collector = InfoCollector(self.specs)
+            # Start the collector and patch self.function on appropriate class
+            self.collector = InfoCollector(
+                self.cls, self.function, self.specs, self.dir)
             self.collector.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -269,4 +295,5 @@ class collect_info(object):
             self.collector.__exit__(exc_type, exc_val, exc_tb)
 
             report_data = {'specs': self.collector.specs}
-            self.report_writer.build_report(self.filename, report_data)
+            report_fn = getattr(self.report_writer, '%s_report' % self.type)
+            report_fn(self.filename, report_data)

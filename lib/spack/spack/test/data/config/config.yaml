@@ -13,6 +13,4 @@ config:
   verify_ssl: true
   checksum: true
   dirty: false
-  module_roots:
-    tcl: {0}
-    lmod: {1}
+  concretizer: {0}

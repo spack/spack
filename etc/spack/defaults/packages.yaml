@@ -17,15 +17,17 @@ packages:
   all:
     compiler: [gcc, intel, pgi, clang, xl, nag, fj, aocc]
     providers:
-      D: [ldc]
       awk: [gawk]
       blas: [openblas, amdblis]
+      D: [ldc]
       daal: [intel-daal]
       elf: [elfutils]
       fftw-api: [fftw, amdfftw]
-      gl: [mesa+opengl, mesa18+opengl, opengl]
-      glx: [mesa+glx, mesa18+glx, opengl]
+      flame: [libflame, amdlibflame]
+      fuse: [libfuse]
+      gl: [mesa+opengl, mesa18, opengl]
       glu: [mesa-glu, openglu]
+      glx: [mesa+glx, mesa18+glx, opengl]
       golang: [gcc]
       iconv: [libiconv]
       ipp: [intel-ipp]
@@ -47,8 +49,10 @@ packages:
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       unwind: [libunwind]
+      uuid: [util-linux-uuid, libuuid]
+      xxd: [xxd-standalone, vim]
       yacc: [bison, byacc]
-      flame: [libflame, amdlibflame]
+      ziglang: [zig]
     permissions:
       read: world
       write: user

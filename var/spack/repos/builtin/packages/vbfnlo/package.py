@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Vbfnlo(AutotoolsPackage):
     homepage = "https://www.itp.kit.edu/vbfnlo/wiki/doku.php?id=overview"
     url      = "https://github.com/vbfnlo/vbfnlo/archive/v3.0.0beta5.tar.gz"
 
+    tags = ["hep"]
+
     # The commented out versions exist, but are not tested
     version('3.0.0beta5', sha256='777a3dedb365ea9abc38848a60f30d325da3799cbad69fa308664b94a8c31a90')
     version('3.0.0beta4', sha256='511e84765e9634a75766a160eae1925812dacbb3943e7e3b4dc90e2eacac8a2c')
@@ -28,6 +30,10 @@ class Vbfnlo(AutotoolsPackage):
     depends_on('gsl')
     depends_on('lhapdf')
     depends_on('looptools')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('m4', type='build')
+    depends_on('libtool', type='build')
 
     @when('@2.7.1')
     def setup_build_environment(self, env):

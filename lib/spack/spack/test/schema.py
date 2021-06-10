@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -118,21 +118,23 @@ def test_schema_validation(meta_schema, config_name):
 
 def test_deprecated_properties(module_suffixes_schema):
     # Test that an error is reported when 'error: True'
+    msg_fmt = r'deprecated properties detected [properties={properties}]'
     module_suffixes_schema['deprecatedProperties'] = {
         'properties': ['tcl'],
-        'message': '{property} not allowed',
+        'message': msg_fmt,
         'error': True
     }
     v = spack.schema.Validator(module_suffixes_schema)
     data = {'tcl': {'all': {'suffixes': {'^python': 'py'}}}}
 
-    with pytest.raises(jsonschema.ValidationError, match='tcl not allowed'):
+    expected_match = 'deprecated properties detected'
+    with pytest.raises(jsonschema.ValidationError, match=expected_match):
         v.validate(data)
 
     # Test that just a warning is reported when 'error: False'
     module_suffixes_schema['deprecatedProperties'] = {
         'properties': ['tcl'],
-        'message': '{property} not allowed',
+        'message': msg_fmt,
         'error': False
     }
     v = spack.schema.Validator(module_suffixes_schema)

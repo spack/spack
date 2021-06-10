@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Vtk(CMakePackage):
 
     maintainers = ['chuckatkins', 'danlipsa']
 
+    version('9.0.1', sha256='1b39a5e191c282861e7af4101eaa8585969a2de05f5646c9199a161213a622c7')
     version('9.0.0', sha256='15def4e6f84d72f82386617fe595ec124dda3cbd13ea19a0dcd91583197d8715')
     version('8.2.0', sha256='34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb')
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
@@ -52,7 +53,7 @@ class Vtk(CMakePackage):
     # We need vtk at least 8.0.1 for python@3,
     # and at least 9.0 for python@3.8
     depends_on('python@2.7:2.9', when='@:8.0 +python', type=('build', 'run'))
-    depends_on('python@2.7:3.7.9', when='@8.0.1:8.9 +python',
+    depends_on('python@2.7:3.7.99', when='@8.0.1:8.9 +python',
                type=('build', 'run'))
     depends_on('python@2.7:', when='@9.0: +python', type=('build', 'run'))
 
@@ -62,6 +63,9 @@ class Vtk(CMakePackage):
     # python3.7 compatibility patch backported from upstream
     # https://gitlab.kitware.com/vtk/vtk/commit/706f1b397df09a27ab8981ab9464547028d0c322
     patch('python3.7-const-char.patch', when='@7.0.0:8.1.1 ^python@3.7:')
+
+    # Broken downstream FindMPI
+    patch('vtkm-findmpi-downstream.patch', when='@9.0.0')
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
@@ -265,11 +269,10 @@ class Vtk(CMakePackage):
                     '-DVTK_USE_X:BOOL=ON',
                     '-DVTK_USE_COCOA:BOOL=OFF'])
 
+        compile_flags = []
+
         if spec.satisfies('@:6.1.0'):
-            cmake_args.extend([
-                '-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY',
-                '-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY'
-            ])
+            compile_flags.append('-DGLX_GLXEXT_LEGACY')
 
             # VTK 6.1.0 (and possibly earlier) does not use
             # NETCDF_CXX_ROOT to detect NetCDF C++ bindings, so
@@ -297,5 +300,17 @@ class Vtk(CMakePackage):
             if '%intel' in spec and spec.version >= Version('8.2'):
                 cmake_args.append(
                     '-DVTK_MODULE_ENABLE_VTK_IOMotionFX:BOOL=OFF')
+
+        # -no-ipo prevents an internal compiler error from multi-file
+        # optimization (https://github.com/spack/spack/issues/20471)
+        if '%intel' in spec:
+            compile_flags.append('-no-ipo')
+
+        if compile_flags:
+            compile_flags = ' '.join(compile_flags)
+            cmake_args.extend([
+                '-DCMAKE_C_FLAGS={0}'.format(compile_flags),
+                '-DCMAKE_CXX_FLAGS={0}'.format(compile_flags)
+            ])
 
         return cmake_args

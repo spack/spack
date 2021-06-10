@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,3 +17,4 @@ class PyPySpy(PythonPackage):
     # Need to figure out how to manage these with Spack once we have a
     # CargoPackage base class.
     depends_on('rust', type='build')
+    depends_on('unwind')

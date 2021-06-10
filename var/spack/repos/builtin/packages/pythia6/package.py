@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,8 @@ class Pythia6(CMakePackage):
 
     homepage = 'https://pythiasix.hepforge.org/'
     url = 'http://www.hepforge.org/archive/pythiasix/pythia-6.4.28.tgz'
+
+    tags = ['hep']
 
     version('6.4.28',
             sha256='01cbff47e99365b5e46f6d62c1735d3cae1932c4710604850d59f538cb758020')
@@ -131,6 +133,7 @@ class Pythia6(CMakePackage):
     # majority of cases. If your case is different, platform- or
     # variant-based adjustments should be made.
     patch('pythia6.patch', level=0)
+    patch('pythia6-root.patch', level=1, when='+root')
 
     def patch(self):
         # Use our provided CMakeLists.txt. The Makefile provided with
@@ -143,6 +146,11 @@ class Pythia6(CMakePackage):
         filter_file(r'^(\s+PARAMETER\s*\(\s*NMXHEP\s*=\s*)\d+',
                     r'\1{0}'.format(self.spec.variants['nmxhep'].value),
                     'pyhepc.f')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%gcc@10:'):
+            env.append_flags('CFLAGS', '-fcommon')
+            env.append_flags('FFLAGS', '-fcommon')
 
     def cmake_args(self):
         args = ['-DPYTHIA6_VERSION={0}'.format(self.version.dotted)]

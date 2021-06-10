@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,12 @@ class R(AutotoolsPackage):
 
     extendable = True
 
+    maintainers = ['glennpj']
+
+    version('4.1.0', sha256='e8e68959d7282ca147360fc9644ada9bd161bab781bab14d33b8999a95182781')
+    version('4.0.5', sha256='0a3ee079aa772e131fe5435311ab627fcbccb5a50cabc54292e6f62046f1ffef')
+    version('4.0.4', sha256='523f27d69744a08c8f0bd5e1e6c3d89a4db29ed983388ba70963a3cd3a4a802e')
+    version('4.0.3', sha256='09983a8a78d5fb6bc45d27b1c55f9ba5265f78fa54a55c13ae691f87c5bb9e0d')
     version('4.0.2', sha256='d3bceab364da0876625e4097808b42512395fdf41292f4915ab1fd257c1bbe75')
     version('4.0.1', sha256='95fe24a4d8d8f8f888460c8f5fe4311cec656e7a1722d233218bc03861bc6f32')
     version('4.0.0', sha256='06beb0291b569978484eb0dcb5d2339665ec745737bdfb4e873e7a5a75492940')
@@ -52,41 +58,34 @@ class R(AutotoolsPackage):
     variant('external-lapack', default=False,
             description='Links to externally installed BLAS/LAPACK')
     variant('X', default=False,
-            description='Enable X11 support (call configure --with-x)')
+            description='Enable X11 support (TCLTK, PNG, JPEG, TIFF, CAIRO)')
     variant('memory_profiling', default=False,
             description='Enable memory profiling')
     variant('rmath', default=False,
             description='Build standalone Rmath library')
 
-    # Virtual dependencies
     depends_on('blas', when='+external-lapack')
     depends_on('lapack', when='+external-lapack')
-
-    # Concrete dependencies.
-    depends_on('readline')
-    depends_on('ncurses')
-    depends_on('icu4c')
-    depends_on('glib')
-    depends_on('zlib@1.2.5:')
     depends_on('bzip2')
-    depends_on('libtiff')
-    depends_on('jpeg')
-    depends_on('cairo+pdf')
-    depends_on('cairo+X', when='+X')
-    depends_on('cairo~X', when='~X')
-    depends_on('pango')
-    depends_on('pango+X', when='+X')
-    depends_on('pango~X', when='~X')
-    depends_on('freetype')
-    depends_on('tcl')
-    depends_on('tk', when='+X')
-    depends_on('libx11', when='+X')
-    depends_on('libxt', when='+X')
-    depends_on('libxmu', when='+X')
     depends_on('curl')
-    depends_on('pcre2', when='@4:')
-    depends_on('pcre', when='@:3.6.3')
+    depends_on('icu4c')
     depends_on('java')
+    depends_on('ncurses')
+    depends_on('pcre', when='@:3.6.3')
+    depends_on('pcre2', when='@4:')
+    depends_on('readline')
+    depends_on('xz')
+    depends_on('zlib@1.2.5:')
+    depends_on('cairo+X+gobject+pdf', when='+X')
+    depends_on('pango+X', when='+X')
+    depends_on('harfbuzz+graphite2', when='+X')
+    depends_on('jpeg', when='+X')
+    depends_on('libpng', when='+X')
+    depends_on('libtiff', when='+X')
+    depends_on('libx11', when='+X')
+    depends_on('libxmu', when='+X')
+    depends_on('libxt', when='+X')
+    depends_on('tk', when='+X')
 
     patch('zlib.patch', when='@:3.3.2')
 
@@ -110,26 +109,16 @@ class R(AutotoolsPackage):
     def etcdir(self):
         return join_path(prefix, 'rlib', 'R', 'etc')
 
-    @run_after('build')
-    def build_rmath(self):
-        if '+rmath' in self.spec:
-            with working_dir('src/nmath/standalone'):
-                make()
-
     @run_after('install')
     def install_rmath(self):
         if '+rmath' in self.spec:
             with working_dir('src/nmath/standalone'):
-                make('install')
+                make()
+                make('install', parallel=False)
 
     def configure_args(self):
         spec   = self.spec
         prefix = self.prefix
-
-        tcl_config_path = join_path(spec['tcl'].prefix.lib, 'tclConfig.sh')
-        if not os.path.exists(tcl_config_path):
-            tcl_config_path = join_path(spec['tcl'].prefix,
-                                        'lib64', 'tclConfig.sh')
 
         config_args = [
             '--libdir={0}'.format(join_path(prefix, 'rlib')),
@@ -137,16 +126,9 @@ class R(AutotoolsPackage):
             '--enable-BLAS-shlib',
             '--enable-R-framework=no',
             '--without-recommended-packages',
-            '--with-tcl-config={0}'.format(tcl_config_path),
             'LDFLAGS=-L{0} -Wl,-rpath,{0}'.format(join_path(prefix, 'rlib',
                                                             'R', 'lib')),
         ]
-        if '^tk' in spec:
-            tk_config_path = join_path(spec['tk'].prefix.lib, 'tkConfig.sh')
-            if not os.path.exists(tk_config_path):
-                tk_config_path = join_path(spec['tk'].prefix,
-                                           'lib64', 'tkConfig.sh')
-            config_args.append('--with-tk-config={0}'.format(tk_config_path))
 
         if '+external-lapack' in spec:
             if '^mkl' in spec and 'gfortran' in self.compiler.fc:
@@ -164,8 +146,26 @@ class R(AutotoolsPackage):
                 ])
 
         if '+X' in spec:
+            config_args.append('--with-cairo')
+            config_args.append('--with-jpeglib')
+            config_args.append('--with-libpng')
+            config_args.append('--with-libtiff')
+            config_args.append('--with-tcltk')
             config_args.append('--with-x')
+
+            tcl_config_path = join_path(
+                spec['tcl'].libs.directories[0], 'tclConfig.sh')
+            config_args.append('--with-tcl-config={0}'.format(tcl_config_path))
+
+            tk_config_path = join_path(
+                spec['tk'].libs.directories[0], 'tkConfig.sh')
+            config_args.append('--with-tk-config={0}'.format(tk_config_path))
         else:
+            config_args.append('--without-cairo')
+            config_args.append('--without-jpeglib')
+            config_args.append('--without-libpng')
+            config_args.append('--without-libtiff')
+            config_args.append('--without-tcltk')
             config_args.append('--without-x')
 
         if '+memory_profiling' in spec:
@@ -220,12 +220,14 @@ class R(AutotoolsPackage):
                 dependent_spec.prefix, self.r_lib_dir))
 
     def setup_run_environment(self, env):
-        env.prepend_path('LIBRARY_PATH',
-                         join_path(self.prefix, 'rlib', 'R', 'lib'))
         env.prepend_path('LD_LIBRARY_PATH',
                          join_path(self.prefix, 'rlib', 'R', 'lib'))
-        env.prepend_path('CPATH',
-                         join_path(self.prefix, 'rlib', 'R', 'include'))
+        env.prepend_path('PKG_CONFIG_PATH',
+                         join_path(self.prefix, 'rlib', 'pkgconfig'))
+
+        if '+rmath' in self.spec:
+            env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'rlib'))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before R modules' install() methods. In most cases,

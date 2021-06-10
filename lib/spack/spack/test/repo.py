@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,3 +67,15 @@ def test_repo_invisibles(mutable_mock_repo, extra_repo):
     with open(os.path.join(extra_repo.root, 'packages', '.invisible'), 'w'):
         pass
     extra_repo.all_package_names()
+
+
+@pytest.mark.parametrize('attr_name,exists', [
+    ('cmake', True),
+    ('__sphinx_mock__', False)
+])
+@pytest.mark.regression('20661')
+def test_namespace_hasattr(attr_name, exists, mutable_mock_repo):
+    # Check that we don't fail on 'hasattr' checks because
+    # of a custom __getattr__ implementation
+    nms = spack.repo.SpackNamespace('spack.pkg.builtin.mock')
+    assert hasattr(nms, attr_name) == exists

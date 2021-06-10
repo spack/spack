@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ class PyPatsy(PythonPackage):
     building design matrices."""
 
     homepage = "https://github.com/pydata/patsy"
-    url      = "https://pypi.io/packages/source/p/patsy/patsy-0.4.1.zip"
+    pypi = "patsy/patsy-0.4.1.zip"
 
     version('0.5.1', sha256='f115cec4201e1465cd58b9866b0b0e7b941caafec129869057405bfe5b5e3991',
             url="https://pypi.io/packages/source/p/patsy/patsy-0.5.1.tar.gz")
@@ -21,5 +21,3 @@ class PyPatsy(PythonPackage):
     depends_on('py-numpy',       type=('build', 'run'))
     depends_on('py-scipy',       type=('build', 'run'), when="+splines")
     depends_on('py-six',         type=('build', 'run'))
-
-    depends_on('py-nose', type='test')

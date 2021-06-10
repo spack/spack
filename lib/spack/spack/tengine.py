@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import textwrap
+from typing import List  # novm
 
 import llnl.util.lang
 import six
@@ -18,7 +19,7 @@ class ContextMeta(type):
     """
     #: Keeps track of the context properties that have been added
     #: by the class that is being defined
-    _new_context_properties = []
+    _new_context_properties = []  # type: List[str]
 
     def __new__(cls, name, bases, attr_dict):
         # Merge all the context properties that are coming from base classes
@@ -68,7 +69,8 @@ def make_environment(dirs=None):
     """Returns an configured environment for template rendering."""
     if dirs is None:
         # Default directories where to search for templates
-        builtins = spack.config.get('config:template_dirs')
+        builtins = spack.config.get('config:template_dirs',
+                                    ['$spack/share/spack/templates'])
         extensions = spack.extensions.get_template_dirs()
         dirs = [canonicalize_path(d)
                 for d in itertools.chain(builtins, extensions)]
@@ -80,7 +82,9 @@ def make_environment(dirs=None):
     # Loader for the templates
     loader = jinja2.FileSystemLoader(dirs)
     # Environment of the template engine
-    env = jinja2.Environment(loader=loader, trim_blocks=True)
+    env = jinja2.Environment(
+        loader=loader, trim_blocks=True, lstrip_blocks=True
+    )
     # Custom filters
     _set_filters(env)
     return env

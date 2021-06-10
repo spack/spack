@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,7 @@ import spack.architecture
 import spack.config
 import spack.cmd
 import spack.environment as ev
+import spack.modules
 import spack.paths
 import spack.repo
 import spack.store
@@ -39,7 +40,6 @@ import spack.util.debug
 import spack.util.path
 import spack.util.executable as exe
 from spack.error import SpackError
-
 
 #: names of profile statistics
 stat_names = pstats.Stats.sort_arg_dict_default
@@ -355,9 +355,13 @@ def make_argument_parser(**kwargs):
         dest='help', action='store_const', const='long', default=None,
         help="show help for all commands (same as spack help --all)")
     parser.add_argument(
-        '--color', action='store', default='auto',
+        '--color', action='store',
+        default=os.environ.get('SPACK_COLOR', 'auto'),
         choices=('always', 'never', 'auto'),
         help="when to colorize output (default: auto)")
+    parser.add_argument(
+        '-c', '--config', default=None, action="append", dest="config_vars",
+        help="add one or more custom, one off config settings.")
     parser.add_argument(
         '-C', '--config-scope', dest='config_scopes', action='append',
         metavar='DIR', help="add a custom configuration scope")
@@ -413,6 +417,7 @@ def make_argument_parser(**kwargs):
         help="print additional output during builds")
     parser.add_argument(
         '--stacktrace', action='store_true',
+        default='SPACK_STACKTRACE' in os.environ,
         help="add stacktraces to all printed statements")
     parser.add_argument(
         '-V', '--version', action='store_true',
@@ -462,6 +467,10 @@ def setup_main_options(args):
     if args.insecure:
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
         spack.config.set('config:verify_ssl', False, scope='command_line')
+
+    # Use the spack config command to handle parsing the config strings
+    for config_var in (args.config_vars or []):
+        spack.config.add(fullpath=config_var, scope="command_line")
 
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
@@ -522,6 +531,8 @@ class SpackCommand(object):
 
         Keyword Args:
             fail_on_error (optional bool): Don't raise an exception on error
+            global_args (optional list): List of global spack arguments:
+                simulates ``spack [global_args] [command] [*argv]``
 
         Returns:
             (str): combined output and error as a string
@@ -534,8 +545,10 @@ class SpackCommand(object):
         self.returncode = None
         self.error = None
 
+        prepend = kwargs['global_args'] if 'global_args' in kwargs else []
+
         args, unknown = self.parser.parse_known_args(
-            [self.command_name] + list(argv))
+            prepend + [self.command_name] + list(argv))
 
         fail_on_error = kwargs.get('fail_on_error', True)
 
@@ -635,12 +648,8 @@ def print_setup_info(*info):
         'tcl': list(),
         'lmod': list()
     }
-    module_roots = spack.config.get('config:module_roots')
-    module_roots = dict(
-        (k, v) for k, v in module_roots.items() if k in module_to_roots
-    )
-    for name, path in module_roots.items():
-        path = spack.util.path.canonicalize_path(path)
+    for name in module_to_roots.keys():
+        path = spack.modules.common.root_path(name, 'default')
         module_to_roots[name].append(path)
 
     other_spack_instances = spack.config.get(

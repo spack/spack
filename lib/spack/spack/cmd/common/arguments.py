@@ -1,11 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import argparse
-import multiprocessing
 
 import spack.cmd
 import spack.config
@@ -102,21 +101,9 @@ class SetParallelJobs(argparse.Action):
                   '[expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, jobs))
 
-        jobs = min(jobs, multiprocessing.cpu_count())
         spack.config.set('config:build_jobs', jobs, scope='command_line')
 
         setattr(namespace, 'jobs', jobs)
-
-    @property
-    def default(self):
-        # This default is coded as a property so that look-up
-        # of this value is done only on demand
-        return min(spack.config.get('config:build_jobs', 16),
-                   multiprocessing.cpu_count())
-
-    @default.setter
-    def default(self, value):
-        pass
 
 
 class DeptypeAction(argparse.Action):
@@ -250,8 +237,8 @@ def very_long():
 @arg
 def tags():
     return Args(
-        '-t', '--tags', action='append',
-        help='filter a package query by tags')
+        '-t', '--tag', action='append', dest='tags', metavar='TAG',
+        help='filter a package query by tag (multiple use allowed)')
 
 
 @arg
@@ -267,6 +254,7 @@ def install_status():
         '-I', '--install-status', action='store_true', default=False,
         help='show install status of packages. packages can be: '
         'installed [+], missing and needed by an installed package [-], '
+        'installed in and upstream instance [^], '
         'or not installed (no annotation)')
 
 
@@ -275,3 +263,60 @@ def no_checksum():
     return Args(
         '-n', '--no-checksum', action='store_true', default=False,
         help="do not use checksums to verify downloaded files (unsafe)")
+
+
+@arg
+def deprecated():
+    return Args(
+        '--deprecated', action='store_true', default=False,
+        help='fetch deprecated versions without warning')
+
+
+def add_cdash_args(subparser, add_help):
+    cdash_help = {}
+    if add_help:
+        cdash_help['upload-url'] = "CDash URL where reports will be uploaded"
+        cdash_help['build'] = """The name of the build that will be reported to CDash.
+Defaults to spec of the package to operate on."""
+        cdash_help['site'] = """The site name that will be reported to CDash.
+Defaults to current system hostname."""
+        cdash_help['track'] = """Results will be reported to this group on CDash.
+Defaults to Experimental."""
+        cdash_help['buildstamp'] = """Instead of letting the CDash reporter prepare the
+buildstamp which, when combined with build name, site and project,
+uniquely identifies the build, provide this argument to identify
+the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
+    else:
+        cdash_help['upload-url'] = argparse.SUPPRESS
+        cdash_help['build'] = argparse.SUPPRESS
+        cdash_help['site'] = argparse.SUPPRESS
+        cdash_help['track'] = argparse.SUPPRESS
+        cdash_help['buildstamp'] = argparse.SUPPRESS
+
+    subparser.add_argument(
+        '--cdash-upload-url',
+        default=None,
+        help=cdash_help['upload-url']
+    )
+    subparser.add_argument(
+        '--cdash-build',
+        default=None,
+        help=cdash_help['build']
+    )
+    subparser.add_argument(
+        '--cdash-site',
+        default=None,
+        help=cdash_help['site']
+    )
+
+    cdash_subgroup = subparser.add_mutually_exclusive_group()
+    cdash_subgroup.add_argument(
+        '--cdash-track',
+        default='Experimental',
+        help=cdash_help['track']
+    )
+    cdash_subgroup.add_argument(
+        '--cdash-buildstamp',
+        default=None,
+        help=cdash_help['buildstamp']
+    )

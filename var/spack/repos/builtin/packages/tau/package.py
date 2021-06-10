@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,10 +20,12 @@ class Tau(Package):
 
     maintainers = ['wspear', 'eugeneswalker', 'khuck', 'sameershende']
     homepage = "http://www.cs.uoregon.edu/research/tau"
-    url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.1.tar.gz"
+    url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.30.tar.gz"
     git      = "https://github.com/UO-OACISS/tau2"
 
     version('master', branch='master')
+    version('2.30.1', sha256='9c20ca1b4f4e80d885f24491cee598068871f0e9dd67906a5e47e4b4147d08fc')
+    version('2.30', sha256='e581c33e21488d69839a00d97fd4451ea579f47249b2750d5c36bea773041eaf')
     version('2.29.1', sha256='4195a0a236bba510ab50a93e13c7f00d9472e8bc46c91de3f0696112a34e34e2')
     version('2.29', sha256='146be769a23c869a7935e8fa5ba79f40ba36b9057a96dda3be6730fc9ca86086')
     version('2.28.2', sha256='64e129a482056755012b91dae2fb4f728dbf3adbab53d49187eca952891c5457')
@@ -55,7 +57,7 @@ class Tau(Package):
     variant('papi', default=darwin_default, description='Activates Performance API')
     variant('binutils', default=True, description='Activates support of BFD GNU Binutils')
     variant('libdwarf', default=darwin_default, description='Activates support of libdwarf')
-    variant('libelf', default=darwin_default, description='Activates support of libelf')
+    variant('elf', default=darwin_default, description='Activates support of elf')
     variant('libunwind', default=darwin_default, description='Activates support of libunwind')
     variant('otf2', default=True, description='Activates support of Open Trace Format (OTF)')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
@@ -67,6 +69,10 @@ class Tau(Package):
     variant('shmem', default=False, description='Activates SHMEM support')
     variant('gasnet', default=False, description='Activates GASNET support')
     variant('cuda', default=False, description='Activates CUDA support')
+    variant('rocm', default=False, description='Activates ROCm support')
+    variant('level_zero', default=False, description='Activates Intel OneAPI Level Zero support')
+    variant('rocprofiler', default=False, description='Activates ROCm rocprofiler support')
+    variant('opencl', default=False, description='Activates OpenCL support')
     variant('fortran', default=darwin_default, description='Activates Fortran support')
     variant('io', default=True, description='Activates POSIX I/O support')
     variant('adios2', default=False, description='Activates ADIOS2 output support')
@@ -87,9 +93,9 @@ class Tau(Package):
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
     depends_on('libdwarf', when='+libdwarf')
-    depends_on('libelf', when='+libdwarf')
+    depends_on('elf', when='+elf')
     # TAU requires the ELF header support, libiberty and demangle.
-    depends_on('binutils@:2.33.1+libiberty+headers', when='+binutils')
+    depends_on('binutils@:2.33.1+libiberty+headers+plugins', when='+binutils')
     depends_on('python@2.7:', when='+python')
     depends_on('libunwind', when='+libunwind')
     depends_on('mpi', when='+mpi', type=('build', 'run', 'link'))
@@ -100,7 +106,7 @@ class Tau(Package):
     depends_on('hwloc')
 
     # Elf only required from 2.28.1 on
-    conflicts('+libelf', when='@:2.28.0')
+    conflicts('+elf', when='@:2.28.0')
     conflicts('+libdwarf', when='@:2.28.0')
 
     # ADIOS2, SQLite only available from 2.29.1 on
@@ -129,8 +135,8 @@ class Tau(Package):
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
 
-        compiler_options = ['-c++=%s' % os.path.basename(self.compiler.cxx),
-                            '-cc=%s' % os.path.basename(self.compiler.cc)]
+        compiler_options = ['-c++=%s' % self.compiler.cxx_names[0],
+                            '-cc=%s' % self.compiler.cc_names[0]]
 
         if '+fortran' in spec and self.compiler.fc:
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
@@ -173,6 +179,8 @@ class Tau(Package):
 
         if '+pdt' in spec:
             options.append("-pdt=%s" % spec['pdt'].prefix)
+            if spec['pdt'].satisfies("%intel"):
+                options.append("-pdt_c++=icpc")
 
         if '+scorep' in spec:
             options.append("-scorep=%s" % spec['scorep'].prefix)
@@ -204,8 +212,8 @@ class Tau(Package):
         if '+libdwarf' in spec:
             options.append("-dwarf=%s" % spec['libdwarf'].prefix)
 
-        if '+libelf' in spec:
-            options.append("-elf=%s" % spec['libelf'].prefix)
+        if '+elf' in spec:
+            options.append("-elf=%s" % spec['elf'].prefix)
 
         if '+libunwind' in spec:
             options.append("-unwind=%s" % spec['libunwind'].prefix)
@@ -218,6 +226,8 @@ class Tau(Package):
             env['CXX'] = spec['mpi'].mpicxx
             env['F77'] = spec['mpi'].mpif77
             env['FC'] = spec['mpi'].mpifc
+            options.append("-mpiinc=%s" % spec['mpi'].prefix.include)
+            options.append("-mpilib=%s" % spec['mpi'].prefix.lib)
 
             options.append('-mpi')
             if '+comm' in spec:
@@ -234,6 +244,18 @@ class Tau(Package):
 
         if '+cuda' in spec:
             options.append("-cuda=%s" % spec['cuda'].prefix)
+
+        if '+level_zero' in spec:
+            options.append("-level_zero")
+
+        if '+opencl' in spec:
+            options.append("-opencl")
+
+        if '+rocm' in spec:
+            options.append("-rocm")
+
+        if '+rocprofiler' in spec:
+            options.append("-rocprofiler=%s" % spec['rocprofiler'].prefix)
 
         if '+adios2' in spec:
             options.append("-adios=%s" % spec['adios2'].prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,7 @@ class PyZopeInterface(PythonPackage):
     of the Design By Contract methodology support in Python."""
 
     homepage = "https://github.com/zopefoundation/zope.interface"
-    url      = "https://pypi.io/packages/source/z/zope.interface/zope.interface-4.5.0.tar.gz"
-
-    # FIXME: No idea why these import tests fail.
-    # Maybe some kind of namespace issue?
-    # import_modules = ['zope.interface', 'zope.interface.common']
+    pypi = "zope.interface/zope.interface-4.5.0.tar.gz"
 
     version('5.1.0', sha256='40e4c42bd27ed3c11b2c983fecfb03356fae1209de10686d03c02c8696a1d90e')
     version('4.5.0', sha256='57c38470d9f57e37afb460c399eb254e7193ac7fb8042bd09bdc001981a9c74c')
@@ -26,6 +22,3 @@ class PyZopeInterface(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@5.1.0:')
 
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-zope-event', type='test')
-    depends_on('py-nose', type='test')
-    depends_on('py-coverage', type='test')

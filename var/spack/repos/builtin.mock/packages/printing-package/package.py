@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,3 +24,8 @@ class PrintingPackage(Package):
         make('install')
 
         print("AFTER INSTALL")
+
+    def test(self):
+        print("BEFORE TEST")
+        self.run_test('true')  # run /bin/true
+        print("AFTER TEST")

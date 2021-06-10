@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RRcppprogress(RPackage):
-    """Allows to display a progress bar in the R console for long running
+    """An Interruptible Progress Bar with OpenMP Support for C++ in R Packages
+
+    Allows to display a progress bar in the R console for long running
     computations taking place in c++ code, and support for interrupting
     those computations even in multithreaded code, typically using OpenMP."""
 
@@ -15,6 +17,7 @@ class RRcppprogress(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/RcppProgress_0.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppProgress"
 
+    version('0.4.2', sha256='b1624b21b7aeb1dafb30f092b2a4bef4c3504efd2d6b00b2cdf55dc9df194b48')
     version('0.4.1', sha256='11764105922f763d4c75c502599ec7dcc2fd629a029964caf53f98b41d0c607a')
     version('0.4', sha256='706e14360dbc5976db05c2ac6692c3279c0f8c95e72bf9d4becd9e1348025e3e')
     version('0.3',   sha256='3de5dc47cc2f9e839f92355c463289531e8c13806e54c7438f63c7c34378261d')

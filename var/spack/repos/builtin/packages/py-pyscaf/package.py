@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,7 @@ class PyPyscaf(PythonPackage):
     """pyScaf orders contigs from genome assemblies utilising several types of
        information"""
 
-    homepage = "https://pypi.python.org/pypi/pyScaf"
-    url      = "https://pypi.io/packages/source/p/pyScaf/pyScaf-0.12a4.tar.gz"
+    pypi = "pyScaf/pyScaf-0.12a4.tar.gz"
 
     version('0.12a4', sha256='3ce3f6fe80bd058831b6a38a56d464ef10f3ebbdd6bc3dcb0d7f127c0b2c1b36')
 

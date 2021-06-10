@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,7 @@ class PyIpdb(PythonPackage):
     """ipdb is the iPython debugger and has many additional features, including
     a better interactive debugging experience via colorized output."""
 
-    homepage = "https://pypi.python.org/pypi/ipdb"
-    url      = "https://pypi.io/packages/source/i/ipdb/ipdb-0.10.1.tar.gz"
+    pypi = "ipdb/ipdb-0.10.1.tar.gz"
 
     version('0.10.1', sha256='bb2948e726dbfb2687f4a582088b3f170b2556ba8e54ae1231c783c97e99ec87')
 

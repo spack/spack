@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtRedis(PythonPackage):
     """Microsoft Azure Redis Cache Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-redis/azure-mgmt-redis-6.0.0.zip"
+    pypi = "azure-mgmt-redis/azure-mgmt-redis-6.0.0.zip"
 
     # Release candidate needed for py-azure-cli
     version('7.0.0rc1', sha256='d3cc259c507b79962495ed00d0a3432a45e4e90a0fb48b49e80d51cdc398dc20')

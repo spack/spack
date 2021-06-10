@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ import sys
 import tempfile
 from six import string_types
 from six import iteritems
+from typing import Dict  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
@@ -43,7 +44,8 @@ _source_path_subdir = 'spack-src'
 stage_prefix = 'spack-stage-'
 
 
-def _create_stage_root(path):
+def create_stage_root(path):
+    # type: (str) -> None
     """Create the stage root directory and ensure appropriate access perms."""
     assert path.startswith(os.path.sep) and len(path.strip()) > 1
 
@@ -98,6 +100,15 @@ def _create_stage_root(path):
             tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
                      .format(user_uid, p, p_stat.st_uid))
 
+    spack_src_subdir = os.path.join(path, _source_path_subdir)
+    # When staging into a user-specified directory with `spack stage -p <PATH>`, we need
+    # to ensure the `spack-src` subdirectory exists, as we can't rely on it being
+    # created automatically by spack. It's not clear why this is the case for `spack
+    # stage -p`, but since `mkdirp()` is idempotent, this should not change the behavior
+    # for any other code paths.
+    if not os.path.isdir(spack_src_subdir):
+        mkdirp(spack_src_subdir, mode=stat.S_IRWXU)
+
 
 def _first_accessible_path(paths):
     """Find the first path that is accessible, creating it if necessary."""
@@ -109,7 +120,7 @@ def _first_accessible_path(paths):
                     return path
             else:
                 # Now create the stage root with the proper group/perms.
-                _create_stage_root(path)
+                create_stage_root(path)
                 return path
 
         except OSError as e:
@@ -221,7 +232,7 @@ class Stage(object):
     """
 
     """Shared dict of all stage locks."""
-    stage_locks = {}
+    stage_locks = {}  # type: Dict[str, spack.util.lock.Lock]
 
     """Most staging is managed by Spack.  DIYStage is one exception."""
     managed_by_spack = True
@@ -602,12 +613,12 @@ class Stage(object):
         """
         Ensures the top-level (config:build_stage) directory exists.
         """
-        # Emulate file permissions for tempfile.mkdtemp.
+        # User has full permissions and group has only read permissions
         if not os.path.exists(self.path):
-            mkdirp(self.path, mode=stat.S_IRWXU)
+            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
         elif not os.path.isdir(self.path):
             os.remove(self.path)
-            mkdirp(self.path, mode=stat.S_IRWXU)
+            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
 
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
@@ -690,17 +701,19 @@ class ResourceStage(Stage):
                     install(src, destination_path)
 
 
-@pattern.composite(method_list=[
-    'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
-    'destroy', 'cache_local', 'cache_mirror', 'steal_source',
-    'managed_by_spack'])
-class StageComposite:
+class StageComposite(pattern.Composite):
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
     forwarded to it."""
     #
     # __enter__ and __exit__ delegate to all stages in the composite.
     #
+
+    def __init__(self):
+        super(StageComposite, self).__init__([
+            'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
+            'destroy', 'cache_local', 'cache_mirror', 'steal_source',
+            'managed_by_spack'])
 
     def __enter__(self):
         for item in self:
@@ -836,12 +849,12 @@ def get_checksums_for_versions(
     max_len = max(len(str(v)) for v in sorted_versions)
     num_ver = len(sorted_versions)
 
-    tty.debug('Found {0} version{1} of {2}:'.format(
-              num_ver, '' if num_ver == 1 else 's', name),
-              '',
-              *spack.cmd.elide_list(
-                  ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
-                   for v in sorted_versions]))
+    tty.msg('Found {0} version{1} of {2}:'.format(
+            num_ver, '' if num_ver == 1 else 's', name),
+            '',
+            *spack.cmd.elide_list(
+                ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
+                 for v in sorted_versions]))
     print()
 
     if batch:

@@ -1,10 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
 import os
 import platform
+import tempfile
 
 
 class Texlive(AutotoolsPackage):
@@ -27,11 +29,17 @@ class Texlive(AutotoolsPackage):
     # connection at install time and the package versions could change over
     # time. It is better to use a version built from tarballs, as defined with
     # the "releases" below.
-    version('live', sha256='7c90a50e55533d57170cbc7c0370a010019946eb18570282948e1af6f809382d',
-            url='ftp://tug.org/historic/systems/texlive/2020/install-tl-unx.tar.gz')
+    version('live', sha256='74eac0855e1e40c8db4f28b24ef354bd7263c1f76031bdc02b52156b572b7a1d',
+            url='ftp://tug.org/historic/systems/texlive/2021/install-tl-unx.tar.gz')
 
     # Add information for new versions below.
     releases = [
+        {
+            'version': '20210325',
+            'year': '2021',
+            'sha256_source': '7aefd96608d72061970f2d73f275be5648ea8ae815af073016d3106acc0d584b',
+            'sha256_texmf': 'ff12d436c23e99fb30aad55924266104356847eb0238c193e839c150d9670f1c',
+        },
         {
             'version': '20200406',
             'year': '2020',
@@ -178,6 +186,9 @@ class Texlive(AutotoolsPackage):
     def setup_run_environment(self, env):
         env.prepend_path('PATH', join_path(self.prefix.bin, self.tex_arch()))
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
     @when('@live')
     def autoreconf(self, spec, prefix):
         touch('configure')
@@ -192,6 +203,11 @@ class Texlive(AutotoolsPackage):
 
     @when('@live')
     def install(self, spec, prefix):
+        # The binary install needs a profile file to be present
+        tmp_profile = tempfile.NamedTemporaryFile()
+        tmp_profile.write("selected_scheme {0}".format(
+            spec.variants['scheme']).encode())
+
         # Using texlive's mirror system leads to mysterious problems,
         # in lieu of being able to specify a repository as a variant, hardwire
         # a particular (slow, but central) one for now.
@@ -202,4 +218,6 @@ class Texlive(AutotoolsPackage):
         scheme = spec.variants['scheme'].value
         perl('./install-tl', '-scheme', scheme,
              '-repository', _repository,
-             '-portable', '-profile', '/dev/null')
+             '-portable', '-profile', tmp_profile.name)
+
+        tmp_profile.close()

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -109,6 +109,10 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--end-date', help='latest date of installation [YYYY-MM-DD]'
     )
+    subparser.add_argument(
+        '-b', '--bootstrap', action='store_true',
+        help='show software in the internal bootstrap store'
+    )
 
     arguments.add_common_arguments(subparser, ['constraint'])
 
@@ -201,7 +205,14 @@ def display_env(env, args, decorator):
 
 def find(parser, args):
     q_args = query_arguments(args)
-    results = args.specs(**q_args)
+    # Query the current store or the internal bootstrap store if required
+    if args.bootstrap:
+        msg = 'Showing internal bootstrap store at "{0}"'
+        tty.msg(msg.format(spack.paths.user_bootstrap_store))
+        with spack.store.use_store(spack.paths.user_bootstrap_store):
+            results = args.specs(**q_args)
+    else:
+        results = args.specs(**q_args)
 
     decorator = lambda s, f: f
     added = set()
@@ -235,8 +246,9 @@ def find(parser, args):
     if args.json:
         cmd.display_specs_as_json(results, deps=args.deps)
     else:
-        if env:
-            display_env(env, args, decorator)
+        if not args.format:
+            if env:
+                display_env(env, args, decorator)
         if sys.stdout.isatty() and args.groups:
             tty.msg("%s" % plural(len(results), 'installed package'))
         cmd.display_specs(
