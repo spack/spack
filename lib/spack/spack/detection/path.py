@@ -41,17 +41,22 @@ def executables_in_path(path_hints=None):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    # build_environment.py::1013: If we're on a Windows box, run vswhere, steal the installationPath using
-    # windows_os.py logic, construct paths to CMake and Ninja, add to PATH
+    # build_environment.py::1013: If we're on a Windows box, run vswhere,
+    # steal the installationPath using windows_os.py logic,
+    # construct paths to CMake and Ninja, add to PATH
     path_hints = path_hints or spack.util.environment.get_path('PATH')
     if sys.platform == 'win32':
-      msvcPaths = winOs.WindowsOs.vsInstallPaths
-      msvcCMakePaths = [os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "CMake", "bin")
-                   for path in msvcPaths]
-      [path_hints.insert(0, path) for path in msvcCMakePaths]
-      msvcNinjaPaths = [os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
-                   for path in msvcPaths]
-      [path_hints.insert(0, path) for path in msvcNinjaPaths]
+        msvc_paths = winOs.WindowsOs.vs_install_paths
+        msvc_cmake_paths = [
+            os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft",
+                         "CMake", "CMake", "bin")
+            for path in msvc_paths]
+        path_hints = msvc_cmake_paths + path_hints
+        msvc_ninja_paths = [
+            os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft",
+                         "CMake", "Ninja")
+            for path in msvc_paths]
+        path_hints = msvc_ninja_paths + path_hints
 
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
 
