@@ -12,7 +12,12 @@ class PerlFth(Package):
        resolves static interface overload.
        It can handle some LaTeX comments inside the source files.
        It only needs to be put somewhere into your disk since it uses Perl.
-       It also provides javatex2.pl initmak.pl getin.pl tex3ht.pl and view.pl.
+       It also provides javatex2.pl initmak.pl getin.pl tex3ht.pl and view.pl:
+        - javatex2 complements latex2html to make nice browsing,
+        - initmak makes fortran 90 dependencies, either full deps or partial
+          (when interface is not modified it is silly to recompile everything)
+        - getin is an advanced search tool for Fortran variables and calls,
+        - view.pl is used for CGI search when source is on http server.
     """
 
     homepage = "https://sourceforge.net/projects/ftagshtml/"
@@ -22,6 +27,7 @@ class PerlFth(Package):
 
     maintainers = ['cessenat']
 
+    version('0.525', sha256='378116febeb20f4b0c1e298de90305e8494335949d853c7e390d1b6386c1326a')
     version('0.524', sha256='2f378e969d1dd267985342f7fb1b3a0b9fd73334627cbc7ab17d61717bcd3c29')
     version('0.523', sha256='d5d3fbd3caca30eee9de45baa46612841d55b2960db8e11411af6db76cf214ad')
     version('0.522', sha256='acb73eb2c05b1ed7b75f86fbd9656c00158519b3d11d89a082117004deb0fb9e')
@@ -46,6 +52,7 @@ class PerlFth(Package):
     depends_on('texlive', when='+pdflatex', type='run')
     # initmak.pl uses md5sum provided by coreutils
     depends_on('coreutils', type='run')
+    depends_on('dos2unix', type='build')
 
     # Patches to remove the ancient ksh shebang for fth.pl and initmak.pl.
     # git diff a/bin/fth.pl b/bin/fth.pl
@@ -77,12 +84,20 @@ class PerlFth(Package):
         # Remove the perl shebang with the local perl
         # (since ftagshtml has no Makefile.PL to do it).
         checks = ['fth', 'getin', 'view', 'javatex2', 'tex3ht', 'initmak']
-        mstr = '#!' + join_path(spec['perl'].prefix.bin, 'perl')
+        # mstr = '#!' + join_path(spec['perl'].prefix.bin, 'perl')
+        mstr = '#!' + spec['perl'].command.path
         with working_dir('bin'):
             for exe in checks:
-                if os.path.exists(exe + '.pl'):
-                    fthfile = FileFilter(exe + '.pl')
+                fic = exe + '.pl'
+                if os.path.exists(fic):
+                    # This is a very clever which
+                    dos2unix = which('dos2unix')
+                    # if not dos2unix:
+                    #     dos2unix = Executable(join_path(self.spec['dos2unix'].prefix.bin, 'dos2unix'))
+                    dos2unix(fic)
+                    fthfile = FileFilter(fic)
                     fthfile.filter('#!/usr/bin/perl', mstr)
+                    fthfile.filter('#!/usr/bin/env perl', mstr)
 
         # Adds a Makefile with an rsync rule
         makefile_inc = [
