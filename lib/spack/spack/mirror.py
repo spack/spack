@@ -81,12 +81,21 @@ class Mirror(object):
             data = syaml.load(stream)
             return Mirror.from_dict(data, name)
         except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML mirror:", str(e)),
+                e,
+            )
 
     @staticmethod
     def from_json(stream, name=None):
-        d = sjson.load(stream)
-        return Mirror.from_dict(d, name)
+        try:
+            d = sjson.load(stream)
+            return Mirror.from_dict(d, name)
+        except Exception as e:
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON mirror:", str(e)),
+                e,
+            )
 
     def to_dict(self):
         if self._push_url is None:
@@ -251,12 +260,21 @@ class MirrorCollection(Mapping):
             data = syaml.load(stream)
             return MirrorCollection(data)
         except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML mirror collection:", str(e)),
+                e,
+            )
 
     @staticmethod
     def from_json(stream, name=None):
-        d = sjson.load(stream)
-        return MirrorCollection(d)
+        try:
+            d = sjson.load(stream)
+            return MirrorCollection(d)
+        except Exception as e:
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON mirror collection:", str(e)),
+                e,
+            )
 
     def to_dict(self, recursive=False):
         return syaml_dict(sorted(
