@@ -20,7 +20,8 @@ class Coreneuron(CMakePackage):
 
     version('develop', branch='master')
     # 1.0.1 > 1.0.0.20210519 > 1.0 as far as Spack is concerned
-    version('1.0.0.20210525', commit='711d2b8efa8f369c4af77be202ace1887f261489')
+    version('1.0.0.20210610', commit='b4a25b4')
+    version('1.0.0.20210525', commit='711d2b8')
     version('1.0.0.20210519', commit='c938e4f')
     version('1.0', tag='1.0')
     version('0.22', tag='0.22', submodules=True)
@@ -54,7 +55,8 @@ class Coreneuron(CMakePackage):
     depends_on('flex@2.6:', type='build', when='+nmodl')
     depends_on('mpi', when='+mpi')
     depends_on('reportinglib', when='+report')
-    depends_on('libsonata-report@1.0:', when='@1.0.0.20210519:+report')
+    depends_on('libsonata-report@1.0.0.20210610:', when='@1.0.0.20210610:+report')
+    depends_on('libsonata-report@1.0:1.0.0.20210531', when='@1.0.0.20210519:1.0.0.20210525+report')
     depends_on('libsonata-report@:0.1', when='@:1.0.0.20210518+report')
     depends_on('reportinglib+profile', when='+report+profile')
     depends_on('tau', when='+profile')
