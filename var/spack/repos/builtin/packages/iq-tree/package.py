@@ -19,7 +19,7 @@ class IqTree(CMakePackage):
 
     variant('openmp', default=True, description='Enable OpenMP support.')
     variant('mpi',    default=False, description='Enable MPI support.')
-    variant('lsd2',   default=True,  description='Axctivate Least Squares Dating.')
+    variant('lsd2',   default=True,  description='Activate Least Squares Dating.')
 
     maintainers = ['ilbiondo']
 
