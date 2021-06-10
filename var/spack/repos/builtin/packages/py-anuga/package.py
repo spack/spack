@@ -1,3 +1,8 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+#Date 10-June-2021
 
 from spack import *
 
@@ -11,7 +16,6 @@ class PyAnuga(PythonPackage):
     git      = "https://github.com/GeoscienceAustralia/anuga_core.git"
 
     maintainers = ['samcom12']
-
     version('master',  branch='master')
     version('anuga_py3',  branch='anuga_py3')
     version('anuga_py2', branch='anuga_py2')
