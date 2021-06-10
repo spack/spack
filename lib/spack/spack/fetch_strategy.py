@@ -766,6 +766,8 @@ class GitFetchStrategy(VCSFetchStrategy):
     optional_attrs = ['tag', 'branch', 'commit', 'submodules',
                       'get_full_repo', 'submodules_delete']
 
+    git_version_re = r'git version (\S+)'
+
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next call
         # to __init__
@@ -780,7 +782,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def git_version(self):
-        return Version(GitFetchStrategy.version_from_git(self.git))
+        return GitFetchStrategy.version_from_git(self.git)
 
     @staticmethod
     def version_from_git(git_exe):
@@ -788,8 +790,8 @@ class GitFetchStrategy(VCSFetchStrategy):
            if the version cannot be parsed.
         """
         version_output = git_exe('--version', output=str)
-        m = re.search(r'git version (\S+)', version_output)
-        return m.group(1) if m else None
+        m = re.search(GitFetchStrategy.git_version_re, version_output)
+        return Version(m.group(1))
 
     @property
     def git(self):

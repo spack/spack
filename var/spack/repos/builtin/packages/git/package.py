@@ -258,8 +258,10 @@ class Git(AutotoolsPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        git_exe = Executable(exe)
-        return spack.fetch_strategy.GitFetchStrategy.version_from_git(git_exe)
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(
+            spack.fetch_strategy.GitFetchStrategy.git_version_re, output)
+        return match.group(1) if match else None
 
     @classmethod
     def determine_variants(cls, exes, version_str):
