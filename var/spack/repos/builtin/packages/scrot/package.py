@@ -38,6 +38,13 @@ class Scrot(AutotoolsPackage):
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')
+    depends_on('autoconf-archive', type='build')
+    depends_on('automake', type='build')
+    depends_on('giblib')
+    depends_on('imlib2')
+    depends_on('libtool')
+    depends_on('libxcomposite')
+    depends_on('libxfixes')
 
     def configure_args(self):
         # FIXME: Add arguments other than --prefix
