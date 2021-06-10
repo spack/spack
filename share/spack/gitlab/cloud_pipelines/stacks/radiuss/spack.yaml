@@ -25,28 +25,28 @@ spack:
     - radiuss:
       - ascent  # ^conduit@0.6.0
       - axom
-      - blt
-      - caliper
-      - care
+      #- blt
+      #- caliper
+      #- care
       - chai
-      - conduit  # ^hdf5+shared
+      #- conduit  # ^hdf5+shared
       #- flux-core
       #- flux-sched
-      - glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm
+      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm
       - hypre
       - lbann
       - lvarray # ^raja~openmp  # per Ben Corbett Issue #23192
-      - mfem
+      #- mfem
       #- py-hatchet
       #- py-maestrowf
       #- py-merlin
       #- py-shroud
-      - raja
-      - samrai
+      #- raja
+      #- samrai
       - scr
-      - sundials
-      - umpire ~openmp
-      - visit   # ^mesa-glu@9.0.0
+      #- sundials
+      #- umpire ~openmp
+      #- visit   # ^mesa-glu@9.0.0
       - xbraid
       - zfp
 
