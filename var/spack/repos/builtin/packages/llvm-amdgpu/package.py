@@ -75,6 +75,13 @@ class LlvmAmdgpu(CMakePackage):
             when='@{0} +rocm-device-libs'.format(d_version)
         )
 
+    resource(
+        name='rocm-device-libs',
+        placement='rocm-device-libs',
+        git='https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git',
+        when='@master +rocm-device-libs'
+    )
+
     def cmake_args(self):
         llvm_projects = [
             'clang',
