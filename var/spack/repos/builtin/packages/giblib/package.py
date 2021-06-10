@@ -3,44 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install giblib
-#
-# You can edit this file again by typing:
-#
-#     spack edit giblib
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
 class Giblib(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Giblib is a simple library which wraps imlib2's context
+    API, avoiding all the context_get/set calls, adds
+    fontstyles to the truetype renderer and supplies a generic
+    doubly-linked list and some string functions."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://web.archive.org/web/20071002210842/http://linuxbrit.co.uk/giblib/"
     url      = "https://mirror.amdmi3.ru/distfiles/giblib-1.2.4.tar.gz"
-
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
 
     version('1.2.4', sha256='176611c4d88d742ea4013991ad54c2f9d2feefbc97a28434c0f48922ebaa8bac')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-
-    def configure_args(self):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
+    depends_on('imlib2')
