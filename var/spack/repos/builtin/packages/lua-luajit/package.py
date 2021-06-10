@@ -23,11 +23,26 @@ class LuaLuajit(MakefilePackage):
     provides("lua-lang", when="+lualinks")
 
     @run_after("install")
-    @when("+lualinks")
     def install_links(self):
-        # make symlinks as shown above
-        with working_dir(prefix.bin):
-            symlink('lua-luajit', 'lualinks')
+        if not self.spec.satisfies("+lualinks"):
+            return
+
+        with working_dir(self.prefix.bin)
+            luajit = os.readlink(self.prefix.bin.luajit
+            symlink(luajit, "lua")
+
+        with working_dir(self.prefix.include)
+            luajit_include_subdirs = glob.glob(self.prefix.include + "luajit")
+            assert len(luajit_include_subdirs) == 1
+            symlink(luajit_include_subdirs[0], "lua")
+
+        with working_dir(self.prefix.lib)
+            luajit_libnames = glob.glob(self.prefix.lib + "libluajit*.so")
+            real_lib = next(
+                lib for lib in luajit_libnames
+                if os.path.isfile(lib) and not os.path.islink(lib)
+            )
+            symlink(real_lib, "liblua.so")
 
     @property
     def headers(self):
