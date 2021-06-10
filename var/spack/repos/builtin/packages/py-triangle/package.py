@@ -1,3 +1,9 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+#Date 10-June-2021
+
 class PyTriangle(PythonPackage):
     """
     Python binding to the triangle library
@@ -8,7 +14,6 @@ class PyTriangle(PythonPackage):
     git      = "https://github.com/drufat/triangle.git"
 
     maintainers = ['samcom12']
-
     version('master', branch='master')
     version('20200424', sha256='fc207641f8f39986f7d2bee1b91688a588cd235d2e67777422f94e61fece27e9')
     version('20200404', sha256='3d5c5a27a56bcb1a6ecdf536b6df35cdcebf6ce2f4bf348ac4b7ed7072830aaa')
@@ -32,6 +37,6 @@ class PyTriangle(PythonPackage):
     version('0.3', sha256='f2f8402907a3835b0e50c2a9ce466fb1921e240b816e55d42c0a1f1854dbfd6f')
     version('0.2', sha256='0f89cc5ae1e398183111e84794a8d213f616642628a6cb03fe5ae64a7a7235d4')
     version('0.1', sha256='32dbb76304ee0c522c7708623bd98dee5945528ec27eeb57182ef6b588e90a77')
-
-
+    
+	depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
