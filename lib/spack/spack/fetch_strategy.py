@@ -787,7 +787,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         """Given a git executable, return the version.
         """
         version_output = git_exe('--version', output=str)
-        m = re.search(r'^(?:git version\s+)([\w.-]+)', version_output)
+        m = re.search(r'git version (\S+)', version_output)
         vstring = m.group(1)
         return Version(vstring)
 
