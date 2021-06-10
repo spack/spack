@@ -2088,7 +2088,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
                             if any(c.satisfies(invd, strict=True)
                                    for invd in invalid_deps_string)]
             if len(invalid_deps) != len(invalid_deps_string):
-                raise e
+                raise
             invalid_constraints.extend(invalid_deps)
         except UnknownVariantError as e:
             invalid_variants = e.unknown_variants
@@ -2096,7 +2096,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
                                        if any(name in c.variants
                                               for name in invalid_variants)]
             if len(inv_variant_constraints) != len(invalid_variants):
-                raise e
+                raise
             invalid_constraints.extend(inv_variant_constraints)
 
 

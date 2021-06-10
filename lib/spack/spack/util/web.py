@@ -216,7 +216,7 @@ def url_exists(url):
         except s3.ClientError as err:
             if err.response['Error']['Code'] == 'NoSuchKey':
                 return False
-            raise err
+            raise
 
     # otherwise, just try to "read" from the URL, and assume that *any*
     # non-throwing response contains the resource represented by the URL

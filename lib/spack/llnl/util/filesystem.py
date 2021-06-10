@@ -625,7 +625,7 @@ def mkdirp(*paths, **kwargs):
 
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
-                    raise e
+                    raise
         elif not os.path.isdir(path):
             raise OSError(errno.EEXIST, "File already exists", path)
 

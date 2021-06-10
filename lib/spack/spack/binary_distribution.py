@@ -1321,9 +1321,9 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
                 suppress = config.get('config:suppress_gpg_warnings', False)
                 spack.util.gpg.verify(
                     '%s.asc' % specfile_path, specfile_path, suppress)
-            except Exception as e:
+            except Exception:
                 shutil.rmtree(tmpdir)
-                raise e
+                raise
         else:
             shutil.rmtree(tmpdir)
             raise NoVerifyException(
@@ -1394,9 +1394,9 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 
     try:
         relocate_package(spec, allow_root)
-    except Exception as e:
+    except Exception:
         shutil.rmtree(spec.prefix)
-        raise e
+        raise
     else:
         manifest_file = os.path.join(spec.prefix,
                                      spack.store.layout.metadata_dir,

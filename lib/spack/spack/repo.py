@@ -189,7 +189,7 @@ class FastPackageChecker(Mapping):
                 elif e.errno == errno.EACCES:
                     tty.warn("Can't read package file %s." % pkg_file)
                     continue
-                raise e
+                raise
 
             # If it's not a file, skip it.
             if stat.S_ISDIR(sinfo.st_mode):

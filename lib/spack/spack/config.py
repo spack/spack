@@ -38,6 +38,8 @@ import sys
 from contextlib import contextmanager
 from typing import List  # novm
 
+import six
+
 import ruamel.yaml as yaml
 from ordereddict_backport import OrderedDict
 from ruamel.yaml.error import MarkedYAMLError
@@ -958,7 +960,7 @@ def validate(data, schema, filename=None):
             line_number = e.instance.lc.line + 1
         else:
             line_number = None
-        raise ConfigFormatError(e, data, filename, line_number)
+        raise six.raise_from(ConfigFormatError(e, data, filename, line_number), e)
     # return the validated data so that we can access the raw data
     # mostly relevant for environments
     return test_data

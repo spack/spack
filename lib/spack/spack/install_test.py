@@ -10,6 +10,8 @@ import shutil
 import sys
 import tty
 
+import six
+
 import llnl.util.filesystem as fs
 
 import spack.error
@@ -245,7 +247,9 @@ class TestSuite(object):
                 return TestSuite.from_dict(data)
         except Exception as e:
             tty.debug(e)
-            raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e))
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON TestSuite:", str(e)),
+                e)
 
 
 def _add_msg_to_file(filename, msg):

@@ -73,7 +73,9 @@ class Mirror(object):
             data = syaml.load(stream)
             return Mirror.from_dict(data, name)
         except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML spec:", str(e)),
+                e)
 
     @staticmethod
     def from_json(stream, name=None):
@@ -182,7 +184,9 @@ class MirrorCollection(Mapping):
             data = syaml.load(stream)
             return MirrorCollection(data)
         except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML spec:", str(e)),
+                e)
 
     @staticmethod
     def from_json(stream, name=None):
