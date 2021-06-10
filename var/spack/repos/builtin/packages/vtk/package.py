@@ -109,6 +109,11 @@ class Vtk(CMakePackage):
 
     # For finding Fujitsu-MPI wrapper commands
     patch('find_fujitsu_mpi.patch', when='@:8.2.0%fj')
+    # Freetype@2.10.3 no longer exports FT_CALLBACK_DEF, this
+    # patch replaces FT_CALLBACK_DEF with simple extern "C"
+    # See https://gitlab.kitware.com/vtk/vtk/-/issues/18033
+    patch('vtk-freetype-2.10.3-replace-FT_CALLBACK_DEF.patch',
+          when='^freetype@2.10.3:')
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
