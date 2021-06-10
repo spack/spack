@@ -18,7 +18,7 @@ class PyPythonXlib(PythonPackage):
 
     version('0.30', sha256='74131418faf9e7b83178c71d9d80297fbbd678abe99ae9258f5a20cd027acb5f')
 
-    depends_on('python@2.7,3.3:3.6', type=('build', 'run'))
+    depends_on('python@2.7,3.3:', type=('build', 'run'))
     depends_on('py-setuptools@30.3.0:', type='build')
     depends_on('py-setuptools-scm', type='build')
     depends_on('py-six@1.10.0:', type=('build', 'run'))
