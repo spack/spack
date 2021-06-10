@@ -26,6 +26,6 @@ class PySetuptoolsScm(PythonPackage):
     depends_on('python@3.6:', when='@6:', type=('build', 'run'))
 
     depends_on('py-setuptools@34.4:', type=('build', 'run'))
-    depends_on('py-setuptools@45:', type=('build', 'run'), when='@6.0.1:')
+    depends_on('py-setuptools@45:', type=('build', 'run'), when='@6:')
 
     depends_on('py-toml', when='+toml', type=('build', 'run'))
