@@ -1546,6 +1546,17 @@ to use it. If you don't have a path to Ninja analogous to the above, then
 you can obtain it by running the Visual Studio Installer and following the
 instructions at the start of this section.
 
+The last step is to setup CMake for Spack. Inside the Spack console, execute
+the following command:
+
+.. code-block:: console
+
+   spack external find cmake
+
+Upon sucessful execution, Spack will find the version of CMake installed on
+your system. If CMake is not isntalled, refer to the insructions at the
+beginning of this section.
+
 ^^^^^^^^^^^^^^^^^
 Step 4: Use Spack
 ^^^^^^^^^^^^^^^^^
