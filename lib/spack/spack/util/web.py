@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,17 @@ import six
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlopen, Request
 
+try:
+    # Python 2 had these in the HTMLParser package.
+    from HTMLParser import HTMLParser, HTMLParseError  # novm
+except ImportError:
+    # In Python 3, things moved to html.parser
+    from html.parser import HTMLParser
+
+    # Also, HTMLParseError is deprecated and never raised.
+    class HTMLParseError(Exception):
+        pass
+
 from llnl.util.filesystem import mkdirp
 import llnl.util.tty as tty
 
@@ -29,21 +40,12 @@ import spack.error
 import spack.url
 import spack.util.crypto
 import spack.util.s3 as s3_util
+import spack.util.gcs as gcs_util
 import spack.util.url as url_util
 import llnl.util.lang
 
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
-if sys.version_info < (3, 0):
-    # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParser, HTMLParseError  # novm
-else:
-    # In Python 3, things moved to html.parser
-    from html.parser import HTMLParser
-
-    # Also, HTMLParseError is deprecated and never raised.
-    class HTMLParseError(Exception):
-        pass
 
 # Timeout in seconds for web requests
 _timeout = 10
@@ -74,6 +76,12 @@ def uses_ssl(parsed_url):
             return True
 
         if url_util.parse(endpoint_url, scheme='https').scheme == 'https':
+            return True
+
+    elif parsed_url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(parsed_url)
+        if gcs.is_https():
+            tty.debug("(uses_ssl) GCS Blob is https")
             return True
 
     return False
@@ -107,7 +115,14 @@ def read_from_url(url, accept_content_type=None):
             # verification.
             context = ssl._create_unverified_context()
 
-    req = Request(url_util.format(url))
+    if url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(url)
+        gcs_url = gcs.gcs_url()
+        tty.debug("(read_from_url) gcs_url = {}".format(gcs_url))
+        req = Request(gcs.gcs_url())
+    else:
+        req = Request(url_util.format(url))
+
     content_type = None
     is_web_url = url.scheme in ('http', 'https')
     if accept_content_type and is_web_url:
@@ -196,6 +211,12 @@ def push_to_url(
         if not keep_original:
             os.remove(local_file_path)
 
+    elif remote_url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(remote_url)
+        gcs.gcs_upload_to_blob(local_file_path)
+        if not keep_original:
+            os.remove(local_file_path)
+
     else:
         raise NotImplementedError(
             'Unrecognized URL scheme: {SCHEME}'.format(
@@ -210,13 +231,18 @@ def url_exists(url):
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
+        from botocore.exceptions import ClientError
         try:
-            s3.get_object(Bucket=url.netloc, Key=url.path.lstrip('/'))
+            s3.get_object(Bucket=url.netloc, Key=url.path)
             return True
-        except s3.ClientError as err:
+        except ClientError as err:
             if err.response['Error']['Code'] == 'NoSuchKey':
                 return False
             raise err
+
+    elif url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(url)
+        return gcs.gcs_blob_exists()
 
     # otherwise, just try to "read" from the URL, and assume that *any*
     # non-throwing response contains the resource represented by the URL
@@ -227,57 +253,22 @@ def url_exists(url):
         return False
 
 
-def _debug_print_delete_results(result):
-    if 'Deleted' in result:
-        for d in result['Deleted']:
-            tty.debug('Deleted {0}'.format(d['Key']))
-    if 'Errors' in result:
-        for e in result['Errors']:
-            tty.debug('Failed to delete {0} ({1})'.format(
-                e['Key'], e['Message']))
-
-
-def remove_url(url, recursive=False):
+def remove_url(url):
     url = url_util.parse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
-        if recursive:
-            shutil.rmtree(local_path)
-        else:
-            os.remove(local_path)
+        os.remove(local_path)
         return
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
-        bucket = url.netloc
-        if recursive:
-            # Because list_objects_v2 can only return up to 1000 items
-            # at a time, we have to paginate to make sure we get it all
-            prefix = url.path.strip('/')
-            paginator = s3.get_paginator('list_objects_v2')
-            pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
+        s3.delete_object(Bucket=url.netloc, Key=url.path)
+        return
 
-            delete_request = {'Objects': []}
-            for item in pages.search('Contents'):
-                if not item:
-                    continue
-
-                delete_request['Objects'].append({'Key': item['Key']})
-
-                # Make sure we do not try to hit S3 with a list of more
-                # than 1000 items
-                if len(delete_request['Objects']) >= 1000:
-                    r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
-                    _debug_print_delete_results(r)
-                    delete_request = {'Objects': []}
-
-            # Delete any items that remain
-            if len(delete_request['Objects']):
-                r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
-                _debug_print_delete_results(r)
-        else:
-            s3.delete_object(Bucket=bucket, Key=url.path.lstrip('/'))
+    elif url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(url)
+        gcs.gcs_delete_blob()
         return
 
     # Don't even try for other URL schemes.
@@ -358,6 +349,10 @@ def list_url(url, recursive=False):
         return list(set(
             key.split('/', 1)[0]
             for key in _iter_s3_prefix(s3, url)))
+
+    elif url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(url)
+        return gcs.gcs_list_blobs()
 
 
 def spider(root_urls, depth=0, concurrency=32):
@@ -587,10 +582,7 @@ def find_versions_of_archive(
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        url_regex += r'(\/download)?'
-        # PyPI adds #sha256=... to the end of the URL
-        url_regex += '(#sha256=.*)?'
-        url_regex += '$'
+        url_regex += r'(\/download)?$'
 
         regexes.append(url_regex)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,6 @@ import os.path
 import re
 import shutil
 import sys
-from typing import Optional, List  # novm
 
 import llnl.util.tty as tty
 import six
@@ -93,12 +92,11 @@ class FetchStrategy(object):
     #: The URL attribute must be specified either at the package class
     #: level, or as a keyword argument to ``version()``.  It is used to
     #: distinguish fetchers for different versions in the package DSL.
-    url_attr = None  # type: Optional[str]
+    url_attr = None
 
     #: Optional attributes can be used to distinguish fetchers when :
     #: classes have multiple ``url_attrs`` at the top-level.
-    # optional attributes in version() args.
-    optional_attrs = []  # type: List[str]
+    optional_attrs = []  # optional attributes in version() args.
 
     def __init__(self, **kwargs):
         # The stage is initialized late, so that fetch strategies can be
@@ -292,15 +290,7 @@ class URLFetchStrategy(FetchStrategy):
 
     @property
     def candidate_urls(self):
-        urls = []
-
-        for url in [self.url] + (self.mirrors or []):
-            if url.startswith('file://'):
-                path = urllib_parse.quote(url[len('file://'):])
-                url = 'file://' + path
-            urls.append(url)
-
-        return urls
+        return [self.url] + (self.mirrors or [])
 
     @_needs_stage
     def fetch(self):
@@ -311,6 +301,13 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
+
+            if url[0:1] == 'gs':
+                import spack.util.gcs as gcs_util
+                parsed_url = urllib_parse.urlparse(url)
+                gcs = gcs_util.GCSBlob(parsed_url)
+                url = gcsblob.gcs_url()
+
             if not self._existing_url(url):
                 continue
 
@@ -334,8 +331,6 @@ class URLFetchStrategy(FetchStrategy):
         # Telling curl to fetch the first byte (-r 0-0) is supposed to be
         # portable.
         curl_args = ['--stderr', '-', '-s', '-f', '-r', '0-0', url]
-        if not spack.config.get('config:verify_ssl'):
-            curl_args.append('-k')
         _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
         return curl.returncode == 0
 
@@ -432,7 +427,7 @@ class URLFetchStrategy(FetchStrategy):
             warn_content_type_mismatch(self.archive_file or "the archive")
         return partial_file, save_file
 
-    @property  # type: ignore # decorated properties unsupported in mypy
+    @property
     @_needs_stage
     def archive_file(self):
         """Path to the source archive within this stage directory."""
@@ -475,8 +470,6 @@ class URLFetchStrategy(FetchStrategy):
         tarball_container = os.path.join(self.stage.path,
                                          "spack-expanded-archive")
 
-        # Below we assume that the command to decompress expand the
-        # archive in the current working directory
         mkdirp(tarball_container)
         with working_dir(tarball_container):
             decompress(self.archive_file)
@@ -780,20 +773,13 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def git_version(self):
-        output = self.git('--version', output=str, error=str)
-        match = re.search(r'git version (\S+)', output)
-        return Version(match.group(1)) if match else None
+        vstring = self.git('--version', output=str).lstrip('git version ')
+        return Version(vstring)
 
     @property
     def git(self):
         if not self._git:
             self._git = which('git', required=True)
-
-            # Disable advice for a quieter fetch
-            # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt
-            if self.git_version >= Version('1.7.2'):
-                self._git.add_default_arg('-c')
-                self._git.add_default_arg('advice.detachedHead=false')
 
             # If the user asked for insecure fetching, make that work
             # with git as well.
@@ -1382,6 +1368,7 @@ def from_url_scheme(url, *args, **kwargs):
             'https': 'url',
             'ftp': 'url',
             'ftps': 'url',
+            'gs':'url',
         })
 
     scheme = parsed_url.scheme
