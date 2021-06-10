@@ -52,8 +52,8 @@ class Zlib(CMakePackage):
         if '+pic' in self.spec:
             env.append_flags('CFLAGS', self.compiler.cc_pic_flag)
         if '+optimize' in self.spec:
-            env.append_flags('CFLAGS', '-O2')            
- 
+            env.append_flags('CFLAGS', '-O2')
+
     # Build, install, and check both static and shared versions of the
     # libraries when +shared
     @when('+shared platform=windows')
@@ -65,7 +65,7 @@ class Zlib(CMakePackage):
     def build(self, spec, prefix):
         for self._building_shared in (False, True):
             super(Zlib, self).build(spec, prefix)
-       
+
     @when('+shared platform=windows')
     def check(self):
         for self._building_shared in (False, True):
@@ -80,11 +80,8 @@ class Zlib(CMakePackage):
             if '~shared' in spec:
                 config_args.append('--static')
             configure('--prefix={0}'.format(prefix), *config_args)
- 
+
             make()
             if self.run_tests:
                 make('check')
             make('install')
-
-
-    
