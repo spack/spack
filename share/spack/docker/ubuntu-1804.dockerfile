@@ -67,7 +67,7 @@ RUN [ -f ~/.profile ]                                               \
 
 # [WORKAROUND]
 # https://bugs.launchpad.net/ubuntu/+source/lua-posix/+bug/1752082
-RUN ln -s posix_c.so /usr/lib/x86_64-linux-gnu/lua/5.2/posix.so
+RUN ln -s posix_c.so /usr/lib/$(uname -m)-linux-gnu/lua/5.2/posix.so
 
 WORKDIR /root
 SHELL ["docker-shell"]
