@@ -2561,3 +2561,15 @@ spack:
 
     assert view_prefix not in full_contents
     assert spec.prefix in full_contents
+
+
+@pytest.mark.regression('24148')
+def test_virtual_spec_concretize_together(tmpdir):
+    # An environment should permit to concretize "mpi"
+    e = ev.create('virtual_spec')
+    e.concretization = 'together'
+
+    e.add('mpi')
+    e.concretize()
+
+    assert any(s.package.provides('mpi') for _, s in e.concretized_specs())

@@ -63,6 +63,8 @@ class Dealii(CMakePackage, CudaPackage):
     # Package variants
     variant('assimp',   default=True,
             description='Compile with Assimp')
+    variant('arborx',   default=True,
+            description='Compile with Arborx support')
     variant('arpack',   default=True,
             description='Compile with Arpack and PArpack (only with MPI)')
     variant('adol-c',   default=True,
@@ -160,6 +162,8 @@ class Dealii(CMakePackage, CudaPackage):
 
     # Optional dependencies: Packages
     depends_on('adol-c@2.6.4:',    when='@9.0:+adol-c')
+    depends_on('arborx',           when='@9.3:+arborx')
+    depends_on('arborx+trilinos',  when='@9.3:+arborx+trilinos')
     depends_on('arpack-ng+mpi',    when='+arpack+mpi')
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
@@ -266,7 +270,7 @@ class Dealii(CMakePackage, CudaPackage):
                       'via ~{0}'.format(p))
 
     # interfaces added in 9.3.0:
-    for p in ['simplex']:  # , 'taskflow']:
+    for p in ['simplex', 'arborx']:  # , 'taskflow']:
         conflicts('+{0}'.format(p), when='@:9.2',
                   msg='The interface to {0} is supported from version 9.3.0 '
                       'onwards. Please explicitly disable this variant '
@@ -486,7 +490,7 @@ class Dealii(CMakePackage, CudaPackage):
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
                 'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
-                'symengine', 'ginkgo'):  # 'taskflow'):
+                'symengine', 'ginkgo', 'arborx'):  # 'taskflow'):
             options.append(self.define_from_variant(
                 'DEAL_II_WITH_{0}'.format(library.upper()), library
             ))
