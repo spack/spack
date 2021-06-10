@@ -141,7 +141,7 @@ def executable_prefix(executable_dir):
 
     components = executable_dir.split(os.sep)
     if 'bin' not in components:
-        return None
+        return executable_dir
     idx = components.index('bin')
     return os.sep.join(components[:idx])
 
