@@ -11,7 +11,7 @@ class IqTree(CMakePackage):
     """IQ-TREE Efficient software for phylogenomic inference"""
 
     homepage = "http://www.iqtree.org"
-    git      = "https://github.com/Cibiv/IQ-TREE.git"
+    git      = "https://github.com/iqtree/iqtree2.git"
     url      = "https://github.com/Cibiv/IQ-TREE/archive/v1.6.12.tar.gz"
 
     version('2.0.6',    tag='v2.0.6', submodules=True)
