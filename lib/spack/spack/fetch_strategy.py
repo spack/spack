@@ -780,16 +780,16 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def git_version(self):
-        return GitFetchStrategy.version_from_git(self.git)
+        return Version(GitFetchStrategy.version_from_git(self.git))
 
     @staticmethod
     def version_from_git(git_exe):
-        """Given a git executable, return the version.
+        """Given a git executable, return the version as a string or None
+           if the version cannot be parsed.
         """
         version_output = git_exe('--version', output=str)
         m = re.search(r'git version (\S+)', version_output)
-        vstring = m.group(1)
-        return Version(vstring)
+        return m.group(1) if m else None
 
     @property
     def git(self):
