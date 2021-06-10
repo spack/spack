@@ -1450,6 +1450,11 @@ Git
 """
 
 A bash console and GUI can be downloaded from https://git-scm.com/downloads.
+
+When given the option of adjusting your ``PATH``, choose the ``Git from the
+command line and also from 3rd-party software`` option. This will automatically
+update your ``PATH`` variable to include the ``git`` command.
+
 If you are unfamiliar with Git, there are a myriad of resources online to help
 guide you through checking out repositories and switching development
 branches.
@@ -1488,7 +1493,7 @@ To use Spack, run ``spack_cmd.bat`` (you may need to Run as Administrator).
 This will provide a Windows command prompt with an environment properly set
 up with Spack and its prerequisites. If you receive a warning message that
 Python is not in your ``PATH`` (which may happen if you installed Python
-from the website and not the Windows Store) add the  location of the Python
+from the website and not the Windows Store), add the location of the Python
 executable to your ``PATH`` now.
 
 To configure Spack, first run the following command inside the Spack console:
@@ -1523,7 +1528,7 @@ backslashes for Windows compatibility.) It is important that all indentions
 in .yaml files are done with spaces and not tabs, so take care when editing
 one by hand.
 
-For the ``packages.yaml`` file, there are a two options. The first
+For the ``packages.yaml`` file, there are two options. The first
 and easiest choice is to use Spack to find installation on your system. In
 the Spack terminal, run the following commands:
 
@@ -1555,8 +1560,14 @@ like this, with possibly slight variants in the paths to CMake and Ninja:
          prefix: 'c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'
        buildable: False
 
+It is important to note that the version of your Ninja and CMake could
+be different than what is shown here. If there is a difference, make sure
+to use your version instead of the version listed above. Similiarly, if
+you use a different version of Visual Studio ("Community" for example),
+make sure the Professional part of the location is changed to your version.
+
 The ``packages.yaml``file should be placed inside either the ``.spack``
-directory or the ``.spack\windows``.
+directory or the ``.spack\windows`` directory.
 
 You can also use an separate installation of CMake if you have one and prefer
 to use it. If you don't have a path to Ninja analogous to the above, then
