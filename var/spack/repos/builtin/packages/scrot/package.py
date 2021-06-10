@@ -19,7 +19,7 @@ class Scrot(AutotoolsPackage):
 
     depends_on('autoconf-archive', type='build')
     depends_on('automake', type='build')
-    depends_on('giblib', when=':1.5')  # @master already has this dependency removed
+    depends_on('giblib', when='@:1.5')  # @master already has this dependency removed
     depends_on('imlib2')
     depends_on('libtool')
     depends_on('libxcomposite')
