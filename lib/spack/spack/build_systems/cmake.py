@@ -22,10 +22,6 @@ from spack.package import InstallError, PackageBase, run_after
 _primary_generator_extractor = re.compile(r'(?:.* - )?(.*)')
 
 
-def generator_default():
-    return 'Make' if sys.platform != 'win32' else 'Ninja'
-
-
 def _extract_primary_generator(generator):
     """Use the compiled regex _primary_generator_extractor to extract the
     primary generator from the generator string which may contain an
@@ -94,9 +90,8 @@ class CMakePackage(PackageBase):
     #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
     #: for more information.
 
-    @staticmethod
-    def generator_options():
-        return ('Make', 'Ninja') if sys.platform != 'win32' else ('Ninja')
+    def generator_default():
+        return 'Make' if sys.platform != 'win32' else 'Ninja'
 
     variant('generator', default=generator_default(),
             description='Build system to generate',
