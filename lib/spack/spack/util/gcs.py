@@ -16,6 +16,7 @@ import llnl.util.tty as tty
 class GCSBlob:
     def __init__(self, url):
         from google.cloud import storage
+        import google.auth
 
         self.url = url
         (self.bucket_name, self.blob_path) = self.get_bucket_blob_path()
@@ -24,16 +25,11 @@ class GCSBlob:
             'Can not create GCS blob connection from URL with scheme: {SCHEME}'.format(
                 SCHEME=url.scheme))
 
-        if "GOOGLE_APPLICATION_CREDENTIALS" in os.environ:
-
-           self.storage_client = storage.Client()
-           if not self.gcs_bucket_exists():
-              tty.warn("The bucket {} does not exist, it will be created".format(self.bucket_name))
-              self.storage_client.create_bucket(self.bucket_name)
-
-        else:
-           tty.error("Error: Environmental variable GOOGLE_APPLICATION_CREDENTIALS is not defined, it is required if you want to use GCS Buckets as a spack buildcache")
-           sys.exit(1)
+        self.storage_credentials, self.storage_project = google.auth.default()
+        self.storage_client = storage.Client(self.storage_project, self.storage_credentials)
+        if not self.gcs_bucket_exists():
+           tty.warn("The bucket {} does not exist, it will be created".format(self.bucket_name))
+           self.storage_client.create_bucket(self.bucket_name)
 
     def get_bucket_blob_path(self):
         blob_path = self.url.path
@@ -87,7 +83,7 @@ class GCSBlob:
 
     def gcs_list_blobs(self):
         try:
-           blobs = self.storage_client.list_blobs(self.bucket_name)
+           blobs = self.storage_client.list_blobs(self.bucket_name,prefix=self.blob_path)
            blob_list=[]
            for blob in blobs:
                p = blob.name.split('/')
@@ -100,14 +96,28 @@ class GCSBlob:
 
 
     def gcs_url(self):
-        try:
-           bucket = self.storage_client.bucket(self.bucket_name)
-           blob = bucket.blob(self.blob_path)
+        import os, google.auth
+        from google.auth.transport import requests
+        from google.auth import compute_engine
+        from datetime import datetime, timedelta
+        from google.cloud import storage
 
-           url = blob.generate_signed_url(expiration=datetime.datetime.utcnow() + datetime.timedelta(minutes=5),
-                       version='v4',bucket_bound_hostname=self.url.netloc)
+        try:
+           auth_request = requests.Request()
+           data_bucket = self.storage_client.lookup_bucket(self.bucket_name)
+           signed_blob_path = data_bucket.blob(self.blob_path)
+
+           expires_at_ms = datetime.now() + timedelta(minutes=5)
+
+           if os.getenv('GCS_COMPUTE_ENGINE') == 'False':
+              url = blob.generate_signed_url(expiration_at_ms,version='v4')
+           else:
+              # Generate Compute Engine credentials
+              signing_credentials = compute_engine.IDTokenCredentials(auth_request, "")
+              signed_url = signed_blob_path.generate_signed_url(expires_at_ms, credentials=signing_credentials, version="v4")
+
         except Exception as ex:
            tty.error("{}, Could not generate a signed URL for GCS blob storage".format(ex))
            sys.exit(1)
 
-        return url
+        return signed_url
