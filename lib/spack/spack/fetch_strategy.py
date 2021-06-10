@@ -780,7 +780,11 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def git_version(self):
-        version_output = self.git('--version', output=str)
+        return GitFetchStrategy._git_version(self.git)
+
+    @staticmethod
+    def _git_version(git_exe):
+        version_output = git_exe('--version', output=str)
         m = re.search(r'^(?:git version\s+)([\w.-]+)', version_output)
         vstring = m.group(1)
         return Version(vstring)
