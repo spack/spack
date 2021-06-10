@@ -307,7 +307,7 @@ _spack_fn_exists() {
 }
 
 need_module="no"
-if ! _spack_fn_exists use && ! _spack_fn_exists module; then
+if [ -z "${SPACK_SKIP_MODULES+x}" ] && ! _spack_fn_exists use && ! _spack_fn_exists module; then
     need_module="yes"
 fi;
 
