@@ -786,8 +786,8 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @staticmethod
     def version_from_git(git_exe):
-        """Given a git executable, return the version as a string or None
-           if the version cannot be parsed.
+        """Given a git executable, return the Version (this will fail if
+           the output cannot be parsed into a valid Version).
         """
         version_output = git_exe('--version', output=str)
         m = re.search(GitFetchStrategy.git_version_re, version_output)
