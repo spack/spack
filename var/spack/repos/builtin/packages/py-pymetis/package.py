@@ -14,7 +14,6 @@ class PyPymetis(PythonPackage):
     url      = "https://pypi.io/packages/source/P/PyMetis/PyMetis-2020.1.tar.gz"
     git      = "https://github.com/inducer/pymetis.git"
 
-
     maintainers = ['samcom12']
 
     version('main', branch='main')
@@ -31,6 +30,7 @@ class PyPymetis(PythonPackage):
     version('0.91', sha256='11df0499142b2d4192922bd27938c1217b5e417613afc790af988e61cb8560dd')
 
     depends_on('python@3.6:', type=('build', 'link', 'run'))
+    depends_on('py-setuptools', type=('build', 'run')) 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pybind11', type=('build', 'run'))
