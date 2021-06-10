@@ -90,10 +90,7 @@ class PerlFth(Package):
             for exe in checks:
                 fic = exe + '.pl'
                 if os.path.exists(fic):
-                    # This is a very clever which
                     dos2unix = which('dos2unix')
-                    # if not dos2unix:
-                    #     dos2unix = Executable(join_path(self.spec['dos2unix'].prefix.bin, 'dos2unix'))
                     dos2unix(fic)
                     fthfile = FileFilter(fic)
                     fthfile.filter('#!/usr/bin/perl', mstr)
