@@ -34,7 +34,7 @@ class PyDistributed(PythonPackage):
     depends_on('py-cloudpickle@0.2.2:', type=('build', 'run'), when='@:2.16.0')
     depends_on('py-cloudpickle@1.3.0:', type=('build', 'run'), when='@2.17.0:2.20.0')
     depends_on('py-cloudpickle@1.5.0:', type=('build', 'run'), when='@2.21.0:')
-    depends_on('py-contextvars', type=('build', 'run'), when='^python@:3.6')
+    depends_on('py-contextvars', type=('build', 'run'), when='@2020: ^python@:3.6')
     depends_on('py-msgpack', type=('build', 'run'), when='@:2.10.0')
     depends_on('py-msgpack@0.6.0:', type=('build', 'run'), when='@2.11.0:')
     depends_on('py-psutil@5.0:', type=('build', 'run'))
