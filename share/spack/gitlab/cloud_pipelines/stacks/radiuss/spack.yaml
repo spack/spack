@@ -31,22 +31,22 @@ spack:
       #- chai
       - conduit  # ^hdf5+shared
       - flux-core
-      - flux-sched
-      - glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm
+      #- flux-sched
+      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm
       - hypre
       - lbann
       #- lvarray ^raja~openmp  # per Ben Corbett Issue #23192
       - mfem
-      - py-hatchet
-      - py-maestrowf
-      - py-merlin
-      - py-shroud
+      #- py-hatchet
+      #- py-maestrowf
+      #- py-merlin
+      #- py-shroud
       - raja
-      - samrai
+      #- samrai
       - scr
-      - sundials
+      #- sundials
       #- umpire ~openmp
-      - visit   # ^mesa-glu@9.0.0
+      #- visit   # ^mesa-glu@9.0.0
       - xbraid
       - zfp
 
