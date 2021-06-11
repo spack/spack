@@ -8,7 +8,6 @@ import argparse
 import os
 import re
 import sys
-import subprocess
 from collections import defaultdict, namedtuple
 
 import six
@@ -69,18 +68,23 @@ def _get_system_executables():
     There may be multiple paths with the same basename. In this case it is
     assumed there are two different instances of the executable.
     """
-    # build_environment.py::1013: If we're on a Windows box, run vswhere, steal the installationPath using
-    # windows_os.py logic, construct paths to CMake and Ninja, add to PATH
+    # build_environment.py::1013: If we're on a Windows box, run vswhere, steal the
+    # installationPath using windows_os.py logic, construct paths to CMake and Ninja,
+    # add to PATH
     path_hints = spack.util.environment.get_path('PATH')
     if sys.platform == 'win32':
-      msvcPaths = winOs.WindowsOs.vsInstallPaths
-      msvcCMakePaths = [os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "CMake", "bin")
-                   for path in msvcPaths]
-      [path_hints.insert(0, path) for path in msvcCMakePaths]
-      msvcNinjaPaths = [os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
-                   for path in msvcPaths]
-      [path_hints.insert(0, path) for path in msvcNinjaPaths]
-            
+        msvc_paths = winOs.WindowsOs.vsInstallPaths
+        msvc_cmake_paths = [
+            os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft",
+                         "CMake", "CMake", "bin")
+            for path in msvc_paths]
+        path_hints = msvc_cmake_paths + path_hints
+        msvc_ninja_paths = [
+            os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft",
+                         "CMake", "Ninja")
+            for path in msvc_paths]
+        path_hints = msvc_ninja_paths + path_hints
+
     search_paths = llnl.util.filesystem.search_paths_for_executables(
         *path_hints)
     path_to_exe = {}

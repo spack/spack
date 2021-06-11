@@ -90,10 +90,8 @@ class CMakePackage(PackageBase):
     #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
     #: for more information.
 
-    def generator_default():
-        return 'Make' if sys.platform != 'win32' else 'Ninja'
-
-    variant('generator', default=generator_default(),
+    variant('generator',
+            default='Make' if sys.platform != 'win32' else 'Ninja',
             description='Build system to generate',
             values=('Make', 'Ninja'))
 
@@ -151,7 +149,7 @@ class CMakePackage(PackageBase):
         try:
             pkg.generator = pkg.spec.variants['generator'].value
         except KeyError:
-            pkg.generator = CMakePackage.generator_default()
+            pkg.generator = 'Make' if sys.platform != 'win32' else 'Ninja'
         primary_generator = CMakePackage.generatorMap[pkg.generator]
 
         try:
