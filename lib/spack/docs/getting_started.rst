@@ -1456,6 +1456,11 @@ Git
 """
 
 A bash console and GUI can be downloaded from https://git-scm.com/downloads.
+
+When given the option of adjusting your ``PATH``, choose the ``Git from the
+command line and also from 3rd-party software`` option. This will automatically
+update your ``PATH`` variable to include the ``git`` command.
+
 If you are unfamiliar with Git, there are a myriad of resources online to help
 guide you through checking out repositories and switching development
 branches.
@@ -1494,7 +1499,7 @@ To use Spack, run ``spack_cmd.bat`` (you may need to Run as Administrator).
 This will provide a Windows command prompt with an environment properly set
 up with Spack and its prerequisites. If you receive a warning message that
 Python is not in your ``PATH`` (which may happen if you installed Python
-from the website and not the Windows Store) add the  location of the Python
+from the website and not the Windows Store), add the location of the Python
 executable to your ``PATH`` now.
 
 To configure Spack, first run the following command inside the Spack console:
@@ -1508,10 +1513,9 @@ This creates a ``.spack`` directory in our home directory, along with a
 Windows install, the only compiler that should be found is your installation
 of Microsoft Visual Studio.
 
-We need to provide the ``config.yaml`` and ``packages.yaml`` configurations
-by ourselves. These go in the ``.spack\windows`` directory in your home
-directory. Open  your text editor of choice and enter the following lines
-for ``config.yaml``:
+We need to provide the ``config.yaml`` configuration by ourselves. This goes
+in the ``.spack\windows`` directory in your home directory. Open your text
+editor of choice and enter the following lines for ``config.yaml``:
 
 .. code-block:: yaml
 
@@ -1521,6 +1525,8 @@ for ``config.yaml``:
        root: $spack\opt\spack
        projections:
          all: '${ARCHITECTURE}\${COMPILERNAME}-${COMPILERVER}\${PACKAGE}-${VERSION}-${HASH}'
+     build_stage:
+       - ~/.spack/stage
 
 (These settings are identical to those in the default ``config.yaml``
 provided with your Spack checkout, except with forward slashes replaced by
@@ -1528,10 +1534,23 @@ backslashes for Windows compatibility.) It is important that all indentions
 in .yaml files are done with spaces and not tabs, so take care when editing
 one by hand.
 
-For the ``packages.yaml`` file, we need to direct spack towards the CMake
-and Ninja installations we set up with Visual Studio. Therefore, your
-``packages.yaml`` file will look something like this, with possibly slight
-variants in the paths to CMake and Ninja:
+For the ``packages.yaml`` file, there are two options. The first
+and easiest choice is to use Spack to find installation on your system. In
+the Spack terminal, run the following commands:
+
+.. code-block:: console
+   spack external find cmake
+   spack external find ninja
+
+The ``spack external find <name>`` will find executalbes on your system
+with the same name given. The command will store the items found in
+``packages.yaml`` in the ``.spack\`` directory.
+
+Assuming the Spack found CMake and Ninja executables in the previous
+step, continue to Step 4. If no executables were found, we will need to
+direct spack towards the CMake and Ninja installations we set up with
+Visual Studio. Therefore, your ``packages.yaml`` file will look something
+like this, with possibly slight variants in the paths to CMake and Ninja:
 
 .. code-block:: yaml
 
@@ -1547,10 +1566,20 @@ variants in the paths to CMake and Ninja:
          prefix: 'c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'
        buildable: False
 
+It is important to note that the version of your Ninja and CMake could
+be different than what is shown here. If there is a difference, make sure
+to use your version instead of the version listed above. Similiarly, if
+you use a different version of Visual Studio ("Community" for example),
+make sure the Professional part of the location is changed to your version.
+
+The ``packages.yaml``file should be placed inside either the ``.spack``
+directory or the ``.spack\windows`` directory.
+
 You can also use an separate installation of CMake if you have one and prefer
 to use it. If you don't have a path to Ninja analogous to the above, then
 you can obtain it by running the Visual Studio Installer and following the
 instructions at the start of this section.
+
 
 ^^^^^^^^^^^^^^^^^
 Step 4: Use Spack
