@@ -1373,7 +1373,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         try:
             self.stage.fetch(mirror_only, err_msg=err_msg)
         except fs.FetchError:
-            tty.error('Failed to fetch {0}'.format(self.spec.cformat('{name}{@version}')))
+            spec_str = self.spec.cformat('{name}{@version}')
+            tty.error('Failed to fetch {0}'.format(spec_str))
             raise
         self._fetch_time = time.time() - start_time
 
