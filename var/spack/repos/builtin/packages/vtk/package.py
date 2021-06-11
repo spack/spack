@@ -113,7 +113,7 @@ class Vtk(CMakePackage):
     # patch replaces FT_CALLBACK_DEF with simple extern "C"
     # See https://gitlab.kitware.com/vtk/vtk/-/issues/18033
     patch('https://gitlab.kitware.com/vtk/vtk/uploads/c6fa799a1a028b8f8a728a40d26d3fec/vtk-freetype-2.10.3-replace-FT_CALLBACK_DEF.patch',
-	  sha256='eefda851f844e8a1dfb4ebd8a9ff92d2b78efc57f205774052c5f4c049cc886a',
+          sha256='eefda851f844e8a1dfb4ebd8a9ff92d2b78efc57f205774052c5f4c049cc886a',
           when='^freetype@2.10.3:')
 
     def url_for_version(self, version):
