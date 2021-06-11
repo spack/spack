@@ -869,7 +869,10 @@ class Python(AutotoolsPackage):
         Returns:
             str: include files directory
         """
-        return self.get_python_inc(prefix='')
+        try:
+            return self.get_python_inc(prefix='')
+        except ProcessError:
+            return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
 
     @property
     def python_lib_dir(self):
@@ -890,7 +893,10 @@ class Python(AutotoolsPackage):
         Returns:
             str: standard library directory
         """
-        return self.get_python_lib(standard_lib=True, prefix='')
+        try:
+            return self.get_python_lib(standard_lib=True, prefix='')
+        except ProcessError:
+            return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
 
     @property
     def site_packages_dir(self):
@@ -911,7 +917,11 @@ class Python(AutotoolsPackage):
         Returns:
             str: site-packages directory
         """
-        return self.get_python_lib(prefix='')
+        try:
+            return self.get_python_lib(prefix='')
+        except ProcessError:
+            return os.path.join(
+                'lib', 'python{0}'.format(self.version.up_to(2)), 'site-packages')
 
     @property
     def easy_install_file(self):
