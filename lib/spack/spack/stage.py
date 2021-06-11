@@ -504,9 +504,8 @@ class Stage(object):
             print_errors(errors)
 
             self.fetcher = self.default_fetcher
-            if not err_msg:
-                err_msg = 'All fetchers failed for {0}'.format(self.name)
-            raise fs.FetchError(err_msg, None)
+            default_msg = 'All fetchers failed for {0}'.format(self.name)
+            raise fs.FetchError(err_msg or default_msg, None)
 
         print_errors(errors)
 
