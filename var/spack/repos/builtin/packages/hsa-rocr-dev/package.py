@@ -65,7 +65,6 @@ class HsaRocrDev(CMakePackage):
         if '@3.7.0:' in spec:
             args.append(self.define_from_variant('IMAGE_SUPPORT', 'image'))
 
-        if '@4.2.0:' in spec:
             # device libs is bundled with llvm-amdgpu (default) or standalone
             if '^rocm-device-libs' in spec:
                 bitcode_dir = spec['rocm-device-libs'].prefix.amdgcn.bitcode

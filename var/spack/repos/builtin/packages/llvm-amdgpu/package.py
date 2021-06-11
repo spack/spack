@@ -79,6 +79,7 @@ class LlvmAmdgpu(CMakePackage):
         name='rocm-device-libs',
         placement='rocm-device-libs',
         git='https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git',
+        branch='amd-stg-open',
         when='@master +rocm-device-libs'
     )
 
