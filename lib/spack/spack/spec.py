@@ -4138,15 +4138,34 @@ class Spec(object):
         spec_str = " ^".join(d.format() for d in sorted_nodes)
         return spec_str.strip()
 
+    STATUS_NOT_INSTALLED = 0
+    STATUS_INSTALLED = 1
+    STATUS_EXTERNAL = 2
+    STATUS_UPSTREAM = 3
+    STATUS_ERROR = 4
+
     def install_status(self):
-        """Helper for tree to print DB install status."""
+        """Helper for tree to print DB install status.
+        :returns: True - if installed, False - if not, None on errors
+        """
         if not self.concrete:
             return None
         try:
-            record = spack.store.db.get_record(self)
-            return record.installed
+            record = spack.store.db.get_record(self)  # type: Spec
+            if not record.installed:
+                return self.STATUS_NOT_INSTALLED
+            else:
+                # If the package should be installed according to the db, but can't be found.
+                if record.path is None or not os.path.exists(record.path):
+                    return self.STATUS_ERROR
+                elif record.external:
+                    return self.STATUS_EXTERNAL
+                elif record.package.installed_upstream:
+                    return self.STATUS_UPSTREAM
+                else:
+                    return self.STATUS_INSTALLED
         except KeyError:
-            return None
+            return self.STATUS_NOT_INSTALLED
 
     def _installed_explicitly(self):
         """Helper for tree to print DB install status."""
@@ -4158,14 +4177,29 @@ class Spec(object):
         except KeyError:
             return None
 
+    UPSTREAM_GLYPH = clr.colorize("@*b{[^]}", color=clr.get_color_when())
+    POS_GLYPH = clr.colorize("@*g{[+]}", color=clr.get_color_when())
+    NEG_GLYPH = clr.colorize("@*K{[ ]}", color=clr.get_color_when())
+    ERR_GLYPH = clr.colorize("@*r{[?]}", color=clr.get_color_when())
+    EXTERNAL_GLYPH = clr.colorize("@*c{[*]}", color=clr.get_color_when())
+    GLYPHS_BY_STATUS = {
+        STATUS_INSTALLED:     POS_GLYPH,
+        STATUS_NOT_INSTALLED: NEG_GLYPH,
+        STATUS_ERROR:         ERR_GLYPH,
+        STATUS_UPSTREAM:      UPSTREAM_GLYPH,
+        STATUS_EXTERNAL:      EXTERNAL_GLYPH,
+    }
+
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
-        color = kwargs.pop('color', clr.get_color_when())
         depth = kwargs.pop('depth', False)
         hashes = kwargs.pop('hashes', False)
         hlen = kwargs.pop('hashlen', None)
-        status_fn = kwargs.pop('status_fn', False)
+        # Should return a lookup key for the 'glyphs' argument to find the
+        # glyph to display.
+        status_fn = kwargs.pop('status_fn', None)
+        glyphs = kwargs.pop('glyphs', self.GLYPHS_BY_STATUS)
         cover = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', default_format)
@@ -4174,6 +4208,8 @@ class Spec(object):
         deptypes = kwargs.pop('deptypes', 'all')
         recurse_dependencies = kwargs.pop('recurse_dependencies', True)
         lang.check_kwargs(kwargs, self.tree)
+
+        color = kwargs.pop('color', clr.get_color_when())
 
         out = ""
         for d, dep_spec in self.traverse_edges(
@@ -4189,14 +4225,7 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if node.package.installed_upstream:
-                    out += clr.colorize("@g{[^]}  ", color=color)
-                elif status is None:
-                    out += clr.colorize("@K{ - }  ", color=color)  # !installed
-                elif status:
-                    out += clr.colorize("@g{[+]}  ", color=color)  # installed
-                else:
-                    out += clr.colorize("@r{[-]}  ", color=color)  # missing
+                out += glyphs.get(status, '')
 
             if hashes:
                 out += clr.colorize(

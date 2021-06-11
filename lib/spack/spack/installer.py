@@ -51,6 +51,7 @@ import spack.package
 import spack.package_prefs as prefs
 import spack.repo
 import spack.store
+import spack.spec
 
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
@@ -295,7 +296,7 @@ def _print_installed_pkg(message):
     Args:
         message (str): message to be output
     """
-    print(colorize('@*g{[+]} ') + message)
+    print(spack.spec.Spec.POS_GLYPH + ' ' + message)
 
 
 def _process_external_package(pkg, explicit):
