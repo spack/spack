@@ -871,7 +871,7 @@ class Python(AutotoolsPackage):
         """
         try:
             return self.get_python_inc(prefix='')
-        except ProcessError:
+        except (ProcessError, RuntimeError):
             return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
 
     @property
@@ -895,7 +895,7 @@ class Python(AutotoolsPackage):
         """
         try:
             return self.get_python_lib(standard_lib=True, prefix='')
-        except ProcessError:
+        except (ProcessError, RuntimeError):
             return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
 
     @property
@@ -919,7 +919,7 @@ class Python(AutotoolsPackage):
         """
         try:
             return self.get_python_lib(prefix='')
-        except ProcessError:
+        except (ProcessError, RuntimeError):
             return os.path.join(
                 'lib', 'python{0}'.format(self.version.up_to(2)), 'site-packages')
 
