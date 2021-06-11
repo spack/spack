@@ -17,4 +17,4 @@ class PyPyusb(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm@:2.0', type='build', when='^py-setuptools@:12.0')
     depends_on('py-setuptools-scm', type='build')
-    depends_on('libusb', type=('build', 'run'))
+    depends_on('libusb')
