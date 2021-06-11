@@ -27,7 +27,7 @@ spack:
       #- axom
       - blt
       - caliper
-      - care
+      #- care
       #- chai
       - conduit  # ^hdf5+shared
       - flux-core
@@ -41,7 +41,7 @@ spack:
       #- py-maestrowf
       #- py-merlin
       #- py-shroud
-      - raja
+      #- raja
       #- samrai
       - scr
       #- sundials
