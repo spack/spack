@@ -14,10 +14,11 @@ necessary.
 
 # Step 2: Make the installer
 
-To use Spack, run ``spack_cmd.bat``. This will provide a Windows command prompt with an environment properly set up with Spack and its prerequisites.
+To use Spack, run ``spack_cmd.bat``. This will provide a Windows command
+prompt with an environment properly set up with Spack and its prerequisites.
 
 Ensure that Python and CMake are on your PATH. If needed, you may add the
-CMake  executable provided by Visual Studio to your path, which will look
+CMake executable provided by Visual Studio to your path, which will look
 something like:
 
 ``C:\Program Files (x86)\Microsoft Visual Studio\<year>\<distribution>\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake``
@@ -30,18 +31,18 @@ quotes are removed. You will encounter configuration errors if you fail to do
 this.
 
 There are two ways to create the installer using Spack's ``make-installer``
-command. The recommended method is to  build the installer using a local
-checkout of Spack source (release or  development), using the
-`-s` flag to specify the directory where that checkout is. For example,
-if you are doing development in a directory called ``spack-develop``
+command. The recommended method is to build the installer using a local
+checkout of Spack source (release or development), using the
+`-s` flag to specify the directory where the local checkout is. For
+example, if the local checkout is in a directory called ``spack-develop``
 and want to generate an installer with the source there, you can use:
 
 ``spack make-installer -s spack-develop tmp``
 
 Both the Spack source directory (e.g. ``spack-develop``) and installer
 destination directory (e.g. ``tmp``) may be an absolute path or relative to
-the  current working directory. The entire contents of the specified
-directory  will be included in the installer (e.g. .git files or local
+the current working directory. The entire contents of the specified
+directory will be included in the installer (e.g. .git files or local
 changes).
 
 Alternatively, if you would like to create an installer from a release version
@@ -55,8 +56,8 @@ official release branches, so an installer created using this method will
 *not* run on Windows.
 
 Regardless of your method, a file called ``Spack.exe`` will be created
-inside the ``tmp`` directory. This executable bundles the Spack installer
-(``Spack.msi`` also located in ``tmp``) and the git installer.
+inside the destination directory. This executable bundles the Spack installer
+(``Spack.msi`` also located in destination directory) and the git installer.
 
 # Step 3: Run the installer
 
@@ -66,6 +67,13 @@ installed and ready for use.
 
 **IMPORTANT**: To avoid permissions issues, it is recommended to select an
 install location other than ``C:\Program Files``.
+
+**IMPORTANT**: There is a specific option that must be chosen when letting Git
+install. When given the option of adjusting your ``PATH``, choose the
+``Git from the command line and also from 3rd-party software`` option. This will
+automatically update your ``PATH`` variable to include the ``git`` command.
+Certain Spack commands expect ``git`` to be part of the ``PATH``. If this step
+is not performed properly, certain Spack comands will not work.
 
 If your Spack installation needs to be modified, repaired, or uninstalled,
 you can do any of these things by rerunning ``Spack.exe``.
