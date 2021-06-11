@@ -30,6 +30,10 @@ def setup_parser(subparser):
         action="store_true",
         help="also fetch all dependencies",
     )
+    subparser.add_argument(
+        '-f', '--file', action='append', default=[],
+        dest='specfiles', metavar='SPEC_YAML_FILE',
+        help="fetch from file. Read specs to fetch from .yaml files")
     arguments.add_common_arguments(subparser, ["specs"])
     subparser.epilog = (
         "With an active environment, the specs "
@@ -39,9 +43,22 @@ def setup_parser(subparser):
 
 
 def fetch(parser, args):
+    specs = []
     if args.specs:
-        specs = spack.cmd.parse_specs(args.specs, concretize=True)
-    else:
+        specs += spack.cmd.parse_specs(args.specs, concretize=True)
+    if args.specfiles:
+        for specfile in args.specfiles:
+            with open(specfile, 'r') as f:
+                s = spack.spec.Spec.from_yaml(f)
+
+            if s.concretized().dag_hash() != s.dag_hash():
+                msg = 'skipped invalid file "{0}". '
+                msg += 'The file does not contain a concrete spec.'
+                tty.warn(msg.format(specfile))
+                continue
+
+            specs.append(s.concretized())
+    if not (args.specs or args.specfiles):
         # No specs were given explicitly, check if we are in an
         # environment. If yes, check the missing argument, if yes
         # fetch all uninstalled specs from it otherwise fetch all.
@@ -59,7 +76,7 @@ def fetch(parser, args):
                     "run `spack concretize` yet?"
                 )
         else:
-            tty.die("fetch requires at least one spec argument")
+            tty.die("fetch requires at least one spec argument or a specfile")
 
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
