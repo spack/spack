@@ -278,21 +278,21 @@ def which_string(*args, **kwargs):
     if isinstance(path, string_types):
         path = path.split(os.pathsep)
 
+
+
     for name in args:
         if os.path.sep in name:
             exe = os.path.abspath(name)
-            print( os.access(exe, os.X_OK))
-            if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                if sys.platform == "win32":
-                    return os.path.abspath(exe)
+            if sys.platform == "win32" and os.path.splitext(exe)[1] == ".exe":
+                return os.path.abspath(exe).replace('\\', '/')
+            elif sys.platform != "win32" and os.path.isfile(exe) and os.access(exe, os.X_OK):
                 return exe.replace('\\', '/')
         else:
             for directory in path:
                 exe = os.path.join(directory, name)
-                print(exe)
-                if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                    if sys.platform == "win32":
-                        return os.path.abspath(exe)
+                if sys.platform == "win32" and os.path.splitext(exe)[1] == ".exe":
+                    return os.path.abspath(exe).replace('\\', '/')
+                elif sys.platform != "win32" and os.path.isfile(exe) and os.access(exe, os.X_OK):
                     return exe.replace('\\', '/')
 
     if required:
