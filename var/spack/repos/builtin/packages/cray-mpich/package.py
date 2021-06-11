@@ -50,6 +50,13 @@ class CrayMpich(Package):
             if "CRAY_MPICH_DIR" in line:
                 return get_path_args_from_module_line(line)[0]
 
+        # Fixes an issue on Archer2 cray-mpich/8.0.16 where there is
+        # no CRAY_MPICH_DIR variable in the module file.
+        for line in mpich_module:
+            if "CRAY_LD_LIBRARY_PATH" in line:
+                libdir = get_path_args_from_module_line(line)[0]
+                return os.path.dirname(os.path.normpath(libdir))
+
     def setup_run_environment(self, env):
         env.set('MPICC', spack_cc)
         env.set('MPICXX', spack_cxx)
