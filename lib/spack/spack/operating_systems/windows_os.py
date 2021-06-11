@@ -10,6 +10,7 @@ import glob
 from spack.architecture import OperatingSystem
 from spack.version import Version
 
+
 # FIXME: To get the actual Windows version, we need a python that runs
 # natively on Windows, not Cygwin.
 def windows_version():
@@ -26,8 +27,8 @@ class WindowsOs(OperatingSystem):
     """
 
     # Find MSVC directories using vswhere
-    compSearchPaths = []
-    vsInstallPaths = []
+    comp_search_paths = []
+    vs_install_paths = []
     root = os.environ.get('ProgramFiles(x86)') or os.environ.get('ProgramFiles')
     if root:
         try:
@@ -44,17 +45,16 @@ class WindowsOs(OperatingSystem):
             ], **extra_args).strip()
             if (3, 0) <= sys.version_info[:2] <= (3, 5):
                 paths = paths.decode()
-            vsInstallPaths = paths.split('\n')
-            msvcPaths = [os.path.join(path, "VC", "Tools", "MSVC")
-                         for path in vsInstallPaths]
-            for p in msvcPaths:
-                compSearchPaths.extend(
+            vs_install_paths = paths.split('\n')
+            msvc_paths = [os.path.join(path, "VC", "Tools", "MSVC")
+                         for path in vs_install_paths]
+            for p in msvc_paths:
+                comp_search_paths.extend(
                     glob.glob(os.path.join(p, '*', 'bin', 'Hostx64', 'x64')))
         except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
             pass
-    if compSearchPaths:
-        compiler_search_paths = compSearchPaths
-    # print(vsInstallPaths)
+    if comp_search_paths:
+        compiler_search_paths = comp_search_paths
 
     def __init__(self):
         super(WindowsOs, self).__init__('Windows10', '10')
