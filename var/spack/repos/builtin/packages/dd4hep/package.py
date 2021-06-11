@@ -71,7 +71,7 @@ class Dd4hep(CMakePackage):
     depends_on('edm4hep', when="+edm4hep")
 
     # See https://github.com/AIDASoft/DD4hep/pull/771
-    conflicts('^cmake@3.16:3.17.2', when='@1.15:1.16.1',
+    conflicts('^cmake@3.16:3.17.0', when='@1.15:1.16.1',
               msg='cmake version with buggy FindPython breaks dd4hep cmake config')
 
     def cmake_args(self):
