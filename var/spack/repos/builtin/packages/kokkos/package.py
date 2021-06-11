@@ -278,11 +278,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             if var in self.spec:
                 options.append("-D%s_DIR=%s" % (tpl, spec[tpl].prefix))
 
-        if '%oneapi' in self.spec and '+spir' in self.spec:
+#        if '%oneapi' in self.spec and '+spir' in self.spec:
 #            options.append('-DCMAKE_CXX_FLAGS=-fopenmp-targets=spir64')
 #            self.flag_handler('cxxflags', ['-fiopenmp','-fopenmp-targets=spir64'])
-            pass
-
+#            pass
+#
         if '+rocm' in self.spec:
             options.append('-DCMAKE_CXX_COMPILER=%s' %
                            self.spec['hip'].hipcc)
