@@ -12,15 +12,12 @@ class Gchp(CMakePackage):
 
     homepage = "https://gchp.readthedocs.io/"
     url      = "https://github.com/geoschem/GCHP/archive/13.0.1.tar.gz"
-
+    git      = "https://github.com/geoschem/GCHP.git"
     maintainers = ['williamdowns']
 
-    version('13.0.2', git='https://github.com/geoschem/GCHP.git',
-            commit='017ad7276a801ab7b3d6945ad24602eb9927cf01',  submodules=True)
-    version('13.0.1', git='https://github.com/geoschem/GCHP.git',
-            commit='f40a2476fda901eacf78c0972fdb6c20e5a06700',  submodules=True)
-    version('13.0.0', git='https://github.com/geoschem/GCHP.git',
-            commit='1f5a5c5630c5d066ff8306cbb8b83e267ca7c265',  submodules=True)
+    version('13.0.2', commit='017ad7276a801ab7b3d6945ad24602eb9927cf01',  submodules=True)
+    version('13.0.1', commit='f40a2476fda901eacf78c0972fdb6c20e5a06700',  submodules=True)
+    version('13.0.0', commit='1f5a5c5630c5d066ff8306cbb8b83e267ca7c265',  submodules=True)
     version('dev', branch='dev', submodules=True)
 
     patch('for_aarch64.patch', when='target=aarch64:')
