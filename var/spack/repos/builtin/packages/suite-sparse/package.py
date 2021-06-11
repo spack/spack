@@ -14,6 +14,8 @@ class SuiteSparse(Package):
     url      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz'
     git      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse.git'
 
+    version('5.10.1', sha256='acb4d1045f48a237e70294b950153e48dce5b5f9ca8190e86c2b8c54ce00a7ee')
+    version('5.10.0', sha256='4bcc974901c0173acf80c41ee0fd779eb7dce2871d4afa24a5d15b1a468f93e5')
     version('5.9.0', sha256='7bdd4811f1cf0767c5fdb5e435817fdadee50b0acdb598f4882ae7b8291a7f24')
     version('5.8.1', sha256='06726e471fbaa55f792578f9b4ab282ea9d008cf39ddcc3b42b73400acddef40')
     version('5.8.0', sha256='94a9b7134eb4dd82b97f1a22a6b464feb81e73af2dcdf683c6f252285191df1d')
@@ -36,7 +38,7 @@ class SuiteSparse(Package):
     variant('cuda', default=False, description='Build with CUDA')
     variant('openmp', default=False, description='Build with OpenMP')
 
-    depends_on('mpfr', type=('build', 'link'), when='@5.8.0:')
+    depends_on('mpfr@4.0.0:', type=('build', 'link'), when='@5.8.0:')
     depends_on('gmp', type=('build', 'link'), when='@5.8.0:')
     depends_on('blas')
     depends_on('lapack')

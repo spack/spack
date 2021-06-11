@@ -2504,7 +2504,7 @@ spack:
         install()
 
         spec = e.specs_by_hash[e.concretized_order[0]]
-        view_prefix = e.default_view.view().get_projection_for_spec(spec)
+        view_prefix = e.default_view.get_projection_for_spec(spec)
         modules_glob = '%s/modules/**/*' % e.path
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
@@ -2539,7 +2539,7 @@ spack:
         install()
 
         spec = e.specs_by_hash[e.concretized_order[0]]
-        view_prefix = e.default_view.view().get_projection_for_spec(spec)
+        view_prefix = e.default_view.get_projection_for_spec(spec)
         modules_glob = '%s/modules/**/*' % e.path
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
@@ -2561,3 +2561,15 @@ spack:
 
     assert view_prefix not in full_contents
     assert spec.prefix in full_contents
+
+
+@pytest.mark.regression('24148')
+def test_virtual_spec_concretize_together(tmpdir):
+    # An environment should permit to concretize "mpi"
+    e = ev.create('virtual_spec')
+    e.concretization = 'together'
+
+    e.add('mpi')
+    e.concretize()
+
+    assert any(s.package.provides('mpi') for _, s in e.concretized_specs())

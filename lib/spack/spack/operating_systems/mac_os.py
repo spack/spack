@@ -55,7 +55,8 @@ class MacOs(OperatingSystem):
             '10.14': 'mojave',
             '10.15': 'catalina',
             '10.16': 'bigsur',
-            '11':  'bigsur',
+            '11': 'bigsur',
+            '12': 'monterey',
         }
 
         # Big Sur versions go 11.0, 11.0.1, 11.1 (vs. prior versions that

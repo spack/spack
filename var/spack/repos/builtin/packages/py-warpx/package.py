@@ -23,7 +23,9 @@ class PyWarpx(PythonPackage):
 
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
 
+    # NOTE: if you update the versions here, also see warpx
     version('develop', branch='development')
+    version('21.06', sha256='a26039dc4061da45e779dd5002467c67a533fc08d30841e01e7abb3a890fbe30')
     version('21.05', sha256='f835f0ae6c5702550d23191aa0bb0722f981abb1460410e3d8952bc3d945a9fc')
     version('21.04', sha256='51d2d8b4542eada96216e8b128c0545c4b7527addc2038efebe586c32c4020a0')
 
@@ -36,10 +38,10 @@ class PyWarpx(PythonPackage):
                    type=['build', 'link'])
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-numpy@1.15.0:', type=('build', 'run'))
+    depends_on('py-numpy@1.15.0:1.99.99', type=('build', 'run'))
     depends_on('py-mpi4py@2.0.0:', type=('build', 'run'), when='+mpi')
-    depends_on('py-periodictable@1.5:', type=('build', 'run'))
-    depends_on('py-picmistandard', type=('build', 'run'))
+    depends_on('py-periodictable@1.5:1.99', type=('build', 'run'))
+    depends_on('py-picmistandard@0.0.14', type=('build', 'run'))
     depends_on('py-setuptools@38.6:', type='build')
     depends_on('py-wheel', type='build')
     depends_on('warpx +lib ~mpi +shared', type=('build', 'link'), when='~mpi')
