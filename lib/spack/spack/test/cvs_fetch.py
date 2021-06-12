@@ -97,4 +97,15 @@ def test_cvs_extra_fetch(tmpdir):
         source_path = stage.source_path
         mkdirp(source_path)
 
+        # TODO: This doesn't look as if it was testing what this function's
+        # comment says it is testing. However, the other `test_*_extra_fetch`
+        # functions (for svn, git, hg) use equivalent code.
+        #
+        # We're calling `fetcher.fetch` twice as this might be what we want to
+        # do, and it can't hurt. See
+        # <https://github.com/spack/spack/pull/23212> for a discussion on this.
+
+        # Fetch once
+        fetcher.fetch()
+        # Fetch a second time
         fetcher.fetch()
