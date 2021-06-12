@@ -915,6 +915,10 @@ def mock_cvs_repository(tmpdir_factory):
     # specified date). As we create each revision, we separately record the
     # time. We expect that, for a sequence of CVS invocations and
     # datetime.now() calls, the resulting timestamps have the same ordering.
+    #
+    # If there are problems with timestamp orderign in the future, then we
+    # should retrieve the latest timestamp for each file from CVS; see e.g.
+    # <https://stackoverflow.com/questions/1044651/how-to-programatically-get-the-latest-commit-date-on-a-cvs-checkout>.
     revision_date = {}
 
     # Initialize the repository
