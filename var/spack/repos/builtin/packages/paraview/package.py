@@ -326,7 +326,7 @@ class Paraview(CMakePackage, CudaPackage):
                 '-D%s_PYTHON_VERSION:STRING=%d' % (py_ver_opt, py_ver_val)
             ])
             if '+python3' in spec:
-                cmake_args.append('-DPython3_ROOT_DIR:PATH={}'.format(
+                cmake_args.append('-DPython3_ROOT_DIR:PATH={0}'.format(
                     spec['python'].prefix))
             if spec.satisfies('@:5.6'):
                 cmake_args.append(
