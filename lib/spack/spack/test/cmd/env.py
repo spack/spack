@@ -176,6 +176,27 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
 
 
+def test_env_roots_marked_explicit(install_mockery, mock_fetch):
+    install = SpackCommand('install')
+    install('dependent-install')
+
+    # Check one explicit, one implicit install
+    dependent = spack.store.db.query(explicit=True)
+    dependency = spack.store.db.query(explicit=False)
+    assert len(dependent) == 1
+    assert len(dependency) == 1
+
+    env('create', 'test')
+    with ev.read('test') as e:
+        # make implicit install a root of the env
+        e.add(dependency[0].name)
+        e.concretize()
+        e.install_all()
+
+    explicit = spack.store.db.query(explicit=True)
+    assert len(explicit) == 2
+
+
 def test_env_modifications_error_on_activate(
         install_mockery, mock_fetch, monkeypatch, capfd):
     env('create', 'test')
