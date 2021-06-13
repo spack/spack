@@ -81,9 +81,9 @@ class Yoda(AutotoolsPackage):
     patch('yoda-1.6.6.patch', level=0, when='@1.6.6')
     patch('yoda-1.6.7.patch', level=0, when='@1.6.7')
 
-    conflicts("%gcc@10:", when="@:1.8.5", 
-              msg="yoda up to 1.8.5 is missing a <limits> header include in AnalysisObject.h."
-              "Use version 1.9.0 or later, or add a patch to earlier versions if needed.")
+    conflicts("%gcc@10:", when="@:1.8.5",
+              msg="yoda up to 1.8.5 is missing a <limits> include in AnalysisObject.h."
+              "Use version 1.9.0 or later, or patch earlier versions if needed.")
 
     def configure_args(self):
         args = []
