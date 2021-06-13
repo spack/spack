@@ -129,6 +129,11 @@ class Cuda(Package):
         return match.group(1) if match else None
 
     def setup_build_environment(self, env):
+        if self.spec.satisfies('@:8.0.61'):
+            # Perl 5.26 removed current directory from module search path,
+            # CUDA 9 has a fix for this, but CUDA 8 and lower don't.
+            env.set('PERL5LIB', self.stage.source_path)
+
         if self.spec.satisfies('@10.1.243:'):
             libxml2_home = self.spec['libxml2'].prefix
             env.set('LIBXML2HOME', libxml2_home)
@@ -166,6 +171,15 @@ class Cuda(Package):
             os.makedirs(os.path.join(prefix, includedir))
             os.makedirs(os.path.join(prefix, "src"))
             os.symlink(includedir, os.path.join(prefix, "include"))
+
+        if self.spec.satisfies('@:8.0.61'):
+            # Perl 5.26 removed current directory from module search path.
+            # We are addressing this by exporting `PERL5LIB` earlier, but for some reason, it is not enough.
+            # One more file needs to be extracted before running actual installer. This solution is one of
+            # the commonly found in the Internet, when people try to install older CUDA manually.
+            arguments = [runfile, '--tar', 'mxvf', './InstallUtils.pm']
+            install_shell = which('sh')
+            install_shell(*arguments)
 
         # CUDA 10.1+ has different cmdline options for the installer
         arguments = [
