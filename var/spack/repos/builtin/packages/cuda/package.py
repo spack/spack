@@ -174,9 +174,10 @@ class Cuda(Package):
 
         if self.spec.satisfies('@:8.0.61'):
             # Perl 5.26 removed current directory from module search path.
-            # We are addressing this by exporting `PERL5LIB` earlier, but for some reason, it is not enough.
-            # One more file needs to be extracted before running actual installer. This solution is one of
-            # the commonly found in the Internet, when people try to install older CUDA manually.
+            # We are addressing this by exporting `PERL5LIB` earlier, but for some
+            # reason, it is not enough. One more file needs to be extracted before
+            # running actual installer. This solution is one of the commonly found
+            # in the Internet, when people try to install CUDA <= 8 manually.
             arguments = [runfile, '--tar', 'mxvf', './InstallUtils.pm']
             install_shell = which('sh')
             install_shell(*arguments)
