@@ -37,7 +37,7 @@ class Faodel(CMakePackage):
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('libfabric@1.5.3:', when='network=libfabric')
-    depends_on('googletest@1.7.0:', type='build')
+    depends_on('googletest@1.7.0:1.10', type='build')
 
     # FAODEL requires C++11 support which starts with gcc 4.8.1
     conflicts('%gcc@:4.8.0')
