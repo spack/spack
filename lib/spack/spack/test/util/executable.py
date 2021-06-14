@@ -54,8 +54,12 @@ def test_which_relative_path_with_slash(tmpdir, working_env):
         no_exe = ex.which('.{0}exe'.format(os.path.sep))
         assert no_exe is None
 
+
+        with tmpdir.as_cwd():
+            fs.touch("exe.exe")
+
         if sys.platform == "win32":
-            exe = ex.which('.{0}exe.exe'.format(os.path.sep))
+            exe = ex.which('.{0}exe'.format(os.path.sep))
             assert exe.path == path + ".exe"
         else:
             fs.set_executable(path)
@@ -73,9 +77,11 @@ def test_which_with_slash_ignores_path(tmpdir, working_env):
 
     if sys.platform == "win32":
         with tmpdir.as_cwd():
+            fs.touch("exe.exe")
+            fs.touch('bin{0}exe'.format(os.path.sep))
             path = path + ".exe"
             wrong_path = wrong_path + ".exe"
-            exe = ex.which('.{0}exe.exe'.format(os.path.sep))
+            exe = ex.which('.{0}exe'.format(os.path.sep))
             assert exe.path == path
 
     else:
@@ -94,8 +100,13 @@ def test_which(tmpdir):
     with pytest.raises(ex.CommandNotFoundError):
         ex.which("spack-test-exe", required=True)
 
+    
+
     if sys.platform == "win32":
-        exe = ex.which("spack-test-exe.exe")
+        with tmpdir.as_cwd():
+            fs.touch("spack-test-exe.exe")
+
+        exe = ex.which("spack-test-exe")
 
         assert exe is not None
         assert exe.path == str(tmpdir.join("spack-test-exe.exe"))
@@ -105,7 +116,6 @@ def test_which(tmpdir):
             fs.set_executable("spack-test-exe")
 
         exe = ex.which("spack-test-exe")
-
         assert exe is not None
         assert exe.path == str(tmpdir.join("spack-test-exe"))
 
