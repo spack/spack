@@ -25,6 +25,7 @@ class FastGlobalFileStatus(AutotoolsPackage):
     depends_on('mpi')
     depends_on('openssl')
     depends_on('elf')
+    depends_on('libtool', type='build')
 
     def configure_args(self):
         spec = self.spec

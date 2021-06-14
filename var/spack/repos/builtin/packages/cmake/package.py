@@ -230,8 +230,6 @@ class Cmake(Package):
     def bootstrap_args(self):
         spec = self.spec
         args = [
-            'CFLAGS=-O3',
-            'CXXFLAGS=-O3',
             '--prefix={0}'.format(self.prefix),
             '--parallel={0}'.format(make_jobs)
         ]

@@ -70,7 +70,13 @@ Sourcing these files will put the ``spack`` command in your ``PATH``, set
 up your ``MODULEPATH`` to use Spack's packages, and add other useful
 shell integration for :ref:`certain commands <packaging-shell-support>`,
 :ref:`environments <environments>`, and :ref:`modules <modules>`. For
-``bash``, it also sets up tab completion.
+``bash`` and ``zsh``, it also sets up tab completion.
+
+In order to know which directory to add to your ``MODULEPATH``, these scripts
+query the ``spack`` command. On shared filesystems, this can be a bit slow,
+especially if you log in frequently. If you don't use modules, or want to set
+``MODULEPATH`` manually instead, you can set the ``SPACK_SKIP_MODULES``
+environment variable to skip this step and speed up sourcing the file.
 
 If you do not want to use Spack's shell support, you can always just run
 the ``spack`` command directly from ``spack/bin/spack``.
@@ -1166,7 +1172,7 @@ the key that we just created:
           60D2685DAB647AD4DB54125961E09BB6F2A0ADCB
     uid           [ultimate] dinosaur (GPG created for Spack) <dinosaur@thedinosaurthings.com>
 
-    
+
 Note that the name "dinosaur" can be seen under the uid, which is the unique
 id. We might need this reference if we want to export or otherwise reference the key.
 
@@ -1205,7 +1211,7 @@ If you want to include the private key, then just add `--secret`:
 
     $ spack gpg export --secret dinosaur.priv dinosaur
 
-This will write the private key to the file `dinosaur.priv`. 
+This will write the private key to the file `dinosaur.priv`.
 
 .. warning::
 
