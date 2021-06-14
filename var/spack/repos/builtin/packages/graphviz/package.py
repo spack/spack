@@ -20,10 +20,11 @@ class Graphviz(AutotoolsPackage):
     git      = 'https://gitlab.com/graphviz/graphviz.git'
     url      = 'https://gitlab.com/graphviz/graphviz/-/archive/2.46.0/graphviz-2.46.0.tar.bz2'
 
+    version('2.47.2', sha256='b5ebb00d4283c6d12cf16b2323e1820b535cc3823c8f261b783f7903b1d5b7fb')
     version('2.46.0', sha256='1b11684fd5488940b45bf4624393140da6032abafae08f33dc3e986cffd55d71')
     version('2.44.1', sha256='0f8f3fbeaddd474e0a270dc9bb0e247a1ae4284ae35125af4adceffae5c7ae9b')
     version('2.42.4', sha256='a1ca0c4273d96bbf32fbfcbb784c8da2e38da13e7d2bbf9b24fe94ae45e79c4c')
-    version('2.38.0', sha256='c1b1e326b5d1f45b0ce91edd7acc68e80ff6be6b470008766e4d466aafc9801f')
+    version('2.38.0', sha256='c1b1e326b5d1f45b0ce91edd7acc68e80ff6be6b470008766e4d466aafc9801f', deprecated=True)
 
     # Language bindings
     language_bindings = ['java']
@@ -83,9 +84,9 @@ class Graphviz(AutotoolsPackage):
         patch('fix-quartz-darwin.patch')
 
     # Language dependencies
-    depends_on('java', when='+java')
     for lang in language_bindings:
         depends_on('swig', when=('+' + lang))
+        depends_on(lang, when=('+' + lang))
 
     # Feature dependencies
     depends_on('zlib')
@@ -111,8 +112,9 @@ class Graphviz(AutotoolsPackage):
     # Build dependencies (graphviz binaries don't include configure file)
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
-    depends_on('bison', type='build')
+    depends_on('bison@3.0.4:', type='build')
     depends_on('flex', type='build')
+    depends_on('sed', type='build')
     depends_on('libtool', type='build')
     depends_on('pkgconfig', type='build')
 
@@ -123,8 +125,6 @@ class Graphviz(AutotoolsPackage):
               when='@2.40.1+qt ^qt@5:',
               msg='graphviz-2.40.1 needs gcc-6 or greater to compile with QT5 '
               'suppport')
-
-    parallel = False
 
     def autoreconf(self, spec, prefix):
         # We need to generate 'configure' when checking out sources from git
@@ -168,6 +168,12 @@ class Graphviz(AutotoolsPackage):
         for var in ["expat", "gts", "ghostscript", "libgd", "pangocairo",
                     "poppler", "qt", "quartz", "x"]:
             args += self.with_or_without(var)
+        for var in ["zlib", "expat", "java"]:
+            if '+' + var in spec:
+                args.append('--with-{0}includedir={1}'.format(
+                    var, spec[var].prefix.include))
+                args.append('--with-{0}libdir={1}'.format(
+                    var, spec[var].prefix.lib))
 
         args.append('--{0}-gtk'.format(
             "with" if "+gtkplus" in spec else "without"))

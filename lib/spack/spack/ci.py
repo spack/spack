@@ -746,8 +746,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     job_script.insert(0, 'cd {0}'.format(concrete_env_dir))
 
                 job_script.extend([
-                    'spack ci rebuild --prepare',
-                    './install.sh'
+                    'spack ci rebuild'
                 ])
 
                 if 'script' in runner_attribs:

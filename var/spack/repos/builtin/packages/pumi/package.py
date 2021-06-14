@@ -38,6 +38,7 @@ class Pumi(CMakePackage):
     variant('shared', default=False, description='Build shared libraries')
     variant('zoltan', default=False, description='Enable Zoltan Features')
     variant('fortran', default=False, description='Enable FORTRAN interface')
+    variant('testing', default=False, description='Enable tests')
     variant('simmodsuite', default='none',
             values=('none', 'base', 'kernels', 'full'),
             description="Enable Simmetrix SimModSuite Support: 'base' enables "
@@ -76,7 +77,8 @@ class Pumi(CMakePackage):
             '-DMDS_ID_TYPE=%s' % ('long' if '+int64' in spec else 'int'),
             '-DSKIP_SIMMETRIX_VERSION_CHECK=%s' %
             ('ON' if '~simmodsuite_version_check' in spec else 'OFF'),
-            '-DMESHES=%s' % join_path(self.stage.source_path, 'pumi_meshes')
+            self.define_from_variant('IS_TESTING', 'testing'),
+            '-DMESHES=%s' % join_path(self.stage.source_path, 'pumi-meshes')
         ]
         if spec.satisfies('@2.2.3'):
             args += ['-DCMAKE_CXX_STANDARD=11']
