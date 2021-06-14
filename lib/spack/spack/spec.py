@@ -4151,7 +4151,7 @@ class Spec(object):
         if not self.concrete:
             return None
         try:
-            record = spack.store.db.get_record(self)  # type: Spec
+            upstream, record = spack.store.db.get_record_and_upstream(self)
             if not record.installed:
                 return self.STATUS_NOT_INSTALLED
             else:
@@ -4159,9 +4159,9 @@ class Spec(object):
                 # but can't be found.
                 if record.path is None or not os.path.exists(record.path):
                     return self.STATUS_ERROR
-                elif record.external:
+                elif record.spec.external:
                     return self.STATUS_EXTERNAL
-                elif record.package.installed_upstream:
+                elif upstream:
                     return self.STATUS_UPSTREAM
                 else:
                     return self.STATUS_INSTALLED

@@ -1165,7 +1165,7 @@ class Database(object):
         the given Spec."""
         key = self._get_matching_spec_key(spec, **kwargs)
         upstream, record = self.query_by_spec_hash(key)
-        return upstream, spack.spec.Spec(record)
+        return upstream, record
 
     def _decrement_ref_count(self, spec):
         key = spec.dag_hash()
