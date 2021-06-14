@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Wxparaver(AutotoolsPackage):
@@ -15,8 +14,6 @@ class Wxparaver(AutotoolsPackage):
     homepage = "https://tools.bsc.es/paraver"
     url = "https://ftp.tools.bsc.es/wxparaver/wxparaver-4.6.3-src.tar.bz2"
 
-    # NOTE: Paraver provides only latest version for download.
-    #       Don't keep/add older versions.
     version('4.9.2',     sha256='83289584040bcedf8cab1b2ae3545191c8bdef0e11ab62b06e54cbf111f2127a')
     version('4.9.1',     sha256='e89fdf563d1fc73ed0018cf0e25b458b6617ec33325ed3fdbf06397c556f3a8e')
     version('4.9.0',     sha256='1f9964d7987032d01a354327845bf53ae369be5d8acf7d4e85bec81699a6ddf6')
@@ -26,8 +23,6 @@ class Wxparaver(AutotoolsPackage):
     version('4.7.2',     sha256='90107797d6af6fc3ebd9505445bb518d673edecbe5d08d1b7af01695d53241ae')
     version('4.7.1',     sha256='8cbec0c5e0f8a849820f6682cbb0920ea234bb7f20d1483e38ea5d0b0ee045cd')
     version('4.7.0',     sha256='81e02bcc1853455b13435172a4336ba85ba05020887d322c9678c97def03d76f')
-    version('4.6.3',     sha256='ac6025eec5419e1060967eab71dfd123e585be5b5f3ac3241085895dbeca255a')
-    version('4.6.2',     sha256='74b85bf9e6570001d372b376b58643526e349b1d2f1e7633ca38bb0800ecf929', deprecated=True)
 
     depends_on('boost@1.36: +serialization')
     depends_on('wxwidgets@2.8:')  # NOTE: using external for this one is usually simpler
@@ -39,55 +34,13 @@ class Wxparaver(AutotoolsPackage):
         spec = self.spec
         args = []
 
-        if spec.satisfies('@4.6.3'):
-            args.append('--with-paraver=%s' % self.prefix)
-            args.append('--with-ptools-common-files=%s' % self.prefix)
         args.append('--with-boost=%s' % spec['boost'].prefix)
         args.append('--with-wx-config=%s/wx-config' % spec['wxwidgets'].prefix.bin)
-        if spec['wxwidgets'].satisfies('@:2'):
+        if spec['wxwidgets'].satisfies('@:2.999'):
             args.append('--with-wxpropgrid=%s' % spec['wxpropgrid'].prefix)
 
         return args
 
-    @when('@4.6.2')  # do not have global build system
-    def autoreconf(self, spec, prefix):
-        pass
-
-    @when('@4.6.2')  # do not have global build system
-    def configure(self, spec, prefix):
-        pass
-
-    # use make install directly as expected by Paraver
+    # use make install directly as expected by Paraver (See README)
     def build(self, spec, prefix):
         pass
-
-    @when('@4.6.2')  # do not have global build system
-    def install(self, spec, prefix):
-        os.chdir("ptools_common_files")
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
-
-        os.chdir("../paraver-kernel")
-        # "--with-extrae=%s" % spec['extrae'].prefix,
-        configure("--prefix=%s" % prefix,
-                  "--with-ptools-common-files=%s" % prefix,
-                  "--with-boost=%s" % spec['boost'].prefix,
-                  "--with-boost-serialization=boost_serialization")
-        make()
-        make("install")
-
-        os.chdir("../paraver-toolset")
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
-
-        os.chdir("../wxparaver")
-        # "--with-extrae=%s" % spec['extrae'].prefix,
-        configure("--prefix=%s" % prefix,
-                  "--with-paraver=%s" % prefix,
-                  "--with-boost=%s" % spec['boost'].prefix,
-                  "--with-boost-serialization=boost_serialization",
-                  "--with-wxdir=%s" % spec['wxwidgets'].prefix.bin)
-        make()
-        make("install")
