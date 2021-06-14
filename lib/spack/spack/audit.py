@@ -151,6 +151,9 @@ def run_check(tag, **kwargs):
     return CALLBACKS[tag].run(**kwargs)
 
 
+# TODO: For the generic check to be useful for end users,
+# TODO: we need to implement hooks like described in
+# TODO: https://github.com/spack/spack/pull/23053/files#r630265011
 #: Generic checks relying on global state
 generic = AuditClass(
     group='generic',
