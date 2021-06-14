@@ -17,7 +17,7 @@ def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmpdir):
     # they would have at Spack startup.
     spack.store.reinitialize()
     # Set the custom user path
-    spack.config.set('config:install_tree:root', user_path)
+    spack.config.set('config:install_trees:spack-root:root', user_path)
 
     # Test that within the context manager we use the bootstrap store
     # and that outside we restore the correct location

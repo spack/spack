@@ -200,6 +200,7 @@ def _bootstrap_config_scopes():
     config_scopes = [
         spack.config.InternalConfigScope('_builtin', spack.config.config_defaults)
     ]
+
     for name, path in spack.config.configuration_paths:
         platform = spack.architecture.platform().name
         platform_scope = spack.config.ConfigScope(

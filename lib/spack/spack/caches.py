@@ -25,7 +25,7 @@ def misc_cache_location():
     """
     path = spack.config.get('config:misc_cache')
     if not path:
-        path = os.path.join(spack.paths.user_config_path, 'cache')
+        path = spack.paths.default_misc_cache_path
     path = spack.util.path.canonicalize_path(path)
     return path
 
@@ -46,8 +46,9 @@ def fetch_cache_location():
     building the same package different ways or multiple times.
     """
     path = spack.config.get('config:source_cache')
+
     if not path:
-        path = os.path.join(spack.paths.var_path, "cache")
+        path = spack.paths.default_source_cache_path
     path = spack.util.path.canonicalize_path(path)
     return path
 
