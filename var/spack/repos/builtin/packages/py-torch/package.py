@@ -20,88 +20,87 @@ class PyTorch(PythonPackage, CudaPackage):
     # core libraries to ensure that the package was successfully installed.
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
-    version('master', branch='master', submodules=True)
-    version('1.8.1', tag='v1.8.1', submodules=True)
-    version('1.8.0', tag='v1.8.0', submodules=True)
-    version('1.7.1', tag='v1.7.1', submodules=True)
-    version('1.7.0', tag='v1.7.0', submodules=True)
-    version('1.6.0', tag='v1.6.0', submodules=True)
-    version('1.5.1', tag='v1.5.1', submodules=True)
-    version('1.5.0', tag='v1.5.0', submodules=True)
-    version('1.4.1', tag='v1.4.1', submodules=True)
-    version('1.4.0', tag='v1.4.0', submodules=True,
-            submodules_delete=['third_party/fbgemm'])
-    version('1.3.1', tag='v1.3.1', submodules=True)
-    version('1.3.0', tag='v1.3.0', submodules=True)
-    version('1.2.0', tag='v1.2.0', submodules=True)
-    version('1.1.0', tag='v1.1.0', submodules=True)
-    version('1.0.1', tag='v1.0.1', submodules=True)
-    version('1.0.0', tag='v1.0.0', submodules=True)
-    version('0.4.1', tag='v0.4.1', submodules=True,
-            submodules_delete=['third_party/nervanagpu'])
-    version('0.4.0', tag='v0.4.0', submodules=True)
-    version('0.3.1', tag='v0.3.1', submodules=True)
+    # Submodules not needed, all third_party libraries are built with Spack
+    version('master', branch='master')
+    version('1.8.1', tag='v1.8.1')
+    version('1.8.0', tag='v1.8.0')
+    version('1.7.1', tag='v1.7.1')
+    version('1.7.0', tag='v1.7.0')
+    version('1.6.0', tag='v1.6.0')
+    version('1.5.1', tag='v1.5.1')
+    version('1.5.0', tag='v1.5.0')
+    version('1.4.1', tag='v1.4.1')
+    version('1.4.0', tag='v1.4.0')
+    version('1.3.1', tag='v1.3.1')
+    version('1.3.0', tag='v1.3.0')
+    version('1.2.0', tag='v1.2.0')
+    version('1.1.0', tag='v1.1.0')
+    version('1.0.1', tag='v1.0.1')
+    version('1.0.0', tag='v1.0.0')
+    version('0.4.1', tag='v0.4.1')
+    version('0.4.0', tag='v0.4.0')
+    version('0.3.1', tag='v0.3.1')
 
-    variant('cuda', default=True, description='Build with CUDA')
-    variant('cudnn', default=True, description='Enables the cuDNN build')
-    variant('rocm', default=False, description='Build with ROCm build')
-    variant('magma', default=False, description='Enables the MAGMA build')
-    variant('fbgemm', default=False, description='Enables the FBGEMM build')
-    variant('test', default=False, description='Enables the test build')
-    variant('miopen', default=False, description='Enables the MIOpen build')
-    variant('mkldnn', default=True, description='Enables use of MKLDNN')
-    variant('nnpack', default=False, description='Enables NNPACK build')
-    variant('qnnpack', default=False, description='Enables QNNPACK build (quantized 8-bit operators)')
-    variant('xnnpack', default=False, description='Enables XNNPACK build')
-    variant('distributed', default=False, description='Enables distributed (c10d, gloo, mpi, etc.) build')
-    variant('nccl', default=True, description='Use Spack-installed NCCL')
-    variant('caffe2', default=False, description='Enables Caffe2 operators build')
-    variant('gloo', default=False, description='Enables features related to distributed support')
-    variant('opencv', default=False, description='Enables use of OpenCV for additional operators')
-    variant('openmp', default=True, description='Enables use of OpenMP for parallelization')
-    variant('ffmpeg', default=False, description='Enables use of ffmpeg for additional operators')
-    variant('leveldb', default=False, description='Enables use of LevelDB for storage')
-    variant('lmdb', default=False, description='Enables use of LMDB for storage')
-    variant('binary', default=False, description='Enables the additional binaries/ build')
-    variant('redis', default=False, description='Use Redis for distributed workflows')
-    variant('zstd', default=False, description='Enables use of ZSTD')
-    variant('tbb', default=False, description='Enables TBB support')
+    # All options are defined in CMakeLists.txt.
+    # Some are listed in setup.py, but not all.
+    variant('caffe2', default=True, description='Build Caffe2')
+    variant('cuda', default=True, description='Use CUDA')
+    variant('rocm', default=True, description='Use ROCm')
+    variant('cudnn', default=True, description='Use cuDNN')
+    variant('fbgemm', default=True, description='Use FBGEMM (quantized 8-bit server operators)')
+    variant('kineto', default=True, description='Use Kineto profiling library')
+    variant('magma', default=True, description='Use MAGMA')
+    variant('metal', default=True, description='Use Metal for Caffe2 iOS build')
+    variant('nccl', default=True, description='Use NCCL')
+    variant('nnpack', default=True, description='Use NNPACK')
+    variant('numa', default=True, description='Use NUMA')
+    variant('numpy', default=True, description='Use NumPy')
+    variant('openmp', default=True, description='Use OpenMP for parallel code')
+    variant('qnnpack', default=True, description='Use QNNPACK (quantized 8-bit operators)')
+    variant('valgrind', default=True, description='Use Valgrind')
+    variant('xnnpack', default=True, description='Use XNNPACK')
+    variant('mkldnn', default=True, description='Use MKLDNN')
+    variant('distributed', default=True, description='Use distributed')
+    variant('mpi', default=True, description='Use MPI for Caffe2')
+    variant('gloo', default=True, description='Use Gloo')
+    variant('tensorpipe', default=True, description='Use TensorPipe')
+    variant('onnx_ml', default=True, description='Enable traditional ONNX ML API')
 
     conflicts('+cudnn', when='~cuda')
-    conflicts('+magma', when='~cuda')
-    conflicts('+fbgemm', when='@:0.4')
-    conflicts('+miopen', when='@:0.4')
-    conflicts('+mkldnn', when='@:0.3')
-    conflicts('+qnnpack', when='@:0.4')
-    conflicts('+xnnpack', when='@:1.4')
-    conflicts('+nccl', when='~cuda')
-    conflicts('+opencv', when='@:0.4')
-    conflicts('+ffmpeg', when='@:0.4')
-    conflicts('+leveldb', when='@:0.4')
-    conflicts('+lmdb', when='@:0.4')
-    conflicts('+binary', when='@:0.4')
-    conflicts('+redis', when='@:1.0')
-    conflicts('+zstd', when='@:1.0')
-    conflicts('+tbb', when='@:1.1')
-    # https://github.com/pytorch/pytorch/issues/35149
-    conflicts('+fbgemm', when='@1.4.0')
+    conflicts('+nccl', when='~cuda~rocm')
+    conflicts('+nccl', when='platform=darwin')
+    conflicts('+numa', when='platform=darwin', msg='Only available on Linux')
+    conflicts('+valgrind', when='platform=darwin', msg='Only available on Linux')
+    conflicts('+mpi', when='~distributed')
+    conflicts('+gloo', when='~distributed')
+    conflicts('+tensorpipe', when='~distributed')
+    conflicts('+magma', when='@:1.8.999')
+    conflicts('+kineto', when='@:1.7.999')
+    conflicts('+valgrind', when='@:1.7.999')
+    conflicts('+caffe2', when='@:1.6.999')
+    conflicts('+tensorpipe', when='@:1.5.999')
+    conflicts('+xnnpack', when='@:1.4.999')
+    conflicts('+onnx_ml', when='@:1.4.999')
+    conflicts('+rocm', when='@:0.4.999')
+    conflicts('+cudnn', when='@:0.4.999')
+    conflicts('+fbgemm', when='@:0.4.999')
+    conflicts('+qnnpack', when='@:0.4.999')
+    conflicts('+mkldnn', when='@:0.4.999')
 
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
-    conflicts('+rocm', when='+cuda')
 
     # Required dependencies
     depends_on('cmake@3.5:', type='build')
-    # Use Ninja generator to speed up build times
-    # Automatically used if found
+    # Use Ninja generator to speed up build times, automatically used if found
     depends_on('ninja@1.5:', type='build')
+    # See python_min_version in setup.py
     depends_on('python@3.6.2:', when='@1.7.1:', type=('build', 'link', 'run'))
     depends_on('python@3.6.1:', when='@1.6:', type=('build', 'link', 'run'))
     depends_on('python@3.5:', when='@1.5:', type=('build', 'link', 'run'))
     depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-future', when='@1.5:', type=('build', 'run'))
     depends_on('py-future', when='@1.1: ^python@:2', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
@@ -115,38 +114,27 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('protobuf', when='@0.4:')
     depends_on('py-protobuf', when='@0.4:', type=('build', 'run'))
     depends_on('eigen', when='@0.4:')
-    # TODO: replace all third_party packages with Spack packages
 
     # Optional dependencies
     depends_on('cuda@7.5:', when='+cuda', type=('build', 'link', 'run'))
     depends_on('cuda@9:', when='@1.1:+cuda', type=('build', 'link', 'run'))
     depends_on('cudnn@6:', when='+cudnn')
     depends_on('cudnn@7:', when='@1.1:+cudnn')
+    depends_on('fbgemm', when='+fbgemm')
+    depends_on('kineto', when='+kineto')
     depends_on('magma', when='+magma')
-    # TODO: add dependency: https://github.com/pytorch/FBGEMM
-    # depends_on('fbgemm', when='+fbgemm')
-    # TODO: add dependency: https://github.com/ROCmSoftwarePlatform/MIOpen
-    # depends_on('miopen', when='+miopen')
-    # TODO: See if there is a way to use an external mkldnn installation.
-    # Currently, only older versions of py-torch use an external mkldnn
-    # library.
-    depends_on('onednn', when='@0.4:0.4.1+mkldnn')
-    # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
-    # depends_on('nnpack', when='+nnpack')
-    depends_on('qnnpack', when='+qnnpack')
-    # TODO: add dependency: https://github.com/google/XNNPACK
-    # depends_on('xnnpack', when='+xnnpack')
-    depends_on('mpi', when='+distributed')
     depends_on('nccl', when='+nccl')
-    depends_on('gloo', when='+gloo')
-    depends_on('opencv', when='+opencv')
+    depends_on('nnpack', when='+nnpack')
+    depends_on('numactl', when='+numa')
+    depends_on('py-numpy', when='+numpy', type=('build', 'run'))
     depends_on('llvm-openmp', when='%apple-clang +openmp')
-    depends_on('ffmpeg', when='+ffmpeg')
-    depends_on('leveldb', when='+leveldb')
-    depends_on('lmdb', when='+lmdb')
-    depends_on('redis', when='+redis')
-    depends_on('zstd', when='+zstd')
-    depends_on('tbb', when='+tbb')
+    depends_on('qnnpack', when='+qnnpack')
+    depends_on('valgrind', when='+valgrind')
+    depends_on('xnnpack', when='+xnnpack')
+    depends_on('onednn', when='+mkldnn')
+    depends_on('mpi', when='+mpi')
+    depends_on('gloo', when='+gloo')
+    depends_on('tensorpipe', when='+tensorpipe')
 
     # Test dependencies
     depends_on('py-hypothesis', type='test')
@@ -163,7 +151,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # Fixes CMake configuration error when XNNPACK is disabled
     patch('xnnpack.patch', when='@1.5.0:1.5.999')
 
-    # Fixes Build error for when ROCm is enable for pytorch-1.5 release
+    # Fixes Build error for when ROCm is enabled for pytorch-1.5 release
     patch('rocm.patch', when='@1.5.0:1.5.999+rocm')
 
     # https://github.com/pytorch/pytorch/pull/37086
@@ -204,6 +192,16 @@ class PyTorch(PythonPackage, CudaPackage):
                     'caffe2/CMakeLists.txt')
 
     def setup_build_environment(self, env):
+        """Set environment variables used to control the build.
+
+        PyTorch's ``setup.py`` is a thin wrapper around ``cmake``.
+        In ``tools/setup_helpers/cmake.py``, you can see that all
+        environment variables that start with ``BUILD_``, ``USE_``,
+        or ``CMAKE_``, plus a few more explicitly specified variable
+        names, are passed directly to the ``cmake`` call. Therefore,
+        most flags defined in ``CMakeLists.txt`` can be specified as
+        environment variables.
+        """
         def enable_or_disable(variant, keyword='USE', var=None, newer=False):
             """Set environment variable to enable or disable support for a
             particular variant.
@@ -221,14 +219,14 @@ class PyTorch(PythonPackage, CudaPackage):
             # But some newer variants have always used USE_* or BUILD_*
             if self.spec.satisfies('@1.1:') or newer:
                 if '+' + variant in self.spec:
-                    env.set(keyword + '_' + var, 'ON')
+                    env.set(keyword + '_' + var, 1)
                 else:
-                    env.set(keyword + '_' + var, 'OFF')
+                    env.set(keyword + '_' + var, 0)
             else:
                 if '+' + variant in self.spec:
                     env.unset('NO_' + var)
                 else:
-                    env.set('NO_' + var, 'ON')
+                    env.set('NO_' + var, 1)
 
         # Build in parallel to speed up build times
         env.set('MAX_JOBS', make_jobs)
@@ -236,62 +234,66 @@ class PyTorch(PythonPackage, CudaPackage):
         # Spack logs have trouble handling colored output
         env.set('COLORIZE_OUTPUT', 'OFF')
 
-        # Don't use vendored third-party libraries
-        env.set('BUILD_CUSTOM_PROTOBUF', 'OFF')
-        env.set('USE_PYTORCH_QNNPACK', 'OFF')
-        env.set('USE_SYSTEM_EIGEN_INSTALL', 'ON')
-        env.set('pybind11_DIR', self.spec['py-pybind11'].prefix)
-        env.set('pybind11_INCLUDE_DIR',
-                self.spec['py-pybind11'].prefix.include)
+        enable_or_disable('caffe2', keyword='BUILD')
 
         enable_or_disable('cuda')
         if '+cuda' in self.spec:
+            # cmake/public/cuda.cmake
+            # cmake/Modules_CUDA_fix/upstream/FindCUDA.cmake
             env.set('CUDA_HOME', self.spec['cuda'].prefix)
             torch_cuda_arch = ';'.join('{0:.1f}'.format(float(i) / 10.0) for i
                                        in
                                        self.spec.variants['cuda_arch'].value)
             env.set('TORCH_CUDA_ARCH_LIST', torch_cuda_arch)
 
+        enable_or_disable('rocm')
+
         enable_or_disable('cudnn')
         if '+cudnn' in self.spec:
-            env.set('CUDNN_LIB_DIR', self.spec['cudnn'].libs.directories[0])
+            # cmake/Modules_CUDA_fix/FindCUDNN.cmake
+            env.set('CUDNN_ROOT', self.spec['cudnn'].prefix)
             env.set('CUDNN_INCLUDE_DIR', self.spec['cudnn'].prefix.include)
             env.set('CUDNN_LIBRARY', self.spec['cudnn'].libs[0])
 
         enable_or_disable('fbgemm')
-        enable_or_disable('test', keyword='BUILD')
-        enable_or_disable('rocm')
-        if '+rocm' in self.spec:
-            env.set('USE_MKLDNN', 0)
-        if '+miopen' in self.spec:
-            env.set('MIOPEN_LIB_DIR', self.spec['miopen'].libs.directories[0])
-            env.set('MIOPEN_INCLUDE_DIR', self.spec['miopen'].prefix.include)
-            env.set('MIOPEN_LIBRARY', self.spec['miopen'].libs[0])
-
-        enable_or_disable('mkldnn')
-        if '@0.4:0.4.1+mkldnn' in self.spec:
-            env.set('MKLDNN_HOME', self.spec['onednn'].prefix)
-
-        enable_or_disable('nnpack')
-        enable_or_disable('qnnpack')
-        enable_or_disable('xnnpack')
-        enable_or_disable('distributed')
+        enable_or_disable('kineto')
+        enable_or_disable('magma')
+        enable_or_disable('metal')
 
         enable_or_disable('nccl')
-        enable_or_disable('nccl', var='SYSTEM_NCCL')
         if '+nccl' in self.spec:
             env.set('NCCL_ROOT', self.spec['nccl'].prefix)
             env.set('NCCL_LIB_DIR', self.spec['nccl'].libs.directories[0])
             env.set('NCCL_INCLUDE_DIR', self.spec['nccl'].prefix.include)
 
-        enable_or_disable('caffe2', keyword='BUILD', var='CAFFE2_OPS')
-        enable_or_disable('gloo', newer=True)
-        enable_or_disable('opencv', newer=True)
+        # cmake/External/nnpack.cmake
+        enable_or_disable('nnpack')
+
+        enable_or_disable('numa')
+        if '+numa' in self.spec:
+            # cmake/Modules/FindNuma.cmake
+            env.set('NUMA_ROOT_DIR', self.spec['numactl'].prefix)
+
+        # cmake/Modules/FindNumPy.cmake
+        enable_or_disable('numpy')
+        # cmake/Modules/FindOpenMP.cmake
         enable_or_disable('openmp', newer=True)
-        enable_or_disable('ffmpeg', newer=True)
-        enable_or_disable('leveldb', newer=True)
-        enable_or_disable('lmdb', newer=True)
-        enable_or_disable('binary', keyword='BUILD', newer=True)
+        enable_or_disable('qnnpack')
+        enable_or_disable('valgrind')
+        enable_or_disable('xnnpack')
+
+        enable_or_disable('mkldnn')
+        if '+mkldnn' in self.spec:
+            # cmake/public/mkldnn.cmake
+            # cmake/Modules/FindMKLDNN.cmake
+            env.set('MKLDNN_HOME', self.spec['onednn'].prefix)
+
+        enable_or_disable('distributed')
+        enable_or_disable('mpi')
+        # cmake/Modules/FindGloo.cmake
+        enable_or_disable('gloo', newer=True)
+        enable_or_disable('tensorpipe')
+        enable_or_disable('onnx_ml')
 
         if not self.spec.satisfies('@master'):
             env.set('PYTORCH_BUILD_VERSION', self.version)
@@ -311,9 +313,26 @@ class PyTorch(PythonPackage, CudaPackage):
         elif '^eigen' in self.spec:
             env.set('BLAS', 'Eigen')
 
-        enable_or_disable('redis', newer=True)
-        enable_or_disable('zstd', newer=True)
-        enable_or_disable('tbb', newer=True)
+        # Don't use vendored third-party libraries
+        env.set('BUILD_CUSTOM_PROTOBUF', 'OFF')
+        env.set('USE_PYTORCH_QNNPACK', 'OFF')
+        env.set('USE_SYSTEM_NCCL', 'ON')
+        env.set('USE_SYSTEM_EIGEN_INSTALL', 'ON')
+        env.set('USE_SYSTEM_LIBS', 'ON')
+        env.set('USE_SYSTEM_CPUINFO', 'ON')
+        env.set('USE_SYSTEM_SLEEF', 'ON')
+        env.set('USE_SYSTEM_GLOO', 'ON')
+        env.set('USE_SYSTEM_FP16', 'ON')
+        env.set('USE_SYSTEM_PYBIND11', 'ON')
+        env.set('pybind11_DIR', self.spec['py-pybind11'].prefix)
+        env.set('pybind11_INCLUDE_DIR',
+                self.spec['py-pybind11'].prefix.include)
+        env.set('USE_SYSTEM_PTHREADPOOL', 'ON')
+        env.set('USE_SYSTEM_PSIMD', 'ON')
+        env.set('USE_SYSTEM_FXDIV', 'ON')
+        env.set('USE_SYSTEM_BENCHMARK', 'ON')
+        env.set('USE_SYSTEM_ONNX', 'ON')
+        env.set('USE_SYSTEM_XNNPACK', 'ON')
 
     @run_before('install')
     def build_amd(self):
