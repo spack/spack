@@ -57,6 +57,29 @@ Build caches are installed via:
 
    $ spack buildcache install
 
+Note that the above command is intended to install a particular package to a
+build cache you have created, and not to install a package from a build cache.
+For the latter, once a mirror is added, by default when you do ``spack install`` the ``--use-cache``
+flag is set, and you will install a package from a build cache if it is available.
+If you want to always use the cache, you can do:
+
+.. code-block:: console
+
+   $ spack install --cache-only <package>
+
+For example, to combine all of the commands above to add the E4S build cache
+and then install from it exclusively, you would do:
+
+.. code-block:: console
+
+    $ spack mirror add E4S https://cache.e4s.io
+    $ spack buildcache keys --install --trust
+    $ spack install --cache-only <package>
+
+We use ``--install`` and ``--trust`` to say that we are installing keys to our
+keyring, and trusting all downloaded keys.
+
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 List of popular build caches
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
