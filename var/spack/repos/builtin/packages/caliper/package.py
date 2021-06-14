@@ -22,6 +22,7 @@ class Caliper(CMakePackage, CudaPackage):
     maintainers = ["daboehme"]
 
     version('master', branch='master')
+    version('2.6.0', tag='v2.6.0')
     version('2.5.0', sha256='d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c')
     version('2.4.0', tag='v2.4.0')
     version('2.3.0', tag='v2.3.0')
