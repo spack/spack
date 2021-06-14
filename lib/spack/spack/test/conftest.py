@@ -909,16 +909,27 @@ def mock_cvs_repository(tmpdir_factory):
     def parse_date(string):
         return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
 
-    # We use this to record the times when we create CVS revisions, so that we
-    # can later check that we retrieve the proper revision when specifying a
-    # date. (CVS guarantees checking out the lastest revision before or on the
-    # specified date). As we create each revision, we separately record the
-    # time. We expect that, for a sequence of CVS invocations and
-    # datetime.now() calls, the resulting timestamps have the same ordering.
-    #
-    # If there are problems with timestamp orderign in the future, then we
-    # should retrieve the latest timestamp for each file from CVS; see e.g.
-    # <https://stackoverflow.com/questions/1044651/how-to-programatically-get-the-latest-commit-date-on-a-cvs-checkout>.
+    def parse_cvs_date(string):
+        return datetime.strptime(string, '%Y/%m/%d %H:%M:%S')
+
+    def get_cvs_timestamp(output):
+        """Find the most recent CVS time stamp in a `cvs log` output"""
+        latest_timestamp = None
+        for line in output.splitlines():
+            m = re.search(r'date:\s+([^;]*);', line)
+            if m:
+                timestamp = parse_cvs_date(m.group(1))
+                if latest_timestamp is None:
+                    latest_timestamp = timestamp
+                else:
+                    latest_timestamp = max(latest_timestamp, timestamp)
+        return latest_timestamp
+
+    # We use this to record the time stamps for when we create CVS revisions,
+    # so that we can later check that we retrieve the proper commits when
+    # specifying a date. (CVS guarantees checking out the lastest revision
+    # before or on the specified date). As we create each revision, we
+    # separately record the time by querying CVS.
     revision_date = {}
 
     # Initialize the repository
@@ -934,14 +945,18 @@ def mock_cvs_repository(tmpdir_factory):
         sourcedir.ensure(r0_file)
         cvs('-d', cvsroot, 'add', r0_file)
         cvs('-d', cvsroot, 'commit', '-m', 'revision 0', r0_file)
-        revision_date['1.1'] = format_date(datetime.now())
+        output = cvs('log', '-N', r0_file, output=str)
+        revision_date['1.1'] = format_date(get_cvs_timestamp(output))
+        print("revision 1.1, date", revision_date['1.1'])#TODO
 
         # Commit file r1
         r1_file = 'r1_file'
         sourcedir.ensure(r1_file)
         cvs('-d', cvsroot, 'add', r1_file)
         cvs('-d', cvsroot, 'commit', '-m' 'revision 1', r1_file)
-        revision_date['1.2'] = format_date(datetime.now())
+        output = cvs('log', '-N', r0_file, output=str)
+        revision_date['1.2'] = format_date(get_cvs_timestamp(output))
+        print("revision 1.2, date", revision_date['1.2'])#TODO
 
         # Create branch 'mock-branch'
         cvs('-d', cvsroot, 'tag', 'mock-branch-root')
@@ -975,16 +990,11 @@ def mock_cvs_repository(tmpdir_factory):
     # commit dates instead
     def get_date():
         """Return latest date of the revisions of all files"""
-        lines = cvs('-d', cvsroot, 'status', '-v', output=str).splitlines()
-        date = datetime.fromtimestamp(0)
-        for line in lines:
-            m = re.search(r'Working revision:\s+(\S+)', line)
-            if m:
-                rev = m.group(1)
-                if rev in revision_date:
-                    rdate = parse_date(revision_date[rev])
-                    date = max(date, rdate)
-        return format_date(date)
+        output = cvs('log', '-N', r0_file, output=str)
+        timestamp = get_cvs_timestamp(output)
+        if timestamp is None:
+            return None
+        return format_date(timestamp)
 
     checks = {
         'default': Bunch(
@@ -1002,9 +1012,9 @@ def mock_cvs_repository(tmpdir_factory):
         'date': Bunch(
             file=r1_file,
             branch=None,
-            date=format_date(datetime.now()),
+            date=revision_date['1.2'],
             args={'cvs': url,
-                  'date': format_date(datetime.now())},
+                  'date': revision_date['1.2']},
         ),
     }
 
