@@ -287,6 +287,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
     patch('zstd.patch', when='@10')
 
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100102
+    patch('ICE_in_tsubst.patch', when='@10.3.0')
+
     build_directory = 'spack-build'
 
     @property
