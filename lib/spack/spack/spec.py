@@ -4155,7 +4155,8 @@ class Spec(object):
             if not record.installed:
                 return self.STATUS_NOT_INSTALLED
             else:
-                # If the package should be installed according to the db, but can't be found.
+                # If the package should be installed according to the db,
+                # but can't be found.
                 if record.path is None or not os.path.exists(record.path):
                     return self.STATUS_ERROR
                 elif record.external:

@@ -1161,7 +1161,8 @@ class Database(object):
         return record
 
     def get_record_and_upstream(self, spec, **kwargs):
-        """Return the upstream status and db spec (converted to a Spec) of the given Spec."""
+        """Return the upstream status and db spec (converted to a Spec) of
+        the given Spec."""
         key = self._get_matching_spec_key(spec, **kwargs)
         upstream, record = self.query_by_spec_hash(key)
         return upstream, spack.spec.Spec(record)

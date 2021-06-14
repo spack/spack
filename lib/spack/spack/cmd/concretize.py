@@ -16,8 +16,10 @@ def setup_parser(subparser):
         '-d', '--dry-run', action='store_true', default=False,
         help="(Re-)concretize, but don't generate the lockfile.")
     subparser.epilog = (
-        'Statuses: {s.POS_GLYPH} - installed, {s.NEG_GLYPH} - not installed, \n'
-        '          {s.UPSTREAM_GLYPH} - upstream, {s.ERR_GLYPH} - install missing/error\n'
+        'Statuses: {s.POS_GLYPH} - installed, '
+        '{s.NEG_GLYPH} - not installed, \n'
+        '          {s.UPSTREAM_GLYPH} - upstream, '
+        '{s.ERR_GLYPH} - install missing/error\n'
         '          {s.EXTERNAL_GLYPH} - external'
         .format(s=Spec))
     subparser.add_argument(
@@ -42,7 +44,8 @@ def concretize(parser, args):
         tests = False
 
     with env.write_transaction():
-        concretized_specs = env.concretize(force=args.force or args.dry_run, tests=tests)
+        concretized_specs = env.concretize(
+            force=args.force or args.dry_run, tests=tests)
         ev.display_specs(concretized_specs)
 
         if not args.dry_run:
