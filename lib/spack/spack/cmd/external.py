@@ -73,7 +73,7 @@ def _get_system_executables():
     # add to PATH
     path_hints = spack.util.environment.get_path('PATH')
     if sys.platform == 'win32':
-        msvc_paths = winOs.WindowsOs.vsInstallPaths
+        msvc_paths = winOs.WindowsOs.vs_install_paths
         msvc_cmake_paths = [
             os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft",
                          "CMake", "CMake", "bin")
