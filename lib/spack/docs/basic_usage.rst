@@ -1734,29 +1734,26 @@ A nicer error message is TBD in future versions of Spack.
 Troubleshooting
 ---------------
 
-When dealing with a large stack of software or with the development of complex
-applications, users may face issues that are very specific to their use case.
-These issues are usually too expensive to track down during normal Spack operations
-or difficult to resolve automatically.
-
-For instance a user may, during development, change the name or values of a
-variant in a package and miss to update all of the dependents. Scanning all the
-packages all of the time to look for inconsistencies would be detrimental to
-the performance and usability of Spack so, to troubleshoot issues of this kind
-Spack provides the ``spack audit`` command:
+The ``spack audit`` command:
 
 .. command-output:: spack audit -h
 
-This command is meant to run sanity checks on various aspects of Spack,
-such as configuration files, package recipes, etc. A detailed list
-of the checks currently implemented for each subcommand can be
+can be used to detect a number of configuration issues. This command detects
+configuration settings which might not be strictly wrong but are not likely
+to be useful outside of special cases.
+
+It can also be used to detect dependency issues with packages - for example
+cases where a package constrains a dependency with a variant that doesn't
+exist (in this case Spack could report the problem ahead of time but
+automatically performing the check would slow down most runs of Spack).
+
+A detailed list of the checks currently implemented for each subcommand can be
 printed with:
 
 .. command-output:: spack -v audit list
 
-Depending on the use case, users might run the appropriate
-subcommands to obtain diagnostics. Issues, if found, are
-reported to stdout:
+Depending on the use case, users might run the appropriate subcommands to obtain
+diagnostics. Issues, if found, are reported to stdout:
 
 .. code-block:: console
 
