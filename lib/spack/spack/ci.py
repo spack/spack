@@ -1292,8 +1292,9 @@ def relate_cdash_builds(spec_map, cdash_base_url, job_build_id, cdash_project,
                 tty.debug('Did not find cdashid for {0} on {1}'.format(
                     dep_pkg_name, url))
         else:
-            raise SpackError('Did not find cdashid for {0} anywhere'.format(
+            tty.warn('Did not find cdashid for {0} anywhere'.format(
                 dep_pkg_name))
+            return
 
         payload = {
             "project": cdash_project,
