@@ -951,7 +951,7 @@ spack:
 
             # env, spec, yaml_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(
-                env, concrete_spec, yaml_path, mirror_url, '42', True)
+                env, concrete_spec, yaml_path, mirror_url, True)
 
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 
@@ -1054,7 +1054,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
     monkeypatch.setattr(buildcache, '_createtarball', faked)
 
     url = 'fakejunk'
-    ci.push_mirror_contents(None, None, None, url, None, None)
+    ci.push_mirror_contents(None, None, None, url, None)
 
     captured = capsys.readouterr()
     std_out = captured[0]
