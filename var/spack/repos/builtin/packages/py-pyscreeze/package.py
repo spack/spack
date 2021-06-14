@@ -19,5 +19,5 @@ class PyPyscreeze(PythonPackage):
 
     depends_on('python@2.7:2.999,3.2:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pillow', type=('build', 'run'))
+    depends_on('pil', type=('build', 'run'))
     depends_on('scrot', type='run')
