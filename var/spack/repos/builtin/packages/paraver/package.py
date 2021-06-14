@@ -7,25 +7,18 @@ from spack import *
 import os
 
 
-class Paraver(AutotoolsPackage):
+class Paraver(Package):
     """"A very powerful performance visualization and analysis tool
         based on traces that can be used to analyse any information that
         is expressed on its input trace format.  Traces for parallel MPI,
-        OpenMP and other programs can be genereated with Extrae."""
+        OpenMP and other programs can be genereated with Extrae.
+
+        Note: This package is deprecated in favor of wxparaver"""
     homepage = "https://tools.bsc.es/paraver"
     url = "https://ftp.tools.bsc.es/wxparaver/wxparaver-4.6.3-src.tar.bz2"
 
     # NOTE: Paraver provides only latest version for download.
     #       Don't keep/add older versions.
-    version('4.9.2',     sha256='83289584040bcedf8cab1b2ae3545191c8bdef0e11ab62b06e54cbf111f2127a', deprecated=True)
-    version('4.9.1',     sha256='e89fdf563d1fc73ed0018cf0e25b458b6617ec33325ed3fdbf06397c556f3a8e', deprecated=True)
-    version('4.9.0',     sha256='1f9964d7987032d01a354327845bf53ae369be5d8acf7d4e85bec81699a6ddf6', deprecated=True)
-    version('4.8.2',     sha256='0d22ec362e4798d7ed21b15b607859e9bda9579e3d5b23af3812c1e32ccc192d', deprecated=True)
-    version('4.8.1',     sha256='d03b04254bd3015d61374b95aeda6888f593be67286c5268849623baa2ae6e2e', deprecated=True)
-    version('4.8.0',     sha256='780af8fff7cb40d1325260fb9f79210f6676f07357bc9b95b1b838862f2d1e5b', deprecated=True)
-    version('4.7.2',     sha256='90107797d6af6fc3ebd9505445bb518d673edecbe5d08d1b7af01695d53241ae', deprecated=True)
-    version('4.7.1',     sha256='8cbec0c5e0f8a849820f6682cbb0920ea234bb7f20d1483e38ea5d0b0ee045cd', deprecated=True)
-    version('4.7.0',     sha256='81e02bcc1853455b13435172a4336ba85ba05020887d322c9678c97def03d76f', deprecated=True)
     version('4.6.3',     sha256='ac6025eec5419e1060967eab71dfd123e585be5b5f3ac3241085895dbeca255a', deprecated=True)
     version('4.6.2',     sha256='74b85bf9e6570001d372b376b58643526e349b1d2f1e7633ca38bb0800ecf929', deprecated=True)
 
@@ -35,33 +28,6 @@ class Paraver(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('zlib')
 
-    def configure_args(self):
-        spec = self.spec
-        args = []
-
-        if spec.satisfies('@4.6.3'):
-            args.append('--with-paraver=%s' % self.prefix)
-            args.append('--with-ptools-common-files=%s' % self.prefix)
-        args.append('--with-boost=%s' % spec['boost'].prefix)
-        args.append('--with-wx-config=%s/wx-config' % spec['wxwidgets'].prefix.bin)
-        if spec['wxwidgets'].satisfies('@:2'):
-            args.append('--with-wxpropgrid=%s' % spec['wxpropgrid'].prefix)
-
-        return args
-
-    @when('@4.6.2')  # do not have global build system
-    def autoreconf(self, spec, prefix):
-        pass
-
-    @when('@4.6.2')  # do not have global build system
-    def configure(self, spec, prefix):
-        pass
-
-    # use make install directly as expected by Paraver
-    def build(self, spec, prefix):
-        pass
-
-    @when('@4.6.2')  # do not have global build system
     def install(self, spec, prefix):
         os.chdir("ptools_common_files")
         configure("--prefix=%s" % prefix)
