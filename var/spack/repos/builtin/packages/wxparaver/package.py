@@ -12,7 +12,7 @@ class Wxparaver(AutotoolsPackage):
         is expressed on its input trace format.  Traces for parallel MPI,
         OpenMP and other programs can be genereated with Extrae."""
     homepage = "https://tools.bsc.es/paraver"
-    url = "https://ftp.tools.bsc.es/wxparaver/wxparaver-4.6.3-src.tar.bz2"
+    url = "https://ftp.tools.bsc.es/wxparaver/wxparaver-4.9.2-src.tar.bz2"
 
     version('4.9.2',     sha256='83289584040bcedf8cab1b2ae3545191c8bdef0e11ab62b06e54cbf111f2127a')
     version('4.9.1',     sha256='e89fdf563d1fc73ed0018cf0e25b458b6617ec33325ed3fdbf06397c556f3a8e')
