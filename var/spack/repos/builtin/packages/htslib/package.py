@@ -38,7 +38,7 @@ class Htslib(AutotoolsPackage):
     depends_on('bzip2', when='@1.4:')
     depends_on('xz', when='@1.4:')
     depends_on('curl', when='@1.3:+libcurl')
-    depends_on('libdeflate',when='@1.8:+libdeflate')
+    depends_on('libdeflate', when='@1.8:+libdeflate')
 
     depends_on('m4', when="@1.2")
     depends_on('autoconf', when="@1.2")
@@ -60,7 +60,7 @@ class Htslib(AutotoolsPackage):
 
         if spec.satisfies('@1.3:'):
             args.extend(self.enable_or_disable('libcurl'))
-            
+
         if spec.satisfies('@1.8:'):
             args.extend(self.enable_or_disable('libdeflate'))
 
