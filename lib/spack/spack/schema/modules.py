@@ -99,6 +99,7 @@ module_type_configuration = {
                 'type': 'boolean',
                 'default': False
             },
+            'defaults': array_of_strings,
             'naming_scheme': {
                 'type': 'string'  # Can we be more specific here?
             },

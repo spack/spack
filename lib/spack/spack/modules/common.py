@@ -455,6 +455,11 @@ class BaseConfiguration(object):
         return self.conf.get('template', None)
 
     @property
+    def defaults(self):
+        """Returns the specs configured as defaults or []."""
+        return self.conf.get('defaults', [])
+
+    @property
     def env(self):
         """List of environment modifications that should be done in the
         module.
@@ -892,6 +897,13 @@ class BaseModuleFileWriter(object):
         # Set the file permissions of the module to match that of the package
         if os.path.exists(self.layout.filename):
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
+
+        # Symlink defaults if needed
+        if any(self.spec.satisfies(default) for default in self.conf.defaults):
+            # This spec matches a default, it needs to be symlinked to default
+            default_path = os.path.join(os.path.dirname(self.layout.filename),
+                                        'default')
+            os.symlink(self.layout.filename, default_path)
 
     def remove(self):
         """Deletes the module file."""
