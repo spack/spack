@@ -1012,9 +1012,9 @@ def mock_cvs_repository(tmpdir_factory):
         'date': Bunch(
             file=r1_file,
             branch=None,
-            date=revision_date['1.2'],
+            date=revision_date['1.1'],
             args={'cvs': url,
-                  'date': revision_date['1.2']},
+                  'date': revision_date['1.1']},
         ),
     }
 
