@@ -28,6 +28,7 @@ modules:
     hash_length: 0
     whitelist:
       - arm-forge
+      - bison
       - blender
       - ccache
       - cli-tools
@@ -39,6 +40,7 @@ modules:
       - doxygen
       - emacs
       - environment-modules
+      - flex
       - ffmpeg
       - gdb
       - git

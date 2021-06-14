@@ -9,11 +9,6 @@ packages:
     externals:
     - spec: automake@1.13.4
       prefix: /usr
-  bison:
-    version: [3.0.4]
-    externals:
-    - spec: bison@3.0.4
-      prefix: /usr
   boost:
     variants: +pic
   cuda:
@@ -27,11 +22,6 @@ packages:
     variants: +slurm
   eigen:
     variants: ~fftw~gmp~metis~mpfr~scotch
-  flex:
-    version: [2.5.37]
-    externals:
-    - spec: flex@2.5.37
-      prefix: /usr
   hadoop:
     version: [2.9.2]
   hdf5:

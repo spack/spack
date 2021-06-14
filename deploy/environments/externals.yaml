@@ -25,6 +25,7 @@ spack:
     - nvhpc@20.9 install_type=network
     - nvhpc@21.2 install_type=network
     - arm-forge@20.2.0-Redhat-7.0-x86_64
+    - bison
     - blender
     - boost~mpi@1.73.0
     - bzip2
@@ -41,6 +42,7 @@ spack:
     - emacs
     - environment-modules@4.5.1
     - ffmpeg
+    - flex
     - freetype
     - gdb~python
     - git
