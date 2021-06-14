@@ -6,7 +6,7 @@
 import glob
 from os import path
 import subprocess
-from sys import platform
+import platform
 
 from spack import *
 
@@ -21,7 +21,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     depends_on('patchelf', type='build')
 
-    if platform == 'linux':
+    if platform.system() == 'Linux':
         version('2021.2.0',
                 sha256='5d01cbff1a574c3775510cd97ffddd27fdf56d06a6b0c89a826fb23da4336d59',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17749/l_dpcpp-cpp-compiler_p_2021.2.0.118_offline.sh',
