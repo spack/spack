@@ -382,7 +382,7 @@ class SpackMonitorClient:
 
             if self.save_local:
                 filename = "spec-%s-%s-config.json" % (spec.name, spec.version)
-                self.save(sjson.dump(as_dict), filename)
+                self.save(as_dict, filename)
             else:
                 response = self.do_request("specs/new/", data=sjson.dump(as_dict))
                 configs[spec.package.name] = response.get('data', {})
@@ -435,7 +435,7 @@ class SpackMonitorClient:
         hasher.update(str(data).encode('utf-8'))
         bid = hasher.hexdigest()
         filename = "build-metadata-%s.json" % full_hash
-        response = self.save(sjson.dump(data), filename)
+        response = self.save(data, filename)
         if return_response:
             return response
         return bid
@@ -465,7 +465,7 @@ class SpackMonitorClient:
         data = {"build_id": self.get_build_id(spec), "status": status}
         if self.save_local:
             filename = "build-%s-status.json" % data['build_id']
-            return self.save(sjson.dump(data), filename)
+            return self.save(data, filename)
 
         return self.do_request("builds/update/", data=sjson.dump(data))
 
@@ -510,7 +510,7 @@ class SpackMonitorClient:
 
         if self.save_local:
             filename = "build-%s-phase-%s.json" % (data['build_id'], phase_name)
-            return self.save(sjson.dump(data), filename)
+            return self.save(data, filename)
 
         return self.do_request("builds/phases/update/", data=sjson.dump(data))
 
@@ -530,7 +530,7 @@ class SpackMonitorClient:
 
         if self.save_local:
             filename = "spec-%s-%s.json" % (spec.name, spec.version)
-            return self.save(sjson.dump(data), filename)
+            return self.save(data, filename)
 
         return self.do_request("specs/new/", data=sjson.dump(data))
 
