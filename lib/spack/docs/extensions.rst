@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,12 +8,6 @@
 =================
 Custom Extensions
 =================
-
-.. warning::
-
-   The support for extending Spack with custom commands is still experimental.
-   Users should expect APIs or prescribed directory structures to
-   change at any time.
 
 *Spack extensions* permit you to extend Spack capabilities by deploying your
 own custom commands or logic in an arbitrary location on your filesystem.
@@ -93,11 +87,12 @@ will be available from the command line:
      --implicit       select specs that are not installed or were installed implicitly
      --output OUTPUT  where to dump the result
 
-The corresponding unit tests can be run giving the appropriate options to ``spack test``:
+The corresponding unit tests can be run giving the appropriate options
+to ``spack unit-test``:
 
 .. code-block:: console
 
-   $ spack test --extension=scripting
+   $ spack unit-test --extension=scripting
 
    ============================================================== test session starts ===============================================================
    platform linux2 -- Python 2.7.15rc1, pytest-3.2.5, py-1.4.34, pluggy-0.4.0

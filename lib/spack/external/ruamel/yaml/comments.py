@@ -9,7 +9,12 @@ these are not really related, formatting could be factored out as
 a separate base
 """
 
-from collections import MutableSet
+import sys
+
+if sys.version_info >= (3, 3):
+    from collections.abc import MutableSet
+else:
+    from collections import MutableSet
 
 __all__ = ["CommentedSeq", "CommentedMap", "CommentedOrderedMap",
            "CommentedSet", 'comment_attrib', 'merge_attrib']

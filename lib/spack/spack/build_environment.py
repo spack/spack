@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,26 +33,34 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import inspect
+import re
 import multiprocessing
 import os
 import shutil
 import sys
 import traceback
 import types
-from six import iteritems
 from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 from llnl.util.lang import dedupe
+from llnl.util.tty.log import MultiProcessFd
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.config
 import spack.main
 import spack.paths
+import spack.package
+import spack.repo
+import spack.schema.environment
 import spack.store
+import spack.install_test
+import spack.subprocess_context
+import spack.architecture as arch
+import spack.util.path
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
@@ -60,10 +68,9 @@ from spack.util.environment import (
 from spack.util.environment import system_dirs
 from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, get_path_from_module
+from spack.util.module_cmd import load_module, path_from_modules, module
 from spack.util.log_parse import parse_log_events, make_log_context
-
-
+from spack.util.cpus import cpus_available
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -141,10 +148,49 @@ def clean_environment():
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     env.unset('LD_LIBRARY_PATH')
-    env.unset('LIBRARY_PATH')
-    env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
+    env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+
+    # These vars affect how the compiler finds libraries and include dirs.
+    env.unset('LIBRARY_PATH')
+    env.unset('CPATH')
+    env.unset('C_INCLUDE_PATH')
+    env.unset('CPLUS_INCLUDE_PATH')
+    env.unset('OBJC_INCLUDE_PATH')
+
+    # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
+    # interference with Spack dependencies.
+    # CNL requires these variables to be set (or at least some of them,
+    # depending on the CNL version).
+    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
+    on_cray = str(hostarch.platform) == 'cray'
+    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    if on_cray and not using_cnl:
+        env.unset('CRAY_LD_LIBRARY_PATH')
+        for varname in os.environ.keys():
+            if 'PKGCONF' in varname:
+                env.unset(varname)
+
+    # Unset the following variables because they can affect installation of
+    # Autotools and CMake packages.
+    build_system_vars = [
+        'CC', 'CFLAGS', 'CPP', 'CPPFLAGS',  # C variables
+        'CXX', 'CCC', 'CXXFLAGS', 'CXXCPP',  # C++ variables
+        'F77', 'FFLAGS', 'FLIBS',  # Fortran77 variables
+        'FC', 'FCFLAGS', 'FCLIBS',  # Fortran variables
+        'LDFLAGS', 'LIBS'  # linker variables
+    ]
+    for v in build_system_vars:
+        env.unset(v)
+
+    # Unset mpi environment vars. These flags should only be set by
+    # mpi providers for packages with mpi dependencies
+    mpi_vars = [
+        'MPICC', 'MPICXX', 'MPIFC', 'MPIF77', 'MPIF90'
+    ]
+    for v in mpi_vars:
+        env.unset(v)
 
     build_lang = spack.config.get('config:build_language')
     if build_lang:
@@ -169,6 +215,9 @@ def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     compiler = pkg.compiler
     spec = pkg.spec
+
+    # Make sure the executables for this compiler exist
+    compiler.verify_executables()
 
     # Set compiler variables used by CMake and autotools
     assert all(key in compiler.link_paths for key in (
@@ -257,6 +306,22 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
+def _place_externals_last(spec_container):
+    """
+    For a (possibly unordered) container of specs, return an ordered list
+    where all external specs are at the end of the list. External packages
+    may be installed in merged prefixes with other packages, and so
+    they should be deprioritized for any search order (i.e. in PATH, or
+    for a set of -L entries in a compiler invocation).
+    """
+    # Establish an arbitrary but fixed ordering of specs so that resulting
+    # environment variable values are stable
+    spec_container = sorted(spec_container, key=lambda x: x.name)
+    first = list(x for x in spec_container if not x.external)
+    second = list(x for x in spec_container if x.external)
+    return first + second
+
+
 def set_build_environment_variables(pkg, env, dirty):
     """Ensure a clean install environment when we build packages.
 
@@ -274,6 +339,24 @@ def set_build_environment_variables(pkg, env, dirty):
     link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
     build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
+    # This includes all build dependencies and any other dependencies that
+    # should be added to PATH (e.g. supporting executables run by build
+    # dependencies)
+    build_and_supporting_deps = set()
+    for build_dep in build_deps:
+        build_and_supporting_deps.update(build_dep.traverse(deptype='run'))
+
+    # External packages may be installed in a prefix which contains many other
+    # package installs. To avoid having those installations override
+    # Spack-installed packages, they are placed at the end of search paths.
+    # System prefixes are removed entirely later on since they are already
+    # searched.
+    build_deps = _place_externals_last(build_deps)
+    link_deps = _place_externals_last(link_deps)
+    build_link_deps = _place_externals_last(build_link_deps)
+    rpath_deps = _place_externals_last(rpath_deps)
+    build_and_supporting_deps = _place_externals_last(
+        build_and_supporting_deps)
 
     link_dirs = []
     include_dirs = []
@@ -320,54 +403,28 @@ def set_build_environment_variables(pkg, env, dirty):
     env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ':'.join(rpath_dirs))
 
-    build_prefixes      = [dep.prefix for dep in build_deps]
-    build_link_prefixes = [dep.prefix for dep in build_link_deps]
-
-    # add run-time dependencies of direct build-time dependencies:
-    for build_dep in build_deps:
-        for run_dep in build_dep.traverse(deptype='run'):
-            build_prefixes.append(run_dep.prefix)
-
-    # Filter out system paths: ['/', '/usr', '/usr/local']
-    # These paths can be introduced into the build when an external package
-    # is added as a dependency. The problem with these paths is that they often
-    # contain hundreds of other packages installed in the same directory.
-    # If these paths come first, they can overshadow Spack installations.
-    build_prefixes      = filter_system_paths(build_prefixes)
-    build_link_prefixes = filter_system_paths(build_link_prefixes)
+    build_and_supporting_prefixes = filter_system_paths(
+        x.prefix for x in build_and_supporting_deps)
+    build_link_prefixes = filter_system_paths(
+        x.prefix for x in build_link_deps)
 
     # Add dependencies to CMAKE_PREFIX_PATH
-    env.set_path('CMAKE_PREFIX_PATH', build_link_prefixes)
+    env.set_path('CMAKE_PREFIX_PATH', get_cmake_prefix_path(pkg))
 
     # Set environment variables if specified for
     # the given compiler
     compiler = pkg.compiler
-    environment = compiler.environment
-
-    for command, variable in iteritems(environment):
-        if command == 'set':
-            for name, value in iteritems(variable):
-                env.set(name, value)
-        elif command == 'unset':
-            for name, _ in iteritems(variable):
-                env.unset(name)
-        elif command == 'prepend-path':
-            for name, value in iteritems(variable):
-                env.prepend_path(name, value)
-        elif command == 'append-path':
-            for name, value in iteritems(variable):
-                env.append_path(name, value)
+    env.extend(spack.schema.environment.parse(compiler.environment))
 
     if compiler.extra_rpaths:
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
-    implicit_rpaths = compiler.implicit_rpaths()
-    if implicit_rpaths:
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS', ':'.join(implicit_rpaths))
-
     # Add bin directories from dependencies to the PATH for the build.
-    for prefix in build_prefixes:
+    # These directories are added to the beginning of the search path, and in
+    # the order given by 'build_and_supporting_prefixes' (the iteration order
+    # is reversed because each entry is prepended)
+    for prefix in reversed(build_and_supporting_prefixes):
         for dirname in ['bin', 'bin64']:
             bin_dir = os.path.join(prefix, dirname)
             if os.path.isdir(bin_dir):
@@ -385,7 +442,7 @@ def set_build_environment_variables(pkg, env, dirty):
     # directory.  Add that to the path too.
     env_paths = []
     compiler_specific = os.path.join(
-        spack.paths.build_env_path, pkg.compiler.name)
+        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
         ci = os.path.join(item, 'case-insensitive')
@@ -411,7 +468,7 @@ def set_build_environment_variables(pkg, env, dirty):
         env.set(SPACK_CCACHE_BINARY, ccache)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
-    for prefix in build_link_prefixes:
+    for prefix in reversed(build_link_prefixes):
         for directory in ('lib', 'lib64', 'share'):
             pcdir = os.path.join(prefix, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
@@ -420,12 +477,47 @@ def set_build_environment_variables(pkg, env, dirty):
     return env
 
 
+def determine_number_of_jobs(
+        parallel=False, command_line=None, config_default=None, max_cpus=None):
+    """
+    Packages that require sequential builds need 1 job. Otherwise we use the
+    number of jobs set on the command line. If not set, then we use the config
+    defaults (which is usually set through the builtin config scope), but we
+    cap to the number of CPUs available to avoid oversubscription.
+
+    Parameters:
+        parallel (bool): true when package supports parallel builds
+        command_line (int/None): command line override
+        config_default (int/None): config default number of jobs
+        max_cpus (int/None): maximum number of CPUs available. When None, this
+                             value is automatically determined.
+    """
+    if not parallel:
+        return 1
+
+    if command_line is None and 'command_line' in spack.config.scopes():
+        command_line = spack.config.get('config:build_jobs', scope='command_line')
+
+    if command_line is not None:
+        return command_line
+
+    max_cpus = max_cpus or cpus_available()
+
+    # in some rare cases _builtin config may not be set, so default to max 16
+    config_default = config_default or spack.config.get('config:build_jobs', 16)
+
+    return min(max_cpus, config_default)
+
+
 def _set_variables_for_single_module(pkg, module):
     """Helper function to set module variables for single module."""
+    # Put a marker on this module so that it won't execute the body of this
+    # function again, since it is not needed
+    marker = '_set_run_already_called'
+    if getattr(module, marker, False):
+        return
 
-    jobs = spack.config.get('config:build_jobs') if pkg.parallel else 1
-    jobs = min(jobs, multiprocessing.cpu_count())
-    assert jobs is not None, "no default set for config:build_jobs"
+    jobs = determine_number_of_jobs(parallel=pkg.parallel)
 
     m = module
     m.make_jobs = jobs
@@ -489,6 +581,10 @@ def _set_variables_for_single_module(pkg, module):
 
     m.static_to_shared_library = static_to_shared_library
 
+    # Put a marker on this module so that it won't execute the body of this
+    # function again, since it is not needed
+    setattr(m, marker, True)
+
 
 def set_module_variables_for_package(pkg):
     """Populate the module scope of install() with some useful functions.
@@ -536,7 +632,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
 
     # TODO: Compiler arguments should not be hardcoded but provided by
     #       the different compiler classes.
-    if 'linux' in arch:
+    if 'linux' in arch or 'cray' in arch:
         soname = os.path.basename(shared_lib)
 
         if compat_version:
@@ -612,8 +708,17 @@ def get_rpaths(pkg):
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
-        rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
-    return rpaths
+        rpaths.append(path_from_modules([pkg.compiler.modules[1]]))
+    return list(dedupe(filter_system_paths(rpaths)))
+
+
+def get_cmake_prefix_path(pkg):
+    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
+    build_link_deps = build_deps | link_deps
+    build_link_deps = _place_externals_last(build_link_deps)
+    build_link_prefixes = filter_system_paths(x.prefix for x in build_link_deps)
+    return build_link_prefixes
 
 
 def get_std_cmake_args(pkg):
@@ -676,32 +781,50 @@ def load_external_modules(pkg):
         pkg (PackageBase): package to load deps for
     """
     for dep in list(pkg.spec.traverse()):
-        if dep.external_module:
-            load_module(dep.external_module)
+        external_modules = dep.external_modules or []
+        for external_module in external_modules:
+            load_module(external_module)
 
 
-def setup_package(pkg, dirty):
+def setup_package(pkg, dirty, context='build'):
     """Execute all environment setup routines."""
-    build_env = EnvironmentModifications()
+    env = EnvironmentModifications()
 
     if not dirty:
         clean_environment()
 
-    set_compiler_environment_variables(pkg, build_env)
-    set_build_environment_variables(pkg, build_env, dirty)
-    pkg.architecture.platform.setup_platform_environment(pkg, build_env)
+    # setup compilers and build tools for build contexts
+    need_compiler = context == 'build' or (context == 'test' and
+                                           pkg.test_requires_compiler)
+    if need_compiler:
+        set_compiler_environment_variables(pkg, env)
+        set_build_environment_variables(pkg, env, dirty)
 
-    build_env.extend(
-        modifications_from_dependencies(pkg.spec, context='build')
-    )
+    # architecture specific setup
+    pkg.architecture.platform.setup_platform_environment(pkg, env)
 
-    if (not dirty) and (not build_env.is_unset('CPATH')):
-        tty.debug("A dependency has updated CPATH, this may lead pkg-config"
-                  " to assume that the package is part of the system"
-                  " includes and omit it when invoked with '--cflags'.")
+    if context == 'build':
+        # recursive post-order dependency information
+        env.extend(
+            modifications_from_dependencies(pkg.spec, context=context)
+        )
 
-    set_module_variables_for_package(pkg)
-    pkg.setup_build_environment(build_env)
+        if (not dirty) and (not env.is_unset('CPATH')):
+            tty.debug("A dependency has updated CPATH, this may lead pkg-"
+                      "config to assume that the package is part of the system"
+                      " includes and omit it when invoked with '--cflags'.")
+
+        # setup package itself
+        set_module_variables_for_package(pkg)
+        pkg.setup_build_environment(env)
+    elif context == 'test':
+        import spack.user_environment as uenv  # avoid circular import
+        env.extend(uenv.environment_modifications_for_spec(pkg.spec))
+        env.extend(
+            modifications_from_dependencies(pkg.spec, context=context)
+        )
+        set_module_variables_for_package(pkg)
+        env.prepend_path('PATH', '.')
 
     # Loading modules, in particular if they are meant to be used outside
     # of Spack, can change environment variables that are relevant to the
@@ -711,24 +834,35 @@ def setup_package(pkg, dirty):
     # unnecessary. Modules affecting these variables will be overwritten anyway
     with preserve_environment('CC', 'CXX', 'FC', 'F77'):
         # All module loads that otherwise would belong in previous
-        # functions have to occur after the build_env object has its
+        # functions have to occur after the env object has its
         # modifications applied. Otherwise the environment modifications
         # could undo module changes, such as unsetting LD_LIBRARY_PATH
         # after a module changes it.
-        for mod in pkg.compiler.modules:
-            # Fixes issue https://github.com/spack/spack/issues/3153
-            if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                load_module("cce")
-            load_module(mod)
+        if need_compiler:
+            for mod in pkg.compiler.modules:
+                # Fixes issue https://github.com/spack/spack/issues/3153
+                if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+                    load_module("cce")
+                load_module(mod)
+
+        # kludge to handle cray libsci being automatically loaded by PrgEnv
+        # modules on cray platform. Module unload does no damage when
+        # unnecessary
+        module('unload', 'cray-libsci')
 
         if pkg.architecture.target.module_name:
             load_module(pkg.architecture.target.module_name)
 
         load_external_modules(pkg)
 
+    implicit_rpaths = pkg.compiler.implicit_rpaths()
+    if implicit_rpaths:
+        env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                ':'.join(implicit_rpaths))
+
     # Make sure nothing's strange about the Spack environment.
-    validate(build_env, tty.warn)
-    build_env.apply_modifications()
+    validate(env, tty.warn)
+    env.apply_modifications()
 
 
 def modifications_from_dependencies(spec, context):
@@ -748,11 +882,13 @@ def modifications_from_dependencies(spec, context):
     deptype_and_method = {
         'build': (('build', 'link', 'test'),
                   'setup_dependent_build_environment'),
-        'run': (('link', 'run'), 'setup_dependent_run_environment')
+        'run': (('link', 'run'), 'setup_dependent_run_environment'),
+        'test': (('link', 'run', 'test'), 'setup_dependent_run_environment')
     }
     deptype, method = deptype_and_method[context]
 
-    for dspec in spec.traverse(order='post', root=False, deptype=deptype):
+    root = context == 'test'
+    for dspec in spec.traverse(order='post', root=root, deptype=deptype):
         dpkg = dspec.package
         set_module_variables_for_package(dpkg)
         # Allow dependencies to modify the module
@@ -762,26 +898,90 @@ def modifications_from_dependencies(spec, context):
     return env
 
 
-def fork(pkg, function, dirty, fake):
-    """Fork a child process to do part of a spack build.
+def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
+                       input_multiprocess_fd):
+
+    context = kwargs.get('context', 'build')
+
+    try:
+        # We are in the child process. Python sets sys.stdin to
+        # open(os.devnull) to prevent our process and its parent from
+        # simultaneously reading from the original stdin. But, we assume
+        # that the parent process is not going to read from it till we
+        # are done with the child, so we undo Python's precaution.
+        if input_multiprocess_fd is not None:
+            sys.stdin = os.fdopen(input_multiprocess_fd.fd)
+
+        pkg = serialized_pkg.restore()
+
+        if not kwargs.get('fake', False):
+            kwargs['unmodified_env'] = os.environ.copy()
+            setup_package(pkg, dirty=kwargs.get('dirty', False),
+                          context=context)
+        return_value = function(pkg, kwargs)
+        child_pipe.send(return_value)
+
+    except StopPhase as e:
+        # Do not create a full ChildError from this, it's not an error
+        # it's a control statement.
+        child_pipe.send(e)
+    except BaseException:
+        # catch ANYTHING that goes wrong in the child process
+        exc_type, exc, tb = sys.exc_info()
+
+        # Need to unwind the traceback in the child because traceback
+        # objects can't be sent to the parent.
+        tb_string = traceback.format_exc()
+
+        # build up some context from the offending package so we can
+        # show that, too.
+        package_context = get_package_context(tb)
+
+        logfile = None
+        if context == 'build':
+            try:
+                if hasattr(pkg, 'log_path'):
+                    logfile = pkg.log_path
+            except NameError:
+                # 'pkg' is not defined yet
+                pass
+        elif context == 'test':
+            logfile = os.path.join(
+                pkg.test_suite.stage,
+                spack.install_test.TestSuite.test_log_name(pkg.spec))
+
+        # make a pickleable exception to send to parent.
+        msg = "%s: %s" % (exc_type.__name__, str(exc))
+
+        ce = ChildError(msg,
+                        exc_type.__module__,
+                        exc_type.__name__,
+                        tb_string, logfile, context, package_context)
+        child_pipe.send(ce)
+
+    finally:
+        child_pipe.close()
+        if input_multiprocess_fd is not None:
+            input_multiprocess_fd.close()
+
+
+def start_build_process(pkg, function, kwargs):
+    """Create a child process to do part of a spack build.
 
     Args:
 
         pkg (PackageBase): package whose environment we should set up the
-            forked process for.
+            child process for.
         function (callable): argless function to run in the child
             process.
-        dirty (bool): If True, do NOT clean the environment before
-            building.
-        fake (bool): If True, skip package setup b/c it's not a real build
 
     Usage::
 
         def child_fun():
             # do stuff
-        build_env.fork(pkg, child_fun)
+        build_env.start_build_process(pkg, child_fun)
 
-    Forked processes are run with the build environment set up by
+    The child process is run with the build environment set up by
     spack.build_environment.  This allows package authors to have full
     control over the environment, etc. without affecting other builds
     that might be executed in the same spack call.
@@ -789,65 +989,36 @@ def fork(pkg, function, dirty, fake):
     If something goes wrong, the child process catches the error and
     passes it to the parent wrapped in a ChildError.  The parent is
     expected to handle (or re-raise) the ChildError.
+
+    This uses `multiprocessing.Process` to create the child process. The
+    mechanism used to create the process differs on different operating
+    systems and for different versions of Python. In some cases "fork"
+    is used (i.e. the "fork" system call) and some cases it starts an
+    entirely new Python interpreter process (in the docs this is referred
+    to as the "spawn" start method). Breaking it down by OS:
+
+    - Linux always uses fork.
+    - Mac OS uses fork before Python 3.8 and "spawn" for 3.8 and after.
+    - Windows always uses the "spawn" start method.
+
+    For more information on `multiprocessing` child process creation
+    mechanisms, see https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
     """
-
-    def child_process(child_pipe, input_stream):
-        # We are in the child process. Python sets sys.stdin to
-        # open(os.devnull) to prevent our process and its parent from
-        # simultaneously reading from the original stdin. But, we assume
-        # that the parent process is not going to read from it till we
-        # are done with the child, so we undo Python's precaution.
-        if input_stream is not None:
-            sys.stdin = input_stream
-
-        try:
-            if not fake:
-                setup_package(pkg, dirty=dirty)
-            return_value = function()
-            child_pipe.send(return_value)
-        except StopIteration as e:
-            # StopIteration is used to stop installations
-            # before the final stage, mainly for debug purposes
-            tty.msg(e)
-            child_pipe.send(None)
-
-        except BaseException:
-            # catch ANYTHING that goes wrong in the child process
-            exc_type, exc, tb = sys.exc_info()
-
-            # Need to unwind the traceback in the child because traceback
-            # objects can't be sent to the parent.
-            tb_string = traceback.format_exc()
-
-            # build up some context from the offending package so we can
-            # show that, too.
-            package_context = get_package_context(tb)
-
-            build_log = None
-            if hasattr(pkg, 'log_path'):
-                build_log = pkg.log_path
-
-            # make a pickleable exception to send to parent.
-            msg = "%s: %s" % (exc_type.__name__, str(exc))
-
-            ce = ChildError(msg,
-                            exc_type.__module__,
-                            exc_type.__name__,
-                            tb_string, build_log, package_context)
-            child_pipe.send(ce)
-
-        finally:
-            child_pipe.close()
-
     parent_pipe, child_pipe = multiprocessing.Pipe()
-    input_stream = None
+    input_multiprocess_fd = None
+
+    serialized_pkg = spack.subprocess_context.PackageInstallContext(pkg)
+
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
-            input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
+            input_fd = os.dup(sys.stdin.fileno())
+            input_multiprocess_fd = MultiProcessFd(input_fd)
 
         p = multiprocessing.Process(
-            target=child_process, args=(child_pipe, input_stream))
+            target=_setup_pkg_and_run,
+            args=(serialized_pkg, function, kwargs, child_pipe,
+                  input_multiprocess_fd))
         p.start()
 
     except InstallError as e:
@@ -856,21 +1027,26 @@ def fork(pkg, function, dirty, fake):
 
     finally:
         # Close the input stream in the parent process
-        if input_stream is not None:
-            input_stream.close()
+        if input_multiprocess_fd is not None:
+            input_multiprocess_fd.close()
 
     child_result = parent_pipe.recv()
     p.join()
+
+    # If returns a StopPhase, raise it
+    if isinstance(child_result, StopPhase):
+        # do not print
+        raise child_result
 
     # let the caller know which package went wrong.
     if isinstance(child_result, InstallError):
         child_result.pkg = pkg
 
-    # If the child process raised an error, print its output here rather
-    # than waiting until the call to SpackError.die() in main(). This
-    # allows exception handling output to be logged from within Spack.
-    # see spack.main.SpackCommand.
     if isinstance(child_result, ChildError):
+        # If the child process raised an error, print its output here rather
+        # than waiting until the call to SpackError.die() in main(). This
+        # allows exception handling output to be logged from within Spack.
+        # see spack.main.SpackCommand.
         child_result.print_context()
         raise child_result
 
@@ -883,6 +1059,7 @@ def get_package_context(traceback, context=3):
     Args:
         traceback (traceback): A traceback from some exception raised during
             install
+
         context (int): Lines of context to show before and after the line
             where the error happened
 
@@ -989,13 +1166,14 @@ class ChildError(InstallError):
     # context instead of Python context.
     build_errors = [('spack.util.executable', 'ProcessError')]
 
-    def __init__(self, msg, module, classname, traceback_string, build_log,
-                 context):
+    def __init__(self, msg, module, classname, traceback_string, log_name,
+                 log_type, context):
         super(ChildError, self).__init__(msg)
         self.module = module
         self.name = classname
         self.traceback = traceback_string
-        self.build_log = build_log
+        self.log_name = log_name
+        self.log_type = log_type
         self.context = context
 
     @property
@@ -1003,26 +1181,16 @@ class ChildError(InstallError):
         out = StringIO()
         out.write(self._long_message if self._long_message else '')
 
+        have_log = self.log_name and os.path.exists(self.log_name)
+
         if (self.module, self.name) in ChildError.build_errors:
             # The error happened in some external executed process. Show
-            # the build log with errors or warnings highlighted.
-            if self.build_log and os.path.exists(self.build_log):
-                errors, warnings = parse_log_events(self.build_log)
-                nerr = len(errors)
-                nwar = len(warnings)
-                if nerr > 0:
-                    # If errors are found, only display errors
-                    out.write(
-                        "\n%s found in build log:\n" % plural(nerr, 'error'))
-                    out.write(make_log_context(errors))
-                elif nwar > 0:
-                    # If no errors are found but warnings are, display warnings
-                    out.write(
-                        "\n%s found in build log:\n" % plural(nwar, 'warning'))
-                    out.write(make_log_context(warnings))
+            # the log with errors or warnings highlighted.
+            if have_log:
+                write_log_summary(out, self.log_type, self.log_name)
 
         else:
-            # The error happened in in the Python code, so try to show
+            # The error happened in the Python code, so try to show
             # some context from the Package itself.
             if self.context:
                 out.write('\n')
@@ -1032,14 +1200,14 @@ class ChildError(InstallError):
         if out.getvalue():
             out.write('\n')
 
-        if self.build_log and os.path.exists(self.build_log):
-            out.write('See build log for details:\n')
-            out.write('  %s\n' % self.build_log)
+        if have_log:
+            out.write('See {0} log for details:\n'.format(self.log_type))
+            out.write('  {0}\n'.format(self.log_name))
 
         return out.getvalue()
 
     def __str__(self):
-        return self.message + self.long_message + self.traceback
+        return self.message
 
     def __reduce__(self):
         """__reduce__ is used to serialize (pickle) ChildErrors.
@@ -1052,10 +1220,48 @@ class ChildError(InstallError):
             self.module,
             self.name,
             self.traceback,
-            self.build_log,
+            self.log_name,
+            self.log_type,
             self.context)
 
 
-def _make_child_error(msg, module, name, traceback, build_log, context):
+def _make_child_error(msg, module, name, traceback, log, log_type, context):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
-    return ChildError(msg, module, name, traceback, build_log, context)
+    return ChildError(msg, module, name, traceback, log, log_type, context)
+
+
+class StopPhase(spack.error.SpackError):
+    """Pickle-able exception to control stopped builds."""
+    def __reduce__(self):
+        return _make_stop_phase, (self.message, self.long_message)
+
+
+def _make_stop_phase(msg, long_msg):
+    return StopPhase(msg, long_msg)
+
+
+def write_log_summary(out, log_type, log, last=None):
+    errors, warnings = parse_log_events(log)
+    nerr = len(errors)
+    nwar = len(warnings)
+
+    if nerr > 0:
+        if last and nerr > last:
+            errors = errors[-last:]
+            nerr = last
+
+        # If errors are found, only display errors
+        out.write(
+            "\n%s found in %s log:\n" %
+            (plural(nerr, 'error'), log_type))
+        out.write(make_log_context(errors))
+    elif nwar > 0:
+        if last and nwar > last:
+            warnings = warnings[-last:]
+            nwar = last
+
+        # If no errors are found but warnings are, display warnings
+        out.write(
+            "\n%s found in %s log:\n" %
+            (plural(nwar, 'warning'), log_type))
+        out.write(make_log_context(warnings))

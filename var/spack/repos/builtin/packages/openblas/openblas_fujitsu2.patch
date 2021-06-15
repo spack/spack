@@ -1,0 +1,13 @@
+--- OpenBLAS-0.3.10/f_check	2020-07-04 00:02:19.000000000 +0900
++++ OpenBLAS-0.3.10/f_check_fix	2020-07-04 00:00:52.000000000 +0900
+@@ -337,8 +337,8 @@
+ 	    && ($flags !~ /kernel32/)
+ 	    && ($flags !~ /advapi32/)
+ 	    && ($flags !~ /shell32/)
+-	    && ($flags !~ /omp/ || ($vendor !~ /PGI/ && $flags =~ /omp/))
+-	    && ($flags !~ /[0-9]+/)
++	    && ($flags !~ /omp/ || ($vendor !~ /PGI/ && $vendor !~ /FUJITSU/ && $flags =~ /omp/))
++	    && ($flags !~ /[0-9]+/ || ($vendor == FUJITSU && $flags =~ /^-lfj90/))
+ 		&& ($flags !~ /^\-l$/)
+ 	    ) {
+ 	    $linker_l .= $flags . " ";

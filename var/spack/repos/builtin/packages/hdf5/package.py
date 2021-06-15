@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import shutil
 import sys
 
-from spack import *
+from spack.util.environment import is_system_path
 
 
 class Hdf5(AutotoolsPackage):
@@ -15,14 +15,29 @@ class Hdf5(AutotoolsPackage):
     flexible and efficient I/O and for high volume and complex data.
     """
 
-    homepage = "https://support.hdfgroup.org/HDF5/"
-    url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.gz"
+    homepage = "https://portal.hdfgroup.org"
+    url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz"
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
+    maintainers = ['lrknox']
+
+    test_requires_compiler = True
+
+    # We rely on the *.la files to be removed and, therefore, do not try to make
+    # sure that they are correct. The following is a precaution against someone
+    # blindly changing the value to True, either here or in the baseclass.
+    install_libtool_archives = False
 
     version('develop', branch='develop')
 
+    version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a')
+
+    # HDF5 1.12 broke API compatibility, so we currently prefer the latest
+    # 1.10 release.  packages that want later versions of HDF5 should specify,
+    # e.g., depends_on("hdf5@1.12:") to get 1.12 or higher.
+    version('1.10.7', sha256='7a1a0a54371275ce2dfc5cd093775bb025c365846512961e7e5ceaecb437ef15', preferred=True)
+    version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa')
     version('1.10.5', sha256='6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8')
     version('1.10.4', sha256='8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
     version('1.10.3', sha256='b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
@@ -31,6 +46,7 @@ class Hdf5(AutotoolsPackage):
     version('1.10.0-patch1', sha256='6e78cfe32a10e6e0629393cdfddf6cfa536571efdaf85f08e35326e1b4e9eff0')
     version('1.10.0', sha256='81f6201aba5c30dced5dcd62f5d5477a2790fd5850e02ac514ca8bf3e2bb375a')
 
+    version('1.8.22', sha256='8406d96d9355ef8961d2739fb8fd5474ad4cdf52f3cfac657733defd9709bfaa')
     version('1.8.21', sha256='87d8c82eba5cf766d97cd06c054f4639c1049c4adeaa3a79f77f8bd374f80f37')
     version('1.8.19', sha256='a4335849f19fae88c264fd0df046bc321a78c536b2548fc508627a790564dc38')
     version('1.8.18', sha256='cdb195ad8d9e6782acf24b2488061289f615628c2ccda8457b0a0c3fb7a8a063')
@@ -50,6 +66,7 @@ class Hdf5(AutotoolsPackage):
     variant('hl', default=False, description='Enable the high-level library')
     variant('cxx', default=False, description='Enable C++ support')
     variant('fortran', default=False, description='Enable Fortran support')
+    variant('java', default=False, description='Enable Java support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
 
@@ -57,6 +74,13 @@ class Hdf5(AutotoolsPackage):
     variant('szip', default=False, description='Enable szip support')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+    # Build HDF5 with API compaitibility.
+    variant('api', default='none', description='choose api compatibility', values=('none', 'v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
+
+    conflicts('api=v114', when='@1.6:1.12.99', msg='v114 is not compatible with this release')
+    conflicts('api=v112', when='@1.6:1.10.99', msg='v112 is not compatible with this release')
+    conflicts('api=v110', when='@1.6:1.8.99', msg='v110 is not compatible with this release')
+    conflicts('api=v18', when='@1.6:1.6.99', msg='v18 is not compatible with this release')
 
     depends_on('autoconf', type='build', when='@develop')
     depends_on('automake', type='build', when='@develop')
@@ -64,6 +88,7 @@ class Hdf5(AutotoolsPackage):
     depends_on('m4',       type='build', when='@develop')
 
     depends_on('mpi', when='+mpi')
+    depends_on('java', when='+java')
     # numactl does not currently build on darwin
     if sys.platform != 'darwin':
         depends_on('numactl', when='+mpi+fortran')
@@ -113,14 +138,57 @@ class Hdf5(AutotoolsPackage):
 
     # Disable MPI C++ interface when C++ is disabled, otherwise downstream
     # libraries fail to link; see https://github.com/spack/spack/issues/12586
-    patch('h5public-skip-mpicxx.patch', when='+mpi~cxx',
+    patch('h5public-skip-mpicxx.patch', when='@:1.8.21,1.10.0:1.10.5+mpi~cxx',
           sha256='b61e2f058964ad85be6ee5ecea10080bf79e73f83ff88d1fa4b602d00209da9c')
 
-    filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
+    # Fixes BOZ literal constant error when compiled with GCC 10.
+    # The issue is described here: https://github.com/spack/spack/issues/18625
+    patch('hdf5_1.8_gcc10.patch', when='@:1.8.21',
+          sha256='0e20187cda3980a4fdff410da92358b63de7ebef2df1d7a425371af78e50f666')
+
+    # Libtool fails to recognize NAG compiler behind the MPI wrappers and apply
+    # correct linker flags enabling shared libraries. # We support only versions
+    # based on Libtool 2.4.6.
+    patch('nag.mpi.libtool.patch', when='@1.8.18:%nag+fortran+mpi+shared')
+
+    # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
+    # declared as intent(in) though it is modified by the invocation. As a
+    # result, aggressive compilers such as Fujitsu's may do a wrong
+    # optimization to cause an error.
+    def patch(self):
+        filter_file(
+            'INTEGER(SIZE_T), INTENT(IN) :: buf_size',
+            'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
+            'fortran/src/H5Fff.F90',
+            string=True, ignore_absent=True)
+        filter_file(
+            'INTEGER(SIZE_T), INTENT(IN) :: buf_size',
+            'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
+            'fortran/src/H5Fff_F03.f90',
+            string=True, ignore_absent=True)
+
+    filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc',
+                             'h5pcc', 'h5pfc', relative_root='bin')
 
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         return url.format(version.up_to(2), version)
+
+    def flag_handler(self, name, flags):
+        if '+pic' in self.spec:
+            if name == "cflags":
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == "cxxflags":
+                flags.append(self.compiler.cxx_pic_flag)
+            elif name == "fflags":
+                flags.append(self.compiler.fc_pic_flag)
+
+        # Quiet warnings/errors about implicit declaration of functions in C99
+        if name == "cflags":
+            if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
+                flags.append("-Wno-implicit-function-declaration")
+
+        return (None, None, flags)
 
     @when('@develop')
     def autoreconf(self, spec, prefix):
@@ -196,22 +264,33 @@ class Hdf5(AutotoolsPackage):
             msg = 'cannot build a Fortran variant without a Fortran compiler'
             raise RuntimeError(msg)
 
+    def with_or_without_szip(self, activated):
+        return '--{0}-szlib'.format('with' if activated else 'without')
+
     def configure_args(self):
         # Always enable this option. This does not actually enable any
         # features: it only *allows* the user to specify certain
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
-        extra_args = ['--enable-unsupported']
-        extra_args += ['--enable-symbols=yes']
+        extra_args = ['--enable-unsupported',
+                      '--enable-symbols=yes']
+
+        # Do not specify the prefix of zlib if it is in a system directory
+        # (see https://github.com/spack/spack/pull/21900).
+        zlib_prefix = self.spec['zlib'].prefix
+        extra_args.append('--with-zlib={0}'.format(
+            'yes' if is_system_path(zlib_prefix) else zlib_prefix))
+
         extra_args += self.enable_or_disable('threadsafe')
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')
         extra_args += self.enable_or_disable('fortran')
+        extra_args += self.enable_or_disable('java')
+        extra_args += self.with_or_without('szip')
 
-        if '+szip' in self.spec:
-            extra_args.append('--with-szlib=%s' % self.spec['szip'].prefix)
-        else:
-            extra_args.append('--without-szlib')
+        api = self.spec.variants['api'].value
+        if api != 'none':
+            extra_args.append('--with-default-api-version=' + api)
 
         if self.spec.satisfies('@1.10:'):
             if '+debug' in self.spec:
@@ -236,9 +315,9 @@ class Hdf5(AutotoolsPackage):
             extra_args.append('--disable-shared')
             extra_args.append('--enable-static-exec')
 
-        if '+pic' in self.spec:
-            extra_args += ['%s=%s' % (f, self.compiler.pic_flag)
-                           for f in ['CFLAGS', 'CXXFLAGS', 'FCFLAGS']]
+        # Fujitsu Compiler does not add Fortran runtime in rpath.
+        if '+fortran %fj' in self.spec:
+            extra_args.append('LDFLAGS=-lfj90i -lfj90f -lfjsrcinfo -lelf')
 
         if '+mpi' in self.spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
@@ -255,8 +334,6 @@ class Hdf5(AutotoolsPackage):
             if '+fortran' in self.spec:
                 extra_args.append('FC=%s' % self.spec['mpi'].mpifc)
 
-        extra_args.append('--with-zlib=%s' % self.spec['zlib'].prefix)
-
         return extra_args
 
     @run_after('configure')
@@ -271,9 +348,21 @@ class Hdf5(AutotoolsPackage):
                     arg for arg in m.group(1).split(' ') if arg != '-l'),
                 'libtool')
 
+    @run_after('configure')
+    def patch_libtool(self):
+        """AOCC support for HDF5"""
+        if '%aocc' in self.spec:
+            filter_file(
+                r'\$wl-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
+                'libtool', string=True)
+
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
+        self._check_install()
+
+    def _check_install(self):
         # Build and run a small program to test the installed HDF5 library
         spec = self.spec
         print("Checking HDF5 installation...")
@@ -322,3 +411,54 @@ HDF5 version {version} {version}
                 print('-' * 80)
                 raise RuntimeError("HDF5 install check failed")
         shutil.rmtree(checkdir)
+
+    def _test_check_versions(self):
+        """Perform version checks on selected installed package binaries."""
+        spec_vers_str = 'Version {0}'.format(self.spec.version)
+
+        exes = [
+            'h5copy', 'h5diff', 'h5dump', 'h5format_convert', 'h5ls',
+            'h5mkgrp', 'h5repack', 'h5stat', 'h5unjam',
+        ]
+        use_short_opt = ['h52gif', 'h5repart', 'h5unjam']
+        for exe in exes:
+            reason = 'test: ensuring version of {0} is {1}' \
+                .format(exe, spec_vers_str)
+            option = '-V' if exe in use_short_opt else '--version'
+            self.run_test(exe, option, spec_vers_str, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def _test_example(self):
+        """This test performs copy, dump, and diff on an example hdf5 file."""
+        test_data_dir = self.test_suite.current_test_data_dir
+
+        filename = 'spack.h5'
+        h5_file = test_data_dir.join(filename)
+
+        reason = 'test: ensuring h5dump produces expected output'
+        expected = get_escaped_text_output(test_data_dir.join('dump.out'))
+        self.run_test('h5dump', filename, expected, installed=True,
+                      purpose=reason, skip_missing=True,
+                      work_dir=test_data_dir)
+
+        reason = 'test: ensuring h5copy runs'
+        options = ['-i', h5_file, '-s', 'Spack', '-o', 'test.h5', '-d',
+                   'Spack']
+        self.run_test('h5copy', options, [], installed=True,
+                      purpose=reason, skip_missing=True, work_dir='.')
+
+        reason = ('test: ensuring h5diff shows no differences between orig and'
+                  ' copy')
+        self.run_test('h5diff', [h5_file, 'test.h5'], [], installed=True,
+                      purpose=reason, skip_missing=True, work_dir='.')
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on known binaries
+        self._test_check_versions()
+
+        # Run sequence of commands on an hdf5 file
+        self._test_example()
+
+        # Run existing install check
+        self._check_install()

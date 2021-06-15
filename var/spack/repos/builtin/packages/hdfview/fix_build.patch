@@ -1,0 +1,12 @@
+diff --git a/build.xml b/build_fixed.xml
+index f0f2c3f..c486cbb 100644
+--- a/build.xml
++++ b/build_fixed.xml
+@@ -943,7 +943,6 @@
+             <!-- Generate list of needed Java modules by using `jdeps` on all JAR files in the release directory -->
+             <apply executable="@{java.bindir}/jdeps" output="${build.dir}/jdeps.pre" append="true" >
+                 <arg value="--print-module-deps" />
+-                <arg value="--ignore-missing-deps" />
+                 <fileset dir="${release.dir}/lib" includes="**/*.jar" />
+             </apply>
+

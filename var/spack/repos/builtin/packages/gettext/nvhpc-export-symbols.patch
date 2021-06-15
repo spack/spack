@@ -1,0 +1,31 @@
+--- a/gettext-runtime/intl/Makefile.in	2020-08-21 08:39:59.102729081 -0700
++++ b/gettext-runtime/intl/Makefile.in	2020-08-21 08:40:07.425761760 -0700
+@@ -1471,7 +1471,6 @@
+ OTHER_LDFLAGS = \
+   @LTLIBICONV@ @INTL_MACOSX_LIBS@ $(INTL_WINDOWS_LIBS) @LTLIBTHREAD@ \
+   -no-undefined \
+-  -export-symbols-regex '^([^g]|g[^l]|gl[^w]|glw[^t]|glwt[^h]|glwth[^r]|glwthr[^e]|glwthre[^a]|glwthrea[^d]).*' \
+   -version-info $(LTV_CURRENT):$(LTV_REVISION):$(LTV_AGE) \
+   -rpath $(libdir)
+
+--- a/gettext-tools/intl/Makefile.in	2020-08-21 07:57:18.357721212 -0700
++++ b/gettext-tools/intl/Makefile.in	2020-08-21 07:57:29.051762490 -0700
+@@ -2296,7 +2296,6 @@
+ OTHER_LDFLAGS = \
+   @LTLIBICONV@ @INTL_MACOSX_LIBS@ $(INTL_WINDOWS_LIBS) @LTLIBTHREAD@ \
+   -no-undefined \
+-  -export-symbols-regex '^([^g]|g[^l]|gl[^w]|glw[^t]|glwt[^h]|glwth[^r]|glwthr[^e]|glwthre[^a]|glwthrea[^d]).*' \
+   -version-info $(LTV_CURRENT):$(LTV_REVISION):$(LTV_AGE) \
+   -rpath $(libdir)
+ 
+--- a/libtextstyle/lib/Makefile.in	2020-08-21 08:49:08.277982271 -0700
++++ b/libtextstyle/lib/Makefile.in	2020-08-21 08:49:19.675030561 -0700
+@@ -1917,7 +1917,7 @@
+ libtextstyle_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(FABS_LIBM) \
+ 	$(ISNAND_LIBM) $(ISNANF_LIBM) $(ISNANL_LIBM) $(LOG10_LIBM) \
+ 	$(LTLIBICONV) $(LTLIBINTL) $(POW_LIBM) $(am__append_8) \
+-	-no-undefined -export-symbols libtextstyle.sym -version-info \
++	-no-undefined -version-info \
+ 	$(LTV_CURRENT):$(LTV_REVISION):$(LTV_AGE) -rpath $(libdir)
+ 
+ # Use this preprocessor expression to decide whether #include_next works.

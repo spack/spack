@@ -1,0 +1,113 @@
+From c31e54353cf587c83c823544849226840fdb26da Mon Sep 17 00:00:00 2001
+From: Christoph Junghans <junghans@votca.org>
+Date: Sat, 23 Nov 2019 19:40:58 -0700
+Subject: [PATCH] add initial version of CMake build system
+
+---
+ source/CMakeLists.txt | 94 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 94 insertions(+)
+ create mode 100644 source/CMakeLists.txt
+
+diff --git a/source/CMakeLists.txt b/source/CMakeLists.txt
+new file mode 100644
+index 0000000..c1f9831
+--- /dev/null
++++ b/source/CMakeLists.txt
+@@ -0,0 +1,94 @@
++cmake_minimum_required(VERSION 3.10)
++
++project(tinker VERSION 8.7.1 LANGUAGES Fortran)
++
++include(GNUInstallDirs)
++find_package(PkgConfig REQUIRED)
++pkg_check_modules(FFTW3 REQUIRED IMPORTED_TARGET fftw3)
++
++add_library(tinker 
++            action.f active.f align.f analysis.f analyz.f angang.f angbnd.f
++            angles.f angpot.f angtor.f argue.f ascii.f atmlst.f atomid.f atoms.f
++            attach.f baoab.f basefile.f bath.f beeman.f bicubic.f bitor.f bitors.f
++            bndpot.f bndstr.f bonds.f born.f bound.f bounds.f boxes.f bussi.f
++            calendar.f cell.f center.f charge.f chgpen.f chgpot.f chgtrn.f
++            chkpole.f chkring.f chkxyz.f cholesky.f chrono.f chunks.f clock.f
++            cluster.f column.f command.f connect.f connolly.f control.f couple.f
++            cspline.f ctrpot.f cutoffs.f damping.f deflate.f delete.f deriv.f
++            diagq.f diffeq.f dipole.f disgeo.f disp.f dma.f domega.f dsppot.f
++            eangang.f eangang1.f eangang2.f eangang3.f eangle.f eangle1.f
++            eangle2.f eangle3.f eangtor.f eangtor1.f eangtor2.f eangtor3.f ebond.f
++            ebond1.f ebond2.f ebond3.f ebuck.f ebuck1.f ebuck2.f ebuck3.f
++            echarge.f echarge1.f echarge2.f echarge3.f echgdpl.f echgdpl1.f
++            echgdpl2.f echgdpl3.f echgtrn.f echgtrn1.f echgtrn2.f echgtrn3.f
++            edipole.f edipole1.f edipole2.f edipole3.f edisp.f edisp1.f edisp2.f
++            edisp3.f egauss.f egauss1.f egauss2.f egauss3.f egeom.f egeom1.f
++            egeom2.f egeom3.f ehal.f ehal1.f ehal2.f ehal3.f eimprop.f eimprop1.f
++            eimprop2.f eimprop3.f eimptor.f eimptor1.f eimptor2.f eimptor3.f elj.f
++            elj1.f elj2.f elj3.f embed.f emetal.f emetal1.f emetal2.f emetal3.f
++            emm3hb.f emm3hb1.f emm3hb2.f emm3hb3.f empole.f empole1.f empole2.f
++            empole3.f energi.f energy.f eopbend.f eopbend1.f eopbend2.f eopbend3.f
++            eopdist.f eopdist1.f eopdist2.f eopdist3.f epitors.f epitors1.f
++            epitors2.f epitors3.f epolar.f epolar1.f epolar2.f epolar3.f erepel.f
++            erepel1.f erepel2.f erepel3.f erf.f erxnfld.f erxnfld1.f erxnfld2.f
++            erxnfld3.f esolv.f esolv1.f esolv2.f esolv3.f estrbnd.f estrbnd1.f
++            estrbnd2.f estrbnd3.f estrtor.f estrtor1.f estrtor2.f estrtor3.f
++            etors.f etors1.f etors2.f etors3.f etortor.f etortor1.f etortor2.f
++            etortor3.f eurey.f eurey1.f eurey2.f eurey3.f evcorr.f ewald.f extra.f
++            extra1.f extra2.f extra3.f faces.f fatal.f fft.f fft3d.f fftpack.f
++            field.f fields.f files.f final.f flatten.f fracs.f freeunit.f freeze.f
++            geometry.f getarc.f getint.f getkey.f getmol.f getmol2.f getnumb.f
++            getpdb.f getprm.f getref.f getstring.f gettext.f getword.f getxyz.f
++            ghmcstep.f gkstuf.f gradient.f gradrgd.f gradrot.f group.f groups.f
++            grpline.f gyrate.f hescut.f hessian.f hessn.f hessrgd.f hessrot.f
++            hpmf.f hybrid.f ielscf.f image.f impose.f improp.f imptor.f induce.f
++            inertia.f inform.f initatom.f initial.f initprm.f initres.f initrot.f
++            insert.f inter.f invbeta.f invert.f iounit.f jacobi.f kanang.f
++            kangang.f kangle.f kangs.f kangtor.f kantor.f katom.f katoms.f kbond.f
++            kbonds.f kcharge.f kchgtrn.f kchrge.f kcpen.f kctrn.f kdipol.f
++            kdipole.f kdisp.f kdsp.f kewald.f kextra.f keys.f kgeom.f khbond.f
++            kimprop.f kimptor.f kinetic.f kiprop.f kitors.f kmetal.f kmpole.f
++            kmulti.f kopbend.f kopbnd.f kopdist.f kopdst.f korbit.f korbs.f
++            kpitor.f kpitors.f kpolar.f kpolr.f krepel.f krepl.f ksolv.f kstbnd.f
++            kstrbnd.f kstrtor.f ksttor.f ktors.f ktorsn.f ktortor.f ktrtor.f
++            kurey.f kurybr.f kvdw.f kvdwpr.f kvdws.f lattice.f lbfgs.f light.f
++            lights.f limits.f linmin.f makeint.f makeref.f makexyz.f math.f
++            maxwell.f mdinit.f mdrest.f mdsave.f mdstat.f mdstuf.f mechanic.f
++            merck.f merge.f minima.f molcul.f moldyn.f molecule.f moment.f
++            moments.f mplpot.f mpole.f mrecip.f mutant.f mutate.f nblist.f neigh.f
++            nextarg.f nexttext.f nonpol.f nose.f nspline.f nucleo.f number.f
++            numeral.f numgrad.f ocvm.f omega.f opbend.f opdist.f openend.f
++            openmp.f optinit.f optsave.f orbital.f orbits.f orient.f orthog.f
++            output.f overlap.f params.f paths.f pbstuf.f pdb.f phipsi.f picalc.f
++            piorbs.f pistuf.f pitors.f pme.f pmestuf.f pmpb.f polar.f polgrp.f
++            polopt.f polpcg.f polpot.f poltcg.f polymer.f potent.f potfit.f
++            pressure.f prmkey.f promo.f prtdyn.f prterr.f prtint.f prtmol2.f
++            prtpdb.f prtprm.f prtseq.f prtxyz.f ptable.f qmstuf.f qrfact.f
++            quatfit.f random.f rattle.f readdyn.f readgau.f readgdma.f readint.f
++            readmol.f readmol2.f readpdb.f readprm.f readseq.f readxyz.f refer.f
++            repel.f replica.f reppot.f resdue.f respa.f restrn.f rgddyn.f
++            rgdstep.f rigid.f ring.f rings.f rmsfit.f rotbnd.f rotlist.f rotpole.f
++            rxnfld.f rxnpot.f scales.f sdstep.f search.f sequen.f server.f
++            shakeup.f shunt.f sigmoid.f simplex.f sizes.f sktstuf.f socket.f
++            solute.f sort.f square.f stodyn.f strbnd.f strtor.f suffix.f surface.f
++            surfatom.f switch.f syntrn.f tarray.f tcgstuf.f temper.f titles.f
++            tncg.f torphase.f torpot.f torque.f tors.f torsions.f tortor.f tree.f
++            trimtext.f unitcell.f units.f uprior.f urey.f urypot.f usage.f
++            valfit.f vdw.f vdwpot.f verlet.f version.f vibs.f virial.f volume.f
++            warp.f xtals.f xyzatm.f zatom.f zclose.f zcoord.f)
++install(TARGETS tinker LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE
++        DESTINATION ${CMAKE_INSTALL_LIBDIR})
++
++foreach(_BIN
++        alchemy analyze anneal archive bar correlate crystal diffuse
++        distgeom document dynamic gda intedit intxyz minimize minirot
++        minrigid mol2xyz molxyz monte newton newtrot nucleic optimize
++        optirot optrigid path pdbxyz polarize poledit potential
++        prmedit protein pss pssrigid pssrot radial saddle scan sniffer
++        spacefill spectrum superpose testgrad testhess testpair
++        testpol testrot testvir timer timerot torsfit valence vibbig
++        vibrate vibrot xtalfit xtalmin xyzedit xyzint xyzmol2 xyzpdb)
++        add_executable(${_BIN}.x ${_BIN}.f)
++        target_link_libraries(${_BIN}.x tinker PkgConfig::FFTW3)
++        install(TARGETS ${_BIN}.x DESTINATION ${CMAKE_INSTALL_BINDIR})
++endforeach()
+-- 
+2.23.0
+

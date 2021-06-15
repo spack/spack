@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,13 +21,13 @@ class Wordnet(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        args.append('--with-tk=%s' % self.spec['tk'].prefix.lib)
-        args.append('--with-tcl=%s' % self.spec['tcl'].prefix.lib)
+        args.append('--with-tk=%s' % self.spec['tk'].libs.directories[0])
+        args.append('--with-tcl=%s' % self.spec['tcl'].libs.directories[0])
         if self.spec.satisfies('^tcl@8.6:'):
             args.append('CPPFLAGS=-DUSE_INTERP_RESULT')
 
         return args
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('WNHOME', self.prefix)
-        run_env.set('WNSEARCHDIR', self.prefix.dict)
+    def setup_run_environment(self, env):
+        env.set('WNHOME', self.prefix)
+        env.set('WNSEARCHDIR', self.prefix.dict)

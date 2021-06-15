@@ -1,19 +1,22 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
 
+import errno
+import getpass
+import glob
+import hashlib
 import os
+import shutil
 import stat
 import sys
-import errno
-import hashlib
 import tempfile
-import getpass
 from six import string_types
 from six import iteritems
+from typing import Dict  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
@@ -41,7 +44,8 @@ _source_path_subdir = 'spack-src'
 stage_prefix = 'spack-stage-'
 
 
-def _create_stage_root(path):
+def create_stage_root(path):
+    # type: (str) -> None
     """Create the stage root directory and ensure appropriate access perms."""
     assert path.startswith(os.path.sep) and len(path.strip()) > 1
 
@@ -96,6 +100,15 @@ def _create_stage_root(path):
             tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
                      .format(user_uid, p, p_stat.st_uid))
 
+    spack_src_subdir = os.path.join(path, _source_path_subdir)
+    # When staging into a user-specified directory with `spack stage -p <PATH>`, we need
+    # to ensure the `spack-src` subdirectory exists, as we can't rely on it being
+    # created automatically by spack. It's not clear why this is the case for `spack
+    # stage -p`, but since `mkdirp()` is idempotent, this should not change the behavior
+    # for any other code paths.
+    if not os.path.isdir(spack_src_subdir):
+        mkdirp(spack_src_subdir, mode=stat.S_IRWXU)
+
 
 def _first_accessible_path(paths):
     """Find the first path that is accessible, creating it if necessary."""
@@ -107,7 +120,7 @@ def _first_accessible_path(paths):
                     return path
             else:
                 # Now create the stage root with the proper group/perms.
-                _create_stage_root(path)
+                create_stage_root(path)
                 return path
 
         except OSError as e:
@@ -219,7 +232,7 @@ class Stage(object):
     """
 
     """Shared dict of all stage locks."""
-    stage_locks = {}
+    stage_locks = {}  # type: Dict[str, spack.util.lock.Lock]
 
     """Most staging is managed by Spack.  DIYStage is one exception."""
     managed_by_spack = True
@@ -271,7 +284,7 @@ class Stage(object):
         else:
             raise ValueError(
                 "Can't construct Stage without url or fetch strategy")
-        self.fetcher.set_stage(self)
+        self.fetcher.stage = self
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
         self.search_fn = search_fn
@@ -307,8 +320,9 @@ class Stage(object):
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
                 stage_lock_path = os.path.join(get_stage_root(), '.lock')
 
+                tty.debug("Creating stage lock {0}".format(self.name))
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, lock_id, 1)
+                    stage_lock_path, lock_id, 1, desc=self.name)
 
             self._lock = Stage.stage_locks[self.name]
 
@@ -399,8 +413,14 @@ class Stage(object):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
-    def fetch(self, mirror_only=False):
-        """Downloads an archive or checks out code from a repository."""
+    def fetch(self, mirror_only=False, err_msg=None):
+        """Retrieves the code or archive
+
+        Args:
+            mirror_only (bool): only fetch from a mirror
+            err_msg (str or None): the error message to display if all fetchers
+                fail or ``None`` for the default fetch failure message
+        """
         fetchers = []
         if not mirror_only:
             fetchers.append(self.default_fetcher)
@@ -413,10 +433,11 @@ class Stage(object):
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            urls = []
+            mirror_urls = []
             for mirror in spack.mirror.MirrorCollection().values():
                 for rel_path in self.mirror_paths:
-                    urls.append(url_util.join(mirror.fetch_url, rel_path))
+                    mirror_urls.append(
+                        url_util.join(mirror.fetch_url, rel_path))
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -434,7 +455,8 @@ class Stage(object):
             self.skip_checksum_for_mirror = not bool(digest)
 
             # Add URL strategies for all the mirrors with the digest
-            for url in urls:
+            # Insert fetchers in the order that the URLs are provided.
+            for url in reversed(mirror_urls):
                 fetchers.insert(
                     0, fs.from_url_scheme(
                         url, digest, expand=expand, extension=extension))
@@ -456,9 +478,14 @@ class Stage(object):
                 for fetcher in dynamic_fetchers:
                     yield fetcher
 
+        def print_errors(errors):
+            for msg in errors:
+                tty.debug(msg)
+
+        errors = []
         for fetcher in generate_fetchers():
             try:
-                fetcher.set_stage(self)
+                fetcher.stage = self
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
@@ -466,13 +493,51 @@ class Stage(object):
                 # Don't bother reporting when something is not cached.
                 continue
             except spack.error.SpackError as e:
-                tty.msg("Fetching from %s failed." % fetcher)
+                errors.append('Fetching from {0} failed.'.format(fetcher))
                 tty.debug(e)
                 continue
         else:
-            err_msg = "All fetchers failed for %s" % self.name
+            print_errors(errors)
+
             self.fetcher = self.default_fetcher
-            raise fs.FetchError(err_msg, None)
+            raise fs.FetchError(err_msg or 'All fetchers failed', None)
+
+        print_errors(errors)
+
+    def steal_source(self, dest):
+        """Copy the source_path directory in its entirety to directory dest
+
+        This operation creates/fetches/expands the stage if it is not already,
+        and destroys the stage when it is done."""
+        if not self.created:
+            self.create()
+        if not self.expanded and not self.archive_file:
+            self.fetch()
+        if not self.expanded:
+            self.expand_archive()
+
+        if not os.path.isdir(dest):
+            mkdirp(dest)
+
+        # glob all files and directories in the source path
+        hidden_entries = glob.glob(os.path.join(self.source_path, '.*'))
+        entries = glob.glob(os.path.join(self.source_path, '*'))
+
+        # Move all files from stage to destination directory
+        # Include hidden files for VCS repo history
+        for entry in hidden_entries + entries:
+            if os.path.isdir(entry):
+                d = os.path.join(dest, os.path.basename(entry))
+                shutil.copytree(entry, d)
+            else:
+                shutil.copy2(entry, dest)
+
+        # copy archive file if we downloaded from url -- replaces for vcs
+        if self.archive_file and os.path.exists(self.archive_file):
+            shutil.copy2(self.archive_file, dest)
+
+        # remove leftover stage
+        self.destroy()
 
     def check(self):
         """Check the downloaded archive against a checksum digest.
@@ -492,22 +557,42 @@ class Stage(object):
         spack.caches.fetch_cache.store(
             self.fetcher, self.mirror_paths.storage_path)
 
-    def cache_mirror(self, stats):
-        """Perform a fetch if the resource is not already cached"""
-        dst_root = spack.caches.mirror_cache.root
+    def cache_mirror(self, mirror, stats):
+        """Perform a fetch if the resource is not already cached
+
+        Arguments:
+            mirror (MirrorCache): the mirror to cache this Stage's resource in
+            stats (MirrorStats): this is updated depending on whether the
+                caching operation succeeded or failed
+        """
+        if isinstance(self.default_fetcher, fs.BundleFetchStrategy):
+            # BundleFetchStrategy has no source to fetch. The associated
+            # fetcher does nothing but the associated stage may still exist.
+            # There is currently no method available on the fetcher to
+            # distinguish this ('cachable' refers to whether the fetcher
+            # refers to a resource with a fixed ID, which is not the same
+            # concept as whether there is anything to fetch at all) so we
+            # must examine the type of the fetcher.
+            return
+
+        if (mirror.skip_unstable_versions and
+            not fs.stable_target(self.default_fetcher)):
+            return
+
         absolute_storage_path = os.path.join(
-            dst_root, self.mirror_paths.storage_path)
+            mirror.root, self.mirror_paths.storage_path)
 
         if (os.path.exists(absolute_storage_path) and
                 os.path.exists(self.mirror_paths.cosmetic_path)):
             stats.already_existed(absolute_storage_path)
-            return
+        else:
+            self.fetch()
+            self.check()
+            mirror.store(
+                self.fetcher, self.mirror_paths.storage_path)
+            stats.added(absolute_storage_path)
 
-        self.fetch()
-        spack.caches.mirror_cache.store(
-            self.fetcher, self.mirror_paths.storage_path,
-            self.mirror_paths.cosmetic_path)
-        stats.added(absolute_storage_path)
+        mirror.symlink(self.mirror_paths)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -515,9 +600,9 @@ class Stage(object):
         downloaded."""
         if not self.expanded:
             self.fetcher.expand()
-            tty.msg("Created stage in %s" % self.path)
+            tty.debug('Created stage in {0}'.format(self.path))
         else:
-            tty.msg("Already staged %s in %s" % (self.name, self.path))
+            tty.debug('Already staged {0} in {1}'.format(self.name, self.path))
 
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
@@ -529,12 +614,12 @@ class Stage(object):
         """
         Ensures the top-level (config:build_stage) directory exists.
         """
-        # Emulate file permissions for tempfile.mkdtemp.
+        # User has full permissions and group has only read permissions
         if not os.path.exists(self.path):
-            mkdirp(self.path, mode=stat.S_IRWXU)
+            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
         elif not os.path.isdir(self.path):
             os.remove(self.path)
-            mkdirp(self.path, mode=stat.S_IRWXU)
+            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
 
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
@@ -617,16 +702,19 @@ class ResourceStage(Stage):
                     install(src, destination_path)
 
 
-@pattern.composite(method_list=[
-    'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
-    'destroy', 'cache_local', 'cache_mirror', 'managed_by_spack'])
-class StageComposite:
+class StageComposite(pattern.Composite):
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
     forwarded to it."""
     #
     # __enter__ and __exit__ delegate to all stages in the composite.
     #
+
+    def __init__(self):
+        super(StageComposite, self).__init__([
+            'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
+            'destroy', 'cache_local', 'cache_mirror', 'steal_source',
+            'managed_by_spack'])
 
     def __enter__(self):
         for item in self:
@@ -688,13 +776,13 @@ class DIYStage(object):
         pass
 
     def fetch(self, *args, **kwargs):
-        tty.msg("No need to fetch for DIY.")
+        tty.debug('No need to fetch for DIY.')
 
     def check(self):
-        tty.msg("No checksum needed for DIY.")
+        tty.debug('No checksum needed for DIY.')
 
     def expand_archive(self):
-        tty.msg("Using source directory: %s" % self.source_path)
+        tty.debug('Using source directory: {0}'.format(self.source_path))
 
     @property
     def expanded(self):
@@ -712,7 +800,7 @@ class DIYStage(object):
         pass
 
     def cache_local(self):
-        tty.msg("Sources for DIY stages are not cached")
+        tty.debug('Sources for DIY stages are not cached')
 
 
 def ensure_access(file):
@@ -732,7 +820,8 @@ def purge():
 
 
 def get_checksums_for_versions(
-        url_dict, name, first_stage_function=None, keep_stage=False):
+        url_dict, name, first_stage_function=None, keep_stage=False,
+        fetch_options=None, batch=False):
     """Fetches and checksums archives from URLs.
 
     This function is called by both ``spack checksum`` and ``spack
@@ -746,6 +835,10 @@ def get_checksums_for_versions(
         first_stage_function (callable): function that takes a Stage and a URL;
             this is run on the stage of the first URL downloaded
         keep_stage (bool): whether to keep staging area when command completes
+        batch (bool): whether to ask user how many versions to fetch (false)
+            or fetch all versions (true)
+        fetch_options (dict): Options used for the fetcher (such as timeout
+            or cookies)
 
     Returns:
         (str): A multi-line string containing versions and corresponding hashes
@@ -757,16 +850,19 @@ def get_checksums_for_versions(
     max_len = max(len(str(v)) for v in sorted_versions)
     num_ver = len(sorted_versions)
 
-    tty.msg("Found {0} version{1} of {2}:".format(
+    tty.msg('Found {0} version{1} of {2}:'.format(
             num_ver, '' if num_ver == 1 else 's', name),
-            "",
+            '',
             *spack.cmd.elide_list(
-                ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v])
+                ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
                  for v in sorted_versions]))
     print()
 
-    archives_to_fetch = tty.get_number(
-        "How many would you like to checksum?", default=1, abort='q')
+    if batch:
+        archives_to_fetch = len(sorted_versions)
+    else:
+        archives_to_fetch = tty.get_number(
+            "How many would you like to checksum?", default=1, abort='q')
 
     if not archives_to_fetch:
         tty.die("Aborted.")
@@ -774,12 +870,18 @@ def get_checksums_for_versions(
     versions = sorted_versions[:archives_to_fetch]
     urls = [url_dict[v] for v in versions]
 
-    tty.msg("Downloading...")
+    tty.debug('Downloading...')
     version_hashes = []
     i = 0
+    errors = []
     for url, version in zip(urls, versions):
         try:
-            with Stage(url, keep=keep_stage) as stage:
+            if fetch_options:
+                url_or_fs = fs.URLFetchStrategy(
+                    url, fetch_options=fetch_options)
+            else:
+                url_or_fs = url
+            with Stage(url_or_fs, keep=keep_stage) as stage:
                 # Fetch the archive
                 stage.fetch()
                 if i == 0 and first_stage_function:
@@ -792,10 +894,12 @@ def get_checksums_for_versions(
                     hashlib.sha256, stage.archive_file)))
                 i += 1
         except FailedDownloadError:
-            tty.msg("Failed to fetch {0}".format(url))
+            errors.append('Failed to fetch {0}'.format(url))
         except Exception as e:
-            tty.msg("Something failed on {0}, skipping.".format(url),
-                    "  ({0})".format(e))
+            tty.msg('Something failed on {0}, skipping.  ({1})'.format(url, e))
+
+    for msg in errors:
+        tty.debug(msg)
 
     if not version_hashes:
         tty.die("Could not fetch any versions for {0}".format(name))
@@ -810,8 +914,8 @@ def get_checksums_for_versions(
     ])
 
     num_hash = len(version_hashes)
-    tty.msg("Checksummed {0} version{1} of {2}:".format(
-        num_hash, '' if num_hash == 1 else 's', name))
+    tty.debug('Checksummed {0} version{1} of {2}:'.format(
+              num_hash, '' if num_hash == 1 else 's', name))
 
     return version_lines
 

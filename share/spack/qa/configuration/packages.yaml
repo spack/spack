@@ -1,13 +1,36 @@
 packages:
   cmake:
     buildable: False
-    paths:
-      cmake@2.8.12.2: /usr
+    externals:
+    - spec: cmake@3.12.4
+      prefix: /usr
   r:
     buildable: False
-    paths:
-      r@3.0.2: /usr
+    externals:
+    - spec: r@3.4.4
+      prefix: /usr
   perl:
     buildable: False
-    paths:
-      perl@5.18.2: /usr
+    externals:
+    - spec: perl@5.26.1
+      prefix: /usr
+  findutils:
+    buildable: False
+    externals:
+    - spec: findutils@4.6.0
+      prefix: /usr
+  openssl:
+    buildable: False
+    externals:
+    - spec: openssl@1.1.1
+      prefix: /usr
+  libpciaccess:
+    buildable: False
+    externals:
+    - spec: libpciaccess@0.13.5
+      prefix: /usr
+  ruby:
+    buildable: False
+    externals:
+    - spec: ruby@2.5.1
+      prefix: /usr

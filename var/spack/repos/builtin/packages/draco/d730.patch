@@ -1,0 +1,34 @@
+diff --git a/config/platform_checks.cmake b/config/platform_checks.cmake
+index c9841b0d..84bf07f5 100644
+--- a/config/platform_checks.cmake
++++ b/config/platform_checks.cmake
+@@ -85,6 +85,7 @@ macro( query_craype )
+       set( CRAY_PE ON CACHE BOOL
+         "Are we building in a Cray Programming Environment?")
+
++      if (FALSE)
+       # We expect developers to use the Cray compiler wrappers (especially in
+       # setupMPI.cmake). See also
+       # https://cmake.org/cmake/help/latest/module/FindMPI.html
+@@ -111,6 +112,7 @@ macro( query_craype )
+ "Otherwise please email this error message and other related information to"
+ " draco@lanl.gov.\n" )
+       endif()
++      endif()
+       message( STATUS
+         "Looking to see if we are building in a Cray Environment..."
+         "found version $ENV{CRAYPE_VERSION}.")
+
+diff --git a/config/setupMPI.cmake b/config/setupMPI.cmake
+index da522499..5b5e27c5 100644
+--- a/config/setupMPI.cmake
++++ b/config/setupMPI.cmake
+@@ -51,7 +51,7 @@ function( setMPIflavorVer )
+     if( DEFINED ENV{CRAY_MPICH2_VER} )
+       set( MPI_VERSION $ENV{CRAY_MPICH2_VER} )
+     endif()
+-  elseif( ${MPI_FLAVOR} STREQUAL "spectrum" )
++  elseif( "${MPI_FLAVOR}" STREQUAL "spectrum" )
+     if( DEFINED ENV{LMOD_MPI_VERSION} )
+       set( LMOD_MPI_VERSION $ENV{LMOD_MPI_VERSION} )
+     endif()

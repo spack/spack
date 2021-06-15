@@ -1,0 +1,26 @@
+From f0267fc728d0f49ad396b83e8e62fba54027f31f Mon Sep 17 00:00:00 2001
+From: Craig Ulmer <craig@craigulmer.com>
+Date: Fri, 29 May 2020 23:08:29 -0700
+Subject: [PATCH] FIX: Removes variable from lambda capture that conflicted
+ with args
+
+---
+ src/kelpie/pools/DHTPool/DHTPool.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/kelpie/pools/DHTPool/DHTPool.cpp b/src/kelpie/pools/DHTPool/DHTPool.cpp
+index df9c1d3..d24aa89 100644
+--- a/src/kelpie/pools/DHTPool/DHTPool.cpp
++++ b/src/kelpie/pools/DHTPool/DHTPool.cpp
+@@ -229,7 +229,7 @@ rc_t DHTPool::Need(const Key &key, size_t expected_ldo_user_bytes, lunasa::DataO
+   bool is_found=false;
+ 
+   rc_t rc = Want(key, expected_ldo_user_bytes,
+-                 [&key, &returned_ldo, &cv, &is_found] (bool success, Key key, lunasa::DataObject result_ldo,
++                 [&returned_ldo, &cv, &is_found] (bool success, Key key, lunasa::DataObject result_ldo,
+                                                         const kv_row_info_t &ri, const kv_col_info_t &c) {
+       if(success) {
+         *returned_ldo = result_ldo;
+-- 
+2.24.2 (Apple Git-127)
+

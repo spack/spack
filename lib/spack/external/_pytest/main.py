@@ -10,9 +10,12 @@ from _pytest import nodes
 import _pytest._code
 import py
 try:
-    from collections import MutableMapping as MappingMixin
+    from collections.abc import MutableMapping as MappingMixin
 except ImportError:
-    from UserDict import DictMixin as MappingMixin
+    try:
+        from collections import MutableMapping as MappingMixin
+    except ImportError:
+        from UserDict import DictMixin as MappingMixin
 
 from _pytest.config import directory_arg, UsageError, hookimpl
 from _pytest.outcomes import exit

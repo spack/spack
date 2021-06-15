@@ -1,0 +1,14 @@
+--- a/configure	2019-05-13 21:57:59.000000000 -0500
++++ b/configure	2021-03-04 10:09:56.612397173 -0600
+@@ -98,6 +98,11 @@
+       ARCH=CRAYXMT
+       PLATFORM=crayxmt
+       echo "Looks like a Cray XMT machine..."
++    elif [ -r /opt/cray ]
++    then
++      ARCH=CRAY
++      PLATFORM=x86_64
++      echo "Looks like a Cray machine..."
+     else
+       ARCH=X86_64
+       PLATFORM=x86_64

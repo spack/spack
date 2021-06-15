@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,14 @@ class Vtk(CMakePackage):
     processing and visualization. """
 
     homepage = "http://www.vtk.org"
-    url      = "http://www.vtk.org/files/release/8.0/VTK-8.0.1.tar.gz"
+    url      = "https://www.vtk.org/files/release/9.0/VTK-9.0.0.tar.gz"
     list_url = "http://www.vtk.org/download/"
 
     maintainers = ['chuckatkins', 'danlipsa']
 
+    version('9.0.1', sha256='1b39a5e191c282861e7af4101eaa8585969a2de05f5646c9199a161213a622c7')
+    version('9.0.0', sha256='15def4e6f84d72f82386617fe595ec124dda3cbd13ea19a0dcd91583197d8715')
+    version('8.2.0', sha256='34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb')
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
     version('8.1.0', sha256='6e269f07b64fb13774f5925161fb4e1f379f4e6a0131c8408c555f6b58ef3cb7')
@@ -43,16 +46,26 @@ class Vtk(CMakePackage):
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
-    conflicts('^python@3:', when='@:8.0')
 
     extends('python', when='+python')
 
-    depends_on('python@2.7:', when='+python', type=('build', 'run'))
+    # Acceptable python versions depend on vtk version
+    # We need vtk at least 8.0.1 for python@3,
+    # and at least 9.0 for python@3.8
+    depends_on('python@2.7:2.9', when='@:8.0 +python', type=('build', 'run'))
+    depends_on('python@2.7:3.7.99', when='@8.0.1:8.9 +python',
+               type=('build', 'run'))
+    depends_on('python@2.7:', when='@9.0: +python', type=('build', 'run'))
+
+    # We need mpi4py if buidling python wrappers and using MPI
     depends_on('py-mpi4py', when='+python+mpi', type='run')
 
     # python3.7 compatibility patch backported from upstream
     # https://gitlab.kitware.com/vtk/vtk/commit/706f1b397df09a27ab8981ab9464547028d0c322
     patch('python3.7-const-char.patch', when='@7.0.0:8.1.1 ^python@3.7:')
+
+    # Broken downstream FindMPI
+    patch('vtkm-findmpi-downstream.patch', when='@9.0.0')
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
@@ -65,7 +78,7 @@ class Vtk(CMakePackage):
 
     # Note: it is recommended to use mesa+llvm, if possible.
     # mesa default is software rendering, llvm makes it faster
-    depends_on('mesa+osmesa', when='+osmesa')
+    depends_on('osmesa', when='+osmesa')
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
@@ -90,6 +103,12 @@ class Vtk(CMakePackage):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('zlib')
+    depends_on('eigen', when='@8.2.0:')
+    depends_on('double-conversion', when='@8.2.0:')
+    depends_on('sqlite', when='@8.2.0:')
+
+    # For finding Fujitsu-MPI wrapper commands
+    patch('find_fujitsu_mpi.patch', when='@:8.2.0%fj')
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
@@ -116,8 +135,6 @@ class Vtk(CMakePackage):
             # However, in a few cases we can't do without them yet
             '-DVTK_USE_SYSTEM_GL2PS:BOOL=OFF',
             '-DVTK_USE_SYSTEM_LIBHARU=OFF',
-            '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
-            '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
 
             '-DNETCDF_DIR={0}'.format(spec['netcdf-c'].prefix),
             '-DNETCDF_C_ROOT={0}'.format(spec['netcdf-c'].prefix),
@@ -131,11 +148,30 @@ class Vtk(CMakePackage):
             '-DVTK_WRAP_TCL=OFF',
         ]
 
-        if '+mpi' in spec:
+        # Some variable names have changed
+        if spec.satisfies('@8.2.0:'):
             cmake_args.extend([
-                '-DVTK_Group_MPI:BOOL=ON',
-                '-DVTK_USE_SYSTEM_DIY2:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_OGG:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_THEORA:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_LIBPROJ:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_PUGIXML:BOOL=OFF',
             ])
+        else:
+            cmake_args.extend([
+                '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
+            ])
+
+        if '+mpi' in spec:
+            if spec.satisfies('@:8.2.0'):
+                cmake_args.extend([
+                    '-DVTK_Group_MPI:BOOL=ON',
+                    '-DVTK_USE_SYSTEM_DIY2:BOOL=OFF'
+                ])
+            else:
+                cmake_args.extend([
+                    '-DVTK_USE_MPI=ON'
+                ])
 
         if '+ffmpeg' in spec:
             cmake_args.extend(['-DModule_vtkIOFFMPEG:BOOL=ON'])
@@ -148,6 +184,8 @@ class Vtk(CMakePackage):
             ])
             if '+mpi' in spec:
                 cmake_args.append('-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON')
+            if spec.satisfies('@9.0.0: ^python@3:'):
+                cmake_args.append('-DVTK_PYTHON_VERSION=3')
         else:
             cmake_args.append('-DVTK_WRAP_PYTHON=OFF')
 
@@ -231,11 +269,10 @@ class Vtk(CMakePackage):
                     '-DVTK_USE_X:BOOL=ON',
                     '-DVTK_USE_COCOA:BOOL=OFF'])
 
+        compile_flags = []
+
         if spec.satisfies('@:6.1.0'):
-            cmake_args.extend([
-                '-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY',
-                '-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY'
-            ])
+            compile_flags.append('-DGLX_GLXEXT_LEGACY')
 
             # VTK 6.1.0 (and possibly earlier) does not use
             # NETCDF_CXX_ROOT to detect NetCDF C++ bindings, so
@@ -256,14 +293,24 @@ class Vtk(CMakePackage):
             # string. This fix was recommended on the VTK mailing list
             # in March 2014 (see
             # https://public.kitware.com/pipermail/vtkusers/2014-March/083368.html)
-            if (self.spec.satisfies('%clang') and
-                self.compiler.is_apple and
-                self.compiler.version >= Version('5.1.0')):
+            if self.spec.satisfies('%apple-clang@5.1.0:'):
                 cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS='])
 
             # A bug in tao pegtl causes build failures with intel compilers
             if '%intel' in spec and spec.version >= Version('8.2'):
                 cmake_args.append(
                     '-DVTK_MODULE_ENABLE_VTK_IOMotionFX:BOOL=OFF')
+
+        # -no-ipo prevents an internal compiler error from multi-file
+        # optimization (https://github.com/spack/spack/issues/20471)
+        if '%intel' in spec:
+            compile_flags.append('-no-ipo')
+
+        if compile_flags:
+            compile_flags = ' '.join(compile_flags)
+            cmake_args.extend([
+                '-DCMAKE_C_FLAGS={0}'.format(compile_flags),
+                '-DCMAKE_CXX_FLAGS={0}'.format(compile_flags)
+            ])
 
         return cmake_args

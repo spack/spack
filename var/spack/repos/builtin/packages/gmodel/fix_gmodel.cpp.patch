@@ -1,0 +1,54 @@
+--- spack-src/gmodel.cpp.org	2019-12-13 10:43:51.578849661 +0900
++++ spack-src/gmodel.cpp	2019-12-13 10:54:55.467737618 +0900
+@@ -30,9 +30,9 @@
+     /* PLANE   = */ "Physical Surface",
+     /* RULED   = */ "Physical Surface",
+     /* VOLUME  = */ "Physical Volume",
+-    /* LOOP    = */ 0,
+-    /* SHELL   = */ 0,
+-    /* GROUP   = */ 0};
++    /* LOOP    = */ nullptr,
++    /* SHELL   = */ nullptr,
++    /* GROUP   = */ nullptr};
+ 
+ int const type_dims[NTYPES] = {
+     /* POINT   = */ 0,
+@@ -63,11 +63,6 @@
+   return v.at(std::size_t(i));
+ }
+ 
+-template <typename T>
+-static int size(std::vector<T> const& v) {
+-  return int(v.size());
+-}
+-
+ int is_entity(int t) { return t <= VOLUME; }
+ 
+ int is_face(int t) { return t == PLANE || t == RULED; }
+@@ -452,7 +447,7 @@
+   auto loop = new_loop();
+   add_use(loop, FORWARD, start);
+   add_use(loop, FORWARD, right.middle);
+-  ObjPtr end = 0;
++  ObjPtr end = nullptr;
+   switch (start->type) {
+     case LINE: {
+       end = new_line2(std::dynamic_pointer_cast<Point>(left.end),
+@@ -492,7 +487,7 @@
+       break;
+     }
+     default:
+-      end = 0;
++      end = nullptr;
+       break;
+   }
+   add_use(loop, REVERSE, end);
+@@ -508,7 +503,7 @@
+       middle = new_ruled2(loop);
+       break;
+     default:
+-      middle = 0;
++      middle = nullptr;
+       break;
+   }
+   return Extruded{middle, end};

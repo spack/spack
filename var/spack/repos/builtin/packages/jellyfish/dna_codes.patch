@@ -1,0 +1,22 @@
+--- spack-src/jellyfish/dna_codes.hpp.bak	2013-05-30 04:45:57.000000000 +0900
++++ spack-src/jellyfish/dna_codes.hpp	2020-09-28 10:37:14.580832234 +0900
+@@ -14,7 +14,7 @@
+ static const uint_t CODE_IGNORE  = (uint_t)-2;
+ static const uint_t CODE_COMMENT = (uint_t)-3;
+ static const uint_t CODE_NOT_DNA = ((uint_t)1) << (bsizeof(uint_t) - 1);
+-extern const char   dna_codes[256];
++extern const signed char   dna_codes[256];
+ };
+ 
+ #endif /* __DNA_CODE_HPP__ */
+--- spack-src/jellyfish/dna_codes.cc.bak	2013-05-30 04:45:57.000000000 +0900
++++ spack-src/jellyfish/dna_codes.cc	2020-09-28 10:29:08.810848835 +0900
+@@ -7,7 +7,7 @@
+ #define C 1
+ #define G 2
+ #define T 3
+-const char jellyfish::dna_codes[256] = {
++const signed char jellyfish::dna_codes[256] = {
+   O, O, O, O, O, O, O, O, O, O, I, O, O, O, O, O, 
+   O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, 
+   O, O, O, O, O, O, O, O, O, O, O, O, O, R, O, O, 
