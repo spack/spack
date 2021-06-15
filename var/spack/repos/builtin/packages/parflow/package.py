@@ -6,18 +6,20 @@
 from spack import *
 import os
 
+
 class Parflow(CMakePackage):
     """ParFlow is an open-source parallel watershed model."""
 
     homepage = "https://www.parflow.org/"
-    url      = "https://github.com/parflow/parflow/archive/v3.8.0.tar.gz"
+    url      = "https://github.com/parflow/parflow/archive/v3.9.0.tar.gz"
     git      = "https://github.com/parflow/parflow.git"
 
     maintainers = ['smithsg84']
 
     version('develop', branch='master')
+    version('3.9.0', sha256='0ac610208baf973ac07ca93187ec289ba3f6e904d3f01d721ee96a2ace0f5e48')
     version('3.8.0', sha256='5ad01457bb03265d1e221090450e3bac5a680d6290db7e3872c295ce6d6aaa08')
-    
+
     variant('mpi', default=True, description='Enable MPI support')
 
     # Using explicit versions to keep builds consistent
@@ -39,8 +41,9 @@ class Parflow(CMakePackage):
             '-DPARFLOW_AMPS_LAYER=mpi1',
             '-DPARFLOW_HAVE_CLM=TRUE',
             '-DTCL_TCLSH={0}'.format(spec['tcl'].prefix.bin.tclsh),
-            '-DTCL_LIBRARY={0}'.format(                                                                                                      
-                    LibraryList(find_libraries('libtcl*', self.spec['tcl'].prefix, shared=True, recursive=True))),
+            '-DTCL_LIBRARY={0}'.format(LibraryList(find_libraries('libtcl*',
+                                       self.spec['tcl'].prefix,
+                                       shared=True, recursive=True))),
             '-DHDF5_ROOT={0}'.format(spec['hdf5'].prefix),
             '-DSILO_ROOT={0}'.format(spec['silo'].prefix),
             '-DHYPRE_ROOT={0}'.format(spec['hypre'].prefix),
@@ -59,10 +62,12 @@ class Parflow(CMakePackage):
 
     def test(self):
         """Perform smoke test on installed ParFlow package."""
-        # Run the single phase flow test 
+        # Run the single phase flow test
         run_path = join_path(self.spec.prefix, self.examples_dir)
-        if os.path.isdir(run_path): 
+        if os.path.isdir(run_path):
             with working_dir(run_path):
-                self.run_test('{0}/tclsh'.format(self.spec['tcl'].prefix.bin), ['default_single.tcl', '1', '1' '1'])
+                self.run_test(
+                    '{0}/tclsh'.format(self.spec['tcl'].prefix.bin),
+                    ['default_single.tcl', '1', '1' '1'])
         else:
-             print('Skipping: older versions of ParFlow do not support smoke test')    
+            print('Skipping: older versions of ParFlow do not support smoke test')
