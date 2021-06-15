@@ -15,6 +15,7 @@ class PyTorchvision(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('0.10.0', sha256='82bb2c2b03d8a65f4ea74bb0ee5566b0876a1992aceefb1e11475c7b5d2e857b')
     version('0.9.1', sha256='79964773729880e0eee0e6af13f336041121d4cc8491a3e2c0e5f184cac8a718')
     version('0.9.0', sha256='9351ed92aded632f8c7f59dfadac13c191a834babe682f5785ea47e6fcf6b472')
     version('0.8.2', sha256='9a866c3c8feb23b3221ce261e6153fc65a98ce9ceaa71ccad017016945c178bf')
@@ -46,6 +47,7 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision#installation
     depends_on('py-torch@master', when='@master', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.9.0', when='@0.10.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.8.1', when='@0.9.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.8.0', when='@0.9.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.7.1', when='@0.8.2', type=('build', 'link', 'run'))
@@ -64,6 +66,7 @@ class PyTorchvision(PythonPackage):
     # https://github.com/pytorch/vision/issues/1712
     depends_on('pil@4.1.1:6', when='@:0.4 backend=pil', type=('build', 'run'))
     depends_on('pil@4.1.1:',  when='@0.5: backend=pil', type=('build', 'run'))
+    depends_on('pil@5.3.0:', when='@0.10: backend=pil', type=('build', 'run'))
     depends_on('py-accimage', when='backend=accimage', type=('build', 'run'))
     depends_on('libpng@1.6.0:', when='backend=png')
     depends_on('jpeg', when='backend=jpeg')
