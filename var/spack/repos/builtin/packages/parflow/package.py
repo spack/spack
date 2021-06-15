@@ -8,7 +8,9 @@ import os
 
 
 class Parflow(CMakePackage):
-    """ParFlow is an open-source parallel watershed model."""
+    """ParFlow is an open-source parallel watershed simulator which
+    includes overland flow, complex topology, heterogeneity and coupled
+    land-surface processes."""
 
     homepage = "https://www.parflow.org/"
     url      = "https://github.com/parflow/parflow/archive/v3.9.0.tar.gz"
