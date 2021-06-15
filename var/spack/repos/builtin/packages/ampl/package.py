@@ -50,8 +50,7 @@ class Ampl(Package):
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix)
         env.prepend_path("PATH", join_path(self.prefix, 'amplide'))
-        env.prepend_path("CPATH", join_path(self.prefix, 'amplapi', 'include'))
-        env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, 'amplapi', 'lib'))
+
 
     def install(self, spec, prefix):
 
