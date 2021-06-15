@@ -31,40 +31,44 @@ def test_package_audits(packages, failing_check, mock_packages):
             assert not errors
 
 
+# Data used in the test below to audit the double definition of a compiler
+_double_compiler_definition = [
+    {'compiler': {
+        'spec': 'gcc@9.0.1',
+        'paths': {
+            'cc': '/usr/bin/gcc-9',
+            'cxx': '/usr/bin/g++-9',
+            'f77': '/usr/bin/gfortran-9',
+            'fc': '/usr/bin/gfortran-9'
+        },
+        'flags': {},
+        'operating_system': 'ubuntu18.04',
+        'target': 'x86_64',
+        'modules': [],
+        'environment': {},
+        'extra_rpaths': []
+    }},
+    {'compiler': {
+        'spec': 'gcc@9.0.1',
+        'paths': {
+            'cc': '/usr/bin/gcc-9',
+            'cxx': '/usr/bin/g++-9',
+            'f77': '/usr/bin/gfortran-9',
+            'fc': '/usr/bin/gfortran-9'
+        },
+        'flags': {"cflags": "-O3"},
+        'operating_system': 'ubuntu18.04',
+        'target': 'x86_64',
+        'modules': [],
+        'environment': {},
+        'extra_rpaths': []
+    }}
+]
+
+
 @pytest.mark.parametrize('config_section,data,failing_check', [
     # Double compiler definitions in compilers.yaml
-    ('compilers', [
-        {'compiler': {
-            'spec': 'gcc@9.0.1',
-            'paths': {
-                'cc': '/usr/bin/gcc-9',
-                'cxx': '/usr/bin/g++-9',
-                'f77': '/usr/bin/gfortran-9',
-                'fc': '/usr/bin/gfortran-9'
-            },
-            'flags': {},
-            'operating_system': 'ubuntu18.04',
-            'target': 'x86_64',
-            'modules': [],
-            'environment': {},
-            'extra_rpaths': []
-        }},
-        {'compiler': {
-            'spec': 'gcc@9.0.1',
-            'paths': {
-                'cc': '/usr/bin/gcc-9',
-                'cxx': '/usr/bin/g++-9',
-                'f77': '/usr/bin/gfortran-9',
-                'fc': '/usr/bin/gfortran-9'
-            },
-            'flags': {"cflags": "-O3"},
-            'operating_system': 'ubuntu18.04',
-            'target': 'x86_64',
-            'modules': [],
-            'environment': {},
-            'extra_rpaths': []
-        }}
-    ], 'CFG-COMPILER'),
+    ('compilers', _double_compiler_definition, 'CFG-COMPILER'),
     # Multiple definitions of the same external spec in packages.yaml
     ('packages', {
         "mpileaks": {"externals": [
