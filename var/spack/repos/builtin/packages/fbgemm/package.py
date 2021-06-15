@@ -14,6 +14,8 @@ class Fbgemm(CMakePackage):
     homepage = "https://github.com/pytorch/FBGEMM"
     git      = "https://github.com/pytorch/FBGEMM.git"
 
+    maintainers = ['dskhudia']
+
     version('master', branch='master', submodules=True)
 
     depends_on('cmake@3.5:', type='build')
