@@ -71,10 +71,9 @@ class Parflow(CMakePackage):
                     ['default_single.tcl', '1', '1' '1'])
         else:
             # If examples are not installed test if exe executes
-            exes = [ 'parflow' ]
+            exes = ['parflow']
             for exe in exes:
                 reason = 'test version of {0} is {1}'.format(exe,
                                                              self.spec.version)
                 self.run_test(exe, ['-v'], [self.spec.version.string],
                               installed=True, purpose=reason)
-
