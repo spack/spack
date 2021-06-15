@@ -21,6 +21,7 @@ class Qnnpack(CMakePackage):
     version('2018-12-04', commit='ef05e87cef6b8e719989ce875b5e1c9fdb304c05')  # py-torch@1.0:1.1
 
     depends_on('cmake@3.5:', type='build')
+    depends_on('ninja', type='build')
 
     resource(
         name='cpuinfo',
@@ -66,6 +67,8 @@ class Qnnpack(CMakePackage):
         destination='deps',
         placement='pthreadpool'
     )
+
+    generator = 'Ninja'
 
     def cmake_args(self):
         return [
