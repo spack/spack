@@ -901,9 +901,14 @@ class BaseModuleFileWriter(object):
         # Symlink defaults if needed
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
+            # Symlink to a tmp location first and move, so that existing
+            # symlinks do not cause an error.
             default_path = os.path.join(os.path.dirname(self.layout.filename),
                                         'default')
-            os.symlink(self.layout.filename, default_path)
+            default_tmp = os.path.join(os.path.dirname(self.layout.filename),
+                                       '.tmp_spack_default')
+            os.symlink(self.layout.filename, default_tmp)
+            os.renaame(default_tmp, default_path)
 
     def remove(self):
         """Deletes the module file."""
