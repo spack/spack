@@ -17,6 +17,7 @@ class Fbgemm(CMakePackage):
     maintainers = ['dskhudia']
 
     version('master', branch='master', submodules=True)
+    version('2021-05-10', commit='7794b2950b35ddfa7426091e7fb2f991b1407557', submodules=True)  # py-torch@1.9
     version('2020-11-13', commit='9b0131179f293a645bfd3409cd66fa5eecc393b0', submodules=True)  # py-torch@1.8
     version('2020-09-14', commit='1d710393d5b7588f5de3b83f51c22bbddf095229', submodules=True)  # py-torch@1.7
     version('2020-05-31', commit='7d673046a6a3ad1fa0d15dfb189cd06ffa217041', submodules=True)  # py-torch@1.6
