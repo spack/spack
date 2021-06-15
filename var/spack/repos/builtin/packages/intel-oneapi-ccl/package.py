@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from sys import platform
+import platform
 
 from spack import *
 
@@ -17,7 +17,7 @@ class IntelOneapiCcl(IntelOneApiLibraryPackage):
 
     depends_on('intel-oneapi-mpi')
 
-    if platform == 'linux':
+    if platform.system() == 'Linux':
         version('2021.2.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17731/l_oneapi_ccl_p_2021.2.0.269_offline.sh',
                 sha256='18b7875030243295b75471e235e91e5f7b4fc15caf18c07d941a6d47fba378d7',
