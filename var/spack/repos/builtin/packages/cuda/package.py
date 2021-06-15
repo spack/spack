@@ -172,6 +172,8 @@ class Cuda(Package):
             os.makedirs(os.path.join(prefix, "src"))
             os.symlink(includedir, os.path.join(prefix, "include"))
 
+        install_shell = which('sh')
+
         if self.spec.satisfies('@:8.0.61'):
             # Perl 5.26 removed current directory from module search path.
             # We are addressing this by exporting `PERL5LIB` earlier, but for some
@@ -180,7 +182,6 @@ class Cuda(Package):
             # found on the Internet, when people try to install CUDA <= 8 manually.
             # For example: https://askubuntu.com/a/1087842
             arguments = [runfile, '--tar', 'mxvf', './InstallUtils.pm']
-            install_shell = which('sh')
             install_shell(*arguments)
 
         # CUDA 10.1+ has different cmdline options for the installer
@@ -190,13 +191,15 @@ class Cuda(Package):
             '--override',       # override compiler version checks
             '--toolkit',        # install CUDA Toolkit
         ]
+
         if spec.satisfies('@10.1:'):
             arguments.append('--installpath=%s' % prefix)   # Where to install
         else:
             arguments.append('--verbose')                   # Verbose log file
             arguments.append('--toolkitpath=%s' % prefix)   # Where to install
-        install_shell = which('sh')
+
         install_shell(*arguments)
+
         try:
             os.remove('/tmp/cuda-installer.log')
         except OSError:
