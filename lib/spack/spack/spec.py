@@ -4227,6 +4227,7 @@ class Spec(object):
             if status_fn:
                 status = status_fn(node)
                 out += glyphs.get(status, '')
+                out += '  '
 
             if hashes:
                 out += clr.colorize(
