@@ -4208,9 +4208,8 @@ class Spec(object):
         show_types = kwargs.pop('show_types', False)
         deptypes = kwargs.pop('deptypes', 'all')
         recurse_dependencies = kwargs.pop('recurse_dependencies', True)
-        lang.check_kwargs(kwargs, self.tree)
-
         color = kwargs.pop('color', clr.get_color_when())
+        lang.check_kwargs(kwargs, self.tree)
 
         out = ""
         for d, dep_spec in self.traverse_edges(
