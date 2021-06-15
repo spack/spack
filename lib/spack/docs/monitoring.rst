@@ -117,4 +117,15 @@ flag.
     $ spack install --monitor --monitor-save-local hdf5 
 
 This will save results in a subfolder, "monitor" in your designated spack
-reports folder, which defaults to ``$HOME/.spack/reports/monitor``.
+reports folder, which defaults to ``$HOME/.spack/reports/monitor``. When
+you are ready to upload them to a spack monitor server:
+
+
+.. code-block:: console
+
+    $ spack monitor upload ~/.spack/reports/monitor 
+
+
+You can choose the root directory of results as shown above, or a specific
+subdirectory. The command accepts other arguments to specify configuration
+for the monitor.
