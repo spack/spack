@@ -33,12 +33,14 @@ class LuaLuajit(MakefilePackage):
             symlink(luajit, "lua")
 
         with working_dir(self.prefix.include):
-            luajit_include_subdirs = glob.glob(self.prefix.include + "luajit")
+            luajit_include_subdirs = glob.glob(
+                os.path.join(self.prefix.include, "luajit*"))
             assert len(luajit_include_subdirs) == 1
             symlink(luajit_include_subdirs[0], "lua")
 
         with working_dir(self.prefix.lib):
-            luajit_libnames = glob.glob(self.prefix.lib + "libluajit*.so")
+            luajit_libnames = glob.glob(
+                os.path.join(self.prefix.lib, "libluajit*.so*"))
             real_lib = next(
                 lib for lib in luajit_libnames
                 if os.path.isfile(lib) and not os.path.islink(lib)
