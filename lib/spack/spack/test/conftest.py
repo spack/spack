@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-from datetime import datetime
 from dateutil.parser import parse as parse_date
 import errno
 import inspect
