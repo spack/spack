@@ -18,5 +18,8 @@ class Kineto(CMakePackage):
     root_cmakelists_dir = 'libkineto'
 
     depends_on('cmake@3.5:', type='build')
+    depends_on('ninja', type='build')
     depends_on('python', type='build')
     depends_on('cuda')
+
+    generator = 'Ninja'
