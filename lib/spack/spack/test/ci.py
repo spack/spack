@@ -231,7 +231,8 @@ def test_relate_cdash_builds(config, mutable_mock_env_path, mock_packages,
         ci.relate_cdash_builds(spec_map, cdash_api_url, job_build_id,
                                cdash_project, [cdashids_mirror_url])
         out, err = capfd.readouterr()
-        assert('Warning: Relate builds (42 -> 1) failed' in err)
+        assert('Warning: Relate builds' in err)
+        assert('failed' in err)
 
         dep_cdash_ids = {}
 
