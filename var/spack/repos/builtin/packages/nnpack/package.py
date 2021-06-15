@@ -30,67 +30,85 @@ class Nnpack(CMakePackage):
     resource(
         name='six',
         url='https://files.pythonhosted.org/packages/source/s/six/six-1.11.0.tar.gz',
-        sha256='70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9'
+        sha256='70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9',
+        destination='deps',
+        placement='six',
     )
-    resource(
-        name='opcodes',
-        url='https://files.pythonhosted.org/packages/source/o/opcodes/opcodes-0.3.13.tar.gz',
-        sha256='1859c23143fe20daa4110be87a947cbf3eefa048da71dde642290213f251590c'
-    )
+#    resource(
+#        name='opcodes',
+#        url='https://files.pythonhosted.org/packages/source/o/opcodes/opcodes-0.3.13.tar.gz',
+#        sha256='1859c23143fe20daa4110be87a947cbf3eefa048da71dde642290213f251590c',
+#        destination='deps',
+#        placement='opcodes',
+#    )
     resource(
         name='peachpy',
         git='https://github.com/Maratyszcza/PeachPy.git',
-        branch='master'
+        branch='master',
+        destination='deps',
+        placement='peachpy',
     )
     resource(
         name='cpuinfo',
         git='https://github.com/Maratyszcza/cpuinfo.git',
-        branch='master'
+        branch='master',
+        destination='deps',
+        placement='cpuinfo',
     )
     resource(
         name='fp16',
         git='https://github.com/Maratyszcza/FP16.git',
-        branch='master'
+        branch='master',
+        destination='deps',
+        placement='fp16',
     )
     resource(
         name='fxdiv',
         git='https://github.com/Maratyszcza/FXdiv.git',
-        branch='master'
+        branch='master',
+        destination='deps',
+        placement='fxdiv',
     )
     resource(
         name='psimd',
         git='https://github.com/Maratyszcza/psimd.git',
-        branch='master'
+        branch='master',
+        destination='deps',
+        placement='psimd',
     )
     resource(
         name='pthreadpool',
         git='https://github.com/Maratyszcza/pthreadpool.git',
-        branch='master'
+        branch='master',
+        destination='deps',
+        placement='pthreadpool',
     )
     resource(
         name='googletest',
         url='https://github.com/google/googletest/archive/release-1.8.0.zip',
         sha256='f3ed3b58511efd272eb074a3a6d6fb79d7c2e6a0e374323d1e6bcbcc1ef141bf',
+        destination='deps',
+        placement='googletest',
     )
 
     def cmake_args(self):
         return [
             self.define('PYTHON_SIX_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'six-1.11.0')),
-            self.define('PYTHON_OPCODES_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'opcodes-0.3.13')),
+                        join_path(self.stage.source_path, 'deps', 'six')),
+#            self.define('PYTHON_OPCODES_SOURCE_DIR',
+#                        join_path(self.stage.source_path, 'deps', 'opcodes')),
             self.define('PYTHON_PEACHPY_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'PeachPy')),
+                        join_path(self.stage.source_path, 'deps', 'peachpy')),
             self.define('CPUINFO_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'cpuinfo')),
+                        join_path(self.stage.source_path, 'deps', 'cpuinfo')),
             self.define('FP16_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'FP16')),
+                        join_path(self.stage.source_path, 'deps', 'fp16')),
             self.define('FXDIV_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'FXdiv')),
+                        join_path(self.stage.source_path, 'deps', 'fxdiv')),
             self.define('PSIMD_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'psimd')),
+                        join_path(self.stage.source_path, 'deps', 'psimd')),
             self.define('PTHREADPOOL_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'pthreadpool')),
+                        join_path(self.stage.source_path, 'deps', 'pthreadpool')),
             self.define('GOOGLETEST_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'googletest-release-1.8.0')),
+                        join_path(self.stage.source_path, 'deps', 'googletest')),
         ]
