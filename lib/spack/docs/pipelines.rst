@@ -187,7 +187,7 @@ during subesequent pipeline runs.
 Spack commands supporting pipelines
 -----------------------------------
 
-Spack provides a command ``ci`` command with a few sub-commands supporting spack
+Spack provides a ``ci`` command with a few sub-commands supporting spack
 ci pipelines.  These commands are covered in more detail in this section.
 
 .. _cmd-spack-ci:
