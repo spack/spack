@@ -137,7 +137,7 @@ jobs:
           sudo apt-get -y install zlib1g-dev libdw-dev libiberty-dev
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools codecov coverage
+          pip install --upgrade pip dateutil six setuptools codecov coverage
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
