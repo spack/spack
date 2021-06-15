@@ -956,7 +956,6 @@ def mock_cvs_repository(tmpdir_factory):
         cvs('-d', cvsroot, 'commit', '-m' 'revision 1', r1_file)
         output = cvs('log', '-N', r0_file, output=str)
         revision_date['1.2'] = format_date(get_cvs_timestamp(output))
-        print("revision 1.2, date", revision_date['1.2'])#TODO
 
         # Create branch 'mock-branch'
         cvs('-d', cvsroot, 'tag', 'mock-branch-root')
