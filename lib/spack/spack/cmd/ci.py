@@ -395,7 +395,7 @@ def ci_rebuild(args):
                 job_spec_pkg_name, matching_mirror))
             tty.debug('Downloading to {0}'.format(build_cache_dir))
             buildcache.download_buildcache_files(
-                job_spec, build_cache_dir, True, matching_mirror)
+                job_spec, build_cache_dir, False, matching_mirror)
 
         # Now we are done and successful
         sys.exit(0)
