@@ -947,7 +947,6 @@ def mock_cvs_repository(tmpdir_factory):
         cvs('-d', cvsroot, 'commit', '-m', 'revision 0', r0_file)
         output = cvs('log', '-N', r0_file, output=str)
         revision_date['1.1'] = format_date(get_cvs_timestamp(output))
-        print("revision 1.1, date", revision_date['1.1'])#TODO
 
         # Commit file r1
         r1_file = 'r1_file'
