@@ -19,5 +19,8 @@ class Fbgemm(CMakePackage):
     version('master', branch='master', submodules=True)
 
     depends_on('cmake@3.5:', type='build')
+    depends_on('ninja', type='build')
     depends_on('python', type='build')
     depends_on('llvm-openmp', when='%apple-clang')
+
+    generator = 'Ninja'
