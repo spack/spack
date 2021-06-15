@@ -9,7 +9,7 @@
 
 import getpass
 import shutil
-from sys import platform
+import platform
 from os.path import basename, dirname, isdir
 
 from spack.package import Package
@@ -48,7 +48,7 @@ class IntelOneApiPackage(Package):
         if installer_path is None:
             installer_path = basename(self.url_for_version(spec.version))
 
-        if platform == 'linux':
+        if platform.system() == 'Linux':
             # Intel installer assumes and enforces that all components
             # are installed into a single prefix. Spack wants to
             # install each component in a separate prefix. The
