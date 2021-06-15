@@ -132,7 +132,7 @@ class Cuda(Package):
         if self.spec.satisfies('@:8.0.61'):
             # Perl 5.26 removed current directory from module search path,
             # CUDA 9 has a fix for this, but CUDA 8 and lower don't.
-            env.set('PERL5LIB', self.stage.source_path)
+            env.append_path('PERL5LIB', self.stage.source_path)
 
         if self.spec.satisfies('@10.1.243:'):
             libxml2_home = self.spec['libxml2'].prefix
