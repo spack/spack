@@ -61,6 +61,10 @@ class OpenpmdApi(CMakePackage):
     depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
     depends_on('python@3.6:', when='+python', type=['link', 'test', 'run'])
 
+    conflicts('^hdf5 api=v18')
+    conflicts('^hdf5 api=v16')
+    conflicts('^hdf5 api=v110')
+
     extends('python', when='+python')
 
     def cmake_args(self):
