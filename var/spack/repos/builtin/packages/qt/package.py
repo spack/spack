@@ -160,7 +160,7 @@ class Qt(Package):
     depends_on("gperf", when='+webkit')
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
-    depends_on("python@2.7.5:2.999", when='@5.14: +webkit', type='build')
+    depends_on("python@2.7.5:2.999", when='+webkit', type='build')
     depends_on("sqlite+column_metadata", when='+sql', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
@@ -178,6 +178,9 @@ class Qt(Package):
     depends_on("double-conversion", when='@5.7:')
     depends_on("pcre2+multibyte", when='@5.9:')
     depends_on("llvm", when='@5.11: +doc')
+
+    # the gl headers are needed to build webkit
+    conflicts('~opengl', when='+webkit')
 
     # gcc@4 is not supported as of Qt@5.14
     # https://doc.qt.io/qt-5.14/supported-platforms.html

@@ -345,8 +345,11 @@ class AutotoolsPackage(PackageBase):
         """Makes the build targets specified by
         :py:attr:``~.AutotoolsPackage.build_targets``
         """
+        # See https://autotools.io/automake/silent.html
+        params = ['V=1']
+        params += self.build_targets
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make(*self.build_targets)
+            inspect.getmodule(self).make(*params)
 
     def install(self, spec, prefix):
         """Makes the install targets specified by

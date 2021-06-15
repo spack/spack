@@ -57,12 +57,12 @@ class NaluWind(CMakePackage, CudaPackage):
     depends_on('trilinos@master,develop ~cuda~wrapper+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+zlib+pnetcdf+shards~hypre~shared cxxstd=14', when=(sys.platform == 'darwin'))
     depends_on('openfast@master,develop +cxx', when='+openfast')
     depends_on('tioga@master,develop', when='+tioga')
-    depends_on('hypre@develop,2.18.2: +mpi~superlu-dist', when='+hypre')
+    depends_on('hypre@develop,2.18.2: +int64+mpi~superlu-dist', when='+hypre')
     depends_on('kokkos-nvcc-wrapper', type='build', when='+cuda')
     for _arch in CudaPackage.cuda_arch_values:
         depends_on('trilinos@master,develop ~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+zlib+pnetcdf+shards~hypre+cuda+cuda_rdc+wrapper cxxstd=14 cuda_arch={0}'.format(_arch),
                    when='+cuda cuda_arch={0}'.format(_arch))
-        depends_on('hypre@develop +mpi+cuda~int64~superlu-dist cuda_arch={0}'.format(_arch),
+        depends_on('hypre@develop +mpi+cuda+int64~superlu-dist cuda_arch={0}'.format(_arch),
                    when='+hypre+cuda cuda_arch={0}'.format(_arch))
     depends_on('trilinos-catalyst-ioss-adapter', when='+catalyst')
     depends_on('fftw+mpi', when='+fftw')
