@@ -5,6 +5,7 @@
 
 import collections
 from datetime import datetime
+from dateutil.parser import parse as parse_date
 import errno
 import inspect
 import itertools
@@ -906,19 +907,13 @@ def mock_cvs_repository(tmpdir_factory):
     def format_date(date):
         return date.strftime('%Y-%m-%d %H:%M:%S')
 
-    def parse_date(string):
-        return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
-
-    def parse_cvs_date(string):
-        return datetime.strptime(string, '%Y/%m/%d %H:%M:%S')
-
     def get_cvs_timestamp(output):
         """Find the most recent CVS time stamp in a `cvs log` output"""
         latest_timestamp = None
         for line in output.splitlines():
             m = re.search(r'date:\s+([^;]*);', line)
             if m:
-                timestamp = parse_cvs_date(m.group(1))
+                timestamp = parse_date(m.group(1))
                 if latest_timestamp is None:
                     latest_timestamp = timestamp
                 else:
