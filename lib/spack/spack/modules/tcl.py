@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,39 +8,50 @@ non-hierarchical modules.
 """
 import os.path
 import string
+from typing import Dict, Any  # novm
 
 import llnl.util.tty as tty
 
 import spack.config
+import spack.projections as proj
 import spack.tengine as tengine
 from .common import BaseConfiguration, BaseFileLayout
 from .common import BaseContext, BaseModuleFileWriter
 
+
 #: TCL specific part of the configuration
-configuration = spack.config.get('modules:tcl', {})
+def configuration(module_set_name):
+    config_path = 'modules:%s:tcl' % module_set_name
+    config = spack.config.get(config_path, {})
+    if not config and module_set_name == 'default':
+        # return old format for backward compatibility
+        return spack.config.get('modules:tcl', {})
+    return config
+
 
 #: Caches the configuration {spec_hash: configuration}
-configuration_registry = {}
+configuration_registry = {}  # type: Dict[str, Any]
 
 
-def make_configuration(spec):
+def make_configuration(spec, module_set_name):
     """Returns the tcl configuration for spec"""
-    key = spec.dag_hash()
+    key = (spec.dag_hash(), module_set_name)
     try:
         return configuration_registry[key]
     except KeyError:
-        return configuration_registry.setdefault(key, TclConfiguration(spec))
+        return configuration_registry.setdefault(
+            key, TclConfiguration(spec, module_set_name))
 
 
-def make_layout(spec):
+def make_layout(spec, module_set_name):
     """Returns the layout information for spec """
-    conf = make_configuration(spec)
+    conf = make_configuration(spec, module_set_name)
     return TclFileLayout(conf)
 
 
-def make_context(spec):
+def make_context(spec, module_set_name):
     """Returns the context information for spec"""
-    conf = make_configuration(spec)
+    conf = make_configuration(spec, module_set_name)
     return TclContext(conf)
 
 
@@ -69,12 +80,12 @@ class TclContext(BaseContext):
     def conflicts(self):
         """List of conflicts for the tcl module file."""
         fmts = []
-        naming_scheme = self.conf.naming_scheme
+        projection = proj.get_projection(self.conf.projections, self.spec)
         f = string.Formatter()
         for item in self.conf.conflicts:
             if len([x for x in f.parse(item)]) > 1:
                 for naming_dir, conflict_dir in zip(
-                        naming_scheme.split('/'), item.split('/')
+                        projection.split('/'), item.split('/')
                 ):
                     if naming_dir != conflict_dir:
                         message = 'conflict scheme does not match naming '
@@ -84,7 +95,7 @@ class TclContext(BaseContext):
                         message += '** You may want to check your '
                         message += '`modules.yaml` configuration file **\n'
                         tty.error(message.format(spec=self.spec,
-                                                 nformat=naming_scheme,
+                                                 nformat=projection,
                                                  cformat=item))
                         raise SystemExit('Module generation aborted.')
                 item = self.spec.format(item)

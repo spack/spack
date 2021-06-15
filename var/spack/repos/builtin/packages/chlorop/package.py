@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Chlorop(Package):
 
     homepage = "http://www.cbs.dtu.dk/services/ChloroP/"
     url      = "file://{0}/chlorop-1.1.Linux.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('1.1', 'eb0ba6b28dfa735163ad5fc70e30139e46e33f6ae27f87666a7167a4ac5f71d9')
 
@@ -29,5 +30,5 @@ class Chlorop(Package):
         os.rename('chlorop', 'bin/chlorop')
         install_tree('.', prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('CHLOROP', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('CHLOROP', self.prefix)

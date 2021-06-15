@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ from spack.spec import Spec
 foo_sha256 = 'b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c'
 bar_sha256 = '7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730'
 baz_sha256 = 'bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c'
+biz_sha256 = 'a69b288d7393261e613c276c6d38a01461028291f6e381623acc58139d01f54d'
 
 # url patches
 url1_sha256 = 'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'
@@ -79,7 +80,7 @@ first line
 third line
 """)
         # apply the patch and compare files
-        patch.fetch(stage)
+        patch.fetch()
         patch.apply(stage)
         patch.clean()
 
@@ -105,13 +106,27 @@ def test_patch_in_spec(mock_packages, config):
             tuple(spec.variants['patches']._patches_in_order_of_appearance))
 
 
+def test_patch_mixed_versions_subset_constraint(mock_packages, config):
+    """If we have a package with mixed x.y and x.y.z versions, make sure that
+       a patch applied to a version range of x.y.z versions is not applied to
+       an x.y version.
+    """
+    spec1 = Spec('patch@1.0.1')
+    spec1.concretize()
+    assert biz_sha256 in spec1.variants['patches'].value
+
+    spec2 = Spec('patch@1.0')
+    spec2.concretize()
+    assert biz_sha256 not in spec2.variants['patches'].value
+
+
 def test_patch_order(mock_packages, config):
     spec = Spec('dep-diamond-patch-top')
     spec.concretize()
 
-    mid2_sha256 = 'mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'  # noqa: E501
-    mid1_sha256 = '0b62284961dab49887e31319843431ee5b037382ac02c4fe436955abef11f094'  # noqa: E501
-    top_sha256 = 'f7de2947c64cb6435e15fb2bef359d1ed5f6356b2aebb7b20535e3772904e6db'  # noqa: E501
+    mid2_sha256 = 'mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'
+    mid1_sha256 = '0b62284961dab49887e31319843431ee5b037382ac02c4fe436955abef11f094'
+    top_sha256 = 'f7de2947c64cb6435e15fb2bef359d1ed5f6356b2aebb7b20535e3772904e6db'
 
     dep = spec['patch']
     patch_order = dep.variants['patches']._patches_in_order_of_appearance
@@ -313,9 +328,25 @@ def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
         spec.package.package_dir)
 
 
-def test_file_patch_no_file():
+def test_patch_no_file():
+    # Give it the attributes we need to construct the error message
+    FakePackage = collections.namedtuple(
+        'FakePackage', ['name', 'namespace', 'fullname'])
+    fp = FakePackage('fake-package', 'test', 'fake-package')
+    with pytest.raises(ValueError, match='FilePatch:'):
+        spack.patch.FilePatch(fp, 'nonexistent_file', 0, '')
+
+    patch = spack.patch.Patch(fp, 'nonexistent_file', 0, '')
+    patch.path = 'test'
+    with pytest.raises(spack.patch.NoSuchPatchError, match='No such patch:'):
+        patch.apply('')
+
+
+@pytest.mark.parametrize('level', [-1, 0.0, '1'])
+def test_invalid_level(level):
     # Give it the attributes we need to construct the error message
     FakePackage = collections.namedtuple('FakePackage', ['name', 'namespace'])
     fp = FakePackage('fake-package', 'test')
-    with pytest.raises(ValueError, match=r'FilePatch:.*'):
-        spack.patch.FilePatch(fp, 'nonexistent_file', 0, '')
+    with pytest.raises(ValueError,
+                       match='Patch level needs to be a non-negative integer.'):
+        spack.patch.Patch(fp, 'nonexistent_file', level, '')

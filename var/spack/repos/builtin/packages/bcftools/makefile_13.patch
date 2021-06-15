@@ -1,0 +1,102 @@
+--- a/Makefile	2016-10-02 21:23:39.289320362 -0500
++++ b/Makefile	2016-10-02 21:30:41.163562704 -0500
+@@ -30,10 +30,11 @@
+ 
+ # Adjust $(HTSDIR) to point to your top-level htslib directory
+ HTSDIR = htslib-1.3.1
+-include $(HTSDIR)/htslib.mk
+-HTSLIB = $(HTSDIR)/libhts.a
+-BGZIP  = $(HTSDIR)/bgzip
+-TABIX  = $(HTSDIR)/tabix
++#include $(HTSDIR)/htslib.mk
++HTSINC = $(HTSDIR)/include
++HTSLIB = -L$(HTSDIR)/lib -lhts
++BGZIP  = $(HTSDIR)/bin/bgzip
++TABIX  = $(HTSDIR)/bin/tabix
+ 
+ CC       = gcc
+ CPPFLAGS =
+@@ -48,7 +49,7 @@
+            vcfcnv.o HMM.o vcfplugin.o consensus.o ploidy.o version.o \
+            ccall.o em.o prob1.o kmin.o # the original samtools calling
+ 
+-EXTRA_CPPFLAGS = -I. -I$(HTSDIR) -DPLUGINPATH=\"$(pluginpath)\"
++EXTRA_CPPFLAGS = -I. -I$(HTSINC) -DPLUGINPATH=\"$(pluginpath)\"
+ GSL_LIBS       =
+ 
+ # The polysomy command is not compiled by default because it brings dependency
+@@ -57,7 +58,7 @@
+ ifdef USE_GPL
+     EXTRA_CPPFLAGS += -DUSE_GPL
+     OBJS += polysomy.o peakfit.o
+-    GSL_LIBS = -lgsl -lcblas
++    GSL_LIBS = -lgsl -lgslcblas
+ endif
+ 
+ prefix      = /usr/local
+@@ -136,20 +137,20 @@
+ filter_h = filter.h $(htslib_vcf_h)
+ ploidy_h = ploidy.h $(htslib_regidx_h)
+ prob1_h = prob1.h $(htslib_vcf_h) $(call_h)
+-roh_h = HMM.h $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(HTSDIR)/htslib/kstring.h $(HTSDIR)/htslib/kseq.h $(bcftools_h)
++roh_h = HMM.h $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(HTSINC)/htslib/kstring.h $(HTSINC)/htslib/kseq.h $(bcftools_h)
+ cnv_h = HMM.h $(htslib_vcf_h) $(htslib_synced_bcf_reader_h)
+ 
+ main.o: main.c $(htslib_hts_h) version.h $(bcftools_h)
+-vcfannotate.o: vcfannotate.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(HTSDIR)/htslib/kseq.h $(bcftools_h) vcmp.h $(filter_h)
+-vcfplugin.o: vcfplugin.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(HTSDIR)/htslib/kseq.h $(bcftools_h) vcmp.h $(filter_h)
+-vcfcall.o: vcfcall.c $(htslib_vcf_h) $(HTSDIR)/htslib/kfunc.h $(htslib_synced_bcf_reader_h) $(HTSDIR)/htslib/khash_str2int.h $(bcftools_h) $(call_h) $(prob1_h) $(ploidy_h)
+-vcfconcat.o: vcfconcat.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(HTSDIR)/htslib/kseq.h $(htslib_bgzf_h) $(htslib_tbx_h) $(bcftools_h)
++vcfannotate.o: vcfannotate.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(HTSINC)/htslib/kseq.h $(bcftools_h) vcmp.h $(filter_h)
++vcfplugin.o: vcfplugin.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(HTSINC)/htslib/kseq.h $(bcftools_h) vcmp.h $(filter_h)
++vcfcall.o: vcfcall.c $(htslib_vcf_h) $(HTSINC)/htslib/kfunc.h $(htslib_synced_bcf_reader_h) $(HTSINC)/htslib/khash_str2int.h $(bcftools_h) $(call_h) $(prob1_h) $(ploidy_h)
++vcfconcat.o: vcfconcat.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(HTSINC)/htslib/kseq.h $(htslib_bgzf_h) $(htslib_tbx_h) $(bcftools_h)
+ vcfconvert.o: vcfconvert.c $(htslib_vcf_h) $(htslib_bgzf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(bcftools_h) $(filter_h) $(convert_h) $(tsv2vcf_h)
+ vcffilter.o: vcffilter.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(bcftools_h) $(filter_h) rbuf.h
+ vcfgtcheck.o: vcfgtcheck.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(bcftools_h)
+ vcfindex.o: vcfindex.c $(htslib_vcf_h) $(htslib_tbx_h)
+ vcfisec.o: vcfisec.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(bcftools_h) $(filter_h)
+-vcfmerge.o: vcfmerge.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(bcftools_h) vcmp.h $(HTSDIR)/htslib/khash.h
++vcfmerge.o: vcfmerge.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(bcftools_h) vcmp.h $(HTSINC)/htslib/khash.h
+ vcfnorm.o: vcfnorm.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_faidx_h) $(bcftools_h) rbuf.h
+ vcfquery.o: vcfquery.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(bcftools_h) $(filter_h) $(convert_h)
+ vcfroh.o: vcfroh.c $(roh_h)
+@@ -157,22 +158,22 @@
+ vcfsom.o: vcfsom.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(bcftools_h)
+ vcfstats.o: vcfstats.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(htslib_faidx_h) $(bcftools_h)
+ vcfview.o: vcfview.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(bcftools_h) $(filter_h)
+-reheader.o: reheader.c $(htslib_vcf_h) $(htslib_bgzf_h) $(htslib_tbx_h) $(HTSDIR)/htslib/kseq.h $(bcftools_h)
++reheader.o: reheader.c $(htslib_vcf_h) $(htslib_bgzf_h) $(htslib_tbx_h) $(HTSINC)/htslib/kseq.h $(bcftools_h)
+ tabix.o: tabix.c $(htslib_bgzf_h) $(htslib_tbx_h)
+-ccall.o: ccall.c $(HTSDIR)/htslib/kfunc.h $(call_h) kmin.h $(prob1_h)
++ccall.o: ccall.c $(HTSINC)/htslib/kfunc.h $(call_h) kmin.h $(prob1_h)
+ convert.o: convert.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(htslib_vcfutils_h) $(bcftools_h) $(convert_h)
+ tsv2vcf.o: tsv2vcf.c $(tsv2vcf_h)
+ em.o: em.c $(htslib_vcf_h) kmin.h $(call_h)
+-filter.o: filter.c $(HTSDIR)/htslib/khash_str2int.h $(filter_h) $(bcftools_h) $(htslib_hts_defs_h) $(htslib_vcfutils_h)
++filter.o: filter.c $(HTSINC)/htslib/khash_str2int.h $(filter_h) $(bcftools_h) $(htslib_hts_defs_h) $(htslib_vcfutils_h)
+ gvcf.o: gvcf.c $(call_h)
+ kmin.o: kmin.c kmin.h
+-mcall.o: mcall.c $(HTSDIR)/htslib/kfunc.h $(call_h)
++mcall.o: mcall.c $(HTSINC)/htslib/kfunc.h $(call_h)
+ prob1.o: prob1.c $(prob1_h)
+ vcmp.o: vcmp.c $(htslib_hts_h) vcmp.h
+-ploidy.o: ploidy.c $(htslib_regidx_h) $(HTSDIR)/htslib/khash_str2int.h $(HTSDIR)/htslib/kseq.h $(htslib_hts_h) $(bcftools_h) $(ploidy_h)
++ploidy.o: ploidy.c $(htslib_regidx_h) $(HTSINC)/htslib/khash_str2int.h $(HTSINC)/htslib/kseq.h $(htslib_hts_h) $(bcftools_h) $(ploidy_h)
+ polysomy.o: polysomy.c $(htslib_vcf_h) $(htslib_synced_bcf_reader_h) $(bcftools_h) peakfit.h
+-peakfit.o: peakfit.c peakfit.h $(htslib_hts_h) $(HTSDIR)/htslib/kstring.h
+-consensus.o: consensus.c $(htslib_hts_h) $(HTSDIR)/htslib/kseq.h rbuf.h $(bcftools_h) $(HTSDIR)/htslib/regidx.h
++peakfit.o: peakfit.c peakfit.h $(htslib_hts_h) $(HTSINC)/htslib/kstring.h
++consensus.o: consensus.c $(htslib_hts_h) $(HTSINC)/htslib/kseq.h rbuf.h $(bcftools_h) $(HTSINC)/htslib/regidx.h
+ version.o: version.h version.c
+ 
+ test/test-rbuf.o: test/test-rbuf.c rbuf.h
+@@ -180,7 +181,7 @@
+ test/test-rbuf: test/test-rbuf.o
+ 	$(CC) $(LDFLAGS) -o $@ $^ -lm $(LIBS)
+ 
+-bcftools: $(HTSLIB) $(OBJS)
++bcftools: $(OBJS)
+ 	$(CC) -rdynamic $(LDFLAGS) -o $@ $(OBJS) $(HTSLIB) -lpthread -lz -lm -ldl $(GSL_LIBS) $(LIBS)
+ 
+ doc/bcftools.1: doc/bcftools.txt

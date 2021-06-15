@@ -1,0 +1,13 @@
+diff --git a/source/src/parse_f.f b/source/src/parse_f.f
+index c58f90e..37821dd 100644
+--- a/source/src/parse_f.f
++++ b/source/src/parse_f.f
+@@ -360,7 +360,7 @@
+          stop
+       endif
+ 
+- 9000 format('ERROR: the order of atoms is wrong:',i)
++ 9000 format('ERROR: the order of atoms is wrong:',i8)
+ 
+       return
+       end

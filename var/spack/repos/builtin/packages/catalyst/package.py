@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 from spack import *
 import os
 import subprocess
+import sys
 import llnl.util.tty as tty
 
 
@@ -65,11 +66,11 @@ class Catalyst(CMakePackage):
 
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python3', type=('build', 'run'))
-    depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
-    depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python3', type=('build', 'run'))
 
     depends_on('gl@3.2:', when='+rendering')
-    depends_on('mesa+osmesa', when='+rendering+osmesa')
+    depends_on('osmesa', when='+rendering+osmesa')
     depends_on('glx', when='+rendering~osmesa')
     depends_on('cmake@3.3:', type='build')
 
@@ -133,7 +134,12 @@ class Catalyst(CMakePackage):
                                     'Editions')
         catalyst_source_dir = os.path.abspath(self.root_cmakelists_dir)
 
-        command = ['python', catalyst_script,
+        python_path = (os.path.realpath(
+            spec['python3'].command.path if '+python3' in self.spec else
+            spec['python'].command.path if '+python' in self.spec else
+            sys.executable))
+
+        command = [python_path, catalyst_script,
                    '-r', self.stage.source_path,
                    '-o', catalyst_source_dir]
 
@@ -148,7 +154,7 @@ class Catalyst(CMakePackage):
             tty.msg("Already generated %s in %s" % (self.name,
                                                     self.stage.source_path))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # paraview 5.5 and later
         # - cmake under lib/cmake/paraview-5.5
         # - libs  under lib
@@ -160,18 +166,18 @@ class Catalyst(CMakePackage):
 
         if self.spec.version <= Version('5.4.1'):
             lib_dir = join_path(lib_dir, paraview_subdir)
-        run_env.set('ParaView_DIR', self.prefix)
-        run_env.prepend_path('LIBRARY_PATH', lib_dir)
-        run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
+        env.set('ParaView_DIR', self.prefix)
+        env.prepend_path('LIBRARY_PATH', lib_dir)
+        env.prepend_path('LD_LIBRARY_PATH', lib_dir)
 
         if '+python' in self.spec or '+python3' in self.spec:
             python_version = self.spec['python'].version.up_to(2)
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 'python{0}'.format(python_version),
-                                 'site-packages'))
+            env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                             'python{0}'.format(python_version),
+                             'site-packages'))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('ParaView_DIR', self.prefix)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('ParaView_DIR', self.prefix)
 
     @property
     def root_cmakelists_dir(self):
@@ -220,12 +226,12 @@ class Catalyst(CMakePackage):
                 '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
                 '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
                 spec['python'].command.path,
-                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON'
             ])
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
-        if spec.platform == 'linux' and spec.target == 'aarch64':
+        if spec.platform == 'linux' and spec.target.family == 'aarch64':
             cmake_args.append('-DCMAKE_CXX_FLAGS=-DPNG_ARM_NEON_OPT=0')
             cmake_args.append('-DCMAKE_C_FLAGS=-DPNG_ARM_NEON_OPT=0')
 

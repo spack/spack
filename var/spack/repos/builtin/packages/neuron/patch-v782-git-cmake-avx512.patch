@@ -1,0 +1,139 @@
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index 391d4daa..20b8b571 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -98,7 +98,7 @@ Currently we have enabled CMake code formatting using [cmake-format](https://git
+ * Make sure to install cmake-format utility with Python version you are using:
+ 
+ ```
+-pip3.7 install cmake-format==0.6.0 --user
++pip3.7 install cmake-format==0.6.0 pyyaml --user
+ ```
+ Now you should have `cmake-format` command available.
+ 
+diff --git a/cmake/ExternalProjectHelper.cmake b/cmake/ExternalProjectHelper.cmake
+index 57094e7e..eeb6dfc2 100644
+--- a/cmake/ExternalProjectHelper.cmake
++++ b/cmake/ExternalProjectHelper.cmake
+@@ -1,5 +1,15 @@
+ find_package(Git QUIET)
+ 
++if(${GIT_FOUND} AND EXISTS ${CMAKE_SOURCE_DIR}/.git)
++  execute_process(
++    COMMAND ${GIT_EXECUTABLE} --git-dir=.git describe --all
++    RESULT_VARIABLE NOT_A_GIT_REPO
++    ERROR_QUIET
++    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
++else()
++  set(NOT_A_GIT_REPO "NotAGitRepo")
++endif()
++
+ # initialize submodule with given path
+ function(initialize_submodule path)
+   if(NOT ${GIT_FOUND})
+@@ -9,7 +19,7 @@ function(initialize_submodule path)
+   message(STATUS "Sub-module : missing ${path} : running git submodule update --init --recursive")
+   execute_process(
+     COMMAND
+-      git submodule update --init --recursive -- ${path}
++      ${GIT_EXECUTABLE}  submodule update --init --recursive -- ${path}
+     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+ endfunction()
+ 
+@@ -20,6 +30,9 @@ function(add_external_project name)
+     NAMES CMakeLists.txt
+     PATHS "${PROJECT_SOURCE_DIR}/external/${name}")
+   if(NOT EXISTS ${${name}_PATH})
++    if(NOT_A_GIT_REPO)
++      message(FATAL_ERROR "Looks like you are building from source. Git needed for ${name} feature.")
++    endif()
+     initialize_submodule(external/${name})
+   else()
+     message(STATUS "Sub-project : using ${name} from from external/${name}")
+diff --git a/git2nrnversion_h.sh b/git2nrnversion_h.sh
+index d62b7410..4d8e4015 100755
+--- a/git2nrnversion_h.sh
++++ b/git2nrnversion_h.sh
+@@ -20,10 +20,9 @@ if git log > /dev/null && test -d .git ; then
+ elif test -f src/nrnoc/nrnversion.h ; then
+         sed -n '1,$p' src/nrnoc/nrnversion.h
+ else
+-        echo "#define GIT_DATE \"1999-12-31\""
+-        echo "#define GIT_BRANCH \"?\""
+-        echo "#define GIT_CHANGESET \"?\""
+-        echo "#define GIT_DESCRIBE \"?\""
+-        exit 1
++        echo "#define GIT_DATE \"Build Time: $(date "+%Y-%m-%d-%H:%M:%S")\""
++        echo "#define GIT_BRANCH \"unknown branch\""
++        echo "#define GIT_CHANGESET \"unknown commit id\""
++        echo "#define GIT_DESCRIBE \"${PROJECT_VERSION}.dev0\""
+ fi
+ 
+diff --git a/src/ivoc/ivocvect.cpp b/src/ivoc/ivocvect.cpp
+index 4884614a..4da9e17e 100644
+--- a/src/ivoc/ivocvect.cpp
++++ b/src/ivoc/ivocvect.cpp
+@@ -67,7 +67,26 @@ extern "C" {
+ #define FRead(arg1,arg2,arg3,arg4) if (fread(arg1,arg2,arg3,arg4) != arg3) {}
+ #endif
+ 
+-static double dmaxint_;
++/**
++ * As all parameters are passed from hoc as double, we need
++ * to calculate max integer that can fit into double variable.
++ *
++ * With IEEE 64-bit double has 52 bits of mantissa, so it's 2^53.
++ * calculating it with approach `while (dbl + 1 != dbl) dbl++;`
++ * has issues with SSE and other 32 bits platform. So we are using
++ * direct value here.
++ *
++ * The maximum mantissa 0xFFFFFFFFFFFFF which is 52 bits all 1.
++ * In Python it's:
++ *
++ *  >>> (2.**53).hex()
++ *   '0x1.0000000000000p+53'
++ *  >>> (2.**53)
++ *   9007199254740992.0
++ *
++ * See https://stackoverflow.com/questions/1848700/biggest-integer-that-can-be-stored-in-a-double
++ */
++static double dmaxint_ = 9007199254740992;
+ 
+ // Definitions allow machine independent write and read
+ // note that must include BYTEHEADER at head of routine
+@@ -3776,20 +3795,7 @@ static void steer_x(void* v) {
+ }
+ 
+ void Vector_reg() {
+-	dmaxint_ = 1073741824.;
+-	for(;;) {
+-		if (dmaxint_*2. == double(int(dmaxint_*2.))) {
+-			dmaxint_ *= 2.;
+-		}else{
+-			if (dmaxint_*2. - 1. == double(int(dmaxint_*2. - 1.))) {
+-				dmaxint_ = 2.*dmaxint_ - 1.;
+-			}
+-			break;
+-		}
+-	}		
+-	//printf("dmaxint=%30.20g   %d\n", dmaxint_, (long)dmaxint_);
+-        class2oc("Vector", v_cons, v_destruct, v_members, NULL, v_retobj_members,
+-        	v_retstr_members);
++	class2oc("Vector", v_cons, v_destruct, v_members, NULL, v_retobj_members, v_retstr_members);
+ 	svec_ = hoc_lookup("Vector");
+ 	// now make the x variable an actual double
+ 	Symbol* sv = hoc_lookup("Vector");
+diff --git a/src/nrniv/CMakeLists.txt b/src/nrniv/CMakeLists.txt
+index 30024d6e..26f76a98 100644
+--- a/src/nrniv/CMakeLists.txt
++++ b/src/nrniv/CMakeLists.txt
+@@ -139,7 +139,8 @@ set(NRN_INCLUDE_DIRS
+ # is different from the contents of nrnversion.h
+ # ~~~
+ add_custom_target(
+-  nrnversion_h ${PROJECT_SOURCE_DIR}/git2nrnversion_h.sh ${PROJECT_SOURCE_DIR} > nrnversion.h.tmp
++  nrnversion_h
++  COMMAND ${CMAKE_COMMAND} -E env PROJECT_VERSION=${PROJECT_VERSION} $ENV{SHELL} ${PROJECT_SOURCE_DIR}/git2nrnversion_h.sh ${PROJECT_SOURCE_DIR} > nrnversion.h.tmp
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different nrnversion.h.tmp ${NRN_NRNOC_SRC_DIR}/nrnversion.h
+   DEPENDS ${PROJECT_SOURCE_DIR}/git2nrnversion_h.sh)
+ 

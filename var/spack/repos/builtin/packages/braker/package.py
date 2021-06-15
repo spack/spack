@@ -1,10 +1,8 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import os
 import glob
 
 
@@ -16,6 +14,7 @@ class Braker(Package):
     url      = "https://github.com/Gaius-Augustus/BRAKER/archive/v2.1.4.tar.gz"
     list_url = "http://bioinf.uni-greifswald.de/augustus/binaries/old"
 
+    version('2.1.6', sha256='eef3c4037364472988a010322cbd79b5171158f9c016f4383809adade4866c06')
     version('2.1.4', sha256='d48af5649cc879343046f9ddf180fe2c709b5810e0b78cf314bf298514d31d52')
     version('1.11', sha256='cb2d9abe1720ed58753d362eee4af3791007efc617754804882d31f9fe2eab00',
             url='http://bioinf.uni-greifswald.de/augustus/binaries/old/BRAKER1_v1.11.tar.gz')
@@ -48,10 +47,7 @@ class Braker(Package):
             install_tree('example', prefix.example)
             with working_dir('scripts'):
                 install('helpMod.pm', prefix.lib)
-                files = glob.iglob('*.pl')
-                for file in files:
-                    if os.path.isfile(file):
-                        install(file, prefix.bin)
+                install('*.pl', prefix.bin)
 
     @run_after('install')
     def filter_sbang(self):
@@ -62,5 +58,5 @@ class Braker(Package):
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PERL5LIB', prefix.lib)
+    def setup_run_environment(self, env):
+        env.prepend_path('PERL5LIB', self.prefix.lib)

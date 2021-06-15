@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,9 @@ class Snappy(CMakePackage):
     """A fast compressor/decompressor: https://code.google.com/p/snappy"""
 
     homepage = "https://github.com/google/snappy"
-    url      = "https://github.com/google/snappy/archive/1.1.7.tar.gz"
+    url      = "https://github.com/google/snappy/archive/1.1.8.tar.gz"
 
+    version('1.1.8', sha256='16b677f07832a612b0836178db7f374e414f94657c138e6993cbfc5dcc58651f')
     version('1.1.7', sha256='3dfa02e873ff51a11ee02b9ca391807f0c8ea0529a4924afa645fbf97163f9d4')
 
     variant('shared', default=True, description='Build shared libraries')
@@ -22,23 +23,19 @@ class Snappy(CMakePackage):
     patch('link_gtest.patch')
 
     def cmake_args(self):
-        spec = self.spec
-
-        args = [
-            '-DCMAKE_INSTALL_LIBDIR:PATH={0}'.format(
-                self.prefix.lib),
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DSNAPPY_BUILD_TESTS:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF')
+        return [
+            self.define('CMAKE_INSTALL_LIBDIR', self.prefix.lib),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define('SNAPPY_BUILD_TESTS', self.run_tests),
         ]
-
-        return args
 
     def flag_handler(self, name, flags):
         flags = list(flags)
-        if '+pic' in self.spec and name in ('cflags', 'cxxflags'):
-            flags.append(self.compiler.pic_flag)
+        if '+pic' in self.spec:
+            if name == 'cflags':
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == 'cxxflags':
+                flags.append(self.compiler.cxx_pic_flag)
         return (None, None, flags)
 
     @run_after('install')

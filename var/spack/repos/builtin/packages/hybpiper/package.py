@@ -1,11 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
-import os
 
 
 class Hybpiper(Package):
@@ -31,12 +27,9 @@ class Hybpiper(Package):
     depends_on('bwa')
     depends_on('samtools')
 
-    def setup_envionment(self, spack_env, run_env):
-        run_env.set('HYBPIPER_HOME', prefix)
+    def setup_run_environment(self, env):
+        env.set('HYBPIPER_HOME', self.prefix)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        files = glob.iglob("*.py")
-        for file in files:
-            if os.path.isfile(file):
-                install(file, prefix.bin)
+        install('*.py', prefix.bin)

@@ -1,0 +1,47 @@
+diff -u -r -N a/core/comm_mpi.f b/core/comm_mpi.f
+--- a/core/comm_mpi.f	2020-09-14 09:56:13.000000000 +0900
++++ b/core/comm_mpi.f	2020-09-14 09:58:51.000000000 +0900
+@@ -736,7 +736,7 @@
+ 
+       call gop_test(ivb)   ! added, Jan. 8, 2008
+ 
+-      log_np=log2(np)
++      log_np=int(log2(real(np)))
+       np2 = 2**log_np
+       if (np2.eq.np) call gp2_test(ivb)   ! added, Jan. 8, 2008
+ 
+@@ -1200,7 +1200,7 @@
+       ifgot=.false.
+       if (nid.eq.root) ifgot=.true.
+ 
+-      lnp = log2(np)
++      lnp = int(log2(real(np)))
+       do i=1,lnp
+         if (ifgot) then
+            jnid=nid+level
+diff -u -r -N a/core/makenek.inc b/core/makenek.inc
+--- a/core/makenek.inc	2020-09-08 14:39:12.000000000 +0900
++++ b/core/makenek.inc	2020-09-14 09:57:58.000000000 +0900
+@@ -234,6 +234,10 @@
+                FF77="-qfixed"
+                PPPO="-WF,"
+                ;;
++  *frt*)       FCPP="-Cpp"
++               FR8="-Ad"
++               FF77="-Fixed -X9"
++               ;; 
+   *)  echo "ERROR: Cannot find a supported compiler!"
+       echo ""
+       read;;
+diff -u -r -N a/core/map2.f b/core/map2.f
+--- a/core/map2.f	2020-09-08 15:09:13.000000000 +0900
++++ b/core/map2.f	2020-09-08 15:11:45.000000000 +0900
+@@ -654,7 +654,7 @@
+       integer e,eg
+ 
+ 
+-      log2p = log2(np)
++      log2p = int(log2(real(np)))
+       np2   = 2**log2p
+       if (np2.eq.np.and.nelgv.eq.nelgt) then   ! std power of 2 case
+ 

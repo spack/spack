@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,13 +11,27 @@ from spack import *
 class Slepc(Package):
     """Scalable Library for Eigenvalue Problem Computations."""
 
-    homepage = "http://slepc.upv.es"
-    url      = "http://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
-    git      = "https://bitbucket.org/slepc/slepc.git"
+    homepage = "https://slepc.upv.es"
+    url      = "https://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
+    git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
 
-    version('develop', branch='master')
+    test_requires_compiler = True
+
+    version('main', branch='main')
+    version('3.15.1', sha256='9c7c3a45f0d9df51decf357abe090ef05114c38a69b7836386a19a96fb203aea')
+    version('3.15.0', sha256='e53783ae13acadce274ea65c67186b5ab12332cf17125a694e21d598aa6b5f00')
+    version('3.14.2', sha256='3e54578dda1f4c54d35ac27d02f70a43f6837906cb7604dbcec0e033cfb264c8')
+    version('3.14.1', sha256='cc78a15e34d26b3e6dde003d4a30064e595225f6185c1975bbd460cb5edd99c7')
+    version('3.14.0', sha256='37f8bb270169d1d3f5d43756ac8929d56204e596bd7a78a7daff707513472e46')
+    version('3.13.4', sha256='ddc9d58e1a4413218f4e67ea3b255b330bd389d67f394403a27caedf45afa496')
+    version('3.13.3', sha256='23d179c22b4b2f22d29fa0ac0a62f5355a964d3bc245a667e9332347c5aa8f81')
+    version('3.13.2', sha256='04cb8306cb5d4d990509710d7f8ae949bdc2c7eb850930b8d0b0b5ca99f6c70d')
+    version('3.13.1', sha256='f4a5ede4ebdee5e15153ce31c1421209c7b794bd94be1430018615fb0838b879')
+    version('3.13.0', sha256='f1f3c2d13a1a6914e7bf4746d38761e107ea866f50927b639e4ad5918dd1e53b')
+    version('3.12.2', sha256='a586ce572a928ed87f04961850992a9b8e741677397cbaa3fb028323eddf4598')
+    version('3.12.1', sha256='a1cc2e93a81c9f6b86abd81022c9d64b0dc2161e77fb54b987f963bc292e286d')
     version('3.12.0', sha256='872831d961cf76389fafb7553231ae1a6676555850c98ea0e893c06f596b2e9e')
     version('3.11.2', sha256='cd6a73ac0c9f689c12f2987000a7a28fa7df53fdc069fb59a2bb148699e741dd')
     version('3.11.1', sha256='4816070d4ecfeea6212c6944cee22dc7b4763df1eaf6ab7847cc5ac5132608fb')
@@ -44,7 +58,10 @@ class Slepc(Package):
     depends_on('python@2.6:2.8,3.4:', type='build', when='@3.11:')
 
     # Cannot mix release and development versions of SLEPc and PETSc:
-    depends_on('petsc@develop', when='@develop')
+    depends_on('petsc@main', when='@main')
+    depends_on('petsc@3.15:3.15.99', when='@3.15:3.15.99')
+    depends_on('petsc@3.14:3.14.99', when='@3.14:3.14.99')
+    depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')
     depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
     depends_on('petsc@3.11:3.11.99', when='@3.11:3.11.99')
     depends_on('petsc@3.10:3.10.99', when='@3.10:3.10.99')
@@ -58,14 +75,22 @@ class Slepc(Package):
     patch('install_name_371.patch', when='@3.7.1')
 
     # Arpack can not be used with 64bit integers.
-    conflicts('+arpack', when='^petsc+int64')
+    conflicts('+arpack', when='@:3.12.99 ^petsc+int64')
+    conflicts('+blopex', when='^petsc+int64')
 
     resource(name='blopex',
              url='http://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
              sha256='0081ee4c4242e635a8113b32f655910ada057c59043f29af4b613508a762f3ac',
              destination=join_path('installed-arch-' + sys.platform + '-c-opt',
                                    'externalpackages'),
-             when='+blopex')
+             when='@:3.12.99+blopex')
+
+    resource(name='blopex',
+             git='https://github.com/lobpcg/blopex',
+             commit='6eba31f0e071f134a6e4be8eccfb8d9d7bdd5ac7',
+             destination=join_path('installed-arch-' + sys.platform + '-c-opt',
+                                   'externalpackages'),
+             when='@3.13.0:+blopex')
 
     def install(self, spec, prefix):
         # set SLEPC_DIR for installation
@@ -73,19 +98,28 @@ class Slepc(Package):
         # its symlink in spack/stage/ !
         os.environ['SLEPC_DIR'] = os.getcwd()
 
-        options = []
+        if self.spec.satisfies('%cce'):
+            filter_file('          flags = l',
+                        '          flags = l\n        flags += ["-fuse-ld=gold"]',
+                        'config/package.py')
 
+        options = []
         if '+arpack' in spec:
             options.extend([
-                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix.lib,
+                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
             ])
+            if spec.satisfies('@:3.12.99'):
+                arpackopt = '--with-arpack-flags'
+            else:
+                arpackopt = '--with-arpack-lib'
+
             if 'arpack-ng~mpi' in spec:
                 options.extend([
-                    '--with-arpack-flags=-larpack'
+                    arpackopt + '=-larpack'
                 ])
             else:
                 options.extend([
-                    '--with-arpack-flags=-lparpack,-larpack'
+                    arpackopt + '=-lparpack,-larpack'
                 ])
 
         # It isn't possible to install BLOPEX separately and link to it;
@@ -101,6 +135,36 @@ class Slepc(Package):
 
         make('install', parallel=False)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # set up SLEPC_DIR for everyone using SLEPc package
-        spack_env.set('SLEPC_DIR', self.prefix)
+    def setup_run_environment(self, env):
+        # set SLEPC_DIR & PETSC_DIR in the module file
+        env.set('SLEPC_DIR', self.prefix)
+        env.set('PETSC_DIR', self.spec['petsc'].prefix)
+
+    def run_hello_test(self):
+        """Run stand alone test: hello"""
+        test_dir = self.test_suite.current_test_data_dir
+
+        if not os.path.exists(test_dir):
+            print('Skipping slepc test')
+            return
+
+        exe = 'hello'
+        cc_exe = os.environ['CC']
+
+        self.run_test(exe=cc_exe,
+                      options=['-I{0}'.format(self.prefix.include),
+                               '-L', self.prefix.lib, '-l', 'slepc',
+                               '-L', self.spec['petsc'].prefix.lib, '-l', 'petsc',
+                               '-L', self.spec['mpi'].prefix.lib, '-l', 'mpi',
+                               '-o', exe, join_path(test_dir, 'hello.c')],
+                      purpose='test: compile {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe=exe,
+                      options=[],
+                      expected=['Hello world'],
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_hello_test()

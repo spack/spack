@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,14 +8,21 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
    :lines: 13-
 """
+import spack.schema.environment
+import spack.schema.projections
 
 #: Matches a spec or a multi-valued variant but not another
 #: valid keyword.
 #:
 #: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
-spec_regex = r'(?!hierarchy|verbose|hash_length|whitelist|' \
-             r'blacklist|naming_scheme|core_compilers|all)(^\w[\w-]*)'
+spec_regex = r'(?!hierarchy|core_specs|verbose|hash_length|whitelist|' \
+             r'blacklist|projections|naming_scheme|core_compilers|all)' \
+             r'(^\w[\w-]*)'
+
+#: Matches a valid name for a module set
+# Banned names are valid entries at that level in the previous schema
+set_regex = r'(?!enable|lmod|tcl|dotkit|prefix_inspections)^\w[\w-]*'
 
 #: Matches an anonymous spec, i.e. a spec without a root name
 anonymous_spec_regex = r'^[\^@%+~]'
@@ -66,19 +73,11 @@ module_file_configuration = {
                 }
             }
         },
-        'environment': {
-            'type': 'object',
-            'default': {},
-            'additionalProperties': False,
-            'properties': {
-                'set': dictionary_of_strings,
-                'unset': array_of_strings,
-                'prepend_path': dictionary_of_strings,
-                'append_path': dictionary_of_strings
-            }
-        }
+        'environment': spack.schema.environment.definition
     }
 }
+
+projections_scheme = spack.schema.projections.properties['projections']
 
 module_type_configuration = {
     'type': 'object',
@@ -103,6 +102,7 @@ module_type_configuration = {
             'naming_scheme': {
                 'type': 'string'  # Can we be more specific here?
             },
+            'projections': projections_scheme,
             'all': module_file_configuration,
         }
         },
@@ -116,73 +116,104 @@ module_type_configuration = {
 }
 
 
+#: The "real" module properties -- the actual configuration parameters.
+#: They are separate from ``properties`` because they can appear both
+#: at the top level of a Spack ``modules:`` config (old, deprecated format),
+#: and within a named module set (new format with multiple module sets).
+module_config_properties = {
+    'use_view': {'anyOf': [
+        {'type': 'string'},
+        {'type': 'boolean'}
+    ]},
+    'prefix_inspections': {
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            # prefix-relative path to be inspected for existence
+            r'^[\w-]*': array_of_strings
+        }
+    },
+    'roots': {
+        'type': 'object',
+        'properties': {
+            'tcl': {'type': 'string'},
+            'lmod': {'type': 'string'},
+        },
+    },
+    'enable': {
+        'type': 'array',
+        'default': [],
+        'items': {
+            'type': 'string',
+            'enum': ['tcl', 'dotkit', 'lmod']
+        },
+        'deprecatedProperties': {
+            'properties': ['dotkit'],
+            'message': 'cannot enable "dotkit" in modules.yaml '
+            '[support for "dotkit" has been dropped '
+            'in v0.13.0]',
+            'error': False
+        },
+    },
+    'lmod': {
+        'allOf': [
+            # Base configuration
+            module_type_configuration,
+            {
+                'type': 'object',
+                'properties': {
+                    'core_compilers': array_of_strings,
+                    'hierarchy': array_of_strings,
+                    'core_specs': array_of_strings,
+                },
+            }  # Specific lmod extensions
+        ]
+    },
+    'tcl': {
+        'allOf': [
+            # Base configuration
+            module_type_configuration,
+            {}  # Specific tcl extensions
+        ]
+    },
+    'dotkit': {
+        'allOf': [
+            # Base configuration
+            module_type_configuration,
+            {}  # Specific dotkit extensions
+        ]
+    },
+}
+
+
 # Properties for inclusion into other schemas (requires definitions)
 properties = {
     'modules': {
         'type': 'object',
-        'default': {},
-        'additionalProperties': False,
-        'properties': {
-            'prefix_inspections': {
+        'patternProperties': {
+            set_regex: {
                 'type': 'object',
-                'patternProperties': {
-                    # prefix-relative path to be inspected for existence
-                    r'\w[\w-]*': array_of_strings
-                }
-            },
-            'enable': {
-                'type': 'array',
-                'default': [],
-                'items': {
-                    'type': 'string',
-                    'enum': ['tcl', 'dotkit', 'lmod']
-                },
+                'default': {},
+                'additionalProperties': False,
+                'properties': module_config_properties,
                 'deprecatedProperties': {
                     'properties': ['dotkit'],
-                    'message': 'cannot enable "{property}" in modules.yaml '
-                               '[support for {property} module files has been'
-                               ' dropped]',
+                    'message': 'the "dotkit" section in modules.yaml has no effect'
+                    ' [support for "dotkit" has been dropped in v0.13.0]',
                     'error': False
-                },
-            },
-            'lmod': {
-                'allOf': [
-                    # Base configuration
-                    module_type_configuration,
-                    {
-                        'type': 'object',
-                        'properties': {
-                            'core_compilers': array_of_strings,
-                            'hierarchy': array_of_strings
-                        },
-                    }  # Specific lmod extensions
-                ]
-            },
-            'tcl': {
-                'allOf': [
-                    # Base configuration
-                    module_type_configuration,
-                    {}  # Specific tcl extensions
-                ]
-            },
-            'dotkit': {
-                'allOf': [
-                    # Base configuration
-                    module_type_configuration,
-                    {}  # Specific dotkit extensions
-                ]
+                }
             },
         },
+        # Available here for backwards compatibility
+        'properties': module_config_properties,
         'deprecatedProperties': {
             'properties': ['dotkit'],
-            'message': 'the section "{property}" in modules.yaml has no effect'
-                       ' [support for {property} module files has been '
-                       'dropped]',
+            'message': 'the "dotkit" section in modules.yaml has no effect'
+            ' [support for "dotkit" has been dropped in v0.13.0]',
             'error': False
-        },
-    },
+        }
+    }
 }
-
 
 #: Full schema with metadata
 schema = {

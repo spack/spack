@@ -1,0 +1,20 @@
+diff --git a/Makefile b/Makefile
+index 9b6600a..8805cd1 100644
+--- a/Makefile
++++ b/Makefile
+@@ -976,13 +976,13 @@ framework :
+ 	@ echo '--------------------------------------'
+ 	( cd frame ; $(MAKE) $(J) LLIST="$(LINKLIST)" framework ; \
+           cd ../external/io_netcdf ; \
+-          $(MAKE) NETCDFPATH="$(NETCDFPATH)" \
++          $(MAKE) NETCDFPATH="$(NETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" \
+                FC="$(FC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
+                CPP="$(CPP)" LDFLAGS="$(LDFLAGS)" TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
+                LIB_LOCAL="$(LIB_LOCAL)" \
+                ESMF_MOD_DEPENDENCE="$(ESMF_MOD_DEPENDENCE)" AR="INTERNAL_BUILD_ERROR_SHOULD_NOT_NEED_AR" diffwrf; \
+           cd ../io_netcdf ; \
+-          $(MAKE) NETCDFPATH="$(NETCDFPATH)" \
++          $(MAKE) NETCDFPATH="$(NETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" \
+                FC="$(SFC) $(FCBASEOPTS) $(PROMOTION) $(FCDEBUG) $(OMP)" RANLIB="$(RANLIB)" \
+                CPP="$(CPP)" LDFLAGS="$(LDFLAGS)" TRADFLAG="$(TRADFLAG)" ESMF_IO_LIB_EXT="$(ESMF_IO_LIB_EXT)" \
+ 	       LIB_LOCAL="$(LIB_LOCAL)" \

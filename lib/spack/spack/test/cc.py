@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ test_args = [
     '-Wl,--end-group',
     '-Xlinker', '-rpath', '-Xlinker', '/third/rpath',
     '-Xlinker', '-rpath', '-Xlinker', '/fourth/rpath',
+    '-Wl,--rpath,/fifth/rpath', '-Wl,--rpath', '-Wl,/sixth/rpath',
     '-llib3', '-llib4',
     'arg5', 'arg6']
 
@@ -45,11 +46,13 @@ test_library_paths = [
 
 test_wl_rpaths = [
     '-Wl,-rpath,/first/rpath', '-Wl,-rpath,/second/rpath',
-    '-Wl,-rpath,/third/rpath', '-Wl,-rpath,/fourth/rpath']
+    '-Wl,-rpath,/third/rpath', '-Wl,-rpath,/fourth/rpath',
+    '-Wl,-rpath,/fifth/rpath', '-Wl,-rpath,/sixth/rpath']
 
 test_rpaths = [
     '-rpath', '/first/rpath', '-rpath', '/second/rpath',
-    '-rpath', '/third/rpath', '-rpath', '/fourth/rpath']
+    '-rpath', '/third/rpath', '-rpath', '/fourth/rpath',
+    '-rpath', '/fifth/rpath', '-rpath', '/sixth/rpath']
 
 test_args_without_paths = [
     'arg1',
@@ -338,6 +341,36 @@ def test_ccld_deps():
             test_args_without_paths)
 
 
+def test_ccld_deps_isystem():
+    """Ensure all flags are added in ccld mode.
+       When a build uses -isystem, Spack should inject it's
+       include paths using -isystem. Spack will insert these
+       after any provided -isystem includes, but before any
+       system directories included using -isystem"""
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_RPATH_DIRS='xlib:ylib:zlib',
+                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
+        mytest_args = test_args + ['-isystem', 'fooinc']
+        check_args(
+            cc, mytest_args,
+            [real_cc] +
+            test_include_paths +
+            ['-isystem', 'fooinc',
+             '-isystem', 'xinc',
+             '-isystem', 'yinc',
+             '-isystem', 'zinc'] +
+            test_library_paths +
+            ['-Lxlib',
+             '-Lylib',
+             '-Lzlib'] +
+            ['-Wl,--disable-new-dtags'] +
+            test_wl_rpaths +
+            ['-Wl,-rpath,xlib',
+             '-Wl,-rpath,ylib',
+             '-Wl,-rpath,zlib'] +
+            test_args_without_paths)
+
+
 def test_cc_deps():
     """Ensure -L and RPATHs are not added in cc mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
@@ -375,6 +408,44 @@ def test_ccld_with_system_dirs():
              '-Izinc'] +
             ['-I/usr/include',
              '-I/usr/local/include'] +
+            test_library_paths +
+            ['-Lxlib',
+             '-Lylib',
+             '-Lzlib'] +
+            ['-L/usr/local/lib',
+             '-L/lib64/'] +
+            ['-Wl,--disable-new-dtags'] +
+            test_wl_rpaths +
+            ['-Wl,-rpath,xlib',
+             '-Wl,-rpath,ylib',
+             '-Wl,-rpath,zlib'] +
+            ['-Wl,-rpath,/usr/lib64'] +
+            test_args_without_paths)
+
+
+def test_ccld_with_system_dirs_isystem():
+    """Ensure all flags are added in ccld mode.
+       Ensure that includes are in the proper
+       place when a build uses -isystem, and uses
+       system directories in the include paths"""
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_RPATH_DIRS='xlib:ylib:zlib',
+                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
+
+        sys_path_args = ['-isystem', '/usr/include',
+                         '-L/usr/local/lib',
+                         '-Wl,-rpath,/usr/lib64',
+                         '-isystem', '/usr/local/include',
+                         '-L/lib64/']
+        check_args(
+            cc, sys_path_args + test_args,
+            [real_cc] +
+            test_include_paths +
+            ['-isystem', 'xinc',
+             '-isystem', 'yinc',
+             '-isystem', 'zinc'] +
+            ['-isystem', '/usr/include',
+             '-isystem', '/usr/local/include'] +
             test_library_paths +
             ['-Lxlib',
              '-Lylib',
@@ -551,3 +622,24 @@ def test_filter_enable_new_dtags(wrapper_flags):
         result = cc(*(test_args + ['-Wl,--enable-new-dtags']), output=str)
         result = result.strip().split('\n')
         assert '-Wl,--enable-new-dtags' not in result
+
+
+@pytest.mark.regression('22643')
+def test_linker_strips_loopopt(wrapper_flags):
+    with set_env(SPACK_TEST_COMMAND='dump-args'):
+        # ensure that -loopopt=0 is not present in ld mode
+        result = ld(*(test_args + ["-loopopt=0"]), output=str)
+        result = result.strip().split('\n')
+        assert '-loopopt=0' not in result
+
+        # ensure that -loopopt=0 is not present in ccld mode
+        result = cc(*(test_args + ["-loopopt=0"]), output=str)
+        result = result.strip().split('\n')
+        assert '-loopopt=0' not in result
+
+        # ensure that -loopopt=0 *is* present in cc mode
+        # The "-c" argument is needed for cc to be detected
+        # as compile only (cc) mode.
+        result = cc(*(test_args + ["-loopopt=0", "-c", "x.c"]), output=str)
+        result = result.strip().split('\n')
+        assert '-loopopt=0' in result

@@ -1,0 +1,11 @@
+--- a/include/pciaccess.h	2020-08-07 11:43:47.395032509 -0700
++++ b/include/pciaccess.h	2020-08-07 11:44:13.384136014 -0700
+@@ -59,7 +59,7 @@
+ 
+ #include <inttypes.h>
+ 
+-#if (__GNUC__ >= 3) || (__SUNPRO_C >= 0x5130)
++#if (((__GNUC__ >= 3) || (__SUNPRO_C >= 0x5130)) && !defined __NVCOMPILER)
+ #define __deprecated __attribute__((deprecated))
+ #else
+ #define __deprecated

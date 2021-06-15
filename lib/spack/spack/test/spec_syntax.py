@@ -1,8 +1,8 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import itertools
 import os
 import pytest
 import shlex
@@ -17,9 +17,11 @@ from spack.parse import Token
 from spack.spec import Spec
 from spack.spec import SpecParseError, RedundantSpecError
 from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
-from spack.spec import DuplicateArchitectureError, DuplicateVariantError
+from spack.spec import DuplicateArchitectureError
 from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
 from spack.spec import SpecFilenameError, NoSuchSpecFileError
+from spack.spec import MultipleVersionError
+from spack.variant import DuplicateVariantError
 
 
 # Sample output for a complex lexing.
@@ -148,6 +150,9 @@ class TestSpecSyntax(object):
         self.check_parse("openmpi ^hwloc ^libunwind",
                          "openmpi^hwloc^libunwind")
 
+    def test_version_after_compiler(self):
+        self.check_parse('foo@2.0%bar@1.0', 'foo %bar@1.0 @2.0')
+
     def test_dependencies_with_versions(self):
         self.check_parse("openmpi ^hwloc@1.2e6")
         self.check_parse("openmpi ^hwloc@1.2e6:")
@@ -176,7 +181,7 @@ class TestSpecSyntax(object):
             " ^stackwalker@8.1_1e")
         self.check_parse(
             "mvapich_foo"
-            " ^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2"
             " ^stackwalker@8.1_1e")
         self.check_parse(
             'mvapich_foo'
@@ -184,8 +189,34 @@ class TestSpecSyntax(object):
             ' ^stackwalker@8.1_1e')
         self.check_parse(
             "mvapich_foo"
-            " ^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2"
             " ^stackwalker@8.1_1e arch=test-redhat6-x86")
+
+    def test_yaml_specs(self):
+        self.check_parse(
+            "yaml-cpp@0.1.8%intel@12.1"
+            " ^boost@3.1.4")
+        tempspec = r"builtin.yaml-cpp%gcc"
+        self.check_parse(
+            tempspec.strip("builtin."),
+            spec=tempspec)
+        tempspec = r"testrepo.yaml-cpp%gcc"
+        self.check_parse(
+            tempspec.strip("testrepo."),
+            spec=tempspec)
+        tempspec = r"builtin.yaml-cpp@0.1.8%gcc"
+        self.check_parse(
+            tempspec.strip("builtin."),
+            spec=tempspec)
+        tempspec = r"builtin.yaml-cpp@0.1.8%gcc@7.2.0"
+        self.check_parse(
+            tempspec.strip("builtin."),
+            spec=tempspec)
+        tempspec = r"builtin.yaml-cpp@0.1.8%gcc@7.2.0" \
+            r" ^boost@3.1.4"
+        self.check_parse(
+            tempspec.strip("builtin."),
+            spec=tempspec)
 
     def test_canonicalize(self):
         self.check_parse(
@@ -212,7 +243,7 @@ class TestSpecSyntax(object):
 
         self.check_parse(
             "x arch=test-redhat6-None"
-            " ^y arch=test-None-x86_64"
+            " ^y arch=test-None-core2"
             " ^z arch=linux-None-None",
 
             "x os=fe "
@@ -220,8 +251,8 @@ class TestSpecSyntax(object):
             "^z platform=linux")
 
         self.check_parse(
-            "x arch=test-debian6-x86_64"
-            " ^y arch=test-debian6-x86_64",
+            "x arch=test-debian6-core2"
+            " ^y arch=test-debian6-core2",
 
             "x os=default_os target=default_target"
             " ^y os=default_os target=default_target")
@@ -320,11 +351,12 @@ class TestSpecSyntax(object):
     @pytest.mark.db
     def test_ambiguous_hash(self, mutable_database):
         x1 = Spec('a')
-        x1._hash = 'xy'
-        x1._concrete = True
+        x1.concretize()
+        x1._hash = 'xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy'
         x2 = Spec('a')
-        x2._hash = 'xx'
-        x2._concrete = True
+        x2.concretize()
+        x2._hash = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
         mutable_database.add(x1, spack.store.layout)
         mutable_database.add(x2, spack.store.layout)
 
@@ -404,6 +436,17 @@ class TestSpecSyntax(object):
             'x ^y@1.2 debug=false ~debug'
         ]
         self._check_raises(DuplicateVariantError, duplicates)
+
+    def test_multiple_versions(self):
+        multiples = [
+            'x@1.2@2.3',
+            'x@1.2:2.3@1.4',
+            'x@1.2@2.3:2.4',
+            'x@1.2@2.3,2.4',
+            'x@1.2 +foo~bar @2.3',
+            'x@1.2%y@1.2@2.3:2.4',
+        ]
+        self._check_raises(MultipleVersionError, multiples)
 
     def test_duplicate_dependency(self):
         self._check_raises(DuplicateDependencyError, ["x ^y ^y"])
@@ -513,10 +556,6 @@ class TestSpecSyntax(object):
 
         with specfile.open('w') as f:
             f.write(s['libelf'].to_yaml(hash=ht.build_hash))
-
-        print("")
-        print("")
-        print("PARSING HERE")
 
         # Make sure we can use yaml path as dependency, e.g.:
         #     "spack spec libdwarf ^ /path/to/libelf.yaml"
@@ -763,3 +802,26 @@ class TestSpecSyntax(object):
     ])
     def test_target_tokenization(self, expected_tokens, spec_string):
         self.check_lex(expected_tokens, spec_string)
+
+    @pytest.mark.regression('20310')
+    def test_compare_abstract_specs(self):
+        """Spec comparisons must be valid for abstract specs.
+
+        Check that the spec cmp_key appropriately handles comparing specs for
+        which some attributes are None in exactly one of two specs"""
+        # Add fields in order they appear in `Spec._cmp_node`
+        constraints = [
+            None,
+            'foo',
+            'foo.foo',
+            'foo.foo@foo',
+            'foo.foo@foo+foo',
+            'foo.foo@foo+foo arch=foo-foo-foo',
+            'foo.foo@foo+foo arch=foo-foo-foo %foo',
+            'foo.foo@foo+foo arch=foo-foo-foo %foo cflags=foo',
+        ]
+        specs = [Spec(s) for s in constraints]
+
+        for a, b in itertools.product(specs, repeat=2):
+            # Check that we can compare without raising an error
+            assert a <= b or b < a

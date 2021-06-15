@@ -1,0 +1,38 @@
+diff -uprN FFB8.org/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Bucket.h FFB8.new/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Bucket.h
+--- FFB8.org/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Bucket.h	2013-03-26 10:09:31.000000000 +0900
++++ FFB8.new/lib/src/REVOCAP_Refiner-0.4.3/Geometry/kmb_Bucket.h	2020-06-16 11:33:05.765408337 +0900
+@@ -64,7 +64,7 @@ public:
+ 		numY = this->ynum;
+ 		numZ = this->znum;
+ 	};
+-	void getSize(void) const{
++	int getSize(void) const{
+ 		return this->xnum * this->ynum * this->znum;
+ 	};
+ 
+@@ -81,12 +81,6 @@ public:
+ 
+ 		int getIndex() const{ return it->first; };
+ 
+-		void getIndices(int &i,int &j,int &k) const{
+-			i = it->first / (ynum*znum);
+-			j = (it->first - i*ynum*znum) / znum;
+-			k = it->first - i*ynum*znum - j*znum;
+-		};
+-
+ 		iterator& operator++(void){ ++it; return *this; };
+ 
+ 		iterator  operator++(int n){
+@@ -124,12 +118,6 @@ public:
+ 
+ 		int getIndex() const{ return it->first; };
+ 
+-		void getIndices(int &i,int &j,int &k) const{
+-			i = it->first / (ynum*znum);
+-			j = (it->first - i*ynum*znum) / znum;
+-			k = it->first - i*ynum*znum - j*znum;
+-		};
+-
+ 		const_iterator& operator++(void){ ++it; return *this; };
+ 
+ 		const_iterator operator++(int n){

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ class Hpl(AutotoolsPackage):
     depends_on('blas')
 
     # 2.3 adds support for openmpi 4
-    conflicts('openmpi@4.0.0:', when='@:2.2')
+    conflicts('^openmpi@4.0.0:', when='@:2.2')
 
     parallel = False
 
@@ -101,11 +101,18 @@ class Hpl(AutotoolsPackage):
 
     @when('@2.3:')
     def configure_args(self):
-        config = [
-            'CFLAGS=-O3'
-        ]
+        filter_file(
+            r"^libs10=.*", "libs10=%s" % self.spec["blas"].libs.ld_flags,
+            "configure"
+        )
+
+        if '+openmp' in self.spec:
+            config = ['CFLAGS=-O3 ' + self.compiler.openmp_flag]
+        else:
+            config = ['CFLAGS=-O3']
 
         if (self.spec.satisfies('^intel-mkl') or
+            self.spec.satisfies('^intel-oneapi-mkl') or
             self.spec.satisfies('^intel-parallel-studio+mkl')):
             config.append('LDFLAGS={0}'.format(
                 self.spec['blas'].libs.ld_flags))

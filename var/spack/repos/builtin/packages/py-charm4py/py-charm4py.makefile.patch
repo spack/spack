@@ -1,0 +1,35 @@
+#This patchfile 
+#	1) patches setup.py to patch the Makefile for charm++ (which it untars) using
+#		spack-charm4py-setup.py.patch
+#	2) creates the spack-charm4py-setup.py.patch file
+diff -Naur spack-src/setup.py spack-src.patched/setup.py
+--- spack-src/setup.py	2019-09-08 20:33:25.000000000 -0400
++++ spack-src.patched/setup.py	2020-09-10 18:09:10.714772095 -0400
+@@ -112,6 +112,11 @@
+             rc = p.wait()
+             if rc != 0:
+                 raise DistutilsSetupError('An error occured while building charm library')
++            cmd = [ 'patch', 'charm/src/scripts/Makefile' , 'spack-charm4py-setup.py.patch' ]
++            p = subprocess.Popen(cmd, cwd=charm_src_dir, shell=False)
++            rc = p.wait()
++            if rc != 0:
++                raise DistutilsSetupError('An error occured while patching charm++ Makefile')
+ 
+         # divide by 2 to not hog the system. On systems with hyperthreading, this will likely
+         # result in using same # cores as physical cores (therefore not all the logical cores)
+diff -Naur spack-src/charm_src/spack-charm4py-setup.py.patch spack-src.patched/charm_src/spack-charm4py-setup.py.patch
+--- spack-src/charm_src/spack-charm4py-setup.py.patch	1969-12-31 19:00:00.000000000 -0500
++++ spack-src.patched/charm_src/spack-charm4py-setup.py.patch	2020-09-10 18:04:58.935191477 -0400
+@@ -0,0 +1,12 @@
++diff -Naur charm_src.orig/charm/src/scripts/Makefile charm_src/charm/src/scripts/Makefile
++--- charm_src.orig/charm/src/scripts/Makefile	2020-09-10 17:52:36.402834986 -0400
+++++ charm_src/charm/src/scripts/Makefile	2020-09-10 17:49:49.514810102 -0400
++@@ -87,7 +87,7 @@
++ f90charm: charm++ $(L)/libf90charm.a
++ 
++ libcharm: charm++
++-	cd $(L) ; $(CHARMC) -standalone -whole-archive -c++stl -shared -o libcharm.so $(LIBCHARM_LIBS)
+++	cd $(L) ; $(CHARMC) -standalone -whole-archive -c++stl -shared -o libcharm.so $(LIBCHARM_LIBS) $(SPACK_CHARM4PY_EXTRALIBS)
++ 
++ charmpy: libcharm
++ 

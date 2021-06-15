@@ -1,0 +1,37 @@
+--- FFB8.org/util/xvx2gf/XVX.h	2013-03-26 10:09:49.000000000 +0900
++++ FFB8.new/util/xvx2gf/XVX.h	2020-06-24 14:27:32.000000000 +0900
+@@ -5,6 +5,7 @@
+ #include <algorithm>
+ #include <cassert>
+ #include <vector>
++#include <inttypes.h>
+ 
+ #define MAX_LEVEL	32
+ 
+@@ -182,25 +183,7 @@ public:
+ 		void *_ptr;
+ 		unsigned char volptr[3];// とりあえず最大256^3まで uintにしてbitmaskすれば1024^3
+ 		
+-		#if _WIN64 // _WIN32と順番を変えるとおかしくなるので注意（64ビットWindows環境では、_WIN32と_WIN64の両方が定義される）
+-			typedef unsigned long long int PtrAsInt;
+-		#elif _WIN32
+-			typedef unsigned int PtrAsInt;
+-		#elif __APPLE__
+-			#if x86_64
+-				typedef unsigned long long int PtrAsInt;
+-			#else
+-				typedef unsigned int PtrAsInt;
+-			#endif
+-		#elif __linux__
+-			#if __x86_64__
+-				typedef unsigned long long int PtrAsInt;
+-			#else	
+-				typedef unsigned int PtrAsInt;
+-			#endif
+-		#else
+-			#error you must typedef 'PtrAsInt'
+-		#endif
++                typedef size_t PtrAsInt;		
+ 	}ALIGNMENT;
+ #ifdef __GNUC__
+ #pragma pack(pop)

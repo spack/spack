@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -266,6 +266,8 @@ def test_contains():
     assert_in('1.3.5-7', '1.2:1.4')
     assert_not_in('1.1', '1.2:1.4')
     assert_not_in('1.5', '1.2:1.4')
+    assert_not_in('1.5', '1.5.1:1.6')
+    assert_not_in('1.5', '1.5.1:')
 
     assert_in('1.4.2', '1.2:1.4')
     assert_not_in('1.4.2', '1.2:1.4.0')
@@ -370,6 +372,9 @@ def test_intersect_with_containment():
 
     check_intersection('1.6:1.6.5', ':1.6.5', '1.6')
     check_intersection('1.6:1.6.5', '1.6', ':1.6.5')
+
+    check_intersection('11.2', '11', '11.2')
+    check_intersection('11.2', '11.2', '11')
 
 
 def test_union_with_containment():
@@ -560,3 +565,14 @@ def test_list_highest():
     assert vl2.highest_numeric() is None
     assert vl2.preferred() == Version('develop')
     assert vl2.lowest() == Version('master')
+
+
+@pytest.mark.parametrize('version_str', [
+    "foo 1.2.0",
+    "!",
+    "1!2"
+])
+def test_invalid_versions(version_str):
+    """Ensure invalid versions are rejected with a ValueError"""
+    with pytest.raises(ValueError):
+        Version(version_str)
