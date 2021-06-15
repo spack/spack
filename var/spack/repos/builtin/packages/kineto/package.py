@@ -13,7 +13,9 @@ class Kineto(CMakePackage):
     homepage = "https://github.com/pytorch/kineto"
     git      = "https://github.com/pytorch/kineto.git"
 
-    version('0.1.0', tag='v0.1.0', submodules=True)
+    version('master', branch='master', submodules=True)
+    version('2021-03-16', commit='ce98f8b95b2ee5ffed257ca90090cd8adcf15b53', submodules=True)  # py-torch@1.8.1
+    version('2021-02-04', commit='258d9a471f8d3a50a0f52b85c3fe0902f65489df', submodules=True)  # py-torch@1.8.0
 
     root_cmakelists_dir = 'libkineto'
 
