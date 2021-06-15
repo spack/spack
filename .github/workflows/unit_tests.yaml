@@ -59,10 +59,10 @@ jobs:
     - name: Install System packages
       run: |
         sudo apt-get -y update
-        sudo apt-get install -y coreutils ninja-build graphviz dateutil
+        sudo apt-get install -y coreutils ninja-build graphviz
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools
+        pip install --upgrade pip six setuptools dateutil
         pip install --upgrade -r lib/spack/docs/requirements.txt
     - name: Build documentation
       run: |
