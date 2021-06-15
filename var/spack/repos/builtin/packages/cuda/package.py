@@ -178,6 +178,7 @@ class Cuda(Package):
             # reason, it is not enough. One more file needs to be extracted before
             # running the actual installer. This solution is one of the commonly
             # found on the Internet, when people try to install CUDA <= 8 manually.
+            # For example: https://askubuntu.com/a/1087842
             arguments = [runfile, '--tar', 'mxvf', './InstallUtils.pm']
             install_shell = which('sh')
             install_shell(*arguments)
