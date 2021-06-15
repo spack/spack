@@ -22,6 +22,7 @@ class Qnnpack(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     depends_on('ninja', type='build')
+    depends_on('python', type='build')
 
     resource(
         name='cpuinfo',
@@ -72,18 +73,18 @@ class Qnnpack(CMakePackage):
 
     def cmake_args(self):
         return [
-            '-DCPUINFO_SOURCE_DIR={0}'.format(
-                join_path(self.stage.source_path, 'deps/cpuinfo')),
-            '-DFP16_SOURCE_DIR={0}'.format(
-                join_path(self.stage.source_path, 'deps/fp16')),
-            '-DFXDIV_SOURCE_DIR={0}'.format(
-                join_path(self.stage.source_path, 'deps/fxdiv')),
-            '-DPSIMD_SOURCE_DIR={0}'.format(
-                join_path(self.stage.source_path, 'deps/psimd')),
-            '-DPTHREADPOOL_SOURCE_DIR={0}'.format(
-                join_path(self.stage.source_path, 'deps/pthreadpool')),
-            '-DGOOGLEBENCHMARK_SOURCE_DIR={0}'.format(
-                join_path(self.stage.source_path, 'deps/googlebenchmark')),
-            '-DGOOGLETEST_SOURCE_DIR={0}'.format(
-                join_path(self.stage.source_path, 'deps/googletest')),
+            self.define('CPUINFO_SOURCE_DIR',
+                        join_path(self.stage.source_path, 'deps', 'cpuinfo')),
+            self.define('FP16_SOURCE_DIR',
+                        join_path(self.stage.source_path, 'deps', 'fp16')),
+            self.define('FXDIV_SOURCE_DIR',
+                        join_path(self.stage.source_path, 'deps', 'fxdiv')),
+            self.define('PSIMD_SOURCE_DIR',
+                        join_path(self.stage.source_path, 'deps', 'psimd')),
+            self.define('PTHREADPOOL_SOURCE_DIR',
+                        join_path(self.stage.source_path, 'deps', 'pthreadpool')),
+            self.define('GOOGLEBENCHMARK_SOURCE_DIR',
+                        join_path(self.stage.source_path, 'deps', 'googlebenchmark')),
+            self.define('GOOGLETEST_SOURCE_DIR',
+                        join_path(self.stage.source_path, 'deps', 'googletest')),
         ]
