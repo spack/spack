@@ -1269,11 +1269,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise ValueError("Can only get the arch for concrete package.")
         return spack.architecture.arch_for_spec(self.spec.architecture)
 
-    @property
+    @property  # type: ignore
+    @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
+
         return spack.compilers.compiler_for_spec(self.spec.compiler,
                                                  self.spec.architecture)
 
@@ -1527,8 +1529,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # should this attempt to download the source and set one? This
             # probably only happens for source repositories which are
             # referenced by branch name rather than tag or commit ID.
-            message = 'Missing a source id for {s.name}@{s.version}'
-            tty.warn(message.format(s=self))
+            if not self.spec.external:
+                message = 'Missing a source id for {s.name}@{s.version}'
+                tty.warn(message.format(s=self))
             hash_content.append(''.encode('utf-8'))
         else:
             hash_content.append(source_id.encode('utf-8'))
@@ -2602,6 +2605,14 @@ def test_process(pkg, kwargs):
                         spec_pkg = spec.package
                     except spack.repo.UnknownPackageError:
                         continue
+
+                    # copy installed test sources cache into test cache dir
+                    if spec.concrete:
+                        cache_source = spec_pkg.install_test_root
+                        cache_dir = pkg.test_suite.current_test_cache_dir
+                        if (os.path.isdir(cache_source) and
+                                not os.path.exists(cache_dir)):
+                            fsys.install_tree(cache_source, cache_dir)
 
                     # copy test data into test data dir
                     data_source = Prefix(spec_pkg.package_dir).test

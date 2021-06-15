@@ -34,6 +34,7 @@ class Dray(Package, CudaPackage):
     maintainers = ['mclarsen', 'cyrush']
 
     version('develop',  branch='develop', submodules='True')
+    version('0.1.6',  sha256='43f39039599e3493cbbaeaf5621b611bef301ff504bed6e32c98f30bb2179e92')
     version('0.1.5',  sha256='aaf0975561a8e7910b9353e2dc30bd78abf9f01c306ec042422b7da223d3a8b8')
     version('0.1.4',  sha256='e763a3aa537b23486a4788f9d68db0a3eb545f6a2e617cd7c8a876682ca2d0a0')
     version('0.1.3',  sha256='b2f624a072463189997343b1ed911cc34c9bb1b6c7f0c3e48efeb40c05dd0d92')
@@ -201,6 +202,23 @@ class Dray(Package, CudaPackage):
             cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
             cfg.write("# cpp compiler used by spack\n")
             cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
+
+        # use global spack compiler flags
+        cppflags = ' '.join(spec.compiler_flags['cppflags'])
+        if cppflags:
+            # avoid always ending up with ' ' with no flags defined
+            cppflags += ' '
+        cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
+        if cflags:
+            cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
+        cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
+        if cxxflags:
+            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
+        fflags = ' '.join(spec.compiler_flags['fflags'])
+        if self.spec.satisfies('%cce'):
+            fflags += " -ef"
+        if fflags:
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
 
         #######################
         # Backends

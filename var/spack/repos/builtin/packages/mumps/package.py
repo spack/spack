@@ -13,6 +13,7 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.3.5.tar.gz"
 
+    version('5.4.0', sha256='c613414683e462da7c152c131cebf34f937e79b30571424060dd673368bbf627')
     version('5.3.5', sha256='e5d665fdb7043043f0799ae3dbe3b37e5b200d1ab7a6f7b2a4e463fd89507fa4')
     version('5.3.3', sha256='27e7749ac05006bf8e81a457c865402bb72a42bf3bc673da49de1020f0f32011')
     version('5.2.0', sha256='41f2c7cb20d69599fb47e2ad6f628f3798c429f49e72e757e70722680f70853f')
@@ -43,6 +44,11 @@ class Mumps(Package):
     variant('int64', default=False,
             description='Use int64_t/integer*8 as default index type')
     variant('shared', default=True, description='Build shared libraries')
+    variant('openmp', default=True,
+            description='Compile MUMPS with OpenMP support')
+    variant('blr_mt', default=False,
+            description='Allow BLAS calls in OpenMP regions ' +
+                        '(warning: might not be supported by all multithread BLAS)')
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
     depends_on('scotch + esmumps ~ metis + mpi', when='+ptscotch')
@@ -66,6 +72,8 @@ class Mumps(Package):
               msg="You cannot use the parmetis variant without metis")
     conflicts('+ptscotch', when='~mpi',
               msg="You cannot use the ptscotch variant without mpi")
+    conflicts('+blr_mt', when='~openmp',
+              msg="You cannot use the blr_mt variant without openmp")
 
     def write_makefile_inc(self):
         # The makefile variables LIBBLAS, LSCOTCH, LMETIS, and SCALAP are only
@@ -172,6 +180,23 @@ class Mumps(Package):
         else:
             if using_xlf:
                 optf.append('-qfixed')
+
+        # As of version 5.2.0, MUMPS is able to take advantage
+        # of the GEMMT BLAS extension. MKL is currently the only
+        # known BLAS implementation supported.
+        if '@5.2.0: ^mkl' in self.spec:
+            optf.append('-DGEMMT_AVAILABLE')
+
+        if '+openmp' in self.spec:
+            optc.append(self.compiler.openmp_flag)
+            optf.append(self.compiler.openmp_flag)
+            optl.append(self.compiler.openmp_flag)
+
+        # Using BLR_MT might not be supported by all multithreaded BLAS
+        # (MKL is known to work) but it is not something we can easily
+        # check so we trust that the user knows what he/she is doing.
+        if '+blr_mt' in self.spec:
+            optf.append('-DBLR_MT')
 
         makefile_conf.extend([
             'OPTC = {0}'.format(' '.join(optc)),
@@ -299,7 +324,10 @@ class Mumps(Package):
             ['d', '+double'], ['z', '+complex+double']]
         for ltr, v in letters_variants:
             if v in spec:
-                make(ltr + 'examples')
+                if self.spec.satisfies('@5.4:'):
+                    make(ltr)
+                else:
+                    make(ltr + 'examples')
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)

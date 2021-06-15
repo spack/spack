@@ -12,10 +12,11 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git      = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.1.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.2.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.2.0', sha256='547f6d5d38a41786839f01c5bfa46ffe9937b389193a8891f251e276a1a47fb0')
     version('4.1.0', sha256='8be20c722bab169bc4badd79a9eab9a1aa338e0e5ff58ad85ba6bf09e8ac60f4')
     version('4.0.0', sha256='78e37a7597b581d90a29e4b956fa65d0f8d1c8fb51667906b5fe2a223338d401')
     version('3.10.0', sha256='9bfd0cf99662192b1ac105ab387531cfa9338ae615db80ed690c6a14d987e0e8')
@@ -30,7 +31,8 @@ class Rocblas(CMakePackage):
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
@@ -40,7 +42,7 @@ class Rocblas(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
-    for ver in ['4.1.0']:
+    for ver in ['4.1.0', '4.2.0']:
         depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
 
     # This is the default library format since 3.7.0
@@ -87,6 +89,10 @@ class Rocblas(CMakePackage):
              git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
              commit='d175277084d3253401583aa030aba121e8875bfd',
              when='@4.1.0')
+    resource(name='Tensile',
+             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
+             commit='3438af228dc812768b20a068b0285122f327fa5b',
+             when='@4.2.0')
 
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.

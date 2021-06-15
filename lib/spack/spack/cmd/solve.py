@@ -116,9 +116,7 @@ def solve(parser, args):
 
     # dump the solutions as concretized specs
     if 'solutions' in dump:
-        best = min(result.answers)
-
-        opt, _, answer = best
+        opt, _, _ = min(result.answers)
         if ("opt" in dump) and (not args.format):
             tty.msg("Best of %d considered solutions." % result.nmodels)
             tty.msg("Optimization Criteria:")
@@ -132,16 +130,7 @@ def solve(parser, args):
                 color.cprint(fmt % (i + 1, name, val))
             print()
 
-        # iterate over roots from command line
-        for input_spec in specs:
-            key = input_spec.name
-            if input_spec.virtual:
-                providers = [spec.name for spec in answer.values()
-                             if spec.package.provides(key)]
-                key = providers[0]
-
-            spec = answer[key]
-
+        for spec in result.specs:
             # With -y, just print YAML to output.
             if args.format == 'yaml':
                 # use write because to_yaml already has a newline.

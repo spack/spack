@@ -5,7 +5,7 @@
 
 
 import subprocess
-from sys import platform
+import platform
 
 
 from spack import *
@@ -18,7 +18,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
-    if platform == 'linux':
+    if platform.system() == 'Linux':
         version('2021.2.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17729/l_mpi_oneapi_p_2021.2.0.215_offline.sh',
                 sha256='d0d4cdd11edaff2e7285e38f537defccff38e37a3067c02f4af43a3629ad4aa3',
@@ -77,3 +77,14 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         for lib_version in ['debug', 'release', 'release_mt', 'debug_mt']:
             file = join_path(self.component_path, 'lib', lib_version, 'libmpi.so')
             subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, file])
+
+        # fix I_MPI_SUBSTITUTE_INSTALLDIR and
+        #   __EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
+        scripts = ["mpif77", "mpif90", "mpigcc", "mpigxx", "mpiicc", "mpiicpc",
+                   "mpiifort"]
+        for script in scripts:
+            file = join_path(self.component_path, 'bin', script)
+            filter_file('I_MPI_SUBSTITUTE_INSTALLDIR',
+                        self.component_path, file, backup=False)
+            filter_file('__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__',
+                        self.component_path, file, backup=False)

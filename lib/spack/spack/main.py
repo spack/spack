@@ -32,6 +32,7 @@ import spack.architecture
 import spack.config
 import spack.cmd
 import spack.environment as ev
+import spack.modules
 import spack.paths
 import spack.repo
 import spack.store
@@ -354,7 +355,8 @@ def make_argument_parser(**kwargs):
         dest='help', action='store_const', const='long', default=None,
         help="show help for all commands (same as spack help --all)")
     parser.add_argument(
-        '--color', action='store', default='auto',
+        '--color', action='store',
+        default=os.environ.get('SPACK_COLOR', 'auto'),
         choices=('always', 'never', 'auto'),
         help="when to colorize output (default: auto)")
     parser.add_argument(
@@ -415,6 +417,7 @@ def make_argument_parser(**kwargs):
         help="print additional output during builds")
     parser.add_argument(
         '--stacktrace', action='store_true',
+        default='SPACK_STACKTRACE' in os.environ,
         help="add stacktraces to all printed statements")
     parser.add_argument(
         '-V', '--version', action='store_true',
@@ -645,12 +648,8 @@ def print_setup_info(*info):
         'tcl': list(),
         'lmod': list()
     }
-    module_roots = spack.config.get('config:module_roots')
-    module_roots = dict(
-        (k, v) for k, v in module_roots.items() if k in module_to_roots
-    )
-    for name, path in module_roots.items():
-        path = spack.util.path.canonicalize_path(path)
+    for name in module_to_roots.keys():
+        path = spack.modules.common.root_path(name, 'default')
         module_to_roots[name].append(path)
 
     other_spack_instances = spack.config.get(

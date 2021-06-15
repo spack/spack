@@ -39,6 +39,7 @@ class Axom(CachedCMakePackage, CudaPackage):
 
     version('main', branch='main', submodules=True)
     version('develop', branch='develop', submodules=True)
+    version('0.5.0', tag='v0.5.0', submodules=True)
     version('0.4.0', tag='v0.4.0', submodules=True)
     version('0.3.3', tag='v0.3.3', submodules=True)
     version('0.3.2', tag='v0.3.2', submodules=True)
@@ -55,6 +56,9 @@ class Axom(CachedCMakePackage, CudaPackage):
             description='Enable build of shared libraries')
     variant('debug',    default=False,
             description='Build debug instead of optimized version')
+
+    variant('examples', default=True, description='Build examples')
+    variant('tools',    default=True, description='Build tools')
 
     variant('cpp14',    default=True, description="Build with C++14 support")
 
@@ -90,11 +94,13 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("conduit~hdf5", when="~hdf5")
 
     # HDF5 needs to be the same as Conduit's
-    depends_on("hdf5@1.8.19:1.8.999~cxx~shared~fortran", when="+hdf5")
+    depends_on("hdf5@1.8.19:1.8.999~cxx~fortran", when="+hdf5")
 
     depends_on("lua", when="+lua")
 
     depends_on("scr", when="+scr")
+    depends_on("kvtree@master", when="+scr")
+    depends_on("dtcmp", when="+scr")
 
     depends_on("raja~openmp", when="+raja~openmp")
     depends_on("raja+openmp", when="+raja+openmp")
@@ -123,6 +129,20 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("py-sphinx", when="+devtools")
     depends_on("py-shroud", when="+devtools")
     depends_on("llvm+clang@10.0.0", when="+devtools", type='build')
+
+    # Conduit's cmake config files moved and < 0.4.0 can't find it
+    conflicts("^conduit@0.7.2:", when="@:0.4.0")
+
+    # Sidre requires conduit_blueprint_mpi.hpp
+    conflicts("^conduit@:0.6.0", when="@0.5.0:")
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%cce') and name == 'fflags':
+            flags.append('-ef')
+
+        if name in ('cflags', 'cxxflags', 'cppflags', 'fflags'):
+            return (None, None, None)  # handled in the cmake cache
+        return (flags, None, None)
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
@@ -301,13 +321,25 @@ class Axom(CachedCMakePackage, CudaPackage):
         entries.append(cmake_cache_path("CONDUIT_DIR", conduit_dir))
 
         # optional tpls
-        for dep in ('mfem', 'hdf5', 'lua', 'scr', 'raja', 'umpire'):
+        for dep in ('mfem', 'hdf5', 'lua', 'raja', 'umpire'):
             if '+%s' % dep in spec:
                 dep_dir = get_spec_path(spec, dep, path_replacements)
                 entries.append(cmake_cache_path('%s_DIR' % dep.upper(),
                                                 dep_dir))
             else:
                 entries.append('# %s not build\n' % dep.upper())
+
+        if '+scr' in spec:
+            dep_dir = get_spec_path(spec, 'scr', path_replacements)
+            entries.append(cmake_cache_path('SCR_DIR', dep_dir))
+
+            # scr's dependencies
+            for dep in ('kvtree', 'dtcmp'):
+                if spec.satisfies('^{0}'.format(dep)):
+                    dep_dir = get_spec_path(spec, dep, path_replacements)
+                    entries.append(cmake_cache_path('%s_DIR' % dep.upper(), dep_dir))
+        else:
+            entries.append('# scr not build\n')
 
         ##################################
         # Devtools
@@ -336,16 +368,16 @@ class Axom(CachedCMakePackage, CudaPackage):
             entries.append("# ClangFormat disabled due to disabled devtools\n")
             entries.append(cmake_cache_option("ENABLE_CLANGFORMAT", False))
 
-        if "+python" in spec or "+devtools" in spec:
+        if spec.satisfies('^python') or "+devtools" in spec:
             python_path = os.path.realpath(spec['python'].command.path)
             for key in path_replacements:
                 python_path = python_path.replace(key, path_replacements[key])
             entries.append(cmake_cache_path("PYTHON_EXECUTABLE", python_path))
 
-        enable_docs = "doxygen" in spec or "py-sphinx" in spec
+        enable_docs = spec.satisfies('^doxygen') or spec.satisfies('^py-sphinx')
         entries.append(cmake_cache_option("ENABLE_DOCS", enable_docs))
 
-        if "py-sphinx" in spec:
+        if spec.satisfies('^py-sphinx'):
             python_bin_dir = get_spec_path(spec, "python",
                                            path_replacements,
                                            use_bin=True)
@@ -353,14 +385,14 @@ class Axom(CachedCMakePackage, CudaPackage):
                                             pjoin(python_bin_dir,
                                                   "sphinx-build")))
 
-        if "py-shroud" in spec:
+        if spec.satisfies('^py-shroud'):
             shroud_bin_dir = get_spec_path(spec, "py-shroud",
                                            path_replacements, use_bin=True)
             entries.append(cmake_cache_path("SHROUD_EXECUTABLE",
                                             pjoin(shroud_bin_dir, "shroud")))
 
-        for dep in ('uncrustify', 'cppcheck', 'doxygen'):
-            if dep in spec:
+        for dep in ('cppcheck', 'doxygen'):
+            if spec.satisfies('^%s' % dep):
                 dep_bin_dir = get_spec_path(spec, dep, path_replacements,
                                             use_bin=True)
                 entries.append(cmake_cache_path('%s_EXECUTABLE' % dep.upper(),
@@ -378,5 +410,15 @@ class Axom(CachedCMakePackage, CudaPackage):
 
         options.append(self.define_from_variant(
             'BUILD_SHARED_LIBS', 'shared'))
+        options.append(self.define_from_variant(
+            'AXOM_ENABLE_EXAMPLES', 'examples'))
+        options.append(self.define_from_variant(
+            'AXOM_ENABLE_TOOLS', 'tools'))
 
         return options
+
+    def patch(self):
+        if self.spec.satisfies('%cce'):
+            filter_file('PROPERTIES LINKER_LANGUAGE CXX',
+                        'PROPERTIES LINKER_LANGUAGE CXX \n LINK_FLAGS "-fopenmp"',
+                        'src/axom/quest/examples/CMakeLists.txt')
