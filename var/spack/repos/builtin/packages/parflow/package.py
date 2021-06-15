@@ -70,4 +70,11 @@ class Parflow(CMakePackage):
                     '{0}/tclsh'.format(self.spec['tcl'].prefix.bin),
                     ['default_single.tcl', '1', '1' '1'])
         else:
-            print('Skipping: older versions of ParFlow do not support smoke test')
+            # If examples are not installed test if exe executes
+            exes = [ 'parflow' ]
+            for exe in exes:
+                reason = 'test version of {0} is {1}'.format(exe,
+                                                             self.spec.version)
+                self.run_test(exe, ['-v'], [self.spec.version.string],
+                              installed=True, purpose=reason)
+
