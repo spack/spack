@@ -23,3 +23,8 @@ class Gloo(CMakePackage):
     version('2018-11-20', commit='cdeb59d5c82e5401445b4c051bb396f6738d4a19')  # py-torch@1.0.0
     version('2018-05-29', commit='69eef748cc1dfbe0fefed69b34e6545495f67ac5')  # py-torch@0.4.1
     version('2018-04-06', commit='aad0002fb40612e991390d8e807f247ed23f13c5')  # py-torch@:0.4.0
+
+    depends_on('cmake@2.8.12:', type='build')
+    depends_on('ninja', type='build')
+
+    generator = 'Ninja'
