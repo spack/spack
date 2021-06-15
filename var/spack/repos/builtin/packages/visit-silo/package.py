@@ -5,6 +5,8 @@
 
 from spack import *
 import os
+# Import re module to use regular expression
+import re
 
 
 class VisitSilo(CMakePackage):
@@ -48,11 +50,12 @@ class VisitSilo(CMakePackage):
 
     build_targets = ['VERBOSE=1']
     phases = ['cmake', 'build']
+    extname = 'Silo'
 
     @property
     def root_cmakelists_dir(self):
         if '@local' not in self.spec:
-            return join_path('src', 'databases', 'Silo')
+            return join_path('src', 'databases', self.extname)
         else:
             return '.'
 
@@ -62,19 +65,30 @@ class VisitSilo(CMakePackage):
 
     @run_before('cmake')
     def run_xml2cmake(self):
-        spec = self.spec
-        visit = spec['visit']
-        args = ['-v', str(visit.version), '-clobber', '-public', 'Silo.xml']
+        visit = self.spec['visit']
+        args = ['-v', str(visit.version), '-clobber', '-public', self.extname + '.xml']
         with working_dir(self.root_cmakelists_dir):
             # Regenerate the public cmake files
             if os.path.exists("CMakeLists.txt"):
                 os.unlink('CMakeLists.txt')
             which("xml2cmake")(*args)
-            # spack extension activate : alter VISIT_PLUGIN_DIR
-            cmf = FileFilter('CMakeLists.txt')
-            cmf.filter(r'^SET\(VISIT_PLUGIN_DIR\s+\"{0}(.+)\"\)'.
-                       format(visit.prefix),
-                       r'SET(VISIT_PLUGIN_DIR "{0}\1")'.format(prefix))
+            # spack extension activate : alter VISIT_PLUGIN_DIR ;
+            # xml2cmake should have set it to visit prefix but it can
+            # happen the directory is an alias.
+            # In that case we match version/smth/plugins.
+            mstr = None
+            mstr1 = r'^SET[(]VISIT_PLUGIN_DIR\s+\"{0}(.+)\"[)]'.format(visit.prefix)
+            mstr2 = r'^SET[(]VISIT_PLUGIN_DIR\s+\".+({0}.+?{1})\"[)]'.format(
+                join_path(os.sep, visit.version, ''), join_path(os.sep, 'plugins'))
+            with open('CMakeLists.txt', 'r') as file:
+                for line in file:
+                    if re.search(mstr1, line):
+                        mstr = mstr1
+                    elif re.search(mstr2, line):
+                        mstr = mstr2
+            if mstr is not None:
+                filter_file(mstr, r'SET(VISIT_PLUGIN_DIR "{0}\1")'.format(prefix),
+                            'CMakeLists.txt')
 
     def cmake_args(self):
         silo = self.spec['silo']

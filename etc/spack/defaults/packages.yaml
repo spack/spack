@@ -40,6 +40,7 @@ packages:
       mpi: [openmpi, mpich]
       mysql-client: [mysql, mariadb-c-client]
       opencl: [pocl]
+      onedal: [intel-oneapi-dal]
       osmesa: [mesa+osmesa, mesa18+osmesa]
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]

@@ -33,10 +33,10 @@ spack:
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
       version:
-        - 2.33.1
+        - 2.36.1
     boost:
       version:
-        - 1.75.0
+        - 1.76.0
     bzip2:
       version:
         - 1.0.8
@@ -45,7 +45,7 @@ spack:
         - 1.21.0
     cmake:
       version:
-        - 3.20.2
+        - 3.20.3
     curl:
       version:
         - 7.76.0
@@ -54,17 +54,17 @@ spack:
         - 3.7
     elfutils:
       version:
-        - 0.182
+        - 0.185
       variants: +bzip2 ~nls +xz
     expat:
       version:
-        - 2.2.10
+        - 2.3.0
     findutils:
       version:
         - 4.8.0
     gdbm:
       version:
-        - 1.18.1
+        - 1.19
     gettext:
       version:
         - 0.21
