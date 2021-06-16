@@ -30,6 +30,10 @@ class Eigen(CMakePackage):
     version('3.2.6', sha256='e097b8dcc5ad30d40af4ad72d7052e3f78639469baf83cffaadc045459cda21f')
     version('3.2.5', sha256='8068bd528a2ff3885eb55225c27237cf5cda834355599f05c2c85345db8338b4')
 
+    # there is a bug that provokes bad parsing of nvhpc version
+    patch('https://gitlab.com/libeigen/eigen/-/commit/001a57519a7aa909d3bf0cd8c6ec8a9cd19d9c70.diff', when='@3.2.6:3.3.9',
+          sha256='55daee880b7669807efc0dcbeda2ae3b659e6dd4df3932f3573c8778bf5f8a42')
+
     # there is a bug in 3.3.8 that provokes a compile error in dependent packages, see https://gitlab.com/libeigen/eigen/-/issues/2011
     patch('https://gitlab.com/libeigen/eigen/-/commit/6d822a1052fc665f06dc51b4729f6a38e0da0546.diff', when='@3.3.8',
           sha256='62590e9b33a8f72b608a72b87147a306e7cb20766ea53c6b8e0a183fa6cb7635')
