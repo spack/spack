@@ -464,10 +464,6 @@ class YamlFilesystemView(FilesystemView):
         specs = self.get_all_specs()
 
         for file in files:
-            if not os.path.lexists(file):
-                tty.warn("Tried to remove %s which does not exist" % file)
-                continue
-
             # remove if file is not owned by any other package in the view
             # This will only be false if two packages are merged into a prefix
             # and have a conflicting file
@@ -477,7 +473,10 @@ class YamlFilesystemView(FilesystemView):
             # metadata directory.
             if len([s for s in specs if needs_file(s, file)]) <= 1:
                 tty.debug("Removing file " + file)
-                os.remove(file)
+                try:
+                    os.remove(file)
+                except FileNotFoundError:
+                    tty.warn("Tried to remove %s which does not exist" % file)
 
     def check_added(self, spec):
         assert spec.concrete
