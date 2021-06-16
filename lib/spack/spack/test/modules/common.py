@@ -56,6 +56,7 @@ def mock_module_filename(monkeypatch, tmpdir):
 
     yield filename
 
+
 @pytest.fixture()
 def mock_module_defaults(monkeypatch):
     def impl(*args):
