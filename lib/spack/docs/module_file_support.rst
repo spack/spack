@@ -461,6 +461,7 @@ default modules with Spack, add a ``defaults`` key to your modules
 configuration:
 
 .. code-block:: yaml
+
   modules:
     my-module-set:
       defaults:
