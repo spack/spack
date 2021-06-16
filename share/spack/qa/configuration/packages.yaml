@@ -12,8 +12,8 @@ packages:
   perl:
     buildable: False
     externals:
-    - spec: perl@5.32.0
-      prefix: /opt/local
+    - spec: perl@5.26.1
+      prefix: /usr
   findutils:
     buildable: False
     externals:
