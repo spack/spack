@@ -73,7 +73,10 @@ class Executable(object):
         Returns:
             str: The path to the executable
         """
-        return self.exe[0]
+        if sys.platform == "win32":
+            return self.exe[0].replace('/', '\\')
+        else:
+            return self.exe[0]
 
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
@@ -202,12 +205,18 @@ class Executable(object):
             if output in (str, str.split) or error in (str, str.split):
                 result = ''
                 if output in (str, str.split):
-                    outstr = text_type(out.decode('utf-8'))
+                    if sys.platform == 'win32':
+                        outstr = text_type(out.decode('ISO-8859-1'))
+                    else:
+                        outstr = text_type(err.decode('utf-8'))
                     result += outstr
                     if output is str.split:
                         sys.stdout.write(outstr)
                 if error in (str, str.split):
-                    errstr = text_type(err.decode('utf-8'))
+                    if sys.platform == 'win32':
+                        errstr = text_type(out.decode('ISO-8859-1'))
+                    else:
+                        errstr = text_type(err.decode('utf-8'))
                     result += errstr
                     if error is str.split:
                         sys.stderr.write(errstr)
@@ -274,6 +283,7 @@ def which_string(*args, **kwargs):
             name += '.exe'
         if os.path.sep in name:
             exe = os.path.abspath(name)
+            print(exe)
             if os.path.isfile(exe) and os.access(exe, os.X_OK):
                 return exe.replace('\\', '/')
         else:
