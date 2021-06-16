@@ -74,7 +74,8 @@ def setup_parser(subparser):
                         default=False, help="Regenerate buildcache index " +
                                             "after building package(s)")
     create.add_argument('--spec-file', default=None,
-                        help='Create buildcache entry for spec from yaml file')
+                        help=('Create buildcache entry for spec from json or ' +
+                              'yaml file'))
     create.add_argument('--only', default='package,dependencies',
                         dest='things_to_install',
                         choices=['package', 'dependencies'],
@@ -160,7 +161,8 @@ def setup_parser(subparser):
 
     check.add_argument(
         '--spec-file', default=None,
-        help='Check single spec from yaml file instead of release specs file')
+        help=('Check single spec from json or yaml file instead of release ' +
+              'specs file'))
 
     check.add_argument(
         '--rebuild-on-error', default=False, action='store_true',
@@ -176,7 +178,8 @@ def setup_parser(subparser):
         help="Download built tarball for spec from mirror")
     dltarball.add_argument(
         '--spec-file', default=None,
-        help="Download built tarball for spec (from yaml file) from mirror")
+        help=("Download built tarball for spec (from json or yaml file) " +
+              "from mirror"))
     dltarball.add_argument(
         '-p', '--path', default=None,
         help="Path to directory where tarball should be downloaded")
@@ -193,7 +196,8 @@ def setup_parser(subparser):
         help='Spec string for which buildcache name is desired')
     getbuildcachename.add_argument(
         '--spec-file', default=None,
-        help='Path to spec yaml file for which buildcache name is desired')
+        help=('Path to spec json or yaml file for which buildcache name is ' +
+              'desired'))
     getbuildcachename.set_defaults(func=get_buildcache_name)
 
     # Given the root spec, save the yaml of the dependent spec to a file
@@ -204,7 +208,7 @@ def setup_parser(subparser):
         help='Root spec of dependent spec')
     saveyaml.add_argument(
         '--root-spec-yaml', default=None,
-        help='Path to yaml file containing root spec of dependent spec')
+        help='Path to json or yaml file containing root spec of dependent spec')
     saveyaml.add_argument(
         '-s', '--specs', default=None,
         help='List of dependent specs for which saved yaml is desired')
@@ -220,7 +224,8 @@ def setup_parser(subparser):
         help='Path to mirror directory (root of existing buildcache)')
     copy.add_argument(
         '--spec-file', default=None,
-        help='Path to spec yaml file representing buildcache entry to copy')
+        help=('Path to spec json or yaml file representing buildcache entry to' +
+              ' copy'))
     copy.add_argument(
         '--destination-url', default=None,
         help='Destination mirror url')
@@ -353,7 +358,7 @@ def _createtarball(env, spec_file=None, packages=None, add_spec=True,
     else:
         tty.die("build cache file creation requires at least one" +
                 " installed package spec, an active environment," +
-                " or else a path to a yaml file containing a spec" +
+                " or else a path to a json or yaml file containing a spec" +
                 " to install")
     specs = set()
 
@@ -614,7 +619,7 @@ def get_tarball(args):
     command uses the process exit code to indicate its result, specifically,
     a non-zero exit code indicates that the command failed to download at
     least one of the required buildcache components.  Normally, just the
-    tarball and .spec.yaml files are required, but if the --require-cdashid
+    tarball and .spec.json files are required, but if the --require-cdashid
     argument was provided, then a .cdashid file is also required."""
     if not args.spec and not args.spec_file:
         tty.msg('No specs provided, exiting.')
