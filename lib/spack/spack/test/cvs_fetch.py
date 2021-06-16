@@ -74,14 +74,6 @@ def test_fetch(
 
             file_path = os.path.join(pkg.stage.source_path, test.file)
             assert os.path.isdir(pkg.stage.source_path)
-            # TODO
-            if not os.path.isfile(file_path):
-                print("source_path: ", pkg.stage.source_path)
-                print("test.file: ", test.file)
-                print("file_path: ", file_path)
-                os.system("ls -l " + pkg.stage.source_path)
-                os.system("pwd")
-                os.system("cvs status")
             assert os.path.isfile(file_path)
 
             os.unlink(file_path)
