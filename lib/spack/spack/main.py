@@ -641,6 +641,7 @@ def _profile_wrapper(command, parser, args, unknown_args):
 
     finally:
         pr.disable()
+        pr.dump_stats('spack.profile')
 
         # print out profile stats.
         stats = pstats.Stats(pr)
