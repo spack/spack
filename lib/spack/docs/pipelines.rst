@@ -173,13 +173,13 @@ during subesequent pipeline runs.
    With the addition of reproducible builds (#22887) a previously working
    pipeline will require some changes:
 
-   * In the build jobs (`runner-attributes`), the environment location changed.
-     This will typically show as a `KeyError` in the failing job. Be sure to
-     point to ${SPACK_CONCRETE_ENV_DIR}.
+   * In the build jobs (``runner-attributes``), the environment location changed.
+     This will typically show as a ``KeyError`` in the failing job. Be sure to
+     point to ``${SPACK_CONCRETE_ENV_DIR}``.
 
-   * If using `include` in your environment, be sure to make the included files
-     available in the build jobs. This means adding those files to the artifact
-     directory. Those files will also be missing in the reproducibility
+   * When using ``include`` in your environment, be sure to make the included
+     files available in the build jobs. This means adding those files to the
+     artifact directory. Those files will also be missing in the reproducibility
      artifact.
 
    * Because the location of the environment changed, including files with
