@@ -18,8 +18,12 @@ import xml.etree.ElementTree
 
 if sys.version_info >= (2, 7):
     # This package does not exist for Python <2.7. That means that we cannot
-    # test CVS respositories. (We can still use them, only our tests break.)
+    # test checkouts "by date" for CVS respositories. (We can still use CVS
+    # repos with all features, only our tests break.)
     from dateutil.parser import parse as parse_date
+else:
+    def parse_date(string):
+        return None
 
 import py
 import pytest
@@ -932,6 +936,8 @@ def mock_cvs_repository(tmpdir_factory):
     sourcedir = sourcedirparent.join(module)
 
     def format_date(date):
+        if date is None:
+            return None
         return date.strftime('%Y-%m-%d %H:%M:%S')
 
     def get_cvs_timestamp(output):
@@ -1030,7 +1036,7 @@ def mock_cvs_repository(tmpdir_factory):
             args={'cvs': url, 'branch': 'mock-branch'},
         ),
         'date': Bunch(
-            file=r1_file,
+            file=r0_file,
             branch=None,
             date=revision_date['1.1'],
             args={'cvs': url,

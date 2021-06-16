@@ -44,8 +44,8 @@ def test_fetch(
     are managed separately for every file.
     """
 
-    # Skip test for Python <2.7 because we cannot parse dates
-    if sys.version_info < (2, 7):
+    # Skip date test for Python <2.7 because we cannot parse dates
+    if sys.version_info < (2, 7) and type_of_test == 'date':
         return
 
     # Retrieve the right test parameters

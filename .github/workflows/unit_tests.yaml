@@ -367,6 +367,7 @@ jobs:
           pip install --upgrade pip six setuptools
           pip install --upgrade codecov coverage
           pip install --upgrade flake8 pep8-naming mypy
+          pip install --upgrade python-dateutil
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg2 kcov
