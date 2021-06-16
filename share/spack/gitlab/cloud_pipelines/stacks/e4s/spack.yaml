@@ -220,6 +220,7 @@ spack:
     - conduit
     - darshan-runtime
     - darshan-util
+    - datatransferkit
     - dyninst
     - faodel
     - flecsi@1.4.2 +external_cinch
