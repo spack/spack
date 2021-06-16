@@ -35,6 +35,7 @@ class PyHuggingfaceHub(PythonPackage):
     # maintainers = ['github_user1', 'github_user2']
 
     version('0.0.10', sha256='556765e4c7edd2d2c4c733809bae1069dca20e10ff043870ec40d53e498efae2')
+    version('0.0.8', sha256='be5b9a7ed36437bb10a780d500154d426798ec16803ff3406f7a61107e4ebfc2')
 
     # FIXME: Add dependencies if required. Only add the python dependency
     # if you need specific versions. A generic python dependency is
@@ -44,7 +45,7 @@ class PyHuggingfaceHub(PythonPackage):
     depends_on('py-filelock', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
-    depends_on('py-typing-extensions', type=('build', 'run'))
+    depends_on('py-typing-extensions', when='@0.0.10:', type=('build', 'run'))
     depends_on('py-importlib-metadata', when='^python@:3.7.999', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
