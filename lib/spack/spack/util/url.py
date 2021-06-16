@@ -66,12 +66,16 @@ def parse(url, scheme='file'):
         if isinstance(url, string_types) else url)
 
     (scheme, netloc, path, params, query, _) = url_obj
+
     scheme = (scheme or 'file').lower()
 
     if scheme == 'file':
         path = spack.util.path.canonicalize_path(netloc + path)
         path = re.sub(r'^/+', '/', path)
         netloc = ''
+
+    if sys.platform == "win32":
+        path = path.replace('\\', '/')
 
     return urllib_parse.ParseResult(scheme=scheme,
                                     netloc=netloc,
@@ -147,7 +151,8 @@ def join(base_url, path, *extra, **kwargs):
       'file:///opt/spack'
     """
     paths = [
-        (x if isinstance(x, string_types) else x.geturl())
+        (x.replace('\\', '/') if isinstance(x, string_types)
+            else x.geturl().replace('\\', '/'))
         for x in itertools.chain((base_url, path), extra)]
     n = len(paths)
     last_abs_component = None
@@ -241,6 +246,9 @@ def _join(base_url, path, *extra, **kwargs):
         if path_tokens:
             netloc = path_tokens.pop(0)
             base_path = os.path.join('', *path_tokens)
+
+    if sys.platform == "win32":
+        base_path = base_path.replace('\\', '/')
 
     return format(urllib_parse.ParseResult(scheme=scheme,
                                            netloc=netloc,
