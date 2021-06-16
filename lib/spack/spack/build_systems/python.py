@@ -127,7 +127,7 @@ class PythonPackage(PackageBase):
             list: list of strings of module names
         """
         modules = []
-        root = self.spec['python'].package.get_python_lib()
+        root = self.spec['python'].package.get_python_lib(prefix=self.prefix)
 
         # Some Python libraries are packages: collections of modules
         # distributed in directories containing __init__.py files
