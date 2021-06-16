@@ -278,13 +278,12 @@ def which_string(*args, **kwargs):
     if isinstance(path, string_types):
         path = path.split(os.pathsep)
 
-
-
     for name in args:
         if sys.platform == "win32":
             name += '.exe'
         if os.path.sep in name:
             exe = os.path.abspath(name)
+            print(exe)
             if os.path.isfile(exe) and os.access(exe, os.X_OK):
                 return exe.replace('\\', '/')
         else:
