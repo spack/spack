@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-from dateutil.parser import parse as parse_date
 import errno
 import inspect
 import itertools
@@ -13,8 +12,14 @@ import os
 import os.path
 import re
 import shutil
+import sys
 import tempfile
 import xml.etree.ElementTree
+
+if sys.version_info >= (2, 7):
+    # This package does not exist for Python <2.7. That means that we cannot
+    # test CVS respositories. (We can still use them, only our tests break.)
+    from dateutil.parser import parse as parse_date
 
 import py
 import pytest
