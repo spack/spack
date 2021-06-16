@@ -908,7 +908,7 @@ class BaseModuleFileWriter(object):
             default_tmp = os.path.join(os.path.dirname(self.layout.filename),
                                        '.tmp_spack_default')
             os.symlink(self.layout.filename, default_tmp)
-            os.renaame(default_tmp, default_path)
+            os.rename(default_tmp, default_path)
 
     def remove(self):
         """Deletes the module file."""
