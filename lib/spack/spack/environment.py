@@ -788,7 +788,14 @@ class Environment(object):
 
         self.spec_lists = OrderedDict()
 
-        for item in config_dict(self.yaml).get('definitions', []):
+        config = config_dict(self.yaml)
+
+        # Populate the speclists with included environments first, in the order given.
+        env_includes = config.get('include_environments', [])
+        for include_env_path in env_includes:
+            self._include_manifest(include_env_path)
+
+        for item in config.get('definitions', []):
             entry = copy.deepcopy(item)
             when = _eval_conditional(entry.pop('when', 'True'))
             assert len(entry) == 1
@@ -800,12 +807,12 @@ class Environment(object):
                 else:
                     self.spec_lists[name] = user_specs
 
-        spec_list = config_dict(self.yaml).get(user_speclist_name, [])
+        spec_list = config.get(user_speclist_name, [])
         user_specs = SpecList(user_speclist_name, [s for s in spec_list if s],
                               self.spec_lists.copy())
         self.spec_lists[user_speclist_name] = user_specs
 
-        enable_view = config_dict(self.yaml).get('view')
+        enable_view = config.get('view')
         # enable_view can be boolean, string, or None
         if enable_view is True or enable_view is None:
             self.views = {
@@ -820,19 +827,69 @@ class Environment(object):
                               for name, values in enable_view.items())
         else:
             self.views = {}
-        # Retrieve the current concretization strategy
-        configuration = config_dict(self.yaml)
+
         # default concretization to separately
-        self.concretization = configuration.get('concretization', 'separately')
+        self.concretization = config.get('concretization', 'separately')
 
         # Retrieve dev-build packages:
-        self.dev_specs = configuration.get('develop', {})
+        self.dev_specs = config.get('develop', {})
         for name, entry in self.dev_specs.items():
             # spec must include a concrete version
             assert Spec(entry['spec']).version.concrete
             # default path is the spec name
             if 'path' not in entry:
                 self.dev_specs[name]['path'] = name
+
+    def _include_manifest(self, include_path):
+        """Include the definitions, specs and views from spack.yaml files listed in the
+        'include_environments' configuration option."""
+
+        if not os.path.exists(include_path):
+            raise SpackEnvironmentError(
+                'Environment %s included by environment %s not found.' % (include_path, self.name)
+            )
+
+        try:
+            with open(include_path) as include_file:
+                yaml = _read_yaml(include_file)
+        except OSError as err:
+            raise SpackEnvironmentError(
+                'Enviroment %s included by environment %s could not be read.\n%s' %
+                (include_path, self.name, err.args[0])
+            )
+
+        config = config_dict(yaml)
+
+        # Build the spec list in the context of this file only, before adding the specs to the
+        # general spec list. This (hopefully) ensures references are resolved the same whether
+        # this environment was resolved individually or included.
+        spec_lists = OrderedDict()
+
+        for item in config.get('definitions', []):
+            entry = copy.deepcopy(item)
+            when = _eval_conditional(entry.pop('when', 'True'))
+            assert len(entry) == 1
+            if when:
+                name, spec_list = next(iter(entry.items()))
+                user_specs = SpecList(name, spec_list, spec_lists.copy())
+                if name in spec_lists:
+                    spec_lists[name].extend(user_specs)
+                else:
+                    spec_lists[name] = user_specs
+
+        spec_list = config.get(user_speclist_name, [])
+        user_specs = SpecList(user_speclist_name, [s for s in spec_list if s],
+                              spec_lists.copy())
+        if user_speclist_name in spec_lists:
+            spec_lists[user_speclist_name].extend(user_specs)
+        else:
+            spec_lists[user_speclist_name] = user_specs
+
+        for name, spec_list in spec_lists.items():
+            if name in self.spec_lists:
+                self.spec_lists[name].extend(spec_list)
+            else:
+                self.spec_lists[name] = spec_list
 
     @property
     def user_specs(self):
