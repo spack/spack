@@ -14,6 +14,7 @@ raising an EnvironmentError if we are unable to find one.
 """
 import os
 import shlex
+import sys
 
 import llnl.util.tty as tty
 
@@ -40,12 +41,21 @@ def _find_exe_from_env_var(var):
     if not exe:
         return None, []
 
+    if sys.platform == "win32":
+        # Fix seperators
+        exe = exe.replace('\\', '/')
+
     # split env var into executable and args if needed
     args = shlex.split(str(exe))
+
     if not args:
         return None, []
 
-    exe = which_string(args[0])
+    if sys.platform == "win32" and args[0][-4:] == '.exe':
+        # Remove .exe ending
+        exe = which_string(args[0][0:-4])
+    else:
+        exe = which_string(args[0])
     args = [exe] + args[1:]
     return exe, args
 

@@ -5,6 +5,7 @@
 
 import os
 import pytest
+import sys
 
 from llnl.util.filesystem import set_executable
 
@@ -15,7 +16,10 @@ pytestmark = pytest.mark.usefixtures('working_env')
 
 
 def _make_exe(tmpdir_factory, name, contents=None):
-    path = str(tmpdir_factory.mktemp('%s_exe' % name).join(name))
+    if sys.platform == "win32":
+        path = str(tmpdir_factory.mktemp('%s_exe' % name).join(name + '.exe'))
+    else:
+        path = str(tmpdir_factory.mktemp('%s_exe' % name).join(name))
     if contents is not None:
         with open(path, 'w') as f:
             f.write('#!/bin/sh\n%s\n' % contents)
@@ -45,11 +49,15 @@ def vim_exe(tmpdir_factory):
 
 def test_find_exe_from_env_var(good_exe):
     os.environ['EDITOR'] = good_exe
+    if sys.platform == "win32":
+        good_exe = good_exe.replace('\\', '/')
     assert ed._find_exe_from_env_var('EDITOR') == (good_exe, [good_exe])
 
 
 def test_find_exe_from_env_var_with_args(good_exe):
     os.environ['EDITOR'] = good_exe + ' a b c'
+    if sys.platform == "win32":
+        good_exe = good_exe.replace('\\', '/')
     assert ed._find_exe_from_env_var('EDITOR') == (
         good_exe, [good_exe, 'a', 'b', 'c'])
 
@@ -68,6 +76,9 @@ def test_find_exe_from_env_var_no_editor():
 def test_editor_visual(good_exe):
     os.environ['VISUAL'] = good_exe
 
+    if sys.platform == "win32":
+        good_exe = good_exe.replace('\\', '/')
+
     def assert_exec(exe, args):
         assert exe == good_exe
         assert args == [good_exe, '/path/to/file']
@@ -78,6 +89,10 @@ def test_editor_visual(good_exe):
 def test_editor_visual_bad(good_exe, bad_exe):
     os.environ['VISUAL'] = bad_exe
     os.environ['EDITOR'] = good_exe
+
+    if sys.platform == "win32":
+        good_exe = good_exe.replace('\\', '/')
+        bad_exe = bad_exe.replace('\\', '/')
 
     def assert_exec(exe, args):
         if exe == bad_exe:
@@ -94,6 +109,9 @@ def test_editor_no_visual(good_exe):
         del os.environ['VISUAL']
     os.environ['EDITOR'] = good_exe
 
+    if sys.platform == "win32":
+        good_exe = good_exe.replace('\\', '/')
+
     def assert_exec(exe, args):
         assert exe == good_exe
         assert args == [good_exe, '/path/to/file']
@@ -108,6 +126,9 @@ def test_editor_no_visual_with_args(good_exe):
     # editor has extra args in the var (e.g., emacs -nw)
     os.environ['EDITOR'] = good_exe + ' -nw --foo'
 
+    if sys.platform == "win32":
+        good_exe = good_exe.replace('\\', '/')
+
     def assert_exec(exe, args):
         assert exe == good_exe
         assert args == [good_exe, '-nw', '--foo', '/path/to/file']
@@ -119,8 +140,16 @@ def test_editor_both_bad(nosuch_exe, vim_exe):
     os.environ['VISUAL'] = nosuch_exe
     os.environ['EDITOR'] = nosuch_exe
 
-    os.environ['PATH'] = '%s:%s' % (
-        os.path.dirname(vim_exe), os.environ['PATH'])
+    if sys.platform == "win32":
+        os.environ['PATH'] = '%s;%s' % (
+            os.path.dirname(vim_exe), os.environ['PATH'])
+    else:
+        os.environ['PATH'] = '%s:%s' % (
+            os.path.dirname(vim_exe), os.environ['PATH'])
+
+    if sys.platform == "win32":
+        nosuch_exe = nosuch_exe.replace('\\', '/')
+        vim_exe = vim_exe.replace('\\', '/')
 
     def assert_exec(exe, args):
         assert exe == vim_exe
