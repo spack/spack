@@ -281,7 +281,7 @@ def which_string(*args, **kwargs):
         path = path.split(os.pathsep)
 
     for name in args:
-        if sys.platform == "win32":
+        if sys.platform == "win32" and not name.endswith(".exe"):
             name += '.exe'
         if os.path.sep in name:
             exe = os.path.abspath(name)
