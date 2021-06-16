@@ -31,6 +31,8 @@ class Libpciaccess(AutotoolsPackage, XorgPackage):
     # libpciaccess built by gcc should be usable by PGI builds.
     conflicts('%pgi')
 
+    conflicts('platform=darwin')
+
     def configure_args(self):
         config_args = []
 

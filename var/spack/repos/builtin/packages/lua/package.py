@@ -34,6 +34,8 @@ class Lua(Package):
 
     extendable = True
 
+    provides('lua-lang')
+
     depends_on('ncurses+termlib')
     depends_on('readline')
     # luarocks needs unzip for some packages (e.g. lua-luaposix)
