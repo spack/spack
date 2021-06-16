@@ -145,7 +145,7 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 % provider for that virtual then it depends on the provider
 depends_on(Package, Provider, Type)
   :- dependency_holds(Package, Virtual, Type),
-     provides_virtual(Provider, Virtual),
+     provider(Provider, Virtual),
      not external(Package).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
@@ -153,14 +153,24 @@ virtual_node(Virtual)
   :- dependency_holds(Package, Virtual, Type),
      virtual(Virtual), not external(Package).
 
-% if there's a virtual node, we must select one provider
-1 { provides_virtual(Package, Virtual) : possible_provider(Package, Virtual) } 1
+% If there's a virtual node, we must select one and only one provider.
+% The provider must be selected among the possible providers.
+1 { provider(Package, Virtual) : possible_provider(Package, Virtual) } 1
  :- virtual_node(Virtual).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 virtual_node(Virtual) :- virtual_root(Virtual).
-1 { root(Package) : provides_virtual(Package, Virtual) } 1
-  :- virtual_root(Virtual).
+
+% If we asked for a virtual root and we have a provider for that,
+% then the provider is the root package.
+root(Package) :- virtual_root(Virtual), provider(Package, Virtual).
+
+% If we asked for a root package and that root provides a virtual,
+% the root is a provider for that virtual. This rule is mostly relevant
+% for environments that are concretized together (e.g. where we
+% asks to install "mpich" and "hdf5+mpi" and we want "mpich" to
+% be the mpi provider)
+provider(Package, Virtual) :- root(Package), provides_virtual(Package, Virtual).
 
 % The provider provides the virtual if some provider condition holds.
 provides_virtual(Provider, Virtual) :-
@@ -168,12 +178,15 @@ provides_virtual(Provider, Virtual) :-
    condition_holds(ID),
    virtual(Virtual).
 
-% a node that provides a virtual is a provider
-provider(Package, Virtual)
-  :- node(Package), provides_virtual(Package, Virtual).
+% A package cannot be the actual provider for a virtual if it does not
+% fulfill the conditions to provide that virtual
+:- provider(Package, Virtual), not provides_virtual(Package, Virtual).
 
-% for any virtual, there can be at most one provider in the DAG
-0 { node(Package) : provides_virtual(Package, Virtual) } 1 :- virtual(Virtual).
+% If a package is selected as a provider, it is provider of all
+% the virtuals it provides
+:- provides_virtual(Package, V1), provides_virtual(Package, V2), V1 != V2,
+   provider(Package, V1), not provider(Package, V2),
+   virtual_node(V1), virtual_node(V2).
 
 #defined possible_provider/2.
 
