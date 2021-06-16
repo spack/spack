@@ -307,6 +307,7 @@ environment variables:
             disable_auth=args.monitor_disable_auth,
             tags=args.monitor_tags,
             save_local=args.monitor_save_local,
+            allow_fail=args.monitor_keep_going,
         )
 
     reporter = spack.report.collect_info(

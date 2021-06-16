@@ -112,6 +112,7 @@ def analyze(parser, args, **kwargs):
             host=args.monitor_host,
             prefix=args.monitor_prefix,
             disable_auth=args.monitor_disable_auth,
+            allow_fail=args.monitor_keep_going,
         )
 
     # Run the analysis

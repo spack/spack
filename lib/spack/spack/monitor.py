@@ -108,7 +108,8 @@ def get_monitor_group(subparser):
 
 
 class SpackMonitorClient:
-    """Client to interact with a spack monitor server.
+    """
+    Client to interact with a spack monitor server.
 
     We require the host url, along with the prefix to discover the
     service_info endpoint. If allow_fail is set to True, we will not exit
@@ -135,7 +136,8 @@ class SpackMonitorClient:
         self.setup_save()
 
     def setup_save(self):
-        """Given a local save "save_local" ensure the output directory exists.
+        """
+        Given a local save "save_local" ensure the output directory exists.
         """
         if not self.save_local:
             return
@@ -277,11 +279,14 @@ class SpackMonitorClient:
                     return self.issue_request(request, False)
 
             # Otherwise, relay the message and exit on error
-            msg = ""
+            try:
+                msg = sjson.load(e.read().decode()).get("message", "") + " "
+            except Exception:
+                msg = ""
             if hasattr(e, 'reason'):
-                msg = e.reason
+                msg += e.reason
             elif hasattr(e, 'code'):
-                msg = e.code
+                msg += e.code
 
             if self.allow_fail:
                 tty.warning("Request to %s was not successful, but continuing." % e.url)
@@ -572,8 +577,13 @@ class SpackMonitorClient:
         """
         Given a found metadata file, upload results to spack monitor.
         """
+        # We must have at least one spec to attempt upload
+        specs = list(self.iter_read("%s%sspec*" % (dirname, os.sep)))
+        if not specs:
+            tty.die("Spec metadata file(s) missing from %s." % dirname)
+
         # First find all the specs
-        for spec in self.iter_read("%s%sspec*" % (dirname, os.sep)):
+        for spec in specs:
             self.do_request("specs/new/", data=sjson.dump(spec))
 
         # Load build metadata to generate an id
