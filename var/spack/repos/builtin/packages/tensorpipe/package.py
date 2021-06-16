@@ -21,5 +21,6 @@ class Tensorpipe(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     depends_on('ninja', type='build')
+    depends_on('libuv')
 
     generator = 'Ninja'
