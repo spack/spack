@@ -53,8 +53,8 @@ class Bowtie2(MakefilePackage):
         files = ['bowtie2-build', 'bowtie2-inspect']
         filter_file(match, substitute, *files, **kwargs)
 
-        if (self.spec.satisfies('@2.4.0: target=aarch64:') or
-            self.spec.satisfies('@2.4.0: target=ppc64le:')):
+        if (self.spec.satisfies('@2.4.0:2.4.2 target=aarch64:') or
+            self.spec.satisfies('@2.4.0:2.4.2 target=ppc64le:')):
             match = '-Ithird_party/simde'
             simdepath = spec['simde'].prefix.include
             substitute = "-I{simdepath}".format(simdepath=simdepath)
