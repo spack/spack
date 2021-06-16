@@ -67,7 +67,6 @@ def parse(url, scheme='file'):
         urllib_parse.urlparse(url, scheme=scheme, allow_fragments=False)
         if isinstance(url, string_types) else url)
 
-
     (scheme, netloc, path, params, query, _) = url_obj
 
     scheme = (scheme or 'file').lower()
@@ -156,7 +155,8 @@ def join(base_url, path, *extra, **kwargs):
       'file:///opt/spack'
     """
     paths = [
-        (x.replace('\\', '/') if isinstance(x, string_types) else x.geturl().replace('\\', '/'))
+        (x.replace('\\', '/') if isinstance(x, string_types)
+            else x.geturl().replace('\\', '/'))
         for x in itertools.chain((base_url, path), extra)]
     n = len(paths)
     last_abs_component = None
@@ -240,9 +240,6 @@ def _join(base_url, path, *extra, **kwargs):
         base_path_args = [new_base_path]
 
     base_path_args.extend(path_tokens)
-    # if sys.platform == "win32":
-    #     base_path = os.path.join(*base_path_args)
-    # else:
     base_path = os.path.relpath(os.path.join(*base_path_args), '/fake-root')
 
     if scheme == 's3':

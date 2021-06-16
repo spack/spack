@@ -211,7 +211,10 @@ def test_url_join_local_paths():
     join_result = url_util.join('/a/b/c', '/$spack')
     assert(join_result == 'file:///$spack')  # not canonicalized
     format_result = url_util.format(join_result)
-    expected = url_util.format('file://' + spack_root)
+    if sys.platform == "win32":
+        expected = url_util.format('file://' + spack_root)
+    else:
+        expected = url_util.format(spack_root)
     assert(format_result == expected)
 
     # For s3:// URLs, the "netloc" (bucket) is considered part of the path.
