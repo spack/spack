@@ -183,6 +183,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('tensorpipe@2021-02-09', when='@1.8.0+tensorpipe')
     depends_on('tensorpipe@2020-09-28', when='@1.7.0:1.7.999+tensorpipe')
     depends_on('tensorpipe@2020-06-26', when='@1.6.0:1.6.999+tensorpipe')
+    depends_on('onnx', when='+onnx_ml')
 
     # Test dependencies
     depends_on('py-hypothesis', type='test')
