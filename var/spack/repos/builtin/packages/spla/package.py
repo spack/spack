@@ -49,6 +49,8 @@ class Spla(CMakePackage):
     depends_on('blis threads=openmp', when='+openmp ^blis')
     depends_on('intel-mkl threads=openmp', when='+openmp ^intel-mkl')
 
+    patch('spla-pre-1.5-fix-build-threaded-blis.patch', when='@:1.4.999')
+
     def cmake_args(self):
         args = [
             self.define_from_variant('SPLA_OMP', 'openmp'),

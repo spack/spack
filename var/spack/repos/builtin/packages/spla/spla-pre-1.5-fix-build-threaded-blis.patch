@@ -1,0 +1,69 @@
+From c21dc4e94d803ab7bd1772e3e8ede9e9e6a70d15 Mon Sep 17 00:00:00 2001
+From: Simon Frasch <simon.frasch@cscs.ch>
+Date: Thu, 10 Jun 2021 15:40:54 +0200
+Subject: [PATCH] fix cmake find module for blis amd fork
+
+---
+ CMakeLists.txt               |  6 +++++-
+ cmake/modules/FindBLIS.cmake | 14 ++++----------
+ 2 files changed, 9 insertions(+), 11 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f7b3cd7..8c55590 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -224,7 +224,11 @@ if(NOT ${_SPLA_BLAS_FOUND} AND (${SPLA_HOST_BLAS} STREQUAL "AUTO" OR ${SPLA_HOST
+ 		message(STATUS "Host BLAS Backend: BLIS")
+ 		list(APPEND SPLA_EXTERNAL_LIBS BLIS::blis)
+ 		set(SPLA_BLAS_BLIS ON)
+-		set(SPLA_BLAS_HEADER_NAME cblas.h)
++		# try to find header file
++		find_file(_BLAS_HEADER NAMES blis.h cblas.h HINTS ${BLIS_INCLUDE_DIRS})
++		if(_BLAS_HEADER)
++			get_filename_component(SPLA_BLAS_HEADER_NAME ${_BLAS_HEADER} NAME)
++		endif()
+ 		set(_SPLA_BLAS_FOUND TRUE)
+ 	endif()
+ endif()
+diff --git a/cmake/modules/FindBLIS.cmake b/cmake/modules/FindBLIS.cmake
+index 3d6fb5d..e8a3dfb 100644
+--- a/cmake/modules/FindBLIS.cmake
++++ b/cmake/modules/FindBLIS.cmake
+@@ -52,7 +52,7 @@ endif()
+ 
+ find_library(
+     BLIS_LIBRARIES
+-    NAMES "blis"
++    NAMES "blis-mt" "blis"
+     HINTS ${_BLIS_PATHS}
+     PATH_SUFFIXES "blis/lib" "blis/lib64" "blis"
+ )
+@@ -62,16 +62,10 @@ find_path(
+     HINTS ${_BLIS_PATHS}
+     PATH_SUFFIXES "blis" "blis/include" "include/blis"
+ )
+-find_path(
+-    BLIS_CBLAS_INCLUDE_DIRS
+-    NAMES "cblas_blis.h" "cblas-blis.h" "cblas.h" 
+-    HINTS ${_BLIS_PATHS}
+-    PATH_SUFFIXES "blis" "blis/include" "include/blis"
+-)
+ 
+ # check if found
+ include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(BLIS REQUIRED_VARS BLIS_INCLUDE_DIRS BLIS_LIBRARIES BLIS_CBLAS_INCLUDE_DIRS)
++find_package_handle_standard_args(BLIS REQUIRED_VARS BLIS_INCLUDE_DIRS BLIS_LIBRARIES)
+ 
+ # add target to link against
+ if(BLIS_FOUND)
+@@ -79,8 +73,8 @@ if(BLIS_FOUND)
+         add_library(BLIS::blis INTERFACE IMPORTED)
+     endif()
+     set_property(TARGET BLIS::blis PROPERTY INTERFACE_LINK_LIBRARIES ${BLIS_LIBRARIES})
+-    set_property(TARGET BLIS::blis PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${BLIS_INCLUDE_DIRS} ${BLIS_CBLAS_INCLUDE_DIRS})
++    set_property(TARGET BLIS::blis PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${BLIS_INCLUDE_DIRS})
+ endif()
+ 
+ # prevent clutter in cache
+-MARK_AS_ADVANCED(BLIS_FOUND BLIS_LIBRARIES BLIS_INCLUDE_DIRS BLIS_CBLAS_INCLUDE_DIRS)
++MARK_AS_ADVANCED(BLIS_FOUND BLIS_LIBRARIES BLIS_INCLUDE_DIRS)
