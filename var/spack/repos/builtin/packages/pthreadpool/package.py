@@ -23,25 +23,31 @@ class Pthreadpool(CMakePackage):
     resource(
         name='fxdiv',
         git='https://github.com/Maratyszcza/FXdiv.git',
-        branch='master'
+        branch='master',
+        destination='deps',
+        placement='fxdiv',
     )
     resource(
         name='googletest',
         url='https://github.com/google/googletest/archive/release-1.10.0.zip',
-        sha256='94c634d499558a76fa649edb13721dce6e98fb1e7018dfaeba3cd7a083945e91'
+        sha256='94c634d499558a76fa649edb13721dce6e98fb1e7018dfaeba3cd7a083945e91',
+        destination='deps',
+        placement='googletest',
     )
     resource(
         name='googlebenchark',
         url='https://github.com/google/benchmark/archive/v1.5.3.zip',
-        sha256='bdefa4b03c32d1a27bd50e37ca466d8127c1688d834800c38f3c587a396188ee'
+        sha256='bdefa4b03c32d1a27bd50e37ca466d8127c1688d834800c38f3c587a396188ee',
+        destination='deps',
+        placement='googlebenchmark',
     )
 
     def cmake_args(self):
         return [
             self.define('FXDIV_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'FXdiv')),
+                        join_path(self.stage.source_path, 'deps', 'fxdiv')),
             self.define('GOOGLETEST_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'googletest-release-1.10.0')),
+                        join_path(self.stage.source_path, 'deps', 'googletest')),
             self.define('GOOGLEBENCHMARK_SOURCE_DIR',
-                        join_path(self.stage.source_path, 'benchmark-1.5.3')),
+                        join_path(self.stage.source_path, 'deps', 'googlebenchmark')),
         ]
