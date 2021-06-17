@@ -299,6 +299,9 @@ class Cp2k(MakefilePackage, CudaPackage):
             fcflags += ['-qpreprocess', '-qstrict', '-q64']
             ldflags += ['-Wl,--allow-multiple-definition']
 
+        if '%gcc@10: +mpi' in spec and spec['mpi'].name in ['mpich', 'cray-mpich']:
+            fcflags += ['-fallow-argument-mismatch']  # https://github.com/pmodels/mpich/issues/4300
+
         if '+openmp' in spec:
             cflags.append(self.compiler.openmp_flag)
             cxxflags.append(self.compiler.openmp_flag)
