@@ -28,3 +28,6 @@ class Gloo(CMakePackage, CudaPackage):
     depends_on('ninja', type='build')
 
     generator = 'Ninja'
+
+    def cmake_args(self):
+        return [self.define_from_variant('USE_CUDA', 'cuda')]
