@@ -31,10 +31,11 @@ class Rocprim(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, when='@' + ver)
+
     for ver in ['4.1.0', '4.2.0']:
         depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
 
@@ -42,14 +43,10 @@ class Rocprim(CMakePackage):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        spec = self.spec
-
-        args = [
-            '-DCMAKE_MODULE_PATH={0}/cmake'.format(spec['hip'].prefix),
-            '-DONLY_INSTALL=ON',
-            '-DBUILD_TEST=OFF',
-            '-DBUILD_BENCHMARK=OFF',
-            '-DBUILD_EXAMPLE=OFF'
+        return [
+            self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
+            self.define('ONLY_INSTALL', 'ON'),
+            self.define('BUILD_TEST', 'OFF'),
+            self.define('BUILD_BENCHMARK', 'OFF'),
+            self.define('BUILD_EXAMPLE', 'OFF')
         ]
-
-        return args
