@@ -17,13 +17,14 @@ import tempfile
 import xml.etree.ElementTree
 
 if sys.version_info >= (2, 7):
-    # This package does not exist for Python <2.7. That means that we cannot
-    # test checkouts "by date" for CVS respositories. (We can still use CVS
-    # repos with all features, only our tests break.)
+    # We are using dateutil to parse the dates that CVS outputs in tests. This
+    # package does not exist for Python <2.7. That means that we cannot test
+    # checkouts "by date" for CVS respositories. (We can still use CVS repos
+    # with all features, only our tests break.)
     from dateutil.parser import parse as parse_date
 else:
     def parse_date(string):
-        return None
+        pytest.skip("dateutil package not available for Python 2.6")
 
 import py
 import pytest

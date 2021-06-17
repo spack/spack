@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -43,11 +42,6 @@ def test_fetch(
     CVS does not have the notion of a unique branch; branches and revisions
     are managed separately for every file.
     """
-
-    # Skip date test for Python <2.7 because we cannot parse dates
-    if sys.version_info < (2, 7) and type_of_test == 'date':
-        return
-
     # Retrieve the right test parameters
     test = mock_cvs_repository.checks[type_of_test]
     get_branch = mock_cvs_repository.get_branch
