@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Gloo(CMakePackage):
+class Gloo(CMakePackage, CudaPackage):
     """Gloo is a collective communications library."""
 
     homepage = "https://github.com/facebookincubator/gloo"
