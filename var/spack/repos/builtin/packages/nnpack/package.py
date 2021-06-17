@@ -34,13 +34,13 @@ class Nnpack(CMakePackage):
         destination='deps',
         placement='six',
     )
-#    resource(
-#        name='opcodes',
-#        url='https://files.pythonhosted.org/packages/source/o/opcodes/opcodes-0.3.13.tar.gz',
-#        sha256='1859c23143fe20daa4110be87a947cbf3eefa048da71dde642290213f251590c',
-#        destination='deps',
-#        placement='opcodes',
-#    )
+    resource(
+        name='opcodes',
+        url='https://files.pythonhosted.org/packages/source/o/opcodes/opcodes-0.3.13.tar.gz',
+        sha256='1859c23143fe20daa4110be87a947cbf3eefa048da71dde642290213f251590c',
+        destination='deps',
+        placement='opcodes',
+    )
     resource(
         name='peachpy',
         git='https://github.com/Maratyszcza/PeachPy.git',
@@ -91,12 +91,16 @@ class Nnpack(CMakePackage):
         placement='googletest',
     )
 
+    @run_before('cmake')
+    def generate_peachpy(self):
+        # https://github.com/Maratyszcza/NNPACK/issues/203
+        with working_dir(join_path(self.stage.source_path, 'deps', 'peachpy')):
+            setup_py('generate')
+
     def cmake_args(self):
         return [
             self.define('PYTHON_SIX_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'six')),
-#            self.define('PYTHON_OPCODES_SOURCE_DIR',
-#                        join_path(self.stage.source_path, 'deps', 'opcodes')),
             self.define('PYTHON_PEACHPY_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'peachpy')),
             self.define('CPUINFO_SOURCE_DIR',
