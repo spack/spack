@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+import sys
+
+from spack import *
 
 
 class PyTorch(PythonPackage, CudaPackage):
@@ -42,29 +44,31 @@ class PyTorch(PythonPackage, CudaPackage):
     version('0.4.0', tag='v0.4.0')
     version('0.3.1', tag='v0.3.1')
 
+    is_darwin = sys.platform == 'darwin'
+
     # All options are defined in CMakeLists.txt.
     # Some are listed in setup.py, but not all.
     variant('caffe2', default=True, description='Build Caffe2')
-    variant('cuda', default=True, description='Use CUDA')
-    variant('rocm', default=True, description='Use ROCm')
-    variant('cudnn', default=True, description='Use cuDNN')
+    variant('cuda', default=not is_darwin, description='Use CUDA')
+    variant('rocm', default=not is_darwin, description='Use ROCm')
+    variant('cudnn', default=not is_darwin, description='Use cuDNN')
     variant('fbgemm', default=True, description='Use FBGEMM (quantized 8-bit server operators)')
     variant('kineto', default=True, description='Use Kineto profiling library')
-    variant('magma', default=True, description='Use MAGMA')
-    variant('metal', default=True, description='Use Metal for Caffe2 iOS build')
-    variant('nccl', default=True, description='Use NCCL')
+    variant('magma', default=not is_darwin, description='Use MAGMA')
+    variant('metal', default=is_darwin, description='Use Metal for Caffe2 iOS build')
+    variant('nccl', default=not is_darwin, description='Use NCCL')
     variant('nnpack', default=True, description='Use NNPACK')
-    variant('numa', default=True, description='Use NUMA')
+    variant('numa', default=not is_darwin, description='Use NUMA')
     variant('numpy', default=True, description='Use NumPy')
     variant('openmp', default=True, description='Use OpenMP for parallel code')
     variant('qnnpack', default=True, description='Use QNNPACK (quantized 8-bit operators)')
-    variant('valgrind', default=True, description='Use Valgrind')
+    variant('valgrind', default=not is_darwin, description='Use Valgrind')
     variant('xnnpack', default=True, description='Use XNNPACK')
     variant('mkldnn', default=True, description='Use MKLDNN')
-    variant('distributed', default=True, description='Use distributed')
-    variant('mpi', default=True, description='Use MPI for Caffe2')
-    variant('gloo', default=True, description='Use Gloo')
-    variant('tensorpipe', default=True, description='Use TensorPipe')
+    variant('distributed', default=not is_darwin, description='Use distributed')
+    variant('mpi', default=not is_darwin, description='Use MPI for Caffe2')
+    variant('gloo', default=not is_darwin, description='Use Gloo')
+    variant('tensorpipe', default=not is_darwin, description='Use TensorPipe')
     variant('onnx_ml', default=True, description='Enable traditional ONNX ML API')
 
     conflicts('+cudnn', when='~cuda')
@@ -194,7 +198,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # Fixes CMake configuration error when XNNPACK is disabled
     patch('xnnpack.patch', when='@1.5.0:1.5.999')
 
-    # Fixes Build error for when ROCm is enabled for pytorch-1.5 release
+    # Fixes build error when ROCm is enabled for pytorch-1.5 release
     patch('rocm.patch', when='@1.5.0:1.5.999+rocm')
 
     # https://github.com/pytorch/pytorch/pull/37086
@@ -245,14 +249,13 @@ class PyTorch(PythonPackage, CudaPackage):
         most flags defined in ``CMakeLists.txt`` can be specified as
         environment variables.
         """
-        def enable_or_disable(variant, keyword='USE', var=None, newer=False):
+        def enable_or_disable(variant, keyword='USE', newer=False):
             """Set environment variable to enable or disable support for a
             particular variant.
 
             Parameters:
                 variant (str): the variant to check
                 keyword (str): the prefix to use for enabling/disabling
-                var (str): CMake variable to set. Defaults to variant.upper()
                 newer (bool): newer variants that never used NO_*
             """
             if var is None:
@@ -262,14 +265,14 @@ class PyTorch(PythonPackage, CudaPackage):
             # But some newer variants have always used USE_* or BUILD_*
             if self.spec.satisfies('@1.1:') or newer:
                 if '+' + variant in self.spec:
-                    env.set(keyword + '_' + var, 1)
+                    env.set(keyword + '_' + var, 'ON')
                 else:
-                    env.set(keyword + '_' + var, 0)
+                    env.set(keyword + '_' + var, 'OFF')
             else:
                 if '+' + variant in self.spec:
                     env.unset('NO_' + var)
                 else:
-                    env.set('NO_' + var, 1)
+                    env.set('NO_' + var, 'ON')
 
         # Build in parallel to speed up build times
         env.set('MAX_JOBS', make_jobs)
