@@ -22,27 +22,28 @@ class PyTorch(PythonPackage, CudaPackage):
     # core libraries to ensure that the package was successfully installed.
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
-    # Submodules not needed, all third_party libraries are built with Spack
-    version('master', branch='master')
-    version('1.9.0', tag='v1.9.0')
-    version('1.8.1', tag='v1.8.1')
-    version('1.8.0', tag='v1.8.0')
-    version('1.7.1', tag='v1.7.1')
-    version('1.7.0', tag='v1.7.0')
-    version('1.6.0', tag='v1.6.0')
-    version('1.5.1', tag='v1.5.1')
-    version('1.5.0', tag='v1.5.0')
-    version('1.4.1', tag='v1.4.1')
-    version('1.4.0', tag='v1.4.0')
-    version('1.3.1', tag='v1.3.1')
-    version('1.3.0', tag='v1.3.0')
-    version('1.2.0', tag='v1.2.0')
-    version('1.1.0', tag='v1.1.0')
-    version('1.0.1', tag='v1.0.1')
-    version('1.0.0', tag='v1.0.0')
-    version('0.4.1', tag='v0.4.1')
-    version('0.4.0', tag='v0.4.0')
-    version('0.3.1', tag='v0.3.1')
+    version('master', branch='master', submodules=True)
+    version('1.9.0', tag='v1.9.0', submodules=True)
+    version('1.8.1', tag='v1.8.1', submodules=True)
+    version('1.8.0', tag='v1.8.0', submodules=True)
+    version('1.7.1', tag='v1.7.1', submodules=True)
+    version('1.7.0', tag='v1.7.0', submodules=True)
+    version('1.6.0', tag='v1.6.0', submodules=True)
+    version('1.5.1', tag='v1.5.1', submodules=True)
+    version('1.5.0', tag='v1.5.0', submodules=True)
+    version('1.4.1', tag='v1.4.1', submodules=True)
+    version('1.4.0', tag='v1.4.0', submodules=True,
+            submodules_delete=['third_party/fbgemm'])
+    version('1.3.1', tag='v1.3.1', submodules=True)
+    version('1.3.0', tag='v1.3.0', submodules=True)
+    version('1.2.0', tag='v1.2.0', submodules=True)
+    version('1.1.0', tag='v1.1.0', submodules=True)
+    version('1.0.1', tag='v1.0.1', submodules=True)
+    version('1.0.0', tag='v1.0.0', submodules=True)
+    version('0.4.1', tag='v0.4.1', submodules=True,
+            submodules_delete=['third_party/nervanagpu'])
+    version('0.4.0', tag='v0.4.0', submodules=True)
+    version('0.3.1', tag='v0.3.1', submodules=True)
 
     is_darwin = sys.platform == 'darwin'
 
@@ -258,8 +259,7 @@ class PyTorch(PythonPackage, CudaPackage):
                 keyword (str): the prefix to use for enabling/disabling
                 newer (bool): newer variants that never used NO_*
             """
-            if var is None:
-                var = variant.upper()
+            var = variant.upper()
 
             # Version 1.1.0 switched from NO_* to USE_* or BUILD_*
             # But some newer variants have always used USE_* or BUILD_*
