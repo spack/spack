@@ -57,7 +57,7 @@ def test_prune_duplicate_paths():
 
 
 def test_get_path(prepare_environment_for_tests):
-    os.environ['TEST_ENV_VAR'] = '/a:/b:/c/d'
+    os.environ['TEST_ENV_VAR'] = '/a%s/b%s/c/d' % (path_sep, path_sep)
     expected = ['/a', '/b', '/c/d']
     assert(envutil.get_path('TEST_ENV_VAR') == expected)
 

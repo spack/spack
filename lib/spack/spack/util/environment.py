@@ -25,16 +25,16 @@ from llnl.util.lang import dedupe
 from six.moves import shlex_quote as cmd_quote
 from six.moves import cPickle
 
-system_paths = ['/', '/usr', '/usr/local']
-suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
-system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
-    system_paths
-
 if sys.platform == "win32":
+    system_paths = ['\\', '\\usr', '\\usr\\local']
     _path_sep = ";"
 else:
     _path_sep = ":"
+    system_paths = ['/', '/usr', '/usr/local']
 
+suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
+system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
+    system_paths
 
 _shell_set_strings = {
     'sh': 'export {0}={1};\n',
