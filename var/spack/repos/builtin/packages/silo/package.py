@@ -35,6 +35,9 @@ class Silo(AutotoolsPackage):
     variant('fpzip', default=True,
             description='Enable fpzip support')
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5@:1.10.999', when='@:4.10.2+hdf5')
     depends_on('hdf5~mpi', when='~mpi+hdf5')
@@ -102,6 +105,10 @@ class Silo(AutotoolsPackage):
         ]
 
         filter_file(r'\b(DOMAIN|RANGE|UNION)\b', repl, *files_to_filter)
+
+    # Update autoconf's tests whether libtool supports shared libraries.
+    # (Otherwise, shared libraries are always disabled.)
+    force_autoreconf = True
 
     def configure_args(self):
         spec = self.spec
