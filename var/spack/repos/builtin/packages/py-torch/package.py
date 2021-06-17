@@ -51,7 +51,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # Some are listed in setup.py, but not all.
     variant('caffe2', default=True, description='Build Caffe2')
     variant('cuda', default=not is_darwin, description='Use CUDA')
-    variant('rocm', default=not is_darwin, description='Use ROCm')
+    variant('rocm', default=False, description='Use ROCm')
     variant('cudnn', default=not is_darwin, description='Use cuDNN')
     variant('fbgemm', default=True, description='Use FBGEMM (quantized 8-bit server operators)')
     variant('kineto', default=True, description='Use Kineto profiling library')
@@ -72,6 +72,7 @@ class PyTorch(PythonPackage, CudaPackage):
     variant('tensorpipe', default=not is_darwin, description='Use TensorPipe')
     variant('onnx_ml', default=True, description='Enable traditional ONNX ML API')
 
+    conflicts('+cuda', when='+rocm')
     conflicts('+cudnn', when='~cuda')
     conflicts('+nccl', when='~cuda~rocm')
     conflicts('+nccl', when='platform=darwin')
@@ -227,6 +228,7 @@ class PyTorch(PythonPackage, CudaPackage):
             Parameters:
                 variant (str): the variant to check
                 keyword (str): the prefix to use for enabling/disabling
+                var (str): CMake variable to set. Defaults to variant.upper()
                 newer (bool): newer variants that never used NO_*
             """
             if var is None:
