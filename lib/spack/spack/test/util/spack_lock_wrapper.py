@@ -48,7 +48,12 @@ def test_disable_locking(tmpdir):
     assert old_value == spack.config.get('config:locks')
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 # "Disable" mock_stage fixture to avoid subdir permissions issues on cleanup.
+# For future reference, the nomockstage causes a permission issue on Windows
+# when the test is skipped. This may be fixed if the test isn't skipped, but
+# this cannot be tested at this time.
 @pytest.mark.nomockstage
 def test_lock_checks_user(tmpdir):
     """Ensure lock checks work with a self-owned, self-group repo."""
@@ -82,6 +87,8 @@ def test_lock_checks_user(tmpdir):
     lk.check_lock_safety(path)
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 # "Disable" mock_stage fixture to avoid subdir permissions issues on cleanup.
 @pytest.mark.nomockstage
 def test_lock_checks_group(tmpdir):
