@@ -36,6 +36,7 @@ def nullcontext():
     yield
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="echo not implemented on windows")
 def test_log_python_output_with_echo(capfd, tmpdir):
     with tmpdir.as_cwd():
         with log_output('foo.txt', echo=True):
@@ -49,6 +50,7 @@ def test_log_python_output_with_echo(capfd, tmpdir):
         assert capfd.readouterr()[0] == 'logged\n'
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="echo not implemented on windows")
 def test_log_python_output_without_echo(capfd, tmpdir):
     with tmpdir.as_cwd():
         with log_output('foo.txt'):
@@ -62,6 +64,7 @@ def test_log_python_output_without_echo(capfd, tmpdir):
         assert capfd.readouterr()[0] == ''
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="echo not implemented on windows")
 def test_log_python_output_and_echo_output(capfd, tmpdir):
     with tmpdir.as_cwd():
         # echo two lines

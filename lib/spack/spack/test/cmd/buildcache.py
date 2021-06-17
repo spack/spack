@@ -6,6 +6,7 @@
 import errno
 import os
 import platform
+import sys
 
 import pytest
 
@@ -56,6 +57,7 @@ def test_buildcache_preview_just_runs(database):
     buildcache('preview', 'mpileaks')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 @pytest.mark.db
 @pytest.mark.regression('13757')
 def test_buildcache_list_duplicates(mock_get_specs, capsys):
@@ -65,6 +67,7 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
     assert output.count('mpileaks') == 3
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 @pytest.mark.db
 @pytest.mark.regression('17827')
 def test_buildcache_list_allarch(database, mock_get_specs_multiarch, capsys):
@@ -79,6 +82,7 @@ def test_buildcache_list_allarch(database, mock_get_specs_multiarch, capsys):
     assert output.count('mpileaks') == 2
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Install hangs on windows")
 def tests_buildcache_create(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
     """"Ensure that buildcache create creates output files"""
@@ -96,6 +100,7 @@ def tests_buildcache_create(
         os.path.join(str(tmpdir), 'build_cache', tarball))
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def tests_buildcache_create_env(
         install_mockery, mock_fetch, monkeypatch,
         tmpdir, mutable_mock_env_path):
@@ -118,6 +123,7 @@ def tests_buildcache_create_env(
         os.path.join(str(tmpdir), 'build_cache', tarball))
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_buildcache_create_fails_on_noargs(tmpdir):
     """Ensure that buildcache create fails when given no args or
     environment."""
@@ -125,6 +131,7 @@ def test_buildcache_create_fails_on_noargs(tmpdir):
         buildcache('create', '-d', str(tmpdir), '--unsigned')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_buildcache_create_fail_on_perm_denied(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
     """Ensure that buildcache create fails on permission denied error."""
