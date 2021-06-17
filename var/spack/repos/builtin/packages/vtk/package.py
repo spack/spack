@@ -90,7 +90,7 @@ class Vtk(CMakePackage):
 
     depends_on('expat')
     # See <https://gitlab.kitware.com/vtk/vtk/-/issues/18033> for why vtk doesn't
-    # work yet with freetype 2.10.3 doesn't work yet (including possible patches)
+    # work yet with freetype 2.10.3 (including possible patches)
     depends_on('freetype @:2.10.2')
     depends_on('freetype')
     depends_on('glew')
