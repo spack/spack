@@ -335,7 +335,6 @@ class PyTorch(PythonPackage, CudaPackage):
         env.set('USE_SYSTEM_SLEEF', 'ON')
         env.set('USE_SYSTEM_GLOO', 'ON')
         env.set('USE_SYSTEM_FP16', 'ON')
-        env.set('USE_SYSTEM_PYBIND11', 'ON')
         env.set('pybind11_DIR', self.spec['py-pybind11'].prefix)
         env.set('pybind11_INCLUDE_DIR',
                 self.spec['py-pybind11'].prefix.include)
