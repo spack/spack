@@ -22,13 +22,13 @@ class Folly(CMakePackage):
     
 
     version('2021.05.24.00', sha256='9d308adefe4670637f5c7d96309b3b394ac3fa129bc954f5dfbdd8b741c02aad')
-    # Further versions below require testing, or removal
-    version('2017.06.05.00', sha256='d22ceda4dfe33583828be1193fa3929d70c51998f0797236e293c44ef828c6d0')
-    version('2016.11.14.00', sha256='cde5b3e1a38d181f7c4e52d590de1c1aca58da7b27b3020d08e9aa45b4c3ed74')
-    version('2016.11.07.00', sha256='4400d7f0fead90d88ce4caee9f0e9aeb8008c9954ea9034e19ae7226175206ba')
-    version('2016.10.31.00', sha256='7bef9ee956248f68f1c4e96be67561842ee6cc030a58e132b93b9be57b6b29ea')
-    version('2016.10.24.00', sha256='d54b609d3750a6a1cfbda7c62e1457af60cf5efc48d7a8e6552d67909e064757')
-    version('2016.10.17.00', sha256='0f83685016d020111ba54ddc48c0cf33e1e0b9b35cee5ae82d5f2cbc5f6b0e82')
+    # TODO: Further versions below require testing, or removal
+    # version('2017.06.05.00', sha256='d22ceda4dfe33583828be1193fa3929d70c51998f0797236e293c44ef828c6d0')
+    # version('2016.11.14.00', sha256='cde5b3e1a38d181f7c4e52d590de1c1aca58da7b27b3020d08e9aa45b4c3ed74')
+    # version('2016.11.07.00', sha256='4400d7f0fead90d88ce4caee9f0e9aeb8008c9954ea9034e19ae7226175206ba')
+    # version('2016.10.31.00', sha256='7bef9ee956248f68f1c4e96be67561842ee6cc030a58e132b93b9be57b6b29ea')
+    # version('2016.10.24.00', sha256='d54b609d3750a6a1cfbda7c62e1457af60cf5efc48d7a8e6552d67909e064757')
+    # version('2016.10.17.00', sha256='0f83685016d020111ba54ddc48c0cf33e1e0b9b35cee5ae82d5f2cbc5f6b0e82')
 
 
     # CMakePackage Dependency
