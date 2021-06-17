@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.main import SpackCommand
+import sys
+import pytest
 
 activate = SpackCommand('activate')
 deactivate = SpackCommand('deactivate')
@@ -10,6 +12,7 @@ install = SpackCommand('install')
 extensions = SpackCommand('extensions')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_activate(
         mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -19,6 +22,7 @@ def test_activate(
     assert 'extension1' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_deactivate(
         mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -29,6 +33,7 @@ def test_deactivate(
     assert 'extension1' not in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_deactivate_all(
         mock_packages, mock_archive, mock_fetch, config,
         install_mockery):

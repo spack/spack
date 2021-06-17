@@ -6,6 +6,7 @@
 import filecmp
 import json
 import os
+import sys
 import pytest
 from jsonschema import validate, ValidationError
 import shutil
@@ -676,6 +677,7 @@ spack:
         assert not any('externaltool' in key for key in yaml_contents)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ci_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
                     install_mockery, mock_packages, monkeypatch,
                     mock_gnupghome, mock_fetch, project_dir_env):
@@ -818,6 +820,7 @@ spack:
         env_cmd('deactivate')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ci_nothing_to_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
                                install_mockery, mock_packages, monkeypatch,
                                mock_fetch, project_dir_env):
@@ -1255,6 +1258,7 @@ spack:
                 assert(found_one is True)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 @pytest.mark.disable_clean_stage_check
 def test_ci_rebuild_index(tmpdir, mutable_mock_env_path, env_deactivate,
                           install_mockery, mock_packages, mock_fetch,
@@ -1307,6 +1311,7 @@ spack:
                 validate(index_object, db_idx_schema)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ci_generate_bootstrap_prune_dag(
         install_mockery_mutable_config, mock_packages, mock_fetch,
         mock_archive, mutable_config, monkeypatch, tmpdir,
@@ -1570,6 +1575,7 @@ spack:
                 assert(cleanup_job['stage'] == stages[-2])
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ci_generate_read_broken_specs_url(tmpdir, mutable_mock_env_path,
                                            env_deactivate, install_mockery,
                                            mock_packages, monkeypatch,

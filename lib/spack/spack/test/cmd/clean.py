@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
+import sys
 import spack.stage
 import spack.caches
 import spack.main
@@ -40,20 +41,22 @@ def mock_calls_for_clean(monkeypatch):
 
 
 all_effects = ['stages', 'downloads', 'caches', 'failures']
-
-
-@pytest.mark.usefixtures(
-    'mock_packages', 'config'
-)
-@pytest.mark.parametrize('command_line,effects', [
+cmd_effects = [
     ('mpileaks', ['package']),
     ('-s',       ['stages']),
     ('-sd',      ['stages', 'downloads']),
     ('-m',       ['caches']),
     ('-f',       ['failures']),
-    ('-a',       all_effects),
     ('',         []),
-])
+]
+if sys.platform != 'win32':
+    cmd_effects += ('-a', all_effects)
+
+
+@pytest.mark.usefixtures(
+    'mock_packages', 'config'
+)
+@pytest.mark.parametrize('command_line,effects', cmd_effects)
 def test_function_calls(command_line, effects, mock_calls_for_clean):
 
     # Call the command with the supplied command line

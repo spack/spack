@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 import pytest
 import spack.spec
 import llnl.util.filesystem as fs
@@ -15,6 +16,7 @@ install = SpackCommand('install')
 env = SpackCommand('env')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
     spec.concretize()
@@ -34,6 +36,7 @@ def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
     assert os.path.exists(str(tmpdir))
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_dev_build_before(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
     spec.concretize()
@@ -51,6 +54,7 @@ def test_dev_build_before(tmpdir, mock_packages, install_mockery):
     assert not os.path.exists(spec.prefix)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_dev_build_until(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
     spec.concretize()
@@ -69,6 +73,7 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
     assert not spack.store.db.query(spec, installed=True)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
     # Test that we ignore the last_phase argument if it is already last
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
@@ -89,6 +94,7 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
     assert os.path.exists(str(tmpdir))
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_dev_build_before_until(tmpdir, mock_packages, install_mockery, capsys):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
     spec.concretize()
@@ -130,6 +136,7 @@ def mock_module_noop(*args):
     pass
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
                            install_mockery):
     monkeypatch.setattr(os, 'execvp', print_spack_cc)
@@ -142,6 +149,7 @@ def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
         assert "lib/spack/env" in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_dev_build_fails_already_installed(tmpdir, mock_packages,
                                            install_mockery):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
@@ -176,6 +184,7 @@ def test_dev_build_fails_no_version(mock_packages):
     assert 'dev-build spec must have a single, concrete version' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Filename/extension is too long")
 def test_dev_build_env(tmpdir, mock_packages, install_mockery,
                        mutable_mock_env_path):
     """Test Spack does dev builds for packages in develop section of env."""
@@ -246,6 +255,7 @@ env:
                 install()
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs")
 def test_dev_build_multiple(tmpdir, mock_packages, install_mockery,
                             mutable_mock_env_path, mock_fetch):
     """Test spack install with multiple developer builds"""
@@ -301,6 +311,7 @@ env:
             assert f.read() == spec.package.replacement_string
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 def test_dev_build_env_dependency(tmpdir, mock_packages, install_mockery,
                                   mock_fetch, mutable_mock_env_path):
     """
@@ -349,6 +360,7 @@ env:
     assert spec.satisfies('^dev_path=*')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
 @pytest.mark.parametrize('test_spec', ['dev-build-test-install',
                                        'dependent-of-dev-build'])
 def test_dev_build_rebuild_on_source_changes(

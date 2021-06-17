@@ -66,6 +66,10 @@ jobs:
       run: |
         Invoke-Expression -Command .\share\spack\qa\windows_test_setup.ps1
         spack unit-test lib\spack\spack\test\modules
+    - name: Unit Test util
+      run: |
+        Invoke-Expression -Command .\share\spack\qa\windows_test_setup.ps1
+        spack unit-test lib\spack\spack\test\util
     - name: Unit Test Common
       run: |
         Invoke-Expression -Command .\share\spack\qa\windows_test_setup.ps1
@@ -86,10 +90,10 @@ jobs:
     - name: Install Python packages
       run: |
           python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
-    - name: Unit Test util
+    - name: Unit Test Cmd
       run: |
         Invoke-Expression -Command .\share\spack\qa\windows_test_setup.ps1
-        spack unit-test lib\spack\spack\test\util
+        spack unit-test lib\spack\spack\test\cmd
   buildtest:
     runs-on: windows-latest
     steps:

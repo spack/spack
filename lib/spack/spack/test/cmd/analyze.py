@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 import pytest
 
 import spack.config
@@ -59,6 +60,7 @@ def test_malformed_analyzer(mock_fetch, install_mockery_mutable_config):
         MyAnalyzer(spec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Install hangs on windows")
 def test_analyze_output(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     Test that an analyzer errors if requested name does not exist.
@@ -104,6 +106,7 @@ def _run_analyzer(name, package, tmpdir):
     return output_file
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Install hangs on windows")
 def test_installfiles_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     test the install files analyzer
@@ -124,6 +127,7 @@ def test_installfiles_analyzer(tmpdir, mock_fetch, install_mockery_mutable_confi
         assert key in basenames
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Install hangs on windows")
 def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     test the environment variables analyzer.
@@ -164,6 +168,7 @@ def test_list_analyzers():
         assert analyzer_type in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Install hangs on windows")
 def test_configargs_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     test the config args analyzer.
