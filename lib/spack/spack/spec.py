@@ -4138,11 +4138,11 @@ class Spec(object):
         spec_str = " ^".join(d.format() for d in sorted_nodes)
         return spec_str.strip()
 
-    STATUS_NOT_INSTALLED = 0
-    STATUS_INSTALLED = 1
-    STATUS_EXTERNAL = 2
-    STATUS_UPSTREAM = 3
-    STATUS_ERROR = 4
+    STATUS_NOT_INSTALLED = 'not_installed'
+    STATUS_INSTALLED = 'installed'
+    STATUS_EXTERNAL = 'external'
+    STATUS_UPSTREAM = 'upstream'
+    STATUS_ERROR = 'error'
 
     def install_status(self):
         """Helper for tree to print DB install status.

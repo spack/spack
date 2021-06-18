@@ -252,9 +252,12 @@ def test_installed_upstream(install_upstream, mock_fetch):
         assert os.path.exists(dependent.prefix)
 
 
-def test_spec_install_status(install_upstream, mock_fetch, install_mockery):
+def test_spec_install_status(install_upstream, mock_fetch, install_mockery,
+                             tmpdir_factory):
     """Check that the install status method returns the correct constants in various
     install scenarios."""
+
+    tmpdir = str(tmpdir_factory.mktemp('external_path'))
 
     store, upstream_layout = install_upstream('a foo=baz', install=True)
     with spack.store.use_store(store):
@@ -262,7 +265,7 @@ def test_spec_install_status(install_upstream, mock_fetch, install_mockery):
         not_inst_spec.concretize()
         assert not_inst_spec.install_status() == not_inst_spec.STATUS_NOT_INSTALLED
 
-        external_spec = spack.spec.Spec('b', external_path='/bin/')
+        external_spec = spack.spec.Spec('b', external_path=tmpdir)
         external_spec.concretize()
         external_spec.package.do_install()
         assert external_spec.install_status() == external_spec.STATUS_EXTERNAL
