@@ -259,27 +259,29 @@ def test_spec_install_status(install_upstream, mock_fetch, install_mockery,
 
     tmpdir = str(tmpdir_factory.mktemp('external_path'))
 
-    store, upstream_layout = install_upstream('a foo=baz', install=True)
+    store, upstream_layout = install_upstream('install-status loc=upstream',
+                                              install=True)
     with spack.store.use_store(store):
-        not_inst_spec = spack.spec.Spec('a')
+        not_inst_spec = spack.spec.Spec('install-status loc=not_installed')
         not_inst_spec.concretize()
         assert not_inst_spec.install_status() == not_inst_spec.STATUS_NOT_INSTALLED
 
-        external_spec = spack.spec.Spec('b', external_path=tmpdir)
+        external_spec = spack.spec.Spec('install-status loc=external',
+                                        external_path=tmpdir)
         external_spec.concretize()
         external_spec.package.do_install()
         assert external_spec.install_status() == external_spec.STATUS_EXTERNAL
 
-        installed_spec = spack.spec.Spec('c')
+        installed_spec = spack.spec.Spec('install-status')
         installed_spec.concretize()
         installed_spec.package.do_install()
         assert installed_spec.install_status() == installed_spec.STATUS_INSTALLED
 
-        upstream_spec = spack.spec.Spec('a foo=baz')
+        upstream_spec = spack.spec.Spec('install-status loc=upstream')
         upstream_spec.concretize()
         assert upstream_spec.install_status() == upstream_spec.STATUS_UPSTREAM
 
-        err_spec = spack.spec.Spec('a foo=fee')
+        err_spec = spack.spec.Spec('install-status loc=error')
         err_spec.concretize()
         # Add to the db without actually installing.
         store.db.add(err_spec, upstream_layout)
