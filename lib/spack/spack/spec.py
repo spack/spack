@@ -4148,6 +4148,7 @@ class Spec(object):
         """Helper for tree to print DB install status.
         :returns: True - if installed, False - if not, None on errors
         """
+
         if not self.concrete:
             return None
         try:

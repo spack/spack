@@ -194,9 +194,11 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     prepared_db = spack.database.Database(mock_db_root)
     upstream_layout = gen_mock_layout('/a/')
 
-    def _install_upstream(*specs):
+    def _install_upstream(*specs, install=False):
         for spec_str in specs:
             s = spack.spec.Spec(spec_str).concretized()
+            if install:
+                s.package.do_install()
             prepared_db.add(s, upstream_layout)
 
         downstream_root = str(tmpdir_factory.mktemp('mock_downstream_db_root'))
@@ -247,6 +249,35 @@ def test_installed_upstream(install_upstream, mock_fetch):
 
         assert not os.path.exists(new_dependency.prefix)
         assert os.path.exists(dependent.prefix)
+
+
+def test_spec_install_status(install_upstream, mock_fetch, install_mockery):
+
+    store, upstream_layout = install_upstream('a foo=baz', install=True)
+    with spack.store.use_store(store):
+        not_inst_spec = spack.spec.Spec('a')
+        not_inst_spec.concretize()
+        assert not_inst_spec.install_status() == not_inst_spec.STATUS_NOT_INSTALLED
+
+        external_spec = spack.spec.Spec('b', external_path='/bin/')
+        external_spec.concretize()
+        external_spec.package.do_install()
+        assert external_spec.install_status() == external_spec.STATUS_EXTERNAL
+
+        installed_spec = spack.spec.Spec('c')
+        installed_spec.concretize()
+        installed_spec.package.do_install()
+        assert installed_spec.install_status() == installed_spec.STATUS_INSTALLED
+
+        upstream_spec = spack.spec.Spec('a foo=baz')
+        upstream_spec.concretize()
+        assert upstream_spec.install_status() == upstream_spec.STATUS_UPSTREAM
+
+        err_spec = spack.spec.Spec('a foo=fee')
+        err_spec.concretize()
+        # Add to the db without actually installing.
+        store.db.add(err_spec, upstream_layout)
+        assert err_spec.install_status() == err_spec.STATUS_ERROR
 
 
 @pytest.mark.disable_clean_stage_check
