@@ -4846,16 +4846,24 @@ def parse(string):
     return SpecParser().parse(string)
 
 
-def save_dependency_spec_yamls(
-        root_spec_as_yaml, output_directory, dependencies=None):
+def save_dependency_specfiles(
+        root_spec_as_json, output_directory, dependencies=None,
+        spec_format='json'):
     """Given a root spec (represented as a yaml object), index it with a subset
        of its dependencies, and write each dependency to a separate yaml file
        in the output directory.  By default, all dependencies will be written
        out.  To choose a smaller subset of dependencies to be written, pass a
-       list of package names in the dependencies parameter.  In case of any
-       kind of error, SaveSpecDependenciesError is raised with a specific
-       message about what went wrong."""
-    root_spec = Spec.from_yaml(root_spec_as_yaml)
+       list of package names in the dependencies parameter. If the format of the
+       incoming spec is not json, that can be specified with the spec_format
+       parameter. This can be used to convert from yaml specfiles to the
+       json format."""
+    if spec_format == 'json':
+        root_spec = Spec.from_json(root_spec_as_json)
+    elif spec_format == 'yaml':
+        root_spec = Spec.from_yaml(root_spec_as_json)
+    else:
+        raise SpecParseError('Unrecognized spec format {0}.'.format(
+            spec_format))
 
     dep_list = dependencies
     if not dep_list:
@@ -4867,10 +4875,10 @@ def save_dependency_spec_yamls(
                 dep_name, root_spec.name)
             raise SpecDependencyNotFoundError(msg)
         dep_spec = root_spec[dep_name]
-        yaml_path = os.path.join(output_directory, '{0}.yaml'.format(dep_name))
+        json_path = os.path.join(output_directory, '{0}.json'.format(dep_name))
 
-        with open(yaml_path, 'w') as fd:
-            fd.write(dep_spec.to_yaml(hash=ht.build_hash))
+        with open(json_path, 'w') as fd:
+            fd.write(dep_spec.to_json(hash=ht.build_hash))
 
 
 class SpecParseError(spack.error.SpecError):

@@ -404,7 +404,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-yaml copy update-index"
+        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-specfile copy update-index"
     fi
 }
 
@@ -461,7 +461,7 @@ _spack_buildcache_get_buildcache_name() {
 }
 
 _spack_buildcache_save_yaml() {
-    SPACK_COMPREPLY="-h --help --root-spec --root-spec-yaml -s --specs -y --yaml-dir"
+    SPACK_COMPREPLY="-h --help --root-spec --root-specfile -s --specs -y --specfile-dir"
 }
 
 _spack_buildcache_copy() {

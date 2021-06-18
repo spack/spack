@@ -23,7 +23,7 @@ import spack.util.spack_yaml as syaml
 import spack.version
 
 from spack import repo
-from spack.spec import Spec, save_dependency_spec_yamls
+from spack.spec import Spec, save_dependency_specfiles
 from spack.util.spack_yaml import syaml_dict
 from spack.util.mock_package import MockPackageMultiRepo
 
@@ -332,7 +332,7 @@ def test_save_dependency_spec_yamls_subset(tmpdir, config):
         c_spec = spec_a['c']
         spec_a_yaml = spec_a.to_yaml(hash=ht.build_hash)
 
-        save_dependency_spec_yamls(spec_a_yaml, output_path, ['b', 'c'])
+        save_dependency_specfiles(spec_a_yaml, output_path, ['b', 'c'])
 
         assert check_specs_equal(b_spec, os.path.join(output_path, 'b.yaml'))
         assert check_specs_equal(c_spec, os.path.join(output_path, 'c.yaml'))
