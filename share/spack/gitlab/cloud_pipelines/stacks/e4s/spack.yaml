@@ -48,7 +48,7 @@ spack:
         - 3.20.3
     curl:
       version:
-        - 7.76.0
+        - 7.76.1
     diffutils:
       version:
         - 3.7
@@ -70,7 +70,7 @@ spack:
         - 0.21
     git:
       version:
-        - 2.31.0
+        - 2.31.1
     hdf5:
       variants: +fortran +hl +shared
       version:
@@ -83,10 +83,10 @@ spack:
         - 2.4.1
     json-c:
       version:
-        - 0.13.1
+        - 0.15
     libbsd:
       version:
-        - 0.10.0
+        - 0.11.3
     libfabric:
       version:
         - 1.12.1
@@ -96,7 +96,7 @@ spack:
         - 1.16
     libsigsegv:
       version:
-        - 2.12
+        - 2.13
     libpciaccess:
       version:
         - 0.16
@@ -115,7 +115,7 @@ spack:
         - 1.9.3
     m4:
       version:
-        - 1.4.18
+        - 1.4.19
     mesa:
       variants: ~llvm
     mesa18:
@@ -123,7 +123,7 @@ spack:
     mpich:
       variants: ~wrapperrpath
       version:
-        - 3.4.1
+        - 3.4.2
     ncurses:
       version:
         - 6.2
@@ -133,26 +133,26 @@ spack:
         - 2.0.14
     openblas:
       version:
-        - 0.3.10
+        - 0.3.15
       variants: threads=openmp
     perl:
       version:
-        - 5.32.1
+        - 5.34.0
     pkgconf:
       version:
-        - 1.7.3
+        - 1.7.4
     python:
       version:
         - 3.8.10
     readline:
       version:
-        - 8
+        - 8.1
     sqlite:
       version:
-        - 3.34.0
+        - 3.35.5
     tar:
       version:
-        - 1.32
+        - 1.34
     texinfo:
       version:
         - 6.5
@@ -165,7 +165,7 @@ spack:
         - 1.2.11
     zstd:
       version:
-        - 1.4.9
+        - 1.5.0
 
   definitions:
 
