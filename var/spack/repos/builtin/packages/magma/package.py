@@ -15,11 +15,10 @@ class Magma(CMakePackage, CudaPackage):
 
     homepage = "http://icl.cs.utk.edu/magma/"
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
-    maintainers = ['stomov', 'luszczek']
+    maintainers = ['stomov', 'luszczek', 'G-Ragghianti']
 
     test_requires_compiler = True
 
-    version('2.6.0', sha256='82e34aff266253dac0ab9f795dc60dc891469f617c37856b04fc2f7679ba0d22')
     version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
     version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
     version('2.5.2', sha256='065feb85558f9dd6f4cc4db36ac633a3f787827fc832d0b578a049a43a195620')
@@ -56,7 +55,6 @@ class Magma(CMakePackage, CudaPackage):
     patch('magma-2.5.0.patch', when='@2.5.0')
     patch('magma-2.5.0-cmake.patch', when='@2.5.0')
     patch('cmake-W.patch', when='@2.5.0:%nvhpc')
-    patch('sm_37.patch', when='@2.6.0 cuda_arch=37')
 
     def cmake_args(self):
         spec = self.spec

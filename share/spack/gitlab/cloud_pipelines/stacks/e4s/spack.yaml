@@ -178,7 +178,7 @@ spack:
     - hpx +cuda cuda_arch=70
     - kokkos +cuda +wrapper cuda_arch=70
     - kokkos-kernels +cuda cuda_arch=70 ^kokkos +cuda +wrapper cuda_arch=70
-    #- magma cuda_arch=70
+    - magma cuda_arch=70
     - raja +cuda cuda_arch=70
     - slate +cuda cuda_arch=70
     - strumpack +cuda ~slate cuda_arch=70
