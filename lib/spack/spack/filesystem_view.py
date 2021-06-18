@@ -467,7 +467,7 @@ class YamlFilesystemView(FilesystemView):
             if not os.path.lexists(file):
                 tty.warn("Tried to remove %s which does not exist" % file)
                 continue
-                
+
             # remove if file is not owned by any other package in the view
             # This will only be false if two packages are merged into a prefix
             # and have a conflicting file
