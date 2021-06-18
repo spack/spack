@@ -37,8 +37,8 @@ class Folly(CMakePackage):
     # folly requires gcc 4.9+ and a version of boost compiled with C++14 support or higher
     # TODO: Specify the boost components
     variant('cxxstd', default='14', values=('14', '17'), multi=False, description='Use the specified C++ standard when building.')
-    depends_on('boost+context cxxstd=14', when='cxxstd=14')
-    depends_on('boost+context cxxstd=17', when='cxxstd=17')
+    depends_on('boost+context+container cxxstd=14', when='cxxstd=14')
+    depends_on('boost+context+container cxxstd=17', when='cxxstd=17')
 
     # required dependencies
     depends_on('gflags')
