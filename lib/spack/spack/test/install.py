@@ -194,7 +194,8 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     prepared_db = spack.database.Database(mock_db_root)
     upstream_layout = gen_mock_layout('/a/')
 
-    def _install_upstream(*specs, install=False):
+    def _install_upstream(*specs, **kwargs):
+        install = kwargs.get('install', False)
         for spec_str in specs:
             s = spack.spec.Spec(spec_str).concretized()
             if install:
@@ -252,6 +253,8 @@ def test_installed_upstream(install_upstream, mock_fetch):
 
 
 def test_spec_install_status(install_upstream, mock_fetch, install_mockery):
+    """Check that the install status method returns the correct constants in various
+    install scenarios."""
 
     store, upstream_layout = install_upstream('a foo=baz', install=True)
     with spack.store.use_store(store):
