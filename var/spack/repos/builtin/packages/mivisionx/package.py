@@ -53,20 +53,21 @@ class Mivisionx(CMakePackage):
     depends_on('ffmpeg@:4', type='build')
     depends_on('protobuf@:3', type='build')
     depends_on('opencv@:3.4 +calib3d+core+features2d+highgui+imgcodecs+imgproc+video+videoio+flann+photo+objdetect', type='build')
-    depends_on('rocm-opencl@3.5.0', type='build', when='@1.7')
+    depends_on('rocm-opencl@3.5.0', when='@1.7')
     depends_on('rocm-cmake@3.5.0', type='build', when='@1.7')
-    depends_on('miopen-opencl@3.5.0', type=('build', 'run', 'link'), when='@1.7')
-    depends_on('miopengemm@1.1.6', type=('build', 'run', 'link'), when='@1.7')
-    depends_on('openssl', type=('build', 'link'), when='@4.0.0:4.2.0')
+    depends_on('miopen-opencl@3.5.0', when='@1.7')
+    depends_on('miopengemm@1.1.6', when='@1.7')
+    depends_on('openssl', when='@4.0.0:4.2.0')
+
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
-        depends_on('rocm-opencl@' + ver, type='build', when='@' + ver)
-        depends_on('miopengemm@' + ver, type=('build', 'run', 'link'), when='@' + ver)
-        depends_on('miopen-opencl@' + ver, type=('build', 'link'), when='@' + ver)
+        depends_on('rocm-opencl@' + ver,   when='@' + ver)
+        depends_on('miopengemm@' + ver,    when='@' + ver)
+        depends_on('miopen-opencl@' + ver, when='@' + ver)
 
     def cmake_args(self):
         spec = self.spec
         protobuf = spec['protobuf'].prefix.include
         args = [
-            '-DCMAKE_CXX_FLAGS:String=-I{0}'.format(protobuf)
+            self.define('CMAKE_CXX_FLAGS', '-I{0}'.format(protobuf))
         ]
         return args

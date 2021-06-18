@@ -49,7 +49,7 @@ class Oneapi(Compiler):
 
     @property
     def openmp_flag(self):
-        return "-qopenmp"
+        return "-fiopenmp"
     # There may be some additional options here for offload, e.g. :
     #  -fopenmp-simd           Emit OpenMP code only for SIMD-based constructs.
     #  -fopenmp-targets=<value>

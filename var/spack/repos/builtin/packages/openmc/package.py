@@ -14,12 +14,14 @@ class Openmc(CMakePackage):
        sections. The project started under the Computational Reactor Physics
        Group at MIT."""
 
-    homepage = "http://openmc.readthedocs.io/"
-    url = "https://github.com/openmc-dev/openmc/tarball/v0.10.0"
+    homepage = "https://docs.openmc.org/"
+    url = "https://github.com/openmc-dev/openmc/tarball/v0.12.2"
     git = "https://github.com/openmc-dev/openmc.git"
 
     version('develop', branch='develop', submodules=True)
     version('master', branch='master', submodules=True)
+    version('0.12.2', tag='v0.12.2', submodules=True)
+    version('0.12.1', tag='v0.12.1', submodules=True)
     version('0.12.0', tag='v0.12.0', submodules=True)
     version('0.11.0', sha256='19a9d8e9c3b581e9060fbd96d30f1098312d217cb5c925eb6372a5786d9175af')
     version('0.10.0', sha256='47650cb45e2c326ae439208d6f137d75ad3e5c657055912d989592c6e216178f')

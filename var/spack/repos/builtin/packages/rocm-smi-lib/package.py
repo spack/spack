@@ -32,6 +32,7 @@ class RocmSmiLib(CMakePackage):
     variant('shared', default=True, description='Build shared or static library')
 
     depends_on('cmake@3:', type='build')
+    depends_on('python@3:', type=('build', 'run'), when='@3.9.0:')
 
     def cmake_args(self):
         return [

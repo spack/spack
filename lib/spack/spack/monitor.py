@@ -29,7 +29,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.path
 import llnl.util.tty as tty
 from copy import deepcopy
-
+from glob import glob
 
 # A global client to instantiate once
 cli = None
@@ -172,7 +172,7 @@ class SpackMonitorClient:
         env_file = os.path.join(pkg_dir, "install_environment.json")
         build_environment = read_json(env_file)
         if not build_environment:
-            tty.warning(
+            tty.warn(
                 "install_environment.json not found in package folder. "
                 " This means that the current environment metadata will be used."
             )
@@ -283,6 +283,12 @@ class SpackMonitorClient:
             elif hasattr(e, 'code'):
                 msg = e.code
 
+            # If we can parse the message, try it
+            try:
+                msg += "\n%s" % e.read().decode("utf8", 'ignore')
+            except Exception:
+                pass
+
             if self.allow_fail:
                 tty.warning("Request to %s was not successful, but continuing." % e.url)
                 return
@@ -382,7 +388,7 @@ class SpackMonitorClient:
 
             if self.save_local:
                 filename = "spec-%s-%s-config.json" % (spec.name, spec.version)
-                self.save(sjson.dump(as_dict), filename)
+                self.save(as_dict, filename)
             else:
                 response = self.do_request("specs/new/", data=sjson.dump(as_dict))
                 configs[spec.package.name] = response.get('data', {})
@@ -434,8 +440,8 @@ class SpackMonitorClient:
         hasher = hashlib.md5()
         hasher.update(str(data).encode('utf-8'))
         bid = hasher.hexdigest()
-        filename = "build-metadata-%s.json" % full_hash
-        response = self.save(sjson.dump(data), filename)
+        filename = "build-metadata-%s.json" % bid
+        response = self.save(data, filename)
         if return_response:
             return response
         return bid
@@ -465,7 +471,7 @@ class SpackMonitorClient:
         data = {"build_id": self.get_build_id(spec), "status": status}
         if self.save_local:
             filename = "build-%s-status.json" % data['build_id']
-            return self.save(sjson.dump(data), filename)
+            return self.save(data, filename)
 
         return self.do_request("builds/update/", data=sjson.dump(data))
 
@@ -510,7 +516,7 @@ class SpackMonitorClient:
 
         if self.save_local:
             filename = "build-%s-phase-%s.json" % (data['build_id'], phase_name)
-            return self.save(sjson.dump(data), filename)
+            return self.save(data, filename)
 
         return self.do_request("builds/phases/update/", data=sjson.dump(data))
 
@@ -530,9 +536,76 @@ class SpackMonitorClient:
 
         if self.save_local:
             filename = "spec-%s-%s.json" % (spec.name, spec.version)
-            return self.save(sjson.dump(data), filename)
+            return self.save(data, filename)
 
         return self.do_request("specs/new/", data=sjson.dump(data))
+
+    def iter_read(self, pattern):
+        """
+        A helper to read json from a directory glob and return it loaded.
+        """
+        for filename in glob(pattern):
+            basename = os.path.basename(filename)
+            tty.info("Reading %s" % basename)
+            yield read_json(filename)
+
+    def upload_local_save(self, dirname):
+        """
+        Upload results from a locally saved directory to spack monitor.
+
+        The general workflow will first include an install with save local:
+        spack install --monitor --monitor-save-local
+        And then a request to upload the root or specific directory.
+        spack upload monitor ~/.spack/reports/monitor/<date>/
+        """
+        dirname = os.path.abspath(dirname)
+        if not os.path.exists(dirname):
+            tty.die("%s does not exist." % dirname)
+
+        # We can't be sure the level of nesting the user has provided
+        # So we walk recursively through and look for build metadata
+        for subdir, dirs, files in os.walk(dirname):
+            root = os.path.join(dirname, subdir)
+
+            # A metadata file signals a monitor export
+            metadata = glob("%s%sbuild-metadata*" % (root, os.sep))
+            if not metadata or not files or not root or not subdir:
+                continue
+            self._upload_local_save(root)
+        tty.info("Upload complete")
+
+    def _upload_local_save(self, dirname):
+        """
+        Given a found metadata file, upload results to spack monitor.
+        """
+        # First find all the specs
+        for spec in self.iter_read("%s%sspec*" % (dirname, os.sep)):
+            self.do_request("specs/new/", data=sjson.dump(spec))
+
+        # Load build metadata to generate an id
+        metadata = glob("%s%sbuild-metadata*" % (dirname, os.sep))
+        if not metadata:
+            tty.die("Build metadata file(s) missing in %s" % dirname)
+
+        # Create a build_id lookup based on hash
+        hashes = {}
+        for metafile in metadata:
+            data = read_json(metafile)
+            build = self.do_request("builds/new/", data=sjson.dump(data))
+            localhash = os.path.basename(metafile).replace(".json", "")
+            hashes[localhash.replace('build-metadata-', "")] = build
+
+        # Next upload build phases
+        for phase in self.iter_read("%s%sbuild*phase*" % (dirname, os.sep)):
+            build_id = hashes[phase['build_id']]['data']['build']['build_id']
+            phase['build_id'] = build_id
+            self.do_request("builds/phases/update/", data=sjson.dump(phase))
+
+        # Next find the status objects
+        for status in self.iter_read("%s%sbuild*status*" % (dirname, os.sep)):
+            build_id = hashes[status['build_id']]['data']['build']['build_id']
+            status['build_id'] = build_id
+            self.do_request("builds/update/", data=sjson.dump(status))
 
 
 # Helper functions

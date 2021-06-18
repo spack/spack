@@ -347,6 +347,10 @@ environment variables:
                 reporter.filename = default_log_file(specs[0])
             reporter.specs = specs
 
+            # Tell the monitor about the specs
+            if args.use_monitor and specs:
+                monitor.new_configuration(specs)
+
             tty.msg("Installing environment {0}".format(env.name))
             with reporter('build'):
                 env.install_all(args, **kwargs)

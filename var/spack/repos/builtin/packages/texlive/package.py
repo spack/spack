@@ -113,7 +113,7 @@ class Texlive(AutotoolsPackage):
     depends_on('mpfr', when='@2019:')
     depends_on('perl', when='@2019:')
     depends_on('pixman', when='@2019:')
-    depends_on('poppler', when='@2019:')
+    depends_on('poppler@:0.84', when='@2019:')
     depends_on('teckit', when='@2019:')
     depends_on('zlib', when='@2019:')
     depends_on('zziplib', when='@2019:')
