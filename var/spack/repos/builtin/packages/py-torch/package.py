@@ -121,15 +121,16 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('eigen', when='@0.4:')
-    depends_on('cpuinfo')
-    depends_on('cpuinfo@master', when='@master')
-    depends_on('cpuinfo@2020-12-17', when='@1.8.0:1.9.999')
-    depends_on('cpuinfo@2020-06-11', when='@1.6.0:1.7.999')
-    depends_on('cpuinfo@2020-01-21', when='@1.5.0:1.5.999')
-    depends_on('cpuinfo@2019-01-17', when='@1.0.1:1.4.999')
-    depends_on('cpuinfo@2018-10-05', when='@1.0.0')
-    depends_on('cpuinfo@2018-05-13', when='@0.4.1')
-    depends_on('cpuinfo@2018-04-04', when='@:0.4.0')
+    # https://github.com/pytorch/pytorch/issues/60329
+    # depends_on('cpuinfo')
+    # depends_on('cpuinfo@master', when='@master')
+    # depends_on('cpuinfo@2020-12-17', when='@1.8.0:1.9.999')
+    # depends_on('cpuinfo@2020-06-11', when='@1.6.0:1.7.999')
+    # depends_on('cpuinfo@2020-01-21', when='@1.5.0:1.5.999')
+    # depends_on('cpuinfo@2019-01-17', when='@1.0.1:1.4.999')
+    # depends_on('cpuinfo@2018-10-05', when='@1.0.0')
+    # depends_on('cpuinfo@2018-05-13', when='@0.4.1')
+    # depends_on('cpuinfo@2018-04-04', when='@:0.4.0')
     depends_on('sleef', when='@0.4.1:')
     depends_on('fp16')
     depends_on('fp16@master', when='@master')
@@ -169,11 +170,12 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-numpy', when='+numpy', type=('build', 'run'))
     depends_on('llvm-openmp', when='%apple-clang +openmp')
     depends_on('valgrind', when='+valgrind')
-    depends_on('xnnpack', when='+xnnpack')
-    depends_on('xnnpack@master', when='@master+xnnpack')
-    depends_on('xnnpack@2021-02-22', when='@1.8.0:1.9.999+xnnpack')
-    depends_on('xnnpack@2020-03-23', when='@1.6.0:1.7.999+xnnpack')
-    depends_on('xnnpack@2020-02-24', when='@1.5.0:1.5.999+xnnpack')
+    # https://github.com/pytorch/pytorch/issues/60332
+    # depends_on('xnnpack', when='+xnnpack')
+    # depends_on('xnnpack@master', when='@master+xnnpack')
+    # depends_on('xnnpack@2021-02-22', when='@1.8.0:1.9.999+xnnpack')
+    # depends_on('xnnpack@2020-03-23', when='@1.6.0:1.7.999+xnnpack')
+    # depends_on('xnnpack@2020-02-24', when='@1.5.0:1.5.999+xnnpack')
     depends_on('mpi', when='+mpi')
     # https://github.com/pytorch/pytorch/issues/60270
     # depends_on('gloo', when='+gloo')
@@ -189,7 +191,8 @@ class PyTorch(PythonPackage, CudaPackage):
     # depends_on('gloo@2018-11-20', when='@1.0.0+gloo')
     # depends_on('gloo@2018-05-29', when='@0.4.1+gloo')
     # depends_on('gloo@2018-04-06', when='@:0.4.0+gloo')
-    depends_on('onnx', when='+onnx_ml')
+    # https://github.com/pytorch/pytorch/issues/60331
+    # depends_on('onnx', when='+onnx_ml')
 
     # Test dependencies
     depends_on('py-hypothesis', type='test')
@@ -351,6 +354,7 @@ class PyTorch(PythonPackage, CudaPackage):
             env.set('PYTORCH_BUILD_NUMBER', 0)
 
         # BLAS to be used by Caffe2
+        # Options defined in cmake/Dependencies.cmake
         # https://github.com/pytorch/pytorch/issues/60328
         if self.spec['blas'].name == 'atlas':
             env.set('BLAS', 'ATLAS')
@@ -375,11 +379,13 @@ class PyTorch(PythonPackage, CudaPackage):
         env.set('USE_SYSTEM_NCCL', 'ON')
         env.set('USE_SYSTEM_EIGEN_INSTALL', 'ON')
         # env.set('USE_SYSTEM_LIBS', 'ON')
-        env.set('USE_SYSTEM_CPUINFO', 'ON')
+        # https://github.com/pytorch/pytorch/issues/60329
+        # env.set('USE_SYSTEM_CPUINFO', 'ON')
         env.set('USE_SYSTEM_SLEEF', 'ON')
         # https://github.com/pytorch/pytorch/issues/60270
         # env.set('USE_SYSTEM_GLOO', 'ON')
         env.set('USE_SYSTEM_FP16', 'ON')
+        env.set('USE_SYSTEM_PYBIND11', 'ON')
         env.set('pybind11_DIR', self.spec['py-pybind11'].prefix)
         env.set('pybind11_INCLUDE_DIR',
                 self.spec['py-pybind11'].prefix.include)
@@ -387,8 +393,10 @@ class PyTorch(PythonPackage, CudaPackage):
         env.set('USE_SYSTEM_PSIMD', 'ON')
         env.set('USE_SYSTEM_FXDIV', 'ON')
         env.set('USE_SYSTEM_BENCHMARK', 'ON')
-        env.set('USE_SYSTEM_ONNX', 'ON')
-        env.set('USE_SYSTEM_XNNPACK', 'ON')
+        # https://github.com/pytorch/pytorch/issues/60331
+        # env.set('USE_SYSTEM_ONNX', 'ON')
+        # https://github.com/pytorch/pytorch/issues/60332
+        # env.set('USE_SYSTEM_XNNPACK', 'ON')
 
     @run_before('install')
     def build_amd(self):
