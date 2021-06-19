@@ -293,47 +293,86 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         return options
 
-    test_script_relative_path = "scripts/spack_test"
+    test_script_relative_path = join_path("scripts", "spack_test")
+
+    # TODO: Replace this method and its 'get' use for cmake path with
+    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
+    #   tests can access build dependencies through self.spec['cmake'].
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path."""
+        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
+        if set:
+            with open(filepath, 'w') as out_file:
+                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                out_file.write('{0}\n'.format(cmake_bin))
+        else:
+            with open(filepath, 'r') as in_file:
+                return in_file.read().strip()
+
+    @property
+    def cached_tests_full_path(self):
+        """The full path to the staged (cached) test files."""
+        return join_path(self.test_suite.current_test_cache_dir,
+                         self.cached_tests_relative_path)
+
+    @property
+    def cached_tests_relative_path(self):
+        """The relative path to the cached test's files."""
+        return join_path(self.test_script_relative_path, "out")
 
     @run_after('install')
     def setup_build_tests(self):
+        """Copy test."""
         # Skip if unsupported version
         cmake_source_path = join_path(self.stage.source_path,
                                       self.test_script_relative_path)
         if not os.path.exists(cmake_source_path):
             return
-        """Copy test."""
-        cmake_out_path = join_path(self.test_script_relative_path, 'out')
+
         cmake_args = [cmake_source_path,
                       "-DSPACK_PACKAGE_SOURCE_DIR:PATH={0}".
                       format(self.stage.source_path),
                       "-DSPACK_PACKAGE_TEST_ROOT_DIR:PATH={0}".
-                      format(join_path(self.install_test_root, cmake_out_path)),
-                      "-DSPACK_PACKAGE_INSTALL_DIR:PATH={0}".format(self.prefix)]
+                      format(self.cached_tests_relative_path),
+                      "-DSPACK_PACKAGE_INSTALL_DIR:PATH={0}".
+                      format(self.prefix)]
         cmake(*cmake_args)
-        self.cache_extra_test_sources(cmake_out_path)
+
+        self.cache_extra_test_sources(self.cached_tests_relative_path)
+
+        # TODO: Remove once self.spec['cmake'] is available here
+        self.cmake_bin(set=True)
 
     def build_tests(self):
-        """Build test."""
-        cmake_path = join_path(self.install_test_root,
-                               self.test_script_relative_path, 'out')
-        cmake_args = [cmake_path, '-DEXECUTABLE_OUTPUT_PATH=' + cmake_path]
-        cmake(*cmake_args)
-        make()
+        """Build the stand-alone/smoke tests."""
+
+        # TODO: Remove/replace once self.spec['cmake'] is available here
+        cmake_bin = self.cmake_bin(set=False)
+
+        cmake_args = [self.cached_tests_full_path,
+                      '-DEXECUTABLE_OUTPUT_PATH={0}'.
+                      format(self.cached_tests_full_path),
+                      '-DCMAKE_PREFIX_PATH={0}'.
+                      format(self.prefix)]
+
+        self.run_test(cmake_bin, cmake_args,
+                      purpose='test: calling cmake on the cached tests')
+
+        self.run_test('make', [],
+                      purpose='test: building the tests')
 
     def run_tests(self):
         """Run test."""
-        reason = 'Checking ability to execute.'
-        run_path = join_path(self.install_test_root,
-                             self.test_script_relative_path, 'out')
-        self.run_test('make', [run_path, 'test'], [], installed=False, purpose=reason)
+        self.run_test('make', [self.cached_tests_full_path, 'test'],
+                      [], installed=False,
+                      purpose='test: executing the tests')
 
     def test(self):
         # Skip if unsupported version
-        cmake_path = join_path(self.install_test_root,
-                               self.test_script_relative_path, 'out')
+        cmake_path = self.cached_tests_full_path
         if not os.path.exists(cmake_path):
             print('Skipping smoke tests: {0} is missing'.format(cmake_path))
             return
+
         self.build_tests()
         self.run_tests()
