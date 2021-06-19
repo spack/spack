@@ -351,18 +351,24 @@ class PyTorch(PythonPackage, CudaPackage):
             env.set('PYTORCH_BUILD_NUMBER', 0)
 
         # BLAS to be used by Caffe2
-        if '^mkl' in self.spec:
-            env.set('BLAS', 'MKL')
-        elif '^atlas' in self.spec:
+        # https://github.com/pytorch/pytorch/issues/60328
+        if self.spec['blas'].name == 'atlas':
             env.set('BLAS', 'ATLAS')
-        elif '^openblas' in self.spec:
-            env.set('BLAS', 'OpenBLAS')
-        elif '^veclibfort' in self.spec:
-            env.set('BLAS', 'vecLib')
-        elif '^libflame' in self.spec:
-            env.set('BLAS', 'FLAME')
-        elif '^eigen' in self.spec:
+        elif self.spec['blas'].name in ['blis', 'amdblis']:
+            env.set('BLAS', 'BLIS')
+        elif self.spec['blas'].name == 'eigen':
             env.set('BLAS', 'Eigen')
+        elif self.spec['lapack'].name in ['libflame', 'amdlibflame']:
+            env.set('BLAS', 'FLAME')
+        elif self.spec['blas'].name in [
+                'intel-mkl', 'intel-parallel-studio', 'intel-oneapi-mkl']:
+            env.set('BLAS', 'MKL')
+        elif self.spec['blas'].name == 'openblas':
+            env.set('BLAS', 'OpenBLAS')
+        elif self.spec['blas'].name == 'veclibfort':
+            env.set('BLAS', 'vecLib')
+        else:
+            env.set('BLAS', 'Generic')
 
         # Don't use vendored third-party libraries
         env.set('BUILD_CUSTOM_PROTOBUF', 'OFF')
