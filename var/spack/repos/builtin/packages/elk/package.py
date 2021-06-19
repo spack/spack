@@ -35,7 +35,7 @@ class Elk(MakefilePackage):
     variant('fft',    default='internal', multi=False,
             description='Build with custom FFT library',
             values=('internal', 'fftw', 'mkl'))
-    # TODO: add check that if fft=mkl then linalg=mkl and vice versa.
+    #  check that if fft=mkl then linalg=mkl and vice versa.
 
     conflicts('linalg=mkl', when='fft=fftw')
     conflicts('linalg=mkl', when='fft=internal')
@@ -137,7 +137,7 @@ class Elk(MakefilePackage):
         if 'fft=fftw' in spec:
             config['LIB_FFT'] = spec['fftw'].libs.ld_flags
             config['SRC_FFT'] = 'zfftifc_fftw.f90'
-        if 'fftw=njk' in spec:
+        if 'fftw=mkl' in spec:
             config['LIB_FFT'] = spec['mkl'].libs.ld_flags
             config['SRC_FFT'] = ' '
 
