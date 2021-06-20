@@ -17,7 +17,3 @@ class Ftobjectlibrary(CMakePackage):
     maintainers = ['schoonovernumerics']
 
     version('main', branch='main')
-
-    def cmake_args(self):
-        args = []
-        return args
