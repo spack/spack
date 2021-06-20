@@ -75,6 +75,7 @@ spack:
     - stat@4.0.2.999
     - symengine@0.3.0
     - timemory
+    - totalview
     - valgrind~mpi
     - virtualgl
     - vrpn

@@ -379,14 +379,12 @@ configure_compilers() {
 setup_mirror() {
     what="$1"
     log "adding mirrors"
-    if [[ "${what}" = "compilers" ]]; then
-        if [[ -z "${SPACK_PROPRIETARY_MIRROR_DIR:+x}" ]]; then
-            log "...need to have \$SPACK_PROPRIETARY_MIRROR_DIR set!"
-            return 1
-        fi
-        log "...source mirror: ${SPACK_PROPRIETARY_MIRROR_DIR}"
-        spack mirror add --scope=user my_proprietary_mirror file://${SPACK_PROPRIETARY_MIRROR_DIR} || log "proprietary mirror already added!"
+    if [[ -z "${SPACK_PROPRIETARY_MIRROR_DIR:+x}" ]]; then
+        log "...need to have \$SPACK_PROPRIETARY_MIRROR_DIR set!"
+        return 1
     fi
+    log "...proprietary mirror: ${SPACK_PROPRIETARY_MIRROR_DIR}"
+    spack mirror add --scope=user my_proprietary_mirror file://${SPACK_PROPRIETARY_MIRROR_DIR} || log "proprietary mirror already added!"
 
     if [[ "${SOURCECACHE:-x}" = "true" ]]; then
         if [[ -z "${SPACK_SOURCE_MIRROR_DIR:+x}" ]]; then
@@ -460,28 +458,29 @@ populate_mirror() {
     shift
     spec_list="$*"
 
-    if [[ "${what}" = "compilers" ]]; then
-        log "populating mirror with proprietary compilers"
-        for compiler in intel intel-parallel-studio pgi nvhpc; do
-            mkdir -p ${SPACK_PROPRIETARY_MIRROR_DIR}/${compiler}
-            cp ${DEPLOYMENT_DATA}/${compiler}/* ${SPACK_PROPRIETARY_MIRROR_DIR}/${compiler}/
-        done
-    fi
+    log "populating mirror with proprietary softwares"
+    mkdir -p "${SPACK_PROPRIETARY_MIRROR_DIR}"
+    rsync -av "${DEPLOYMENT_DATA}/" "${SPACK_PROPRIETARY_MIRROR_DIR}"
 
     if [[ "${SOURCECACHE:-x}" != "true" ]]; then
         return
     fi
 
-    log "populating mirror for ${what}"
+    # TODO this should either
+    # * be updated to pull the specs for the current environment
+    # * removed as we now have an official Spack mirror *and* the source
+    #   cache
+    #
+    # log "populating mirror for ${what}"
 
-    if [[ -z "${spec_list}" ]]; then
-        log "...found no new packages"
-        return 0
-    fi
+    # if [[ -z "${spec_list}" ]]; then
+    #     log "...found no new packages"
+    #     return 0
+    # fi
 
-    log "found the following specs"
-    echo "${spec_list}"
-    spack -d mirror create -D -d ${SPACK_SOURCE_MIRROR_DIR} ${spec_list}
+    # log "found the following specs"
+    # echo "${spec_list}"
+    # spack -d mirror create -D -d ${SPACK_SOURCE_MIRROR_DIR} ${spec_list}
 }
 
 copy_configuration() {
@@ -713,6 +712,7 @@ EOF
     spack reindex
 
     setup_mirror "${what}"
+    populate_mirror "${what}"
 
     log "starting deployment"
     install_start=$(date "+%Y-%m-%d %H:%M:%S")

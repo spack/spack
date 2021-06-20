@@ -58,6 +58,7 @@ modules:
       - python
       - snakemake
       - stat
+      - totalview
       - valgrind
       - virtualgl
     blacklist:
