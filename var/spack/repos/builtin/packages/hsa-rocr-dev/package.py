@@ -17,7 +17,7 @@ class HsaRocrDev(CMakePackage):
     git      = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
     url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-4.1.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='master')
     version('4.2.0', sha256='fa0e7bcd64e97cbff7c39c9e87c84a49d2184dc977b341794770805ec3f896cc')
@@ -34,16 +34,18 @@ class HsaRocrDev(CMakePackage):
     variant('image', default=True, description='build with or without image support')
 
     depends_on('cmake@3:', type="build")
-    depends_on('xxd', when='@3.7: +image', type='build')
+
+    # Note, technically only necessary when='@3.7: +image', but added to all
+    # to work around https://github.com/spack/spack/issues/23951
+    depends_on('xxd', when='+image', type='build')
     depends_on('libelf@0.8:', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', 'master']:
-        depends_on('hsakmt-roct@' + ver, type=('link', 'run'), when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type=('build', 'link'), when='@' + ver)
-
-    for ver in ['3.7.0', '3.8.0', '3.9.0', '4.0.0', '4.1.0', '4.2.0', 'master']:
-        depends_on('llvm-amdgpu@' + ver, type=('link', 'run'), when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, when='@' + ver)
+        # allow standalone rocm-device-libs (useful for aomp)
+        depends_on('rocm-device-libs@' + ver, when='@{0} ^llvm-amdgpu ~rocm-device-libs'.format(ver))
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
     patch('0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch', when='@3.5.0')
@@ -52,17 +54,23 @@ class HsaRocrDev(CMakePackage):
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
-        libelf_include = self.spec['libelf'].prefix.include.libelf
+        spec = self.spec
+
+        libelf_include = spec['libelf'].prefix.include.libelf
         args = [
             self.define('LIBELF_INCLUDE_DIRS', libelf_include),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
 
-        if '@3.7.0:' in self.spec:
+        if '@3.7.0:' in spec:
             args.append(self.define_from_variant('IMAGE_SUPPORT', 'image'))
 
-        if '@4.2.0:' in self.spec:
-            bitcode_dir = self.spec['rocm-device-libs'].prefix.amdgcn.bitcode
-            args.append('-DBITCODE_DIR={0}'.format(bitcode_dir))
+            # device libs is bundled with llvm-amdgpu (default) or standalone
+            if '^rocm-device-libs' in spec:
+                bitcode_dir = spec['rocm-device-libs'].prefix.amdgcn.bitcode
+            else:
+                bitcode_dir = spec['llvm-amdgpu'].prefix.amdgcn.bitcode
+
+            args.append(self.define('BITCODE_DIR', bitcode_dir))
 
         return args

@@ -13,6 +13,7 @@ class Opencv(CMakePackage, CudaPackage):
     maintainers = ['bvanessen', 'adamjstewart']
 
     version('master', branch='master')
+    version('4.5.2',    sha256='ae258ed50aa039279c3d36afdea5c6ecf762515836b27871a8957c610d0424f8')
     version('4.5.1',    sha256='e27fe5b168918ab60d58d7ace2bd82dd14a4d0bd1d3ae182952c2113f5637513')
     version('4.5.0',    sha256='dde4bf8d6639a5d3fe34d5515eab4a15669ded609a1d622350c7ff20dace1907')
     version('4.2.0',    sha256='9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec')
@@ -30,8 +31,8 @@ class Opencv(CMakePackage, CudaPackage):
     version('3.4.0',    sha256='678cc3d2d1b3464b512b084a8cca1fad7de207c7abdf2caa1fed636c13e916da')
     version('3.3.1',    sha256='5dca3bb0d661af311e25a72b04a7e4c22c47c1aa86eb73e70063cd378a2aa6ee')
     version('3.3.0',    sha256='8bb312b9d9fd17336dc1f8b3ac82f021ca50e2034afc866098866176d985adc6')
-    version('3.2.0',    sha256='9541efbf68f298f45914b4e837490647f4d5e472b4c0c04414a787d116a702b2')
-    version('3.1.0',    sha256='f3b160b9213dd17aa15ddd45f6fb06017fe205359dbd1f7219aad59c98899f15')
+    version('3.2.0',    sha256='9541efbf68f298f45914b4e837490647f4d5e472b4c0c04414a787d116a702b2', deprecated=True)
+    version('3.1.0',    sha256='f3b160b9213dd17aa15ddd45f6fb06017fe205359dbd1f7219aad59c98899f15', deprecated=True)
     version('2.4.13.2', sha256='4b00c110e6c54943cbbb7cf0d35c5bc148133ab2095ee4aaa0ac0a4f67c58080', deprecated=True)
     version('2.4.13.1', sha256='0d5ce5e0973e3a745f927d1ee097aaf909aae59f787be6d27a03d639e2d96bd7', deprecated=True)
     version('2.4.13',   sha256='94ebcca61c30034d5fb16feab8ec12c8a868f5162d20a9f0396f0f5f6d8bbbff', deprecated=True)
@@ -58,7 +59,7 @@ class Opencv(CMakePackage, CudaPackage):
     components = [
         '1394', 'ade', 'aravis', 'arith_dec', 'arith_enc', 'avfoundation', 'clp',
         'cuda', 'eigen', 'ffmpeg', 'freetype', 'gdal', 'gdcm', 'gphoto2', 'gstreamer',
-        'halide', 'hpx', 'imgcodec_hdr', 'imgcode_pfm', 'imgcodec_pxm',
+        'gtk', 'halide', 'hpx', 'imgcodec_hdr', 'imgcode_pfm', 'imgcodec_pxm',
         'imgcodec_sunraster', 'inf_engine', 'ipp', 'itt', 'jasper', 'jpeg', 'lapack',
         'librealsense', 'mfx', 'ngraph', 'onnx', 'opencl', 'openclamdblas',
         'openclamdfft', 'opencl_svm', 'openexr', 'opengl', 'openjpeg', 'openmp',
@@ -81,7 +82,9 @@ class Opencv(CMakePackage, CudaPackage):
 
     variant('contrib', default=False, description='Adds in code from opencv_contrib.')
     contrib_vers = [
-        '3.4.12', '4.0.0', '4.0.1', '4.1.0', '4.1.1', '4.1.2', '4.2.0', '4.5.0', '4.5.1'
+        '3.1.0', '3.2.0', '3.3.0', '3.3.1', '3.4.0', '3.4.1', '3.4.3', '3.4.4',
+        '3.4.5', '3.4.6', '3.4.12', '4.0.0', '4.0.1', '4.1.0', '4.1.1',
+        '4.1.2', '4.2.0', '4.5.0', '4.5.1', '4.5.2'
     ]
     for cv in contrib_vers:
         resource(name="contrib",
@@ -100,7 +103,8 @@ class Opencv(CMakePackage, CudaPackage):
     # the current development branch of OpenCV. See #8461 for more information.
     patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
 
-    patch('opencv3.2_cmake.patch', when='@3.2')
+    patch('opencv3.2_cmake.patch', when='@3.2:3.4.1')
+    patch('opencv3.2_compiler_cmake.patch', when='@3.2')
     patch('opencv3.2_vtk.patch', when='@3.2+vtk')
     patch('opencv3.2_regacyvtk.patch', when='@3.2+vtk')
     patch('opencv3.2_ffmpeg.patch', when='@3.2+videoio')
@@ -112,6 +116,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('freetype', when='+freetype')
     depends_on('gdal', when='+gdal')
+    depends_on('gtkplus', when='+gtk')
     depends_on('libpng', when='+png')
     depends_on('jpeg', when='+jpeg')
     depends_on('openjpeg@2:', when='+openjpeg')
@@ -119,6 +124,13 @@ class Opencv(CMakePackage, CudaPackage):
 
     depends_on('jasper', when='+jasper')
     depends_on('cuda@6.5:', when='+cuda')
+    depends_on('cuda@:10.2', when='@4.0:4.2+cuda')
+    depends_on('cuda@:9.0', when='@3.3.1:3.4+cuda')
+    depends_on('cuda@:8', when='@:3.3.0+cuda')
+    depends_on('cudnn', when='+cuda')
+    depends_on('cudnn@:7.6', when='@4.0:4.2+cuda')
+    depends_on('cudnn@:7.3', when='@3.3.1:3.4+cuda')
+    depends_on('cudnn@:6', when='@:3.3.0+cuda')
     depends_on('vtk', when='+vtk')
     depends_on('qt', when='+qt')
     depends_on('java', when='+java_bindings_generator')
@@ -180,6 +192,9 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts('+videoio', when='~imgproc')
     conflicts('+videoio', when='~imgcodecs')
     conflicts('+world', when='~core')
+
+    # OpenCV component conflicts
+    conflicts('+gtk', when='platform=darwin')
 
     conflicts('+python2', when='+python3')
     conflicts('+python3', when='+python2')

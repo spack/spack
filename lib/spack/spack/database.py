@@ -189,7 +189,8 @@ class InstallRecord(object):
             ref_count=0,
             explicit=False,
             installation_time=None,
-            deprecated_for=None
+            deprecated_for=None,
+            in_buildcache=False,
     ):
         self.spec = spec
         self.path = str(path) if path else None
@@ -198,6 +199,7 @@ class InstallRecord(object):
         self.explicit = explicit
         self.installation_time = installation_time or _now()
         self.deprecated_for = deprecated_for
+        self.in_buildcache = in_buildcache
 
     def install_type_matches(self, installed):
         installed = InstallStatuses.canonicalize(installed)
@@ -283,6 +285,11 @@ _query_docstring = """
 
             hashes (container): list or set of hashes that we can use to
                 restrict the search
+
+            in_buildcache (bool or any, optional): Specs that are marked in
+                this database as part of an associated binary cache are
+                ``in_buildcache``. All other specs are not. This field is used
+                for querying mirror indices. Default is ``any``.
 
         Returns:
             list of specs that match the query
@@ -1266,6 +1273,16 @@ class Database(object):
         self._data[spec_key] = spec_rec
 
     @_autospec
+    def mark(self, spec, key, value):
+        """Mark an arbitrary record on a spec."""
+        with self.write_transaction():
+            return self._mark(spec, key, value)
+
+    def _mark(self, spec, key, value):
+        record = self._data[self._get_matching_spec_key(spec)]
+        setattr(record, key, value)
+
+    @_autospec
     def deprecate(self, spec, deprecator):
         """Marks a spec as deprecated in favor of its deprecator"""
         with self.write_transaction():
@@ -1425,7 +1442,8 @@ class Database(object):
             explicit=any,
             start_date=None,
             end_date=None,
-            hashes=None
+            hashes=None,
+            in_buildcache=any,
     ):
         """Run a query on the database."""
 
@@ -1455,6 +1473,9 @@ class Database(object):
                 continue
 
             if not rec.install_type_matches(installed):
+                continue
+
+            if in_buildcache is not any and rec.in_buildcache != in_buildcache:
                 continue
 
             if explicit is not any and rec.explicit != explicit:

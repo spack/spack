@@ -333,7 +333,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add analyze arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="activate add analyze arch audit blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module monitor patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -379,6 +379,32 @@ _spack_analyze_run() {
 
 _spack_arch() {
     SPACK_COMPREPLY="-h --help --known-targets -p --platform -o --operating-system -t --target -f --frontend -b --backend"
+}
+
+_spack_audit() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY="configs packages list"
+    fi
+}
+
+_spack_audit_configs() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_audit_packages() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_audit_list() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_blame() {
@@ -495,20 +521,29 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="generate rebuild rebuild-index"
+        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build"
     fi
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies --prune-dag --no-prune-dag --check-index-only"
+    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies --prune-dag --no-prune-dag --check-index-only --artifacts-root"
+}
+
+_spack_ci_rebuild_index() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_ci_rebuild() {
     SPACK_COMPREPLY="-h --help"
 }
 
-_spack_ci_rebuild_index() {
-    SPACK_COMPREPLY="-h --help"
+_spack_ci_reproduce_build() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --working-dir"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_clean() {
@@ -694,7 +729,7 @@ _spack_config_revert() {
 }
 
 _spack_containerize() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help --monitor --monitor-save-local --monitor-no-auth --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix"
 }
 
 _spack_create() {
@@ -858,7 +893,7 @@ _spack_env_st() {
 _spack_env_loads() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-type --input-only -p --prefix -x --exclude -r --dependencies"
+        SPACK_COMPREPLY="-h --help -n --module-set-name -m --module-type --input-only -p --prefix -x --exclude -r --dependencies"
     else
         _environments
     fi
@@ -1001,7 +1036,7 @@ _spack_gpg_sign() {
 _spack_gpg_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --comment --expires --export"
+        SPACK_COMPREPLY="-h --help --comment --expires --export --export-secret"
     else
         SPACK_COMPREPLY=""
     fi
@@ -1018,7 +1053,7 @@ _spack_gpg_init() {
 _spack_gpg_export() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help --secret"
     else
         _keys
     fi
@@ -1218,7 +1253,7 @@ _spack_module() {
 _spack_module_lmod() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -n --name"
     else
         SPACK_COMPREPLY="refresh find rm loads setdefault"
     fi
@@ -1272,7 +1307,7 @@ _spack_module_lmod_setdefault() {
 _spack_module_tcl() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -n --name"
     else
         SPACK_COMPREPLY="refresh find rm loads"
     fi
@@ -1312,6 +1347,10 @@ _spack_module_tcl_loads() {
     else
         _installed_packages
     fi
+}
+
+_spack_monitor() {
+    SPACK_COMPREPLY="-h --help --monitor --monitor-save-local --monitor-no-auth --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix"
 }
 
 _spack_patch() {

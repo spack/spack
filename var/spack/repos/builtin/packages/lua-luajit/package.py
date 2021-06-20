@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 from spack import *
 
@@ -17,6 +18,34 @@ class LuaLuajit(MakefilePackage):
     version('2.0.4', sha256='620fa4eb12375021bef6e4f237cbd2dd5d49e56beb414bee052c746beef1807d')
 
     conflicts('@:2.0.5', when='target=aarch64:')
+
+    variant('lualinks', default=False, description="add symlinks to make lua-luajit a drop-in lua replacement")
+
+    provides("lua-lang", when="+lualinks")
+
+    @run_after("install")
+    def install_links(self):
+        if not self.spec.satisfies("+lualinks"):
+            return
+
+        with working_dir(self.prefix.bin):
+            luajit = os.readlink(self.prefix.bin.luajit)
+            symlink(luajit, "lua")
+
+        with working_dir(self.prefix.include):
+            luajit_include_subdirs = glob.glob(
+                os.path.join(self.prefix.include, "luajit*"))
+            assert len(luajit_include_subdirs) == 1
+            symlink(luajit_include_subdirs[0], "lua")
+
+        with working_dir(self.prefix.lib):
+            luajit_libnames = glob.glob(
+                os.path.join(self.prefix.lib, "libluajit*.so*"))
+            real_lib = next(
+                lib for lib in luajit_libnames
+                if os.path.isfile(lib) and not os.path.islink(lib)
+            )
+            symlink(real_lib, "liblua.so")
 
     @property
     def headers(self):

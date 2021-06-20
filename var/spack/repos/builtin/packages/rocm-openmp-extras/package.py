@@ -88,13 +88,12 @@ class RocmOpenmpExtras(Package):
     depends_on('libffi', type=('build', 'link'))
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
-        depends_on('hsakmt-roct@' + ver, type=('build', 'run'), when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type=('build', 'run'),
-                   when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type=('build', 'run'),
-                   when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver + ' ~openmp', type=('build', 'run'),
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        # standalone rocm-device-libs
+        depends_on('rocm-device-libs@' + ver, when='@' + ver)
+        depends_on('llvm-amdgpu@{0} ~rocm-device-libs ~openmp'.format(ver),
                    when='@' + ver)
 
         # tag changed to 'rocm-' in 4.0.0

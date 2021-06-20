@@ -12,8 +12,8 @@ class PyGoogleApiCore(PythonPackage):
     homepage = "https://github.com/GoogleCloudPlatform/google-cloud-python"
     pypi = "google-api-core/google-api-core-1.14.2.tar.gz"
 
-    # google.api_core.operations_v1 and google.api_core.gapic_v1 require
-    # grpc optional dependency
+    # 'google.api_core.operations_v1' and 'google.api_core.gapic_v1' require 'grpc'.
+    # Leave them out of 'import_modules' to avoid optional dependency.
     import_modules = ['google.api_core', 'google.api_core.future']
 
     version('1.14.2', sha256='2c23fbc81c76b941ffb71301bb975ed66a610e9b03f918feacd1ed59cf43a6ec')

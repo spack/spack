@@ -197,7 +197,7 @@ def check_packages_exist(specs):
 
 class Result(object):
     """Result of an ASP solve."""
-    def __init__(self, asp=None):
+    def __init__(self, specs, asp=None):
         self.asp = asp
         self.satisfiable = None
         self.optimal = None
@@ -211,11 +211,44 @@ class Result(object):
         # names of optimization criteria
         self.criteria = []
 
+        # Abstract user requests
+        self.abstract_specs = specs
+
+        # Concrete specs
+        self._concrete_specs = None
+
     def print_cores(self):
         for core in self.cores:
             tty.msg(
                 "The following constraints are unsatisfiable:",
                 *sorted(str(symbol) for symbol in core))
+
+    @property
+    def specs(self):
+        """List of concretized specs satisfying the initial
+        abstract request.
+        """
+        # The specs were already computed, return them
+        if self._concrete_specs:
+            return self._concrete_specs
+
+        # Assert prerequisite
+        msg = 'cannot compute specs ["satisfiable" is not True ]'
+        assert self.satisfiable, msg
+
+        self._concrete_specs = []
+        best = min(self.answers)
+        opt, _, answer = best
+        for input_spec in self.abstract_specs:
+            key = input_spec.name
+            if input_spec.virtual:
+                providers = [spec.name for spec in answer.values()
+                             if spec.package.provides(key)]
+                key = providers[0]
+
+            self._concrete_specs.append(answer[key])
+
+        return self._concrete_specs
 
 
 def _normalize_packages_yaml(packages_yaml):
@@ -329,7 +362,7 @@ class PyclingoDriver(object):
         timer.phase("ground")
 
         # With a grounded program, we can run the solve.
-        result = Result()
+        result = Result(specs)
         models = []  # stable models if things go well
         cores = []   # unsatisfiable cores if they do not
 

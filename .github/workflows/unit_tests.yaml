@@ -39,7 +39,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools flake8 mypy>=0.800 black
+        pip install --upgrade pip six setuptools flake8 mypy>=0.800 black types-six
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.

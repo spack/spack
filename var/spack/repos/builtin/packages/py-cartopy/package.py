@@ -14,7 +14,7 @@ class PyCartopy(PythonPackage):
 
     maintainers = ['adamjstewart']
 
-    # Skip test files in cartopy.tests
+    # Tests require extra dependencies, skip them in 'import_modules'
     import_modules = [
         'cartopy', 'cartopy.sphinxext', 'cartopy.io', 'cartopy.geodesic',
         'cartopy.examples', 'cartopy.mpl', 'cartopy.feature'

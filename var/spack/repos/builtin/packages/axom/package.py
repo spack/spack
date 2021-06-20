@@ -94,7 +94,7 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("conduit~hdf5", when="~hdf5")
 
     # HDF5 needs to be the same as Conduit's
-    depends_on("hdf5@1.8.19:1.8.999~cxx~shared~fortran", when="+hdf5")
+    depends_on("hdf5@1.8.19:1.8.999~cxx~fortran", when="+hdf5")
 
     depends_on("lua", when="+lua")
 
@@ -131,10 +131,10 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("llvm+clang@10.0.0", when="+devtools", type='build')
 
     # Conduit's cmake config files moved and < 0.4.0 can't find it
-    conflicts("conduit@0.7.2:", when="@:0.4.0")
+    conflicts("^conduit@0.7.2:", when="@:0.4.0")
 
     # Sidre requires conduit_blueprint_mpi.hpp
-    conflicts("conduit@:0.6.0", when="@0.5.0:")
+    conflicts("^conduit@:0.6.0", when="@0.5.0:")
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies('%cce') and name == 'fflags':

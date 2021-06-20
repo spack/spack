@@ -33,7 +33,7 @@ class Rocksdb(MakefilePackage):
     variant('zstd', default=False, description='Enable zstandard compression support')
     variant('tbb', default=False, description='Enable Intel TBB support')
 
-    depends_on('bzip2', when='+bzip2')
+    depends_on('bzip2', when='+bz2')
     depends_on('gflags')
     depends_on('lz4', when='+lz4')
     depends_on('snappy', when='+snappy')

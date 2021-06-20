@@ -30,6 +30,7 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
 
     # from https://dev.gentoo.org/~mgorny/dist/gsl-2.3-cblas.patch.bz2
     patch('gsl-2.3-cblas.patch', when="@2.3:2.5.99+external-cblas")
+    patch('gsl-2.6-cblas.patch', when="@2.6: +external-cblas")
 
     conflicts('+external-cblas', when="@:2.2.99")
 

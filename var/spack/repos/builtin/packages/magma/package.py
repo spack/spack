@@ -15,7 +15,7 @@ class Magma(CMakePackage, CudaPackage):
 
     homepage = "http://icl.cs.utk.edu/magma/"
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
-    maintainers = ['stomov', 'luszczek']
+    maintainers = ['stomov', 'luszczek', 'G-Ragghianti']
 
     test_requires_compiler = True
 

@@ -11,6 +11,21 @@ class PyPromptToolkit(PythonPackage):
 
     pypi = "prompt_toolkit/prompt_toolkit-1.0.9.tar.gz"
 
+    # 'prompt_toolkit.contrib.ssh' requires 'asyncssh', but 'asyncssh' isn't listed as a
+    # dependency. Leave out of 'import_modules' to avoid unnecessary dependency.
+    import_modules = [
+        'prompt_toolkit', 'prompt_toolkit.filters', 'prompt_toolkit.lexers',
+        'prompt_toolkit.input', 'prompt_toolkit.layout', 'prompt_toolkit.output',
+        'prompt_toolkit.completion', 'prompt_toolkit.contrib',
+        'prompt_toolkit.contrib.completers', 'prompt_toolkit.contrib.regular_languages',
+        'prompt_toolkit.contrib.telnet', 'prompt_toolkit.key_binding',
+        'prompt_toolkit.key_binding.bindings', 'prompt_toolkit.styles',
+        'prompt_toolkit.shortcuts', 'prompt_toolkit.shortcuts.progress_bar',
+        'prompt_toolkit.formatted_text', 'prompt_toolkit.eventloop',
+        'prompt_toolkit.application', 'prompt_toolkit.widgets',
+        'prompt_toolkit.clipboard'
+    ]
+
     version('3.0.17', sha256='9397a7162cf45449147ad6042fa37983a081b8a73363a5253dd4072666333137')
     version('3.0.16', sha256='0fa02fa80363844a4ab4b8d6891f62dd0645ba672723130423ca4037b80c1974')
     version('3.0.7',  sha256='822f4605f28f7d2ba6b0b09a31e25e140871e96364d1d377667b547bb3bf4489')

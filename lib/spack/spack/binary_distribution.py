@@ -157,7 +157,7 @@ class BinaryCacheIndex(object):
             with self._index_file_cache.read_transaction(cache_key):
                 db._read_from_file(cache_path)
 
-            spec_list = db.query_local(installed=False)
+            spec_list = db.query_local(installed=False, in_buildcache=True)
 
             for indexed_spec in spec_list:
                 dag_hash = indexed_spec.dag_hash()
@@ -717,7 +717,7 @@ def generate_package_index(cache_prefix):
     db_root_dir = os.path.join(tmpdir, 'db_root')
     db = spack_db.Database(None, db_dir=db_root_dir,
                            enable_transaction_locking=False,
-                           record_fields=['spec', 'ref_count'])
+                           record_fields=['spec', 'ref_count', 'in_buildcache'])
 
     try:
         file_list = (
@@ -754,6 +754,7 @@ def generate_package_index(cache_prefix):
             else:
                 raise URLError('')
             db.add(s, None)
+            db.mark(s, 'in_buildcache', True)
         except (URLError, web_util.SpackWebError) as url_err:
             tty.error('Error reading specfile: {0}'.format(file_path))
             tty.error(url_err)
@@ -1613,7 +1614,9 @@ def push_keys(*mirrors, **kwargs):
                 filename = fingerprint + '.pub'
 
                 export_target = os.path.join(prefix, filename)
-                spack.util.gpg.export_keys(export_target, fingerprint)
+
+                # Export public keys (private is set to False)
+                spack.util.gpg.export_keys(export_target, [fingerprint])
 
                 # If mirror is local, the above export writes directly to the
                 # mirror (export_target points directly to the mirror).

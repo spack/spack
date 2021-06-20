@@ -9,6 +9,7 @@ import filecmp
 import re
 from six.moves import builtins
 import time
+import shutil
 
 import pytest
 
@@ -1019,6 +1020,10 @@ def test_cache_install_full_hash_match(
     # both libdwarf and libelf manually set the same full_hash
     uninstall('-y', s.name, fail_on_error=False)
     mirror('rm', 'test-mirror')
+
+    # Get rid of that libdwarf binary in the mirror so other tests don't try to
+    # use it and fail because of NoVerifyException
+    shutil.rmtree(mirror_dir.strpath)
 
 
 def test_install_env_with_tests_all(tmpdir, mock_packages, mock_fetch,

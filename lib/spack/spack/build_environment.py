@@ -159,6 +159,10 @@ def clean_environment():
     env.unset('CPLUS_INCLUDE_PATH')
     env.unset('OBJC_INCLUDE_PATH')
 
+    # Avoid that libraries of build dependencies get hijacked.
+    env.unset('LD_PRELOAD')
+    env.unset('DYLD_INSERT_LIBRARIES')
+
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
     # CNL requires these variables to be set (or at least some of them,
@@ -314,6 +318,9 @@ def _place_externals_last(spec_container):
     they should be deprioritized for any search order (i.e. in PATH, or
     for a set of -L entries in a compiler invocation).
     """
+    # Establish an arbitrary but fixed ordering of specs so that resulting
+    # environment variable values are stable
+    spec_container = sorted(spec_container, key=lambda x: x.name)
     first = list(x for x in spec_container if not x.external)
     second = list(x for x in spec_container if x.external)
     return first + second
@@ -343,22 +350,17 @@ def set_build_environment_variables(pkg, env, dirty):
     for build_dep in build_deps:
         build_and_supporting_deps.update(build_dep.traverse(deptype='run'))
 
-    # Establish an arbitrary but fixed ordering of specs so that resulting
-    # environment variable values are stable
-    def _order(specs):
-        return sorted(specs, key=lambda x: x.name)
-
     # External packages may be installed in a prefix which contains many other
     # package installs. To avoid having those installations override
     # Spack-installed packages, they are placed at the end of search paths.
     # System prefixes are removed entirely later on since they are already
     # searched.
-    build_deps = _place_externals_last(_order(build_deps))
-    link_deps = _place_externals_last(_order(link_deps))
-    build_link_deps = _place_externals_last(_order(build_link_deps))
-    rpath_deps = _place_externals_last(_order(rpath_deps))
+    build_deps = _place_externals_last(build_deps)
+    link_deps = _place_externals_last(link_deps)
+    build_link_deps = _place_externals_last(build_link_deps)
+    rpath_deps = _place_externals_last(rpath_deps)
     build_and_supporting_deps = _place_externals_last(
-        _order(build_and_supporting_deps))
+        build_and_supporting_deps)
 
     link_dirs = []
     include_dirs = []
@@ -411,7 +413,7 @@ def set_build_environment_variables(pkg, env, dirty):
         x.prefix for x in build_link_deps)
 
     # Add dependencies to CMAKE_PREFIX_PATH
-    env.set_path('CMAKE_PREFIX_PATH', build_link_prefixes)
+    env.set_path('CMAKE_PREFIX_PATH', get_cmake_prefix_path(pkg))
 
     # Set environment variables if specified for
     # the given compiler
@@ -712,6 +714,15 @@ def get_rpaths(pkg):
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(path_from_modules([pkg.compiler.modules[1]]))
     return list(dedupe(filter_system_paths(rpaths)))
+
+
+def get_cmake_prefix_path(pkg):
+    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
+    build_link_deps = build_deps | link_deps
+    build_link_deps = _place_externals_last(build_link_deps)
+    build_link_prefixes = filter_system_paths(x.prefix for x in build_link_deps)
+    return build_link_prefixes
 
 
 def get_std_cmake_args(pkg):

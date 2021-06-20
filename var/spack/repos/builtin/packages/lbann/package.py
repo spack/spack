@@ -20,6 +20,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['bvanessen']
 
     version('develop', branch='develop')
+    version('0.102', sha256='3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a')
     version('0.101', sha256='69d3fe000a88a448dc4f7e263bcb342c34a177bd9744153654528cd86335a1f7')
     version('0.100', sha256='d1bab4fb6f1b80ae83a7286cc536a32830890f6e5b0c3107a17c2600d0796912')
     version('0.99',   sha256='3358d44f1bc894321ce07d733afdf6cb7de39c33e3852d73c9f31f530175b7cd')
@@ -68,6 +69,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant('python', default=True, description='Support for Python extensions (e.g. Data Reader)')
     variant('pfe', default=True, description='Python Frontend for generating and launching models')
     variant('boost', default=False, description='Enable callbacks that use Boost libraries')
+    variant('asan', default=False, description='Build with support for address-sanitizer')
 
     # LBANN benefits from high performance linkers, but passing these in as command
     # line options forces the linker flags to unnecessarily propagate to all
@@ -291,6 +293,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '-DLBANN_DETERMINISTIC:BOOL=%s' % ('+deterministic' in spec),
             '-DLBANN_WITH_HWLOC=%s' % ('+hwloc' in spec),
             '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
+            '-DLBANN_WITH_ADDRESS_SANITIZER:BOOL=%s' % ('+asan' in spec),
             '-DLBANN_WITH_BOOST:BOOL=%s' % ('+boost' in spec),
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
             '-DLBANN_WITH_NVSHMEM:BOOL=%s' % ('+nvshmem' in spec),
@@ -313,6 +316,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:
                 args.append('-DCMAKE_CUDA_STANDARD=14')
+            archs = spec.variants['cuda_arch'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+            args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.95:'):
             args.append(
