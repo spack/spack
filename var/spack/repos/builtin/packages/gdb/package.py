@@ -50,6 +50,10 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
     patch('gdb-libintl.patch', level=0, when='@10.1:')
 
+    # Silence warnings about imp being deprecated on new python versions
+    # https://sourceware.org/pipermail/gdb-patches/2021-February/176622.html
+    patch('importlib.patch', when="@8.3.1:10.2 ^python@3.4:")
+
     # Required dependency
     depends_on('texinfo', type='build')
 
