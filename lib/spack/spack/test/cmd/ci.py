@@ -25,7 +25,6 @@ from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import Spec, CompilerSpec
 from spack.util.mock_package import MockPackageMultiRepo
-import spack.util.executable as exe
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.gpg
