@@ -110,16 +110,12 @@ class Conduit(CMakePackage):
     ###############
     # HDF5
     ###############
-    # Note: cxx variant is disabled due to build issue Cyrus
-    # experienced on BGQ. When on, the static build tries
-    # to link against shared libs.
-    #
     # Use HDF5 1.8, for wider output compatibly
     # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5@1.8.19:1.8.999~cxx", when="+hdf5+hdf5_compat+shared")
-    depends_on("hdf5@1.8.19:1.8.999~shared~cxx", when="+hdf5+hdf5_compat~shared")
-    depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
-    depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
+    depends_on("hdf5@1.8.19:1.8.999", when="+hdf5+hdf5_compat+shared")
+    depends_on("hdf5@1.8.19:1.8.999~shared", when="+hdf5+hdf5_compat~shared")
+    depends_on("hdf5", when="+hdf5~hdf5_compat+shared")
+    depends_on("hdf5~shared", when="+hdf5~hdf5_compat~shared")
 
     ###############
     # Silo
