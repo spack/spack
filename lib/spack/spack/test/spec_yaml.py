@@ -311,8 +311,8 @@ def check_specs_equal(original_spec, spec_yaml_path):
         return original_spec.eq_dag(spec_from_yaml)
 
 
-def test_save_dependency_spec_yamls_subset(tmpdir, config):
-    output_path = str(tmpdir.mkdir('spec_yamls'))
+def test_save_dependency_spec_jsons_subset(tmpdir, config):
+    output_path = str(tmpdir.mkdir('spec_jsons'))
 
     default = ('build', 'link')
 
@@ -330,9 +330,9 @@ def test_save_dependency_spec_yamls_subset(tmpdir, config):
         spec_a.concretize()
         b_spec = spec_a['b']
         c_spec = spec_a['c']
-        spec_a_yaml = spec_a.to_yaml(hash=ht.build_hash)
+        spec_a_json = spec_a.to_json(hash=ht.build_hash)
 
-        save_dependency_specfiles(spec_a_yaml, output_path, ['b', 'c'])
+        save_dependency_specfiles(spec_a_json, output_path, ['b', 'c'])
 
-        assert check_specs_equal(b_spec, os.path.join(output_path, 'b.yaml'))
-        assert check_specs_equal(c_spec, os.path.join(output_path, 'c.yaml'))
+        assert check_specs_equal(b_spec, os.path.join(output_path, 'b.json'))
+        assert check_specs_equal(c_spec, os.path.join(output_path, 'c.json'))

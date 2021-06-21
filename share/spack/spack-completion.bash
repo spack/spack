@@ -486,7 +486,7 @@ _spack_buildcache_get_buildcache_name() {
     SPACK_COMPREPLY="-h --help -s --spec --spec-file"
 }
 
-_spack_buildcache_save_yaml() {
+_spack_buildcache_save_specfile() {
     SPACK_COMPREPLY="-h --help --root-spec --root-specfile -s --specs -y --specfile-dir"
 }
 
