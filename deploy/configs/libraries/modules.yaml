@@ -44,6 +44,7 @@ modules:
       - py-poisson-recon-pybind
       - py-rtree
       - py-scikit-learn
+      - py-tensorflow
       - py-virtualenv
       - 'tensorflow@1.12.0'
     blacklist:

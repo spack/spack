@@ -128,6 +128,7 @@ spack:
     - py-sphinx-rtd-theme
     - py-sympy
     - python-dev
+    - py-tensorflow@2.4.2
     - py-toml
     - py-traceback2
     - py-unittest2
