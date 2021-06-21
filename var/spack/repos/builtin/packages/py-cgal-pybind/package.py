@@ -13,6 +13,7 @@ class PyCgalPybind(PythonPackage):
     git = "git@bbpgitlab.epfl.ch:nse/cgal-pybind.git"
 
     version("develop", submodules=True)
+    version("0.1.1", tag="cgal-pybind-v0.1.1", submodules=True)
     version("0.1.0", tag="cgal_pybind-v0.1.0", submodules=True)
 
     depends_on("py-setuptools", type="build")
@@ -22,3 +23,9 @@ class PyCgalPybind(PythonPackage):
     depends_on("eigen")
     depends_on("py-pybind11")
     depends_on("py-numpy@1.12:", type=("build", "run"))
+    depends_on('py-pytest', type='test')
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def test_install(self):
+        python("-m", "pytest", "tests")
