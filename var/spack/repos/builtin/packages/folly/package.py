@@ -40,7 +40,7 @@ class Folly(CMakePackage):
     depends_on('libevent')
     depends_on('fmt')
 
-    # TODO: optional dependencies
+    # optional dependencies
     variant('libdwarf', default=False, description="Optional Dependency")
     variant('elfutils', default=False, description="Optional Dependency")
     variant('libunwind', default=False, description="Optional Dependency")
