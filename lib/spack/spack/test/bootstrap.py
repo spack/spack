@@ -37,7 +37,7 @@ def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmpdir):
 ])
 def test_store_path_customization(config_value, expected, mutable_config):
     # Set the current configuration to a specific value
-    spack.config.set('config:bootstrap:root', config_value)
+    spack.config.set('bootstrap:root', config_value)
 
     # Check the store path
     current = spack.bootstrap.store_path()
@@ -46,7 +46,7 @@ def test_store_path_customization(config_value, expected, mutable_config):
 
 def test_raising_exception_if_bootstrap_disabled(mutable_config):
     # Disable bootstrapping in config.yaml
-    spack.config.set('config:bootstrap:enable', False)
+    spack.config.set('bootstrap:enable', False)
 
     # Check the correct exception is raised
     with pytest.raises(RuntimeError, match='bootstrapping is currently disabled'):

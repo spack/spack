@@ -202,7 +202,7 @@ def _store():
     # reserved by Spack to bootstrap its own dependencies, since this would
     # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
     # user installed software)
-    enable_bootstrap = spack.config.get('config:bootstrap:enable', True)
+    enable_bootstrap = spack.config.get('bootstrap:enable', True)
     if enable_bootstrap and spack.bootstrap.store_path() == root:
         msg = ('please change the install tree root "{0}" in your '
                'configuration [path reserved for Spack internal use]')
