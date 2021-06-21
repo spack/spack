@@ -37,6 +37,11 @@ class Zlib(CMakePackage):
             ['libz'], root=self.prefix, recursive=True, shared=shared
         )
 
+    def cmake_args(self):
+        args = ['-DBUILD_SHARED_LIBS:BOOL=' +
+                ('ON' if self._building_shared else 'OFF')]
+        return args
+
     @property
     def build_directory(self):
         return join_path(self.stage.source_path,
