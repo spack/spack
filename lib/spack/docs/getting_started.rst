@@ -1478,7 +1478,14 @@ The files and scripts used for Windows installation are on the
 ``features/windows-support`` branch; ``cd`` into the repo and use
 ``git checkout`` to switch to it. Then navigate to
 ``lib\spack\spack\cmd\installer`` and copy the ``scripts`` directory and
-``spack_cmd.bat`` up to the top-level ``spack_install`` directory.
+``spack_cmd.bat`` up to the top-level ``spack_install`` directory. In a 
+Windows console, you can do both of these things by executing the following
+commands from the ``spack_install`` level:
+
+.. code-block:: console 
+
+   xcopy lib\spack\spack\cmd\installer\scripts\ scripts\
+   xcopy lib\spack\spack\cmd\installer\spack_cmd.bat .
 
 Your file structure should look like this after following the above
 steps:
@@ -1539,10 +1546,11 @@ and easiest choice is to use Spack to find installation on your system. In
 the Spack terminal, run the following commands:
 
 .. code-block:: console
+
    spack external find cmake
    spack external find ninja
 
-The ``spack external find <name>`` will find executalbes on your system
+The ``spack external find <name>`` will find executables on your system
 with the same name given. The command will store the items found in
 ``packages.yaml`` in the ``.spack\`` directory.
 
@@ -1572,7 +1580,7 @@ to use your version instead of the version listed above. Similiarly, if
 you use a different version of Visual Studio ("Community" for example),
 make sure the Professional part of the location is changed to your version.
 
-The ``packages.yaml``file should be placed inside either the ``.spack``
+The ``packages.yaml`` file should be placed inside either the ``.spack``
 directory or the ``.spack\windows`` directory.
 
 You can also use an separate installation of CMake if you have one and prefer
