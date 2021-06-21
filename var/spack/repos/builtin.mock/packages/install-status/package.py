@@ -15,7 +15,6 @@ class InstallStatus(Package):
     version('1.0', '0123456789abcdef0123456789abcdef')
     version('0.9', 'abcd456789abcdef0123456789abcdef')
 
-    variant('loc', 
+    variant('loc',
             values=('installed', 'not_installed', 'external', 'upstream', 'error'),
             default='installed')
-
