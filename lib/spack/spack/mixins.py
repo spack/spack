@@ -190,6 +190,8 @@ def filter_compiler_wrappers(*files, **kwargs):
         ]
         for env_var, compiler_path in replacements:
             if env_var in os.environ:
+                p = os.path.realpath(os.environ[env_var])
+                x.filter(p, compiler_path, **filter_kwargs)
                 x.filter(os.environ[env_var], compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
