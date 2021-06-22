@@ -24,10 +24,18 @@ __all__ = [
     'substitute_path_variables',
     'canonicalize_path']
 
+
+def _getuser_fallback_to_uid():
+    try:
+        return getpass.getuser()
+    except KeyError:
+        return str(os.getuid())
+
+
 # Substitutions to perform
 replacements = {
     'spack': spack.paths.prefix,
-    'user': getpass.getuser(),
+    'user': _getuser_fallback_to_uid(),
     'tempdir': tempfile.gettempdir(),
 }
 
