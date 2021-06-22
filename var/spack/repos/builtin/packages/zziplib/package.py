@@ -31,8 +31,9 @@ class Zziplib(AutotoolsPackage, CMakePackage):
     depends_on('coreutils', type='build', when='@0.13.71:')
     depends_on('pkgconfig', type='build', when='@0.13.71:')
 
-    # configure phase stands for cmake since 0.13.70
-    phases = ['configure', 'build', 'install']
+    @when('@0.13.71:')
+    def autoreconf(self, spec, prefix):
+        touch('configure')
 
     @when('@0.13.71:')
     def _cmake_args(self):
@@ -49,14 +50,14 @@ class Zziplib(AutotoolsPackage, CMakePackage):
 
         return args
 
-    @when('@:0.13.70')
+    @when('@:0.13.69')
     def configure_args(self):
-        if '@:0.13.70' in self.spec:
-            args = ['--with-zlib={0}'.format(self.spec['zlib'].prefix)]
-            return args
+        args = ['--with-zlib={0}'.format(self.spec['zlib'].prefix)]
+        return args
 
     @when('@0.13.71:')
     def configure(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake_args = self._cmake_args()
             cmake('..', *cmake_args)
+
