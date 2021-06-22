@@ -60,4 +60,3 @@ class Zziplib(AutotoolsPackage, CMakePackage):
         with working_dir('spack-build', create=True):
             cmake_args = self._cmake_args()
             cmake('..', *cmake_args)
-
