@@ -41,9 +41,13 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('cuda@8:', when='@2.5.1:')  # See PR #14471
+    depends_on('hip@:4.0.0', when='+rocm')
+    depends_on('hsa-rocr-dev@:4.0.0', when='+rocm')
+    depends_on('llvm-amdgpu@:4.0.0', when='+rocm')
 
     conflicts('~cuda', when='~rocm', msg='Either CUDA or HIP support must be enabled')
     conflicts('+rocm', when='+cuda', msg='CUDA must be disabled to support HIP (ROCm)')
+    conflicts('+rocm', when='@:2.5.4', msg='HIP support starts in version 2.6.0')
     conflicts('cuda_arch=none', when='+cuda',
               msg='Please indicate a CUDA arch value or values')
 
