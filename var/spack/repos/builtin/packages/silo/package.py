@@ -35,9 +35,9 @@ class Silo(AutotoolsPackage):
     variant('fpzip', default=True,
             description='Enable fpzip support')
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+    depends_on('autoconf', type='build', when='+shared')
+    depends_on('automake', type='build', when='+shared')
+    depends_on('libtool', type='build', when='+shared')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5@:1.10.999', when='@:4.10.2+hdf5')
     depends_on('hdf5~mpi', when='~mpi+hdf5')
