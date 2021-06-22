@@ -7,6 +7,7 @@ from spack import *
 import os
 import platform
 import tempfile
+import re
 
 
 class Texlive(AutotoolsPackage):
@@ -221,3 +222,44 @@ class Texlive(AutotoolsPackage):
              '-portable', '-profile', tmp_profile.name)
 
         tmp_profile.close()
+
+    executables = [r'^tex$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        # https://askubuntu.com/questions/100406/finding-the-tex-live-version
+        # I do not know how to use the global self.releases in this context so I build
+        # a string that shall have to be updated at the same time.
+        # BTW I added two older releases (2017 is Ubuntu 18.04)
+        releases = [
+            {
+                'version': '20210325',
+                'year': '2021',
+            },
+            {
+                'version': '20200406',
+                'year': '2020',
+            },
+            {
+                'version': '20190410',
+                'year': '2019',
+            },
+            {
+                'version': '20180414',
+                'year': '2018',
+            },
+            {
+                'version': '20170524',
+                'year': '2017',
+            },
+        ]
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'TeX Live (\d+)', output)
+        ver = match.group(1) if match else None
+        if ver is not None:
+            for release in releases:
+                year = release['year']
+                if year == ver:
+                    ver = release['version']
+                    break
+        return ver
