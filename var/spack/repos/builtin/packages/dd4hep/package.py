@@ -24,7 +24,7 @@ class Dd4hep(CMakePackage):
     tags = ['hep']
 
     version('master', branch='master')
-    version('1.17', sha256='e56071ce5497517fe56af813828b1a5fab90f0b602b86961a277ca22be215232')
+    version('1.17', sha256='036a9908aaf1e13eaf5f2f43b6f5f4a8bdda8183ddc5befa77a4448dbb485826')
     version('1.16.1', sha256='c8b1312aa88283986f89cc008d317b3476027fd146fdb586f9f1fbbb47763f1a')
     version('1.16', sha256='ea9755cd255cf1b058e0e3cd743101ca9ca5ff79f4c60be89f9ba72b1ae5ec69')
     version('1.15', sha256='992a24bd4b3dfaffecec9d1c09e8cde2c7f89d38756879a47b23208242f4e352')
