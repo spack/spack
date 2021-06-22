@@ -35,9 +35,20 @@ class Z3(CMakePackage):
     build_directory = 'build'
 
     def cmake_args(self):
+        spec = self.spec
+
         args = [
             self.define_from_variant('Z3_USE_LIB_GMP', 'gmp'),
             self.define_from_variant('Z3_BUILD_PYTHON_BINDINGS', 'python'),
             self.define_from_variant('Z3_INSTALL_PYTHON_BINDINGS', 'python')
         ]
+
+        if spec.satisfies('+python'):
+            args.append(
+                self.define('CMAKE_INSTALL_PYTHON_PKG_DIR', join_path(
+                    prefix.lib,
+                    'python%s' % spec['python'].version.up_to(2),
+                    'site-packages'))
+            )
+
         return args
