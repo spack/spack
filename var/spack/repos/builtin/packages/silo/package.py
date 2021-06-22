@@ -106,9 +106,11 @@ class Silo(AutotoolsPackage):
 
         filter_file(r'\b(DOMAIN|RANGE|UNION)\b', repl, *files_to_filter)
 
-    # Update autoconf's tests whether libtool supports shared libraries.
-    # (Otherwise, shared libraries are always disabled.)
-    force_autoreconf = True
+    @property
+    def force_autoreconf(self):
+        # Update autoconf's tests whether libtool supports shared libraries.
+        # (Otherwise, shared libraries are always disabled on Darwin.)
+        return self.spec.satisfies('+shared')
 
     def configure_args(self):
         spec = self.spec
