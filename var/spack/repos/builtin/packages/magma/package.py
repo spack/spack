@@ -20,7 +20,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('devel', git='https://bitbucket.org/icl/magma')
-    version('2.6.0', sha256='1758c9347a7e5e98236d1a23aa9db4b5fcbb2bcd0c4784191a1fedd10c3d8df0')
+    version('2.6.0', sha256='b97cfd67a6ac534a4d20ac5bb561ec6c2286c6d0ec04cdb4ad5f0d44a47cc003')
     version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
     version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
     version('2.5.2', sha256='065feb85558f9dd6f4cc4db36ac633a3f787827fc832d0b578a049a43a195620')
@@ -44,6 +44,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hip@:4.0.0', when='+rocm')
     depends_on('hsa-rocr-dev@:4.0.0', when='+rocm')
     depends_on('llvm-amdgpu@:4.0.0', when='+rocm')
+    depends_on('rocblas', when='+rocm')
 
     conflicts('~cuda', when='~rocm', msg='Either CUDA or HIP support must be enabled')
     conflicts('+rocm', when='+cuda', msg='CUDA must be disabled to support HIP (ROCm)')
