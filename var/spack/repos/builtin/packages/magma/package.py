@@ -14,12 +14,13 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     """
 
     homepage = "http://icl.cs.utk.edu/magma/"
+    git = 'https://bitbucket.org/icl/magma'
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers = ['stomov', 'luszczek', 'G-Ragghianti']
 
     test_requires_compiler = True
 
-    version('devel', git='https://bitbucket.org/icl/magma')
+    version('master', branch='master')
     version('2.6.0', sha256='1758c9347a7e5e98236d1a23aa9db4b5fcbb2bcd0c4784191a1fedd10c3d8df0')
     version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
     version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
@@ -41,9 +42,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('cuda@8:', when='@2.5.1:')  # See PR #14471
-    depends_on('hip@:4.0.0', when='+rocm')
-    depends_on('hsa-rocr-dev@:4.0.0', when='+rocm')
-    depends_on('llvm-amdgpu@:4.0.0', when='+rocm')
+    depends_on('rocblas', when='+rocm')
 
     conflicts('~cuda', when='~rocm', msg='Either CUDA or HIP support must be enabled')
     conflicts('+rocm', when='+cuda', msg='CUDA must be disabled to support HIP (ROCm)')
@@ -64,13 +63,18 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     patch('cmake-W.patch', when='@2.5.0:%nvhpc')
     patch('sm_37.patch', when='@2.5.4 cuda_arch=37')
 
-    #@run_before('cmake')
-    def generate(self):
+    @run_before('cmake')
+    def generate_cuda(self):
+        backend = 'cuda'
         cuda_arch = self.spec.variants['cuda_arch'].value
         gpu_target = ' '.join('sm_{0}'.format(i) for i in cuda_arch)
+        if '+rocm' in self.spec:
+            backend = 'hip'
+            gpu_target = self.spec.variants['amdgpu_target'].value
         with open('make.inc', 'w') as inc:
             inc.write('FORT = true\n')
             inc.write('GPU_TARGET = %s\n' % gpu_target)
+            inc.write('BACKEND = %s\n' % backend)
         make('generate')
     
 
