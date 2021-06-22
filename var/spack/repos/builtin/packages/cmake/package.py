@@ -18,6 +18,7 @@ class Cmake(Package):
 
     executables = ['^cmake$']
 
+    version('3.20.3',   sha256='4d008ac3461e271fcfac26a05936f77fc7ab64402156fb371d41284851a651b8')
     version('3.20.2',   sha256='aecf6ecb975179eb3bb6a4a50cae192d41e92b9372b02300f9e8f1d5f559544e')
     version('3.20.1',   sha256='3f1808b9b00281df06c91dd7a021d7f52f724101000da7985a401678dfe035b0')
     version('3.20.0',   sha256='9c06b2ddf7c337e31d8201f6ebcd3bba86a9a033976a9aee207fe0c6971f4755')
@@ -229,8 +230,6 @@ class Cmake(Package):
     def bootstrap_args(self):
         spec = self.spec
         args = [
-            'CFLAGS=-O3',
-            'CXXFLAGS=-O3',
             '--prefix={0}'.format(self.prefix),
             '--parallel={0}'.format(make_jobs)
         ]

@@ -20,6 +20,7 @@ class Slepc(Package):
     test_requires_compiler = True
 
     version('main', branch='main')
+    version('3.15.1', sha256='9c7c3a45f0d9df51decf357abe090ef05114c38a69b7836386a19a96fb203aea')
     version('3.15.0', sha256='e53783ae13acadce274ea65c67186b5ab12332cf17125a694e21d598aa6b5f00')
     version('3.14.2', sha256='3e54578dda1f4c54d35ac27d02f70a43f6837906cb7604dbcec0e033cfb264c8')
     version('3.14.1', sha256='cc78a15e34d26b3e6dde003d4a30064e595225f6185c1975bbd460cb5edd99c7')

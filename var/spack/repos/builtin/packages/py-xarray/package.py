@@ -12,7 +12,8 @@ class PyXarray(PythonPackage):
     homepage = "https://github.com/pydata/xarray"
     pypi = "xarray/xarray-0.9.1.tar.gz"
 
-    # 'xarray.tests' requires pytest
+    # 'xarray.tests' requires 'pytest'. Leave out of 'import_modules' to avoid
+    # unnecessary dependency.
     import_modules = [
         'xarray', 'xarray.core', 'xarray.plot', 'xarray.util',
         'xarray.backends', 'xarray.coding'

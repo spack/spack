@@ -277,7 +277,7 @@ def remove_url(url, recursive=False):
                 r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
                 _debug_print_delete_results(r)
         else:
-            s3.delete_object(Bucket=bucket, Key=url.path)
+            s3.delete_object(Bucket=bucket, Key=url.path.lstrip('/'))
         return
 
     # Don't even try for other URL schemes.

@@ -121,10 +121,12 @@ class VariantFormatter(object):
                 )
                 allowed = v.allowed_values.replace('True, False', 'on, off')
                 allowed = textwrap.wrap(allowed, width=self.column_widths[1])
-                description = textwrap.wrap(
-                    v.description,
-                    width=self.column_widths[2]
-                )
+                description = []
+                for d_line in v.description.split('\n'):
+                    description += textwrap.wrap(
+                        d_line,
+                        width=self.column_widths[2]
+                    )
                 for t in zip_longest(
                         name, allowed, description, fillvalue=''
                 ):

@@ -5,7 +5,7 @@
 import os
 
 
-class Petsc(Package):
+class Petsc(Package, CudaPackage, ROCmPackage):
     """PETSc is a suite of data structures and routines for the scalable
     (parallel) solution of scientific applications modeled by partial
     differential equations.
@@ -19,6 +19,7 @@ class Petsc(Package):
     version('main', branch='main')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.15.1', sha256='c0ac6566e69d1d70b431e07e7598e9de95e84891c2452db1367c846b75109deb')
     version('3.15.0', sha256='ac46db6bfcaaec8cd28335231076815bd5438f401a4a05e33736b4f9ff12e59a')
     version('3.14.6', sha256='4de0c8820419fb15bc683b780127ff57067b62ca18749e864a87c6d7c93f1230')
     version('3.14.5', sha256='8b8ff5c4e10468f696803b354a502d690c7d25c19d694a7e10008a302fdbb048')
@@ -76,7 +77,6 @@ class Petsc(Package):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
     variant('mpi',     default=True,  description='Activates MPI support')
-    variant('cuda',    default=False, description='Activates CUDA support')
     variant('double',  default=True,
             description='Switches between single and double precision')
     variant('complex', default=False, description='Build with complex numbers')
@@ -141,6 +141,10 @@ class Petsc(Package):
             description='Activates support for Saws')
     variant('libyaml', default=False,
             description='Activates support for YAML')
+    variant('openmp', default=False,
+            description='Activates support for openmp')
+    variant('hwloc', default=False,
+            description='Activates support for hwloc')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -188,6 +192,9 @@ class Petsc(Package):
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
+    depends_on('hip', when='+rocm')
+    depends_on('hipblas', when='+rocm')
+    depends_on('hipsparse', when='+rocm')
 
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
@@ -247,8 +254,10 @@ class Petsc(Package):
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@main+superlu-dist+mpi~int64')
     depends_on('superlu-dist@develop+int64', when='@main+superlu-dist+mpi+int64')
-    depends_on('mumps+mpi~int64~metis~parmetis', when='+mumps~metis')
-    depends_on('mumps+mpi~int64+metis+parmetis', when='+mumps+metis')
+    depends_on('mumps+mpi~int64~metis~parmetis~openmp', when='+mumps~metis~openmp')
+    depends_on('mumps+mpi~int64+metis+parmetis~openmp', when='+mumps+metis~openmp')
+    depends_on('mumps+mpi~int64~metis~parmetis+openmp', when='+mumps~metis+openmp')
+    depends_on('mumps+mpi~int64+metis+parmetis+openmp', when='+mumps+metis+openmp')
     depends_on('scalapack', when='+mumps')
     depends_on('trilinos@12.6.2:+mpi', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+trilinos+mpi')
@@ -272,6 +281,7 @@ class Petsc(Package):
     depends_on('p4est+mpi', when='+p4est+mpi')
     depends_on('saws', when='+saws')
     depends_on('libyaml', when='+libyaml')
+    depends_on('hwloc', when='+hwloc')
 
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
@@ -370,35 +380,55 @@ class Petsc(Package):
 
         # Activates library support if needed (i.e. direct dependency)
         if '^libjpeg-turbo' in spec:
-            jpeg_library = 'libjpeg-turbo'
+            jpeg_library = ('libjpeg-turbo', 'libjpeg')
         else:
             jpeg_library = 'libjpeg'
 
-        for library in ('cuda', 'metis', 'hypre', 'parmetis', 'mumps',
-                        'trilinos', 'fftw', 'valgrind', 'gmp', 'libpng',
-                        'giflib', 'mpfr', 'netcdf-c', 'parallel-netcdf',
-                        'moab', 'random123', 'exodusii', 'cgns', 'memkind',
-                        'p4est', 'saws', 'libyaml', jpeg_library):
+        for library in (
+                'cuda',
+                'hip',
+                'metis',
+                'hypre',
+                'parmetis',
+                'mumps',
+                'trilinos',
+                'fftw',
+                'valgrind',
+                'gmp',
+                'libpng',
+                'giflib',
+                'mpfr',
+                ('netcdf-c', 'netcdf'),
+                ('parallel-netcdf', 'pnetcdf'),
+                'moab',
+                'openmp',
+                'random123',
+                'exodusii',
+                'cgns',
+                'memkind',
+                'p4est',
+                'saws',
+                ('libyaml', 'yaml'),
+                'hwloc',
+                jpeg_library,
+        ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
+            if isinstance(library, tuple):
+                library, petsclibname = library
+            else:
+                petsclibname = library
+
             library_requested = library in spec.dependencies_dict()
             options.append(
                 '--with-{library}={value}'.format(
-                    library=('libjpeg' if library == 'libjpeg-turbo'
-                             else 'netcdf' if library == 'netcdf-c'
-                             else 'pnetcdf' if library == 'parallel-netcdf'
-                             else 'yaml' if library == 'libyaml'
-                             else library),
+                    library=petsclibname,
                     value=('1' if library_requested else '0'))
             )
             if library_requested:
                 options.append(
                     '--with-{library}-dir={path}'.format(
-                        library=('libjpeg' if library == 'libjpeg-turbo'
-                                 else 'netcdf' if library == 'netcdf-c'
-                                 else 'pnetcdf' if library == 'parallel-netcdf'
-                                 else 'yaml' if library == 'libyaml'
-                                 else library), path=spec[library].prefix)
+                        library=petsclibname, path=spec[library].prefix)
                 )
 
         # PETSc does not pick up SuperluDist from the dir as they look for

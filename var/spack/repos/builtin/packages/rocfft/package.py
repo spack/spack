@@ -14,7 +14,7 @@ class Rocfft(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-4.2.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('4.2.0', sha256='db29c9067f0cfa98bddd3574f6aa7200cfc790cc6da352d19e4696c3f3982163')
     version('4.1.0', sha256='df23fcb05aae72557461ae3687be7e3b8b78be4132daf1aa9dc07339f4eba0cc')
@@ -39,10 +39,9 @@ class Rocfft(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
+        depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, type=('build', 'link'), when='@' + ver)
+
     for ver in ['4.1.0', '4.2.0']:
         depends_on('hip-rocclr@' + ver, when='@' + ver)
 

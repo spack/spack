@@ -35,10 +35,18 @@ class Mbedtls(CMakePackage):
 
     variant('pic', default=False,
             description='Compile with position independent code.')
+    variant('shared', default=False,
+            description='Build shared libraries')
 
     depends_on('cmake@3.1.0:', type='build', when='@2.8.0:')
     depends_on('cmake@2.6:', type='build', when='@:2.7.99')
-    depends_on('perl', type='build')
+    depends_on('perl', type='test')
+
+    def cmake_args(self):
+        return [
+            self.define('ENABLE_TESTING', self.run_tests),
+            self.define_from_variant('USE_SHARED_MBEDTLS_LIBRARY', 'shared')
+        ]
 
     def flag_handler(self, name, flags):
 

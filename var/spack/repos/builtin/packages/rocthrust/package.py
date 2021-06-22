@@ -35,13 +35,11 @@ class Rocthrust(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
-        depends_on('rocprim@' + ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver, when='@' + ver)
+        depends_on('rocprim@' + ver, when='@' + ver)
+
     for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -49,8 +47,9 @@ class Rocthrust(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = [
-            '-DCMAKE_MODULE_PATH={0}/cmake'.format(spec['hip'].prefix)
+        return [
+            self.define(
+                'CMAKE_MODULE_PATH',
+                '{0}/cmake'.format(spec['hip'].prefix)
+            )
         ]
-
-        return args

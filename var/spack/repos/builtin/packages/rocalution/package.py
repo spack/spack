@@ -33,19 +33,18 @@ class Rocalution(CMakePackage):
     depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hip@' + ver,  when='@' + ver)
-        depends_on('rocblas@' + ver, type='link', when='@' + ver)
-        depends_on('rocprim@' + ver, type='link', when='@' + ver)
-        depends_on('rocsparse@' + ver, type='link', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver, when='@' + ver)
+        depends_on('rocblas@' + ver, when='@' + ver)
+        depends_on('rocprim@' + ver, when='@' + ver)
+        depends_on('rocsparse@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
-        depends_on('rocrand@' + ver, type='link', when='@' + ver)
+        depends_on('rocrand@' + ver, when='@' + ver)
 
     for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     patch('0001-fix-hip-build-error.patch')
 
@@ -63,9 +62,8 @@ class Rocalution(CMakePackage):
                 filter_file(match, substitute, *files, **kwargs)
 
     def cmake_args(self):
-        args = [
-            '-DSUPPORT_HIP=ON',
-            '-DSUPPORT_MPI=OFF',
-            '-DBUILD_CLIENTS_SAMPLES=OFF'
+        return [
+            self.define('SUPPORT_HIP', 'ON'),
+            self.define('SUPPORT_MPI', 'OFF'),
+            self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
         ]
-        return args

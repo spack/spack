@@ -703,7 +703,7 @@ set -xg _sp_shell "fish"
 # Check whether we need environment-variables (module) <= `use` is not available
 #
 set -l need_module "no"
-if not functions -q use; and not functions -q module
+if test -z "$SPACK_SKIP_MODULES"; and not functions -q use; and not functions -q module
     set need_module "yes"
 end
 

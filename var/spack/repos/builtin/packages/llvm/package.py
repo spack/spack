@@ -187,7 +187,8 @@ class Llvm(CMakePackage, CudaPackage):
     # Introduced in version 11 as a part of LLVM and not a separate package.
     conflicts("+flang", when="@:10.999")
 
-    # LLVM 4 and 5 does not build with GCC 8
+    # Older LLVM do not build with newer GCC
+    conflicts("%gcc@11:", when="@:10")
     conflicts("%gcc@8:", when="@:5")
     conflicts("%gcc@:5.0.999", when="@8:")
 

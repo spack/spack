@@ -115,6 +115,10 @@ class Tau(Package):
 
     patch('unwind.patch', when="@2.29.0")
 
+    filter_compiler_wrappers('Makefile', relative_root='include')
+    filter_compiler_wrappers('Makefile.tau*', relative_root='lib')
+    filter_compiler_wrappers('Makefile.tau*', relative_root='lib64')
+
     def set_compiler_options(self, spec):
 
         useropt = ["-O2 -g", self.rpath_args]
@@ -305,7 +309,6 @@ class Tau(Package):
         self.link_tau_arch_dirs()
         # TAU may capture Spack's internal compiler wrapper. Replace
         # it with the correct compiler.
-        self.fix_tau_compilers()
 
     def link_tau_arch_dirs(self):
         for subdir in os.listdir(self.prefix):
@@ -314,22 +317,6 @@ class Tau(Package):
                 dest = join_path(self.prefix, d)
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
-
-    def fix_tau_compilers(self):
-        filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' + self.compiler.cc,
-                    self.prefix + '/include/Makefile', backup=False,
-                    string=True)
-        filter_file('FULL_CXX=' + spack_cxx, 'FULL_CXX=' +
-                    self.compiler.cxx, self.prefix + '/include/Makefile',
-                    backup=False, string=True)
-        for makefile in os.listdir(self.prefix.lib):
-            if makefile.startswith('Makefile.tau'):
-                filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' +
-                            self.compiler.cc, self.prefix.lib + "/" +
-                            makefile, backup=False, string=True)
-                filter_file('FULL_CXX=' + spack_cxx, 'FULL_CXX=' +
-                            self.compiler.cxx, self.prefix.lib +
-                            "/" + makefile, backup=False, string=True)
 
     def setup_run_environment(self, env):
         pattern = join_path(self.prefix.lib, 'Makefile.*')

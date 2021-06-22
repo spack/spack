@@ -35,6 +35,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     version('10.2.0', sha256='b8dd4368bb9c7f0b98188317ee0254dd8cc99d1e3a18d0ff146c855fe16c1d8c')
     version('10.1.0', sha256='b6898a23844b656f1b68691c5c012036c2e694ac4b53a8918d4712ad876e7ea2')
 
+    version('9.4.0', sha256='c95da32f440378d7751dd95533186f7fc05ceb4fb65eb5b85234e6299eb9838e')
     version('9.3.0', sha256='71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1')
     version('9.2.0', sha256='ea6ef08f121239da5695f76c9b33637a118dcf63e24164422231917fa61fb206')
     version('9.1.0', sha256='79a66834e96a6050d8fe78db2c3b32fb285b230b855d0a66288235bc04b327a0')
@@ -100,8 +101,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
     variant('bootstrap',
-            default=False,
-            description='add --enable-bootstrap flag for stage3 build')
+            default=True,
+            description='Enable 3-stage bootstrap')
     variant('graphite',
             default=False,
             description='Enable Graphite loop optimizations (requires ISL)')

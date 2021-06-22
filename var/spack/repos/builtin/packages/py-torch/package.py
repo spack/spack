@@ -16,7 +16,8 @@ class PyTorch(PythonPackage, CudaPackage):
 
     maintainers = ['adamjstewart']
 
-    # Exact set of modules is version- and variant-specific
+    # Exact set of modules is version- and variant-specific, just attempt to import the
+    # core libraries to ensure that the package was successfully installed.
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
