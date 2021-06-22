@@ -12,8 +12,20 @@ import os
 import os.path
 import re
 import shutil
+import sys
 import tempfile
 import xml.etree.ElementTree
+
+if sys.version_info >= (2, 7):
+    # CVS outputs dates in different formats on different systems. We are using
+    # the dateutil package to parse these dates. This package does not exist
+    # for Python <2.7. That means that we cannot test checkouts "by date" for
+    # CVS respositories. (We can still use CVS repos with all features, only
+    # our tests break.)
+    from dateutil.parser import parse as parse_date
+else:
+    def parse_date(string):
+        pytest.skip("dateutil package not available for Python 2.6")
 
 import py
 import pytest
@@ -906,6 +918,143 @@ def mock_archive(request, tmpdir_factory):
         archive_file=archive_file,
         path=str(repodir),
         expanded_archive_basedir=spack.stage._source_path_subdir)
+
+
+@pytest.fixture(scope='session')
+def mock_cvs_repository(tmpdir_factory):
+    """Creates a very simple CVS repository with two commits and a branch."""
+    cvs = spack.util.executable.which('cvs', required=True)
+
+    tmpdir = tmpdir_factory.mktemp('mock-cvs-repo-dir')
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
+    cvsroot = str(repodir)
+
+    # The CVS repository and source tree need to live in a different directories
+    sourcedirparent = tmpdir_factory.mktemp('mock-cvs-source-dir')
+    module = spack.stage._source_path_subdir
+    url = cvsroot + "%module=" + module
+    sourcedirparent.ensure(module, dir=True)
+    sourcedir = sourcedirparent.join(module)
+
+    def format_date(date):
+        if date is None:
+            return None
+        return date.strftime('%Y-%m-%d %H:%M:%S')
+
+    def get_cvs_timestamp(output):
+        """Find the most recent CVS time stamp in a `cvs log` output"""
+        latest_timestamp = None
+        for line in output.splitlines():
+            m = re.search(r'date:\s+([^;]*);', line)
+            if m:
+                timestamp = parse_date(m.group(1))
+                if latest_timestamp is None:
+                    latest_timestamp = timestamp
+                else:
+                    latest_timestamp = max(latest_timestamp, timestamp)
+        return latest_timestamp
+
+    # We use this to record the time stamps for when we create CVS revisions,
+    # so that we can later check that we retrieve the proper commits when
+    # specifying a date. (CVS guarantees checking out the lastest revision
+    # before or on the specified date). As we create each revision, we
+    # separately record the time by querying CVS.
+    revision_date = {}
+
+    # Initialize the repository
+    with sourcedir.as_cwd():
+        cvs('-d', cvsroot, 'init')
+        cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit',
+            module, 'mockvendor', 'mockrelease')
+        with sourcedirparent.as_cwd():
+            cvs('-d', cvsroot, 'checkout', module)
+
+        # Commit file r0
+        r0_file = 'r0_file'
+        sourcedir.ensure(r0_file)
+        cvs('-d', cvsroot, 'add', r0_file)
+        cvs('-d', cvsroot, 'commit', '-m', 'revision 0', r0_file)
+        output = cvs('log', '-N', r0_file, output=str)
+        revision_date['1.1'] = format_date(get_cvs_timestamp(output))
+
+        # Commit file r1
+        r1_file = 'r1_file'
+        sourcedir.ensure(r1_file)
+        cvs('-d', cvsroot, 'add', r1_file)
+        cvs('-d', cvsroot, 'commit', '-m' 'revision 1', r1_file)
+        output = cvs('log', '-N', r0_file, output=str)
+        revision_date['1.2'] = format_date(get_cvs_timestamp(output))
+
+        # Create branch 'mock-branch'
+        cvs('-d', cvsroot, 'tag', 'mock-branch-root')
+        cvs('-d', cvsroot, 'tag', '-b', 'mock-branch')
+
+    # CVS does not have the notion of a unique branch; branches and revisions
+    # are managed separately for every file
+    def get_branch():
+        """Return the branch name if all files are on the same branch, else
+        return None. Also return None if all files are on the trunk."""
+        lines = cvs('-d', cvsroot, 'status', '-v', output=str).splitlines()
+        branch = None
+        for line in lines:
+            m = re.search(r'(\S+)\s+[(]branch:', line)
+            if m:
+                tag = m.group(1)
+                if branch is None:
+                    # First branch name found
+                    branch = tag
+                elif tag == branch:
+                    # Later branch name found; all branch names found so far
+                    # agree
+                    pass
+                else:
+                    # Later branch name found; branch names differ
+                    branch = None
+                    break
+        return branch
+
+    # CVS does not have the notion of a unique revision; usually, one uses
+    # commit dates instead
+    def get_date():
+        """Return latest date of the revisions of all files"""
+        output = cvs('log', '-N', r0_file, output=str)
+        timestamp = get_cvs_timestamp(output)
+        if timestamp is None:
+            return None
+        return format_date(timestamp)
+
+    checks = {
+        'default': Bunch(
+            file=r1_file,
+            branch=None,
+            date=None,
+            args={'cvs': url},
+        ),
+        'branch': Bunch(
+            file=r1_file,
+            branch='mock-branch',
+            date=None,
+            args={'cvs': url, 'branch': 'mock-branch'},
+        ),
+        'date': Bunch(
+            file=r0_file,
+            branch=None,
+            date=revision_date['1.1'],
+            args={'cvs': url,
+                  'date': revision_date['1.1']},
+        ),
+    }
+
+    test = Bunch(
+        checks=checks,
+        url=url,
+        get_branch=get_branch,
+        get_date=get_date,
+        path=str(repodir),
+    )
+
+    yield test
 
 
 @pytest.fixture(scope='session')
