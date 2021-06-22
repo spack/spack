@@ -71,6 +71,9 @@ _spack_build_logfile = 'spack-build-out.txt'
 # Filename for the Spack build/install environment file.
 _spack_build_envfile = 'spack-build-env.txt'
 
+# Filename of json with total build and phase times (seconds)
+_spack_times_log = 'install_times.json'
+
 # Filename for the Spack configure args file.
 _spack_configure_argsfile = 'spack-configure-args.txt'
 
@@ -699,7 +702,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Set up timing variables
         self._fetch_time = 0.0
-        self._total_time = 0.0
 
         if self.is_extension:
             spack.repo.get(self.extendee_spec)._check_extendable()
@@ -1091,6 +1093,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def configure_args_path(self):
         """Return the configure args file path associated with staging."""
         return os.path.join(self.stage.path, _spack_configure_argsfile)
+
+    @property
+    def times_log_path(self):
+        """Return the times log json file."""
+        return os.path.join(self.metadata_dir, _spack_times_log)
 
     @property
     def install_configure_args_path(self):

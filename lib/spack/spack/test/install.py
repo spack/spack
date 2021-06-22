@@ -15,6 +15,7 @@ import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
+import spack.util.spack_json as sjson
 from spack.package import (_spack_build_envfile, _spack_build_logfile,
                            _spack_configure_argsfile)
 
@@ -159,6 +160,32 @@ def test_install_dependency_symlinks_pkg(
     # Ensure dependency directory exists after the installation.
     dependency_dir = os.path.join(pkg.prefix, 'dependency-install')
     assert os.path.isdir(dependency_dir)
+
+
+def test_install_times(
+        install_mockery, mock_fetch, mutable_mock_repo):
+    """Test install times added."""
+    spec = Spec('dev-build-test-install-phases')
+    spec.concretize()
+    pkg = spec.package
+    pkg.do_install()
+
+    # Ensure dependency directory exists after the installation.
+    install_times = os.path.join(pkg.prefix, ".spack", 'install_times.json')
+    assert os.path.isfile(install_times)
+
+    # Ensure the phases are included
+    with open(install_times, 'r') as timefile:
+        times = sjson.load(timefile.read())
+
+    # The order should be maintained
+    phases = [x['name'] for x in times['phases']]
+    total = sum([x['seconds'] for x in times['phases']])
+    for name in ['one', 'two', 'three', 'install']:
+        assert name in phases
+
+    # Give a generous difference threshold
+    assert abs(total - times['total']['seconds']) < 5
 
 
 def test_flatten_deps(
