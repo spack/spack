@@ -171,7 +171,7 @@ spack:
 
   - cuda_specs:
     - amrex +cuda cuda_arch=70
-    - axom +cuda cuda_arch=70 ^umpire@4.1.2 ~shared
+    # - axom +cuda cuda_arch=70 ^umpire@4.1.2 ~shared
     - caliper +cuda cuda_arch=70
     - chai +cuda ~benchmarks ~tests cuda_arch=70 ^umpire@4.1.2 ~shared
     - ginkgo +cuda cuda_arch=70
@@ -368,4 +368,3 @@ spack:
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
-
