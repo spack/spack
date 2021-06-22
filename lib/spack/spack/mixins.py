@@ -190,8 +190,11 @@ def filter_compiler_wrappers(*files, **kwargs):
         ]
         for env_var, compiler_path in replacements:
             if env_var in os.environ:
-                p = os.path.realpath(os.environ[env_var])
-                x.filter(p, compiler_path, **filter_kwargs)
+                # filter spack wrapper and links to spack wrapper in case 
+                # build system runs realpath
+                wrapper = os.environ[env_var]
+                for wrapper_path in (wrapper, os.path.realpath(wrapper):
+                    x.filter(wrapper_path, compiler_path, **filter_kwargs)
                 x.filter(os.environ[env_var], compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
