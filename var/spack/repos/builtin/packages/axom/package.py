@@ -196,39 +196,38 @@ class Axom(CachedCMakePackage, CudaPackage):
         spec = self.spec
         entries = super(Axom, self).initconfig_hardware_entries()
 
-        if spec.satisfies('target=ppc64le:'):
-            if "+cuda" in spec:
-                entries.append(cmake_cache_option("ENABLE_CUDA", True))
-                entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION",
-                                                  True))
+        if "+cuda" in spec:
+            entries.append(cmake_cache_option("ENABLE_CUDA", True))
+            entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION",
+                                              True))
 
+            entries.append(
+                cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
+
+            # CUDA_FLAGS
+            cudaflags  = "-restrict --expt-extended-lambda "
+
+            if not spec.satisfies('cuda_arch=none'):
+                cuda_arch = spec.variants['cuda_arch'].value[0]
+                entries.append(cmake_cache_string(
+                    "CMAKE_CUDA_ARCHITECTURES",
+                    cuda_arch))
+                cudaflags += '-arch sm_${CMAKE_CUDA_ARCHITECTURES} '
+            else:
                 entries.append(
-                    cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
+                    "# cuda_arch could not be determined\n\n")
 
-                # CUDA_FLAGS
-                cudaflags  = "-restrict --expt-extended-lambda "
+            if "+cpp14" in spec:
+                cudaflags += " -std=c++14"
+            else:
+                cudaflags += " -std=c++11"
+            entries.append(
+                cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags))
 
-                if not spec.satisfies('cuda_arch=none'):
-                    cuda_arch = spec.variants['cuda_arch'].value[0]
-                    entries.append(cmake_cache_string(
-                        "CMAKE_CUDA_ARCHITECTURES",
-                        cuda_arch))
-                    cudaflags += '-arch sm_${CMAKE_CUDA_ARCHITECTURES} '
-                else:
-                    entries.append(
-                        "# cuda_arch could not be determined\n\n")
-
-                if "+cpp14" in spec:
-                    cudaflags += " -std=c++14"
-                else:
-                    cudaflags += " -std=c++11"
-                entries.append(
-                    cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags))
-
-                entries.append(
-                    "# nvcc does not like gtest's 'pthreads' flag\n")
-                entries.append(
-                    cmake_cache_option("gtest_disable_pthreads", True))
+            entries.append(
+                "# nvcc does not like gtest's 'pthreads' flag\n")
+            entries.append(
+                cmake_cache_option("gtest_disable_pthreads", True))
 
         entries.append("#------------------{0}".format("-" * 30))
         entries.append("# Hardware Specifics")
@@ -244,41 +243,46 @@ class Axom(CachedCMakePackage, CudaPackage):
             not spec.satisfies('+cuda target=ppc64le:')
         ))
 
-        if spec.satisfies('target=ppc64le:'):
-            if (self.compiler.fc is not None) and ("xlf" in self.compiler.fc):
-                description = ("Converts C-style comments to Fortran style "
-                               "in preprocessed files")
-                entries.append(cmake_cache_string(
-                    "BLT_FORTRAN_FLAGS",
-                    "-WF,-C!  -qxlf2003=polymorphic",
-                    description))
-                # Grab lib directory for the current fortran compiler
-                libdir = pjoin(os.path.dirname(
-                               os.path.dirname(self.compiler.fc)),
-                               "lib")
-                description = ("Adds a missing rpath for libraries "
-                               "associated with the fortran compiler")
-                linker_flags = "${BLT_EXE_LINKER_FLAGS} -Wl,-rpath," + libdir
-                entries.append(cmake_cache_string("BLT_EXE_LINKER_FLAGS",
-                                                  linker_flags, description))
-                if "+shared" in spec:
-                    linker_flags = "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath," \
-                                   + libdir
-                    entries.append(cmake_cache_string(
-                        "CMAKE_SHARED_LINKER_FLAGS",
-                        linker_flags, description))
+        if (self.compiler.fc is not None) and ("xlf" in self.compiler.fc):
+            # Grab lib directory for the current fortran compiler
+            libdir = pjoin(os.path.dirname(
+                           os.path.dirname(self.compiler.fc)),
+                           "lib")
+            description = ("Adds a missing rpath for libraries "
+                           "associated with the fortran compiler")
 
-            # Fix for working around CMake adding implicit link directories
-            # returned by the BlueOS compilers to link executables with
-            # non-system default stdlib
-            _gcc_prefix = "/usr/tce/packages/gcc/gcc-4.9.3/lib64"
-            if os.path.exists(_gcc_prefix):
-                _gcc_prefix2 = pjoin(
-                    _gcc_prefix,
-                    "gcc/powerpc64le-unknown-linux-gnu/4.9.3")
-                _link_dirs = "{0};{1}".format(_gcc_prefix, _gcc_prefix2)
+            linker_flags = "${BLT_EXE_LINKER_FLAGS} -Wl,-rpath," + libdir
+
+            entries.append(cmake_cache_string("BLT_EXE_LINKER_FLAGS",
+                                              linker_flags, description))
+
+            if "+shared" in spec:
+                linker_flags = "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath," \
+                               + libdir
                 entries.append(cmake_cache_string(
-                    "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE", _link_dirs))
+                    "CMAKE_SHARED_LINKER_FLAGS",
+                    linker_flags, description))
+
+            description = ("Converts C-style comments to Fortran style "
+                           "in preprocessed files")
+            entries.append(cmake_cache_string(
+                "BLT_FORTRAN_FLAGS",
+                "-WF,-C!  -qxlf2003=polymorphic",
+                description))
+
+            if spec.satisfies('target=ppc64le:'):
+                # Fix for working around CMake adding implicit link directories
+                # returned by the BlueOS compilers to link executables with
+                # non-system default stdlib
+                _gcc_prefix = "/usr/tce/packages/gcc/gcc-4.9.3/lib64"
+                if os.path.exists(_gcc_prefix):
+                    _gcc_prefix2 = pjoin(
+                        _gcc_prefix,
+                        "gcc/powerpc64le-unknown-linux-gnu/4.9.3")
+                    _link_dirs = "{0};{1}".format(_gcc_prefix, _gcc_prefix2)
+                    entries.append(cmake_cache_string(
+                        "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
+                        _link_dirs))
 
         return entries
 
@@ -327,7 +331,7 @@ class Axom(CachedCMakePackage, CudaPackage):
                 entries.append(cmake_cache_path('%s_DIR' % dep.upper(),
                                                 dep_dir))
             else:
-                entries.append('# %s not build\n' % dep.upper())
+                entries.append('# %s not built\n' % dep.upper())
 
         if '+scr' in spec:
             dep_dir = get_spec_path(spec, 'scr', path_replacements)
@@ -339,7 +343,7 @@ class Axom(CachedCMakePackage, CudaPackage):
                     dep_dir = get_spec_path(spec, dep, path_replacements)
                     entries.append(cmake_cache_path('%s_DIR' % dep.upper(), dep_dir))
         else:
-            entries.append('# scr not build\n')
+            entries.append('# scr not built\n')
 
         ##################################
         # Devtools

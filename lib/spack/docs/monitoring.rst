@@ -103,6 +103,140 @@ more tags to your build, you can do:
     $ spack install --monitor --monitor-tags pizza,pasta hdf5
 
 
+----------------------------
+Monitoring with Containerize
+----------------------------
+
+The same argument group is available to add to a containerize command. 
+
+^^^^^^
+Docker
+^^^^^^
+
+To add monitoring to a Docker container recipe generation using the defaults,
+and assuming a monitor server running on localhost, you would
+start with a spack.yaml in your present working directory:
+
+.. code-block:: yaml
+
+   spack:
+     specs:
+       - samtools
+
+And then do:
+
+.. code-block:: console
+
+    # preview first
+    spack containerize --monitor
+    
+    # and then write to a Dockerfile
+    spack containerize --monitor > Dockerfile
+    
+    
+The install command will be edited to include commands for enabling monitoring.
+However, getting secrets into the container for your monitor server is something
+that should be done carefully. Specifically you should:
+
+ - Never try to define secrets as ENV, ARG, or using ``--build-arg``
+ - Do not try to get the secret into the container via a "temporary" file that you remove (it in fact will still exist in a layer)
+
+Instead, it's recommended to use buildkit `as explained here <https://pythonspeed.com/articles/docker-build-secrets/>`_.
+You'll need to again export environment variables for your spack monitor server:
+
+.. code-block:: console
+
+    $ export SPACKMON_TOKEN=50445263afd8f67e59bd79bff597836ee6c05438
+    $ export SPACKMON_USER=spacky
+
+And then use buildkit along with your build and identifying the name of the secret:
+
+.. code-block:: console
+
+    $ DOCKER_BUILDKIT=1 docker build --secret id=st,env=SPACKMON_TOKEN --secret id=su,env=SPACKMON_USER -t spack/container . 
+    
+The secrets are expected to come from your environment, and then will be temporarily mounted and available
+at ``/run/secrets/<name>``. If you forget to supply them (and authentication is required) the build
+will fail. If you need to build on your host (and interact with a spack monitor at localhost) you'll
+need to tell Docker to use the host network:
+
+.. code-block:: console
+
+    $ DOCKER_BUILDKIT=1 docker build --network="host" --secret id=st,env=SPACKMON_TOKEN --secret id=su,env=SPACKMON_USER -t spack/container . 
+    
+
+^^^^^^^^^^^
+Singularity
+^^^^^^^^^^^
+
+To add monitoring to a Singularity container build, the spack.yaml needs to
+be modified slightly to specify wanting a different format:
+
+
+.. code-block:: yaml
+
+   spack:
+     specs:
+       - samtools
+     container:
+       format: singularity
+       
+       
+Again, generate the recipe:
+
+
+.. code-block:: console
+
+    # preview first
+    $ spack containerize --monitor
+    
+    # then write to a Singularity recipe
+    $ spack containerize --monitor > Singularity
+
+
+Singularity doesn't have a direct way to define secrets at build time, so we have
+to do a bit of a manual command to add a file, source secrets in it, and remove it.
+Since Singularity doesn't have layers like Docker, deleting a file will truly
+remove it from the container and history. So let's say we have this file,
+``secrets.sh``:
+
+.. code-block:: console
+
+    # secrets.sh
+    export SPACKMON_USER=spack
+    export SPACKMON_TOKEN=50445263afd8f67e59bd79bff597836ee6c05438
+
+
+We would then generate the Singularity recipe, and add a files section,
+a source of that file at the start of ``%post``, and **importantly**
+a removal of the final at the end of that same section.
+
+.. code-block::
+
+    Bootstrap: docker
+    From: spack/ubuntu-bionic:latest
+    Stage: build
+
+    %files
+      secrets.sh /opt/secrets.sh 
+
+    %post
+      . /opt/secrets.sh
+
+      # spack install commands are here
+      ...
+      
+      # Don't forget to remove here!
+      rm /opt/secrets.sh
+
+
+You can then build the container as your normally would.
+
+.. code-block:: console
+
+    $ sudo singularity build container.sif Singularity 
+
+
 ------------------
 Monitoring Offline
 ------------------

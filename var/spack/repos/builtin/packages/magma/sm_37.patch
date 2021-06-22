@@ -1,6 +1,6 @@
---- a/CMakeLists.txt	2021-06-17 05:48:48.000000000 +0000
-+++ b/CMakeLists.txt	2021-06-17 15:50:13.683664538 +0000
-@@ -145,7 +145,7 @@
+--- a/CMakeLists.txt	2021-06-19 15:53:21.028881552 +0000
++++ b/CMakeLists.txt	2021-06-19 15:54:09.204228276 +0000
+@@ -132,7 +132,7 @@
      endif()
  
      if (GPU_TARGET MATCHES Kepler)
@@ -9,7 +9,7 @@
      endif()
  
      if (GPU_TARGET MATCHES Maxwell)
-@@ -195,6 +195,15 @@
+@@ -182,6 +182,15 @@
          message( STATUS "    compile for CUDA arch 3.5 (Kepler)" )
      endif()
  
