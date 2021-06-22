@@ -161,7 +161,6 @@ class PyTorch(PythonPackage, CudaPackage):
     # depends_on('xnnpack@master', when='@master+xnnpack')
     # depends_on('xnnpack@2021-02-22', when='@1.8.0:1.9.999+xnnpack')
     # depends_on('xnnpack@2020-03-23', when='@1.6.0:1.7.999+xnnpack')
-    depends_on('mkl', when='@1.0.0:1.1.999')
     depends_on('mpi', when='+mpi')
     # https://github.com/pytorch/pytorch/issues/60270
     # depends_on('gloo@master', when='@master+gloo')
@@ -170,6 +169,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # depends_on('gloo@2020-03-17', when='@1.6.0:1.6.999+gloo')
     # https://github.com/pytorch/pytorch/issues/60331
     # depends_on('onnx', when='@1.6:+onnx_ml')
+    depends_on('mkl', when='+mkldnn')
 
     # Test dependencies
     depends_on('py-hypothesis', type='test')
@@ -344,6 +344,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
         # BLAS to be used by Caffe2
         # Options defined in cmake/Dependencies.cmake
+        # Note that if +mkldnn is chosen, BLAS must be MKL
         # https://github.com/pytorch/pytorch/issues/60328
         if self.spec['blas'].name == 'atlas':
             env.set('BLAS', 'ATLAS')
