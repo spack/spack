@@ -23,7 +23,7 @@ packages:
   eigen:
     variants: ~fftw~gmp~metis~mpfr~scotch
   hadoop:
-    version: [2.9.2]
+    version: [2.10.1]
   hdf5:
     variants: +cxx+hl
   icu4c:
