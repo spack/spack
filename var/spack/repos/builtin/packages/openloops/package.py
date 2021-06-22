@@ -74,6 +74,7 @@ class Openloops(Package):
                                     'Set to 1 if compiling a large number' +
                                     'of processes (e.g. lcg.coll)', default=0)
     depends_on('python', type=("build", "run"))
+    depends_on('scons', type=('build', 'run'))
 
     phases = ['configure', 'build', 'build_processes', 'install']
 
