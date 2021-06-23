@@ -10,6 +10,7 @@ gfortran
 git
 libboost-all-dev
 libbz2-dev
+libfreetype-dev
 libhdf5-dev
 libhdf5-openmpi-dev
 libmlpack-dev
