@@ -436,7 +436,7 @@ class log_output(object):
     """
 
     def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
-                 env=None):
+                 env=None, filter_fn=None):
         """Create a new output log context manager.
 
         Args:
@@ -446,6 +446,8 @@ class log_output(object):
             debug (int): positive to enable tty debug mode during logging
             buffer (bool): pass buffer=True to skip unbuffering output; note
                 this doesn't set up any *new* buffering
+            filter_fn (callable, optional): Callable[str] -> str to filter each
+                line of output
 
         log_output can take either a file object or a filename. If a
         filename is passed, the file will be opened and closed entirely
@@ -465,6 +467,7 @@ class log_output(object):
         self.debug = debug
         self.buffer = buffer
         self.env = env  # the environment to use for _writer_daemon
+        self.filter_fn = filter_fn
 
         self._active = False  # used to prevent re-entry
 
@@ -543,7 +546,7 @@ class log_output(object):
                     target=_writer_daemon,
                     args=(
                         input_multiprocess_fd, read_multiprocess_fd, write_fd,
-                        self.echo, self.log_file, child_pipe
+                        self.echo, self.log_file, child_pipe, self.filter_fn
                     )
                 )
                 self.process.daemon = True  # must set before start()
@@ -667,7 +670,7 @@ class log_output(object):
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
-                   log_file_wrapper, control_pipe):
+                   log_file_wrapper, control_pipe, filter_fn):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -712,6 +715,7 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
         log_file_wrapper (FileWrapper): file to log all output
         control_pipe (Pipe): multiprocessing pipe on which to send control
             information to the parent
+        filter_fn (callable, optional): function to filter each line of output
 
     """
     # If this process was forked, then it will inherit file descriptors from
@@ -784,7 +788,10 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
 
                             # Echo to stdout if requested or forced.
                             if echo or force_echo:
-                                sys.stdout.write(clean_line)
+                                output_line = clean_line
+                                if filter_fn:
+                                    output_line = filter_fn(clean_line)
+                                sys.stdout.write(output_line)
 
                             # Stripped output to log file.
                             log_file.write(_strip(clean_line))

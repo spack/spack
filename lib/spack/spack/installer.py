@@ -1692,6 +1692,12 @@ def build_process(pkg, kwargs):
     verbose = kwargs.get('verbose', False)
 
     timer = Timer()
+
+    # If we are using a padded path, filter the output to compress padded paths
+    # The real log still has full-length paths.
+    filter_padding = spack.config.get("config:install_tree:padded_length", None)
+    filter_fn = spack.util.path.padding_filter if filter_padding else None
+
     if not fake:
         if not skip_patch:
             pkg.do_patch()
@@ -1764,8 +1770,10 @@ def build_process(pkg, kwargs):
                     try:
                         # DEBUGGING TIP - to debug this section, insert an IPython
                         # embed here, and run the sections below without log capture
-                        with log_output(log_file, echo, True,
-                                        env=unmodified_env) as logger:
+                        with log_output(
+                                log_file, echo, True, env=unmodified_env,
+                                filter_fn=filter_fn
+                        ) as logger:
 
                             with logger.force_echo():
                                 inner_debug_level = tty.debug_level()
