@@ -68,7 +68,7 @@ format = spack
 
 # flake8-import-order settings
 application-import-names = llnl,spack
-import-order-style = google
+import-order-style = pycharm
 
 [flake8:local-plugins]
 report =

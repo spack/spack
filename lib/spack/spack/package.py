@@ -28,12 +28,10 @@ import traceback
 import types
 from typing import Any, Callable, Dict, List, Optional  # novm
 
-from ordereddict_backport import OrderedDict
 import six
+from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fsys
-from llnl.util.lang import memoized
-from llnl.util.link_tree import LinkTree
 import llnl.util.tty as tty
 import spack.compilers
 import spack.config
@@ -42,23 +40,25 @@ import spack.directives
 import spack.directory_layout
 import spack.error
 import spack.fetch_strategy as fs
-from spack.filesystem_view import YamlFilesystemView
 import spack.hooks
-from spack.install_test import TestFailure, TestSuite
-from spack.installer import InstallError, PackageInstaller
 import spack.mirror
 import spack.mixins
 import spack.multimethod
 import spack.paths
 import spack.repo
-from spack.stage import ResourceStage, Stage, stage_prefix, StageComposite
 import spack.store
 import spack.url
 import spack.util.environment
+import spack.util.web
+from llnl.util.lang import memoized
+from llnl.util.link_tree import LinkTree
+from spack.filesystem_view import YamlFilesystemView
+from spack.install_test import TestFailure, TestSuite
+from spack.installer import InstallError, PackageInstaller
+from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
-import spack.util.web
 from spack.version import Version
 
 """Allowed URL schemes for spack packages."""
