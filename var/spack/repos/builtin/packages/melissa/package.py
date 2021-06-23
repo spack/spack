@@ -25,7 +25,7 @@ class Melissa(CMakePackage):
     depends_on('cmake@3.7.2:', type='build')
     depends_on('libzmq')
     depends_on('mpi')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('py-numpy')
 
     def cmake_args(self):
