@@ -316,10 +316,10 @@ class URLFetchStrategy(FetchStrategy):
 
             try:
                 partial_file, save_file = self._fetch_from_url(url)
-                if save_file:
+                if save_file and (partial_file is not None):
                     os.rename(partial_file, save_file)
                 break
-            except FetchError as e:
+            except FailedDownloadError as e:
                 errors.append(str(e))
 
         for msg in errors:
@@ -330,16 +330,68 @@ class URLFetchStrategy(FetchStrategy):
 
     def _existing_url(self, url):
         tty.debug('Checking existence of {0}'.format(url))
-        curl = self.curl
-        # Telling curl to fetch the first byte (-r 0-0) is supposed to be
-        # portable.
-        curl_args = ['--stderr', '-', '-s', '-f', '-r', '0-0', url]
-        if not spack.config.get('config:verify_ssl'):
-            curl_args.append('-k')
-        _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
-        return curl.returncode == 0
+
+        if spack.config.get('config:use_curl'):
+            curl = self.curl
+            # Telling curl to fetch the first byte (-r 0-0) is supposed to be
+            # portable.
+            curl_args = ['--stderr', '-', '-s', '-f', '-r', '0-0', url]
+            if not spack.config.get('config:verify_ssl'):
+                curl_args.append('-k')
+            _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
+            return curl.returncode == 0
+        else:
+            # Telling urllib to check if url is accessible
+            try:
+                url, headers, response = web_util.read_from_url(url)
+            except web_util.SpackWebError:
+                msg = "Urllib fetch failed to verify url {0}".format(url)
+                raise FailedDownloadError(url, msg)
+            return (response.getcode() is None or response.getcode() == 200)
 
     def _fetch_from_url(self, url):
+        if spack.config.get('config:use_curl'):
+            return self._fetch_curl(url)
+        else:
+            return self._fetch_urllib(url)
+
+    def _check_headers(self, headers):
+        # Check if we somehow got an HTML file rather than the archive we
+        # asked for.  We only look at the last content type, to handle
+        # redirects properly.
+        content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
+                                   flags=re.IGNORECASE)
+        if content_types and 'text/html' in content_types[-1]:
+            warn_content_type_mismatch(self.archive_file or "the archive")
+
+    @_needs_stage
+    def _fetch_urllib(self, url):
+        save_file = None
+        if self.stage.save_filename:
+            save_file = self.stage.save_filename
+        tty.msg('Fetching {0}'.format(url))
+
+        # Run urllib but grab the mime type from the http headers
+        try:
+            url, headers, response = web_util.read_from_url(url)
+        except web_util.SpackWebError as e:
+            # clean up archive on failure.
+            if self.archive_file:
+                os.remove(self.archive_file)
+            if save_file and os.path.exists(save_file):
+                os.remove(save_file)
+            msg = 'urllib failed to fetch with error {0}'.format(e)
+            raise FailedDownloadError(url, msg)
+        _data = response.read()
+        with open(save_file, 'wb') as _open_file:
+            _open_file.write(_data)
+        headers = _data.decode('utf-8', 'ignore')
+
+        self._check_headers(headers)
+        return None, save_file
+
+    @_needs_stage
+    def _fetch_curl(self, url):
         save_file = None
         partial_file = None
         if self.stage.save_filename:
@@ -423,13 +475,7 @@ class URLFetchStrategy(FetchStrategy):
                     url,
                     "Curl failed with error %d" % curl.returncode)
 
-        # Check if we somehow got an HTML file rather than the archive we
-        # asked for.  We only look at the last content type, to handle
-        # redirects properly.
-        content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
-                                   flags=re.IGNORECASE)
-        if content_types and 'text/html' in content_types[-1]:
-            warn_content_type_mismatch(self.archive_file or "the archive")
+        self._check_headers(headers)
         return partial_file, save_file
 
     @property  # type: ignore # decorated properties unsupported in mypy
