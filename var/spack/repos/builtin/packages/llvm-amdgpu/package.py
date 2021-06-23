@@ -5,6 +5,7 @@
 
 
 from spack import *
+import os
 
 
 class LlvmAmdgpu(CMakePackage):
@@ -15,7 +16,7 @@ class LlvmAmdgpu(CMakePackage):
     git      = "https://github.com/RadeonOpenCompute/llvm-project.git"
     url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-4.1.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
     version('4.2.0', sha256='751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661')
@@ -28,7 +29,7 @@ class LlvmAmdgpu(CMakePackage):
     version('3.5.0', sha256='4878fa85473b24d88edcc89938441edc85d2e8a785e567b7bd7ce274ecc2fd9c')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
-
+    variant('rocm-device-libs', default=True, description='Build ROCm device libs as external LLVM project instead of a standalone spack package.')
     variant('openmp', default=True, description='Enable OpenMP')
 
     depends_on('cmake@3.4.3:',  type='build', when='@:3.8.99')
@@ -37,6 +38,7 @@ class LlvmAmdgpu(CMakePackage):
     depends_on('z3', type='link')
     depends_on('zlib', type='link')
     depends_on('ncurses+termlib', type='link')
+
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"), when='+openmp')
     depends_on("hwloc", when='+openmp')
@@ -52,8 +54,34 @@ class LlvmAmdgpu(CMakePackage):
     conflicts('^cmake@3.19.0')
 
     root_cmakelists_dir = 'llvm'
-
     install_targets = ['clang-tidy', 'install']
+
+    # Add device libs sources so they can be an external LLVM project
+    for d_version, d_shasum in [
+        ('4.2.0',  '34a2ac39b9bb7cfa8175cbab05d30e7f3c06aaffce99eed5f79c616d0f910f5f'),
+        ('4.1.0',  'f5f5aa6bfbd83ff80a968fa332f80220256447c4ccb71c36f1fbd2b4a8e9fc1b'),
+        ('4.0.0',  'd0aa495f9b63f6d8cf8ac668f4dc61831d996e9ae3f15280052a37b9d7670d2a'),
+        ('3.10.0', 'bca9291385d6bdc91a8b39a46f0fd816157d38abb1725ff5222e6a0daa0834cc'),
+        ('3.9.0',  'c99f45dacf5967aef9a31e3731011b9c142446d4a12bac69774998976f2576d7'),
+        ('3.8.0',  'e82cc9a8eb7d92de02cabb856583e28f17a05c8cf9c97aec5275608ef1a38574'),
+        ('3.7.0',  'b3a114180bf184b3b829c356067bc6a98021d52c1c6f9db6bc57272ebafc5f1d'),
+        ('3.5.0',  'dce3a4ba672c4a2da4c2260ee4dc96ff6dd51877f5e7e1993cb107372a35a378')
+    ]:
+        resource(
+            name='rocm-device-libs',
+            placement='rocm-device-libs',
+            url='https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-{0}.tar.gz'.format(d_version),
+            sha256=d_shasum,
+            when='@{0} +rocm-device-libs'.format(d_version)
+        )
+
+    resource(
+        name='rocm-device-libs',
+        placement='rocm-device-libs',
+        git='https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git',
+        branch='amd-stg-open',
+        when='@master +rocm-device-libs'
+    )
 
     def cmake_args(self):
         llvm_projects = [
@@ -67,10 +95,18 @@ class LlvmAmdgpu(CMakePackage):
             llvm_projects.append('openmp')
 
         args = [
-            '-DLLVM_ENABLE_PROJECTS={0}'.format(';'.join(llvm_projects)),
-            '-DLLVM_ENABLE_ASSERTIONS=1'
+            self.define('LLVM_ENABLE_PROJECTS', ';'.join(llvm_projects))
         ]
 
+        # Enable rocm-device-libs as a external project
+        if '+rocm-device-libs' in self.spec:
+            dir = os.path.join(self.stage.source_path, 'rocm-device-libs')
+            args.extend([
+                self.define('LLVM_EXTERNAL_PROJECTS', 'device-libs'),
+                self.define('LLVM_EXTERNAL_DEVICE_LIBS_SOURCE_DIR', dir)
+            ])
+
+        # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":
             compiler = Executable(self.compiler.cc)
             gcc_output = compiler('-print-search-dirs', output=str, error=str)
@@ -83,6 +119,6 @@ class LlvmAmdgpu(CMakePackage):
                     gcc_prefix = line.split(":")[1].strip()
                     gcc_prefix = ancestor(gcc_prefix, 4)
                     break
-            args.append("-DGCC_INSTALL_PREFIX=" + gcc_prefix)
+            args.append(self.define('GCC_INSTALL_PREFIX', gcc_prefix))
 
         return args

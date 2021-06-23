@@ -80,9 +80,11 @@ spack package at this time.''',
             description='Enable Argobots support')
     variant('fortran', default=True, description='Enable Fortran support')
 
-    provides('mpi')
-    provides('mpi@:3.0', when='@3:')
-    provides('mpi@:1.3', when='@1:')
+    provides('mpi@:3.1')
+    provides('mpi@:3.0', when='@:3.1')
+    provides('mpi@:2.2', when='@:1.2')
+    provides('mpi@:2.1', when='@:1.1')
+    provides('mpi@:2.0', when='@:1.0')
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'

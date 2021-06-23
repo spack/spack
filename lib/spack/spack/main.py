@@ -32,6 +32,7 @@ import spack.architecture
 import spack.config
 import spack.cmd
 import spack.environment as ev
+import spack.modules
 import spack.paths
 import spack.repo
 import spack.store
@@ -647,14 +648,8 @@ def print_setup_info(*info):
         'tcl': list(),
         'lmod': list()
     }
-    module_roots = spack.config.get('modules:default:roots', {})
-    module_roots = spack.config.merge_yaml(
-        module_roots, spack.config.get('config:module_roots', {}))
-    module_roots = dict(
-        (k, v) for k, v in module_roots.items() if k in module_to_roots
-    )
-    for name, path in module_roots.items():
-        path = spack.util.path.canonicalize_path(path)
+    for name in module_to_roots.keys():
+        path = spack.modules.common.root_path(name, 'default')
         module_to_roots[name].append(path)
 
     other_spack_instances = spack.config.get(

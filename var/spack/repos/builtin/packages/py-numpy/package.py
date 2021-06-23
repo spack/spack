@@ -22,6 +22,7 @@ class PyNumpy(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.21.0', sha256='e80fe25cba41c124d04c662f33f6364909b985f2eb5998aaa5ae4b9587242cce')
     version('1.20.3', sha256='e55185e51b18d788e49fe8305fd73ef4470596b33fc2c1ceb304566b99c71a69')
     version('1.20.2', sha256='878922bf5ad7550aa044aa9301d417e2d3ae50f0f577de92051d739ac6096cee')
     version('1.20.1', sha256='3bc63486a870294683980d76ec1e3efc786295ae00128f9ea38e2c6e74d5a60a')
@@ -113,6 +114,9 @@ class PyNumpy(PythonPackage):
     patch('check_executables3.patch', when='@1.16.0:1.18.5')
     patch('check_executables4.patch', when='@1.14.0:1.15.4')
     patch('check_executables5.patch', when='@:1.13.3')
+
+    # https://github.com/numpy/numpy/releases/tag/v1.21.0
+    conflicts('%gcc@11.1', when='@1.21.0')
 
     # GCC 4.8 is the minimum version that works
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')

@@ -48,6 +48,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
 
     patch('camp_target_umpire_3.0.0.patch', when='@3.0.0')
     patch('cmake_version_check.patch', when='@4.1')
+    patch('missing_header_for_numeric_limits.patch', when='@4.1:5.0.1')
 
     variant('fortran', default=False, description='Build C/Fortran API')
     variant('c', default=True, description='Build C API')

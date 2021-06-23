@@ -201,6 +201,15 @@ def ci_rebuild(args):
     pr_mirror_url = get_env_var('SPACK_PR_MIRROR_URL')
     remote_mirror_url = get_env_var('SPACK_REMOTE_MIRROR_URL')
 
+    # Construct absolute paths relative to current $CI_PROJECT_DIR
+    ci_project_dir = get_env_var('CI_PROJECT_DIR')
+    pipeline_artifacts_dir = os.path.join(
+        ci_project_dir, pipeline_artifacts_dir)
+    job_log_dir = os.path.join(ci_project_dir, job_log_dir)
+    repro_dir = os.path.join(ci_project_dir, repro_dir)
+    local_mirror_dir = os.path.join(ci_project_dir, local_mirror_dir)
+    concrete_env_dir = os.path.join(ci_project_dir, concrete_env_dir)
+
     # Debug print some of the key environment variables we should have received
     tty.debug('pipeline_artifacts_dir = {0}'.format(pipeline_artifacts_dir))
     tty.debug('root_spec = {0}'.format(root_spec))
@@ -342,7 +351,8 @@ def ci_rebuild(args):
     repro_details = {
         'job_name': ci_job_name,
         'job_spec_yaml': job_spec_yaml_file,
-        'root_spec_yaml': 'root.yaml'
+        'root_spec_yaml': 'root.yaml',
+        'ci_project_dir': ci_project_dir
     }
     with open(repro_file, 'w') as fd:
         fd.write(json.dumps(repro_details))

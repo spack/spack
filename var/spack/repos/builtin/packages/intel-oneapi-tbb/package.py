@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from sys import platform
+import platform
 
 from spack import *
 
@@ -16,7 +16,7 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onetbb.html'
 
-    if platform == 'linux':
+    if platform.system() == 'Linux':
         version('2021.2.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17759/l_tbb_oneapi_p_2021.2.0.357_offline.sh',
                 sha256='c1c3623c5bef547b30eac009e7a444611bf714c758d7472c114e9be9d5700eba',

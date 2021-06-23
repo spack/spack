@@ -346,7 +346,7 @@ class TestLmod(object):
             spec = spack.spec.Spec('cmake').concretized()
 
             content = modulefile_content('cmake')
-            expected = e.default_view.view().get_projection_for_spec(spec)
+            expected = e.default_view.get_projection_for_spec(spec)
             # Rather than parse all lines, ensure all prefixes in the content
             # point to the right one
             assert any(expected in line for line in content)

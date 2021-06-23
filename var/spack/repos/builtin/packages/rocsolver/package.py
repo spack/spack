@@ -14,7 +14,7 @@ class Rocsolver(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-4.2.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     variant('optimal', default=True,
             description='This option improves performance at the cost of increased binary \
@@ -39,19 +39,22 @@ class Rocsolver(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     def cmake_args(self):
-        incl = self.spec['rocblas'].prefix
         args = [
-            '-DBUILD_CLIENTS_SAMPLES=OFF',
-            '-DBUILD_CLIENTS_TESTS=OFF',
-            '-DBUILD_CLIENTS_BENCHMARKS=OFF'
+            self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
+            self.define('BUILD_CLIENTS_TESTS', 'OFF'),
+            self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF')
         ]
         if self.spec.satisfies('@4.1.0:'):
-            args.append('-DCMAKE_CXX_FLAGS:String=-I{0}/rocblas/include'.format(incl))
+            incl = self.spec['rocblas'].prefix
+            args.append(self.define(
+                'CMAKE_CXX_FLAGS',
+                '-I{0}/rocblas/include'.format(incl)
+            ))
 
         if self.spec.satisfies('@3.7.0:'):
             args.append(self.define_from_variant('OPTIMAL', 'optimal'))

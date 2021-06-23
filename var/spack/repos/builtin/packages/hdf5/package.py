@@ -167,7 +167,8 @@ class Hdf5(AutotoolsPackage):
             'fortran/src/H5Fff_F03.f90',
             string=True, ignore_absent=True)
 
-    filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
+    filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc',
+                             'h5pcc', 'h5pfc', relative_root='bin')
 
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
@@ -184,7 +185,7 @@ class Hdf5(AutotoolsPackage):
 
         # Quiet warnings/errors about implicit declaration of functions in C99
         if name == "cflags":
-            if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
+            if "%clang" in self.spec or "%gcc" in self.spec:
                 flags.append("-Wno-implicit-function-declaration")
 
         return (None, None, flags)

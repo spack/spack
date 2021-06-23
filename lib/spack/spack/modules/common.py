@@ -221,8 +221,8 @@ def root_path(name, module_set_name):
         root folder for module file installation
     """
     defaults = {
-        'lmod': '$spack/share/spack/modules',
-        'tcl': '$spack/share/spack/lmod',
+        'lmod': '$spack/share/spack/lmod',
+        'tcl': '$spack/share/spack/modules',
     }
     # Root folders where the various module files should be written
     roots = spack.config.get('modules:%s:roots' % module_set_name, {})
@@ -698,7 +698,7 @@ class BaseContext(tengine.Context):
                 use_view = ev.default_view_name
 
             env = ev.get_env({}, 'post_env_write_hook', required=True)
-            view = env.views[use_view].view()
+            view = env.views[use_view]
 
             spec.prefix = view.get_projection_for_spec(spec)
 

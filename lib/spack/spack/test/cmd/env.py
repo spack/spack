@@ -179,6 +179,27 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
 
 
+def test_env_roots_marked_explicit(install_mockery, mock_fetch):
+    install = SpackCommand('install')
+    install('dependent-install')
+
+    # Check one explicit, one implicit install
+    dependent = spack.store.db.query(explicit=True)
+    dependency = spack.store.db.query(explicit=False)
+    assert len(dependent) == 1
+    assert len(dependency) == 1
+
+    env('create', 'test')
+    with ev.read('test') as e:
+        # make implicit install a root of the env
+        e.add(dependency[0].name)
+        e.concretize()
+        e.install_all()
+
+    explicit = spack.store.db.query(explicit=True)
+    assert len(explicit) == 2
+
+
 def test_env_modifications_error_on_activate(
         install_mockery, mock_fetch, monkeypatch, capfd):
     env('create', 'test')
@@ -2504,7 +2525,7 @@ spack:
         install()
 
         spec = e.specs_by_hash[e.concretized_order[0]]
-        view_prefix = e.default_view.view().get_projection_for_spec(spec)
+        view_prefix = e.default_view.get_projection_for_spec(spec)
         modules_glob = '%s/modules/**/*' % e.path
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
@@ -2539,7 +2560,7 @@ spack:
         install()
 
         spec = e.specs_by_hash[e.concretized_order[0]]
-        view_prefix = e.default_view.view().get_projection_for_spec(spec)
+        view_prefix = e.default_view.get_projection_for_spec(spec)
         modules_glob = '%s/modules/**/*' % e.path
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
@@ -2561,3 +2582,15 @@ spack:
 
     assert view_prefix not in full_contents
     assert spec.prefix in full_contents
+
+
+@pytest.mark.regression('24148')
+def test_virtual_spec_concretize_together(tmpdir):
+    # An environment should permit to concretize "mpi"
+    e = ev.create('virtual_spec')
+    e.concretization = 'together'
+
+    e.add('mpi')
+    e.concretize()
+
+    assert any(s.package.provides('mpi') for _, s in e.concretized_specs())

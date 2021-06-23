@@ -20,6 +20,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     url      = 'https://bitbucket.org/icl/slate/downloads/slate-2020.10.00.tar.gz'
     maintainers = ['G-Ragghianti', 'mgates3']
 
+    test_requires_compiler = True
+
     version('master', branch='master')
     version('2021.05.02', sha256='29667a9e869e41fbc22af1ae2bcd425d79b4094bbb3f21c411888e7adc5d12e3')
     version('2021.05.01', sha256='d9db2595f305eb5b1b49a77cc8e8c8e43c3faab94ed910d8387c221183654218')
@@ -68,3 +70,29 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             '-Duse_mpi=%s'           % ('+mpi' in spec),
             '-DSCALAPACK_LIBRARIES=%s'    % spec['scalapack'].libs.joined(';')
         ]
+
+    examples_src_dir = 'examples'
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if self.spec.satisfies('@master'):
+            self.cache_extra_test_sources([self.examples_src_dir])
+
+    def test(self):
+        if not self.spec.satisfies('@master') or '+mpi' not in self.spec:
+            print('Skipping: stand-alone tests only run on master with +mpi')
+            return
+
+        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        test_bld_dir = join_path(test_dir, 'build')
+        with working_dir(test_bld_dir, create=True):
+            cmake('..')
+            make()
+            test_args = ['-n', '4', './ex05_blas']
+            mpiexe_f = which('srun', 'mpirun', 'mpiexec')
+            if mpiexe_f:
+                self.run_test(mpiexe_f.command, test_args,
+                              purpose='SLATE smoke test')
+            make('clean')

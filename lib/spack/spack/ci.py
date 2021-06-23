@@ -507,7 +507,7 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
                 'job': get_job_name(phase_name,
                                     strip_compilers,
                                     dep_job,
-                                    osname,
+                                    dep_job.architecture,
                                     build_group),
                 'artifacts': enable_artifacts_buildcache,
             })
@@ -642,6 +642,25 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     local_mirror_dir = os.path.join(pipeline_artifacts_dir, 'mirror')
     user_artifacts_dir = os.path.join(pipeline_artifacts_dir, 'user_data')
 
+    # We communicate relative paths to the downstream jobs to avoid issues in
+    # situations where the CI_PROJECT_DIR varies between the pipeline
+    # generation job and the rebuild jobs.  This can happen when gitlab
+    # checks out the project into a runner-specific directory, for example,
+    # and different runners are picked for generate and rebuild jobs.
+    ci_project_dir = os.environ.get('CI_PROJECT_DIR')
+    rel_artifacts_root = os.path.relpath(
+        pipeline_artifacts_dir, ci_project_dir)
+    rel_concrete_env_dir = os.path.relpath(
+        concrete_env_dir, ci_project_dir)
+    rel_job_log_dir = os.path.relpath(
+        job_log_dir, ci_project_dir)
+    rel_job_repro_dir = os.path.relpath(
+        job_repro_dir, ci_project_dir)
+    rel_local_mirror_dir = os.path.relpath(
+        local_mirror_dir, ci_project_dir)
+    rel_user_artifacts_dir = os.path.relpath(
+        user_artifacts_dir, ci_project_dir)
+
     # Speed up staging by first fetching binary indices from all mirrors
     # (including the per-PR mirror we may have just added above).
     bindist.binary_index.update()
@@ -687,14 +706,17 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 root_spec = spec_record['rootSpec']
                 pkg_name = pkg_name_from_spec_label(spec_label)
                 release_spec = root_spec[pkg_name]
+                release_spec_full_hash = release_spec.full_hash()
+                release_spec_dag_hash = release_spec.dag_hash()
+                release_spec_build_hash = release_spec.build_hash()
 
                 # Check if this spec is in our list of known failures.
                 if broken_specs_url:
-                    full_hash = release_spec.full_hash()
-                    broken_spec_path = url_util.join(broken_specs_url, full_hash)
+                    broken_spec_path = url_util.join(
+                        broken_specs_url, release_spec_full_hash)
                     if web_util.url_exists(broken_spec_path):
                         known_broken_specs_encountered.append('{0} ({1})'.format(
-                            release_spec, full_hash))
+                            release_spec, release_spec_full_hash))
 
                 runner_attribs = find_matching_config(
                     release_spec, gitlab_ci)
@@ -727,8 +749,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     job_script.insert(0, 'cd {0}'.format(concrete_env_dir))
 
                 job_script.extend([
-                    'spack ci rebuild --prepare',
-                    './install.sh'
+                    'spack ci rebuild'
                 ])
 
                 if 'script' in runner_attribs:
@@ -757,7 +778,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 job_vars = {
                     'SPACK_ROOT_SPEC': format_root_spec(
                         root_spec, main_phase, strip_compilers),
-                    'SPACK_JOB_SPEC_DAG_HASH': release_spec.dag_hash(),
+                    'SPACK_JOB_SPEC_DAG_HASH': release_spec_dag_hash,
+                    'SPACK_JOB_SPEC_BUILD_HASH': release_spec_build_hash,
+                    'SPACK_JOB_SPEC_FULL_HASH': release_spec_full_hash,
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action
                 }
@@ -884,9 +907,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 variables.update(job_vars)
 
                 artifact_paths = [
-                    job_log_dir,
-                    job_repro_dir,
-                    user_artifacts_dir
+                    rel_job_log_dir,
+                    rel_job_repro_dir,
+                    rel_user_artifacts_dir
                 ]
 
                 if enable_artifacts_buildcache:
@@ -1042,14 +1065,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 version_to_clone = spack_version
 
         output_object['variables'] = {
-            'SPACK_ARTIFACTS_ROOT': pipeline_artifacts_dir,
-            'SPACK_CONCRETE_ENV_DIR': concrete_env_dir,
+            'SPACK_ARTIFACTS_ROOT': rel_artifacts_root,
+            'SPACK_CONCRETE_ENV_DIR': rel_concrete_env_dir,
             'SPACK_VERSION': spack_version,
             'SPACK_CHECKOUT_VERSION': version_to_clone,
             'SPACK_REMOTE_MIRROR_URL': remote_mirror_url,
-            'SPACK_JOB_LOG_DIR': job_log_dir,
-            'SPACK_JOB_REPRO_DIR': job_repro_dir,
-            'SPACK_LOCAL_MIRROR_DIR': local_mirror_dir,
+            'SPACK_JOB_LOG_DIR': rel_job_log_dir,
+            'SPACK_JOB_REPRO_DIR': rel_job_repro_dir,
+            'SPACK_LOCAL_MIRROR_DIR': rel_local_mirror_dir,
             'SPACK_IS_PR_PIPELINE': str(is_pr_pipeline)
         }
 
@@ -1535,7 +1558,6 @@ def reproduce_ci_job(url, work_dir):
         tty.debug('  {0}'.format(yaml_file))
 
     pipeline_yaml = None
-    pipeline_variables = None
 
     # Try to find the dynamically generated pipeline yaml file in the
     # reproducer.  If the user did not put it in the artifacts root,
@@ -1546,7 +1568,6 @@ def reproduce_ci_job(url, work_dir):
             yaml_obj = syaml.load(y_fd)
             if 'variables' in yaml_obj and 'stages' in yaml_obj:
                 pipeline_yaml = yaml_obj
-                pipeline_variables = pipeline_yaml['variables']
 
     if pipeline_yaml:
         tty.debug('\n{0} is likely your pipeline file'.format(yf))
@@ -1603,9 +1624,8 @@ def reproduce_ci_job(url, work_dir):
         # more faithful reproducer if everything appears to run in the same
         # absolute path used during the CI build.
         mount_as_dir = '/work'
-        if pipeline_variables:
-            artifacts_root = pipeline_variables['SPACK_ARTIFACTS_ROOT']
-            mount_as_dir = os.path.dirname(artifacts_root)
+        if repro_details:
+            mount_as_dir = repro_details['ci_project_dir']
             mounted_repro_dir = os.path.join(mount_as_dir, rel_repro_dir)
 
         # We will also try to clone spack from your local checkout and
