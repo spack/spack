@@ -7,17 +7,18 @@ from spack import *
 
 
 class Melissa(CMakePackage):
-    """
-    Melissa is a file avoiding, adaptive, fault tolerant and elastic framework,
-    to run large scale sensitivity analysis on supercomputers.
+    """Melissa is a file avoiding, adaptive, fault tolerant and elastic
+    framework, to run large scale sensitivity analysis on supercomputers.
     """
 
-    homepage = "https://github.com/melissa-sa/melissa"
-    url      = "https://github.com/melissa-sa/melissa/archive/V1.0.tar.gz"
+    homepage = 'https://gitlab.inria.fr/melissa/melissa'
+    git = 'https://gitlab.inria.fr/melissa/melissa.git'
 
+    # attention: Git**Hub**.com accounts
     maintainers = ['christoph-conrads', 'raffino']
 
-    version('develop', branch='develop', git='git@gitlab.inria.fr:melissa/melissa.git')
+    version('master', branch='master')
+    version('develop', branch='develop')
 
     variant('no_mpi_api', default=False, description="Enable the deprecated no-MPI API")
     variant('shared', default=True, description="Build shared libraries")
