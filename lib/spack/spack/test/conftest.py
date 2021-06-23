@@ -23,7 +23,7 @@ try:
     # our tests break.)
     from dateutil.parser import parse as parse_date
 except ImportError:
-    def parse_date(string):
+    def parse_date(string):  # type: ignore
         pytest.skip("dateutil package not available")
 
 import py
