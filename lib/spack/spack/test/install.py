@@ -284,9 +284,10 @@ def test_spec_install_status(install_upstream, mock_fetch, install_mockery,
                                         external_path=tmpdir)
         external_spec.concretize()
         external_spec.package.do_install()
+        print('orig spec', external_spec.external_path, external_spec.external)
         rec = store.db.get_record(external_spec)
         print('external', rec, rec.installed, rec.spec.external_path, rec.spec.external)
-        assert external_spec.install_status() == external_spec.STATUS_EXTERNAL
+        assert external_spec.install_status() == external_spec.STATUS_EXTERNAL + 'asdf'
 
         installed_spec = spack.spec.Spec('install-status')
         installed_spec.concretize()

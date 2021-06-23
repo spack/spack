@@ -122,6 +122,8 @@ def _handle_external_and_upstream(pkg, explicit):
         (bool): ``True`` if the package is external or upstream (so not to
             be installed locally), otherwise, ``True``
     """
+
+    print('External?, upstream?', pkg.spec.external, pkg.installed_upstream)
     # For external packages the workflow is simplified, and basically
     # consists in module file generation and registration in the DB.
     if pkg.spec.external:
@@ -1030,6 +1032,7 @@ class PackageInstaller(object):
         # External and upstream packages need to get flagged as installed to
         # ensure proper status tracking for environment build.
         not_local = _handle_external_and_upstream(request.pkg, True)
+        print('not_local', request.pkg.spec, not_local)
         if not_local:
             self._flag_installed(request.pkg)
             return
@@ -1399,6 +1402,8 @@ class PackageInstaller(object):
         """Initialize the build queue from the list of build requests."""
         all_dependencies = defaultdict(set)
 
+        print(len(self.build_requests))
+
         tty.debug('Initializing the build queue from the build requests')
         for request in self.build_requests:
             self._add_tasks(request, all_dependencies)
@@ -1425,6 +1430,9 @@ class PackageInstaller(object):
         single_explicit_spec = len(self.build_requests) == 1
         failed_explicits = []
         exists_errors = []
+
+        print('heya')
+        print(self.build_pq)
 
         while self.build_pq:
             task = self._pop_task()
@@ -1980,6 +1988,7 @@ class BuildTask(object):
     @property
     def explicit(self):
         """The package was explicitly requested by the user."""
+        print('explicit', self.pkg.spec, self.pkg, self.request.pkg)
         return self.pkg == self.request.pkg
 
     @property
