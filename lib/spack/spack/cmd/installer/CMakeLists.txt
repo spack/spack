@@ -85,8 +85,6 @@ install(DIRECTORY "${SPACK_SOURCE}/"
   DESTINATION "${SPACK_DIR}")
 install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Python-${PYTHON_VERSION}-win64/"
   DESTINATION "${PYTHON_DIR}")
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/scripts/" DESTINATION "scripts")
-#install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/spack_cmd.bat/" DESTINATION ".")
 
 # CPACK Installer Instructions
 set(CPACK_PACKAGE_NAME "Spack")
@@ -107,8 +105,9 @@ set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/patch.xml")
 set(CPACK_WIX_UPGRADE_GUID "D2C703E4-721D-44EC-8016-BCB96BB64E0B")
 set(CPACK_WIX_SKIP_PROGRAM_FOLDER TRUE)
 
+set(SHORTCUT_GUID "099213BC-0D37-4F29-B758-60CA2A7E6DDA")
 # Set full path to icon, shortcut in spack.wxs
-set(SPACK_SHORTCUT "${CMAKE_CURRENT_SOURCE_DIR}/spack_cmd.bat")
+set(SPACK_SHORTCUT "spack_cmd.bat")
 configure_file("spack.wxs.in" "${CMAKE_CURRENT_BINARY_DIR}/spack.wxs")
 configure_file("bundle.wxs.in" "${CMAKE_CURRENT_BINARY_DIR}/bundle.wxs")
 set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/spack.wxs")
