@@ -6,7 +6,6 @@
 import shutil
 import sys
 import os
-import glob
 
 
 class Hdf5(CMakePackage):
@@ -354,14 +353,14 @@ class Hdf5(CMakePackage):
 
         # Rename bin/<executable tool file>-shared bin/<executable tool file>
         # Current versions of HDF5 using CMake produce tools executable files
-        # with shared linkage that are named with -shared suffix when shared 
-        # libraries are built, and statically linked tools executable files 
+        # with shared linkage that are named with -shared suffix when shared
+        # libraries are built, and statically linked tools executable files
         # with the usual names as produced by Autotools when static libraries
-        # are built. When both shared and static libraries are built, both 
+        # are built. When both shared and static libraries are built, both
         # sets of executables will be installed in bin. In order to match
-        # the previous behavior with Autotools, this function checks for 
-        # files in bin with the -shared suffix, and for any such files 
-        # found removes any file with a matching name without the -shared 
+        # the previous behavior with Autotools, this function checks for
+        # files in bin with the -shared suffix, and for any such files
+        # found removes any file with a matching name without the -shared
         # suffix, then renames the -shared file to the original tool name.
         print("Renaming any shared tool files to original tool file name")
         os.chdir(self.prefix.bin)
@@ -375,8 +374,8 @@ class Hdf5(CMakePackage):
         for x in range(len(shared_filelist)):
             filename = shared_filelist[x].split('-')[0]
             if os.path.isfile(filename):
-               os.remove(filename)
-               os.rename(shared_filelist[x], filename)
+                os.remove(filename)
+                os.rename(shared_filelist[x], filename)
 
     @on_package_attributes(run_tests=True)
     def check_install(self):
