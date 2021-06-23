@@ -1133,6 +1133,8 @@ class Spec(object):
 
     @property
     def external(self):
+        print('external...', self.external_path, bool(self.external_path),
+              self.external_modules, bool(self.external_modules))
         return bool(self.external_path) or bool(self.external_modules)
 
     def get_dependency(self, name):
