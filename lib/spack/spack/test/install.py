@@ -257,8 +257,6 @@ def test_spec_install_status(install_upstream, mock_fetch, install_mockery,
     """Check that the install status method returns the correct constants in various
     install scenarios."""
 
-    tmpdir = str(tmpdir_factory.mktemp('external_path'))
-
     store, upstream_layout = install_upstream('install-status loc=upstream',
                                               install=True)
     with spack.store.use_store(store):
@@ -268,6 +266,7 @@ def test_spec_install_status(install_upstream, mock_fetch, install_mockery,
 
         # We should be checking this, but I've yet to figure out a way to test it
         # that works consistently. This works on my local machine, but fails in CI.
+        # tmpdir = str(tmpdir_factory.mktemp('external_path'))
         # external_spec = spack.spec.Spec('install-status loc=external',
         #                                 external_path=tmpdir)
         # external_spec.concretize()
