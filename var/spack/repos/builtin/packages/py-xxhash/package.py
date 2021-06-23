@@ -36,12 +36,12 @@ class PyXxhash(PythonPackage):
 
     version('2.0.2', sha256='b7bead8cf6210eadf9cecf356e17af794f57c0939a3d420a00d87ea652f87b49')
 
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('python@2.6:2.999,3.3:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('xxhash')
+
+    def setup_build_environment(self, env):
+        env.set('XXHASH_LINK_SO', '1')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
