@@ -11,11 +11,13 @@ class PyAtlasBuildingTools(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/browse/code/nse/atlas-building-tools/tree/"
     git      = "ssh://bbpcode.epfl.ch/nse/atlas-building-tools"
 
+    version('0.1.2', tag='atlas-building-tools-v0.1.2')
     version('0.1.1', tag='atlas_building_tools-v0.1.1')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('py-cgal-pybind@0.1.0:', type=('build', 'run'))
+    depends_on('py-cgal-pybind@0.1.1:', type=('build', 'run'), when='@0.1.2:')
+    depends_on('py-cgal-pybind@0.1.0', type=('build', 'run'), when='@0.1.1')
     depends_on('py-click@7.0:', type=('build', 'run'))
     depends_on('py-networkx@2.4:', type=('build', 'run'))
     depends_on('py-nptyping@1.0.1:', type=('build', 'run'))
@@ -39,3 +41,9 @@ class PyAtlasBuildingTools(PythonPackage):
     depends_on('py-xlrd@1.0.0:', type=('build', 'run'))
     depends_on('regiodesics@0.1.0:', type='run')
     depends_on('ultraliser@0.2.0:', type='run')
+    depends_on('py-pytest', type='test')
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def test_install(self):
+        python("-m", "pytest", "tests/app/test_flatmap.py")

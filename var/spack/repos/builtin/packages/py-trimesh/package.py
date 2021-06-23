@@ -20,3 +20,5 @@ class PyTrimesh(PythonPackage):
     depends_on('py-numpy', type='run')
     depends_on('py-shapely', type='run')
     depends_on('py-scipy', type='run')
+    depends_on('py-svgpath', type='run')
+    depends_on('py-lxml', type='run')
