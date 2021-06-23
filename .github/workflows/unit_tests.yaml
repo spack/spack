@@ -156,6 +156,8 @@ jobs:
           make -C ${KCOV_ROOT}/build && sudo  make -C ${KCOV_ROOT}/build install
     - name: Bootstrap clingo from sources
       if: ${{ matrix.concretizer == 'clingo' }}
+      env:
+          SPACK_PYTHON: python
       run: |
           . share/spack/setup-env.sh
           spack external find --not-buildable cmake bison
@@ -163,6 +165,7 @@ jobs:
     - name: Run unit tests (full suite with coverage)
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       env:
+          SPACK_PYTHON: python
           COVERAGE: true
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
       run: |
@@ -172,6 +175,7 @@ jobs:
     - name: Run unit tests (reduced suite without coverage)
       if: ${{ needs.changes.outputs.with_coverage == 'false' }}
       env:
+          SPACK_PYTHON: python
           ONLY_PACKAGES: true
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
       run: |
