@@ -260,19 +260,33 @@ def test_spec_install_status(install_upstream, mock_fetch, install_mockery,
     store, upstream_layout = install_upstream('install-status loc=upstream',
                                               install=True)
     with spack.store.use_store(store):
+
+        non_conc_spec = spack.spec.Spec('a')
+        assert non_conc_spec.install_status() is None
+
+        # A Spec can be not installed if it isn't in the DB or if it's marked
+        # as not installed in the DB. Hit both for code coverage.
         not_inst_spec = spack.spec.Spec('install-status loc=not_installed')
         not_inst_spec.concretize()
+        assert not_inst_spec.install_status() == not_inst_spec.STATUS_NOT_INSTALLED
+
+        not_inst_spec.package.do_install()
+        with store.db.write_transaction():
+            rec = store.db.get_record(not_inst_spec)
+            rec.installed = False
         assert not_inst_spec.install_status() == not_inst_spec.STATUS_NOT_INSTALLED
 
         # We should be checking this, but I've yet to figure out a way to test it
         # that works consistently. This works on my local machine, but fails in CI
         # tests.
-        # tmpdir = str(tmpdir_factory.mktemp('external_path'))
-        # external_spec = spack.spec.Spec('install-status loc=external',
-        #                                 external_path=tmpdir)
-        # external_spec.concretize()
-        # external_spec.do_install()
-        # assert external_spec.install_status() == external_spec.STATUS_EXTERNAL
+        tmpdir = str(tmpdir_factory.mktemp('external_path'))
+        external_spec = spack.spec.Spec('install-status loc=external',
+                                        external_path=tmpdir)
+        external_spec.concretize()
+        external_spec.package.do_install()
+        rec = store.db.get_record(external_spec)
+        print('external', rec, rec.installed, rec.spec.external_path, rec.spec.external)
+        assert external_spec.install_status() == external_spec.STATUS_EXTERNAL
 
         installed_spec = spack.spec.Spec('install-status')
         installed_spec.concretize()
