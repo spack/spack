@@ -265,7 +265,8 @@ def test_spec_install_status(install_upstream, mock_fetch, install_mockery,
         assert not_inst_spec.install_status() == not_inst_spec.STATUS_NOT_INSTALLED
 
         # We should be checking this, but I've yet to figure out a way to test it
-        # that works consistently. This works on my local machine, but fails in CI.
+        # that works consistently. This works on my local machine, but fails in CI
+        # tests.
         # tmpdir = str(tmpdir_factory.mktemp('external_path'))
         # external_spec = spack.spec.Spec('install-status loc=external',
         #                                 external_path=tmpdir)
