@@ -28,7 +28,7 @@ class Nalu(CMakePackage):
             description='Compile with Tioga support')
 
     # Required dependencies
-    depends_on('cmake@3.20.0')
+    depends_on('cmake@3.20.0:')
     depends_on('mpi')
     depends_on('yaml-cpp@0.5.3:', when='+shared')
     depends_on('yaml-cpp~shared@0.5.3:', when='~shared')
