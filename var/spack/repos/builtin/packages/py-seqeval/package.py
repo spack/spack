@@ -36,12 +36,10 @@ class PySeqeval(PythonPackage):
 
     version('1.2.2', sha256='f28e97c3ab96d6fcd32b648f6438ff2e09cfba87f05939da9b3970713ec56e6f')
 
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('python@2.6:2.999,3.3:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.14:', type=('build', 'run'))
+    depends_on('py-scikit-learn@0.21.3:', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
