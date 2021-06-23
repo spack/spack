@@ -22,6 +22,7 @@ class Hypre(AutotoolsPackage, CudaPackage):
     test_requires_compiler = True
 
     version('develop', branch='master')
+    version('2.22.0', sha256='2c786eb5d3e722d8d7b40254f138bef4565b2d4724041e56a8fa073bda5cfbb5')
     version('2.21.0', sha256='e380f914fe7efe22afc44cdf553255410dc8a02a15b2e5ebd279ba88817feaf5')
     version('2.20.0', sha256='5be77b28ddf945c92cde4b52a272d16fb5e9a7dc05e714fc5765948cba802c01')
     version('2.19.0', sha256='466b19d8a86c69989a237f6f03f20d35c0c63a818776d2cd071b0a084cffeba5')
