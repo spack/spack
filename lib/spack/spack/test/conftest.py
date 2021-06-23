@@ -12,20 +12,19 @@ import os
 import os.path
 import re
 import shutil
-import sys
 import tempfile
 import xml.etree.ElementTree
 
-if sys.version_info >= (2, 7):
+try:
     # CVS outputs dates in different formats on different systems. We are using
     # the dateutil package to parse these dates. This package does not exist
     # for Python <2.7. That means that we cannot test checkouts "by date" for
     # CVS respositories. (We can still use CVS repos with all features, only
     # our tests break.)
     from dateutil.parser import parse as parse_date
-else:
+except ImportError:
     def parse_date(string):
-        pytest.skip("dateutil package not available for Python 2.6")
+        pytest.skip("dateutil package not available")
 
 import py
 import pytest
