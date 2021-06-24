@@ -210,13 +210,13 @@ class Executable(object):
                     if sys.platform == 'win32':
                         outstr = text_type(out.decode('ISO-8859-1'))
                     else:
-                        outstr = text_type(err.decode('utf-8'))
+                        outstr = text_type(out.decode('utf-8'))
                     result += outstr
                     if output is str.split:
                         sys.stdout.write(outstr)
                 if error in (str, str.split):
                     if sys.platform == 'win32':
-                        errstr = text_type(out.decode('ISO-8859-1'))
+                        errstr = text_type(err.decode('ISO-8859-1'))
                     else:
                         errstr = text_type(err.decode('utf-8'))
                     result += errstr
@@ -283,7 +283,6 @@ def which_string(*args, **kwargs):
     for name in args:
         if os.path.sep in name:
             exe = os.path.abspath(name)
-            print(exe)
             if os.path.isfile(exe) and os.access(exe, os.X_OK):
                 return exe
         else:
