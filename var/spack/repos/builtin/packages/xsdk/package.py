@@ -75,7 +75,7 @@ class Xsdk(BundlePackage):
     depends_on('datatransferkit@master', when='@develop +trilinos +datatransferkit')
     depends_on('datatransferkit@3.1-rc2', when='@0.6.0 +trilinos +datatransferkit')
 
-    depends_on('petsc +trilinos', when='+trilinos')
+    depends_on('petsc +trilinos', when='+trilinos @:0.6.0')
     depends_on('petsc +cuda', when='+cuda @0.6.0:')
     depends_on('petsc +batch', when='platform=cray @0.5.0:')
     depends_on('petsc@main+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64',
@@ -91,7 +91,7 @@ class Xsdk(BundlePackage):
 
     depends_on('dealii +trilinos~adol-c', when='+trilinos +dealii')
     depends_on('dealii ~trilinos', when='~trilinos +dealii')
-    depends_on('dealii@master~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5~netcdf+metis~sundials~ginkgo~symengine~nanoflann', when='@develop +dealii')
+    depends_on('dealii@master~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5~netcdf+metis~sundials~ginkgo~symengine~nanoflann~simplex~arborx', when='@develop +dealii')
     depends_on('dealii@9.2.0~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5~netcdf+metis~sundials~ginkgo~symengine~simplex~arborx', when='@0.6.0 +dealii')
     depends_on('dealii@9.1.1~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5~netcdf+metis~sundials~ginkgo~symengine', when='@0.5.0 +dealii')
     depends_on('dealii@9.0.1~assimp~python~doc~gmsh+petsc~slepc+mpi~int64+hdf5~netcdf+metis~ginkgo~symengine', when='@0.4.0 +dealii')
