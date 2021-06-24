@@ -171,10 +171,8 @@ def print_text_info(pkg):
         # If the package does not define 'determine_version' nor
         # 'determine_variants', then it must use some custom detection
         # mechanism. In this case, just inform the user it's detectable somehow.
-        if len(find_attributes) == 0:
-            color.cprint('    True')
-        else:
-            color.cprint('    {0}'.format(', '.join(find_attributes)))
+        color.cprint('    True{0}'.format(
+            ' (' + ', '.join(find_attributes) + ')' if find_attributes else ''))
     else:
         color.cprint('    False')
 
