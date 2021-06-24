@@ -549,9 +549,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     generate_job_name = os.environ.get('CI_JOB_NAME', None)
     parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', None)
 
-    is_pr_pipeline = (
-        os.environ.get('SPACK_IS_PR_PIPELINE', '').lower() == 'true'
-    )
+    spack_pipeline_type = os.environ.get('SPACK_PIPELINE_TYPE', None)
+    is_pr_pipeline = spack_pipeline_type == 'spack_pull_request'
 
     spack_pr_branch = os.environ.get('SPACK_PR_BRANCH', None)
     pr_mirror_url = None
@@ -1073,7 +1072,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             'SPACK_JOB_LOG_DIR': rel_job_log_dir,
             'SPACK_JOB_REPRO_DIR': rel_job_repro_dir,
             'SPACK_LOCAL_MIRROR_DIR': rel_local_mirror_dir,
-            'SPACK_IS_PR_PIPELINE': str(is_pr_pipeline)
+            'SPACK_PIPELINE_TYPE': str(spack_pipeline_type)
         }
 
         if pr_mirror_url:

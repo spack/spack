@@ -612,14 +612,14 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
-            os.environ['SPACK_IS_PR_PIPELINE'] = 'True'
+            os.environ['SPACK_PIPELINE_TYPE'] = 'spack_pull_request'
             os.environ['SPACK_PR_BRANCH'] = 'fake-test-branch'
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
             try:
                 ci_cmd('generate', '--output-file', outputfile)
             finally:
-                del os.environ['SPACK_IS_PR_PIPELINE']
+                del os.environ['SPACK_PIPELINE_TYPE']
                 del os.environ['SPACK_PR_BRANCH']
 
         with open(outputfile) as f:
@@ -630,8 +630,8 @@ spack:
 
             assert('variables' in yaml_contents)
             pipeline_vars = yaml_contents['variables']
-            assert('SPACK_IS_PR_PIPELINE' in pipeline_vars)
-            assert(pipeline_vars['SPACK_IS_PR_PIPELINE'] == 'True')
+            assert('SPACK_PIPELINE_TYPE' in pipeline_vars)
+            assert(pipeline_vars['SPACK_PIPELINE_TYPE'] == 'spack_pull_request')
 
 
 def test_ci_generate_with_external_pkg(tmpdir, mutable_mock_env_path,
@@ -779,7 +779,7 @@ spack:
         set_env_var('SPACK_CDASH_BUILD_NAME', '(specs) archive-files')
         set_env_var('SPACK_RELATED_BUILDS_CDASH', '')
         set_env_var('SPACK_REMOTE_MIRROR_URL', mirror_url)
-        set_env_var('SPACK_IS_DEVELOP_PIPELINE', 'True')
+        set_env_var('SPACK_PIPELINE_TYPE', 'spack_protected_branch')
 
         ci_cmd('rebuild', fail_on_error=False)
 
