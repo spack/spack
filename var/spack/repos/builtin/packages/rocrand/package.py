@@ -38,6 +38,7 @@ class Rocrand(CMakePackage):
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocminfo@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
     for ver in ['4.1.0', '4.2.0']:
         depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
 
