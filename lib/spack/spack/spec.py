@@ -2546,7 +2546,6 @@ class Spec(object):
         # take the best answer
         opt, i, answer = min(result.answers)
         name = self.name
-        print('my external path', self, self.external_path)
         # TODO: Consolidate this code with similar code in solve.py
         if self.virtual:
             providers = [spec.name for spec in answer.values()
@@ -2556,7 +2555,6 @@ class Spec(object):
         assert name in answer
 
         concretized = answer[name]
-        print('conc answer', concretized, concretized.external_path)
         self._dup(concretized)
         self._mark_concrete()
 
