@@ -196,8 +196,7 @@ def ci_rebuild(args):
     compiler_action = get_env_var('SPACK_COMPILER_ACTION')
     cdash_build_name = get_env_var('SPACK_CDASH_BUILD_NAME')
     related_builds = get_env_var('SPACK_RELATED_BUILDS_CDASH')
-    pr_env_var = get_env_var('SPACK_IS_PR_PIPELINE')
-    dev_env_var = get_env_var('SPACK_IS_DEVELOP_PIPELINE')
+    spack_pipeline_type = get_env_var('SPACK_PIPELINE_TYPE')
     pr_mirror_url = get_env_var('SPACK_PR_MIRROR_URL')
     remote_mirror_url = get_env_var('SPACK_REMOTE_MIRROR_URL')
 
@@ -242,8 +241,11 @@ def ci_rebuild(args):
 
     # Is this a pipeline run on a spack PR or a merge to develop?  It might
     # be neither, e.g. a pipeline run on some environment repository.
-    spack_is_pr_pipeline = True if pr_env_var == 'True' else False
-    spack_is_develop_pipeline = True if dev_env_var == 'True' else False
+    spack_is_pr_pipeline = spack_pipeline_type == 'spack_pull_request'
+    spack_is_develop_pipeline = spack_pipeline_type == 'spack_protected_branch'
+
+    tty.debug('Pipeline type - PR: {0}, develop: {1}'.format(
+        spack_is_pr_pipeline, spack_is_develop_pipeline))
 
     # Figure out what is our temporary storage mirror: Is it artifacts
     # buildcache?  Or temporary-storage-url-prefix?  In some cases we need to
@@ -495,10 +497,13 @@ def ci_rebuild(args):
     # list of known broken full hashes.  This allows spack PR pipelines to
     # avoid wasting compute cycles attempting to build those hashes.
     if install_exit_code != 0 and spack_is_develop_pipeline:
+        tty.debug('Install failed on develop')
         if 'broken-specs-url' in gitlab_ci:
             broken_specs_url = gitlab_ci['broken-specs-url']
             dev_fail_hash = job_spec.full_hash()
             broken_spec_path = url_util.join(broken_specs_url, dev_fail_hash)
+            tty.msg('Reporting broken develop build as: {0}'.format(
+                broken_spec_path))
             tmpdir = tempfile.mkdtemp()
             empty_file_path = os.path.join(tmpdir, 'empty.txt')
 
