@@ -20,4 +20,3 @@ class Hohqmesh(CMakePackage):
     depends_on('ftobjectlibrary')
 
     parallel = False
-
