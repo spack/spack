@@ -10,7 +10,6 @@ from six.moves import zip_longest
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
-from spack.util.string import comma_and
 from llnl.util.tty.colify import colify
 
 import spack.cmd.common.arguments as arguments
