@@ -79,14 +79,14 @@ class Ipopt(AutotoolsPackage):
 
         if spec.satisfies('@:3.12.10'):
             args.extend([
-                "--with-lapack-lib={}".format(lapack_lib),
-                "--with-lapack-incdir={}".format(lapack_dir.include),
-                "--with-blas-lib={}".format(blas_lib),
-                "--with-blas-incdir={}".format(blas_dir.include),
+                "--with-lapack-lib={0}".format(lapack_lib),
+                "--with-lapack-incdir={0}".format(lapack_dir.include),
+                "--with-blas-lib={0}".format(blas_lib),
+                "--with-blas-incdir={0}".format(blas_dir.include),
             ])
         else:
             args.extend([
-                "--with-lapack-lflags={} {}".format(lapack_lib, blas_lib),
+                "--with-lapack-lflags={0} {1}".format(lapack_lib, blas_lib),
             ])
 
         if '+mumps' in spec:
