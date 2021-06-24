@@ -5,7 +5,6 @@
 
 import shutil
 import sys
-import os
 
 
 class Hdf5(CMakePackage):
