@@ -98,7 +98,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     depends_on('spfft@0.9.6: +mpi', when='@6.4.0:')
     depends_on('spfft@0.9.13:', when='@7.0.1:')
-    depends_on('spfft@0.9.13: +single_precision', when='@7.2.5: +single_precision')
+    depends_on('spfft +single_precision', when='+single_precision ^spfft')
     depends_on('spfft+cuda', when='+cuda ^spfft')
     depends_on('spfft+rocm', when='+rocm ^spfft')
     depends_on('spfft+openmp', when='+openmp ^spfft')
