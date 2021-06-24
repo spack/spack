@@ -285,7 +285,6 @@ class Hdf5(CMakePackage):
         # sanity check in configure, so this doesn't merit a variant.
         args = [
             self.define('ALLOW_UNSUPPORTED', True),
-            self.define('BUILD_TESTING', self.run_tests),
             self.define('HDF5_ENABLE_Z_LIB_SUPPORT', True),
             self.define_from_variant('HDF5_ENABLE_SZIP_SUPPORT', 'szip'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
