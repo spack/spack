@@ -39,7 +39,7 @@ class PyDatasets(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.17:', type=('build', 'run'))
-    depends_on('py-pyarrow@1.0.0:3.999', type=('build', 'run'))
+    depends_on('py-pyarrow@1.0.0:3.999+parquet', type=('build', 'run'))
     depends_on('py-dill', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-requests@2.19:', type=('build', 'run'))
