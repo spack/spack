@@ -1,0 +1,25 @@
+From 5029f8665190879285787a9dcdaf5f997cadd2e2 Mon Sep 17 00:00:00 2001
+From: Boris Kolpackov <boris@codesynthesis.com>
+Date: Fri, 23 Oct 2015 15:40:35 +0200
+Subject: Add missing #include
+
+---
+ xsd-frontend/semantic-graph/elements.cxx | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/libxsd-frontend/xsd-frontend/semantic-graph/elements.cxx b/libxsd-frontend/xsd-frontend/semantic-graph/elements.cxx
+index fa48a9a..3159906 100644
+--- a/libxsd-frontend/xsd-frontend/semantic-graph/elements.cxx
++++ b/libxsd-frontend/xsd-frontend/semantic-graph/elements.cxx
+@@ -3,6 +3,7 @@
+ // license   : GNU GPL v2 + exceptions; see accompanying LICENSE file
+ 
+ #include <algorithm>
++#include <iostream>
+ 
+ #include <cutl/compiler/type-info.hxx>
+ 
+-- 
+cgit v1.1
+
+
