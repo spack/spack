@@ -10,6 +10,7 @@ from six.moves import zip_longest
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
+from spack.util.string import comma_and
 from llnl.util.tty.colify import colify
 
 import spack.cmd.common.arguments as arguments
@@ -156,25 +157,21 @@ def print_text_info(pkg):
         color.cprint(section_title('Maintainers: ') + mnt)
 
     color.cprint('')
-    color.cprint(section_title('Externally Findable: '))
-    find_method = ''
+    color.cprint(section_title('Externally Detectable: '))
     if hasattr(pkg, 'executables'):
-        find_method += 'executables'
+        find_attributes = []
+        if hasattr(pkg, 'determine_version'):
+            find_attributes.append('version')
 
-    if hasattr(pkg, 'determine_version'):
-        find_method += ', ' if len(find_method) > 0 else ''
-        find_method += 'version'
+        if hasattr(pkg, 'determine_variants'):
+            find_attributes.append('variants')
 
-    if hasattr(pkg, 'determine_variants'):
-        find_method += ', ' if len(find_method) > 0 else ''
-        find_method += 'variants'
+        if hasattr(pkg, 'determine_spec_details'):
+            find_attributes.append('custom')
 
-    # What to do with this?
-    # if hasattr(pkg, 'determine_spec_details'):
-    #     find_method += ', ' if len(find_method) > 0 else ''
-    #     find_method += 'custom'
-
-    color.cprint('    {0}'.format(find_method if len(find_method) > 0 else 'False'))
+        color.cprint('    {0}'.format(comma_and(find_attributes)))
+    else:
+        color.cprint('    False')
 
     color.cprint('')
     color.cprint(section_title("Tags: "))
