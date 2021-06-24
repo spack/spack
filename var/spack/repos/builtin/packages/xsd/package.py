@@ -21,7 +21,7 @@ class Xsd(MakefilePackage):
     depends_on('xerces-c')
     depends_on('libtool', type='build')
 
-    patch('fix_include_ostream.patch')
+    patch('fix_include_iostream.patch')
 
     def install(self, spec, prefix):
         make('install', 'install_prefix=' + prefix)
