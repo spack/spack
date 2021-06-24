@@ -156,6 +156,32 @@ def print_text_info(pkg):
         color.cprint(section_title('Maintainers: ') + mnt)
 
     color.cprint('')
+    color.cprint(section_title('Externally Findable: '))
+    find_method = ''
+    is_findable = False
+    if hasattr(pkg, 'executables'):
+        is_findable = True
+        find_method += 'executables'
+
+    if hasattr(pkg, 'determine_version'):
+        is_findable = True
+        find_method += ', ' if len(find_method) > 0 else ''
+        find_method += 'version'
+
+    if hasattr(pkg, 'determine_variants'):
+        is_findable = True
+        find_method += ', ' if len(find_method) > 0 else ''
+        find_method += 'variants'
+
+    # What to do with this?
+    # if hasattr(pkg, 'determine_spec_details'):
+    #     is_findable = True
+    #     find_method += ', ' if len(find_method) > 0 else ''
+    #     find_method += 'custom'
+
+    color.cprint('    {0}'.format(find_method if len(find_method) > 0 else 'False'))
+
+    color.cprint('')
     color.cprint(section_title("Tags: "))
     if hasattr(pkg, 'tags'):
         tags = sorted(pkg.tags)
