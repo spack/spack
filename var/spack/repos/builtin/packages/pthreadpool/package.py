@@ -13,6 +13,12 @@ class Pthreadpool(CMakePackage):
     git      = "https://github.com/Maratyszcza/pthreadpool.git"
 
     version('master', branch='master')
+    version('2021-04-13', commit='a134dd5d4cee80cce15db81a72e7f929d71dd413')  # py-torch@1.9
+    version('2020-10-05', commit='fa75e65a58a5c70c09c30d17a1fe1c1dff1093ae')  # py-torch@1.8
+    version('2020-06-15', commit='029c88620802e1361ccf41d1970bd5b07fd6b7bb')  # py-torch@1.6:1.7
+    version('2019-10-29', commit='d465747660ecf9ebbaddf8c3db37e4a13d0c9103')  # py-torch@1.5
+    version('2018-10-08', commit='13da0b4c21d17f94150713366420baaf1b5a46f4')  # py-torch@1.0:1.4
+    version('2018-02-25', commit='2b06b31f6a315162348e1f3c24325eedaf6cc559')  # py-torch@:0.4
 
     depends_on('cmake@3.5:', type='build')
     depends_on('ninja', type='build')

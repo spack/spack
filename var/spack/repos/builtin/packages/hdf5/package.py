@@ -185,7 +185,7 @@ class Hdf5(AutotoolsPackage):
 
         # Quiet warnings/errors about implicit declaration of functions in C99
         if name == "cflags":
-            if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
+            if "%clang" in self.spec or "%gcc" in self.spec:
                 flags.append("-Wno-implicit-function-declaration")
 
         return (None, None, flags)
