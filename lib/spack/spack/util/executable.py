@@ -281,15 +281,17 @@ def which_string(*args, **kwargs):
         path = path.split(os.pathsep)
 
     for name in args:
+        if sys.platform == "win32":
+            name += '.exe'
         if os.path.sep in name:
             exe = os.path.abspath(name)
             if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                return exe
+                return exe.replace('\\', '/')
         else:
             for directory in path:
                 exe = os.path.join(directory, name)
                 if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                    return exe
+                    return exe.replace('\\', '/')
 
     if required:
         raise CommandNotFoundError(
