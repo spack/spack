@@ -6,7 +6,6 @@
 from spack import *
 import os
 
-
 class Ampl(Package):
     """AMPL integrates a modeling language for describing optimization data, variables,
     objectives, and constraints; a command language for debugging models and analyzing
@@ -51,9 +50,7 @@ class Ampl(Package):
         env.prepend_path("PATH", self.prefix)
         env.prepend_path("PATH", join_path(self.prefix, 'amplide'))
 
-
     def install(self, spec, prefix):
-
         install_tree('.', prefix)
         install_tree('amplapi', prefix)
         install_tree('amplide', prefix)
