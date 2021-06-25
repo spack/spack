@@ -24,9 +24,10 @@ class Melissa(CMakePackage):
     variant('shared', default=True, description="Build shared libraries")
 
     depends_on('cmake@3.7.2:', type='build')
-    depends_on('libzmq')
+    depends_on('libzmq@4.1.5:')
     depends_on('mpi')
     depends_on('pkgconfig', type='build')
+    depends_on('python@3.5.3:', type=('build', 'run'))
     depends_on('py-numpy')
 
     def cmake_args(self):
