@@ -237,9 +237,11 @@ def store_path():
                'Use "spack bootstrap enable" to enable it')
         raise RuntimeError(msg)
 
+    # If the configuration returns an explicit None, make sure
+    # to fall-back to the default value
     bootstrap_root_path = spack.config.get(
-        'bootstrap:root', spack.paths.user_bootstrap_path
-    )
+        'bootstrap:root'
+    ) or spack.paths.user_bootstrap_path
     bootstrap_store_path = spack.util.path.canonicalize_path(
         os.path.join(bootstrap_root_path, 'store')
     )
