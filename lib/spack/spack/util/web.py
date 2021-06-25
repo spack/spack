@@ -607,6 +607,7 @@ def find_versions_of_archive(
     # Any conflicting versions will be overwritten by the list_url links.
     versions = {}
     for url in archive_urls + sorted(links):
+        url = url.replace("\\", "/")
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)
