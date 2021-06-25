@@ -79,6 +79,64 @@ _versions = {
         'Linux-x86_64': ('f3e527f34f317314fe8fcd8c85f10560729069298c0f73105ba89225db69da48', 'http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run')},
 }
 
+# Note: entries must be either comma-separated list of individual supported compiler versions, or a single supported range.
+_supported_compilers = {
+  '8.0': {'pgi': '16', 'xl': '13.1', 'gcc': ':5'},
+  '9.0': {'pgi': '17', 'xl': '13.1', 'gcc': ':6'},
+  '9.1': {'pgi': '17', 'xl': '13.1,14.1', 'gcc': ':6'},
+  '9.2': {'pgi': '17:18', 'xl': '13.1,16.1', 'gcc': ':7'},
+  '10.0': {'pgi': '18', 'xl': '13.1,16.1', 'gcc': ':7'},
+  '10.1': {'pgi': '18:19', 'xl': '13.1,16.1', 'gcc': ':8', 'clang': '3.2:7'},
+  '10.2': {'pgi': '18:19', 'xl': '13.1,16.1', 'gcc': ':8', 'clang': '3.2:8'},
+  '11.0': {'pgi': '18:20', 'xl': '13.1,16.1', 'gcc': ':9', 'clang': '3.2:9'},
+  '11.1': {'pgi': '18:20', 'xl': '13.1,16.1', 'gcc': ':10', 'clang': '3.2:10'},
+  '11.2': {'pgi': '18:21', 'xl': '13.1,16.1', 'gcc': ':10', 'clang': '3.2:11'},
+  '11.3': {'pgi': '18:21', 'xl': '13.1,16.1', 'gcc': ':10', 'clang': '3.2:11'},
+  }
+
+# Helper function to "invert" support strings for conflict statements.
+# For example:
+#   input range: invert_support_entry('18:21') -> [':17', '22:']
+#   input list: invert_support_entry('13.1,16.1') -> [':13.0', '13.2:16.0', '16.2:']
+def invert_support_entry(entry):
+    def minus_version(ver_string):
+        ver = [int(x) for x in ver_string.split('.')]
+        ver[-1] -= 1
+        return '.'.join([str(x) for x in ver])
+
+    def plus_version(ver_string):
+        ver = [int(x) for x in ver_string.split('.')]
+        ver[-1] += 1
+        return '.'.join([str(x) for x in ver])
+
+    ret = []
+    if ":" in entry:
+        ver_range = entry.split(':')
+        min_ver, max_ver = ver_range
+        if min_ver:
+            ret.append(":"+"{}".format(minus_version(min_ver)))
+        if max_ver:
+            ret.append("{}".format(plus_version(max_ver)) + ":")
+    elif "," in entry:
+        ver_list = entry.split(',')
+        # Sort version list strings by float value
+        _, ver_list = zip(*sorted(zip([float(x) for x in ver_list], ver_list)))
+
+        # Generate all ranges
+        tmp = []
+        for x in ver_list:
+            tmp.append(":"+"{}".format(minus_version(x)))
+            tmp.append("{}".format(plus_version(x)) + ":")
+
+        # Merge any inner ranges
+        ret.append(tmp[0])
+        for i in range(1, len(tmp)-1, 2):
+            low = tmp[i][:-1]
+            hi = tmp[i+1][1:]
+            if float(low) <= float(hi):
+                ret.append(tmp[i][:-1] + tmp[i+1])
+        ret.append(tmp[-1])
+    return ret
 
 class Cuda(Package):
     """CUDA is a parallel computing platform and programming model invented
@@ -120,6 +178,24 @@ class Cuda(Package):
 
     provides('opencl@:1.2', when='@7:')
     provides('opencl@:1.1', when='@:6')
+
+    # Set host compiler version conflicts
+    compiler_list = ['clang', 'gcc', 'pgi', 'xl']
+    for ver, _ in _versions.items():
+        ver_key = ver.rsplit('.', 1)[0]
+        compilers = _supported_compilers.get(ver_key)
+        if compilers:
+            for c in compiler_list:
+                support_entry = compilers.get(c)
+                if support_entry:
+                    for x in invert_support_entry(support_entry):
+                        conflicts('%{}@{}'.format(c, x), when='@{}'.format(ver_key),
+                                   msg='{} version is not within supported range ({}) for CUDA {}.'.format(c, support_entry, ver))
+                        # Add nvhpc alias for pgi
+                        if c == 'pgi':
+                            conflicts('%nvhpc@{}'.format(x), when='@{}'.format(ver_key),
+                                      msg='nvhpc version is not within supported range ({}) for CUDA {}.'.format(support_entry, ver))
+
 
     @classmethod
     def determine_version(cls, exe):
