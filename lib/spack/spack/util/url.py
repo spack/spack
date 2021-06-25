@@ -10,9 +10,11 @@ Utility functions for parsing, formatting, and manipulating URLs.
 import itertools
 import os.path
 import re
+import sys
 
 import six.moves.urllib.parse as urllib_parse
 from six import string_types
+from six.moves.urllib.request import url2pathname
 
 import spack.util.path
 
@@ -70,6 +72,8 @@ def parse(url, scheme='file'):
     scheme = (scheme or 'file').lower()
 
     if scheme == 'file':
+        if sys.platform == "win32":
+            path = url2pathname(path)
         path = spack.util.path.canonicalize_path(netloc + path)
         path = re.sub(r'^/+', '/', path)
         netloc = ''
