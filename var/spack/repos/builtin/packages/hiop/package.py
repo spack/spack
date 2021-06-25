@@ -17,15 +17,18 @@ class Hiop(CMakePackage, CudaPackage):
     git = "https://github.com/LLNL/hiop.git"
 
     # Most recent tagged snapshot is the preferred version when profiling.
-    version('0.4.1', tag='v0.4.1')
-    version('0.4', tag='v0.4')
-    version('0.3.99.3', tag='v0.3.99.3')
-    version('0.3.99.2', tag='v0.3.99.2')
-    version('0.3.99.1', tag='v0.3.99.1')
-    version('0.3.99.0', tag='v0.3.99.0')
-    version('0.3', tag='v0.3')
-    version('0.2', tag='v0.2')
-    version('0.1', tag='v0.1')
+    version('0.4.4', commit='e858eefa6b914f5c87c3717bbce811931ea69386')
+    version('0.4.3', commit='c0394af4d84ebb84b7d2b95283ad65ffd84e0d45')
+    version('0.4.2', commit='3fcb788d223eec24c0241680070c4a9a5ec71ef3')
+    version('0.4.1', commit='3f269560f76d5a89bcbd1d3c4f9f0e5acaa6fd64')
+    version('0.4', commit='91d21085a1149eacdb27cd738d4a74a7e412fcff')
+    version('0.3.99.3', commit='bed1dbef260e53a9d139ccfb77d2e83a98aab216')
+    version('0.3.99.2', commit='9eb026768bc5e0a2c1293d0487cc39913001ae19')
+    version('0.3.99.1', commit='220e32c0f318665d6d394ca3cd0735b9d26a65eb')
+    version('0.3.99.0', commit='589b9c76781447108fa55788d5fa1b83ff71a3d1')
+    version('0.3', commit='7e8adae9db757aed48e5c2bc448316307598258f')
+    version('0.2', commit='c52a6f6b9baaaa2d7f233a749aa98f901349723f')
+    version('0.1', commit='5f60e11b79d532115fb41694378b54c9c707aad9')
 
     # Development branches
     version('master', branch='master')

@@ -549,9 +549,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     generate_job_name = os.environ.get('CI_JOB_NAME', None)
     parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', None)
 
-    is_pr_pipeline = (
-        os.environ.get('SPACK_IS_PR_PIPELINE', '').lower() == 'true'
-    )
+    spack_pipeline_type = os.environ.get('SPACK_PIPELINE_TYPE', None)
+    is_pr_pipeline = spack_pipeline_type == 'spack_pull_request'
 
     spack_pr_branch = os.environ.get('SPACK_PR_BRANCH', None)
     pr_mirror_url = None
@@ -706,14 +705,17 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 root_spec = spec_record['rootSpec']
                 pkg_name = pkg_name_from_spec_label(spec_label)
                 release_spec = root_spec[pkg_name]
+                release_spec_full_hash = release_spec.full_hash()
+                release_spec_dag_hash = release_spec.dag_hash()
+                release_spec_build_hash = release_spec.build_hash()
 
                 # Check if this spec is in our list of known failures.
                 if broken_specs_url:
-                    full_hash = release_spec.full_hash()
-                    broken_spec_path = url_util.join(broken_specs_url, full_hash)
+                    broken_spec_path = url_util.join(
+                        broken_specs_url, release_spec_full_hash)
                     if web_util.url_exists(broken_spec_path):
                         known_broken_specs_encountered.append('{0} ({1})'.format(
-                            release_spec, full_hash))
+                            release_spec, release_spec_full_hash))
 
                 runner_attribs = find_matching_config(
                     release_spec, gitlab_ci)
@@ -775,7 +777,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 job_vars = {
                     'SPACK_ROOT_SPEC': format_root_spec(
                         root_spec, main_phase, strip_compilers),
-                    'SPACK_JOB_SPEC_DAG_HASH': release_spec.dag_hash(),
+                    'SPACK_JOB_SPEC_DAG_HASH': release_spec_dag_hash,
+                    'SPACK_JOB_SPEC_BUILD_HASH': release_spec_build_hash,
+                    'SPACK_JOB_SPEC_FULL_HASH': release_spec_full_hash,
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action
                 }
@@ -1068,7 +1072,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             'SPACK_JOB_LOG_DIR': rel_job_log_dir,
             'SPACK_JOB_REPRO_DIR': rel_job_repro_dir,
             'SPACK_LOCAL_MIRROR_DIR': rel_local_mirror_dir,
-            'SPACK_IS_PR_PIPELINE': str(is_pr_pipeline)
+            'SPACK_PIPELINE_TYPE': str(spack_pipeline_type)
         }
 
         if pr_mirror_url:

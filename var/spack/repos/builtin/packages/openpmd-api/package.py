@@ -62,10 +62,10 @@ class OpenpmdApi(CMakePackage):
     depends_on('python@3.6:', when='+python', type=['link', 'test', 'run'])
 
     conflicts('^hdf5 api=v16', msg='openPMD-api requires HDF5 APIs for 1.8+')
-    # compatibility macros are unclear:
-    # https://github.com/HDFGroup/hdf5/issues/754
-    conflicts('^hdf5@1.12: api=v18')
-    conflicts('^hdf5@1.12: api=v110')
+
+    # Fix breaking HDF5 1.12.0 API when build with legacy api options
+    # https://github.com/openPMD/openPMD-api/pull/1012
+    patch('hdf5-1.12.0.patch', when='@:0.13.99 +hdf5')
 
     extends('python', when='+python')
 

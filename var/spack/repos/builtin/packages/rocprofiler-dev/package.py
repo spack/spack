@@ -28,9 +28,9 @@ class RocprofilerDev(CMakePackage):
     depends_on('cmake@3:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('rocminfo@' + ver, type='build', when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('rocminfo@' + ver, when='@' + ver)
 
     resource(name='roctracer-dev',
              url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-3.5.0.tar.gz',
