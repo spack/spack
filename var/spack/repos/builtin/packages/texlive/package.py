@@ -228,22 +228,11 @@ class Texlive(AutotoolsPackage):
     @classmethod
     def determine_version(cls, exe):
         # https://askubuntu.com/questions/100406/finding-the-tex-live-version
-        # I do not know how to use the global self.releases in this context so I build
-        # a string that shall have to be updated at the same time.
-        # BTW I added two older releases (2017 is Ubuntu 18.04)
-        releases = [
-            {
-                'version': '20210325',
-                'year': '2021',
-            },
-            {
-                'version': '20200406',
-                'year': '2020',
-            },
-            {
-                'version': '20190410',
-                'year': '2019',
-            },
+        # Thanks to @michaelkuhn that told how to reuse the package releases
+        # variable.
+        # Added 3 older releases: 2018 (CentOS-8), 2017 (Ubuntu-18.04), 2013 (CentOS-7).
+        releases = cls.releases
+        releases.extend([
             {
                 'version': '20180414',
                 'year': '2018',
@@ -252,10 +241,16 @@ class Texlive(AutotoolsPackage):
                 'version': '20170524',
                 'year': '2017',
             },
-        ]
+            {
+                'version': '20130530',
+                'year': '2013',
+            },
+        ])
+        # tex indicates the year only
         output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'TeX Live (\d+)', output)
         ver = match.group(1) if match else None
+        # We search for the repo actual release
         if ver is not None:
             for release in releases:
                 year = release['year']
