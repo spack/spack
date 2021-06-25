@@ -114,6 +114,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-typing', when='@0.4: ^python@:3.4', type=('build', 'run'))
     depends_on('py-typing-extensions', when='@1.7:', type=('build', 'run'))
+    depends_on('py-pybind11@master', when='@master', type=('build', 'link', 'run'))
     depends_on('py-pybind11@2.6.2', when='@1.8.0:1.9.999', type=('build', 'link', 'run'))
     depends_on('py-pybind11@2.3.0', when='@1.1.0:1.7.999', type=('build', 'link', 'run'))
     depends_on('py-pybind11@2.2.4', when='@1.0.0:1.0.999', type=('build', 'link', 'run'))
@@ -130,9 +131,9 @@ class PyTorch(PythonPackage, CudaPackage):
     # depends_on('cpuinfo@2020-12-17', when='@1.8.0:1.9.999')
     # depends_on('cpuinfo@2020-06-11', when='@1.6.0:1.7.999')
     depends_on('sleef@master', when='@master')
-    depends_on('sleef@2020-12-22', when='@1.8.0:1.9.999')
+    depends_on('sleef@3.5.1_2020-12-22', when='@1.8.0:1.9.999')
     # https://github.com/pytorch/pytorch/issues/60334
-    # depends_on('sleef@2019-07-30', when='@1.6.0:1.7.999')
+    # depends_on('sleef@3.4.0_2019-07-30', when='@1.6.0:1.7.999')
     depends_on('fp16@master', when='@master')
     depends_on('fp16@2020-05-14', when='@1.6.0:1.9.999')
     depends_on('pthreadpool@master', when='@master')
@@ -168,13 +169,21 @@ class PyTorch(PythonPackage, CudaPackage):
     # depends_on('gloo@2020-09-18', when='@1.7.0:1.8.999+gloo')
     # depends_on('gloo@2020-03-17', when='@1.6.0:1.6.999+gloo')
     # https://github.com/pytorch/pytorch/issues/60331
-    # depends_on('onnx', when='@1.6:+onnx_ml')
+    # depends_on('onnx@master', when='@master+onnx_ml')
+    # depends_on('onnx@1.8.0_2020-11-03', when='@1.8.0:1.9.999+onnx_ml')
+    # depends_on('onnx@1.7.0_2020-05-31', when='@1.6.0:1.7.999+onnx_ml')
     depends_on('mkl', when='+mkldnn')
 
     # Test dependencies
     depends_on('py-hypothesis', type='test')
     depends_on('py-six', type='test')
     depends_on('py-psutil', type='test')
+
+    # Fix BLAS being overridden by MKL
+    # https://github.com/pytorch/pytorch/issues/60328
+    patch('https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/59220.patch',
+          sha256='e37afffe45cf7594c22050109942370e49983ad772d12ebccf508377dc9dcfc9',
+          when='@1.2.0:')
 
     # Fixes build on older systems with glibc <2.12
     patch('https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/55063.patch',
@@ -343,28 +352,33 @@ class PyTorch(PythonPackage, CudaPackage):
             env.set('PYTORCH_BUILD_NUMBER', 0)
 
         # BLAS to be used by Caffe2
-        # Options defined in cmake/Dependencies.cmake
-        # Note that if +mkldnn is chosen, BLAS must be MKL
-        # https://github.com/pytorch/pytorch/issues/60328
+        # Options defined in cmake/Dependencies.cmake and cmake/Modules/FindBLAS.cmake
         if self.spec['blas'].name == 'atlas':
             env.set('BLAS', 'ATLAS')
+            env.set('WITH_BLAS', 'atlas')
         elif self.spec['blas'].name in ['blis', 'amdblis']:
             env.set('BLAS', 'BLIS')
+            env.set('WITH_BLAS', 'blis')
         elif self.spec['blas'].name == 'eigen':
             env.set('BLAS', 'Eigen')
         elif self.spec['lapack'].name in ['libflame', 'amdlibflame']:
             env.set('BLAS', 'FLAME')
+            env.set('WITH_BLAS', 'FLAME')
         elif self.spec['blas'].name in [
                 'intel-mkl', 'intel-parallel-studio', 'intel-oneapi-mkl']:
             env.set('BLAS', 'MKL')
+            env.set('WITH_BLAS', 'mkl')
         elif self.spec['blas'].name == 'openblas':
             env.set('BLAS', 'OpenBLAS')
+            env.set('WITH_BLAS', 'open')
         elif self.spec['blas'].name == 'veclibfort':
             env.set('BLAS', 'vecLib')
+            env.set('WITH_BLAS', 'veclib')
         else:
             env.set('BLAS', 'Generic')
+            env.set('WITH_BLAS', 'generic')
 
-        # Don't use vendored third-party libraries
+        # Don't use vendored third-party libraries when possible
         env.set('BUILD_CUSTOM_PROTOBUF', 'OFF')
         env.set('USE_SYSTEM_NCCL', 'ON')
         env.set('USE_SYSTEM_EIGEN_INSTALL', 'ON')
