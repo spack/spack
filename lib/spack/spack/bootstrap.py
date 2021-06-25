@@ -234,12 +234,12 @@ def store_path():
     enabled = spack.config.get('bootstrap:enable', True)
     if not enabled:
         msg = ('bootstrapping is currently disabled. '
-               'Modify config.yaml to enable it')
+               'Use "spack bootstrap enable" to enable it')
         raise RuntimeError(msg)
 
     bootstrap_root_path = spack.config.get(
-        'bootstrap:root', None
-    ) or spack.paths.user_bootstrap_path
+        'bootstrap:root', spack.paths.user_bootstrap_path
+    )
     bootstrap_store_path = spack.util.path.canonicalize_path(
         os.path.join(bootstrap_root_path, 'store')
     )

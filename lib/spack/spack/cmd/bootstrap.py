@@ -51,17 +51,9 @@ def setup_parser(subparser):
 
 
 def _enable_or_disable(args):
-    _config = spack.main.SpackCommand('config')
-
     # Set to True if we called "enable", otherwise set to false
-    value = str(args.subcommand == 'enable').lower()
-    scope, config_args = args.scope, []
-    if scope:
-        config_args.append('--scope={0}'.format(scope))
-    config_args.extend([
-        'add', 'bootstrap:enable:{0}'.format(value)
-    ])
-    _config(*config_args)
+    value = args.subcommand == 'enable'
+    spack.config.set('bootstrap:enable', value, scope=args.scope)
 
 
 def _reset(args):
