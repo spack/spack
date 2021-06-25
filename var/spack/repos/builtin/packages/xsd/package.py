@@ -21,6 +21,7 @@ class Xsd(MakefilePackage):
     depends_on('xerces-c')
     depends_on('libtool', type='build')
 
+    # Adds a missing include for <iostream> in a source file
     patch('fix_include_iostream.patch')
 
     def install(self, spec, prefix):
