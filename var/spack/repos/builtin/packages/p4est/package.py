@@ -48,8 +48,9 @@ class P4est(AutotoolsPackage):
           when='@2.0')
 
     def autoreconf(self, spec, prefix):
-        bootstrap = Executable('./bootstrap')
-        bootstrap()
+        if self.spec.satisfies('@:2.2'):
+            bootstrap = Executable('./bootstrap')
+            bootstrap()
 
     def configure_args(self):
         args = [
