@@ -7,6 +7,7 @@ class Libuv(AutotoolsPackage):
     homepage = "http://libuv.org"
     url = "https://github.com/libuv/libuv/archive/v1.9.0.tar.gz"
 
+    version('1.41.0', sha256='6cfeb5f4bab271462b4a2cc77d4ecec847fdbdc26b72019c27ae21509e6f94fa')
     version('1.40.0', sha256='70fe1c9ba4f2c509e8166c0ca2351000237da573bb6c82092339207a9715ba6b')
     version('1.39.0', sha256='dc7b21f1bb7ef19f4b42c5ea058afabe51132d165da18812b70fb319659ba629')
     version('1.38.1', sha256='2177fca2426ac60c20f654323656e843dac4f568d46674544b78f416697bd32c')
@@ -17,6 +18,7 @@ class Libuv(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
+    depends_on('m4', type='build')
 
     # Tries to build an Objective-C file with GCC's C frontend
     # https://github.com/libuv/libuv/issues/2805

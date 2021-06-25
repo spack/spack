@@ -11,10 +11,11 @@ class Migraphx(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX"
     git      = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX.git"
-    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-4.0.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-4.2.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.2.0', sha256='93f22f6c641dde5d7fb8abcbd99621b3c81e332e125a6f3a258d5e4cf2055f55')
     version('4.1.0', sha256='f9b1d2e25cdbaf5d0bfb07d4c8ccef0abaa291757c4bce296c3b5b9488174045')
     version('4.0.0', sha256='b8b845249626e9169353dbfa2530db468972a7569b248c8118ff19e029a12e55')
     version('3.10.0', sha256='eda22b9af286afb7806e6b5d5ebb0d612dce87c9bad64ba5176fda1c2ed9c9b7')
@@ -42,15 +43,16 @@ class Migraphx(CMakePackage):
     depends_on('nlohmann-json', type='link')
     depends_on('msgpack-c', type='link')
     depends_on('half@1.12.0', type='link')
-    depends_on('py-pybind11', type='build')
+    depends_on('py-pybind11', type='build', when='@:4.0.0')
     depends_on('py-pybind11@2.6:', type='build', when='@4.1.0:')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocblas@' + ver, type='link', when='@' + ver)
-        depends_on('miopen-hip@' + ver, type='link', when='@' + ver)
+        depends_on('hip@' + ver,                      when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
+        depends_on('rocblas@' + ver,                  when='@' + ver)
+        depends_on('miopen-hip@' + ver,               when='@' + ver)
 
     def cmake_args(self):
         args = [

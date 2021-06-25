@@ -18,7 +18,9 @@ class Vim(AutotoolsPackage):
     homepage = "http://www.vim.org"
     url      = "https://github.com/vim/vim/archive/v8.1.0338.tar.gz"
 
+    version('8.2.2541', sha256='2699dfe87b524169e7390f0b383c406cb77a9fde7431665d3b9b80964d8d5daf')
     version('8.2.1201', sha256='39032fe866f44724b104468038dc9ac4ff2c00a4b18c9a1e2c27064ab1f1143d')
+    version('8.2.0752', sha256='d616945810dac5a1fab2f23b003d22bdecd34861b31f208d5d0012a609821c0f')
     version('8.1.2141', sha256='7be3c3d88a6c871121230ffb9b7371b1d2ab462118dedb967c7265473af1144b')
     version('8.1.0338', sha256='3febcc4e49eaca458be1a1e8055a3a52887aa2054b03e24d5f38d192c3de51a0')
     version('8.1.0001', sha256='c342acaa26589f371fa34a5ca213b95811f26185c12443f8f48ad2868dee2935')
@@ -46,6 +48,8 @@ class Vim(AutotoolsPackage):
 
     variant('cscope', default=False, description="build with cscope support")
     depends_on('cscope', when='+cscope', type='run')
+
+    provides('xxd')
 
     # TODO: Once better support for multi-valued variants is added, add
     # support for auto/no/gtk2/gnome2/gtk3/motif/athena/neXtaw/photon/carbon

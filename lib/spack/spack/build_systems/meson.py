@@ -55,9 +55,8 @@ class MesonPackage(PackageBase):
     variant('buildtype', default='debugoptimized',
             description='Meson build type',
             values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
-    variant('default_library', default='shared',
-            description=' Default library type',
-            values=('shared', 'static', 'both'))
+    variant('default_library', default='shared', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
     variant('strip', default=False, description='Strip targets on install')
 
     depends_on('meson', type='build')
@@ -102,9 +101,11 @@ class MesonPackage(PackageBase):
 
         strip = 'true' if '+strip' in pkg.spec else 'false'
 
-        try:
-            default_library = pkg.spec.variants['default_library'].value
-        except KeyError:
+        if 'libs=static,shared' in pkg.spec:
+            default_library = 'both'
+        elif 'libs=static' in pkg.spec:
+            default_library = 'static'
+        else:
             default_library = 'shared'
 
         args = [

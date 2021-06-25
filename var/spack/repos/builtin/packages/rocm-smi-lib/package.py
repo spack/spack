@@ -14,11 +14,12 @@ class RocmSmiLib(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm_smi_lib"
     git      = "https://github.com/RadeonOpenCompute/rocm_smi_lib.git"
-    url      = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-4.1.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-4.2.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('4.2.0', sha256='c31bf91c492f00d0c5ab21e45afbd7baa990e4a8d7ce9b01e3b988e5fdd53f50')
     version('4.1.0', sha256='0c1d2152e40e14bb385071ae16e7573290fb9f74afa5ab887c54f4dd75849a6b')
     version('4.0.0', sha256='93d19229b5a511021bf836ddc2a9922e744bf8ee52ee0e2829645064301320f4')
     version('3.10.0', sha256='8bb2142640d1c6bf141f19accf809e61377a6e0c0222e47ac4daa5da2c85ddac')
@@ -28,8 +29,15 @@ class RocmSmiLib(CMakePackage):
     version('3.5.0', sha256='a5d2ec3570d018b60524f0e589c4917f03d26578443f94bde27a170c7bb21e6e')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('shared', default=True, description='Build shared or static library')
 
     depends_on('cmake@3:', type='build')
+    depends_on('python@3:', type=('build', 'run'), when='@3.9.0:')
+
+    def cmake_args(self):
+        return [
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
+        ]
 
     @run_after('install')
     def post_install(self):

@@ -16,20 +16,23 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ['ecp', 'e4s']
 
-    version('develop', branch='develop', submodules='True')
-    version('master', branch='main', submodules='True')
-    version('2.3.0', tag='v2.3.0', submodules='True')
-    version('2.1.1', tag='v2.1.1', submodules='True')
-    version('2.1.0', tag='v2.1.0', submodules='True')
-    version('2.0.0', tag='v2.0.0', submodules='True')
-    version('1.2.0', tag='v1.2.0', submodules='True')
-    version('1.1.0', tag='v1.1.0', submodules='True')
-    version('1.0', tag='v1.0', submodules='True')
+    version('develop', branch='develop', submodules=True)
+    version('master', branch='main', submodules=True)
+    version('2.3.0', tag='v2.3.0', submodules=True)
+    version('2.2.2', tag='v2.2.2', submodules=True)
+    version('2.2.1', tag='v2.2.1', submodules=True)
+    version('2.2.0', tag='v2.2.0', submodules=True)
+    version('2.1.1', tag='v2.1.1', submodules=True)
+    version('2.1.0', tag='v2.1.0', submodules=True)
+    version('2.0.0', tag='v2.0.0', submodules=True)
+    version('1.2.0', tag='v1.2.0', submodules=True)
+    version('1.1.0', tag='v1.1.0', submodules=True)
+    version('1.0', tag='v1.0', submodules=True)
 
     variant('enable_pick', default=False, description='Enable pick method')
     variant('shared', default=True, description='Build Shared Libs')
     variant('raja', default=False, description='Build plugin for RAJA')
-    variant('benchmarks', default=True, description='Build benchmarks.')
+    variant('benchmarks', default=False, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
     # TODO: figure out gtest dependency and then set this default True
     # and remove the +tests conflict below.
@@ -38,10 +41,8 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
 
-    depends_on('blt', type='build', when='@2.3.1:')
+    depends_on('blt@0.4.0:', type='build', when='@2.3.1:')
     depends_on('blt@:0.3.6', type='build', when='@:2.3.0')
-    # 0.3.6 + specific fix for rocm
-    depends_on('blt@0.3.6rocm', type='build', when='@:2.3.0+rocm')
 
     depends_on('umpire')
     depends_on('raja', when="+raja")
@@ -96,8 +97,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
             options.extend(['-DENABLE_RAJA_PLUGIN=ON',
                             '-DRAJA_DIR=' + spec['raja'].prefix])
 
-        options.append('-DENABLE_PICK={0}'.format(
-            'ON' if '+enable_pick' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_PICK', 'enable_pick'))
 
         options.append('-Dumpire_DIR:PATH='
                        + spec['umpire'].prefix.share.umpire.cmake)
@@ -105,10 +105,11 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
         options.append('-DENABLE_TESTS={0}'.format(
             'ON' if '+tests' in spec  else 'OFF'))
 
+        options.append(self.define_from_variant('ENABLE_BENCHMARKS', 'benchmarks'))
+
+        options.append(self.define_from_variant('ENABLE_EXAMPLES', 'examples'))
+
         options.append('-DENABLE_BENCHMARKS={0}'.format(
             'ON' if '+benchmarks' in spec else 'OFF'))
-
-        options.append('-DENABLE_EXAMPLES={0}'.format(
-            'ON' if '+examples' in spec else 'OFF'))
 
         return options

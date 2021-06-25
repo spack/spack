@@ -66,8 +66,7 @@ class AoclSparse(CMakePackage):
             args.append("-DCMAKE_BUILD_TYPE=Release")
 
         args.extend([
-            "-DBUILD_SHARED_LIBS:BOOL=%s" % (
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
 
             "-DBUILD_CLIENTS_BENCHMARKS:BOOL=%s" % (
                 'ON' if self.run_tests else 'OFF')
@@ -75,8 +74,7 @@ class AoclSparse(CMakePackage):
 
         if spec.satisfies('@3.0:'):
             args.extend([
-                "-DBUILD_ILP64:BOOL=%s" % (
-                    'ON' if '+ilp64' in spec else 'OFF')
+                self.define_from_variant('BUILD_ILP64', 'ilp64')
             ])
 
         return args

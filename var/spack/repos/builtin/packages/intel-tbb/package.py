@@ -135,6 +135,11 @@ class IntelTbb(Package):
             name = '{0}'.format(version)
         return url.format(name)
 
+    # We set OS here in case the user has it set to something else
+    # that TBB doesn't expect.
+    def setup_build_environment(self, env):
+        env.set('OS', platform.system())
+
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:
             fs = glob.glob(join_path(tbb_build_subdir,

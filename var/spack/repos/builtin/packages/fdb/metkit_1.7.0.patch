@@ -1,0 +1,11 @@
+--- a/src/fdb5/tools/fdb-hammer.cc
++++ b/src/fdb5/tools/fdb-hammer.cc
+@@ -22,7 +22,7 @@
+ #include "eckit/option/SimpleOption.h"
+ #include "eckit/option/VectorOption.h"
+ 
+-#include "metkit/grib/GribHandle.h"
++#include "metkit/codes/GribHandle.h"
+ 
+ #include "fdb5/grib/GribArchiver.h"
+ #include "fdb5/io/HandleGatherer.h"

@@ -13,5 +13,6 @@ class B(Package):
     url      = "http://www.example.com/b-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
+    version('0.9', 'abcd456789abcdef0123456789abcdef')
 
     depends_on('test-dependency', type='test')

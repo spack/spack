@@ -15,7 +15,7 @@ class Magma(CMakePackage, CudaPackage):
 
     homepage = "http://icl.cs.utk.edu/magma/"
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
-    maintainers = ['stomov', 'luszczek']
+    maintainers = ['stomov', 'luszczek', 'G-Ragghianti']
 
     tags = ['ecp', 'e4s']
 
@@ -57,6 +57,7 @@ class Magma(CMakePackage, CudaPackage):
     patch('magma-2.5.0.patch', when='@2.5.0')
     patch('magma-2.5.0-cmake.patch', when='@2.5.0')
     patch('cmake-W.patch', when='@2.5.0:%nvhpc')
+    patch('sm_37.patch', when='@2.5.4 cuda_arch=37')
 
     def cmake_args(self):
         spec = self.spec
@@ -76,6 +77,9 @@ class Magma(CMakePackage, CudaPackage):
         options += ['-DBUILD_SHARED_LIBS=%s' %
                     ('ON' if ('+shared' in spec) else 'OFF')]
 
+        if spec.satisfies('%cce'):
+            options += ['-DCUDA_NVCC_FLAGS=-allow-unsupported-compiler']
+
         if '+fortran' in spec:
             options.extend([
                 '-DUSE_FORTRAN=yes'
@@ -84,6 +88,9 @@ class Magma(CMakePackage, CudaPackage):
                 options.extend([
                     '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77
                 ])
+
+            if spec.satisfies('%cce'):
+                options.append('-DCMAKE_Fortran_FLAGS=-ef')
 
         if spec.satisfies('^cuda'):
             cuda_arch = self.spec.variants['cuda_arch'].value

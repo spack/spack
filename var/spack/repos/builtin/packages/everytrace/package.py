@@ -26,8 +26,7 @@ class Everytrace(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
-        spec = self.spec
         return [
-            '-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
-            '-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO'),
-            '-DUSE_CXX=%s' % ('YES' if '+cxx' in spec else 'NO')]
+            self.define_from_variant('USE_MPI', 'mpi'),
+            self.define_from_variant('USE_FORTRAN', 'fortran'),
+            self.define_from_variant('USE_CXX', 'cxx')]

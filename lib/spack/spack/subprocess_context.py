@@ -65,19 +65,25 @@ class PackageInstallContext(object):
     needs to be transmitted to a child process.
     """
     def __init__(self, pkg):
+        import spack.environment as ev  # break import cycle
         if _serialize:
             self.serialized_pkg = serialize(pkg)
+            self.serialized_env = serialize(ev._active_environment)
         else:
             self.pkg = pkg
+            self.env = ev._active_environment
         self.spack_working_dir = spack.main.spack_working_dir
         self.test_state = TestState()
 
     def restore(self):
+        import spack.environment as ev  # break import cycle
         self.test_state.restore()
         spack.main.spack_working_dir = self.spack_working_dir
         if _serialize:
+            ev._active_environment = pickle.load(self.serialized_env)
             return pickle.load(self.serialized_pkg)
         else:
+            ev._active_environment = self.env
             return self.pkg
 
 

@@ -130,6 +130,19 @@ class Qt(Package):
     patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@8:')
     patch('qt514.patch', when='@5.14')
     patch('qt514-isystem.patch', when='@5.14.2')
+    # https://bugreports.qt.io/browse/QTBUG-90395
+    patch('https://src.fedoraproject.org/rpms/qt5-qtbase/raw/6ae41be8260f0f5403367eb01f7cd8319779674a/f/qt5-qtbase-gcc11.patch',
+          sha256='9378afd071ad5c0ec8f7aef48421e4b9fab02f24c856bee9c0951143941913c5',
+          working_dir='qtbase',
+          when='@5.14: %gcc@11:')
+    patch('https://src.fedoraproject.org/rpms/qt5-qtdeclarative/raw/593481a2541d3218f285dd7b46bdc5f4c76075ab/f/qt5-qtdeclarative-gcc11.patch',
+          sha256='2081e9cb85f6712be9b63c70204efa3da954c07d857283eeae16d1b0409704bd',
+          working_dir='qtdeclarative',
+          when='@5.14: %gcc@11:')
+    patch('https://src.fedoraproject.org/rpms/qt5-qtwebsockets/raw/f54f4ce6fa27941e9e6d606103d32056078edc74/f/qt5-qtwebsockets-gcc11.patch',
+          sha256='84b099109d08adf177adf9d3542b6215ec3e42138041d523860dbfdcb59fdaae',
+          working_dir='qtwebsockets',
+          when='@5.14: %gcc@11:')
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
 
     # Build-only dependencies
@@ -149,7 +162,7 @@ class Qt(Package):
     depends_on("gperf", when='+webkit')
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
-    depends_on("python@2.7.5:2.999", when='@5.14: +webkit', type='build')
+    depends_on("python@2.7.5:2.999", when='+webkit', type='build')
     depends_on("sqlite+column_metadata", when='+sql', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
@@ -167,6 +180,9 @@ class Qt(Package):
     depends_on("double-conversion", when='@5.7:')
     depends_on("pcre2+multibyte", when='@5.9:')
     depends_on("llvm", when='@5.11: +doc')
+
+    # the gl headers are needed to build webkit
+    conflicts('~opengl', when='+webkit')
 
     # gcc@4 is not supported as of Qt@5.14
     # https://doc.qt.io/qt-5.14/supported-platforms.html
@@ -188,7 +204,7 @@ class Qt(Package):
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
     else:
-        conflicts('platform=darwin', when='@4.8.6',
+        conflicts('platform=darwin', when='@:4.8.6',
                   msg="QT 4 for macOS is only patched for 4.8.7")
 
     use_xcode = True
@@ -402,6 +418,13 @@ class Qt(Package):
         with open(conf_file, 'a') as f:
             f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
+    @when('@5.9 platform=darwin')
+    def patch(self):
+        # 'javascriptcore' is in the include path, so its file named 'version'
+        # interferes with the standard library
+        os.unlink(join_path(self.stage.source_path,
+                            'qtscript/src/3rdparty/javascriptcore/version'))
+
     @property
     def common_config_args(self):
         spec = self.spec
@@ -564,13 +587,14 @@ class Qt(Package):
         ])
 
         if MACOS_VERSION:
-            config_args.extend([
-                '-no-xcb-xlib',
-                '-no-pulseaudio',
-                '-no-alsa',
-            ])
+            if version < Version('5.9'):
+                config_args.append('-no-xcb-xlib')
             if version < Version('5.12'):
                 config_args.append('-no-xinput2')
+            if spec.satisfies('@5.9'):
+                # Errors on bluetooth even when bluetooth is disabled...
+                # at least on apple-clang%12
+                config_args.extend(['-skip', 'connectivity'])
         elif version < Version('5.15') and '+gui' in spec:
             # Linux-only QT5 dependencies
             config_args.append('-system-xcb')
@@ -591,6 +615,7 @@ class Qt(Package):
             config_args.extend(['-skip', 'wayland'])
 
         if '~opengl' in spec:
+            config_args.extend(['-skip', 'multimedia'])
             if version >= Version('5.10'):
                 config_args.extend([
                     '-skip', 'webglplugin',
@@ -602,6 +627,14 @@ class Qt(Package):
 
             if version >= Version('5.15'):
                 config_args.extend(['-skip', 'qtlocation'])
+        elif MACOS_VERSION:
+            # These options are only valid if 'multimedia' is enabled, i.e.
+            # +opengl is selected. Force them to be off on macOS, but let other
+            # platforms decide for themselves.
+            config_args.extend([
+                '-no-pulseaudio',
+                '-no-alsa',
+            ])
 
         configure(*config_args)
 

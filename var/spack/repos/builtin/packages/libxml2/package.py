@@ -48,7 +48,7 @@ class Libxml2(AutotoolsPackage):
     def headers(self):
         include_dir = self.spec.prefix.include.libxml2
         hl = find_all_headers(include_dir)
-        hl.directories = include_dir
+        hl.directories = [include_dir, self.spec.prefix.include]
         return hl
 
     def configure_args(self):

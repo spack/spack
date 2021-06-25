@@ -24,6 +24,9 @@ class Ghostscript(AutotoolsPackage):
     version('9.21', sha256='02bceadbc4dddeb6f2eec9c8b1623d945d355ca11b8b4df035332b217d58ce85')
     version('9.18', sha256='5fc93079749a250be5404c465943850e3ed5ffbc0d5c07e10c7c5ee8afbbdb1b')
 
+    # https://www.ghostscript.com/ocr.html
+    variant('tesseract', default=False, description='Use the Tesseract library for OCR')
+
     depends_on('pkgconfig', type='build')
     depends_on('krb5', type='link')
 
@@ -35,6 +38,12 @@ class Ghostscript(AutotoolsPackage):
     depends_on('zlib')
     depends_on('libxext')
     depends_on('gtkplus')
+
+    # https://www.ghostscript.com/doc/9.53.0/News.htm
+    conflicts('+tesseract', when='@:9.52', msg='Tesseract OCR engine added in 9.53.0')
+
+    # https://trac.macports.org/ticket/62832
+    conflicts('+tesseract', when='platform=darwin', msg='Tesseract does not build correctly on macOS')
 
     patch('nogoto.patch', when='%fj@:4.1.0')
 
@@ -69,11 +78,16 @@ class Ghostscript(AutotoolsPackage):
                     string=True)
 
     def configure_args(self):
-        return [
+        args = [
             '--disable-compile-inits',
             '--enable-dynamic',
             '--with-system-libtiff',
         ]
+
+        if self.spec.satisfies('@9.53:'):
+            args.extend(self.with_or_without('tesseract'))
+
+        return args
 
     def build(self, spec, prefix):
         make()

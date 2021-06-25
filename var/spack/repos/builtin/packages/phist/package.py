@@ -154,26 +154,20 @@ class Phist(CMakePackage):
                 '-DPHIST_OUTLEV=%s' % outlev,
                 '-DTPL_LAPACKE_LIBRARIES=%s' % lapacke_libs,
                 '-DTPL_LAPACKE_INCLUDE_DIRS=%s' % lapacke_include_dir,
-                '-DPHIST_ENABLE_MPI:BOOL=%s'
-                % ('ON' if '+mpi' in spec else 'OFF'),
-                '-DPHIST_ENABLE_OPENMP=%s'
-                % ('ON' if '+openmp' in spec else 'OFF'),
-                '-DBUILD_SHARED_LIBS:BOOL=%s'
-                % ('ON' if '+shared' in spec else 'OFF'),
-                '-DPHIST_ENABLE_SCAMAC:BOOL=%s'
-                % ('ON' if '+scamac' in spec else 'OFF'),
+                self.define_from_variant('PHIST_ENABLE_MPI', 'mpi'),
+                self.define_from_variant('PHIST_ENABLE_OPENMP', 'openmp'),
+                self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+                self.define_from_variant('PHIST_ENABLE_SCAMAC', 'scamac'),
                 '-DPHIST_USE_TRILINOS_TPLS:BOOL=%s'
                 % ('ON' if '^trilinos' in spec else 'OFF'),
                 '-DPHIST_USE_SOLVER_TPLS:BOOL=%s'
                 % ('ON' if '^trilinos+belos+anasazi' in spec else 'OFF'),
                 '-DPHIST_USE_PRECON_TPLS:BOOL=%s'
                 % ('ON' if '^trilinos' in spec else 'OFF'),
-                '-DXSDK_ENABLE_Fortran:BOOL=%s'
-                % ('ON' if '+fortran' in spec else 'OFF'),
+                self.define_from_variant('XSDK_ENABLE_Fortran', 'fortran'),
                 '-DXSDK_INDEX_SIZE=%s'
                 % ('64' if '+int64' in spec else '32'),
-                '-DPHIST_HOST_OPTIMIZE:BOOL=%s'
-                % ('ON' if '+host' in spec else 'OFF'),
+                self.define_from_variant('PHIST_HOST_OPTIMIZE', 'host'),
                 ]
 
         return args

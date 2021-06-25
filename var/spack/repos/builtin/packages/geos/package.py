@@ -46,9 +46,16 @@ class Geos(AutotoolsPackage):
     extends('ruby', when='+ruby')
     extends('python', when='+python')
 
+    # SWIG bindings dropped in 3.9, so no python/ruby bindings
+    conflicts('+python', when='@3.9:', msg='SWIG bindings dropped in 3.9')
+    conflicts('+ruby', when='@3.9:', msg='SWIG bindings dropped in 3.9')
+
     # Python 3 is supposedly supported, but I couldn't get it to work
     # https://trac.osgeo.org/geos/ticket/774
     depends_on('python@:2', when='@:3.5')
+    # This patch should fix above issue.
+    # Only tested on 3.8.1, but patch at least applies on 3.5
+    patch('geos_python3_config.patch', when='+python @3.5:3.8.99')
 
     depends_on('swig', type='build', when='+ruby')
     depends_on('swig', type='build', when='+python')

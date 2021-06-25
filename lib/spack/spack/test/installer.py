@@ -229,26 +229,32 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
-                                       monkeypatch, capsys):
-    """Tests SystemExit path for_try_install_from_binary_cache."""
-    def _mirrors_for_spec(spec, full_hash_match=False):
-        spec = spack.spec.Spec('mpi').concretized()
-        return [{
-            'mirror_url': 'notused',
-            'spec': spec,
-        }]
+                                       monkeypatch):
+    """Tests SystemExit path for_try_install_from_binary_cache.
+
+       This test does not make sense.  We tell spack there is a mirror
+       with a binary for this spec and then expect it to die because there
+       are no mirrors configured."""
+    # def _mirrors_for_spec(spec, full_hash_match=False):
+    #     spec = spack.spec.Spec('mpi').concretized()
+    #     return [{
+    #         'mirror_url': 'notused',
+    #         'spec': spec,
+    #     }]
 
     spec = spack.spec.Spec('mpich')
     spec.concretize()
 
-    monkeypatch.setattr(
-        spack.binary_distribution, 'get_mirrors_for_spec', _mirrors_for_spec)
+    # monkeypatch.setattr(
+    #     spack.binary_distribution, 'get_mirrors_for_spec', _mirrors_for_spec)
 
-    with pytest.raises(SystemExit):
-        inst._try_install_from_binary_cache(spec.package, False, False)
+    # with pytest.raises(SystemExit):
+    #     inst._try_install_from_binary_cache(spec.package, False, False)
+    result = inst._try_install_from_binary_cache(spec.package, False, False)
+    assert(not result)
 
-    captured = capsys.readouterr()
-    assert 'add a spack mirror to allow download' in str(captured)
+    # captured = capsys.readouterr()
+    # assert 'add a spack mirror to allow download' in str(captured)
 
 
 def test_installer_repr(install_mockery):
@@ -777,7 +783,11 @@ def test_requeue_task(install_mockery, capfd):
     installer = create_installer(const_arg)
     task = create_build_task(installer.build_requests[0].pkg)
 
+    # temporarily set tty debug messages on so we can test output
+    current_debug_level = tty.debug_level()
+    tty.set_debug(1)
     installer._requeue_task(task)
+    tty.set_debug(current_debug_level)
 
     ids = list(installer.build_tasks)
     assert len(ids) == 1
@@ -786,7 +796,7 @@ def test_requeue_task(install_mockery, capfd):
     assert qtask.sequence > task.sequence
     assert qtask.attempts == task.attempts + 1
 
-    out = capfd.readouterr()[0]
+    out = capfd.readouterr()[1]
     assert 'Installing a' in out
     assert ' in progress by another process' in out
 

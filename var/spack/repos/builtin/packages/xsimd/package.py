@@ -32,8 +32,7 @@ class Xsimd(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DBUILD_TESTS:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF')
+            self.define('BUILD_TESTS', self.run_tests)
         ]
 
         return args

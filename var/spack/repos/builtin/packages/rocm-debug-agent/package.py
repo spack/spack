@@ -12,10 +12,11 @@ class RocmDebugAgent(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent"
     git      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent.git"
-    url      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-4.1.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-4.2.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.2.0', sha256='ce02a5b752291882daa0a2befa23944e59087ce9fe65a91061476c3c399e4a0c')
     version('4.1.0', sha256='b1ae874887e5ee037070f1dd46b145ad02ec9fd8a724c6b6ae194b534f01acdb')
     version('4.0.0', sha256='a9e64834d56a9221c242e71aa110c2cef0087aa8f86f50428dd618e5e623cc3c')
     version('3.10.0', sha256='675b8d3cc4aecc4428a93553abf664bbe6a2cb153f1f480e6cadeeb4d24ef4b1')
@@ -38,12 +39,14 @@ class RocmDebugAgent(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on("elfutils", type='link')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('hsakmt-roct@' + ver, type='link', when='@' + ver)
-        if ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
-            depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
-            depends_on('hip@' + ver, when='@' + ver)
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0']:
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+
+    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
+        depends_on('rocm-dbgapi@' + ver, when='@' + ver)
+        depends_on('hip@' + ver, when='@' + ver)
 
     # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4
     patch('0001-Drop-overly-strict-Werror-flag.patch', when='@3.7.0:')

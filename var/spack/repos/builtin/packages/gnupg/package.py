@@ -12,6 +12,10 @@ class Gnupg(AutotoolsPackage):
     homepage = "https://gnupg.org/index.html"
     url      = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.19.tar.bz2"
 
+    maintainers = ['alalazo']
+
+    version('2.3.1',  sha256='c498db346a9b9a4b399e514c8f56dfc0a888ce8f327f10376ff984452cd154ec')
+    version('2.2.27', sha256='34e60009014ea16402069136e0a5f63d9b65f90096244975db5cea74b3d02399')
     version('2.2.25', sha256='c55307b247af4b6f44d2916a25ffd1fb64ce2e509c3c3d028dbe7fbf309dc30a')
     version('2.2.24', sha256='9090b400faae34f08469d78000cfec1cee5b9c553ce11347cc96ef16eab98c46')
     version('2.2.23', sha256='10b55e49d78b3e49f1edb58d7541ecbdad92ddaeeb885b6f486ed23d1cd1da5c')
@@ -25,14 +29,24 @@ class Gnupg(AutotoolsPackage):
     version('2.1.21', sha256='7aead8a8ba75b69866f583b6c747d91414d523bfdfbe9a8e0fe026b16ba427dd')
 
     depends_on('npth@1.2:')
+
     depends_on('libgpg-error@1.24:')
+    depends_on('libgpg-error@1.41:', when='@2.3:')
+
     depends_on('libgcrypt@1.7.0:')
+    depends_on('libgcrypt@1.9.1:', when='@2.3:')
+
     depends_on('libksba@1.3.4:')
     depends_on('libassuan@2.4:', when='@:2.2.3')
     depends_on('libassuan@2.5:', when='@2.2.15:')
     depends_on('pinentry', type='run')
     depends_on('iconv')
     depends_on('zlib')
+
+    @run_after('install')
+    def add_gpg2_symlink(self):
+        if self.spec.satisfies("@2.0:2.999"):
+            symlink('gpg', self.prefix.bin.gpg2)
 
     def configure_args(self):
         args = [

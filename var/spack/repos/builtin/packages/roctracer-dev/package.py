@@ -13,10 +13,12 @@ class RoctracerDev(CMakePackage):
        specific runtime profiler to trace API and asyncronous activity."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/roctracer"
-    url      = "https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-4.0.0.tar.gz"
+    git      = "https://github.com/ROCm-Developer-Tools/roctracer.git"
+    url      = "https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-4.2.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.2.0', sha256='62a9c0cb1ba50b1c39a0636c886ac86e75a1a71cbf5fec05801517ceb0e67a37')
     version('4.1.0', sha256='5d93de4e92895b6eb5f9d098f5dbd182d33923bd9b2ab69cf5a1abbf91d70695')
     version('4.0.0', sha256='f47859a46173228b597c463eda850b870e810534af5efd5f2a746067ef04edee')
     version('3.10.0', sha256='ac4a1d059fc34377e906071fd0e56f5434a7e0e4ded9db8faf9217a115239dec')
@@ -27,14 +29,19 @@ class RoctracerDev(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('py-setuptools@:44', type='build')
-    depends_on('python@:2', type='build')
+    depends_on('python@:2', type='build', when='@:4.1.0')
+    depends_on('python@3:', type='build', when='@4.2.0:')
     depends_on('py-cppheaderparser', type='build')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
-        depends_on('rocminfo@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver, type='build', when='@' + ver)
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0']:
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('rocminfo@' + ver, when='@' + ver)
+        depends_on('hip@' + ver, when='@' + ver)
+
+    for ver in ['4.2.0']:
+        depends_on('rocprofiler-dev@' + ver, when='@' + ver)
 
     def setup_build_environment(self, build_env):
         spec = self.spec
@@ -46,7 +53,7 @@ class RoctracerDev(CMakePackage):
                     string=True)
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         with working_dir('script'):
-            match = '^#!/usr/bin/python[2]'
+            match = '^#!/usr/bin/python[23]'
             python = self.spec['python'].command.path
             substitute = "#!{python}".format(python=python)
             files = [

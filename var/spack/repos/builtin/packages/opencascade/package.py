@@ -14,8 +14,12 @@ class Opencascade(CMakePackage):
     visualization, data exchange and rapid application development."""
 
     homepage = "https://www.opencascade.com"
-    url      = "http://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_4_0;sf=tgz"
+    url      = "https://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_4_0;sf=tgz"
 
+    version('7.5.2', extension='tar.gz',
+            sha256='1a32d2b0d6d3c236163cb45139221fb198f0f3cdad56606c5b1c9a2a8869b3ac')
+    version('7.4.0p2', extension='tar.gz',
+            sha256='93565f9bdc9575e0d6fcb34c11c8f06d8f9394250bb427870da65424e8537f60')
     version('7.4.0p1', extension='tar.gz',
             sha256='e00fedc221560fda31653c23a8f3d0eda78095c87519f338d4f4088e2ee9a9c0')
     version('7.4.0', extension='tar.gz',
@@ -31,7 +35,7 @@ class Opencascade(CMakePackage):
             description='Build with rapidjson')
 
     depends_on('intel-tbb', when='+tbb')
-    depends_on('vtk', when='+vtk')
+    depends_on('vtk',       when='+vtk')
     depends_on('freeimage', when='+freeimage')
     depends_on('rapidjson', when='+rapidjson')
     depends_on('freetype')

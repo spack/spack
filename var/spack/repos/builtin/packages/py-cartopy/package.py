@@ -14,7 +14,7 @@ class PyCartopy(PythonPackage):
 
     maintainers = ['adamjstewart']
 
-    # Skip test files in cartopy.tests
+    # Tests require extra dependencies, skip them in 'import_modules'
     import_modules = [
         'cartopy', 'cartopy.sphinxext', 'cartopy.io', 'cartopy.geodesic',
         'cartopy.examples', 'cartopy.mpl', 'cartopy.feature'
@@ -38,8 +38,8 @@ class PyCartopy(PythonPackage):
     depends_on('py-six@1.3.0:',     type=('build', 'run'))
     depends_on('py-futures', when='^python@:2', type=('build', 'run'))
     depends_on('geos@3.3.3:')
-    depends_on('proj@4.9.0:5', when='@:0.16.0')
-    depends_on('proj@4.9:',    when='@0.17.0:')
+    depends_on('proj@4.9:5', when='@:0.16.0')
+    depends_on('proj@4.9:7', when='@0.17.0:')
 
     # Optional dependecies
     depends_on('py-pyepsg@0.4.0:',     type=('build', 'run'), when='+epsg')

@@ -59,7 +59,7 @@ class Tau(Package):
     variant('papi', default=darwin_default, description='Activates Performance API')
     variant('binutils', default=True, description='Activates support of BFD GNU Binutils')
     variant('libdwarf', default=darwin_default, description='Activates support of libdwarf')
-    variant('libelf', default=darwin_default, description='Activates support of libelf')
+    variant('elf', default=darwin_default, description='Activates support of elf')
     variant('libunwind', default=darwin_default, description='Activates support of libunwind')
     variant('otf2', default=True, description='Activates support of Open Trace Format (OTF)')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
@@ -95,7 +95,7 @@ class Tau(Package):
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
     depends_on('libdwarf', when='+libdwarf')
-    depends_on('libelf', when='+libdwarf')
+    depends_on('elf', when='+elf')
     # TAU requires the ELF header support, libiberty and demangle.
     depends_on('binutils@:2.33.1+libiberty+headers+plugins', when='+binutils')
     depends_on('python@2.7:', when='+python')
@@ -108,7 +108,7 @@ class Tau(Package):
     depends_on('hwloc')
 
     # Elf only required from 2.28.1 on
-    conflicts('+libelf', when='@:2.28.0')
+    conflicts('+elf', when='@:2.28.0')
     conflicts('+libdwarf', when='@:2.28.0')
 
     # ADIOS2, SQLite only available from 2.29.1 on
@@ -116,6 +116,10 @@ class Tau(Package):
     conflicts('+sqlite', when='@:2.29.1')
 
     patch('unwind.patch', when="@2.29.0")
+
+    filter_compiler_wrappers('Makefile', relative_root='include')
+    filter_compiler_wrappers('Makefile.tau*', relative_root='lib')
+    filter_compiler_wrappers('Makefile.tau*', relative_root='lib64')
 
     def set_compiler_options(self, spec):
 
@@ -181,6 +185,8 @@ class Tau(Package):
 
         if '+pdt' in spec:
             options.append("-pdt=%s" % spec['pdt'].prefix)
+            if spec['pdt'].satisfies("%intel"):
+                options.append("-pdt_c++=icpc")
 
         if '+scorep' in spec:
             options.append("-scorep=%s" % spec['scorep'].prefix)
@@ -212,8 +218,8 @@ class Tau(Package):
         if '+libdwarf' in spec:
             options.append("-dwarf=%s" % spec['libdwarf'].prefix)
 
-        if '+libelf' in spec:
-            options.append("-elf=%s" % spec['libelf'].prefix)
+        if '+elf' in spec:
+            options.append("-elf=%s" % spec['elf'].prefix)
 
         if '+libunwind' in spec:
             options.append("-unwind=%s" % spec['libunwind'].prefix)
@@ -305,7 +311,6 @@ class Tau(Package):
         self.link_tau_arch_dirs()
         # TAU may capture Spack's internal compiler wrapper. Replace
         # it with the correct compiler.
-        self.fix_tau_compilers()
 
     def link_tau_arch_dirs(self):
         for subdir in os.listdir(self.prefix):
@@ -314,22 +319,6 @@ class Tau(Package):
                 dest = join_path(self.prefix, d)
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
-
-    def fix_tau_compilers(self):
-        filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' + self.compiler.cc,
-                    self.prefix + '/include/Makefile', backup=False,
-                    string=True)
-        filter_file('FULL_CXX=' + spack_cxx, 'FULL_CXX=' +
-                    self.compiler.cxx, self.prefix + '/include/Makefile',
-                    backup=False, string=True)
-        for makefile in os.listdir(self.prefix.lib):
-            if makefile.startswith('Makefile.tau'):
-                filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' +
-                            self.compiler.cc, self.prefix.lib + "/" +
-                            makefile, backup=False, string=True)
-                filter_file('FULL_CXX=' + spack_cxx, 'FULL_CXX=' +
-                            self.compiler.cxx, self.prefix.lib +
-                            "/" + makefile, backup=False, string=True)
 
     def setup_run_environment(self, env):
         pattern = join_path(self.prefix.lib, 'Makefile.*')

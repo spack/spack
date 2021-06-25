@@ -11,7 +11,8 @@
 # See https://stackoverflow.com/a/47886254
 """:"
 # prefer SPACK_PYTHON environment variable, python3, python, then python2
-for cmd in "${SPACK_PYTHON:-}" python3 python python2; do
+SPACK_PREFERRED_PYTHONS="python3 python python2 /usr/libexec/platform-python"
+for cmd in "${SPACK_PYTHON:-}" ${SPACK_PREFERRED_PYTHONS}; do
     if command -v > /dev/null "$cmd"; then
         export SPACK_PYTHON="$(command -v "$cmd")"
         exec "${SPACK_PYTHON}" "$0" "$@"

@@ -17,6 +17,12 @@ class PyFsspec(PythonPackage):
     version('0.7.3', sha256='1b540552c93b47e83c568e87507d6e02993e6d1b30bc7285f2336c81c5014103')
     version('0.4.4', sha256='97697a46e8bf8be34461c2520d6fc4bfca0ed749b22bb2b7c21939fd450a7d63')
 
+    variant('http', default=False, description='HTTPFileSystem support (Requires version 0.8.1+)')
+
+    conflicts('+http', when='@:0.8.0', msg='Only available in 0.8.1+')
+
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('python@3.6:', type=('build', 'run'), when='@0.6.3:')
     depends_on('py-setuptools', type='build')
+    depends_on('py-requests', type=('build', 'run'), when='+http')
+    depends_on('py-aiohttp',  type=('build', 'run'), when='+http')

@@ -44,7 +44,8 @@ _source_path_subdir = 'spack-src'
 stage_prefix = 'spack-stage-'
 
 
-def _create_stage_root(path):
+def create_stage_root(path):
+    # type: (str) -> None
     """Create the stage root directory and ensure appropriate access perms."""
     assert path.startswith(os.path.sep) and len(path.strip()) > 1
 
@@ -99,6 +100,15 @@ def _create_stage_root(path):
             tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
                      .format(user_uid, p, p_stat.st_uid))
 
+    spack_src_subdir = os.path.join(path, _source_path_subdir)
+    # When staging into a user-specified directory with `spack stage -p <PATH>`, we need
+    # to ensure the `spack-src` subdirectory exists, as we can't rely on it being
+    # created automatically by spack. It's not clear why this is the case for `spack
+    # stage -p`, but since `mkdirp()` is idempotent, this should not change the behavior
+    # for any other code paths.
+    if not os.path.isdir(spack_src_subdir):
+        mkdirp(spack_src_subdir, mode=stat.S_IRWXU)
+
 
 def _first_accessible_path(paths):
     """Find the first path that is accessible, creating it if necessary."""
@@ -110,7 +120,7 @@ def _first_accessible_path(paths):
                     return path
             else:
                 # Now create the stage root with the proper group/perms.
-                _create_stage_root(path)
+                create_stage_root(path)
                 return path
 
         except OSError as e:
