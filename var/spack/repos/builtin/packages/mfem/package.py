@@ -11,7 +11,7 @@ import shutil
 class Mfem(Package):
     """Free, lightweight, scalable C++ library for finite element methods."""
 
-    tags = ['FEM', 'finite elements', 'high-order', 'AMR', 'HPC']
+    tags = ['FEM', 'finite elements', 'high-order', 'AMR', 'HPC', 'ecp', 'e4s']
 
     homepage = 'http://www.mfem.org'
     git      = 'https://github.com/mfem/mfem.git'

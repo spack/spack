@@ -16,6 +16,8 @@ class Petsc(Package):
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
+    tags = ['ecp', 'e4s']
+
     version('main', branch='main')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 

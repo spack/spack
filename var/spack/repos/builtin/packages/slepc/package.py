@@ -17,6 +17,8 @@ class Slepc(Package):
 
     maintainers = ['joseeroman', 'balay']
 
+    tags = ['ecp', 'e4s']
+
     version('main', branch='main')
     version('3.15.0', sha256='e53783ae13acadce274ea65c67186b5ab12332cf17125a694e21d598aa6b5f00')
     version('3.14.2', sha256='3e54578dda1f4c54d35ac27d02f70a43f6837906cb7604dbcec0e033cfb264c8')

@@ -20,6 +20,8 @@ class ParallelNetcdf(AutotoolsPackage):
 
     maintainers = ['skosukhin']
 
+    tags = ['ecp', 'e4s']
+
     test_requires_compiler = True
 
     def url_for_version(self, version):

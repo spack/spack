@@ -32,6 +32,8 @@ class Openmpi(AutotoolsPackage):
     maintainers = ['hppritcha', 'naughtont3']
 
     executables = ['^ompi_info$']
+    
+    tags = ['ecp', 'e4s']
 
     version('master', branch='master')
 

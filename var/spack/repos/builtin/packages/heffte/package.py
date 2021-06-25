@@ -14,7 +14,7 @@ class Heffte(CMakePackage):
     git      = "https://bitbucket.org/icl/heffte.git"
 
     maintainers = ['mkstoyanov']
-
+    tags = ['ecp', 'e4s']
     version('develop', branch='master')
     version('2.0.0', sha256='12f2b49a1a36c416eac174cf0cc50e729d56d68a9f68886d8c34bd45a0be26b6')
     version('1.0', sha256='0902479fb5b1bad01438ca0a72efd577a3529c3d8bad0028f3c18d3a4935ca74')

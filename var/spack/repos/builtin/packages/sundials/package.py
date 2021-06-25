@@ -18,6 +18,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/llnl/sundials.git"
     maintainers = ['cswoodward', 'gardner48', 'balos1']
 
+    tags = ['ecp', 'e4s']
+
     # ==========================================================================
     # Versions
     # ==========================================================================

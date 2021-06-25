@@ -22,6 +22,8 @@ class Hdf5(AutotoolsPackage):
     git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
     maintainers = ['lrknox']
 
+    tags = ['ecp', 'e4s']
+
     test_requires_compiler = True
 
     # We rely on the *.la files to be removed and, therefore, do not try to make

@@ -17,6 +17,8 @@ class Magma(CMakePackage, CudaPackage):
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers = ['stomov', 'luszczek']
 
+    tags = ['ecp', 'e4s']
+
     test_requires_compiler = True
 
     version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')

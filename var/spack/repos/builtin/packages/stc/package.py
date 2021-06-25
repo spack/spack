@@ -14,6 +14,8 @@ class Stc(AutotoolsPackage):
     url      = 'http://swift-lang.github.io/swift-t-downloads/spack/stc-0.8.3.tar.gz'
     git      = "https://github.com/swift-lang/swift-t.git"
 
+    tags = ['ecp', 'e4s']
+
     version('master', branch='master')
     version('0.8.3', sha256='d61ca80137a955b12e84e41cb8a78ce1a58289241a2665076f12f835cf68d798')
     version('0.8.2', sha256='13f0f03fdfcca3e63d2d58d7e7dbdddc113d5b9826c9357ab0713b63e8e42c5e')

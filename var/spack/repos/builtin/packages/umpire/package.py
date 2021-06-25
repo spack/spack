@@ -16,6 +16,8 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['davidbeckingsale']
 
+    tags = ['ecp', 'e4s']
+
     version('develop', branch='develop', submodules='True')
     version('main', branch='main', submodules='True')
     version('4.1.2', tag='v4.1.2', submodules='True')

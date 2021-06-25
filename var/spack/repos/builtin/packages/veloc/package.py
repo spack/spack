@@ -14,7 +14,7 @@ class Veloc(CMakePackage):
     url      = "https://github.com/ECP-VeloC/VELOC/archive/veloc-1.0rc1.zip"
     git      = "https://github.com/ecp-veloc/veloc.git"
 
-    tags = ['ecp']
+    tags = ['ecp', 'e4s']
 
     version('master', branch='master')
     version('1.4',    sha256='d5d12aedb9e97f079c4428aaa486bfa4e31fe1db547e103c52e76c8ec906d0a8')

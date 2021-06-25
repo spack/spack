@@ -13,7 +13,7 @@ class Mercury(CMakePackage):
     git = 'https://github.com/mercury-hpc/mercury.git'
 
     maintainers = ['soumagne']
-
+    tags = ['ecp', 'e4s']
     version('master', branch='master', submodules=True)
     version('2.0.0', sha256='9e80923712e25df56014309df70660e828dbeabbe5fcc82ee024bcc86e7eb6b7')
     version('1.0.1', sha256='02febd56c401ef7afa250caf28d012b37dee842bfde7ee16fcd2f741b9cf25b3')

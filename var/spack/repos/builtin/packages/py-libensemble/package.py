@@ -14,6 +14,8 @@ class PyLibensemble(PythonPackage):
     pypi = "libensemble/libensemble-0.7.1.tar.gz"
     git      = "https://github.com/Libensemble/libensemble.git"
 
+    tags = ['ecp', 'e4s']
+
     version('develop', branch='develop')
     version('0.7.1', sha256='5cb294269624c1284ea25be9ed3bc668a2333e21e97a97b57ad339eb85435e46')
     version('0.7.0', sha256='4c3c16ef3d4750b7a54198fae5d7ae402c5f5411ae85189da41afd20e20027dc')

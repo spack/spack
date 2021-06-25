@@ -9,7 +9,9 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "http://software.llnl.gov/RAJA/"
     git      = "https://github.com/LLNL/RAJA.git"
-
+    
+    tags = ['ecp', 'e4s']
+    
     version('develop', branch='develop', submodules='True')
     version('main',  branch='main',  submodules='True')
     version('0.13.0', tag='v0.13.0', submodules='True')

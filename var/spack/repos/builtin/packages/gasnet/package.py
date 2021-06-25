@@ -18,6 +18,8 @@ class Gasnet(AutotoolsPackage):
 
     maintainers = ['PHHargrove', 'bonachea']
 
+    tags = ['ecp', 'e4s']
+
     version('2020.3.0', sha256='019eb2d2284856e6fabe6c8c0061c874f10e95fa0265245f227fd3497f1bb274')
     version('2019.9.0', sha256='117f5fdb16e53d0fa8a47a1e28cccab1d8020ed4f6e50163d985dc90226aaa2c')
     version('2019.6.0', sha256='839ba115bfb48083c66b4c1c27703d73063b75d2f1e0501d5eab2ad7f0f776c8')

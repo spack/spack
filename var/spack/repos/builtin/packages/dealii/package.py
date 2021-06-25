@@ -18,6 +18,8 @@ class Dealii(CMakePackage, CudaPackage):
 
     maintainers = ['davydden', 'jppelteret', 'luca-heltai']
 
+    tags = ['ecp', 'e4s']
+
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
     transitive_rpaths = False

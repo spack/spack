@@ -13,6 +13,8 @@ class Gotcha(CMakePackage):
     homepage = "http://github.com/LLNL/gotcha"
     git      = "https://github.com/LLNL/gotcha.git"
 
+    tags = ['ecp', 'e4s']
+
     version('develop', branch='develop')
     version('master', branch='master')
     version('1.0.3', tag='1.0.3')

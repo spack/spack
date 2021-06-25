@@ -18,6 +18,8 @@ class DarshanUtil(Package):
 
     maintainers = ['shanedsnyder', 'carns']
 
+    tags = ['ecp', 'e4s']
+
     version('develop', branch='master')
     version('3.3.0-pre1', sha256='1c655359455b5122921091bab9961491be58a5f0158f073d09fe8cc772bd0812')
     version('3.2.1', sha256='d63048b7a3d1c4de939875943e3e7a2468a9034fcb68585edbc87f57f622e7f7', preferred=True)

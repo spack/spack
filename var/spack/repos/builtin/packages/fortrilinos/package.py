@@ -29,6 +29,8 @@ class Fortrilinos(CMakePackage):
 
     maintainers = ['sethrj', 'aprokop']
 
+    tags = ['ecp', 'e4s']
+
     version('2.0.0', sha256='9af3b3eea9934e44d74654a5fa822de08bd0efa43e06e4a4e35a777781f542d6')
     # Note: spack version comparison implies Version('2.0.0') <
     # Version('2.0.0-dev1'), so this is the best workaround I could find.

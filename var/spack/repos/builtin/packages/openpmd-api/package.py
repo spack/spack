@@ -15,6 +15,8 @@ class OpenpmdApi(CMakePackage):
 
     maintainers = ['ax3l']
 
+    tags = ['ecp', 'e4s']
+
     version('dev', branch='dev')
     version('0.13.3', sha256='4b8f84bd89cd540c73ffe8c21085970453cb7f0e4f125f11a4e288433f64b58c')
     version('0.13.2', sha256='2e5170d41bb7b2c0608ec833eee7f9adf8175b46734743f6e46dcce6f6685fb0')

@@ -20,6 +20,8 @@ class Flecsi(CMakePackage):
     homepage = 'http://flecsi.org/'
     git      = 'https://github.com/laristra/flecsi.git'
 
+    tags = ['ecp', 'e4s']
+
     version('devel', branch='devel', submodules=False, preferred=False)
     version('1', branch='1', submodules=False, preferred=False)
     version('1.4', branch='1.4', submodules=False, preferred=True)

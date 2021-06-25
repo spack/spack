@@ -20,6 +20,8 @@ class Scr(CMakePackage):
     url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
     git      = "https://github.com/llnl/scr.git"
 
+    tags = ['ecp', 'e4s']
+
     version('develop', branch='develop')
     version('legacy', branch='legacy')
 

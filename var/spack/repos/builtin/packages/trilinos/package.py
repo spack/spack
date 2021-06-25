@@ -31,6 +31,8 @@ class Trilinos(CMakePackage, CudaPackage):
 
     maintainers = ['keitat']
 
+    tags = ['ecp', 'e4s']
+
     # ###################### Versions ##########################
 
     version('xsdk-0.2.0', tag='xsdk-0.2.0')

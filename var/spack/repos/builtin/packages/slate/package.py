@@ -20,6 +20,8 @@ class Slate(CMakePackage):
     url      = 'https://bitbucket.org/icl/slate/downloads/slate-2020.10.00.tar.gz'
     maintainers = ['G-Ragghianti', 'mgates3']
 
+    tags = ['ecp', 'e4s']
+
     version('master', branch='master')
     version('2020.10.00', sha256='ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab')
 

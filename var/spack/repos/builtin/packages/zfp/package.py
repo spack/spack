@@ -22,6 +22,8 @@ class Zfp(CMakePackage, CudaPackage):
     git         = 'https://github.com/LLNL/zfp.git'
     maintainers = ['lindstro', 'GarrettDMorrison']
 
+    tags = ['ecp', 'e4s']
+
     # Versions
     version('develop', branch='develop')
     version('0.5.5', sha256='fdf7b948bab1f4e5dccfe2c2048fd98c24e417ad8fb8a51ed3463d04147393c5')

@@ -16,6 +16,8 @@ class Ginkgo(CMakePackage, CudaPackage):
 
     maintainers = ['tcojean', 'hartwiganzt']
 
+    tags = ['ecp', 'e4s']
+
     version('develop', branch='develop')
     version('master', branch='master')
     version('1.3.0', commit='4678668c66f634169def81620a85c9a20b7cec78')  # v1.3.0

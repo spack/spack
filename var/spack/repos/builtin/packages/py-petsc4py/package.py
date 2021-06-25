@@ -16,6 +16,8 @@ class PyPetsc4py(PythonPackage):
 
     maintainers = ['dalcinl', 'balay']
 
+    tags = ['ecp', 'e4s']
+
     version('main', branch='main')
     version('3.15.0', sha256='87dcc5ef63a1f0e1a963619f7527e623f52341b2806056b0ef5fdfb0b8b287ad')
     version('3.14.1', sha256='f5f8daf3a4cd1dfc945876b0d83a05b25f3c54e08046312eaa3e3036b24139c0')

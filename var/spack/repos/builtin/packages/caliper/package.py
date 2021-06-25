@@ -19,6 +19,8 @@ class Caliper(CMakePackage, CudaPackage):
     git      = "https://github.com/LLNL/Caliper.git"
     url      = "https://github.com/LLNL/Caliper/archive/v2.5.0.tar.gz"
 
+    tags = ['ecp', 'e4s']
+
     maintainers = ["daboehme"]
 
     version('master', branch='master')
