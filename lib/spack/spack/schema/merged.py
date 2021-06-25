@@ -10,6 +10,7 @@
 """
 from llnl.util.lang import union_dicts
 
+import spack.schema.bootstrap
 import spack.schema.cdash
 import spack.schema.compilers
 import spack.schema.config
@@ -23,6 +24,7 @@ import spack.schema.upstreams
 
 #: Properties for inclusion in other schemas
 properties = union_dicts(
+    spack.schema.bootstrap.properties,
     spack.schema.cdash.properties,
     spack.schema.compilers.properties,
     spack.schema.config.properties,

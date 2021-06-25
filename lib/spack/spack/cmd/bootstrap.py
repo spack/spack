@@ -70,8 +70,17 @@ def _reset(args):
             raise RuntimeError('Aborting')
 
     for scope in spack.config.config.file_scopes:
+        # The default scope should stay untouched
         if 'defaults' in scope.path:
             continue
+
+        # If we are in an env scope we can't delete a file, but the best we
+        # can do is nullify the corresponding configuration
+        if 'env' in scope.path and spack.config.get('bootstrap', scope=scope.name):
+            spack.config.set('bootstrap', {}, scope=scope.name)
+            continue
+
+        # If we are outside of an env scope delete the bootstrap.yaml file
         bootstrap_yaml = os.path.join(scope.path, 'bootstrap.yaml')
         if os.path.exists(bootstrap_yaml):
             os.remove(bootstrap_yaml)
