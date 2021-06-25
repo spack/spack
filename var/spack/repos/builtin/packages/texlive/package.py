@@ -7,6 +7,7 @@ from spack import *
 import os
 import platform
 import tempfile
+import re
 
 
 class Texlive(AutotoolsPackage):
@@ -221,3 +222,39 @@ class Texlive(AutotoolsPackage):
              '-portable', '-profile', tmp_profile.name)
 
         tmp_profile.close()
+
+    executables = [r'^tex$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        # https://askubuntu.com/questions/100406/finding-the-tex-live-version
+        # Thanks to @michaelkuhn that told how to reuse the package releases
+        # variable.
+        # Added 3 older releases: 2018 (CentOS-8), 2017 (Ubuntu-18.04), 2013 (CentOS-7).
+        releases = cls.releases
+        releases.extend([
+            {
+                'version': '20180414',
+                'year': '2018',
+            },
+            {
+                'version': '20170524',
+                'year': '2017',
+            },
+            {
+                'version': '20130530',
+                'year': '2013',
+            },
+        ])
+        # tex indicates the year only
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'TeX Live (\d+)', output)
+        ver = match.group(1) if match else None
+        # We search for the repo actual release
+        if ver is not None:
+            for release in releases:
+                year = release['year']
+                if year == ver:
+                    ver = release['version']
+                    break
+        return ver
