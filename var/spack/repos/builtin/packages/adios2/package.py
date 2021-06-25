@@ -16,7 +16,7 @@ class Adios2(CMakePackage):
     git = "https://github.com/ornladios/ADIOS2.git"
 
     maintainers = ['ax3l', 'chuckatkins', 'williamfgc']
-    
+
     tags = ['ecp', 'e4s']
 
     version('master', branch='master')
