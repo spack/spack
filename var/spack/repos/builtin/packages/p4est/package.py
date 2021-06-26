@@ -29,8 +29,8 @@ class P4est(AutotoolsPackage):
     variant('openmp', default=False, description='Enable OpenMP')
 
     # build dependencies
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
+    depends_on('automake', when='@2.0', type='build')
+    depends_on('autoconf', when='@2.0', type='build')
     depends_on('libtool@2.4.2:', type='build')
 
     # other dependencies
@@ -48,7 +48,7 @@ class P4est(AutotoolsPackage):
           when='@2.0')
 
     def autoreconf(self, spec, prefix):
-        if self.spec.satisfies('@:2.2'):
+        if self.spec.satisfies('@2.0'):
             bootstrap = Executable('./bootstrap')
             bootstrap()
 
