@@ -47,15 +47,18 @@ class Lorene(MakefilePackage):
         # (We could build the documentation as well.)
         # (We could circumvent the build system and simply compile all
         # source files, and do so in parallel.)
-        make(*args, 'cpp', 'fortran', 'export')
+        make('cpp', 'fortran', 'export', *args)
         if '+Bin_star' in spec:
             with working_dir(join_path('Codes', 'Bin_star')):
-                make('-f', 'Makefile_O2', *args,
-                     'coal', 'lit_bin', 'init_bin', 'coal_regu', 'init_bin_regu', 'analyse', 'prepare_seq')
+                make('-f', 'Makefile_O2',
+                     'coal', 'lit_bin', 'init_bin', 'coal_regu', 'init_bin_regu',
+                     'analyse', 'prepare_seq',
+                     *args)
         # if '+Bin_star_ncp' in spec:
         #     with working_dir(join_path('Codes', 'Bin_star_ncp')):
-        #         make('-f', 'Makefile_O2', *args,
-        #              'coal_ncp', 'lit_bin_ncp', 'init_bin_ncp', 'coal_ncp_regu')
+        #         make('-f', 'Makefile_O2',
+        #              'coal_ncp', 'lit_bin_ncp', 'init_bin_ncp', 'coal_ncp_regu',
+        #              *args)
 
     def install(self, spec, prefix):
         mkdirp(prefix.lib)
