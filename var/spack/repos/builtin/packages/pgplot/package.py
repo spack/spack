@@ -26,7 +26,6 @@ class Pgplot(MakefilePackage):
             url="ftp://ftp.astro.caltech.edu/pub/pgplot/pgplot5.2.tar.gz",
             sha256='a5799ff719a510d84d26df4ae7409ae61fe66477e3f1e8820422a9a4727a5be4')
 
-    # patch('drivers.list')
     patch('conf')
 
     # depends_on('libpng')
@@ -39,7 +38,6 @@ class Pgplot(MakefilePackage):
         make()
         make('clean')
         make('cpg')
-
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
