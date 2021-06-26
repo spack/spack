@@ -70,7 +70,8 @@ class Lorene(MakefilePackage):
         install(join_path('Lib', 'liblorenef77_g.a'), prefix.lib)
         mkdirp(prefix.bin)
         if '+Bin_star' in spec:
-            for exe in ['coal', 'lit_bin', 'init_bin', 'coal_regu', 'init_bin_regu', 'analyse', 'prepare_seq']:
+            for exe in ['coal', 'lit_bin', 'init_bin', 'coal_regu', 'init_bin_regu',
+                        'analyse', 'prepare_seq']:
                 install(join_path('Codes', 'Bin_star', exe), prefix.bin)
         # if '+Bin_star_ncp' in spec:
         #     for exe in ['coal_ncp', 'lit_bin_ncp', 'init_bin_ncp', 'coal_ncp_regu']:
