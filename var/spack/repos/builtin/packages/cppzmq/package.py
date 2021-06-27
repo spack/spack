@@ -23,12 +23,19 @@ class Cppzmq(CMakePackage):
     version('4.2.3', sha256='3e6b57bf49115f4ae893b1ff7848ead7267013087dc7be1ab27636a97144d373')
     version('4.2.2', sha256='3ef50070ac5877c06c6bb25091028465020e181bbfd08f110294ed6bc419737d')
 
+    variant("drafts", default=False,
+            description="Build and install draft classes and methods")
+
     depends_on('cmake@3.0.0:', type='build')
     depends_on('libzmq')
     depends_on('libzmq@4.2.2', when='@4.2.2:4.2.3')
+    depends_on('libzmq+drafts', when='+drafts')
 
     def cmake_args(self):
         args = []
+
+        args.append(self.define_from_variant("ENABLE_DRAFTS", "drafts"))
+
         # https://github.com/zeromq/cppzmq/issues/422
         # https://github.com/zeromq/cppzmq/pull/288
         args.append('-DCPPZMQ_BUILD_TESTS=OFF')
