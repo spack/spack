@@ -14,6 +14,7 @@ class Cppzmq(CMakePackage):
     git      = "https://github.com/zeromq/cppzmq.git"
 
     version('master', branch='master')
+    version('4.7.1', sha256='9853e0437d834cbed5d3c223bf1d755cadee70e7c964c6e42c4c6783dee5d02c')
     version('4.6.0', sha256='e9203391a0b913576153a2ad22a2dc1479b1ec325beb6c46a3237c669aef5a52')
     version('4.5.0', sha256='64eb4e58eaf0c77505391c6c9a606cffcb57c6086f3431567a1ef4a25b01fa36')
     version('4.4.1', sha256='117fc1ca24d98dbe1a60c072cde13be863d429134907797f8e03f654ce679385')
