@@ -306,6 +306,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+teko', when='~ml')
     conflicts('+teko', when='~teuchos')
     conflicts('+teko', when='~tpetra')
+    conflicts('+teko', when='gotype=long')
     conflicts('+tempus', when='~nox')
     conflicts('+tempus', when='~teuchos')
     conflicts('+tpetra', when='~kokkos')
