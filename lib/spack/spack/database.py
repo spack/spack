@@ -23,11 +23,12 @@ filesystem.
 import contextlib
 import datetime
 import os
-import six
 import socket
 import sys
 import time
 from typing import Dict  # novm
+
+import six
 
 try:
     import uuid
@@ -38,7 +39,6 @@ except ImportError:
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-
 import spack.repo
 import spack.spec
 import spack.store

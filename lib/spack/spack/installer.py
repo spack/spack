@@ -33,11 +33,12 @@ import heapq
 import itertools
 import os
 import shutil
-import six
 import sys
 import time
-
 from collections import defaultdict
+
+import six
+
 
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
@@ -51,7 +52,6 @@ import spack.package
 import spack.package_prefs as prefs
 import spack.repo
 import spack.store
-
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
 from spack.util.environment import dump_environment

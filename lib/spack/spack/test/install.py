@@ -4,20 +4,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import pytest
 import shutil
 
-import llnl.util.filesystem as fs
+import pytest
 
-from spack.package import InstallError, PackageBase, PackageStillNeededError
+import llnl.util.filesystem as fs
 import spack.error
 import spack.patch
 import spack.repo
 import spack.store
-from spack.spec import Spec
 import spack.util.spack_json as sjson
+from spack.package import InstallError, PackageBase, PackageStillNeededError
 from spack.package import (_spack_build_envfile, _spack_build_logfile,
                            _spack_configure_argsfile)
+from spack.spec import Spec
 
 
 def find_nothing(*args):
