@@ -48,7 +48,7 @@ packages:
       rpc: [libtirpc]
       scalapack: [netlib-scalapack, amdscalapack]
       sycl: [hipsycl]
-      szip: [libszip, libaec]
+      szip: [libaec, libszip]
       tbb: [intel-tbb]
       unwind: [libunwind]
       uuid: [util-linux-uuid, libuuid]
