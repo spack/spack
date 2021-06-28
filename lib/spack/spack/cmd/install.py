@@ -182,6 +182,13 @@ packages. If neither are chosen, don't run tests for any packages."""
     )
     arguments.add_cdash_args(subparser, False)
     arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
+    subparser.epilog = (
+        'Statuses: {s.POS_GLYPH} - installed, '
+        '{s.NEG_GLYPH} - not installed, \n'
+        '          {s.UPSTREAM_GLYPH} - upstream, '
+        '{s.ERR_GLYPH} - install missing/error\n'
+        '          {s.EXTERNAL_GLYPH} - external'
+        .format(s=spack.spec.Spec))
 
 
 def default_log_file(spec):

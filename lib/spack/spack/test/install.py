@@ -221,9 +221,12 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     prepared_db = spack.database.Database(mock_db_root)
     upstream_layout = gen_mock_layout('/a/')
 
-    def _install_upstream(*specs):
+    def _install_upstream(*specs, **kwargs):
+        install = kwargs.get('install', False)
         for spec_str in specs:
             s = spack.spec.Spec(spec_str).concretized()
+            if install:
+                s.package.do_install()
             prepared_db.add(s, upstream_layout)
 
         downstream_root = str(tmpdir_factory.mktemp('mock_downstream_db_root'))
@@ -274,6 +277,56 @@ def test_installed_upstream(install_upstream, mock_fetch):
 
         assert not os.path.exists(new_dependency.prefix)
         assert os.path.exists(dependent.prefix)
+
+
+def test_spec_install_status(install_upstream, mock_fetch, install_mockery,
+                             tmpdir_factory):
+    """Check that the install status method returns the correct constants in various
+    install scenarios."""
+
+    store, upstream_layout = install_upstream('install-status loc=upstream',
+                                              install=True)
+    with spack.store.use_store(store):
+
+        non_conc_spec = spack.spec.Spec('a')
+        assert non_conc_spec.install_status() is None
+
+        # A Spec can be not installed if it isn't in the DB or if it's marked
+        # as not installed in the DB. Hit both for code coverage.
+        not_inst_spec = spack.spec.Spec('install-status loc=not_installed')
+        not_inst_spec.concretize()
+        assert not_inst_spec.install_status() == not_inst_spec.STATUS_NOT_INSTALLED
+
+        not_inst_spec.package.do_install()
+        with store.db.write_transaction():
+            rec = store.db.get_record(not_inst_spec)
+            rec.installed = False
+        assert not_inst_spec.install_status() == not_inst_spec.STATUS_NOT_INSTALLED
+
+        # TODO: Does not work under clingo due to a bug with the clingo concretizer.
+        #       https://github.com/spack/spack/issues/24506
+        # tmpdir = str(tmpdir_factory.mktemp('external_path'))
+        # external_spec = spack.spec.Spec('install-status loc=external',
+        #                                 external_path=tmpdir)
+        # external_spec.concretize()
+        # external_spec.package.do_install()
+        # rec = store.db.get_record(external_spec)
+        # assert external_spec.install_status() == external_spec.STATUS_EXTERNAL
+
+        installed_spec = spack.spec.Spec('install-status')
+        installed_spec.concretize()
+        installed_spec.package.do_install()
+        assert installed_spec.install_status() == installed_spec.STATUS_INSTALLED
+
+        upstream_spec = spack.spec.Spec('install-status loc=upstream')
+        upstream_spec.concretize()
+        assert upstream_spec.install_status() == upstream_spec.STATUS_UPSTREAM
+
+        err_spec = spack.spec.Spec('install-status loc=error')
+        err_spec.concretize()
+        # Add to the db without actually installing.
+        store.db.add(err_spec, upstream_layout)
+        assert err_spec.install_status() == err_spec.STATUS_ERROR
 
 
 @pytest.mark.disable_clean_stage_check

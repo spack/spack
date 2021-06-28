@@ -51,6 +51,7 @@ import spack.package
 import spack.package_prefs as prefs
 import spack.repo
 import spack.store
+import spack.spec
 
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
@@ -121,6 +122,7 @@ def _handle_external_and_upstream(pkg, explicit):
         (bool): ``True`` if the package is external or upstream (so not to
             be installed locally), otherwise, ``True``
     """
+
     # For external packages the workflow is simplified, and basically
     # consists in module file generation and registration in the DB.
     if pkg.spec.external:
@@ -295,7 +297,7 @@ def _print_installed_pkg(message):
     Args:
         message (str): message to be output
     """
-    print(colorize('@*g{[+]} ') + message)
+    print(spack.spec.Spec.POS_GLYPH + ' ' + message)
 
 
 def _process_external_package(pkg, explicit):

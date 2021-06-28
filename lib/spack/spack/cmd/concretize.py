@@ -4,13 +4,24 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.environment as ev
+from spack.spec import Spec
 
-description = 'concretize an environment and write a lockfile'
+description = 'Concretize an environment and write a lockfile'
 section = "environments"
 level = "long"
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '-d', '--dry-run', action='store_true', default=False,
+        help="(Re-)concretize, but don't generate the lockfile.")
+    subparser.epilog = (
+        'Statuses: {s.POS_GLYPH} - installed, '
+        '{s.NEG_GLYPH} - not installed, \n'
+        '          {s.UPSTREAM_GLYPH} - upstream, '
+        '{s.ERR_GLYPH} - install missing/error\n'
+        '          {s.EXTERNAL_GLYPH} - external'
+        .format(s=Spec))
     subparser.add_argument(
         '-f', '--force', action='store_true',
         help="Re-concretize even if already concretized.")
@@ -33,6 +44,9 @@ def concretize(parser, args):
         tests = False
 
     with env.write_transaction():
-        concretized_specs = env.concretize(force=args.force, tests=tests)
+        concretized_specs = env.concretize(
+            force=args.force or args.dry_run, tests=tests)
         ev.display_specs(concretized_specs)
-        env.write()
+
+        if not args.dry_run:
+            env.write()
