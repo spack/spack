@@ -30,7 +30,7 @@ class Aml(AutotoolsPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(['tests', 'include/config.h'])
 
-    def run_test(self):
+    def run_area_test(self):
         """Run stand alone test: test_area"""
 
         test_dir = join_path(self.prefix, '.spack/test/tests/area')
@@ -53,11 +53,8 @@ class Aml(AutotoolsPackage):
                       work_dir=test_dir)
 
         self.run_test(exe,
-                      options=[],
-                      expected=[0],
                       purpose='test: run {0} example'.format(exe),
                       work_dir=test_dir)
-        print(other)
 
     def test(self):
-        self.run_test()
+        self.run_area_test()
