@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Zziplib(AutotoolsPackage, CMakePackage):
+class Zziplib(AutotoolsPackage):
     """The zziplib provides read access to zipped files in a zip-archive, using
     compression based solely on free algorithms provided by zlib.  It also
     provides a functionality to overlay the archive filesystem with the
@@ -40,9 +40,10 @@ class Zziplib(AutotoolsPackage, CMakePackage):
         spec = self.spec
         args = []
         zlib = spec['zlib']
+        # Do not use self.define('VAR', path) unless a CMakePackage
         args.extend([
-            self.define('ZLIB_LIBRARY', zlib.libs[0]),
-            self.define('ZLIB_INCLUDE_DIR', zlib.headers.directories[0]),
+            '-DZLIB_LIBRARY:FILEPATH=%s' % zlib.libs[0],
+            '-DZLIB_INCLUDE_DIR:FILEPATH=%s' % zlib.headers.directories[0]
         ])
         args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
                     % spec['python'].command.path)
