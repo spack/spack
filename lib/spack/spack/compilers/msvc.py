@@ -18,10 +18,10 @@ class Msvc(Compiler):
     cxx_names = ['cl.exe']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = []  # type: List[str]
+    f77_names = ['ifx.exe']  # type: List[str]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = []  # type: List[str]
+    fc_names = ['ifx.exe']  # type: List[str]
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'msvc/cl.exe',
@@ -44,6 +44,10 @@ class Msvc(Compiler):
             os.path.join(self.cc, '../../../../../../..'))
         self.vcvarsallfile = os.path.join(
             self.vcvarsallfile, 'Auxiliary', 'Build', 'vcvarsall.bat')
+        self.setvarsfile = os.path.abspath(
+            os.path.join(self.cc, '../../../../../../../../../..'))
+        self.setvarsfile = os.path.join(
+            self.setvarsfile, 'Intel', 'oneAPI', 'setvars.bat')
 
     @property
     def verbose_flag(self):
@@ -58,11 +62,17 @@ class Msvc(Compiler):
         script."""
         if sys.version_info[:2] > (2, 6):
             # Capture output from batch script and DOS environment dump
-            out = subprocess.check_output(
+            msvcout = subprocess.check_output(
                 'cmd /u /c "{0}" {1} && set'.format(self.vcvarsallfile, 'amd64'),
                 stderr=subprocess.STDOUT)
             if sys.version_info[0] >= 3:
-                out = out.decode('utf-16le', errors='replace')
+                msvcout = msvcout.decode('utf-16le', errors='replace')
+           # And same for Intel
+            intelout = subprocess.check_output(
+                'cmd /u /c "{0}" {1} && set'.format(self.setvarsfile, 'amd64'),
+                stderr=subprocess.STDOUT)
+            if sys.version_info[0] >= 3:
+                intelout = intelout.decode('utf-16le', errors='replace')
         else:
             print("Cannot pull msvc compiler information in Python 2.6 or below")
 
@@ -70,7 +80,15 @@ class Msvc(Compiler):
         vc_env = {
             key.lower(): value
             for key, _, value in
-            (line.partition('=') for line in out.splitlines())
+            (line.partition('=') for line in msvcout.splitlines())
+            if key and value
+        }
+        
+        # And same for Intel
+        int_env = {
+            key.lower(): value
+            for key, _, value in
+            (line.partition('=') for line in intelout.splitlines())
             if key and value
         }
 
@@ -79,3 +97,10 @@ class Msvc(Compiler):
             env.set_path('PATH', vc_env['path'].split(';'))
         env.set_path('INCLUDE', vc_env.get('include', '').split(';'))
         env.set_path('LIB', vc_env.get('lib', '').split(';'))
+        
+        # Request setting environment variables
+        if 'path' in vc_env:
+            env.set_path('PATH', int_env['path'].split(';'))
+        env.set_path('INCLUDE', int_env.get('include', '').split(';'))
+        env.set_path('LIB', int_env.get('lib', '').split(';'))
+
