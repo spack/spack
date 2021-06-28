@@ -14,10 +14,8 @@ class Simgrid(CMakePackage):
     url      = "https://github.com/simgrid/simgrid/releases/download/v3.27/simgrid-3.27.tar.gz"
     git      = 'https://framagit.org/simgrid/simgrid.git'
 
-    version('3.27', sha256='51aeb9de0434066e5fec40e785f5ea9fa934afe7f6bfb4aa627246e765f1d6d7',
-            url='https://github.com/simgrid/simgrid/releases/download/v3.27/simgrid-3.27.tar.gz')
-    version('3.26', sha256='ac50da1eacc5a53b094a988a8ecde09962c29320f346b45e74dd32ab9d9f3e96',
-            url='https://github.com/simgrid/simgrid/releases/download/v3.26/simgrid-3.26.tar.gz')
+    version('3.27', sha256='51aeb9de0434066e5fec40e785f5ea9fa934afe7f6bfb4aa627246e765f1d6d7')
+    version('3.26', sha256='ac50da1eacc5a53b094a988a8ecde09962c29320f346b45e74dd32ab9d9f3e96')
     version('3.25', sha256='0b5dcdde64f1246f3daa7673eb1b5bd87663c0a37a2c5dcd43f976885c6d0b46',
             url='https://github.com/simgrid/simgrid/releases/download/v3.25/SimGrid-3.25.tar.gz')
     version('3.24', sha256='c976ed1cbcc7ff136f6d1a8eda7d9ccf090e0e16d5239e6e631047ae9e592921',
