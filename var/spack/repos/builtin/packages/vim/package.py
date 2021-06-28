@@ -17,6 +17,7 @@ class Vim(AutotoolsPackage):
 
     homepage = "http://www.vim.org"
     url      = "https://github.com/vim/vim/archive/v8.1.0338.tar.gz"
+    maintainers = ['sethrj']
 
     version('8.2.2541', sha256='2699dfe87b524169e7390f0b383c406cb77a9fde7431665d3b9b80964d8d5daf')
     version('8.2.1201', sha256='39032fe866f44724b104468038dc9ac4ff2c00a4b18c9a1e2c27064ab1f1143d')
