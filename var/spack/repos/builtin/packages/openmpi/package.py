@@ -589,7 +589,7 @@ class Openmpi(AutotoolsPackage):
     def with_or_without_tm(self, activated):
         if not activated:
             return '--without-tm'
-        return '--with-tm={0}'.format(self.spec['openpbs'].prefix)
+        return '--with-tm={0}'.format(self.spec['pbs'].prefix)
 
     @run_before('autoreconf')
     def die_without_fortran(self):
