@@ -1794,8 +1794,6 @@ def build_process(pkg, kwargs):
                 else:
                     with winlog(pkg.log_path, True, True,
                                 env=unmodified_env) as logger:
-
-
                         for phase_name, phase_attr in zip(
                                 pkg.phases, pkg._InstallPhase_phases):
 

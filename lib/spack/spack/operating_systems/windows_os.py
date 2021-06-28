@@ -47,7 +47,7 @@ class WindowsOs(OperatingSystem):
                 paths = paths.decode()
             vs_install_paths = paths.split('\n')
             msvc_paths = [os.path.join(path, "VC", "Tools", "MSVC")
-                         for path in vs_install_paths]
+                          for path in vs_install_paths]
             for p in msvc_paths:
                 comp_search_paths.extend(
                     glob.glob(os.path.join(p, '*', 'bin', 'Hostx64', 'x64')))
