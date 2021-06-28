@@ -18,7 +18,6 @@ import signal
 import sys
 import ctypes
 import traceback
-import tempfile
 import threading
 from threading import Thread
 from contextlib import contextmanager
