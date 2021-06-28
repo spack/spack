@@ -26,9 +26,10 @@ class Pgplot(MakefilePackage):
             url="ftp://ftp.astro.caltech.edu/pub/pgplot/pgplot5.2.tar.gz",
             sha256='a5799ff719a510d84d26df4ae7409ae61fe66477e3f1e8820422a9a4727a5be4')
 
+    # Create a file `conf`. This is how pgplot is configured, defining
+    # specifying compilers, paths, etc. We just point to the respective Spack
+    # wrappers.
     patch('conf')
-
-    # depends_on('libpng')
 
     parallel = False
 

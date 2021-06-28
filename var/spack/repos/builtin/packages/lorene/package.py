@@ -22,10 +22,14 @@ class Lorene(MakefilePackage):
 
     version('2021.4.22', date='2021-04-22')
 
-    variant('fftw', default=True)
-    variant('Bin_star', default=True)
-    # variant('Bin_star_ncp', default=True)
+    variant('fftw', default=True,
+            description='Use external FFTW for spectral transformations')
+    variant('bin_star', default=True,
+            description='Build Bin_star solver for binary neutron star systems')
 
+    # Create a file `local_settings`. This is how Lorene is configured,
+    # defining specifying compilers, paths, etc. We just point to the
+    # respective Spack wrappers.
     patch('local_settings')
 
     depends_on('fftw @3:', when='+fftw')
@@ -54,11 +58,6 @@ class Lorene(MakefilePackage):
                      'coal', 'lit_bin', 'init_bin', 'coal_regu', 'init_bin_regu',
                      'analyse', 'prepare_seq',
                      *args)
-        # if '+Bin_star_ncp' in spec:
-        #     with working_dir(join_path('Codes', 'Bin_star_ncp')):
-        #         make('-f', 'Makefile_O2',
-        #              'coal_ncp', 'lit_bin_ncp', 'init_bin_ncp', 'coal_ncp_regu',
-        #              *args)
 
     def install(self, spec, prefix):
         mkdirp(prefix.lib)
@@ -73,6 +72,3 @@ class Lorene(MakefilePackage):
             for exe in ['coal', 'lit_bin', 'init_bin', 'coal_regu', 'init_bin_regu',
                         'analyse', 'prepare_seq']:
                 install(join_path('Codes', 'Bin_star', exe), prefix.bin)
-        # if '+Bin_star_ncp' in spec:
-        #     for exe in ['coal_ncp', 'lit_bin_ncp', 'init_bin_ncp', 'coal_ncp_regu']:
-        #         install(join_path('Codes', 'Bin_star_ncp', exe), prefix.bin)
