@@ -308,7 +308,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('knem', when='fabrics=knem')
 
     depends_on('lsf', when='schedulers=lsf')
-    depends_on('openpbs', when='schedulers=tm')
+    depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
 
     depends_on('openssh', type='run')
