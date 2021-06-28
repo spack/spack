@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class Ampl(Package):
     """AMPL integrates a modeling language for describing optimization data, variables,
     objectives, and constraints; a command language for debugging models and analyzing
