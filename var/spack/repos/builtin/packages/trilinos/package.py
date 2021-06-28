@@ -70,7 +70,7 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('float', default=False,
             description='Enable single precision (float) numbers in Trilinos')
     variant('gotype', default='long',
-            values=('none', 'int', 'long', 'long_long'),
+            values=('int', 'long', 'long_long', 'all'),
             multi=False,
             description='global ordinal type for Tpetra')
     variant('fortran',      default=True,
@@ -370,12 +370,15 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+scorec', when='~stk')
     conflicts('+scorec', when='~zoltan')
 
+    # Multi-value gotype only applies to trilinos through 12.14
+    conflicts('gotype=all', when='@12.15:')
+
     # All compilers except for pgi are in conflict:
     for __compiler in spack.compilers.supported_compilers():
         if __compiler != 'clang':
             conflicts('+cuda', when='~wrapper %{0}'.format(__compiler),
-                      msg='trilinos~wrapper+cuda can only be built with the\
-                      Clang compiler')
+                      msg='trilinos~wrapper+cuda can only be built with the '
+                      'Clang compiler')
 
     # ###################### Dependencies ##########################
 
@@ -876,21 +879,13 @@ class Trilinos(CMakePackage, CudaPackage):
             ])
 
             gotype = spec.variants['gotype'].value
-            # default in older Trilinos versions to enable multiple GOs
-            if ((gotype == 'none') and spec.satisfies('@:12.14.1')):
+            if gotype == 'all':
+                # default in older Trilinos versions to enable multiple GOs
                 options.extend([
-                    '-DTpetra_INST_INT_INT:BOOL=ON',
-                    '-DTpetra_INST_INT_LONG:BOOL=ON',
-                    '-DTpetra_INST_INT_LONG_LONG:BOOL=ON'
+                    define('Tpetra_INST_INT_INT', True),
+                    define('Tpetra_INST_INT_LONG', True),
+                    define('Tpetra_INST_INT_LONG_LONG', True),
                 ])
-            # set default GO in newer versions to long
-            elif (gotype == 'none'):
-                options.extend([
-                    '-DTpetra_INST_INT_INT:BOOL=OFF',
-                    '-DTpetra_INST_INT_LONG:BOOL=ON',
-                    '-DTpetra_INST_INT_LONG_LONG:BOOL=OFF'
-                ])
-            # if another GO is specified, use this
             else:
                 options.extend([
                     define('Tpetra_INST_INT_INT', gotype == 'int'),
