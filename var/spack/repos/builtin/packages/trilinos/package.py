@@ -100,7 +100,7 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Enable ADIOS2')
     variant('glm',          default=True,
             description='Compile with GLM')
-    variant('gtest',        default=True,
+    variant('gtest',        default=False,
             description='Compile with Gtest')
     variant('hdf5',         default=True,
             description='Compile with HDF5')
