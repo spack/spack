@@ -40,14 +40,17 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('blt@0.4.0:', type='build', when='@0.13.1:')
     depends_on('blt@:0.3.6', type='build', when='@:0.13.0')
 
-    depends_on('camp')
-    depends_on('camp+cuda', when='+cuda')
-
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
     depends_on('camp+rocm', when='+rocm')
     for val in ROCmPackage.amdgpu_targets:
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+
+    depends_on('camp')
+    depends_on('camp+cuda', when='+cuda')
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on('camp cuda_arch={0}'.format(sm_),
+                   when='cuda_arch={0}'.format(sm_))
 
     conflicts('+openmp', when='+rocm')
 
@@ -68,6 +71,7 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
+                options.append('-DCMAKE_CUDA_ARCHITECTURES={0}'.format(cuda_arch[0]))
         else:
             options.append('-DENABLE_CUDA=OFF')
 

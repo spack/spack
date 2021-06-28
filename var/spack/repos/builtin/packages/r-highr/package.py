@@ -13,12 +13,13 @@ class RHighr(RPackage):
     Andre Simon's highlight package."""
 
     homepage = "https://github.com/yihui/highr"
-    url      = "https://cloud.r-project.org/src/contrib/highr_0.6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/highr"
+    cran     = "highr"
 
+    version('0.9', sha256='beff11390d936c90fdcc00e7ed0eb72220f3de403a51b56659e3d3e0b6d8ed4d')
     version('0.8', sha256='4bd01fba995f68c947a99bdf9aca15327a5320151e10bd0326fad50a6d8bc657')
     version('0.7', sha256='cabba5b6f2ea82024a49c5ced5f1aa476f864bc52bc129038e319e4e26b6f3b7')
     version('0.6', sha256='43e152b2dea596df6e14c44398c74fcd438ece15eaae5bdb84aef8d61b213b59')
 
     depends_on('r@3.0.2:', when='@:0.7', type=('build', 'run'))
     depends_on('r@3.2.3:', when='@0.8:', type=('build', 'run'))
+    depends_on('r-xfun@0.18:', when='@0.9:', type=('build', 'run'))
