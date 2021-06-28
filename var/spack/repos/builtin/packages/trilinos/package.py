@@ -29,7 +29,7 @@ class Trilinos(CMakePackage, CudaPackage):
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
     git      = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ['keitat']
+    maintainers = ['keitat', 'sethrj']
 
     # ###################### Versions ##########################
 
