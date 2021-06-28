@@ -43,6 +43,8 @@ OpenCL ICD loaders."""
     provides('opencl@:2.1', when='@2.2.8:2.2.11+headers')
     provides('opencl@:2.0', when='@2.2.3:2.2.7+headers')
 
+    # upstream patch to fix compatibility with the latest version of the
+    # official khronos OpenCL C headers release, ie opencl-c-headers@2021.04.29
     patch('https://github.com/OCL-dev/ocl-icd/commit/aed1832c81c0971ea001e12d41e04df834257f94.patch',
           sha256='c6bb2813e2a59ac9b79b86d7f421c3e6446c0f9d8a4c850e5641fb7273ab3b43', when='@2.3.0')
 
