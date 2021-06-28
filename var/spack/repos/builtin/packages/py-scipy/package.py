@@ -65,6 +65,7 @@ class PyScipy(PythonPackage):
     depends_on('py-numpy@1.14.5:+blas+lapack', when='@1.5:1.5.999', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.16.5:+blas+lapack', when='@1.6:1.6.1', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.16.5:1.22.999+blas+lapack', when='@1.6.2:', type=('build', 'link', 'run'))
+    depends_on('py-cython@0.29.18:2.9', when='@1.7:', type='build')
     depends_on('py-pythran@0.9.11:', when='@1.7:', type=('build', 'link'))
     depends_on('py-pytest', type='test')
 
