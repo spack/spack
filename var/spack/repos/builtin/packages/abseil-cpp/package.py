@@ -27,8 +27,15 @@ class AbseilCpp(CMakePackage):
 
     conflicts('+shared', when='@:20190808')
 
+    variant('cxxstd', values=('11', '14', '17', '20'), default='11',
+            description="C++ standard used during compilation")
+
     def cmake_args(self):
-        args = ["-DBUILD_TESTING=OFF",  "-DCMAKE_CXX_STANDARD=11"]
+        cxxstd = self.spec.variants['cxxstd'].value
+        args = [
+          "-DBUILD_TESTING=OFF",
+          "-DCMAKE_CXX_STANDARD={}".format(cxxstd)
+        ]
         args.append('-DBUILD_SHARED_LIBS:Bool={0}'.format(
             'ON' if '+shared' in self.spec else 'OFF'))
         return args
