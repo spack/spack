@@ -20,7 +20,7 @@ class Argobots(AutotoolsPackage):
     git      = "https://github.com/pmodels/argobots.git"
     maintainers = ['shintaro-iwasaki']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version("main", branch="main")
     version("1.1", sha256="f0f971196fc8354881681c2282a2f2adb6d48ff5e84cf820ca657daad1549005")
