@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Heffte(CMakePackage):
+class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     """Highly Efficient FFT for Exascale"""
 
     homepage = "https://bitbucket.org/icl/heffte"
@@ -18,6 +18,7 @@ class Heffte(CMakePackage):
     test_requires_compiler = True
 
     version('develop', branch='master')
+    version('2.1.0', sha256='527a3e21115231715a0342afdfaf6a8878d2dd0f02f03c92b53692340fd940b9')
     version('2.0.0', sha256='12f2b49a1a36c416eac174cf0cc50e729d56d68a9f68886d8c34bd45a0be26b6')
     version('1.0', sha256='0902479fb5b1bad01438ca0a72efd577a3529c3d8bad0028f3c18d3a4935ca74')
     version('0.2', sha256='4e76ae60982b316c2e873b2e5735669b22620fefa1fc82f325cdb6989bec78d1')
@@ -29,7 +30,6 @@ class Heffte(CMakePackage):
     variant('shared', default=True, description='Builds with shared libraries')
     variant('fftw', default=False, description='Builds with support for FFTW backend')
     variant('mkl',  default=False, description='Builds with support for MKL backend')
-    variant('cuda', default=False, description='Builds with support for GPUs via CUDA')
     variant('magma', default=False, description='Use helper methods from the UTK MAGMA library')
     variant('python', default=False, description='Install the Python bindings')
     variant('fortran', default=False, description='Install the Fortran modules')
@@ -40,10 +40,11 @@ class Heffte(CMakePackage):
     depends_on('py-numba', when='+python+cuda', type=('build', 'run'))
     extends('python', when='+python', type=('build', 'run'))
 
-    conflicts('~fftw', when='~mkl~cuda')  # requires at least one backend
+    conflicts('~fftw', when='@:2.1.0~mkl~cuda')  # requires at least one backend
     conflicts('+fftw', when='+mkl@:1.0')  # old API supports at most one CPU backend
     conflicts('^openmpi~cuda', when='+cuda')  # +cuda requires CUDA enabled OpenMPI
     conflicts('~cuda', when='+magma')  # magma requires CUDA or HIP
+    conflicts('+rocm', when='@:2.1.0')  # heffte+rocm is in in development in spack
     conflicts('+python', when="@:1.0")  # python support was added post v1.0
     conflicts('+fortran', when="@:1.0")  # fortran support was added post v1.0
     conflicts('+magma', when="@:1.0")  # magma support was added post v1.0
@@ -51,14 +52,19 @@ class Heffte(CMakePackage):
     depends_on('mpi', type=('build', 'run'))
 
     depends_on('fftw@3.3.8:', when="+fftw", type=('build', 'run'))
-    depends_on('intel@16.0:', when="+mkl", type=('build', 'run'))
+    depends_on('intel-mkl@2018.0.128:', when="+mkl", type=('build', 'run'))
     depends_on('cuda@8.0:', when="+cuda", type=('build', 'run'))
+    depends_on('hip@3.8.0:', when='+rocm')
+    depends_on('rocfft@3.8.0:', when='+rocm')
     depends_on('magma@2.5.3:', when="+cuda+magma", type=('build', 'run'))
 
+    examples_src_dir = 'examples'
+
     def cmake_args(self):
-        return [
+        args = [
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('Heffte_ENABLE_CUDA', 'cuda'),
+            self.define_from_variant('Heffte_ENABLE_ROCM', 'rocm'),
             self.define_from_variant('Heffte_ENABLE_FFTW', 'fftw'),
             self.define_from_variant('Heffte_ENABLE_MKL', 'mkl'),
             self.define_from_variant('Heffte_ENABLE_MAGMA', 'magma'),
@@ -68,7 +74,23 @@ class Heffte(CMakePackage):
                 'ON' if ('+cuda' in self.spec and
                          '+fftw' in self.spec) else 'OFF'), ]
 
-    examples_src_dir = 'examples'
+        if '+cuda' in self.spec:
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            if len(cuda_arch) > 0 or cuda_arch[0] != 'none':
+                nvcc_flags = ""
+                for nvflag in self.cuda_flags(cuda_arch):
+                    nvcc_flags += "{0};".format(nvflag)
+
+                args.append('-DCUDA_NVCC_FLAGS={0}'.format(nvcc_flags))
+
+        if '+rocm' in self.spec:
+            args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc))
+
+            rocm_arch = self.spec.variants['amdgpu_target'].value
+            if 'none' not in rocm_arch:
+                args.append('-DCMAKE_CXX_FLAGS={0}'.format(self.hip_flags(rocm_arch)))
+
+        return args
 
     @run_after('install')
     def cache_test_sources(self):
