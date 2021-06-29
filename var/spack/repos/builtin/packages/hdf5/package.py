@@ -396,36 +396,38 @@ class Hdf5(CMakePackage):
     @run_after('install')
     def fix_package_config(self):
         # We need to fix the pkg-config files, which are also used by the
-        # compiler wrappers, see
-        # https://github.com/HDFGroup/hdf5/pull/221
-        # https://github.com/HDFGroup/hdf5/pull/222
-        # https://github.com/HDFGroup/hdf5/pull/223
-        # The patches that we could download from the upstream repo are not
-        # universally applicable (e.g. version 1.8.21 needs only a subset of the
-        # modifications applied in the corresponding PR). It also looks like
-        # that it is easier to fix the installed pkg-config files than patching
-        # the CMakeLists.txt files.
-        if self.spec.satisfies('@:1.8.21,1.10.2:1.10.7,1.12.0'):
-            core_pc_files = find(self.prefix.lib.pkgconfig,
-                                 'hdf5-*.pc', recursive=False)
+        # compiler wrappers. The files are created starting versions 1.8.21,
+        # 1.10.2 and 1.12.0. However, they are broken (except for the version
+        # 1.8.22): the files are named <name>-<version>.pc but reference <name>
+        # packages. This was fixed in the develop versions at some point: the
+        # files started referencing <name>-<version> packages but got broken
+        # again: the files got names <name>.pc but references had not been
+        # updated accordingly. Another issue, which we address here, is that
+        # some Linux distributions install pkg-config files named hdf5.pc and we
+        # want to override them. Therefore, the following solution makes sure
+        # that each <name>-<version>.pc file is symlinked by <name>.pc and all
+        # references to <name>-<version> packages in the original files are
+        # replaced with references to <name> packages.
+        pc_files = find(self.prefix.lib.pkgconfig, 'hdf5*.pc', recursive=False)
 
-            if len(core_pc_files) != 1:
-                return
+        if not pc_files:
+            # This also tells us that the pkgconfig directory does not exist.
+            return
 
-            core_pc_basename = os.path.basename(core_pc_files[0])
+        # Replace versioned references in all pkg-config files:
+        filter_file(
+            r'(Requires(?:\.private)?:.*)(hdf5[^\s,]*)(?:-[^\s,]*)(.*)',
+            r'\1\2\3', *pc_files, backup=False)
 
-            # self.version might differ, therefore we take it from the basename
-            # of the pkg-config file of the core library, which is
-            # 'hdf5-<version>.pc'.
-            pc_version = core_pc_basename[5:-3]
-
-            interface_pc_files = find(self.prefix.lib.pkgconfig,
-                                      'hdf5_*-{0}.pc'.format(pc_version),
-                                      recursive=False)
-            filter_file(
-                r'(Requires(?:\.private)?:.*)(hdf5(?:_hl)?)((?:[\s,].*)|$)',
-                r'\1\2-{0}\3'.format(pc_version),
-                *interface_pc_files, backup=True)
+        # Create non-versioned symlinks to the versioned pkg-config files:
+        with working_dir(self.prefix.lib.pkgconfig):
+            for f in pc_files:
+                src_filename = os.path.basename(f)
+                version_sep_idx = src_filename.find('-')
+                if version_sep_idx > -1:
+                    tgt_filename = src_filename[:version_sep_idx] + '.pc'
+                    if not os.path.exists(tgt_filename):
+                        symlink(src_filename, tgt_filename)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
