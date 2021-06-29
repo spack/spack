@@ -1,17 +1,16 @@
 # TODO: 
 #  - alinux2 image builder
-#  - aarch64 large/medium instance
+#  - graviton2 large/medium instance
 #  - expand packages to full set (currently only building 3 packages)
 #  - handle parallelcluster provided packages (build a docker AMI based on pcluster)
 
 spack:
-  concretization: separately
   view: false
+  concretization: separately
 
   config:
-    concretizer: clingo
     install_tree:
-      root: /home/software/aws-ahug
+      root: /home/software/spack
       padded_length: 512
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
@@ -23,9 +22,9 @@ spack:
       providers:
         mpi: [openmpi, mpich]
     libfabric:
-      variants: fabrics=efa,tcp,udp,sockets,verbs,shm,mrail,rxd,rxm
       version:
         - 1.11.1
+      variants: fabrics=efa,tcp,udp,sockets,verbs,shm,mrail,rxd,rxm
     m4:
       version:
         - 1.4.18
@@ -72,10 +71,10 @@ spack:
     mappings:
       - match: [ascent, axom, llvm, sundials, umpire, vtk-h, vtk-m]
         runner-attributes:
-          tags: ["spack", "public", "xlarge", "aarch64"]
+          tags: ["spack", "public", "xlarge", "graviton2"]
       - match: ['@:']
         runner-attributes:
-          tags: ["spack", "public", "xlarge", "aarch64"]
+          tags: ["spack", "public", "xlarge", "graviton2"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     service-job-attributes:
       before_script:
@@ -89,7 +88,7 @@ spack:
       #  - spack --version
       #  - cd share/spack/gitlab/cloud_pipelines/stacks/aws-ahug
       #  - spack env activate --without-view .
-      tags: ["spack", "public", "xlarge", "aarch64"]
+      tags: ["spack", "public", "xlarge", "graviton2"]
 
   cdash:
     build-group: ARM HPC User Group (AHUG)
