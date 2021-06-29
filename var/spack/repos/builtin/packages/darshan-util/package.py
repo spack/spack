@@ -13,11 +13,11 @@ class DarshanUtil(Package):
     log files produced by Darshan (runtime)."""
 
     homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    git      = "https://xgitlab.cels.anl.gov/darshan/darshan.git"
+    git      = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers = ['shanedsnyder', 'carns']
 
-    version('master', branch='master', submodules='True')
+    version('main', branch='main', submodules='True')
     version('3.3.1', sha256='284224404cb8d0bd4cedd1819587164b5d4f0bfe2f7115ead8364d185e3ab1be')
     version('3.3.0', sha256='2e8bccf28acfa9f9394f2084ec18122c66e45d966087fa2e533928e824fcb57a')
     version('3.3.0-pre2', sha256='0fc09f86f935132b7b05df981b05cdb3796a1ea02c7acd1905323691df65e761')
