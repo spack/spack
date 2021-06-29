@@ -26,7 +26,7 @@ class PyTransformers(PythonPackage):
     depends_on('py-tokenizers@0.10.1:0.10.999', when='@4.6.1:', type=('build', 'run'))
 
     depends_on('py-dataclasses', when='^python@:3.6', type=('build', 'run'))
-    depends_on('py-boto3', type=('build', 'run'))
+    depends_on('py-boto3', when='@2.8.0', type=('build', 'run'))
     depends_on('py-filelock', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-tqdm@4.27:', type=('build', 'run'))
