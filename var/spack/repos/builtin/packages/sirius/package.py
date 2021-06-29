@@ -21,6 +21,7 @@ class Sirius(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('7.2.5', sha256='794e03d4da91025f77542d3d593d87a8c74e980394f658a0210a4fd91c011f22')
     version('7.2.4', sha256='aeed0e83b80c3a79a9469e7f3fe10d80ad331795e38dbc3c49cb0308e2bd084d')
     version('7.2.3', sha256='6c10f0e87e50fcc7cdb4d1b2d35e91dba6144de8f111e36c7d08912e5942a906')
     version('7.2.1', sha256='01bf6c9893ff471473e13351ca7fdc2ed6c1f4b1bb7afa151909ea7cd6fa0de7')
