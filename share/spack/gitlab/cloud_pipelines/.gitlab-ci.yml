@@ -124,3 +124,32 @@ e4s-develop-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: e4s-develop-generate
     strategy: depend
+
+########################################
+# aws-ahug pipeline
+########################################
+.aws-ahug:
+  variables:
+    SPACK_CI_STACK_NAME: aws-ahug
+
+aws-ahug-pr-generate:
+  extends: [ ".aws-ahug", ".pr-generate"]
+
+aws-ahug-develop-generate:
+  extends: [ ".aws-ahug", ".develop-generate"]
+
+aws-ahug-pr-build:
+  extends: [ ".aws-ahug", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-ahug-pr-generate
+    strategy: depend
+
+aws-ahug-develop-build:
+  extends: [ ".aws-ahug", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-ahug-develop-generate
+    strategy: depend

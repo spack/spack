@@ -1,0 +1,92 @@
+spack:
+  concretization: separately
+  view: false
+
+  config:
+    concretizer: clingo
+    install_tree:
+      root: /home/software/aws-ahug
+      padded_length: 512
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  packages:
+    all:
+      target: [arm64]
+
+      providers:
+        mpi: [openmpi, mpich]
+    libfabric:
+      variants: fabrics=efa,tcp,udp,sockets,verbs,shm,mrail,rxd,rxm
+      version:
+        - 1.11.1
+    m4:
+      version:
+        - 1.4.18
+    mpich:
+      variants: ~wrapperrpath pmi=pmi netmod=ofi device=ch4
+    munge:
+      variants: localstatedir=/var
+    openmpi:
+      variants: +pmi fabrics=ofi schedulers=slurm
+      version:
+        - 4.1.0
+    perl:
+      version:
+        - 5.32.1
+    slurm:
+      variants: +pmix sysconfdir=/opt/slurm/etc
+
+  definitions:
+    - compilers: ['%gcc@7.5.0']
+    
+    # Note skipping spot since no spack package for it
+    - ahug:
+      - cloverleaf
+      - coevp
+      - cohmm
+
+  mirrors:
+    mirror: "s3://spack-binaries-devleop/aws-ahug"
+
+  specs:
+  - matrix:
+    - [$ahug]
+    - [$compilers]
+
+  gitlab-ci:
+    image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - spack -d ci rebuild
+    mappings:
+      - match: [ascent, axom, llvm, sundials, umpire, vtk-h, vtk-m]
+        runner-attributes:
+          tags: ["spack", "public", "xlarge", "arm64"]
+      - match: ['@:']
+        runner-attributes:
+          tags: ["spack", "public", "xlarge", "arm64"]
+    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    service-job-attributes:
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+        - cd share/spack/gitlab/cloud_pipelines/stacks/aws-ahug
+        - spack env activate --without-view .
+      image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
+      #before_script:
+      #  - . "./share/spack/setup-env.sh"
+      #  - spack --version
+      #  - cd share/spack/gitlab/cloud_pipelines/stacks/aws-ahug
+      #  - spack env activate --without-view .
+      tags: ["spack", "public", "xlarge", "arm64"]
+
+  cdash:
+    build-group: ARM HPC User Group (AHUG)
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure
