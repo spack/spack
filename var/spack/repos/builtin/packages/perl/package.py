@@ -276,6 +276,15 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if self.spec.satisfies('os=bigsur'):
             env.set('SYSTEM_VERSION_COMPAT', 1)
 
+        # Force perl to build its own, internal copies of bzip2 and zlib.
+        # Otherwise, some modules can confuse config and break the build.
+        env.set('BUILD_BZIP2', 1)
+        env.unset('BZIP2_LIB')
+        env.unset('BZIP2_INCLUDE')
+        env.set('BUILD_ZLIB', 1)
+        env.unset('ZLIB_LIB')
+        env.unset('ZLIB_INCLUDE')
+
     @run_after('install')
     def filter_config_dot_pm(self):
         """Run after install so that Config.pm records the compiler that Spack
