@@ -61,14 +61,7 @@ class Lorene(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.lib)
-        install(join_path('Lib', 'liblorene.a'), prefix.lib)
-        install(join_path('Lib', 'liblorene_export.a'), prefix.lib)
-        install(join_path('Lib', 'liblorene_export_g.a'), prefix.lib)
-        install(join_path('Lib', 'liblorene_g.a'), prefix.lib)
-        install(join_path('Lib', 'liblorenef77.a'), prefix.lib)
-        install(join_path('Lib', 'liblorenef77_g.a'), prefix.lib)
+        install_tree('Lib', prefix.lib)
         mkdirp(prefix.bin)
         if '+Bin_star' in spec:
-            for exe in ['coal', 'lit_bin', 'init_bin', 'coal_regu', 'init_bin_regu',
-                        'analyse', 'prepare_seq']:
-                install(join_path('Codes', 'Bin_star', exe), prefix.bin)
+            install_tree(join_path('Codes', 'Bin_star'), prefix.bin)
