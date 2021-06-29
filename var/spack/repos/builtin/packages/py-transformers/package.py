@@ -39,9 +39,3 @@ class PyTransformers(PythonPackage):
     depends_on('py-importlib-metadata', when='@4.6.1: ^python@:3.7.999', type=('build', 'run'))
     depends_on('py-huggingface-hub@0.0.8', when='@4.6.1:', type=('build', 'run'))
     depends_on('py-packaging', when='@4.6.1:', type=('build', 'run'))
-
-    def patch(self):
-        filter_file('tokenizers == 0.8.1.rc2',
-                    'tokenizers >= 0.8.1.rc2',
-                    'setup.py',
-                    string=True)
