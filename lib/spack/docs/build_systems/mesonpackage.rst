@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -121,10 +121,14 @@ override the ``meson_args`` method like so:
 .. code-block:: python
 
    def meson_args(self):
-       return ['--default-library=both']
+       return ['--warnlevel=3']
 
 
 This method can be used to pass flags as well as variables.
+
+Note that the ``MesonPackage`` base class already defines variants for
+``buildtype``, ``default_library`` and ``strip``, which are mapped to default
+Meson arguments, meaning that you don't have to specify these.
 
 ^^^^^^^^^^^^^^^^^^^^^^
 External documentation

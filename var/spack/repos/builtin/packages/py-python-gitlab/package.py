@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPythonGitlab(PythonPackage):
     """Python wrapper for the GitLab API"""
 
     homepage = "https://github.com/gpocentek/python-gitlab"
-    url      = "https://pypi.io/packages/source/p/python-gitlab/python-gitlab-0.19.tar.gz"
+    pypi = "python-gitlab/python-gitlab-0.19.tar.gz"
 
     version('1.8.0', sha256='a6b03bc53f6e2e22b88d5ff9772b1bb360570ec82752f1def3d6eb60cda093e7')
     version('0.19',  sha256='88b65591db7a10a0d9979797e4e654a113e2b93b3a559309f6092b27ab93934a')

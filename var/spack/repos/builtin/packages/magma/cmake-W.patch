@@ -1,0 +1,12 @@
+diff -ru magma-2.5.0-orig/CMakeLists.txt magma-2.5.0/CMakeLists.txt
+--- magma-2.5.0-orig/CMakeLists.txt	2019-01-02 11:18:39.000000000 -0800
++++ magma-2.5.0/CMakeLists.txt	2019-04-03 15:58:01.871234891 -0700
+@@ -363,8 +363,6 @@
+ else()
+     # Primarily for gcc / nvcc:
+     # Ignore unused static functions in headers.
+-    set( CMAKE_C_FLAGS     "${CMAKE_C_FLAGS} -Wall -Wno-unused-function" )
+-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-function" )
+ endif()
+ 
+ if (CMAKE_HOST_APPLE)

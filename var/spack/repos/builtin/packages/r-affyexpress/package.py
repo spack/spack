@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffyexpress(RPackage):
-    """Affymetrix Quality Assessment and Analysis Tool.
+    """Affymetrix Quality Assessment and Analysis Tool
 
        The purpose of this package is to provide a comprehensive and easy-to-
        use tool for quality assessment and to identify differentially expressed
@@ -16,6 +16,7 @@ class RAffyexpress(RPackage):
     homepage = "https://bioconductor.org/packages/AffyExpress"
     git      = "https://git.bioconductor.org/packages/AffyExpress.git"
 
+    version('1.56.0', commit='e07085833de2bbf81537410cad526d39f8a82478')
     version('1.50.0', commit='8b98703b63396df9692afb0e15b594658125cc96')
     version('1.48.0', commit='dbaed516b7529ef4f7588aafaf3c5f1d53a9bb92')
     version('1.46.0', commit='2add4a4436e21aa20f1ededbfd5f1365a3d28c85')

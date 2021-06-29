@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,13 @@ class Cctools(AutotoolsPackage):
     """
 
     homepage = "https://cctools.readthedocs.io"
-    url      = "https://ccl.cse.nd.edu/software/files/cctools-7.1.5-source.tar.gz"
+    url      = "https://ccl.cse.nd.edu/software/files/cctools-7.2.4-source.tar.gz"
 
+    version('7.2.10', sha256='4a604329896ae5e0fad7451a3814f531ff2f00a41c96e971ac08276208aa1650')
+    version('7.2.4', sha256='36d36465a14b503a27c4739ebe0e11e00970ef6abb07c0365a46670753dddbd0')
+    version('7.2.3', sha256='c9d32f9e9d4886ef88b79cc7c898c26e8369a004132080697b8523560cb8765b')
+    version('7.2.2', sha256='3eee05826954792e3ef974fefe3b8e436f09cd368b195287639b67f5acfa050f')
+    version('7.2.1', sha256='8f847fef9bca1ebd23a93d74fc093807d2c3e584111c087cf25e070e130eb820')
     version('7.1.7', sha256='63cbfabe52591d41a1b27040bf27700d2a11b2f30cb2e25132e0016fb1aade03')
     version('7.1.5', sha256='c01415fd47a1d9626b6c556e0dc0a6b0d3cd67224fa060cabd44ff78eede1d8a')
     version('7.1.3', sha256='b937878ab429dda31bc692e5d9ffb402b9eb44bb674c07a934bb769cee4165ba')

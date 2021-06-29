@@ -1,0 +1,25 @@
+From 5ade2f2eb1745f1d09281044e44b3272f01eb5ed Mon Sep 17 00:00:00 2001
+From: Prem Mallappa <Premachandra.Mallappa@amd.com>
+Date: Tue, 22 Dec 2020 21:03:57 +0530
+Subject: [PATCH 2/2] libm: ose: prevent log-v3.c from building
+
+Signed-off-by: Prem Mallappa <Premachandra.Mallappa@amd.com>
+---
+ src/optmized/SConscript | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/optmized/SConscript b/src/optmized/SConscript
+index a614e9b..412dbdf 100644
+--- a/src/optmized/SConscript
++++ b/src/optmized/SConscript
+@@ -67,6 +67,7 @@ else:
+ 
+ experiment_src=[
+ 	'expm1f.c',
++        'log_v3.c',
+ 	]
+ 
+ source = Glob('*.c', exclude=experiment_src)
+-- 
+2.28.0
+

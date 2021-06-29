@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="do not remove the install prefix if installation fails")
@@ -98,6 +98,9 @@ def dev_build(self, args):
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
 
+    if args.deprecated:
+        spack.config.set('config:deprecated', True, scope='command_line')
+
     tests = False
     if args.test == 'all':
         tests = True
@@ -112,6 +115,7 @@ def dev_build(self, args):
         verbose=not args.quiet,
         dirty=args.dirty,
         stop_before=args.before,
+        skip_patch=args.skip_patch,
         stop_at=args.until)
 
     # drop into the build environment of the package?

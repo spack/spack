@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Libdap4(AutotoolsPackage):
     depends_on('flex')
     depends_on('curl')
     depends_on('libxml2')
-    depends_on('libuuid')
+    depends_on('uuid')
 
     def configure_args(self):
         # libxml2 exports ./include/libxml2/ instead of ./include/, which we

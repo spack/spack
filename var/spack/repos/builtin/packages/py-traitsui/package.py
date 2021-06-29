@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyTraitsui(PythonPackage):
     the details of displaying them."""
 
     homepage = "https://docs.enthought.com/traitsui"
-    url      = "https://pypi.io/packages/source/t/traitsui/traitsui-6.1.3.tar.gz"
+    pypi = "traitsui/traitsui-6.1.3.tar.gz"
 
     version('6.1.3', sha256='48381763b181efc58eaf288431d1d92d028d0d97dfdd33eba7809aae8aef814f')
 

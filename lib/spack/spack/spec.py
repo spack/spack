@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -76,10 +76,8 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
-import base64
 import sys
 import collections
-import hashlib
 import itertools
 import operator
 import os
@@ -108,6 +106,7 @@ import spack.solver
 import spack.store
 import spack.util.crypto
 import spack.util.executable
+import spack.util.hash
 import spack.util.module_cmd as md
 import spack.util.prefix
 import spack.util.spack_json as sjson
@@ -115,6 +114,13 @@ import spack.util.spack_yaml as syaml
 import spack.util.string
 import spack.variant as vt
 import spack.version as vn
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Mapping  # novm
+else:
+    from collections import Mapping
+
 
 __all__ = [
     'Spec',
@@ -196,7 +202,7 @@ def colorize_spec(spec):
     return clr.colorize(re.sub(_separators, insert_color(), str(spec)) + '@.')
 
 
-@lang.key_ordering
+@lang.lazy_lexicographic_ordering
 class ArchSpec(object):
     def __init__(self, spec_or_platform_tuple=(None, None, None)):
         """ Architecture specification a package should be built with.
@@ -245,8 +251,10 @@ class ArchSpec(object):
             return spec_like
         return ArchSpec(spec_like)
 
-    def _cmp_key(self):
-        return self.platform, self.os, self.target
+    def _cmp_iter(self):
+        yield self.platform
+        yield self.os
+        yield self.target
 
     def _dup(self, other):
         self.platform = other.platform
@@ -359,13 +367,11 @@ class ArchSpec(object):
                     return False
 
         # Check target
-        return self._satisfies_target(other.target, strict=strict)
+        return self.target_satisfies(other, strict=strict)
 
-    def _satisfies_target(self, other_target, strict):
-        self_target = self.target
-
-        need_to_check = bool(other_target) if strict or self.concrete \
-            else bool(other_target and self_target)
+    def target_satisfies(self, other, strict):
+        need_to_check = bool(other.target) if strict or self.concrete \
+            else bool(other.target and self.target)
 
         # If there's no need to check we are fine
         if not need_to_check:
@@ -375,24 +381,68 @@ class ArchSpec(object):
         if self.target is None:
             return False
 
-        for target_range in str(other_target).split(','):
-            t_min, sep, t_max = target_range.partition(':')
+        return bool(self.target_intersection(other))
 
-            # Checking against a single specific target
-            if not sep and self_target == t_min:
-                return True
+    def target_constrain(self, other):
+        if not other.target_satisfies(self, strict=False):
+            raise UnsatisfiableArchitectureSpecError(self, other)
 
-            if not sep and self_target != t_min:
-                return False
+        if self.target_concrete:
+            return False
+        elif other.target_concrete:
+            self.target = other.target
+            return True
 
-            # Check against a range
-            min_ok = self_target.microarchitecture >= t_min if t_min else True
-            max_ok = self_target.microarchitecture <= t_max if t_max else True
+        # Compute the intersection of every combination of ranges in the lists
+        results = self.target_intersection(other)
+        # Do we need to dedupe here?
+        self.target = ','.join(results)
 
-            if min_ok and max_ok:
-                return True
+    def target_intersection(self, other):
+        results = []
 
-        return False
+        if not self.target or not other.target:
+            return results
+
+        for s_target_range in str(self.target).split(','):
+            s_min, s_sep, s_max = s_target_range.partition(':')
+            for o_target_range in str(other.target).split(','):
+                o_min, o_sep, o_max = o_target_range.partition(':')
+
+                if not s_sep:
+                    # s_target_range is a concrete target
+                    # get a microarchitecture reference for at least one side
+                    # of each comparison so we can use archspec comparators
+                    s_comp = spack.architecture.Target(s_min).microarchitecture
+                    if not o_sep:
+                        if s_min == o_min:
+                            results.append(s_min)
+                    elif (not o_min or s_comp >= o_min) and (
+                            not o_max or s_comp <= o_max):
+                        results.append(s_min)
+                elif not o_sep:
+                    # "cast" to microarchitecture
+                    o_comp = spack.architecture.Target(o_min).microarchitecture
+                    if (not s_min or o_comp >= s_min) and (
+                            not s_max or o_comp <= s_max):
+                        results.append(o_min)
+                else:
+                    # Take intersection of two ranges
+                    # Lots of comparisons needed
+                    _s_min = spack.architecture.Target(s_min).microarchitecture
+                    _s_max = spack.architecture.Target(s_max).microarchitecture
+                    _o_min = spack.architecture.Target(o_min).microarchitecture
+                    _o_max = spack.architecture.Target(o_max).microarchitecture
+
+                    n_min = s_min if _s_min >= _o_min else o_min
+                    n_max = s_max if _s_max <= _o_max else o_max
+                    _n_min = spack.architecture.Target(n_min).microarchitecture
+                    _n_max = spack.architecture.Target(n_max).microarchitecture
+                    if _n_min == _n_max:
+                        results.append(n_min)
+                    elif not n_min or not n_max or _n_min < _n_max:
+                        results.append('%s:%s' % (n_min, n_max))
+        return results
 
     def constrain(self, other):
         """Projects all architecture fields that are specified in the given
@@ -409,15 +459,17 @@ class ArchSpec(object):
         """
         other = self._autospec(other)
 
-        if not self.satisfies(other):
-            raise UnsatisfiableArchitectureSpecError(self, other)
+        if not other.satisfies(self):
+            raise UnsatisfiableArchitectureSpecError(other, self)
 
         constrained = False
-        for attr in ('platform', 'os', 'target'):
+        for attr in ('platform', 'os'):
             svalue, ovalue = getattr(self, attr), getattr(other, attr)
             if svalue is None and ovalue is not None:
                 setattr(self, attr, ovalue)
                 constrained = True
+
+        self.target_constrain(other)
 
         return constrained
 
@@ -431,7 +483,13 @@ class ArchSpec(object):
     def concrete(self):
         """True if the spec is concrete, False otherwise"""
         # return all(v for k, v in six.iteritems(self.to_cmp_dict()))
-        return self.platform and self.os and self.target
+        return (self.platform and self.os and self.target and
+                self.target_concrete)
+
+    @property
+    def target_concrete(self):
+        """True if the target is not a range or list."""
+        return ':' not in str(self.target) and ',' not in str(self.target)
 
     def to_dict(self):
         d = syaml.syaml_dict([
@@ -477,7 +535,7 @@ class ArchSpec(object):
         return string in str(self) or string in self.target
 
 
-@lang.key_ordering
+@lang.lazy_lexicographic_ordering
 class CompilerSpec(object):
     """The CompilerSpec field represents the compiler or range of compiler
        versions that a package should be built with.  CompilerSpecs have a
@@ -566,8 +624,9 @@ class CompilerSpec(object):
         clone.versions = self.versions.copy()
         return clone
 
-    def _cmp_key(self):
-        return (self.name, self.versions)
+    def _cmp_iter(self):
+        yield self.name
+        yield self.versions
 
     def to_dict(self):
         d = syaml.syaml_dict([('name', self.name)])
@@ -591,7 +650,7 @@ class CompilerSpec(object):
         return str(self)
 
 
-@lang.key_ordering
+@lang.lazy_lexicographic_ordering
 class DependencySpec(object):
     """DependencySpecs connect two nodes in the DAG, and contain deptypes.
 
@@ -629,10 +688,10 @@ class DependencySpec(object):
             self.deptypes + dp.canonical_deptype(type)
         )
 
-    def _cmp_key(self):
-        return (self.parent.name if self.parent else None,
-                self.spec.name if self.spec else None,
-                self.deptypes)
+    def _cmp_iter(self):
+        yield self.parent.name if self.parent else None
+        yield self.spec.name if self.spec else None
+        yield self.deptypes
 
     def __str__(self):
         return "%s %s--> %s" % (self.parent.name if self.parent else None,
@@ -690,8 +749,15 @@ class FlagMap(lang.HashableMap):
             clone[name] = value
         return clone
 
-    def _cmp_key(self):
-        return tuple((k, tuple(v)) for k, v in sorted(six.iteritems(self)))
+    def _cmp_iter(self):
+        for k, v in sorted(self.items()):
+            yield k
+
+            def flags():
+                for flag in v:
+                    yield flag
+
+            yield flags
 
     def __str__(self):
         sorted_keys = [k for k in sorted(self.keys()) if self[k] != []]
@@ -959,7 +1025,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
         )
 
 
-@lang.key_ordering
+@lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec(object):
 
     #: Cache for spec's prefix, computed lazily in the corresponding property
@@ -1003,7 +1069,7 @@ class Spec(object):
 
         self._hash = None
         self._build_hash = None
-        self._cmp_key_cache = None
+        self._dunder_hash = None
         self._package = None
 
         # Most of these are internal implementation details that can be
@@ -1030,6 +1096,12 @@ class Spec(object):
         # This attribute is used to store custom information for
         # external specs. None signal that it was not set yet.
         self.extra_attributes = None
+
+        # This attribute holds the original build copy of the spec if it is
+        # deployed differently than it was built. None signals that the spec
+        # is deployed "as built."
+        # Build spec should be the actual build spec unless marked dirty.
+        self._build_spec = None
 
         if isinstance(spec_like, six.string_types):
             spec_list = SpecParser(self).parse(spec_like)
@@ -1245,6 +1317,13 @@ class Spec(object):
         """
         return self._concrete
 
+    @property
+    def spliced(self):
+        """Returns whether or not this Spec is being deployed as built i.e.
+        whether or not this Spec has ever been spliced.
+        """
+        return any(s.build_spec is not s for s in self.traverse(root=True))
+
     def traverse(self, **kwargs):
         direction = kwargs.get('direction', 'children')
         depth = kwargs.get('depth', False)
@@ -1312,7 +1391,16 @@ class Spec(object):
         cover = kwargs.get('cover', 'nodes')
         direction = kwargs.get('direction', 'children')
         order = kwargs.get('order', 'pre')
-        deptype = dp.canonical_deptype(deptype)
+
+        # we don't want to run canonical_deptype every time through
+        # traverse, because it is somewhat expensive. This ensures we
+        # canonicalize only once.
+        canonical_deptype = kwargs.get("canonical_deptype", None)
+        if canonical_deptype is None:
+            deptype = dp.canonical_deptype(deptype)
+            kwargs["canonical_deptype"] = deptype
+        else:
+            deptype = canonical_deptype
 
         # Make sure kwargs have legal values; raise ValueError if not.
         def validate(name, val, allowed_values):
@@ -1416,13 +1504,7 @@ class Spec(object):
         # this when we move to using package hashing on all specs.
         node_dict = self.to_node_dict(hash=hash)
         yaml_text = syaml.dump(node_dict, default_flow_style=True)
-        sha = hashlib.sha1(yaml_text.encode('utf-8'))
-        b32_hash = base64.b32encode(sha.digest()).lower()
-
-        if sys.version_info[0] >= 3:
-            b32_hash = b32_hash.decode('utf-8')
-
-        return b32_hash
+        return spack.util.hash.b32_hash(yaml_text)
 
     def _cached_hash(self, hash, length=None):
         """Helper function for storing a cached hash on the spec.
@@ -1478,7 +1560,7 @@ class Spec(object):
 
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
-        return base32_prefix_bits(self.dag_hash(), bits)
+        return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
 
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
@@ -1572,7 +1654,13 @@ class Spec(object):
                 d['patches'] = variant._patches_in_order_of_appearance
 
         if hash.package_hash:
-            d['package_hash'] = self.package.content_hash()
+            package_hash = self.package.content_hash()
+
+            # Full hashes are in bytes
+            if (not isinstance(package_hash, six.text_type)
+                and isinstance(package_hash, six.binary_type)):
+                package_hash = package_hash.decode('utf-8')
+            d['package_hash'] = package_hash
 
         deps = self.dependencies_dict(deptype=hash.deptype)
         if deps:
@@ -1729,10 +1817,12 @@ class Spec(object):
         name = next(iter(node))
         node = node[name]
 
-        spec = Spec(name, full_hash=node.get('full_hash', None))
+        spec = Spec()
+        spec.name = name
         spec.namespace = node.get('namespace', None)
         spec._hash = node.get('hash', None)
         spec._build_hash = node.get('build_hash', None)
+        spec._full_hash = node.get('full_hash', None)
 
         if 'version' in node or 'versions' in node:
             spec.versions = vn.VersionList.from_dict(node)
@@ -2070,7 +2160,7 @@ class Spec(object):
         # which likely means the spec was created with Spec.from_detection
         msg = ('cannot validate "{0}" since it was not created '
                'using Spec.from_detection'.format(self))
-        assert isinstance(self.extra_attributes, collections.Mapping), msg
+        assert isinstance(self.extra_attributes, Mapping), msg
 
         # Validate the spec calling a package specific method
         validate_fn = getattr(
@@ -2206,6 +2296,8 @@ class Spec(object):
                 # If replacement is external then trim the dependencies
                 if replacement.external:
                     if (spec._dependencies):
+                        for dep in spec.dependencies():
+                            del dep._dependents[spec.name]
                         changed = True
                         spec._dependencies = DependencyMap()
                     replacement._dependencies = DependencyMap()
@@ -2442,6 +2534,9 @@ class Spec(object):
             raise spack.error.SpecError(
                 "Spec has no name; cannot concretize an anonymous spec")
 
+        if self._concrete:
+            return
+
         result = spack.solver.asp.solve([self], tests=tests)
         if not result.satisfiable:
             result.print_cores()
@@ -2463,12 +2558,25 @@ class Spec(object):
         self._dup(concretized)
         self._mark_concrete()
 
-    #: choose your concretizer here.
     def concretize(self, tests=False):
+        """Concretize the current spec.
+
+        Args:
+            tests (bool or list): if False disregard 'test' dependencies,
+                if a list of names activate them for the packages in the list,
+                if True activate 'test' dependencies for all packages.
+        """
         if spack.config.get('config:concretizer') == "clingo":
             self._new_concretize(tests)
         else:
             self._old_concretize(tests)
+
+    def _mark_root_concrete(self, value=True):
+        """Mark just this spec (not dependencies) concrete."""
+        if (not value) and self.concrete and self.package.installed:
+            return
+        self._normal = value
+        self._concrete = value
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -2476,18 +2584,28 @@ class Spec(object):
         Only for internal use -- client code should use "concretize"
         unless there is a need to force a spec to be concrete.
         """
+        # if set to false, clear out all hashes (set to None or remove attr)
+        # may need to change references to respect None
         for s in self.traverse():
             if (not value) and s.concrete and s.package.installed:
                 continue
-            s._normal = value
-            s._concrete = value
+            elif not value:
+                s.clear_cached_hashes()
+            s._mark_root_concrete(value)
 
-    def concretized(self):
-        """This is a non-destructive version of concretize().  First clones,
-           then returns a concrete version of this package without modifying
-           this package. """
+    def concretized(self, tests=False):
+        """This is a non-destructive version of concretize().
+
+        First clones, then returns a concrete version of this package
+        without modifying this package.
+
+        Args:
+            tests (bool or list): if False disregard 'test' dependencies,
+                if a list of names activate them for the packages in the list,
+                if True activate 'test' dependencies for all packages.
+        """
         clone = self.copy(caches=False)
-        clone.concretize()
+        clone.concretize(tests=tests)
         return clone
 
     def flat_dependencies(self, **kwargs):
@@ -2877,6 +2995,40 @@ class Spec(object):
         if not_existing:
             raise vt.UnknownVariantError(spec, not_existing)
 
+    def update_variant_validate(self, variant_name, values):
+        """If it is not already there, adds the variant named
+        `variant_name` to the spec `spec` based on the definition
+        contained in the package metadata. Validates the variant and
+        values before returning.
+
+        Used to add values to a variant without being sensitive to the
+        variant being single or multi-valued. If the variant already
+        exists on the spec it is assumed to be multi-valued and the
+        values are appended.
+
+        Args:
+           variant_name: the name of the variant to add or append to
+           values: the value or values (as a tuple) to add/append
+                   to the variant
+        """
+        if not isinstance(values, tuple):
+            values = (values,)
+
+        pkg_variant = self.package_class.variants[variant_name]
+
+        for value in values:
+            if self.variants.get(variant_name):
+                msg = ("Cannot append a value to a single-valued "
+                       "variant with an already set value")
+                assert pkg_variant.multi, msg
+                self.variants[variant_name].append(value)
+            else:
+                variant = pkg_variant.make_variant(value)
+                self.variants[variant_name] = variant
+
+        pkg_variant.validate_or_raise(
+            self.variants[variant_name], self.package)
+
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
 
@@ -3041,25 +3193,23 @@ class Spec(object):
         if other.concrete:
             return self.concrete and self.dag_hash() == other.dag_hash()
 
-        # A concrete provider can satisfy a virtual dependency.
-        if not self.virtual and other.virtual:
-            try:
-                pkg = spack.repo.get(self.fullname)
-            except spack.repo.UnknownEntityError:
-                # If we can't get package info on this spec, don't treat
-                # it as a provider of this vdep.
-                return False
-
-            if pkg.provides(other.name):
-                for provided, when_specs in pkg.provided.items():
-                    if any(self.satisfies(when_spec, deps=False, strict=strict)
-                           for when_spec in when_specs):
-                        if provided.satisfies(other):
-                            return True
-            return False
-
-        # Otherwise, first thing we care about is whether the name matches
+        # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
+            # A concrete provider can satisfy a virtual dependency.
+            if not self.virtual and other.virtual:
+                try:
+                    pkg = spack.repo.get(self.fullname)
+                except spack.repo.UnknownEntityError:
+                    # If we can't get package info on this spec, don't treat
+                    # it as a provider of this vdep.
+                    return False
+
+                if pkg.provides(other.name):
+                    for provided, when_specs in pkg.provided.items():
+                        if any(self.satisfies(when, deps=False, strict=strict)
+                               for when in when_specs):
+                            if provided.satisfies(other):
+                                return True
             return False
 
         # namespaces either match, or other doesn't require one.
@@ -3169,7 +3319,7 @@ class Spec(object):
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
 
-    @property
+    @property  # type: ignore[misc] # decorated prop not supported in mypy
     @lang.memoized
     def patches(self):
         """Return patch objects for any patch sha256 sums on this Spec.
@@ -3215,7 +3365,7 @@ class Spec(object):
                 before possibly copying the dependencies of ``other`` onto
                 ``self``
             caches (bool or None): preserve cached fields such as
-                ``_normal``, ``_hash``, and ``_cmp_key_cache``. By
+                ``_normal``, ``_hash``, and ``_dunder_hash``. By
                 default this is ``False`` if DAG structure would be
                 changed by the copy, ``True`` if it's an exact copy.
 
@@ -3252,6 +3402,7 @@ class Spec(object):
         self.compiler_flags = other.compiler_flags.copy()
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
+        self._build_spec = other._build_spec
 
         # FIXME: we manage _patches_in_order_of_appearance specially here
         # to keep it from leaking out of spec.py, but we should figure
@@ -3288,13 +3439,13 @@ class Spec(object):
         if caches:
             self._hash = other._hash
             self._build_hash = other._build_hash
-            self._cmp_key_cache = other._cmp_key_cache
+            self._dunder_hash = other._dunder_hash
             self._normal = other._normal
             self._full_hash = other._full_hash
         else:
             self._hash = None
             self._build_hash = None
-            self._cmp_key_cache = None
+            self._dunder_hash = None
             self._normal = False
             self._full_hash = None
 
@@ -3413,18 +3564,17 @@ class Spec(object):
         else:
             return any(s.satisfies(spec) for s in self.traverse(root=False))
 
-    def sorted_deps(self):
-        """Return a list of all dependencies sorted by name."""
-        deps = self.flat_dependencies()
-        return tuple(deps[name] for name in sorted(deps))
+    def eq_dag(self, other, deptypes=True, vs=None, vo=None):
+        """True if the full dependency DAGs of specs are equal."""
+        if vs is None:
+            vs = set()
+        if vo is None:
+            vo = set()
 
-    def _eq_dag(self, other, vs, vo, deptypes):
-        """Recursive helper for eq_dag and ne_dag.  Does the actual DAG
-           traversal."""
         vs.add(id(self))
         vo.add(id(other))
 
-        if self.ne_node(other):
+        if not self.eq_node(other):
             return False
 
         if len(self._dependencies) != len(other._dependencies):
@@ -3452,55 +3602,38 @@ class Spec(object):
                 continue
 
             # Recursive check for equality
-            if not s._eq_dag(o, vs, vo, deptypes):
+            if not s.eq_dag(o, deptypes, vs, vo):
                 return False
 
         return True
 
-    def eq_dag(self, other, deptypes=True):
-        """True if the full dependency DAGs of specs are equal."""
-        return self._eq_dag(other, set(), set(), deptypes)
-
-    def ne_dag(self, other, deptypes=True):
-        """True if the full dependency DAGs of specs are not equal."""
-        return not self.eq_dag(other, set(), set(), deptypes)
-
     def _cmp_node(self):
-        """Comparison key for just *this node* and not its deps."""
-        return (self.name,
-                self.namespace,
-                tuple(self.versions),
-                self.variants,
-                self.architecture,
-                self.compiler,
-                self.compiler_flags)
+        """Yield comparable elements of just *this node* and not its deps."""
+        yield self.name
+        yield self.namespace
+        yield self.versions
+        yield self.variants
+        yield self.compiler
+        yield self.compiler_flags
+        yield self.architecture
 
     def eq_node(self, other):
         """Equality with another spec, not including dependencies."""
-        return self._cmp_node() == other._cmp_node()
+        return (other is not None) and lang.lazy_eq(
+            self._cmp_node, other._cmp_node
+        )
 
-    def ne_node(self, other):
-        """Inequality with another spec, not including dependencies."""
-        return self._cmp_node() != other._cmp_node()
+    def _cmp_iter(self):
+        """Lazily yield components of self for comparison."""
+        for item in self._cmp_node():
+            yield item
 
-    def _cmp_key(self):
-        """This returns a key for the spec *including* DAG structure.
-
-        The key is the concatenation of:
-          1. A tuple describing this node in the DAG.
-          2. The hash of each of this node's dependencies' cmp_keys.
-        """
-        if self._cmp_key_cache:
-            return self._cmp_key_cache
-
-        dep_tuple = tuple(
-            (d.spec.name, hash(d.spec), tuple(sorted(d.deptypes)))
-            for name, d in sorted(self._dependencies.items()))
-
-        key = (self._cmp_node(), dep_tuple)
-        if self._concrete:
-            self._cmp_key_cache = key
-        return key
+        def deps():
+            for _, dep in sorted(self._dependencies.items()):
+                yield dep.spec.name
+                yield tuple(sorted(dep.deptypes))
+                yield hash(dep.spec)
+        yield deps
 
     def colorized(self):
         return colorize_spec(self)
@@ -3740,7 +3873,9 @@ class Spec(object):
                 'Format string terminated while reading attribute.'
                 'Missing terminating }.'
             )
-        return out.getvalue()
+
+        formatted_spec = out.getvalue()
+        return formatted_spec.strip()
 
     def old_format(self, format_string='$_$@$%@+$+$=', **kwargs):
         """
@@ -3996,12 +4131,12 @@ class Spec(object):
         kwargs.setdefault('color', None)
         return self.format(*args, **kwargs)
 
-    def dep_string(self):
-        return ''.join(" ^" + dep.format() for dep in self.sorted_deps())
-
     def __str__(self):
-        ret = self.format() + self.dep_string()
-        return ret.strip()
+        sorted_nodes = [self] + sorted(
+            self.traverse(root=False), key=lambda x: x.name
+        )
+        spec_str = " ^".join(d.format() for d in sorted_nodes)
+        return spec_str.strip()
 
     def install_status(self):
         """Helper for tree to print DB install status."""
@@ -4108,6 +4243,105 @@ class Spec(object):
         # This property returns the underlying microarchitecture object
         # to give to the attribute the appropriate comparison semantic
         return self.architecture.target.microarchitecture
+
+    @property
+    def build_spec(self):
+        return self._build_spec or self
+
+    @build_spec.setter
+    def build_spec(self, value):
+        self._build_spec = value
+
+    def splice(self, other, transitive):
+        """Splices dependency "other" into this ("target") Spec, and return the
+        result as a concrete Spec.
+        If transitive, then other and its dependencies will be extrapolated to
+        a list of Specs and spliced in accordingly.
+        For example, let there exist a dependency graph as follows:
+        T
+        | \
+        Z<-H
+        In this example, Spec T depends on H and Z, and H also depends on Z.
+        Suppose, however, that we wish to use a differently-built H, known as
+        H'. This function will splice in the new H' in one of two ways:
+        1. transitively, where H' depends on the Z' it was built with, and the
+        new T* also directly depends on this new Z', or
+        2. intransitively, where the new T* and H' both depend on the original
+        Z.
+        Since the Spec returned by this splicing function is no longer deployed
+        the same way it was built, any such changes are tracked by setting the
+        build_spec to point to the corresponding dependency from the original
+        Spec.
+        TODO: Extend this for non-concrete Specs.
+        """
+        assert self.concrete
+        assert other.concrete
+        assert other.name in self
+
+        # Multiple unique specs with the same name will collide, so the
+        # _dependents of these specs should not be trusted.
+        # Variants may also be ignored here for now...
+
+        if transitive:
+            self_nodes = dict((s.name, s.copy(deps=False))
+                              for s in self.traverse(root=True)
+                              if s.name not in other)
+            other_nodes = dict((s.name, s.copy(deps=False))
+                               for s in other.traverse(root=True))
+        else:
+            # If we're not doing a transitive splice, then we only want the
+            # root of other.
+            self_nodes = dict((s.name, s.copy(deps=False))
+                              for s in self.traverse(root=True)
+                              if s.name != other.name)
+            other_nodes = {other.name: other.copy(deps=False)}
+
+        nodes = other_nodes.copy()
+        nodes.update(self_nodes)
+
+        for name in nodes:
+            if name in self_nodes:
+                dependencies = self[name]._dependencies
+                for dep in dependencies:
+                    nodes[name]._add_dependency(nodes[dep],
+                                                dependencies[dep].deptypes)
+                if any(dep not in self_nodes for dep in dependencies):
+                    nodes[name].build_spec = self[name].build_spec
+            else:
+                dependencies = other[name]._dependencies
+                for dep in dependencies:
+                    nodes[name]._add_dependency(nodes[dep],
+                                                dependencies[dep].deptypes)
+                if any(dep not in other_nodes for dep in dependencies):
+                    nodes[name].build_spec = other[name].build_spec
+
+        # Clear cached hashes
+        nodes[self.name].clear_cached_hashes()
+        return nodes[self.name]
+
+    def clear_cached_hashes(self):
+        """
+        Clears all cached hashes in a Spec, while preserving other properties.
+        """
+        for attr in ht.SpecHashDescriptor.hash_types:
+            if hasattr(self, attr):
+                setattr(self, attr, None)
+
+    def __hash__(self):
+        # If the spec is concrete, we leverage the DAG hash and just use
+        # a 64-bit prefix of it. The DAG hash has the advantage that it's
+        # computed once per concrete spec, and it's saved -- so if we
+        # read concrete specs we don't need to recompute the whole hash.
+        # This is good for large, unchanging specs.
+        if self.concrete:
+            if not self._dunder_hash:
+                self._dunder_hash = self.dag_hash_bit_prefix(64)
+            return self._dunder_hash
+
+        # This is the normal hash for lazy_lexicographic_ordering. It's
+        # slow for large specs because it traverses the whole spec graph,
+        # so we hope it only runs on abstract specs, which are small.
+        return hash(lang.tuplify(self._cmp_iter))
 
 
 class LazySpecCache(collections.defaultdict):
@@ -4403,7 +4637,8 @@ class SpecParser(spack.parse.Parser):
                     break
 
             elif self.accept(HASH):
-                # Get spec by hash and confirm it matches what we already have
+                # Get spec by hash and confirm it matches any constraints we
+                # already read in
                 hash_spec = self.spec_by_hash()
                 if hash_spec.satisfies(spec):
                     spec._dup(hash_spec)
@@ -4516,16 +4751,6 @@ def save_dependency_spec_yamls(
 
         with open(yaml_path, 'w') as fd:
             fd.write(dep_spec.to_yaml(hash=ht.build_hash))
-
-
-def base32_prefix_bits(hash_string, bits):
-    """Return the first <bits> bits of a base32 string as an integer."""
-    if bits > len(hash_string) * 5:
-        raise ValueError("Too many bits! Requested %d bit prefix of '%s'."
-                         % (bits, hash_string))
-
-    hash_bytes = base64.b32decode(hash_string, casefold=True)
-    return spack.util.crypto.prefix_bits(hash_bytes, bits)
 
 
 class SpecParseError(spack.error.SpecError):

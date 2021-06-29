@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ def shell_init_instructions(cmd, equivalent):
     shell_specific = "{sh_arg}" in equivalent
 
     msg = [
-        "`%s` requires spack's shell support." % cmd,
+        "`%s` requires Spack's shell support." % cmd,
         "",
         "To set up shell support, run the command below for your shell.",
         "",
@@ -48,6 +48,13 @@ def shell_init_instructions(cmd, equivalent):
         ]
     else:
         msg += ["  " + equivalent]
+
+    msg += [
+        "",
+        "If you have already set up Spack's shell support but still receive",
+        "this message, please make sure to call Spack via the `spack` command",
+        "without any path components (such as `bin/spack`).",
+    ]
 
     msg += ['']
     tty.error(*msg)

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,10 +31,12 @@ class Libpciaccess(AutotoolsPackage, XorgPackage):
     # libpciaccess built by gcc should be usable by PGI builds.
     conflicts('%pgi')
 
+    conflicts('platform=darwin')
+
     def configure_args(self):
         config_args = []
 
-        if (self.spec.satisfies('%nvhpc') and
+        if (self.spec.satisfies('%nvhpc@:20.11') and
             (self.spec.target.family == 'aarch64' or
              self.spec.target.family == 'ppc64le')):
             config_args.append('--disable-strict-compilation')

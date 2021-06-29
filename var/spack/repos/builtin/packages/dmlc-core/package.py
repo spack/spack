@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,6 @@ class DmlcCore(CMakePackage):
                     'make/config.mk')
 
     def cmake_args(self):
-        spec = self.spec
         return [
-            '-DUSE_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
+            self.define_from_variant('USE_OPENMP', 'openmp'),
         ]

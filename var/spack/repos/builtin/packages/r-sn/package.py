@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RSn(RPackage):
-    """Build and manipulate probability distributions of the skew-normal
+    """The Skew-Normal and Related Distributions Such as the Skew-t
+
+    Build and manipulate probability distributions of the skew-normal
     family and some related ones, notably the skew-t family, and provide
     related statistical methods for data fitting and diagnostics, in the
     univariate and the multivariate case."""
@@ -16,6 +18,7 @@ class RSn(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/sn_1.5-0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/sn"
 
+    version('1.6-2', sha256='2fd4730c315efc48958b47990ddb0cbc6ce075f7a27255944a292fb4fc593d9d')
     version('1.5-4', sha256='46677ebc109263a68f62b5cf53ec59916cda490e5bc5bbb08276757a677f8674')
     version('1.5-3', sha256='cc21b97ddd674c9b1296260f2a72ffb085cdcb877c8332f0bfa96ff028517183')
     version('1.5-0', sha256='0164f7cffbf9e2a0f03f9bed3b96388b08d8a8ca476bbb686aa88be6b4ec073a')
@@ -27,3 +30,4 @@ class RSn(RPackage):
     depends_on('r@2.15.3:', type=('build', 'run'))
     depends_on('r-mnormt@1.5-4:', type=('build', 'run'))
     depends_on('r-numderiv', type=('build', 'run'))
+    depends_on('r-quantreg', when='@1.6-2:', type=('build', 'run'))

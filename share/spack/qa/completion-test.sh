@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,13 +31,18 @@ title "Testing spack-completion.$_sp_shell with $_sp_shell"
 succeeds which spack
 
 title 'Testing all subcommands'
-while IFS= read -r line
+# read line into an array portably
+READ="read -ra line"
+if [ -n "${ZSH_VERSION:-}" ]; then
+  READ=(read -rA line)
+fi
+while IFS=' ' $READ
 do
     # Test that completion with no args works
-    succeeds _spack_completions ${line[*]} ''
+    succeeds _spack_completions "${line[@]}" ''
 
     # Test that completion with flags works
-    contains '-h --help' _spack_completions ${line[*]} -
+    contains '-h --help' _spack_completions "${line[@]}" -
 done <<- EOF
     $(spack commands --aliases --format=subcommands)
 EOF
@@ -58,32 +63,39 @@ contains 'hdf5' _spack_completions spack install -v ''
 # XFAIL: Fails for Python 2.6 because pkg_resources not found?
 #contains 'compilers.py' _spack_completions spack unit-test ''
 
-title 'Testing debugging functions'
+_test_debug_functions() {
+    title 'Testing debugging functions'
 
-# This is a particularly tricky case that involves the following situation:
-#     `spack -d [] install `
-# Here, [] represents the cursor, which is in the middle of the line.
-# We should tab-complete optional flags for `spack`, not optional flags for
-# `spack install` or package names.
-COMP_LINE='spack -d  install '
-COMP_POINT=9
-COMP_WORDS=(spack -d install)
-COMP_CWORD=2
-COMP_KEY=9
-COMP_TYPE=64
+    if [ -n "${ZSH_VERSION:-}" ]; then
+        emulate -L sh
+    fi
 
-_bash_completion_spack
-contains "--all-help" echo "${COMPREPLY[@]}"
+    # This is a particularly tricky case that involves the following situation:
+    #     `spack -d [] install `
+    # Here, [] represents the cursor, which is in the middle of the line.
+    # We should tab-complete optional flags for `spack`, not optional flags for
+    # `spack install` or package names.
+    COMP_LINE='spack -d  install '
+    COMP_POINT=9
+    COMP_WORDS=(spack -d install)
+    COMP_CWORD=2
+    COMP_KEY=9
+    COMP_TYPE=64
 
-contains "['spack', '-d', 'install', '']" _pretty_print COMP_WORDS[@]
+    _bash_completion_spack
+    contains "--all-help" echo "${COMPREPLY[@]}"
 
-# Set the rest of the intermediate variables manually
-COMP_WORDS_NO_FLAGS=(spack install)
-COMP_CWORD_NO_FLAGS=1
-subfunction=_spack
-cur=
+    contains "['spack', '-d', 'install', '']" _pretty_print COMP_WORDS[@]
 
-list_options=true
-contains "'True'" _test_vars
-list_options=false
-contains "'False'" _test_vars
+    # Set the rest of the intermediate variables manually
+    COMP_WORDS_NO_FLAGS=(spack install)
+    COMP_CWORD_NO_FLAGS=1
+    subfunction=_spack
+    cur=
+
+    list_options=true
+    contains "'True'" _test_vars
+    list_options=false
+    contains "'False'" _test_vars
+}
+_test_debug_functions

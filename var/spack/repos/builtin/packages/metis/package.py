@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,19 +16,12 @@ class Metis(Package):
        multilevel recursive-bisection, multilevel k-way, and multi-constraint
        partitioning schemes."""
 
-    #
-    # The original metis website: http://glaros.dtc.umn.edu/gkhome/metis/metis/overview
-    # is down sometimes. This is a github mirror that provides metis 5.1.0
-    #
-
-    homepage = "https://github.com/scivision/METIS/"
-    url      = "https://github.com/scivision/METIS/raw/master/metis-5.1.0.tar.gz"
+    homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
+    url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
+    list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
 
     version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
-    # For v4.0.3, use the original metis website since this version is not
-    # mirrored at the above github location.
-    version('4.0.3', url='http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-4.0.3.tar.gz',
-            sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
+    version('4.0.3', sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
     variant('gdb', default=False, description='Enables gdb support (version 5+).')

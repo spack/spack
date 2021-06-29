@@ -1,11 +1,17 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import inspect
-import collections
 import functools
+import sys
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import MutableSequence  # novm
+else:
+    from collections import MutableSequence
 
 
 class Delegate(object):
@@ -52,7 +58,7 @@ def composite(interface=None, method_list=None, container=list):
     # exception if it doesn't. The patched class returned by the decorator will
     # inherit from the container class to expose the interface needed to manage
     # objects composition
-    if not issubclass(container, collections.MutableSequence):
+    if not issubclass(container, MutableSequence):
         raise TypeError("Container must fulfill the MutableSequence contract")
 
     # Check if at least one of the 'interface' or the 'method_list' arguments

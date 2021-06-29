@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index eff5ab4..aca4441 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -197,6 +197,8 @@ add_subdirectory(doc)
+ add_subdirectory(test)
+ add_subdirectory(tools)
+ 
++target_include_directories(migraphx PUBLIC "${NLOHMANN_JSON_INCLUDE}")
++
+ set(DEST_DIR ${CMAKE_BINARY_DIR})
+ file(GLOB backend_files ${CMAKE_SOURCE_DIR}/src/py/backend/*.py)
+ file(MAKE_DIRECTORY ${DEST_DIR}/lib/onnx_migraphx)

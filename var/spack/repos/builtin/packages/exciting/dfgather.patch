@@ -1,0 +1,27 @@
+--- dfgather.F90_old	2020-09-16 17:19:18.000000000 -0600
++++ dfgather.F90	2020-09-16 17:19:21.000000000 -0600
+@@ -27,6 +27,11 @@
+   ! loop over q-points
+       Do iq = 1, nqpt
+          tq0 = tqgamma (iq)
++
++        call genfilname(basename='X0', bzsampl=bzsampl,&
++         & acont=input%xs%tddft%acont, nar= .not. input%xs%tddft%aresdf,&
++         & tord=input%xs%tddft%torddf, markfxcbse=tfxcbse, iqmt=iq, filnam=fnchi0)
++     
+      ! calculate k+q and G+k+q related variables
+          Call init1offs (qvkloff(1, iq))
+      ! size of local field effects
+@@ -54,6 +59,12 @@
+                call mpi_bcast(chi0hd,3*3,MPI_DOUBLE_COMPLEX,iproc,mpi_comm_world,ierr)
+ #endif
+                if(rank.eq.0.or.(firstinnode.and. .not.input%sharedfs))then
++                 if (iw == wpari) then
++                   print *, 'procs=', procs
++                   print *, 'rank=', rank
++                   print *, 'iq=', iq, '/', nqpt
++                   print *, 'fnchi0=',trim(fnchi0)
++                 end if
+                Call putx0 (tq0, iq, iw, trim(fnchi0), '', chi0, chi0wg, &
+               & chi0hd)
+               endif

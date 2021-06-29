@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyHpcbench(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/hpcbench"
 
-    url      = "https://pypi.io/packages/source/h/hpcbench/hpcbench-0.8.tar.gz"
+    pypi = "hpcbench/hpcbench-0.8.tar.gz"
     git      = "https://github.com/BlueBrain/hpcbench.git"
 
     version('master', branch='master')

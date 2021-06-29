@@ -1,0 +1,10 @@
+--- a/contrib/minizip/miniunz.c	2010-07-18 11:04:24.000000000 -0500
++++ b/contrib/minizip/miniunz.c	2020-12-25 21:39:19.000000000 -0600
+@@ -45,6 +45,7 @@
+ #include <time.h>
+ #include <errno.h>
+ #include <fcntl.h>
++#include <sys/stat.h>
+ 
+ #ifdef _WIN32
+ # include <direct.h>

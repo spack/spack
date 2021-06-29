@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyHttpbin(PythonPackage):
     """HTTP Request and Response Service"""
 
     homepage = "https://github.com/Runscope/httpbin"
-    url = "https://pypi.io/packages/source/h/httpbin/httpbin-0.7.0.tar.gz"
+    pypi = "httpbin/httpbin-0.7.0.tar.gz"
 
     version('0.7.0', sha256='cbb37790c91575f4f15757f42ad41d9f729eb227d5edbe89e4ec175486db8dfa')
     version('0.5.0', sha256='79fbc5d27e4194ea908b0fa18e09a59d95d287c91667aa69bcd010342d1589b5')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ class PyAzureMgmtRecoveryservicesbackup(PythonPackage):
     Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-recoveryservicesbackup/azure-mgmt-recoveryservicesbackup-0.8.0.zip"
+    pypi = "azure-mgmt-recoveryservicesbackup/azure-mgmt-recoveryservicesbackup-0.8.0.zip"
 
     version('0.8.0', sha256='a0ee89691b21945cc4b892a9194320f50c1cd242d98f00a82d7e3848c28517a5')
     version('0.6.0', sha256='4df62479c90a6f93e7689f9d58e0a139899f0407f5e3298d5ce014442599428f')

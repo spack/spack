@@ -1,0 +1,34 @@
+From 93f2a963e4c23c0acbcdbb349f157cf8c640ce14 Mon Sep 17 00:00:00 2001
+From: "David J. Gardner" <gardner48@llnl.gov>
+Date: Wed, 31 Mar 2021 20:59:30 -0700
+Subject: [PATCH] remove links to OpenMP vector
+
+---
+ examples/arkode/CXX_superludist/CMakeLists.txt | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/examples/arkode/CXX_superludist/CMakeLists.txt b/examples/arkode/CXX_superludist/CMakeLists.txt
+index 9c486b1cd..6de445851 100644
+--- a/examples/arkode/CXX_superludist/CMakeLists.txt
++++ b/examples/arkode/CXX_superludist/CMakeLists.txt
+@@ -45,7 +45,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+ set(ARKODE_LIB sundials_arkode)
+ set(SUNMAT_LIB sundials_sunmatrixslunrloc)
+ set(SUNLS_LIB sundials_sunlinsolsuperludist)
+-set(NVECP_LIB sundials_nvecopenmp)
+ 
+ # Set-up linker flags and link libraries
+ set(SUNDIALS_LIBS ${ARKODE_LIB} ${NVECP_LIB} ${SUNMAT_LIB} ${SUNLS_LIB} ${EXTRA_LINK_LIBS})
+@@ -102,8 +101,7 @@ if(EXAMPLES_INSTALL)
+   set(SOLVER "ARKODE")
+   string(CONCAT SUNDIALS_LIBS "-lsundials_arkode "
+     "-lsundials_sunmatrixslunrloc "
+-    "-lsundials_sunlinsolsuperludist "
+-    "-lsundials_nvecopenmp")
++    "-lsundials_sunlinsolsuperludist")
+ 
+   examples2string(ARKODE_examples EXAMPLES)
+ 
+-- 
+2.24.3 (Apple Git-128)
+

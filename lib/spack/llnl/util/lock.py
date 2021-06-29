@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -264,7 +264,7 @@ class Lock(object):
         self.old_host = self.host
 
         self.pid = os.getpid()
-        self.host = socket.getfqdn()
+        self.host = socket.gethostname()
 
         # write pid, host to disk to sync over FS
         self._file.seek(0)

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RHh(RPackage):
-    """HH: Statistical Analysis and Data Display: Heiberger and Holland.
+    """Statistical Analysis and Data Display: Heiberger and Holland.
 
     Support software for Statistical Analysis and Data Display (Second
     Edition, Springer, ISBN 978-1-4939-2121-8, 2015) and (First Edition,
@@ -28,6 +28,7 @@ class RHh(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/HH_3.1-40.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/HH"
 
+    version('3.1-43', sha256='2ed35c8fc97092e9d2ce3439a2ec342d5d7bd93ad8f5266995cc80d88cd2235b')
     version('3.1-40', sha256='795924d900a98ae367e6697b2c951c3b4910a54931aebcad5024eda083d4a8a2')
 
     depends_on('r@3.0.2:', type=('build', 'run'))

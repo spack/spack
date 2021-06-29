@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -429,6 +429,8 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     # .tgz
     ('ADOL-C', '2.6.1',
      'http://www.coin-or.org/download/source/ADOL-C/ADOL-C-2.6.1.tgz'),
+    # .tbz
+    ('mpfr', '4.0.1', 'https://ftpmirror.gnu.org/mpfr/mpfr-4.0.1.tbz'),
     # .tbz2
     ('mpfr', '4.0.1', 'https://ftpmirror.gnu.org/mpfr/mpfr-4.0.1.tbz2'),
     # .txz

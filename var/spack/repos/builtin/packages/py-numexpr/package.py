@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,9 +8,11 @@ from spack import *
 
 class PyNumexpr(PythonPackage):
     """Fast numerical expression evaluator for NumPy"""
-    homepage = "https://pypi.python.org/pypi/numexpr"
+
+    homepage = "https://github.com/pydata/numexpr"
     url      = "https://github.com/pydata/numexpr/archive/v2.7.0.tar.gz"
 
+    version('2.7.2', sha256='7d1b3790103221feda07f4a93a4fa5c6654f46865197a677ca6f27eb5cb4e5ef')
     version('2.7.0', sha256='1923f038b90cc69635871968ed742be7775c879451c612f173c2547c823c9561')
     version('2.6.9', sha256='d57267bbdf10906f5ed7841b3484bec4af0494102b50e89ba316924cc7a7fd46')
     version('2.6.5', sha256='fe78a78e002806e87e012b6105f3b3d52d47fc7a72bafb56341fcec7ce02cfd7')

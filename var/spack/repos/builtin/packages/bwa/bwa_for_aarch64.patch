@@ -7,7 +7,7 @@ index 9793e5e..2eecef4 100644
  #include <stdint.h>
  #include <assert.h>
 -#include <emmintrin.h>
-+#include <SSE2NEON.h>
++#include <sse2neon.h>
  #include "ksw.h"
  
  #ifdef USE_MALLOC_WRAPPERS

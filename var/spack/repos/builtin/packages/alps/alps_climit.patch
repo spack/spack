@@ -1,0 +1,11 @@
+diff -u -r -N e/alps/src/alps/osiris/xdrcore.C h/alps/src/alps/osiris/xdrcore.C
+--- e/alps/src/alps/osiris/xdrcore.C	2020-11-04 12:59:46.000000000 +0900
++++ h/alps/src/alps/osiris/xdrcore.C	2020-12-16 11:45:16.000000000 +0900
+@@ -66,6 +66,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <stdlib.h>
++#include <climits>
+ 
+ #include <alps/osiris/xdrcore.h>
+ 

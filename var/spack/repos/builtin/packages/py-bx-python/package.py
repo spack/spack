@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyBxPython(PythonPackage):
     to allow for rapid implementation of genome scale analyses."""
 
     homepage = "https://github.com/bxlab/bx-python"
-    url      = "https://pypi.io/packages/source/b/bx-python/bx-python-0.8.8.tar.gz"
+    pypi = "bx-python/bx-python-0.8.8.tar.gz"
 
     version('0.8.8', sha256='ad0808ab19c007e8beebadc31827e0d7560ac0e935f1100fb8cc93607400bb47')
     version('0.7.4',

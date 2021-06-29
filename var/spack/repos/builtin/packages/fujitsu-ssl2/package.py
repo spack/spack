@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,7 +54,8 @@ class FujitsuSsl2(Package):
             else:
                 libslist.append("libfjlapack.so")
 
-        libslist.append("libfj90rt2.a")
+        if "+parallel" in spec:  # parallel
+            libslist.extend(["libfjomphk.so", "libfjomp.so"])
 
         if spec.target == "a64fx":  # Build with SVE support
             if "+parallel" in spec:  # parallel
@@ -72,7 +73,7 @@ class FujitsuSsl2(Package):
         else:
             libslist.append("libfj90fmt.a")
 
-        libslist.extend(["libfj90f.a", "libfjsrcinfo.a", "libfj90rt.so"])
+        libslist.extend(["libfj90f.so", "libfjsrcinfo.so", "libfj90rt.so"])
 
         libspath = find(self.prefix.lib64, libslist, recursive=False)
         libs = LibraryList(libspath)
@@ -104,8 +105,11 @@ class FujitsuSsl2(Package):
             libslist.append("libscalapack.a")
 
         libslist.extend(
-            ["libmpi_usempi_ignore_tkr.so", "libmpi_mpifh.so", "libfj90rt2.a"]
+            ["libmpi_usempi_ignore_tkr.so", "libmpi_mpifh.so"]
         )
+
+        if "+parallel" in spec:  # parallel
+            libslist.extend(["libfjomphk.so", "libfjomp.so"])
 
         if spec.target == "a64fx":  # Build with SVE support
             if "+parallel" in spec:  # parallel
@@ -123,7 +127,7 @@ class FujitsuSsl2(Package):
         else:
             libslist.append("libfj90fmt.a")
 
-        libslist.extend(["libfj90f.a", "libfjsrcinfo.a", "libfj90rt.so"])
+        libslist.extend(["libfj90f.so", "libfjsrcinfo.so", "libfj90rt.so"])
 
         libspath = find(self.prefix.lib64, libslist, recursive=False)
         libs = LibraryList(libspath)
@@ -133,9 +137,16 @@ class FujitsuSsl2(Package):
     def setup_dependent_build_environment(self, env, dependent_spec):
         path = self.prefix.include
         env.append_flags(
-            "fcc_ENV", "-lm -lrt -lpthread -lelf -lz -ldl -idirafter " + path
+            "fcc_ENV", "-idirafter " + path
         )
         env.append_flags(
-            "FCC_ENV", "-lm -lrt -lpthread -lelf -lz -ldl -idirafter " + path
+            "FCC_ENV", "-idirafter " + path
         )
-        env.append_flags("FORT90C", "-lm -lrt -lpthread -lelf -lz -ldl")
+
+    @property
+    def headers(self):
+        path = join_path(
+            self.spec.prefix, "clang-comp"
+        )
+        headers = find_headers('cssl', path, recursive=True)
+        return headers

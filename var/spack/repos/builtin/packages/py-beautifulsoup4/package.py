@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyBeautifulsoup4(PythonPackage):
     of navigating, searching, and modifying the parse tree."""
 
     homepage = "https://www.crummy.com/software/BeautifulSoup"
-    url = "https://pypi.io/packages/source/b/beautifulsoup4/beautifulsoup4-4.8.0.tar.gz"
+    pypi = "beautifulsoup4/beautifulsoup4-4.8.0.tar.gz"
 
     version('4.8.0', sha256='25288c9e176f354bf277c0a10aa96c782a6a18a17122dba2e8cec4a97e03343b')
     version('4.5.3', sha256='b21ca09366fa596043578fd4188b052b46634d22059e68dd0077d9ee77e08a3e')

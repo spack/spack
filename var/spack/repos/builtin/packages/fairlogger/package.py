@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 #   Spack Project Developers. See the top-level COPYRIGHT file for details.
 # Copyright 2020 GSI Helmholtz Centre for Heavy Ion Research GmbH,
 #   Darmstadt, Germany
@@ -36,7 +36,7 @@ class Fairlogger(CMakePackage):
             multi=False,
             description='CMake build type')
     variant('cxxstd', default='default',
-            values=('11', '14', '17'),
+            values=('default', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant('pretty',
@@ -68,8 +68,7 @@ class Fairlogger(CMakePackage):
         if cxxstd != 'default':
             args.append('-DCMAKE_CXX_STANDARD=%s' % cxxstd)
         if self.spec.satisfies('@1.4:'):
-            args.append('-DUSE_BOOST_PRETTY_FUNCTION=%s' %
-                        ('ON' if '+pretty' in self.spec else 'OFF'))
+            args.append(self.define_from_variant('USE_BOOST_PRETTY_FUNCTION', 'pretty'))
         if self.spec.satisfies('@1.6:'):
             args.append('-DUSE_EXTERNAL_FMT=ON')
         if self.spec.satisfies('^boost@:1.69.99'):

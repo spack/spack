@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,28 @@ class Sio(CMakePackage):
     maintainers = ['vvolkl', 'tmadlener']
 
     version('master', branch='master')
+    version('0.1',   sha256='0407c0daeae53660c0562f9302a220f72ab51547050cd9fe9113b995804ab4b4')
+    version('0.0.4', sha256='72e96e6a1cc8dd3641d3e2bb9876e75bf6af8074e1617220da9e52df522ef5c0')
     version('0.0.3', sha256='4c8b9c08480fb53cd10abb0e1260071a8c3f68d06a8acfd373f6560a916155cc')
     version('0.0.2', sha256='e4cd2aeaeaa23c1da2c20c5c08a9b72a31b16b7a8f5aa6d480dcd561ef667657')
+
+    variant('builtin_zlib', default=True,
+            description='Use and statically link against a builtin version of zlib')
+    variant('cxxstd', default='17',
+            values=('11', '14', '17', '20'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
+    depends_on('zlib', when='~builtin_zlib')
+
+    def cmake_args(self):
+        return [
+            self.define('CMAKE_CXX_STANDARD', self.spec.variants['cxxstd'].value),
+            # Examples are built this way, but if the examples are built they
+            # are also used for tests
+            self.define('SIO_EXAMPLES', self.run_tests),
+            self.define_from_variant('SIO_BUILTIN_ZLIB', 'builtin_zlib')
+        ]
 
     def url_for_version(self, version):
         """Translate version numbers to ilcsoft conventions.

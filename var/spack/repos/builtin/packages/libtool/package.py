@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    tags = ['build-tools']
+
     executables = ['^g?libtool(ize)?$']
 
     @classmethod
@@ -53,7 +55,7 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
-        if self.spec.satisfies('%nvhpc'):
+        if self.spec.satisfies('%nvhpc@:20.11'):
             filter_file('-fno-builtin', '-Mnobuiltin', 'configure')
             filter_file('-fno-builtin', '-Mnobuiltin', 'libltdl/configure')
 

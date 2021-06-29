@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,10 +7,16 @@ from spack import *
 
 
 class RTximportdata(RPackage):
-    """This packages provides the output of running various transcript abundance
-    quantifiers on a set of 6 RNA-seq samples from the GEUVADIS project"""
+    """Import and summarize transcript-level estimates for transcript- and
+    gene-level analysis
 
-    homepage = "http://bioconductor.org/packages/release/data/experiment/html/tximportData.html"
-    url      = "http://bioconductor.org/packages/release/data/experiment/src/contrib/tximportData_1.18.0.tar.gz"
+    Imports transcript-level abundance, estimated counts and transcript
+    lengths, and summarizes into matrices for use with downstream gene-level
+    analysis packages. Average transcript length, weighted by sample-specific
+    transcript abundance estimates, is provided as a matrix which can be used
+    as an offset for different expression of gene-level counts."""
 
-    version('1.18.0', sha256='4edf9fdcf5b0086fc958d5ac0249668c7cf7e2fa941cd8d413620634d0cb5971')
+    homepage = "https://github.com/mikelove/tximport"
+    git      = "https://git.bioconductor.org/packages/tximportData"
+
+    version('1.18.0', commit='24945f8dd1e4e441ad5145fb7a37a1630912f929')

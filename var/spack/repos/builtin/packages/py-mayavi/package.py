@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyMayavi(PythonPackage):
     """Mayavi: 3D visualization of scientific data in Python."""
 
     homepage = "https://docs.enthought.com/mayavi/mayavi/index.html"
-    url      = "https://pypi.io/packages/source/m/mayavi/mayavi-4.7.1.tar.bz2"
+    pypi = "mayavi/mayavi-4.7.1.tar.bz2"
 
     version('4.7.1', sha256='be51fb6f886f304f7c593c907e6a2e88d7919f8f446cdccfcd184fa35b3db724')
 

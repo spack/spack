@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,9 @@ class Tophat(AutotoolsPackage):
     depends_on('bowtie2', type='run')
 
     parallel = False
+
+    def setup_build_environment(self, env):
+        env.append_flags("CFLAGS", self.compiler.cxx98_flag)
 
     def configure_args(self):
         return ["--with-boost={0}".format(self.spec['boost'].prefix)]

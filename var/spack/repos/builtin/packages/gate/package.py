@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,7 @@ class Gate(CMakePackage):
             values=('SGE', 'condor', 'openPBS', 'openmosix', 'slurm', 'xgrid'),
             multi=False)
 
-    depends_on('geant4~threads')  # Gate needs a non-threaded geant4
+    depends_on('geant4@:10.6~threads')  # Gate needs a non-threaded geant4
     depends_on('root')
     depends_on('itk+rtk', when='+rtk')
 
@@ -49,9 +49,15 @@ class Gate(CMakePackage):
         args = []
 
         if '+rtk' in self.spec:
-            args.append('-DGATE_USE_RTK=ON')
+            args.extend([
+                '-DGATE_USE_ITK=ON',
+                '-DGATE_USE_RTK=ON',
+            ])
         else:
-            args.append('-DGATE_USE_RTK=OFF')
+            args.extend([
+                '-DGATE_USE_ITK=OFF',
+                '-DGATE_USE_RTK=OFF',
+            ])
 
         return args
 

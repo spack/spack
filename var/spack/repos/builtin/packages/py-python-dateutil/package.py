@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,12 +10,9 @@ class PyPythonDateutil(PythonPackage):
     """Extensions to the standard Python datetime module."""
 
     homepage = "https://dateutil.readthedocs.io/"
-    url      = "https://pypi.io/packages/source/p/python-dateutil/python-dateutil-2.8.0.tar.gz"
+    pypi = "python-dateutil/python-dateutil-2.8.0.tar.gz"
 
-    import_modules = [
-        'dateutil', 'dateutil.zoneinfo', 'dateutil.parser', 'dateutil.tz'
-    ]
-
+    version('2.8.1', sha256='73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c')
     version('2.8.0', sha256='c89805f6f4d64db21ed966fda138f8a5ed7a4fdbc1a8ee329ce1b74e3c74da9e')
     version('2.7.5', sha256='88f9287c0174266bb0d8cedd395cfba9c58e87e5ad86b2ce58859bc11be3cf02')
     version('2.5.2', sha256='063907ef47f6e187b8fe0728952e4effb587a34f2dc356888646f9b71fbb2e4b')
@@ -27,13 +24,3 @@ class PyPythonDateutil(PythonPackage):
     depends_on('py-setuptools@24.3:', type='build')
     depends_on('py-setuptools-scm', type='build', when='@2.7.0:')
     depends_on('py-six@1.5:', type=('build', 'run'))
-    # depends_on('py-pytest', type='test')
-    # depends_on('py-hypothesis', type='test')
-    # depends_on('py-freezegun', type='test')
-
-    def build_test(self):
-        # Tests require freezegun, which depends on python-dateutil,
-        # creating circular dependency
-        # pytest = which('pytest')
-        # pytest()
-        pass

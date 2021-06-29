@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffyio(RPackage):
-    """Tools for parsing Affymetrix data files.
+    """Tools for parsing Affymetrix data files
 
        Routines for parsing Affymetrix data files based upon file format
        information. Primary focus is on accessing the CEL and CDF file
@@ -16,6 +16,7 @@ class RAffyio(RPackage):
     homepage = "https://bioconductor.org/packages/affyio"
     git      = "https://git.bioconductor.org/packages/affyio.git"
 
+    version('1.60.0', commit='ee20528b32700e99768da48143d6d45c9a7bbe91')
     version('1.54.0', commit='c0e306e1805a556a1074d1af1acdd18e0a04477f')
     version('1.52.0', commit='9da725ac1098a22a370fa96eb03e51e4f6d5d963')
     version('1.50.0', commit='911ea4f8e4cdf7b649b87ef7ed1a5f5b111ef38a')

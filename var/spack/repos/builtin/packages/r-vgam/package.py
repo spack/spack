@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,30 @@ from spack import *
 
 
 class RVgam(RPackage):
-    """An implementation of about 6 major classes of statistical regression
-    models."""
+    """Vector Generalized Linear and Additive Models
+
+    An implementation of about 6 major classes of statistical regression
+    models. The central algorithm is Fisher scoring and iterative reweighted
+    least squares. At the heart of this package are the vector generalized
+    linear and additive model (VGLM/VGAM) classes. VGLMs can be loosely thought
+    of as multivariate GLMs. VGAMs are data-driven VGLMs that use smoothing.
+    The book "Vector Generalized Linear and Additive Models: With an
+    Implementation in R" (Yee, 2015) <DOI:10.1007/978-1-4939-2818-7> gives
+    details of the statistical framework and the package. Currently only
+    fixed-effects models are implemented. Many (150+) models and distributions
+    are estimated by maximum likelihood estimation (MLE) or penalized MLE. The
+    other classes are RR-VGLMs (reduced-rank VGLMs), quadratic RR-VGLMs,
+    reduced-rank VGAMs, RCIMs (row-column interaction models)---these classes
+    perform constrained and unconstrained quadratic ordination (CQO/UQO) models
+    in ecology, as well as constrained additive ordination (CAO). Hauck-Donner
+    effect detection is implemented. Note that these functions are subject to
+    change; see the NEWS and ChangeLog files for latest changes."""
 
     homepage = "https://cloud.r-project.org/package=VGAM"
     url      = "https://cloud.r-project.org/src/contrib/VGAM_1.0-4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/VGAM"
 
+    version('1.1-5', sha256='30190b150f3e5478137d288a45f575b2654ad7c29254b0a1fe5c954ee010a1bb')
     version('1.1-1', sha256='de192bd65a7e8818728008de8e60e6dd3b61a13616c887a43e0ccc8147c7da52')
     version('1.0-6', sha256='121820a167411e847b41bdcb0028b55842d0ccc0c3471755c67449837e0fe3b9')
     version('1.0-4', sha256='e581985f78ef8b866d0e810b2727061bb9c9bc177b2c9090aebb3a35ae87a964')
@@ -22,6 +39,7 @@ class RVgam(RPackage):
     version('1.0-1', sha256='c066864e406fcee23f383a28299dba3cf83356e5b68df16324885afac87a05ea')
     version('1.0-0', sha256='6acdd7db49c0987c565870afe593160ceba72a6ca4a84e6da3cf6f74d1fa02e1')
 
-    depends_on('r@3.0.0:', when='@:1.0-1', type=('build', 'run'))
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.1.0:', when='@1.0-2:1.0-3', type=('build', 'run'))
     depends_on('r@3.4.0:', when='@1.0-4:', type=('build', 'run'))
+    depends_on('r@3.5.0:', when='@1.1-5:', type=('build', 'run'))

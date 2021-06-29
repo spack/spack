@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,4 +32,9 @@ class Libffi(AutotoolsPackage, SourcewarePackage):
             # Spack adds its own target flags, so tell libffi not to
             # second-guess us
             args.append('--without-gcc-arch')
+        # At the moment, build scripts accept 'aarch64-apple-darwin'
+        # but not 'arm64-apple-darwin'.
+        # See: https://github.com/libffi/libffi/issues/571
+        if self.spec.satisfies('platform=darwin target=aarch64:'):
+            args.append('--build=aarch64-apple-darwin')
         return args

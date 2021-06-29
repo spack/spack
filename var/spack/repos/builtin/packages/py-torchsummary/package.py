@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyTorchsummary(PythonPackage):
     print(your_model) in PyTorch."""
 
     homepage = "https://github.com/sksq96/pytorch-summary"
-    url      = "https://pypi.io/packages/source/t/torchsummary/torchsummary-1.5.1.tar.gz"
+    pypi = "torchsummary/torchsummary-1.5.1.tar.gz"
 
     version('1.5.1', sha256='981bf689e22e0cf7f95c746002f20a24ad26aa6b9d861134a14bc6ce92230590')
 

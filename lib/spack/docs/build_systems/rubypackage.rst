@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -113,7 +113,6 @@ the base class contains:
 .. code-block:: python
 
    extends('ruby')
-   depends_on('ruby', type=('build', 'run'))
 
 
 The ``*.gemspec`` file may contain something like:

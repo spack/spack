@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ class Ghost(CMakePackage, CudaPackage):
     # ###################### Dependencies ##########################
 
     # Everything should be compiled position independent (-fpic)
-    depends_on('cmake@3.5:')
+    depends_on('cmake@3.5:', type='build')
     depends_on('hwloc')
     depends_on('blas')
     depends_on('mpi', when='+mpi')
@@ -44,16 +44,11 @@ class Ghost(CMakePackage, CudaPackage):
         # note: we require the cblas_include_dir property from the blas
         # provider, this is implemented at least for intel-mkl and
         # netlib-lapack
-        args = ['-DGHOST_ENABLE_MPI:BOOL=%s'
-                % ('ON' if '+mpi' in spec else 'OFF'),
-                '-DGHOST_USE_CUDA:BOOL=%s'
-                % ('ON' if '+cuda' in spec else 'OFF'),
-                '-DGHOST_USE_SCOTCH:BOOL=%s'
-                % ('ON' if '+scotch' in spec else 'OFF'),
-                '-DGHOST_USE_ZOLTAN:BOOL=%s'
-                % ('ON' if '+zoltan' in spec else 'OFF'),
-                '-DBUILD_SHARED_LIBS:BOOL=%s'
-                % ('ON' if '+shared' in spec else 'OFF'),
+        args = [self.define_from_variant('GHOST_ENABLE_MPI', 'mpi'),
+                self.define_from_variant('GHOST_USE_CUDA', 'cuda'),
+                self.define_from_variant('GHOST_USE_SCOTCH', 'scotch'),
+                self.define_from_variant('GHOST_USE_ZOLTAN', 'zoltan'),
+                self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
                 '-DCBLAS_INCLUDE_DIR:STRING=%s'
                 % format(spec['blas'].headers.directories[0]),
                 '-DBLAS_LIBRARIES=%s'

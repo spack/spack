@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -82,7 +82,9 @@ class TestConcretizePreferences(object):
          {'debug': True, 'opt': True, 'shared': False, 'static': False}),
         # Check a multivalued variant with multiple values set
         ('multivalue-variant', ['foo=bar,baz', 'fee=bar'],
-         {'foo': ('bar', 'baz'), 'fee': 'bar'})
+         {'foo': ('bar', 'baz'), 'fee': 'bar'}),
+        ('singlevalue-variant', ['fum=why'],
+         {'fum': 'why'})
     ])
     def test_preferred_variants(
             self, package_name, variant_value, expected_results
@@ -371,3 +373,13 @@ mpi:
         spec = Spec('callpath')
         with pytest.raises(ConfigError):
             spack.package_prefs.get_package_permissions(spec)
+
+    @pytest.mark.regression('20040')
+    def test_variant_not_flipped_to_pull_externals(self):
+        """Test that a package doesn't prefer pulling in an
+        external to using the default value of a variant.
+        """
+        s = Spec('vdefault-or-external-root').concretized()
+
+        assert '~external' in s['vdefault-or-external']
+        assert 'externaltool' not in s

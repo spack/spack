@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyBackportsFunctoolsLruCache(PythonPackage):
     """Backport of functools.lru_cache from Python 3.3"""
 
     homepage = "https://github.com/jaraco/backports.functools_lru_cache"
-    url = "https://pypi.io/packages/source/b/backports.functools_lru_cache/backports.functools_lru_cache-1.4.tar.gz"
+    pypi = "backports.functools_lru_cache/backports.functools_lru_cache-1.4.tar.gz"
 
     py_namespace = 'backports'
 

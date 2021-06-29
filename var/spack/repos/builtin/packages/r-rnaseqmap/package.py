@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRnaseqmap(RPackage):
-    """rnaSeq secondary analyses.
+    """rnaSeq secondary analyses
 
        The rnaSeqMap library provides classes and functions to analyze the RNA-
        sequencing data using the coverage profiles in multiple samples at a
@@ -16,6 +16,7 @@ class RRnaseqmap(RPackage):
     homepage = "https://bioconductor.org/packages/rnaSeqMap"
     git      = "https://git.bioconductor.org/packages/rnaSeqMap.git"
 
+    version('2.48.0', commit='a8c515e518cebf571d1524c3a8a986ba7d1557db')
     version('2.42.0', commit='3a3a1030cc38d79d04536e0ab16114e4fa6721cf')
     version('2.40.1', commit='c122d645b3503fb1a061f5515e4f8cf2863b3ba3')
     version('2.38.0', commit='5eb9583bfacd375161739a8ae6057204487f8b9e')

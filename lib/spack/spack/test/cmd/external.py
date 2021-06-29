@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pytest
+
 import os
 import os.path
 
@@ -242,3 +244,26 @@ def test_new_entries_are_reported_correctly(
     # has been found
     output = external('find', 'gcc')
     assert 'No new external packages detected' in output
+
+
+@pytest.mark.parametrize('command_args', [
+    ('-t', 'build-tools'),
+    ('-t', 'build-tools', 'cmake'),
+])
+def test_use_tags_for_detection(
+        command_args, mock_executable, mutable_config, monkeypatch
+):
+    # Prepare an environment to detect a fake cmake
+    cmake_exe = mock_executable('cmake', output="echo cmake version 3.19.1")
+    prefix = os.path.dirname(cmake_exe)
+    monkeypatch.setenv('PATH', prefix)
+
+    openssl_exe = mock_executable('openssl', output="OpenSSL 2.8.3")
+    prefix = os.path.dirname(openssl_exe)
+    monkeypatch.setenv('PATH', prefix)
+
+    # Test that we detect specs
+    output = external('find', *command_args)
+    assert 'The following specs have been' in output
+    assert 'cmake' in output
+    assert 'openssl' not in output

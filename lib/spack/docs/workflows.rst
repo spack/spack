@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -543,7 +543,8 @@ specified from the command line using the ``--projection-file`` option
 to the ``spack view`` command.
 
 The projections configuration file is a mapping of partial specs to
-spec format strings, as shown in the example below.
+spec format strings, defined by the :meth:`~spack.spec.Spec.format`
+function, as shown in the example below.
 
 .. code-block:: yaml
 

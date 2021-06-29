@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,3 +19,10 @@ class Rempi(AutotoolsPackage):
     depends_on("autoconf", type='build')
     depends_on("automake", type='build')
     depends_on("libtool", type='build')
+    depends_on("libpciaccess", type='link')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%cce'):
+            env.set('MPICC', 'mpicc')
+            env.set('MPICXX', 'mpicxx')
+            env.set('MPICH_CC', 'cc')

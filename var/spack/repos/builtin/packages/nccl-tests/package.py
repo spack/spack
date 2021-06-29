@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,11 @@ class NcclTests(MakefilePackage, CudaPackage):
             targets.append('MPI_HOME={0}'.format(self.spec['mpi'].prefix))
             targets.append('MPI=1')
         return targets
+
+    def setup_build_environment(self, env):
+        cuda_arch = self.spec.variants["cuda_arch"].value
+        cuda_gencode = " ".join(self.cuda_flags(cuda_arch))
+        env.set("NVCC_GENCODE", cuda_gencode)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

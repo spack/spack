@@ -1,10 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
 
 
 class Astyle(MakefilePackage):
@@ -32,9 +31,9 @@ class Astyle(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = join_path(self.build_directory, 'Makefile')
         filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
-        # strangely enough install -o $(USER) -g $(USER) stoped working on OSX
-        if sys.platform == 'darwin':
-            filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
+        # If the group is not a user account, the installation will fail,
+        # so remove the -o $ (USER) -g $ (USER) parameter.
+        filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
 
     @property
     def install_targets(self):

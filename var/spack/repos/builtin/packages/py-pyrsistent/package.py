@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyPyrsistent(PythonPackage):
        Persistent in the sense that they are immutable."""
 
     homepage = "http://github.com/tobgu/pyrsistent/"
-    url      = "https://pypi.io/packages/source/p/pyrsistent/pyrsistent-0.15.7.tar.gz"
+    pypi = "pyrsistent/pyrsistent-0.15.7.tar.gz"
 
     version('0.15.7', sha256='cdc7b5e3ed77bed61270a47d35434a30617b9becdf2478af76ad2c6ade307280')
 

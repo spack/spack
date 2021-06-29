@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,6 +59,8 @@ class Visit(CMakePackage):
     url = "https://github.com/visit-dav/visit/releases/download/v3.1.1/visit3.1.1.tar.gz"
 
     maintainers = ['cyrush']
+
+    extendable = True
 
     version('develop', branch='develop')
     version('3.1.1', sha256='0b60ac52fd00aff3cf212a310e36e32e13ae3ca0ddd1ea3f54f75e4d9b6c6cf0')
@@ -180,8 +182,8 @@ class Visit(CMakePackage):
     depends_on('vtk+python', when='+python @3.0:,develop')
     depends_on('vtk~mpi', when='~mpi')
     depends_on('vtk+qt', when='+gui')
-    depends_on('qt@4.8.6:4.999', when='+gui @:2.999')
-    depends_on('qt@5.10:', when='+gui @3.0:,develop')
+    depends_on('qt+gui@4.8.6:4.999', when='+gui @:2.999')
+    depends_on('qt+gui@5.10:', when='+gui @3.0:,develop')
     depends_on('qwt', when='+gui')
     depends_on('python@2.6:2.8', when='+python')
     # VisIt uses Silo's 'ghost zone' data structures, which are only available
@@ -230,6 +232,9 @@ class Visit(CMakePackage):
             '-DCMAKE_CXX_FLAGS=' + ' '.join(cxx_flags),
             '-DCMAKE_C_FLAGS=' + ' '.join(cc_flags),
         ]
+
+        # Provide the plugin compilation environment so as to extend VisIt
+        args.append('-DVISIT_INSTALL_THIRD_PARTY=ON')
 
         if spec.satisfies('@3.1:'):
             args.append('-DFIXUP_OSX=OFF')

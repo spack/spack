@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,7 @@ class PyCvxopt(PythonPackage):
     Python programming language."""
 
     homepage = "http://cvxopt.org/"
-    url      = "https://pypi.io/packages/source/c/cvxopt/cvxopt-1.1.9.tar.gz"
-
-    import_modules = ['cvxopt']
+    pypi = "cvxopt/cvxopt-1.1.9.tar.gz"
 
     version('1.2.5', sha256='94ec8c36bd6628a11de9014346692daeeef99b3b7bae28cef30c7490bbcb2d72')
     version('1.1.9', sha256='8f157e7397158812cabd340b68546f1baa55a486ed0aad8bc26877593dc2983d')

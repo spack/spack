@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,6 +62,7 @@ class Papi(AutotoolsPackage):
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
     patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8:')
+    patch('crayftn-fixes.patch', when='@6.0.0:%cce@9:')
 
     configure_directory = 'src'
 

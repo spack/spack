@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,7 +54,7 @@ def builtin_and_mock_packages():
     repo_dirs = [spack.paths.packages_path, spack.paths.mock_packages_path]
     path = RepoPath(*repo_dirs)
 
-    with spack.repo.swap(path):
+    with spack.repo.use_repositories(path):
         yield
 
 

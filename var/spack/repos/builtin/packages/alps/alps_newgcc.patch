@@ -1,0 +1,59 @@
+diff -u -r -N a/alps/applications/dmrg/dmrg/dmtk/system.h b/alps/applications/dmrg/dmrg/dmtk/system.h
+--- a/alps/applications/dmrg/dmrg/dmtk/system.h	2020-10-20 15:38:28.000000000 +0900
++++ b/alps/applications/dmrg/dmrg/dmtk/system.h	2020-10-20 15:40:15.000000000 +0900
+@@ -577,8 +577,11 @@
+     {
+       s.write((const char *)&_numsweeps, sizeof(size_t));
+       for(int i = 1; i <= _numsweeps; i++){
+-        s.write((const char *)&_sweeps(0,i), sizeof(double));
+-        s.write((const char *)&_sweeps(1,i), sizeof(double));
++        double x;
++        x = _sweeps(0,i);
++        s.write((const char *)&x, sizeof(double));
++        x = _sweeps(1,i);
++        s.write((const char *)&x, sizeof(double));
+       }
+       s.write((const char *)&_in_warmup, sizeof(bool));
+       s.write((const char *)&_sweep, sizeof(int));
+diff -u -r -N a/alps/applications/dmrg/mps/framework/dmrg/mp_tensors/twositetensor.hpp b/alps/applications/dmrg/mps/framework/dmrg/mp_tensors/twositetensor.hpp
+--- a/alps/applications/dmrg/mps/framework/dmrg/mp_tensors/twositetensor.hpp	2020-10-20 14:47:06.000000000 +0900
++++ b/alps/applications/dmrg/mps/framework/dmrg/mp_tensors/twositetensor.hpp	2020-10-20 14:47:53.000000000 +0900
+@@ -216,8 +216,8 @@
+     swap(this->left_i, b.left_i);
+     swap(this->right_i, b.right_i);
+     swap(this->data_, b.data_);
+-    swap(this->cur_storage, b.cur_storage);
+-    swap(this->cur_normalization, b.cur_normalization);
++    this->swap(this->cur_storage, b.cur_storage);
++    this->swap(this->cur_normalization, b.cur_normalization);
+ }
+ 
+ template<class Matrix, class SymmGroup>
+diff -u -r -N a/alps/applications/qmc/sse4/model.h b/alps/applications/qmc/sse4/model.h
+--- a/alps/applications/qmc/sse4/model.h	2020-10-20 15:12:20.000000000 +0900
++++ b/alps/applications/qmc/sse4/model.h	2020-12-15 14:56:27.000000000 +0900
+@@ -140,11 +140,6 @@
+         return diag_vertex_indices[e_index(state, utype, sites)];
+     }
+     
+-    double max_diag_me() const
+-    {
+-        return _max_diag_me;
+-    }
+-    
+     double c(unsigned unit_type) const
+     {
+         return epsilon + _max_diag_me[unit_type];
+diff -u -r -N a/alps/src/alps/alea/histogram.h b/alps/src/alps/alea/histogram.h
+--- a/alps/src/alps/alea/histogram.h	2020-10-20 14:49:19.000000000 +0900
++++ b/alps/src/alps/alea/histogram.h	2020-12-15 14:56:59.000000000 +0900
+@@ -85,9 +85,7 @@
+   // forward a few things from container
+ 
+   const_iterator begin() const { return histogram_.begin();}
+-  const_iterator rbegin() const { return histogram_.rbegin();}
+   const_iterator end() const { return histogram_.end();}
+-  const_iterator rend() const { return histogram_.rend();}
+   size_type size() const { return histogram_.size();}
+   value_type operator[](size_type i) const { return histogram_[i];}
+   value_type at(size_type i) const { return histogram_.at(i);}

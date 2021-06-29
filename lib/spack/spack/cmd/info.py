@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -111,7 +111,7 @@ class VariantFormatter(object):
             yield '    None'
         else:
             yield '    ' + self.fmt % self.headers
-            underline = tuple([l * "=" for l in self.column_widths])
+            underline = tuple([w * "=" for w in self.column_widths])
             yield '    ' + self.fmt % underline
             yield ''
             for k, v in sorted(self.variants.items()):
@@ -121,10 +121,12 @@ class VariantFormatter(object):
                 )
                 allowed = v.allowed_values.replace('True, False', 'on, off')
                 allowed = textwrap.wrap(allowed, width=self.column_widths[1])
-                description = textwrap.wrap(
-                    v.description,
-                    width=self.column_widths[2]
-                )
+                description = []
+                for d_line in v.description.split('\n'):
+                    description += textwrap.wrap(
+                        d_line,
+                        width=self.column_widths[2]
+                    )
                 for t in zip_longest(
                         name, allowed, description, fillvalue=''
                 ):
@@ -152,6 +154,26 @@ def print_text_info(pkg):
         mnt = " ".join(['@@' + m for m in pkg.maintainers])
         color.cprint('')
         color.cprint(section_title('Maintainers: ') + mnt)
+
+    color.cprint('')
+    color.cprint(section_title('Externally Detectable: '))
+
+    # If the package has an 'executables' field, it can detect an installation
+    if hasattr(pkg, 'executables'):
+        find_attributes = []
+        if hasattr(pkg, 'determine_version'):
+            find_attributes.append('version')
+
+        if hasattr(pkg, 'determine_variants'):
+            find_attributes.append('variants')
+
+        # If the package does not define 'determine_version' nor
+        # 'determine_variants', then it must use some custom detection
+        # mechanism. In this case, just inform the user it's detectable somehow.
+        color.cprint('    True{0}'.format(
+            ' (' + ', '.join(find_attributes) + ')' if find_attributes else ''))
+    else:
+        color.cprint('    False')
 
     color.cprint('')
     color.cprint(section_title("Tags: "))
@@ -189,10 +211,11 @@ def print_text_info(pkg):
         color.cprint(section_title('Safe versions:  '))
 
         for v in reversed(sorted(pkg.versions)):
-            if pkg.has_code:
-                url = fs.for_package_version(pkg, v)
-            line = version('    {0}'.format(pad(v))) + color.cescape(url)
-            color.cprint(line)
+            if not pkg.versions[v].get('deprecated', False):
+                if pkg.has_code:
+                    url = fs.for_package_version(pkg, v)
+                line = version('    {0}'.format(pad(v))) + color.cescape(url)
+                color.cprint(line)
 
     color.cprint('')
     color.cprint(section_title('Variants:'))

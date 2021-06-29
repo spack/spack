@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,7 +55,8 @@ class MacOs(OperatingSystem):
             '10.14': 'mojave',
             '10.15': 'catalina',
             '10.16': 'bigsur',
-            '11':  'bigsur',
+            '11': 'bigsur',
+            '12': 'monterey',
         }
 
         # Big Sur versions go 11.0, 11.0.1, 11.1 (vs. prior versions that

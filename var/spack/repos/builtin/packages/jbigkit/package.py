@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,3 +33,9 @@ class Jbigkit(MakefilePackage):
             mkdir(prefix.bin)
             for f in ['tstcodec', 'tstcodec85']:
                 install(f, prefix.bin)
+
+    @property
+    def libs(self):
+        return find_libraries(
+            "libjbig*", root=self.prefix, shared=False, recursive=True
+        )

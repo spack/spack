@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Liggghts(MakefilePackage):
     variant('profile', default=False,
             description='Generate profiling code')
 
-    depends_on('vtk')
+    depends_on('vtk@6.1.0:8.2.0')
     depends_on('mpi', when='+mpi')
     depends_on('jpeg', when='+jpeg')
     depends_on('zlib', when="+gzip")

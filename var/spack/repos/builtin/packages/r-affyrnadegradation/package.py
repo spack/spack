@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class RAffyrnadegradation(RPackage):
     """Analyze and correct probe positional bias in microarray data due to RNA
-       degradation.
+       degradation
 
        The package helps with the assessment and correction of RNA degradation
        effects in Affymetrix 3' expression arrays. The parameter d gives a
@@ -19,6 +19,7 @@ class RAffyrnadegradation(RPackage):
     homepage = "https://bioconductor.org/packages/AffyRNADegradation"
     git      = "https://git.bioconductor.org/packages/AffyRNADegradation.git"
 
+    version('1.36.0', commit='89662b93076659db2967a526899184c12c156bc5')
     version('1.30.0', commit='620c464fb09248e1c7a122828eab59a4fb778cc1')
     version('1.28.0', commit='aff91d78fa9e76edaa3ef6a9a43b98b86cc44c24')
     version('1.26.0', commit='6ab03ad624701464280bf7dfe345d200e846298a')

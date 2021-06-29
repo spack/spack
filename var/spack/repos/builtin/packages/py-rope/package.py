@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyRope(PythonPackage):
     """a python refactoring library."""
 
     homepage = "https://github.com/python-rope/rope"
-    url      = "https://pypi.io/packages/source/r/rope/rope-0.10.5.tar.gz"
+    pypi = "rope/rope-0.10.5.tar.gz"
 
     version('0.11.0', sha256='a108c445e1cd897fe19272ab7877d172e7faf3d4148c80e7d20faba42ea8f7b2')
     version('0.10.7', sha256='a09edfd2034fd50099a67822f9bd851fbd0f4e98d3b87519f6267b60e50d80d1')

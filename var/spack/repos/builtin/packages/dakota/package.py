@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,6 +44,7 @@ class Dakota(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     depends_on('python')
+    depends_on('perl-data-dumper', type='build', when='@6.12:')
     depends_on('boost@:1.68.0', when='@:6.12')
     depends_on('cmake@2.8.9:', type='build')
 
@@ -51,8 +52,7 @@ class Dakota(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
 
         if '+mpi' in spec:

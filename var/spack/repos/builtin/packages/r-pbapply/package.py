@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,19 @@ from spack import *
 
 
 class RPbapply(RPackage):
-    """A lightweight package that adds progress bar to vectorized R
-    apply functions."""
+    """Adding Progress Bar to '*apply' Functions
+
+    A lightweight package that adds progress bar to vectorized R functions
+    ('*apply'). The implementation can easily be added to functions where
+    showing the progress is useful (e.g. bootstrap). The type and style of the
+    progress bar (with percentages or remaining time) can be set through
+    options. Supports several parallel processing backends."""
 
     homepage = "https://cloud.r-project.org/package=pbapply"
     url      = "https://cloud.r-project.org/src/contrib/pbapply_1.3-3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pbapply"
 
+    version('1.4-3', sha256='8fe6287535be766b5a688810e2cc1ca4e668ac6b42b6e832473fe5701133eb21')
     version('1.4-1', sha256='b3633349181db944e1dfc4422b4728a6562e454117a232cbb51633906cd27cad')
     version('1.3-4', sha256='cdfdaf9b8aecbe48daac858aecaf65a766b74a363d1eb7cd6ebf27c0549f6552')
     version('1.3-3', sha256='7379b21d1176db5769f5cac858dd12c975736e80a600870180cec9625cf51047')

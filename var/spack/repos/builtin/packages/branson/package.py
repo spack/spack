@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Branson(CMakePackage):
     depends_on('mpi@2:')
     depends_on('boost', when='@:0.81')
     depends_on('metis')
-    depends_on('parmetis', when='@:0.82')
+    depends_on('parmetis', when='@:0.81')
 
     root_cmakelists_dir = 'src'
 

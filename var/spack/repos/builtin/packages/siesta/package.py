@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,11 @@ class Siesta(Package):
 
     phases = ['configure', 'build', 'install']
 
+    def flag_handler(self, name, flags):
+        if '%gcc@10:' in self.spec and name == 'fflags':
+            flags.append('-fallow-argument-mismatch')
+        return (flags, None, None)
+
     def configure(self, spec, prefix):
         sh = which('sh')
         configure_args = ['--enable-mpi',
@@ -45,6 +50,8 @@ class Siesta(Package):
                           # Intel's mpiifort is not found
                           'MPIFC=%s' % spec['mpi'].mpifc
                           ]
+        if self.spec.satisfies('%gcc'):
+            configure_args.append('FCFLAGS=-ffree-line-length-0')
         for d in ['Obj', 'Obj_trans']:
             with working_dir(d, create=True):
                 sh('../Src/configure', *configure_args)

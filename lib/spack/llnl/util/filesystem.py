@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,12 @@ import six
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
 from spack.util.executable import Executable
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Sequence  # novm
+else:
+    from collections import Sequence
 
 __all__ = [
     'FileFilter',
@@ -63,7 +69,8 @@ __all__ = [
     'touchp',
     'traverse_tree',
     'unset_executable_mode',
-    'working_dir'
+    'working_dir',
+    'keep_modification_time'
 ]
 
 
@@ -1105,7 +1112,7 @@ def find(root, files, recursive=True):
 
     Parameters:
         root (str): The root directory to start searching from
-        files (str or collections.Sequence): Library name(s) to search for
+        files (str or Sequence): Library name(s) to search for
         recurse (bool, optional): if False search only root folder,
             if True descends top-down from the root. Defaults to True.
 
@@ -1168,7 +1175,7 @@ def _find_non_recursive(root, search_files):
 # Utilities for libraries and headers
 
 
-class FileList(collections.Sequence):
+class FileList(Sequence):
     """Sequence of absolute paths to files.
 
     Provides a few convenience methods to manipulate file paths.
@@ -1411,7 +1418,7 @@ def find_headers(headers, root, recursive=False):
     """
     if isinstance(headers, six.string_types):
         headers = [headers]
-    elif not isinstance(headers, collections.Sequence):
+    elif not isinstance(headers, Sequence):
         message = '{0} expects a string or sequence of strings as the '
         message += 'first argument [got {1} instead]'
         message = message.format(find_headers.__name__, type(headers))
@@ -1566,7 +1573,7 @@ def find_system_libraries(libraries, shared=True):
     """
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
-    elif not isinstance(libraries, collections.Sequence):
+    elif not isinstance(libraries, Sequence):
         message = '{0} expects a string or sequence of strings as the '
         message += 'first argument [got {1} instead]'
         message = message.format(find_system_libraries.__name__,
@@ -1620,7 +1627,7 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     """
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
-    elif not isinstance(libraries, collections.Sequence):
+    elif not isinstance(libraries, Sequence):
         message = '{0} expects a string or sequence of strings as the '
         message += 'first argument [got {1} instead]'
         message = message.format(find_libraries.__name__, type(libraries))
@@ -1819,3 +1826,24 @@ def remove_directory_contents(dir):
                 os.unlink(entry)
             else:
                 shutil.rmtree(entry)
+
+
+@contextmanager
+def keep_modification_time(*filenames):
+    """
+    Context manager to keep the modification timestamps of the input files.
+    Tolerates and has no effect on non-existent files and files that are
+    deleted by the nested code.
+
+    Parameters:
+        *filenames: one or more files that must have their modification
+            timestamps unchanged
+    """
+    mtimes = {}
+    for f in filenames:
+        if os.path.exists(f):
+            mtimes[f] = os.path.getmtime(f)
+    yield
+    for f, mtime in mtimes.items():
+        if os.path.exists(f):
+            os.utime(f, (os.path.getatime(f), mtime))

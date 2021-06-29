@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -125,10 +125,6 @@ def test_buildcache_create_fails_on_noargs(tmpdir):
         buildcache('create', '-d', str(tmpdir), '--unsigned')
 
 
-@pytest.mark.skipif(
-    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
-    reason='Test for Clingo are run in a container with root permissions'
-)
 def test_buildcache_create_fail_on_perm_denied(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
     """Ensure that buildcache create fails on permission denied error."""
@@ -142,8 +138,6 @@ def test_buildcache_create_fail_on_perm_denied(
     tmpdir.chmod(0o700)
 
 
-@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
-                    reason='This test requires gpg')
 def test_update_key_index(tmpdir, mutable_mock_env_path,
                           install_mockery, mock_packages, mock_fetch,
                           mock_stage, mock_gnupghome):

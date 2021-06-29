@@ -12,9 +12,12 @@ try:
     from ruamel.ordereddict import ordereddict
 except:
     try:
-        from collections import OrderedDict
+        from collections.abc import OrderedDict
     except ImportError:
-        from ordereddict import OrderedDict
+        try:
+            from collections import OrderedDict
+        except ImportError:
+            from ordereddict import OrderedDict
     # to get the right name import ... as ordereddict doesn't do that
 
     class ordereddict(OrderedDict):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,5 +19,3 @@ class PyBlosc(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-scikit-build', type='build')
     # depends_on('c-blosc')  # shipped internally
-    depends_on('py-numpy', type='test')
-    depends_on('py-psutil', type='test')

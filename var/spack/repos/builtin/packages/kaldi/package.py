@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -68,7 +68,7 @@ class Kaldi(Package):    # Does not use Autotools
                 configure_args.append('--threaded-atlas')
         elif '^intel-parallel-studio' in spec or '^intel-mkl' in spec:
             configure_args.append('--mathlib=MKL')
-            configure_args.append('--mkl-root=' + spec['blas'].prefix)
+            configure_args.append('--mkl-root=' + spec['blas'].prefix.mkl)
             if '+openmp' in spec['blas'].variants:
                 configure_args.append('--mkl-threading=iomp')
 

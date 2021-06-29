@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,8 +31,10 @@ class Maker(Package):
     http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.yandell-lab.org/software/maker.html"
+    manual_download = True
 
-    version('2.31.10',      sha256='d3979af9710d61754a3b53f6682d0e2052c6c3f36be6f2df2286d2587406f07d')
+    version('3.01.03', sha256='d3979af9710d61754a3b53f6682d0e2052c6c3f36be6f2df2286d2587406f07d')
+    version('2.31.10', sha256='d3979af9710d61754a3b53f6682d0e2052c6c3f36be6f2df2286d2587406f07d')
 
     def url_for_version(self, version):
         return "file://{0}/maker-{1}.tgz".format(os.getcwd(), version)

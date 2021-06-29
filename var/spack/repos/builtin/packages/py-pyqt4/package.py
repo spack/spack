@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,13 +16,6 @@ class PyPyqt4(SIPPackage):
     url      = "http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.12.3/PyQt4_gpl_x11-4.12.3.tar.gz"
 
     sip_module = 'PyQt4.sip'
-    import_modules = [
-        'PyQt4', 'PyQt4.Qt', 'PyQt4.QtCore', 'PyQt4.QtDeclarative',
-        'PyQt4.QtDesigner', 'PyQt4.QtGui', 'PyQt4.QtHelp',
-        'PyQt4.QtMultimedia', 'PyQt4.QtNetwork', 'PyQt4.QtOpenGL',
-        'PyQt4.QtScript', 'PyQt4.QtScriptTools', 'PyQt4.QtSql', 'PyQt4.QtSvg',
-        'PyQt4.QtTest', 'PyQt4.QtWebKit', 'PyQt4.QtXml', 'PyQt4.QtXmlPatterns'
-    ]
 
     version('4.12.3', sha256='a00f5abef240a7b5852b7924fa5fdf5174569525dc076cd368a566619e56d472')
     version('4.11.3', sha256='853780dcdbe2e6ba785d703d059b096e1fc49369d3e8d41a060be874b8745686',

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyFilelock(PythonPackage):
     inter-process communication"""
 
     homepage = "https://github.com/benediktschmitt/py-filelock"
-    url      = "https://pypi.io/packages/source/f/filelock/filelock-3.0.4.tar.gz"
+    pypi = "filelock/filelock-3.0.4.tar.gz"
 
     version('3.0.12',  sha256='18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59')
     version('3.0.4',  sha256='011327d4ed939693a5b28c0fdf2fd9bda1f68614c1d6d0643a89382ce9843a71')

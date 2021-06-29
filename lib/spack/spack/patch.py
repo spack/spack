@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -291,7 +291,7 @@ def from_dict(dictionary):
         if not checker.check(patch.path):
             raise fs.ChecksumError(
                 "sha256 checksum failed for %s" % patch.path,
-                "Expected %s but got %s" % (sha256, checker.sum),
+                "Expected %s but got %s " % (sha256, checker.sum) +
                 "Patch may have changed since concretization.")
         return patch
     else:

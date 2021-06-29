@@ -1,0 +1,16 @@
+https://github.com/apache/incubator-mxnet/pull/19174
+--- a/CMakeLists.txt	2020-07-16 00:32:00.000000000 -0500
++++ b/CMakeLists.txt	2021-02-02 15:30:13.000000000 -0600
+@@ -446,9 +446,9 @@
+ if(USE_LAPACK)
+   message("USE_LAPACK is ON")
+   add_definitions(-DMXNET_USE_LAPACK=1)
+-  # In the CMAKE_BUILD_TYPE="Distribution" case, we link against Blas libraries
+-  # that already provide lapack symbols. Thus -llapack would be wrong.
+-  if (NOT MSVC AND NOT CMAKE_BUILD_TYPE STREQUAL "Distribution")
++  # BLAS=open case is handled in ChooseBlas.cmake
++  if(NOT MSVC AND NOT CMAKE_BUILD_TYPE STREQUAL "Distribution"
++     AND NOT BLAS STREQUAL "Open" AND NOT BLAS STREQUAL "open")
+     list(APPEND mxnet_LINKER_LIBS lapack)
+   endif()
+ endif()

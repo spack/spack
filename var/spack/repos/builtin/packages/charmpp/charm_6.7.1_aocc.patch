@@ -1,0 +1,188 @@
+diff -bur charm-6.7.1/src/arch/mpi-linux-x86_64/cc-mpicxx.sh updated-charm-6.7.1/src/arch/mpi-linux-x86_64/cc-mpicxx.sh
+--- charm-6.7.1/src/arch/mpi-linux-x86_64/cc-mpicxx.sh	2016-11-07 20:14:26.000000000 +0530
++++ updated-charm-6.7.1/src/arch/mpi-linux-x86_64/cc-mpicxx.sh	2019-08-26 16:55:40.868903291 +0530
+@@ -14,7 +14,7 @@
+ 
+ CMK_REAL_COMPILER=`$MPICXX -show 2>/dev/null | cut -d' ' -f1 `
+ case "$CMK_REAL_COMPILER" in
+-g++)   CMK_AMD64="-m64 -fPIC" ;;
++clang++)   CMK_AMD64="-m64 -fPIC" ;;
+ icpc)  CMK_AMD64="-m64";;
+ pgCC)  CMK_AMD64="-DCMK_FIND_FIRST_OF_PREDICATE=1 --no_using_std " ;;
+ FCC)   CMK_AMD64="-Kfast -DCMK_FIND_FIRST_OF_PREDICATE=1 --variadic_macros";;
+diff -bur charm-6.7.1/src/arch/mpi-linux-x86_64/conv-mach-scyld.sh updated-charm-6.7.1/src/arch/mpi-linux-x86_64/conv-mach-scyld.sh
+--- charm-6.7.1/src/arch/mpi-linux-x86_64/conv-mach-scyld.sh	2016-11-07 20:14:26.000000000 +0530
++++ updated-charm-6.7.1/src/arch/mpi-linux-x86_64/conv-mach-scyld.sh	2019-08-26 16:55:40.868903291 +0530
+@@ -1,14 +1,14 @@
+ 
+ case "$CMK_CC" in
+ mpicc*)
+-	CMK_CPP_C="gcc -E "
+-	CMK_CC="gcc -fPIC"
+-	CMK_CC_RELIABLE="gcc  -fPIC"
+-	CMK_CC_FASTEST="gcc  -fPIC"
+-	CMK_CXX="g++ -fPIC"
+-	CMK_CXXPP="gcc -E "
+-	CMK_LD="gcc"
+-	CMK_LDXX="g++"
++	CMK_CPP_C="clang -E "
++	CMK_CC="clang -fPIC"
++	CMK_CC_RELIABLE="clang  -fPIC"
++	CMK_CC_FASTEST="clang  -fPIC"
++	CMK_CXX="clang++ -fPIC"
++	CMK_CXXPP="clang -E "
++	CMK_LD="clang"
++	CMK_LDXX="clang++"
+ 
+ # native compiler for compiling charmxi, etc
+ 	CMK_NATIVE_CC="$CMK_CC"
+Only in updated-charm-6.7.1/src/arch/mpi-linux-x86_64: conv-mach-scyld.sh.orig
+Only in updated-charm-6.7.1/src/arch/mpi-linux-x86_64: conv-mach-scyld.sh.rej
+diff -bur charm-6.7.1/src/arch/mpi-linux-x86_64/conv-mach.sh updated-charm-6.7.1/src/arch/mpi-linux-x86_64/conv-mach.sh
+--- charm-6.7.1/src/arch/mpi-linux-x86_64/conv-mach.sh	2016-11-07 20:14:26.000000000 +0530
++++ updated-charm-6.7.1/src/arch/mpi-linux-x86_64/conv-mach.sh	2019-08-26 16:55:40.868903291 +0530
+@@ -23,7 +23,7 @@
+ 
+ CMK_REAL_COMPILER=`$MPICXX -show 2>/dev/null | cut -d' ' -f1 `
+ case "$CMK_REAL_COMPILER" in
+-g++) CMK_AMD64_CC="$CMK_GCC64"; CMK_AMD64_CXX="$CMK_GCC64" ;;
++clang++) CMK_AMD64_CC="$CMK_GCC64"; CMK_AMD64_CXX="$CMK_GCC64" ;;
+ pgCC)  CMK_AMD64_CC="-fPIC"; CMK_AMD64_CXX="-fPIC -DCMK_FIND_FIRST_OF_PREDICATE=1 --no_using_std " ;;
+ charmc)  echo "Error> charmc can not call AMPI's mpicxx/mpiCC wrapper! Please fix your PATH."; exit 1 ;;
+ esac
+@@ -38,10 +38,10 @@
+ CMK_LIBS="-lckqt $CMK_SYSLIBS "
+ CMK_LD_LIBRARY_PATH="-Wl,-rpath,$CHARMLIBSO/"
+ 
+-CMK_NATIVE_CC="gcc $CMK_GCC64 "
+-CMK_NATIVE_LD="gcc $CMK_GCC64 "
+-CMK_NATIVE_CXX="g++ $CMK_GCC64 "
+-CMK_NATIVE_LDXX="g++ $CMK_GCC64 "
++CMK_NATIVE_CC="clang $CMK_GCC64 "
++CMK_NATIVE_LD="clang $CMK_GCC64 "
++CMK_NATIVE_CXX="clang++ $CMK_GCC64 "
++CMK_NATIVE_LDXX="clang++ $CMK_GCC64 "
+ CMK_NATIVE_LIBS=""
+ 
+ # fortran compiler 
+@@ -51,7 +51,7 @@
+ #    CMK_FPP="/lib/cpp -P -CC"
+ #    CMK_CF90="$CMK_CF90 -fpic -fautomatic -fdollar-ok "
+ #    CMK_CF90_FIXED="$CMK_CF90 -ffixed-form "
+-#    CMK_F90LIBS="-lgfortran "
++#    CMK_F90LIBS="  "
+ #    CMK_F90_USE_MODDIR=1
+ #    CMK_F90_MODINC="-I"
+ #    CMK_MOD_NAME_ALLCAPS=
+diff -bur charm-6.7.1/src/libs/ck-libs/ckloop/Makefile updated-charm-6.7.1/src/libs/ck-libs/ckloop/Makefile
+--- charm-6.7.1/src/libs/ck-libs/ckloop/Makefile	2016-11-07 20:14:28.000000000 +0530
++++ updated-charm-6.7.1/src/libs/ck-libs/ckloop/Makefile	2019-08-26 16:55:40.852903122 +0530
+@@ -38,7 +38,7 @@
+         for i in $(LIBOBJ) ; do \
+ 	      SRCFILE=`basename $$i .o`.C ; \
+               echo "checking dependencies for $$i : $$SRCFILE" ; \
+-              g++ -MM -Wno-deprecated -I$(CDIR)/tmp $$SRCFILE >> $(DEPENDFILE); \
++              clang++ -MM -Wno-deprecated -I$(CDIR)/tmp $$SRCFILE >> $(DEPENDFILE); \
+               echo '	$$(CHARMC) -I$(CDIR)/tmp -o '$$i $$SRCFILE >> $(DEPENDFILE) ; \
+         done; 
+ 
+Only in updated-charm-6.7.1/src/libs/ck-libs/ckloop: Makefile.orig
+Only in updated-charm-6.7.1/src/libs/ck-libs/ckloop: Makefile.rej
+diff -bur charm-6.7.1/src/libs/ck-libs/completion/Makefile updated-charm-6.7.1/src/libs/ck-libs/completion/Makefile
+--- charm-6.7.1/src/libs/ck-libs/completion/Makefile	2016-11-07 20:14:28.000000000 +0530
++++ updated-charm-6.7.1/src/libs/ck-libs/completion/Makefile	2019-08-26 16:55:40.852903122 +0530
+@@ -45,7 +45,7 @@
+         for i in $(LIBOBJ) ; do \
+ 	      SRCFILE=`basename $$i .o`.C ; \
+               echo "checking dependencies for $$i : $$SRCFILE" ; \
+-              g++ -MM -Wno-deprecated -I$(CDIR)/tmp $$SRCFILE >> $(DEPENDFILE); \
++              clang++ -MM -Wno-deprecated -I$(CDIR)/tmp $$SRCFILE >> $(DEPENDFILE); \
+               echo '	$$(CHARMC) -I$(CDIR)/tmp -o '$$i $$SRCFILE >> $(DEPENDFILE) ; \
+         done; 
+ 
+Only in updated-charm-6.7.1/src/libs/ck-libs/completion: Makefile.orig
+Only in updated-charm-6.7.1/src/libs/ck-libs/completion: Makefile.rej
+diff -bur charm-6.7.1/src/libs/ck-libs/multicast/Makefile updated-charm-6.7.1/src/libs/ck-libs/multicast/Makefile
+--- charm-6.7.1/src/libs/ck-libs/multicast/Makefile	2016-11-07 20:14:29.000000000 +0530
++++ updated-charm-6.7.1/src/libs/ck-libs/multicast/Makefile	2019-08-26 16:55:40.852903122 +0530
+@@ -53,7 +53,7 @@
+         for i in $(LIBOBJ) ; do \
+ 	      SRCFILE=`basename $$i .o`.C ; \
+               echo "checking dependencies for $$i : $$SRCFILE" ; \
+-              g++ -MM -Wno-deprecated -I$(CDIR)/tmp $$SRCFILE >> $(DEPENDFILE); \
++              clang++ -MM -Wno-deprecated -I$(CDIR)/tmp $$SRCFILE >> $(DEPENDFILE); \
+               echo '	$$(CHARMC) -I$(CDIR)/tmp -o '$$i $$SRCFILE >> $(DEPENDFILE) ; \
+         done; 
+ 
+Only in updated-charm-6.7.1/src/libs/ck-libs/multicast: Makefile.orig
+Only in updated-charm-6.7.1/src/libs/ck-libs/multicast: Makefile.rej
+diff -bur charm-6.7.1/src/libs/ck-libs/NDMeshStreamer/Makefile updated-charm-6.7.1/src/libs/ck-libs/NDMeshStreamer/Makefile
+--- charm-6.7.1/src/libs/ck-libs/NDMeshStreamer/Makefile	2016-11-07 20:14:27.000000000 +0530
++++ updated-charm-6.7.1/src/libs/ck-libs/NDMeshStreamer/Makefile	2019-08-26 16:55:40.852903122 +0530
+@@ -52,7 +52,7 @@
+         for i in $(LIBOBJ) ; do \
+ 	      SRCFILE=`basename $$i .o`.C ; \
+               echo "checking dependencies for $$i : $$SRCFILE" ; \
+-              g++ -MM -Wno-deprecated -I$(CDIR)/tmp -I../completion $$SRCFILE >> $(DEPENDFILE); \
++              clang++ -MM -Wno-deprecated -I$(CDIR)/tmp -I../completion $$SRCFILE >> $(DEPENDFILE); \
+               echo '	$$(CHARMC) -I$(CDIR)/tmp -o '$$i $$SRCFILE >> $(DEPENDFILE) ; \
+         done;
+ 
+Only in updated-charm-6.7.1/src/libs/ck-libs/NDMeshStreamer: Makefile.orig
+Only in updated-charm-6.7.1/src/libs/ck-libs/NDMeshStreamer: Makefile.rej
+diff -bur charm-6.7.1/src/QuickThreads/Makefile updated-charm-6.7.1/src/QuickThreads/Makefile
+--- charm-6.7.1/src/QuickThreads/Makefile	2016-11-07 20:14:25.000000000 +0530
++++ updated-charm-6.7.1/src/QuickThreads/Makefile	2019-08-26 16:55:40.856903165 +0530
+@@ -1,5 +1,5 @@
+ 
+-CC=gcc -I. -O2
++CC=clang -I. -O2
+ 
+ all: qt stp testpgm
+ 
+diff -bur charm-6.7.1/src/scripts/Makefile updated-charm-6.7.1/src/scripts/Makefile
+--- charm-6.7.1/src/scripts/Makefile	2016-11-07 20:14:29.000000000 +0530
++++ updated-charm-6.7.1/src/scripts/Makefile	2019-08-26 16:55:40.840902996 +0530
+@@ -942,7 +942,7 @@
+ 	      SRCFILE=`basename $$i .o`.C ; \
+ 	      [ ! -f $$SRCFILE ] && SRCFILE=`basename $$i .o`.c ;	\
+               echo "checking dependencies for $$SRCFILE" ; \
+-              if g++ -MM -Wno-deprecated -I. -I$(INC) $$SRCFILE  >> $(DEPENDFILE); then true ; else echo '' ; echo "Compilation of '$$SRCFILE' failed, please fix it first!!!!" ; exit; fi;  \
++              if clang++ -MM -Wno-deprecated -I. -I$(INC) $$SRCFILE  >> $(DEPENDFILE); then true ; else echo '' ; echo "Compilation of '$$SRCFILE' failed, please fix it first!!!!" ; exit; fi;  \
+ 	      echo '' >> $(DEPENDFILE) ; \
+         done;  \
+ 
+@@ -968,7 +968,7 @@
+ 	      found=`/usr/bin/find $$SRCDIR -depth 1 -name $$SRCFILE`; \
+               [ ! $$found ] && SRCFILE=`basename $$i .o`.c ; \
+               echo "checking dependencies for $$SRCFILE" ; \
+-              if g++ -MM -Wno-deprecated -I. -I$(INC) $$SRCFILE  >> $(DEPENDFILE); then true ; else echo '' ; echo "Compilation of '$$SRCFILE' failed, please fix it first!!!!" ; exit; fi;  \
++              if clang++ -MM -Wno-deprecated -I. -I$(INC) $$SRCFILE  >> $(DEPENDFILE); then true ; else echo '' ; echo "Compilation of '$$SRCFILE' failed, please fix it first!!!!" ; exit; fi;  \
+ 	      echo '' >> $(DEPENDFILE) ; \
+         done;  \
+ 
+diff -bur charm-6.7.1/tests/charm++/megatest/Makefile updated-charm-6.7.1/tests/charm++/megatest/Makefile
+--- charm-6.7.1/tests/charm++/megatest/Makefile	2016-11-07 20:14:30.000000000 +0530
++++ updated-charm-6.7.1/tests/charm++/megatest/Makefile	2019-08-26 16:55:40.820902785 +0530
+@@ -118,7 +118,7 @@
+         for i in $(OBJS) ; do \
+               SRCFILE=`basename $$i .o`.C ; \
+               echo "checking dependencies for $$SRCFILE" ; \
+-              g++ -MM -I$(CHARMINC) $$SRCFILE | \
++              clang++ -MM -I$(CHARMINC) $$SRCFILE | \
+               perl $(CHARMBIN)/dep.pl $(CHARMINC) /usr/include /usr/local >> $(DEPENDFILE); \
+               echo '	$$(CHARMC) -o '$$i $$SRCFILE >> $(DEPENDFILE) ; \
+         done;
+--- charm-6.7.1/src/scripts/configure	2016-11-07 20:14:31.000000000 +0530
++++ updated-charm/charm-6.7.1/src/scripts/configure	2020-10-21 12:54:06.476958828 +0530
+@@ -2141,8 +2141,8 @@
+ $as_echo_n "checking \"$1\"... " >&6; }
+ 	echo "### $1" >> $charmout
+ 	cat $t >> $charmout
+-	echo $CMK_CXX -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CXX $OPTS_LD -c $t -o test.o $4 >> $charmout
+-	$CMK_CXX -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CXX $OPTS_LD -c $t -o test.o $4 > out 2>&1
++	echo $CMK_CXX -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CXX $OPTS_LD -Qunused-arguments -c $t -o test.o $4 >> $charmout
++	$CMK_CXX -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CXX $OPTS_LD -Qunused-arguments  -c $t -o test.o $4 > out 2>&1
+ 	test_result $? "$1" "$2" "$3"
+  	strictpass=$pass
+ 	strictfail=$fail

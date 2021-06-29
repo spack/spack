@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RJsonlite(RPackage):
-    """A fast JSON parser and generator optimized for statistical data and the
+    """A Simple and Robust JSON Parser and Generator for R
+
+    A fast JSON parser and generator optimized for statistical data and the
     web. Started out as a fork of 'RJSONIO', but has been completely rewritten
     in recent versions. The package offers flexible, robust, high performance
     tools for working with JSON in R and is particularly powerful for building
@@ -22,6 +24,7 @@ class RJsonlite(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/jsonlite_1.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/jsonlite"
 
+    version('1.7.2', sha256='06354b50435942f67ba264f79831e577809ef89e5f9a5a2201985396fe651fd2')
     version('1.6.1', sha256='74921dd249857a23afabc1ad1485a63a48828e57f240f0619deb04c60f883377')
     version('1.6', sha256='88c5b425229966b7409145a6cabc72db9ed04f8c37ee95901af0146bb285db53')
     version('1.5', sha256='6490371082a387cb1834048ad8cdecacb8b6b6643751b50298c741490c798e02')

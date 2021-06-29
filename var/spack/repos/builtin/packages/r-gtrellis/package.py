@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGtrellis(RPackage):
-    """Genome Level Trellis Layout.
+    """Genome Level Trellis Layout
 
        Genome level Trellis graph visualizes genomic data conditioned by
        genomic categories (e.g. chromosomes). For each genomic category,
@@ -19,6 +19,7 @@ class RGtrellis(RPackage):
     homepage = "https://bioconductor.org/packages/gtrellis"
     git      = "https://git.bioconductor.org/packages/gtrellis.git"
 
+    version('1.22.0', commit='c071c5631f3dedda212aed87d9c02954b5ed6611')
     version('1.16.1', commit='a9003ededc8f2a48c78d4545e2f214023c13a7da')
     version('1.14.0', commit='93935fb34211d12b250e22291712e18a31b0208d')
     version('1.12.1', commit='7f3941adddbbfa17f4cf474b703568678a38272d')
@@ -29,6 +30,5 @@ class RGtrellis(RPackage):
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-circlize@0.3.3:', type=('build', 'run'))
-    depends_on('r-getoptlong', type=('build', 'run'))
-
     depends_on('r-circlize@0.4.8:', when='@1.16.1', type=('build', 'run'))
+    depends_on('r-getoptlong', type=('build', 'run'))

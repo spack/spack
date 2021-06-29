@@ -5,7 +5,7 @@
  #include <stdlib.h>
  #include <stdint.h>
 -#include <emmintrin.h>
-+#include <SSE2NEON.h>
++#include <sse2neon.h>
  #include "ksw.h"
  
  #ifdef __GNUC__

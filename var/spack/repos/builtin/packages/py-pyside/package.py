@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,7 @@ import os
 
 class PyPyside(PythonPackage):
     """Python bindings for Qt."""
-    homepage = "https://pypi.python.org/pypi/pyside"
-    url      = "https://pypi.io/packages/source/P/PySide/PySide-1.2.2.tar.gz"
+    pypi = "PySide/PySide-1.2.2.tar.gz"
 
     # More recent versions of PySide2 (for Qt5) have been taken under
     # the offical Qt umbrella.  For more information, see:

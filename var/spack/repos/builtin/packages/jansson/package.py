@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,5 @@ class Jansson(CMakePackage):
 
     def cmake_args(self):
         return [
-            '-DJANSSON_BUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in self.spec else 'OFF'),
+            self.define_from_variant('JANSSON_BUILD_SHARED_LIBS', 'shared'),
         ]

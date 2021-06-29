@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyDendropy(PythonPackage):
     NeXML, Phylip, FASTA, etc."""
 
     homepage = "https://www.dendropy.org"
-    url      = "https://pypi.io/packages/source/d/dendropy/DendroPy-4.3.0.tar.gz"
+    pypi = "dendropy/DendroPy-4.3.0.tar.gz"
 
     version('4.3.0',  sha256='bd5b35ce1a1c9253209b7b5f3939ac22beaa70e787f8129149b4f7ffe865d510')
     version('3.12.0', sha256='38a0f36f2f7aae43ec5599408b0d0a4c80996b749589f025940d955a70fc82d4')

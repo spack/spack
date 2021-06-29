@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ class Racon(CMakePackage):
 
     depends_on('cmake@3.2:', type='build')
     depends_on('python', type='build')
+    depends_on('sse2neon', when='target=aarch64:')
 
     conflicts('%gcc@:4.7')
     conflicts('%clang@:3.1')

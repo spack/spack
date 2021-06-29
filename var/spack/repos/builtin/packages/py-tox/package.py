@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyTox(PythonPackage):
     """tox is a generic virtualenv management and test command line tool."""
 
     homepage = "https://tox.readthedocs.org/"
-    url      = "https://pypi.io/packages/source/t/tox/tox-3.14.2.tar.gz"
+    pypi = "tox/tox-3.14.2.tar.gz"
 
     version('3.14.2', sha256='7efd010a98339209f3a8292f02909b51c58417bfc6838ab7eca14cf90f96117a')
 

@@ -1,0 +1,11 @@
+--- spack-src/flags.guess.org	2021-01-07 14:37:33.000000000 +0900
++++ spack-src/flags.guess	2021-01-07 14:38:07.000000000 +0900
+@@ -115,7 +115,7 @@
+ # with some versions of gfortran/gcc you make get errors about unused functions when compiling with the options below;
+ # if so, either change -Wunused to -Wunused -Werror=no-unused-function, or remove -Wunused, or remove -Werror
+ #
+-        DEF_FFLAGS="-std=gnu -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Wunused -Werror" # -mcmodel=medium
++        DEF_FFLAGS="-std=gnu -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Wunused" # -mcmodel=medium
+         OPT_FFLAGS="-O3 -finline-functions"
+         DEBUG_FFLAGS="-g -O0 -ggdb -fbacktrace -fbounds-check"
+         # useful to track loss of accuracy because of automatic double to single precision conversion:  -Wconversion  (this may generate many warnings...)

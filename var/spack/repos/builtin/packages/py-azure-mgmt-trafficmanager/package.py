@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtTrafficmanager(PythonPackage):
     """Microsoft Azure Traffic Manager Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-trafficmanager/azure-mgmt-trafficmanager-0.51.0.zip"
+    pypi = "azure-mgmt-trafficmanager/azure-mgmt-trafficmanager-0.51.0.zip"
 
     version('0.51.0', sha256='fc8ae77022cfe52fda4379a2f31e0b857574d536e41291a7b569b5c0f4104186')
 

@@ -1,0 +1,86 @@
+--- a/src/sgeutils/fsl_sub	2020-07-25 09:36:17.000000000 -0500
++++ b/src/sgeutils/fsl_sub	2020-11-15 17:04:41.484972803 -0600
+@@ -81,7 +81,7 @@
+ # "NONE". Note that a user can unset SGE_ROOT if they don't want the
+ # cluster to be used.
+ ###########################################################################
+-METHOD=SGE
++METHOD=NONE
+ unset module
+ if [[ "x$SGE_ROOT" = "x" ]] ; then
+   METHOD=NONE
+@@ -145,7 +145,10 @@
+ 
+ usage ()
+ {
+-  cat <<EOF
++  case "$METHOD" in
++    SGE)
++  
++      cat <<EOF
+ 
+ $command V1.1 - wrapper for job control system such as SGE
+ 
+@@ -190,7 +193,24 @@
+ bigmem.q:   This queue is like the verylong.q but has no memory limits.
+ 
+ EOF
++      ;;
++    NONE)
++  
++      cat <<EOF
+ 
++$command V1.1 - wrapper for job control system such as SGE
++
++Usage: $command [options] <command>
++
++$command gzip *.img *.hdr
++
++  -t <filename>         Specify a task file of commands to execute in parallel
++  -l <logdirname>       Where to output logfiles
++  -v                    Verbose mode.
++
++EOF
++      ;;
++    esac
+   exit 1
+ }
+ 
+@@ -199,14 +219,29 @@
+   usage
+ fi
+ 
+-#if the newer whitespace-safe getopt format is available, use it
+-if [[ $(getopt -T >/dev/null 2>&1; echo $?) == 4 ]]; then
+-  eval set -- $(getopt -s bash T:q:a:p:M:j:t:z:N:R:Fvm:l:s: "$@")
+-  result=$?
+-else
+-  set -- $(getopt T:q:a:p:M:j:t:z:N:R:Fvm:l:s: "$@")
+-  result=$?
+-fi
++case "$METHOD" in
++  SGE)
++    #if the newer whitespace-safe getopt format is available, use it
++    if [[ $(getopt -T >/dev/null 2>&1; echo $?) == 4 ]]; then
++      eval set -- $(getopt -s bash T:q:a:p:M:j:t:z:N:R:Fvm:l:s: "$@")
++      result=$?
++    else
++      set -- $(getopt T:q:a:p:M:j:t:z:N:R:Fvm:l:s: "$@")
++      result=$?
++    fi
++    ;;
++  NONE)
++    #if the newer whitespace-safe getopt format is available, use it
++    if [[ $(getopt -T >/dev/null 2>&1; echo $?) == 4 ]]; then
++      eval set -- $(getopt -s bash t:vl: "$@")
++      result=$?
++    else
++      set -- $(getopt t:vl: "$@")
++      result=$?
++    fi
++    ;;
++esac
++
+ if [[ "$result" != 0 ]] ; then
+   echo "What? Your arguments make no sense!"
+ fi

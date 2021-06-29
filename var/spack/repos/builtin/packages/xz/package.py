@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,12 @@ class Xz(AutotoolsPackage, SourceforgePackage):
 
     variant('pic', default=False,
             description='Compile with position independent code.')
+
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+
+    def configure_args(self):
+        return self.enable_or_disable('libs')
 
     def flag_handler(self, name, flags):
         if name == 'cflags' and '+pic' in self.spec:

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class RTximport(RPackage):
     """Import and summarize transcript-level estimates for transcript- and
-       gene-level analysis.
+       gene-level analysis
 
        Imports transcript-level abundance, estimated counts and transcript
        lengths, and summarizes into matrices for use with downstream gene-level
@@ -20,6 +20,7 @@ class RTximport(RPackage):
     homepage = "https://bioconductor.org/packages/tximport"
     git      = "https://git.bioconductor.org/packages/tximport.git"
 
+    version('1.18.0', commit='58b20cbc566648586b6990b30ebc70bef308cb05')
     version('1.12.3', commit='acbdead961471c3b910d720f73bd0af1b7a07c57')
     version('1.10.1', commit='cd8f81cf7140f61d4a4f25f89451fb49e2cd4bd3')
     version('1.8.0', commit='cc91b8389ca4c16b0f588bdeb63d051a11e8a705')

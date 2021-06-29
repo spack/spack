@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,8 @@ class RReprex(RPackage):
     version('0.2.1', sha256='5d234ddfbcadc5a5194a58eb88973c51581e7e2e231f146974af8f42747b45f3')
     version('0.1.1', sha256='919ae93039b2d8fb8eace98da9376c031d734d9e75c237efb24d047f35b5ba4b')
 
-    depends_on('r@3.0.2:', when='@:0.1.2', type=('build', 'run'))
+    depends_on('r+X', type=('build', 'run'))
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.1:', when='@0.2.0:', type=('build', 'run'))
     depends_on('r-callr@2.0.0:', type=('build', 'run'))
     depends_on('r-clipr@0.4.0:', type=('build', 'run'))

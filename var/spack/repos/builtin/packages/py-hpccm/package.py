@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyHpccm(PythonPackage):
     tool to make it easier to generate container specification files."""
 
     homepage = "https://github.com/NVIDIA/hpc-container-maker"
-    url      = "https://pypi.io/packages/source/h/hpccm/hpccm-19.2.0.tar.gz"
+    pypi = "hpccm/hpccm-19.2.0.tar.gz"
 
     version('19.2.0', sha256='c60eec914a802b0a76596cfd5fdf7122d3f8665fcef06ef928323f5dfb5219a6')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Dealii(CMakePackage, CudaPackage):
     url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
     git      = "https://github.com/dealii/dealii.git"
 
-    maintainers = ['davydden', 'jppelteret', 'luca-heltai']
+    maintainers = ['jppelteret', 'luca-heltai']
 
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
@@ -25,6 +25,7 @@ class Dealii(CMakePackage, CudaPackage):
     generator = 'Ninja'
 
     version('master', branch='master')
+    version('9.3.0', sha256='aef8c7a87510ce827dfae3bdd4ed7bff82004dc09f96fa7a65b2554f2839b931')
     version('9.2.0', sha256='d05a82fb40f1f1e24407451814b5a6004e39366a44c81208b1ae9d65f3efa43a')
     version('9.1.1', sha256='fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276')
     version('9.1.0', sha256='5b070112403f8afbb72345c1bb24d2a38d11ce58891217e353aab97957a04600')
@@ -62,6 +63,8 @@ class Dealii(CMakePackage, CudaPackage):
     # Package variants
     variant('assimp',   default=True,
             description='Compile with Assimp')
+    variant('arborx',   default=True,
+            description='Compile with Arborx support')
     variant('arpack',   default=True,
             description='Compile with Arpack and PArpack (only with MPI)')
     variant('adol-c',   default=True,
@@ -78,7 +81,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Metis')
     variant('muparser', default=True,
             description='Compile with muParser')
-    variant('nanoflann', default=True,
+    variant('nanoflann', default=False,
             description='Compile with Nanoflann')
     variant('netcdf',   default=False,
             description='Compile with Netcdf (only with MPI)')
@@ -96,6 +99,13 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Slepc (only with Petsc and MPI)')
     variant('symengine', default=True,
             description='Compile with SymEngine')
+    variant('simplex', default=True,
+            description='Compile with Simplex support')
+    # TODO @9.3: enable by default, when we know what to do
+    # variant('taskflow',  default=False,
+    #        description='Compile with multi-threading via Taskflow')
+    # TODO @9.3: disable by default
+    # (NB: only if tbb is removed in 9.3, as planned!!!)
     variant('threads',  default=True,
             description='Compile with multi-threading via TBB')
     variant('trilinos', default=True,
@@ -152,6 +162,8 @@ class Dealii(CMakePackage, CudaPackage):
 
     # Optional dependencies: Packages
     depends_on('adol-c@2.6.4:',    when='@9.0:+adol-c')
+    depends_on('arborx',           when='@9.3:+arborx')
+    depends_on('arborx+trilinos',  when='@9.3:+arborx+trilinos')
     depends_on('arpack-ng+mpi',    when='+arpack+mpi')
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
@@ -159,10 +171,10 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('ginkgo',           when='@9.1:+ginkgo')
     depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
-    # FIXME: next line fixes concretization with petsc
+    # TODO: next line fixes concretization with petsc
     depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi+petsc')
     depends_on('hdf5+mpi+hl',      when='+hdf5+mpi~petsc')
-    # FIXME: concretizer bug. The two lines mimic what comes from PETSc
+    # TODO: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on('metis@5:+int64',   when='+metis+int64')
     depends_on('metis@5:~int64',   when='+metis~int64')
@@ -180,13 +192,17 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc',            when='+slepc+petsc+mpi')
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
-    depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    depends_on('sundials@:3~pthread', when='@9.0:9.2+sundials')
+    depends_on('sundials@5:',      when='@9.3:+sundials')
+    # depends_on('taskflow',         when='@9.3:+taskflow')
     depends_on('trilinos gotype=int', when='+trilinos@12.18.1:')
+    # TODO: next line fixes concretization with trilinos and adol-c
+    depends_on('trilinos~exodus~netcdf',    when='@9.0:+adol-c+trilinos')
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
     # See https://github.com/symengine/symengine/issues/1516
-    # FIXME: uncomment when the following is fixed
+    # TODO: uncomment when the following is fixed
     # https://github.com/spack/spack/issues/11160
     # depends_on("symengine@0.4: build_type=Release", when="@9.1:+symengine+trilinos^trilinos~debug")  # NOQA: ignore=E501
     # depends_on("symengine@0.4: build_type=Debug", when="@9.1:+symengine+trilinos^trilinos+debug")  # NOQA: ignore=E501
@@ -194,12 +210,16 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('symengine@0.6:', when='@9.2:+symengine')
     depends_on('tbb',            when='+threads')
     # do not require +rol to make concretization of xsdk possible
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
-    # FIXME: temporary disable Tpetra when using CUDA due to
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',
+               when='+trilinos+mpi~int64~cuda')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre',
+               when='+trilinos+mpi+int64~cuda')
+    # TODO: temporary disable Tpetra when using CUDA due to
     # namespace "Kokkos::Impl" has no member "cuda_abort"
-    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')
-    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
+    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',
+               when='+trilinos+mpi~int64+cuda')
+    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',
+               when='+trilinos+mpi+int64+cuda')
 
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
@@ -218,8 +238,13 @@ class Dealii(CMakePackage, CudaPackage):
           sha256='6f876dc8eadafe2c4ec2a6673864fb451c6627ca80511b6e16f3c401946fdf33',
           when='@9.0.0:9.1.1')
 
+    # Explicitly include a boost header, otherwise deal.II fails to compile
+    # https://github.com/dealii/dealii/pull/11438
+    patch('https://github.com/dealii/dealii/commit/3b815e21c4bfd82c792ba80e4d90314c8bb9edc9.patch',
+          sha256='5f9f411ab9336bf49d8293b9936344bad6e1cf720955b9d8e8b29883593b0ed9',
+          when='@9.2.0 ^boost@1.72.0:')
+
     # Check for sufficiently modern versions
-    conflicts('cxxstd=98', when='@9.0:')
     conflicts('cxxstd=11', when='@9.3:')
 
     # Interfaces added in 8.5.0:
@@ -241,6 +266,13 @@ class Dealii(CMakePackage, CudaPackage):
     for p in ['ginkgo', 'symengine']:
         conflicts('+{0}'.format(p), when='@:9.0',
                   msg='The interface to {0} is supported from version 9.1.0 '
+                      'onwards. Please explicitly disable this variant '
+                      'via ~{0}'.format(p))
+
+    # interfaces added in 9.3.0:
+    for p in ['simplex', 'arborx']:  # , 'taskflow']:
+        conflicts('+{0}'.format(p), when='@:9.2',
+                  msg='The interface to {0} is supported from version 9.3.0 '
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
@@ -384,7 +416,7 @@ class Dealii(CMakePackage, CudaPackage):
                         'deal.II only supports compilation for a single GPU!'
                     )
                 flags = '-arch=sm_{0}'.format(cuda_arch[0])
-                # FIXME: there are some compiler errors in dealii
+                # TODO: there are some compiler errors in dealii
                 # with: flags = ' '.join(self.cuda_flags(cuda_arch))
                 # Stick with -arch=sm_xy for now.
                 options.append(
@@ -426,6 +458,11 @@ class Dealii(CMakePackage, CudaPackage):
                     self.define('PYTHON_LIBRARY', python_library)
                 ])
 
+        # Simplex support
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_SIMPLEX_SUPPORT', 'simplex'
+        ))
+
         # Threading
         options.append(self.define_from_variant(
             'DEAL_II_WITH_THREADS', 'threads'
@@ -453,7 +490,7 @@ class Dealii(CMakePackage, CudaPackage):
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
                 'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
-                'symengine', 'ginkgo'):
+                'symengine', 'ginkgo', 'arborx'):  # 'taskflow'):
             options.append(self.define_from_variant(
                 'DEAL_II_WITH_{0}'.format(library.upper()), library
             ))

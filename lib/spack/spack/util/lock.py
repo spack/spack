@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ import spack.error
 import spack.paths
 
 
-class Lock(llnl.util.lock.Lock):
+class Lock(llnl.util.lock.Lock):  # type: ignore[no-redef]
     """Lock that can be disabled.
 
     This overrides the ``_lock()`` and ``_unlock()`` methods from

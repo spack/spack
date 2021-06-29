@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,12 +51,13 @@ class Cairo(AutotoolsPackage):
 
     # patch from https://gitlab.freedesktop.org/cairo/cairo/issues/346
     patch('fontconfig.patch', when='@1.16.0:1.17.2')
-
-    def setup_build_environment(self, env):
-        env.set('NOCONFIGURE', "1")
+    # Don't regenerate docs to avoid a dependency on gtk-doc
+    patch('disable-gtk-docs.patch', when='^autoconf@2.70:')
 
     def autoreconf(self, spec, prefix):
-        which('sh')('./autogen.sh')
+        # Regenerate, directing the script *not* to call configure before Spack
+        # does
+        which('sh')('./autogen.sh', extra_env={'NOCONFIGURE': '1'})
 
     def configure_args(self):
         args = [

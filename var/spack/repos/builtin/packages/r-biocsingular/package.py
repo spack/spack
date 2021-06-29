@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiocsingular(RPackage):
-    """Singular Value Decomposition for Bioconductor Packages.
+    """Singular Value Decomposition for Bioconductor Packages
 
        Implements exact and approximate methods for singular value
        decomposition and principal components analysis, in a framework that
@@ -18,6 +18,7 @@ class RBiocsingular(RPackage):
     homepage = "https://bioconductor.org/packages/BiocSingular"
     git      = "https://git.bioconductor.org/packages/BiocSingular.git"
 
+    version('1.6.0', commit='11baf1080d6f791439cd5d97357589d6451643d9')
     version('1.0.0', commit='d2b091c072d0312698c9bb6611eb1bdf8aebf833')
 
     depends_on('r-biocgenerics', type=('build', 'run'))

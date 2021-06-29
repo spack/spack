@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtDatalakeStore(PythonPackage):
     """Microsoft Azure Data Lake Store Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-datalake-store/azure-mgmt-datalake-store-0.5.0.zip"
+    pypi = "azure-mgmt-datalake-store/azure-mgmt-datalake-store-0.5.0.zip"
 
     version('0.5.0', sha256='9376d35495661d19f8acc5604f67b0bc59493b1835bbc480f9a1952f90017a4c')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,10 @@ class Esmf(MakefilePackage):
     and utilities for developing individual models."""
 
     homepage = "https://www.earthsystemcog.org/projects/esmf/"
-    url      = "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_7_1_0r/esmf_7_1_0r_src.tar.gz"
+    url = 'https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz'
 
+    version('8.0.1',  sha256='9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84')
+    version('8.0.0',  sha256='051dca45f9803d7e415c0ea146df15ce487fb55f0fce18ca61d96d4dba0c8774')
     version('7.1.0r', sha256='ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889')
 
     variant('mpi',     default=True,  description='Build with MPI support')
@@ -68,7 +70,10 @@ class Esmf(MakefilePackage):
         chmod('+x', 'scripts/libs.mvapich2f90')
 
     def url_for_version(self, version):
-        return "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
+        if version < Version('8.0.0'):
+            return "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
+        else:
+            return "https://github.com/esmf-org/esmf/archive/ESMF_{0}.tar.gz".format(version.underscored)
 
     def edit(self, spec, prefix):
         # Installation instructions can be found at:

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ class Coinhsl(AutotoolsPackage):
     # exist
     homepage = "http://www.hsl.rl.ac.uk/ipopt/"
     url = "file://{0}/coinhsl-archive-2014.01.17.tar.gz".format(os.getcwd())
+    manual_download = True
 
     # CoinHSL has a few versions that vary with respect to stability/features
     # and licensing terms.

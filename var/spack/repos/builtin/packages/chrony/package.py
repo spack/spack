@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,7 @@ class Chrony(AutotoolsPackage):
     version('3.3',   sha256='0dd7323b5ed9e3208236c1b39fcabf2ad03469fa07ac516ba9c682206133f66d')
 
     depends_on('ruby-asciidoctor')
+    depends_on('bison', type='build')
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.prefix.sbin)

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,7 @@ class PyStopit(PythonPackage):
     blocks or callables with two context managers and two decorators.
     """
 
-    homepage = "https://pypi.org/project/stopit/"
-    url      = "https://pypi.io/packages/source/s/stopit/stopit-1.1.2.tar.gz"
+    pypi = "stopit/stopit-1.1.2.tar.gz"
 
     version('1.1.2', sha256='f7f39c583fd92027bd9d06127b259aee7a5b7945c1f1fa56263811e1e766996d')
 

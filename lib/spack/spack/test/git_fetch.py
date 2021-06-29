@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,8 @@ def git_version(request, monkeypatch):
     use the backward-compatibility code paths with newer git versions.
     """
     git = which('git', required=True)
-    real_git_version = ver(git('--version', output=str).lstrip('git version '))
+    real_git_version = (
+        spack.fetch_strategy.GitFetchStrategy.version_from_git(git))
 
     if request.param is None:
         # Don't patch; run with the real git_version method.

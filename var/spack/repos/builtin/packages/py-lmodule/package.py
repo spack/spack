@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyLmodule(PythonPackage):
     environment-modules to interact with module using the Module class."""
 
     homepage = "https://lmodule.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/l/lmodule/lmodule-0.1.0.tar.gz"
+    pypi = "lmodule/lmodule-0.1.0.tar.gz"
     git      = "https://github.com/buildtesters/lmodule"
 
     maintainers = ['shahzebsiddiqui']

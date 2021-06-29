@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,7 @@ class PyPsutil(PythonPackage):
     running processes and system utilization (CPU, memory, disks, network)
     in Python."""
 
-    homepage = "https://pypi.python.org/pypi/psutil"
-    url      = "https://pypi.io/packages/source/p/psutil/psutil-5.6.3.tar.gz"
+    pypi = "psutil/psutil-5.6.3.tar.gz"
 
     version('5.7.2', sha256='90990af1c3c67195c44c9a889184f84f5b2320dce3ee3acbd054e3ba0b4a7beb')
     version('5.6.3', sha256='863a85c1c0a5103a12c05a35e59d336e1d665747e531256e061213e2e90f63f3')
@@ -23,6 +22,3 @@ class PyPsutil(PythonPackage):
 
     depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-unittest2', when='^python@:2.6', type='test')
-    depends_on('py-mock', when='^python@:2.7', type='test')
-    depends_on('py-ipaddress', when='^python@:3.2', type='test')

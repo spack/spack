@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyProfilehooks(PythonPackage):
     """Python decorators for profiling/tracing/timing a single function"""
 
     homepage = "https://mg.pov.lt/profilehooks/"
-    url      = "https://pypi.io/packages/source/p/profilehooks/profilehooks-1.11.2.tar.gz"
+    pypi = "profilehooks/profilehooks-1.11.2.tar.gz"
 
     git      = "https://github.com/mgedmin/profilehooks.git"
 

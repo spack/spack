@@ -1,0 +1,31 @@
+From 0448e229d5c38d00e8a4b9f7081a862e966f8c17 Mon Sep 17 00:00:00 2001
+From: Evan Bollig <ebbollig@amazon.com>
+Date: Tue, 9 Feb 2021 09:48:13 -0600
+Subject: [PATCH] Simple patch to fix intel mkl linking
+
+---
+ src/apps/CMakeLists.txt | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/apps/CMakeLists.txt b/src/apps/CMakeLists.txt
+index 9f23f797..b26d373d 100644
+--- a/src/apps/CMakeLists.txt
++++ b/src/apps/CMakeLists.txt
+@@ -212,6 +212,14 @@ foreach (_target ${RELION_TARGETS})
+ 		target_link_libraries(${_target} ${LIB} ${EXTRA_LIBS} ${MPI_LIBRARIES} ${CMAKE_DL_LIBS})
+ 	else()	
+ 		target_link_libraries(${_target} ${LIB} ${FFTW_LIBRARIES} ${EXTRA_LIBS} ${MPI_LIBRARIES} ${CMAKE_DL_LIBS})
++		# Intel MKL needs to be last in the list
++		if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
++			SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp -mkl -limf ")
++			#target_link_libraries(${_target} "fopenmp" "mkl" "imf")
++		else()
++			#SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential ")
++			target_link_libraries(${_target} "mkl_intel_ilp64" "mkl_core" "mkl_sequential")
++		endif()
+ 	endif(NOT MKLFFT)
+ 
+ 	if(CUDA_FOUND)
+-- 
+2.25.1
+

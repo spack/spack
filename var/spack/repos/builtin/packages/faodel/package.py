@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Faodel(CMakePackage):
 
     maintainers = ['tkordenbrock', 'craigulmer']
 
+    version('master', branch='master')
     version('1.1906.1', sha256='4b3caf469ae7db50e9bb8d652e4cb532d33d474279def0f8a483f69385648058')
     version('1.1811.2', sha256='22feb502dad0f56fb8af492f6e2cdc53a97fd6c31f6fa3c655be0a6266c46996')
     version('1.1811.1', sha256='8e95ee99b8c136ff687eb07a2481ee04560cb1526408eb22ab56cd9c60206916')
@@ -62,26 +63,19 @@ class Faodel(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DBUILD_TESTS:BOOL={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('BUILD_TESTS', 'mpi'),
             '-DBOOST_ROOT:PATH={0}'.format(spec['boost'].prefix),
             '-DGTEST_ROOT:PATH={0}'.format(spec['googletest'].prefix),
             '-DBUILD_DOCS:BOOL=OFF',
-            '-DFaodel_ENABLE_IOM_HDF5:BOOL={0}'.format(
-                'ON' if '+hdf5' in spec else 'OFF'),
-            '-DFaodel_ENABLE_IOM_LEVELDB:BOOL={0}'.format(
-                'ON' if '+leveldb' in spec else 'OFF'),
-            '-DFaodel_ENABLE_MPI_SUPPORT:BOOL={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
-            '-DFaodel_ENABLE_TCMALLOC:BOOL={0}'.format(
-                'ON' if '+tcmalloc' in spec else 'OFF'),
+            self.define_from_variant('Faodel_ENABLE_IOM_HDF5', 'hdf5'),
+            # self.define_from_variant('Faodel_ENABLE_IOM_LEVELDB', 'leveldb'),
+            self.define_from_variant('Faodel_ENABLE_MPI_SUPPORT', 'mpi'),
+            self.define_from_variant('Faodel_ENABLE_TCMALLOC', 'tcmalloc'),
             '-DFaodel_LOGGING_METHOD:STRING={0}'.format(
                 spec.variants['logging'].value),
             '-DFaodel_NETWORK_LIBRARY:STRING={0}'.format(
                 spec.variants['network'].value),
-            '-DFaodel_ENABLE_CEREAL:BOOL={0}'.format(
-                'ON' if '+cereal' in spec else 'OFF')
+            self.define_from_variant('Faodel_ENABLE_CEREAL', 'cereal')
         ]
         return args

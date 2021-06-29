@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,5 +14,6 @@ class Shadow(AutotoolsPackage):
     url      = "https://github.com/shadow-maint/shadow/releases/download/4.7/shadow-4.7.tar.gz"
     git      = "https://github.com/shadow-maint/shadow.git"
 
-    version('4.7', sha256='5135b0ca2a361a218fab59e63d9c1720d2a8fc1faa520c819a654b638017286f')
-    version('4.6', sha256='4668f99bd087399c4a586084dc3b046b75f560720d83e92fd23bf7a89dda4d31')
+    version('4.8.1', sha256='3ee3081fbbcbcfea5c8916419e46bc724807bab271072104f23e7a29e9668f3a')
+    version('4.7',   sha256='5135b0ca2a361a218fab59e63d9c1720d2a8fc1faa520c819a654b638017286f')
+    version('4.6',   sha256='4668f99bd087399c4a586084dc3b046b75f560720d83e92fd23bf7a89dda4d31')

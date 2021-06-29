@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ def test_mock_package_possible_dependencies():
     b = mock_repo.add_package('b', [d])
     a = mock_repo.add_package('a', [b, c])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         assert set(a.possible_dependencies()) == set(['a', 'b', 'c', 'd', 'e'])
         assert set(b.possible_dependencies()) == set(['b', 'd', 'e'])
         assert set(c.possible_dependencies()) == set(['c', 'd', 'e'])

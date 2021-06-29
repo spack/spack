@@ -1,0 +1,53 @@
+--- a/Makefile
++++ b/Makefile
+@@ -1,4 +1,4 @@
+-all: FilterFusionAlignmentsByFilteredFusions filterremappedfusion FilterFusionAlignmentsByFilteredFusions MPSSam2fq collectstats SetUnmappedBitFlag sam2fq recover_fusion_alignments_order SepSamUnmapped swap_dRanger_and_MPS_matched comp_fusiondb_offset sepdRangerfusion sepMPSfusion generate_fusiongene_convert_coordinate_trim generate_fusiongene_convert_coordinate_trim_dRanger junc2bed SeparateNormalFromFusionJunc search_fusion_gene AddFusionStrandConsistent gtf2genetab FilterFusionByNormalPaired load_fusion_chrom_seq_std matchfusion2normal filteroriginalfusion Convert2FusionAlignment generate_combined_sequence DNA2StdRegion search_unmapped_reads reads2unmappedsam junc_db_fusion bsb4 mapsplice_multi_thread bowtie check_reads_format alignmenthandler_multi parseCluster cluster junc_db filterjuncbyROCarguNonCanonical filter_1hits newsam2junc fusionsam2junc_filteranchor_newfmt read_chromo_size find_mate_sam_fq alignmenthandler SepSam RemovePairNo check_index_consistency samtools
++all: FilterFusionAlignmentsByFilteredFusions filterremappedfusion FilterFusionAlignmentsByFilteredFusions MPSSam2fq collectstats SetUnmappedBitFlag sam2fq recover_fusion_alignments_order SepSamUnmapped swap_dRanger_and_MPS_matched comp_fusiondb_offset sepdRangerfusion sepMPSfusion generate_fusiongene_convert_coordinate_trim generate_fusiongene_convert_coordinate_trim_dRanger junc2bed SeparateNormalFromFusionJunc search_fusion_gene AddFusionStrandConsistent gtf2genetab FilterFusionByNormalPaired load_fusion_chrom_seq_std matchfusion2normal filteroriginalfusion Convert2FusionAlignment generate_combined_sequence DNA2StdRegion search_unmapped_reads reads2unmappedsam junc_db_fusion bsb4 mapsplice_multi_thread check_reads_format alignmenthandler_multi parseCluster cluster junc_db filterjuncbyROCarguNonCanonical filter_1hits newsam2junc fusionsam2junc_filteranchor_newfmt read_chromo_size find_mate_sam_fq alignmenthandler SepSam RemovePairNo check_index_consistency
+ 
+ OPTFLAGS = -O3
+ 
+@@ -75,24 +75,24 @@ gtf2genetab:
+ bsb4:
+ 	g++ $(CFLAGS) -o bin/bsb4 src/bsb4/bsb4.cpp $(ERRLOG)
+ 
+-samtools:
+-	cd ./samtools-0.1.9;make
++#samtools:
++#	cd ./samtools-0.1.9;make
+ 
+-	cp ./samtools-0.1.9/samtools ./bin/
++#	cp ./samtools-0.1.9/samtools ./bin/
+ 
+ mapsplice_multi_thread:
+ 	cd ./src/MapSplice;make
+ 
+ 	cp ./src/MapSplice/bowtie ./bin/mapsplice_multi_thread
+ 
+-bowtie:
+-	cd ./src/bowtie; make
++#bowtie:
++#	cd ./src/bowtie; make
+ 
+-	cp ./src/bowtie/bowtie ./bin/bowtie
++#	cp ./src/bowtie/bowtie ./bin/bowtie
+ 
+-	cp ./src/bowtie/bowtie-build ./bin/bowtie-build
++#	cp ./src/bowtie/bowtie-build ./bin/bowtie-build
+ 
+-	cp ./src/bowtie/bowtie-inspect ./bin/bowtie-inspect
++#	cp ./src/bowtie/bowtie-inspect ./bin/bowtie-inspect
+ 
+ reads2unmappedsam:
+ 	g++ $(CFLAGS) -o bin/reads2unmappedsam src/reads2unmappedsam/reads2unmappedsam.cpp $(ERRLOG)
+@@ -167,7 +167,7 @@ RemovePairNo:
+ 	g++ $(CFLAGS) -o bin/RemovePairNo src/RemovePairNo/remove_pair_no.cpp $(ERRLOG)
+ 
+ clean:
+-	cd ./samtools-0.1.9 ; make clean-recur
++#	cd ./samtools-0.1.9 ; make clean-recur
+ 	cd ./src/MapSplice ; make clean
+-	cd ./src/bowtie ; make clean
+-	rm -f bin/FilterFusionAlignmentsByFilteredFusions bin/filterremappedfusion bin/MPSSam2fq bin/comp_fusiondb_offset bin/SeparateNormalFromFusionJunc bin/collectstats bin/SetUnmappedBitFlag bin/sam2fq bin/recover_fusion_alignments_order bin/SepSamUnmapped bin/swap_dRanger_and_MPS_matched bin/sepdRangerfusion bin/sepMPSfusion bin/generate_fusiongene_convert_coordinate_trim_dRanger bin/generate_fusiongene_convert_coordinate_trim bin/junc2bed bin/search_fusion_gene bin/AddFusionStrandConsistent bin/gtf2genetab bin/FilterFusionByNormalPaired bin/load_fusion_chrom_seq_std bin/matchfusion2normal bin/filteroriginalfusion bin/DNA2StdRegion bin/generate_combined_sequence bin/Convert2FusionAlignment bin/search_unmapped_reads bin/reads2unmappedsam bin/junc_db_fusion bin/bsb4 bin/fusionsam2junc_filteranchor_newfmt bin/mapsplice_multi_thread bin/bowtie-build bin/bowtie bin/bowtie-inspect bin/check_reads_format bin/samtools bin/alignment_handler_multi bin/parseCluster bin/cluster bin/junc_db bin/filterjuncbyROCarguNonCanonical bin/filter_1hits bin/newsam2junc bin/read_chromo_size bin/find_mate_sam_fq bin/alignment_handler bin/SepSam bin/RemovePairNo bin/check_index_consistency log
+\ No newline at end of file
++#	cd ./src/bowtie ; make clean
++	rm -f bin/FilterFusionAlignmentsByFilteredFusions bin/filterremappedfusion bin/MPSSam2fq bin/comp_fusiondb_offset bin/SeparateNormalFromFusionJunc bin/collectstats bin/SetUnmappedBitFlag bin/sam2fq bin/recover_fusion_alignments_order bin/SepSamUnmapped bin/swap_dRanger_and_MPS_matched bin/sepdRangerfusion bin/sepMPSfusion bin/generate_fusiongene_convert_coordinate_trim_dRanger bin/generate_fusiongene_convert_coordinate_trim bin/junc2bed bin/search_fusion_gene bin/AddFusionStrandConsistent bin/gtf2genetab bin/FilterFusionByNormalPaired bin/load_fusion_chrom_seq_std bin/matchfusion2normal bin/filteroriginalfusion bin/DNA2StdRegion bin/generate_combined_sequence bin/Convert2FusionAlignment bin/search_unmapped_reads bin/reads2unmappedsam bin/junc_db_fusion bin/bsb4 bin/fusionsam2junc_filteranchor_newfmt bin/mapsplice_multi_thread bin/check_reads_format bin/alignment_handler_multi bin/parseCluster bin/cluster bin/junc_db bin/filterjuncbyROCarguNonCanonical bin/filter_1hits bin/newsam2junc bin/read_chromo_size bin/find_mate_sam_fq bin/alignment_handler bin/SepSam bin/RemovePairNo bin/check_index_consistency log

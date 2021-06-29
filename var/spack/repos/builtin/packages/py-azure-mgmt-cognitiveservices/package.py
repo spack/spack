@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ class PyAzureMgmtCognitiveservices(PythonPackage):
     Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-cognitiveservices/azure-mgmt-cognitiveservices-6.2.0.zip"
+    pypi = "azure-mgmt-cognitiveservices/azure-mgmt-cognitiveservices-6.2.0.zip"
 
     version('6.2.0', sha256='93503507ba87c18fe24cd3dfcd54e6e69a4daf7636f38b7537e09cee9a4c13ce')
 

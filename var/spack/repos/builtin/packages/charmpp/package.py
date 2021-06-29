@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,9 @@ class Charmpp(Package):
     url      = "https://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
     git      = "https://github.com/UIUC-PPL/charm.git"
 
-    version("master", branch="master")
+    maintainers = ["matthiasdiener"]
+
+    version("main", branch="main")
 
     version('6.10.2', sha256='7abb4cace8aebdfbb8006eac03eb766897c009cfb919da0d0a33f74c3b4e6deb')
     version('6.10.1', sha256='ab96198105daabbb8c8bdf370f87b0523521ce502c656cb6cd5b89f69a2c70a8')
@@ -40,6 +42,10 @@ class Charmpp(Package):
     # <https://github.com/UIUC-PPL/charm/issues/1206>
     # Patch is no longer needed in versions 6.8.0+
     patch("mpi.patch", when="@:6.7.1")
+
+    # Patch for AOCC
+    patch('charm_6.7.1_aocc.patch', when="@6.7.1 %aocc", level=1)
+    patch('charm_6.8.2_aocc.patch', when="@6.8.2 %aocc", level=3)
 
     # support Fujitsu compiler
     patch("fj.patch", when="%fj")
@@ -234,11 +240,14 @@ class Charmpp(Package):
         # not, then we need to query the compiler vendor from Spack
         # here.
         options = [
-            os.path.basename(self.compiler.cc),
-            os.path.basename(self.compiler.fc),
-            "-j%d" % make_jobs,
-            "--destination=%s" % builddir,
+            os.path.basename(self.compiler.cc)
         ]
+
+        if '@:6.8.2 %aocc' not in spec:
+            options.append(os.path.basename(self.compiler.fc))
+
+        options.append("-j%d" % make_jobs)
+        options.append("--destination=%s" % builddir)
 
         if "pmi=slurmpmi" in spec:
             options.append("slurmpmi")
@@ -328,8 +337,8 @@ class Charmpp(Package):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-        make('-C', join_path(self.stage.source_path, 'charm/tests'),
-             'test', parallel=False)
+        make('-C', join_path(self.stage.source_path, 'tests'),
+             'test', 'TESTOPTS=++local', parallel=False)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MPICC',  self.prefix.bin.ampicc)

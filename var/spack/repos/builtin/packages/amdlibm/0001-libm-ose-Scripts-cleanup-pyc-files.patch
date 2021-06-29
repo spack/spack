@@ -1,0 +1,601 @@
+From edd381260e27226d48108ec7b578c43caf723640 Mon Sep 17 00:00:00 2001
+From: Pranoy Jayaraj <Pranoy.Jayaraj@amd.com>
+Date: Sun, 20 Dec 2020 18:04:38 +0530
+Subject: [PATCH 1/2] libm:ose:Scripts:cleanup pyc files
+
+---
+ SConstruct                       |  29 +++++++-
+ scripts/cfg/__init__.py          |  59 ++++++++---------
+ scripts/cfg/compiler/__init__.py | 109 ++++++++++++++-----------------
+ scripts/cfg/compiler/gcc.py      | 105 +++++++++++++++--------------
+ scripts/cfg/compiler/llvm.py     |  57 ++++++++++++----
+ scripts/cfg/helper.py            |  14 ++++
+ src/SConscript                   |   3 +
+ 7 files changed, 220 insertions(+), 156 deletions(-)
+
+diff --git a/SConstruct b/SConstruct
+index 79a7695..64150c0 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -53,6 +53,22 @@ defcfg = DefaultCfg(build_root=Dir('#build', create=True))
+ 
+ env = defcfg.GetDefaultEnv()
+ 
++#check intel lib path
++intel_lib_path = None
++libabi = env['libabi']
++if libabi == 'svml':
++    for p in env['ENV']['PATH'].split(':'):
++        if 'intel' in p:
++            intel_lib_path=p
++            break
++
++    if intel_lib_path is None:
++        print ("Error! Intel lib not found")
++        Exit(2)
++    else:
++        print (intel_lib_path)
++        env.Append(INTEL_LIB_PATH = intel_lib_path)
++
+ # Add shared top-level headers
+ env.Prepend(CPPPATH=[Dir('include')])
+ 
+@@ -98,10 +114,17 @@ targets += amdlibm
+ #
+ # Build Test lib and associated tests
+ #
++
+ testenv = env.Clone()
+-testenv.Append(
+-	LIBPATH=['#'+joinpath(build_root,'src')]
+-)
++if libabi == 'svml':
++    testenv.Append(
++	    LIBPATH=['#'+joinpath(build_root,'src'), env['INTEL_LIB_PATH']]
++    )
++else:
++    testenv.Append(
++        LIBPATH=['#'+joinpath(build_root,'src')]
++    )
++
+ test_lib_objs = []  			# Will fill at a later date
+ test_objs = SConscript(dirs='tests',
+                        exports = {'env' : testenv},
+diff --git a/scripts/cfg/__init__.py b/scripts/cfg/__init__.py
+index d4f34eb..b21ed2f 100644
+--- a/scripts/cfg/__init__.py
++++ b/scripts/cfg/__init__.py
+@@ -1,28 +1,7 @@
++# Copyright (C) Prem Mallappa
+ #
+-# Copyright (C) 2008-2020 Advanced Micro Devices, Inc. All rights reserved.
++# Author: Prem Mallappa <prem.mallappa@gmail.com>
+ #
+-# Redistribution and use in source and binary forms, with or without modification,
+-# are permitted provided that the following conditions are met:
+-# 1. Redistributions of source code must retain the above copyright notice,
+-#    this list of conditions and the following disclaimer.
+-# 2. Redistributions in binary form must reproduce the above copyright notice,
+-#    this list of conditions and the following disclaimer in the documentation
+-#    and/or other materials provided with the distribution.
+-# 3. Neither the name of the copyright holder nor the names of its contributors
+-#    may be used to endorse or promote products derived from this software without
+-#    specific prior written permission.
+-#
+-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+-# IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+-# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+-# OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-# POSSIBILITY OF SUCH DAMAGE.
+-
+ from os.path import join as joinpath
+ from os import environ
+ 
+@@ -66,7 +45,9 @@ class DefaultCfg(object):
+         self.defenv = Environment(variables = self.defvars,
+                                   ENV = {'PATH' : environ['PATH']})
+ 
+-        self.Check()
++        #self.Check()
++        #for key in self.defvars.keys():
++        #    print(key)
+ 
+     def AddOptions(self):
+         opts = cfg.LocalOption()
+@@ -119,6 +100,13 @@ class DefaultCfg(object):
+                  --toolchain-base=/usr/local/toolchain/
+                  CC will be used as /usr/local/toolchain/bin/gcc if --compiler is gcc""")
+ 
++        opts.Add('--prefix', dest='prefix', nargs=1, action='callback',
++                 type='str',
++                 callback=self.__default_store,
++                 help="""Specify an install prefix directory
++                 the directory will be create if non-existant""")
++
++
+         self.opts = opts
+ 
+     def AddVariables(self):
+@@ -130,7 +118,7 @@ class DefaultCfg(object):
+                          map={}, ignorecase=0),  # case sensitive
+ 	        # test abi makes tests to call out for given library call
+             EnumVariable('libabi', 'Test ABI for library function calling', 'aocl',
+-                         allowed_values=('aocl', 'glibc', 'libm', 'acml','amdlibm'),
++                         allowed_values=('aocl', 'glibc', 'libm', 'acml','amdlibm', 'svml'),
+                          map={}, ignorecase=2),  # lowercase always
+             EnumVariable('developer', 'A developer friendly mode', 0,
+                          allowed_values=('0', '1', '2', '3', '4'),
+@@ -140,9 +128,15 @@ class DefaultCfg(object):
+             EnumVariable('compiler', "Select compiler type", 'gcc',
+                          allowed_values=('gcc', 'aocc', 'llvm', 'icc'), ignorecase=2),
+ 
+-            PathVariable('toolchain_base', "Use this as toolchain prefix", '/usr/bin')
++            PathVariable('toolchain_base', "Use this as toolchain prefix", '/usr/bin'),
++            PathVariable('prefix', "use this as install prefix", '/usr/local')
+         )
+ 
++        defvars.Add(PathVariable('CC', help="Custome C compiler", default=None, 
++                                validator=PathVariable.PathAccept))
++        defvars.Add(PathVariable('CXX', help="Custome C++ compiler", default=None,
++                                validator=PathVariable.PathAccept))
++
+         self.defvars = defvars
+ 
+     def Check(self):
+@@ -154,7 +148,7 @@ class DefaultCfg(object):
+ 
+         unknown = self.defvars.UnknownVariables()
+         if unknown:
+-            print("Unknown variables:", unknown.keys())
++            print("ALM: build: Unknown variables:", unknown.keys())
+             #Exit(1)
+ 
+         #if debug_mode is mentioned assume build type debug
+@@ -175,14 +169,15 @@ class DefaultCfg(object):
+         env.Append(
+             CPPDEFINES = { 'LIBABI': env['libabi']})
+ 
+-        cmpiler = compiler.gcc.Gcc(self.defenv['build'])
++        cmpiler = compiler.gcc.Gcc(self.defenv['build'],
++                                  bvars=self.defvars, 
++                                  opts=self.opts)
+         #print(env['compiler'])
+         if env['compiler'] == 'aocc' or env['compiler'] == 'llvm':
+             cmpiler = compiler.llvm.LLVM(self.defenv['build'])
+ 
+         env.Replace(
+-            CXX = cmpiler.CXXCmd(),
+-            CC = cmpiler.CCCmd(),
++            CC = cmpiler.Cmd(),
+             CCFLAGS = cmpiler.CFlags(),
+             LINKFLAGS = cmpiler.LDFlags(),
+         )
+@@ -201,6 +196,10 @@ class DefaultCfg(object):
+                 CPPDEFINES = {'DEVELOPER' : env['developer']})
+ 
+         self.defvars.Save(self.def_env_file, env)
++        self.Check()
++
++        env['ENV'].update(environ)
++
+         return env
+ 
+     def GetHelpTexts(self):
+diff --git a/scripts/cfg/compiler/__init__.py b/scripts/cfg/compiler/__init__.py
+index 60e136a..4383d01 100644
+--- a/scripts/cfg/compiler/__init__.py
++++ b/scripts/cfg/compiler/__init__.py
+@@ -23,77 +23,64 @@
+ # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ # POSSIBILITY OF SUCH DAMAGE.
+ 
+-class Compiler:
+-    def init_env(self):
+-        self.env_modifiers = {
+-            'CC'          : '',
+-            'CXX'         : '',
+-            'CPPFLAGS'    : [],
+-            'CFLAGS'      : [],
+-            'CXXFLAGS'    : [],
+-            'CPPDEFINES'  : [],
+-            'LDFLAGS'     : []
+-        }
++import os
+ 
+-    def CCCmd(self):
+-        return self.env_modifiers['CC']
+-
+-    def CXXCmd(self):
+-        return self.env_modifiers['CXX']
++class Compiler:
++    def __init__(self, prod_mode, bvars = None, opts = None):
++        self.vars = bvars
++        self.opts = opts
++        self.cxxcmd = ''
++        self.cmd = ''
++        self.prod_mode = prod_mode
++        self.compile_flags_debug = [
++            '-g',
++            '-Og',
++            '-march=native',
++        ]
++        self.compile_flags_release = [
++            '-Ofast',
++            '-march=native',
++            '-fipa-pta',
++            '-funsafe-loop-optimizations',
++            '-flto=4',
++        ]
++        self.compile_flag_map = {
++			'debug': self.compile_flags_debug,
++			'release' : self.compile_flags_release
++		}
+ 
+-    def CFlags(self):
+-        return self.env_modifiers['CFLAGS']
++        self.link_flags_debug = []
+ 
+-    def LDFlags(self):
+-        return self.env_modifiers['LDFLAGS']
++        self.link_flags_release = self.compile_flags_release
+ 
+-    def Append(self, d):
+-        for key,value in d.items():
+-            if isinstance(self.env_modifiers[key], list):
+-                self.env_modifiers[key].extend(value)
+-            else:
+-                self.env_modifiers[key] = value
++        self.link_flag_map = {
++            "debug": self.link_flags_debug,
++            "release": self.link_flags_release
++        }
+ 
+-    def Replace(self, d):
+-        self.env_modifiers.update(d)
++        self.cpp_flags_debug = []
+ 
+-    def __init__(self, prod_mode):
+-        self.prod_mode = prod_mode
+-        self.init_env()
++        self.cpp_flags_release = []
+ 
+-        compile_flags_debug = [
+-            '-g',
+-            '-Og',
+-            #'-march=native',
+-        ]
++        self.cpp_flag_map = {
++            "debug": self.cpp_flags_debug,
++            "release": self.cpp_flags_release
++        }
+ 
+-        compile_flags_release = [
+-            #'-Ofast',
+-            #'-march=native',
+-            #'-fipa-pta',
+-            #'-funsafe-loop-optimizations',
+-            #'-flto=4',
+-            #'-fno-strict-aliasing',
+-        ]
++    def fixup_from_vars(self):
++        pass
+ 
+-        link_flags_debug = []
+-        link_flags_release = compile_flags_release
++    def fixup_from_env(self):
++        if 'CC' in os.environ:
++            self.cmd = os.getenv('CC')
++        
++        if 'CXX' in os.environ:
++            self.cxxcmd = os.getenv('CXX')
+ 
+-        cpp_flags_debug = []
+-        cpp_flags_release = []
++        if 'CFLAGS' in os.environ:
++            self.compile_flag_map[self.prod_mode]
+ 
+-        pmode = prod_mode.lower()
++        if 'LDFLAGS' in os.environ:
++            self.link_flag_map[self.prod_mode]
+ 
+-        if pmode == "debug" :
+-            self.Append({
+-                'CFLAGS'  : compile_flags_debug,
+-                'LDFLAGS' : link_flags_debug,
+-                'CPPFLAGS': cpp_flags_debug,}
+-            )
+-        elif pmode == "release":
+-            self.Append({
+-                    'CFLAGS'  : compile_flags_release,
+-                    'LDFLAGS' : link_flags_release,
+-                    'CPPFLAGS': cpp_flags_release,}
+-            )
+ 
+diff --git a/scripts/cfg/compiler/gcc.py b/scripts/cfg/compiler/gcc.py
+index c2f8c8e..eb89a73 100644
+--- a/scripts/cfg/compiler/gcc.py
++++ b/scripts/cfg/compiler/gcc.py
+@@ -25,18 +25,36 @@
+ 
+ from . import Compiler
+ class Gcc(Compiler):
+-    def __init__(self, prod_mode):
+-        super(Gcc, self).__init__(prod_mode)
+-
+-        warnings_cxx  = [
+-            '-Wctor-dtor-privacy',
+-            '-Wnoexcept',
+-            '-Wstrict-null-sentinel',
+-            '-Wold-style-cast',
+-            '-Woverloaded-virtual',
++    def __init__(self, prod_mode, bvars = None, opts = None):
++        super(Gcc, self).__init__(prod_mode, bvars, opts)
++        self.cmd = 'gcc'
++        self.cxxcmd = 'g++'
++        self.compile_flags_debug = [
++            '-g',
++            '-Og',
++            '-march=native',
+         ]
++        self.compile_flags_release = []
++        self.compile_flag_map = {
++            'debug': self.compile_flags_debug,
++            'release' : self.compile_flags_release
++        }
++
++        self.link_flags_debug = []
++        self.link_flags_release = self.compile_flags_release
++        self.link_flag_map = {
++            "debug": self.link_flags_debug,
++            "release": self.link_flags_release
++        }
++        self.cpp_flag_map = {
++            "debug":   self.cpp_flags_debug,
++            "release": self.cpp_flags_release
++        }
+ 
+-        warnings_c = [
++        self.cpp_flags_debug = []
++        self.cpp_flags_release = []
++
++        self.warnings = [
+             '-Wall',
+             '-Wextra',
+             '-Wpedantic',
+@@ -44,6 +62,7 @@ class Gcc(Compiler):
+             '-Wcast-align',
+             '-Wcast-qual',
+             '-Wconversion',
++            '-Wctor-dtor-privacy',
+             '-Wdisabled-optimization',
+             '-Wdouble-promotion',
+             #   '-Weffc++',
+@@ -54,7 +73,10 @@ class Gcc(Compiler):
+             #   '-Wlogical-op',
+             '-Wmissing-declarations',
+             '-Wmissing-include-dirs',
++            '-Wnoexcept',
+             '-Wodr',
++            '-Wold-style-cast',
++            '-Woverloaded-virtual',
+             #   '-Wpadded',
+             '-Wredundant-decls',
+             '-Wshadow',
+@@ -62,53 +84,40 @@ class Gcc(Compiler):
+             #   '-Wsign-promo',
+             #   '-Wsuggest-final-methods',
+             #   '-Wsuggest-final-types',
+-            '-fno-strict-aliasing',
+-            # '-Wstrict-overflow=5',
+-            # '-Wswitch-default',
+-            # -Wswitch-enum needs every switch statement to be handled
+-            #       explicitly. It would be useful if the language had some
+-            #       mechanism to activate this on specified switch statements
+-            #       (to ensure that future changes to the enum are handled
+-            #       everywhere that they need to be), but it's overkill for an
+-            #       "all-or-nothing" setting. '-Wswitch-enum',
++            '-Wstrict-null-sentinel',
++            #   '-Wstrict-overflow=5',
++            '-Wswitch-default',
++            # -Wswitch-enum needs every switch statement to be handled explicitly.
++            #       It would be useful if the language had some mechanism
++            #       to activate this on specified switch statements (to ensure that future
++            #       changes to the enum are handled everywhere that they need to be), but it's
++            #       overkill for an "all-or-nothing" setting.
++            #   '-Wswitch-enum',
+             '-Wtrampolines',
+-            # '-Wundef',
+-            # -Wunsafe-loop-optimizations causes too many spurious warnings. It
+-            #       may be useful to apply this one periodically and manually
+-            #       verify the results. It is also issued warning for the
+-            #       constructor of a const array of const std::string (where
+-            #       there is no loop in user code).
++            '-Wundef',
++            # -Wunsafe-loop-optimizations causes too many spurious warnings. It may be
++            #       useful to apply this one periodically and manually verify the results.
++            #       It is also issued warning for the constructor of a const array of const
++            #       std::string (where there is no loop in user code).
+             #
+             #   '-Wunsafe-loop-optimizations',
+             # -Wuseless-cast is incompatible with BOUNDED_INTEGER_CONDITIONAL
+             #   '-Wuseless-cast',
+             '-Wvector-operation-performance',
+-            # -Wzero-as-null-pointer-constant does not work with the
+-            #   operator<=> emulation '-Wzero-as-null-pointer-constant',
++            # -Wzero-as-null-pointer-constant does not work with the operator<=> emulation
++            #   '-Wzero-as-null-pointer-constant',
+             '-Werror',
+             '-Wlto-type-mismatch',
+         ]
++        self.fixup_from_env()
+ 
+ 
+-        # Eventually we should enable all warnings
+-        # with compile_flags_release = [] + warnings_c
+-        compile_flags_release = []
+-        compile_flags_debug   = []
+-
+-        self.Replace({
+-            'CC' : 'gcc',
+-            'CXX': 'g++',
+-        }
+-        )
+-
+-        if self.prod_mode == "debug":
+-            self.Append({
+-                'CFLAGS' : compile_flags_debug,
+-                'CXXFLAGS': warnings_cxx ,                
+-            })
+-        else:
+-            self.Append({
+-                'CFLAGS' : compile_flags_release,
+-                'CXXFLAGS': warnings_cxx,
+-            })
++    def Cmd(self):
++        return self.cmd
++    def CxxCmd(self):
++        return self.cxxcmd
++    def CFlags(self):
++        return self.compile_flag_map[self.prod_mode]
++    def LDFlags(self):
++        return self.link_flag_map[self.prod_mode]
+ 
+diff --git a/scripts/cfg/compiler/llvm.py b/scripts/cfg/compiler/llvm.py
+index 0e4c346..b39d341 100644
+--- a/scripts/cfg/compiler/llvm.py
++++ b/scripts/cfg/compiler/llvm.py
+@@ -26,29 +26,58 @@
+ from . import Compiler
+ 
+ class LLVM(Compiler):
+-    def __init__(self, prod_mode):
+-        super(LLVM, self).__init__(prod_mode)
+-
+-        compile_flags_release = [
+-            # fp-contract needed to generate FMA instructions
+-            '-ffp-contract=fast',
++    def __init__(self, prod_mode, bvars = None, opts = None):
++        super(LLVM, self).__init__(prod_mode, bvars, opts)
++        self.cmd = 'clang'
++        self.cxxcmd = 'clang++'
++        self.compile_flags_debug = [
++            '-g',
++            '-Og',
++            '-march=native',
++        ]
++        self.compile_flags_release = [
++            '-ffp-contract=fast', # Needed to generate FMA instructions for vector routines
+             #'-Ofast',
+             # '-march=native',
+             # '-fipa-pta',
+             # '-funsafe-loop-optimizations',
+             # '-flto=4',
+         ]
++        self.compile_flag_map = {
++            'debug': self.compile_flags_debug,
++            'release' : self.compile_flags_release
++        }
+ 
+-        link_flags_debug = ['-fuse-ld=ld']
+-        link_flags_release = ['-fuse-ld=ld']
++        self.link_flags_debug = ['-fuse-ld=ld']
++        self.link_flags_release = ['-fuse-ld=ld']
++
++        self.link_flag_map = {
++            "debug": self.link_flags_debug,
++            "release": self.link_flags_release
++        }
+ 
+-        llvm = {
+-            'CC'      : 'clang',
+-            'CXX'     : 'clang++',
+-            'CFLAGS'  : link_flags_release,
+-            'LDFLAGS' : link_flags_release
++        self.cpp_flag_map = {
++            "debug":   self.cpp_flags_debug,
++            "release": self.cpp_flags_release
+         }
+ 
+-        self.Append(llvm)
++        self.cpp_flags_debug = []
++        self.cpp_flags_release = []
++
++        self.warnings = [
++            '-Weverything',
++        ]
++
++        self.fixup_from_env()
++
++    def Cmd(self):
++        return self.cmd
++
++    def CxxCmd(self):
++        return self.cxxcmd
+ 
++    def CFlags(self):
++        return self.compile_flag_map[self.prod_mode]
+ 
++    def LDFlags(self):
++        return self.link_flag_map[self.prod_mode]
+diff --git a/scripts/cfg/helper.py b/scripts/cfg/helper.py
+index a0fb991..1d7a01d 100644
+--- a/scripts/cfg/helper.py
++++ b/scripts/cfg/helper.py
+@@ -140,6 +140,18 @@ def UpdateEnvComStr(env):
+         env["SHCCCOMSTR"]   = Transform('SHCC')
+         env["SHLINKCOMSTR"] = Transform('SHLINK', hidesrc=True)
+ 
++
++def MakeInstallRoot(env):
++    """Build root has
++       build/<libabi>-<debug/release/developer>
++    """
++    try:
++        inst = env['prefix']
++    except KeyError:
++        inst = '#install'
++
++    env['INSTALL_PREFIX'] = inst
++
+ def MakeBuildRoot(env):
+     """Build root has
+        build/<libabi>-<debug/release/developer>
+@@ -178,7 +190,9 @@ def SetupConfiguration(env):
+         and puts target into testdir."""
+         #print(env.Dump())
+         MakeBuildRoot(env)
++        MakeInstallRoot(env)
+         UpdateEnvComStr(env)
++        env['compiler'] = GetOption('compiler')
+ 
+         if env['debug_mode'] != 'no':
+             env.Append(CPPDEFINES = {'DEBUG': '1'})
+diff --git a/src/SConscript b/src/SConscript
+index 0fe4e19..32d6b83 100644
+--- a/src/SConscript
++++ b/src/SConscript
+@@ -27,6 +27,7 @@
+ Import('env')
+ from os.path import join as joinpath
+ 
++installdir = env['prefix']
+ builddir = joinpath(env['BUILDROOT'], 'src')
+ 
+ e = env.Clone()
+@@ -73,6 +74,8 @@ libm = almenv.StaticLibrary('alm', alm_objs)
+ libmso = almenv.SharedLibrary('alm', alm_objs)
+ 
+ 
++almenv.Alias("install", almenv.Install(joinpath(installdir, "lib"), [libmso, libm]))
++
+ fast_libm = SConscript('fast/SConscript',
+                        exports = {'env' : e},
+                        duplicate = 0,
+-- 
+2.28.0
+

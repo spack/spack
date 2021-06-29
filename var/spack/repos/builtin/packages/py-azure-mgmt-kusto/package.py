@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtKusto(PythonPackage):
     """Microsoft Azure Kusto Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-kusto/azure-mgmt-kusto-0.9.0.zip"
+    pypi = "azure-mgmt-kusto/azure-mgmt-kusto-0.9.0.zip"
 
     version('0.9.0', sha256='9210db89fa18ee8ed53339cd63bbe6fe1d9624cd793b54b7451ddbda8ae92ef3')
     version('0.3.0', sha256='9eb8b7781fd4410ee9e207cd0c3983baf9e58414b5b4a18849d09856e36bacde')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ class PyMsrestazure(PythonPackage):
     Azure-specific module."""
 
     homepage = "https://github.com/Azure/msrestazure-for-python"
-    url      = "https://pypi.io/packages/source/m/msrestazure/msrestazure-0.6.3.tar.gz"
+    pypi = "msrestazure/msrestazure-0.6.3.tar.gz"
 
     version('0.6.3', sha256='0ec9db93eeea6a6cf1240624a04f49cd8bbb26b98d84a63a8220cfda858c2a96')
 

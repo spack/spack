@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class PyAccimage(PythonPackage):
     depends_on('py-numpy', type='test')
     depends_on('py-imageio', type='test')
 
-    def test(self):
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
         pytest = which('pytest')
         pytest('test.py')

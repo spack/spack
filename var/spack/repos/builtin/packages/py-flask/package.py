@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyFlask(PythonPackage):
     """A simple framework for building complex web applications."""
 
     homepage = "https://palletsprojects.com/p/flask/"
-    url      = "https://pypi.io/packages/source/F/Flask/Flask-1.1.1.tar.gz"
+    pypi = "Flask/Flask-1.1.1.tar.gz"
 
     version('1.1.2',  sha256='4efa1ae2d7c9865af48986de8aeb8504bf32c7f3d6fdc9353d34b21f4b127060')
     version('1.1.1',  sha256='13f9f196f330c7c2c5d7a5cf91af894110ca0215ac051b5844701f2bfd934d52')

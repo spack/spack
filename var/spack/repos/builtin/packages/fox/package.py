@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,7 @@ class Fox(AutotoolsPackage):
     depends_on('libxi')
     depends_on('libxrandr')
     depends_on('gl', when='+opengl')
+    depends_on('glu', when='+opengl', type='link')
 
     def configure_args(self):
         # Make the png link flags explicit or it will try to pick up libpng15

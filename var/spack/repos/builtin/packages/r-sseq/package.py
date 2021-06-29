@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class RSseq(RPackage):
     """Shrinkage estimation of dispersion in Negative Binomial models for RNA-
-       seq experiments with small sample size.
+       seq experiments with small sample size
 
        The purpose of this package is to discover the genes that are
        differentially expressed between two conditions in RNA-seq experiments.
@@ -24,6 +24,7 @@ class RSseq(RPackage):
     homepage = "https://bioconductor.org/packages/sSeq"
     git      = "https://git.bioconductor.org/packages/sSeq.git"
 
+    version('1.28.0', commit='401f6805628bdf6579cc0e643b7ed54319f024be')
     version('1.22.0', commit='fa3895c9578edddca17b5d13a2678ee5830b85cc')
     version('1.20.1', commit='91f31440323612cb04beb44404ab0a1bcb3ad87d')
     version('1.18.0', commit='1f65e5a55ce0d51672b785450031872e6db5ca0f')

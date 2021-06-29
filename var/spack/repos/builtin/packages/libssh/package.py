@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,5 @@ class Libssh(CMakePackage):
         return url.format(version.up_to(2), version)
 
     def cmake_args(self):
-        args = ['-DWITH_GSSAPI=%s' %
-                ('ON' if '+gssapi' in self.spec else 'OFF')]
+        args = [self.define_from_variant('WITH_GSSAPI', 'gssapi')]
         return args

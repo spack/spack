@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class PyPyscf(PythonPackage):
 
     maintainers = ['naromero77']
 
+    version('1.7.5', tag='v1.7.5')
     version('1.7.3', tag='v1.7.3')
 
     # dependencies
@@ -27,7 +28,8 @@ class PyPyscf(PythonPackage):
     depends_on('blas')
     depends_on('libcint+coulomb_erf+f12')
     depends_on('libxc')
-    depends_on('xcfun@:2.0.0a2')  # PySCF does not support recent version of the xcfun API'
+    depends_on('xcfun')
+    depends_on('xcfun@2.0.0a2', when='@:1.7.4')
 
     def setup_build_environment(self, env):
         # Tell PSCF where supporting libraries are located."
@@ -36,6 +38,7 @@ class PyPyscf(PythonPackage):
         pyscf_search_dir = []
         pyscf_search_dir.append(spec['blas'].prefix)
         pyscf_search_dir.append(spec['libcint'].prefix)
+        pyscf_search_dir.append(spec['libcint'].prefix.lib64)
         pyscf_search_dir.append(spec['libxc'].prefix)
         pyscf_search_dir.append(spec['xcfun'].prefix)
         pyscf_search_dir.append(spec['xcfun'].prefix.include.XCFun)

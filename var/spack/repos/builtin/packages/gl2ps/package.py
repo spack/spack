@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,8 +50,8 @@ class Gl2ps(CMakePackage):
 
     def cmake_args(self):
         options = [
-            '-DENABLE_PNG={0}'.format(self.variant_to_bool('+png')),
-            '-DENABLE_ZLIB={0}'.format(self.variant_to_bool('+zlib')),
+            self.define_from_variant('ENABLE_PNG', 'png'),
+            self.define_from_variant('ENABLE_ZLIB', 'zlib'),
         ]
         if '~doc' in self.spec:
             # Make sure we don't look.

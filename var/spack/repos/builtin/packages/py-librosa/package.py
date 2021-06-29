@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyLibrosa(PythonPackage):
     """A python package for music and audio analysis."""
 
     homepage = "http://github.com/librosa/librosa"
-    url      = "https://pypi.io/packages/source/l/librosa/librosa-0.7.2.tar.gz"
+    pypi = "librosa/librosa-0.7.2.tar.gz"
 
     version('0.7.2', sha256='656bbda80e98e6330db1ead79cd084b13a762284834d7603fcf7cf7c0dc65f3c')
 

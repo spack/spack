@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -135,6 +135,15 @@ class NetcdfFortran(AutotoolsPackage):
             config_args.append('--disable-doxygen')
 
         return config_args
+
+    @run_after('configure')
+    def patch_libtool(self):
+        """AOCC support for NETCDF-F"""
+        if '%aocc' in self.spec:
+            filter_file(
+                r'\${wl}-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
+                'libtool', string=True)
 
     @when('@:4.4.5')
     def check(self):

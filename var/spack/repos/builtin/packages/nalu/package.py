@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,8 +53,7 @@ class Nalu(CMakePackage):
             '-DMPI_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DMPI_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
-                'ON' if '+pic' in spec else 'OFF'),
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'),
         ])
 
         if '+tioga' in spec:

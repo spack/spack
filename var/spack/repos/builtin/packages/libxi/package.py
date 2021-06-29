@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,10 +18,12 @@ class Libxi(AutotoolsPackage, XorgPackage):
     depends_on('libx11@1.6:')
     depends_on('libxext@1.0.99.1:')
     depends_on('libxfixes@5:')
+    depends_on('fixesproto@5.0:')
+    depends_on('xproto@7.0.13:')
+    depends_on('xextproto@7.0.3:')
+    depends_on('inputproto@2.2.99.1:')
 
-    # transient build dependency (from libxfixes), i.e. shouldn't be needed?
-    depends_on('fixesproto@5.0:', type='build')
-
-    depends_on('xproto@7.0.13:', type='build')
-    depends_on('xextproto@7.0.3:', type='build')
-    depends_on('inputproto@2.2.99.1:', type='build')
+    @property
+    def libs(self):
+        return find_libraries(
+            'libXi', self.prefix, shared=True, recursive=True)
