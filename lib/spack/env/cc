@@ -139,9 +139,13 @@ case "$command" in
         ;;
 esac
 
-# If any of the arguments below are present, then the mode is vcheck.
-# In vcheck mode, nothing is added in terms of extra search paths or
-# libraries.
+# Look for option to print version (in which case the mode is vcheck). For ld
+# this is -v. For most other compiler binaries it is -V, --version, or
+# -dumpversion. In vcheck mode, nothing is added in terms of extra search paths
+# or libraries.
+# TODO: For the xl compiler, -V indicates verbose output, so we should not
+#  enable vcheck mode for -V when using xl
+#  see https://github.com/spack/spack/pull/23224#discussion_r656450014
 for arg in "$@"; do
     case $arg in
         -v)
