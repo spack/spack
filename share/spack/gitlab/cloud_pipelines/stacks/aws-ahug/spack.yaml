@@ -1,6 +1,6 @@
 # TODO: 
 #  - alinux2 image builder
-#  - arm64 large/medium instance
+#  - aarch64 large/medium instance
 #  - expand packages to full set (currently only building 3 packages)
 #  - handle parallelcluster provided packages (build a docker AMI based on pcluster)
 
@@ -18,7 +18,7 @@ spack:
 
   packages:
     all:
-      target: [arm64]
+      target: [graviton2]
 
       providers:
         mpi: [openmpi, mpich]
@@ -72,10 +72,10 @@ spack:
     mappings:
       - match: [ascent, axom, llvm, sundials, umpire, vtk-h, vtk-m]
         runner-attributes:
-          tags: ["spack", "public", "xlarge", "arm64"]
+          tags: ["spack", "public", "xlarge", "aarch64"]
       - match: ['@:']
         runner-attributes:
-          tags: ["spack", "public", "xlarge", "arm64"]
+          tags: ["spack", "public", "xlarge", "aarch64"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     service-job-attributes:
       before_script:
@@ -89,7 +89,7 @@ spack:
       #  - spack --version
       #  - cd share/spack/gitlab/cloud_pipelines/stacks/aws-ahug
       #  - spack env activate --without-view .
-      tags: ["spack", "public", "xlarge", "arm64"]
+      tags: ["spack", "public", "xlarge", "aarch64"]
 
   cdash:
     build-group: ARM HPC User Group (AHUG)
