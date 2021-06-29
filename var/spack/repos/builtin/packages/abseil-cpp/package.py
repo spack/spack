@@ -33,8 +33,8 @@ class AbseilCpp(CMakePackage):
     def cmake_args(self):
         cxxstd = self.spec.variants['cxxstd'].value
         args = [
-          "-DBUILD_TESTING=OFF",
-          "-DCMAKE_CXX_STANDARD={}".format(cxxstd)
+            "-DBUILD_TESTING=OFF",
+            "-DCMAKE_CXX_STANDARD={}".format(cxxstd)
         ]
         args.append('-DBUILD_SHARED_LIBS:Bool={0}'.format(
             'ON' if '+shared' in self.spec else 'OFF'))
