@@ -23,8 +23,6 @@ class Sombrero(MakefilePackage):
         sombrero_dir = join_path(prefix.bin, 'sombrero')
         sombrero_sh.filter('sombrero/', '{0}/'.format(sombrero_dir))
 
-    def build(self, spec, prefix):
-        make()
 
     def install(self, spec, prefix):
         sombrero_dir = join_path(prefix.bin, 'sombrero')
