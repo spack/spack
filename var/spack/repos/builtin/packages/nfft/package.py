@@ -23,7 +23,8 @@ class NfftBase(AutotoolsPackage):
 
     def configure(self, spec, prefix):
         # Base options
-        options = ['--prefix={0}'.format(prefix),'--with-fftw3=%s'  % spec['fftw'].prefix]
+        options = ['--prefix={0}'.format(prefix),
+                   '--with-fftw3=%s'  % spec['fftw'].prefix]
 
         # Double is the default precision, for all the others we need
         # to enable the corresponding option.
