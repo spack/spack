@@ -10,10 +10,7 @@ properties = {
         'properties': {
             'enable': {'type': 'boolean'},
             'root': {
-                'anyOf': [
-                    {'type': 'string'},
-                    {'type': 'null'},
-                ],
+                'type': 'string'
             },
         }
     }

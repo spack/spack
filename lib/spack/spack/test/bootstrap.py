@@ -5,8 +5,8 @@
 import pytest
 
 import spack.bootstrap
-import spack.util.path
 import spack.store
+import spack.util.path
 
 
 @pytest.mark.regression('22294')
@@ -23,7 +23,7 @@ def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmpdir):
     # Test that within the context manager we use the bootstrap store
     # and that outside we restore the correct location
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert spack.store.root == spack.paths.user_bootstrap_store
+        assert spack.store.root == spack.bootstrap.store_path()
     assert spack.store.root == user_path
 
 
@@ -32,8 +32,6 @@ def test_store_is_restored_correctly_after_bootstrap(mutable_config, tmpdir):
     ('/opt/spack/bootstrap', '/opt/spack/bootstrap/store'),
     # Path with placeholder
     ('$spack/opt/bootstrap', '$spack/opt/bootstrap/store'),
-    # Default value if there's no customization
-    (None, spack.paths.user_bootstrap_store)
 ])
 def test_store_path_customization(config_value, expected, mutable_config):
     # Set the current configuration to a specific value
