@@ -37,7 +37,7 @@ class Axom(CachedCMakePackage, CudaPackage):
     homepage = "https://github.com/LLNL/axom"
     git      = "https://github.com/LLNL/axom.git"
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('main', branch='main', submodules=True)
     version('develop', branch='develop', submodules=True)
