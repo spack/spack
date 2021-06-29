@@ -17,11 +17,12 @@ class Caliper(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git      = "https://github.com/LLNL/Caliper.git"
-    url      = "https://github.com/LLNL/Caliper/archive/v2.5.0.tar.gz"
+    url      = "https://github.com/LLNL/Caliper/archive/v2.6.0.tar.gz"
 
     maintainers = ["daboehme"]
 
     version('master', branch='master')
+    version('2.6.0', sha256='6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f')
     version('2.5.0', sha256='d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c')
     version('2.4.0', tag='v2.4.0')
     version('2.3.0', tag='v2.3.0')

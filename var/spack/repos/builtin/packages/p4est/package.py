@@ -9,14 +9,19 @@ from spack import *
 class P4est(AutotoolsPackage):
     """Dynamic management of a collection (a forest) of adaptive octrees in
     parallel"""
-    homepage = "http://www.p4est.org"
-    url      = "http://p4est.github.io/release/p4est-2.2.tar.gz"
-    git = "https://github.com/cburstedde/p4est.git"
+    homepage = "https://www.p4est.org"
+
+    # Only use the official tarball releases provided on p4est.org or
+    # p4est.github.io. The automatically generated releases from the
+    # Github repository lack important parts.
+    url = "https://p4est.github.io/release/p4est-2.3.2.tar.gz"
 
     maintainers = ['davydden']
 
-    version('2.3.1', submodules=True, tag='v2.3.1')
+    version('2.3.2', sha256='076df9e5578e0e7fcfbe12e1a0b080104001f8c986ab1d5a69ec2220050df8e6')
+    version('2.3.1', sha256='be66893b039fb3f27aca3d5d00acff42c67bfad5aa09cea9253cdd628b2bdc9a')
     version('2.2', sha256='1549cbeba29bee2c35e7cc50a90a04961da5f23b6eada9c8047f511b90a8e438')
+    version('2.1', sha256='07ab24bd63a652a30576fbca12c0fc068dffa615d888802d7f229fa994a9c1ef')
     version('2.0', sha256='c522c5b69896aab39aa5a81399372a19a6b03fc6200d2d5d677d9a22fe31029a')
     version('1.1', sha256='0b5327a35f0c869bf920b8cab5f20caa4eb55692eaaf1f451d5de30285b25139')
 
@@ -24,8 +29,8 @@ class P4est(AutotoolsPackage):
     variant('openmp', default=False, description='Enable OpenMP')
 
     # build dependencies
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
+    depends_on('automake', when='@2.0', type='build')
+    depends_on('autoconf', when='@2.0', type='build')
     depends_on('libtool@2.4.2:', type='build')
 
     # other dependencies
@@ -43,8 +48,9 @@ class P4est(AutotoolsPackage):
           when='@2.0')
 
     def autoreconf(self, spec, prefix):
-        bootstrap = Executable('./bootstrap')
-        bootstrap()
+        if self.spec.satisfies('@2.0'):
+            bootstrap = Executable('./bootstrap')
+            bootstrap()
 
     def configure_args(self):
         args = [

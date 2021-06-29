@@ -16,6 +16,10 @@ class PyNumcodecs(PythonPackage):
     pypi = "numcodecs/numcodecs-0.6.4.tar.gz"
     git = "https://github.com/zarr-developers/numcodecs.git"
 
+    # 'numcodecs.tests' excluded from 'import_modules' because it requires
+    # an additional dependency on 'pytest'
+    import_modules = ['numcodecs']
+
     version('master', branch='master', submodules=True)
     version('0.7.3', sha256='022b12ad83eb623ec53f154859d49f6ec43b15c36052fa864eaf2d9ee786dd85')
     version('0.6.4', sha256='ef4843d5db4d074e607e9b85156835c10d006afc10e175bda62ff5412fca6e4d')

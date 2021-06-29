@@ -14,6 +14,7 @@ class Libfuse(MesonPackage):
     homepage = "https://github.com/libfuse/libfuse"
     url      = "https://github.com/libfuse/libfuse/releases/download/fuse-2.9.9/fuse-2.9.9.tar.gz"
 
+    version('3.10.4', sha256='bfcb2520fd83db29e9fefd57d3abd5285f38ad484739aeee8e03fbec9b2d984a')
     version('3.10.3', sha256='c32527782cef620df58b162aa29901d1fb13253b029375d5860a2253a810344e')
     version('3.10.2', sha256='a16f93cc083264afd0d2958a0dc88f24c6c5d40a9f3842c645b1909e13edb75f')
     version('3.10.1', sha256='d8954e7b4c022c651aa80db3bb4a161437dd285cd5f1a23d0e25f055dcebe00d')
@@ -34,7 +35,9 @@ class Libfuse(MesonPackage):
         "which typically sets up udev rules and "
         "and init script in /etc/init.d"))
 
+    provides('fuse')
     conflicts("+useroot", when='~system_install', msg="useroot requires system_install")
+    conflicts('platform=darwin', msg='libfuse does not support OS-X, use macfuse instead')
 
     # Drops the install script which does system configuration
     patch('0001-Do-not-run-install-script.patch', when='@3: ~system_install')

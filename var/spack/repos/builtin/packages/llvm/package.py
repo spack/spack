@@ -187,7 +187,8 @@ class Llvm(CMakePackage, CudaPackage):
     # Introduced in version 11 as a part of LLVM and not a separate package.
     conflicts("+flang", when="@:10.999")
 
-    # LLVM 4 and 5 does not build with GCC 8
+    # Older LLVM do not build with newer GCC
+    conflicts("%gcc@11:", when="@:7")
     conflicts("%gcc@8:", when="@:5")
     conflicts("%gcc@:5.0.999", when="@8:")
 
@@ -220,6 +221,12 @@ class Llvm(CMakePackage, CudaPackage):
 
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
+
+    # https://github.com/spack/spack/issues/24270
+    patch('https://src.fedoraproject.org/rpms/llvm10/raw/7ce7ebd066955ea95ba2b491c41fbc6e4ee0643a/f/llvm10-gcc11.patch',
+          sha256='958c64838c9d469be514eef195eca0f8c3ab069bc4b64a48fad59991c626bab8',
+          when='@8:10 %gcc@11:')
+
     # Backport from llvm master + additional fix
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
     # for a bug report about this problem in llvm master.

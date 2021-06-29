@@ -10,7 +10,6 @@ import itertools
 import os
 import pprint
 import sys
-import time
 import types
 import warnings
 from six import string_types
@@ -43,33 +42,12 @@ import spack.repo
 import spack.bootstrap
 import spack.variant
 import spack.version
-
+import spack.util.timer
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm
 else:
     from collections import Sequence
-
-
-class Timer(object):
-    """Simple timer for timing phases of a solve"""
-    def __init__(self):
-        self.start = time.time()
-        self.last = self.start
-        self.phases = {}
-
-    def phase(self, name):
-        last = self.last
-        now = time.time()
-        self.phases[name] = now - last
-        self.last = now
-
-    def write(self, out=sys.stdout):
-        now = time.time()
-        out.write("Time:\n")
-        for phase, t in self.phases.items():
-            out.write("    %-15s%.4f\n" % (phase + ":", t))
-        out.write("Total: %.4f\n" % (now - self.start))
 
 
 def issequence(obj):
@@ -197,7 +175,7 @@ def check_packages_exist(specs):
 
 class Result(object):
     """Result of an ASP solve."""
-    def __init__(self, asp=None):
+    def __init__(self, specs, asp=None):
         self.asp = asp
         self.satisfiable = None
         self.optimal = None
@@ -211,11 +189,44 @@ class Result(object):
         # names of optimization criteria
         self.criteria = []
 
+        # Abstract user requests
+        self.abstract_specs = specs
+
+        # Concrete specs
+        self._concrete_specs = None
+
     def print_cores(self):
         for core in self.cores:
             tty.msg(
                 "The following constraints are unsatisfiable:",
                 *sorted(str(symbol) for symbol in core))
+
+    @property
+    def specs(self):
+        """List of concretized specs satisfying the initial
+        abstract request.
+        """
+        # The specs were already computed, return them
+        if self._concrete_specs:
+            return self._concrete_specs
+
+        # Assert prerequisite
+        msg = 'cannot compute specs ["satisfiable" is not True ]'
+        assert self.satisfiable, msg
+
+        self._concrete_specs = []
+        best = min(self.answers)
+        opt, _, answer = best
+        for input_spec in self.abstract_specs:
+            key = input_spec.name
+            if input_spec.virtual:
+                providers = [spec.name for spec in answer.values()
+                             if spec.package.provides(key)]
+                key = providers[0]
+
+            self._concrete_specs.append(answer[key])
+
+        return self._concrete_specs
 
 
 def _normalize_packages_yaml(packages_yaml):
@@ -298,7 +309,7 @@ class PyclingoDriver(object):
             self, solver_setup, specs, dump=None, nmodels=0,
             timers=False, stats=False, tests=False
     ):
-        timer = Timer()
+        timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
         self.control = clingo.Control()
@@ -329,7 +340,7 @@ class PyclingoDriver(object):
         timer.phase("ground")
 
         # With a grounded program, we can run the solve.
-        result = Result()
+        result = Result(specs)
         models = []  # stable models if things go well
         cores = []   # unsatisfiable cores if they do not
 
@@ -395,7 +406,7 @@ class PyclingoDriver(object):
                 result.cores.append(core_symbols)
 
         if timers:
-            timer.write()
+            timer.write_tty()
             print()
         if stats:
             print("Statistics:")
@@ -753,7 +764,8 @@ class SpackSolverSetup(object):
                 continue
 
             for i, provider in enumerate(providers):
-                func(vspec, provider, i + 10)
+                provider_name = spack.spec.Spec(provider).name
+                func(vspec, provider_name, i + 10)
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")

@@ -73,13 +73,16 @@ class Sirius(CMakePackage, CudaPackage):
             values=('Debug', 'Release', 'RelWithDebInfo'))
     variant('apps', default=True, description="Build applications")
     variant('tests', default=False, description="Build tests")
+    variant('single_precision', default=False, description="Use single precision arithmetics")
+    variant('profiler', default=True, description="Use internal profiler to measure execution time")
 
     depends_on('python', type=('build', 'run'))
     depends_on('mpi')
     depends_on('gsl')
     depends_on('lapack')
     depends_on('fftw-api@3')
-    depends_on('libxc')
+    depends_on('libxc@3.0.0:')
+    depends_on('libxc@4.0.0:', when='@7.2.0:')
     depends_on('spglib')
     depends_on('hdf5+hl')
     depends_on('pkgconfig', type='build')
@@ -94,27 +97,26 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('magma', when='+magma')
     depends_on('boost cxxstd=14 +filesystem', when='+boost_filesystem')
 
-    depends_on('spfft@1.0.3:', when='@6.4.0:')
-    depends_on('spfft+cuda', when='@6.4.0:+cuda')
-    depends_on('spfft+rocm', when='@6.4.0:+rocm')
+    depends_on('spfft@0.9.6: +mpi', when='@6.4.0:')
+    depends_on('spfft@0.9.13:', when='@7.0.1:')
+    depends_on('spfft +single_precision', when='+single_precision ^spfft')
+    depends_on('spfft+cuda', when='+cuda ^spfft')
+    depends_on('spfft+rocm', when='+rocm ^spfft')
+    depends_on('spfft+openmp', when='+openmp ^spfft')
 
-    depends_on('spla@1.4.0:', when='@7.0.0:')
-    depends_on('spla+cuda', when='@7.0.0:+cuda')
-    depends_on('spla+rocm', when='@7.0.0:+rocm')
-
-    depends_on('elpa+openmp', when='+elpa+openmp')
-    depends_on('elpa~openmp', when='+elpa~openmp')
+    depends_on('spla@1.1.0:', when='@7.0.2:')
+    depends_on('spla+cuda', when='+cuda ^spla')
+    depends_on('spla+rocm', when='+rocm ^spla')
+    depends_on('spla+openmp', when='+openmp ^spla')
 
     depends_on('nlcglib', when='+nlcglib')
 
-    depends_on('libvdwxc+mpi', when='+vdwxc')
+    depends_on('libvdwxc@0.3.0:+mpi', when='+vdwxc')
 
     depends_on('scalapack', when='+scalapack')
 
     # rocm
     depends_on('hip', when='+rocm')
-    depends_on('hsakmt-roct', when='+rocm', type='link')
-    depends_on('hsa-rocr-dev', when='+rocm', type='link')
     depends_on('rocblas', when='+rocm')
 
     # FindHIP cmake script only works for < 4.1
@@ -125,6 +127,16 @@ class Sirius(CMakePackage, CudaPackage):
     conflicts('+shared', when='@6.3.0:6.4.999')
     conflicts('+boost_filesystem', when='~apps')
     conflicts('^libxc@5.0.0')  # known to produce incorrect results
+    conflicts('+single_precision', when='@:7.2.4')
+
+    # Propagate openmp to blas
+    depends_on('openblas threads=openmp', when='+openmp ^openblas')
+    depends_on('amdblis threads=openmp', when='+openmp ^amdblis')
+    depends_on('blis threads=openmp', when='+openmp ^blis')
+    depends_on('intel-mkl threads=openmp', when='+openmp ^intel-mkl')
+
+    depends_on('elpa+openmp', when='+elpa+openmp')
+    depends_on('elpa~openmp', when='+elpa~openmp')
 
     # TODO:
     # add support for CRAY_LIBSCI, testing
@@ -173,7 +185,9 @@ class Sirius(CMakePackage, CudaPackage):
             self.define_from_variant('USE_ROCM', 'rocm'),
             self.define_from_variant('BUILD_TESTING', 'tests'),
             self.define_from_variant('BUILD_APPS', 'apps'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('USE_FP32', 'single_precision'),
+            self.define_from_variant('USE_PROFILER', 'profiler')
         ]
 
         lapack = spec['lapack']

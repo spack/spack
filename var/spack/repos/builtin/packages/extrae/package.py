@@ -115,9 +115,12 @@ class Extrae(AutotoolsPackage):
             make.add_default_arg("CXXFLAGS=%s" % self.compiler.cxx11_flag)
             args.append("CXXFLAGS=%s" % self.compiler.cxx11_flag)
 
-        # This was added due to configure failure
+        # This was added due to:
+        # - configure failure
         # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
-        args.append('LDFLAGS=-lintl')
+        # - linking error
+        # https://github.com/bsc-performance-tools/extrae/issues/57
+        args.append('LDFLAGS=-lintl -pthread')
 
         return(args)
 

@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import glob
 import os
 from six import StringIO
 
@@ -177,6 +177,27 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.user_specs[0].name == 'cmake-client'
     assert e.concretized_user_specs[0].name == 'cmake-client'
     assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
+
+
+def test_env_roots_marked_explicit(install_mockery, mock_fetch):
+    install = SpackCommand('install')
+    install('dependent-install')
+
+    # Check one explicit, one implicit install
+    dependent = spack.store.db.query(explicit=True)
+    dependency = spack.store.db.query(explicit=False)
+    assert len(dependent) == 1
+    assert len(dependency) == 1
+
+    env('create', 'test')
+    with ev.read('test') as e:
+        # make implicit install a root of the env
+        e.add(dependency[0].name)
+        e.concretize()
+        e.install_all()
+
+    explicit = spack.store.db.query(explicit=True)
+    assert len(explicit) == 2
 
 
 def test_env_modifications_error_on_activate(
@@ -2484,3 +2505,92 @@ def test_custom_version_concretize_together(tmpdir):
     e.concretize()
 
     assert any('hdf5@myversion' in spec for _, spec in e.concretized_specs())
+
+
+def test_modules_relative_to_views(tmpdir, install_mockery, mock_fetch):
+    spack_yaml = """
+spack:
+  specs:
+  - trivial-install-test-package
+  modules:
+    default:
+      enable:: [tcl]
+      use_view: true
+      roots:
+        tcl: modules
+"""
+    _env_create('test', StringIO(spack_yaml))
+
+    with ev.read('test') as e:
+        install()
+
+        spec = e.specs_by_hash[e.concretized_order[0]]
+        view_prefix = e.default_view.get_projection_for_spec(spec)
+        modules_glob = '%s/modules/**/*' % e.path
+        modules = glob.glob(modules_glob)
+        assert len(modules) == 1
+        module = modules[0]
+
+    with open(module, 'r') as f:
+        contents = f.read()
+
+    assert view_prefix in contents
+    assert spec.prefix not in contents
+
+
+def test_multiple_modules_post_env_hook(tmpdir, install_mockery, mock_fetch):
+    spack_yaml = """
+spack:
+  specs:
+  - trivial-install-test-package
+  modules:
+    default:
+      enable:: [tcl]
+      use_view: true
+      roots:
+        tcl: modules
+    full:
+      enable:: [tcl]
+      roots:
+        tcl: full_modules
+"""
+    _env_create('test', StringIO(spack_yaml))
+
+    with ev.read('test') as e:
+        install()
+
+        spec = e.specs_by_hash[e.concretized_order[0]]
+        view_prefix = e.default_view.get_projection_for_spec(spec)
+        modules_glob = '%s/modules/**/*' % e.path
+        modules = glob.glob(modules_glob)
+        assert len(modules) == 1
+        module = modules[0]
+
+        full_modules_glob = '%s/full_modules/**/*' % e.path
+        full_modules = glob.glob(full_modules_glob)
+        assert len(full_modules) == 1
+        full_module  = full_modules[0]
+
+    with open(module, 'r') as f:
+        contents = f.read()
+
+    with open(full_module, 'r') as f:
+        full_contents = f.read()
+
+    assert view_prefix in contents
+    assert spec.prefix not in contents
+
+    assert view_prefix not in full_contents
+    assert spec.prefix in full_contents
+
+
+@pytest.mark.regression('24148')
+def test_virtual_spec_concretize_together(tmpdir):
+    # An environment should permit to concretize "mpi"
+    e = ev.create('virtual_spec')
+    e.concretization = 'together'
+
+    e.add('mpi')
+    e.concretize()
+
+    assert any(s.package.provides('mpi') for _, s in e.concretized_specs())
