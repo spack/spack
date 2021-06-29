@@ -35,6 +35,6 @@ class AbseilCpp(CMakePackage):
         cxxstd = self.spec.variants['cxxstd'].value
         return [
             self.define('BUILD_TESTING', 'OFF'),
-            self.define('BUILD_SHARED_LIBS:Bool', 'shared'),
+            self.define('BUILD_SHARED_LIBS:Bool', shared),
             self.define('CMAKE_CXX_STANDARD', cxxstd)
         ]
