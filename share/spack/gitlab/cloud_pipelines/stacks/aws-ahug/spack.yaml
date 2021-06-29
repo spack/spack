@@ -1,3 +1,9 @@
+# TODO: 
+#  - alinux2 image builder
+#  - arm64 large/medium instance
+#  - expand packages to full set (currently only building 3 packages)
+#  - handle parallelcluster provided packages (build a docker AMI based on pcluster)
+
 spack:
   concretization: separately
   view: false
@@ -47,7 +53,7 @@ spack:
       - cohmm
 
   mirrors:
-    mirror: "s3://spack-binaries-devleop/aws-ahug"
+    mirror: "s3://spack-binaries-develop/aws-ahug"
 
   specs:
   - matrix:
