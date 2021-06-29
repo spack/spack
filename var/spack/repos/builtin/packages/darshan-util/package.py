@@ -13,12 +13,13 @@ class DarshanUtil(Package):
     log files produced by Darshan (runtime)."""
 
     homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
+    url      = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
     git      = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers = ['shanedsnyder', 'carns']
 
     version('main', branch='main', submodules='True')
-    version('3.3.1', sha256='284224404cb8d0bd4cedd1819587164b5d4f0bfe2f7115ead8364d185e3ab1be')
+    version('3.3.1', sha256='281d871335977d0592a49d053df93d68ce1840f6fdec27fea7a59586a84395f7')
     version('3.3.0', sha256='2e8bccf28acfa9f9394f2084ec18122c66e45d966087fa2e533928e824fcb57a')
     version('3.3.0-pre2', sha256='0fc09f86f935132b7b05df981b05cdb3796a1ea02c7acd1905323691df65e761')
     version('3.3.0-pre1', sha256='1c655359455b5122921091bab9961491be58a5f0158f073d09fe8cc772bd0812')
@@ -62,10 +63,3 @@ class DarshanUtil(Package):
             configure('--prefix=%s' % prefix, *options)
             make()
             make('install')
-
-    def url_for_version(self, version):
-        if version >= Version('3.3.1'):
-            url = "https://github.com/darshan-hpc/darshan/archive/refs/tags/v{0}.tar.gz"
-        else:
-            url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-{0}.tar.gz"
-        return url.format(version)
