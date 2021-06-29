@@ -74,6 +74,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('apps', default=True, description="Build applications")
     variant('tests', default=False, description="Build tests")
     variant('single_precision', default=False, description="Use single precision arithmetics")
+    variant('profiler', default=True, description="Use internal profiler to measure execution time")
 
     depends_on('python', type=('build', 'run'))
     depends_on('mpi')
@@ -185,7 +186,8 @@ class Sirius(CMakePackage, CudaPackage):
             self.define_from_variant('BUILD_TESTING', 'tests'),
             self.define_from_variant('BUILD_APPS', 'apps'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('USE_FP32', 'single_precision')
+            self.define_from_variant('USE_FP32', 'single_precision'),
+            self.define_from_variant('USE_PROFILER', 'profiler')
         ]
 
         lapack = spec['lapack']

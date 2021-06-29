@@ -175,7 +175,6 @@ class Gdal(AutotoolsPackage):
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
     conflicts('+jasper', when='@3.5:', msg='JPEG2000 driver removed in GDAL 3.5')
-    conflicts('+openjpeg', when='@3.5:', msg='JPEG2000 driver removed in GDAL 3.5')
     conflicts('+perl', when='@3.5:', msg='Perl bindings removed in GDAL 3.5')
 
     # https://github.com/OSGeo/gdal/issues/3782
