@@ -31,11 +31,10 @@ class AbseilCpp(CMakePackage):
             description="C++ standard used during compilation")
 
     def cmake_args(self):
+        shared = 'ON' if '+shared' in self.spec else 'OFF'
         cxxstd = self.spec.variants['cxxstd'].value
-        args = [
-            "-DBUILD_TESTING=OFF",
-            "-DCMAKE_CXX_STANDARD={}".format(cxxstd)
+        return [
+            self.define('BUILD_TESTING', 'OFF'),
+            self.define('BUILD_SHARED_LIBS:Bool', 'shared'),
+            self.define('CMAKE_CXX_STANDARD', cxxstd)
         ]
-        args.append('-DBUILD_SHARED_LIBS:Bool={0}'.format(
-            'ON' if '+shared' in self.spec else 'OFF'))
-        return args
