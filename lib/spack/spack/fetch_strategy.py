@@ -29,11 +29,12 @@ import os.path
 import re
 import shutil
 import sys
-from typing import Optional, List  # novm
+from typing import List, Optional  # novm
 
-import llnl.util.tty as tty
 import six
 import six.moves.urllib.parse as urllib_parse
+
+import llnl.util.tty as tty
 import spack.config
 import spack.error
 import spack.util.crypto as crypto
@@ -41,9 +42,9 @@ import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
 from llnl.util.filesystem import (
-    working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
+    get_single_file, mkdirp, temp_cwd, temp_rename, working_dir)
 from spack.util.compression import decompressor_for, extension
-from spack.util.executable import which, CommandNotFoundError
+from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
 from spack.version import Version, ver
 
@@ -889,10 +890,20 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.debug('Already fetched {0}'.format(self.stage.source_path))
             return
 
+        self.clone(commit=self.commit)
+
+    def clone(self, dest=None, commit=None):
+        """
+        Clone a repository to a path.
+
+        This is the fetch logic, but does not require a stage.
+        """
+        # Default to spack source path
+        dest = dest or self.stage.source_path
         tty.debug('Cloning git repository: {0}'.format(self._repo_info()))
 
         git = self.git
-        if self.commit:
+        if commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
             debug = spack.config.get('config:debug')
@@ -903,11 +914,12 @@ class GitFetchStrategy(VCSFetchStrategy):
             with temp_cwd():
                 git(*clone_args)
                 repo_name = get_single_file('.')
-                self.stage.srcdir = repo_name
-                shutil.move(repo_name, self.stage.source_path)
+                if self.stage:
+                    self.stage.srcdir = repo_name
+                shutil.move(repo_name, dest)
 
-            with working_dir(self.stage.source_path):
-                checkout_args = ['checkout', self.commit]
+            with working_dir(dest):
+                checkout_args = ['checkout', commit]
                 if not debug:
                     checkout_args.insert(1, '--quiet')
                 git(*checkout_args)
@@ -944,10 +956,11 @@ class GitFetchStrategy(VCSFetchStrategy):
                 git(*args)
 
                 repo_name = get_single_file('.')
-                self.stage.srcdir = repo_name
-                shutil.move(repo_name, self.stage.source_path)
+                if self.stage:
+                    self.stage.srcdir = repo_name
+                shutil.move(repo_name, dest)
 
-            with working_dir(self.stage.source_path):
+            with working_dir(dest):
                 # For tags, be conservative and check them out AFTER
                 # cloning.  Later git versions can do this with clone
                 # --branch, but older ones fail.
@@ -965,7 +978,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                     git(*co_args)
 
         if self.submodules_delete:
-            with working_dir(self.stage.source_path):
+            with working_dir(dest):
                 for submodule_to_delete in self.submodules_delete:
                     args = ['rm', submodule_to_delete]
                     if not spack.config.get('config:debug'):
@@ -974,7 +987,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         # Init submodules if the user asked for them.
         if self.submodules:
-            with working_dir(self.stage.source_path):
+            with working_dir(dest):
                 args = ['submodule', 'update', '--init', '--recursive']
                 if not spack.config.get('config:debug'):
                     args.insert(1, '--quiet')
@@ -1497,6 +1510,26 @@ def for_package_version(pkg, version):
 
     if not isinstance(version, Version):
         version = Version(version)
+
+    # if it's a commit, we must use a GitURLFetcher
+    if version.is_commit:
+
+        # Figure out the url for the git fetcher
+        repo_regex = r'(\w+://)(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)'
+        match = re.search(repo_regex, pkg.url)
+        if not match:
+            tty.die("Cannot derive repository from %s." % pkg.url)
+        service, _, repository, _, name = match.groups()
+        name = "/".join(name.split('/')[0:2])
+        repository = "%s%s/%s" % (service, repository, name)
+
+        # Create a GitFetchStrategy for all commits
+        fetcher = GitFetchStrategy(git=repository)
+
+        # Populate the version with comparisons to other commits
+        version.generate_commit_lookup(fetcher, pkg.versions)
+        fetcher = GitFetchStrategy(git=repository, commit=str(version))
+        return fetcher
 
     # If it's not a known version, try to extrapolate one by URL
     if version not in pkg.versions:

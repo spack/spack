@@ -24,23 +24,36 @@ be called on any of the types::
   intersection
   concrete
 """
-import re
 import numbers
+import os
+import re
 from bisect import bisect_left
 from functools import wraps
+
 from six import string_types
 
+import llnl.util.tty as tty
 import spack.error
+import spack.paths
+import spack.util.spack_json as sjson
+from llnl.util.filesystem import working_dir
 from spack.util.spack_yaml import syaml_dict
-
 
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 
 # Valid version characters
 VALID_VERSION = re.compile(r'^[A-Za-z0-9_.-]+$')
 
+# regex for a commit version
+COMMIT_VERSION = re.compile(r'^[a-z0-9]{40}$')
+
 # regex for version segments
 SEGMENT_REGEX = re.compile(r'(?:(?P<num>[0-9]+)|(?P<str>[a-zA-Z]+))(?P<sep>[_.-]*)')
+
+# regular expression for semantic versioning
+SEMVER_REGEX = re.compile(".+(?P<semver>([0-9]+)[.]([0-9]+)[.]([0-9]+)"
+                          "(?:-([0-9A-Za-z-]+(?:[.][0-9A-Za-z-]+)*))?"
+                          "(?:[+][0-9A-Za-z-]+)?)")
 
 # Infinity-like versions. The order in the list implies the comparison rules
 infinity_versions = ['develop', 'main', 'master', 'head', 'trunk']
@@ -151,7 +164,7 @@ class VersionStrComponent(object):
 
 class Version(object):
     """Class to represent versions"""
-    __slots__ = ['version', 'separators', 'string']
+    __slots__ = ['version', 'separators', 'string', 'commits']
 
     def __init__(self, string):
         if not isinstance(string, str):
@@ -164,12 +177,27 @@ class Version(object):
         if not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
+        # A cache of known commits, if needed
+        self.commits = {}
+
+        # Regular expression for commit version
+        if self.is_commit:
+            self.version = string
+
         # Split version into alphabetical and numeric segments simultaneously
-        segments = SEGMENT_REGEX.findall(string)
-        self.version = tuple(
-            int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments
-        )
-        self.separators = tuple(m[2] for m in segments)
+        else:
+            segments = SEGMENT_REGEX.findall(string)
+            self.version = tuple(
+                int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments
+            )
+            self.separators = tuple(m[2] for m in segments)
+
+    @property
+    def is_commit(self):
+        """
+        Determine if the original string is referencing a commit.
+        """
+        return COMMIT_VERSION.match(self.string) is not None
 
     @property
     def dotted(self):
@@ -276,10 +304,23 @@ class Version(object):
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler.
         """
+        # If we have commits, we require previous versions to match
+        if self.is_commit and other.is_commit and self.commits:
+            version = Version(self.commits[self.version]['prev_version'])
+            other = Version(self.commits[other.version]['prev_version'])
 
-        nself = len(self.version)
+        # Our version is a commit, and the other is not
+        elif self.is_commit and self.commits:
+            version = Version(self.commits[self.version]['prev_version'])
+        elif other.is_commit and self.commits:
+            other = Version(self.commits[other.version]['prev_version'])
+        else:
+            version = self.version
+
+        # Do the final comparison
+        nself = len(version)
         nother = len(other.version)
-        return nother <= nself and self.version[:nother] == other.version
+        return nother <= nself and version[:nother] == other.version
 
     def __iter__(self):
         return iter(self.version)
@@ -331,13 +372,46 @@ class Version(object):
         if other is None:
             return False
 
+        if self.is_commit and other.is_commit and self.commits:
+            order = self.commits[self.version]['order']
+            other_order = self.commits[other.version]['order']
+            return order < other_order
+
+        # This version is a commit, but not the other one
+        if self.is_commit and self.commits:
+            # Otherwise, get previous version we can compare
+            prev_version = self.commits[self.version]['prev_version']
+            if prev_version:
+                return Version(prev_version) < other.version
+            return False
+
+        # This version is not a commit, and the other is
+        if other.is_commit and self.commits:
+            prev_version = self.commits[other.version]['prev_version']
+            if prev_version:
+                return self.version < Version(prev_version)
+            return False
+
         # Use tuple comparison assisted by VersionStrComponent for performance
         return self.version < other.version
 
     @coerced
     def __eq__(self, other):
-        return (other is not None and
-                type(other) == Version and self.version == other.version)
+
+        # Cut out early if we don't have a version
+        if other is None or type(other) != Version:
+            return False
+
+        if self.is_commit and self.commits:
+            if other.is_commit:
+                return self.version == other.version
+
+            # If the other isn't a commit, we need to check the spack version
+            exact_version = self.commits[self.version]['exact_version']
+            if exact_version:
+                return exact_version == other.version
+
+        return self.version == other.version
 
     @coerced
     def __ne__(self, other):
@@ -400,6 +474,36 @@ class Version(object):
             return other
         else:
             return VersionList()
+
+    def generate_commit_lookup(self, fetcher, versions):
+        """
+        Use the git fetcher to look up a version for a commit.
+
+        Since we want to optimize the clone and lookup, we do the clone once
+        and store it in the user specified git repository cache. We also need
+        context of the package to get known versions, which could be tags if
+        they are linked to Git Releases. If we are unable to determine the
+        context of the version, we cannot continue. This implementation is
+        alongside the GitFetcher because eventually the git repos cache will
+        be one and the same with the source cache.
+
+        Args:
+            version: the requested version, which should be a commit.
+            versions: the known versions of the package
+        """
+        # Sanity check we have a commit
+        if not self.is_commit:
+            tty.die("%s is not a commit." % self)
+
+        # We require the full git repository history
+        fetcher.get_full_repo = True
+
+        # Generate a commit looker-upper
+        lookup = CommitLookup(fetcher)
+
+        # This shows a previous, and next spack version
+        self.commits = lookup.get_commit_lookup(self, versions)
+        lookup.save()
 
 
 class VersionRange(object):
@@ -886,3 +990,152 @@ class VersionError(spack.error.SpackError):
 
 class VersionChecksumError(VersionError):
     """Raised for version checksum errors."""
+
+
+class CommitLookup(object):
+
+    def __init__(self, fetcher):
+        self.fetcher = fetcher
+        self.data = {}
+
+    @property
+    def repository_uri(self):
+        return os.sep.join(self.fetcher.url.split(os.sep)[-3:])
+
+    @property
+    def repository_metadata_path(self):
+        filename = "%s.json" % self.repository_uri.replace('/', '-')
+        return os.path.join(spack.paths.user_repos_metadata_path, filename)
+
+    def save(self):
+        """
+        Save the data to file
+        """
+        with open(self.repository_metadata_path, 'w') as fd:
+            sjson.dump(self.data, fd)
+
+    def load_data(self):
+        """
+        Load data if the path already exists.
+        """
+        if os.path.exists(self.repository_metadata_path):
+            with open(self.repository_metadata_path, 'r') as fd:
+                self.data = sjson.load(fd.read())
+
+    def get_commit_lookup(self, version, spack_versions):
+        """
+        Given a git handle, repository, and known spack versions, generate a lookup.
+
+        We do this by listing all the tags for a repository path, in the order of
+        release (the assumption being that versioned releases/candidates that are
+        later are preferable to earlier) and then we match these versions to known
+        spack versions. We can then parse the entire git history, and generate
+        a lookup that describes the context of every commit to a known spack
+        version. In the case that commit is an exact match, exact_version will
+        be true. If a commit does not have a spack version before it, or does
+        not have a spack version after it, then the value will be None.
+        """
+        # lookup cache and return early here
+        self.load_data()
+
+        # Cut out early if we already have the version cached
+        if str(version) in self.data:
+            return self.data
+
+        # Honor the namespace for the service and repository
+        dest = os.path.join(spack.paths.user_repos_cache_path, self.repository_uri)
+
+        # prepare a cache for the repository and metadata
+        for path in [dest, self.repository_metadata_path]:
+            parent = os.path.dirname(path)
+            if not os.path.exists(parent):
+                os.makedirs(parent)
+
+        # Only clone if we don't have it!
+        if not os.path.exists(dest):
+            self.fetcher.clone(os.path.dirname(dest))
+
+        # But if we get here and no repostiory, this is a fail
+        if not os.path.exists(dest):
+            tty.die("There was an issue cloning %s to %s" % (self.fetcher.url, dest))
+
+        # Always pull and fetch
+        with working_dir(dest):
+            self.fetcher.git("pull")
+            self.fetcher.git("fetch")
+
+            # List tags (refs) by date, so last reference of a tag is newest
+            tags = self.fetcher.git("for-each-ref", "--sort=creatordate", "--format",
+                                    "%(refname)", "refs/tags", output=str)
+
+        # Lookup of spack tags to git references
+        tag_lookup = {}
+
+        # Lookup of commits to spack versions
+        commit_to_version = {}
+
+        # For each tag, try to match to a version.
+        versions = [str(v) for v in spack_versions]
+        for tag in tags.split('\n'):
+            tag = tag.replace('refs/tags/', '', 1)
+            for v in versions:
+                if v in tag:
+                    tag_lookup[v] = tag
+
+        # Also prepare to parse versions that aren't in spack
+        for tag in tags.split('\n'):
+            tag = tag.replace('refs/tags/', '', 1)
+
+            # Try to derive a semantic version
+            match = SEMVER_REGEX.match(tag)
+            if match:
+                semver = match.groupdict()['semver']
+                if semver not in tag_lookup:
+                    tag_lookup[semver] = tag
+
+        # Now get commits for these versions
+        with working_dir(dest):
+            for spack_version, tag in tag_lookup.items():
+                command = ["rev-list", "-n", "1", "tags/%s" % tag]
+                commit = self.fetcher.git(*command, output=str)
+                commit_to_version[commit.strip()] = spack_version
+
+            # Get list of all commits, this is in reverse order
+            commits = self.fetcher.git("rev-list", "--remotes", output=str)
+
+        # commits[0] is most recent, commits[-2] is first
+        commits = [c for c in commits.split('\n') if c]
+
+        # We want a lookup of commits to previous version, and commits to next version
+        commit_to_prev_version = {}
+        commit_to_next_version = {}
+
+        # Get next version after commit first
+        next_version = None
+        for commit in commits:
+            if commit in commit_to_version:
+                next_version = commit_to_version[commit]
+            commit_to_next_version[commit] = next_version
+
+        # Get previous version in the same manner, reversed
+        previous_version = None
+        for commit in reversed(commits):
+            if commit in commit_to_version:
+                previous_version = commit_to_version[commit]
+            commit_to_prev_version[commit] = previous_version
+
+        # Combine into one result!
+        for order, commit in enumerate(reversed(commits)):
+            prev_v = commit_to_prev_version[commit]
+            next_v = commit_to_next_version[commit]
+
+            # Do we have an exact version?
+            exact_version = next_v is not None and next_v == prev_v
+            self.data[commit] = {"next_version": next_v,
+                                 "prev_version": prev_v,
+                                 "exact_version": prev_v if exact_version else None,
+                                 "order": order}
+
+        if str(version) not in self.data:
+            tty.die("%s is not in the history of %s" % (version, self.fetcher.url))
+        return self.data
