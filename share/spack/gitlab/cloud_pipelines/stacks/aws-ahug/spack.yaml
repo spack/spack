@@ -63,7 +63,7 @@ spack:
     - [$compilers]
 
   gitlab-ci:
-    image: { "name": "ghcr.io/scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
+    image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
@@ -85,7 +85,7 @@ spack:
         - spack --version
         - cd share/spack/gitlab/cloud_pipelines/stacks/aws-ahug
         - spack env activate --without-view .
-      image: { "name": "ghcr.io/scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
+      image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
       #before_script:
       #  - . "./share/spack/setup-env.sh"
       #  - spack --version
