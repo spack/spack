@@ -26,7 +26,7 @@ spack:
         - 2.1.8
     libfabric:
       version:
-        - 1.11.1
+        - 1.12.1
       variants: fabrics=efa,tcp,udp,sockets,verbs,shm,mrail,rxd,rxm
     m4:
       version:
@@ -94,7 +94,7 @@ spack:
       tags: ["spack", "public", "xlarge", "graviton2"]
 
   cdash:
-    build-group: ARM HPC User Group (AHUG)
+    build-group: AHUG ARM HPC User Group
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
