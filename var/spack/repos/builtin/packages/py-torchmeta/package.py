@@ -21,7 +21,7 @@ class PyTorchmeta(PythonPackage):
     depends_on('py-numpy@1.14:',                type=('build', 'run'))
     depends_on('py-torch@1.4.0:1.8.999',        type=('build', 'run'))
     depends_on('py-torchvision@0.5.0:0.9.999',  type=('build', 'run'))
-    depends_on('py-pillow@7.0:',                type=('build', 'run'))
+    depends_on('pil@7.0:',                      type=('build', 'run'))
     depends_on('py-h5py',                       type=('build', 'run'))
     depends_on('py-tqdm@4.0.0:',                type=('build', 'run'))
     depends_on('py-requests',                   type=('build', 'run'))
