@@ -147,7 +147,6 @@ aws-ahug-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: aws-ahug-pr-generate
     strategy: depend
-  image: { "name": "ghcr.io/scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
 
 aws-ahug-develop-build:
   extends: [ ".aws-ahug", ".develop-build" ]
@@ -156,4 +155,3 @@ aws-ahug-develop-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: aws-ahug-develop-generate
     strategy: depend
-  image: { "name": "ghcr.io/scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
