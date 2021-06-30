@@ -132,13 +132,13 @@ e4s-develop-build:
   variables:
     SPACK_CI_STACK_NAME: aws-ahug
 
-aws-ahug-pr-generate:
-  extends: [ ".aws-ahug", ".pr-generate"]
+.aws-ahug-generate:
+  extends: [ ".aws-ahug" ]
   image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
 
-aws-ahug-develop-generate:
-  extends: [ ".aws-ahug", ".develop-generate"]
-  image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
+# --------- PRs ---------
+aws-ahug-pr-generate:
+  extends: [ ".aws-ahug-generate", ".pr-generate"]
 
 aws-ahug-pr-build:
   extends: [ ".aws-ahug", ".pr-build" ]
@@ -147,6 +147,10 @@ aws-ahug-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: aws-ahug-pr-generate
     strategy: depend
+
+# --------- Develop ---------
+aws-ahug-develop-generate:
+  extends: [ ".aws-ahug-generate", ".develop-generate"]
 
 aws-ahug-develop-build:
   extends: [ ".aws-ahug", ".develop-build" ]
