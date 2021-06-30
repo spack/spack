@@ -22,8 +22,6 @@ class Sombrero(MakefilePackage):
         sombrero_sh = FileFilter(join_path(self.stage.source_path, 'sombrero.sh'))
         sombrero_dir = join_path(prefix.bin, 'sombrero')
         sombrero_sh.filter('sombrero/', '{0}/'.format(sombrero_dir))
-
-
     def install(self, spec, prefix):
         sombrero_dir = join_path(prefix.bin, 'sombrero')
         mkdirp(sombrero_dir)
