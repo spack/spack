@@ -11,7 +11,7 @@ class Toml11(CMakePackage):
     """toml11 is a C++11 (or later) header-only toml parser/encoder depending
     only on C++ standard library."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/ToruNiina/toml11"
     url      = "https://github.com/ToruNiina/toml11/archive/refs/tags/v3.7.0.tar.gz"
 
     maintainers = ['ashermancinelli', 'ToruNiina']
