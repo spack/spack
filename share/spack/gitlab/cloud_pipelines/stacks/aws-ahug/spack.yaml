@@ -21,6 +21,9 @@ spack:
 
       providers:
         mpi: [openmpi, mpich]
+    libevent:
+      version: 
+        - 2.1.8
     libfabric:
       version:
         - 1.11.1
