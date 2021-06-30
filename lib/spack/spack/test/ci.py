@@ -179,7 +179,7 @@ def test_register_cdash_build(monkeypatch):
 
 
 def test_relate_cdash_builds(config, mutable_mock_env_path, mock_packages,
-                             monkeypatch):
+                             monkeypatch, capfd):
     e = ev.create('test1')
     e.add('dyninst')
     e.concretize()
@@ -228,9 +228,11 @@ def test_relate_cdash_builds(config, mutable_mock_env_path, mock_packages,
         }
 
         fake_responder._resp_code = 400
-        with pytest.raises(spack.error.SpackError):
-            ci.relate_cdash_builds(spec_map, cdash_api_url, job_build_id,
-                                   cdash_project, [cdashids_mirror_url])
+        ci.relate_cdash_builds(spec_map, cdash_api_url, job_build_id,
+                               cdash_project, [cdashids_mirror_url])
+        out, err = capfd.readouterr()
+        assert('Warning: Relate builds' in err)
+        assert('failed' in err)
 
         dep_cdash_ids = {}
 
