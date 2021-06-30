@@ -137,9 +137,26 @@ e4s-develop-build:
   image: { "name": "ghcr.io/scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
   tags: ["spack", "public", "xlarge", "aarch64"]
 
+.aarch64-generate:
+  stage: generate
+  script:
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack ci generate --check-index-only
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  tags: ["spack", "public", "medium", "aarch64"]
+  interruptible: true
+
+
 # --------- PRs ---------
 aws-ahug-pr-generate:
-  extends: [ ".aws-ahug-generate", ".pr-generate"]
+  extends: [ ".aws-ahug-generate", ".pr", ".aarch64-generate"]
 
 aws-ahug-pr-build:
   extends: [ ".aws-ahug", ".pr-build" ]
@@ -151,7 +168,7 @@ aws-ahug-pr-build:
 
 # --------- Develop ---------
 aws-ahug-develop-generate:
-  extends: [ ".aws-ahug-generate", ".develop-generate"]
+  extends: [ ".aws-ahug-generate", ".develop", ".aarch64-generate"]
 
 aws-ahug-develop-build:
   extends: [ ".aws-ahug", ".develop-build" ]
