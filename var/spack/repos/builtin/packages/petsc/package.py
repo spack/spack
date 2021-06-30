@@ -90,6 +90,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             description='Activates support for HDF5 (only parallel)')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
+    variant('hpddm',   default=False,
+            description='Activates support for HPDDM (only parallel)')
+    variant('mmg',   default=False,
+            description='Activates support for MMG')
+    variant('parmmg',   default=False,
+            description='Activates support for ParMMG (only parallel)')
+    variant('tetgen',   default=False,
+            description='Activates support for Tetgen')
     # Mumps is disabled by default, because it depends on Scalapack
     # which is not portable to all HPC systems
     variant('mumps',   default=False,
@@ -156,6 +164,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     conflicts('+fftw', when='~mpi', msg=mpi_msg)
     conflicts('+hdf5', when='~mpi', msg=mpi_msg)
     conflicts('+hypre', when='~mpi', msg=mpi_msg)
+    conflicts('+hpddm', when='~mpi', msg=mpi_msg)
+    conflicts('+parmmg', when='~mpi', msg=mpi_msg)
     conflicts('+moab', when='~mpi', msg=mpi_msg)
     conflicts('+mumps', when='~mpi', msg=mpi_msg)
     conflicts('+p4est', when='~mpi', msg=mpi_msg)
@@ -179,6 +189,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch('xlf_fix-dup-petscfecreate.patch', when='@3.11.0')
     patch('disable-DEPRECATED_ENUM.diff', when='@3.14.1 +cuda')
 
+    depends_on('gmake')
     depends_on('diffutils', type='build')
 
     # Virtual dependencies
@@ -224,6 +235,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('parmetis+int64', when='+metis+mpi+int64')
     depends_on('parmetis~int64', when='+metis+mpi~int64')
     depends_on('valgrind', when='+valgrind')
+    depends_on('mmg', when='+mmg')
+    depends_on('parmmg', when='+parmmg')
+    depends_on('tetgen', when='+tetgen')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
@@ -377,6 +391,44 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             options.extend([
                 '--with-scalapack=0'
             ])
+
+        # For the moment, HPDDM does not work as a dependency
+        # using download instead
+        if '+hpddm' in spec:
+            options.extend(['--download-hpddm'])
+
+        if '+mmg' in spec:
+            options.extend([
+                '--with-mmg-dir=%s' %
+                spec['mmg'].prefix,
+                '--with-mmg=1'
+            ])
+        else:
+            options.append(
+                '--with-mmg=0'
+            )
+
+        if '+parmmg' in spec:
+            options.extend([
+                '--with-parmmg-dir=%s' %
+                spec['parmmg'].prefix,
+                '--with-parmmg=1'
+            ])
+        else:
+            options.append(
+                '--with-parmmg=0'
+            )
+
+        if '+tetgen' in spec:
+            options.extend([
+                '--with-tetgen-dir=%s' %
+                spec['tetgen'].prefix,
+                '--with-tetgen=1'
+            ])
+        else:
+            options.append(
+                '--with-tetgen=0'
+            )
 
         # Activates library support if needed (i.e. direct dependency)
         if '^libjpeg-turbo' in spec:
