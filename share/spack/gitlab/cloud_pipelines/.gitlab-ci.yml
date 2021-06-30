@@ -150,7 +150,7 @@ e4s-develop-build:
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
-  tags: ["spack", "public", "medium", "aarch64"]
+  tags: ["spack", "public", "xlarge", "aarch64"]
   interruptible: true
 
 
