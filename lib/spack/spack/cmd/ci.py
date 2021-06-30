@@ -22,6 +22,7 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
+import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 
@@ -30,6 +31,7 @@ section = "build"
 level = "long"
 
 CI_REBUILD_INSTALL_BASE_ARGS = ['spack', '-d', '-v']
+INSTALL_FAIL_CODE = 1
 
 
 def get_env_var(variable_name):
@@ -491,7 +493,7 @@ def ci_rebuild(args):
     # If a spec fails to build in a spack develop pipeline, we add it to a
     # list of known broken full hashes.  This allows spack PR pipelines to
     # avoid wasting compute cycles attempting to build those hashes.
-    if install_exit_code == 1 and spack_is_develop_pipeline:
+    if install_exit_code == INSTALL_FAIL_CODE and spack_is_develop_pipeline:
         tty.debug('Install failed on develop')
         if 'broken-specs-url' in gitlab_ci:
             broken_specs_url = gitlab_ci['broken-specs-url']
@@ -502,9 +504,17 @@ def ci_rebuild(args):
             tmpdir = tempfile.mkdtemp()
             empty_file_path = os.path.join(tmpdir, 'empty.txt')
 
+            broken_spec_details = {
+                'broken-spec': {
+                    'job-url': get_env_var('CI_JOB_URL'),
+                    'pipeline-url': get_env_var('CI_PIPELINE_URL'),
+                    'concrete-spec-yaml': job_spec.to_dict(hash=ht.full_hash)
+                }
+            }
+
             try:
                 with open(empty_file_path, 'w') as efd:
-                    efd.write('')
+                    efd.write(syaml.dump(broken_spec_details))
                 web_util.push_to_url(
                     empty_file_path,
                     broken_spec_path,
