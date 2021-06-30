@@ -101,7 +101,7 @@ class DirectoryLayout(object):
         """Removes a prefix and any empty parent directories from the root.
            Raised RemoveFailedError if something goes wrong.
         """
-        path = self.path_for_spec(spec)
+        path = spec.prefix
         assert(path.startswith(self.root))
 
         if deprecated:
