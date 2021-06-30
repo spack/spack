@@ -496,7 +496,7 @@ def ci_rebuild(args):
     # If a spec fails to build in a spack develop pipeline, we add it to a
     # list of known broken full hashes.  This allows spack PR pipelines to
     # avoid wasting compute cycles attempting to build those hashes.
-    if install_exit_code != 0 and spack_is_develop_pipeline:
+    if install_exit_code == 1 and spack_is_develop_pipeline:
         tty.debug('Install failed on develop')
         if 'broken-specs-url' in gitlab_ci:
             broken_specs_url = gitlab_ci['broken-specs-url']

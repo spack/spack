@@ -17,6 +17,7 @@ import os.path
 import inspect
 import pstats
 import argparse
+import signal
 import traceback
 import warnings
 from six import StringIO
@@ -777,13 +778,15 @@ def main(argv=None):
     except Exception as e:
         if spack.config.get('config:debug'):
             raise
-        tty.die(e)
+        tty.error(e)
+        return 3
 
     except KeyboardInterrupt:
         if spack.config.get('config:debug'):
             raise
         sys.stderr.write('\n')
-        tty.die("Keyboard interrupt.")
+        tty.error("Keyboard interrupt.")
+        return signal.SIGINT.value
 
     except SystemExit as e:
         if spack.config.get('config:debug'):
