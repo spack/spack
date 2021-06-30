@@ -382,12 +382,11 @@ class URLFetchStrategy(FetchStrategy):
                 os.remove(save_file)
             msg = 'urllib failed to fetch with error {0}'.format(e)
             raise FailedDownloadError(url, msg)
-        _data = response.read()
-        with open(save_file, 'wb') as _open_file:
-            _open_file.write(_data)
-        headers = _data.decode('utf-8', 'ignore')
 
-        self._check_headers(headers)
+        with open(save_file, 'wb') as _open_file:
+            shutil.copyfileobj(response, _open_file)
+
+        self._check_headers(str(headers))
         return None, save_file
 
     @_needs_stage
