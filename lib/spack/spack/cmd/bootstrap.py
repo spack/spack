@@ -5,6 +5,7 @@
 import os.path
 
 import llnl.util.tty
+
 import spack.cmd.common.arguments
 import spack.config
 import spack.main
@@ -71,12 +72,13 @@ def _reset(args):
 
     for scope in spack.config.config.file_scopes:
         # The default scope should stay untouched
-        if 'defaults' in scope.path:
+        if scope.name == 'defaults':
             continue
 
         # If we are in an env scope we can't delete a file, but the best we
         # can do is nullify the corresponding configuration
-        if 'env' in scope.path and spack.config.get('bootstrap', scope=scope.name):
+        if (scope.name.startswith('env') and
+                spack.config.get('bootstrap', scope=scope.name)):
             spack.config.set('bootstrap', {}, scope=scope.name)
             continue
 
