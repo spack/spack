@@ -10,36 +10,36 @@ after the system path is set up.
 """
 from __future__ import print_function
 
-import sys
-import re
+import argparse
+import inspect
 import os
 import os.path
-import inspect
 import pstats
-import argparse
+import re
 import signal
+import sys
 import traceback
 import warnings
-from six import StringIO
 
 import archspec.cpu
+from six import StringIO
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output
-
 import spack
 import spack.architecture
-import spack.config
 import spack.cmd
+import spack.config
 import spack.environment as ev
 import spack.modules
 import spack.paths
 import spack.repo
 import spack.store
 import spack.util.debug
-import spack.util.path
 import spack.util.executable as exe
+import spack.util.path
+from llnl.util.tty.log import log_output
 from spack.error import SpackError
 
 #: names of profile statistics

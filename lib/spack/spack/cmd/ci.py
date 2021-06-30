@@ -14,11 +14,10 @@ import tempfile
 from six.moves.urllib.parse import urlencode
 
 import llnl.util.tty as tty
-
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
-import spack.config as cfg
 import spack.cmd.buildcache as buildcache
+import spack.config as cfg
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
