@@ -23,11 +23,12 @@ filesystem.
 import contextlib
 import datetime
 import os
-import six
 import socket
 import sys
 import time
 from typing import Dict  # novm
+
+import six
 
 try:
     import uuid
@@ -38,7 +39,6 @@ except ImportError:
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-
 import spack.repo
 import spack.spec
 import spack.store
@@ -381,6 +381,11 @@ class Database(object):
                                 default_timeout=self.db_lock_timeout,
                                 desc='database')
         self._data = {}
+
+        # For every installed spec we keep track of its install prefix, so that
+        # we can answer the simple query whether a given path is already taken
+        # before installing a different spec.
+        self._installed_prefixes = set()
 
         self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
 
@@ -774,6 +779,7 @@ class Database(object):
 
         # Pass 1: Iterate through database and build specs w/o dependencies
         data = {}
+        installed_prefixes = set()
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
@@ -784,6 +790,9 @@ class Database(object):
                 # TODO: would a more immmutable spec implementation simplify
                 #       this?
                 data[hash_key] = InstallRecord.from_dict(spec, rec)
+
+                if not spec.external and 'installed' in rec and rec['installed']:
+                    installed_prefixes.add(rec['path'])
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -805,6 +814,7 @@ class Database(object):
             rec.spec._mark_root_concrete()
 
         self._data = data
+        self._installed_prefixes = installed_prefixes
 
     def reindex(self, directory_layout):
         """Build database index from scratch based on a directory layout.
@@ -824,6 +834,7 @@ class Database(object):
             except CorruptDatabaseError as e:
                 self._error = e
                 self._data = {}
+                self._installed_prefixes = set()
 
         transaction = lk.WriteTransaction(
             self.lock, acquire=_read_suppress_error, release=self._write
@@ -838,12 +849,14 @@ class Database(object):
                 self._error = None
 
             old_data = self._data
+            old_installed_prefixes = self._installed_prefixes
             try:
                 self._construct_from_directory_layout(
                     directory_layout, old_data)
             except BaseException:
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
+                self._installed_prefixes = old_installed_prefixes
                 raise
 
     def _construct_entry_from_directory_layout(self, directory_layout,
@@ -880,6 +893,7 @@ class Database(object):
         with directory_layout.disable_upstream_check():
             # Initialize data in the reconstructed DB
             self._data = {}
+            self._installed_prefixes = set()
 
             # Start inspecting the installed prefixes
             processed_specs = set()
@@ -1087,6 +1101,8 @@ class Database(object):
             path = None
             if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
+                if path in self._installed_prefixes:
+                    raise Exception("Install prefix collision.")
                 try:
                     directory_layout.check_installed(spec)
                     installed = True
@@ -1094,6 +1110,7 @@ class Database(object):
                     tty.warn(
                         'Dependency missing: may be deprecated or corrupted:',
                         path, str(e))
+                self._installed_prefixes.add(path)
             elif spec.external_path:
                 path = spec.external_path
 
@@ -1173,6 +1190,7 @@ class Database(object):
 
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
+
             for dep in spec.dependencies(_tracked_deps):
                 self._decrement_ref_count(dep)
 
@@ -1190,11 +1208,17 @@ class Database(object):
         key = self._get_matching_spec_key(spec)
         rec = self._data[key]
 
+        # This install prefix is now free for other specs to use, even if the
+        # spec is only marked uninstalled.
+        if not rec.spec.external:
+            self._installed_prefixes.remove(rec.path)
+
         if rec.ref_count > 0:
             rec.installed = False
             return rec.spec
 
         del self._data[key]
+
         for dep in rec.spec.dependencies(_tracked_deps):
             # FIXME: the two lines below needs to be updated once #11983 is
             # FIXME: fixed. The "if" statement should be deleted and specs are
@@ -1537,6 +1561,10 @@ class Database(object):
         key = spec.dag_hash()
         upstream, record = self.query_by_spec_hash(key)
         return record and not record.installed
+
+    def is_occupied_install_prefix(self, path):
+        with self.read_transaction():
+            return path in self._installed_prefixes
 
     @property
     def unused_specs(self):

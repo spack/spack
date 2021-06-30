@@ -4,20 +4,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import pytest
 import shutil
 
-import llnl.util.filesystem as fs
+import pytest
 
-from spack.package import InstallError, PackageBase, PackageStillNeededError
+import llnl.util.filesystem as fs
 import spack.error
 import spack.patch
 import spack.repo
 import spack.store
-from spack.spec import Spec
 import spack.util.spack_json as sjson
+from spack.package import InstallError, PackageBase, PackageStillNeededError
 from spack.package import (_spack_build_envfile, _spack_build_logfile,
                            _spack_configure_argsfile)
+from spack.spec import Spec
 
 
 def find_nothing(*args):
@@ -323,6 +323,23 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
 
     finally:
         spack.package.Package.remove_prefix = remove_prefix
+
+
+def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmpdir):
+    """
+    Test that different specs with coinciding install prefixes will fail
+    to install.
+    """
+    projections = {'all': 'all-specs-project-to-this-prefix'}
+    store = spack.store.Store(str(tmpdir), projections=projections)
+    with spack.store.use_store(store):
+        with spack.config.override('config:checksum', False):
+            pkg_a = Spec('libelf@0.8.13').concretized().package
+            pkg_b = Spec('libelf@0.8.12').concretized().package
+            pkg_a.do_install()
+
+            with pytest.raises(InstallError, match="Install prefix collision"):
+                pkg_b.do_install()
 
 
 def test_store(install_mockery, mock_fetch):

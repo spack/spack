@@ -94,7 +94,7 @@ class CudaPackage(PackageBase):
     conflicts('%gcc@8:', when='+cuda ^cuda@:10.0.130 target=x86_64:')
     conflicts('%gcc@9:', when='+cuda ^cuda@:10.2.89 target=x86_64:')
     conflicts('%gcc@:4', when='+cuda ^cuda@11.0.2: target=x86_64:')
-    conflicts('%gcc@10:', when='+cuda ^cuda@:11.0.2 target=x86_64:')
+    conflicts('%gcc@10:', when='+cuda ^cuda@:11.0.3 target=x86_64:')
     conflicts('%gcc@11:', when='+cuda ^cuda@:11.1.0 target=x86_64:')
     conflicts('%pgi@:14.8', when='+cuda ^cuda@:7.0.27 target=x86_64:')
     conflicts('%pgi@:15.3,15.5:', when='+cuda ^cuda@7.5 target=x86_64:')
@@ -117,7 +117,7 @@ class CudaPackage(PackageBase):
               when='+cuda ^cuda@10.1.105:10.1.243 target=x86_64:')
     conflicts('%clang@:3.2,9:', when='+cuda ^cuda@10.2.89 target=x86_64:')
     conflicts('%clang@:5', when='+cuda ^cuda@11.0.2: target=x86_64:')
-    conflicts('%clang@10:', when='+cuda ^cuda@:11.0.2 target=x86_64:')
+    conflicts('%clang@10:', when='+cuda ^cuda@:11.0.3 target=x86_64:')
     conflicts('%clang@11:', when='+cuda ^cuda@:11.1.0 target=x86_64:')
 
     # x86_64 vs. ppc64le differ according to NVidia docs
@@ -134,7 +134,7 @@ class CudaPackage(PackageBase):
     conflicts('%gcc@9:', when='+cuda ^cuda@:10.1.243 target=ppc64le:')
     # officially, CUDA 11.0.2 only supports the system GCC 8.3 on ppc64le
     conflicts('%gcc@:4', when='+cuda ^cuda@11.0.2: target=ppc64le:')
-    conflicts('%gcc@10:', when='+cuda ^cuda@:11.0.2 target=ppc64le:')
+    conflicts('%gcc@10:', when='+cuda ^cuda@:11.0.3 target=ppc64le:')
     conflicts('%gcc@11:', when='+cuda ^cuda@:11.1.0 target=ppc64le:')
     conflicts('%pgi', when='+cuda ^cuda@:8 target=ppc64le:')
     conflicts('%pgi@:16', when='+cuda ^cuda@:9.1.185 target=ppc64le:')
@@ -146,7 +146,7 @@ class CudaPackage(PackageBase):
     conflicts('%clang@7.1:', when='+cuda ^cuda@:10.1.105 target=ppc64le:')
     conflicts('%clang@8.1:', when='+cuda ^cuda@:10.2.89 target=ppc64le:')
     conflicts('%clang@:5', when='+cuda ^cuda@11.0.2: target=ppc64le:')
-    conflicts('%clang@10:', when='+cuda ^cuda@:11.0.2 target=ppc64le:')
+    conflicts('%clang@10:', when='+cuda ^cuda@:11.0.3 target=ppc64le:')
     conflicts('%clang@11:', when='+cuda ^cuda@:11.1.0 target=ppc64le:')
 
     # Intel is mostly relevant for x86_64 Linux, even though it also
