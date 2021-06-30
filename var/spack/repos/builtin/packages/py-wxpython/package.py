@@ -22,6 +22,6 @@ class PyWxpython(PythonPackage):
     depends_on('py-pathlib2', type='build')
 
     # Needed at runtime
-    depends_on('py-numpy', type='run')
-    depends_on('pil', type='run')
-    depends_on('py-six', type='run')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('pil', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
