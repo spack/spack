@@ -17,6 +17,8 @@ spack:
 
   packages:
     all:
+      compiler:
+        - gcc@7.5.0
       target: [graviton2]
 
       providers:
