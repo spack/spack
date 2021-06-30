@@ -237,7 +237,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('valgrind', when='+valgrind')
     depends_on('mmg', when='+mmg')
     depends_on('parmmg', when='+parmmg')
-    depends_on('tetgen', when='+tetgen')
+    depends_on('tetgen+pic', when='+tetgen')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
