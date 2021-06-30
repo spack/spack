@@ -15,7 +15,7 @@ class Er(CMakePackage):
 
     tags = ['ecp']
 
-    version('master', branch='master')
+    version('main',  branch='main')
     version('0.0.4', sha256='c456d34719bb57774adf6d7bc2fa9917ecb4a9de442091023c931a2cb83dfd37')
     version('0.0.3', sha256='243b2b46ea274e17417ef5873c3ed7ba16dacdfdaf7053d1de5434e300de796b')
 
