@@ -316,7 +316,7 @@ class Dealii(CMakePackage, CudaPackage):
         cxx_flags_release = []
         # Debug and release flags
         cxx_flags = []
-
+        options.append(self.define('DEAL_II_FORCE_BUNDLED_TBB',True))
         # Set directory structure:
         if spec.satisfies('@:8.2.1'):
             options.append(
