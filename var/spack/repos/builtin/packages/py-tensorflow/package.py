@@ -19,7 +19,6 @@ class PyTensorflow(Package):
     # are broken on the docuementation page. Below dict is setup so that this
     # can be easily extended.
     tensorflow_sha = {
-        ('2.5.0', 'gpu-2.5.0-cp38-cp38-manylinux2010_x86_64'): '43932117e5374e109a45b66231a007b62ffa170b7bd7776711e2d471beca01b7',
         ('2.4.2', 'gpu-2.4.2-cp38-cp38-manylinux2010_x86_64'): 'a33acffb4816c5456eb0cbc1654e3f270d17245322aa3d7bfdd22a610c862e0a',
     }
 
@@ -44,7 +43,7 @@ class PyTensorflow(Package):
     # otherwise setup.py tries to uninstall them
     depends_on('py-h5py@2.10:2.99', when='@:2.4.99', type=('build', 'run'))
     depends_on('py-h5py@3:', when='@2.5:', type=('build', 'run'))
-    depends_on('py-six@:1.15.0', when='@:2.4.99', type=('build', 'run'))
+    depends_on('py-six@1.15.0', when='@:2.4.99', type=('build', 'run'))
     depends_on('py-six@1.16:', when='@2.5:', type=('build', 'run'))
 
     # no versions for Mac OS added

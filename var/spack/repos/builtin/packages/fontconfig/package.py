@@ -22,6 +22,8 @@ class Fontconfig(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('font-util')
     depends_on('libuuid', when='@2.13.1:')
+    # freetype is external and hence need to add it's link dependency
+    depends_on('libpng')
 
     def configure_args(self):
         font_path = join_path(self.spec['font-util'].prefix, 'share', 'fonts')

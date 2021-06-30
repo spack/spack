@@ -54,6 +54,8 @@ packages:
     version: [14.13.0]
   omega-h:
     variants: +trilinos
+  opencv:
+    variants: ~gtk~vtk
   openssl:
     version: [1.0.2k]
     externals:

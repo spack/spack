@@ -127,8 +127,8 @@ spack:
     - py-sphinx
     - py-sphinx-rtd-theme
     - py-sympy
-    - python-dev
     - py-tensorflow@2.4.2
+    - python-dev
     - py-toml
     - py-traceback2
     - py-unittest2
