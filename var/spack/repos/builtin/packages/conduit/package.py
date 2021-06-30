@@ -37,7 +37,7 @@ class Conduit(CMakePackage):
     url      = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
     git      = "https://github.com/LLNL/conduit.git"
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('develop', branch='develop', submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry

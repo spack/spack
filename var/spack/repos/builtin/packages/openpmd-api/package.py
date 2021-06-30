@@ -15,7 +15,7 @@ class OpenpmdApi(CMakePackage):
 
     maintainers = ['ax3l']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     # C++14 up until here
     version('dev', branch='dev')

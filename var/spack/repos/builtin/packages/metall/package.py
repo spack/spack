@@ -12,7 +12,9 @@ class Metall(CMakePackage):
     url      = "https://github.com/LLNL/metall/archive/v0.2.tar.gz"
 
     maintainers = ['KIwabuchi', 'rogerpearce', 'mayagokhale']
-    tags = ['ecp', 'e4s']
+
+    tags = ['e4s']
+
     version('master', branch='master')
     version('develop', branch='develop')
 

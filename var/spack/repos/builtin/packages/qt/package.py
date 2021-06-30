@@ -24,7 +24,7 @@ class Qt(Package):
     list_depth = 3
     maintainers = ['sethrj']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     phases = ['configure', 'build', 'install']
 

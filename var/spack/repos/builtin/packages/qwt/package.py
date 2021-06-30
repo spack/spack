@@ -16,7 +16,7 @@ class Qwt(QMakePackage):
     homepage = "http://qwt.sourceforge.net/"
     url      = "https://sourceforge.net/projects/qwt/files/qwt/6.1.3/qwt-6.1.3.tar.bz2"
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('6.1.6', sha256='99460d31c115ee4117b0175d885f47c2c590d784206f09815dc058fbe5ede1f6')
     version('6.1.4', sha256='1529215329e51fc562e0009505a838f427919a18b362afff441f035b2d9b5bd9')

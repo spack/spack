@@ -15,7 +15,7 @@ class Hpx(CMakePackage, CudaPackage):
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
     maintainers = ['msimberg', 'albestro', 'teonnik']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')

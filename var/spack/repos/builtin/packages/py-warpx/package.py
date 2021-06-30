@@ -23,7 +23,7 @@ class PyWarpx(PythonPackage):
 
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     # NOTE: if you update the versions here, also see warpx
     version('develop', branch='development')
