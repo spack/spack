@@ -8,12 +8,11 @@ import platform
 import re
 
 import llnl.util.tty as tty
-from llnl.util.lang import match_predicate
 from llnl.util.filesystem import get_filetype, path_contains_subdirectory
-
+from llnl.util.lang import match_predicate
+from spack import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
-from spack import *
 
 
 class Python(AutotoolsPackage):
