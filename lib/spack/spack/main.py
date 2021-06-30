@@ -775,12 +775,6 @@ def main(argv=None):
         tty.debug(e)
         e.die()  # gracefully die on any SpackErrors
 
-    except Exception as e:
-        if spack.config.get('config:debug'):
-            raise
-        tty.error(e)
-        return 3
-
     except KeyboardInterrupt:
         if spack.config.get('config:debug'):
             raise
@@ -792,6 +786,12 @@ def main(argv=None):
         if spack.config.get('config:debug'):
             traceback.print_exc()
         return e.code
+
+    except Exception as e:
+        if spack.config.get('config:debug'):
+            raise
+        tty.error(e)
+        return 3
 
 
 class SpackCommandError(Exception):
