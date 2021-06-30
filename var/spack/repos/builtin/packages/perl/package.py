@@ -11,12 +11,10 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
-import re
 import os
+import re
 from contextlib import contextmanager
-
 from llnl.util.lang import match_predicate
-
 from spack import *
 
 
