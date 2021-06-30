@@ -135,6 +135,7 @@ e4s-develop-build:
 .aws-ahug-generate:
   extends: [ ".aws-ahug" ]
   image: { "name": "ghcr.io/scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
+  tags: ["spack", "public", "medium", "aarch64"]
 
 # --------- PRs ---------
 aws-ahug-pr-generate:
