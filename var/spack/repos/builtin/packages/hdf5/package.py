@@ -187,7 +187,7 @@ class Hdf5(CMakePackage):
         cmake_flags = []
 
         if name == "cflags":
-            if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
+            if self.spec.satisfies('%clang') or self.spec.satisfies('%gcc'):
                 # Quiet warnings/errors about implicit declaration of functions
                 # in C99:
                 cmake_flags.append("-Wno-implicit-function-declaration")
