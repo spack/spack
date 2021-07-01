@@ -1469,8 +1469,9 @@ branches.
 Step 2: Install and setup Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We are now ready to get the Spack environment set up on our machine.
-Use Git to clone the Spack repo, hosted at https://github.com/spack/spack.git.
+We are now ready to get the Spack environment set up on our machine. We
+begin by using Git to clone the Spack repo, hosted at https://github.com/spack/spack.git
+into a desired directory, for our purposes today, called ``spack_install``.
 
 The files and scripts used for Windows installation are on the
 ``features/windows-support`` branch; ``cd`` into the repo and use
