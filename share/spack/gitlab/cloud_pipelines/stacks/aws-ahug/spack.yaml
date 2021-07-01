@@ -36,7 +36,7 @@ spack:
     munge:
       variants: localstatedir=/var
     openmpi:
-      variants: +pmi fabrics=ofi schedulers=slurm
+      variants: +pmi +internal-hwloc fabrics=ofi schedulers=slurm
       version:
         - 4.1.0
     perl:
