@@ -32,19 +32,18 @@ import functools
 import os.path
 import re
 import sys
+from typing import List, Set  # novm
 
-from six import string_types
-from typing import Set, List  # novm
+import six
 
 import llnl.util.lang
 import llnl.util.tty.color
-
 import spack.error
 import spack.patch
 import spack.spec
 import spack.url
 import spack.variant
-from spack.dependency import Dependency, default_deptype, canonical_deptype
+from spack.dependency import Dependency, canonical_deptype, default_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version, VersionChecksumError
@@ -116,7 +115,7 @@ class DirectiveMeta(type):
     # Set of all known directives
     _directive_names = set()  # type: Set[str]
     _directives_to_be_executed = []  # type: List[str]
-    _when_constraints_from_context = []
+    _when_constraints_from_context = []  # type: List[str]
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -221,7 +220,7 @@ class DirectiveMeta(type):
         """
         global __all__
 
-        if isinstance(dicts, string_types):
+        if isinstance(dicts, six.string_types):
             dicts = (dicts, )
 
         if not isinstance(dicts, Sequence):
@@ -383,7 +382,7 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
         patches = [patches]
 
     # auto-call patch() directive on any strings in patch list
-    patches = [patch(p) if isinstance(p, string_types) else p
+    patches = [patch(p) if isinstance(p, six.string_types) else p
                for p in patches]
     assert all(callable(p) for p in patches)
 
