@@ -53,18 +53,19 @@ spack:
       - cloverleaf
       - coevp
       - cohmm
-      - examinimd
+    # - examinimd
       - exampm
       - exasp2
       - gamess-ri-mp2-miniapp
       - hpcg
       - laghos
       - lulesh
-      - miniaero
+    # - miniaero
       - miniamr
       - minife
       - minighost
-      - minigmg
+    # Download failed
+    # - minigmg
       - minimd
       - miniqmc
       - minismac2d
