@@ -1096,7 +1096,8 @@ class Database(object):
                 }
                 self._add(dep, directory_layout, **extra_args)
 
-        if key not in self._data:
+        if (key not in self._data or
+                self._data[key].spec._full_hash != spec._full_hash):
             installed = bool(spec.external)
             path = None
             if not spec.external and directory_layout:
