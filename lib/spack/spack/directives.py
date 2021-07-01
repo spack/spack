@@ -235,6 +235,15 @@ class DirectiveMeta(type):
             def _wrapper(*args, **kwargs):
                 # Inject when arguments from the context
                 if DirectiveMeta._when_constraints_from_context:
+                    # Check that directives not yet supporting the when= argument
+                    # are not used inside the context manager
+                    if decorated_function.__name__ in ('version', 'variant'):
+                        msg = ('directive "{0}" cannot be used within a "when"'
+                               ' context since it does not support a "when=" '
+                               'argument')
+                        msg = msg.format(decorated_function.__name__)
+                        raise DirectiveError(msg)
+
                     when_spec_from_context = ' '.join(
                         DirectiveMeta._when_constraints_from_context
                     )
