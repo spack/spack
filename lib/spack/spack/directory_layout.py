@@ -3,21 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
+import glob
 import os
 import shutil
-import glob
 import tempfile
-import errno
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
-
-from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.hash_types as ht
 import spack.spec
 import spack.util.spack_json as sjson
+from llnl.util.filesystem import mkdirp
 from spack.error import SpackError
 
 
@@ -101,7 +100,7 @@ class DirectoryLayout(object):
         """Removes a prefix and any empty parent directories from the root.
            Raised RemoveFailedError if something goes wrong.
         """
-        path = self.path_for_spec(spec)
+        path = spec.prefix
         assert(path.startswith(self.root))
 
         if deprecated:
