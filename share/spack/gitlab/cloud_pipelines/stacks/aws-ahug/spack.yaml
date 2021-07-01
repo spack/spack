@@ -60,12 +60,12 @@ spack:
       - hpcg
       - laghos
       - lulesh
-    # - miniaero
+      - miniaero
       - miniamr
       - minife
       - minighost
-    # Download failed
-      - minigmg
+    # fails due to x86 specific timer (asm instructions)
+    # - minigmg
       - minimd
       - miniqmc
       - minismac2d
