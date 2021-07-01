@@ -88,7 +88,6 @@ class CudaPackage(PackageBase):
 
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
-<<<<<<< HEAD
     conflicts('%gcc@5:', when='+cuda ^cuda@:7.5 target=x86_64: ~allow-unsupported-compilers')
     conflicts('%gcc@6:', when='+cuda ^cuda@:8 target=x86_64: ~allow-unsupported-compilers')
     conflicts('%gcc@7:', when='+cuda ^cuda@:9.1 target=x86_64: ~allow-unsupported-compilers')
@@ -102,21 +101,6 @@ class CudaPackage(PackageBase):
     conflicts('%pgi@:16.2,16.0:16.3', when='+cuda ^cuda@8 target=x86_64: ~allow-unsupported-compilers')
     conflicts('%pgi@:15,18:', when='+cuda ^cuda@9.0:9.1 target=x86_64: ~allow-unsupported-compilers')
     conflicts('%pgi@:16,19:', when='+cuda ^cuda@9.2.88:10 target=x86_64: ~allow-unsupported-compilers')
-=======
-    conflicts('%gcc@5:', when='+cuda ^cuda@:7.5 target=x86_64:')
-    conflicts('%gcc@6:', when='+cuda ^cuda@:8 target=x86_64:')
-    conflicts('%gcc@7:', when='+cuda ^cuda@:9.1 target=x86_64:')
-    conflicts('%gcc@8:', when='+cuda ^cuda@:10.0.130 target=x86_64:')
-    conflicts('%gcc@9:', when='+cuda ^cuda@:10.2.89 target=x86_64:')
-    conflicts('%gcc@:4', when='+cuda ^cuda@11.0.2: target=x86_64:')
-    conflicts('%gcc@10:', when='+cuda ^cuda@:11.0.3 target=x86_64:')
-    conflicts('%gcc@11:', when='+cuda ^cuda@:11.1.0 target=x86_64:')
-    conflicts('%pgi@:14.8', when='+cuda ^cuda@:7.0.27 target=x86_64:')
-    conflicts('%pgi@:15.3,15.5:', when='+cuda ^cuda@7.5 target=x86_64:')
-    conflicts('%pgi@:16.2,16.0:16.3', when='+cuda ^cuda@8 target=x86_64:')
-    conflicts('%pgi@:15,18:', when='+cuda ^cuda@9.0:9.1 target=x86_64:')
-    conflicts('%pgi@:16,19:', when='+cuda ^cuda@9.2.88:10 target=x86_64:')
->>>>>>> develop
     conflicts('%pgi@:17,20:',
               when='+cuda ^cuda@10.1.105:10.2.89 target=x86_64: ~allow-unsupported-compilers')
     conflicts('%pgi@:17,21:',
