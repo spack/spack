@@ -89,6 +89,7 @@ class Nvhpc(Package):
     provides('blas',        when='+blas')
     provides('lapack',      when='+lapack')
     provides('mpi',         when='+mpi')
+    patch('gcc_config.patch')
 
     def install(self, spec, prefix):
         # Enable the silent installation feature
