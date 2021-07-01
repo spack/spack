@@ -878,7 +878,7 @@ def add(fullpath, scope=None):
             # We've nested further than existing config, so we need the
             # type information for validation to know how to handle bare
             # values appended to lists.
-            existing = get_valid_type(path)
+            existing = get_valid_type(path, components[-1])
 
             # construct value from this point down
             value = syaml.load_config(components[-1])
@@ -1041,7 +1041,7 @@ def _mark_internal(data, name):
     return d
 
 
-def get_valid_type(path):
+def get_valid_type(path, value):
     """Returns an instance of a type that will pass validation for path.
 
     The instance is created by calling the constructor with no arguments.
@@ -1053,7 +1053,11 @@ def get_valid_type(path):
     section = components[0]
     for type in (list, syaml.syaml_dict, str, bool, int, float):
         try:
-            ret = type()
+            try:
+                ret = type(value)
+            except (ValueError):
+                ret = type()
+
             test_data = ret
             for component in reversed(components):
                 test_data = {component: test_data}
