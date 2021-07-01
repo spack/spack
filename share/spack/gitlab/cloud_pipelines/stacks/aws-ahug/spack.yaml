@@ -21,6 +21,9 @@ spack:
 
       providers:
         mpi: [openmpi, mpich]
+    hwloc: 
+      version:
+        - 2.4.0
     libevent:
       version: 
         - 2.1.8
