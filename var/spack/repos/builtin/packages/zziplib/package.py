@@ -42,16 +42,15 @@ class Zziplib(AutotoolsPackage):
         zlib = spec['zlib']
         # Do not use self.define('VAR', path) unless a CMakePackage
         args.extend([
-            '-DZLIB_LIBRARY:FILEPATH=%s' % zlib.libs[0],
-            '-DZLIB_INCLUDE_DIR:FILEPATH=%s' % zlib.headers.directories[0]
+            '-DZLIB_LIBRARY:FILEPATH={0}'.format(zlib.libs[0]),
+            '-DZLIB_INCLUDE_DIR:FILEPATH={0}'.format(zlib.headers.directories[0])
         ])
-        args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
-                    % spec['python'].command.path)
-        args.append("-DCMAKE_INSTALL_PREFIX:PATH={0}".format(spec.prefix))
+        args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
+            spec['python'].command.path))
+        args.append('-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(spec.prefix))
 
         return args
 
-    @when('@:0.13.69')
     def configure_args(self):
         args = ['--with-zlib={0}'.format(self.spec['zlib'].prefix)]
         return args
