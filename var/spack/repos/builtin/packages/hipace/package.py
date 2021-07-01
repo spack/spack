@@ -20,7 +20,7 @@ class Hipace(CMakePackage):
     version('develop', branch='development')
 
     variant('compute',
-            default='omp',
+            default='noacc',
             values=('omp', 'cuda', 'hip', 'sycl', 'noacc'),
             multi=False,
             description='On-node, accelerated computing backend')
@@ -36,7 +36,7 @@ class Hipace(CMakePackage):
 
     depends_on('cmake@3.15.0:', type='build')
     depends_on('cuda@9.2.88:', when='compute=cuda')
-    depends_on('fftw@3:', when='compute=omp')
+    depends_on('fftw@3: +openmp', when='compute=omp')
     depends_on('fftw +mpi', when='+mpi compute=omp')
     depends_on('mpi', when='+mpi')
     depends_on('openpmd-api@hipace', when='+openpmd')

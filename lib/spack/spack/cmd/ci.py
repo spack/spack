@@ -14,11 +14,10 @@ import tempfile
 from six.moves.urllib.parse import urlencode
 
 import llnl.util.tty as tty
-
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
-import spack.config as cfg
 import spack.cmd.buildcache as buildcache
+import spack.config as cfg
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
@@ -230,7 +229,6 @@ def ci_rebuild(args):
         eq_idx = proj_enc.find('=') + 1
         cdash_project_enc = proj_enc[eq_idx:]
         cdash_site = ci_cdash['site']
-        cdash_id_path = os.path.join(repro_dir, 'cdash_id.txt')
         tty.debug('cdash_base_url = {0}'.format(cdash_base_url))
         tty.debug('cdash_project = {0}'.format(cdash_project))
         tty.debug('cdash_project_enc = {0}'.format(cdash_project_enc))
@@ -398,7 +396,7 @@ def ci_rebuild(args):
                 job_spec_pkg_name, matching_mirror))
             tty.debug('Downloading to {0}'.format(build_cache_dir))
             buildcache.download_buildcache_files(
-                job_spec, build_cache_dir, True, matching_mirror)
+                job_spec, build_cache_dir, False, matching_mirror)
 
         # Now we are done and successful
         sys.exit(0)
@@ -433,24 +431,21 @@ def ci_rebuild(args):
             cdash_build_name, cdash_base_url, cdash_project,
             cdash_site, job_spec_buildgroup)
 
-        cdash_upload_url = '{0}/submit.php?project={1}'.format(
-            cdash_base_url, cdash_project_enc)
+        if cdash_build_id is not None:
+            cdash_upload_url = '{0}/submit.php?project={1}'.format(
+                cdash_base_url, cdash_project_enc)
 
-        install_args.extend([
-            '--cdash-upload-url', cdash_upload_url,
-            '--cdash-build', cdash_build_name,
-            '--cdash-site', cdash_site,
-            '--cdash-buildstamp', cdash_build_stamp,
-        ])
+            install_args.extend([
+                '--cdash-upload-url', cdash_upload_url,
+                '--cdash-build', cdash_build_name,
+                '--cdash-site', cdash_site,
+                '--cdash-buildstamp', cdash_build_stamp,
+            ])
 
-        tty.debug('CDash: Relating build with dependency builds')
-        spack_ci.relate_cdash_builds(
-            spec_map, cdash_base_url, cdash_build_id, cdash_project,
-            [pipeline_mirror_url, pr_mirror_url, remote_mirror_url])
-
-        # store the cdash build id on disk for later
-        with open(cdash_id_path, 'w') as fd:
-            fd.write(cdash_build_id)
+            tty.debug('CDash: Relating build with dependency builds')
+            spack_ci.relate_cdash_builds(
+                spec_map, cdash_base_url, cdash_build_id, cdash_project,
+                [pipeline_mirror_url, pr_mirror_url, remote_mirror_url])
 
     # A compiler action of 'FIND_ANY' means we are building a bootstrap
     # compiler or one of its deps.
@@ -496,7 +491,7 @@ def ci_rebuild(args):
     # If a spec fails to build in a spack develop pipeline, we add it to a
     # list of known broken full hashes.  This allows spack PR pipelines to
     # avoid wasting compute cycles attempting to build those hashes.
-    if install_exit_code != 0 and spack_is_develop_pipeline:
+    if install_exit_code == 1 and spack_is_develop_pipeline:
         tty.debug('Install failed on develop')
         if 'broken-specs-url' in gitlab_ci:
             broken_specs_url = gitlab_ci['broken-specs-url']
@@ -546,17 +541,31 @@ def ci_rebuild(args):
 
         # Create buildcache in either the main remote mirror, or in the
         # per-PR mirror, if this is a PR pipeline
-        spack_ci.push_mirror_contents(
-            env, job_spec, job_spec_yaml_path, buildcache_mirror_url,
-            cdash_build_id, sign_binaries)
+        if buildcache_mirror_url:
+            spack_ci.push_mirror_contents(
+                env, job_spec, job_spec_yaml_path, buildcache_mirror_url,
+                sign_binaries)
+
+            if cdash_build_id:
+                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
+                    cdash_build_id, buildcache_mirror_url))
+                spack_ci.write_cdashid_to_mirror(
+                    cdash_build_id, job_spec, buildcache_mirror_url)
 
         # Create another copy of that buildcache in the per-pipeline
         # temporary storage mirror (this is only done if either
         # artifacts buildcache is enabled or a temporary storage url
         # prefix is set)
-        spack_ci.push_mirror_contents(
-            env, job_spec, job_spec_yaml_path, pipeline_mirror_url,
-            cdash_build_id, sign_binaries)
+        if pipeline_mirror_url:
+            spack_ci.push_mirror_contents(
+                env, job_spec, job_spec_yaml_path, pipeline_mirror_url,
+                sign_binaries)
+
+            if cdash_build_id:
+                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
+                    cdash_build_id, pipeline_mirror_url))
+                spack_ci.write_cdashid_to_mirror(
+                    cdash_build_id, job_spec, pipeline_mirror_url)
     else:
         tty.debug('spack install exited non-zero, will not create buildcache')
 

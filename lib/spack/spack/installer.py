@@ -33,11 +33,12 @@ import heapq
 import itertools
 import os
 import shutil
-import six
 import sys
 import time
-
 from collections import defaultdict
+
+import six
+
 
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
@@ -51,7 +52,6 @@ import spack.package
 import spack.package_prefs as prefs
 import spack.repo
 import spack.store
-
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
 from spack.util.environment import dump_environment
@@ -814,24 +814,29 @@ class PackageInstaller(object):
         # Determine if the spec is flagged as installed in the database
         rec, installed_in_db = self._check_db(task.pkg.spec)
 
-        # Make sure the installation directory is in the desired state
-        # for uninstalled specs.
-        partial = False
-        if not installed_in_db and os.path.isdir(task.pkg.spec.prefix):
-            if not keep_prefix:
-                task.pkg.remove_prefix()
-            else:
-                tty.debug('{0} is partially installed'
-                          .format(task.pkg_id))
-                partial = True
+        if not installed_in_db:
+            # Ensure there is no other installed spec with the same prefix dir
+            if spack.store.db.is_occupied_install_prefix(task.pkg.spec.prefix):
+                raise InstallError(
+                    "Install prefix collision for {0}".format(task.pkg_id),
+                    long_msg="Prefix directory {0} already used by another "
+                             "installed spec.".format(task.pkg.spec.prefix))
+
+            # Make sure the installation directory is in the desired state
+            # for uninstalled specs.
+            if os.path.isdir(task.pkg.spec.prefix):
+                if not keep_prefix:
+                    task.pkg.remove_prefix()
+                else:
+                    tty.debug('{0} is partially installed'.format(task.pkg_id))
 
         # Destroy the stage for a locally installed, non-DIYStage, package
         if restage and task.pkg.stage.managed_by_spack:
             task.pkg.stage.destroy()
 
-        if not partial and self.layout.check_installed(task.pkg.spec) and (
-                rec.spec.dag_hash() not in task.request.overwrite or
-                rec.installation_time > task.request.overwrite_time
+        if installed_in_db and (
+            rec.spec.dag_hash() not in task.request.overwrite or
+            rec.installation_time > task.request.overwrite_time
         ):
             self._update_installed(task)
 
