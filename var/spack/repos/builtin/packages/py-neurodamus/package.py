@@ -19,8 +19,10 @@ class PyNeurodamus(PythonPackage):
     version('2.4.0',   tag='2.4.0')
     version('2.3.1',   tag='2.3.1')
     version('1.3.2',   tag='1.3.2')
-    version('0.8.0',   tag='0.8.0')
-    version('0.7.2',   tag='0.7.2')
+
+    variant("all_deps",
+            default=False,
+            description="Add more dependencies to support advanced use cases")
 
     # Note: we depend on Neurodamus but let the user decide which one.
     # Note: avoid Neuron dependency due to issues with Intel and GCC conflicts.
@@ -29,11 +31,9 @@ class PyNeurodamus(PythonPackage):
     depends_on('py-h5py',          type='run')
     depends_on('py-numpy',         type='run')
     depends_on('py-docopt',        type='run')
-    depends_on('py-scipy',         type='run', when='@2.5.3:')
     depends_on('py-libsonata',     type='run', when='@2.5.3:')
-    depends_on('py-lazy-property', type='run', when='@:1.0.0')
-    depends_on('py-six',           type='run', when='@:1.0.0')
     depends_on('py-morphio',       type='run', when='@2.6.0:')
+    depends_on('py-scipy',         type='run', when='+all_deps@2.5.3:')
 
     @run_after('install')
     def install_scripts(self):

@@ -72,7 +72,7 @@ modules:
       - py-morphio
       - py-morphology-repair-workflow
       - 'py-mvdtool%gcc'
-      - py-neurodamus
+      - 'py-neurodamus+all_deps'
       - py-simwriter
       - py-sonata-network-reduction
       - py-pytouchreader
