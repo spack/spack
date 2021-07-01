@@ -84,7 +84,7 @@ spack:
       - tycho2
       - xsbench 
 
-    ahug_fullapps:
+    - ahug_fullapps:
       - abinit
       - abyss
       - albany
