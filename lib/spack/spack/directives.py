@@ -27,7 +27,7 @@ The available directives are:
   * ``version``
 
 """
-
+import contextlib
 import functools
 import os.path
 import re
@@ -56,7 +56,9 @@ else:
     from collections import Sequence
 
 
-__all__ = []
+__all__ = [
+    'constraint_met'
+]
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches', 'dev_path']
@@ -114,6 +116,7 @@ class DirectiveMeta(type):
     # Set of all known directives
     _directive_names = set()  # type: Set[str]
     _directives_to_be_executed = []  # type: List[str]
+    _when_constraints_from_context = []
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -168,6 +171,16 @@ class DirectiveMeta(type):
         super(DirectiveMeta, cls).__init__(name, bases, attr_dict)
 
     @staticmethod
+    def push_to_context(when_spec):
+        """Add a spec to the context constraints."""
+        DirectiveMeta._when_constraints_from_context.append(when_spec)
+
+    @staticmethod
+    def pop_from_context():
+        """Pop the last constraint from the context"""
+        return DirectiveMeta._when_constraints_from_context.pop()
+
+    @staticmethod
     def directive(dicts=None):
         """Decorator for Spack directives.
 
@@ -205,15 +218,16 @@ class DirectiveMeta(type):
         This is just a modular way to add storage attributes to the
         Package class, and it's how Spack gets information from the
         packages to the core.
-
         """
         global __all__
 
         if isinstance(dicts, string_types):
             dicts = (dicts, )
+
         if not isinstance(dicts, Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
+
         # Add the dictionary names if not already there
         DirectiveMeta._directive_names |= set(dicts)
 
@@ -223,6 +237,14 @@ class DirectiveMeta(type):
 
             @functools.wraps(decorated_function)
             def _wrapper(*args, **kwargs):
+                # Inject when arguments from the context
+                if DirectiveMeta._when_constraints_from_context:
+                    when_spec_from_context = ' '.join(
+                        DirectiveMeta._when_constraints_from_context
+                    )
+                    when_spec = kwargs.get('when', '') + ' ' + when_spec_from_context
+                    kwargs['when'] = when_spec
+
                 # If any of the arguments are executors returned by a
                 # directive passed as an argument, don't execute them
                 # lazily. Instead, let the called directive handle them.
@@ -266,6 +288,36 @@ class DirectiveMeta(type):
 
 
 directive = DirectiveMeta.directive
+
+
+@contextlib.contextmanager
+def constraint_met(constraint_spec):
+    """Inject the constraint spec into the `when=` argument of directives
+    in the context.
+
+    This context manager allows you to write:
+
+        with when('+nvptx'):
+            conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
+            conflicts('languages=ada')
+            conflicts('languages=brig')
+
+    instead of writing:
+
+         conflicts('@:6', when='+nvptx', msg='NVPTX only supported in gcc 7 and above')
+         conflicts('languages=ada', when='+nvptx')
+         conflicts('languages=brig', when='+nvptx')
+
+    Context managers can be nested (but this is not recommended for readability)
+    and add their constraint to whatever may be already present in the directive
+    `when=` argument.
+
+    Args:
+        constraint_spec (str): constraint to be injected
+    """
+    DirectiveMeta.push_to_context(constraint_spec)
+    yield
+    DirectiveMeta.pop_from_context()
 
 
 @directive('versions')

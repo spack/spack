@@ -2775,6 +2775,57 @@ packages be built with MVAPICH and GCC.
 
 See the :ref:`concretization-preferences` section for more details.
 
+
+.. _group_when_spec:
+
+------------------------------------
+Group ``when=`` constraints together
+------------------------------------
+
+In case a package needs many directives to share the whole ``when=``
+argument, or just part of it, Spack permits to group the common part
+under a context manager:
+
+.. code-block:: python
+
+   class Gcc(AutotoolsPackage):
+
+       with constraint_met('+nvptx'):
+           depends_on('cuda')
+           conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
+           conflicts('languages=ada')
+           conflicts('languages=brig')
+           conflicts('languages=go')
+
+The snippet above is equivalent to the more verbose:
+
+.. code-block:: python
+
+   class Gcc(AutotoolsPackage):
+
+       depends_on('cuda', when='+nvptx')
+       conflicts('@:6', when='+nvptx', msg='NVPTX only supported in gcc 7 and above')
+       conflicts('languages=ada', when='+nvptx')
+       conflicts('languages=brig', when='+nvptx')
+       conflicts('languages=go', when='+nvptx')
+
+Constraints stemming from the context are added to what is explicitly present in the
+``when=`` argument of a directive, so:
+
+.. code-block:: python
+
+   with constraint_met('+elpa'):
+       depends_on('elpa+openmp', when='+openmp')
+
+is equivalent to:
+
+.. code-block:: python
+
+   depends_on('elpa+openmp', when='+openmp+elpa')
+
+Constraints from nested context managers are also added together, but they are rarely
+needed or recommended.
+
 .. _install-method:
 
 ------------------
