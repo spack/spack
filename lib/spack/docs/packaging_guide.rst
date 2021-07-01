@@ -1257,7 +1257,7 @@ Variants
 Many software packages can be configured to enable optional
 features, which often come at the expense of additional dependencies or
 longer build times. To be flexible enough and support a wide variety of
-use cases, Spack permits to expose to the end-user the ability to choose
+use cases, Spack allows you to expose to the end-user the ability to choose
 which features should be activated in a package at the time it is installed.
 The mechanism to be employed is the :py:func:`spack.directives.variant` directive.
 
@@ -2778,12 +2778,12 @@ See the :ref:`concretization-preferences` section for more details.
 
 .. _group_when_spec:
 
-------------------------------------
-Group ``when=`` constraints together
-------------------------------------
+----------------------------
+Common ``when=`` constraints
+----------------------------
 
 In case a package needs many directives to share the whole ``when=``
-argument, or just part of it, Spack permits to group the common part
+argument, or just part of it, Spack allows you to group the common part
 under a context manager:
 
 .. code-block:: python
