@@ -18,8 +18,8 @@ class PyPpft(PythonPackage):
     version('1.6.4.6',   sha256='92d09061f5425634c43dbf99c5558f2cf2a2e1e351929f8da7e85f4649c11095')
     version('1.6.4.5',   sha256='d47da9d2e553848b75727ce7c510f9e149965d5c68f9fc56c774a7c6a3d18214')
 
-    depends_on('python@2.5:2.8,3.1:')
-    depends_on('python@2.7:2.8,3.6:', when='@1.6.6.4:')
+    depends_on('python@2.5:2.8,3.1:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.6:', when='@1.6.6.4:', type=('build', 'run'))
 
     depends_on('py-setuptools@0.6:', type='build')
     depends_on('py-six@1.7.3:', type=('build', 'run'))
