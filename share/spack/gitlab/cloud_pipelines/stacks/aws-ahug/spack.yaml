@@ -1,7 +1,7 @@
 # TODO: 
 #  - alinux2 image builder
 #  - graviton2 large/medium instance
-#  - expand packages to full set (currently only building 3 packages)
+#  - ADDED expand packages to full set (currently only building 3 packages)
 #  - handle parallelcluster provided packages (build a docker AMI based on pcluster)
 
 spack:
@@ -49,18 +49,122 @@ spack:
     - compilers: ['%gcc@7.5.0']
     
     # Note skipping spot since no spack package for it
-    - ahug:
+    - ahug_miniapps:
       - cloverleaf
       - coevp
       - cohmm
+      - examinimd
+      - exampm
+      - exasp2
+      - gamess-ri-mp2-miniapp
+      - hpcg
+      - laghos
+      - lulesh
+      - miniaero
+      - miniamr
+      - minife
+      - minighost
+      - minigmg
+      - minimd
+      - miniqmc
+      - minismac2d
+      - minitri
+      - minivite
+      - minixyce
+      - pennant
+      - picsarlite
+      - quicksilver
+      - remhos
+      - rsbench
+      - simplemoc
+      - snap
+      - snappy
+      - tealeaf
+      - thornado-mini
+      - tycho2
+      - xsbench 
+
+    ahug_fullapps:
+      - abinit
+      - abyss
+      - albany
+      - amber
+      - amg2013
+      - aoflagger
+      - athena
+      - bowtie2
+      - branson
+      - camx
+      - candle-benchmarks
+      - cbench
+      - cgm
+      - chatterbug
+      - cistem
+      - comd
+      - converge
+      - cosmoflow-benchmark
+      - cosmomc
+      - cosp2
+      - cp2k
+      - dock
+      - elk
+      - elmerfem
+      - exabayes
+      - examl
+      - flecsph
+      - frontistr
+      - gatk
+      - graph500
+      - hpgmg
+      - lammps
+      - latte
+      - macsio
+      - meep
+      - meme
+      - modylas
+      - mrbayes
+      - mrchem
+      - mxnet
+      - nalu
+      - nalu-wind
+      - namd
+      - nek5000
+      - nekbone
+      - nektar
+      - nest
+      - nut
+      - nwchem
+      - octopus
+      - openmm
+      - pathfinder
+      - picsar
+      - pism
+      - qbox
+      - qmcpack
+      - quantum-espresso
+      - relion
+      - siesta
+      - snbone
+      - star
+      - su2
+      - swfft
+      - tinker
+      - vasp
+      - vpfft
+      - vpic
+      - warpx
+      - yambo
 
   mirrors:
     mirror: "s3://spack-binaries-develop/aws-ahug"
 
   specs:
   - matrix:
-    - [$ahug]
+    - [$ahug_miniapps]
     - [$compilers]
+# - matrix:
+#   - [$ahug_fullapps]
+#   - [$compilers]
 
   gitlab-ci:
     image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
