@@ -16,8 +16,8 @@ class PyPathos(PythonPackage):
     version('0.2.3', sha256='954c5b0a8b257c375e35d311c65fa62a210a3d65269195557de38418ac9f61f9')
     version('0.2.0', sha256='2f4e67e7914c95fb0cce766bab173eb2c5860ee420108fa183099557ac2e50e9')
 
-    depends_on('python@2.6:2.8,3.1:')
-    depends_on('python@2.7:2.8,3.6:', when='@0.2.8:')
+    depends_on('python@2.6:2.8,3.1:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.6:', when='@0.2.8:', type=('build', 'run'))
 
     depends_on('py-setuptools@0.6:', type='build')
     depends_on('py-multiprocess@0.70.7:', type=('build', 'run'))
