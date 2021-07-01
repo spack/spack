@@ -119,7 +119,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
     #   GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
-    with constraint_met('+graphite'):
+    with when('+graphite'):
         depends_on('isl@0.14', when='@5.0:5.2')
         depends_on('isl@0.15', when='@5.3:5.9')
         depends_on('isl@0.15:0.18', when='@6:8.9')
@@ -152,7 +152,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('guile@1.4.1:', type='test')
 
     # See https://golang.org/doc/install/gccgo#Releases
-    with constraint_met('languages=go'):
+    with when('languages=go'):
         provides('golang',        when='@4.6:')
         provides('golang@:1',     when='@4.7.1:')
         provides('golang@:1.1',   when='@4.8:')
@@ -194,7 +194,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts('languages=jit', when='@:4')
 
-    with constraint_met('+nvptx'):
+    with when('+nvptx'):
         depends_on('cuda')
         resource(
             name='newlib',

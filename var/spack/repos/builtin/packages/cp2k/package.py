@@ -77,7 +77,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('lapack')
     depends_on('fftw-api@3')
 
-    with constraint_met('smm=libxsmm'):
+    with when('smm=libxsmm'):
         # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
         depends_on('libxsmm@1.11:~header-only')
         # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
@@ -86,7 +86,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         # cp2k with option smm=blas on aarch64
         conflicts('target=aarch64:', msg='libxsmm is not available on arm')
 
-    with constraint_met('+libint'):
+    with when('+libint'):
         # ... and in CP2K 7.0+ for linking to libint2
         depends_on('pkgconfig', type='build', when='@7.0:')
         # libint & libxc are always statically linked
@@ -96,25 +96,25 @@ class Cp2k(MakefilePackage, CudaPackage):
             depends_on('libint@2.6.0:+fortran tune=cp2k-lmax-{0}'.format(lmax),
                        when='@7.0: lmax={0}'.format(lmax))
 
-    with constraint_met('+libxc'):
+    with when('+libxc'):
         depends_on('pkgconfig', type='build', when='@7.0:')
         depends_on('libxc@2.2.2:3.99.0', when='@:5.5999', type='build')
         depends_on('libxc@4.0.3:4.99.0', when='@6.0:6.9', type='build')
         depends_on('libxc@4.0.3:4.99.0', when='@7.0:8.1')
         depends_on('libxc@5.1.3:5.1.99', when='@8.2:')
 
-    with constraint_met('+mpi'):
+    with when('+mpi'):
         depends_on('mpi@2:')
         depends_on('scalapack')
 
-    with constraint_met('+cosma'):
+    with when('+cosma'):
         depends_on('cosma+scalapack')
         depends_on('cosma+cuda', when='+cuda')
         conflicts('~mpi')
         # COSMA support was introduced in 8+
         conflicts('@:7.999')
 
-    with constraint_met('+elpa'):
+    with when('+elpa'):
         conflicts('~mpi', msg='elpa requires MPI')
         depends_on('elpa+openmp', when='+openmp')
         depends_on('elpa~openmp', when='~openmp')
@@ -122,14 +122,14 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on('elpa@2011.12:2017.11', when='@6.0:6.999')
         depends_on('elpa@2018.05:', when='@7.0:')
 
-    with constraint_met('+plumed'):
+    with when('+plumed'):
         depends_on('plumed+shared')
         depends_on('plumed+mpi', when='+mpi')
         depends_on('plumed~mpi', when='~mpi')
 
     # while we link statically against PEXSI, its own deps may be linked in
     # dynamically, therefore can't set this as pure build-type dependency.
-    with constraint_met('+pexsi'):
+    with when('+pexsi'):
         conflicts('~mpi', msg='pexsi requires MPI')
         depends_on('pexsi+fortran@0.9.0:0.9.999', when='@:4.999')
         depends_on('pexsi+fortran@0.10.0:', when='@5.0:')
@@ -137,7 +137,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     # only OpenMP should be consistently used, all other common things
     # like ELPA, SCALAPACK are independent and Spack will ensure that
     # a consistent/compatible combination is pulled into the dependency graph.
-    with constraint_met('+sirius'):
+    with when('+sirius'):
         depends_on('sirius+fortran+vdwxc+shared')
         depends_on('sirius+openmp', when='+openmp')
         depends_on('sirius~openmp', when='~openmp')
@@ -147,7 +147,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         # sirius support was introduced in 7+
         conflicts('@:6.999')
 
-    with constraint_met('+libvori'):
+    with when('+libvori'):
         depends_on('libvori@201219:', when='@8.1', type='build')
         depends_on('libvori@210412:', when='@8.2:', type='build')
         # libvori support was introduced in 8+

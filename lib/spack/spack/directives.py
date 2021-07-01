@@ -27,7 +27,6 @@ The available directives are:
   * ``version``
 
 """
-import contextlib
 import functools
 import os.path
 import re
@@ -55,9 +54,7 @@ else:
     from collections import Sequence
 
 
-__all__ = [
-    'constraint_met'
-]
+__all__ = []
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches', 'dev_path']
@@ -287,36 +284,6 @@ class DirectiveMeta(type):
 
 
 directive = DirectiveMeta.directive
-
-
-@contextlib.contextmanager
-def constraint_met(constraint_spec):
-    """Inject the constraint spec into the `when=` argument of directives
-    in the context.
-
-    This context manager allows you to write:
-
-        with when('+nvptx'):
-            conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
-            conflicts('languages=ada')
-            conflicts('languages=brig')
-
-    instead of writing:
-
-         conflicts('@:6', when='+nvptx', msg='NVPTX only supported in gcc 7 and above')
-         conflicts('languages=ada', when='+nvptx')
-         conflicts('languages=brig', when='+nvptx')
-
-    Context managers can be nested (but this is not recommended for readability)
-    and add their constraint to whatever may be already present in the directive
-    `when=` argument.
-
-    Args:
-        constraint_spec (str): constraint to be injected
-    """
-    DirectiveMeta.push_to_context(constraint_spec)
-    yield
-    DirectiveMeta.pop_from_context()
 
 
 @directive('versions')

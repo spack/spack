@@ -15,6 +15,6 @@ class WithConstraintMet(Package):
     version('2.0', '0123456789abcdef0123456789abcdef')
     version('1.0', '0123456789abcdef0123456789abcdef')
 
-    with constraint_met('@1.0'):
+    with when('@1.0'):
         depends_on('b')
         conflicts('%gcc')

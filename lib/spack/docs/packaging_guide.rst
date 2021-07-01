@@ -2790,7 +2790,7 @@ under a context manager:
 
    class Gcc(AutotoolsPackage):
 
-       with constraint_met('+nvptx'):
+       with when('+nvptx'):
            depends_on('cuda')
            conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
            conflicts('languages=ada')
@@ -2814,7 +2814,7 @@ Constraints stemming from the context are added to what is explicitly present in
 
 .. code-block:: python
 
-   with constraint_met('+elpa'):
+   with when('+elpa'):
        depends_on('elpa+openmp', when='+openmp')
 
 is equivalent to:
