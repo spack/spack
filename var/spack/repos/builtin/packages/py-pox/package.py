@@ -18,8 +18,8 @@ class PyPox(PythonPackage):
     version('0.2.2', sha256='c0b88e59ef0e4f2fa4839e11bf90d2c32d6ceb5abaf01f0c8138f7558e6f87c1')
     version('0.2.1', sha256='580bf731fee233c58eac0974011b5bf0698efb7337b0a1696d289043b4fcd7f4')
 
-    depends_on('python@2.5:2.8,3.1:')
-    depends_on('python@2.7:2.8,3.6:', when='@0.3.0:')
+    depends_on('python@2.5:2.8,3.1:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.6:', when='@0.3.0:', type=('build', 'run'))
 
     depends_on('py-setuptools@0.6:', type='build')
 
