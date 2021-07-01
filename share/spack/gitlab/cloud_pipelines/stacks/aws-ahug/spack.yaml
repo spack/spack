@@ -65,7 +65,7 @@ spack:
       - minife
       - minighost
     # Download failed
-    # - minigmg
+      - minigmg
       - minimd
       - miniqmc
       - minismac2d
