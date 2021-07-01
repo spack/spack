@@ -73,6 +73,8 @@ class Sirius(CMakePackage, CudaPackage):
             values=('Debug', 'Release', 'RelWithDebInfo'))
     variant('apps', default=True, description="Build applications")
     variant('tests', default=False, description="Build tests")
+    variant('single_precision', default=False, description="Use single precision arithmetics")
+    variant('profiler', default=True, description="Use internal profiler to measure execution time")
 
     depends_on('python', type=('build', 'run'))
     depends_on('mpi')
@@ -97,6 +99,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     depends_on('spfft@0.9.6: +mpi', when='@6.4.0:')
     depends_on('spfft@0.9.13:', when='@7.0.1:')
+    depends_on('spfft +single_precision', when='+single_precision ^spfft')
     depends_on('spfft+cuda', when='+cuda ^spfft')
     depends_on('spfft+rocm', when='+rocm ^spfft')
     depends_on('spfft+openmp', when='+openmp ^spfft')
@@ -114,8 +117,6 @@ class Sirius(CMakePackage, CudaPackage):
 
     # rocm
     depends_on('hip', when='+rocm')
-    depends_on('hsakmt-roct', when='+rocm', type='link')
-    depends_on('hsa-rocr-dev', when='+rocm', type='link')
     depends_on('rocblas', when='+rocm')
 
     # FindHIP cmake script only works for < 4.1
@@ -126,6 +127,7 @@ class Sirius(CMakePackage, CudaPackage):
     conflicts('+shared', when='@6.3.0:6.4.999')
     conflicts('+boost_filesystem', when='~apps')
     conflicts('^libxc@5.0.0')  # known to produce incorrect results
+    conflicts('+single_precision', when='@:7.2.4')
 
     # Propagate openmp to blas
     depends_on('openblas threads=openmp', when='+openmp ^openblas')
@@ -183,7 +185,9 @@ class Sirius(CMakePackage, CudaPackage):
             self.define_from_variant('USE_ROCM', 'rocm'),
             self.define_from_variant('BUILD_TESTING', 'tests'),
             self.define_from_variant('BUILD_APPS', 'apps'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('USE_FP32', 'single_precision'),
+            self.define_from_variant('USE_PROFILER', 'profiler')
         ]
 
         lapack = spec['lapack']

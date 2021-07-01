@@ -56,7 +56,7 @@ from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
 from spack.util.environment import dump_environment
 from spack.util.executable import which
-
+from spack.util.timer import Timer
 
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they
@@ -1685,7 +1685,7 @@ def build_process(pkg, kwargs):
     unmodified_env = kwargs.get('unmodified_env', {})
     verbose = kwargs.get('verbose', False)
 
-    start_time = time.time()
+    timer = Timer()
     if not fake:
         if not skip_patch:
             pkg.do_patch()
@@ -1770,9 +1770,9 @@ def build_process(pkg, kwargs):
 
                             # Redirect stdout and stderr to daemon pipe
                             phase = getattr(pkg, phase_attr)
+                            timer.phase(phase_name)
 
                             # Catch any errors to report to logging
-
                             phase(pkg.spec, pkg.prefix)
                             spack.hooks.on_phase_success(pkg, phase_name, log_file)
 
@@ -1788,17 +1788,19 @@ def build_process(pkg, kwargs):
             combine_phase_logs(pkg.phase_log_files, pkg.log_path)
             log(pkg)
 
+        # Stop the timer and save results
+        timer.stop()
+        with open(pkg.times_log_path, 'w') as timelog:
+            timer.write_json(timelog)
+
         # Run post install hooks before build stage is removed.
         spack.hooks.post_install(pkg.spec)
 
-    # Stop the timer
-    pkg._total_time = time.time() - start_time
-    build_time = pkg._total_time - pkg._fetch_time
-
+    build_time = timer.total - pkg._fetch_time
     tty.msg('{0} Successfully installed {1}'.format(pre, pkg_id),
             'Fetch: {0}.  Build: {1}.  Total: {2}.'
             .format(_hms(pkg._fetch_time), _hms(build_time),
-                    _hms(pkg._total_time)))
+                    _hms(timer.total)))
     _print_installed_pkg(pkg.prefix)
 
     # Send final status that install is successful

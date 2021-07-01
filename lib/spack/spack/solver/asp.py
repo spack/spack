@@ -10,7 +10,6 @@ import itertools
 import os
 import pprint
 import sys
-import time
 import types
 import warnings
 from six import string_types
@@ -43,33 +42,12 @@ import spack.repo
 import spack.bootstrap
 import spack.variant
 import spack.version
-
+import spack.util.timer
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm
 else:
     from collections import Sequence
-
-
-class Timer(object):
-    """Simple timer for timing phases of a solve"""
-    def __init__(self):
-        self.start = time.time()
-        self.last = self.start
-        self.phases = {}
-
-    def phase(self, name):
-        last = self.last
-        now = time.time()
-        self.phases[name] = now - last
-        self.last = now
-
-    def write(self, out=sys.stdout):
-        now = time.time()
-        out.write("Time:\n")
-        for phase, t in self.phases.items():
-            out.write("    %-15s%.4f\n" % (phase + ":", t))
-        out.write("Total: %.4f\n" % (now - self.start))
 
 
 def issequence(obj):
@@ -331,7 +309,7 @@ class PyclingoDriver(object):
             self, solver_setup, specs, dump=None, nmodels=0,
             timers=False, stats=False, tests=False
     ):
-        timer = Timer()
+        timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
         self.control = clingo.Control()
@@ -428,7 +406,7 @@ class PyclingoDriver(object):
                 result.cores.append(core_symbols)
 
         if timers:
-            timer.write()
+            timer.write_tty()
             print()
         if stats:
             print("Statistics:")
@@ -786,7 +764,8 @@ class SpackSolverSetup(object):
                 continue
 
             for i, provider in enumerate(providers):
-                func(vspec, provider, i + 10)
+                provider_name = spack.spec.Spec(provider).name
+                func(vspec, provider_name, i + 10)
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")

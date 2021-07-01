@@ -201,26 +201,28 @@ def test_install_overwrite(
 
     install('libdwarf')
 
+    # Ignore manifest and install times
     manifest = os.path.join(spec.prefix, spack.store.layout.metadata_dir,
                             spack.store.layout.manifest_file_name)
+    ignores = [manifest, spec.package.times_log_path]
 
     assert os.path.exists(spec.prefix)
-    expected_md5 = fs.hash_directory(spec.prefix, ignore=[manifest])
+    expected_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
     with open(os.path.join(spec.prefix, 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
 
-    bad_md5 = fs.hash_directory(spec.prefix, ignore=[manifest])
+    bad_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
 
     assert bad_md5 != expected_md5
 
     install('--overwrite', '-y', 'libdwarf')
 
     assert os.path.exists(spec.prefix)
-    assert fs.hash_directory(spec.prefix, ignore=[manifest]) == expected_md5
-    assert fs.hash_directory(spec.prefix, ignore=[manifest]) != bad_md5
+    assert fs.hash_directory(spec.prefix, ignore=ignores) == expected_md5
+    assert fs.hash_directory(spec.prefix, ignore=ignores) != bad_md5
 
 
 def test_install_overwrite_not_installed(
@@ -254,16 +256,19 @@ def test_install_overwrite_multiple(
                                spack.store.layout.metadata_dir,
                                spack.store.layout.manifest_file_name)
 
+    ld_ignores = [ld_manifest, libdwarf.package.times_log_path]
+
     assert os.path.exists(libdwarf.prefix)
     expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix,
-                                              ignore=[ld_manifest])
+                                              ignore=ld_ignores)
 
     cm_manifest = os.path.join(cmake.prefix,
                                spack.store.layout.metadata_dir,
                                spack.store.layout.manifest_file_name)
 
+    cm_ignores = [cm_manifest, cmake.package.times_log_path]
     assert os.path.exists(cmake.prefix)
-    expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
+    expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
@@ -272,8 +277,8 @@ def test_install_overwrite_multiple(
     with open(os.path.join(cmake.prefix, 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
 
-    bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=[ld_manifest])
-    bad_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
+    bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
+    bad_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
 
     assert bad_libdwarf_md5 != expected_libdwarf_md5
     assert bad_cmake_md5 != expected_cmake_md5
@@ -282,8 +287,8 @@ def test_install_overwrite_multiple(
     assert os.path.exists(libdwarf.prefix)
     assert os.path.exists(cmake.prefix)
 
-    ld_hash = fs.hash_directory(libdwarf.prefix, ignore=[ld_manifest])
-    cm_hash = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
+    ld_hash = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
+    cm_hash = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
     assert ld_hash == expected_libdwarf_md5
     assert cm_hash == expected_cmake_md5
     assert ld_hash != bad_libdwarf_md5

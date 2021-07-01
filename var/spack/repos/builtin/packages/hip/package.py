@@ -17,7 +17,7 @@ class Hip(CMakePackage):
     git      = "https://github.com/ROCm-Developer-Tools/HIP.git"
     url      = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-4.2.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('4.2.0', sha256='ecb929e0fc2eaaf7bbd16a1446a876a15baf72419c723734f456ee62e70b4c24')
     version('4.1.0', sha256='e21c10b62868ece7aa3c8413ec0921245612d16d86d81fe61797bf9a64bc37eb')
@@ -34,13 +34,12 @@ class Hip(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hip-rocclr@' + ver,  type=('build', 'run'), when='@' + ver)
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('comgr@' + ver, type=('build', 'link', 'run'), when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type=('build', 'link', 'run'), when='@' + ver)
-        depends_on('rocminfo@' + ver, type=('build', 'run'), when='@' + ver)
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, when='@' + ver)
+        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), when='@' + ver)
+        depends_on('rocminfo@' + ver, when='@' + ver)
 
     # hipcc likes to add `-lnuma` by default :(
     # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
@@ -87,7 +86,7 @@ class Hip(CMakePackage):
                 'llvm-amdgpu': rocm_prefix.llvm,
                 'hsa-rocr-dev': rocm_prefix.hsa,
                 'rocminfo': rocm_prefix,
-                'rocm-device-libs': rocm_prefix,
+                'rocm-device-libs': rocm_prefix
             }
         else:
             paths = {
@@ -95,14 +94,13 @@ class Hip(CMakePackage):
                 'llvm-amdgpu': self.spec['llvm-amdgpu'].prefix,
                 'hsa-rocr-dev': self.spec['hsa-rocr-dev'].prefix,
                 'rocminfo': self.spec['rocminfo'].prefix,
-                'rocm-device-libs': self.spec['rocm-device-libs'].prefix,
+                'rocm-device-libs': self.spec['llvm-amdgpu'].prefix
             }
 
-        # `device_lib_path` is the path to the bitcode directory
         if '@:3.8.0' in self.spec:
-            paths['device_lib_path'] = paths['rocm-device-libs'].lib
+            paths['bitcode'] = paths['rocm-device-libs'].lib
         else:
-            paths['device_lib_path'] = paths['rocm-device-libs'].amdgcn.bitcode
+            paths['bitcode'] = paths['rocm-device-libs'].amdgcn.bitcode
 
         return paths
 
@@ -136,12 +134,12 @@ class Hip(CMakePackage):
         # https://github.com/ROCm-Developer-Tools/HIP/pull/2138
         env.set('ROCMINFO_PATH', paths['rocminfo'])
 
-        # This one is used in hipcc to run `hipcc --hip-device-lib-path=...`
-        env.set('DEVICE_LIB_PATH', paths['device_lib_path'])
+        # This one is used in hipcc to run `clang --hip-device-lib-path=...`
+        env.set('DEVICE_LIB_PATH', paths['bitcode'])
 
         # And this is used in clang whenever the --hip-device-lib-path is not
         # used (e.g. when clang is invoked directly)
-        env.set('HIP_DEVICE_LIB_PATH', paths['device_lib_path'])
+        env.set('HIP_DEVICE_LIB_PATH', paths['bitcode'])
 
         # Just the prefix of hip (used in hipcc)
         env.set('HIP_PATH', paths['rocm-path'])
@@ -164,6 +162,9 @@ class Hip(CMakePackage):
             env.append_path('HIPCC_COMPILE_FLAGS_APPEND',
                             '--rocm-path={0}'.format(paths['rocm-path']),
                             separator=' ')
+
+    def setup_build_environment(self, env):
+        self.set_variables(env)
 
     def setup_run_environment(self, env):
         self.set_variables(env)

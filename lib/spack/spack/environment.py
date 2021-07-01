@@ -1574,6 +1574,13 @@ class Environment(object):
         specs_to_install = [s for s in specs_to_install
                             if s not in self.roots() or s in uninstalled_roots]
 
+        # ensure specs already installed are marked explicit
+        all_specs = specs or [cs for _, cs in self.concretized_specs()]
+        specs_installed = [s for s in all_specs if s.package.installed]
+        with spack.store.db.write_transaction():  # do all in one transaction
+            for spec in specs_installed:
+                spack.store.db.update_explicit(spec, True)
+
         if not specs_to_install:
             tty.msg('All of the packages are already installed')
             return

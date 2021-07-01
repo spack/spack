@@ -78,7 +78,7 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 
 #
 # These environment variables are set by
-# set_build_environment_variables and used to pass parameters to
+# set_wrapper_variables and used to pass parameters to
 # Spack's compiler wrappers.
 #
 SPACK_ENV_PATH = 'SPACK_ENV_PATH'
@@ -158,6 +158,12 @@ def clean_environment():
     env.unset('C_INCLUDE_PATH')
     env.unset('CPLUS_INCLUDE_PATH')
     env.unset('OBJC_INCLUDE_PATH')
+
+    env.unset('CMAKE_PREFIX_PATH')
+
+    # Avoid that libraries of build dependencies get hijacked.
+    env.unset('LD_PRELOAD')
+    env.unset('DYLD_INSERT_LIBRARIES')
 
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
@@ -306,111 +312,20 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
-def _place_externals_last(spec_container):
+def set_wrapper_variables(pkg, env):
+    """Set environment variables used by the Spack compiler wrapper
+       (which have the prefix `SPACK_`) and also add the compiler wrappers
+       to PATH.
+
+       This determines the injected -L/-I/-rpath options; each
+       of these specifies a search order and this function computes these
+       options in a manner that is intended to match the DAG traversal order
+       in `modifications_from_dependencies`: that method uses a post-order
+       traversal so that `PrependPath` actions from dependencies take lower
+       precedence; we use a post-order traversal here to match the visitation
+       order of `modifications_from_dependencies` (so we are visiting the
+       lowest priority packages first).
     """
-    For a (possibly unordered) container of specs, return an ordered list
-    where all external specs are at the end of the list. External packages
-    may be installed in merged prefixes with other packages, and so
-    they should be deprioritized for any search order (i.e. in PATH, or
-    for a set of -L entries in a compiler invocation).
-    """
-    # Establish an arbitrary but fixed ordering of specs so that resulting
-    # environment variable values are stable
-    spec_container = sorted(spec_container, key=lambda x: x.name)
-    first = list(x for x in spec_container if not x.external)
-    second = list(x for x in spec_container if x.external)
-    return first + second
-
-
-def set_build_environment_variables(pkg, env, dirty):
-    """Ensure a clean install environment when we build packages.
-
-    This involves unsetting pesky environment variables that may
-    affect the build. It also involves setting environment variables
-    used by Spack's compiler wrappers.
-
-    Args:
-        pkg: The package we are building
-        env: The build environment
-        dirty (bool): Skip unsetting the user's environment settings
-    """
-    # Gather information about various types of dependencies
-    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
-    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
-    build_link_deps = build_deps | link_deps
-    rpath_deps      = get_rpath_deps(pkg)
-    # This includes all build dependencies and any other dependencies that
-    # should be added to PATH (e.g. supporting executables run by build
-    # dependencies)
-    build_and_supporting_deps = set()
-    for build_dep in build_deps:
-        build_and_supporting_deps.update(build_dep.traverse(deptype='run'))
-
-    # External packages may be installed in a prefix which contains many other
-    # package installs. To avoid having those installations override
-    # Spack-installed packages, they are placed at the end of search paths.
-    # System prefixes are removed entirely later on since they are already
-    # searched.
-    build_deps = _place_externals_last(build_deps)
-    link_deps = _place_externals_last(link_deps)
-    build_link_deps = _place_externals_last(build_link_deps)
-    rpath_deps = _place_externals_last(rpath_deps)
-    build_and_supporting_deps = _place_externals_last(
-        build_and_supporting_deps)
-
-    link_dirs = []
-    include_dirs = []
-    rpath_dirs = []
-
-    # The top-level package is always RPATHed. It hasn't been installed yet
-    # so the RPATHs are added unconditionally (e.g. even though lib64/ may
-    # not be created for the install).
-    for libdir in ['lib', 'lib64']:
-        lib_path = os.path.join(pkg.prefix, libdir)
-        rpath_dirs.append(lib_path)
-
-    # Set up link, include, RPATH directories that are passed to the
-    # compiler wrapper
-    for dep in link_deps:
-        if is_system_path(dep.prefix):
-            continue
-        query = pkg.spec[dep.name]
-        dep_link_dirs = list()
-        try:
-            dep_link_dirs.extend(query.libs.directories)
-        except NoLibrariesError:
-            tty.debug("No libraries found for {0}".format(dep.name))
-
-        for default_lib_dir in ['lib', 'lib64']:
-            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
-            if os.path.isdir(default_lib_prefix):
-                dep_link_dirs.append(default_lib_prefix)
-
-        link_dirs.extend(dep_link_dirs)
-        if dep in rpath_deps:
-            rpath_dirs.extend(dep_link_dirs)
-
-        try:
-            include_dirs.extend(query.headers.directories)
-        except NoHeadersError:
-            tty.debug("No headers found for {0}".format(dep.name))
-
-    link_dirs = list(dedupe(filter_system_paths(link_dirs)))
-    include_dirs = list(dedupe(filter_system_paths(include_dirs)))
-    rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
-
-    env.set(SPACK_LINK_DIRS, ':'.join(link_dirs))
-    env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
-    env.set(SPACK_RPATH_DIRS, ':'.join(rpath_dirs))
-
-    build_and_supporting_prefixes = filter_system_paths(
-        x.prefix for x in build_and_supporting_deps)
-    build_link_prefixes = filter_system_paths(
-        x.prefix for x in build_link_deps)
-
-    # Add dependencies to CMAKE_PREFIX_PATH
-    env.set_path('CMAKE_PREFIX_PATH', get_cmake_prefix_path(pkg))
-
     # Set environment variables if specified for
     # the given compiler
     compiler = pkg.compiler
@@ -419,16 +334,6 @@ def set_build_environment_variables(pkg, env, dirty):
     if compiler.extra_rpaths:
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
-
-    # Add bin directories from dependencies to the PATH for the build.
-    # These directories are added to the beginning of the search path, and in
-    # the order given by 'build_and_supporting_prefixes' (the iteration order
-    # is reversed because each entry is prepended)
-    for prefix in reversed(build_and_supporting_prefixes):
-        for dirname in ['bin', 'bin64']:
-            bin_dir = os.path.join(prefix, dirname)
-            if os.path.isdir(bin_dir):
-                env.prepend_path('PATH', bin_dir)
 
     # Add spack build environment path with compiler wrappers first in
     # the path. We add the compiler wrapper path, which includes default
@@ -449,6 +354,7 @@ def set_build_environment_variables(pkg, env, dirty):
         if os.path.isdir(ci):
             env_paths.append(ci)
 
+    tty.debug("Adding compiler bin/ paths: " + " ".join(env_paths))
     for item in env_paths:
         env.prepend_path('PATH', item)
     env.set_path(SPACK_ENV_PATH, env_paths)
@@ -467,14 +373,69 @@ def set_build_environment_variables(pkg, env, dirty):
             raise RuntimeError("No ccache binary found in PATH")
         env.set(SPACK_CCACHE_BINARY, ccache)
 
-    # Add any pkgconfig directories to PKG_CONFIG_PATH
-    for prefix in reversed(build_link_prefixes):
-        for directory in ('lib', 'lib64', 'share'):
-            pcdir = os.path.join(prefix, directory, 'pkgconfig')
-            if os.path.isdir(pcdir):
-                env.prepend_path('PKG_CONFIG_PATH', pcdir)
+    # Gather information about various types of dependencies
+    link_deps  = set(pkg.spec.traverse(root=False, deptype=('link')))
+    rpath_deps = get_rpath_deps(pkg)
 
-    return env
+    link_dirs = []
+    include_dirs = []
+    rpath_dirs = []
+
+    def _prepend_all(list_to_modify, items_to_add):
+        # Update the original list (creating a new list would be faster but
+        # may not be convenient)
+        for item in reversed(list(items_to_add)):
+            list_to_modify.insert(0, item)
+
+    def update_compiler_args_for_dep(dep):
+        if dep in link_deps and (not is_system_path(dep.prefix)):
+            query = pkg.spec[dep.name]
+            dep_link_dirs = list()
+            try:
+                dep_link_dirs.extend(query.libs.directories)
+            except NoLibrariesError:
+                tty.debug("No libraries found for {0}".format(dep.name))
+
+            for default_lib_dir in ['lib', 'lib64']:
+                default_lib_prefix = os.path.join(
+                    dep.prefix, default_lib_dir)
+                if os.path.isdir(default_lib_prefix):
+                    dep_link_dirs.append(default_lib_prefix)
+
+            _prepend_all(link_dirs, dep_link_dirs)
+            if dep in rpath_deps:
+                _prepend_all(rpath_dirs, dep_link_dirs)
+
+            try:
+                _prepend_all(include_dirs, query.headers.directories)
+            except NoHeadersError:
+                tty.debug("No headers found for {0}".format(dep.name))
+
+    for dspec in pkg.spec.traverse(root=False, order='post'):
+        if dspec.external:
+            update_compiler_args_for_dep(dspec)
+
+    # Just above, we prepended entries for -L/-rpath for externals. We
+    # now do this for non-external packages so that Spack-built packages
+    # are searched first for libraries etc.
+    for dspec in pkg.spec.traverse(root=False, order='post'):
+        if not dspec.external:
+            update_compiler_args_for_dep(dspec)
+
+    # The top-level package is always RPATHed. It hasn't been installed yet
+    # so the RPATHs are added unconditionally (e.g. even though lib64/ may
+    # not be created for the install).
+    for libdir in ['lib64', 'lib']:
+        lib_path = os.path.join(pkg.prefix, libdir)
+        rpath_dirs.insert(0, lib_path)
+
+    link_dirs = list(dedupe(filter_system_paths(link_dirs)))
+    include_dirs = list(dedupe(filter_system_paths(include_dirs)))
+    rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
+
+    env.set(SPACK_LINK_DIRS, ':'.join(link_dirs))
+    env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
+    env.set(SPACK_RPATH_DIRS, ':'.join(rpath_dirs))
 
 
 def determine_number_of_jobs(
@@ -712,15 +673,6 @@ def get_rpaths(pkg):
     return list(dedupe(filter_system_paths(rpaths)))
 
 
-def get_cmake_prefix_path(pkg):
-    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
-    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
-    build_link_deps = build_deps | link_deps
-    build_link_deps = _place_externals_last(build_link_deps)
-    build_link_prefixes = filter_system_paths(x.prefix for x in build_link_deps)
-    return build_link_prefixes
-
-
 def get_std_cmake_args(pkg):
     """List of standard arguments used if a package is a CMakePackage.
 
@@ -788,42 +740,40 @@ def load_external_modules(pkg):
 
 def setup_package(pkg, dirty, context='build'):
     """Execute all environment setup routines."""
+    if context not in ['build', 'test']:
+        raise ValueError(
+            "'context' must be one of ['build', 'test'] - got: {0}"
+            .format(context))
+
+    set_module_variables_for_package(pkg)
+
     env = EnvironmentModifications()
 
     if not dirty:
         clean_environment()
 
-    # setup compilers and build tools for build contexts
+    # setup compilers for build contexts
     need_compiler = context == 'build' or (context == 'test' and
                                            pkg.test_requires_compiler)
     if need_compiler:
         set_compiler_environment_variables(pkg, env)
-        set_build_environment_variables(pkg, env, dirty)
+        set_wrapper_variables(pkg, env)
+
+    env.extend(modifications_from_dependencies(
+        pkg.spec, context, custom_mods_only=False))
 
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
 
     if context == 'build':
-        # recursive post-order dependency information
-        env.extend(
-            modifications_from_dependencies(pkg.spec, context=context)
-        )
+        pkg.setup_build_environment(env)
 
         if (not dirty) and (not env.is_unset('CPATH')):
             tty.debug("A dependency has updated CPATH, this may lead pkg-"
                       "config to assume that the package is part of the system"
                       " includes and omit it when invoked with '--cflags'.")
-
-        # setup package itself
-        set_module_variables_for_package(pkg)
-        pkg.setup_build_environment(env)
     elif context == 'test':
-        import spack.user_environment as uenv  # avoid circular import
-        env.extend(uenv.environment_modifications_for_spec(pkg.spec))
-        env.extend(
-            modifications_from_dependencies(pkg.spec, context=context)
-        )
-        set_module_variables_for_package(pkg)
+        pkg.setup_run_environment(env)
         env.prepend_path('PATH', '.')
 
     # Loading modules, in particular if they are meant to be used outside
@@ -865,37 +815,171 @@ def setup_package(pkg, dirty, context='build'):
     env.apply_modifications()
 
 
-def modifications_from_dependencies(spec, context):
+def _make_runnable(pkg, env):
+    # Helper method which prepends a Package's bin/ prefix to the PATH
+    # environment variable
+    prefix = pkg.prefix
+
+    for dirname in ['bin', 'bin64']:
+        bin_dir = os.path.join(prefix, dirname)
+        if os.path.isdir(bin_dir):
+            env.prepend_path('PATH', bin_dir)
+
+
+def modifications_from_dependencies(spec, context, custom_mods_only=True):
     """Returns the environment modifications that are required by
     the dependencies of a spec and also applies modifications
     to this spec's package at module scope, if need be.
+
+    Environment modifications include:
+
+    - Updating PATH so that executables can be found
+    - Updating CMAKE_PREFIX_PATH and PKG_CONFIG_PATH so that their respective
+      tools can find Spack-built dependencies
+    - Running custom package environment modifications
+
+    Custom package modifications can conflict with the default PATH changes
+    we make (specifically for the PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH
+    environment variables), so this applies changes in a fixed order:
+
+    - All modifications (custom and default) from external deps first
+    - All modifications from non-external deps afterwards
+
+    With that order, `PrependPath` actions from non-external default
+    environment modifications will take precedence over custom modifications
+    from external packages.
+
+    A secondary constraint is that custom and default modifications are
+    grouped on a per-package basis: combined with the post-order traversal this
+    means that default modifications of dependents can override custom
+    modifications of dependencies (again, this would only occur for PATH,
+    CMAKE_PREFIX_PATH, or PKG_CONFIG_PATH).
 
     Args:
         spec (Spec): spec for which we want the modifications
         context (str): either 'build' for build-time modifications or 'run'
             for run-time modifications
     """
+    if context not in ['build', 'run', 'test']:
+        raise ValueError(
+            "Expecting context to be one of ['build', 'run', 'test'], "
+            "got: {0}".format(context))
+
     env = EnvironmentModifications()
-    pkg = spec.package
 
-    # Maps the context to deptype and method to be called
-    deptype_and_method = {
-        'build': (('build', 'link', 'test'),
-                  'setup_dependent_build_environment'),
-        'run': (('link', 'run'), 'setup_dependent_run_environment'),
-        'test': (('link', 'run', 'test'), 'setup_dependent_run_environment')
-    }
-    deptype, method = deptype_and_method[context]
+    # Note: see computation of 'custom_mod_deps' and 'exe_deps' later in this
+    # function; these sets form the building blocks of those collections.
+    build_deps      = set(spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(spec.traverse(root=False, deptype='link'))
+    build_link_deps = build_deps | link_deps
+    build_and_supporting_deps = set()
+    for build_dep in build_deps:
+        build_and_supporting_deps.update(build_dep.traverse(deptype='run'))
+    run_and_supporting_deps = set(
+        spec.traverse(root=False, deptype=('run', 'link')))
+    test_and_supporting_deps = set()
+    for test_dep in set(spec.dependencies(deptype='test')):
+        test_and_supporting_deps.update(test_dep.traverse(deptype='run'))
 
-    root = context == 'test'
-    for dspec in spec.traverse(order='post', root=root, deptype=deptype):
-        dpkg = dspec.package
-        set_module_variables_for_package(dpkg)
-        # Allow dependencies to modify the module
-        dpkg.setup_dependent_package(pkg.module, spec)
-        getattr(dpkg, method)(env, spec)
+    # All dependencies that might have environment modifications to apply
+    custom_mod_deps = set()
+    if context == 'build':
+        custom_mod_deps.update(build_and_supporting_deps)
+        # Tests may be performed after build
+        custom_mod_deps.update(test_and_supporting_deps)
+    else:
+        # test/run context
+        custom_mod_deps.update(run_and_supporting_deps)
+        if context == 'test':
+            custom_mod_deps.update(test_and_supporting_deps)
+    custom_mod_deps.update(link_deps)
+
+    # Determine 'exe_deps': the set of packages with binaries we want to use
+    if context == 'build':
+        exe_deps = build_and_supporting_deps | test_and_supporting_deps
+    elif context == 'run':
+        exe_deps = set(spec.traverse(deptype='run'))
+    elif context == 'test':
+        exe_deps = test_and_supporting_deps
+
+    def default_modifications_for_dep(dep):
+        if (dep in build_link_deps and
+                not is_system_path(dep.prefix) and
+                context == 'build'):
+            prefix = dep.prefix
+
+            env.prepend_path('CMAKE_PREFIX_PATH', prefix)
+
+            for directory in ('lib', 'lib64', 'share'):
+                pcdir = os.path.join(prefix, directory, 'pkgconfig')
+                if os.path.isdir(pcdir):
+                    env.prepend_path('PKG_CONFIG_PATH', pcdir)
+
+        if dep in exe_deps and not is_system_path(dep.prefix):
+            _make_runnable(dep, env)
+
+    def add_modifications_for_dep(dep):
+        # Some callers of this function only want the custom modifications.
+        # For callers that want both custom and default modifications, we want
+        # to perform the default modifications here (this groups custom
+        # and default modifications together on a per-package basis).
+        if not custom_mods_only:
+            default_modifications_for_dep(dep)
+
+        # Perform custom modifications here (PrependPath actions performed in
+        # the custom method override the default environment modifications
+        # we do to help the build, namely for PATH, CMAKE_PREFIX_PATH, and
+        # PKG_CONFIG_PATH)
+        if dep in custom_mod_deps:
+            dpkg = dep.package
+            set_module_variables_for_package(dpkg)
+            # Allow dependencies to modify the module
+            dpkg.setup_dependent_package(spec.package.module, spec)
+            if context == 'build':
+                dpkg.setup_dependent_build_environment(env, spec)
+            else:
+                dpkg.setup_dependent_run_environment(env, spec)
+
+    # Note that we want to perform environment modifications in a fixed order.
+    # The Spec.traverse method provides this: i.e. in addition to
+    # the post-order semantics, it also guarantees a fixed traversal order
+    # among dependencies which are not constrained by post-order semantics.
+    for dspec in spec.traverse(root=False, order='post'):
+        if dspec.external:
+            add_modifications_for_dep(dspec)
+
+    for dspec in spec.traverse(root=False, order='post'):
+        # Default env modifications for non-external packages can override
+        # custom modifications of external packages (this can only occur
+        # for modifications to PATH, CMAKE_PREFIX_PATH, and PKG_CONFIG_PATH)
+        if not dspec.external:
+            add_modifications_for_dep(dspec)
 
     return env
+
+
+def get_cmake_prefix_path(pkg):
+    # Note that unlike modifications_from_dependencies, this does not include
+    # any edits to CMAKE_PREFIX_PATH defined in custom
+    # setup_dependent_build_environment implementations of dependency packages
+    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
+    build_link_deps = build_deps | link_deps
+    spack_built = []
+    externals = []
+    # modifications_from_dependencies updates CMAKE_PREFIX_PATH by first
+    # prepending all externals and then all non-externals
+    for dspec in pkg.spec.traverse(root=False, order='post'):
+        if dspec in build_link_deps:
+            if dspec.external:
+                externals.insert(0, dspec)
+            else:
+                spack_built.insert(0, dspec)
+
+    ordered_build_link_deps = spack_built + externals
+    build_link_prefixes = filter_system_paths(
+        x.prefix for x in ordered_build_link_deps)
+    return build_link_prefixes
 
 
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,

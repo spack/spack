@@ -225,7 +225,7 @@ def test_package_inheritance_module_setup(config, mock_packages, working_env):
     assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
 
 
-def test_set_build_environment_variables(
+def test_wrapper_variables(
         config, mock_packages, working_env, monkeypatch,
         installation_dir_with_headers
 ):
@@ -264,8 +264,8 @@ def test_set_build_environment_variables(
     try:
         pkg = root.package
         env_mods = EnvironmentModifications()
-        spack.build_environment.set_build_environment_variables(
-            pkg, env_mods, dirty=False)
+        spack.build_environment.set_wrapper_variables(
+            pkg, env_mods)
 
         env_mods.apply_modifications()
 
@@ -324,8 +324,8 @@ dt-diamond-left:
     )
 
     env_mods = EnvironmentModifications()
-    spack.build_environment.set_build_environment_variables(
-        top.package, env_mods, False)
+    spack.build_environment.set_wrapper_variables(
+        top.package, env_mods)
 
     env_mods.apply_modifications()
     link_dir_var = os.environ['SPACK_LINK_DIRS']

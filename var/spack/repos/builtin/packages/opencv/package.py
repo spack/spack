@@ -31,8 +31,8 @@ class Opencv(CMakePackage, CudaPackage):
     version('3.4.0',    sha256='678cc3d2d1b3464b512b084a8cca1fad7de207c7abdf2caa1fed636c13e916da')
     version('3.3.1',    sha256='5dca3bb0d661af311e25a72b04a7e4c22c47c1aa86eb73e70063cd378a2aa6ee')
     version('3.3.0',    sha256='8bb312b9d9fd17336dc1f8b3ac82f021ca50e2034afc866098866176d985adc6')
-    version('3.2.0',    sha256='9541efbf68f298f45914b4e837490647f4d5e472b4c0c04414a787d116a702b2')
-    version('3.1.0',    sha256='f3b160b9213dd17aa15ddd45f6fb06017fe205359dbd1f7219aad59c98899f15')
+    version('3.2.0',    sha256='9541efbf68f298f45914b4e837490647f4d5e472b4c0c04414a787d116a702b2', deprecated=True)
+    version('3.1.0',    sha256='f3b160b9213dd17aa15ddd45f6fb06017fe205359dbd1f7219aad59c98899f15', deprecated=True)
     version('2.4.13.2', sha256='4b00c110e6c54943cbbb7cf0d35c5bc148133ab2095ee4aaa0ac0a4f67c58080', deprecated=True)
     version('2.4.13.1', sha256='0d5ce5e0973e3a745f927d1ee097aaf909aae59f787be6d27a03d639e2d96bd7', deprecated=True)
     version('2.4.13',   sha256='94ebcca61c30034d5fb16feab8ec12c8a868f5162d20a9f0396f0f5f6d8bbbff', deprecated=True)
@@ -82,7 +82,9 @@ class Opencv(CMakePackage, CudaPackage):
 
     variant('contrib', default=False, description='Adds in code from opencv_contrib.')
     contrib_vers = [
-        '3.4.12', '4.0.0', '4.0.1', '4.1.0', '4.1.1', '4.1.2', '4.2.0', '4.5.0', '4.5.1'
+        '3.1.0', '3.2.0', '3.3.0', '3.3.1', '3.4.0', '3.4.1', '3.4.3', '3.4.4',
+        '3.4.5', '3.4.6', '3.4.12', '4.0.0', '4.0.1', '4.1.0', '4.1.1',
+        '4.1.2', '4.2.0', '4.5.0', '4.5.1', '4.5.2'
     ]
     for cv in contrib_vers:
         resource(name="contrib",
@@ -101,7 +103,8 @@ class Opencv(CMakePackage, CudaPackage):
     # the current development branch of OpenCV. See #8461 for more information.
     patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
 
-    patch('opencv3.2_cmake.patch', when='@3.2')
+    patch('opencv3.2_cmake.patch', when='@3.2:3.4.1')
+    patch('opencv3.2_compiler_cmake.patch', when='@3.2')
     patch('opencv3.2_vtk.patch', when='@3.2+vtk')
     patch('opencv3.2_regacyvtk.patch', when='@3.2+vtk')
     patch('opencv3.2_ffmpeg.patch', when='@3.2+videoio')
@@ -121,6 +124,13 @@ class Opencv(CMakePackage, CudaPackage):
 
     depends_on('jasper', when='+jasper')
     depends_on('cuda@6.5:', when='+cuda')
+    depends_on('cuda@:10.2', when='@4.0:4.2+cuda')
+    depends_on('cuda@:9.0', when='@3.3.1:3.4+cuda')
+    depends_on('cuda@:8', when='@:3.3.0+cuda')
+    depends_on('cudnn', when='+cuda')
+    depends_on('cudnn@:7.6', when='@4.0:4.2+cuda')
+    depends_on('cudnn@:7.3', when='@3.3.1:3.4+cuda')
+    depends_on('cudnn@:6', when='@:3.3.0+cuda')
     depends_on('vtk', when='+vtk')
     depends_on('qt', when='+qt')
     depends_on('java', when='+java_bindings_generator')
