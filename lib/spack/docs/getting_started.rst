@@ -1482,7 +1482,7 @@ Step 3: Run and configure Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To use Spack, run ``bin\spack_cmd.bat`` (you may need to Run as Administrator)
-from the spack soure tree root. This will provide a Windows command prompt
+from the spack source tree root. This will provide a Windows command prompt
 with an environment properly set up with Spack and its prerequisites.
 If you receive a warning message that Python is not in your ``PATH``
 (which may happen if you installed Python from the website and not
