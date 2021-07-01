@@ -47,7 +47,7 @@ spack:
     - py-atlas-building-tools
     - py-basalt@0.2.9
     - py-bbp-analysis-framework
-    - py-bbp-workflow
+    - py-bbp-workflow ^py-h5py~mpi
     - py-bglibpy%gcc ^neuron%intel
     - py-bluepy
     - py-bluepyefe
@@ -68,7 +68,7 @@ spack:
     - py-pytouchreader
     - py-simwriter
     - py-sonata-network-reduction%gcc ^neuron%intel^py-ipython%gcc
-    - py-visual-cortex-analysis
+    - py-visual-cortex-analysis ^py-h5py~mpi
     - regiodesics
     - reportinglib%intel
     - spatial-index
