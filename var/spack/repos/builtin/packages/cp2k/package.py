@@ -247,7 +247,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             'intel': ['-O2', '-pc64', '-unroll', ],
             'pgi': ['-fast'],
             'nvhpc': ['-fast'],
-            'cray': ['-O2'],
+            'cce': ['-O2'],
             'xl': ['-O3'],
             'aocc': ['-O1'],
         }
@@ -293,7 +293,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             ]
         elif '%pgi' in spec or '%nvhpc' in spec:
             fcflags += ['-Mfreeform', '-Mextend']
-        elif '%cray' in spec:
+        elif '%cce' in spec:
             fcflags += ['-emf', '-ffree', '-hflex_mp=strict']
         elif '%xl' in spec:
             fcflags += ['-qpreprocess', '-qstrict', '-q64']
@@ -306,7 +306,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             ldflags.append(self.compiler.openmp_flag)
             nvflags.append('-Xcompiler="{0}"'.format(
                 self.compiler.openmp_flag))
-        elif '%cray' in spec:  # Cray enables OpenMP by default
+        elif '%cce' in spec:  # Cray enables OpenMP by default
             cflags   += ['-hnoomp']
             cxxflags += ['-hnoomp']
             fcflags  += ['-hnoomp']
