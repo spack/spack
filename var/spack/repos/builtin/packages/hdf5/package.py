@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import shutil
 import sys
 
@@ -187,7 +188,8 @@ class Hdf5(CMakePackage):
         cmake_flags = []
 
         if name == "cflags":
-            if self.spec.satisfies('%clang') or self.spec.satisfies('%gcc'):
+            cc_name = pathlib.PurePosixPath(self.compiler.cc).name
+            if "clang" in cc_name or "gcc" in cc_name:
                 # Quiet warnings/errors about implicit declaration of functions
                 # in C99:
                 cmake_flags.append("-Wno-implicit-function-declaration")
