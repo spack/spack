@@ -50,6 +50,7 @@ class Pthreadpool(CMakePackage):
 
     def cmake_args(self):
         return [
+            '-DBUILD_SHARED_LIBS=ON',
             self.define('FXDIV_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'fxdiv')),
             self.define('GOOGLETEST_SOURCE_DIR',
