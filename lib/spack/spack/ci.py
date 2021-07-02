@@ -81,7 +81,8 @@ def _create_buildgroup(opener, headers, url, project, group_name, group_type):
     if response_code != 200 and response_code != 201:
         msg = 'Creating buildgroup failed (response code = {0}'.format(
             response_code)
-        raise SpackError(msg)
+        tty.warn(msg)
+        return None
 
     response_text = response.read()
     response_json = json.loads(response_text)
@@ -110,7 +111,8 @@ def populate_buildgroup(job_names, group_name, project, site,
     if not parent_group_id or not group_id:
         msg = 'Failed to create or retrieve buildgroups for {0}'.format(
             group_name)
-        raise SpackError(msg)
+        tty.warn(msg)
+        return
 
     data = {
         'project': project,
@@ -133,7 +135,7 @@ def populate_buildgroup(job_names, group_name, project, site,
     if response_code != 200:
         msg = 'Error response code ({0}) in populate_buildgroup'.format(
             response_code)
-        raise SpackError(msg)
+        tty.warn(msg)
 
 
 def is_main_phase(phase_name):
@@ -1259,7 +1261,8 @@ def register_cdash_build(build_name, base_url, project, site, track):
 
     if response_code != 200 and response_code != 201:
         msg = 'Adding build failed (response code = {0}'.format(response_code)
-        raise SpackError(msg)
+        tty.warn(msg)
+        return (None, None)
 
     response_text = response.read()
     response_json = json.loads(response_text)
@@ -1296,8 +1299,9 @@ def relate_cdash_builds(spec_map, cdash_base_url, job_build_id, cdash_project,
                 tty.debug('Did not find cdashid for {0} on {1}'.format(
                     dep_pkg_name, url))
         else:
-            raise SpackError('Did not find cdashid for {0} anywhere'.format(
+            tty.warn('Did not find cdashid for {0} anywhere'.format(
                 dep_pkg_name))
+            return
 
         payload = {
             "project": cdash_project,
@@ -1318,7 +1322,8 @@ def relate_cdash_builds(spec_map, cdash_base_url, job_build_id, cdash_project,
         if response_code != 200 and response_code != 201:
             msg = 'Relate builds ({0} -> {1}) failed (resp code = {2})'.format(
                 job_build_id, dep_build_id, response_code)
-            raise SpackError(msg)
+            tty.warn(msg)
+            return
 
         response_text = response.read()
         tty.debug('Relate builds response: {0}'.format(response_text))
@@ -1341,7 +1346,16 @@ def write_cdashid_to_mirror(cdashid, spec, mirror_url):
         tty.debug('pushing cdashid to url')
         tty.debug('  local file path: {0}'.format(local_cdash_path))
         tty.debug('  remote url: {0}'.format(remote_url))
-        web_util.push_to_url(local_cdash_path, remote_url)
+
+        try:
+            web_util.push_to_url(local_cdash_path, remote_url)
+        except Exception as inst:
+            # No matter what went wrong here, don't allow the pipeline to fail
+            # just because there was an issue storing the cdashid on the mirror
+            msg = 'Failed to write cdashid {0} to mirror {1}'.format(
+                cdashid, mirror_url)
+            tty.warn(inst)
+            tty.warn(msg)
 
 
 def read_cdashid_from_mirror(spec, mirror_url):
@@ -1359,40 +1373,34 @@ def read_cdashid_from_mirror(spec, mirror_url):
     return int(contents)
 
 
-def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id,
-                         sign_binaries):
-    if mirror_url:
-        try:
-            unsigned = not sign_binaries
-            tty.debug('Creating buildcache ({0})'.format(
-                'unsigned' if unsigned else 'signed'))
-            spack.cmd.buildcache._createtarball(
-                env, spec_yaml=yaml_path, add_deps=False,
-                output_location=mirror_url, force=True, allow_root=True,
-                unsigned=unsigned)
-            if build_id:
-                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
-                    build_id, mirror_url))
-                write_cdashid_to_mirror(build_id, spec, mirror_url)
-        except Exception as inst:
-            # If the mirror we're pushing to is on S3 and there's some
-            # permissions problem, for example, we can't just target
-            # that exception type here, since users of the
-            # `spack ci rebuild' may not need or want any dependency
-            # on boto3.  So we use the first non-boto exception type
-            # in the heirarchy:
-            #     boto3.exceptions.S3UploadFailedError
-            #     boto3.exceptions.Boto3Error
-            #     Exception
-            #     BaseException
-            #     object
-            err_msg = 'Error msg: {0}'.format(inst)
-            if 'Access Denied' in err_msg:
-                tty.msg('Permission problem writing to {0}'.format(
-                    mirror_url))
-                tty.msg(err_msg)
-            else:
-                raise inst
+def push_mirror_contents(env, spec, yaml_path, mirror_url, sign_binaries):
+    try:
+        unsigned = not sign_binaries
+        tty.debug('Creating buildcache ({0})'.format(
+            'unsigned' if unsigned else 'signed'))
+        spack.cmd.buildcache._createtarball(
+            env, spec_yaml=yaml_path, add_deps=False,
+            output_location=mirror_url, force=True, allow_root=True,
+            unsigned=unsigned)
+    except Exception as inst:
+        # If the mirror we're pushing to is on S3 and there's some
+        # permissions problem, for example, we can't just target
+        # that exception type here, since users of the
+        # `spack ci rebuild' may not need or want any dependency
+        # on boto3.  So we use the first non-boto exception type
+        # in the heirarchy:
+        #     boto3.exceptions.S3UploadFailedError
+        #     boto3.exceptions.Boto3Error
+        #     Exception
+        #     BaseException
+        #     object
+        err_msg = 'Error msg: {0}'.format(inst)
+        if 'Access Denied' in err_msg:
+            tty.msg('Permission problem writing to {0}'.format(
+                mirror_url))
+            tty.msg(err_msg)
+        else:
+            raise inst
 
 
 def copy_stage_logs_to_artifacts(job_spec, job_log_dir):

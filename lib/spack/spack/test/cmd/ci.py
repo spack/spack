@@ -894,8 +894,9 @@ spack:
 
 @pytest.mark.disable_clean_stage_check
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
-                              install_mockery, mock_packages, mock_fetch,
-                              mock_stage, mock_gnupghome, project_dir_env):
+                              install_mockery_mutable_config, mock_packages,
+                              mock_fetch, mock_stage, mock_gnupghome,
+                              project_dir_env):
     project_dir_env(tmpdir.strpath)
     working_dir = tmpdir.join('working_dir')
 
@@ -951,7 +952,9 @@ spack:
 
             # env, spec, yaml_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(
-                env, concrete_spec, yaml_path, mirror_url, '42', True)
+                env, concrete_spec, yaml_path, mirror_url, True)
+
+            ci.write_cdashid_to_mirror('42', concrete_spec, mirror_url)
 
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 
@@ -1054,7 +1057,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
     monkeypatch.setattr(buildcache, '_createtarball', faked)
 
     url = 'fakejunk'
-    ci.push_mirror_contents(None, None, None, url, None, None)
+    ci.push_mirror_contents(None, None, None, url, None)
 
     captured = capsys.readouterr()
     std_out = captured[0]
