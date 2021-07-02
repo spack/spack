@@ -5,15 +5,14 @@
 
 from __future__ import print_function
 
-import re
-import os
-import sys
 import argparse
+import os
+import re
+import sys
 
-from llnl.util.filesystem import working_dir
 import llnl.util.tty as tty
-
 import spack.paths
+from llnl.util.filesystem import working_dir
 from spack.util.executable import which
 
 if sys.version_info < (3, 0):
@@ -205,6 +204,10 @@ def run_flake8(file_list, args):
     returncode = 0
     print_tool_header("flake8")
     flake8_cmd = which("flake8", required=True)
+
+    # Check if plugins are installed
+    if "import-order" not in flake8_cmd("--version", output=str, error=str):
+        tty.warn("style: flake8-import-order plugin is not installed, skipping")
 
     output = ""
     # run in chunks of 100 at a time to avoid line length limit

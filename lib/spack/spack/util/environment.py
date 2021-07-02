@@ -245,12 +245,16 @@ class NameValueModifier(object):
 class SetEnv(NameValueModifier):
 
     def execute(self, env):
+        tty.debug("SetEnv: {0}={1}".format(self.name, str(self.value)),
+                  level=3)
         env[self.name] = str(self.value)
 
 
 class AppendFlagsEnv(NameValueModifier):
 
     def execute(self, env):
+        tty.debug("AppendFlagsEnv: {0}={1}".format(self.name, str(self.value)),
+                  level=3)
         if self.name in env and env[self.name]:
             env[self.name] += self.separator + str(self.value)
         else:
@@ -260,6 +264,7 @@ class AppendFlagsEnv(NameValueModifier):
 class UnsetEnv(NameModifier):
 
     def execute(self, env):
+        tty.debug("UnsetEnv: {0}".format(self.name), level=3)
         # Avoid throwing if the variable was not set
         env.pop(self.name, None)
 
@@ -267,6 +272,8 @@ class UnsetEnv(NameModifier):
 class RemoveFlagsEnv(NameValueModifier):
 
     def execute(self, env):
+        tty.debug("RemoveFlagsEnv: {0}-{1}".format(self.name, str(self.value)),
+                  level=3)
         environment_value = env.get(self.name, '')
         flags = environment_value.split(
             self.separator) if environment_value else []
@@ -278,12 +285,15 @@ class SetPath(NameValueModifier):
 
     def execute(self, env):
         string_path = concatenate_paths(self.value, separator=self.separator)
+        tty.debug("SetPath: {0}={1}".format(self.name, string_path), level=3)
         env[self.name] = string_path
 
 
 class AppendPath(NameValueModifier):
 
     def execute(self, env):
+        tty.debug("AppendPath: {0}+{1}".format(self.name, str(self.value)),
+                  level=3)
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -294,6 +304,8 @@ class AppendPath(NameValueModifier):
 class PrependPath(NameValueModifier):
 
     def execute(self, env):
+        tty.debug("PrependPath: {0}+{1}".format(self.name, str(self.value)),
+                  level=3)
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -304,6 +316,8 @@ class PrependPath(NameValueModifier):
 class RemovePath(NameValueModifier):
 
     def execute(self, env):
+        tty.debug("RemovePath: {0}-{1}".format(self.name, str(self.value)),
+                  level=3)
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -315,6 +329,7 @@ class RemovePath(NameValueModifier):
 class DeprioritizeSystemPaths(NameModifier):
 
     def execute(self, env):
+        tty.debug("DeprioritizeSystemPaths: {0}".format(self.name), level=3)
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -326,6 +341,8 @@ class DeprioritizeSystemPaths(NameModifier):
 class PruneDuplicatePaths(NameModifier):
 
     def execute(self, env):
+        tty.debug("PruneDuplicatePaths: {0}".format(self.name),
+                  level=3)
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -624,6 +641,8 @@ class EnvironmentModifications(object):
             clean (bool): in addition to removing empty entries,
                 also remove duplicate entries (default: False).
         """
+        tty.debug("EnvironmentModifications.from_sourcing_file: {0}"
+                  .format(filename))
         # Check if the file actually exists
         if not os.path.isfile(filename):
             msg = 'Trying to source non-existing file: {0}'.format(filename)

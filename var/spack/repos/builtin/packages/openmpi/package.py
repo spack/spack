@@ -33,7 +33,7 @@ class Openmpi(AutotoolsPackage):
 
     executables = ['^ompi_info$']
 
-    version('master', branch='master')
+    version('master', branch='master', submodules=True)
 
     # Current
     version('4.1.1', sha256='e24f7a778bd11a71ad0c14587a7f5b00e68a71aa5623e2157bafee3d44c07cda')  # libmpi.so.40.30.1
@@ -598,7 +598,7 @@ class Openmpi(AutotoolsPackage):
                 'OpenMPI requires both C and Fortran compilers!'
             )
 
-    @when('@develop')
+    @when('@master')
     def autoreconf(self, spec, prefix):
         perl = which('perl')
         perl('autogen.pl')

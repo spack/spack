@@ -12,13 +12,13 @@ default:
   - /^github\/pr[\d]+_.*$/
   variables:
     SPACK_PR_BRANCH: ${CI_COMMIT_REF_NAME}
-    SPACK_IS_PR_PIPELINE: "True"
+    SPACK_PIPELINE_TYPE: "spack_pull_request"
 
 .develop:
   only:
   - /^github\/develop$/
   variables:
-    SPACK_IS_PR_PIPELINE: "False"
+    SPACK_PIPELINE_TYPE: "spack_protected_branch"
 
 .generate:
   stage: generate

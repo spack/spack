@@ -19,7 +19,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     patch('gnulib-pgi.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')
     patch('nvhpc.patch', when='%nvhpc')
-    patch('oneapi.patch', when='%oneapi')
+    patch('oneapi.patch', when='@1.4.18 %oneapi')
     # from: https://github.com/Homebrew/homebrew-core/blob/master/Formula/m4.rb
     # Patch credit to Jeremy Huddleston Sequoia <jeremyhu@apple.com>
     patch('secure_snprintf.patch', when='@:1.4.18 os=highsierra')

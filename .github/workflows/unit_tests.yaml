@@ -24,9 +24,9 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade vermin
     - name: vermin (Spack's Core)
-      run: vermin --backport argparse --backport typing -t=2.6- -t=3.5- -v lib/spack/spack/ lib/spack/llnl/ bin/
+      run: vermin --backport argparse --violations --backport typing -t=2.6- -t=3.5- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
-      run: vermin --backport argparse --backport typing -t=2.6- -t=3.5- -v var/spack/repos
+      run: vermin --backport argparse --violations --backport typing -t=2.6- -t=3.5- -vvv var/spack/repos
   # Run style checks on the files that have been changed
   style:
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools flake8 mypy>=0.800 black types-six types-python-dateutil
+        pip install --upgrade pip six setuptools flake8 flake8-import-order mypy>=0.800 black types-six types-python-dateutil
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
@@ -370,7 +370,7 @@ jobs:
       run: |
           pip install --upgrade pip six setuptools
           pip install --upgrade codecov coverage
-          pip install --upgrade flake8 pep8-naming mypy
+          pip install --upgrade flake8 flake8-import-order pep8-naming mypy
           pip install --upgrade python-dateutil
     - name: Setup Homebrew packages
       run: |
