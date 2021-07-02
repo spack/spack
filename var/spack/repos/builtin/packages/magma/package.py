@@ -21,6 +21,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('2.6.0', sha256='50cdd384f44f06a34469e7125f8b2ffae13c1975d373c3f1510d91be2b7638ec')
     version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
     version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
     version('2.5.2', sha256='065feb85558f9dd6f4cc4db36ac633a3f787827fc832d0b578a049a43a195620')
@@ -76,7 +77,6 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             inc.write('GPU_TARGET = %s\n' % gpu_target)
             inc.write('BACKEND = %s\n' % backend)
         make('generate')
-    
 
     def cmake_args(self):
         spec = self.spec
