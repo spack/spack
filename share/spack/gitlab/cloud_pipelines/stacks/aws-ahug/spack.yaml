@@ -46,8 +46,19 @@ spack:
       variants: +pmix sysconfdir=/opt/slurm/etc
 
   definitions:
-    - compilers: ['%gcc@7.5.0']
-    
+    - compilers: 
+      - '%gcc@10.3.0'
+      - '%arm@21.0.0.879'
+      - '%nvhpc@21.2'
+    - when: arch.satisfies('os=ubuntu18.04')
+      compilers: ['%gcc@7.5.0']
+    - when: arch.satisfies('os=amzn2')
+      compilers: ['%gcc@7.3.1']
+    - bootstrap-compilers:
+      - 'gcc@10.3.0'
+      - 'nvhpc@21.2'
+      - 'arm@21.0.0.879'
+
     # Note skipping spot since no spack package for it
     - ahug_miniapps:
       - cloverleaf
@@ -60,7 +71,7 @@ spack:
       - hpcg
       - laghos
       - lulesh
-      - miniaero
+    # - miniaero
       - miniamr
       - minife
       - minighost
@@ -168,6 +179,8 @@ spack:
 #   - [$compilers]
 
   gitlab-ci:
+    bootstrap:
+      - name: bootstrap-compilers
     image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
     script:
       - . "./share/spack/setup-env.sh"
