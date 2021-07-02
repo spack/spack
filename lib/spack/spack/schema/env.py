@@ -125,6 +125,9 @@ schema = {
                                             'include_implicits': {
                                                 'type': 'boolean'
                                             },
+                                            'link_type': {
+                                                'type': 'string'
+                                            },
                                             'select': {
                                                 'type': 'array',
                                                 'items': {

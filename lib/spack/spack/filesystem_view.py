@@ -98,6 +98,26 @@ def view_copy(src, dst, view, spec=None):
             )
 
 
+def view_func_parser(parsed_name):
+    # What method are we using for this view
+    if parsed_name in ("hardlink", "hard"):
+        link_fn = view_hardlink
+    elif parsed_name in ("copy", "relocate"):
+        link_fn = view_copy
+    else:
+        link_fn = view_symlink
+    return link_fn
+
+
+def inverse_view_func_parser(view_type):
+    # get string based on view type
+    if view_type is view_hardlink:
+        link_name = 'hardlink'
+    elif view_type is view_copy:
+        link_name = 'copy'
+    else:
+        link_name = 'symlink'
+    return link_name
 class FilesystemView(object):
     """
         Governs a filesystem view that is located at certain root-directory.

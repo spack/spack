@@ -28,6 +28,10 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.user_environment as uenv
+<<<<<<< HEAD
+=======
+from spack.filesystem_view import YamlFilesystemView, view_func_parser, inverse_view_func_parser, view_symlink
+>>>>>>> First commit for adding view type to env
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
@@ -456,13 +460,14 @@ def _eval_conditional(string):
 
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
-                 include_implicits=default_include_implicits):
+                 include_implicits=default_include_implicits, link_type=view_symlink):
         self.base = base_path
         self.root = spack.util.path.canonicalize_path(root)
         self.projections = projections
         self.select = select
         self.exclude = exclude
         self.include_implicits = include_implicits
+        self.link_type = link_type
 
     def select_fn(self, spec):
         return any(spec.satisfies(s) for s in self.select)
@@ -492,6 +497,8 @@ class ViewDescriptor(object):
             ret['exclude'] = self.exclude
         if self.include_implicits != default_include_implicits:
             ret['include_implicits'] = self.include_implicits
+        if self.link_type:
+            ret['link_type'] = inverse_view_func_parser(self.link_type)
         return ret
 
     @staticmethod
@@ -501,7 +508,8 @@ class ViewDescriptor(object):
                               d.get('projections', {}),
                               d.get('select', []),
                               d.get('exclude', []),
-                              d.get('include_implicits', default_include_implicits))
+                              d.get('include_implicits', default_include_implicits),
+                              d.get('link_type', view_symlink))
 
     @property
     def _current_root(self):
@@ -565,7 +573,8 @@ class ViewDescriptor(object):
             raise SpackEnvironmentViewError(msg)
         return YamlFilesystemView(root, spack.store.layout,
                                   ignore_conflicts=True,
-                                  projections=self.projections)
+                                  projections=self.projections,
+                                  link=self.link_type)
 
     def __contains__(self, spec):
         """Is the spec described by the view descriptor
