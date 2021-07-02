@@ -21,6 +21,7 @@ import spack.util.gpg
 import spack.util.web as web_util
 
 from spack.directory_layout import DirectoryLayout
+from spack.paths import test_path
 from spack.spec import Spec
 
 mirror_cmd = spack.main.SpackCommand('mirror')
@@ -28,6 +29,7 @@ install_cmd = spack.main.SpackCommand('install')
 uninstall_cmd = spack.main.SpackCommand('uninstall')
 buildcache_cmd = spack.main.SpackCommand('buildcache')
 
+legacy_mirror_dir = os.path.join(test_path, 'data', 'mirrors', 'legacy_yaml')
 
 @pytest.fixture(scope='function')
 def cache_directory(tmpdir):
@@ -55,6 +57,15 @@ def test_mirror(mirror_dir):
     mirror_cmd('add', '--scope', 'site', 'test-mirror-func', mirror_url)
     yield mirror_dir
     mirror_cmd('rm', '--scope=site', 'test-mirror-func')
+
+
+@pytest.fixture(scope='function')
+def test_legacy_mirror(mutable_config):
+    mirror_url = 'file://%s' % legacy_mirror_dir
+    mirror_cmd('add', '--scope', 'site', 'test-legacy-yaml', mirror_url)
+    buildcache_cmd('update-index', '-d', mirror_url)
+    yield legacy_mirror_dir
+    mirror_cmd('rm', '--scope=site', 'test-legacy-yaml')
 
 
 @pytest.fixture(scope='module')
@@ -588,3 +599,10 @@ def test_update_sbang(tmpdir, test_mirror):
             open(str(installed_script_style_2_path)).read()
 
         uninstall_cmd('-y', '/%s' % new_spec.dag_hash())
+
+# Need one where the platform has been changed to the test platform.
+def test_legacy_yaml(test_legacy_mirror):
+    # There has to be a better way!
+    install_cmd('--no-check-signature', '--cache-only', '-f', 
+        legacy_mirror_dir + '/build_cache/darwin-bigsur-skylake-apple-clang-11.0.0-zlib-1.2.11-vy45suunsr447dfrvv4tyvoxomn5fdxj.spec.yaml')
+    uninstall_cmd('y', '/vy45suunsr447dfrvv4tyvoxomn5fdxj')

@@ -402,9 +402,14 @@ environment variables:
     # 2. Concrete specs from yaml files
     for file in args.specfiles:
         with open(file, 'r') as f:
-            s = spack.spec.Spec.from_yaml(f)
+            if file.endswith('json'):
+                s = spack.spec.Spec.from_json(f)
+            elif file.endswith('yaml'):
+                s = spack.spec.Spec.from_yaml(f)
 
         concretized = s.concretized()
+        tty.debug('reconcretized dag hash:', concretized.dag_hash())
+        tty.debug('original dag hash:', s.dag_hash())
         if concretized.dag_hash() != s.dag_hash():
             msg = 'skipped invalid file "{0}". '
             msg += 'The file does not contain a concrete spec.'

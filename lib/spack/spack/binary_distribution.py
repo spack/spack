@@ -735,6 +735,7 @@ def generate_package_index(cache_prefix):
         msg = 'Encountered problem listing packages at {0}: {1}'.format(
             cache_prefix, err)
         tty.warn(msg)
+        
         return
 
     tty.debug('Retrieving spec descriptor files from {0} to build index'.format(
@@ -745,16 +746,15 @@ def generate_package_index(cache_prefix):
             tty.debug('fetching {0}'.format(spec_url))
             _, _, spec_file = web_util.read_from_url(spec_url)
             spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
-            # Need full spec.json name or this gets confused with database.
+            # Need full spec.json name or this gets confused with index.json.
             if spec_url.endswith('spec.json'):
                 s = Spec.from_json(spec_file_contents)
+                db.add(s, None)
+                db.mark(s, 'in_buildcache', True)
             elif spec_url.endswith('yaml'):
-                obj = syaml.load(spec_file_contents)
-                s = Spec.from_yaml(obj)
-            else:
-                raise URLError('')
-            db.add(s, None)
-            db.mark(s, 'in_buildcache', True)
+                s = Spec.from_yaml(spec_file_contents)
+                db.add(s, None)
+                db.mark(s, 'in_buildcache', True)
         except (URLError, web_util.SpackWebError) as url_err:
             tty.error('Error reading specfile: {0}'.format(file_path))
             tty.error(url_err)
@@ -1426,9 +1426,9 @@ def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
         # are concrete (as they are built) so we need to mark this spec
         # concrete on read-in.
         if specfile_is_json:
-            fetched_spec = Spec.from_yaml(specfile_contents)
-        else:
             fetched_spec = Spec.from_json(specfile_contents)
+        else:
+            fetched_spec = Spec.from_yaml(specfile_contents)
         fetched_spec._mark_concrete()
 
         # Do not recompute the full hash for the fetched spec, instead just

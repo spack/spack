@@ -1816,10 +1816,13 @@ class Spec(object):
             write_build_hash = 'build' in hash.deptype and (
                 self._hashes_final and self._build_hash or  # cached and final
                 not self._hashes_final)                     # lazily compute
+            # TODO: Check if these keys are correct?
             if write_full_hash:
                 node['_full_hash'] = self.full_hash()
             if write_build_hash:
                 node['_build_hash'] = self.build_hash()
+        else:
+            node['concrete'] = False
 
         return node
 
@@ -2718,7 +2721,8 @@ class Spec(object):
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
         """
-        clone = self.copy(caches=False)
+        # TODO: This used to be False; this could break other things.
+        clone = self.copy(caches=True)
         clone.concretize(tests=tests)
         return clone
 
