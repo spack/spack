@@ -48,7 +48,7 @@ spack:
   definitions:
     - compilers: 
       - '%gcc@10.3.0'
-      - '%arm@21.0.0.879'
+    # - '%arm@21.0.0.879'
     # - '%nvhpc@21.2'
     - when: arch.satisfies('os=ubuntu18.04')
       compilers: ['%gcc@7.5.0']
@@ -57,7 +57,7 @@ spack:
     - bootstrap-compilers:
       - 'gcc@10.3.0'
     # - 'nvhpc@21.2'
-      - 'arm@21.0.0.879'
+    # - 'arm@21.0.0.879'
 
     # Note skipping spot since no spack package for it
     - ahug_miniapps:
