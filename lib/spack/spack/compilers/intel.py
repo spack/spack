@@ -3,22 +3,23 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
 
 class Intel(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['icc']
+    cc_names = ['icc', 'icc.exe']
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['icpc']
+    cxx_names = ['icpc', 'icpc.exe']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ifort']
+    f77_names = ['ifort', 'ifx.exe']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ifort']
+    fc_names = ['ifort', 'ifx.exe']
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'intel/icc',
@@ -29,8 +30,15 @@ class Intel(Compiler):
     PrgEnv = 'PrgEnv-intel'
     PrgEnv_compiler = 'intel'
 
-    version_argument = '--version'
-    version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
+    if sys.platform == 'win32':
+        version_argument = '/QV'
+    else:
+        version_argument = '--version'
+    
+    if sys.platform == 'win32':
+        version_regex = '([1-9][0-9]*\.[0-9]*\.[0-9]*)'
+    else:        
+        version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
 
     @property
     def verbose_flag(self):
