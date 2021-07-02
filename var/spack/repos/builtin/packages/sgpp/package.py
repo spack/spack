@@ -19,6 +19,7 @@ class Sgpp(SConsPackage):
 
     # Versions with Python 3 bindings:
     version('master', branch='master')
+    version('3.4.0', sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
     version('3.3.0', sha256='ca4d5b79f315b425ce69b04940c141451a76848bf1bd7b96067217304c68e2d4')
     version('3.2.0', sha256='dab83587fd447f92ed8546eacaac6b8cbe65b8db5e860218c0fa2e42f776962d')
     # Versions with Python 2 bindings:
@@ -81,9 +82,8 @@ class Sgpp(SConsPackage):
     extends('python', when='+python')
     depends_on('py-setuptools', when='+python', type=('build'))
     # Python 3 support was added in version 3.2.0
-    depends_on('python', when='+python', type=('build', 'run'))
     depends_on('python@2.7:2.8', when='@1.0.0:3.1.0+python', type=('build', 'run'))
-    depends_on('python@3:', when='@3.2.0:+python', type=('build', 'run'))
+    depends_on('python@3.7:', when='@3.2.0:+python', type=('build', 'run'))
     depends_on('swig@3:', when='+python', type=('build'))
     # Python libraries (version depends on whether we use Python 2 or 3)
     depends_on('py-numpy', when='+python', type=('build', 'run'))
