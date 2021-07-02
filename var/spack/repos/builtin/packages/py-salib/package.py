@@ -16,6 +16,7 @@ class PySalib(PythonPackage):
 
     version('1.4.0.1', sha256='dbf6e865af9f3be82a79cf64889ed66d6d3b6803f0c22a242a112876789d49e7')
 
+    depends_on('py-setuptools@38.3:', type='build')
     depends_on('py-numpy@1.16.5:', type=('build', 'run'))
     depends_on('py-scipy@1.5.2:', type=('build', 'run'))
     depends_on('py-matplotlib@3.2.2:', type=('build', 'run'))
