@@ -601,8 +601,8 @@ def test_update_sbang(tmpdir, test_mirror):
         uninstall_cmd('-y', '/%s' % new_spec.dag_hash())
 
 # Need one where the platform has been changed to the test platform.
-def test_legacy_yaml(test_legacy_mirror):
+def test_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config, mock_packages):
     # There has to be a better way!
     install_cmd('--no-check-signature', '--cache-only', '-f', 
-        legacy_mirror_dir + '/build_cache/darwin-bigsur-skylake-apple-clang-11.0.0-zlib-1.2.11-vy45suunsr447dfrvv4tyvoxomn5fdxj.spec.yaml')
-    uninstall_cmd('y', '/vy45suunsr447dfrvv4tyvoxomn5fdxj')
+        legacy_mirror_dir + '/build_cache/test-debian6-core2-gcc-4.5.0-zlib-1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml')
+    uninstall_cmd('-y', '/t5mczux3tfqpxwmg7egp7axy2jvyulqk')
