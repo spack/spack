@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import inspect
+import os
 from spack import *
 
 
@@ -27,11 +29,6 @@ class Lorene(MakefilePackage):
     variant('bin_star', default=True,
             description='Build Bin_star solver for binary neutron star systems')
 
-    # Create a file `local_settings`. This is how Lorene is configured,
-    # defining specifying compilers, paths, etc. We just point to the
-    # respective Spack wrappers.
-    patch('local_settings')
-
     depends_on('fftw @3:', when='+fftw')
     depends_on('gsl')
     depends_on('lapack')
@@ -39,20 +36,51 @@ class Lorene(MakefilePackage):
 
     parallel = False
 
+    def edit(self, spec, prefix):
+        fftw_incdirs = "-I" + spec['fftw'].prefix.include if '+fftw' in spec else ""
+        fftw_libdirs = "-L" + spec['fftw'].prefix.lib if '+fftw' in spec else ""
+        gsl_incdirs = "-I" + spec['gsl'].prefix.include
+        gsl_libdirs = "-L" + spec['gsl'].prefix.lib
+        pgplot_incdirs = "-I" + spec['pgplot'].prefix.include
+        pgplot_libdirs = "-L" + spec['pgplot'].prefix.lib
+
+        substitutions = [
+            ('@CXX@', self.compiler.cxx),
+            ('@CXXFLAGS@', "-g -I$(HOME_LORENE)/C++/Include -O3 -DNDEBUG"),
+            ('@CXXFLAGS_G@', "-g -I$(HOME_LORENE)/C++/Include"),
+            ('@F77@', self.compiler.f77),
+            ('@F77FLAGS@', "-ffixed-line-length-none -g -O3"),
+            ('@F77FLAGS_G@', "-ffixed-line-length-none -g"),
+            ('@INC@',
+             ("-I$(HOME_LORENE)/C++/Include" +
+              "-I$(HOME_LORENE)/C++/Include_extra " +
+              fftw_incdirs + " " + gsl_incdirs + " " + pgplot_incdirs)),
+            ('@RANLIB@', "ls"),
+            ('@MAKEDEPEND@', "cpp $(INC) -M >> $(df).d $<"),
+            ('@FFT_DIR@', "FFTW3"),
+            ('@LIB_CXX@', fftw_libdirs + " -lfftw3 -lgfortran"),
+            ('@LIB_GSL@', gsl_libdirs + " -lgsl -lgslcblas"),
+            ('@LIB_LAPACK@', "-llapack -lblas"),
+            ('@LIB_PGPLOT@', pgplot_libdirs + " -lcpgplot -lpgplot"),
+        ]
+        local_settings_template = join_path(
+            os.path.dirname(inspect.getmodule(self).__file__),
+            'local_settings.template'
+        )
+        local_settings = join_path(
+            self.stage.source_path, 'local_settings'
+        )
+        copy(local_settings_template, local_settings)
+        for key, value in substitutions:
+            filter_file(key, value, local_settings)
+
     def build(self, spec, prefix):
-        args = ['HOME_LORENE=' + self.build_directory,
-                'GSL_INCDIRS=' + spec['gsl'].prefix.include,
-                'GSL_LIBDIRS=' + spec['gsl'].prefix.lib,
-                'PGPLOT_INCDIRS=' + spec['pgplot'].prefix.include,
-                'PGPLOT_LIBDIRS=' + spec['pgplot'].prefix.lib]
-        if '+fftw' in spec:
-            args.extend(['FFTW_INCDIRS=' + spec['fftw'].prefix.include,
-                         'FFTW_LIBDIRS=' + spec['fftw'].prefix.lib])
+        args = ['HOME_LORENE=' + self.build_directory]
         # (We could build the documentation as well.)
         # (We could circumvent the build system and simply compile all
         # source files, and do so in parallel.)
         make('cpp', 'fortran', 'export', *args)
-        if '+Bin_star' in spec:
+        if '+bin_star' in spec:
             with working_dir(join_path('Codes', 'Bin_star')):
                 make('-f', 'Makefile_O2',
                      'coal', 'lit_bin', 'init_bin', 'coal_regu', 'init_bin_regu',
@@ -63,5 +91,5 @@ class Lorene(MakefilePackage):
         mkdirp(prefix.lib)
         install_tree('Lib', prefix.lib)
         mkdirp(prefix.bin)
-        if '+Bin_star' in spec:
+        if '+bin_star' in spec:
             install_tree(join_path('Codes', 'Bin_star'), prefix.bin)
