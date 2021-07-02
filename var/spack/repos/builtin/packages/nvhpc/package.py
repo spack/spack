@@ -90,7 +90,7 @@ class Nvhpc(Package):
     provides('blas',        when='+blas')
     provides('lapack',      when='+lapack')
     provides('mpi',         when='+mpi')
-    patch('gcc_config.patch')
+    patch('makelocalrc_path.patch')
 
     def install(self, spec, prefix):
         # Enable the silent installation feature
@@ -98,16 +98,29 @@ class Nvhpc(Package):
         os.environ['NVHPC_ACCEPT_EULA'] = "accept"
         os.environ['NVHPC_INSTALL_DIR'] = prefix
 
+        version_prefix = join_path(self.prefix, 'Linux_%s' %
+                                   self.spec.target.family,
+                                   self.version)
+        flags = ' -q'
+
         if spec.variants['install_type'].value == 'network':
+            local_dir = version_prefix + '/share_objects'
             os.environ['NVHPC_INSTALL_TYPE'] = "network"
-            os.environ['NVHPC_INSTALL_LOCAL_DIR'] = \
-                "%s/%s/%s/share_objects" % \
-                (prefix, 'Linux_%s' % spec.target.family, self.version)
+            os.environ['NVHPC_INSTALL_LOCAL_DIR'] = local_dir
+            flags = flags + ' -net ' + local_dir
         else:
             os.environ['NVHPC_INSTALL_TYPE'] = "single"
-
         # Run install script
         os.system("./install")
+
+        # Update localrc to use Spack gcc
+        if spec.satisfies('%gcc'):
+            prefix = Prefix(join_path(version_prefix, 'compilers'))
+            script = join_path(prefix.bin, 'makelocalrc')
+            flags = flags + ' -gcc %s -gpp %s -g77 %s -x %s' % (
+                self.compiler.cc, self.compiler.cxx,
+                self.compiler.f77, prefix.bin)
+            os.system(script + flags)
 
     def setup_run_environment(self, env):
         prefix = Prefix(join_path(self.prefix,
