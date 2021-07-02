@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -28,12 +29,12 @@ class Aml(AutotoolsPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(['tests', 'include/config.h'])
+        self.cache_extra_test_sources(['tests', join_path('include', 'config.h')])
 
     def run_area_test(self):
         """Run stand alone test: test_area"""
 
-        test_dir = join_path(self.prefix, '.spack/test/tests/area')
+        test_dir = join_path(self.prefix, '.spack', 'test', 'tests', 'area')
 
         if not os.path.exists(test_dir):
             print('Skipping aml test')
@@ -44,7 +45,9 @@ class Aml(AutotoolsPackage):
         self.run_test('gcc',
                       options=['-o', exe, join_path(test_dir, 'test_area.c'),
                                '-I{0}'.format(join_path(self.prefix,
-                                                        '.spack/test/include')),
+                                                        '.spack',
+                                                        'test',
+                                                        'include')),
                                '-I{0}'.format(self.prefix.include),
                                '-I{0}'.format(self.spec['numactl'].prefix.include),
                                '-L{0}'.format(self.prefix.lib),
