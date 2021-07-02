@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import copy
 import os
 import os.path
-import copy
 
 import spack.util.environment
 
