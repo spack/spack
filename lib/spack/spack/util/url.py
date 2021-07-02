@@ -154,7 +154,7 @@ def join(base_url, path, *extra, **kwargs):
     scheme = None
     for i in range(n - 1, -1, -1):
         obj = urllib_parse.urlparse(
-            paths[i], scheme=None, allow_fragments=False)
+            paths[i], scheme='', allow_fragments=False)
 
         scheme = obj.scheme
 
