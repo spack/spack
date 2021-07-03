@@ -26,6 +26,26 @@ def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
+def _bunzip2(archive_file):
+    """ Use Python's bz2 module to decompress bz2 compressed archives
+
+    Args:
+        archive_file (str): absolute path to the bz2 archive to be decompressed
+    """
+    try:
+        import bz2
+        decompressed_file = os.path.basename(archive_file.strip(".bz2"))
+        archive_out = os.path.join(os.getcwd(), decompressed_file)
+        f_bz = bz2.BZ2File(archive_file, mode='rb')
+        with open(archive_out, 'wb') as ar:
+            ar.write(f_bz.read())
+        f_bz.close()
+    except ImportError:
+        bunzip2 = which('bunzip2', required=True)
+        bunzip2.add_default_arg('-q')
+        return bunzip2
+
+
 def _gunzip(archive_file):
     """Like gunzip, but extracts in the current working directory
     instead of in-place.
@@ -69,8 +89,7 @@ def decompressor_for(path, extension=None):
     if extension and re.match(r'gz', extension):
         return _gunzip
     if extension and re.match(r'bz2', extension):
-        bunzip2 = which('bunzip2', required=True)
-        return bunzip2
+        return _bunzip2
     tar = which('tar', required=True)
     tar.add_default_arg('-oxf')
     return tar
