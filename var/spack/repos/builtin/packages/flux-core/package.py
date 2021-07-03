@@ -57,6 +57,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("py-pyyaml")
     depends_on("py-jsonschema")
     depends_on("jansson")
+    depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")
     depends_on("yaml-cpp")
     depends_on("lz4")
