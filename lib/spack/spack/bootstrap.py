@@ -134,7 +134,7 @@ def get_executable(exe, spec=None, install=False):
 
     Args:
         exe (str): needed executable name
-        spec (Spec or str): spec to search for exe in (default exe)
+        spec (spack.spec.Spec or str): spec to search for exe in (default exe)
         install (bool): install spec if not available
 
     When ``install`` is True, Spack will use the python used to run Spack as an

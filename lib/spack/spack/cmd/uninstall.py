@@ -69,12 +69,13 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
        concretized specs given from cli
 
     Args:
-        env (Environment): active environment, or ``None`` if there is not one
+        env (spack.environment.Environment): active environment, or ``None``
+            if there is not one
         specs (list): list of specs to be matched against installed packages
         allow_multiple_matches (bool): if True multiple matches are admitted
 
     Return:
-        list of specs
+        list: list of specs
     """
     # constrain uninstall resolution to current environment if one is active
     hashes = env.all_hashes() if env else None
@@ -118,15 +119,13 @@ def installed_dependents(specs, env):
 
     Args:
         specs (list): list of Specs
-        env (Environment): the active environment, or None
+        env (spack.environment.Environment or None): the active environment, or None
 
     Returns:
-        (tuple of dicts): two mappings: one from specs to their dependent
-            environments in the active environment (or global scope if
-            there is no environment), and one from specs to their
-            dependents in *inactive* environments (empty if there is no
-            environment
-
+        tuple: two mappings: one from specs to their dependent environments in the
+        active environment (or global scope if there is no environment), and one from
+        specs to their dependents in *inactive* environments (empty if there is no
+        environment
     """
     active_dpts = {}
     inactive_dpts = {}
@@ -155,9 +154,9 @@ def dependent_environments(specs):
 
     Args:
         specs (list): list of Specs
-    Returns:
-        (dict): mapping from spec to lists of dependent Environments
 
+    Returns:
+        dict: mapping from spec to lists of dependent Environments
     """
     dependents = {}
     for env in ev.all_environments():
@@ -176,9 +175,10 @@ def inactive_dependent_environments(spec_envs):
     have no dependent environments.  Return the result.
 
     Args:
-        (dict): mapping from spec to lists of dependent Environments
+        spec_envs (dict): mapping from spec to lists of dependent Environments
+
     Returns:
-        (dict): mapping from spec to lists of *inactive* dependent Environments
+        dict: mapping from spec to lists of *inactive* dependent Environments
     """
     spec_inactive_envs = {}
     for spec, de_list in spec_envs.items():
@@ -203,7 +203,8 @@ def do_uninstall(env, specs, force):
     """Uninstalls all the specs in a list.
 
     Args:
-        env (Environment): active environment, or ``None`` if there is not one
+        env (spack.environment.Environment or None): active environment, or ``None``
+            if there is not one
         specs (list): list of specs to be uninstalled
         force (bool): force uninstallation (boolean)
     """

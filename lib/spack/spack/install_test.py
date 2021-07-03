@@ -28,7 +28,7 @@ def get_escaped_text_output(filename):
         filename (str): path to the file
 
     Returns:
-        (list of str): escaped text lines read from the file
+        list: escaped text lines read from the file
     """
     with open(filename, 'r') as f:
         # Ensure special characters are escaped as needed

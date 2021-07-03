@@ -101,11 +101,14 @@ needs_sphinx = '1.8'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.graphviz',
-              'sphinx.ext.napoleon',
-              'sphinx.ext.todo',
-              'sphinxcontrib.programoutput']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.graphviz',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
+    'sphinxcontrib.programoutput',
+]
 
 # Set default graphviz options
 graphviz_dot_args = [
@@ -163,6 +166,19 @@ gettext_uuid = False
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 exclude_patterns = ['_build', '_spack_root', '.spack-env']
+
+nitpicky = True
+nitpick_ignore = [
+    # Python classes that intersphinx is unable to resolve
+    ('py:class', 'argparse.HelpFormatter'),
+    ('py:class', 'contextlib.contextmanager'),
+    ('py:class', 'module'),
+    ('py:class', '_io.BufferedReader'),
+    ('py:class', 'unittest.case.TestCase'),
+    ('py:class', '_frozen_importlib_external.SourceFileLoader'),
+    # Spack classes that are private and we don't want to expose
+    ('py:class', 'spack.provider_index._IndexBase'),
+]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -358,3 +374,11 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+
+# -- Extension configuration -------------------------------------------------
+
+# sphinx.ext.intersphinx
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+}

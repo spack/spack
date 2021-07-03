@@ -368,7 +368,7 @@ class IntelPackage(PackageBase):
                 toplevel psxevars.sh or equivalent file to source (and thus by
                 the modulefiles that Spack produces).
 
-            version_globs (list of str): Suffix glob patterns (most specific
+            version_globs (list): Suffix glob patterns (most specific
                 first) expected to qualify suite_dir_name to its fully
                 version-specific install directory (as opposed to a
                 compatibility directory or symlink).

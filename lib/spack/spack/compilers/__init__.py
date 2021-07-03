@@ -135,8 +135,8 @@ def add_compilers_to_config(compilers, scope=None, init_config=True):
     """Add compilers to the config for the specified architecture.
 
     Arguments:
-      - compilers: a list of Compiler objects.
-      - scope:     configuration scope to modify.
+        compilers: a list of Compiler objects.
+        scope: configuration scope to modify.
     """
     compiler_config = get_compiler_config(scope, init_config)
     for compiler in compilers:
@@ -151,8 +151,8 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     """Remove compilers from the config, by spec.
 
     Arguments:
-      - compiler_specs: a list of CompilerSpec objects.
-      - scope:          configuration scope to modify.
+        compiler_specs: a list of CompilerSpec objects.
+        scope: configuration scope to modify.
     """
     # Need a better way for this
     global _cache_config_file
@@ -544,8 +544,8 @@ def arguments_to_detect_version_fn(operating_system, paths):
     function by providing a method called with the same name.
 
     Args:
-        operating_system (OperatingSystem): the operating system on which
-            we are looking for compilers
+        operating_system (spack.architecture.OperatingSystem): the operating system
+            on which we are looking for compilers
         paths: paths to search for compilers
 
     Returns:
@@ -649,7 +649,7 @@ def make_compiler_list(detected_versions):
             valid version
 
     Returns:
-        list of Compiler objects
+        list: list of Compiler objects
     """
     group_fn = lambda x: (x.id, x.variation, x.language)
     sorted_compilers = sorted(detected_versions, key=group_fn)
@@ -715,7 +715,7 @@ def is_mixed_toolchain(compiler):
     False otherwise.
 
     Args:
-        compiler (Compiler): a valid compiler object
+        compiler (spack.compiler.Compiler): a valid compiler object
     """
     cc = os.path.basename(compiler.cc or '')
     cxx = os.path.basename(compiler.cxx or '')
