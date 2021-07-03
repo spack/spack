@@ -11,8 +11,8 @@ import itertools
 import os.path
 import re
 
-from six import string_types
 import six.moves.urllib.parse as urllib_parse
+from six import string_types
 
 import spack.util.path
 
