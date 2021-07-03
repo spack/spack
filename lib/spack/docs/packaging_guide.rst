@@ -2884,52 +2884,52 @@ The package base class, usually specialized for a given build system, determines
 actual set of entities available for overriding.
 The classes that are currently provided by Spack are:
 
-    +-------------------------------+----------------------------------+
-    |        **Base Class**         |           **Purpose**            |
-    +===============================+==================================+
-    | :py:class:`.Package`          | General base class not           |
-    |                               | specialized for any build system |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.MakefilePackage`  | Specialized class for packages   |
-    |                               | built invoking                   |
-    |                               | hand-written Makefiles           |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.AutotoolsPackage` | Specialized class for packages   |
-    |                               | built using GNU Autotools        |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.CMakePackage`     | Specialized class for packages   |
-    |                               | built using CMake                |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.CudaPackage`      | A helper class for packages that |
-    |                               | use CUDA                         |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.QMakePackage`     | Specialized class for packages   |
-    |                               | build using QMake                |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.ROCmPackage`      | A helper class for packages that |
-    |                               | use ROCm                         |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.SConsPackage`     | Specialized class for packages   |
-    |                               | built using SCons                |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.WafPackage`       | Specialized class for packages   |
-    |                               | built using Waf                  |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.RPackage`         | Specialized class for            |
-    |                               | :py:class:`.R` extensions        |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.OctavePackage`    | Specialized class for            |
-    |                               | :py:class:`.Octave` packages     |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.PythonPackage`    | Specialized class for            |
-    |                               | :py:class:`.Python` extensions   |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.PerlPackage`      | Specialized class for            |
-    |                               | :py:class:`.Perl` extensions     |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.IntelPackage`     | Specialized class for licensed   |
-    |                               | Intel software                   |
-    +-------------------------------+----------------------------------+
++-------------------------=--------------------------------+----------------------------------+
+|     **Base Class**                                       |           **Purpose**            |
++==========================================================+==================================+
+| :class:`~spack.package.Package`                          | General base class not           |
+|                                                          | specialized for any build system |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.makefile.MakefilePackage`   | Specialized class for packages   |
+|                                                          | built invoking                   |
+|                                                          | hand-written Makefiles           |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.autotools.AutotoolsPackage` | Specialized class for packages   |
+|                                                          | built using GNU Autotools        |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.cmake.CMakePackage`         | Specialized class for packages   |
+|                                                          | built using CMake                |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.cuda.CudaPackage`           | A helper class for packages that |
+|                                                          | use CUDA                         |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.qmake.QMakePackage`         | Specialized class for packages   |
+|                                                          | built using QMake                |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.rocm.ROCmPackage`           | A helper class for packages that |
+|                                                          | use ROCm                         |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.scons.SConsPackage`         | Specialized class for packages   |
+|                                                          | built using SCons                |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.waf.WafPackage`             | Specialized class for packages   |
+|                                                          | built using Waf                  |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.r.RPackage`                 | Specialized class for            |
+|                                                          | R extensions                     |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.octave.OctavePackage`       | Specialized class for            |
+|                                                          | Octave packages                  |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.python.PythonPackage`       | Specialized class for            |
+|                                                          | Python extensions                |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.perl.PerlPackage`           | Specialized class for            |
+|                                                          | Perl extensions                  |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.intel.IntelPackage`         | Specialized class for licensed   |
+|                                                          | Intel software                   |
++----------------------------------------------------------+----------------------------------+
 
 
 .. note::
@@ -2939,7 +2939,7 @@ The classes that are currently provided by Spack are:
         rare cases where manual intervention is needed we need to stress that a
         package base class depends on the *build system* being used, not the language of the package.
         For example, a Python extension installed with CMake would ``extends('python')`` and
-        subclass from :py:class:`.CMakePackage`.
+        subclass from :class:`~spack.build_systems.cmake.CMakePackage`.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Installation pipeline
@@ -4079,7 +4079,7 @@ prefix **before** ``make install``. Builds like this can falsely report
 success when an error occurs before the installation is complete. Simple
 sanity checks can be used to identify files and or directories that are
 required of a successful installation. Spack checks for the presence of
-the files and directories after ``install()`` runs. 
+the files and directories after ``install()`` runs.
 
 If any of the listed files or directories are missing, then the build will
 fail and the install prefix will be removed. If they all exist, then Spack
@@ -4193,7 +4193,7 @@ need to use two decorators for each phase test method:
 The first decorator tells Spack when in the installation process to
 run your test method installation process; namely *after* the provided
 installation phase. The second decorator tells Spack to only run the
-checks when the ``--test`` option is provided on the command line. 
+checks when the ``--test`` option is provided on the command line.
 
 .. note::
 
@@ -4267,17 +4267,17 @@ tests can be performed days, even weeks, after the software is installed.
 
 Stand-alone tests are checks that should run relatively quickly -- as
 in on the order of at most a few minutes -- and ideally execute all
-aspects of the installed software, or at least key functionality. 
+aspects of the installed software, or at least key functionality.
 
 .. note::
 
     Execution speed is important because these tests are intended
     to quickly assess whether the installed software works on the
     system.
-    
+
     Failing stand-alone tests indicate that there is no reason to
     proceed with more resource-intensive tests.
-    
+
     Passing stand-alone (or smoke) tests can lead to more thorough
     testing, such as extensive unit or regression tests, or tests
     that run at scale. Spack support for more thorough testing is
@@ -4307,7 +4307,7 @@ file such that:
      test_stage: /path/to/stage
 
 The package can access this path **during test processing** using
-`self.test_suite.stage`. 
+`self.test_suite.stage`.
 
 .. note::
 
@@ -4388,7 +4388,7 @@ can be implemented as shown below.
        @run_after('install')
        def copy_test_sources(self):
            srcs = ['tests',
-                   join_path('examples', 'foo.c'), 
+                   join_path('examples', 'foo.c'),
                    join_path('examples', 'bar.c')]
            self.cache_extra_test_sources(srcs)
 
@@ -4446,7 +4446,7 @@ Examples include:
 - expected test output
 
 These extra files should be added to the ``test`` subdirectory of the
-package in the Spack repository. 
+package in the Spack repository.
 
 Spack will **automatically copy** the contents of that directory to the
 test staging directory for stand-alone testing. The ``test`` method can
@@ -4471,7 +4471,7 @@ The signature for ``get_escaped_text_output`` is:
 
 where ``filename`` is the path to the file containing the expected output.
 
-The ``filename`` for a :ref:`custom file <cache_custom_files>` can be 
+The ``filename`` for a :ref:`custom file <cache_custom_files>` can be
 accessed and used as illustrated by a simplified version of an ``sqlite``
 package check:
 
@@ -4591,10 +4591,10 @@ where each argument has the following meaning:
 
   Options are a list of strings to be passed to the executable when
   it runs.
-  
+
   The default is ``[]``, which means no options are provided to the
   executable.
- 
+
 * ``expected`` is an optional list of expected output strings.
 
   Spack requires every string in ``expected`` to be a regex matching
@@ -4605,31 +4605,31 @@ where each argument has the following meaning:
 
   The expected output can be :ref:`read from a file
   <expected_test_output_from_file>`.
-  
+
   The default is ``expected=[]``, so Spack will not check the output.
- 
+
 * ``status`` is the optional expected return code(s).
 
   A list of return codes corresponding to successful execution can
   be provided (e.g., ``status=[0,3,7]``). Support for non-zero return
   codes allows for basic **expected failure** tests as well as different
   return codes across versions of the software.
-  
+
   The default is ``status=[0]``, which corresponds to **successful**
   execution in the sense that the executable does not exit with a
   failure code or raise an exception.
- 
+
 * ``installed`` is used to require ``exe`` to be within the package
   prefix.
-  
+
   If ``True``, then the path for ``exe`` is required to be within the
   package prefix; otherwise, the path is not constrained.
-  
+
   The default is ``False``, so the fully qualified path for ``exe``
   does **not** need to be within the installation directory.
- 
+
 * ``purpose`` is an optional heading describing the the test part.
- 
+
   Output from the test is written to a test log file so this argument
   serves as a searchable heading in text logs to highlight the start
   of the test part. Having a description can be helpful when debugging
@@ -4644,10 +4644,10 @@ where each argument has the following meaning:
 
   The default is ``False``, which means the test executable must be
   present for any installable version of the software.
- 
+
 * ``work_dir`` is the path to the directory from which the executable
   will run.
-  
+
   The default of ``None`` corresponds to the current directory (``'.'``).
 
 """""""""""""""""""""""""""""""""""""""""
@@ -4754,7 +4754,7 @@ where only the outputs for the first of each set are shown:
    Copyright (C) 2018 Free Software Foundation, Inc.
    This is free software; see the source for copying conditions.  There is NO
    warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-   
+
    PASSED
    ...
    ==> [2021-04-26-17:35:20.493921] test: checking mpirun output
@@ -4915,7 +4915,7 @@ This is already part of the boilerplate for packages created with
 Filtering functions
 ^^^^^^^^^^^^^^^^^^^
 
-:py:func:`filter_file(regex, repl, *filenames, **kwargs) <spack.filter_file>`
+:py:func:`filter_file(regex, repl, *filenames, **kwargs) <llnl.util.filesystem.filter_file>`
   Works like ``sed`` but with Python regular expression syntax.  Takes
   a regular expression, a replacement, and a set of files.  ``repl``
   can be a raw string or a callable function.  If it is a raw string,
@@ -4953,7 +4953,7 @@ Filtering functions
         filter_file('CXX="c++"', 'CXX="%s"' % self.compiler.cxx,
                     prefix.bin.mpicxx)
 
-:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.change_sed_delim>`
+:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <llnl.util.filesystem.change_sed_delimiter>`
     Some packages, like TAU, have a build system that can't install
     into directories with, e.g. '@' in the name, because they use
     hard-coded ``sed`` commands in their build.
@@ -4975,14 +4975,14 @@ Filtering functions
 File functions
 ^^^^^^^^^^^^^^
 
-:py:func:`ancestor(dir, n=1) <spack.ancestor>`
+:py:func:`ancestor(dir, n=1) <llnl.util.filesystem.ancestor>`
   Get the n\ :sup:`th` ancestor of the directory ``dir``.
 
-:py:func:`can_access(path) <spack.can_access>`
+:py:func:`can_access(path) <llnl.util.filesystem.can_access>`
   True if we can read and write to the file at ``path``.  Same as
   native python ``os.access(file_name, os.R_OK|os.W_OK)``.
 
-:py:func:`install(src, dest) <spack.install>`
+:py:func:`install(src, dest) <llnl.util.filesystem.install>`
   Install a file to a particular location.  For example, install a
   header into the ``include`` directory under the install ``prefix``:
 
@@ -4990,14 +4990,14 @@ File functions
 
      install('my-header.h', prefix.include)
 
-:py:func:`join_path(*paths) <spack.join_path>`
+:py:func:`join_path(*paths) <llnl.util.filesystem.join_path>`
   An alias for ``os.path.join``. This joins paths using the OS path separator.
 
-:py:func:`mkdirp(*paths) <spack.mkdirp>`
+:py:func:`mkdirp(*paths) <llnl.util.filesystem.mkdirp>`
   Create each of the directories in ``paths``, creating any parent
   directories if they do not exist.
 
-:py:func:`working_dir(dirname, kwargs) <spack.working_dir>`
+:py:func:`working_dir(dirname, kwargs) <llnl.util.filesystem.working_dir>`
   This is a Python `Context Manager
   <https://docs.python.org/2/library/contextlib.html>`_ that makes it
   easier to work with subdirectories in builds.  You use this with the
@@ -5039,7 +5039,7 @@ File functions
      The ``create=True`` keyword argument causes the command to create
      the directory if it does not exist.
 
-:py:func:`touch(path) <spack.touch>`
+:py:func:`touch(path) <llnl.util.filesystem.touch>`
   Create an empty file at ``path``.
 
 .. _make-package-findable:

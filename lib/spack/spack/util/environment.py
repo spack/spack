@@ -623,7 +623,7 @@ class EnvironmentModifications(object):
 
         Args:
             filename (str): the file to be sourced
-            *arguments (list of str): arguments to pass on the command line
+            *arguments (list): arguments to pass on the command line
 
         Keyword Args:
             shell (str): the shell to use (default: ``bash``)
@@ -867,7 +867,7 @@ def inspect_path(root, inspections, exclude=None):
             modifications are not performed immediately, but stored in a
             command object that is returned to client
 
-        exclude (callable): optional callable. If present it must accept an
+        exclude (typing.Callable): optional callable. If present it must accept an
             absolute path and return True if it should be excluded from the
             inspection
 
@@ -920,7 +920,7 @@ def preserve_environment(*variables):
     explicitly unset on exit.
 
     Args:
-        variables (list of str): list of environment variables to be preserved
+        variables (list): list of environment variables to be preserved
     """
     cache = {}
     for var in variables:
@@ -1031,9 +1031,9 @@ def sanitize(environment, blacklist, whitelist):
 
     Args:
         environment (dict): input dictionary
-        blacklist (list of str): literals or regex patterns to be
+        blacklist (list): literals or regex patterns to be
             blacklisted
-        whitelist (list of str): literals or regex patterns to be
+        whitelist (list): literals or regex patterns to be
             whitelisted
     """
 

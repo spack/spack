@@ -367,7 +367,7 @@ def spider(root_urls, depth=0, concurrency=32):
     up to <depth> levels of links from each root.
 
     Args:
-        root_urls (str or list of str): root urls used as a starting point
+        root_urls (str or list): root urls used as a starting point
             for spidering
         depth (int): level of recursion into links
         concurrency (int): number of simultaneous requests that can be sent
