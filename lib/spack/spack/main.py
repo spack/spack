@@ -743,6 +743,14 @@ def _main(argv=None):
             the executable name. If None, parses from sys.argv.
 
     """
+    # ------------------------------------------------------------------------
+    # main() is tricky to get right, so be careful where you put things.
+    #
+    # Things in this first part of `main()` should *not* require any
+    # configuration. This doesn't include much -- setting up th parser,
+    # restoring some key environment variables, very simple CLI options, etc.
+    # ------------------------------------------------------------------------
+
     # Create a parser with a simple positional argument first.  We'll
     # lazily load the subcommand(s) we need later. This allows us to
     # avoid loading all the modules from spack.cmd when we don't need
@@ -765,20 +773,6 @@ def _main(argv=None):
         if stored_var_name in os.environ:
             os.environ[var] = os.environ[stored_var_name]
 
-    # make spack.config aware of any command line configuration scopes
-    if args.config_scopes:
-        spack.config.command_line_scopes = args.config_scopes
-
-    # activate an environment if one was specified on the command line
-    if not args.no_env:
-        env = spack.cmd.find_environment(args)
-        if env:
-            ev.activate(env, args.use_env_repo)
-
-    if args.print_shell_vars:
-        print_setup_info(*args.print_shell_vars.split(','))
-        return 0
-
     # Just print help and exit if run with no arguments at all
     no_args = (len(sys.argv) == 1) if argv is None else (len(argv) == 0)
     if no_args:
@@ -793,12 +787,39 @@ def _main(argv=None):
     elif args.help:
         sys.stdout.write(parser.format_help(level=args.help))
         return 0
-    elif not args.command:
-        parser.print_help()
-        return 1
+
+    # ------------------------------------------------------------------------
+    # This part of the `main()` sets up Spack's configuration.
+    #
+    # We set command line options (like --debug), then command line config
+    # scopes, then environment configuration here.
+    # ------------------------------------------------------------------------
 
     # ensure options on spack command come before everything
     setup_main_options(args)
+
+    # make spack.config aware of any command line configuration scopes
+    if args.config_scopes:
+        spack.config.command_line_scopes = args.config_scopes
+
+    # activate an environment if one was specified on the command line
+    if not args.no_env:
+        env = spack.cmd.find_environment(args)
+        if env:
+            ev.activate(env, args.use_env_repo)
+
+    # ------------------------------------------------------------------------
+    # Things that require configuration should go below here
+    # ------------------------------------------------------------------------
+    if args.print_shell_vars:
+        print_setup_info(*args.print_shell_vars.split(','))
+        return 0
+
+    # At this point we've considered all the options to spack itself, so we
+    # need a command or we're done.
+    if not args.command:
+        parser.print_help()
+        return 1
 
     # Try to load the particular command the caller asked for.
     cmd_name = args.command[0]
