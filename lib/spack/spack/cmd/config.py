@@ -143,16 +143,16 @@ def config_get(args):
     """
     scope, section = _get_scope_and_section(args)
 
-    if scope and scope.startswith('env:'):
+    if section is not None:
+        spack.config.config.print_section(section)
+
+    elif scope and scope.startswith('env:'):
         config_file = spack.config.config.get_config_filename(scope, section)
         if os.path.exists(config_file):
             with open(config_file) as f:
                 print(f.read())
         else:
             tty.die('environment has no %s file' % ev.manifest_name)
-
-    elif section is not None:
-        spack.config.config.print_section(section)
 
     else:
         tty.die('`spack config get` requires a section argument '
