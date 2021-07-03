@@ -727,12 +727,21 @@ def print_setup_info(*info):
             shell_set('_sp_module_prefix', 'not_installed')
 
 
-def main(argv=None):
-    """This is the entry point for the Spack command.
+def _main(argv=None):
+    """Logic for the main entry point for the Spack command.
+
+    ``main()`` calls ``_main()`` and catches any errors that emerge.
+
+    ``_main()`` handles:
+
+    1. Parsing arguments;
+    2. Setting up configuration; and
+    3. Finding and executing a Spack command.
 
     Args:
         argv (list or None): command line arguments, NOT including
             the executable name. If None, parses from sys.argv.
+
     """
     # Create a parser with a simple positional argument first.  We'll
     # lazily load the subcommand(s) we need later. This allows us to
@@ -788,32 +797,48 @@ def main(argv=None):
         parser.print_help()
         return 1
 
+    # ensure options on spack command come before everything
+    setup_main_options(args)
+
+    # Try to load the particular command the caller asked for.
+    cmd_name = args.command[0]
+    cmd_name = aliases.get(cmd_name, cmd_name)
+
+    command = parser.add_command(cmd_name)
+
+    # Re-parse with the proper sub-parser added.
+    args, unknown = parser.parse_known_args()
+
+    # many operations will fail without a working directory.
+    set_working_dir()
+
+    # now we can actually execute the command.
+    if args.spack_profile or args.sorted_profile:
+        _profile_wrapper(command, parser, args, unknown)
+    elif args.pdb:
+        import pdb
+        pdb.runctx('_invoke_command(command, parser, args, unknown)',
+                   globals(), locals())
+        return 0
+    else:
+        return _invoke_command(command, parser, args, unknown)
+
+
+def main(argv=None):
+    """This is the entry point for the Spack command.
+
+    ``main()`` itself is just an error handler -- it handles errors for
+    everything in Spack that makes it to the top level.
+
+    The logic is all in ``_main()``.
+
+    Args:
+        argv (list of str or None): command line arguments, NOT including
+            the executable name. If None, parses from sys.argv.
+
+    """
     try:
-        # ensure options on spack command come before everything
-        setup_main_options(args)
-
-        # Try to load the particular command the caller asked for.
-        cmd_name = args.command[0]
-        cmd_name = aliases.get(cmd_name, cmd_name)
-
-        command = parser.add_command(cmd_name)
-
-        # Re-parse with the proper sub-parser added.
-        args, unknown = parser.parse_known_args()
-
-        # many operations will fail without a working directory.
-        set_working_dir()
-
-        # now we can actually execute the command.
-        if args.spack_profile or args.sorted_profile:
-            _profile_wrapper(command, parser, args, unknown)
-        elif args.pdb:
-            import pdb
-            pdb.runctx('_invoke_command(command, parser, args, unknown)',
-                       globals(), locals())
-            return 0
-        else:
-            return _invoke_command(command, parser, args, unknown)
+        _main(argv)
 
     except SpackError as e:
         tty.debug(e)
