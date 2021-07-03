@@ -11,8 +11,8 @@ import itertools
 import os.path
 import re
 
-from six import string_types
 import six.moves.urllib.parse as urllib_parse
+from six import string_types
 
 import spack.util.path
 
@@ -151,21 +151,21 @@ def join(base_url, path, *extra, **kwargs):
         for x in itertools.chain((base_url, path), extra)]
     n = len(paths)
     last_abs_component = None
-    scheme = None
+    scheme = ''
     for i in range(n - 1, -1, -1):
         obj = urllib_parse.urlparse(
-            paths[i], scheme=None, allow_fragments=False)
+            paths[i], scheme='', allow_fragments=False)
 
         scheme = obj.scheme
 
         # in either case the component is absolute
-        if scheme is not None or obj.path.startswith('/'):
-            if scheme is None:
+        if scheme or obj.path.startswith('/'):
+            if not scheme:
                 # Without a scheme, we have to go back looking for the
                 # next-last component that specifies a scheme.
                 for j in range(i - 1, -1, -1):
                     obj = urllib_parse.urlparse(
-                        paths[j], scheme=None, allow_fragments=False)
+                        paths[j], scheme='', allow_fragments=False)
 
                     if obj.scheme:
                         paths[i] = '{SM}://{NL}{PATH}'.format(
