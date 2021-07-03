@@ -43,7 +43,7 @@ class Xyce(CMakePackage):
 
     # Xyce is built against an older version of Trilinos unlikely to be
     # used for any other purpose.
-    depends_on('trilinos@12.12.1 +amesos+amesos2+anasazi+aztec+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse-dist+teuchos+trilinoscouplings+zoltan+stokhos+amesos2basker+epetraextbtf+epetraextexperimental+epetraextgraphreordering gotype=all')
+    depends_on('trilinos@12.12.1 +amesos+amesos2+anasazi+aztec+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+teuchos+trilinoscouplings+zoltan+stokhos+amesos2basker+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=all')
 
     # MPI options must be consistent with Trilinos
     depends_on('trilinos~mpi', when='~mpi')
@@ -55,7 +55,7 @@ class Xyce(CMakePackage):
     # applications, namely xSDK, deal.ii, and DTK. Future changes to the
     # Trilinos recipe will disable all packages by default. At that
     # point, these ~variants can be removed from the following recipes.
-    depends_on('trilinos~adios2~alloptpkgs~boost~cgns~chaco~cuda~cuda_rdc~debug~dtk~exodus~float~glm~gtest~hwloc~hypre~ifpack2~intrepid~intrepid2~ipo~matio~mesquite~metis~minitensor~ml~muelu~mumps~netcdf~openmp~phalanx~piro~pnetcdf~python~rol~rythmos~shards~shared~shylu~stk~stratimikos~strumpack-sparse~superlu~superlu-dist~teko~tempus~wrapper~x11~xsdkflags~zlib~zoltan2')
+    depends_on('trilinos~adios2~alloptpkgs~boost~cgns~chaco~cuda~cuda_rdc~debug~dtk~exodus~float~glm~gtest~hwloc~hypre~ifpack2~intrepid~intrepid2~ipo~matio~mesquite~metis~minitensor~ml~muelu~mumps~netcdf~openmp~phalanx~piro~pnetcdf~python~rol~rythmos~shards~shared~shylu~stk~stratimikos~strumpack~superlu~superlu-dist~teko~tempus~wrapper~x11~xsdkflags~zlib~zoltan2')
 
     def cmake_args(self):
         spec = self.spec
