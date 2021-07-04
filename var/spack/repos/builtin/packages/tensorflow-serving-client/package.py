@@ -10,6 +10,8 @@ class TensorflowServingClient(CMakePackage):
     """A prebuilt tensorflow serving client from the tensorflow serving
        proto files"""
 
+    maintainers = ['figroc']
+
     homepage = "https://github.com/figroc/tensorflow-serving-client"
     url      = "https://github.com/figroc/tensorflow-serving-client/archive/v2.3.0.tar.gz"
 
