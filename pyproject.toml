@@ -1,0 +1,14 @@
+[tool.isort]
+profile = "black"
+sections = [
+  "FUTURE",
+  "STDLIB",
+  "THIRDPARTY",
+  "ARCHSPEC", "LLNL", "FIRSTPARTY",
+  "LOCALFOLDER",
+]
+known_first_party = "spack"
+known_archspec = "archspec"
+known_llnl = "llnl"
+src_paths = "lib"
+honor_noqa = true
