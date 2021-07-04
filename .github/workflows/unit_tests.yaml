@@ -39,7 +39,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools flake8 flake8-import-order isort mypy>=0.800 black types-six types-python-dateutil
+        pip install --upgrade pip six setuptools flake8 isort>=4.3.5 mypy>=0.800 black types-six types-python-dateutil
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
@@ -370,7 +370,7 @@ jobs:
       run: |
           pip install --upgrade pip six setuptools
           pip install --upgrade codecov coverage
-          pip install --upgrade flake8 flake8-import-order isort pep8-naming mypy
+          pip install --upgrade flake8 isort>=4.3.5 pep8-naming mypy>=0.800
           pip install --upgrade python-dateutil
     - name: Setup Homebrew packages
       run: |
