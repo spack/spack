@@ -17,28 +17,27 @@ import zipfile
 from six import iteritems
 from six.moves.urllib.error import HTTPError, URLError
 from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import build_opener, HTTPHandler, Request
+from six.moves.urllib.request import HTTPHandler, Request, build_opener
 
-import llnl.util.tty as tty
 import llnl.util.filesystem as fs
-
+import llnl.util.tty as tty
 import spack
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.compilers as compilers
 import spack.config as cfg
 import spack.environment as ev
-from spack.error import SpackError
 import spack.main
 import spack.mirror
 import spack.paths
 import spack.repo
-from spack.spec import Spec
 import spack.util.executable as exe
-import spack.util.spack_yaml as syaml
-import spack.util.web as web_util
 import spack.util.gpg as gpg_util
+import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
+import spack.util.web as web_util
+from spack.error import SpackError
+from spack.spec import Spec
 
 
 JOB_RETRY_CONDITIONS = [
@@ -711,14 +710,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 release_spec_dag_hash = release_spec.dag_hash()
                 release_spec_build_hash = release_spec.build_hash()
 
-                # Check if this spec is in our list of known failures.
-                if broken_specs_url:
-                    broken_spec_path = url_util.join(
-                        broken_specs_url, release_spec_full_hash)
-                    if web_util.url_exists(broken_spec_path):
-                        known_broken_specs_encountered.append('{0} ({1})'.format(
-                            release_spec, release_spec_full_hash))
-
                 runner_attribs = find_matching_config(
                     release_spec, gitlab_ci)
 
@@ -881,6 +872,15 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
                 if prune_dag and not rebuild_spec:
                     continue
+
+                # Check if this spec is in our list of known failures, now that
+                # we know this spec needs a rebuild
+                if broken_specs_url:
+                    broken_spec_path = url_util.join(
+                        broken_specs_url, release_spec_full_hash)
+                    if web_util.url_exists(broken_spec_path):
+                        known_broken_specs_encountered.append('{0} ({1})'.format(
+                            release_spec, release_spec_full_hash))
 
                 if artifacts_root:
                     job_dependencies.append({
