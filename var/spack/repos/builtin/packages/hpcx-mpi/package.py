@@ -28,20 +28,16 @@ class HpcxMpi(Package):
         self.spec.mpif77 = os.path.join(self.prefix.bin, 'mpif77')
         self.spec.mpifc  = os.path.join(self.prefix.bin, 'mpif90')
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('MPICC',  os.path.join(self.prefix.bin, 'mpicc'))
-        env.set('MPICXX', os.path.join(self.prefix.bin, 'mpic++'))
-        env.set('MPIF77', os.path.join(self.prefix.bin, 'mpif77'))
-        env.set('MPIF90', os.path.join(self.prefix.bin, 'mpif90'))
+    def make_base_environment(self, prefix, env):
+        env.set('MPICC',  os.path.join(prefix.bin, 'mpicc'))
+        env.set('MPICXX', os.path.join(prefix.bin, 'mpicxx'))
+        env.set('MPIF77', os.path.join(prefix.bin, 'mpif77'))
+        env.set('MPIF90', os.path.join(prefix.bin, 'mpif90'))
+        env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
+        env.set('OPAL_PREFIX', prefix)
 
-        env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
-        env.set('OPAL_PREFIX', self.prefix)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.make_base_environment(self.prefix, env)
 
     def setup_run_environment(self, env):
-        env.set('MPICC',  os.path.join(self.prefix.bin, 'mpicc'))
-        env.set('MPICXX', os.path.join(self.prefix.bin, 'mpic++'))
-        env.set('MPIF77', os.path.join(self.prefix.bin, 'mpif77'))
-        env.set('MPIF90', os.path.join(self.prefix.bin, 'mpif90'))
-
-        env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
-        env.set('OPAL_PREFIX', self.prefix)
+        self.make_base_environment(self.prefix, env)
