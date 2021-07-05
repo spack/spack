@@ -8,7 +8,6 @@ import os
 import pytest
 
 import llnl.util.filesystem as fs
-
 import spack.util.executable
 import spack.util.gpg
 from spack.main import SpackCommand
@@ -88,12 +87,14 @@ def test_gpg(tmpdir, mock_gnupghome):
 
     # Create a key for use in the tests.
     keypath = tmpdir.join('testing-1.key')
+
     gpg('create',
         '--comment', 'Spack testing key',
         '--export', str(keypath),
         'Spack testing 1',
         'spack@googlegroups.com')
-    keyfp = spack.util.gpg.signing_keys()[0]
+
+    keyfp = spack.util.gpg.signing_keys()[0].fingerprint
 
     # List the keys.
     # TODO: Test the output here.

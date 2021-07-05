@@ -119,12 +119,14 @@ def gpg_create(args):
     """create a new key"""
     if args.export or args.secret:
         old_sec_keys = spack.util.gpg.signing_keys()
+        old_sec_keys = [k.fingerprint for k in old_sec_keys]
 
     # Create the new key
     spack.util.gpg.create(name=args.name, email=args.email,
                           comment=args.comment, expires=args.expires)
     if args.export or args.secret:
-        new_sec_keys = set(spack.util.gpg.signing_keys())
+        _keys = spack.util.gpg.signing_keys()
+        new_sec_keys = set([k.fingerprint for k in _keys])
         new_keys = new_sec_keys.difference(old_sec_keys)
 
     if args.export:
@@ -138,6 +140,7 @@ def gpg_export(args):
     keys = args.keys
     if not keys:
         keys = spack.util.gpg.signing_keys()
+        keys = [k.fingerprint for k in keys]
     spack.util.gpg.export_keys(args.location, keys, args.secret)
 
 
@@ -151,6 +154,7 @@ def gpg_sign(args):
     key = args.key
     if key is None:
         keys = spack.util.gpg.signing_keys()
+        keys = [k.fingerprint for k in keys]
         if len(keys) == 1:
             key = keys[0]
         elif not keys:

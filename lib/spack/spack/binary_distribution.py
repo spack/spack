@@ -22,8 +22,6 @@ from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
@@ -37,6 +35,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
+from llnl.util.filesystem import mkdirp
 from spack.caches import misc_cache_location
 from spack.spec import Spec
 from spack.stage import Stage
@@ -486,9 +485,15 @@ class PickKeyException(spack.error.SpackError):
     """
 
     def __init__(self, keys):
-        err_msg = "Multiple keys available for signing\n%s\n" % keys
-        err_msg += "Use spack buildcache create -k <key hash> to pick a key."
-        super(PickKeyException, self).__init__(err_msg)
+        msg = "Multiple keys available for signing\n---"
+        for i, k in enumerate(keys):
+            msg += "\n"
+            msg += "{0: <3} User ID: {1}\n".format("{0}.".format(i + 1), k.uid)
+            msg += "{0: <3} Fingerprint: {1}\n".format("", k.fingerprint)
+        msg += "---\n"
+        msg += "Specify your key choice unambiguously using `--key <ID>`. "
+        msg += "<ID> can be the fingerprint or user-id.\n"
+        super(PickKeyException, self).__init__(msg)
 
 
 class NoVerifyException(spack.error.SpackError):
@@ -677,20 +682,25 @@ def checksum_tarball(file):
 
 
 def select_signing_key(key=None):
-    if key is None:
+    keys = []
+    if key:
+        keys = spack.util.gpg.signing_keys(key)
+    else:
         keys = spack.util.gpg.signing_keys()
-        if len(keys) == 1:
-            key = keys[0]
 
-        if len(keys) > 1:
-            raise PickKeyException(str(keys))
-
-        if len(keys) == 0:
+    if len(keys) <= 0:
+        if key:
+            raise NoKeyException("Signing key not found: {0}".format(key))
+        else:
             raise NoKeyException(
                 "No default key available for signing.\n"
                 "Use spack gpg init and spack gpg create"
                 " to create a default key.")
-    return key
+
+    elif len(keys) == 1:
+        return keys[0].fingerprint
+
+    raise PickKeyException(keys)
 
 
 def sign_tarball(key, force, specfile_path):
