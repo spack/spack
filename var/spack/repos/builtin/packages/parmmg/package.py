@@ -41,6 +41,12 @@ class Parmmg(CMakePackage):
     depends_on('vtk')
     depends_on('mpi')
 
+    variant('pic', default=True,
+            description='Build with position independent code')
+
     def cmake_args(self):
-        args = []
+        args = [
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'),
+        ]
+
         return args
