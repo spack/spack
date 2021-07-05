@@ -23,6 +23,16 @@ SOCKET_DIR = None
 GNUPGHOME = None
 
 
+class GPGKey:
+    def __init__(self, id, fingerprint="", uid=""):
+        self.id = id
+        self.fingerprint = fingerprint
+        self.uid = uid
+
+    def __str__(self):
+        return self.fingerprint
+
+
 def clear():
     """Reset the global state to uninitialized."""
     global GPG, GPGCONF, SOCKET_DIR, GNUPGHOME
@@ -118,17 +128,28 @@ def gnupghome_override(dir):
 
 
 def _parse_secret_keys_output(output):
+    lines = output.split('\n')[:-1]
+    keyStartIndices = [i for i, l in enumerate(lines) if l.startswith('sec')]
     keys = []
-    found_sec = False
-    for line in output.split('\n'):
-        if found_sec:
-            if line.startswith('fpr'):
-                keys.append(line.split(':')[9])
-                found_sec = False
-            elif line.startswith('ssb'):
-                found_sec = False
-        elif line.startswith('sec'):
-            found_sec = True
+    for n, i in enumerate(keyStartIndices):
+        keylines = []
+        if n < len(keyStartIndices) - 1:
+            keylines = lines[i:keyStartIndices[n + 1]]
+        else:
+            keylines = lines[i:]
+
+        kid, fpr, uid = "", "", ""
+        for line in keylines:
+            fields = line.split(':')
+            if line.startswith('fpr') and fpr == "":
+                fpr = fields[9]
+            elif line.startswith('uid') and uid == "":
+                uid = fields[9]
+            elif line.startswith('sec') and kid == "":
+                kid = fields[4]
+
+        keys.append(GPGKey(kid, fingerprint=fpr, uid=uid))
+
     return keys
 
 
@@ -226,6 +247,7 @@ def untrust(signing, *keys):
     """
     if signing:
         skeys = signing_keys(*keys)
+        skeys = [k.fingerprint for k in skeys]
         GPG('--batch', '--yes', '--delete-secret-keys', *skeys)
 
     pkeys = public_keys(*keys)

@@ -30,8 +30,8 @@ ssb::2048:1:AAAAAAAAAAAAAAAA:AAAAAAAAAA::::::::::
     keys = spack.util.gpg._parse_secret_keys_output(output)
 
     assert len(keys) == 2
-    assert keys[0] == 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-    assert keys[1] == 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+    assert keys[0].fingerprint == 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    assert keys[1].fingerprint == 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
 
 
 def test_parse_gpg_output_case_two():
@@ -47,7 +47,7 @@ grp:::::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:
     keys = spack.util.gpg._parse_secret_keys_output(output)
 
     assert len(keys) == 1
-    assert keys[0] == 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    assert keys[0].fingerprint == 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 
 
 def test_parse_gpg_output_case_three():
@@ -66,8 +66,8 @@ fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
     keys = spack.util.gpg._parse_secret_keys_output(output)
 
     assert len(keys) == 2
-    assert keys[0] == 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW'
-    assert keys[1] == 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+    assert keys[0].fingerprint == 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW'
+    assert keys[1].fingerprint == 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
 
 
 @pytest.mark.requires_executables('gpg2')
