@@ -22,6 +22,7 @@ class PyBlack(PythonPackage):
     version('18.9b0', sha256='e030a9a28f542debc08acceb273f228ac422798e5215ba2a791a6ddeaaca22a5')
 
     variant('d', default=False, description='enable blackd HTTP server')
+    variant('python2', default=False, description='enable python 2 formatting support')
 
     depends_on('python@3.6.0:', type=('build', 'run'))
     depends_on('python@3.6.2:', when='@21:', type=('build', 'run'))
@@ -49,6 +50,7 @@ class PyBlack(PythonPackage):
     depends_on('py-aiohttp@3.6.0:', when='@21.6: +d', type=('build', 'run'))
     depends_on('py-aiohttp-cors', when='+d', type=('build', 'run'))
     depends_on('py-aiohttp-cors@0.4.0:', when='@21.6: +d', type=('build', 'run'))
+    depends_on('py-typed-ast@1.4.2:', when='+python2', type=('build', 'run'))
 
     @property
     def import_modules(self):
