@@ -1,5 +1,8 @@
-# Licence CEA DES/ISAS/DM2S
-
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+#
 # Important feature: a version of salome-medcoupling depand on a specific
 # version of salome-med package
 
