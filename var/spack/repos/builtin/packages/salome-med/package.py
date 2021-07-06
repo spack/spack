@@ -1,11 +1,14 @@
 # Licence CEA DES/ISAS/DM2S
 
-# Important feature: to interoperate goodly MED files, it is imperative to fix the HDF5 version for a salome-med version
+# Important feature: to interoperate goodly MED files, it is imperative to fix
+# the HDF5 version for a salome-med version
 
 from spack import *
 
+
 class SalomeMed(CMakePackage):
-    """salome-med is the MED file format that is the SALOME platform standard file for meshes and fields and salome-med is based on HDF5 library."""
+    """salome-med is the MED file format that is the SALOME platform standard
+    file for meshes and fields and salome-med is based on HDF5 library."""
 
     maintainers = []
 
@@ -43,9 +46,9 @@ class SalomeMed(CMakePackage):
         if '+mpi' in spec:
             options.extend([
                 '-DMEDFILE_USE_MPI=ON',
-                '-DMPI_ROOT_DIR=%s' % spec['mpi'].prefix ])
+                '-DMPI_ROOT_DIR=%s' % spec['mpi'].prefix])
         else:
-            options.extend([ '-DMEDFILE_USE_MPI=OFF' ])
+            options.extend(['-DMEDFILE_USE_MPI=OFF'])
 
         options.extend([
             '-DMEDFILE_BUILD_PYTHON=OFF',
@@ -54,6 +57,6 @@ class SalomeMed(CMakePackage):
             '-DMEDFILE_BUILD_STATIC_LIBS=OFF',
             '-DMEDFILE_BUILD_TESTS={0}'.format('ON' if self.run_tests else 'OFF'),
             '-DCMAKE_Fortran_COMPILER=',
-            '-DHDF5_ROOT_DIR=%s' % spec['hdf5'].prefix ])
+            '-DHDF5_ROOT_DIR=%s' % spec['hdf5'].prefix])
 
         return options

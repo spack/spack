@@ -5,8 +5,10 @@
 
 from spack import *
 
+
 class SalomeConfiguration(Package):
-    """salome-configuration is a part of SALOME platform and define general build tools for the platform."""
+    """salome-configuration is a part of SALOME platform and define general
+    build tools for the platform."""
 
     maintainers = []
 
@@ -19,7 +21,7 @@ class SalomeConfiguration(Package):
     version('9.4.0', tag='V9_4_0')
     version('9.3.0', tag='V9_3_0')
 
-    patch('SalomeMacros.patch'  , working_dir='./cmake')
+    patch('SalomeMacros.patch', working_dir='./cmake')
     patch('FindSalomeHDF5.patch', working_dir='./cmake')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
