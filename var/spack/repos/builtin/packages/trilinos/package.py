@@ -303,11 +303,13 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+teko', when='~amesos')
     conflicts('+teko', when='~anasazi')
     conflicts('+teko', when='~aztec')
+    conflicts('+teko', when='~epetraext')
     conflicts('+teko', when='~ifpack')
     conflicts('+teko', when='~ml')
+    conflicts('+teko', when='~stratimikos')
     conflicts('+teko', when='~teuchos')
     conflicts('+teko', when='~tpetra')
-    conflicts('+teko', when='gotype=long')
+    conflicts('+teko', when='@:12 gotype=long')
     conflicts('+tempus', when='~nox')
     conflicts('+tempus', when='~teuchos')
     conflicts('+tpetra', when='~kokkos')
@@ -458,6 +460,10 @@ class Trilinos(CMakePackage, CudaPackage):
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
     # avoid calling deprecated functions with CUDA-11
     patch('fix_cxx14_cuda11.patch', when='@13.0.0:13.0.1 cxxstd=14 ^cuda@11:')
+
+    patch('https://github.com/trilinos/Trilinos/commit/b17f20a0b91e0b9fc5b1b0af3c8a34e2a4874f3f.patch',
+          sha256='dee6c55fe38eb7f6367e1896d6bc7483f6f9ab8fa252503050cc0c68c6340610',
+          when='@13.0.0:13.0.1 +teko gotype=long')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
