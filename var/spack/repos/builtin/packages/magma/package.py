@@ -7,18 +7,21 @@
 from spack import *
 
 
-class Magma(CMakePackage, CudaPackage):
+class Magma(CMakePackage, CudaPackage, ROCmPackage):
     """The MAGMA project aims to develop a dense linear algebra library similar
        to LAPACK but for heterogeneous/hybrid architectures, starting with
        current "Multicore+GPU" systems.
     """
 
     homepage = "http://icl.cs.utk.edu/magma/"
+    git = 'https://bitbucket.org/icl/magma'
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers = ['stomov', 'luszczek', 'G-Ragghianti']
 
     test_requires_compiler = True
 
+    version('master', branch='master')
+    version('2.6.0', sha256='50cdd384f44f06a34469e7125f8b2ffae13c1975d373c3f1510d91be2b7638ec')
     version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
     version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
     version('2.5.2', sha256='065feb85558f9dd6f4cc4db36ac633a3f787827fc832d0b578a049a43a195620')
@@ -38,10 +41,14 @@ class Magma(CMakePackage, CudaPackage):
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cuda@8:', when='@2.5.1:')  # See PR #14471
+    depends_on('cuda@8:', when='@2.5.1: +cuda')  # See PR #14471
+    depends_on('hipblas', when='+rocm')
+    depends_on('hipsparse', when='+rocm')
 
-    conflicts('~cuda', msg='Magma requires cuda')
-    conflicts('cuda_arch=none',
+    conflicts('~cuda', when='~rocm', msg='Either CUDA or HIP support must be enabled')
+    conflicts('+rocm', when='+cuda', msg='CUDA must be disabled to support HIP (ROCm)')
+    conflicts('+rocm', when='@:2.5.4', msg='HIP support starts in version 2.6.0')
+    conflicts('cuda_arch=none', when='+cuda',
               msg='Please indicate a CUDA arch value or values')
 
     # currently not compatible with CUDA-11
@@ -56,6 +63,21 @@ class Magma(CMakePackage, CudaPackage):
     patch('magma-2.5.0-cmake.patch', when='@2.5.0')
     patch('cmake-W.patch', when='@2.5.0:%nvhpc')
     patch('sm_37.patch', when='@2.5.4 cuda_arch=37')
+
+    @run_before('cmake')
+    def generate_cuda(self):
+        if '@master' in self.spec:
+            backend = 'cuda'
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            gpu_target = ' '.join('sm_{0}'.format(i) for i in cuda_arch)
+            if '+rocm' in self.spec:
+                backend = 'hip'
+                gpu_target = self.spec.variants['amdgpu_target'].value
+            with open('make.inc', 'w') as inc:
+                inc.write('FORT = true\n')
+                inc.write('GPU_TARGET = %s\n' % gpu_target)
+                inc.write('BACKEND = %s\n' % backend)
+            make('generate')
 
     def cmake_args(self):
         spec = self.spec
@@ -103,6 +125,12 @@ class Magma(CMakePackage, CudaPackage):
             options.extend(['-DMAGMA_SPARSE=OFF'])
             if spec.compiler.name in ['xl', 'xl_r']:
                 options.extend(['-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=TRUE'])
+
+        if '+rocm' in spec:
+            options.extend(['-DMAGMA_ENABLE_HIP=ON'])
+            options.extend(['-DCMAKE_CXX_COMPILER=hipcc'])
+        else:
+            options.extend(['-DMAGMA_ENABLE_CUDA=ON'])
 
         return options
 
