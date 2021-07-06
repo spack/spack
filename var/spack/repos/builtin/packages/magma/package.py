@@ -33,15 +33,13 @@ class Magma(CMakePackage, CudaPackage):
     variant('shared', default=True,
             description='Enable shared library')
     variant('cuda', default=True, description='Build with CUDA')
-    variant('cuda_arch', default='none', multi=True,
-            description='Specify CUDA architecture(s)')
 
     depends_on('blas')
     depends_on('lapack')
     depends_on('cuda@8:', when='@2.5.1:')  # See PR #14471
 
     conflicts('~cuda', msg='Magma requires cuda')
-    conflicts('cuda_arch=none',
+    conflicts('cuda_arch=none', when='+cuda',
               msg='Please indicate a CUDA arch value or values')
 
     # currently not compatible with CUDA-11
