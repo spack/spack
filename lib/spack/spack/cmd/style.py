@@ -65,7 +65,7 @@ def is_package(f):
     packages, since we allow `from spack import *` and poking globals
     into packages.
     """
-    return f.startswith("var/spack/repos/") and f.endswith('package.py')
+    return f.startswith("var/spack/repos/") and f.endswith("package.py")
 
 
 #: decorator for adding tools to the list
@@ -94,13 +94,14 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     git = which("git", required=True)
 
     # ensure base is in the repo
-    base_sha = git("rev-parse", "--quiet", "--verify", "--revs-only", base,
-                   fail_on_error=False, output=str)
+    base_sha = git(
+        "rev-parse", "--quiet", "--verify", "--revs-only", base, fail_on_error=False, output=str
+    )
     if git.returncode != 0:
         tty.die(
             "This repository does not have a '%s' revision." % base,
             "spack style needs this branch to determine which files changed.",
-            "Ensure that '%s' exists, or specify files to check explicitly." % base
+            "Ensure that '%s' exists, or specify files to check explicitly." % base,
         )
 
     range = "{0}...".format(base_sha.strip())
@@ -122,10 +123,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     if all_files:
         git_args.append(["ls-files", "--exclude-standard"])
 
-    excludes = [
-        os.path.realpath(os.path.join(root, f))
-        for f in exclude_directories
-    ]
+    excludes = [os.path.realpath(os.path.join(root, f)) for f in exclude_directories]
     changed = set()
 
     for arg_list in git_args:
@@ -200,10 +198,10 @@ def setup_parser(subparser):
         help="do not run mypy (default: run mypy if available)",
     )
     subparser.add_argument(
-        "--black",
+        "--no-black",
         dest="black",
-        action="store_true",
-        help="run black if available (default: skip black)",
+        action="store_false",
+        help="run black if available (default: run black if available)",
     )
     subparser.add_argument(
         "--root",
@@ -211,9 +209,7 @@ def setup_parser(subparser):
         default=None,
         help="style check a different spack instance",
     )
-    subparser.add_argument(
-        "files", nargs=argparse.REMAINDER, help="specific files to check"
-    )
+    subparser.add_argument("files", nargs=argparse.REMAINDER, help="specific files to check")
 
 
 def cwd_relative(path, args):
@@ -227,9 +223,7 @@ def rewrite_and_print_output(
     """rewrite ouput with <file>:<line>: format to respect path args"""
     # print results relative to current working directory
     def translate(match):
-        return replacement.format(
-            cwd_relative(match.group(1), args), *list(match.groups()[1:])
-        )
+        return replacement.format(cwd_relative(match.group(1), args), *list(match.groups()[1:]))
 
     for line in output.split("\n"):
         if not line:
@@ -291,18 +285,29 @@ def run_flake8(flake8_cmd, file_list, args):
 def run_mypy(mypy_cmd, file_list, args):
     # always run with config from running spack prefix
     common_mypy_args = [
-        "--config-file", os.path.join(spack.paths.prefix, "pyproject.toml"),
+        "--config-file",
+        os.path.join(spack.paths.prefix, "pyproject.toml"),
         "--show-error-codes",
     ]
-    mypy_arg_sets = [common_mypy_args + [
-        "--package", "spack",
-        "--package", "llnl",
-    ]]
-    if 'SPACK_MYPY_CHECK_PACKAGES' in os.environ:
-        mypy_arg_sets.append(common_mypy_args + [
-            '--package', 'packages',
-            '--disable-error-code', 'no-redef',
-        ])
+    mypy_arg_sets = [
+        common_mypy_args
+        + [
+            "--package",
+            "spack",
+            "--package",
+            "llnl",
+        ]
+    ]
+    if "SPACK_MYPY_CHECK_PACKAGES" in os.environ:
+        mypy_arg_sets.append(
+            common_mypy_args
+            + [
+                "--package",
+                "packages",
+                "--disable-error-code",
+                "no-redef",
+            ]
+        )
 
     returncode = 0
     for mypy_args in mypy_arg_sets:
@@ -334,16 +339,22 @@ def run_isort(isort_cmd, file_list, args):
 
             rewrite_and_print_output(output, args, pat, replacement)
 
-    packages_isort_args = ('--rm', 'spack', '--rm', 'spack.pkgkit', '--rm',
-                           'spack.package_defs', '-a', 'from spack.package import *')
+    packages_isort_args = (
+        "--rm",
+        "spack",
+        "--rm",
+        "spack.pkgkit",
+        "--rm",
+        "spack.package_defs",
+        "-a",
+        "from spack.package import *",
+    )
     packages_isort_args = packages_isort_args + isort_args
 
     # packages
-    process_files(filter(is_package, file_list),
-                  packages_isort_args)
+    process_files(filter(is_package, file_list), packages_isort_args)
     # non-packages
-    process_files(filter(lambda f: not is_package(f), file_list),
-                  isort_args)
+    process_files(filter(lambda f: not is_package(f), file_list), isort_args)
 
     print_tool_result("isort", returncode[0])
     return returncode[0]
@@ -369,6 +380,13 @@ def run_black(black_cmd, file_list, args):
         output = black_cmd(*packed_args, fail_on_error=False, output=str, error=str)
         returncode |= black_cmd.returncode
 
+        # ignore Python 2.7 deprecation error because we already know it's deprecated.
+        output = "\n".join(
+            line
+            for line in output.split("\n")
+            if not "DEPRECATION: Python 2 support will be removed" in line
+        )
+
         rewrite_and_print_output(output, args, pat, replacement)
 
     print_tool_result("black", returncode)
@@ -393,10 +411,7 @@ def style(parser, args):
     args.root = os.path.realpath(args.root) if args.root else spack.paths.prefix
     spack_script = os.path.join(args.root, "bin", "spack")
     if not os.path.exists(spack_script):
-        tty.die(
-            "This does not look like a valid spack root.",
-            "No such file: '%s'" % spack_script
-        )
+        tty.die("This does not look like a valid spack root.", "No such file: '%s'" % spack_script)
 
     file_list = args.files
     if file_list:
