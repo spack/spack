@@ -38,6 +38,9 @@ def grouper(iterable, n, fillvalue=None):
         yield filter(None, group)
 
 
+#: directory where spack style started, for relativizing paths
+initial_working_dir = None
+
 #: List of directories to exclude from checks.
 exclude_directories = [spack.paths.external_path]
 
@@ -183,34 +186,39 @@ def setup_parser(subparser):
     )
 
 
+def cwd_relative(path):
+    """Translate prefix-relative path to current working directory-relative."""
+    return os.path.relpath(os.path.join(spack.paths.prefix, path), initial_working_dir)
+
+
 def rewrite_and_print_output(
     output, args, re_obj=re.compile(r"^(.+):([0-9]+):"), replacement=r"{0}:{1}:"
 ):
     """rewrite ouput with <file>:<line>: format to respect path args"""
-    if args.root_relative or re_obj is None:
-        # print results relative to repo root.
-        for line in output.split("\n"):
-            print("  " + output)
-    else:
-        # print results relative to current working directory
-        def cwd_relative(path):
-            return replacement.format(
-                os.path.relpath(
-                    os.path.join(spack.paths.prefix, path.group(1)), os.getcwd()
-                ),
-                *list(path.groups()[1:])
-            )
+    # print results relative to current working directory
+    def translate(match):
+        return replacement.format(
+            cwd_relative(match.group(1)), *list(match.groups()[1:])
+        )
 
-        for line in output.split("\n"):
-            if not line:
-                continue
-            print("  " + re_obj.sub(cwd_relative, line))
+    for line in output.split("\n"):
+        if not line:
+            continue
+        if not args.root_relative and re_obj:
+            line = re_obj.sub(translate, line)
+        print("  " + line)
 
 
 def print_style_header(file_list, args):
     tools = [tool for tool in tool_order if getattr(args, tool)]
     tty.msg("Running style checks on spack:", "selected: " + ", ".join(tools))
-    tty.msg("Modified files:", *[filename.strip() for filename in file_list])
+
+    # translate modified paths to cwd_relative if needed
+    paths = [filename.strip() for filename in file_list]
+    if not args.root_relative:
+        paths = [cwd_relative(filename) for filename in paths]
+
+    tty.msg("Modified files:", *paths)
     sys.stdout.flush()
 
 
@@ -308,6 +316,10 @@ def run_black(black_cmd, file_list, args):
 
 
 def style(parser, args):
+    # save initial working directory for relativizing paths later
+    global initial_working_dir
+    initial_working_dir = os.getcwd()
+
     file_list = args.files
     if file_list:
 
