@@ -11,15 +11,25 @@ class Sombrero(MakefilePackage):
     "A next-generation conjugate gradient benchmark from computational particle physics"
 
     homepage = "https://github.com/sa2c/sombrero"
-    url      = "https://github.com/sa2c/sombrero/archive/refs/tags/1.0.tar.gz"
+    url = "https://github.com/sa2c/sombrero/archive/refs/tags/1.0.tar.gz"
 
-    version('1.0', sha256='423a631c86f0e5f14dea186228871099ca0374dc07bf1bb24b6be17f79784682')
+    version('1.0',
+            sha256=
+            '423a631c86f0e5f14dea186228871099ca0374dc07bf1bb24b6be17f79784682',
+            deprecated=True)
+
+    version('2021-07-06',
+            sha256=
+            'fa27374a9612e3170789719888364d3559811550dd4e4b87020215dbc8aa9bb3')
 
     depends_on('mpi')
 
+    maintainers = ['mmesiti', 'edbennett']
+
     def edit(self, spec, prefix):
         # Make the `sombrero.sh` driver relocatable
-        sombrero_sh = FileFilter(join_path(self.stage.source_path, 'sombrero.sh'))
+        sombrero_sh = FileFilter(
+            join_path(self.stage.source_path, 'sombrero.sh'))
         sombrero_dir = join_path(prefix.bin, 'sombrero')
         sombrero_sh.filter('sombrero/', '{0}/'.format(sombrero_dir))
 
