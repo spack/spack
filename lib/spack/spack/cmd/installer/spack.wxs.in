@@ -11,7 +11,7 @@
         <Shortcut Id="SpackDesktopShortCut"
           Name="Spack Package Manager"
           Description="Spack package manager"
-          Target="[INSTALL_ROOT]/spack/bin/@SPACK_SHORTCUT@"
+          Target="[INSTALL_ROOT]/@SPACK_DIR@/bin/@SPACK_SHORTCUT@"
           Icon="icon1.ico">
           <Icon Id="icon1.ico" SourceFile="@CPACK_WIX_PRODUCT_ICON@" />
         </Shortcut>
@@ -25,7 +25,7 @@
           <Shortcut Id="SpackStartMenuShortCut"
             Name="Spack Package Manager"
             Description="Spack package manager"
-            Target="[INSTALL_ROOT]/spack/bin/@SPACK_SHORTCUT@"
+            Target="[INSTALL_ROOT]/@SPACK_DIR@/bin/@SPACK_SHORTCUT@"
             Icon="icon2.ico">
             <Icon Id="icon2.ico" SourceFile="@CPACK_WIX_PRODUCT_ICON@" />
           </Shortcut>
