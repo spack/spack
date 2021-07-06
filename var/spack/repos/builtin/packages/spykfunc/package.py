@@ -16,6 +16,7 @@ class Spykfunc(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
     version('develop', submodules=True, get_full_repo=True)
+    version('0.16.1', tag='v0.16.1', submodules=True, get_full_repo=True)
     version('0.16.0', tag='v0.16.0', submodules=True, get_full_repo=True)
     version('0.15.9', tag='v0.15.9', submodules=True, get_full_repo=True)
     version('0.15.7', tag='v0.15.7', submodules=True, get_full_repo=True)
@@ -32,7 +33,7 @@ class Spykfunc(PythonPackage):
     depends_on('boost', type=('build', 'link'), when='@0.15.4:')
     depends_on('morpho-kit', type=('build', 'link'), when='@0.15.4:')
 
-    depends_on('py-mvdtool~mpi', type=('build', 'run'), when='@0.14.4:0.16.0')
+    depends_on('py-mvdtool~mpi', type=('build', 'run'), when='@0.14.4:0.16.1')
 
     depends_on('python@3.6:')
     depends_on('py-cython', type='run', when='@:0.15.3')
@@ -68,7 +69,7 @@ class Spykfunc(PythonPackage):
     patch('bogus-h5py.patch', when='@0.15.2:0.15.9')
 
     def patch(self):
-        if self.spec.satisfies('@:0.16.0'):
+        if self.spec.satisfies('@:0.16.1'):
             filter_file('srun', 'srun --mpi=none', 'scripts/sm_cluster')
 
     def setup_build_environment(self, env):
