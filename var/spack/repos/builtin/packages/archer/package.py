@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
 from spack import *
 
 
@@ -41,3 +42,27 @@ class Archer(CMakePackage):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(['test'])
+
+    def run_parallel_example_test(self):
+        """Run stand alone test: parallel-simple"""
+
+        test_dir = join_path(self.prefix, '.spack', 'test', 'test', 'parallel')
+
+        if not os.path.exists(test_dir):
+            print('Skipping archer test')
+            return
+
+        exe = 'parallel-simple'
+
+        self.run_test('clang-archer',
+                      options=['-o', exe,
+                               '{0}'.format(join_path(test_dir, 'parallel-simple.c'))],
+                      purpose='test: compile {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_parallel_example_test()
