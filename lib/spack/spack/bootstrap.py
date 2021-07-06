@@ -845,11 +845,13 @@ def ensure_mypy_in_path_or_raise():
 
 
 def black_root_spec():
-    return _root_spec('py-black')
+    # black v21 is the last version to support Python 2.7.
+    # Upgrade when we no longer support Python 2.7
+    return _root_spec('py-black@:21')
 
 
 def ensure_black_in_path_or_raise():
-    """Ensure that isort is in the PATH or raise."""
+    """Ensure that black is in the PATH or raise."""
     executable, root_spec = 'black', black_root_spec()
     return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
 
