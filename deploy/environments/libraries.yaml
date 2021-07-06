@@ -25,6 +25,7 @@ spack:
     - assimp
     - boost+python@1.70.0
     - boost+python@1.73.0
+    - caliper+cuda cuda_arch=70
     - catch2
     - deflect
     - easyloggingpp
