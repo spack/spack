@@ -3,12 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from spack.operating_systems.mac_os import macos_version
-import llnl.util.tty as tty
 import itertools
 import os
 import sys
+
+import llnl.util.tty as tty
+from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
 
@@ -141,6 +142,10 @@ class Qt(Package):
           sha256='84b099109d08adf177adf9d3542b6215ec3e42138041d523860dbfdcb59fdaae',
           working_dir='qtwebsockets',
           when='@5.14: %gcc@11:')
+    patch('https://src.fedoraproject.org/rpms/qt5-qtwebengine/raw/32062243e895612823b47c2ae9eeb873a98a3542/f/qtwebengine-gcc11.patch',
+          sha256='14e2d6baff0d09a528ee3e2b5a14de160859880360100af75ea17f3e0f672787',
+          working_dir='qtwebengine',
+          when='@5.15.2:+webkit %gcc@11:')
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
 
     # Build-only dependencies
@@ -179,8 +184,19 @@ class Qt(Package):
     depends_on("pcre2+multibyte", when='@5.9:')
     depends_on("llvm", when='@5.11: +doc')
 
-    # the gl headers are needed to build webkit
+    depends_on("nss", when='@5.7: +webkit')
+    depends_on("libdrm", when='@5.7: +webkit')
+    depends_on("libxcomposite", when='@5.7: +webkit')
+    depends_on("libxcursor", when='@5.7: +webkit')
+    depends_on("libxi", when='@5.7: +webkit')
+    depends_on("libxtst", when='@5.7: +webkit')
+    depends_on("libxrandr", when='@5.7: +webkit')
+    depends_on("libxdamage", when='@5.7: +webkit')
+    depends_on("gettext", when='@5.7: +webkit')
+
+    # the gl headers and dbus are needed to build webkit
     conflicts('~opengl', when='+webkit')
+    conflicts('~dbus', when='+webkit')
 
     # gcc@4 is not supported as of Qt@5.14
     # https://doc.qt.io/qt-5.14/supported-platforms.html
@@ -312,6 +328,14 @@ class Qt(Package):
                          mkspec_dir, pname, ",".join(cnames)))
 
         return (mkspec_dir, qtplat)
+
+    # webkit requires libintl (gettext), but does not test for it
+    # correctly, so add it here.
+    def flag_handler(self, name, flags):
+        if '+webkit' in self.spec and name == 'ldlibs':
+            flags.append('-lintl')
+
+        return (flags, None, None)
 
     @when('@4 platform=darwin')
     def patch(self):
