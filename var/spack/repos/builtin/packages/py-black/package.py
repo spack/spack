@@ -21,6 +21,9 @@ class PyBlack(PythonPackage):
     version('22.3.0', sha256='35020b8886c022ced9282b51b5a875b6d1ab0c387b31a065b84db7c33085ca79')
     version('22.1.0', sha256='a7c0192d35635f6fc1174be575cb7915e92e5dd629ee79fdaf0dcfa41a80afb5')
 
+    # This is the last v21 release, and it's needed to format for Python 2.7
+    version('21.12b0', sha256='77b80f693a569e2e527958459634f18df9b0ba2625ba4e0c2d5da5be42e6f2b3')
+
     variant('d', default=False, description='enable blackd HTTP server')
     variant('colorama', default=False, description='enable colorama support')
     variant('uvloop', default=False, description='enable uvloop support')
@@ -32,10 +35,14 @@ class PyBlack(PythonPackage):
 
     # setup.py
     depends_on('python@3.6.2:', type=('build', 'run'))
+
     depends_on('py-click@8:', type=('build', 'run'))
+    # see: https://github.com/psf/black/issues/2964
+    # note that pip doesn't know this constraint.
+    depends_on("py-click@:8.0", when="@:22.2", type=("build", "run"))
+
     depends_on('py-platformdirs@2:', type=('build', 'run'))
-    depends_on('py-tomli@1.1:', when='@22.3: ^python@:3.10', type=('build', 'run'))
-    depends_on('py-tomli@1.1:', when='@22.1', type=('build', 'run'))
+    depends_on('py-tomli@1.1:', when='@21.7:', type=('build', 'run'))
     depends_on('py-typed-ast@1.4.2:', when='^python@:3.7', type=('build', 'run'))
     depends_on('py-pathspec@0.9:', type=('build', 'run'))
     depends_on('py-dataclasses@0.6:', when='^python@:3.6', type=('build', 'run'))
