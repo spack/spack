@@ -12,6 +12,7 @@ class PySphinx(PythonPackage):
     homepage = "https://sphinx-doc.org/"
     pypi = "Sphinx/Sphinx-3.2.0.tar.gz"
 
+    version('4.0.2', sha256='b5c2ae4120bf00c799ba9b3699bc895816d272d120080fbc967292f29b52b48c')
     version('3.2.0', sha256='cf2d5bc3c6c930ab0a1fbef3ad8a82994b1bf4ae923f8098a05c7e5516f07177')
     version('3.0.0', sha256='6a099e6faffdc3ceba99ca8c2d09982d43022245e409249375edf111caf79ed3')
     version('2.2.0', sha256='0d586b0f8c2fc3cc6559c5e8fd6124628110514fda0e5d7c82e682d749d2e845')
@@ -30,6 +31,7 @@ class PySphinx(PythonPackage):
     # https://github.com/sphinx-doc/sphinx/blob/master/setup.py
     # See http://www.sphinx-doc.org/en/stable/changes.html for when each
     # dependency was added or removed.
+    depends_on('python@3.6:', when='@4:', type=('build', 'run'))
     depends_on('python@3.5:', when='@2:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@:1', type=('build', 'run'))
 
@@ -43,7 +45,8 @@ class PySphinx(PythonPackage):
     depends_on('py-six@1.5:', when='@:1', type=('build', 'run'))
     depends_on('py-jinja2@2.3:', type=('build', 'run'))
     depends_on('py-pygments@2.0:', type=('build', 'run'))
-    depends_on('py-docutils@0.12:', type=('build', 'run'))
+    depends_on('py-docutils@0.14:1.17', when='@4:', type=('build', 'run'))
+    depends_on('py-docutils@0.12:', when='@:3', type=('build', 'run'))
     depends_on('py-snowballstemmer@1.1:', type=('build', 'run'))
     depends_on('py-babel@1.3:1.999,2.1:', type=('build', 'run'))
     depends_on('py-alabaster@0.7.0:0.7.999', type=('build', 'run'))
