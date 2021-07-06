@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import itertools
 import os
 import sys
@@ -142,16 +141,10 @@ class Qt(Package):
           sha256='84b099109d08adf177adf9d3542b6215ec3e42138041d523860dbfdcb59fdaae',
           working_dir='qtwebsockets',
           when='@5.14: %gcc@11:')
-    patch('https://src.fedoraproject.org/rpms/qt5-qtwebengine/raw/32062243e895612823b47c2ae9eeb873a98a3542/f/qtwebengine-gcc11.patch',
-          sha256='14e2d6baff0d09a528ee3e2b5a14de160859880360100af75ea17f3e0f672787',
-          working_dir='qtwebengine',
-          when='@5.15.2:+webkit %gcc@11:')
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
-    depends_on("flex", when='+webkit', type='build')
-    depends_on("bison", when='+webkit', type='build')
     depends_on("python", when='@5.7.0:', type='build')
 
     # Dependencies, then variant- and version-specific dependencies
@@ -162,10 +155,8 @@ class Qt(Package):
     depends_on("libxml2")
     depends_on("zlib")
     depends_on("freetype", when='+gui')
-    depends_on("gperf", when='+webkit')
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
-    depends_on("python@2.7.5:2.999", when='+webkit', type='build')
     depends_on("sqlite+column_metadata", when='+sql', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
@@ -184,19 +175,32 @@ class Qt(Package):
     depends_on("pcre2+multibyte", when='@5.9:')
     depends_on("llvm", when='@5.11: +doc')
 
-    depends_on("nss", when='@5.7: +webkit')
-    depends_on("libdrm", when='@5.7: +webkit')
-    depends_on("libxcomposite", when='@5.7: +webkit')
-    depends_on("libxcursor", when='@5.7: +webkit')
-    depends_on("libxi", when='@5.7: +webkit')
-    depends_on("libxtst", when='@5.7: +webkit')
-    depends_on("libxrandr", when='@5.7: +webkit')
-    depends_on("libxdamage", when='@5.7: +webkit')
-    depends_on("gettext", when='@5.7: +webkit')
+    with when('+webkit'):
+        patch(
+            'https://src.fedoraproject.org/rpms/qt5-qtwebengine/raw/32062243e895612823b47c2ae9eeb873a98a3542/f/qtwebengine-gcc11.patch',
+            sha256='14e2d6baff0d09a528ee3e2b5a14de160859880360100af75ea17f3e0f672787',
+            working_dir='qtwebengine',
+            when='@5.15.2: %gcc@11:'
+        )
+        # the gl headers and dbus are needed to build webkit
+        conflicts('~opengl')
+        conflicts('~dbus')
 
-    # the gl headers and dbus are needed to build webkit
-    conflicts('~opengl', when='+webkit')
-    conflicts('~dbus', when='+webkit')
+        depends_on("flex", type='build')
+        depends_on("bison", type='build')
+        depends_on("gperf")
+        depends_on("python@2.7.5:2.999", type='build')
+
+        with when('@5.7:'):
+            depends_on("nss")
+            depends_on("libdrm")
+            depends_on("libxcomposite")
+            depends_on("libxcursor")
+            depends_on("libxi")
+            depends_on("libxtst")
+            depends_on("libxrandr")
+            depends_on("libxdamage")
+            depends_on("gettext")
 
     # gcc@4 is not supported as of Qt@5.14
     # https://doc.qt.io/qt-5.14/supported-platforms.html
@@ -204,17 +208,19 @@ class Qt(Package):
 
     # Non-macOS dependencies and special macOS constraints
     if MACOS_VERSION is None:
-        depends_on("fontconfig", when='+gui')
-        depends_on("libsm", when='+gui')
-        depends_on("libx11", when='+gui')
-        depends_on("libxcb", when='+gui')
-        depends_on("libxkbcommon", when='+gui')
-        depends_on("xcb-util-image", when='+gui')
-        depends_on("xcb-util-keysyms", when='+gui')
-        depends_on("xcb-util-renderutil", when='+gui')
-        depends_on("xcb-util-wm", when='+gui')
-        depends_on("libxext", when='+gui')
-        depends_on("libxrender", when='+gui')
+        with when('+gui'):
+            depends_on("fontconfig")
+            depends_on("libsm")
+            depends_on("libx11")
+            depends_on("libxcb")
+            depends_on("libxkbcommon")
+            depends_on("xcb-util-image")
+            depends_on("xcb-util-keysyms")
+            depends_on("xcb-util-renderutil")
+            depends_on("xcb-util-wm")
+            depends_on("libxext")
+            depends_on("libxrender")
+
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
     else:
