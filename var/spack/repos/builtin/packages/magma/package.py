@@ -66,17 +66,18 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
 
     @run_before('cmake')
     def generate_cuda(self):
-        backend = 'cuda'
-        cuda_arch = self.spec.variants['cuda_arch'].value
-        gpu_target = ' '.join('sm_{0}'.format(i) for i in cuda_arch)
-        if '+rocm' in self.spec:
-            backend = 'hip'
-            gpu_target = self.spec.variants['amdgpu_target'].value
-        with open('make.inc', 'w') as inc:
-            inc.write('FORT = true\n')
-            inc.write('GPU_TARGET = %s\n' % gpu_target)
-            inc.write('BACKEND = %s\n' % backend)
-        make('generate')
+        if '@master' in self.spec:
+            backend = 'cuda'
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            gpu_target = ' '.join('sm_{0}'.format(i) for i in cuda_arch)
+            if '+rocm' in self.spec:
+                backend = 'hip'
+                gpu_target = self.spec.variants['amdgpu_target'].value
+            with open('make.inc', 'w') as inc:
+                inc.write('FORT = true\n')
+                inc.write('GPU_TARGET = %s\n' % gpu_target)
+                inc.write('BACKEND = %s\n' % backend)
+            make('generate')
 
     def cmake_args(self):
         spec = self.spec
