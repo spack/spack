@@ -90,11 +90,17 @@ config:
 
 
   # Suppress gpg warnings from binary package verification
-  # Only suppresses warnings, gpg failure will still fail the install
-  # Potential rationale to set True: users have already explicitly trusted the
-  # gpg key they are using, and may not want to see repeated warnings that it
-  # is self-signed or something of the sort.
-  suppress_gpg_warnings: false
+  # Warnings are suppressed by default. It is assumed that
+  # if a user explicitly trusts a GPG key, then they do in fact
+  # mean to trust the key for verification purposes. This spares
+  # users from a barrage of GPG warnings during binary package
+  # verification that arise because the trust model used by Spack
+  # is NOT a web of trust model as GPG assumes.
+  # Binary package verification will STILL FAIL, regardless of the
+  # value of this config option, if a user is trying to install
+  # a package that has been signed with a key that has not been
+  # explicitly trusted by the user.
+  suppress_gpg_warnings: true
 
 
   # If set to true, Spack will attempt to build any compiler on the spec

@@ -250,7 +250,7 @@ def sign(key, file, output, clearsign=False):
 
 
 @_autoinit
-def verify(signature, file, suppress_warnings=False):
+def verify(signature, file, suppress_warnings=True):
     """Verify the signature on a file.
 
     Args:
