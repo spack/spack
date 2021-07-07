@@ -6,9 +6,10 @@
 import filecmp
 import json
 import os
-import pytest
-from jsonschema import validate, ValidationError
 import shutil
+
+import pytest
+from jsonschema import ValidationError, validate
 
 import spack
 import spack.ci as ci
@@ -20,13 +21,13 @@ import spack.hash_types as ht
 import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
+import spack.util.gpg
+import spack.util.spack_yaml as syaml
 from spack.schema.buildcache_spec import schema as spec_yaml_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
-from spack.spec import Spec, CompilerSpec
+from spack.spec import CompilerSpec, Spec
 from spack.util.mock_package import MockPackageMultiRepo
-import spack.util.spack_yaml as syaml
-import spack.util.gpg
 
 
 ci_cmd = spack.main.SpackCommand('ci')
@@ -894,8 +895,9 @@ spack:
 
 @pytest.mark.disable_clean_stage_check
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
-                              install_mockery, mock_packages, mock_fetch,
-                              mock_stage, mock_gnupghome, project_dir_env):
+                              install_mockery_mutable_config, mock_packages,
+                              mock_fetch, mock_stage, mock_gnupghome,
+                              project_dir_env):
     project_dir_env(tmpdir.strpath)
     working_dir = tmpdir.join('working_dir')
 
@@ -951,7 +953,9 @@ spack:
 
             # env, spec, yaml_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(
-                env, concrete_spec, yaml_path, mirror_url, '42', True)
+                env, concrete_spec, yaml_path, mirror_url, True)
+
+            ci.write_cdashid_to_mirror('42', concrete_spec, mirror_url)
 
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 
@@ -1054,7 +1058,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
     monkeypatch.setattr(buildcache, '_createtarball', faked)
 
     url = 'fakejunk'
-    ci.push_mirror_contents(None, None, None, url, None, None)
+    ci.push_mirror_contents(None, None, None, url, None)
 
     captured = capsys.readouterr()
     std_out = captured[0]
@@ -1604,7 +1608,10 @@ spack:
     broken-specs-url: "{0}"
     mappings:
       - match:
-          - archive-files
+          - a
+          - flatten-deps
+          - b
+          - dependency-install
         runner-attributes:
           tags:
             - donotcare

@@ -41,12 +41,12 @@
 #
 ##############################################################################
 import glob
-import re
 import os
+import re
 
+import llnl.util.tty as tty
 from spack import *
 from spack.util.environment import EnvironmentModifications
-import llnl.util.tty as tty
 
 
 # Not the nice way of doing things, but is a start for refactoring
@@ -265,6 +265,7 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2106', sha256='11e41e5b9a253ef592a8f6b79f6aded623b28308192d02cec1327078523b5a37')
     version('2012_210414', sha256='5260aaa79f91aad58a3a305c1a12d0d48b10f12e37cd99a6fa561969b15ea09d')
     version('2012', sha256='3d6e39e39e7ae61d321fbc6db6c3748e6e5e1c4886454207a7f1a7321469e65a')
     version('2006_201012', sha256='9afb7eee072bfddcf7f3e58420c93463027db2394997ac4c3b87a8b07c707fb0')

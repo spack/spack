@@ -1257,7 +1257,7 @@ Variants
 Many software packages can be configured to enable optional
 features, which often come at the expense of additional dependencies or
 longer build times. To be flexible enough and support a wide variety of
-use cases, Spack permits to expose to the end-user the ability to choose
+use cases, Spack allows you to expose to the end-user the ability to choose
 which features should be activated in a package at the time it is installed.
 The mechanism to be employed is the :py:func:`spack.directives.variant` directive.
 
@@ -2774,6 +2774,57 @@ built with OpenMPI and the Intel compiler.  Another user may prefer
 packages be built with MVAPICH and GCC.
 
 See the :ref:`concretization-preferences` section for more details.
+
+
+.. _group_when_spec:
+
+----------------------------
+Common ``when=`` constraints
+----------------------------
+
+In case a package needs many directives to share the whole ``when=``
+argument, or just part of it, Spack allows you to group the common part
+under a context manager:
+
+.. code-block:: python
+
+   class Gcc(AutotoolsPackage):
+
+       with when('+nvptx'):
+           depends_on('cuda')
+           conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
+           conflicts('languages=ada')
+           conflicts('languages=brig')
+           conflicts('languages=go')
+
+The snippet above is equivalent to the more verbose:
+
+.. code-block:: python
+
+   class Gcc(AutotoolsPackage):
+
+       depends_on('cuda', when='+nvptx')
+       conflicts('@:6', when='+nvptx', msg='NVPTX only supported in gcc 7 and above')
+       conflicts('languages=ada', when='+nvptx')
+       conflicts('languages=brig', when='+nvptx')
+       conflicts('languages=go', when='+nvptx')
+
+Constraints stemming from the context are added to what is explicitly present in the
+``when=`` argument of a directive, so:
+
+.. code-block:: python
+
+   with when('+elpa'):
+       depends_on('elpa+openmp', when='+openmp')
+
+is equivalent to:
+
+.. code-block:: python
+
+   depends_on('elpa+openmp', when='+openmp+elpa')
+
+Constraints from nested context managers are also added together, but they are rarely
+needed or recommended.
 
 .. _install-method:
 
