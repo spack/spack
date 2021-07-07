@@ -109,7 +109,8 @@ spack:
       - bowtie2
       - branson
       - camx
-      - candle-benchmarks
+    # Bad variant +gpu
+    # - candle-benchmarks
       - cbench
       - cgm
       - chatterbug
