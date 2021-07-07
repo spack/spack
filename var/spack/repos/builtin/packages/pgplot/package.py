@@ -26,12 +26,26 @@ class Pgplot(MakefilePackage):
             url="ftp://ftp.astro.caltech.edu/pub/pgplot/pgplot5.2.tar.gz",
             sha256='a5799ff719a510d84d26df4ae7409ae61fe66477e3f1e8820422a9a4727a5be4')
 
-    # Create a file `conf`. This is how pgplot is configured, defining
-    # specifying compilers, paths, etc. We just point to the respective Spack
-    # wrappers.
-    patch('conf')
+    # Replace hard-coded compilers and options by tokens, so that Spack can
+    # edit the file more easily
+    patch('g77_gcc.conf.patch')
 
     parallel = False
+
+    def edit(self, spec, prefix):
+        substitutions = [
+            ('@CCOMPL@', self.compiler.cc),
+            ('@CFLAGC@', "-Wall -fPIC -DPG_PPU -O -std=c89 -Wno-error=implicit-function-declaration"),
+            ('@FCOMPL@', self.compiler.f77),
+            ('@FFLAGC@', "-Wall -fPIC -O -ffixed-line-length-none -fallow-invalid-boz"),
+            ('@LIBS@', "-lgfortran"),
+            ('@SHARED_LD@', self.compiler.cc + " -shared -o $SHARED_LIB -lgfortran"),
+        ]
+        conf = join_path(
+            self.stage.source_path, 'sys_linux/g77_gcc.conf'
+        )
+        for key, value in substitutions:
+            filter_file(key, value, conf)
 
     def build(self, spec, prefix):
         makemake = which('./makemake')
