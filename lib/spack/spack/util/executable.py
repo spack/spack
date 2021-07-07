@@ -2,11 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 import os
 import re
 import shlex
 import subprocess
+import sys
+
 from six import string_types, text_type
 
 import llnl.util.tty as tty
@@ -123,6 +124,7 @@ class Executable(object):
         env.update(self.default_env)
 
         from spack.util.environment import EnvironmentModifications  # no cycle
+
         # Apply env argument
         if isinstance(env_arg, EnvironmentModifications):
             env_arg.apply_modifications(env)

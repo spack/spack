@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.util.url
 import spack.package
+import spack.util.url
 
 
 class SourcewarePackage(spack.package.PackageBase):

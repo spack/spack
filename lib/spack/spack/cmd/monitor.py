@@ -5,7 +5,6 @@
 
 import spack.monitor
 
-
 description = "interact with a monitor server"
 section = "analysis"
 level = "long"

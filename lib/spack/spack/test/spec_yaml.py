@@ -21,12 +21,10 @@ import spack.spec
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.version
-
 from spack import repo
 from spack.spec import Spec, save_dependency_spec_yamls
-from spack.util.spack_yaml import syaml_dict
 from spack.util.mock_package import MockPackageMultiRepo
-
+from spack.util.spack_yaml import syaml_dict
 
 if sys.version_info >= (3, 3):
     from collections.abc import Iterable, Mapping  # novm

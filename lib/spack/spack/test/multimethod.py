@@ -9,7 +9,6 @@ import pytest
 import spack.repo
 from spack.multimethod import NoSuchMethodError
 
-
 pytestmark = pytest.mark.usefixtures('mock_packages')
 
 

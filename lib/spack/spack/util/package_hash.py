@@ -6,10 +6,10 @@
 import ast
 import hashlib
 
-import spack.repo
-import spack.package
 import spack.directives
 import spack.error
+import spack.package
+import spack.repo
 import spack.spec
 import spack.util.naming
 

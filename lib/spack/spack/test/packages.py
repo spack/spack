@@ -4,16 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+
 import pytest
 
-import spack.repo
+import spack.directives
 import spack.fetch_strategy
+import spack.repo
 from spack.paths import mock_packages_path
-from spack.util.naming import mod_to_class
 from spack.spec import Spec
+from spack.util.naming import mod_to_class
 from spack.util.package_hash import package_content
 from spack.version import VersionChecksumError
-import spack.directives
 
 
 def _generate_content_strip_name(spec):
@@ -109,7 +110,6 @@ class TestPackage(object):
 
     def test_import_package_as(self):
         import spack.pkg.builtin.mock.mpich as mp       # noqa
-
         import spack.pkg.builtin.mock                   # noqa
         import spack.pkg.builtin.mock as m              # noqa
         from spack.pkg.builtin import mock              # noqa
@@ -161,11 +161,9 @@ class TestPackage(object):
         import spack.pkg                                # noqa
         import spack.pkg as p                           # noqa
         from spack import pkg                           # noqa
-
         import spack.pkg.builtin                        # noqa
         import spack.pkg.builtin as b                   # noqa
         from spack.pkg import builtin                   # noqa
-
         import spack.pkg.builtin.mock                   # noqa
         import spack.pkg.builtin.mock as m              # noqa
         from spack.pkg.builtin import mock              # noqa

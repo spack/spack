@@ -3,26 +3,27 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
+import itertools as it
 import json
 import os
+
 import pytest
 
 import llnl.util.filesystem as fs
 
 import spack.ci as ci
+import spack.ci_needs_workaround as cinw
+import spack.ci_optimization as ci_opt
+import spack.config as cfg
 import spack.environment as ev
 import spack.error
 import spack.main as spack_main
-import spack.config as cfg
 import spack.paths as spack_paths
 import spack.spec as spec
 import spack.util.gpg
-
-import spack.ci_optimization as ci_opt
-import spack.ci_needs_workaround as cinw
 import spack.util.spack_yaml as syaml
-import itertools as it
-import collections
+
 try:
     # dynamically import to keep vermin from complaining
     collections_abc = __import__('collections.abc')

@@ -5,9 +5,10 @@
 
 
 import itertools
-import re
 import os
+import re
 import sys
+
 import llnl.util.tty as tty
 
 

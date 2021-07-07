@@ -6,20 +6,20 @@
 """\
 Test that Spack's shebang filtering works correctly.
 """
-import os
-import stat
-import pytest
-import tempfile
-import shutil
 import filecmp
+import os
+import shutil
+import stat
+import tempfile
+
+import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.hooks.sbang as sbang
 import spack.paths
 import spack.store
-import spack.hooks.sbang as sbang
 from spack.util.executable import which
-
 
 too_long = sbang.shebang_limit + 1
 

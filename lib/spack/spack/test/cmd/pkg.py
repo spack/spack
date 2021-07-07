@@ -5,14 +5,15 @@
 
 from __future__ import print_function
 
-import pytest
 import re
 import shutil
 
+import pytest
+
 from llnl.util.filesystem import mkdirp, working_dir
 
-import spack.main
 import spack.cmd.pkg
+import spack.main
 from spack.util.executable import which
 
 pytestmark = pytest.mark.skipif(not which('git'),
