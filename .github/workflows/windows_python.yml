@@ -42,7 +42,7 @@ jobs:
     - name: Install Python packages
       run: |
         python -m pip install --upgrade pip six setuptools flake8 mypy>=0.800 black pywin32
-    - name:
+    - name: Create local develop
       run: |
         .\spack\.github\workflows\setup_git.ps1
     - name: Run style tests
