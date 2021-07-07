@@ -171,7 +171,8 @@ spack:
       - su2
       - swfft
       - tinker
-      - vasp
+    # gfortran < 9.x unsupported
+    # - vasp
       - vpfft
       - vpic
       - warpx
