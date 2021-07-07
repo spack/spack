@@ -1616,44 +1616,26 @@ Step 2: Install and setup Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We are now ready to get the Spack environment set up on our machine. We
-begin by creating a top-level directory to do our work in: we will call
-it ``spack_install`` in this tutorial. Inside this directory, use Git to
-clone the Spack repo, hosted at https://github.com/spack/spack.git.
+begin by using Git to clone the Spack repo, hosted at https://github.com/spack/spack.git
+into a desired directory, for our purposes today, called ``spack_install``.
 
 The files and scripts used for Windows installation are on the
 ``features/windows-support`` branch; ``cd`` into the repo and use
-``git checkout`` to switch to it. Then navigate to
-``lib\spack\spack\cmd\installer`` and copy the ``scripts`` directory and
-``spack_cmd.bat`` up to the top-level ``spack_install`` directory. In a
-Windows console, you can do both of these things by executing the following
-commands from the ``spack_install`` level:
+``git checkout`` to switch to it.
 
-.. code-block:: console
-
-   xcopy lib\spack\spack\cmd\installer\scripts\ scripts\
-   xcopy lib\spack\spack\cmd\installer\spack_cmd.bat .
-
-Your file structure should look like this after following the above
-steps:
-
-.. code-block:: console
-
-   spack_install
-       |--------spack
-       |--------scripts
-       |--------spack_cmd.bat
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 3: Run and configure Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To use Spack, run ``spack_cmd.bat`` (you may need to Run as Administrator).
-This will provide a Windows command prompt with an environment properly set
-up with Spack and its prerequisites. If you receive a warning message that
-Python is not in your ``PATH`` (which may happen if you installed Python
-from the website and not the Windows Store), add the location of the Python
-executable to your ``PATH`` now.
+To use Spack, run ``bin\spack_cmd.bat`` (you may need to Run as Administrator)
+from the spack source tree root. This will provide a Windows command prompt
+with an environment properly set up with Spack and its prerequisites.
+If you receive a warning message that Python is not in your ``PATH``
+(which may happen if you installed Python from the website and not
+the Windows Store), add the location of the Python executable to your
+``PATH`` now.
 
 To configure Spack, first run the following command inside the Spack console:
 
