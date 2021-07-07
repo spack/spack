@@ -1,15 +1,17 @@
 @ECHO OFF
 setlocal EnableDelayedExpansion
 :: (c) 2021 Lawrence Livermore National Laboratory
-:: To use this file independently of Spack's installer, please copy this file, and the
-:: 'scripts' directory, to be adjacent to your spack directory. You must have python on
-:: your path for Spack to locate it.
-:: source_dir -------- spack
-::                |--- scripts
-::                |--- spack_cmd.bat
-pushd %~dp0
+:: To use this file independently of Spack's installer, execute this script in its directory, or add the
+:: associated bin directory to your PATH. Invoke to launch Spack Shell.
+::
+:: source_dir/spack/bin/spack_cmd.bat
+::
+pushd %~dp0..
+set SPACK_ROOT=%CD%
+pushd %CD%\..
 set spackinstdir=%CD%
 popd
+
 
 :: Check if Python is on the PATH
 (for /f "delims=" %%F in ('where python.exe') do (set python_pf_ver=%%F) ) 2> NUL
@@ -38,17 +40,13 @@ if not defined python_pf_ver (
 )
 :exitpoint
 
-
-for /f "tokens=*" %%g in ('dir /b /a:d "%spackinstdir%\spack*"') do (set spack_ver=%%g)
-set "SPACK_ROOT=%spackinstdir%\%spack_ver%"
-
-set "PATH=%spackinstdir%\scripts\;%PATH%"
+set "PATH=%SPACK_ROOT%\bin\;%PATH%"
 if defined py_path (
     set "PATH=%py_path%;%PATH%"
 )
 
 if defined py_exe (
-    "%py_exe%" "%spackinstdir%\scripts\haspywin.py"
+    "%py_exe%" "%SPACK_ROOT%\bin\haspywin.py"
     "%py_exe%" "%SPACK_ROOT%\bin\spack" external find python >NUL
 )
 
