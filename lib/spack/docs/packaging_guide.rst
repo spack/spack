@@ -920,12 +920,13 @@ For some packages, source code is provided in a Version Control System
 (VCS) repository rather than in a tarball.  Spack can fetch packages
 from VCS repositories. Currently, Spack supports fetching with `Git
 <git-fetch_>`_, `Mercurial (hg) <hg-fetch_>`_, `Subversion (svn)
-<svn-fetch_>`_, and `Go <go-fetch_>`_.  In all cases, the destination
+<svn-fetch_>`_, `CVS (cvs) <cvs-fetch_>`_, and `Go <go-fetch_>`_.
+In all cases, the destination
 is the standard stage source path.
 
 To fetch a package from a source repository, Spack needs to know which
 VCS to use and where to download from. Much like with ``url``, package
-authors can specify a class-level ``git``, ``hg``, ``svn``, or ``go``
+authors can specify a class-level ``git``, ``hg``, ``svn``, ``cvs``, or ``go``
 attribute containing the correct download location.
 
 Many packages developed with Git have both a Git repository as well as
@@ -1173,6 +1174,55 @@ you can check out a branch or tag by changing the URL. If you want to
 package multiple branches, simply add a ``svn`` argument to each
 version directive.
 
+.. _cvs-fetch:
+
+^^^
+CVS
+^^^
+
+CVS (Concurrent Versions System) is an old centralized version control
+system. It is a predecessor of Subversion.
+
+To fetch with CVS, use the ``cvs``, branch, and ``date`` parameters.
+The destination directory will be the standard stage source path.
+
+Fetching the head
+  Simply add a ``cvs`` parameter to the package:
+
+  .. code-block:: python
+
+     class Example(Package):
+
+         cvs = ":pserver:outreach.scidac.gov/cvsroot%module=modulename"
+
+         version('1.1.2.4')
+
+  CVS repository locations are described using an older syntax that
+  is different from today's ubiquitous URL syntax. ``:pserver:``
+  denotes the transport method. CVS servers can host multiple
+  repositories (called "modules") at the same location, and one needs
+  to specify both the server location and the module name to access.
+  Spack combines both into one string using the ``%module=modulename``
+  suffix shown above.
+
+  This download method is untrusted.
+
+Fetching a date
+  Versions in CVS are commonly specified by date. To fetch a
+  particular branch or date, add a ``branch`` and/or ``date`` argument
+  to the version directive:
+
+  .. code-block:: python
+
+     version('2021.4.22', branch='branchname', date='2021-04-22')
+
+  Unfortunately, CVS does not identify repository-wide commits via a
+  revision or hash like Subversion, Git, or Mercurial do. This makes
+  it impossible to specify an exact commit to check out.
+
+CVS has more features, but since CVS is rarely used these days, Spack
+does not support all of them.
+
 .. _go-fetch:
 
 ^^
@@ -1207,7 +1257,7 @@ Variants
 Many software packages can be configured to enable optional
 features, which often come at the expense of additional dependencies or
 longer build times. To be flexible enough and support a wide variety of
-use cases, Spack permits to expose to the end-user the ability to choose
+use cases, Spack allows you to expose to the end-user the ability to choose
 which features should be activated in a package at the time it is installed.
 The mechanism to be employed is the :py:func:`spack.directives.variant` directive.
 
@@ -2724,6 +2774,57 @@ built with OpenMPI and the Intel compiler.  Another user may prefer
 packages be built with MVAPICH and GCC.
 
 See the :ref:`concretization-preferences` section for more details.
+
+
+.. _group_when_spec:
+
+----------------------------
+Common ``when=`` constraints
+----------------------------
+
+In case a package needs many directives to share the whole ``when=``
+argument, or just part of it, Spack allows you to group the common part
+under a context manager:
+
+.. code-block:: python
+
+   class Gcc(AutotoolsPackage):
+
+       with when('+nvptx'):
+           depends_on('cuda')
+           conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
+           conflicts('languages=ada')
+           conflicts('languages=brig')
+           conflicts('languages=go')
+
+The snippet above is equivalent to the more verbose:
+
+.. code-block:: python
+
+   class Gcc(AutotoolsPackage):
+
+       depends_on('cuda', when='+nvptx')
+       conflicts('@:6', when='+nvptx', msg='NVPTX only supported in gcc 7 and above')
+       conflicts('languages=ada', when='+nvptx')
+       conflicts('languages=brig', when='+nvptx')
+       conflicts('languages=go', when='+nvptx')
+
+Constraints stemming from the context are added to what is explicitly present in the
+``when=`` argument of a directive, so:
+
+.. code-block:: python
+
+   with when('+elpa'):
+       depends_on('elpa+openmp', when='+openmp')
+
+is equivalent to:
+
+.. code-block:: python
+
+   depends_on('elpa+openmp', when='+openmp+elpa')
+
+Constraints from nested context managers are also added together, but they are rarely
+needed or recommended.
 
 .. _install-method:
 

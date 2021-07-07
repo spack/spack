@@ -120,7 +120,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('kim-api', when='+kim')
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
-    depends_on('kokkos+deprecated_code+shared@3.0', when='@20200303+kokkos')
+    depends_on('kokkos+deprecated_code+shared@3.0.00', when='@20200303+kokkos')
     depends_on('kokkos+shared@3.1:', when='@20200505:+kokkos')
     depends_on('adios2', when='+user-adios')
     depends_on('plumed', when='+user-plumed')

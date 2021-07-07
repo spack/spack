@@ -11,8 +11,7 @@ import sys
 import llnl.util.tty as tty
 import spack.architecture
 import spack.util.executable
-
-from spack.operating_systems.mac_os import macos_version, macos_sdk_path
+from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
@@ -25,7 +24,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
-    maintainers = ['michaelkuhn']
+    maintainers = ['michaelkuhn', 'alalazo']
 
     version('master', branch='master')
 
@@ -120,11 +119,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
     #   GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
-    depends_on('isl@0.14', when='@5.0:5.2 +graphite')
-    depends_on('isl@0.15', when='@5.3:5.9 +graphite')
-    depends_on('isl@0.15:0.18', when='@6:8.9 +graphite')
-    depends_on('isl@0.15:0.20', when='@9:9.9 +graphite')
-    depends_on('isl@0.15:', when='@10: +graphite')
+    with when('+graphite'):
+        depends_on('isl@0.14', when='@5.0:5.2')
+        depends_on('isl@0.15', when='@5.3:5.9')
+        depends_on('isl@0.15:0.18', when='@6:8.9')
+        depends_on('isl@0.15:0.20', when='@9:9.9')
+        depends_on('isl@0.15:', when='@10:')
+
     depends_on('zlib', when='@6:')
     # GCC only tries to link with -lzstd but it requires
     # -pthread too when linking against libzstd.a, so
@@ -135,25 +136,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gnat', when='languages=ada')
     depends_on('binutils+gas+ld+plugins~libiberty', when='+binutils', type=('build', 'link', 'run'))
     depends_on('zip', type='build', when='languages=java')
-    depends_on('cuda', when='+nvptx')
 
     # The server is sometimes a bit slow to respond
     timeout = {'timeout': 60}
-
-    resource(name='newlib',
-             url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
-             sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
-             destination='newlibsource',
-             when='+nvptx',
-             fetch_options=timeout)
-
-    # nvptx-tools does not seem to work as a dependency,
-    # but does fine when the source is inside the gcc build directory
-    # nvptx-tools doesn't have any releases, so grabbing the last commit
-    resource(name='nvptx-tools',
-             git='https://github.com/MentorEmbedded/nvptx-tools',
-             commit='d0524fbdc86dfca068db5a21cc78ac255b335be5',
-             when='+nvptx')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -167,14 +152,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('guile@1.4.1:', type='test')
 
     # See https://golang.org/doc/install/gccgo#Releases
-    provides('golang',        when='languages=go @4.6:')
-    provides('golang@:1',     when='languages=go @4.7.1:')
-    provides('golang@:1.1',   when='languages=go @4.8:')
-    provides('golang@:1.1.2', when='languages=go @4.8.2:')
-    provides('golang@:1.2',   when='languages=go @4.9:')
-    provides('golang@:1.4',   when='languages=go @5:')
-    provides('golang@:1.6.1', when='languages=go @6:')
-    provides('golang@:1.8',   when='languages=go @7:')
+    with when('languages=go'):
+        provides('golang',        when='@4.6:')
+        provides('golang@:1',     when='@4.7.1:')
+        provides('golang@:1.1',   when='@4.8:')
+        provides('golang@:1.1.2', when='@4.8.2:')
+        provides('golang@:1.2',   when='@4.9:')
+        provides('golang@:1.4',   when='@5:')
+        provides('golang@:1.6.1', when='@6:')
+        provides('golang@:1.8',   when='@7:')
+        # GCC 4.6 added support for the Go programming language.
+        # See https://gcc.gnu.org/gcc-4.6/changes.html
+        conflicts('@:4.5', msg='support for Go has been added in GCC 4.6')
+        # Go is not supported on macOS
+        conflicts('platform=darwin', msg='Go not supported on MacOS')
 
     # For a list of valid languages for a specific release,
     # run the following command in the GCC source directory:
@@ -194,13 +185,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # but this is the first version that accepts 'c' as a valid language.
     conflicts('languages=c', when='@:4.7')
 
-    # GCC 4.6 added support for the Go programming language.
-    # See https://gcc.gnu.org/gcc-4.6/changes.html
-    conflicts('languages=go', when='@:4.5')
-
-    # Go is not supported on macOS
-    conflicts('languages=go', when='platform=darwin')
-
     # The GCC Java frontend and associated libjava runtime library
     # have been removed from GCC as of GCC 7.
     # See https://gcc.gnu.org/gcc-7/changes.html
@@ -210,17 +194,34 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts('languages=jit', when='@:4')
 
-    # NVPTX offloading supported in 7 and later by limited languages
-    conflicts('+nvptx', when='@:6', msg='NVPTX only supported in gcc 7 and above')
-    conflicts('languages=ada', when='+nvptx')
-    conflicts('languages=brig', when='+nvptx')
-    conflicts('languages=go', when='+nvptx')
-    conflicts('languages=java', when='+nvptx')
-    conflicts('languages=jit', when='+nvptx')
-    conflicts('languages=objc', when='+nvptx')
-    conflicts('languages=obj-c++', when='+nvptx')
-    # NVPTX build disables bootstrap
-    conflicts('+bootstrap', when='+nvptx')
+    with when('+nvptx'):
+        depends_on('cuda')
+        resource(
+            name='newlib',
+            url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
+            sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
+            destination='newlibsource',
+            fetch_options=timeout
+        )
+        # nvptx-tools does not seem to work as a dependency,
+        # but does fine when the source is inside the gcc build directory
+        # nvptx-tools doesn't have any releases, so grabbing the last commit
+        resource(
+            name='nvptx-tools',
+            git='https://github.com/MentorEmbedded/nvptx-tools',
+            commit='d0524fbdc86dfca068db5a21cc78ac255b335be5',
+        )
+        # NVPTX offloading supported in 7 and later by limited languages
+        conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
+        conflicts('languages=ada')
+        conflicts('languages=brig')
+        conflicts('languages=go')
+        conflicts('languages=java')
+        conflicts('languages=jit')
+        conflicts('languages=objc')
+        conflicts('languages=obj-c++')
+        # NVPTX build disables bootstrap
+        conflicts('+bootstrap')
 
     # Binutils can't build ld on macOS
     conflicts('+binutils', when='platform=darwin')

@@ -156,6 +156,26 @@ def print_text_info(pkg):
         color.cprint(section_title('Maintainers: ') + mnt)
 
     color.cprint('')
+    color.cprint(section_title('Externally Detectable: '))
+
+    # If the package has an 'executables' field, it can detect an installation
+    if hasattr(pkg, 'executables'):
+        find_attributes = []
+        if hasattr(pkg, 'determine_version'):
+            find_attributes.append('version')
+
+        if hasattr(pkg, 'determine_variants'):
+            find_attributes.append('variants')
+
+        # If the package does not define 'determine_version' nor
+        # 'determine_variants', then it must use some custom detection
+        # mechanism. In this case, just inform the user it's detectable somehow.
+        color.cprint('    True{0}'.format(
+            ' (' + ', '.join(find_attributes) + ')' if find_attributes else ''))
+    else:
+        color.cprint('    False')
+
+    color.cprint('')
     color.cprint(section_title("Tags: "))
     if hasattr(pkg, 'tags'):
         tags = sorted(pkg.tags)

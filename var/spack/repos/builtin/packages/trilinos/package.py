@@ -5,6 +5,7 @@
 
 import os
 import sys
+
 from spack import *
 from spack.operating_systems.mac_os import macos_version
 from spack.pkg.builtin.kokkos import Kokkos
@@ -29,7 +30,7 @@ class Trilinos(CMakePackage, CudaPackage):
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
     git      = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ['keitat']
+    maintainers = ['keitat', 'sethrj']
 
     # ###################### Versions ##########################
 
@@ -70,7 +71,7 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('float', default=False,
             description='Enable single precision (float) numbers in Trilinos')
     variant('gotype', default='long',
-            values=('none', 'int', 'long', 'long_long'),
+            values=('int', 'long', 'long_long', 'all'),
             multi=False,
             description='global ordinal type for Tpetra')
     variant('fortran',      default=True,
@@ -100,7 +101,7 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Enable ADIOS2')
     variant('glm',          default=True,
             description='Compile with GLM')
-    variant('gtest',        default=True,
+    variant('gtest',        default=False,
             description='Compile with Gtest')
     variant('hdf5',         default=True,
             description='Compile with HDF5')
@@ -302,10 +303,13 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+teko', when='~amesos')
     conflicts('+teko', when='~anasazi')
     conflicts('+teko', when='~aztec')
+    conflicts('+teko', when='~epetraext')
     conflicts('+teko', when='~ifpack')
     conflicts('+teko', when='~ml')
+    conflicts('+teko', when='~stratimikos')
     conflicts('+teko', when='~teuchos')
     conflicts('+teko', when='~tpetra')
+    conflicts('+teko', when='@:12 gotype=long')
     conflicts('+tempus', when='~nox')
     conflicts('+tempus', when='~teuchos')
     conflicts('+tpetra', when='~kokkos')
@@ -369,12 +373,15 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+scorec', when='~stk')
     conflicts('+scorec', when='~zoltan')
 
+    # Multi-value gotype only applies to trilinos through 12.14
+    conflicts('gotype=all', when='@12.15:')
+
     # All compilers except for pgi are in conflict:
     for __compiler in spack.compilers.supported_compilers():
         if __compiler != 'clang':
             conflicts('+cuda', when='~wrapper %{0}'.format(__compiler),
-                      msg='trilinos~wrapper+cuda can only be built with the\
-                      Clang compiler')
+                      msg='trilinos~wrapper+cuda can only be built with the '
+                      'Clang compiler')
 
     # ###################### Dependencies ##########################
 
@@ -453,6 +460,10 @@ class Trilinos(CMakePackage, CudaPackage):
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
     # avoid calling deprecated functions with CUDA-11
     patch('fix_cxx14_cuda11.patch', when='@13.0.0:13.0.1 cxxstd=14 ^cuda@11:')
+
+    patch('https://github.com/trilinos/Trilinos/commit/b17f20a0b91e0b9fc5b1b0af3c8a34e2a4874f3f.patch',
+          sha256='dee6c55fe38eb7f6367e1896d6bc7483f6f9ab8fa252503050cc0c68c6340610',
+          when='@13.0.0:13.0.1 +teko gotype=long')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
@@ -875,21 +886,13 @@ class Trilinos(CMakePackage, CudaPackage):
             ])
 
             gotype = spec.variants['gotype'].value
-            # default in older Trilinos versions to enable multiple GOs
-            if ((gotype == 'none') and spec.satisfies('@:12.14.1')):
+            if gotype == 'all':
+                # default in older Trilinos versions to enable multiple GOs
                 options.extend([
-                    '-DTpetra_INST_INT_INT:BOOL=ON',
-                    '-DTpetra_INST_INT_LONG:BOOL=ON',
-                    '-DTpetra_INST_INT_LONG_LONG:BOOL=ON'
+                    define('Tpetra_INST_INT_INT', True),
+                    define('Tpetra_INST_INT_LONG', True),
+                    define('Tpetra_INST_INT_LONG_LONG', True),
                 ])
-            # set default GO in newer versions to long
-            elif (gotype == 'none'):
-                options.extend([
-                    '-DTpetra_INST_INT_INT:BOOL=OFF',
-                    '-DTpetra_INST_INT_LONG:BOOL=ON',
-                    '-DTpetra_INST_INT_LONG_LONG:BOOL=OFF'
-                ])
-            # if another GO is specified, use this
             else:
                 options.extend([
                     define('Tpetra_INST_INT_INT', gotype == 'int'),

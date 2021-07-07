@@ -171,7 +171,7 @@ spack:
 
   - cuda_specs:
     - amrex +cuda cuda_arch=70
-    - axom +cuda cuda_arch=70 ^umpire@4.1.2 ~shared
+    # - axom +cuda cuda_arch=70 ^umpire@4.1.2 ~shared
     - caliper +cuda cuda_arch=70
     - chai +cuda ~benchmarks ~tests cuda_arch=70 ^umpire@4.1.2 ~shared
     - ginkgo +cuda cuda_arch=70
@@ -345,6 +345,7 @@ spack:
         - trilinos
         - vtk-h
         - vtk-m
+        - warpx
         runner-attributes:
           image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
           tags: ["spack", "public", "xlarge", "x86_64"]
@@ -368,4 +369,3 @@ spack:
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
-

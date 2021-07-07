@@ -14,7 +14,7 @@ class Filo(CMakePackage):
 
     tags = ['ecp']
 
-    version('master', branch='master')
+    version('main', branch='main')
 
     depends_on('mpi')
     depends_on('axl')

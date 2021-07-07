@@ -11,12 +11,11 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
-import re
 import os
+import re
 from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
-
 from spack import *
 
 
@@ -65,6 +64,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     depends_on('gdbm')
     depends_on('berkeley-db')
+    depends_on('bzip2+shared')
+    depends_on('zlib+shared')
 
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
@@ -270,11 +271,21 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             mkdirp(module.perl_lib_dir)
 
     def setup_build_environment(self, env):
+        spec = self.spec
+
         # This is to avoid failures when using -mmacosx-version-min=11.1
         # since not all Apple Clang compilers support that version range
         # See https://eclecticlight.co/2020/07/21/big-sur-is-both-10-16-and-11-0-its-official/
-        if self.spec.satisfies('os=bigsur'):
+        if spec.satisfies('os=bigsur'):
             env.set('SYSTEM_VERSION_COMPAT', 1)
+
+        # This is how we tell perl the locations of bzip and zlib.
+        env.set('BUILD_BZIP2', 0)
+        env.set('BZIP2_INCLUDE', spec['bzip2'].prefix.include)
+        env.set('BZIP2_LIB',     spec['bzip2'].prefix.lib)
+        env.set('BUILD_ZLIB', 0)
+        env.set('ZLIB_INCLUDE', spec['zlib'].prefix.include)
+        env.set('ZLIB_LIB',     spec['zlib'].prefix.lib)
 
     @run_after('install')
     def filter_config_dot_pm(self):

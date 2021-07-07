@@ -33,11 +33,12 @@ import heapq
 import itertools
 import os
 import shutil
-import six
 import sys
 import time
-
 from collections import defaultdict
+
+import six
+
 
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
@@ -51,12 +52,11 @@ import spack.package
 import spack.package_prefs as prefs
 import spack.repo
 import spack.store
-
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
 from spack.util.environment import dump_environment
 from spack.util.executable import which
-
+from spack.util.timer import Timer
 
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they
@@ -814,24 +814,29 @@ class PackageInstaller(object):
         # Determine if the spec is flagged as installed in the database
         rec, installed_in_db = self._check_db(task.pkg.spec)
 
-        # Make sure the installation directory is in the desired state
-        # for uninstalled specs.
-        partial = False
-        if not installed_in_db and os.path.isdir(task.pkg.spec.prefix):
-            if not keep_prefix:
-                task.pkg.remove_prefix()
-            else:
-                tty.debug('{0} is partially installed'
-                          .format(task.pkg_id))
-                partial = True
+        if not installed_in_db:
+            # Ensure there is no other installed spec with the same prefix dir
+            if spack.store.db.is_occupied_install_prefix(task.pkg.spec.prefix):
+                raise InstallError(
+                    "Install prefix collision for {0}".format(task.pkg_id),
+                    long_msg="Prefix directory {0} already used by another "
+                             "installed spec.".format(task.pkg.spec.prefix))
+
+            # Make sure the installation directory is in the desired state
+            # for uninstalled specs.
+            if os.path.isdir(task.pkg.spec.prefix):
+                if not keep_prefix:
+                    task.pkg.remove_prefix()
+                else:
+                    tty.debug('{0} is partially installed'.format(task.pkg_id))
 
         # Destroy the stage for a locally installed, non-DIYStage, package
         if restage and task.pkg.stage.managed_by_spack:
             task.pkg.stage.destroy()
 
-        if not partial and self.layout.check_installed(task.pkg.spec) and (
-                rec.spec.dag_hash() not in task.request.overwrite or
-                rec.installation_time > task.request.overwrite_time
+        if installed_in_db and (
+            rec.spec.dag_hash() not in task.request.overwrite or
+            rec.installation_time > task.request.overwrite_time
         ):
             self._update_installed(task)
 
@@ -1613,6 +1618,7 @@ class PackageInstaller(object):
                 # package as a failure.
                 if (not isinstance(exc, spack.error.SpackError) or
                     not exc.printed):
+                    exc.printed = True
                     # SpackErrors can be printed by the build process or at
                     # lower levels -- skip printing if already printed.
                     # TODO: sort out this and SpackError.print_context()
@@ -1685,7 +1691,7 @@ def build_process(pkg, kwargs):
     unmodified_env = kwargs.get('unmodified_env', {})
     verbose = kwargs.get('verbose', False)
 
-    start_time = time.time()
+    timer = Timer()
     if not fake:
         if not skip_patch:
             pkg.do_patch()
@@ -1770,9 +1776,9 @@ def build_process(pkg, kwargs):
 
                             # Redirect stdout and stderr to daemon pipe
                             phase = getattr(pkg, phase_attr)
+                            timer.phase(phase_name)
 
                             # Catch any errors to report to logging
-
                             phase(pkg.spec, pkg.prefix)
                             spack.hooks.on_phase_success(pkg, phase_name, log_file)
 
@@ -1788,17 +1794,19 @@ def build_process(pkg, kwargs):
             combine_phase_logs(pkg.phase_log_files, pkg.log_path)
             log(pkg)
 
+        # Stop the timer and save results
+        timer.stop()
+        with open(pkg.times_log_path, 'w') as timelog:
+            timer.write_json(timelog)
+
         # Run post install hooks before build stage is removed.
         spack.hooks.post_install(pkg.spec)
 
-    # Stop the timer
-    pkg._total_time = time.time() - start_time
-    build_time = pkg._total_time - pkg._fetch_time
-
+    build_time = timer.total - pkg._fetch_time
     tty.msg('{0} Successfully installed {1}'.format(pre, pkg_id),
             'Fetch: {0}.  Build: {1}.  Total: {2}.'
             .format(_hms(pkg._fetch_time), _hms(build_time),
-                    _hms(pkg._total_time)))
+                    _hms(timer.total)))
     _print_installed_pkg(pkg.prefix)
 
     # Send final status that install is successful

@@ -18,6 +18,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['WeiqunZhang', 'asalmgren']
 
     version('develop', branch='development')
+    version('21.07', sha256='9630b8c0c7ffbf3f5ea4d973a3fdb40b9b10fec0f8df33b9e24d76d2c1d15771')
     version('21.06', sha256='6982c22837d7c0bc4583065d9da55e0aebcf07b54386e4b90a779391fe73fd53')
     version('21.05', sha256='eb6d21e48279ad67278413c77b29a1754c18ffe741aa6b3a9f3f01eeac13177f')
     version('21.04', sha256='1c610e4b0800b16f7f1da74193ff11af0abfb12198b36a7e565a6a7f793087fa')
@@ -128,6 +129,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('cuda_arch=30', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('cuda_arch=32', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('+rocm', when='@:20.11', msg='AMReX HIP support needs AMReX newer than version 20.11')
+    conflicts('%rocm@4.2.0:4.2.99', when='+rocm',
+              msg='AMReX does not support rocm-4.2 due to a compiler bug')
     conflicts('+cuda', when='+rocm', msg='CUDA and HIP support are exclusive')
 
     def url_for_version(self, version):
