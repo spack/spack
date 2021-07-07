@@ -122,7 +122,8 @@ spack:
     # - cosmoflow-benchmark
       - cosmomc
       - cosp2
-      - cp2k
+    # libxsmm not avail on arm
+    # - cp2k
       - dock
       - elk
       - elmerfem
