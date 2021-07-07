@@ -103,7 +103,8 @@ spack:
     # - albany
       - amber
       - amg2013
-      - aoflagger
+    # Bad variant +fftw
+    # - aoflagger
       - athena
       - bowtie2
       - branson
