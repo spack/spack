@@ -130,7 +130,8 @@ spack:
       - exabayes
       - examl
     # - flecsph
-      - frontistr
+    # trilinos variant (mumps)
+    # - frontistr
       - gatk
       - graph500
       - hpgmg
