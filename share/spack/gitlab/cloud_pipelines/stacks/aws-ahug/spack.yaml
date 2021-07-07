@@ -129,7 +129,7 @@ spack:
       - elmerfem
       - exabayes
       - examl
-      - flecsph
+    # - flecsph
       - frontistr
       - gatk
       - graph500
