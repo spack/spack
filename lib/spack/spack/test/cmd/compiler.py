@@ -62,6 +62,7 @@ done
     return str(tmpdir)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.regression('11678,13138')
 def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir):
     with tmpdir.as_cwd():
@@ -114,6 +115,7 @@ def test_compiler_remove(mutable_config, mock_packages):
     assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_compiler_add(
         mutable_config, mock_packages, mock_compiler_dir, mock_compiler_version
 ):
@@ -193,6 +195,7 @@ fi
     yield tmpdir
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.regression('17590')
 def test_compiler_find_mixed_suffixes(
         no_compilers_yaml, working_env, clangdir):
@@ -228,6 +231,7 @@ def test_compiler_find_mixed_suffixes(
     }
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.regression('17590')
 def test_compiler_find_prefer_no_suffix(
         no_compilers_yaml, working_env, clangdir):
@@ -253,10 +257,9 @@ def test_compiler_find_prefer_no_suffix(
     assert clang['paths']['cxx'] == str(clangdir.join('clang++'))
 
 
-def test_compiler_find_path_order(
-        no_compilers_yaml, working_env, clangdir):
-    """Ensure that we find compilers that come first in the PATH first
-    """
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+def test_compiler_find_path_order(no_compilers_yaml, working_env, clangdir):
+    """Ensure that we find compilers that come first in the PATH first"""
 
     with clangdir.as_cwd():
         os.mkdir('first_in_path')

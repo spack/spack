@@ -15,16 +15,19 @@ import spack.util.spack_json as sjson
 from spack.main import SpackCommand
 from spack.spec import Spec
 
+
 install = SpackCommand('install')
 analyze = SpackCommand('analyze')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_test_package_not_installed(mock_fetch, install_mockery_mutable_config):
     # We cannot run an analysis for a package not installed
     out = analyze('run', 'libdwarf', fail_on_error=False)
     assert "==> Error: Spec 'libdwarf' matches no installed packages.\n" in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_analyzer_get_install_dir(mock_fetch, install_mockery_mutable_config):
     """
     Test that we cannot get an analyzer directory without a spec package.
@@ -44,6 +47,7 @@ def test_analyzer_get_install_dir(mock_fetch, install_mockery_mutable_config):
         spack.analyzers.analyzer_base.get_analyzer_dir(Packageless())
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_malformed_analyzer(mock_fetch, install_mockery_mutable_config):
     """
     Test that an analyzer missing needed attributes is invalid.
@@ -153,6 +157,7 @@ def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config
     assert not result['environment_variables']
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_list_analyzers():
     """
     test that listing analyzers shows all the possible analyzers.

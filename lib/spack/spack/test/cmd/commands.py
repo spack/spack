@@ -5,6 +5,7 @@
 
 import filecmp
 import os
+import sys
 import shutil
 import subprocess
 
@@ -215,6 +216,7 @@ def test_update_completion_arg(tmpdir, monkeypatch):
     assert "--update-completion" in mock_bashfile.read()
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_updated_completion_scripts(tmpdir):
     """Make sure our shell tab completion scripts remain up-to-date."""
 

@@ -14,6 +14,7 @@ import spack.environment as ev
 import spack.spec
 from spack.main import SpackCommand
 
+
 develop = SpackCommand('develop')
 env = SpackCommand('env')
 
@@ -41,6 +42,7 @@ class TestDevelop(object):
         else:
             assert yaml_entry['path'] == path
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
     def test_develop_no_path_no_clone(self):
         env('create', 'test')
         with ev.read('test') as e:
@@ -49,6 +51,7 @@ class TestDevelop(object):
             develop('--no-clone', 'mpich@1.0')
             self.check_develop(e, spack.spec.Spec('mpich@1.0'))
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
     def test_develop_no_clone(self, tmpdir):
         env('create', 'test')
         with ev.read('test') as e:

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
+import sys
 
 from spack.main import SpackCommand
 from spack.version import Version
@@ -11,6 +12,7 @@ from spack.version import Version
 versions = SpackCommand('versions')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_safe_only_versions():
     """Only test the safe versions of a package.
        (Using the deprecated command line argument)
@@ -18,12 +20,14 @@ def test_safe_only_versions():
     versions('--safe-only', 'zlib')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_safe_versions():
     """Only test the safe versions of a package."""
 
     versions('--safe', 'zlib')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.maybeslow
 def test_remote_versions():
     """Test a package for which remote versions should be available."""
@@ -31,6 +35,7 @@ def test_remote_versions():
     versions('zlib')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.maybeslow
 def test_remote_versions_only():
     """Test a package for which remote versions should be available."""
@@ -38,6 +43,7 @@ def test_remote_versions_only():
     versions('--remote', 'zlib')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.usefixtures('mock_packages')
 def test_new_versions_only(monkeypatch):
     """Test a package for which new versions should be available."""
@@ -66,6 +72,7 @@ def test_new_versions_only(monkeypatch):
     assert(v.strip(' \n\t') == "99.99.99\n  3.2.1")
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.maybeslow
 def test_no_versions():
     """Test a package for which no remote versions are available."""
@@ -73,6 +80,7 @@ def test_no_versions():
     versions('converge')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.maybeslow
 def test_no_unchecksummed_versions():
     """Test a package for which no unchecksummed versions are available."""
@@ -80,6 +88,7 @@ def test_no_unchecksummed_versions():
     versions('bzip2')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.maybeslow
 def test_versions_no_url():
     """Test a package with versions but without a ``url`` attribute."""
@@ -87,6 +96,7 @@ def test_versions_no_url():
     versions('graphviz')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.maybeslow
 def test_no_versions_no_url():
     """Test a package without versions or a ``url`` attribute."""

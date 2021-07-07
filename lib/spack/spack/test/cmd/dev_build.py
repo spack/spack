@@ -225,6 +225,7 @@ env:
         assert f.read() == spec.package.replacement_string
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_dev_build_env_version_mismatch(tmpdir, mock_packages, install_mockery,
                                         mutable_mock_env_path):
     """Test Spack constraints concretization by develop specs."""

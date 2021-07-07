@@ -137,7 +137,7 @@ def test_url_summary():
 
 
 @pytest.mark.skipif(
-    sys.version_info < (2, 7),
+    sys.version_info < (2, 7) or sys.platform.startswith("win"),
     reason="Python 2.6 tests are run in a container, where "
            "networking is super slow"
 )

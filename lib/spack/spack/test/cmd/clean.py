@@ -56,6 +56,7 @@ if sys.platform != 'win32':
     cmd_effects += ('-a', all_effects)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.usefixtures(
     'mock_packages', 'config'
 )

@@ -16,6 +16,7 @@ import spack.main
 import spack.spec
 from spack.spec import Spec
 
+
 buildcache = spack.main.SpackCommand('buildcache')
 install = spack.main.SpackCommand('install')
 env = spack.main.SpackCommand('env')
@@ -145,6 +146,7 @@ def test_buildcache_create_fail_on_perm_denied(
     tmpdir.chmod(0o700)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_update_key_index(tmpdir, mutable_mock_env_path,
                           install_mockery, mock_packages, mock_fetch,
                           mock_stage, mock_gnupghome):
