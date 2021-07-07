@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import platform
+
+from spack import *
 
 
 class Latex2html(AutotoolsPackage):
@@ -14,7 +15,9 @@ class Latex2html(AutotoolsPackage):
     homepage = "https://www.latex2html.org/"
     url      = "https://github.com/latex2html/latex2html/archive/refs/tags/v2021.tar.gz"
     git      = "https://github.com/latex2html/latex2html.git"
-    
+
+    maintainers = ['cessenat']
+
     version('master', branch='master')
     version('2021', sha256='872fe7a53f91ababaafc964847639e3644f2b9fab3282ea059788e4e18cbba47')
     version('2017', sha256='28a5d4b8f14b1f95928da281b6332559bcd83349ba439b2fa43655b2e21c83ab')
@@ -46,12 +49,10 @@ class Latex2html(AutotoolsPackage):
         args.extend(self.enable_or_disable('gif'))
         args.extend(self.enable_or_disable('svg'))
 
-        # Since packages do not always provide a proper
-        # dependent_build_environment, one needs to guess
-        # since latex2html configure wants to hard set the
-        # bins location once for all:
-        gss = ['gs', 'ps2pdf']
-        for p in gss:
+        # Since packages do not always provide a proper dependent_build_environment,
+        # one needs to guess where the bins are since latex2html configure wants to
+        # hard set the bins location once for all:
+        for p in ['gs', 'ps2pdf']:
             exe = join_path(spec['ghostscript'].prefix.bin, p)
             if os.path.exists(exe):
                 args.append('--with-{0}={1}'.format(p, exe))
@@ -64,26 +65,29 @@ class Latex2html(AutotoolsPackage):
             if os.path.exists(exe):
                 args.append('--with-{0}={1}'.format(p, exe))
 
+        # PR #24102 at https://github.com/spack/spack/pull/24102
+        # should make this useless ; but at least it lets us know which are the
+        # texlive bins that latex2html may use.
         lats = ['pdfcrop', 'tex', 'initex', 'latex', 'dvips', 'dvipng', 'pdflatex',
-                'lualatex', 'dvilualatex', 'kpsewhich', 'mktexlsr', 'epstopdf']
+                'lualatex', 'dvilualatex', 'kpsewhich', 'mktexlsr']
         for p in lats:
-            exe = join_path(spec['texlive'].prefix.bin, p)
+            exe = join_path(spec['texlive'].prefix.bin, self.tex_arch(), p)
             if os.path.exists(exe):
                 args.append('--with-{0}={1}'.format(p, exe))
             else:
-                exe = join_path(spec['texlive'].prefix.bin, self.tex_arch(), p)
-                if os.path.exists(exe):
-                    args.append('--with-{0}={1}'.format(p, exe))
-                else:
-                    # This should be the only needed code if texlive where
-                    # to set its proper dependent_build_environment
-                    exe = which(p)
-                    if exe:
-                        args.append('--with-{0}={1}'.format(p, str(exe)))
+                # This should be the only needed code if texlive where
+                # to set its proper dependent_build_environment
+                exe = which(p)
+                if exe:
+                    args.append('--with-{0}={1}'.format(p, str(exe)))
         if '+svg' in spec:
             p = 'pdftocairo'
             exe = join_path(spec['poppler'].prefix.bin, p)
             if os.path.exists(exe):
                 args.append('--with-{0}={1}'.format(p, exe))
+            else:
+                exe = which(p)
+                if exe:
+                    args.append('--with-{0}={1}'.format(p, str(exe)))
 
         return args
