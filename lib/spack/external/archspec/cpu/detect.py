@@ -185,6 +185,11 @@ def compatible_microarchitectures(info):
         info (dict): dictionary containing information on the host cpu
     """
     architecture_family = platform.machine()
+    # On Apple M1 platform.machine() returns "arm64" instead of "aarch64"
+    # so we should normalize the name here
+    if architecture_family == "arm64":
+        architecture_family = "aarch64"
+
     # If a tester is not registered, be conservative and assume no known
     # target is compatible with the host
     tester = COMPATIBILITY_CHECKS.get(architecture_family, lambda x, y: False)

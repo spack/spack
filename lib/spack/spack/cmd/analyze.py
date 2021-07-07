@@ -18,9 +18,9 @@ import spack.paths
 import spack.report
 
 
-description = "analyze installed packages"
-section = "extensions"
-level = "short"
+description = "run analyzers on installed packages"
+section = "analysis"
+level = "long"
 
 
 def setup_parser(subparser):

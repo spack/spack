@@ -40,10 +40,7 @@ class ModernWheel(CMakePackage):
     patch('add_virtual_destructor.patch')
 
     def cmake_args(self):
-        spec = self.spec
         return [
-            '-DBUILD_UNIT_TEST:BOOL={0}'.format(
-                'ON' if '+test' in spec else 'OFF'),
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_UNIT_TEST', 'test'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]

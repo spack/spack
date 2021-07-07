@@ -17,6 +17,7 @@ class Ccache(CMakePackage):
 
     executables = ['^ccache$']
 
+    version('4.3',   sha256='b9789c42e52c73e99428f311a34def9ffec3462736439afd12dbacc7987c1533')
     version('4.2.1', sha256='320d2b17d2f76393e5d4bb28c8dee5ca783248e9cd23dff0654694d60f8a4b62')
     version('4.2',   sha256='dbf139ff32031b54cb47f2d7983269f328df14b5a427882f89f7721e5c411b7e')
     version('4.1',   sha256='cdeefb827b3eef3b42b5454858123881a4a90abbd46cc72cf8c20b3bd039deb7')

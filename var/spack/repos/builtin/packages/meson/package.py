@@ -16,6 +16,8 @@ class Meson(PythonPackage):
 
     maintainers = ['michaelkuhn']
 
+    version('0.58.0', sha256='991b882bfe4d37acc23c064a29ca209458764a580d52f044f3d50055a132bed4')
+    version('0.57.2', sha256='cd3773625253df4fd1c380faf03ffae3d02198d6301e7c8bc7bba6c66af66096')
     version('0.57.1', sha256='0c043c9b5350e9087cd4f6becf6c0d10b1d618ca3f919e0dcca2cdf342360d5d')
     version('0.57.0', sha256='fd26a27c1a509240c668ebd29d280649d9239cf8684ead51d5cb499d1e1188bd')
     version('0.56.2', sha256='aaae961c3413033789248ffe6762589e80b6cf487c334d0b808e31a32c48f35f')
@@ -45,7 +47,8 @@ class Meson(PythonPackage):
     # are not reverted.
     patch('rpath-0.49.patch', when='@0.49:0.53')
     patch('rpath-0.54.patch', when='@0.54:0.55')
-    patch('rpath-0.56.patch', when='@0.56:')
+    patch('rpath-0.56.patch', when='@0.56:0.57')
+    patch('rpath-0.58.patch', when='@0.58:')
 
     executables = ['^meson$']
 

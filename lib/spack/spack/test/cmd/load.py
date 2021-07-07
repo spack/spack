@@ -21,7 +21,9 @@ def test_load(install_mockery, mock_fetch, mock_archive, mock_packages):
 
     CMAKE_PREFIX_PATH is the only prefix inspection guaranteed for fake
     packages, since it keys on the prefix instead of a subdir."""
-    install('mpileaks')
+    install_out = install('mpileaks', output=str, fail_on_error=False)
+    print('spack install mpileaks')
+    print(install_out)
     mpileaks_spec = spack.spec.Spec('mpileaks').concretized()
 
     sh_out = load('--sh', '--only', 'package', 'mpileaks')

@@ -13,8 +13,9 @@ class PySphinxcontribDevhelp(PythonPackage):
     homepage = "http://sphinx-doc.org/"
     pypi = "sphinxcontrib-devhelp/sphinxcontrib-devhelp-1.0.1.tar.gz"
 
-    # Sphinx requires sphinxcontrib-devhelp at build-time, but
-    # sphinxcontrib-devhelp requires sphinx at run-time
+    # 'sphinx' requires 'sphinxcontrib-devhelp' at build-time, but
+    # 'sphinxcontrib-devhelp' requires 'sphinx' at run-time. Don't bother trying to
+    # import any modules.
     import_modules = []
 
     version('1.0.1', sha256='6c64b077937330a9128a4da74586e8c2130262f014689b4b89e2d08ee7294a34')

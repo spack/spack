@@ -64,6 +64,9 @@ class Libfabric(AutotoolsPackage):
     variant('kdreg', default=False,
             description='Enable kdreg on supported Cray platforms')
 
+    variant('debug', default=False,
+            description='Enable debugging')
+
     # For version 1.9.0:
     # headers: fix forward-declaration of enum fi_collective_op with C++
     patch('https://github.com/ofiwg/libfabric/commit/2e95b0efd85fa8a3d814128e34ec57ffd357460e.patch',
@@ -94,6 +97,8 @@ class Libfabric(AutotoolsPackage):
 
     def configure_args(self):
         args = []
+
+        args.extend(self.enable_or_disable('debug'))
 
         if '+kdreg' in self.spec:
             args.append('--with-kdreg=yes')

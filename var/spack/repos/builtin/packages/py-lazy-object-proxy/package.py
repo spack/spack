@@ -17,4 +17,5 @@ class PyLazyObjectProxy(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
+    depends_on('py-setuptools-scm@3.3.1:', type='build', when='@1.4.0:')
     depends_on('py-setuptools', type='build')

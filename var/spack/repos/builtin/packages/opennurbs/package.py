@@ -25,8 +25,7 @@ class Opennurbs(Package):
     # CMake installation method
     def install(self, spec, prefix):
         cmake_args = [
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
 
         cmake_args.extend(std_cmake_args)

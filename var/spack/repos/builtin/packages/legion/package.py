@@ -204,8 +204,6 @@ class Legion(CMakePackage):
                 options.append('-DGASNet_ROOT_DIR=%s' % gasnet_dir)
             else:
                 options.append('-DLegion_EMBED_GASNet=ON')
-                gasnet_dir = join_path(self.stage.source_path, 'gasnet')
-                options.append('-DLegion_EMBED_GASNet_LOCALSRC=%s' % gasnet_dir)
 
             gasnet_conduit = spec.variants['conduit'].value
             options.append('-DGASNet_CONDUIT=%s' % gasnet_conduit)

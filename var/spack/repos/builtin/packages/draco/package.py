@@ -92,7 +92,7 @@ class Draco(CMakePackage):
         options = []
         options.extend([
             '-Wno-dev',
-            '-DBUILD_TESTING={0}'.format('ON' if self.run_tests else 'OFF'),
+            self.define('BUILD_TESTING', self.run_tests),
             '-DUSE_CUDA={0}'.format('ON' if '+cuda' in self.spec else 'OFF'),
             '-DUSE_QT={0}'.format('ON' if '+qt' in self.spec else 'OFF')
         ])

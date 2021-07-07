@@ -10,21 +10,31 @@ import itertools
 import json
 import os
 import os.path
+import re
 import shutil
 import tempfile
 import xml.etree.ElementTree
 
-import py
-import pytest
+try:
+    # CVS outputs dates in different formats on different systems. We are using
+    # the dateutil package to parse these dates. This package does not exist
+    # for Python <2.7. That means that we cannot test checkouts "by date" for
+    # CVS respositories. (We can still use CVS repos with all features, only
+    # our tests break.)
+    from dateutil.parser import parse as parse_date
+except ImportError:
+    def parse_date(string):  # type: ignore
+        pytest.skip("dateutil package not available")
 
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
-from llnl.util.filesystem import mkdirp, remove_linked_tree
+import py
+import pytest
 
 import spack.architecture
+import spack.caches
 import spack.compilers
 import spack.config
-import spack.caches
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
@@ -35,14 +45,28 @@ import spack.platforms.test
 import spack.repo
 import spack.stage
 import spack.store
+import spack.subprocess_context
 import spack.util.executable
 import spack.util.gpg
-import spack.subprocess_context
 import spack.util.spack_yaml as syaml
-
-from spack.util.pattern import Bunch
-from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
+from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 from spack.fetch_strategy import FetchError
+from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
+from spack.util.pattern import Bunch
+
+
+#
+# Return list of shas for latest two git commits in local spack repo
+#
+@pytest.fixture
+def last_two_git_commits(scope='session'):
+    git = spack.util.executable.which('git', required=True)
+    spack_git_path = spack.paths.prefix
+    with working_dir(spack_git_path):
+        git_log_out = git('log', '-n', '2', output=str, error=os.devnull)
+
+    regex = re.compile(r"^commit\s([^\s]+$)", re.MULTILINE)
+    yield regex.findall(git_log_out)
 
 
 @pytest.fixture(autouse=True)
@@ -567,6 +591,7 @@ def _populate(mock_db):
     _install('mpileaks ^mpich2')
     _install('mpileaks ^zmpi')
     _install('externaltest')
+    _install('trivial-smoke-test')
 
 
 @pytest.fixture(scope='session')
@@ -740,7 +765,7 @@ class MockLayout(object):
         self.root = root
 
     def path_for_spec(self, spec):
-        return '/'.join([self.root, spec.name])
+        return '/'.join([self.root, spec.name + '-' + spec.dag_hash()])
 
     def check_installed(self, spec):
         return True
@@ -763,11 +788,11 @@ class MockConfig(object):
         self._configuration = configuration
         self.writer_key = writer_key
 
-    def configuration(self):
+    def configuration(self, module_set_name):
         return self._configuration
 
-    def writer_configuration(self):
-        return self.configuration()[self.writer_key]
+    def writer_configuration(self, module_set_name):
+        return self.configuration(module_set_name)[self.writer_key]
 
 
 class ConfigUpdate(object):
@@ -780,7 +805,9 @@ class ConfigUpdate(object):
     def __call__(self, filename):
         file = os.path.join(self.root_for_conf, filename + '.yaml')
         with open(file) as f:
-            mock_config = MockConfig(syaml.load_config(f), self.writer_key)
+            config_settings = syaml.load_config(f)
+        spack.config.set('modules:default', config_settings)
+        mock_config = MockConfig(config_settings, self.writer_key)
 
         self.monkeypatch.setattr(
             spack.modules.common,
@@ -824,8 +851,14 @@ def mock_gnupghome(monkeypatch):
     # have to make our own tmpdir with a shorter name than pytest's.
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
+    try:
+        spack.util.gpg.init()
+    except spack.util.gpg.SpackGPGError:
+        if not spack.util.gpg.GPG:
+            pytest.skip('This test requires gpg')
+
     short_name_tmpdir = tempfile.mkdtemp()
-    with spack.util.gpg.gnupg_home_override(short_name_tmpdir):
+    with spack.util.gpg.gnupghome_override(short_name_tmpdir):
         yield short_name_tmpdir
 
     # clean up, since we are doing this manually
@@ -882,6 +915,143 @@ def mock_archive(request, tmpdir_factory):
         archive_file=archive_file,
         path=str(repodir),
         expanded_archive_basedir=spack.stage._source_path_subdir)
+
+
+@pytest.fixture(scope='session')
+def mock_cvs_repository(tmpdir_factory):
+    """Creates a very simple CVS repository with two commits and a branch."""
+    cvs = spack.util.executable.which('cvs', required=True)
+
+    tmpdir = tmpdir_factory.mktemp('mock-cvs-repo-dir')
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
+    cvsroot = str(repodir)
+
+    # The CVS repository and source tree need to live in a different directories
+    sourcedirparent = tmpdir_factory.mktemp('mock-cvs-source-dir')
+    module = spack.stage._source_path_subdir
+    url = cvsroot + "%module=" + module
+    sourcedirparent.ensure(module, dir=True)
+    sourcedir = sourcedirparent.join(module)
+
+    def format_date(date):
+        if date is None:
+            return None
+        return date.strftime('%Y-%m-%d %H:%M:%S')
+
+    def get_cvs_timestamp(output):
+        """Find the most recent CVS time stamp in a `cvs log` output"""
+        latest_timestamp = None
+        for line in output.splitlines():
+            m = re.search(r'date:\s+([^;]*);', line)
+            if m:
+                timestamp = parse_date(m.group(1))
+                if latest_timestamp is None:
+                    latest_timestamp = timestamp
+                else:
+                    latest_timestamp = max(latest_timestamp, timestamp)
+        return latest_timestamp
+
+    # We use this to record the time stamps for when we create CVS revisions,
+    # so that we can later check that we retrieve the proper commits when
+    # specifying a date. (CVS guarantees checking out the lastest revision
+    # before or on the specified date). As we create each revision, we
+    # separately record the time by querying CVS.
+    revision_date = {}
+
+    # Initialize the repository
+    with sourcedir.as_cwd():
+        cvs('-d', cvsroot, 'init')
+        cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit',
+            module, 'mockvendor', 'mockrelease')
+        with sourcedirparent.as_cwd():
+            cvs('-d', cvsroot, 'checkout', module)
+
+        # Commit file r0
+        r0_file = 'r0_file'
+        sourcedir.ensure(r0_file)
+        cvs('-d', cvsroot, 'add', r0_file)
+        cvs('-d', cvsroot, 'commit', '-m', 'revision 0', r0_file)
+        output = cvs('log', '-N', r0_file, output=str)
+        revision_date['1.1'] = format_date(get_cvs_timestamp(output))
+
+        # Commit file r1
+        r1_file = 'r1_file'
+        sourcedir.ensure(r1_file)
+        cvs('-d', cvsroot, 'add', r1_file)
+        cvs('-d', cvsroot, 'commit', '-m' 'revision 1', r1_file)
+        output = cvs('log', '-N', r0_file, output=str)
+        revision_date['1.2'] = format_date(get_cvs_timestamp(output))
+
+        # Create branch 'mock-branch'
+        cvs('-d', cvsroot, 'tag', 'mock-branch-root')
+        cvs('-d', cvsroot, 'tag', '-b', 'mock-branch')
+
+    # CVS does not have the notion of a unique branch; branches and revisions
+    # are managed separately for every file
+    def get_branch():
+        """Return the branch name if all files are on the same branch, else
+        return None. Also return None if all files are on the trunk."""
+        lines = cvs('-d', cvsroot, 'status', '-v', output=str).splitlines()
+        branch = None
+        for line in lines:
+            m = re.search(r'(\S+)\s+[(]branch:', line)
+            if m:
+                tag = m.group(1)
+                if branch is None:
+                    # First branch name found
+                    branch = tag
+                elif tag == branch:
+                    # Later branch name found; all branch names found so far
+                    # agree
+                    pass
+                else:
+                    # Later branch name found; branch names differ
+                    branch = None
+                    break
+        return branch
+
+    # CVS does not have the notion of a unique revision; usually, one uses
+    # commit dates instead
+    def get_date():
+        """Return latest date of the revisions of all files"""
+        output = cvs('log', '-N', r0_file, output=str)
+        timestamp = get_cvs_timestamp(output)
+        if timestamp is None:
+            return None
+        return format_date(timestamp)
+
+    checks = {
+        'default': Bunch(
+            file=r1_file,
+            branch=None,
+            date=None,
+            args={'cvs': url},
+        ),
+        'branch': Bunch(
+            file=r1_file,
+            branch='mock-branch',
+            date=None,
+            args={'cvs': url, 'branch': 'mock-branch'},
+        ),
+        'date': Bunch(
+            file=r0_file,
+            branch=None,
+            date=revision_date['1.1'],
+            args={'cvs': url,
+                  'date': revision_date['1.1']},
+        ),
+    }
+
+    test = Bunch(
+        checks=checks,
+        url=url,
+        get_branch=get_branch,
+        get_date=get_date,
+        path=str(repodir),
+    )
+
+    yield test
 
 
 @pytest.fixture(scope='session')

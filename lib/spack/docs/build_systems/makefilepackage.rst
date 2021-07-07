@@ -147,8 +147,10 @@ and a ``filter_file`` method to help with this. For example:
    def edit(self, spec, prefix):
        makefile = FileFilter('Makefile')
 
-       makefile.filter('CC = gcc',  'CC = cc')
-       makefile.filter('CXX = g++', 'CC = c++')
+       makefile.filter(r'^\s*CC\s*=.*',  'CC = '  + spack_cc)
+       makefile.filter(r'^\s*CXX\s*=.*', 'CXX = ' + spack_cxx)
+       makefile.filter(r'^\s*F77\s*=.*', 'F77 = ' + spack_f77)
+       makefile.filter(r'^\s*FC\s*=.*',  'FC = '  + spack_fc)
 
 
 `stream <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/stream/package.py>`_

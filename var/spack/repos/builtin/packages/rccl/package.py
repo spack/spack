@@ -14,10 +14,11 @@ class Rccl(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rccl"
     git      = "https://github.com/RadeonOpenCompute/rccl.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-4.1.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-4.2.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.2.0', sha256='2829fae40ebc1d8be201856d2193a941c87e9cf38dca0a2f4414e675c1742f20')
     version('4.1.0', sha256='88ec9b43c31cb054fe6aa28bcc0f4b510213635268f951939d6980eee5bb3680')
     version('4.0.0', sha256='0632a15b3d6b5981c05377cf4aeb51546f4c4901fd7c37fb0c98071851ad531a')
     version('3.10.0', sha256='d9dd0b0d8b9d056fc5e6c7b814520800190952acd30dac3a7c462c4cb6f42bb3')
@@ -29,16 +30,18 @@ class Rccl(CMakePackage):
     patch('0001-Fix-numactl-path-issue.patch', when='@3.7.0:')
 
     depends_on('cmake@3:', type='build')
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver, type=('build', 'run'), when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type=('build', 'run'), when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
-        if ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0' '4.1.0']:
-            depends_on('numactl@2.0.12', type=('build', 'link'), when='@' + ver)
-        if ver in ['4.1.0']:
-            depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0']:
+        depends_on('rocm-cmake@' + ver,   type='build', when='@' + ver)
+        depends_on('hip@' + ver,                        when='@' + ver)
+        depends_on('comgr@' + ver,                      when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver,               when='@' + ver)
+
+    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
+        depends_on('numactl@2:', when='@' + ver)
+
+    for ver in ['4.1.0', '4.2.0']:
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -46,6 +49,8 @@ class Rccl(CMakePackage):
     def cmake_args(self):
         args = []
         if '@3.7.0:' in self.spec:
-            numactl_prefix = self.spec['numactl'].prefix
-            args.append('-DNUMACTL_DIR={0}'.format(numactl_prefix))
+            args.append(self.define(
+                'NUMACTL_DIR',
+                self.spec['numactl'].prefix
+            ))
         return args

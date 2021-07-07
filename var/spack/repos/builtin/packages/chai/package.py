@@ -14,20 +14,23 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/CHAI"
     git      = "https://github.com/LLNL/CHAI.git"
 
-    version('develop', branch='develop', submodules='True')
-    version('master', branch='main', submodules='True')
-    version('2.3.0', tag='v2.3.0', submodules='True')
-    version('2.1.1', tag='v2.1.1', submodules='True')
-    version('2.1.0', tag='v2.1.0', submodules='True')
-    version('2.0.0', tag='v2.0.0', submodules='True')
-    version('1.2.0', tag='v1.2.0', submodules='True')
-    version('1.1.0', tag='v1.1.0', submodules='True')
-    version('1.0', tag='v1.0', submodules='True')
+    version('develop', branch='develop', submodules=True)
+    version('master', branch='main', submodules=True)
+    version('2.3.0', tag='v2.3.0', submodules=True)
+    version('2.2.2', tag='v2.2.2', submodules=True)
+    version('2.2.1', tag='v2.2.1', submodules=True)
+    version('2.2.0', tag='v2.2.0', submodules=True)
+    version('2.1.1', tag='v2.1.1', submodules=True)
+    version('2.1.0', tag='v2.1.0', submodules=True)
+    version('2.0.0', tag='v2.0.0', submodules=True)
+    version('1.2.0', tag='v1.2.0', submodules=True)
+    version('1.1.0', tag='v1.1.0', submodules=True)
+    version('1.0', tag='v1.0', submodules=True)
 
     variant('enable_pick', default=False, description='Enable pick method')
     variant('shared', default=True, description='Build Shared Libs')
     variant('raja', default=False, description='Build plugin for RAJA')
-    variant('benchmarks', default=True, description='Build benchmarks.')
+    variant('benchmarks', default=False, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
     # TODO: figure out gtest dependency and then set this default True
     # and remove the +tests conflict below.
@@ -92,8 +95,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
             options.extend(['-DENABLE_RAJA_PLUGIN=ON',
                             '-DRAJA_DIR=' + spec['raja'].prefix])
 
-        options.append('-DENABLE_PICK={0}'.format(
-            'ON' if '+enable_pick' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_PICK', 'enable_pick'))
 
         options.append('-Dumpire_DIR:PATH='
                        + spec['umpire'].prefix.share.umpire.cmake)
@@ -101,10 +103,11 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
         options.append('-DENABLE_TESTS={0}'.format(
             'ON' if '+tests' in spec  else 'OFF'))
 
+        options.append(self.define_from_variant('ENABLE_BENCHMARKS', 'benchmarks'))
+
+        options.append(self.define_from_variant('ENABLE_EXAMPLES', 'examples'))
+
         options.append('-DENABLE_BENCHMARKS={0}'.format(
             'ON' if '+benchmarks' in spec else 'OFF'))
-
-        options.append('-DENABLE_EXAMPLES={0}'.format(
-            'ON' if '+examples' in spec else 'OFF'))
 
         return options

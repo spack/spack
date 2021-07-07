@@ -111,20 +111,13 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         if '+xsdkflags' in spec and spec.satisfies('@:7.1'):
             args = [
                 '-DUSE_XSDK_DEFAULTS:BOOL=ON',
-                '-DXSDK_ENABLE_PYTHON:BOOL={0}'.format(
-                    'ON' if '+python' in spec else 'OFF'),
-                '-DTPL_ENABLE_MPI:BOOL={0}'.format(
-                    'ON' if '+mpi' in spec else 'OFF'),
-                '-DXSDK_ENABLE_OPENMP:BOOL={0}'.format(
-                    'ON' if '+openmp' in spec else 'OFF'),
-                '-DTPL_ENABLE_BLAS:BOOL={0}'.format(
-                    'ON' if '+blas' in spec else 'OFF'),
-                '-DXSDK_ENABLE_CUDA:BOOL={0}'.format(
-                    'ON' if '+cuda' in spec else 'OFF'),
-                '-DTPL_ENABLE_MAGMA:BOOL={0}'.format(
-                    'ON' if '+magma' in spec else 'OFF'),
-                '-DXSDK_ENABLE_FORTRAN:BOOL={0}'.format(
-                    'ON' if '+fortran' in spec else 'OFF'), ]
+                self.define_from_variant('XSDK_ENABLE_PYTHON', 'python'),
+                self.define_from_variant('TPL_ENABLE_MPI', 'mpi'),
+                self.define_from_variant('XSDK_ENABLE_OPENMP', 'openmp'),
+                self.define_from_variant('TPL_ENABLE_BLAS', 'blas'),
+                self.define_from_variant('XSDK_ENABLE_CUDA', 'cuda'),
+                self.define_from_variant('TPL_ENABLE_MAGMA', 'magma'),
+                self.define_from_variant('XSDK_ENABLE_FORTRAN', 'fortran'), ]
         else:
             args = [
                 self.define_from_variant('Tasmanian_ENABLE_OPENMP', 'openmp'),
@@ -150,7 +143,6 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         # _CUBLAS and _CUDA were separate options prior to 6.0
         # skipping _CUBLAS leads to peformance regression
         if spec.satisfies('@:5.1'):
-            args.append('-DTasmanian_ENABLE_CUBLAS={0}'.format(
-                        'ON' if '+cuda' in spec else 'OFF'))
+            args.append(self.define_from_variant('Tasmanian_ENABLE_CUBLAS', 'cuda'))
 
         return args

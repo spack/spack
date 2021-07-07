@@ -21,11 +21,13 @@ class Hipfft(CMakePackage):
     maintainers = ['arjun-raj-kuppala', 'srekolam']
 
     version('master', branch='master')
+
+    version('4.2.0', sha256='74253b0d92feff55ebb39b3fe4a22a6454160a60bdad37384aa5340fd8843f8a')
     version('4.1.0', sha256='885ffd4813f2c271150f1b8b386f0af775b38fc82b96ce6fd94eb4ba0c0180be')
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['4.1.0']:
+    for ver in ['4.1.0', '4.2.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('hip-rocclr@' + ver, when='@' + ver)

@@ -3,18 +3,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class Pinentry(AutotoolsPackage):
     """pinentry is a small collection of dialog programs that allow GnuPG to
-    read passphrases and PIN numbers in a secure manner. There are versions for
-    the common GTK and Qt toolkits as well as for the text terminal (Curses).
+    read passphrases and PIN numbers in a secure manner.
+
+    There are versions for the common GTK and Qt toolkits as well as for
+    the text terminal (Curses).
     """
 
     homepage = "https://gnupg.org/related_software/pinentry/index.html"
     url      = "https://gnupg.org/ftp/gcrypt/pinentry/pinentry-1.1.0.tar.bz2"
 
+    maintainers = ['alalazo']
+
+    version('1.1.1', sha256='cd12a064013ed18e2ee8475e669b9f58db1b225a0144debdb85a68cecddba57f')
     version('1.1.0', sha256='68076686fa724a290ea49cdf0d1c0c1500907d1b759a3bcbfbec0293e8f56570')
 
     depends_on('libgpg-error@1.16:')
@@ -22,6 +25,8 @@ class Pinentry(AutotoolsPackage):
 
     def configure_args(self):
         return [
+            '--enable-static',
+            '--enable-shared',
             # Autotools automatically enables these if dependencies found
             # TODO: add variants for these
             '--disable-pinentry-curses',

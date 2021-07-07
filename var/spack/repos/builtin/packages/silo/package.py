@@ -30,7 +30,14 @@ class Silo(AutotoolsPackage):
             description='Compile with MPI Compatibility')
     variant('hdf5', default=True,
             description='Use the HDF5 for database')
+    variant('hzip', default=True,
+            description='Enable hzip support')
+    variant('fpzip', default=True,
+            description='Enable fpzip support')
 
+    depends_on('autoconf', type='build', when='+shared')
+    depends_on('automake', type='build', when='+shared')
+    depends_on('libtool', type='build', when='+shared')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5@:1.10.999', when='@:4.10.2+hdf5')
     depends_on('hdf5~mpi', when='~mpi+hdf5')
@@ -99,6 +106,12 @@ class Silo(AutotoolsPackage):
 
         filter_file(r'\b(DOMAIN|RANGE|UNION)\b', repl, *files_to_filter)
 
+    @property
+    def force_autoreconf(self):
+        # Update autoconf's tests whether libtool supports shared libraries.
+        # (Otherwise, shared libraries are always disabled on Darwin.)
+        return self.spec.satisfies('+shared')
+
     def configure_args(self):
         spec = self.spec
         config_args = [
@@ -106,6 +119,8 @@ class Silo(AutotoolsPackage):
             '--enable-fortran' if '+fortran' in spec else '--disable-fortran',
             '--enable-silex' if '+silex' in spec else '--disable-silex',
             '--enable-shared' if '+shared' in spec else '--disable-shared',
+            '--enable-hzip' if '+hzip' in spec else '--disable-hzip',
+            '--enable-fpzip' if '+fpzip' in spec else '--disable-fpzip',
         ]
 
         # Do not specify the prefix of zlib if it is in a system directory

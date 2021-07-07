@@ -1,0 +1,18 @@
+diff --git a/gdb/python/lib/gdb/__init__.py b/gdb/python/lib/gdb/__init__.py
+index 84ec728ea21..9a0e9891cc5 100644
+--- a/gdb/python/lib/gdb/__init__.py
++++ b/gdb/python/lib/gdb/__init__.py
+@@ -18,8 +18,10 @@ import os
+ import sys
+ import _gdb
+ 
+-if sys.version_info[0] > 2:
+-    # Python 3 moved "reload"
++# Python 3 moved "reload"
++if sys.version_info >= (3, 4):
++    from importlib import reload
++elif sys.version_info[0] > 2:
+     from imp import reload
+ 
+ from _gdb import *
+-- 

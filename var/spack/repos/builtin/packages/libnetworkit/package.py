@@ -42,7 +42,6 @@ class Libnetworkit(CMakePackage):
         tlx_libs = spec['libtlx'].prefix
 
         args = ['-DNETWORKIT_EXT_TLX=%s' % tlx_libs,
-                '-DNETWORKIT_STATIC=%s' %
-                ('ON' if '+static' in spec else 'OFF')]
+                self.define_from_variant('NETWORKIT_STATIC', 'static')]
 
         return args

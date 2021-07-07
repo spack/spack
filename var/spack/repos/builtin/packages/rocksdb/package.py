@@ -14,6 +14,7 @@ class Rocksdb(MakefilePackage):
     git      = 'https://github.com/facebook/rocksdb.git'
 
     version('master',  git=git, branch='master', submodules=True)
+    version('6.20.3',  sha256='c6502c7aae641b7e20fafa6c2b92273d935d2b7b2707135ebd9a67b092169dca')
     version('6.19.3',  sha256='5c19ffefea2bbe4c275d0c60194220865f508f371c64f42e802b4a85f065af5b')
     version('6.11.4',  sha256='6793ef000a933af4a834b59b0cd45d3a03a3aac452a68ae669fb916ddd270532')
     version('6.7.3',   sha256='c4d1397b58e4801b5fd7c3dd9175e6ae84541119cbebb739fe17d998f1829e81')
@@ -32,13 +33,16 @@ class Rocksdb(MakefilePackage):
     variant('zstd', default=False, description='Enable zstandard compression support')
     variant('tbb', default=False, description='Enable Intel TBB support')
 
-    depends_on('bzip2', when='+bzip2')
+    depends_on('bzip2', when='+bz2')
     depends_on('gflags')
     depends_on('lz4', when='+lz4')
     depends_on('snappy', when='+snappy')
     depends_on('zlib', when='+zlib')
     depends_on('zstd', when='+zstd')
     depends_on('tbb', when='+tbb')
+
+    # https://github.com/facebook/rocksdb/issues/8286
+    patch('pkg-config.patch', when='@6.13.2:')
 
     conflicts('~shared~static', msg='have to build one type of library')
 

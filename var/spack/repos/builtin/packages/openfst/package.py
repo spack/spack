@@ -16,7 +16,9 @@ class Openfst(AutotoolsPackage):
     url      = "http://www.openfst.org/twiki/pub/FST/FstDownload/openfst-1.6.1.tar.gz"
     list_url = "http://www.openfst.org/twiki/bin/view/FST/FstDownload"
 
+    version('1.8.1',  sha256='24fb53b72bb687e3fa8ee96c72a31ff2920d99b980a0a8f61dda426fca6713f0')
     version('1.7.9',  sha256='9319aeb31d1e2950ae25449884e255cc2bc9dfaf987f601590763e61a10fbdde')
+    version('1.7.3',  sha256='b8dc6b4ca0f964faaf046577e4ad86b1a6ef544e35eacc6a5f16237f38300a0d')
     version('1.6.7',  sha256='e21a486d827cde6a592c8e91721e4540ad01a5ae35a60423cf17be4d716017f7')
     version('1.6.1',  sha256='5245af8ebccb96208eec2dfe3b3a81143d3565a4d41220bff299287fb3333f7d')
     version('1.6.0',  sha256='c03467951631af3f74a6f33ffd50f04285bc4562f79127afd95785120379d293')
@@ -34,6 +36,11 @@ class Openfst(AutotoolsPackage):
     conflicts('%gcc@6:', when='@:1.6.1')
 
     variant('far', default=False, description="Enable FAR support")
+    variant('python', default=False, description="Enable python extension")
+
+    depends_on('python@3.6:', when='+python')
+
+    extends('python', when='+python')
 
     # Patch openfst-1.4.1 for kaldi@c024e8
     # See https://github.com/kaldi-asr/kaldi/blob/c024e8aa0a727bf76c91a318f76a1f8b0b59249e/tools/Makefile#L82-L88
@@ -41,10 +48,4 @@ class Openfst(AutotoolsPackage):
     patch('openfst_gcc41up.patch', when='@1.4.1-patch')
 
     def configure_args(self):
-        args = []
-        spec = self.spec
-        if '+far' in spec:
-            args.append('--enable-far')
-        else:
-            args.append('--disable-far')
-        return args
+        return self.enable_or_disable('far') + self.enable_or_disable('python')

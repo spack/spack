@@ -18,6 +18,7 @@ class PyScipy(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.7.0',  sha256='998c5e6ea649489302de2c0bc026ed34284f531df89d2bdc8df3a0d44d165739')
     version('1.6.3',  sha256='a75b014d3294fce26852a9d04ea27b5671d86736beb34acdfc05859246260707')
     version('1.6.2',  sha256='e9da33e21c9bc1b92c20b5328adb13e5f193b924c9b969cd700c8908f315aa59')
     version('1.6.1',  sha256='c4fceb864890b6168e79b0e714c585dbe2fd4222768ee90bc1aa0f8218691b11')
@@ -64,6 +65,8 @@ class PyScipy(PythonPackage):
     depends_on('py-numpy@1.14.5:+blas+lapack', when='@1.5:1.5.999', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.16.5:+blas+lapack', when='@1.6:1.6.1', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.16.5:1.22.999+blas+lapack', when='@1.6.2:', type=('build', 'link', 'run'))
+    depends_on('py-cython@0.29.18:2.9', when='@1.7:', type='build')
+    depends_on('py-pythran@0.9.11:', when='@1.7:', type=('build', 'link'))
     depends_on('py-pytest', type='test')
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
@@ -74,6 +77,8 @@ class PyScipy(PythonPackage):
     # https://github.com/scipy/scipy/issues/12860
     patch('https://git.sagemath.org/sage.git/plain/build/pkgs/scipy/patches/extern_decls.patch?id=711fe05025795e44b84233e065d240859ccae5bd',
           sha256='5433f60831cb554101520a8f8871ac5a32c95f7a971ccd68b69049535b106780', when='@1.2:1.5.3')
+
+    patch('scipy-clang.patch', when='@1.5.0:1.6.3 %clang')
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080

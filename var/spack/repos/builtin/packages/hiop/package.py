@@ -17,15 +17,18 @@ class Hiop(CMakePackage, CudaPackage):
     git = "https://github.com/LLNL/hiop.git"
 
     # Most recent tagged snapshot is the preferred version when profiling.
-    version('0.4.1', tag='v0.4.1')
-    version('0.4', tag='v0.4')
-    version('0.3.99.3', tag='v0.3.99.3')
-    version('0.3.99.2', tag='v0.3.99.2')
-    version('0.3.99.1', tag='v0.3.99.1')
-    version('0.3.99.0', tag='v0.3.99.0')
-    version('0.3', tag='v0.3')
-    version('0.2', tag='v0.2')
-    version('0.1', tag='v0.1')
+    version('0.4.4', commit='e858eefa6b914f5c87c3717bbce811931ea69386')
+    version('0.4.3', commit='c0394af4d84ebb84b7d2b95283ad65ffd84e0d45')
+    version('0.4.2', commit='3fcb788d223eec24c0241680070c4a9a5ec71ef3')
+    version('0.4.1', commit='3f269560f76d5a89bcbd1d3c4f9f0e5acaa6fd64')
+    version('0.4', commit='91d21085a1149eacdb27cd738d4a74a7e412fcff')
+    version('0.3.99.3', commit='bed1dbef260e53a9d139ccfb77d2e83a98aab216')
+    version('0.3.99.2', commit='9eb026768bc5e0a2c1293d0487cc39913001ae19')
+    version('0.3.99.1', commit='220e32c0f318665d6d394ca3cd0735b9d26a65eb')
+    version('0.3.99.0', commit='589b9c76781447108fa55788d5fa1b83ff71a3d1')
+    version('0.3', commit='7e8adae9db757aed48e5c2bc448316307598258f')
+    version('0.2', commit='c52a6f6b9baaaa2d7f233a749aa98f901349723f')
+    version('0.1', commit='5f60e11b79d532115fb41694378b54c9c707aad9')
 
     # Development branches
     version('master', branch='master')
@@ -80,65 +83,42 @@ class Hiop(CMakePackage, CudaPackage):
             '-DLAPACK_LIBRARIES={0}'.format(lapack_blas_libs)
         ])
 
-        args.append('-DHIOP_BUILD_STATIC=ON')
-        if '+shared' in spec:
-            args.append('-DHIOP_BUILD_SHARED=ON')
-        else:
-            args.append('-DHIOP_BUILD_SHARED=OFF')
+        args.append(self.define_from_variant('HIOP_BUILD_SHARED', 'shared'))
+        args.append(self.define_from_variant('HIOP_USE_MPI', 'mpi'))
+        args.append(self.define_from_variant('HIOP_DEEPCHECKS', 'deepchecking'))
+        args.append(self.define_from_variant('HIOP_USE_GPU', 'cuda'))
+        args.append(self.define_from_variant('HIOP_USE_CUDA', 'cuda'))
+        args.append(self.define_from_variant('HIOP_USE_MAGMA', 'cuda'))
+        args.append(self.define_from_variant('HIOP_USE_RAJA', 'raja'))
+        args.append(self.define_from_variant('HIOP_USE_UMPIRE', 'raja'))
+        args.append(self.define_from_variant('HIOP_WITH_KRON_REDUCTION', 'kron'))
+        args.append(self.define_from_variant('HIOP_SPARSE', 'sparse'))
+        args.append(self.define_from_variant('HIOP_USE_COINHSL', 'sparse'))
+        args.append(self.define_from_variant('HIOP_TEST_WITH_BSUB', 'jsrun'))
 
         if '+mpi' in spec:
-            args.append(
-                "-DHIOP_USE_MPI=ON -DMPI_HOME={0}".format(spec['mpi'].prefix))
+            args.append('-DMPI_HOME={0}'.format(spec['mpi'].prefix))
             args.append('-DMPI_C_COMPILER={0}'.format(spec['mpi'].mpicc))
             args.append('-DMPI_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
             args.append('-DMPI_Fortran_COMPILER={0}'.format(spec['mpi'].mpifc))
-        else:
-            args.append("-DHIOP_USE_MPI=OFF")
-
-        if '+deepchecking' in spec:
-            args.append("-DHIOP_DEEPCHECKS=ON")
-        else:
-            args.append("-DHIOP_DEEPCHECKS=OFF")
 
         # HIP flags are a part of the buildsystem, but full support is not
         # yet ready for public release
         args.append("-DHIOP_USE_HIP=OFF")
 
         if '+cuda' in spec:
-            args.append("-DHIOP_USE_GPU=ON")
-
             cuda_arch_list = spec.variants['cuda_arch'].value
             cuda_arch = cuda_arch_list[0]
             if cuda_arch != 'none':
                 args.append("-DHIOP_NVCC_ARCH=sm_{0}".format(cuda_arch))
                 args.append("-DCMAKE_CUDA_ARCHITECTURES={0}".format(cuda_arch))
-            args.append("-DHIOP_USE_CUDA=ON")
-
-            args.append('-DHIOP_USE_MAGMA=ON')
             if '+magma' in spec:
                 args.append(
                     "-DHIOP_MAGMA_DIR={0}".format(spec['magma'].prefix))
 
-        else:
-            args.append("-DHIOP_USE_GPU=OFF")
-            args.append("-DHIOP_USE_CUDA=OFF")
-            args.append("-DHIOP_USE_MAGMA=OFF")
-
-        if '+raja' in spec:
-            args.append("-DHIOP_USE_RAJA=ON")
-            args.append("-DHIOP_USE_UMPIRE=ON")
-            args.append("-Dumpire_DIR={0}".format(spec['umpire'].prefix))
-            args.append("-DRAJA_DIR={0}".format(spec['raja'].prefix))
-        else:
-            args.append("-DHIOP_USE_RAJA=OFF")
-            args.append("-DHIOP_USE_UMPIRE=OFF")
-
         if '+kron' in spec:
-            args.append("-DHIOP_WITH_KRON_REDUCTION=ON")
             args.append(
                 "-DHIOP_UMFPACK_DIR={0}".format(spec['suite-sparse'].prefix))
-        else:
-            args.append("-DHIOP_WITH_KRON_REDUCTION=OFF")
 
         # Unconditionally disable strumpack, even when +sparse. This may be
         # used in place of COINHSL for sparse interface, however this is not
@@ -146,18 +126,7 @@ class Hiop(CMakePackage, CudaPackage):
         args.append("-DHIOP_USE_STRUMPACK=OFF")
 
         if '+sparse' in spec:
-            args.append("-DHIOP_SPARSE=ON")
-            args.append("-DHIOP_USE_COINHSL=ON")
             args.append(
                 "-DHIOP_COINHSL_DIR={0}".format(spec['coinhsl'].prefix))
-        else:
-            args.append("-DHIOP_SPARSE=OFF")
-            args.append("-DHIOP_USE_COINHSL=OFF")
-
-        # Enable CTest tests to use jsrun for easier testing on IBM systems
-        if '+jsrun' in spec:
-            args.append("-DHIOP_TEST_WITH_BSUB=ON")
-        else:
-            args.append("-DHIOP_TEST_WITH_BSUB=OFF")
 
         return args

@@ -10,10 +10,11 @@ class PyGraphqlCore(PythonPackage):
     for APIs created by Facebook."""
 
     homepage = "https://github.com/graphql-python/graphql-core"
-    url      = "https://github.com/graphql-python/graphql-core/archive/v3.1.2.tar.gz"
+    pypi     = "graphql-core/graphql-core-3.1.5.tar.gz"
 
-    version('3.1.2', sha256='16087360d34f9cfa295b401fc17f9f11bcddef0e6e0dc5a694bbe2298b31949b')
-    version('3.0.5', sha256='88021f8b879f18cf56523644e51e1552b126a9ad9ab218f579bf503d236d5272')
+    version('3.1.2', sha256='c056424cbdaa0ff67446e4379772f43746bad50a44ec23d643b9bdcd052f5b3a')
+    version('3.0.5', sha256='51f7dab06b5035515b23984f6fcb677ed909b56c672152699cca32e03624992e')
+    version('2.3.2', sha256='aac46a9ac524c9855910c14c48fc5d60474def7f99fd10245e76608eba7af746')
 
     depends_on('python@3.6:3.999', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

@@ -39,6 +39,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     variant('ld', default=False, description='Enable ld.')
     variant('gas', default=False, description='Enable as assembler.')
     variant('interwork', default=False, description='Enable interwork.')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
@@ -71,6 +73,14 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # --disable-ld flag
     conflicts('~ld', '+gold')
 
+    def setup_build_environment(self, env):
+
+        if self.spec.satisfies('%cce'):
+            env.append_flags('LDFLAGS', '-Wl,-z,muldefs')
+
+        if '+nls' in self.spec:
+            env.append_flags('LDFLAGS', '-lintl')
+
     def configure_args(self):
         spec = self.spec
 
@@ -78,13 +88,13 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             '--disable-dependency-tracking',
             '--disable-werror',
             '--enable-multilib',
-            '--enable-shared',
             '--enable-64-bit-bfd',
             '--enable-targets=all',
             '--with-system-zlib',
             '--with-sysroot=/',
         ]
 
+        args += self.enable_or_disable('libs')
         args += self.enable_or_disable('lto')
         args += self.enable_or_disable('ld')
         args += self.enable_or_disable('gas')
@@ -99,7 +109,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
         if '+nls' in spec:
             args.append('--enable-nls')
-            args.append('LDFLAGS=-lintl')
         else:
             args.append('--disable-nls')
 
@@ -132,17 +141,20 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
                     extradir)
 
     def flag_handler(self, name, flags):
+        # Use a separate variable for injecting flags. This way, installing
+        # `binutils cflags='-O2'` will still work as expected.
+        iflags = []
         # To ignore the errors of narrowing conversions for
         # the Fujitsu compiler
         if name == 'cxxflags' and (
             self.spec.satisfies('@:2.31.1') and
             self.compiler.name in ('fj', 'clang', 'apple-clang')
         ):
-            flags.append('-Wno-narrowing')
+            iflags.append('-Wno-narrowing')
         elif name == 'cflags':
             if self.spec.satisfies('@:2.34 %gcc@10:'):
-                flags.append('-fcommon')
-        return (flags, None, None)
+                iflags.append('-fcommon')
+        return (iflags, None, flags)
 
     def test(self):
         spec_vers = str(self.spec.version)

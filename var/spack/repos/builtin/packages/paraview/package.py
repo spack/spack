@@ -20,9 +20,8 @@ class Paraview(CMakePackage, CudaPackage):
     maintainers = ['chuckatkins', 'danlipsa', 'vicentebolea']
 
     version('master', branch='master', submodules=True)
-    version('5.9.1-RC2', sha256='87395d7d65e96d2a5f8a8086b5da52a78c7929397a03170cbd04c1e3b3bb501c')
-    version('5.9.1-RC1', sha256='bb3f12bd3d31bcb52455e1393e45f81a18754d3c3e8199d51532b0c067dc1595')
-    version('5.9.0', sha256='b03258b7cddb77f0ee142e3e77b377e5b1f503bcabc02bfa578298c99a06980d', preferred=True)
+    version('5.9.1', sha256='0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d', preferred=True)
+    version('5.9.0', sha256='b03258b7cddb77f0ee142e3e77b377e5b1f503bcabc02bfa578298c99a06980d')
     version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034')
     version('5.8.0', sha256='219e4107abf40317ce054408e9c3b22fb935d464238c1c00c0161f1c8697a3f9')
     version('5.7.0', sha256='e41e597e1be462974a03031380d9e5ba9a7efcdb22e4ca2f3fec50361f310874')

@@ -33,14 +33,15 @@ class Openmpi(AutotoolsPackage):
 
     executables = ['^ompi_info$']
 
-    version('master', branch='master')
+    version('master', branch='master', submodules=True)
 
     # Current
     version('4.1.1', sha256='e24f7a778bd11a71ad0c14587a7f5b00e68a71aa5623e2157bafee3d44c07cda')  # libmpi.so.40.30.1
 
     # Still supported
     version('4.1.0', sha256='73866fb77090819b6a8c85cb8539638d37d6877455825b74e289d647a39fd5b5')  # libmpi.so.40.30.0
-    version('4.0.5', preferred=True, sha256='c58f3863b61d944231077f344fe6b4b8fbb83f3d1bc93ab74640bf3e5acac009')  # libmpi.so.40.20.5
+    version('4.0.6', sha256='94b7b59ae9860f3bd7b5f378a698713e7b957070fdff2c43453b6cbf8edb410c')  # libmpi.so.40.20.6
+    version('4.0.5', sha256='c58f3863b61d944231077f344fe6b4b8fbb83f3d1bc93ab74640bf3e5acac009')  # libmpi.so.40.20.5
     version('4.0.4', sha256='47e24eb2223fe5d24438658958a313b6b7a55bb281563542e1afc9dec4a31ac4')  # libmpi.so.40.20.4
     version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
     version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
@@ -191,7 +192,7 @@ class Openmpi(AutotoolsPackage):
     patch('use_mpi_tkr_sizeof/step_2.patch', when='@1.8.4:2.1.3,3:3.0.1')
     # To fix performance regressions introduced while fixing a bug in older
     # gcc versions on x86_64, Refs. open-mpi/ompi#8603
-    patch('opal_assembly_arch.patch', when='@4.0.0:4.1.1')
+    patch('opal_assembly_arch.patch', when='@4.0.0:4.0.5,4.1.0')
 
     variant(
         'fabrics',
@@ -597,7 +598,7 @@ class Openmpi(AutotoolsPackage):
                 'OpenMPI requires both C and Fortran compilers!'
             )
 
-    @when('@develop')
+    @when('@master')
     def autoreconf(self, spec, prefix):
         perl = which('perl')
         perl('autogen.pl')
@@ -891,9 +892,10 @@ class Openmpi(AutotoolsPackage):
             'shmemrun': ls,
         }
 
-        for exe in checks:
-            options, expected, status = checks[exe]
-            reason = 'test: checking {0} output'.format(exe)
+        for binary in checks:
+            options, expected, status = checks[binary]
+            exe = join_path(self.prefix.bin, binary)
+            reason = 'test: checking {0} output'.format(binary)
             self.run_test(exe, options, expected, status, installed=True,
                           purpose=reason, skip_missing=True)
 
@@ -942,21 +944,28 @@ class Openmpi(AutotoolsPackage):
             'shmemcxx': comp_vers,
         }
 
-        for exe in checks:
-            expected = checks[exe]
+        for binary in checks:
+            expected = checks[binary]
             purpose = 'test: ensuring version of {0} is {1}' \
-                .format(exe, expected)
+                .format(binary, expected)
+            exe = join_path(self.prefix.bin, binary)
             self.run_test(exe, '--version', expected, installed=True,
                           purpose=purpose, skip_missing=True)
 
-    def _test_examples(self):
-        # First build the examples
-        self.run_test('make', ['all'], [],
-                      purpose='test: ensuring ability to build the examples',
-                      work_dir=join_path(self.install_test_root,
-                                         self.extra_install_tests))
+    @property
+    def _cached_tests_work_dir(self):
+        """The working directory for cached test sources."""
+        return join_path(self.test_suite.current_test_cache_dir,
+                         self.extra_install_tests)
 
-        # Now run those with known results
+    def _test_examples(self):
+        """Run test examples copied from source at build-time."""
+        # Build the copied, cached test examples
+        self.run_test('make', ['all'], [],
+                      purpose='test: building cached test examples',
+                      work_dir=self._cached_tests_work_dir)
+
+        # Run examples with known, simple-to-verify results
         have_spml = self.spec.satisfies('@2.0.0:2.1.6')
 
         hello_world = (['Hello, world', 'I am', '0 of', '1'], 0)
@@ -995,14 +1004,16 @@ class Openmpi(AutotoolsPackage):
         }
 
         for exe in checks:
-            expected = checks[exe]
-            reason = 'test: checking example {0} output'.format(exe)
-            self.run_test(exe, [], expected, 0, installed=True,
-                          purpose=reason, skip_missing=True)
+            expected, status = checks[exe]
+            reason = 'test: checking {0} example output and status ({1})' \
+                .format(exe, status)
+            self.run_test(exe, [], expected, status, installed=False,
+                          purpose=reason, skip_missing=True,
+                          work_dir=self._cached_tests_work_dir)
 
     def test(self):
-        """Perform smoke tests on the installed package."""
-        # Simple version check tests on known packages
+        """Perform stand-alone/smoke tests on the installed package."""
+        # Simple version check tests on selected installed binaries
         self._test_check_versions()
 
         # Test the operation of selected executables

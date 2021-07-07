@@ -3,12 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
-
-# to get system platform type
 import sys
+
+from spack import *
 
 
 def detect_scheduler():
@@ -42,13 +40,13 @@ class Scr(CMakePackage):
     depends_on('mpi')
 
     # Use the latest iteration of the components when installing scr@develop
-    depends_on('axl@master',      when="@develop")
-    depends_on('er@master',       when="@develop")
-    depends_on('kvtree@master',   when="@develop")
-    depends_on('rankstr@master',  when="@develop")
-    depends_on('redset@master',   when="@develop")
-    depends_on('shuffile@master', when="@develop")
-    depends_on('spath@master',    when="@develop")
+    depends_on('axl@main',      when="@develop")
+    depends_on('er@main',       when="@develop")
+    depends_on('kvtree@main',   when="@develop")
+    depends_on('rankstr@main',  when="@develop")
+    depends_on('redset@main',   when="@develop")
+    depends_on('shuffile@main', when="@develop")
+    depends_on('spath@main',    when="@develop")
 
     # SCR legacy is anything 2.x.x or earlier
     # SCR components is anything 3.x.x or later
@@ -123,6 +121,14 @@ class Scr(CMakePackage):
     variant('cntl_base', default=platform_tmp_default,
             description='Compile time default location for control directory.')
 
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%cce'):
+            if name in ['cflags', 'cxxflags', 'cppflags']:
+                return (None, flags, None)
+            elif name == 'ldflags':
+                flags.append('-ldl')
+        return (flags, None, None)
+
     def get_abs_path_rel_prefix(self, path):
         # Return path if absolute, otherwise prepend prefix
         if os.path.isabs(path):
@@ -135,7 +141,7 @@ class Scr(CMakePackage):
         args = []
 
         if 'platform=cray' in spec:
-            args.append('-DSCR_LINK_STATIC=ON')
+            args.append('-DSCR_LINK_STATIC=OFF')
 
         args.append('-DENABLE_FORTRAN={0}'.format('+fortran' in spec))
 

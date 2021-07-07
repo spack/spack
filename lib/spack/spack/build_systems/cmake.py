@@ -12,7 +12,6 @@ from typing import List  # novm
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir
-from spack.util.environment import filter_system_paths
 from spack.directives import depends_on, variant, conflicts
 from spack.package import PackageBase, InstallError, run_after
 
@@ -185,13 +184,9 @@ class CMakePackage(PackageBase):
             define('CMAKE_INSTALL_RPATH_USE_LINK_PATH', False),
             define('CMAKE_INSTALL_RPATH',
                    spack.build_environment.get_rpaths(pkg)),
+            define('CMAKE_PREFIX_PATH',
+                   spack.build_environment.get_cmake_prefix_path(pkg))
         ])
-        # CMake's find_package() looks in CMAKE_PREFIX_PATH first, help CMake
-        # to find immediate link dependencies in right places:
-        deps = [d.prefix for d in
-                pkg.spec.dependencies(deptype=('build', 'link'))]
-        deps = filter_system_paths(deps)
-        args.append(define('CMAKE_PREFIX_PATH', deps))
         return args
 
     @staticmethod

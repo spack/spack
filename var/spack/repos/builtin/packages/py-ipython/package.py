@@ -10,7 +10,8 @@ class PyIpython(PythonPackage):
 
     pypi = "ipython/ipython-7.18.1.tar.gz"
 
-    # IPython.kernel is deprecated and fails to import
+    # 'IPython.kernel' is deprecated and fails to import, leave out of 'import_modules'
+    # to ensure that import tests pass.
     import_modules = [
         'IPython', 'IPython.core', 'IPython.core.tests', 'IPython.core.magics',
         'IPython.sphinxext', 'IPython.terminal',
@@ -47,7 +48,7 @@ class PyIpython(PythonPackage):
     depends_on('py-prompt-toolkit@2.0.0:2.0.999', when='@7.5.0', type=('build', 'run'))
     depends_on('py-prompt-toolkit@3.0.2:3.0.999', when='@7.18:', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
-    depends_on('py-backcall', type=('build', 'run'), when='@7.5.0:')
+    depends_on('py-backcall', type=('build', 'run'), when='@7.3.0:')
     depends_on('py-pexpect', type=('build', 'run'))
     depends_on('py-pexpect@4.3:', type=('build', 'run'), when='@7.18:')
     depends_on('py-appnope', type=('build', 'run'), when='platform=darwin')
