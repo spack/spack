@@ -19,15 +19,12 @@ class Folly(CMakePackage):
 
     homepage = "https://github.com/facebook/folly"
     url = "https://github.com/facebook/folly/releases/download/v2021.05.24.00/folly-v2021.05.24.00.tar.gz"
-    
-
     version('2021.05.24.00', sha256='9d308adefe4670637f5c7d96309b3b394ac3fa129bc954f5dfbdd8b741c02aad')
-
 
     # CMakePackage Dependency
     depends_on('pkgconfig', type='build')
 
-    # folly requires gcc 4.9+ and a version of boost compiled with C++14 support or higher
+    # folly requires gcc 4.9+ and a version of boost compiled with >= C++14
     # TODO: Specify the boost components
     variant('cxxstd', default='14', values=('14', '17'), multi=False, description='Use the specified C++ standard when building.')
     depends_on('boost+context+container cxxstd=14', when='cxxstd=14')
