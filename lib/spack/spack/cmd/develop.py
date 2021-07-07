@@ -79,6 +79,8 @@ def develop(parser, args):
     abspath = path
     if not os.path.isabs(abspath):
         abspath = os.path.join(env.path, path)
+    else:
+        abspath = os.path.expanduser(os.path.abspath(abspath))
 
     # clone default: only if the path doesn't exist
     clone = args.clone
