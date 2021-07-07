@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import shutil
 import sys
+
+from spack import *
 
 
 class Mfem(Package, CudaPackage, ROCmPackage):
@@ -195,7 +196,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('hypre@2.10.0:2.13.99', when='@:3.3.99+mpi')
-    depends_on('hypre', when='@3.4:+mpi')
+    depends_on('hypre@:2.20.0', when='@3.4:4.2.99+mpi')
+    depends_on('hypre', when='@4.3.0:+mpi')
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')

@@ -27,24 +27,22 @@ The available directives are:
   * ``version``
 
 """
-
 import functools
 import os.path
 import re
 import sys
+from typing import List, Set  # novm
 
-from six import string_types
-from typing import Set, List  # novm
+import six
 
 import llnl.util.lang
 import llnl.util.tty.color
-
 import spack.error
 import spack.patch
 import spack.spec
 import spack.url
 import spack.variant
-from spack.dependency import Dependency, default_deptype, canonical_deptype
+from spack.dependency import Dependency, canonical_deptype, default_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version, VersionChecksumError
@@ -114,6 +112,7 @@ class DirectiveMeta(type):
     # Set of all known directives
     _directive_names = set()  # type: Set[str]
     _directives_to_be_executed = []  # type: List[str]
+    _when_constraints_from_context = []  # type: List[str]
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -168,6 +167,16 @@ class DirectiveMeta(type):
         super(DirectiveMeta, cls).__init__(name, bases, attr_dict)
 
     @staticmethod
+    def push_to_context(when_spec):
+        """Add a spec to the context constraints."""
+        DirectiveMeta._when_constraints_from_context.append(when_spec)
+
+    @staticmethod
+    def pop_from_context():
+        """Pop the last constraint from the context"""
+        return DirectiveMeta._when_constraints_from_context.pop()
+
+    @staticmethod
     def directive(dicts=None):
         """Decorator for Spack directives.
 
@@ -205,15 +214,16 @@ class DirectiveMeta(type):
         This is just a modular way to add storage attributes to the
         Package class, and it's how Spack gets information from the
         packages to the core.
-
         """
         global __all__
 
-        if isinstance(dicts, string_types):
+        if isinstance(dicts, six.string_types):
             dicts = (dicts, )
+
         if not isinstance(dicts, Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
+
         # Add the dictionary names if not already there
         DirectiveMeta._directive_names |= set(dicts)
 
@@ -223,6 +233,23 @@ class DirectiveMeta(type):
 
             @functools.wraps(decorated_function)
             def _wrapper(*args, **kwargs):
+                # Inject when arguments from the context
+                if DirectiveMeta._when_constraints_from_context:
+                    # Check that directives not yet supporting the when= argument
+                    # are not used inside the context manager
+                    if decorated_function.__name__ in ('version', 'variant'):
+                        msg = ('directive "{0}" cannot be used within a "when"'
+                               ' context since it does not support a "when=" '
+                               'argument')
+                        msg = msg.format(decorated_function.__name__)
+                        raise DirectiveError(msg)
+
+                    when_spec_from_context = ' '.join(
+                        DirectiveMeta._when_constraints_from_context
+                    )
+                    when_spec = kwargs.get('when', '') + ' ' + when_spec_from_context
+                    kwargs['when'] = when_spec
+
                 # If any of the arguments are executors returned by a
                 # directive passed as an argument, don't execute them
                 # lazily. Instead, let the called directive handle them.
@@ -331,7 +358,7 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
         patches = [patches]
 
     # auto-call patch() directive on any strings in patch list
-    patches = [patch(p) if isinstance(p, string_types) else p
+    patches = [patch(p) if isinstance(p, six.string_types) else p
                for p in patches]
     assert all(callable(p) for p in patches)
 

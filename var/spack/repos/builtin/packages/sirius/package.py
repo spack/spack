@@ -21,6 +21,7 @@ class Sirius(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('7.2.5', sha256='794e03d4da91025f77542d3d593d87a8c74e980394f658a0210a4fd91c011f22')
     version('7.2.4', sha256='aeed0e83b80c3a79a9469e7f3fe10d80ad331795e38dbc3c49cb0308e2bd084d')
     version('7.2.3', sha256='6c10f0e87e50fcc7cdb4d1b2d35e91dba6144de8f111e36c7d08912e5942a906')
     version('7.2.1', sha256='01bf6c9893ff471473e13351ca7fdc2ed6c1f4b1bb7afa151909ea7cd6fa0de7')
@@ -74,6 +75,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('apps', default=True, description="Build applications")
     variant('tests', default=False, description="Build tests")
     variant('single_precision', default=False, description="Use single precision arithmetics")
+    variant('profiler', default=True, description="Use internal profiler to measure execution time")
 
     depends_on('python', type=('build', 'run'))
     depends_on('mpi')
@@ -98,7 +100,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     depends_on('spfft@0.9.6: +mpi', when='@6.4.0:')
     depends_on('spfft@0.9.13:', when='@7.0.1:')
-    depends_on('spfft +single_precision', when='+single_precision ^spfft')
+    depends_on('spfft+single_precision', when='+single_precision ^spfft')
     depends_on('spfft+cuda', when='+cuda ^spfft')
     depends_on('spfft+rocm', when='+rocm ^spfft')
     depends_on('spfft+openmp', when='+openmp ^spfft')
@@ -185,7 +187,8 @@ class Sirius(CMakePackage, CudaPackage):
             self.define_from_variant('BUILD_TESTING', 'tests'),
             self.define_from_variant('BUILD_APPS', 'apps'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('USE_FP32', 'single_precision')
+            self.define_from_variant('USE_FP32', 'single_precision'),
+            self.define_from_variant('USE_PROFILER', 'profiler')
         ]
 
         lapack = spec['lapack']

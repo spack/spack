@@ -1725,6 +1725,12 @@
             "versions": ":",
             "flags": "-march=armv8-a -mtune=generic"
           }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8-a -mtune=generic"
+          }
         ]
       }
     },
@@ -1826,6 +1832,12 @@
           },
           {
             "versions": "5:",
+            "flags": "-march=armv8.2-a+crc+crypto+fp16+sve"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "20:",
             "flags": "-march=armv8.2-a+crc+crypto+fp16+sve"
           }
         ]

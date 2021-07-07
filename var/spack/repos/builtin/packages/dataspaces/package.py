@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import six
+
+from spack import *
 
 
 def is_string(x):
@@ -52,11 +53,20 @@ class Dataspaces(AutotoolsPackage):
         bash = which('bash')
         bash('./autogen.sh')
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('+mpi'):
+            env.set('CC', self.spec['mpi'].mpicc)
+            env.set('FC', self.spec['mpi'].mpifc)
+
+        env.set('CFLAGS', self.compiler.cc_pic_flag)
+
+        if '%gcc@10:' in self.spec:
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
+
     def configure_args(self):
         args = []
         cookie = self.spec.variants['gni-cookie'].value
         ptag = self.spec.variants['ptag'].value
-        args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
         if self.spec.satisfies('+dimes'):
             args.append('--enable-dimes')
         if self.spec.satisfies('+cray-drc'):
@@ -64,7 +74,4 @@ class Dataspaces(AutotoolsPackage):
         else:
             args.append('--with-gni-cookie=%s' % cookie)
             args.append('--with-gni-ptag=%s' % ptag)
-        if self.spec.satisfies('+mpi'):
-            args.append('CC=%s' % self.spec['mpi'].mpicc)
-            args.append('FC=%s' % self.spec['mpi'].mpifc)
         return args
