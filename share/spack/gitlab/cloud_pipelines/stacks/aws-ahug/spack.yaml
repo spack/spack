@@ -46,8 +46,8 @@ spack:
       variants: +pmix sysconfdir=/opt/slurm/etc
 
   definitions:
-    - compilers: 
-      - '%gcc@10.3.0'
+  # - compilers: 
+  #   - '%gcc@10.3.0'
     # - '%arm@21.0.0.879'
     # - '%nvhpc@21.2'
     - when: arch.satisfies('os=ubuntu18.04')
@@ -174,13 +174,13 @@ spack:
   - matrix:
     - [$ahug_miniapps]
     - [$compilers]
-# - matrix:
-#   - [$ahug_fullapps]
-#   - [$compilers]
+  - matrix:
+    - [$ahug_fullapps]
+    - [$compilers]
 
   gitlab-ci:
-    bootstrap:
-      - name: bootstrap-compilers
+  # bootstrap:
+  #   - name: bootstrap-compilers
     image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
     script:
       - . "./share/spack/setup-env.sh"
