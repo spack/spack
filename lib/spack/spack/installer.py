@@ -1618,6 +1618,7 @@ class PackageInstaller(object):
                 # package as a failure.
                 if (not isinstance(exc, spack.error.SpackError) or
                     not exc.printed):
+                    exc.printed = True
                     # SpackErrors can be printed by the build process or at
                     # lower levels -- skip printing if already printed.
                     # TODO: sort out this and SpackError.print_context()

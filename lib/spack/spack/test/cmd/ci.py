@@ -6,9 +6,10 @@
 import filecmp
 import json
 import os
-import pytest
-from jsonschema import validate, ValidationError
 import shutil
+
+import pytest
+from jsonschema import ValidationError, validate
 
 import spack
 import spack.ci as ci
@@ -20,13 +21,13 @@ import spack.hash_types as ht
 import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
+import spack.util.gpg
+import spack.util.spack_yaml as syaml
 from spack.schema.buildcache_spec import schema as spec_yaml_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
-from spack.spec import Spec, CompilerSpec
+from spack.spec import CompilerSpec, Spec
 from spack.util.mock_package import MockPackageMultiRepo
-import spack.util.spack_yaml as syaml
-import spack.util.gpg
 
 
 ci_cmd = spack.main.SpackCommand('ci')
@@ -1607,7 +1608,10 @@ spack:
     broken-specs-url: "{0}"
     mappings:
       - match:
-          - archive-files
+          - a
+          - flatten-deps
+          - b
+          - dependency-install
         runner-attributes:
           tags:
             - donotcare
