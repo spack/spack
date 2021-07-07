@@ -158,16 +158,6 @@ class FftwBase(AutotoolsPackage):
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
             simd_options.append(msg.format(feature))
 
-        # If no features are found, enable the generic ones
-        if not any(f in spec.target for f in
-                   simd_features + float_simd_features):
-            # Workaround NVIDIA compiler bug
-            if not spec.satisfies('%nvhpc'):
-                simd_options += [
-                    '--enable-generic-simd128',
-                    '--enable-generic-simd256'
-                ]
-
         simd_options += [
             '--enable-fma' if 'fma' in spec.target else '--disable-fma'
         ]
