@@ -282,10 +282,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # This is how we tell perl the locations of bzip and zlib.
         env.set('BUILD_BZIP2', 0)
         env.set('BZIP2_INCLUDE', spec['bzip2'].prefix.include)
-        env.set('BZIP2_LIB',     spec['bzip2'].prefix.lib)
+        env.set('BZIP2_LIB', spec['bzip2'].libs.directories[0])
         env.set('BUILD_ZLIB', 0)
         env.set('ZLIB_INCLUDE', spec['zlib'].prefix.include)
-        env.set('ZLIB_LIB',     spec['zlib'].prefix.lib)
+        env.set('ZLIB_LIB', spec['zlib'].libs.directories[0])
 
     @run_after('install')
     def filter_config_dot_pm(self):
