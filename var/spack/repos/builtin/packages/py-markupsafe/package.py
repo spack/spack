@@ -12,7 +12,7 @@ class PyMarkupsafe(PythonPackage):
     implement automatic string escaping. It is used by Jinja 2, the
     Mako templating engine, the Pylons web framework and many more."""
 
-    homepage = "markupsafe.palletsprojects.com"
+    homepage = "https://markupsafe.palletsprojects.com"
     pypi = "MarkupSafe/MarkupSafe-1.1.1.tar.gz"
 
     version('2.0.1', sha256='594c67807fb16238b30c44bdf74f36c02cdf22d1c8cda91ef8a0ed8dabf5620a')
