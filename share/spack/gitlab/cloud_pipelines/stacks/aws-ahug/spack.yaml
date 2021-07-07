@@ -143,7 +143,8 @@ spack:
       - modylas
       - mrbayes
       - mrchem
-      - mxnet
+   # cudnn depednency
+   #  - mxnet
    # trilinos variant (mumps)
    #  - nalu
       - nalu-wind
@@ -159,7 +160,8 @@ spack:
       - pathfinder
       - picsar
       - pism
-      - qbox
+    # meson version
+    # - qbox
       - qmcpack
       - quantum-espresso
       - relion
