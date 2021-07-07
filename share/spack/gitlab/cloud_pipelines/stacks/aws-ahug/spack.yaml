@@ -99,7 +99,8 @@ spack:
     - ahug_fullapps:
       - abinit
       - abyss
-      - albany
+    # conflicts on trilinos
+    # - albany
       - amber
       - amg2013
       - aoflagger
