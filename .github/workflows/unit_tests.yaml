@@ -39,7 +39,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools flake8 isort>=4.3.5 mypy>=0.800 black types-six types-python-dateutil
+        pip install --upgrade pip six setuptools flake8 isort>=4.3.5 mypy>=0.800 black types-six
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
@@ -62,7 +62,7 @@ jobs:
         sudo apt-get install -y coreutils ninja-build graphviz
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools python-dateutil
+        pip install --upgrade pip six setuptools
         pip install --upgrade -r lib/spack/docs/requirements.txt
     - name: Build documentation
       run: |
@@ -137,7 +137,7 @@ jobs:
           sudo apt-get -y install zlib1g-dev libdw-dev libiberty-dev
     - name: Install Python packages
       run: |
-          pip install --upgrade pip python-dateutil six setuptools codecov coverage
+          pip install --upgrade pip six setuptools codecov coverage
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -205,7 +205,7 @@ jobs:
           sudo apt-get -y install zlib1g-dev libdw-dev libiberty-dev
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools codecov coverage python-dateutil
+          pip install --upgrade pip six setuptools codecov coverage
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -326,7 +326,7 @@ jobs:
           make -C ${KCOV_ROOT}/build && sudo  make -C ${KCOV_ROOT}/build install
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools codecov coverage clingo python-dateutil
+          pip install --upgrade pip six setuptools codecov coverage clingo
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -371,7 +371,6 @@ jobs:
           pip install --upgrade pip six setuptools
           pip install --upgrade codecov coverage
           pip install --upgrade flake8 isort>=4.3.5 pep8-naming mypy>=0.800
-          pip install --upgrade python-dateutil
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg2 kcov
