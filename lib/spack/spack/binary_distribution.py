@@ -4,39 +4,38 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
+import glob
+import hashlib
+import json
 import os
 import re
+import shutil
 import sys
 import tarfile
-import shutil
 import tempfile
-import hashlib
-import glob
-from ordereddict_backport import OrderedDict
-
+import traceback
 from contextlib import closing
+
 import ruamel.yaml as yaml
-
-import json
-
-from six.moves.urllib.error import URLError, HTTPError
+from ordereddict_backport import OrderedDict
+from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.fetch_strategy as fs
-import spack.util.file_cache as file_cache
+import spack.hash_types as ht
+import spack.mirror
 import spack.relocate as relocate
+import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.mirror
 import spack.util.url as url_util
 import spack.util.web as web_util
+from llnl.util.filesystem import mkdirp
 from spack.caches import misc_cache_location
 from spack.spec import Spec
 from spack.stage import Stage
@@ -712,12 +711,6 @@ def generate_package_index(cache_prefix):
     cache_prefix.  This page contains a link for each binary package (.yaml)
     under cache_prefix.
     """
-    tmpdir = tempfile.mkdtemp()
-    db_root_dir = os.path.join(tmpdir, 'db_root')
-    db = spack_db.Database(None, db_dir=db_root_dir,
-                           enable_transaction_locking=False,
-                           record_fields=['spec', 'ref_count', 'in_buildcache'])
-
     try:
         file_list = (
             entry
@@ -738,22 +731,110 @@ def generate_package_index(cache_prefix):
 
     tty.debug('Retrieving spec.yaml files from {0} to build index'.format(
         cache_prefix))
+
+    all_mirror_specs = {}
+    all_dag_hashes = set()
+
     for file_path in file_list:
         try:
             yaml_url = url_util.join(cache_prefix, file_path)
             tty.debug('fetching {0}'.format(yaml_url))
             _, _, yaml_file = web_util.read_from_url(yaml_url)
             yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
-            # yaml_obj = syaml.load(yaml_contents)
-            # s = Spec.from_yaml(yaml_obj)
+            spec_dict = syaml.load(yaml_contents)
             s = Spec.from_yaml(yaml_contents)
-            db.add(s, None)
-            db.mark(s, 'in_buildcache', True)
+            s_dag_hash = s.dag_hash()
+            all_mirror_specs[s_dag_hash] = {
+                'yaml_url': yaml_url,
+                'spec': s,
+                'binary_cache_checksum': spec_dict['binary_cache_checksum'],
+                'buildinfo': spec_dict['buildinfo'],
+            }
+            all_dag_hashes.add(s_dag_hash)
         except (URLError, web_util.SpackWebError) as url_err:
             tty.error('Error reading spec.yaml: {0}'.format(file_path))
             tty.error(url_err)
 
+    tmpdir = tempfile.mkdtemp()
+    db_root_dir = os.path.join(tmpdir, 'db_root')
+    db = spack_db.Database(None, db_dir=db_root_dir,
+                           enable_transaction_locking=False,
+                           record_fields=['spec', 'ref_count', 'in_buildcache'])
+
     try:
+        while all_dag_hashes:
+            dag_hash = all_dag_hashes.pop()
+            s = all_mirror_specs[dag_hash]['spec']
+
+            tty.debug('{0}/{1}'.format(s.name, dag_hash[:7]))
+
+            # Everything in the DAG of s (which corresponds to a spec.yaml file
+            # we found on the mirror) is a candidate for fixing up, and we
+            # consider these candiates starting at the leaves and working up
+            # towards s, the root.
+            for candidate in s.traverse(root=True, order='post'):
+                candidate_hash = candidate.dag_hash()
+                tty.debug('  candidate {0}/{1}'.format(candidate.name,
+                                                       candidate_hash[:7]))
+                if candidate_hash in all_dag_hashes:
+                    # we check before removing because we already popped the
+                    # root of the dag we're working on now.
+                    all_dag_hashes.remove(candidate_hash)
+
+                candidate_deps = candidate.dependencies()
+                if not candidate_deps:
+                    # If the candidate doesn't have any dependencies, it's a
+                    # leaf node and can be ignored.
+                    continue
+
+                candidate_record = all_mirror_specs[candidate_hash]
+                deps_to_splice = []
+
+                # We look at the direct dependencies of the candidate to see if
+                # the dependency spec.yaml has a different full hash than the
+                # candidate spec.yaml has for them.
+                for dep in candidate_deps:
+                    dep_dag_hash = dep.dag_hash()
+
+                    # It's possible that some other mirror has the one or more
+                    # of the deps of this candidate, and thus we first check if
+                    # this mirror has a spec.yaml file for this dep.
+                    if dep_dag_hash in all_mirror_specs:
+                        true_dep = all_mirror_specs[dep_dag_hash]['spec']
+                        if true_dep._full_hash != dep._full_hash:
+                            deps_to_splice.append(true_dep)
+
+                fixed_candidate = candidate
+
+                if deps_to_splice:
+                    # Splice in all dependencies of this candidate that didn't
+                    # have matching full hashes, and push the spliced candidate
+                    # back to the mirror
+                    for splice_dep in deps_to_splice:
+                        tty.debug('    splicing {0}'.format(splice_dep.name))
+                        fixed_candidate = fixed_candidate.splice(splice_dep,
+                                                                 True)
+
+                    spliced_yaml = fixed_candidate.to_dict(hash=ht.full_hash)
+                    for key in ['binary_cache_checksum', 'buildinfo']:
+                        spliced_yaml[key] = candidate_record[key]
+
+                    temp_yaml_path = os.path.join(tmpdir, 'spliced.spec.yaml')
+                    with open(temp_yaml_path, 'w') as fd:
+                        fd.write(syaml.dump(spliced_yaml))
+
+                    spliced_yaml_url = candidate_record['yaml_url']
+                    web_util.push_to_url(
+                        temp_yaml_path, spliced_yaml_url, keep_original=False)
+                    tty.debug('    Wrote {0}'.format(spliced_yaml_url))
+                    all_mirror_specs[candidate_hash]['spec'] = fixed_candidate
+
+                db.add(fixed_candidate, None)
+                db.mark(fixed_candidate, 'in_buildcache', True)
+
+        # Now that we have fixed any old spec yamls that might have had the wrong
+        # full hash for their dependencies, we can generate the index, compute
+        # the hash, and push those files to the mirror.
         index_json_path = os.path.join(db_root_dir, 'index.json')
         with open(index_json_path, 'w') as f:
             db._write_to_file(f)
@@ -785,6 +866,7 @@ def generate_package_index(cache_prefix):
         msg = 'Encountered problem pushing package index to {0}: {1}'.format(
             cache_prefix, err)
         tty.warn(msg)
+        traceback.print_exc(file=sys.stdout)
     finally:
         shutil.rmtree(tmpdir)
 
