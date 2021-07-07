@@ -12,12 +12,13 @@ import sys
 import termios
 import textwrap
 import traceback
-import six
 from datetime import datetime
+
+import six
 from six import StringIO
 from six.moves import input
 
-from llnl.util.tty.color import cprint, cwrite, cescape, clen
+from llnl.util.tty.color import cescape, clen, cprint, cwrite
 
 # Globals
 _debug = 0

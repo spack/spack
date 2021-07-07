@@ -2,13 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 import os
+import sys
 
-import spack.config
-import spack.util.prefix as prefix
-import spack.util.environment as environment
 import spack.build_environment as build_env
+import spack.config
+import spack.util.environment as environment
+import spack.util.prefix as prefix
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = 'SPACK_LOADED_HASHES'

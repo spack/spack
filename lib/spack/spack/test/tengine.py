@@ -5,9 +5,9 @@
 
 
 import pytest
-import spack.tengine as tengine
-import spack.config
 
+import spack.config
+import spack.tengine as tengine
 from spack.util.path import canonicalize_path
 
 

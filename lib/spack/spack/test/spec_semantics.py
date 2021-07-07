@@ -4,18 +4,25 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-import pytest
 
-from spack.error import SpecError, UnsatisfiableSpecError
-from spack.spec import UnconstrainableDependencySpecError
-from spack.spec import Spec, SpecFormatSigilError, SpecFormatStringError
-from spack.variant import InvalidVariantValueError, UnknownVariantError
-from spack.variant import MultipleValuesInExclusiveVariantError
-from spack.variant import substitute_abstract_variants
+import pytest
 
 import spack.architecture
 import spack.directives
 import spack.error
+from spack.error import SpecError, UnsatisfiableSpecError
+from spack.spec import (
+    Spec,
+    SpecFormatSigilError,
+    SpecFormatStringError,
+    UnconstrainableDependencySpecError,
+)
+from spack.variant import (
+    InvalidVariantValueError,
+    MultipleValuesInExclusiveVariantError,
+    UnknownVariantError,
+    substitute_abstract_variants,
+)
 
 
 def make_spec(spec_like, concrete):

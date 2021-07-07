@@ -6,13 +6,14 @@ import os
 
 import ordereddict_backport
 import pytest
-import spack.config
-import spack.paths
-import spack.util.web
-import spack.util.s3
-from spack.version import ver
 
 import llnl.util.tty as tty
+
+import spack.config
+import spack.paths
+import spack.util.s3
+import spack.util.web
+from spack.version import ver
 
 
 def _create_url(relative_url):

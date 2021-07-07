@@ -6,10 +6,11 @@
 import inspect
 import os
 
-from llnl.util.filesystem import find, working_dir, join_path
+import llnl.util.tty as tty
+from llnl.util.filesystem import find, join_path, working_dir
+
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
-import llnl.util.tty as tty
 
 
 class SIPPackage(PackageBase):

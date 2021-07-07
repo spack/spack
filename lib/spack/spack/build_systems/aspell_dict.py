@@ -6,6 +6,7 @@
 # Why doesn't this work for me?
 # from spack import *
 from llnl.util.filesystem import filter_file
+
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.directives import extends
 from spack.package import ExtensionError

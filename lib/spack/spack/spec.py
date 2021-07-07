@@ -76,22 +76,21 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
-import sys
 import collections
 import itertools
 import operator
 import os
 import re
+import sys
 
-import six
 import ruamel.yaml as yaml
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
-import llnl.util.tty.color as clr
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
 
-import spack.paths
 import spack.architecture
 import spack.compiler
 import spack.compilers as compilers
@@ -100,6 +99,7 @@ import spack.dependency as dp
 import spack.error
 import spack.hash_types as ht
 import spack.parse
+import spack.paths
 import spack.provider_index
 import spack.repo
 import spack.solver
@@ -114,7 +114,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.string
 import spack.variant as vt
 import spack.version as vn
-
 
 if sys.version_info >= (3, 3):
     from collections.abc import Mapping  # novm

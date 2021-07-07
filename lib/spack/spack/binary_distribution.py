@@ -4,22 +4,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
+import glob
+import hashlib
+import json
 import os
 import re
+import shutil
 import sys
 import tarfile
-import shutil
 import tempfile
-import hashlib
-import glob
-from ordereddict_backport import OrderedDict
-
 from contextlib import closing
+
 import ruamel.yaml as yaml
-
-import json
-
-from six.moves.urllib.error import URLError, HTTPError
+from ordereddict_backport import OrderedDict
+from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -29,18 +27,17 @@ import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.fetch_strategy as fs
-import spack.util.file_cache as file_cache
+import spack.mirror
 import spack.relocate as relocate
+import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.mirror
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
 from spack.spec import Spec
 from spack.stage import Stage
-
 
 _build_cache_relative_path = 'build_cache'
 _build_cache_keys_relative_path = '_pgp'

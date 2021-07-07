@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os.path
 import platform
+
+from spack import *
 
 
 # The viewer and trace viewer tar files and sha256sum depend on the

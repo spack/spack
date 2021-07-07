@@ -3,11 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+import llnl.util.tty as tty
+
 from spack import *
 from spack.package_test import compare_output
 from spack.util.executable import Executable
-import llnl.util.tty as tty
-import os
 
 
 class Bohrium(CMakePackage, CudaPackage):

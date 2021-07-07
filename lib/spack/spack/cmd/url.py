@@ -4,22 +4,30 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import division, print_function
+
 from collections import defaultdict
 
 import six.moves.urllib.parse as urllib_parse
 
+from llnl.util import tty
+
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.util.crypto as crypto
-
-from llnl.util import tty
-from spack.url import parse_version_offset, parse_name_offset
-from spack.url import parse_name, parse_version, color_url
-from spack.url import substitute_version, substitution_offsets
-from spack.url import UndetectableNameError, UndetectableVersionError
-from spack.url import UrlParseError
-from spack.util.web import find_versions_of_archive
+from spack.url import (
+    UndetectableNameError,
+    UndetectableVersionError,
+    UrlParseError,
+    color_url,
+    parse_name,
+    parse_name_offset,
+    parse_version,
+    parse_version_offset,
+    substitute_version,
+    substitution_offsets,
+)
 from spack.util.naming import simplify_name
+from spack.util.web import find_versions_of_archive
 
 description = "debugging tool for url parsing"
 section = "developer"

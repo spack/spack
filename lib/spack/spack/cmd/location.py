@@ -6,12 +6,13 @@
 from __future__ import print_function
 
 import os
+
 import llnl.util.tty as tty
 
-import spack.environment as ev
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment
+import spack.environment as ev
 import spack.paths
 import spack.repo
 import spack.stage

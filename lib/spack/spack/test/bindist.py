@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
-import sys
 import platform
+import sys
 
 import py
 import pytest
@@ -19,7 +19,6 @@ import spack.repo
 import spack.store
 import spack.util.gpg
 import spack.util.web as web_util
-
 from spack.directory_layout import YamlDirectoryLayout
 from spack.spec import Spec
 
