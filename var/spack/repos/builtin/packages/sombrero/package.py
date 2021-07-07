@@ -13,6 +13,8 @@ class Sombrero(MakefilePackage):
     homepage = "https://github.com/sa2c/sombrero"
     url = "https://github.com/sa2c/sombrero/archive/refs/tags/1.0.tar.gz"
 
+    # Version 1 is incompatible with spack
+    # as CFLAGS and the like are hardcoded in the makefile.
     version('1.0',
             sha256=
             '423a631c86f0e5f14dea186228871099ca0374dc07bf1bb24b6be17f79784682',
