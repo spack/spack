@@ -118,7 +118,8 @@ spack:
       - comd
     # old version of openmpi
     # - converge
-      - cosmoflow-benchmark
+    # bad variant tensor_ops=mpi
+    # - cosmoflow-benchmark
       - cosmomc
       - cosp2
       - cp2k
