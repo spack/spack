@@ -46,16 +46,17 @@ spack:
       variants: +pmix sysconfdir=/opt/slurm/etc
 
   definitions:
-  # - compilers: 
+    - compilers: 
+      - '%gcc@7.5.0'
   #   - '%gcc@10.3.0'
-    # - '%arm@21.0.0.879'
-    # - '%nvhpc@21.2'
-    - when: arch.satisfies('os=ubuntu18.04')
-      compilers: ['%gcc@7.5.0']
-    - when: arch.satisfies('os=amzn2')
-      compilers: ['%gcc@7.3.1']
-    - bootstrap-compilers:
-      - 'gcc@10.3.0'
+  #   - '%arm@21.0.0.879'
+  #   - '%nvhpc@21.2'
+  # - when: arch.satisfies('os=ubuntu18.04')
+  #   compilers: ['%gcc@7.5.0']
+  # - when: arch.satisfies('os=amzn2')
+  #   compilers: ['%gcc@7.3.1']
+  # - bootstrap-compilers:
+  #   - 'gcc@10.3.0'
     # - 'nvhpc@21.2'
     # - 'arm@21.0.0.879'
 
@@ -103,13 +104,13 @@ spack:
     # - albany
       - amber
       - amg2013
-    # Bad variant +fftw
+    # Bad variant fftw
     # - aoflagger
-      - athena
+    # - athena
       - bowtie2
       - branson
       - camx
-    # Bad variant +gpu
+    # Bad variant gpu
     # - candle-benchmarks
       - cbench
       - cgm
@@ -118,7 +119,7 @@ spack:
       - comd
     # old version of openmpi
     # - converge
-    # bad variant tensor_ops=mpi
+    # bad variant tensor ops mpi
     # - cosmoflow-benchmark
       - cosmomc
       - cosp2
@@ -130,7 +131,7 @@ spack:
       - exabayes
       - examl
     # - flecsph
-    # trilinos variant (mumps)
+    # trilinos variant mumps
     # - frontistr
       - gatk
       - graph500
@@ -145,7 +146,7 @@ spack:
       - mrchem
    # cudnn depednency
    #  - mxnet
-   # trilinos variant (mumps)
+   # trilinos variant mumps
    #  - nalu
       - nalu-wind
       - namd
@@ -171,7 +172,7 @@ spack:
       - su2
       - swfft
       - tinker
-    # gfortran < 9.x unsupported
+    # gfortran lt 9 unsupported
     # - vasp
       - vpfft
       - vpic
@@ -206,7 +207,7 @@ spack:
           tags: ["spack", "public", "xlarge", "graviton2"]
       - match: ['@:']
         runner-attributes:
-          tags: ["spack", "public", "xlarge", "graviton2"]
+          tags: ["spack", "public", "large", "graviton2"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     service-job-attributes:
       before_script:
@@ -220,7 +221,7 @@ spack:
       #  - spack --version
       #  - cd share/spack/gitlab/cloud_pipelines/stacks/aws-ahug
       #  - spack env activate --without-view .
-      tags: ["spack", "public", "xlarge", "graviton2"]
+      tags: ["spack", "public", "large", "graviton2"]
 
   cdash:
     build-group: AHUG ARM HPC User Group
