@@ -168,7 +168,7 @@ e4s-develop-build:
 .aws-ahug-generate:
   extends: [ ".aws-ahug" ]
   image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
-  tags: ["spack", "public", "large", "aarch64"]
+  tags: ["spack", "public", "xlarge", "aarch64"]
 
 .aarch64-generate:
   stage: generate
@@ -183,7 +183,7 @@ e4s-develop-build:
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
-  tags: ["spack", "public", "large", "aarch64"]
+  tags: ["spack", "public", "xlarge", "aarch64"]
   interruptible: true
 
 

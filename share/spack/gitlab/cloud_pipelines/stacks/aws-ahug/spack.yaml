@@ -207,7 +207,7 @@ spack:
           tags: ["spack", "public", "xlarge", "graviton2"]
       - match: ['@:']
         runner-attributes:
-          tags: ["spack", "public", "large", "graviton2"]
+          tags: ["spack", "public", "xlarge", "graviton2"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     service-job-attributes:
       before_script:
@@ -221,7 +221,7 @@ spack:
       #  - spack --version
       #  - cd share/spack/gitlab/cloud_pipelines/stacks/aws-ahug
       #  - spack env activate --without-view .
-      tags: ["spack", "public", "large", "graviton2"]
+      tags: ["spack", "public", "xlarge", "graviton2"]
 
   cdash:
     build-group: AHUG ARM HPC User Group
