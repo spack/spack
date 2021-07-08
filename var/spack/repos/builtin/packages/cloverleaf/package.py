@@ -57,8 +57,9 @@ class Cloverleaf(MakefilePackage):
 
         if '%gcc' in self.spec:
             targets.append('COMPILER=GNU')
-            targets.append('FLAGS_GNU=')
-            targets.append('CFLAGS_GNU=')
+            targets.append('OMP_GNU=-fopenmp')
+            targets.append('FLAGS_GNU=-O3 -march=native -funroll-loops')
+            targets.append('CFLAGS_GNU=-O3 -march=native -funroll-loops')
         elif '%cce' in self.spec:
             targets.append('COMPILER=CRAY')
             targets.append('FLAGS_CRAY=')
@@ -75,6 +76,16 @@ class Cloverleaf(MakefilePackage):
             targets.append('COMPILER=XLF')
             targets.append('FLAGS_XLF=')
             targets.append('CFLAGS_XLF=')
+        elif '%arm' in self.spec:
+            targets.append('COMPILER=ARM')
+            targets.append('OMP_ARM=-fopenmp')
+            targets.append('FLAGS_ARM=-O3 -mcpu=native -funroll-loops')
+            targets.append('CFLAGS_ARM=-O3 -mcpu=native -funroll-loops')
+        elif '%nvhpc' in self.spec:
+            targets.append('COMPILER=NVHPC')
+            targets.append('OMP_NVHPC=-mp=multicore')
+            targets.append('FLAGS_NVHPC=-O3 -fast')
+            targets.append('CFLAGS_NVHPC=-O3 -fast')
 
         return targets
 
