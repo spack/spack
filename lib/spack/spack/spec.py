@@ -83,13 +83,15 @@ import os
 import re
 import sys
 
-import ruamel.yaml as yaml
-import six
-
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
+
+import ruamel.yaml as yaml
+
+import six
+
 import spack.architecture
 import spack.compiler
 import spack.compilers as compilers

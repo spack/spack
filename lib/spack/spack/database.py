@@ -28,6 +28,9 @@ import sys
 import time
 from typing import Dict  # novm
 
+import llnl.util.filesystem as fs
+import llnl.util.tty as tty
+
 import six
 
 try:
@@ -37,8 +40,6 @@ except ImportError:
     _use_uuid = False
     pass
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 import spack.hash_types as ht
 import spack.repo
 import spack.spec

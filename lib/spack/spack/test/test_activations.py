@@ -9,11 +9,12 @@
 
 import os
 
+from llnl.util.link_tree import MergeConflictError
+
 import pytest
 
 import spack.package
 import spack.spec
-from llnl.util.link_tree import MergeConflictError
 from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 from spack.repo import RepoPath

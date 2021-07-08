@@ -11,12 +11,12 @@ import re
 from datetime import datetime
 from glob import glob
 
-
 import llnl.util.tty as tty
+from llnl.util.filesystem import working_dir
+
 import spack.architecture as architecture
 import spack.config
 import spack.paths
-from llnl.util.filesystem import working_dir
 from spack.main import get_version
 from spack.util.executable import which
 

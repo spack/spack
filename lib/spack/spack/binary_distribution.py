@@ -15,12 +15,16 @@ import tarfile
 import tempfile
 from contextlib import closing
 
-import ruamel.yaml as yaml
-from ordereddict_backport import OrderedDict
-from six.moves.urllib.error import HTTPError, URLError
-
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
+
+from ordereddict_backport import OrderedDict
+
+import ruamel.yaml as yaml
+
+from six.moves.urllib.error import HTTPError, URLError
+
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
@@ -34,7 +38,6 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
-from llnl.util.filesystem import mkdirp
 from spack.caches import misc_cache_location
 from spack.spec import Spec
 from spack.stage import Stage

@@ -14,13 +14,14 @@ import stat
 import tempfile
 import zipfile
 
+import llnl.util.filesystem as fs
+import llnl.util.tty as tty
+
 from six import iteritems
 from six.moves.urllib.error import HTTPError, URLError
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import HTTPHandler, Request, build_opener
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 import spack
 import spack.binary_distribution as bindist
 import spack.cmd

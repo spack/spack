@@ -8,6 +8,7 @@ import shutil
 import sys
 
 import llnl.util.tty as tty
+
 import spack.architecture
 import spack.binary_distribution as bindist
 import spack.cmd

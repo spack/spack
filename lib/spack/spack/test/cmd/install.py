@@ -10,11 +10,13 @@ import re
 import shutil
 import time
 
+import llnl.util.filesystem as fs
+
 import pytest
+
 from six.moves import builtins
 from six.moves.urllib.error import HTTPError, URLError
 
-import llnl.util.filesystem as fs
 import spack.cmd.install
 import spack.compilers as compilers
 import spack.config

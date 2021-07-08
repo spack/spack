@@ -8,8 +8,9 @@ import json
 import os
 import shutil
 
-import pytest
 from jsonschema import ValidationError, validate
+
+import pytest
 
 import spack
 import spack.ci as ci

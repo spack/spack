@@ -8,6 +8,7 @@ import platform
 import sys
 
 import py
+
 import pytest
 
 import spack.binary_distribution as bindist

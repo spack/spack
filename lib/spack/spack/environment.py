@@ -9,12 +9,16 @@ import re
 import shutil
 import sys
 
-import ruamel.yaml as yaml
-import six
-from ordereddict_backport import OrderedDict
-
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.tty.color import colorize
+
+from ordereddict_backport import OrderedDict
+
+import ruamel.yaml as yaml
+
+import six
+
 import spack.concretize
 import spack.config
 import spack.error
@@ -32,7 +36,6 @@ import spack.util.lock as lk
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from llnl.util.tty.color import colorize
 from spack.filesystem_view import YamlFilesystemView
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList

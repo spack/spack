@@ -10,9 +10,10 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 
+import llnl.util.filesystem as fs
+
 import ruamel.yaml as yaml
 
-import llnl.util.filesystem as fs
 import spack.config
 import spack.hash_types as ht
 import spack.spec

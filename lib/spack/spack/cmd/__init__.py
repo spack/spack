@@ -10,11 +10,17 @@ import os
 import re
 import sys
 
+import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
+from llnl.util.lang import attr_setdefault, index_by
+from llnl.util.tty.colify import colify
+from llnl.util.tty.color import colorize
+
 import ruamel.yaml as yaml
-import six
 from ruamel.yaml.error import MarkedYAMLError
 
-import llnl.util.tty as tty
+import six
+
 import spack.config
 import spack.error
 import spack.extensions
@@ -23,10 +29,6 @@ import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
 import spack.util.string
-from llnl.util.filesystem import join_path
-from llnl.util.lang import attr_setdefault, index_by
-from llnl.util.tty.colify import colify
-from llnl.util.tty.color import colorize
 
 
 # cmd has a submodule called "list" so preserve the python list module
