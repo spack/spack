@@ -92,6 +92,9 @@ jobs:
     - name: Install Python packages
       run: |
           python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+    - name: Create local develop
+      run: |
+        .\spack\.github\workflows\setup_git.ps1
     - name: Unit Test Cmd
       run: |
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
