@@ -148,7 +148,7 @@ class CudaPackage(PackageBase):
 
     # Intel is mostly relevant for x86_64 Linux, even though it also
     # exists for Mac OS X. No information prior to CUDA 3.2 or Intel 11.1
-    with when('^cuda~allow-usupported-compilers'):
+    with when('^cuda~allow-unsupported-compilers'):
         conflicts('%intel@:11.0', when='+cuda ^cuda@:3.1')
         conflicts('%intel@:12.0', when='+cuda ^cuda@5.5:')
         conflicts('%intel@:13.0', when='+cuda ^cuda@6.0:')
@@ -163,7 +163,7 @@ class CudaPackage(PackageBase):
         conflicts('%intel@19.2:', when='+cuda ^cuda@:11.1.0')
 
     # XL is mostly relevant for ppc64le Linux
-    with when('^cuda~allow-usupported-compilers'):
+    with when('^cuda~allow-unsupported-compilers'):
         conflicts('%xl@:12,14:', when='+cuda ^cuda@:9.1')
         conflicts('%xl@:12,14:15,17:', when='+cuda ^cuda@9.2')
         conflicts('%xl@:12,17:', when='+cuda ^cuda@:11.1.0')
