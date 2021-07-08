@@ -37,6 +37,7 @@ as input.
 """
 import collections
 import itertools
+
 try:
     from collections.abc import Sequence  # novm
 except ImportError:
@@ -265,6 +266,7 @@ package_directives = AuditClass(
 def _unknown_variants_in_directives(pkgs, error_cls):
     """Report unknown or wrong variants in directives for this package"""
     import llnl.util.lang
+
     import spack.repo
     import spack.spec
 

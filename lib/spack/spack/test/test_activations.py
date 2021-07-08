@@ -8,11 +8,13 @@
 """
 
 import os
+
 import pytest
 
-import spack.spec
-import spack.package
 from llnl.util.link_tree import MergeConflictError
+
+import spack.package
+import spack.spec
 from spack.directory_layout import YamlDirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
 from spack.repo import RepoPath

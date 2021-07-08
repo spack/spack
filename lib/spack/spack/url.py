@@ -27,6 +27,7 @@ it's never been told about that version before.
 """
 import os
 import re
+
 from six import StringIO
 from six.moves.urllib.parse import urlsplit, urlunsplit
 

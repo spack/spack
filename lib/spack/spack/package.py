@@ -33,6 +33,9 @@ from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
+from llnl.util.lang import memoized
+from llnl.util.link_tree import LinkTree
+
 import spack.compilers
 import spack.config
 import spack.dependency
@@ -50,8 +53,6 @@ import spack.store
 import spack.url
 import spack.util.environment
 import spack.util.web
-from llnl.util.lang import memoized
-from llnl.util.link_tree import LinkTree
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import TestFailure, TestSuite
 from spack.installer import InstallError, PackageInstaller
@@ -1833,6 +1834,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 exc_type, _, tb = sys.exc_info()
                 print('FAILED: {0}'.format(e))
                 import traceback
+
                 # remove the current call frame to exclude the extract_stack
                 # call from the error
                 stack = traceback.extract_stack()[:-1]

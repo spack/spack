@@ -21,6 +21,7 @@ from six.moves.urllib.request import HTTPHandler, Request, build_opener
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+
 import spack
 import spack.binary_distribution as bindist
 import spack.cmd
@@ -38,7 +39,6 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
 from spack.spec import Spec
-
 
 JOB_RETRY_CONDITIONS = [
     'always',

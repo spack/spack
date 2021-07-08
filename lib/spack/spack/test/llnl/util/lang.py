@@ -3,14 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pytest
-
 import os.path
 import sys
 from datetime import datetime, timedelta
 
+import pytest
+
 import llnl.util.lang
-from llnl.util.lang import pretty_date, match_predicate
+from llnl.util.lang import match_predicate, pretty_date
 
 
 @pytest.fixture()

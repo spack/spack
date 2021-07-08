@@ -8,8 +8,10 @@ from __future__ import print_function
 import collections
 
 import archspec.cpu
+
 import llnl.util.tty.colify as colify
 import llnl.util.tty.color as color
+
 import spack.architecture as architecture
 
 description = "print architecture information about this machine"

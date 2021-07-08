@@ -3,10 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.main import SpackCommand, SpackCommandError
-
 import pytest
 
+from spack.main import SpackCommand, SpackCommandError
 
 graph = SpackCommand('graph')
 

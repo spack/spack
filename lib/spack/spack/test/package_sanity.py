@@ -4,23 +4,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This test does sanity checks on Spack's builtin package database."""
 import os.path
+import pickle
 import re
 
 import pytest
 
+import llnl.util.tty as tty
+
+# A few functions from this module are used to
+# do sanity checks only on packagess modified by a PR
+import spack.cmd.style as style
 import spack.fetch_strategy
 import spack.package
 import spack.paths
 import spack.repo
+import spack.util.crypto as crypto
 import spack.util.executable as executable
 import spack.variant
-# A few functions from this module are used to
-# do sanity checks only on packagess modified by a PR
-import spack.cmd.style as style
-import spack.util.crypto as crypto
-import pickle
-
-import llnl.util.tty as tty
 
 
 def check_repo():

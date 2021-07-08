@@ -37,6 +37,7 @@ import six
 
 import llnl.util.lang
 import llnl.util.tty.color
+
 import spack.error
 import spack.patch
 import spack.spec
@@ -46,7 +47,6 @@ from spack.dependency import Dependency, canonical_deptype, default_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version, VersionChecksumError
-
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm
