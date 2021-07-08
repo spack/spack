@@ -22,8 +22,9 @@ class Xyce(CMakePackage):
     url      = 'https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz'
     maintainers = ['kuberry']
 
-    version('master',  branch='master')
-    version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5', preferred=True)
+    version('github.master',  branch='master', preferred=True)
+    version('7.3.0', '43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446')
+    version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5')
 
     depends_on('cmake@3.13:', type='build')
     depends_on('flex')
