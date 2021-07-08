@@ -24,6 +24,7 @@ class Gridsim2d(MakefilePackage):
     version('v2020-12-04', tag='v2020-12-04')
     version('v2020-12-21-c3-final', tag='v2020-12-21-c3-final') ## Added by tomaso, 2020-12-21
     version('v2020-12-22-c3-final', tag='v2020-12-22-c3-final')
+    version('dat-20210701-c4test', tag='dat-20210701-c4test')
 
     depends_on('mpi')
     depends_on('fftw')
@@ -36,6 +37,7 @@ class Gridsim2d(MakefilePackage):
         mkdir(prefix.bin)
         install('gridsim2dras', prefix.bin)
 
+        '''
         with working_dir('c3-test'):
             #mfiles = ['pmfcode.m', 'make_pmf.m', 'interpolate.m', 'pmfsmooth2.m']
             ## Added by tomaso 2020-11-13:
@@ -48,4 +50,4 @@ class Gridsim2d(MakefilePackage):
             mfiles = [] # This is for version v2020-12-04
             for m in mfiles:
                 install(m, prefix.bin)
-
+        '''
