@@ -74,6 +74,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
     conflicts('+cuda', when='+rocm')
     conflicts('+cudnn', when='~cuda')
+    conflicts('+magma', when='~cuda')
     conflicts('+nccl', when='~cuda~rocm')
     conflicts('+nccl', when='platform=darwin')
     conflicts('+numa', when='platform=darwin', msg='Only available on Linux')
