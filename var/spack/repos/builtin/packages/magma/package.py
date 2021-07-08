@@ -36,8 +36,6 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     variant('shared', default=True,
             description='Enable shared library')
     variant('cuda', default=True, description='Build with CUDA')
-    variant('cuda_arch', default='none', multi=True,
-            description='Specify CUDA architecture(s)')
 
     depends_on('blas')
     depends_on('lapack')
