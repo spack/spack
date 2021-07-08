@@ -80,7 +80,7 @@ jobs:
         spack unit-test lib\spack\spack\test\url_fetch.py
         spack unit-test lib\spack\spack\test\url_parse.py
         spack unit-test lib\spack\spack\test\url_substitution.py
-  unittest-util:
+  unittest-cmd:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
