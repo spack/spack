@@ -9,15 +9,13 @@ import re
 import shutil
 import sys
 
+import ruamel.yaml as yaml
+import six
+from ordereddict_backport import OrderedDict
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
-
-from ordereddict_backport import OrderedDict
-
-import ruamel.yaml as yaml
-
-import six
 
 import spack.concretize
 import spack.config

@@ -17,7 +17,6 @@ from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.util.pattern import Bunch
 
-
 find = SpackCommand('find')
 env = SpackCommand('env')
 install = SpackCommand('install')

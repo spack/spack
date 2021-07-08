@@ -10,16 +10,15 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 
-import llnl.util.filesystem as fs
-
 import ruamel.yaml as yaml
+
+import llnl.util.filesystem as fs
 
 import spack.config
 import spack.hash_types as ht
 import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
-
 
 default_projections = {'all': ('{architecture}/'
                                '{compiler.name}-{compiler.version}/'
@@ -214,8 +213,7 @@ class DirectoryLayout(object):
 
         # Create install directory with properly configured permissions
         # Cannot import at top of file
-        from spack.package_prefs import get_package_dir_permissions
-        from spack.package_prefs import get_package_group
+        from spack.package_prefs import get_package_dir_permissions, get_package_group
 
         # Each package folder can have its own specific permissions, while
         # intermediate folders (arch/compiler) are set with access permissions

@@ -27,7 +27,6 @@ from spack.error import SpecError
 from spack.spec import Spec, save_dependency_specfiles
 from spack.util.string import plural
 
-
 description = "create, download and install binary packages"
 section = "packaging"
 level = "long"

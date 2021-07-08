@@ -9,9 +9,9 @@
 
 import os
 
-from llnl.util.link_tree import MergeConflictError
-
 import pytest
+
+from llnl.util.link_tree import MergeConflictError
 
 import spack.package
 import spack.spec

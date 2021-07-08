@@ -8,9 +8,8 @@ import json
 import os
 import shutil
 
-from jsonschema import ValidationError, validate
-
 import pytest
+from jsonschema import ValidationError, validate
 
 import spack
 import spack.ci as ci
@@ -30,7 +29,6 @@ from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import CompilerSpec, Spec
 from spack.util.mock_package import MockPackageMultiRepo
-
 
 ci_cmd = spack.main.SpackCommand('ci')
 env_cmd = spack.main.SpackCommand('env')

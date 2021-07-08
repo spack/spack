@@ -13,8 +13,10 @@ import pytest
 
 import spack.paths
 import spack.repo
-from spack.directory_layout import DirectoryLayout
-from spack.directory_layout import InvalidDirectoryLayoutParametersError
+from spack.directory_layout import (
+    DirectoryLayout,
+    InvalidDirectoryLayoutParametersError,
+)
 from spack.spec import Spec
 
 # number of packages to test (to reduce test time)

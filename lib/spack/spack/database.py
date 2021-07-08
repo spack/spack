@@ -28,10 +28,10 @@ import sys
 import time
 from typing import Dict  # novm
 
+import six
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-
-import six
 
 try:
     import uuid

@@ -23,7 +23,6 @@ import spack.report
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
-
 description = "build and install packages"
 section = "build"
 level = "short"

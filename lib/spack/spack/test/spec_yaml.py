@@ -26,7 +26,6 @@ from spack.spec import Spec, save_dependency_specfiles
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.spack_yaml import syaml_dict
 
-
 if sys.version_info >= (3, 3):
     from collections.abc import Iterable, Mapping  # novm
 else:
