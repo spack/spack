@@ -5,6 +5,7 @@
 
 from spack.package import PackageBase
 from spack.directives import depends_on, variant, conflicts
+from spack.multimethod import when
 
 import spack.variant
 
