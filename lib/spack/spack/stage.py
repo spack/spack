@@ -73,7 +73,7 @@ def create_stage_root(path):
     err_msg = 'Cannot create stage root {0}: Access to {1} is denied'
 
     if _platform != "win32":
-        user_uid = os.getuid()
+        user_uid = os.getuid()  # type: ignore[attr-defined]
     else:
         user_uid = win32api.GetUserName()
 

@@ -41,7 +41,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-        python -m pip install --upgrade pip six setuptools flake8 mypy>=0.800 black pywin32
+        python -m pip install --upgrade pip six setuptools flake8 mypy>=0.800 black pywin32 types-python-dateutil
     - name: Create local develop
       run: |
         .\spack\.github\workflows\setup_git.ps1
@@ -50,7 +50,7 @@ jobs:
         spack style
     - name: Verify license headers
       run: |
-        python bin\spack license verify
+        python spack\bin\spack license verify
   unittest:
     runs-on: windows-latest
     steps:

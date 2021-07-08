@@ -9,9 +9,9 @@ import os
 import sys
 
 import pytest
-from jsonschema import validate, ValidationError
 import shutil
 
+from jsonschema import ValidationError, validate
 
 import spack
 import spack.ci as ci

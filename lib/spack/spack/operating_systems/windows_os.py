@@ -42,7 +42,7 @@ class WindowsOs(OperatingSystem):
                 "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
                 "-property", "installationPath",
                 "-products", "*",
-            ], **extra_args).strip()
+            ], **extra_args).strip()  # type: ignore[call-overload]
             if (3, 0) <= sys.version_info[:2] <= (3, 5):
                 paths = paths.decode()
             vs_install_paths = paths.split('\n')
