@@ -16,6 +16,8 @@ class Ack(Package):
     homepage = "http://beyondgrep.com/"
     url      = "http://beyondgrep.com/ack-2.14-single-file"
 
+    version('3.50', sha256='fd0617585b88517a3d41d3d206c1dc38058c57b90dfd88c278049a41aeb5be38', expand=False, url='http://beyondgrep.com/ack-v3.5.0')
+    version('2.28', sha256='0ab3df19513a2c71aa7901f7f522a5baf72ce69e6e0e34879979f157210734f6', expand=False)
     version('2.22', sha256='fd0617585b88517a3d41d3d206c1dc38058c57b90dfd88c278049a41aeb5be38', expand=False)
     version('2.18', sha256='6e41057c8f50f661d800099471f769209480efa53b8a886969d7ec6db60a2208', expand=False)
     version('2.16', sha256='7f39f08ebb78ed160a41293d7f42ff1bdcdaf57aee859bc4c4888bdf4abee7f2', expand=False)
