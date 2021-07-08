@@ -7,6 +7,7 @@ import os
 
 from spack import *
 
+
 def simmodsuite_releases():
     releases = [
         {
