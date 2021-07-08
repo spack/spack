@@ -37,6 +37,8 @@ class PyMdanalysisMummi(PythonPackage):
 
     version('mda_1.0.1_ddcmd', tag='mda_1.0.1_ddcmd', git='git@github.com:XiaohuaZhangLLNL/mdanalysis.git')
     version('mda_1.0.0_ddcmd', tag='mda_1.0.0_ddcmd', git='git@github.com:XiaohuaZhangLLNL/mdanalysis.git')
+    version('mda_1.0.3_ddcmd', tag='mda_1.0.3_ddcmd', git='git@github.com:XiaohuaZhangLLNL/mdanalysis.git')
+    version('mda_1.0.4_ddcmd', tag='mda_1.0.4_ddcmd', git='git@github.com:XiaohuaZhangLLNL/mdanalysis.git')
 
     # removed this because their deps are diff
     # need to consult with py-mdanalysis if these are needed
