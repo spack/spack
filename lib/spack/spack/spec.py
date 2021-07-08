@@ -4281,19 +4281,22 @@ class Spec(object):
         # _dependents of these specs should not be trusted.
         # Variants may also be ignored here for now...
 
+        # Keep all cached hashes because we will invalidate the ones that need
+        # invalidating later, and we don't want to invalidate unnecessarily
+
         if transitive:
-            self_nodes = dict((s.name, s.copy(deps=False))
+            self_nodes = dict((s.name, s.copy(deps=False, caches=True))
                               for s in self.traverse(root=True)
                               if s.name not in other)
-            other_nodes = dict((s.name, s.copy(deps=False))
+            other_nodes = dict((s.name, s.copy(deps=False, caches=True))
                                for s in other.traverse(root=True))
         else:
             # If we're not doing a transitive splice, then we only want the
             # root of other.
-            self_nodes = dict((s.name, s.copy(deps=False))
+            self_nodes = dict((s.name, s.copy(deps=False, caches=True))
                               for s in self.traverse(root=True)
                               if s.name != other.name)
-            other_nodes = {other.name: other.copy(deps=False)}
+            other_nodes = {other.name: other.copy(deps=False, caches=True)}
 
         nodes = other_nodes.copy()
         nodes.update(self_nodes)
@@ -4314,8 +4317,30 @@ class Spec(object):
                 if any(dep not in other_nodes for dep in dependencies):
                     nodes[name].build_spec = other[name].build_spec
 
-        # Clear cached hashes
-        nodes[self.name].clear_cached_hashes()
+        ret = nodes[self.name]
+
+        # Clear cached hashes for all affected nodes
+        # Do not touch unaffected nodes
+        for dep in ret.traverse(root=True, order='post'):
+            opposite = other_nodes if dep.name in self_nodes else self_nodes
+            if any(name in dep for name in opposite.keys()):
+                # Record whether hashes are already cached
+                # So we don't try to compute a hash from insufficient
+                # provenance later
+                has_build_hash = getattr(dep, ht.build_hash.attr, None)
+                has_full_hash = getattr(dep, ht.full_hash.attr, None)
+
+                dep.clear_cached_hashes()
+
+                # Since this is a concrete spec, we want to make sure hashes
+                # are cached writing specs only writes cached hashes in case
+                # the spec is too old to have full provenance for these hashes,
+                # so we can't rely on doing it at write time.
+                if has_build_hash:
+                    _ = dep.build_hash()
+                if has_full_hash:
+                    _ = dep.full_hash()
+
         return nodes[self.name]
 
     def clear_cached_hashes(self):
