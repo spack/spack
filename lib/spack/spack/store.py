@@ -26,16 +26,16 @@ configuration.
 import contextlib
 import os
 import re
+
 import six
 
 import llnl.util.lang
 import llnl.util.tty as tty
-
-import spack.paths
 import spack.config
-import spack.util.path
 import spack.database
 import spack.directory_layout
+import spack.paths
+import spack.util.path
 
 
 #: default installation root, relative to the Spack install path

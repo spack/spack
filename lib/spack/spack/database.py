@@ -39,12 +39,12 @@ except ImportError:
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import spack.hash_types as ht
 import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
-import spack.hash_types as ht
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.filesystem_view import YamlFilesystemView

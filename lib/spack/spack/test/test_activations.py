@@ -8,10 +8,11 @@
 """
 
 import os
+
 import pytest
 
-import spack.spec
 import spack.package
+import spack.spec
 from llnl.util.link_tree import MergeConflictError
 from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import YamlFilesystemView

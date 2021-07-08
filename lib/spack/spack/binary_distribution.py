@@ -4,40 +4,37 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
+import glob
+import hashlib
+import json
 import os
 import re
+import shutil
 import sys
 import tarfile
-import shutil
 import tempfile
-import hashlib
-import glob
-from ordereddict_backport import OrderedDict
-
 from contextlib import closing
+
 import ruamel.yaml as yaml
-
-import json
-
-from six.moves.urllib.error import URLError, HTTPError
+from ordereddict_backport import OrderedDict
+from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.fetch_strategy as fs
 import spack.hash_types as ht
-import spack.util.file_cache as file_cache
+import spack.mirror
 import spack.relocate as relocate
+import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.mirror
 import spack.util.url as url_util
 import spack.util.web as web_util
+from llnl.util.filesystem import mkdirp
 from spack.caches import misc_cache_location
 from spack.spec import Spec
 from spack.stage import Stage
@@ -735,7 +732,6 @@ def generate_package_index(cache_prefix):
         msg = 'Encountered problem listing packages at {0}: {1}'.format(
             cache_prefix, err)
         tty.warn(msg)
-        
         return
 
     tty.debug('Retrieving spec descriptor files from {0} to build index'.format(

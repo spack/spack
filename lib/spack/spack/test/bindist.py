@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
-import sys
 import platform
+import sys
 
 import py
 import pytest
@@ -19,7 +19,6 @@ import spack.repo
 import spack.store
 import spack.util.gpg
 import spack.util.web as web_util
-
 from spack.directory_layout import DirectoryLayout
 from spack.paths import test_path
 from spack.spec import Spec
@@ -30,6 +29,7 @@ uninstall_cmd = spack.main.SpackCommand('uninstall')
 buildcache_cmd = spack.main.SpackCommand('buildcache')
 
 legacy_mirror_dir = os.path.join(test_path, 'data', 'mirrors', 'legacy_yaml')
+
 
 @pytest.fixture(scope='function')
 def cache_directory(tmpdir):
@@ -600,9 +600,12 @@ def test_update_sbang(tmpdir, test_mirror):
 
         uninstall_cmd('-y', '/%s' % new_spec.dag_hash())
 
+
 # Need one where the platform has been changed to the test platform.
-def test_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config, mock_packages):
+def test_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
+                     mock_packages):
     # There has to be a better way!
-    install_cmd('--no-check-signature', '--cache-only', '-f', 
-        legacy_mirror_dir + '/build_cache/test-debian6-core2-gcc-4.5.0-zlib-1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml')
+    install_cmd('--no-check-signature', '--cache-only', '-f', legacy_mirror_dir
+                + '/build_cache/test-debian6-core2-gcc-4.5.0-zlib-' +
+                '1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml')
     uninstall_cmd('-y', '/t5mczux3tfqpxwmg7egp7axy2jvyulqk')

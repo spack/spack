@@ -3,17 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
+import glob
 import os
 import shutil
-import glob
 import tempfile
-import errno
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
 
 import llnl.util.filesystem as fs
-
 import spack.config
 import spack.hash_types as ht
 import spack.spec

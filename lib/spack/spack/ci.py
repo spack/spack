@@ -1378,7 +1378,7 @@ def read_cdashid_from_mirror(spec, mirror_url):
     return int(contents)
 
 
-def push_mirror_contents(env, spec, yaml_path, mirror_url, sign_binaries):
+def push_mirror_contents(env, spec, specfile_path, mirror_url, sign_binaries):
     try:
         unsigned = not sign_binaries
         tty.debug('Creating buildcache ({0})'.format(
