@@ -93,7 +93,7 @@ import llnl.util.tty.color as clr
 
 import spack.architecture
 import spack.compiler
-import spack.compilers as compilers
+import spack.compilers
 import spack.config
 import spack.dependency as dp
 import spack.error
@@ -2966,7 +2966,7 @@ class Spec(object):
 
             # validate compiler in addition to the package name.
             if spec.compiler:
-                if not compilers.supported(spec.compiler):
+                if not spack.compilers.supported(spec.compiler):
                     raise UnsupportedCompilerError(spec.compiler.name)
 
             # Ensure correctness of variants (if the spec is not virtual)
