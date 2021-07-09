@@ -17,6 +17,7 @@ class FluxSched(AutotoolsPackage):
     maintainers = ['SteVwonder']
 
     version('master', branch='master')
+    version('0.17.0', sha256='5acfcb757e2294a92eaa91be58ba9b42736b88b42d2937de4a78f4642b1c4933')
     version('0.16.0', sha256='08313976161c141b9b34e2d44d5a08d1b11302e22d60aeaf878eef84d4bd2884')
     version('0.15.0', sha256='ff24d26997f91af415f98734b8117291f5a5001e86dac865b56b3d72980c80c8')
     version('0.14.0', sha256='2808f42032b917823d69cd26103c9238694416e2f30c6d39c11c670927ed232a')
@@ -46,6 +47,7 @@ class FluxSched(AutotoolsPackage):
     depends_on("flux-core@0.22.0", when='@0.14.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.23.0:0.25.99", when='@0.15.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.26.0:", when='@0.16.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.28.0:", when='@0.17.0', type=('build', 'run', 'link'))
     depends_on("flux-core@master", when='@master', type=('build', 'run', 'link'))
 
     # Need autotools when building on master:
