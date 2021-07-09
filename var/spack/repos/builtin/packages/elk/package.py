@@ -63,7 +63,8 @@ class Elk(MakefilePackage):
     depends_on('openblas threads=openmp', when='linalg=openblas +openmp')
     
     depends_on('blis', when='linalg=blis')
-
+    depends_on('blis threads=openmp', when='linalg=blis +openmp')
+ 
     depends_on('fftw', when='fft=fftw')
     depends_on('fftw +openmp', when='fft=fftw +openmp')
     depends_on('mkl', when='fft=mkl')
