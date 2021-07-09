@@ -566,6 +566,26 @@ def ci_rebuild(args):
                     cdash_build_id, pipeline_mirror_url))
                 spack_ci.write_cdashid_to_mirror(
                     cdash_build_id, job_spec, pipeline_mirror_url)
+
+        # If this is a develop pipeline, check if the spec that we just built is
+        # on the broken-specs list. If so, remove it.
+        if spack_is_develop_pipeline and 'broken-specs-url' in gitlab_ci:
+            broken_specs_url = gitlab_ci['broken-specs-url']
+            just_built_hash = job_spec.full_hash()
+            broken_spec_path = url_util.join(broken_specs_url, just_built_hash)
+            if web_util.url_exists(broken_spec_path):
+                tty.msg('Removing {0} from the list of broken specs'.format(
+                    broken_spec_path))
+                try:
+                    web_util.remove_url(broken_spec_path)
+                except Exception as err:
+                    # If we got some kind of S3 (access denied or other connection
+                    # error), the first non boto-specific class in the exception
+                    # hierarchy is Exception.  Just print a warning and return
+                    msg = 'Error removing {0} from broken specs list: {1}'.format(
+                        broken_spec_path, err)
+                    tty.warn(msg)
+
     else:
         tty.debug('spack install exited non-zero, will not create buildcache')
 
