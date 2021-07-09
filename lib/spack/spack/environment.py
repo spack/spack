@@ -574,7 +574,7 @@ class ViewDescriptor(object):
         return YamlFilesystemView(root, spack.store.layout,
                                   ignore_conflicts=True,
                                   projections=self.projections,
-                                  link=self.link_type)
+                                  link=view_func_parser(self.link_type))
 
     def __contains__(self, spec):
         """Is the spec described by the view descriptor
