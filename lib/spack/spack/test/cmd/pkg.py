@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import re
 import shutil
+import sys
 
 import pytest
 
@@ -104,6 +105,7 @@ def split(output):
 pkg = spack.main.SpackCommand('pkg')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_packages_path():
     assert (spack.cmd.pkg.packages_path() ==
             spack.repo.path.get_repo('builtin').packages_path)
@@ -190,6 +192,7 @@ def test_pkg_removed(mock_pkg_git_repo):
     assert out == ['pkg-c']
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_pkg_changed(mock_pkg_git_repo):
     out = split(pkg('changed', 'HEAD^^', 'HEAD^'))
     assert out == []

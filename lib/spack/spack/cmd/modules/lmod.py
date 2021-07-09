@@ -7,11 +7,10 @@ import functools
 import os
 
 import llnl.util.filesystem
+from llnl.util.symlink import symlink
 
 import spack.cmd.common.arguments
 import spack.cmd.modules
-
-from llnl.util.symlink import symlink
 
 
 def add_command(parser, command_dict):
