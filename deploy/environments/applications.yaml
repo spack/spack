@@ -63,7 +63,7 @@ spack:
     - py-morphio
     - py-morphology-repair-workflow
     - py-morph-tool%gcc ^neuron%intel
-    - py-neurodamus
+    - py-neurodamus+all_deps
     - py-notebook
     - py-pytouchreader
     - py-simwriter
