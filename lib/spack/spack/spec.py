@@ -4351,7 +4351,7 @@ class Spec(object):
 
         return nodes[self.name]
 
-    def clear_cached_hashes(self, ignore=[]):
+    def clear_cached_hashes(self, ignore=()):
         """
         Clears all cached hashes in a Spec, while preserving other properties.
         """
