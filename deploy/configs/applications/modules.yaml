@@ -94,7 +94,6 @@ modules:
       - '%pgi'
     projections:
       all: '{name}/{version}'
-      ^spark@3.0.0: '{name}/{version}-spark3.0'
       ^coreneuron+knl: '{name}-knl/{version}'
       +common: '{name}/{version}-commonmods'
     all:

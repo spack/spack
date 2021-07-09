@@ -14,14 +14,8 @@ class ParquetConverters(CMakePackage):
     git      = "git@bbpgitlab.epfl.ch:hpc/circuit-building/parquet-converters.git"
 
     version('develop', submodules=True)
+    version('0.6.0', tag='v0.6.0', submodules=True)
     version('0.5.7', tag='v0.5.7', submodules=True)
-    version('0.5.6', tag='v0.5.6', submodules=True)
-    version('0.5.5', tag='v0.5.5', submodules=True)
-    version('0.5.4', tag='v0.5.4', submodules=True)
-    version('0.5.3', tag='v0.5.3', submodules=True)
-    version('0.5.2', tag='v0.5.2', submodules=True)
-    version('0.5.1', tag='v0.5.1', submodules=True)
-    version('0.5.0', tag='v0.5.0', submodules=True)
     version('0.4.1', tag='v0.4.1')
     version('0.3', tag='v0.3')
     version('0.2.1', tag='v0.2.1')

@@ -16,6 +16,7 @@ class Spykfunc(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
     version('develop', submodules=True, get_full_repo=True)
+    version('0.16.99', tag='v0.16.99', submodules=True, get_full_repo=True)
     version('0.16.1', tag='v0.16.1', submodules=True, get_full_repo=True)
     version('0.16.0', tag='v0.16.0', submodules=True, get_full_repo=True)
     version('0.15.9', tag='v0.15.9', submodules=True, get_full_repo=True)
@@ -48,7 +49,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-funcsigs', type=('build', 'run'))
     # h5py needed for morphologies before, and to supplement libSONATA due
     # to missing API functionality
-    depends_on('py-h5py', type=('build', 'run'), when='@:0.15.1,0.17:')
+    depends_on('py-h5py', type=('build', 'run'), when='@:0.15.1,0.16.99:')
     depends_on('py-hdfs', type=('build', 'run'))
     depends_on('py-jprops', type=('build', 'run'))
     depends_on('py-lazy-property', type=('build', 'run'))
