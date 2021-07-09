@@ -14,10 +14,10 @@ get tests done quickly, not to avoid high CPU usage.
 """
 from __future__ import print_function
 
-import os
-import signal
 import multiprocessing
+import os
 import re
+import signal
 import sys
 import termios
 import time

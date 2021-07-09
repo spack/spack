@@ -10,21 +10,22 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-import six
 from typing import Dict  # novm
 
-import llnl.util.lang
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
+import six
+
 import archspec.cpu
 
-import spack.paths
-import spack.error
-import spack.spec
-import spack.config
-import spack.compiler
-import spack.architecture
+import llnl.util.filesystem as fs
+import llnl.util.lang
+import llnl.util.tty as tty
 
+import spack.architecture
+import spack.compiler
+import spack.config
+import spack.error
+import spack.paths
+import spack.spec
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 

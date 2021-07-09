@@ -4,18 +4,24 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import pytest
 import numbers
 
-from spack.variant import Variant, SingleValuedVariant, VariantMap
-from spack.variant import MultiValuedVariant, BoolValuedVariant
-from spack.variant import UnsatisfiableVariantSpecError
-from spack.variant import InconsistentValidationError
-from spack.variant import MultipleValuesInExclusiveVariantError
-from spack.variant import InvalidVariantValueError, DuplicateVariantError
-from spack.variant import disjoint_sets
+import pytest
 
 import spack.error
+from spack.variant import (
+    BoolValuedVariant,
+    DuplicateVariantError,
+    InconsistentValidationError,
+    InvalidVariantValueError,
+    MultipleValuesInExclusiveVariantError,
+    MultiValuedVariant,
+    SingleValuedVariant,
+    UnsatisfiableVariantSpecError,
+    Variant,
+    VariantMap,
+    disjoint_sets,
+)
 
 
 class TestMultiValuedVariant(object):

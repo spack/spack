@@ -9,21 +9,20 @@ import contextlib
 import inspect
 import json
 import os
+import os.path
 import platform
 import re
 import socket
 import sys
-import os.path
 
 import six
+from six.moves import cPickle
+from six.moves import shlex_quote as cmd_quote
 
 import llnl.util.tty as tty
-import spack.util.executable as executable
-
 from llnl.util.lang import dedupe
 
-from six.moves import shlex_quote as cmd_quote
-from six.moves import cPickle
+import spack.util.executable as executable
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
@@ -159,8 +158,8 @@ def get_host_environment():
     """Return a dictionary (lookup) with host information (not including the
     os.environ).
     """
-    import spack.spec
     import spack.architecture as architecture
+    import spack.spec
     arch = architecture.Arch(
         architecture.platform(), 'default_os', 'default_target')
     arch_spec = spack.spec.Spec('arch=%s' % arch)

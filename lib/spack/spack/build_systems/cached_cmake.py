@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from llnl.util.filesystem import install, mkdirp
 import llnl.util.tty as tty
+from llnl.util.filesystem import install, mkdirp
 
 from spack.build_systems.cmake import CMakePackage
 from spack.package import run_after

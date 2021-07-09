@@ -7,9 +7,9 @@
 
 TODO: this is really part of spack.config. Consolidate it.
 """
+import getpass
 import os
 import re
-import getpass
 import subprocess
 import tempfile
 

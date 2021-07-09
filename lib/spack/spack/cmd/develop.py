@@ -10,7 +10,6 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
-
 from spack.error import SpackError
 
 description = "add a spec to an environment's dev-build information"

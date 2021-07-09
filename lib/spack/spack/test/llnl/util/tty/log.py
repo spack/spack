@@ -4,15 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
+
 import contextlib
 import multiprocessing
 import os
 import signal
 import sys
 import time
-
-from typing import Optional  # novm
 from types import ModuleType  # novm
+from typing import Optional  # novm
 
 import pytest
 

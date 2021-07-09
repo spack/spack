@@ -10,7 +10,7 @@ class Scotch(Package):
     """Scotch is a software package for graph and mesh/hypergraph
        partitioning, graph clustering, and sparse matrix ordering."""
 
-    homepage = "http://scotch.gforge.inria.fr/"
+    homepage = "https://gitlab.inria.fr/scotch/scotch"
     git      = "https://gitlab.inria.fr/scotch/scotch.git"
     url      = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.4.tar.gz"
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
@@ -33,8 +33,8 @@ class Scotch(Package):
             description='Activate the compilation of esmumps needed by mumps')
     variant('shared', default=True,
             description='Build a shared version of the library')
-    variant('metis', default=True,
-            description='Build metis and parmetis wrapper libraries')
+    variant('metis', default=False,
+            description='Expose vendored METIS/ParMETIS libraries and wrappers')
     variant('int64', default=False,
             description='Use int64_t for SCOTCH_Num typedef')
 
@@ -50,6 +50,11 @@ class Scotch(Package):
     patch('metis-headers-6.0.4.patch', when='@6.0.4')
 
     patch('libscotchmetis-return-6.0.5a.patch', when='@6.0.5a')
+
+    # Vendored dependency of METIS/ParMETIS conflicts with standard
+    # installations
+    conflicts('^metis', when='+metis')
+    conflicts('^parmetis', when='+metis')
 
     # NOTE: In cross-compiling environment parallel build
     # produces weird linker errors.
@@ -115,6 +120,12 @@ class Scotch(Package):
             cflags.extend([
                 '-Drestrict=__restrict'
             ])
+
+        if '~metis' in self.spec:
+            # Scotch requires METIS to build, but includes its own patched,
+            # vendored dependency. Prefix its internal symbols so they won't
+            # conflict with another installation.
+            cflags.append('-DSCOTCH_METIS_PREFIX')
 
         # Library Build Type #
         if '+shared' in self.spec:
@@ -215,7 +226,7 @@ class Scotch(Package):
 
         with working_dir('src'):
             for target in targets:
-                # It seams that building ptesmumps in parallel fails, for
+                # It seems that building ptesmumps in parallel fails, for
                 # version prior to 6.0.0 there is no separated targets force
                 # ptesmumps, this library is built by the ptscotch target. This
                 # should explain the test for the can_make_parallel variable
@@ -226,7 +237,7 @@ class Scotch(Package):
                 make(target, parallel=can_make_parallel)
 
         lib_ext = dso_suffix if '+shared' in self.spec else 'a'
-        # It seams easier to remove metis wrappers from the folder that will be
+        # It seems easier to remove metis wrappers from the folder that will be
         # installed than to tweak the Makefiles
         if '+metis' not in self.spec:
             with working_dir('lib'):

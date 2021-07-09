@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from spack.util.module_cmd import module
-from spack.util.module_cmd import get_path_args_from_module_line
 import os
+
+from spack import *
+from spack.util.module_cmd import get_path_args_from_module_line, module
 
 
 class CrayMpich(Package):

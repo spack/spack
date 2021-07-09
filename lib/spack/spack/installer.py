@@ -39,10 +39,12 @@ from collections import defaultdict
 
 import six
 
-
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
+from llnl.util.tty.color import colorize
+from llnl.util.tty.log import log_output
+
 import spack.binary_distribution as binary_distribution
 import spack.compilers
 import spack.error
@@ -52,8 +54,6 @@ import spack.package
 import spack.package_prefs as prefs
 import spack.repo
 import spack.store
-from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output
 from spack.util.environment import dump_environment
 from spack.util.executable import which
 from spack.util.timer import Timer
@@ -1618,6 +1618,7 @@ class PackageInstaller(object):
                 # package as a failure.
                 if (not isinstance(exc, spack.error.SpackError) or
                     not exc.printed):
+                    exc.printed = True
                     # SpackErrors can be printed by the build process or at
                     # lower levels -- skip printing if already printed.
                     # TODO: sort out this and SpackError.print_context()

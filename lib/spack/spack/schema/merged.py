@@ -21,7 +21,6 @@ import spack.schema.packages
 import spack.schema.repos
 import spack.schema.upstreams
 
-
 #: Properties for inclusion in other schemas
 properties = union_dicts(
     spack.schema.cdash.properties,
