@@ -7,7 +7,6 @@ import sys
 
 import pytest
 
-from spack.main import SpackCommand
 import spack.store
 from spack.main import SpackCommand
 
