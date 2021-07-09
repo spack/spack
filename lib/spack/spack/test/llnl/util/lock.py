@@ -43,6 +43,7 @@ actually on a shared filesystem.
 
 """
 import collections
+import ctypes
 import errno
 import getpass
 import glob
@@ -52,10 +53,10 @@ import socket
 import stat
 import tempfile
 import traceback
-import ctypes
 from contextlib import contextmanager
 from multiprocessing import Process, Queue
 from sys import platform as _platform
+
 import pytest
 
 import llnl.util.lock as lk
@@ -63,9 +64,9 @@ import llnl.util.multiproc as mp
 from llnl.util.filesystem import touch
 
 if _platform == "win32":
+    import pywintypes
     import win32con
     import win32file
-    import pywintypes
     LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK
     LOCK_SH = 0
     LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY

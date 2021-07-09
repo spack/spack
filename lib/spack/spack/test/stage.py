@@ -5,14 +5,15 @@
 
 """Test that the Stage class works correctly."""
 import collections
+import ctypes
 import errno
 import getpass
 import os
 import shutil
 import stat
-import tempfile
 import sys
-import ctypes
+import tempfile
+
 import pytest
 
 from llnl.util.filesystem import mkdirp, partition_path, touch, working_dir

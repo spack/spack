@@ -16,6 +16,7 @@ import stat
 import pytest
 
 from llnl.util.filesystem import mkdirp
+from llnl.util.symlink import symlink
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
@@ -36,7 +37,6 @@ from spack.relocate import (
     relocate_text,
 )
 from spack.spec import Spec
-from llnl.util.symlink import symlink
 
 
 def fake_fetchify(url, pkg):

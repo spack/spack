@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
+import glob
 import os
 import subprocess
-import glob
+import sys
+
 from spack.architecture import OperatingSystem
 from spack.version import Version
 
@@ -35,14 +36,14 @@ class WindowsOs(OperatingSystem):
             extra_args = {}
             if sys.version_info[:3] >= (3, 6, 0):
                 extra_args = {'encoding': 'mbcs', 'errors': 'strict'}
-            paths = subprocess.check_output([
+            paths = subprocess.check_output([  # novermin
                 os.path.join(root, "Microsoft Visual Studio", "Installer",
                              "vswhere.exe"),
                 "-prerelease",
                 "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
                 "-property", "installationPath",
                 "-products", "*",
-            ], **extra_args).strip()
+            ], **extra_args).strip()  # type: ignore[call-overload]
             if (3, 0) <= sys.version_info[:2] <= (3, 5):
                 paths = paths.decode()
             vs_install_paths = paths.split('\n')

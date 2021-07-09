@@ -7,6 +7,7 @@
 import os
 import os.path
 import sys
+
 import spack.paths
 import spack.util.url as url_util
 

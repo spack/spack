@@ -8,6 +8,7 @@ import os
 
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
+from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
@@ -15,8 +16,6 @@ import spack.fetch_strategy
 import spack.paths
 import spack.util.file_cache
 import spack.util.path
-
-from llnl.util.symlink import symlink
 
 
 def misc_cache_location():

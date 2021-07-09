@@ -14,13 +14,13 @@ from ordereddict_backport import OrderedDict
 
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.symlink import symlink
 
 import spack.architecture
 import spack.cmd
 import spack.repo
 import spack.spec
 import spack.util.executable as executable
-from llnl.util.symlink import symlink
 
 
 class InstallRootStringError(spack.error.SpackError):

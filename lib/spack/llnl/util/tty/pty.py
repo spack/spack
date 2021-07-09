@@ -21,8 +21,11 @@ import signal
 import sys
 import time
 import traceback
+
 import llnl.util.tty.log as log
+
 from spack.util.executable import which
+
 termios = None
 try:
     import termios as term_mod

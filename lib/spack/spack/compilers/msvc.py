@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 import os
 import subprocess
+import sys
 from typing import List  # novm
+
 from spack.compiler import Compiler
 
 
@@ -58,7 +59,7 @@ class Msvc(Compiler):
         script."""
         if sys.version_info[:2] > (2, 6):
             # Capture output from batch script and DOS environment dump
-            out = subprocess.check_output(
+            out = subprocess.check_output(  # novermin
                 'cmd /u /c "{0}" {1} && set'.format(self.vcvarsallfile, 'amd64'),
                 stderr=subprocess.STDOUT)
             if sys.version_info[0] >= 3:
@@ -67,7 +68,7 @@ class Msvc(Compiler):
             print("Cannot pull msvc compiler information in Python 2.6 or below")
 
         # Process in to nice Python dictionary
-        vc_env = {
+        vc_env = {  # novermin
             key.lower(): value
             for key, _, value in
             (line.partition('=') for line in out.splitlines())

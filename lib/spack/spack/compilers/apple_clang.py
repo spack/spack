@@ -8,12 +8,12 @@ import shutil
 
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.symlink import symlink
 
 import spack.compiler
 import spack.compilers.clang
 import spack.util.executable
 import spack.version
-from llnl.util.symlink import symlink
 
 
 class AppleClang(spack.compilers.clang.Clang):

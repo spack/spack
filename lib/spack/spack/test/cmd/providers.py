@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import sys
+
 import pytest
 
 from spack.main import SpackCommand
@@ -21,6 +23,7 @@ def test_it_just_runs(pkg):
     providers(*pkg)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('vpkg,provider_list', [
     (('mpi',), ['intel-mpi',
                 'intel-parallel-studio',
