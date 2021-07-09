@@ -6,9 +6,9 @@
 import collections
 import itertools
 import os.path
+import posixpath
 from typing import Any, Dict  # novm
 
-import posixpath
 import llnl.util.lang as lang
 
 import spack.compilers

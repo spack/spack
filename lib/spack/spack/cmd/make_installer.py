@@ -4,11 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import posixpath
-import sys
 import subprocess
+import sys
+
 import spack.paths
-from spack.spec import Spec
 import spack.util.executable
+from spack.spec import Spec
 
 description = "generate Windows installer"
 section = "admin"

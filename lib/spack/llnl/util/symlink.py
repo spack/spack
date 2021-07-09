@@ -2,13 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from os.path import exists, join
+import ctypes.wintypes
+import errno
 import os
-import tempfile
 import shutil
 import sys
-
-import ctypes.wintypes
+import tempfile
+from os.path import exists, join
 
 import llnl.util.filesystem as fs
 
@@ -45,7 +45,7 @@ def _win32_junction(path, link):
 
     # os.symlink will fail if link exists, emulate the behavior here
     if exists(link):
-        raise FileExistsError('File  exists: {} -> {}'.format(link, path))
+        raise OSError(errno.EEXIST, 'File  exists: %s -> %s' % (link, path))
 
     if not os.path.isabs(path):
         parent = os.path.join(link, os.pardir)
@@ -54,10 +54,10 @@ def _win32_junction(path, link):
 
     if os.path.isdir(path):
         # try using a junction
-        command = 'mklink /J "{}" "{}"'.format(link, path)
+        command = 'mklink /J "%s" "%s"' % (link, path)
     else:
         # try using a hard link
-        command = 'mklink /H "{}" "{}"'.format(link, path)
+        command = 'mklink /H "%s" "%s"' % (link, path)
 
     _cmd(command)
 

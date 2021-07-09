@@ -15,6 +15,7 @@ from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.symlink import islink, symlink
 from llnl.util.tty.color import colorize
 
 import spack.concretize
@@ -39,8 +40,6 @@ from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
 from spack.variant import UnknownVariantError
-from llnl.util.symlink import symlink, islink
-
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'

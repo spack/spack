@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 
+import ctypes
 import errno
 import getpass
 import glob
@@ -13,9 +14,8 @@ import os
 import shutil
 import stat
 import sys
-from sys import platform as _platform
-import ctypes
 import tempfile
+from sys import platform as _platform
 from typing import Dict  # novm
 
 from six import iteritems, string_types
@@ -42,7 +42,6 @@ import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack.util.crypto import bit_length, prefix_bits
-
 
 if _platform == "win32":
     import win32api
@@ -73,7 +72,7 @@ def create_stage_root(path):
     err_msg = 'Cannot create stage root {0}: Access to {1} is denied'
 
     if _platform != "win32":
-        user_uid = os.getuid()
+        user_uid = os.getuid()  # type: ignore[attr-defined]
     else:
         user_uid = win32api.GetUserName()
 

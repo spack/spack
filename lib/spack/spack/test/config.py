@@ -4,14 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
+import ctypes
 import getpass
 import os
+import sys
 import tempfile
 
 import pytest
 from six import StringIO
-import sys
-import ctypes
 
 from llnl.util.filesystem import mkdirp, touch
 
@@ -27,6 +27,7 @@ import spack.schema.packages
 import spack.schema.repos
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
+
 
 def getuid():
     if sys.platform == "win32":
