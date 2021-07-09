@@ -1030,9 +1030,8 @@ class Spec(object):
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
 
-    def __init__(self, spec_like=None,
-                 normal=False, concrete=False, external_path=None,
-                 external_modules=None, full_hash=None):
+    def __init__(self, spec_like=None, normal=False,
+                 concrete=False, external_path=None, external_modules=None):
         """Create a new Spec.
 
         Arguments:
@@ -1046,8 +1045,6 @@ class Spec(object):
         self._concrete = concrete
         self.external_path = external_path
         self.external_module = external_module
-        self._full_hash = full_hash
-
         """
 
         # Copy if spec_like is a Spec.
@@ -1068,6 +1065,8 @@ class Spec(object):
 
         self._hash = None
         self._build_hash = None
+        self._full_hash = None
+        self._package_hash = None
         self._dunder_hash = None
         self._package = None
 
@@ -1082,7 +1081,6 @@ class Spec(object):
         self._concrete = concrete
         self.external_path = external_path
         self.external_modules = Spec._format_module_list(external_modules)
-        self._full_hash = full_hash
 
         # Older spack versions did not compute full_hash or build_hash,
         # and we may not have the necessary information to recompute them
@@ -1493,6 +1491,12 @@ class Spec(object):
     def prefix(self, value):
         self._prefix = spack.util.prefix.Prefix(value)
 
+    def package_hash(self):
+        """Compute the hash of the contents of the package for this node"""
+        if not self._package_hash:
+            self._package_hash = self.package.content_hash()
+        return self._package_hash
+
     def _spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
 
@@ -1653,7 +1657,7 @@ class Spec(object):
                 d['patches'] = variant._patches_in_order_of_appearance
 
         if hash.package_hash:
-            package_hash = self.package.content_hash()
+            package_hash = self.package_hash()
 
             # Full hashes are in bytes
             if (not isinstance(package_hash, six.text_type)
@@ -1822,6 +1826,7 @@ class Spec(object):
         spec._hash = node.get('hash', None)
         spec._build_hash = node.get('build_hash', None)
         spec._full_hash = node.get('full_hash', None)
+        spec._package_hash = node.get('package_hash', None)
 
         if 'version' in node or 'versions' in node:
             spec.versions = vn.VersionList.from_dict(node)
@@ -3441,12 +3446,14 @@ class Spec(object):
             self._dunder_hash = other._dunder_hash
             self._normal = other._normal
             self._full_hash = other._full_hash
+            self._package_hash = other._package_hash
         else:
             self._hash = None
             self._build_hash = None
             self._dunder_hash = None
             self._normal = False
             self._full_hash = None
+            self._package_hash = None
 
         return changed
 
@@ -4330,7 +4337,8 @@ class Spec(object):
                 has_build_hash = getattr(dep, ht.build_hash.attr, None)
                 has_full_hash = getattr(dep, ht.full_hash.attr, None)
 
-                dep.clear_cached_hashes()
+                # package hash cannot be affected by splice
+                dep.clear_cached_hashes(ignore=['_package_hash'])
 
                 # Since this is a concrete spec, we want to make sure hashes
                 # are cached writing specs only writes cached hashes in case
@@ -4343,13 +4351,16 @@ class Spec(object):
 
         return nodes[self.name]
 
-    def clear_cached_hashes(self):
+    def clear_cached_hashes(self, ignore=[]):
         """
         Clears all cached hashes in a Spec, while preserving other properties.
         """
-        for attr in ht.SpecHashDescriptor.hash_types:
-            if hasattr(self, attr):
-                setattr(self, attr, None)
+        attrs = list(ht.SpecHashDescriptor.hash_types)
+        attrs.append('_package_hash')  # not a spec hash, but does cache value
+        for attr in attrs:
+            if attr not in ignore:
+                if hasattr(self, attr):
+                    setattr(self, attr, None)
 
     def __hash__(self):
         # If the spec is concrete, we leverage the DAG hash and just use
