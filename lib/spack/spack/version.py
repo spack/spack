@@ -33,10 +33,11 @@ from functools import wraps
 from six import string_types
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import working_dir
+
 import spack.error
 import spack.paths
 import spack.util.spack_json as sjson
-from llnl.util.filesystem import working_dir
 from spack.util.spack_yaml import syaml_dict
 
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
