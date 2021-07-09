@@ -9,6 +9,9 @@ ENV DOCKERFILE_BASE=centos            \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
     container=docker
 
+# Make yum usable again with CentOS 6
+RUN curl https://www.getpagespeed.com/files/centos6-eol.repo --output /etc/yum.repos.d/CentOS-Base.repo
+
 RUN yum update -y \
  && yum install -y epel-release \
  && yum update -y \
