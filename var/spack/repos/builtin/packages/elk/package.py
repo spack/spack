@@ -55,11 +55,17 @@ class Elk(MakefilePackage):
 
     depends_on('blas', when='linalg=generic')
     depends_on('lapack', when='linalg=generic')
+    
     depends_on('mkl', when='linalg=mkl')
+    depends_on('mkl threads=openmp', when='linalg=mkl +openmp')
+
     depends_on('openblas', when='linalg=openblas')
+    depends_on('openblas threads=openmp', when='linalg=openblas +openmp')
+    
     depends_on('blis', when='linalg=blis')
 
     depends_on('fftw', when='fft=fftw')
+    depends_on('fftw +openmp', when='fft=fftw +openmp')
     depends_on('mkl', when='fft=mkl')
 
     depends_on('mpi@2:', when='+mpi')
