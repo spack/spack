@@ -1492,12 +1492,6 @@ class Spec(object):
     def prefix(self, value):
         self._prefix = spack.util.prefix.Prefix(value)
 
-    def package_hash(self):
-        """Compute the hash of the contents of the package for this node"""
-        if not self._package_hash:
-            self._package_hash = self.package.content_hash()
-        return self._package_hash
-
     def _spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
 
@@ -1506,6 +1500,8 @@ class Spec(object):
         """
         # TODO: curently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
+        if hash.override is not None:
+            return hash.override(self)
         node_dict = self.to_node_dict(hash=hash)
         yaml_text = syaml.dump(node_dict, default_flow_style=True)
         return spack.util.hash.b32_hash(yaml_text)
@@ -1532,6 +1528,10 @@ class Spec(object):
                 setattr(self, hash.attr, hash_string)
 
             return hash_string[:length]
+
+    def package_hash(self):
+        """Compute the hash of the contents of the package for this node"""
+        return self._cached_hash(ht.package_hash)
 
     def dag_hash(self, length=None):
         """This is Spack's default hash, used to identify installations.
@@ -4356,9 +4356,7 @@ class Spec(object):
         """
         Clears all cached hashes in a Spec, while preserving other properties.
         """
-        attrs = list(ht.SpecHashDescriptor.hash_types)
-        attrs.append('_package_hash')  # not a spec hash, but does cache value
-        for attr in attrs:
+        for attr in ht.SpecHashDescriptor.hash_types:
             if attr not in ignore:
                 if hasattr(self, attr):
                     setattr(self, attr, None)
