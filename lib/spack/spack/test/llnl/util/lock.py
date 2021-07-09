@@ -45,13 +45,13 @@ actually on a shared filesystem.
 import collections
 import errno
 import fcntl
+import getpass
+import glob
 import os
-import socket
 import shutil
+import socket
 import tempfile
 import traceback
-import glob
-import getpass
 from contextlib import contextmanager
 from multiprocessing import Process, Queue
 
@@ -60,7 +60,6 @@ import pytest
 import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import touch
-
 
 #
 # This test can be run with MPI.  MPI is "enabled" if we can import

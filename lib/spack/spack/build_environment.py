@@ -33,44 +33,52 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import inspect
-import re
 import multiprocessing
 import os
+import re
 import shutil
 import sys
 import traceback
 import types
+
 from six import StringIO
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import cescape, colorize
-from llnl.util.filesystem import mkdirp, install, install_tree
+from llnl.util.filesystem import install, install_tree, mkdirp
 from llnl.util.lang import dedupe
+from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
+import spack.architecture as arch
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.config
+import spack.install_test
 import spack.main
-import spack.paths
 import spack.package
+import spack.paths
 import spack.repo
 import spack.schema.environment
 import spack.store
-import spack.install_test
 import spack.subprocess_context
-import spack.architecture as arch
 import spack.util.path
-from spack.util.string import plural
-from spack.util.environment import (
-    env_flag, filter_system_paths, get_path, is_system_path,
-    EnvironmentModifications, validate, preserve_environment)
-from spack.util.environment import system_dirs
-from spack.error import NoLibrariesError, NoHeadersError
-from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, path_from_modules, module
-from spack.util.log_parse import parse_log_events, make_log_context
+from spack.error import NoHeadersError, NoLibrariesError
 from spack.util.cpus import cpus_available
+from spack.util.environment import (
+    EnvironmentModifications,
+    env_flag,
+    filter_system_paths,
+    get_path,
+    is_system_path,
+    preserve_environment,
+    system_dirs,
+    validate,
+)
+from spack.util.executable import Executable
+from spack.util.log_parse import make_log_context, parse_log_events
+from spack.util.module_cmd import load_module, module, path_from_modules
+from spack.util.string import plural
+
 #
 # This can be set by the user to globally disable parallel builds.
 #

@@ -12,12 +12,10 @@ import tty
 
 import llnl.util.filesystem as fs
 
-from spack.spec import Spec
-
 import spack.error
 import spack.util.prefix
 import spack.util.spack_json as sjson
-
+from spack.spec import Spec
 
 test_suite_filename = 'test_suite.lock'
 results_filename = 'results.txt'

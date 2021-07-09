@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
+import glob
 import os
 import shutil
-import glob
 import tempfile
-import errno
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
@@ -19,7 +19,6 @@ import spack.hash_types as ht
 import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
-
 
 default_projections = {'all': ('{architecture}/'
                                '{compiler.name}-{compiler.version}/'
@@ -327,8 +326,7 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         # Create install directory with properly configured permissions
         # Cannot import at top of file
-        from spack.package_prefs import get_package_dir_permissions
-        from spack.package_prefs import get_package_group
+        from spack.package_prefs import get_package_dir_permissions, get_package_group
 
         # Each package folder can have its own specific permissions, while
         # intermediate folders (arch/compiler) are set with access permissions

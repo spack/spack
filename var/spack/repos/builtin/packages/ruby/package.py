@@ -15,6 +15,7 @@ class Ruby(AutotoolsPackage):
     list_url = "http://cache.ruby-lang.org/pub/ruby/"
     list_depth = 1
 
+    version('3.0.2', sha256='5085dee0ad9f06996a8acec7ebea4a8735e6fac22f22e2d98c3f2bc3bef7e6f1')
     version('3.0.1', sha256='369825db2199f6aeef16b408df6a04ebaddb664fb9af0ec8c686b0ce7ab77727')
     version('3.0.0', sha256='a13ed141a1c18eb967aac1e33f4d6ad5f21be1ac543c344e0d6feeee54af8e28')
     version('2.7.2', sha256='6e5706d0d4ee4e1e2f883db9d768586b4d06567debea353c796ec45e8321c3d4')

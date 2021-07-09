@@ -11,13 +11,13 @@ class CBlosc2(CMakePackage):
        other bells and whistles"""
 
     homepage = "http://www.blosc.org"
-    url      = "https://github.com/Blosc/c-blosc2/archive/refs/tags/v2.0.0.rc1.tar.gz"
+    url      = "https://github.com/Blosc/c-blosc2/archive/refs/tags/v2.0.1.tar.gz"
     git      = "https://github.com/Blosc/c-blosc2.git"
 
-    maintainers = ['ax3l']
+    maintainers = ['ax3l', 'robert-mijakovic']
 
     version('develop', branch='master')
-    version('2.0.0.rc1', sha256='c30b72af5446f052bad1791000e5a44d156c96b0e39b4bc8e9f97a013c7d1b69')
+    version('2.0.1', sha256='35b93dfed479b1dfd9372d41d7843b60254ed1d71792577b95e489c28705874f')
 
     variant('avx2', default=True, description='Enable AVX2 support')
 

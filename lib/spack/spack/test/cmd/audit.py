@@ -6,7 +6,6 @@ import pytest
 
 from spack.main import SpackCommand
 
-
 audit = SpackCommand('audit')
 
 

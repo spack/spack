@@ -12,9 +12,7 @@ import spack.environment
 import spack.schema.env
 import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
-
-from spack.container.images import build_info, commands_for
-from spack.container.images import os_package_manager_for
+from spack.container.images import build_info, commands_for, os_package_manager_for
 
 #: Caches all the writers that are currently supported
 _writer_factory = {}
@@ -135,6 +133,7 @@ class PathContext(tengine.Context):
     def manifest(self):
         """The spack.yaml file that should be used in the image"""
         import jsonschema
+
         # Copy in the part of spack.yaml prescribed in the configuration file
         manifest = copy.deepcopy(self.config)
         manifest.pop('container')
