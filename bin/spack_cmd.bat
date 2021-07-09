@@ -14,8 +14,9 @@ popd
 
 
 :: Check if Python is on the PATH
+if not defined python_pf_ver (
 (for /f "delims=" %%F in ('where python.exe') do (set python_pf_ver=%%F) ) 2> NUL
-
+)
 if not defined python_pf_ver (
     :: If not, look for Python from the Spack installer
     :get_builtin
@@ -58,4 +59,9 @@ DOSKEY spacktivate=spack env activate $*
 @echo ** Spack Package Manager
 @echo **********************************************************************
 
+IF "%1"=="" GOTO CONTINUE
+set
+GOTO:EOF
+
+:continue
 %comspec% /k
