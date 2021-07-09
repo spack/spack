@@ -1,5 +1,9 @@
 import json
 
+import spack.cmd
+
+from spack.spec import Spec
+
 example_x_json_str = """\
 {
   "name": "packagex",
@@ -84,25 +88,25 @@ class JsonCompilerEntry(object):
             'version': self.version
         }
 
+_common_arch = JsonArchEntry(
+    platform='linux',
+    os='centos8',
+    target='haswell'
+).to_dict()
+
+_common_compiler = JsonCompilerEntry(
+    name='gcc',
+    version='10.2.0'
+).to_dict()
+
 def test_compatibility():
-    common_arch = JsonArchEntry(
-        platform='linux',
-        os='centos8',
-        target='haswell'
-    ).to_dict()
-
-    common_compiler = JsonCompilerEntry(
-        name='gcc',
-        version='10.2.0'
-    ).to_dict()
-
     y = JsonSpecEntry(
         name='packagey',
         hash='hash-of-y',
         prefix='/path/to/packagey-install/',
         version='1.0',
-        arch=common_arch,
-        compiler=common_compiler,
+        arch=_common_arch,
+        compiler=_common_compiler,
         dependencies={},
         parameters={}
     )
@@ -112,8 +116,8 @@ def test_compatibility():
         hash='hash-of-x',
         prefix='/path/to/packagex-install/',
         version='1.0',
-        arch=common_arch,
-        compiler=common_compiler,
+        arch=_common_arch,
+        compiler=_common_compiler,
         dependencies=dict([y.as_dependency(deptypes=['link'])]),
         parameters={'precision': ['double', 'float']}
     )
@@ -146,8 +150,63 @@ def spec_from_entry(entry):
     )
     return spec_str
 
+def generate_openmpi_entries():
+    hwloc = JsonSpecEntry(
+        name='hwloc',
+        hash='x',
+        prefix='/path/to/hwloc-install/',
+        version='2.0.3',
+        arch=_common_arch,
+        compiler=_common_compiler,
+        dependencies={},
+        parameters={}
+    )
+
+    openmpi = JsonSpecEntry(
+        name='openmpi',
+        hash='y',
+        prefix='/path/to/packagex-install/',
+        version='4.1.0',
+        arch=_common_arch,
+        compiler=_common_compiler,
+        dependencies=dict([hwloc.as_dependency(deptypes=['link'])]),
+        parameters={
+            'internal_hwloc': False,
+            'fabrics': ['psm']
+        }
+    )
+
+    return [openmpi, hwloc]
+
+def entries_to_specs(entries):
+    spec_dict = {}
+    for entry in entries:
+        spec_str = spec_from_entry(entry)
+        spec, = spack.cmd.parse_specs(spec_str.split())
+        spec._hash = entry['hash']
+        spec._concrete = True
+        spec.external_path = entry['prefix']
+        spec_dict[entry['hash']] = spec
+
+    for entry in entries:
+        dependencies = entry['dependencies']
+        for name, properties in dependencies.items():
+            dep_hash = properties['hash']
+            deptypes = properties['type']
+            if dep_hash in spec_dict:
+                parent_spec = spec_dict[entry['hash']]
+                dep_spec = spec_dict[dep_hash]
+                parent_spec._add_dependency(dep_spec, deptypes)
+
+    return spec_dict
+
+def test_spec_conversion():
+    entries = list(x.to_dict() for x in generate_openmpi_entries())
+    entries_to_specs(entries)
+
 def main():
     test_compatibility()
+    test_spec_conversion()
 
 if __name__ == "__main__":
     main()
