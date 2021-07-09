@@ -5,14 +5,15 @@
 
 from __future__ import division
 
+import functools
+import inspect
 import multiprocessing
 import os
 import re
-import functools
-import inspect
-from datetime import datetime, timedelta
-from six import string_types
 import sys
+from datetime import datetime, timedelta
+
+from six import string_types
 
 if sys.version_info < (3, 0):
     from itertools import izip_longest  # novm

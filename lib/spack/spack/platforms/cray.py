@@ -4,19 +4,19 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import os.path
-import re
 import platform
+import re
 
 import archspec.cpu
 
 import llnl.util.tty as tty
+
+from spack.architecture import NoPlatformError, Platform, Target
+from spack.operating_systems.cray_backend import CrayBackend
+from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.paths import build_env_path
 from spack.util.executable import Executable
-from spack.architecture import Platform, Target, NoPlatformError
-from spack.operating_systems.cray_frontend import CrayFrontend
-from spack.operating_systems.cray_backend import CrayBackend
 from spack.util.module_cmd import module
-
 
 _craype_name_to_target_name = {
     'x86-cascadelake': 'cascadelake',

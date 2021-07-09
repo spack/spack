@@ -37,14 +37,15 @@ import re
 from typing import Optional  # novm
 
 import llnl.util.filesystem
-from llnl.util.lang import dedupe
 import llnl.util.tty as tty
+from llnl.util.lang import dedupe
+
 import spack.build_environment as build_environment
 import spack.environment as ev
 import spack.error
 import spack.paths
-import spack.schema.environment
 import spack.projections as proj
+import spack.schema.environment
 import spack.tengine as tengine
 import spack.util.environment
 import spack.util.file_permissions as fp

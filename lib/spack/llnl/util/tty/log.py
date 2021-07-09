@@ -13,15 +13,14 @@ import multiprocessing
 import os
 import re
 import select
+import signal
 import sys
 import traceback
-import signal
 from contextlib import contextmanager
-from six import string_types
-from six import StringIO
-
-from typing import Optional  # novm
 from types import ModuleType  # novm
+from typing import Optional  # novm
+
+from six import StringIO, string_types
 
 import llnl.util.tty as tty
 

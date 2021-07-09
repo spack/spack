@@ -6,9 +6,9 @@
 from __future__ import print_function
 
 import sys
-from six import StringIO
 
-from ctest_log_parser import CTestLogParser, BuildError, BuildWarning
+from ctest_log_parser import BuildError, BuildWarning, CTestLogParser
+from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize

@@ -10,6 +10,7 @@ throughout Spack and should bring in a minimal number of external
 dependencies.
 """
 import os
+
 from llnl.util.filesystem import ancestor
 
 #: This file lives in $prefix/lib/spack/spack/__file__

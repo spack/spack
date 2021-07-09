@@ -8,14 +8,14 @@ import json
 import os
 
 import pytest
+
 import spack.cmd as cmd
 import spack.cmd.find
+import spack.environment as ev
 import spack.user_environment as uenv
 from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.util.pattern import Bunch
-import spack.environment as ev
-
 
 find = SpackCommand('find')
 env = SpackCommand('env')

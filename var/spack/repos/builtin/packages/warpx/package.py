@@ -79,7 +79,7 @@ class Warpx(CMakePackage):
     depends_on('boost@1.66.0: +math', when='+qedtablegen')
     depends_on('cmake@3.15.0:', type='build')
     depends_on('cuda@9.2.88:', when='compute=cuda')
-    depends_on('fftw@3:', when='+psatd compute=omp')
+    depends_on('fftw@3: +openmp', when='+psatd compute=omp')
     depends_on('fftw +mpi', when='+psatd +mpi compute=omp')
     depends_on('lapackpp', when='+psatd dims=rz')
     depends_on('mpi', when='+mpi')

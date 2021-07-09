@@ -5,20 +5,20 @@
 
 from __future__ import print_function
 
-import sys
 import itertools
-
-import spack.cmd
-import spack.environment as ev
-import spack.error
-import spack.package
-import spack.cmd.common.arguments as arguments
-import spack.repo
-import spack.store
-from spack.database import InstallStatuses
+import sys
 
 from llnl.util import tty
 from llnl.util.tty.colify import colify
+
+import spack.cmd
+import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.error
+import spack.package
+import spack.repo
+import spack.store
+from spack.database import InstallStatuses
 
 description = "remove installed packages"
 section = "build"

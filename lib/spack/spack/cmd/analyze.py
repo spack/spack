@@ -17,7 +17,6 @@ import spack.monitor
 import spack.paths
 import spack.report
 
-
 description = "run analyzers on installed packages"
 section = "analysis"
 level = "long"

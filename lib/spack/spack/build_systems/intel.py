@@ -4,26 +4,32 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
-import sys
 import glob
-import tempfile
-import re
 import inspect
+import os
+import re
+import sys
+import tempfile
 import xml.etree.ElementTree as ElementTree
+
 import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    HeaderList,
+    LibraryList,
+    ancestor,
+    filter_file,
+    find_headers,
+    find_libraries,
+    find_system_libraries,
+    install,
+)
 
-from llnl.util.filesystem import \
-    install, ancestor, filter_file, \
-    HeaderList, find_headers, \
-    LibraryList, find_libraries, find_system_libraries
-
-from spack.version import Version, ver
-from spack.package import PackageBase, run_after, InstallError
+from spack.build_environment import dso_suffix
+from spack.package import InstallError, PackageBase, run_after
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
-from spack.build_environment import dso_suffix
+from spack.version import Version, ver
 
 # A couple of utility functions that might be useful in general. If so, they
 # should really be defined elsewhere, unless deemed heretical.

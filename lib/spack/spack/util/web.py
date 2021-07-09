@@ -18,10 +18,11 @@ import traceback
 
 import six
 from six.moves.urllib.error import URLError
-from six.moves.urllib.request import urlopen, Request
+from six.moves.urllib.request import Request, urlopen
 
-from llnl.util.filesystem import mkdirp
+import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 
 import spack.cmd
 import spack.config
@@ -30,13 +31,11 @@ import spack.url
 import spack.util.crypto
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
-import llnl.util.lang
-
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParser, HTMLParseError  # novm
+    from HTMLParser import HTMLParseError, HTMLParser  # novm
 else:
     # In Python 3, things moved to html.parser
     from html.parser import HTMLParser

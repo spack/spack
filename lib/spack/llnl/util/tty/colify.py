@@ -10,10 +10,11 @@ from __future__ import division, unicode_literals
 
 import os
 import sys
+
 from six import StringIO, text_type
 
 from llnl.util.tty import terminal_size
-from llnl.util.tty.color import clen, cextra
+from llnl.util.tty.color import cextra, clen
 
 
 class ColumnConfig:

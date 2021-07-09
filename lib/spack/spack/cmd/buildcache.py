@@ -8,10 +8,12 @@ import shutil
 import sys
 
 import llnl.util.tty as tty
+
 import spack.architecture
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
@@ -19,16 +21,11 @@ import spack.relocate
 import spack.repo
 import spack.spec
 import spack.store
-import spack.config
-import spack.repo
-import spack.store
 import spack.util.url as url_util
-
+from spack.cmd import display_specs
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.util.string import plural
-
-from spack.cmd import display_specs
 
 description = "create, download and install binary packages"
 section = "packaging"
