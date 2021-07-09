@@ -102,34 +102,34 @@ spack:
       - abyss
     # conflicts on trilinos
     # - albany
-      - amber
+    # - amber
       - amg2013
     # Bad variant fftw
     # - aoflagger
     # - athena
-      - bowtie2
+    # - bowtie2
       - branson
-      - camx
+    # - camx
     # Bad variant gpu
     # - candle-benchmarks
       - cbench
       - cgm
       - chatterbug
-      - cistem
+    # - cistem
       - comd
     # old version of openmpi
     # - converge
     # bad variant tensor ops mpi
     # - cosmoflow-benchmark
-      - cosmomc
+    # - cosmomc
       - cosp2
     # libxsmm not avail on arm
     # - cp2k
-      - dock
-      - elk
+    # - dock
+    # - elk
       - elmerfem
-      - exabayes
-      - examl
+    # - exabayes
+    # - examl
     # - flecsph
     # trilinos variant mumps
     # - frontistr
@@ -139,23 +139,23 @@ spack:
       - lammps
       - latte
       - macsio
-      - meep
+    # - meep
       - meme
-      - modylas
-      - mrbayes
+    # - modylas
+    # - mrbayes
       - mrchem
    # cudnn depednency
    #  - mxnet
    # trilinos variant mumps
    #  - nalu
-      - nalu-wind
-      - namd
+    # - nalu-wind
+    # - namd
       - nek5000
       - nekbone
-      - nektar
-      - nest
+    # - nektar
+    # - nest
       - nut
-      - nwchem
+    # - nwchem
       - octopus
       - openmm
       - pathfinder
@@ -165,8 +165,8 @@ spack:
     # - qbox
       - qmcpack
       - quantum-espresso
-      - relion
-      - siesta
+    # - relion
+    # - siesta
       - snbone
       - star
       - su2
@@ -177,7 +177,7 @@ spack:
       - vpfft
       - vpic
       - warpx
-      - yambo
+    # - yambo
 
   mirrors:
     mirror: "s3://spack-binaries-develop/aws-ahug"
