@@ -2,6 +2,7 @@ import json
 import six
 
 import spack.cmd
+import spack.hash_types as hash_types
 
 from spack.spec import Spec
 
@@ -180,7 +181,10 @@ def spec_from_entry(entry):
 
     spec, = spack.cmd.parse_specs(spec_str.split())
 
-    spec._hash = entry['hash']
+    for ht in [hash_types.dag_hash, hash_types.build_hash,
+               hash_types.full_hash]:
+        setattr(spec, ht.attr, entry['hash'])
+
     spec._concrete = True
     spec.external_path = entry['prefix']
 
@@ -189,7 +193,7 @@ def spec_from_entry(entry):
 def generate_openmpi_entries():
     hwloc = JsonSpecEntry(
         name='hwloc',
-        hash='x',
+        hash='hwloc-fake-hash',
         prefix='/path/to/hwloc-install/',
         version='2.0.3',
         arch=_common_arch,
@@ -200,7 +204,7 @@ def generate_openmpi_entries():
 
     openmpi = JsonSpecEntry(
         name='openmpi',
-        hash='y',
+        hash='openmpi-fake-hash',
         prefix='/path/to/packagex-install/',
         version='4.1.0',
         arch=_common_arch,
