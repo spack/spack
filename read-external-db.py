@@ -179,6 +179,11 @@ def spec_from_entry(entry):
         spec_str += ' ' + ' '.join(variant_strs)
 
     spec, = spack.cmd.parse_specs(spec_str.split())
+
+    spec._hash = entry['hash']
+    spec._concrete = True
+    spec.external_path = entry['prefix']
+
     return spec
 
 def generate_openmpi_entries():
@@ -213,10 +218,7 @@ def entries_to_specs(entries):
     spec_dict = {}
     for entry in entries:
         spec = spec_from_entry(entry)
-        spec._hash = entry['hash']
-        spec._concrete = True
-        spec.external_path = entry['prefix']
-        spec_dict[entry['hash']] = spec
+        spec_dict[spec._hash] = spec
 
     for entry in entries:
         dependencies = entry['dependencies']
