@@ -12,10 +12,12 @@ import pytest
 
 import spack.binary_distribution as bindist
 import spack.config
+import spack.hash_types as ht
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
 import spack.repo
+import spack.spec as spec
 import spack.store
 import spack.util.gpg
 import spack.util.web as web_util
@@ -518,6 +520,48 @@ def test_generate_indices_exception(monkeypatch, capfd):
     err = capfd.readouterr()[1]
     expect = 'Encountered problem listing packages at {0}'.format(test_url)
     assert expect in err
+
+
+@pytest.mark.usefixtures(
+    'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
+)
+def test_buildcache_create_custom_hash(monkeypatch, tmpdir, mutable_config):
+    """Ensure spack buildcache creation with a """
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+    spack.config.set('mirrors', {'test': mirror_url})
+
+    a = Spec('a').concretized()
+    new_a_full_hash = 'abcdef'
+    a._full_hash = new_a_full_hash
+
+    temp_a_yaml_path = os.path.join(tmpdir.strpath, 'a.yaml')
+
+    print('Wrote a to: {0}'.format(temp_a_yaml_path))
+
+    with open(temp_a_yaml_path, 'w') as fd:
+        fd.write(a.to_yaml(hash=ht.full_hash))
+
+    # Install package a from concrete spec yaml file
+    install_cmd('--no-cache', '--require-full-hash-match', '-f', temp_a_yaml_path)
+
+    # Create a buildcache for a from the same concrete spec yaml file
+    buildcache_cmd('create', '-uad', mirror_dir.strpath, '-f', temp_a_yaml_path)
+
+    # Read in the concrete spec yaml of a
+    a_buildcache_name = bindist.tarball_name(a, '.spec.yaml')
+    a_buildcache_path = os.path.join(mirror_dir.strpath,
+                                    bindist.build_cache_relative_path(),
+                                    a_buildcache_name)
+
+    # Turn concrete spec yaml into a concrete spec (a)
+    with open(a_buildcache_path) as fd:
+        a_prime = spec.Spec.from_yaml(fd.read())
+
+    # Make sure the full hash of b in a's spec yaml matches the new value
+    assert(a_prime.full_hash() == new_a_full_hash)
 
 
 @pytest.mark.usefixtures('mock_fetch', 'install_mockery')
