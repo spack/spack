@@ -464,9 +464,10 @@ configuration:
 
   modules:
     my-module-set:
-      defaults:
-      - gcc@10.2.1
-      - hdf5@1.2.10+mpi+hl%gcc
+      tcl:
+        defaults:
+        - gcc@10.2.1
+        - hdf5@1.2.10+mpi+hl%gcc
 
 These defaults may be arbitrarily specific. For any package that
 satisfies a default, Spack will generate the module file in the
