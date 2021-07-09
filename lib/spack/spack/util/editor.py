@@ -20,7 +20,6 @@ import llnl.util.tty as tty
 import spack.config
 from spack.util.executable import which_string
 
-
 #: editors to try if VISUAL and EDITOR are not set
 _default_editors = ['vim', 'vi', 'emacs', 'nano']
 

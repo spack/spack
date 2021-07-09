@@ -9,7 +9,6 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 
-
 description = 'add a spec to an environment'
 section = "environments"
 level = "long"

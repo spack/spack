@@ -9,6 +9,7 @@ import os
 from typing import List  # novm
 
 from llnl.util.filesystem import working_dir
+
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, run_after
 

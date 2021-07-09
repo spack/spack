@@ -3,12 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from spack.operating_systems.mac_os import macos_version
-
 import os
 import sys
 
+from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
 

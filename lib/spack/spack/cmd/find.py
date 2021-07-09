@@ -9,17 +9,17 @@ import copy
 import os
 import sys
 
+import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
-import llnl.util.lang
 
-import spack.environment as ev
-import spack.repo
 import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.repo
 import spack.user_environment as uenv
-from spack.util.string import plural
 from spack.database import InstallStatuses
+from spack.util.string import plural
 
 description = "list and search installed packages"
 section = "basic"

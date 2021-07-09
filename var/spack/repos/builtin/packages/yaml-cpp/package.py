@@ -5,7 +5,6 @@
 
 from spack.spec import ConflictsInSpecError
 
-
 yaml_cpp_tests_libcxx_error_msg = 'yaml-cpp tests incompatible with libc++'
 
 

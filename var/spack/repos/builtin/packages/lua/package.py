@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from llnl.util.filesystem import join_path
-from spack import *
 import os
+
+from llnl.util.filesystem import join_path
+
+from spack import *
 
 
 class Lua(Package):

@@ -8,10 +8,11 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
+
 import pytest
 
 from spack.paths import build_env_path
-from spack.util.environment import system_dirs, set_env
+from spack.util.environment import set_env, system_dirs
 from spack.util.executable import Executable
 
 #

@@ -3,14 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import copy
 import os
 import re
-import sys
 import shutil
-import copy
-import six
-import ruamel.yaml as yaml
+import sys
 
+import ruamel.yaml as yaml
+import six
 from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fs
@@ -18,27 +18,27 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
 import spack.concretize
+import spack.config
 import spack.error
 import spack.hash_types as ht
 import spack.hooks
 import spack.repo
 import spack.schema.env
 import spack.spec
-import spack.store
 import spack.stage
-import spack.util.spack_json as sjson
-import spack.util.spack_yaml as syaml
-import spack.config
+import spack.store
 import spack.user_environment as uenv
-from spack.filesystem_view import YamlFilesystemView
 import spack.util.environment
-from spack.spec import Spec
-from spack.spec_list import SpecList, InvalidSpecConstraintError
-from spack.variant import UnknownVariantError
 import spack.util.hash
 import spack.util.lock as lk
-from spack.util.path import substitute_path_variables
 import spack.util.path
+import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
+from spack.filesystem_view import YamlFilesystemView
+from spack.spec import Spec
+from spack.spec_list import InvalidSpecConstraintError, SpecList
+from spack.util.path import substitute_path_variables
+from spack.variant import UnknownVariantError
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'

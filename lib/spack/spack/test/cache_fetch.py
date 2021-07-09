@@ -4,14 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 import pytest
 
 from llnl.util.filesystem import mkdirp, touch
 
 import spack.config
-
-from spack.stage import Stage
 from spack.fetch_strategy import CacheURLFetchStrategy, NoCacheError
+from spack.stage import Stage
 
 
 @pytest.mark.parametrize('use_curl', [True, False])

@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from six.moves import cPickle
 import pytest
+from six.moves import cPickle
 
 from spack.main import SpackCommand
 

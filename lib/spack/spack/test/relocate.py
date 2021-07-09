@@ -8,8 +8,10 @@ import platform
 import re
 import shutil
 
-import llnl.util.filesystem
 import pytest
+
+import llnl.util.filesystem
+
 import spack.architecture
 import spack.concretize
 import spack.paths

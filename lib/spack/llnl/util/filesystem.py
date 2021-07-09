@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import errno
-import hashlib
 import glob
 import grp
+import hashlib
 import itertools
 import numbers
 import os
@@ -19,10 +19,11 @@ import tempfile
 from contextlib import contextmanager
 
 import six
+
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
-from spack.util.executable import Executable
 
+from spack.util.executable import Executable
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm

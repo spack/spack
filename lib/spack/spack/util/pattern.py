@@ -3,10 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
 import functools
+import inspect
 import sys
-
 
 if sys.version_info >= (3, 3):
     from collections.abc import MutableSequence  # novm

@@ -29,7 +29,6 @@ from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import CompilerSpec, Spec
 from spack.util.mock_package import MockPackageMultiRepo
 
-
 ci_cmd = spack.main.SpackCommand('ci')
 env_cmd = spack.main.SpackCommand('env')
 mirror_cmd = spack.main.SpackCommand('mirror')

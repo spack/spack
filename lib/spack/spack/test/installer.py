@@ -4,12 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 import py
 import pytest
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 import llnl.util.lock as ulk
+import llnl.util.tty as tty
 
 import spack.binary_distribution
 import spack.compilers

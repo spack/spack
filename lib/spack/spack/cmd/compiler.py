@@ -7,16 +7,18 @@ from __future__ import print_function
 
 import argparse
 import sys
+
 from six import iteritems
 
 import llnl.util.tty as tty
-import spack.compilers
-import spack.config
-import spack.spec
 from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
-from spack.spec import CompilerSpec, ArchSpec
+
+import spack.compilers
+import spack.config
+import spack.spec
+from spack.spec import ArchSpec, CompilerSpec
 
 description = "manage compilers"
 section = "system"

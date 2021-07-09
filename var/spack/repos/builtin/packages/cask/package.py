@@ -3,12 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from glob import glob
+
 #
 # Based on Homebrew's formula:
 # https://github.com/Homebrew/homebrew-core/blob/master/Formula/cask.rb
 #
 from spack import *
-from glob import glob
 
 
 class Cask(Package):

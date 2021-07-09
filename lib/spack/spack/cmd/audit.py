@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import llnl.util.tty.color as cl
+
 import spack.audit
 import spack.repo
-
 
 description = "audit configuration files, packages, etc."
 section = "system"
