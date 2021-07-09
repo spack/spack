@@ -77,3 +77,25 @@ def test_reset_in_environment(mutable_mock_env_path, mutable_config):
     # Check that reset didn't delete the entire file
     spack_yaml = os.path.join(current_environment.path, 'spack.yaml')
     assert os.path.exists(spack_yaml)
+
+
+def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
+    # Create a bootstrap.yaml with some config
+    _bootstrap('disable', '--scope=site')
+    scope_path = spack.config.config.scopes['site'].path
+    bootstrap_yaml = os.path.join(scope_path, 'bootstrap.yaml')
+    assert os.path.exists(bootstrap_yaml)
+
+    # Reset the bootstrap configuration
+    _bootstrap('reset', '-y')
+    backup_file = bootstrap_yaml + '.bkp'
+    assert not os.path.exists(bootstrap_yaml)
+    assert os.path.exists(backup_file)
+
+    # Iterate another time
+    _bootstrap('disable', '--scope=site')
+    assert os.path.exists(bootstrap_yaml)
+    assert os.path.exists(backup_file)
+    _bootstrap('reset', '-y')
+    assert not os.path.exists(bootstrap_yaml)
+    assert os.path.exists(backup_file)

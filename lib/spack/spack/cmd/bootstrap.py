@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import shutil
 
 import llnl.util.tty
 
@@ -84,8 +85,9 @@ def _reset(args):
 
         # If we are outside of an env scope delete the bootstrap.yaml file
         bootstrap_yaml = os.path.join(scope.path, 'bootstrap.yaml')
+        backup_file = bootstrap_yaml + '.bkp'
         if os.path.exists(bootstrap_yaml):
-            os.remove(bootstrap_yaml)
+            shutil.move(bootstrap_yaml, backup_file)
 
 
 def _root(args):
