@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 import pytest
 
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
-
 
 gc = SpackCommand('gc')
 mark = SpackCommand('mark')

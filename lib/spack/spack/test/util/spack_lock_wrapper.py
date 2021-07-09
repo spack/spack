@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for Spack's wrapper module around llnl.util.lock."""
+import ctypes
 import os
 import sys
-import ctypes
+
 import pytest
 
 from llnl.util.filesystem import group_ids

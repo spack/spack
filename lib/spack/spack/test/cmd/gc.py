@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 import pytest
 
 import spack.environment as ev
 import spack.main
 import spack.spec
-
 
 gc = spack.main.SpackCommand('gc')
 

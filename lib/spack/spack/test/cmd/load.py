@@ -11,7 +11,6 @@ import spack.spec
 import spack.user_environment as uenv
 from spack.main import SpackCommand, SpackCommandError
 
-
 load = SpackCommand('load')
 unload = SpackCommand('unload')
 install = SpackCommand('install')

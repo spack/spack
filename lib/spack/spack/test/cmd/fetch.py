@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pytest
 import sys
+
+import pytest
+
 import spack.environment as ev
 from spack.main import SpackCommand, SpackCommandError
 

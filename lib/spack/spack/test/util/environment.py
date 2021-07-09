@@ -5,10 +5,10 @@
 
 """Test Spack's environment utility functions."""
 import os
+import sys
 
 import pytest
 
-import sys
 import spack.util.environment as envutil
 
 

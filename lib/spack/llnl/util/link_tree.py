@@ -13,7 +13,6 @@ import shutil
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, touch, traverse_tree
-
 from llnl.util.symlink import symlink
 
 __all__ = ['LinkTree']

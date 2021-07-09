@@ -2,9 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.main import SpackCommand
 import sys
+
 import pytest
+
+from spack.main import SpackCommand
 
 activate = SpackCommand('activate')
 deactivate = SpackCommand('deactivate')

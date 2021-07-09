@@ -12,10 +12,9 @@ import sys
 import pytest
 
 import llnl.util.filesystem as fs
+from llnl.util.symlink import symlink
 
 import spack.paths
-
-from llnl.util.symlink import symlink
 
 
 @pytest.fixture()

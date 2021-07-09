@@ -5,8 +5,9 @@
 
 """Tests various features of :py:class:`spack.util.prefix.Prefix`"""
 
-from spack.util.prefix import Prefix
 import os
+
+from spack.util.prefix import Prefix
 
 
 def test_prefix_attributes():

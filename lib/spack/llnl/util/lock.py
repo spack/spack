@@ -9,6 +9,7 @@ import socket
 import time
 from datetime import datetime
 from sys import platform as _platform
+
 import llnl.util.tty as tty
 
 import spack.util.string
@@ -18,7 +19,8 @@ if _platform != "win32":
 else:
     import win32con
     import win32file
-    import pywintypes
+
+    import pywintypes  # isort:skip
 
 __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
            'LockError', 'LockTimeoutError',

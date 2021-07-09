@@ -2,14 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from os.path import exists, join
+import ctypes.wintypes
+import errno
 import os
-import tempfile
 import shutil
 import sys
-import errno
-
-import ctypes.wintypes
+import tempfile
+from os.path import exists, join
 
 import llnl.util.filesystem as fs
 

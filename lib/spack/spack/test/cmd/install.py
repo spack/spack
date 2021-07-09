@@ -11,7 +11,6 @@ import shutil
 import sys
 import time
 
-
 import pytest
 from six.moves import builtins
 from six.moves.urllib.error import HTTPError, URLError
@@ -27,7 +26,6 @@ import spack.package
 from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.spec import CompilerSpec, Spec
-
 
 install = SpackCommand('install')
 env = SpackCommand('env')

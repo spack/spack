@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 import os
 import subprocess
+import sys
 from typing import List  # novm
+
 from spack.compiler import Compiler
 
 

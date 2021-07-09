@@ -11,7 +11,6 @@ import pytest
 import spack.util.spack_yaml as s_yaml
 from spack.main import SpackCommand
 
-
 activate = SpackCommand('activate')
 extensions = SpackCommand('extensions')
 install = SpackCommand('install')

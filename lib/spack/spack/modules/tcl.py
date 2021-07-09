@@ -10,7 +10,6 @@ import posixpath
 import string
 from typing import Any, Dict  # novm
 
-
 import llnl.util.tty as tty
 
 import spack.config

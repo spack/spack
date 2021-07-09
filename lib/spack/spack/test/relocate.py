@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import os
 import os.path
 import platform
 import re
 import shutil
-import os
 
 import pytest
 

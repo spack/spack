@@ -16,7 +16,6 @@ import spack.main
 import spack.spec
 from spack.spec import Spec
 
-
 buildcache = spack.main.SpackCommand('buildcache')
 install = spack.main.SpackCommand('install')
 env = spack.main.SpackCommand('env')

@@ -5,9 +5,9 @@
 
 import filecmp
 import os
-import sys
 import shutil
 import subprocess
+import sys
 
 import pytest
 

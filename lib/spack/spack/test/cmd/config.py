@@ -18,7 +18,6 @@ import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 
-
 config = spack.main.SpackCommand('config')
 env = spack.main.SpackCommand('env')
 

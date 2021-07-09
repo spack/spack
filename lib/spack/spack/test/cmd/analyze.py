@@ -15,7 +15,6 @@ import spack.util.spack_json as sjson
 from spack.main import SpackCommand
 from spack.spec import Spec
 
-
 install = SpackCommand('install')
 analyze = SpackCommand('analyze')
 

@@ -6,11 +6,10 @@
 import filecmp
 import json
 import os
+import shutil
 import sys
 
 import pytest
-import shutil
-
 from jsonschema import ValidationError, validate
 
 import spack

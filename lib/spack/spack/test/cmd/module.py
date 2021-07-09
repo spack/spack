@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
-import sys
 import re
+import sys
 
 import pytest
 
@@ -13,7 +13,6 @@ import spack.config
 import spack.main
 import spack.modules
 import spack.store
-
 
 module = spack.main.SpackCommand('module')
 

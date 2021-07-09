@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import platform
+
 import archspec.cpu
+
 from spack.architecture import Platform, Target
 from spack.operating_systems.windows_os import WindowsOs
 

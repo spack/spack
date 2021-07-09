@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
+import glob
 import os
 import subprocess
-import glob
+import sys
+
 from spack.architecture import OperatingSystem
 from spack.version import Version
 

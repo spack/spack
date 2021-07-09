@@ -6,6 +6,7 @@
 """Tests for the `spack verify` command"""
 import os
 import sys
+
 import pytest
 
 import llnl.util.filesystem as fs
@@ -15,7 +16,6 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.verify
 from spack.main import SpackCommand
-
 
 verify = SpackCommand('verify')
 install = SpackCommand('install')

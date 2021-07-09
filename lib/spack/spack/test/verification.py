@@ -8,12 +8,12 @@ import os
 import shutil
 
 import llnl.util.filesystem as fs
+from llnl.util.symlink import symlink
 
 import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
 import spack.verify
-from llnl.util.symlink import symlink
 
 
 def test_link_manifest_entry(tmpdir):
