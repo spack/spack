@@ -71,6 +71,7 @@ def test_add():
     assert Spec('mpileaks') in e.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_add_virtual():
     env('create', 'test')
 
@@ -84,6 +85,7 @@ def test_env_add_virtual():
     assert spec.satisfies('mpi')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_add_nonexistant_fails():
     env('create', 'test')
 
@@ -92,6 +94,7 @@ def test_env_add_nonexistant_fails():
         e.add('thispackagedoesnotexist')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_list(mutable_mock_env_path):
     env('create', 'foo')
     env('create', 'bar')
@@ -113,6 +116,7 @@ def test_env_list(mutable_mock_env_path):
     assert '.DS_Store' not in out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_remove(capfd):
     env('create', 'foo')
     env('create', 'bar')
@@ -139,6 +143,7 @@ def test_env_remove(capfd):
     assert 'bar' not in out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_concretize():
     e = ev.create('test')
     e.add('mpileaks')
@@ -162,7 +167,7 @@ def test_env_uninstalled_specs(install_mockery, mock_fetch):
     assert any(s.name == 'mpileaks' for s in e.uninstalled_specs())
 
 
-@pytest.mark.skipif(sys.platform == "win32",
+@pytest.mark.skipif(sys.platform.startswith("win"),
                     reason='Not supported on Windows (yet)')
 def test_env_install_all(install_mockery, mock_fetch):
     e = ev.create('test')
@@ -190,6 +195,7 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install = SpackCommand('install')
     install('dependent-install')
@@ -328,6 +334,7 @@ def test_remove_after_concretize():
     assert not any(s.name == 'mpileaks' for s in env_specs)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_remove_command():
     env('create', 'test')
     assert 'test' in env('list')
@@ -370,6 +377,7 @@ def test_remove_command():
         assert 'mpileaks@' not in find('--show-concretized')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_environment_status(capsys, tmpdir):
     with tmpdir.as_cwd():
         with capsys.disabled():
@@ -434,6 +442,7 @@ def test_env_activate_broken_view(
     env('activate', '--sh', 'test')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_to_lockfile_dict():
     e = ev.create('test')
     e.add('mpileaks')
@@ -446,6 +455,7 @@ def test_to_lockfile_dict():
     assert e.specs_by_hash == e_copy.specs_by_hash
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_repo():
     e = ev.create('test')
     e.add('mpileaks')
@@ -459,6 +469,7 @@ def test_env_repo():
     assert package.namespace == 'builtin.mock'
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_user_removed_spec():
     """Ensure a user can remove from any position in the spack.yaml file."""
     initial_yaml = StringIO("""\
@@ -493,6 +504,7 @@ env:
     assert not any(x.name == 'hypre' for x in env_specs)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_init_from_lockfile(tmpdir):
     """Test that an environment can be instantiated from a lockfile."""
     initial_yaml = StringIO("""\
@@ -521,6 +533,7 @@ env:
         assert s1 == s2
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_init_from_yaml(tmpdir):
     """Test that an environment can be instantiated from a lockfile."""
     initial_yaml = StringIO("""\
@@ -596,6 +609,7 @@ packages:
         )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_init_with_file_and_remove(tmpdir):
     """Ensure a user can remove from any position in the spack.yaml file."""
     path = tmpdir.join('spack.yaml')
@@ -622,6 +636,7 @@ env:
     assert 'test' not in out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_with_config():
     test_config = """\
 env:
@@ -641,6 +656,7 @@ env:
                for x in e._get_environment_specs())
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_with_config_bad_include(env_deactivate, capfd):
     env_name = 'test_bad_include'
     test_config = """\
@@ -663,6 +679,7 @@ spack:
     assert os.path.join('no', 'such', 'file.yaml') in err
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_with_include_config_files_same_basename():
     test_config = """\
         env:
@@ -704,6 +721,7 @@ def test_env_with_include_config_files_same_basename():
     assert(environment_specs[1].satisfies('mpileaks@2.2'))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_with_included_config_file():
     test_config = """\
 env:
@@ -729,6 +747,7 @@ packages:
                for x in e._get_environment_specs())
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_with_included_config_scope():
     config_scope_path = os.path.join(ev.root('test'), 'config')
     test_config = """\
@@ -758,6 +777,7 @@ packages:
                for x in e._get_environment_specs())
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_with_included_config_var_path():
     config_var_path = os.path.join('$tempdir', 'included-config.yaml')
     test_config = """\
@@ -787,6 +807,7 @@ packages:
                for x in e._get_environment_specs())
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_config_precedence():
     test_config = """\
 env:
@@ -862,6 +883,7 @@ version: [0.8.12]
         [x.satisfies('libelf@0.8.10') for x in e._get_environment_specs()])
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_bad_env_yaml_format(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -925,6 +947,7 @@ def test_stage(mock_stage, mock_fetch, install_mockery):
     check_stage('zmpi')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_commands_die_with_no_env_arg():
     # these fail in argparse when given no arg
     with pytest.raises(SystemExit):
@@ -954,6 +977,7 @@ def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
     assert 'used by the following environments' in out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_roots_display_with_variants():
     env('create', 'test')
     with ev.read('test'):
@@ -1009,6 +1033,7 @@ def create_v1_lockfile_dict(roots, all_specs):
     return test_lockfile_dict
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_read_old_lock_and_write_new(tmpdir):
     build_only = ('build',)
@@ -1040,6 +1065,7 @@ def test_read_old_lock_and_write_new(tmpdir):
             y.build_hash()])
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_read_old_lock_creates_backup(tmpdir):
     """When reading a version-1 lockfile, make sure that a backup of that file
@@ -1068,6 +1094,7 @@ def test_read_old_lock_creates_backup(tmpdir):
         assert y.dag_hash() in lockfile_dict_v1['concrete_specs']
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_indirect_build_dep():
     """Simple case of X->Y->Z where Y is a build/link dep and Z is a
@@ -1103,6 +1130,7 @@ def test_indirect_build_dep():
         assert x_env_spec == x_concretized
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.usefixtures('config')
 def test_store_different_build_deps():
     r"""Ensure that an environment can store two instances of a build-only
@@ -1327,6 +1355,7 @@ def test_env_updates_view_force_remove(
     check_viewdir_removal(view_dir)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_activate_view_fails(
         tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate):
     """Sanity check on env activate to make sure it requires shell support"""
@@ -1334,6 +1363,7 @@ def test_env_activate_view_fails(
     assert "To set up shell support" in out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_yaml_definitions(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1352,6 +1382,7 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_yaml_definitions_as_constraints(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1375,6 +1406,7 @@ env:
         assert Spec('callpath^openmpi') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_yaml_definitions_as_constraints_on_matrix(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1401,6 +1433,7 @@ env:
         assert Spec('callpath^mpich@3.0.3') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.regression('12095')
 def test_stack_yaml_definitions_write_reference(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
@@ -1424,6 +1457,7 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_yaml_add_to_list(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1446,6 +1480,7 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_yaml_remove_from_list(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1467,6 +1502,7 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_yaml_remove_from_list_force(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1494,6 +1530,7 @@ env:
         assert Spec('callpath ^mpich') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_yaml_remove_from_matrix_no_effect(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1517,6 +1554,7 @@ env:
             assert before == after
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_yaml_force_remove_from_matrix(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1550,6 +1588,7 @@ env:
             assert mpileaks_spec not in after_conc
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
     # FIXME: The new concretizer doesn't handle yet soft
     # FIXME: constraints for stacks
@@ -1585,6 +1624,7 @@ env:
                 assert concrete.satisfies('^mpi', strict=True)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_concretize_extraneous_variants(tmpdir, config, mock_packages):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1616,6 +1656,7 @@ env:
                         user.variants['shared'].value)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_concretize_extraneous_variants_with_dash(tmpdir, config,
                                                         mock_packages):
     filename = str(tmpdir.join('spack.yaml'))
@@ -1643,6 +1684,7 @@ env:
         assert True
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_definition_extension(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1664,6 +1706,7 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_definition_conditional_false(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1686,6 +1729,7 @@ env:
         assert Spec('callpath') not in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_definition_conditional_true(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1708,6 +1752,7 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_definition_conditional_with_variable(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1730,6 +1775,7 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_definition_conditional_with_satisfaction(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1753,6 +1799,7 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_definition_complex_conditional(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1775,6 +1822,7 @@ env:
         assert Spec('callpath') not in test.user_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_definition_conditional_invalid_variable(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1792,6 +1840,7 @@ env:
             env('create', 'test', './spack.yaml')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_stack_definition_conditional_add_write(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -2251,6 +2300,7 @@ def test_env_activate_csh_prints_shell_output(
     assert "alias despacktivate" in out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.regression('12719')
 def test_env_activate_default_view_root_unconditional(env_deactivate,
                                                       mutable_mock_env_path):
@@ -2269,6 +2319,7 @@ def test_env_activate_default_view_root_unconditional(env_deactivate,
            'export PATH="{0}'.format(viewdir_bin) in out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_concretize_user_specs_together():
     e = ev.create('coconcretization')
     e.concretization = 'together'
@@ -2297,6 +2348,7 @@ def test_concretize_user_specs_together():
     assert all('mpich' not in spec for _, spec in e.concretized_specs())
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_cant_install_single_spec_when_concretizing_together():
     e = ev.create('coconcretization')
     e.concretization = 'together'
@@ -2306,6 +2358,7 @@ def test_cant_install_single_spec_when_concretizing_together():
         e.install_all()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_duplicate_packages_raise_when_concretizing_together():
     e = ev.create('coconcretization')
     e.concretization = 'together'
@@ -2318,6 +2371,7 @@ def test_duplicate_packages_raise_when_concretizing_together():
         e.concretize()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_env_write_only_non_default():
     env('create', 'test')
 
@@ -2328,6 +2382,7 @@ def test_env_write_only_non_default():
     assert yaml == ev.default_manifest_yaml
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.regression('20526')
 def test_env_write_only_non_default_nested(tmpdir):
     # setup an environment file
@@ -2382,6 +2437,7 @@ spack:
     return manifest, backup_file
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_update_anonymous_env(packages_yaml_v015):
     manifest, backup_file = packages_yaml_v015
     env('update', '-y', str(manifest.dirname))
@@ -2393,6 +2449,7 @@ def test_update_anonymous_env(packages_yaml_v015):
     assert not ev.is_latest_format(str(backup_file))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_double_update(packages_yaml_v015):
     manifest, backup_file = packages_yaml_v015
 
@@ -2410,6 +2467,7 @@ def test_double_update(packages_yaml_v015):
     assert not ev.is_latest_format(str(backup_file))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_update_and_revert(packages_yaml_v015):
     manifest, backup_file = packages_yaml_v015
 
@@ -2425,6 +2483,7 @@ def test_update_and_revert(packages_yaml_v015):
     assert not ev.is_latest_format(str(manifest))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_old_format_cant_be_updated_implicitly(packages_yaml_v015):
     manifest, backup_file = packages_yaml_v015
     env('activate', str(manifest.dirname))
@@ -2432,6 +2491,7 @@ def test_old_format_cant_be_updated_implicitly(packages_yaml_v015):
         add('hdf5')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.regression('18147')
 def test_can_update_attributes_with_override(tmpdir):
     spack_yaml = """
@@ -2489,6 +2549,7 @@ spack:
     assert libelf_first_hash == libelf_second_hash
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.regression('18441')
 def test_lockfile_not_deleted_on_write_error(tmpdir, monkeypatch):
     raw_yaml = """
@@ -2554,6 +2615,7 @@ spack:
     return init_env, build_folder, dest_env, spack_yaml
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_rewrite_rel_dev_path_new_dir(tmpdir):
     """Relative develop paths should be rewritten for new environments in
        a different directory from the original manifest file"""
@@ -2566,6 +2628,7 @@ def test_rewrite_rel_dev_path_new_dir(tmpdir):
                                                                    'other', 'path')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_rewrite_rel_dev_path_named_env(tmpdir):
     """Relative develop paths should by default be rewritten for new named
        environment"""
@@ -2577,6 +2640,7 @@ def test_rewrite_rel_dev_path_named_env(tmpdir):
                                                                    'other', 'path')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_rewrite_rel_dev_path_original_dir(tmpdir):
     """Relative devevelop paths should not be rewritten when initializing an
        environment with root path set to the same directory"""
@@ -2586,6 +2650,7 @@ def test_rewrite_rel_dev_path_original_dir(tmpdir):
         assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_rewrite_rel_dev_path_create_original_dir(tmpdir):
     """Relative develop paths should not be rewritten when creating an
        environment in the original directory"""
@@ -2596,6 +2661,7 @@ def test_rewrite_rel_dev_path_create_original_dir(tmpdir):
         assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmpdir):
     """Relative develop paths should not be rewritten when --keep-relative is
        passed to create"""
@@ -2607,6 +2673,7 @@ def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmpdir):
         assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.regression('23440')
 def test_custom_version_concretize_together(tmpdir):
     # Custom versions should be permitted in specs when
@@ -2703,6 +2770,7 @@ spack:
     assert spec.prefix in full_contents
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.regression('24148')
 def test_virtual_spec_concretize_together(tmpdir):
     # An environment should permit to concretize "mpi"

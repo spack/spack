@@ -19,6 +19,7 @@ import argparse
 import os
 
 import llnl.util.tty as tty
+from llnl.util.symlink import symlink
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -26,7 +27,6 @@ import spack.environment as ev
 import spack.store
 from spack.database import InstallStatuses
 from spack.error import SpackError
-from llnl.util.symlink import symlink
 
 description = "Replace one package with another via symlinks"
 section = "admin"

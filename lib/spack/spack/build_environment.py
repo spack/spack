@@ -46,6 +46,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
 from llnl.util.lang import dedupe
+from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
@@ -80,9 +81,6 @@ from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.module_cmd import load_module, module, path_from_modules
 from spack.util.string import plural
-
-from llnl.util.symlink import symlink
-
 
 #
 # This can be set by the user to globally disable parallel builds.

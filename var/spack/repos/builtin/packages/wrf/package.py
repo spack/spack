@@ -8,12 +8,13 @@ import re
 import time
 from os.path import basename
 from subprocess import PIPE, Popen
+from sys import platform as _platform
 from sys import stdout
 
 from llnl.util import tty
 
 from spack import *
-from sys import platform as _platform
+
 if _platform != 'win32':
     from fcntl import F_GETFL, F_SETFL, fcntl
     from os import O_NONBLOCK, rename

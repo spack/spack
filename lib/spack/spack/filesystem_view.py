@@ -15,6 +15,7 @@ from llnl.util import tty
 from llnl.util.filesystem import mkdirp, remove_dead_links, remove_empty_directories
 from llnl.util.lang import index_by, match_predicate
 from llnl.util.link_tree import LinkTree, MergeConflictError
+from llnl.util.symlink import symlink
 from llnl.util.tty.color import colorize
 
 import spack.config
@@ -30,7 +31,6 @@ from spack.directory_layout import (
     YamlViewExtensionsLayout,
 )
 from spack.error import SpackError
-from llnl.util.symlink import symlink
 
 # compatability
 if sys.version_info < (3, 0):

@@ -3,15 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import ctypes
 import errno
 import glob
-import ctypes
-
 from sys import platform as _platform
+
 if _platform != "win32":
     import grp
     import pwd
-
 
 import hashlib
 import itertools
@@ -31,7 +30,6 @@ from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import symlink
 
 from spack.util.executable import Executable
-
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm

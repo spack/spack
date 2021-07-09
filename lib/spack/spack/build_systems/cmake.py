@@ -6,16 +6,16 @@
 
 import inspect
 import os
-import sys
 import platform
 import re
+import sys
 from typing import List  # novm
 
 from llnl.util.filesystem import working_dir
 
 import spack.build_environment
 from spack.directives import conflicts, depends_on, variant
-from spack.package import InstallError, PackageBase, run_after
+from spack.package import PackageBase, run_after
 
 # Regex to extract the primary generator from the CMake generator
 # string.

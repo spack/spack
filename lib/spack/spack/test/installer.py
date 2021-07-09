@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 import py
 import pytest
-import sys
 
 import llnl.util.filesystem as fs
 import llnl.util.lock as ulk

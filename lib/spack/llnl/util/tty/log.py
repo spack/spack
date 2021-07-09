@@ -8,19 +8,19 @@
 from __future__ import unicode_literals
 
 import atexit
+import ctypes
 import errno
+import io
 import multiprocessing
 import os
 import re
-import io
 import select
 import signal
 import sys
-import ctypes
-import traceback
 import threading
-from threading import Thread
+import traceback
 from contextlib import contextmanager
+from threading import Thread
 from types import ModuleType  # novm
 from typing import Optional  # novm
 

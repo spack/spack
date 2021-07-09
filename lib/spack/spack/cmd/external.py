@@ -20,9 +20,9 @@ import spack
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.error
+import spack.operating_systems.windows_os as winOs
 import spack.util.environment
 import spack.util.spack_yaml as syaml
-import spack.operating_systems.windows_os as winOs
 
 description = "manage external packages in Spack configuration"
 section = "config"

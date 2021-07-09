@@ -11,9 +11,9 @@ import os
 import re
 import sys
 from datetime import datetime, timedelta
+from sys import platform as _platform
 
 from six import string_types
-from sys import platform as _platform
 
 if sys.version_info < (3, 0):
     from itertools import izip_longest  # novm
