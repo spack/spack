@@ -1,4 +1,5 @@
 import json
+import six
 
 import spack.cmd
 
@@ -148,7 +149,37 @@ def spec_from_entry(entry):
         compiler = compiler_str,
         arch = arch_str
     )
-    return spec_str
+
+    variants_strs = list()
+    if 'parameters' in entry:
+        variant_strs = list()
+        for name, value in entry['parameters'].items():
+            # Value could be a list (of strings), boolean, or string
+            if isinstance(value, six.string_types):
+                variant_strs.append('{0}={1}'.format(name, value))
+            else:
+                try:
+                    iter(value)
+                    variant_strs.append(
+                        '{0}={1}'.format(name, ','.join(value)))
+                    continue
+                except TypeError:
+                    # Not an iterable
+                    pass
+                # At this point not a string or collection, check for boolean
+                if value in [True, False]:
+                    bool_symbol = '+' if value else '~'
+                    variant_strs.append('{0}{1}'.format(bool_symbol, name))
+                else:
+                    raise ValueError(
+                        "Unexpected value for {0} ({1}): {2}".format(
+                            name, str(type(value)), str(value)
+                        )
+                    )
+        spec_str += ' ' + ' '.join(variant_strs)
+
+    spec, = spack.cmd.parse_specs(spec_str.split())
+    return spec
 
 def generate_openmpi_entries():
     hwloc = JsonSpecEntry(
@@ -181,8 +212,7 @@ def generate_openmpi_entries():
 def entries_to_specs(entries):
     spec_dict = {}
     for entry in entries:
-        spec_str = spec_from_entry(entry)
-        spec, = spack.cmd.parse_specs(spec_str.split())
+        spec = spec_from_entry(entry)
         spec._hash = entry['hash']
         spec._concrete = True
         spec.external_path = entry['prefix']
