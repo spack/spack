@@ -9,7 +9,7 @@ import sys
 from spack import *
 
 
-class Hypre(CMakePackage, CudaPackage):
+class HypreCmake(CMakePackage, CudaPackage):
     """Hypre is a library of high performance preconditioners that
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
@@ -55,6 +55,8 @@ class Hypre(CMakePackage, CudaPackage):
             url = 'http://computing.llnl.gov/project/linear_solvers/download/hypre-{0}.tar.gz'
 
         return url.format(version)
+
+    root_cmakelists_dir = 'src'
 
     def cmake_args(self):
         args = [ ]
