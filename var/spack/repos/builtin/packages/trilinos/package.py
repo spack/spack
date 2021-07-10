@@ -60,8 +60,6 @@ class Trilinos(CMakePackage, CudaPackage):
     # Other
     # not everyone has py-numpy activated, keep it disabled by default to avoid
     # configure errors
-    variant('python',       default=False,
-            description='Build python wrappers')
 
     # Build options
     variant('complex', default=False,
@@ -76,13 +74,13 @@ class Trilinos(CMakePackage, CudaPackage):
             description='global ordinal type for Tpetra')
     variant('fortran',      default=True,
             description='Compile with Fortran support')
+    variant('python',       default=False,
+            description='Build PyTrilinos wrappers')
     variant('wrapper', default=False,
             description="Use nvcc-wrapper for CUDA build")
     variant('cuda_rdc', default=False,
             description='turn on RDC for CUDA build')
     variant('cxxstd', default='11', values=['11', '14', '17'], multi=False)
-    variant('hwloc', default=False,
-            description='Enable hwloc')
     variant('openmp',       default=False,
             description='Enable OpenMP')
     variant('shared',       default=True,
@@ -99,14 +97,12 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Enable CGNS')
     variant('adios2',       default=False,
             description='Enable ADIOS2')
-    variant('glm',          default=True,
-            description='Compile with GLM')
-    variant('gtest',        default=False,
-            description='Compile with Gtest')
     variant('hdf5',         default=True,
             description='Compile with HDF5')
     variant('hypre',        default=True,
             description='Compile with Hypre preconditioner')
+    variant('hwloc', default=False,
+            description='Enable hwloc')
     variant('matio',        default=True,
             description='Compile with Matio')
     variant('metis',        default=True,
@@ -127,8 +123,6 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with SuperLU solvers')
     variant('strumpack',    default=False,
             description='Compile with STRUMPACK solvers')
-    variant('x11',          default=False,
-            description='Compile with X11')
     variant('zlib',         default=False,
             description='Compile with zlib')
 
@@ -221,7 +215,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # External package options
     variant('dtk',          default=False,
-            description='Enable DataTransferKit')
+            description='Enable DataTransferKit (deprecated)')
     variant('scorec',       default=False,
             description='Enable SCOREC')
     variant('mesquite',     default=False,
@@ -373,7 +367,6 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('boost', when='+boost')
-    depends_on('glm', when='+glm')
     depends_on('hdf5+hl', when='+hdf5')
     depends_on('matio', when='+matio')
     depends_on('metis@5:', when='+metis')
@@ -414,6 +407,7 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
     depends_on('python', when='+python')
+    depends_on('py-mpi4py', when='+mpi +python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
     depends_on('kokkos-nvcc-wrapper', when='+wrapper')
@@ -629,10 +623,7 @@ class Trilinos(CMakePackage, CudaPackage):
             define('TPL_ENABLE_LAPACK', True),
             define('LAPACK_LIBRARY_NAMES', lapack.names),
             define('LAPACK_LIBRARY_DIRS', lapack.directories),
-            define_tpl_enable('GLM'),
             define_tpl_enable('Matio'),
-            define_tpl_enable('X11'),
-            define_trilinos_enable('Gtest', 'gtest'),
         ])
 
         if '+hwloc' in spec:
