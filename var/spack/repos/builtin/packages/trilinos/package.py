@@ -87,8 +87,6 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Enables the build of shared libraries')
     variant('debug',       default=False,
             description='Enable runtime safety and debug checks')
-    variant('xsdkflags',    default=False,
-            description='Compile using the default xSDK configuration')
 
     # TPLs (alphabet order)
     variant('boost',        default=True,
@@ -127,8 +125,6 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with zlib')
 
     # Package options (alphabet order)
-    variant('alloptpkgs',   default=False,
-            description='Compile with all optional packages')
     variant('amesos',       default=True,
             description='Compile with Amesos')
     variant('amesos2',      default=True,
@@ -518,7 +514,6 @@ class Trilinos(CMakePackage, CudaPackage):
         # ################## Trilinos Packages #####################
 
         options.extend([
-            define_trilinos_enable('ALL_OPTIONAL_PACKAGES', 'alloptpkgs'),
             define_trilinos_enable('Amesos'),
             define_trilinos_enable('Amesos2'),
             define_trilinos_enable('Anasazi'),
@@ -562,8 +557,6 @@ class Trilinos(CMakePackage, CudaPackage):
                                 'epetraextgraphreorderings'),
             define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
         ])
-
-        options.append(define_from_variant('USE_XSDK_DEFAULTS', 'xsdkflags'))
 
         if '+dtk' in spec:
             options.extend([

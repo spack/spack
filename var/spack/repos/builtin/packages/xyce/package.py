@@ -56,7 +56,7 @@ class Xyce(CMakePackage):
     # applications, namely xSDK, deal.ii, and DTK. Future changes to the
     # Trilinos recipe will disable all packages by default. At that
     # point, these ~variants can be removed from the following recipes.
-    depends_on('trilinos~adios2~alloptpkgs~boost~cgns~chaco~cuda~cuda_rdc~debug~dtk~exodus~float~hwloc~hypre~ifpack2~intrepid~intrepid2~ipo~matio~mesquite~metis~minitensor~ml~muelu~mumps~netcdf~openmp~phalanx~piro~pnetcdf~python~rol~rythmos~shards~shared~shylu~stk~stratimikos~strumpack~superlu~superlu-dist~teko~tempus~wrapper~xsdkflags~zlib~zoltan2')
+    depends_on('trilinos~adios2~boost~cgns~chaco~cuda~cuda_rdc~debug~dtk~exodus~float~hwloc~hypre~ifpack2~intrepid~intrepid2~ipo~matio~mesquite~metis~minitensor~ml~muelu~mumps~netcdf~openmp~phalanx~piro~pnetcdf~python~rol~rythmos~shards~shared~shylu~stk~stratimikos~strumpack~superlu~superlu-dist~teko~tempus~wrapper~zlib~zoltan2')
 
     def cmake_args(self):
         spec = self.spec
