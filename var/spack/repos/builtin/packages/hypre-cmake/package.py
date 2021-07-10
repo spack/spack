@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import sys
 
 from spack import *
@@ -59,8 +58,8 @@ class HypreCmake(CMakePackage, CudaPackage):
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
-        args = [ ]
-        
+        args = []
+
         if '+mpi' in self.spec:
             args.append('-DHYPRE_WITH_MPI=ON')
         else:
