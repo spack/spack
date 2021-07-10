@@ -137,7 +137,7 @@ jobs:
           sudo apt-get -y install zlib1g-dev libdw-dev libiberty-dev
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools codecov coverage
+          pip install --upgrade pip six setuptools codecov coverage[toml]
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -205,7 +205,7 @@ jobs:
           sudo apt-get -y install zlib1g-dev libdw-dev libiberty-dev
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools codecov coverage
+          pip install --upgrade pip six setuptools codecov coverage[toml]
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -326,7 +326,7 @@ jobs:
           make -C ${KCOV_ROOT}/build && sudo  make -C ${KCOV_ROOT}/build install
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools codecov coverage clingo
+          pip install --upgrade pip six setuptools codecov coverage[toml] clingo
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -369,7 +369,7 @@ jobs:
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools
-          pip install --upgrade codecov coverage
+          pip install --upgrade codecov coverage[toml]
           pip install --upgrade flake8 isort>=4.3.5 mypy>=0.900
     - name: Setup Homebrew packages
       run: |
