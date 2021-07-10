@@ -44,7 +44,7 @@ class Xyce(CMakePackage):
 
     # Xyce is built against an older version of Trilinos unlikely to be
     # used for any other purpose.
-    depends_on('trilinos@12.12.1 +amesos+amesos2+anasazi+aztec+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+teuchos+trilinoscouplings+zoltan+stokhos+amesos2basker+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=all')
+    depends_on('trilinos@12.12.1 +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+teuchos+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=all')
 
     # MPI options must be consistent with Trilinos
     depends_on('trilinos~mpi', when='~mpi')

@@ -212,8 +212,8 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Zoltan2')
 
     # Internal package options (alphabetical order)
-    variant('amesos2basker',             default=False,
-            description='Compile with Basker in Amesos2')
+    variant('basker',             default=False,
+            description='Compile with the Basker solver in Amesos2')
     variant('epetraextbtf',              default=False,
             description='Compile with BTF in EpetraExt')
     variant('epetraextexperimental',     default=False,
@@ -273,6 +273,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+amesos', when='~teuchos')
     conflicts('+anasazi', when='~teuchos')
     conflicts('+aztec', when='~epetra')
+    conflicts('+basker', when='~amesos2')
     conflicts('+belos', when='~teuchos')
     conflicts('+epetraext', when='~epetra')
     conflicts('+epetraext', when='~teuchos')
@@ -321,7 +322,6 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+epetraextbtf', when='~epetraext')
     conflicts('+epetraextexperimental', when='~epetraext')
     conflicts('+epetraextgraphreorderings', when='~epetraext')
-    conflicts('+amesos2basker', when='~amesos2')
 
     conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
@@ -493,24 +493,17 @@ class Trilinos(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
         define = CMakePackage.define
+        define_from_variant = self.define_from_variant
 
         def define_trilinos_enable(cmake_var, spec_var=None):
             if spec_var is None:
                 spec_var = cmake_var.lower()
-            return self.define_from_variant(
-                'Trilinos_ENABLE_' + cmake_var, spec_var)
+            return define_from_variant('Trilinos_ENABLE_' + cmake_var, spec_var)
 
         def define_tpl_enable(cmake_var, spec_var=None):
             if spec_var is None:
                 spec_var = cmake_var.lower()
-            return self.define_from_variant('TPL_ENABLE_' + cmake_var,
-                                            spec_var)
-
-        def define_prefix_enable(prefix, cmake_var, spec_var=None):
-            if spec_var is None:
-                spec_var = cmake_var.lower()
-            return self.define_from_variant(
-                '%s' % prefix, spec_var)
+            return define_from_variant('TPL_ENABLE_' + cmake_var, spec_var)
 
         cxx_flags = []
         options = []
@@ -522,7 +515,7 @@ class Trilinos(CMakePackage, CudaPackage):
             define('Trilinos_ENABLE_TESTS', False),
             define('Trilinos_ENABLE_EXAMPLES', False),
             define('Trilinos_ENABLE_CXX11', True),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             define_trilinos_enable('DEBUG', 'debug'),
             # The following can cause problems on systems that don't have
             # static libraries available for things like dl and pthreads
@@ -587,16 +580,15 @@ class Trilinos(CMakePackage, CudaPackage):
             define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
-            define_prefix_enable('EpetraExt_BUILD_BTF', 'epetraextbtf'),
-            define_prefix_enable('EpetraExt_BUILD_EXPERIMENTAL',
-                                 'epetraextexperimental'),
-            define_prefix_enable('EpetraExt_BUILD_GRAPH_REORDERINGS',
-                                 'epetraextgraphreorderings'),
-            define_prefix_enable('Amesos2_ENABLE_Basker', 'amesos2basker'),
+            define_from_variant('EpetraExt_BUILD_BTF', 'epetraextbtf'),
+            define_from_variant('EpetraExt_BUILD_EXPERIMENTAL',
+                                'epetraextexperimental'),
+            define_from_variant('EpetraExt_BUILD_GRAPH_REORDERINGS',
+                                'epetraextgraphreorderings'),
+            define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
         ])
 
-        options.append(self.define_from_variant('USE_XSDK_DEFAULTS',
-                                                'xsdkflags'))
+        options.append(define_from_variant('USE_XSDK_DEFAULTS', 'xsdkflags'))
 
         if '+dtk' in spec:
             options.extend([
@@ -808,7 +800,7 @@ class Trilinos(CMakePackage, CudaPackage):
                 define('CGNS_LIBRARY_DIRS', spec['cgns'].prefix.lib),
             ])
 
-        options.append(self.define_from_variant('TPL_ENABLE_ADIOS2', 'adios2'))
+        options.append(define_from_variant('TPL_ENABLE_ADIOS2', 'adios2'))
 
         options.append(define(
             "Kokkos_ARCH_" +
@@ -836,8 +828,7 @@ class Trilinos(CMakePackage, CudaPackage):
                 cxx_flags.extend(['--expt-extended-lambda'])
 
         # Set the C++ standard to use
-        options.append(self.define_from_variant(
-            "CMAKE_CXX_STANDARD", "cxxstd"))
+        options.append(define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 
         # OpenMP
         options.append(define_trilinos_enable('OpenMP'))
@@ -872,7 +863,7 @@ class Trilinos(CMakePackage, CudaPackage):
         # Explicit Template Instantiation (ETI) in Tpetra
         # NOTE: Trilinos will soon move to fixed std::uint64_t for GO and
         # std::int32_t or std::int64_t for local.
-        options.append(self.define_from_variant(
+        options.append(define_from_variant(
             'Trilinos_ENABLE_EXPLICIT_INSTANTIATION',
             'explicit_template_instantiation'))
 
