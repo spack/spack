@@ -16,7 +16,7 @@ class OpenpmdApi(CMakePackage):
     maintainers = ['ax3l']
 
     # C++14 up until here
-    version('dev', branch='dev')
+    version('develop', branch='dev')
     #   temporary, pre 0.14.0 version for HiPACE++
     version('hipace', commit='ac083025ee662469b8cad1adf93eef48cde35f58')
     version('0.13.4', sha256='46c013be5cda670f21969675ce839315d4f5ada0406a6546a91ec3441402cf5e')

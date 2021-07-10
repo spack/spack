@@ -785,6 +785,38 @@ Unit tests
 Unit testing
 ------------
 
+---------------------
+Developer environment
+---------------------
+
+.. warning::
+
+    This is an experimental feature. It is expected to change and you should
+    not use it in a production environment.
+
+
+When installing a package, we currently have support to export environment
+variables to specify adding debug flags to the build. By default, a package
+install will build without any debug flag. However, if you want to add them,
+you can export:
+
+.. code-block:: console
+
+   export SPACK_ADD_DEBUG_FLAGS=true
+   spack install zlib
+
+
+If you want to add custom flags, you should export an additional variable:
+
+.. code-block:: console
+
+   export SPACK_ADD_DEBUG_FLAGS=true
+   export SPACK_DEBUG_FLAGS="-g"
+   spack install zlib
+
+These environment variables will eventually be integrated into spack so
+they are set from the command line.
+
 ------------------
 Developer commands
 ------------------
