@@ -265,48 +265,55 @@ class Trilinos(CMakePackage, CudaPackage):
              placement='packages/mesquite',
              when='+mesquite @develop')
 
-    conflicts('+amesos2', when='~tpetra')
-    conflicts('+amesos', when='~epetra')
-    conflicts('+aztec', when='~epetra')
-    conflicts('+basker', when='~amesos2')
-    conflicts('+epetraext', when='~epetra')
-    conflicts('+exodus', when='~netcdf')
-    conflicts('+ifpack2', when='~belos')
-    conflicts('+ifpack2', when='~tpetra')
-    conflicts('+ifpack', when='~epetra')
-    conflicts('+intrepid2', when='~kokkos')
-    conflicts('+intrepid2', when='~shards')
-    conflicts('+intrepid', when='~sacado')
-    conflicts('+intrepid', when='~shards')
-    conflicts('+isorropia', when='~epetra')
-    conflicts('+isorropia', when='~epetraext')
-    conflicts('+isorropia', when='~zoltan')
-    conflicts('+phalanx', when='~kokkos')
-    conflicts('+phalanx', when='~sacado')
+    # Epetra packages
+    with when('~epetra'):
+        conflicts('+amesos')
+        conflicts('+aztec')
+        conflicts('+epetraext')
+        conflicts('+ifpack')
+        conflicts('+isorropia')
+    with when('~epetraext'):
+        conflicts('+isorropia')
+        conflicts('+teko')
+        conflicts('+epetraextbtf')
+        conflicts('+epetraextexperimental')
+        conflicts('+epetraextgraphreorderings')
     conflicts('+teko', when='~amesos')
     conflicts('+teko', when='~anasazi')
     conflicts('+teko', when='~aztec')
-    conflicts('+teko', when='~epetraext')
     conflicts('+teko', when='~ifpack')
     conflicts('+teko', when='~ml')
+
+    # Tpetra packages
+    with when('~kokkos'):
+        conflicts('+tpetra')
+        conflicts('+intrepid2')
+        conflicts('+phalanx')
+    with when('~tpetra'):
+        conflicts('+amesos2')
+        conflicts('+dtk')
+        conflicts('+ifpack2')
+        conflicts('+teko')
+        conflicts('+zoltan2')
+
+    conflicts('+basker', when='~amesos2')
+    conflicts('+exodus', when='~netcdf')
+    conflicts('+ifpack2', when='~belos')
+    conflicts('+intrepid', when='~sacado')
+    conflicts('+intrepid', when='~shards')
+    conflicts('+intrepid2', when='~shards')
+    conflicts('+isorropia', when='~zoltan')
+    conflicts('+phalanx', when='~sacado')
     conflicts('+teko', when='~stratimikos')
-    conflicts('+teko', when='~tpetra')
     conflicts('+teko', when='@:12 gotype=long')
     conflicts('+tempus', when='~nox')
-    conflicts('+tpetra', when='~kokkos')
-    conflicts('+zoltan2', when='~tpetra')
     conflicts('+zoltan2', when='~zoltan')
 
-    conflicts('+epetraextbtf', when='~epetraext')
-    conflicts('+epetraextexperimental', when='~epetraext')
-    conflicts('+epetraextgraphreorderings', when='~epetraext')
-
+    # Only allow DTK with Trilinos 12.14 and develop
     conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
-    conflicts('+dtk', when='~kokkos')
-    conflicts('+dtk', when='~tpetra')
-    # Only allow DTK with Trilinos 12.14 and develop
     conflicts('+dtk', when='@0:12.12.99,master')
+
     # Only allow Mesquite with Trilinos 12.12 and up, and develop
     conflicts('+mesquite', when='@0:12.10.99,master')
     # Can only use one type of SuperLU
