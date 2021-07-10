@@ -99,8 +99,6 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with HDF5')
     variant('hypre',        default=True,
             description='Compile with Hypre preconditioner')
-    variant('hwloc', default=False,
-            description='Enable hwloc')
     variant('matio',        default=True,
             description='Compile with Matio')
     variant('metis',        default=True,
@@ -276,6 +274,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Tpetra packages
     with when('~kokkos'):
+        conflicts('+cuda')
         conflicts('+tpetra')
         conflicts('+intrepid2')
         conflicts('+phalanx')
@@ -359,7 +358,6 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # ###################### Dependencies ##########################
 
-    # Everything should be compiled position independent (-fpic)
     depends_on('blas')
     depends_on('lapack')
     depends_on('boost', when='+boost')
@@ -407,8 +405,8 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
     depends_on('kokkos-nvcc-wrapper', when='+wrapper')
-    depends_on('hwloc', when='+hwloc')
-    depends_on('hwloc +cuda', when='+hwloc+cuda')
+    depends_on('hwloc', when='+kokkos')
+    depends_on('hwloc +cuda', when='+kokkos+cuda')
 
     # Dependencies/conflicts when MPI is disabled
     depends_on('hdf5~mpi', when='+hdf5~mpi')
@@ -489,6 +487,7 @@ class Trilinos(CMakePackage, CudaPackage):
             define('Trilinos_ENABLE_TESTS', False),
             define('Trilinos_ENABLE_EXAMPLES', False),
             define('Trilinos_ENABLE_CXX11', True),
+            define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
             define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             define_trilinos_enable('DEBUG', 'debug'),
             # The following can cause problems on systems that don't have
@@ -617,10 +616,8 @@ class Trilinos(CMakePackage, CudaPackage):
             define('LAPACK_LIBRARY_NAMES', lapack.names),
             define('LAPACK_LIBRARY_DIRS', lapack.directories),
             define_tpl_enable('Matio'),
+            ,
         ])
-
-        if '+hwloc' in spec:
-            options.append(define_tpl_enable('hwloc'))
 
         options.append(define_tpl_enable('Netcdf'))
         if '+netcdf' in spec:
@@ -767,10 +764,12 @@ class Trilinos(CMakePackage, CudaPackage):
 
         options.append(define_from_variant('TPL_ENABLE_ADIOS2', 'adios2'))
 
-        options.append(define(
-            "Kokkos_ARCH_" +
-            Kokkos.spack_micro_arch_map[spec.target.name].upper(),
-            True))
+        if '+kokkos' in spec:
+            options.append(define('TPL_ENABLE_HWLOC', True))
+            options.append(define(
+                "Kokkos_ARCH_" +
+                Kokkos.spack_micro_arch_map[spec.target.name].upper(),
+                True))
 
         # ################# Miscellaneous Stuff ######################
         # CUDA
@@ -791,9 +790,6 @@ class Trilinos(CMakePackage, CudaPackage):
                     True))
             if '+wrapper' in spec:
                 cxx_flags.extend(['--expt-extended-lambda'])
-
-        # Set the C++ standard to use
-        options.append(define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 
         # OpenMP
         options.append(define_trilinos_enable('OpenMP'))
