@@ -15,7 +15,6 @@
 #     run-flake8-tests
 #
 . "$(dirname $0)/setup.sh"
-check_dependencies flake8 mypy
 
 # verify that the code style is correct
 spack style --root-relative
