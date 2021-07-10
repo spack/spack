@@ -200,8 +200,6 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Teko')
     variant('tempus',       default=False,
             description='Compile with Tempus')
-    variant('teuchos',      default=True,
-            description='Compile with Teuchos')
     variant('tpetra',       default=True,
             description='Compile with Tpetra')
     variant('trilinoscouplings', default=False,
@@ -267,40 +265,24 @@ class Trilinos(CMakePackage, CudaPackage):
              placement='packages/mesquite',
              when='+mesquite @develop')
 
-    conflicts('+amesos2', when='~teuchos')
     conflicts('+amesos2', when='~tpetra')
     conflicts('+amesos', when='~epetra')
-    conflicts('+amesos', when='~teuchos')
-    conflicts('+anasazi', when='~teuchos')
     conflicts('+aztec', when='~epetra')
     conflicts('+basker', when='~amesos2')
-    conflicts('+belos', when='~teuchos')
     conflicts('+epetraext', when='~epetra')
-    conflicts('+epetraext', when='~teuchos')
     conflicts('+exodus', when='~netcdf')
     conflicts('+ifpack2', when='~belos')
-    conflicts('+ifpack2', when='~teuchos')
     conflicts('+ifpack2', when='~tpetra')
     conflicts('+ifpack', when='~epetra')
-    conflicts('+ifpack', when='~teuchos')
     conflicts('+intrepid2', when='~kokkos')
     conflicts('+intrepid2', when='~shards')
-    conflicts('+intrepid2', when='~teuchos')
     conflicts('+intrepid', when='~sacado')
     conflicts('+intrepid', when='~shards')
-    conflicts('+intrepid', when='~teuchos')
     conflicts('+isorropia', when='~epetra')
     conflicts('+isorropia', when='~epetraext')
-    conflicts('+isorropia', when='~teuchos')
     conflicts('+isorropia', when='~zoltan')
-    conflicts('+muelu', when='~teuchos')
-    conflicts('+nox', when='~teuchos')
     conflicts('+phalanx', when='~kokkos')
     conflicts('+phalanx', when='~sacado')
-    conflicts('+phalanx', when='~teuchos')
-    conflicts('+piro', when='~teuchos')
-    conflicts('+rol', when='~teuchos')
-    conflicts('+rythmos', when='~teuchos')
     conflicts('+teko', when='~amesos')
     conflicts('+teko', when='~anasazi')
     conflicts('+teko', when='~aztec')
@@ -308,14 +290,10 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+teko', when='~ifpack')
     conflicts('+teko', when='~ml')
     conflicts('+teko', when='~stratimikos')
-    conflicts('+teko', when='~teuchos')
     conflicts('+teko', when='~tpetra')
     conflicts('+teko', when='@:12 gotype=long')
     conflicts('+tempus', when='~nox')
-    conflicts('+tempus', when='~teuchos')
     conflicts('+tpetra', when='~kokkos')
-    conflicts('+tpetra', when='~teuchos')
-    conflicts('+zoltan2', when='~teuchos')
     conflicts('+zoltan2', when='~tpetra')
     conflicts('+zoltan2', when='~zoltan')
 
@@ -326,7 +304,6 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
     conflicts('+dtk', when='~kokkos')
-    conflicts('+dtk', when='~teuchos')
     conflicts('+dtk', when='~tpetra')
     # Only allow DTK with Trilinos 12.14 and develop
     conflicts('+dtk', when='@0:12.12.99,master')
@@ -520,10 +497,8 @@ class Trilinos(CMakePackage, CudaPackage):
             # The following can cause problems on systems that don't have
             # static libraries available for things like dl and pthreads
             # for example when trying to build static libs
-            # define('TPL_FIND_SHARED_LIBS', (
-            #     'ON' if '+shared' in spec else 'OFF'))
-            # define('Trilinos_LINK_SEARCH_START_STATIC', (
-            #     'OFF' if '+shared' in spec else 'ON'))
+            # define_from_variant('TPL_FIND_SHARED_LIBS', 'shared')
+            # define('Trilinos_LINK_SEARCH_START_STATIC', '+shared' not in spec)
         ])
 
         # MPI settings
@@ -575,7 +550,6 @@ class Trilinos(CMakePackage, CudaPackage):
             define_trilinos_enable('Stratimikos'),
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
-            define_trilinos_enable('Teuchos'),
             define_trilinos_enable('Tpetra'),
             define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Zoltan'),
@@ -852,20 +826,19 @@ class Trilinos(CMakePackage, CudaPackage):
                     '-L%s/ -lgfortran' % (libgfortran),
                 ))
 
-        float_s = '+float' in spec
-        complex_s = '+complex' in spec
-        if '+teuchos' in spec:
-            options.extend([
-                define('Teuchos_ENABLE_COMPLEX', complex_s),
-                define('Teuchos_ENABLE_FLOAT', float_s),
-            ])
-
         # Explicit Template Instantiation (ETI) in Tpetra
         # NOTE: Trilinos will soon move to fixed std::uint64_t for GO and
         # std::int32_t or std::int64_t for local.
         options.append(define_from_variant(
             'Trilinos_ENABLE_EXPLICIT_INSTANTIATION',
             'explicit_template_instantiation'))
+
+        complex_s = spec.variants['complex'].value
+        float_s = spec.variants['float'].value
+        options.extend([
+            define('Teuchos_ENABLE_COMPLEX', complex_s),
+            define('Teuchos_ENABLE_FLOAT', float_s),
+        ])
 
         if '+explicit_template_instantiation' in spec and '+tpetra' in spec:
             options.extend([
