@@ -53,7 +53,7 @@ class Lorene(MakefilePackage):
             ('@F77FLAGS@', "-ffixed-line-length-none -g -O3"),
             ('@F77FLAGS_G@', "-ffixed-line-length-none -g"),
             ('@INC@',
-             ("-I$(HOME_LORENE)/C++/Include" +
+             ("-I$(HOME_LORENE)/C++/Include " +
               "-I$(HOME_LORENE)/C++/Include_extra " +
               fftw_incdirs + " " + gsl_incdirs + " " + pgplot_incdirs)),
             ('@RANLIB@', "ls"),
