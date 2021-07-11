@@ -10,12 +10,15 @@ import sys
 import py
 import pytest
 
+import llnl.util.filesystem as fs
+
 import spack.binary_distribution as bindist
 import spack.config
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
 import spack.repo
+import spack.spec as spec
 import spack.store
 import spack.util.gpg
 import spack.util.web as web_util
@@ -589,3 +592,55 @@ def test_update_sbang(tmpdir, test_mirror):
             open(str(installed_script_style_2_path)).read()
 
         uninstall_cmd('-y', '/%s' % new_spec.dag_hash())
+
+
+@pytest.mark.usefixtures(
+    'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
+)
+def test_update_index_fix_deps(monkeypatch, tmpdir, mutable_config):
+    """Ensure spack buildcache update-index properly fixes up spec.yaml
+    files on the mirror when updating the buildcache index."""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+    spack.config.set('mirrors', {'test': mirror_url})
+
+    a = Spec('a').concretized()
+    b = Spec('b').concretized()
+    new_b_full_hash = 'abcdef'
+
+    # Install package a with dep b
+    install_cmd('--no-cache', a.name)
+
+    # Create a buildcache for a and its dep b, and update index
+    buildcache_cmd('create', '-uad', mirror_dir.strpath, a.name)
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Simulate an update to b that only affects full hash by simply overwriting
+    # the full hash in the spec.yaml file on the mirror
+    b_spec_yaml_name = bindist.tarball_name(b, '.spec.yaml')
+    b_spec_yaml_path = os.path.join(mirror_dir.strpath,
+                                    bindist.build_cache_relative_path(),
+                                    b_spec_yaml_name)
+    fs.filter_file(r"full_hash:\s[^\s]+$",
+                   "full_hash: {0}".format(new_b_full_hash),
+                   b_spec_yaml_path)
+
+    # When we update the index, spack should notice that a's notion of the
+    # full hash of b doesn't match b's notion of it's own full hash, and as
+    # a result, spack should fix the spec.yaml for a
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Read in the concrete spec yaml of a
+    a_spec_yaml_name = bindist.tarball_name(a, '.spec.yaml')
+    a_spec_yaml_path = os.path.join(mirror_dir.strpath,
+                                    bindist.build_cache_relative_path(),
+                                    a_spec_yaml_name)
+
+    # Turn concrete spec yaml into a concrete spec (a)
+    with open(a_spec_yaml_path) as fd:
+        a_prime = spec.Spec.from_yaml(fd.read())
+
+    # Make sure the full hash of b in a's spec yaml matches the new value
+    assert(a_prime[b.name].full_hash() == new_b_full_hash)
