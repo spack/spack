@@ -20,7 +20,6 @@ class Pdc(CMakePackage):
     conflicts('%clang')
     depends_on('libfabric@1.11.2')
     depends_on('mercury')
-    depends_on('cmake')
     depends_on('mpi')
 
     root_cmakelists_dir = 'src'
