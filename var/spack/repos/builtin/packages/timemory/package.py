@@ -9,7 +9,8 @@ from spack import *
 
 
 class Timemory(CMakePackage, PythonPackage):
-    '''Profiling toolkit and suite of libraries and tools for C/C++/Fortran/CUDA/Python'''
+    '''Profiling toolkit and suite of libraries and tools for
+    C/C++/Fortran/CUDA/Python'''
 
     homepage = 'https://timemory.readthedocs.io/en/latest/'
     git = 'https://github.com/NERSC/timemory.git'
@@ -34,7 +35,8 @@ class Timemory(CMakePackage, PythonPackage):
     variant(
         'python_hatchet',
         default=False,
-        description='Build Python hatchet submodule (does not conflict with py-hatchet)',
+        description='Build Python hatchet submodule '
+        '(does not conflict with py-hatchet)',
     )
     variant(
         'python_line_profiler',
