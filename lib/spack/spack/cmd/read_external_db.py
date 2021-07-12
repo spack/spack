@@ -291,11 +291,16 @@ def setup_parser(subparser):
                            help="run tests")
     subparser.add_argument('--file',
                            help="path to json description of Spack DB")
+    subparser.add_argument('--apply-updates', action='store_true',
+                           help="add parsed specs to the database")
 
 
 def read_external_db(parser, args):
     if args.file:
-        _json_entries_from_file(args.file)
+        specs = _json_entries_from_file(args.file)
+        if args.apply_updates:
+            for spec in specs.values():
+                spack.store.db.add(spec, directory_layout=None)
 
     if args.test:
         test_compatibility()
