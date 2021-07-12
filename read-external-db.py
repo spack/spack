@@ -223,6 +223,9 @@ def generate_openmpi_entries():
         parameters={}
     )
 
+    # This includes a variant which is guaranteed not to appear in the
+    # OpenMPI package: we need to make sure we can use such package
+    # descriptions.
     openmpi = JsonSpecEntry(
         name='openmpi',
         hash='openmpi-fake-hash',
@@ -233,7 +236,8 @@ def generate_openmpi_entries():
         dependencies=dict([hwloc.as_dependency(deptypes=['link'])]),
         parameters={
             'internal_hwloc': False,
-            'fabrics': ['psm']
+            'fabrics': ['psm'],
+            'missing_variant': True
         }
     )
 
