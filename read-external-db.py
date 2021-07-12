@@ -1,3 +1,8 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import json
 import six
 
@@ -5,6 +10,7 @@ import spack.cmd
 import spack.hash_types as hash_types
 
 from spack.spec import Spec
+
 
 example_x_json_str = """\
 {
@@ -35,6 +41,7 @@ example_x_json_str = """\
 }
 """
 
+
 class JsonSpecEntry(object):
     def __init__(self, name, hash, prefix, version, arch, compiler,
                  dependencies, parameters):
@@ -64,6 +71,7 @@ class JsonSpecEntry(object):
                 {'hash': self.hash,
                  'type': list(deptypes)})
 
+
 class JsonArchEntry(object):
     def __init__(self, platform, os, target):
         self.platform = platform
@@ -79,6 +87,7 @@ class JsonArchEntry(object):
             }
         }
 
+
 class JsonCompilerEntry(object):
     def __init__(self, name, version):
         self.name = name
@@ -90,16 +99,19 @@ class JsonCompilerEntry(object):
             'version': self.version
         }
 
+
 _common_arch = JsonArchEntry(
     platform='linux',
     os='centos8',
     target='haswell'
 ).to_dict()
 
+
 _common_compiler = JsonCompilerEntry(
     name='gcc',
     version='10.2.0'
 ).to_dict()
+
 
 def test_compatibility():
     y = JsonSpecEntry(
@@ -130,6 +142,7 @@ def test_compatibility():
         if val != x_from_str[key]:
             import pdb; pdb.set_trace()
     assert x_from_entry == x_from_str
+
 
 def spec_from_entry(entry):
     arch_format = "{platform}-{os}-{target}"
@@ -191,6 +204,7 @@ def spec_from_entry(entry):
 
     return spec
 
+
 def generate_openmpi_entries():
     hwloc = JsonSpecEntry(
         name='hwloc',
@@ -219,6 +233,7 @@ def generate_openmpi_entries():
 
     return [openmpi, hwloc]
 
+
 def entries_to_specs(entries):
     spec_dict = {}
     for entry in entries:
@@ -237,13 +252,16 @@ def entries_to_specs(entries):
 
     return spec_dict
 
+
 def test_spec_conversion():
     entries = list(x.to_dict() for x in generate_openmpi_entries())
     entries_to_specs(entries)
 
+
 def main():
     test_compatibility()
     test_spec_conversion()
+
 
 if __name__ == "__main__":
     main()
