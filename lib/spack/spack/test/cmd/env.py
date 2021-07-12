@@ -1948,7 +1948,7 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
-def test_view_type_copy(tmpdir, mock_fetch, mock_packages, mock_archive,
+def test_view_link_type_copy(tmpdir, mock_fetch, mock_packages, mock_archive,
                         install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
