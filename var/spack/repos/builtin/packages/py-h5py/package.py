@@ -13,7 +13,7 @@ class PyH5py(PythonPackage):
     homepage = "http://www.h5py.org/"
     pypi     = "h5py/h5py-3.3.0.tar.gz"
     git      = "https://github.com/h5py/h5py.git"
-    maintainers = ['bryanherman']
+    maintainers = ['bryanherman', 'takluyver']
 
     version('master', branch='master')
     version('3.3.0', sha256='e0dac887d779929778b3cfd13309a939359cc9e74756fc09af7c527a82797186')
