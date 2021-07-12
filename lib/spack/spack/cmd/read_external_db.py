@@ -6,9 +6,10 @@
 import json
 import six
 
+import llnl.util.tty as tty
+
 import spack.cmd
 import spack.hash_types as hash_types
-
 from spack.spec import Spec
 
 
@@ -145,18 +146,24 @@ def test_compatibility():
 
 
 def spec_from_entry(entry):
-    arch_format = "{platform}-{os}-{target}"
-    arch_str = arch_format.format(
-        platform = entry['arch']['platform'],
-        os = entry['arch']['platform_os'],
-        target = entry['arch']['target']['name']
-    )
-    compiler_format  = "{name}@{version}"
-    compiler_str = compiler_format.format(
-        name = entry['compiler']['name'],
-        version = entry['compiler']['version']
-    )
-    spec_format = "{name}@{version}%{compiler} arch={arch}"
+    arch_str = ""
+    if 'arch' in entry:
+        arch_format = "arch={platform}-{os}-{target}"
+        arch_str = arch_format.format(
+            platform = entry['arch']['platform'],
+            os = entry['arch']['platform_os'],
+            target = entry['arch']['target']['name']
+        )
+
+    compiler_str = ""
+    if 'compiler' in entry:
+        compiler_format  = "%{name}@{version}"
+        compiler_str = compiler_format.format(
+            name = entry['compiler']['name'],
+            version = entry['compiler']['version']
+        )
+
+    spec_format = "{name}@{version} {compiler} {arch}"
     spec_str = spec_format.format(
         name = entry['name'],
         version = entry['version'],
@@ -250,7 +257,7 @@ def entries_to_specs(entries):
         except Exception:
             tty.warn("Could not parse entry: " + str(entry))
 
-    for entry in entries:
+    for entry in filter(lambda x: 'dependencies' in x, entries):
         dependencies = entry['dependencies']
         for name, properties in dependencies.items():
             dep_hash = properties['hash']
