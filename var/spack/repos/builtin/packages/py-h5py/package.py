@@ -66,10 +66,6 @@ class PyH5py(PythonPackage):
     depends_on('py-mpi4py@3.0.2:', when='@3.3.0:+mpi^python@3.0.0:3.7.99', type=('build', 'run'))
     depends_on('py-mpi4py@3.0.3:', when='@3.0.0:+mpi^python@3.8.0:', type=('build', 'run'))
 
-    # For version 3+, patch setup.py to allow setup_requires list to be more abstract.
-    # Required for offline installations with version 3+
-    patch('h5py-3-setuprequires.patch', when="@3.0.0:")
-
     phases = ['configure', 'install']
 
     def setup_build_environment(self, env):
@@ -77,6 +73,10 @@ class PyH5py(PythonPackage):
         if '+mpi' in self.spec:
             env.set('CC', self.spec['mpi'].mpicc)
             env.set('HDF5_MPI', 'ON')
+
+        # Disable build requirements meant for Python build tools, which pin
+        # versions of numpy & mpi4py.
+        env.set('H5PY_SETUP_REQUIRES', '0')
 
     @when('@3.0.0:')
     def configure(self, spec, prefix):
