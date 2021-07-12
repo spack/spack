@@ -43,8 +43,6 @@ class Hepmc3(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            '-Dmomentum:STRING=GEV',
-            '-Dlength:STRING=MM',
             '-DHEPMC3_ENABLE_PYTHON={0}'.format(spec.satisfies('+python')),
             '-DHEPMC3_ENABLE_ROOTIO={0}'.format(spec.satisfies('+rootio')),
             '-DHEPMC3_INSTALL_INTERFACES={0}'.format(
@@ -62,4 +60,5 @@ class Hepmc3(CMakePackage):
 
         if self.spec.satisfies('+rootio'):
             args.append('-DROOT_DIR={0}'.format(self.spec['root'].prefix))
+        args.append("-DHEPMC3_ENABLE_TEST={0}".format(self.run_tests))
         return args
