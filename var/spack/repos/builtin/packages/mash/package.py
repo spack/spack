@@ -7,9 +7,13 @@ from spack import *
 
 
 class Mash(AutotoolsPackage):
+<<<<<<< HEAD
     """
     Fast genome and metagenome distance estimation using MinHash.
     """
+=======
+    """Fast genome and metagenome distance estimation using MinHash"""
+>>>>>>> cfe91e07fde4ccb30f0a9894a4d2e35b62dd329c
 
     homepage = "http://mash.readthedocs.org/"
     url      = "https://github.com/marbl/Mash/archive/refs/tags/v2.3.tar.gz"
@@ -25,7 +29,12 @@ class Mash(AutotoolsPackage):
     depends_on("libtool", type='build')
     depends_on("m4", type='build')
     depends_on("capnproto", type='build')
+<<<<<<< HEAD
     depends_on("gsl", type=('build', 'run'))
+=======
+    depends_on("gsl", type=('build','run'))
+
+>>>>>>> cfe91e07fde4ccb30f0a9894a4d2e35b62dd329c
 
     def configure_args(self):
         args = []
