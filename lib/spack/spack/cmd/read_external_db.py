@@ -244,8 +244,11 @@ def generate_openmpi_entries():
 def entries_to_specs(entries):
     spec_dict = {}
     for entry in entries:
-        spec = spec_from_entry(entry)
-        spec_dict[spec._hash] = spec
+        try:
+            spec = spec_from_entry(entry)
+            spec_dict[spec._hash] = spec
+        except Exception:
+            tty.warn("Could not parse entry: " + str(entry))
 
     for entry in entries:
         dependencies = entry['dependencies']
@@ -270,11 +273,23 @@ def test_spec_conversion():
     assert openmpi_spec['hwloc']
 
 
+def _json_entries_from_file(path):
+    with open(path, 'r') as json_file:
+        json_data = json.load(json_file)
+        return entries_to_specs(json_data['specs'])
+
+
 def setup_parser(subparser):
     subparser.add_argument('--test', action='store_true',
                            help="run tests")
+    subparser.add_argument('--file',
+                           help="path to json description of Spack DB")
+
 
 def read_external_db(parser, args):
+    if args.file:
+        _json_entries_from_file(args.file)
+
     if args.test:
         test_compatibility()
         test_spec_conversion()
