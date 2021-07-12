@@ -42,12 +42,7 @@ import spack.environment as ev
 import spack.schema.projections
 import spack.store
 from spack.config import validate
-from spack.filesystem_view import (
-    YamlFilesystemView,
-    view_copy,
-    view_hardlink,
-    view_symlink,
-)
+from spack.filesystem_view import YamlFilesystemView
 from spack.util import spack_yaml as s_yaml
 
 description = "project packages to a compact naming scheme on the filesystem."

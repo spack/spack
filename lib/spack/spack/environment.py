@@ -32,7 +32,8 @@ from spack.filesystem_view import (
     YamlFilesystemView,
     view_func_parser,
     inverse_view_func_parser,
-    view_symlink)
+    view_symlink
+)
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
