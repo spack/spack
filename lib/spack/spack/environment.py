@@ -28,10 +28,7 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.user_environment as uenv
-<<<<<<< HEAD
-=======
 from spack.filesystem_view import YamlFilesystemView, view_func_parser, inverse_view_func_parser, view_symlink
->>>>>>> First commit for adding view type to env
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
@@ -574,7 +571,7 @@ class ViewDescriptor(object):
         return YamlFilesystemView(root, spack.store.layout,
                                   ignore_conflicts=True,
                                   projections=self.projections,
-                                  link=view_func_parser(self.link_type))
+                                  link=self.link_type)
 
     def __contains__(self, spec):
         """Is the spec described by the view descriptor
