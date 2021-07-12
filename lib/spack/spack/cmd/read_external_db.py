@@ -141,9 +141,6 @@ def test_compatibility():
 
     x_from_entry = x.to_dict()
     x_from_str = json.loads(example_x_json_str)
-    for key, val in x_from_entry.items():
-        if val != x_from_str[key]:
-            import pdb; pdb.set_trace()
     assert x_from_entry == x_from_str
 
 
