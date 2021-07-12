@@ -9,8 +9,8 @@ from spack import *
 
 
 class Timemory(CMakePackage, PythonPackage):
-    '''Profiling toolkit and suite of libraries and tools for
-    C/C++/Fortran/CUDA/Python'''
+    '''Modular profiling toolkit and suite of libraries and tools
+    for C/C++/Fortran/CUDA/Python'''
 
     homepage = 'https://timemory.readthedocs.io/en/latest/'
     git = 'https://github.com/NERSC/timemory.git'
