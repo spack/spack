@@ -34,12 +34,12 @@ class FenicsDolfinx(CMakePackage):
     depends_on("parmetis", when="+parmetis")
     depends_on("slepc", when="+slepc")
 
-    depends_on("py-fenics-ffcx", type=("build", "run"), when="@main")
+    depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
     depends_on("py-fenics-ffcx@0.1.0", type=("build", "run"), when="@0.1.0")
 
-    depends_on("fenics-basix", type=("build", "run"), when="@main")
+    depends_on("fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
-    depends_on("py-fenics-basix", type=("build", "run"), when="@main")
+    depends_on("py-fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("py-fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
 
     conflicts('%gcc@:8', msg='Improved C++17 support required')
