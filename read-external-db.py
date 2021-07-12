@@ -114,6 +114,9 @@ _common_compiler = JsonCompilerEntry(
 
 
 def test_compatibility():
+    """Make sure that JsonSpecEntry outputs the expected JSON structure
+       by comparing it with JSON parsed from an example string.
+    """
     y = JsonSpecEntry(
         name='packagey',
         hash='hash-of-y',
@@ -206,6 +209,9 @@ def spec_from_entry(entry):
 
 
 def generate_openmpi_entries():
+    """Generate two example JSON entries that refer to an OpenMPI
+       installation and a hwloc dependency.
+    """
     hwloc = JsonSpecEntry(
         name='hwloc',
         hash='hwloc-fake-hash',
@@ -254,8 +260,13 @@ def entries_to_specs(entries):
 
 
 def test_spec_conversion():
+    """Given JSON entries, check that we can form a set of Specs
+       including dependency references.
+    """
     entries = list(x.to_dict() for x in generate_openmpi_entries())
-    entries_to_specs(entries)
+    specs = entries_to_specs(entries)
+    openmpi_spec, = list(x for x in specs.values() if x.name == 'openmpi')
+    assert openmpi_spec['hwloc']
 
 
 def main():
@@ -264,4 +275,5 @@ def main():
 
 
 if __name__ == "__main__":
+    # Run this with spack-python
     main()
