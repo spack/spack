@@ -457,14 +457,14 @@ def _eval_conditional(string):
 
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
-                 include_implicits=default_include_implicits, link_type=view_symlink):
+                 include_implicits=default_include_implicits, link_type='symlink'):
         self.base = base_path
         self.root = spack.util.path.canonicalize_path(root)
         self.projections = projections
         self.select = select
         self.exclude = exclude
         self.include_implicits = include_implicits
-        self.link_type = link_type
+        self.link_type = view_func_parser(link_type)
 
     def select_fn(self, spec):
         return any(spec.satisfies(s) for s in self.select)
