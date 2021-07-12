@@ -273,11 +273,11 @@ def test_spec_conversion():
     assert openmpi_spec['hwloc']
 
 
-def main():
-    test_compatibility()
-    test_spec_conversion()
+def setup_parser(subparser):
+    subparser.add_argument('--test', action='store_true',
+                           help="run tests")
 
-
-if __name__ == "__main__":
-    # Run this with spack-python
-    main()
+def read_external_db(parser, args):
+    if args.test:
+        test_compatibility()
+        test_spec_conversion()
