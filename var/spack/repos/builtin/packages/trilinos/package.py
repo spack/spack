@@ -616,7 +616,6 @@ class Trilinos(CMakePackage, CudaPackage):
             define('LAPACK_LIBRARY_NAMES', lapack.names),
             define('LAPACK_LIBRARY_DIRS', lapack.directories),
             define_tpl_enable('Matio'),
-            ,
         ])
 
         options.append(define_tpl_enable('Netcdf'))
