@@ -27,7 +27,7 @@ class PyJupyterlab(PythonPackage):
     # @3:
     depends_on('py-ipython', when='@3:', type=('build', 'run'))
     depends_on('py-packaging', when='@3:', type=('build', 'run'))
-    depends_on('py-tornado@6.1.0:', when='@3:', type=('build', 'run'))
+    depends_on('py-tornado@6.1:', when='@3:', type=('build', 'run'))
     depends_on('py-jupyter-core', when='@3:', type=('build', 'run'))
     depends_on('py-jupyterlab-server@2.3:2.999', when='@3.0.9:', type=('build', 'run'))
     depends_on('py-jupyterlab-server@2.0:2.999', when='@3.0.0:3.0.8', type=('build', 'run'))
