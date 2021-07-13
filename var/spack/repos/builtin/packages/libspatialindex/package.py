@@ -13,3 +13,9 @@ class Libspatialindex(CMakePackage):
     url      = "https://github.com/libspatialindex/libspatialindex/tarball/1.8.5"
 
     version('1.8.5', sha256='271f0d1425c527fd7d8b4be45b27e9383b244047b5918225877105616e7c0ad2')
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libspatialindex_c'], root=self.prefix, recursive=True, shared=True
+        )
