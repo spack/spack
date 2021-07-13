@@ -350,6 +350,11 @@ external_conditions_hold(Package, LocalIndex) :-
 %-----------------------------------------------------------------------------
 % Variant semantics
 %-----------------------------------------------------------------------------
+% a variant is a variant of a package if it is a variant under some condition
+% and that condition holds
+variant(Package, Variant) :- variant_condition(Package, Variant, ID),
+                             condition_holds(ID).
+
 % one variant value for single-valued variants.
 1 {
   variant_value(Package, Variant, Value)
