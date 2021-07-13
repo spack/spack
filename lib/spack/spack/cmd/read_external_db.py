@@ -12,6 +12,10 @@ import spack.cmd
 import spack.hash_types as hash_types
 from spack.spec import Spec
 
+description = "Read packages from a JSON file into Spack's DB"
+section = "build"
+level = "long"
+
 
 example_x_json_str = """\
 {
