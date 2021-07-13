@@ -44,9 +44,6 @@ class Rocalution(CMakePackage):
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
         depends_on('rocrand@' + ver, when='@' + ver)
 
-    for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, when='@' + ver)
-
     patch('0001-fix-hip-build-error.patch')
 
     def setup_build_environment(self, env):

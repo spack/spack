@@ -30,7 +30,6 @@ class Hipfft(CMakePackage):
     for ver in ['4.1.0', '4.2.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
-        depends_on('hip-rocclr@' + ver, when='@' + ver)
         depends_on('rocfft@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):
