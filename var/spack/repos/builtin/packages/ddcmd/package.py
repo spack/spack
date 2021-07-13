@@ -33,13 +33,16 @@ class Ddcmd(CMakePackage, CudaPackage):
     @run_after('install')
     def _fix_exename(self):
 
-        with working_dir(self.prefix.bin):
-            files = os.listdir()
-            assert 1 == len(files)
-            exe = files[0]
-            assert 'ddcMD_' == exe[:6]
+        # the executable is named as ddcMD_?PU_[host]
+        # we want to rename it to ddcMD_?PU (i.e., remove the [host])
+        new_name = 'ddcMD_GPU' if '+cuda' in self.spec else 'ddcMD_CPU'
 
-            exe2 = exe[:9]
-            tty.info('Renaming installed executable from ({0}) to ({1})'.format(exe, exe2))
-            os.rename(exe, exe2)
+        with working_dir(self.prefix.bin):
+            files = os.listdir(os.getcwd())
+            assert 1 == len(files)
+            old_name = files[0]
+            assert new_name == old_name[:len(new_name)]
+
+            tty.info('Renaming installed executable from ({0}) to ({1})'.format(old_name, new_name))
+            os.rename(old_name, new_name)
 
