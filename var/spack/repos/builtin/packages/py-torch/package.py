@@ -150,6 +150,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # Optional dependencies
     depends_on('cuda@7.5:', when='+cuda', type=('build', 'link', 'run'))
     depends_on('cuda@9:', when='@1.1:+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@9.2:', when='@1.6:+cuda', type=('build', 'link', 'run'))
     depends_on('cudnn@6.0:7.999', when='@:1.0.999+cudnn')
     depends_on('cudnn@7.0:7.999', when='@1.1.0:1.5.999+cudnn')
     depends_on('cudnn@7.0:', when='@1.6.0:+cudnn')

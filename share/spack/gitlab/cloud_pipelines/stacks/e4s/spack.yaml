@@ -58,7 +58,7 @@ spack:
       variants: +bzip2 ~nls +xz
     expat:
       version:
-        - 2.3.0
+        - 2.4.1
     findutils:
       version:
         - 4.8.0
