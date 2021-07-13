@@ -35,6 +35,8 @@ class VotcaTools(CMakePackage):
 
     # https://github.com/votca/tools/pull/229, fix mkl in exported target
     patch("https://github.com/votca/tools/pull/229.patch", sha256="250d0b679e5d3104e3c8d6adf99751b71386c7ed4cbdae1c75408717ef3f401f", when="@1.6:1.6.0+mkl")
+    # https://github.com/votca/tools/pull/361, fix build with newer glibc/gcc, fixed in stable and 2021.1
+    patch("https://github.com/votca/tools/commit/6bb7e35ba7d1a31247eafb323be2777ec0439cfe.patch", sha256="3c9fa5ac9cf45c54ac475bcb22350793efaccd6b5154e3d30c24b8aa754fe47b", when="@2021")
 
     variant('mkl', default=False, description='Build with MKL support')
     conflicts('+mkl', when='@1.4:1.5.9999')

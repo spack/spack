@@ -35,7 +35,6 @@ RUN yum update -y \
         tcl \
         unzip \
         which \
- && pip install boto3 \
  && rm -rf /var/cache/yum \
  && yum clean all
 
