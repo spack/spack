@@ -739,6 +739,22 @@ class TestConcretize(object):
         assert s.satisfies(expected_str)
 
     @pytest.mark.parametrize('spec_str,expected,unexpected', [
+        ('conditional-variant-pkg@1.0',
+         [], ['version_based', 'variant_based']),
+        ('conditional-variant-pkg@2.0',
+         ['version_based', 'variant_based'], []),
+        ('conditional-variant-pkg@2.0~version_based',
+         ['version_based'], ['variant_based']),
+    ])
+    def test_conditional_variants(self, spec_str, expected, unexpected):
+        s = Spec(spec_str).concretized()
+
+        for var in expected:
+            assert s.satisfies('%s=*' % var)
+        for var in unexpected:
+            assert not s.satisfies('%s=*' % var)
+
+    @pytest.mark.parametrize('spec_str,expected,unexpected', [
         ('py-extension3 ^python@3.5.1', [], ['py-extension1']),
         ('py-extension3 ^python@2.7.11', ['py-extension1'], []),
         ('py-extension3@1.0 ^python@2.7.11', ['patchelf@0.9'], []),
