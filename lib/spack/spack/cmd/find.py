@@ -13,6 +13,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 
+import spack.bootstrap
 import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
@@ -207,9 +208,10 @@ def find(parser, args):
     q_args = query_arguments(args)
     # Query the current store or the internal bootstrap store if required
     if args.bootstrap:
+        bootstrap_store_path = spack.bootstrap.store_path()
         msg = 'Showing internal bootstrap store at "{0}"'
-        tty.msg(msg.format(spack.paths.user_bootstrap_store))
-        with spack.store.use_store(spack.paths.user_bootstrap_store):
+        tty.msg(msg.format(bootstrap_store_path))
+        with spack.store.use_store(bootstrap_store_path):
             results = args.specs(**q_args)
     else:
         results = args.specs(**q_args)

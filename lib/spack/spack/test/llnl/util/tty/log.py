@@ -78,6 +78,39 @@ def test_log_python_output_and_echo_output(capfd, tmpdir):
         assert capfd.readouterr()[0] == 'force echo\n'
 
 
+def _log_filter_fn(string):
+    return string.replace("foo", "bar")
+
+
+def test_log_output_with_filter(capfd, tmpdir):
+    with tmpdir.as_cwd():
+        with log_output('foo.txt', filter_fn=_log_filter_fn):
+            print('foo blah')
+            print('blah foo')
+            print('foo foo')
+
+        # foo.txt output is not filtered
+        with open('foo.txt') as f:
+            assert f.read() == 'foo blah\nblah foo\nfoo foo\n'
+
+    # output is not echoed
+    assert capfd.readouterr()[0] == ''
+
+    # now try with echo
+    with tmpdir.as_cwd():
+        with log_output('foo.txt', echo=True, filter_fn=_log_filter_fn):
+            print('foo blah')
+            print('blah foo')
+            print('foo foo')
+
+        # foo.txt output is still not filtered
+        with open('foo.txt') as f:
+            assert f.read() == 'foo blah\nblah foo\nfoo foo\n'
+
+    # echoed output is filtered.
+    assert capfd.readouterr()[0] == 'bar blah\nblah bar\nbar bar\n'
+
+
 @pytest.mark.skipif(not which('echo'), reason="needs echo command")
 def test_log_subproc_and_echo_output_no_capfd(capfd, tmpdir):
     echo = which('echo')
