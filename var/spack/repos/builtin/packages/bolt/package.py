@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -47,15 +49,23 @@ class Bolt(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(['examples'])
 
-    def run_sample_example_test(self): #Change to specific test
-        """Run stand alone test: """
+    def run_sample_nested_example(self):
+        """Run stand alone test: sample_nested"""
 
-        test_dir = join_path(self.prefix, '.spack', 'test', 'examples')
+        test_dir = join_path(self.install_test_root, 'examples')
 
         if not os.path.exists(test_dir):
             print('Skipping bolt test')
             return
 
+        exe = 'sample_nested'
+
+        self.run_test('gcc',
+                 options=['-lomp', '{0}'.format(join_path(test_dir, 'sample_nested.c')),
+                          '-L{0}'.format(join_path(self.prefix, 'lib'))],
+                 purpose='test: compile {0} example'.format(exe),
+                 work_dir=test_dir)
 
     def test(self):
         print("Running bolt test")
+        self.run_sample_nested_example()
