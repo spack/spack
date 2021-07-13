@@ -433,7 +433,7 @@ def config_prefer_upstream(args):
                     or var_name not in spec.package.variants):
                 continue
 
-            if variant.value != spec.package.variants[var_name].default:
+            if variant.value != spec.package.variants[var_name][0].default:
                 variants.append(str(variant))
         variants.sort()
         variants = ' '.join(variants)

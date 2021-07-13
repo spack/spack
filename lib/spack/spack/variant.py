@@ -645,7 +645,7 @@ def substitute_abstract_variants(spec):
                 new_variant = SingleValuedVariant(name, v._original_value)
                 spec.variants.substitute(new_variant)
             continue
-        pkg_variant = spec.package_class.variants.get(name, None)
+        pkg_variant = spec.package_class.variants.get(name, [None])[0]
         if not pkg_variant:
             failed.append(name)
             continue

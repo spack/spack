@@ -562,7 +562,8 @@ def variant(
         description='',
         values=None,
         multi=None,
-        validator=None):
+        validator=None,
+        when=None):
     """Define a variant for the package. Packager can specify a default
     value as well as a text description.
 
@@ -581,6 +582,7 @@ def variant(
             logic. It receives the package name, the variant name and a tuple
             of values and should raise an instance of SpackError if the group
             doesn't meet the additional constraints
+        when (Spec): optional condition on which the variant applies
 
     Raises:
         DirectiveError: if arguments passed to the directive are invalid
@@ -640,14 +642,16 @@ def variant(
     description = str(description).strip()
 
     def _execute_variant(pkg):
+        when_spec = make_when_spec(when)
+
         if not re.match(spack.spec.identifier_re, name):
             directive = 'variant'
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))
 
-        pkg.variants[name] = spack.variant.Variant(
+        pkg.variants[name] = (spack.variant.Variant(
             name, default, description, values, multi, validator
-        )
+        ), when_spec)
     return _execute_variant
 
 
