@@ -101,8 +101,6 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Hypre preconditioner')
     variant('matio',        default=False,
             description='Compile with Matio')
-    variant('metis',        default=False,
-            description='Compile with METIS and ParMETIS')
     variant('mpi',          default=True,
             description='Compile with MPI parallelism')
     variant('mumps',        default=False,
@@ -320,7 +318,6 @@ class Trilinos(CMakePackage, CudaPackage):
     # https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
     conflicts('+superlu-dist', when='+complex+amesos2')
     conflicts('+strumpack', when='@:13.0.99')
-    conflicts('+strumpack', when='~metis')
     # PnetCDF was only added after v12.10.1
     conflicts('+pnetcdf', when='@0:12.10.1')
     # https://github.com/trilinos/Trilinos/issues/2994
@@ -340,8 +337,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
 
-    # SCOREC requires parmetis, shards, stk, and zoltan
-    conflicts('+scorec', when='~metis')
+    # SCOREC requires shards, stk, and zoltan
     conflicts('+scorec', when='~mpi')
     conflicts('+scorec', when='~shards')
     conflicts('+scorec', when='~stk')
@@ -364,7 +360,6 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('boost', when='+boost')
     depends_on('hdf5+hl', when='+hdf5')
     depends_on('matio', when='+matio')
-    depends_on('metis@5:', when='+metis')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('zlib', when="+zlib")
 
@@ -375,7 +370,7 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('netcdf-c+mpi', when="+netcdf~pnetcdf+mpi")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
     depends_on('parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
-    depends_on('parmetis', when='+metis+mpi')
+    depends_on('parmetis', when='+scorec')
     depends_on('cgns', when='+cgns')
     depends_on('adios2', when='+adios2')
     # Trilinos' Tribits config system is limited which makes it very tricky to
@@ -670,14 +665,22 @@ class Trilinos(CMakePackage, CudaPackage):
                 define('TPL_ENABLE_UMFPACK', False),
             ])
 
-        options.append(define_tpl_enable('METIS'))
-        options.append(define_tpl_enable('ParMETIS', 'metis'))
-        if '+metis' in spec:
+        # METIS and ParMETIS mostly depend on transitive dependencies
+        # STRUMPACK and SuperLU-dist, so don't provide a separate variant for
+        # them.
+        have_metis = 'metis' in spec
+        options.append(define('TPL_ENABLE_METIS', have_metis))
+        if have_metis:
             options.extend([
                 define('METIS_LIBRARY_DIRS', spec['metis'].prefix.lib),
                 define('METIS_LIBRARY_NAMES', 'metis'),
                 define('TPL_METIS_INCLUDE_DIRS', spec['metis'].prefix.include),
-                define('TPL_ENABLE_ParMETIS', True),
+            ])
+
+        have_parmetis = 'parmetis' in spec
+        options.append(define('TPL_ENABLE_ParMETIS', have_parmetis))
+        if have_parmetis:
+            options.extend([
                 define('ParMETIS_LIBRARY_DIRS', [
                     spec['parmetis'].prefix.lib, spec['metis'].prefix.lib
                 ]),
