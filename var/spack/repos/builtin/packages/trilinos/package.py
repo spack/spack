@@ -142,7 +142,8 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Epetra')
     variant('epetraext',    default=True,
             description='Compile with EpetraExt')
-    variant('exodus',       default=True,
+    # Disable Exodus by default as it requires netcdf
+    variant('exodus',       default=False,
             description='Compile with Exodus from SEACAS')
     variant('ifpack',       default=True,
             description='Compile with Ifpack')
