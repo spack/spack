@@ -6,7 +6,6 @@
 
 import os
 import shutil
-from spack import *
 
 from spack import *
 
