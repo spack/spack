@@ -47,7 +47,7 @@ class Archer(CMakePackage):
     def run_parallel_example_test(self):
         """Run stand alone test: parallel-simple"""
 
-        test_dir = join_path(self.prefix, '.spack', 'test', 'test', 'parallel')
+        test_dir = join_path(self.install_test_root, 'test', 'parallel')
 
         if not os.path.exists(test_dir):
             print('Skipping archer test')
