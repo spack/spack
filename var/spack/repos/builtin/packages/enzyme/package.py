@@ -9,8 +9,10 @@ from spack import *
 
 class Enzyme(CMakePackage):
     """
-    The Enzyme project is a tool for performing reverse-mode automatic differentiation (AD) of statically-analyzable LLVM IR.
-    This allows developers to use Enzyme to automatically create gradients of their source code without much additional work.
+    The Enzyme project is a tool for performing reverse-mode automatic
+    differentiation (AD) of statically-analyzable LLVM IR.
+    This allows developers to use Enzyme to automatically create gradients
+    of their source code without much additional work.
     """
 
     homepage = "https://enzyme.mit.edu"
@@ -23,11 +25,19 @@ class Enzyme(CMakePackage):
     root_cmakelists_dir = 'enzyme'
 
     version('main', branch='main')
-    version('0.0.15', sha256='1ec27db0d790c4507b2256d851b256bf7e074eec933040e9e375d6e352a3c159')
-    version('0.0.14', sha256='740641eeeeadaf47942ac88cc52e62ddc0e8c25767a501bed36ec241cf258b8d')
-    version('0.0.13', sha256='d4a53964ec1f763772db2c56e6734269b7656c8b2ecd41fa7a41315bcd896b5a')
-    
-    variant('build_type', default='Release', description='CMake build type', values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    version('0.0.15',
+            sha256='1ec27db0d790c4507b2256d851b256bf7e074eec933040e9e375d6e352a3c159')
+    version('0.0.14',
+            sha256='740641eeeeadaf47942ac88cc52e62ddc0e8c25767a501bed36ec241cf258b8d')
+    version('0.0.13',
+            sha256='d4a53964ec1f763772db2c56e6734269b7656c8b2ecd41fa7a41315bcd896b5a')
+
+    variant(
+        'build_type',
+        default='Release',
+        description='CMake build type',
+        values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel')
+    )
 
     depends_on('llvm@7:12')
     depends_on('cmake@3.9:', type='build')
@@ -47,6 +57,12 @@ class Enzyme(CMakePackage):
             libtype = ".dylib"
         else:
             libtype = ".so"
-            
-        env.set('LLVMENZYME', self.prefix.lib + "LLVMEnzyme-" + spec["llvm"].version.up_to(1) + libtype)
-        env.set('CLANGENZYME', self.prefix.lib + "ClangEnzyme-" + spec["llvm"].version.up_to(1) + libtype)
+
+        env.set(
+            'LLVMENZYME',
+            self.prefix.lib + "LLVMEnzyme-" + spec["llvm"].version.up_to(1) + libtype
+        )
+        env.set(
+            'CLANGENZYME',
+            self.prefix.lib + "ClangEnzyme-" + spec["llvm"].version.up_to(1) + libtype
+        )
