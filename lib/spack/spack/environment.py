@@ -28,18 +28,18 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.user_environment as uenv
-from spack.filesystem_view import (
-    YamlFilesystemView,
-    view_func_parser,
-    inverse_view_func_parser,
-    view_symlink
-)
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+from spack.filesystem_view import (
+    YamlFilesystemView,
+    inverse_view_func_parser,
+    view_func_parser,
+    view_symlink,
+)
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
