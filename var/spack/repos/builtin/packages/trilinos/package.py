@@ -407,8 +407,8 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('swig', when='+python')
     depends_on('kokkos-nvcc-wrapper', when='+wrapper')
-    depends_on('hwloc', when='@13.0.1: +kokkos')
-    depends_on('hwloc+cuda', when='@13.0.1: +kokkos+cuda')
+    depends_on('hwloc', when='@13: +kokkos')
+    depends_on('hwloc+cuda', when='@13: +kokkos+cuda')
 
     # Dependencies/conflicts when MPI is disabled
     depends_on('hdf5~mpi', when='+hdf5~mpi')
@@ -765,7 +765,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
         options.append(define_from_variant('TPL_ENABLE_ADIOS2', 'adios2'))
 
-        if '+kokkos' in spec:
+        if '@13: +kokkos' in spec:
             options.append(define('TPL_ENABLE_HWLOC', True))
             options.append(define(
                 "Kokkos_ARCH_" +
