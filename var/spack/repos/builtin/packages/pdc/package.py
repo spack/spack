@@ -5,12 +5,15 @@
 
 from spack import *
 
-class Pdc(CMakePackage):
-    """Proactive Data Containers (PDC) software provides an object-centric API and a runtime system with a set of 
-       data object management services. These services allow placing data in the memory and storage hierarchy, 
-       performing data movement asynchronously, and providing scalable metadata operations to find data objects."""
 
-    homepage = "https://pdc.readthedocs.io"
+class Pdc(CMakePackage):
+    """Proactive Data Containers (PDC) software provides an object-centric
+    API and a runtime system with a set of data object management services.
+    These services allow placing data in the memory and storage hierarchy,
+    performing data movement asynchronously, and providing scalable
+    metadata operations to find data objects."""
+
+    homepage = "https://pdc.readthedocs.io/en/latest/"
     url      = "https://github.com/hpc-io/pdc/archive/refs/tags/0.1.tar.gz"
 
     maintainers = ['houjun', 'sbyna']
@@ -20,19 +23,19 @@ class Pdc(CMakePackage):
     conflicts('%clang')
     depends_on('libfabric@1.11.2')
     depends_on('mercury')
-    depends_on('cmake')
     depends_on('mpi')
 
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
-        args = []
-        args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-        args.append("-DBUILD_MPI_TESTING=ON")
-        args.append("-DBUILD_SHARED_LIBS=ON")
-        args.append("-DBUILD_TESTING=ON")
-        args.append("-DPDC_ENABLE_MPI=ON")
-        args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
+        args = [
+            self.define('MPI_C_COMPILER', self.spec['mpi'].mpicc),
+            self.define('BUILD_MPI_TESTING', 'ON'),
+            self.define('BUILD_SHARED_LIBS', 'ON'),
+            self.define('BUILD_TESTING', 'ON'),
+            self.define('PDC_ENABLE_MPI', 'ON'),
+            self.define('CMAKE_C_COMPILER', self.spec['mpi'].mpicc)
+        ]
 
         if self.spec.satisfies('platform=cray'):
             args.append("-DRANKSTR_LINK_STATIC=ON")
