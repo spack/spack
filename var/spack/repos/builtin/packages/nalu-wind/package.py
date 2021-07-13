@@ -63,10 +63,10 @@ class NaluWind(CMakePackage, CudaPackage):
     # Propagate cuda options to trilinos and hypre
     depends_on('trilinos~cuda~wrapper', when='~cuda')
     depends_on('trilinos+cuda+wrapper+cuda_rdc', when='+cuda')
-    depends_on('hyper@develop +cuda', when='+cuda')
+    depends_on('hypre@develop +cuda', when='+cuda')
     for _arch in CudaPackage.cuda_arch_values:
         depends_on('trilinos cuda_arch=' + _arch, when='+cuda cuda_arch=' + _arch)
-        depends_on('hypre cuda_arch' + _arch, when='+hypre+cuda cuda_arch=' + _arch)
+        depends_on('hypre cuda_arch=' + _arch, when='+hypre+cuda cuda_arch=' + _arch)
     depends_on('trilinos-catalyst-ioss-adapter', when='+catalyst')
     depends_on('fftw+mpi', when='+fftw')
     depends_on('boost cxxstd=14', when='+boost')
