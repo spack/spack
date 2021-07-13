@@ -32,6 +32,7 @@ class Ddcmdconverter(PythonPackage):
     maintainers = ['bhatiaharsh']
 
     version('1.0.5', sha256='332059215144d9b8b2ec89df64853e96419fcd62d462058635e1369f48ba13f5')
+    version('1.0.4',  git='git@github.com:LLNL/ddcMDconverter.git', tag='v1.0.4')
     '''
     # older versions linked to the internal repo
     #version('master', git='ssh://git@cz-bitbucket.llnl.gov:7999/xzr/ddcmdconvertor.git')
