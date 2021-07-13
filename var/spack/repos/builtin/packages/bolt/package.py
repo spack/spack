@@ -46,3 +46,16 @@ class Bolt(CMakePackage):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(['examples'])
+
+    def run_sample_example_test(self): #Change to specific test
+        """Run stand alone test: """
+
+        test_dir = join_path(self.prefix, '.spack', 'test', 'examples')
+
+        if not os.path.exists(test_dir):
+            print('Skipping bolt test')
+            return
+
+
+    def test(self):
+        print("Running bolt test")
