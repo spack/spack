@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
+
+from spack import *
 
 
 def _parse_float(val):

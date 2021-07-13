@@ -12,12 +12,14 @@ import pprint
 import sys
 import types
 import warnings
+
 from six import string_types
 
 import archspec.cpu
 
 try:
     import clingo
+
     # There may be a better way to detect this
     clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
@@ -29,20 +31,20 @@ import llnl.util.tty as tty
 
 import spack
 import spack.architecture
+import spack.bootstrap
 import spack.cmd
 import spack.compilers
 import spack.config
 import spack.dependency
 import spack.directives
 import spack.error
-import spack.spec
 import spack.package
 import spack.package_prefs
 import spack.repo
-import spack.bootstrap
+import spack.spec
+import spack.util.timer
 import spack.variant
 import spack.version
-import spack.util.timer
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm

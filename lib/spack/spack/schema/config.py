@@ -9,7 +9,9 @@
    :lines: 13-
 """
 import six
+
 from llnl.util.lang import union_dicts
+
 import spack.schema.projections
 
 #: Properties for inclusion in other schemas

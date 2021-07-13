@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+
 #
 from spack import *
-import glob
 
 
 class Pfunit(CMakePackage):

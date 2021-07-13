@@ -39,10 +39,12 @@ from collections import defaultdict
 
 import six
 
-
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
+from llnl.util.tty.color import colorize
+from llnl.util.tty.log import log_output
+
 import spack.binary_distribution as binary_distribution
 import spack.compilers
 import spack.error
@@ -52,8 +54,6 @@ import spack.package
 import spack.package_prefs as prefs
 import spack.repo
 import spack.store
-from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output
 from spack.util.environment import dump_environment
 from spack.util.executable import which
 from spack.util.timer import Timer
@@ -1618,6 +1618,7 @@ class PackageInstaller(object):
                 # package as a failure.
                 if (not isinstance(exc, spack.error.SpackError) or
                     not exc.printed):
+                    exc.printed = True
                     # SpackErrors can be printed by the build process or at
                     # lower levels -- skip printing if already printed.
                     # TODO: sort out this and SpackError.print_context()
@@ -1691,6 +1692,12 @@ def build_process(pkg, kwargs):
     verbose = kwargs.get('verbose', False)
 
     timer = Timer()
+
+    # If we are using a padded path, filter the output to compress padded paths
+    # The real log still has full-length paths.
+    filter_padding = spack.config.get("config:install_tree:padded_length", None)
+    filter_fn = spack.util.path.padding_filter if filter_padding else None
+
     if not fake:
         if not skip_patch:
             pkg.do_patch()
@@ -1763,8 +1770,10 @@ def build_process(pkg, kwargs):
                     try:
                         # DEBUGGING TIP - to debug this section, insert an IPython
                         # embed here, and run the sections below without log capture
-                        with log_output(log_file, echo, True,
-                                        env=unmodified_env) as logger:
+                        with log_output(
+                                log_file, echo, True, env=unmodified_env,
+                                filter_fn=filter_fn
+                        ) as logger:
 
                             with logger.force_echo():
                                 inner_debug_level = tty.debug_level()

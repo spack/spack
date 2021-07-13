@@ -11,7 +11,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.store
-from spack.graph import graph_dot, graph_ascii
+from spack.graph import graph_ascii, graph_dot
 
 description = "generate graphs of package dependency relationships"
 section = "basic"

@@ -3,12 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from spack.operating_systems.mac_os import macos_version
-
 import os
 import sys
 
+from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
 
@@ -117,6 +116,8 @@ class Graphviz(AutotoolsPackage):
     depends_on('sed', type='build')
     depends_on('libtool', type='build')
     depends_on('pkgconfig', type='build')
+    # to process f-strings used in gen_version.py
+    depends_on('python@3.6:', when='@2.47:', type='build')
 
     conflicts('~doc',
               when='@:2.45',

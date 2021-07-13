@@ -36,6 +36,8 @@ Documentation
 [**Full documentation**](https://spack.readthedocs.io/) is available, or
 run `spack help` or `spack help --all`.
 
+For a cheat sheet on Spack syntax, run `spack help --spec`.
+
 Tutorial
 ----------------
 

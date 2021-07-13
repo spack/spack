@@ -4,16 +4,29 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-from spack import *
+
 import spack.util.web
+from spack import *
 
 
 class Protobuf(Package):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
-    url      = "https://github.com/protocolbuffers/protobuf/archive/v3.12.2.tar.gz"
+    url      = "https://github.com/protocolbuffers/protobuf/archive/v3.17.3.tar.gz"
 
+    version('3.17.3',  sha256='c6003e1d2e7fefa78a3039f19f383b4f3a61e81be8c19356f85b6461998ad3db')
+    version('3.17.0',  sha256='eaba1dd133ac5167e8b08bc3268b2d33c6e9f2dcb14ec0f97f3d3eed9b395863')
+    version('3.16.0',  sha256='7892a35d979304a404400a101c46ce90e85ec9e2a766a86041bb361f626247f5')
+    version('3.15.7',  sha256='efdd6b932a2c0a88a90c4c80f88e4b2e1bf031e7514dbb5a5db5d0bf4f295504')
+    version('3.15.5',  sha256='bc3dbf1f09dba1b2eb3f2f70352ee97b9049066c9040ce0c9b67fb3294e91e4b')
+    version('3.15.4',  sha256='07f8a02afc14a657f727ed89a8ec5627b9ecc47116d60acaabaa1da233bd2e8f')
+    version('3.15.2',  sha256='3c85fdac243dab1f6cd725eb58e361cdbb3ec4480052ac90b1ab55c608112cd0')
+    version('3.15.1',  sha256='f18a40816260a9a3190a94efb0fc26270b244a2436681602f0a944739095d632')
+    version('3.15.0',  sha256='6aff9834fd7c540875e1836967c8d14c6897e3785a2efac629f69860fb7834ff')
+    version('3.14.0',  sha256='d0f5f605d0d656007ce6c8b5a82df3037e1d8fe8b121ed42e536f569dec16113')
+    version('3.13.0',  sha256='9b4ee22c250fe31b16f1a24d61467e40780a3fbb9b91c3b65be2a376ed913a1a')
+    version('3.12.3',  sha256='71030a04aedf9f612d2991c1c552317038c3c5a2b578ac4745267a45e7037c29')
     version('3.12.2',  sha256='bb8ce9ba11eb7bccf080599fe7cad9cc461751c8dd1ba61701c0070d58cde973')
     version('3.12.1',  sha256='cb9b3f9d625b5739a358268eb3421de11cacd90025f5f7672c3930553eca810e')
     version('3.12.0',  sha256='946ba5371e423e1220d2cbefc1f65e69a1e81ca5bab62a03d66894172983cfcd')

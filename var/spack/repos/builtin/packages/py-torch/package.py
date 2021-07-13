@@ -74,6 +74,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
     conflicts('+cuda', when='+rocm')
     conflicts('+cudnn', when='~cuda')
+    conflicts('+magma', when='~cuda')
     conflicts('+nccl', when='~cuda~rocm')
     conflicts('+nccl', when='platform=darwin')
     conflicts('+numa', when='platform=darwin', msg='Only available on Linux')
@@ -149,6 +150,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # Optional dependencies
     depends_on('cuda@7.5:', when='+cuda', type=('build', 'link', 'run'))
     depends_on('cuda@9:', when='@1.1:+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@9.2:', when='@1.6:+cuda', type=('build', 'link', 'run'))
     depends_on('cudnn@6.0:7.999', when='@:1.0.999+cudnn')
     depends_on('cudnn@7.0:7.999', when='@1.1.0:1.5.999+cudnn')
     depends_on('cudnn@7.0:', when='@1.6.0:+cudnn')
@@ -223,12 +225,14 @@ class PyTorch(PythonPackage, CudaPackage):
 
     @property
     def libs(self):
-        root = join_path(site_packages_dir, 'torch', 'lib')
+        root = join_path(self.prefix, self.spec['python'].package.site_packages_dir,
+                         'torch', 'lib')
         return find_libraries('libtorch', root)
 
     @property
     def headers(self):
-        root = join_path(site_packages_dir, 'torch', 'include')
+        root = join_path(self.prefix, self.spec['python'].package.site_packages_dir,
+                         'torch', 'include')
         headers = find_all_headers(root)
         headers.directories = [root]
         return headers

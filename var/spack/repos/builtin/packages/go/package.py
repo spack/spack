@@ -6,7 +6,9 @@
 import os
 import platform
 import re
+
 import llnl.util.tty as tty
+
 from spack import *
 
 # - vanilla CentOS 7, and possibly other systems, fail a test:

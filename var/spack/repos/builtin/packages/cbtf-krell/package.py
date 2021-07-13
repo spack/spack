@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import spack
 import spack.store
+from spack import *
 
 
 class CbtfKrell(CMakePackage):

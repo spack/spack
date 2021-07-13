@@ -33,6 +33,7 @@ class Hdf5(CMakePackage):
     version('develop-1.10', branch='hdf5_1_10')
     version('develop-1.8', branch='hdf5_1_8')
 
+    version('1.12.1', sha256='79c66ff67e666665369396e9c90b32e238e501f345afd2234186bfb8331081ca')
     version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a')
     # HDF5 1.12 broke API compatibility, so we currently prefer the latest
     # 1.10 release.  packages that want later versions of HDF5 should specify,
@@ -187,7 +188,8 @@ class Hdf5(CMakePackage):
         cmake_flags = []
 
         if name == "cflags":
-            if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
+            cc_name = os.path.basename(self.compiler.cc)
+            if "clang" in cc_name or "gcc" in cc_name:
                 # Quiet warnings/errors about implicit declaration of functions
                 # in C99:
                 cmake_flags.append("-Wno-implicit-function-declaration")

@@ -19,12 +19,15 @@ class SpecHashDescriptor(object):
     We currently use different hashes for different use cases.
     """
 
-    hash_types = ('_dag_hash', '_build_hash', '_full_hash')
+    hash_types = ('_dag_hash', '_build_hash', '_full_hash', '_package_hash')
 
-    def __init__(self, deptype=('link', 'run'), package_hash=False, attr=None):
+    def __init__(self, deptype=('link', 'run'), package_hash=False, attr=None,
+                 override=None):
         self.deptype = dp.canonical_deptype(deptype)
         self.package_hash = package_hash
         self.attr = attr
+        # Allow spec hashes to have an alternate computation method
+        self.override = override
 
 
 #: Default Hash descriptor, used by Spec.dag_hash() and stored in the DB.
@@ -40,3 +43,9 @@ build_hash = SpecHashDescriptor(
 #: Full hash used in build pipelines to determine when to rebuild packages.
 full_hash = SpecHashDescriptor(
     deptype=('build', 'link', 'run'), package_hash=True, attr='_full_hash')
+
+
+#: Package hash used as part of full hash
+package_hash = SpecHashDescriptor(
+    deptype=(), package_hash=True, attr='_package_hash',
+    override=lambda s: s.package.content_hash())
