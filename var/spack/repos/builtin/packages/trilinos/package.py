@@ -89,29 +89,29 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Enable runtime safety and debug checks')
 
     # TPLs (alphabet order)
-    variant('boost',        default=True,
+    variant('boost',        default=False,
             description='Compile with Boost')
     variant('cgns',         default=False,
             description='Enable CGNS')
     variant('adios2',       default=False,
             description='Enable ADIOS2')
-    variant('hdf5',         default=True,
+    variant('hdf5',         default=False,
             description='Compile with HDF5')
-    variant('hypre',        default=True,
+    variant('hypre',        default=False,
             description='Compile with Hypre preconditioner')
-    variant('matio',        default=True,
+    variant('matio',        default=False,
             description='Compile with Matio')
-    variant('metis',        default=True,
+    variant('metis',        default=False,
             description='Compile with METIS and ParMETIS')
     variant('mpi',          default=True,
             description='Compile with MPI parallelism')
-    variant('mumps',        default=True,
+    variant('mumps',        default=False,
             description='Compile with support for MUMPS solvers')
-    variant('netcdf',       default=True,
+    variant('netcdf',       default=False,
             description='Compile with netcdf')
     variant('pnetcdf',      default=False,
             description='Compile with parallel-netcdf')
-    variant('suite-sparse', default=True,
+    variant('suite-sparse', default=False,
             description='Compile with SuiteSparse solvers')
     variant('superlu-dist', default=False,
             description='Compile with SuperluDist solvers')
