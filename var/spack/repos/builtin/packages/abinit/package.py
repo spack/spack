@@ -280,4 +280,9 @@ class Abinit(AutotoolsPackage):
         explicitly activated by user.
         """
         make('check')
-        make('tests_in')
+
+        # the tests directly execute abinit. thus failing with MPI
+        # TODO: run tests in tests/ via the builtin runtests.py
+        #       requires Python with numpy, pyyaml, pandas
+        if '~mpi' in self.spec:
+            make('tests_in')
