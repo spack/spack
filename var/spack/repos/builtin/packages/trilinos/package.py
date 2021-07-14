@@ -212,7 +212,7 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('scorec',       default=False,
             description='Enable SCOREC')
     variant('mesquite',     default=False,
-            description='Enable Mesquite')
+            description='Enable Mesquite (deprecated)')
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit.git',
@@ -303,7 +303,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+dtk', when='@0:12.12.99,master')
 
     # Only allow Mesquite with Trilinos 12.12 and up, and develop
-    conflicts('+mesquite', when='@0:12.10.99,master')
+    conflicts('+mesquite', when='@0:12.10.99,master,develop')
     # Can only use one type of SuperLU
     conflicts('+superlu-dist', when='+superlu')
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
@@ -737,7 +737,6 @@ class Trilinos(CMakePackage, CudaPackage):
         options.append(define_tpl_enable('STRUMPACK'))
         if '+strumpack' in spec:
             options.extend([
-                define('TPL_ENABLE_STRUMPACK', True),
                 define('Amesos2_ENABLE_STRUMPACK', True),
                 define('STRUMPACK_LIBRARY_DIRS',
                        spec['strumpack'].libs.directories[0]),
@@ -772,10 +771,9 @@ class Trilinos(CMakePackage, CudaPackage):
 
         if '@13: +kokkos' in spec:
             options.append(define('TPL_ENABLE_HWLOC', True))
-            options.append(define(
-                "Kokkos_ARCH_" +
-                Kokkos.spack_micro_arch_map[spec.target.name].upper(),
-                True))
+            kkmarch = Kokkos.spack_micro_arch_map.get(spec.target.name, None)
+            if kkmarch:
+                options.append(define("Kokkos_ARCH_" + kkmarch.upper(), True))
 
         # ################# Miscellaneous Stuff ######################
         # CUDA
