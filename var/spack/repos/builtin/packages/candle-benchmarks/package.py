@@ -27,18 +27,30 @@ class CandleBenchmarks(Package):
 
     extends('python')
     depends_on('python@2.7:')
-    depends_on('py-theano +cuda', type=('build', 'run'))
-    depends_on('py-keras', type=('build', 'run'))
-    depends_on('py-matplotlib +image@:2.2.3', type=('build', 'run'))
-    depends_on('py-tqdm', type=('build', 'run'))
-    depends_on('py-scikit-learn', type=('build', 'run'))
-    depends_on('opencv@3.2.0: +core +imgproc +jpeg +png +tiff -dnn ~eigen ~gtk') # highgui conflict with ~imgcodecs
-    depends_on('py-mdanalysis', type=('build', 'run'))
-    depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
+    depends_on('opencv@3.2.0: +core +imgproc +jpeg +png +tiff -dnn ~eigen ~gtk')
+
+    depends_on('py-astropy', type=('build', 'run'))
     depends_on('py-h5py~mpi', when='~mpi', type=('build', 'run'))
     depends_on('py-h5py+mpi', when='+mpi', type=('build', 'run'))
+    depends_on('py-keras', type=('build', 'run'))
+    depends_on('py-mdanalysis', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
+    depends_on('py-matplotlib +image@:2.2.3', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numba', type=('build', 'run'))
+    depends_on('py-patsy', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
-    depends_on('py-numba', when='@0.3:', type=('build', 'run'))
+    depends_on('py-scikit-learn', type=('build', 'run'))
+    depends_on('py-statsmodels', type=('build', 'run'))
+    depends_on('py-theano +cuda', type=('build', 'run'))
+    depends_on('py-tqdm', type=('build', 'run'))
+    depends_on('py-torch', type=('build', 'run'))
+    depends_on('py-tensorflow+cuda', type=('build', 'run'))
+
+
+
+
+
 
     # see #3244, but use external for now
     # depends_on('tensorflow')
