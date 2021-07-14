@@ -25,7 +25,7 @@ class CandleBenchmarks(Package):
     depends_on('py-matplotlib +image@:2.2.3', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
     depends_on('py-scikit-learn@0.22.1', type=('build', 'run'))
-    depends_on('opencv@3.2.0: +core +imgproc +jpeg +png +tiff +zlib +python -dnn ~eigen ~gtk') # highgui conflict with ~imgcodecs
+    depends_on('opencv@3.2.0: +core +imgproc +jpeg +png +tiff -dnn ~eigen ~gtk') # highgui conflict with ~imgcodecs
     depends_on('py-mdanalysis', type=('build', 'run'))
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
     depends_on('py-h5py~mpi', when='~mpi', type=('build', 'run'))
