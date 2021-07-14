@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -22,6 +23,8 @@ pytestmark = pytest.mark.skipif(
     reason='requires subversion to be installed')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
 @pytest.mark.parametrize("secure", [True, False])
 def test_fetch(
@@ -77,6 +80,8 @@ def test_fetch(
             assert h() == t.revision
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_svn_extra_fetch(tmpdir):
     """Ensure a fetch after downloading is effectively a no-op."""
     testpath = str(tmpdir)

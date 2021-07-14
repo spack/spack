@@ -317,6 +317,8 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
     buildcache_cmd('install', '-auf', cspec.name)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
 
@@ -354,6 +356,8 @@ def test_push_and_fetch_keys(mock_gnupghome):
         assert new_keys[0] == fpr
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.requires_executables(*args)
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -401,10 +405,14 @@ def fake_full_hash(spec):
     return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures(
     'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
     'test_mirror'
 )
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_spec_needs_rebuild(monkeypatch, tmpdir):
     """Make sure needs_rebuild properly compares remote full_hash
     against locally computed one, avoiding unnecessary rebuilds"""
@@ -433,6 +441,8 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     assert rebuild
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures(
     'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
 )
@@ -472,6 +482,8 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     assert 'libelf' not in cache_list
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_generate_indices_key_error(monkeypatch, capfd):
 
     def mock_list_url(url, recursive=False):
@@ -495,6 +507,8 @@ def test_generate_indices_key_error(monkeypatch, capfd):
     assert 'Warning: No packages at {0}'.format(test_url) in err
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_generate_indices_exception(monkeypatch, capfd):
 
     def mock_list_url(url, recursive=False):
@@ -520,6 +534,8 @@ def test_generate_indices_exception(monkeypatch, capfd):
     assert expect in err
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('mock_fetch', 'install_mockery')
 def test_update_sbang(tmpdir, test_mirror):
     """Test the creation and installation of buildcaches with default rpaths
