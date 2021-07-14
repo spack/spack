@@ -306,6 +306,9 @@ class URLFetchStrategy(FetchStrategy):
         for url in [self.url] + (self.mirrors or []):
             if url.startswith('file://'):
                 path = urllib_parse.quote(url[len('file://'):])
+                if sys.platform == "win32":
+                    if not path.startswith("/"):
+                        path = "/" + path
                 url = 'file://' + path
             urls.append(url)
 
@@ -677,6 +680,9 @@ class VCSFetchStrategy(FetchStrategy):
         if not self.url:
             raise ValueError(
                 "%s requires %s argument." % (self.__class__, self.url_attr))
+
+        if sys.platform == "win32":
+            self.url = self.url.replace('\\', '/')
 
         for attr in self.optional_attrs:
             setattr(self, attr, kwargs.get(attr, None))
