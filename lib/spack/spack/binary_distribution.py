@@ -583,7 +583,7 @@ def get_buildfile_manifest(spec):
                     added = True
 
             if relocate.needs_binary_relocation(m_type, m_subtype):
-                if ((m_subtype in ('x-executable', 'x-sharedlib')
+                if ((m_subtype in ('x-executable', 'x-sharedlib', 'x-pie-executable')
                     and sys.platform != 'darwin') or
                    (m_subtype in ('x-mach-binary')
                     and sys.platform == 'darwin') or
