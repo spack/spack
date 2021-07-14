@@ -248,7 +248,7 @@ def test_variant_defaults_are_parsable_from_cli():
     failing = []
     for pkg in spack.repo.path.all_packages():
         for variant_name, entry in pkg.variants.items():
-            variant = entry[0]
+            variant, _ = entry
             default_is_parsable = (
                 # Permitting a default that is an instance on 'int' permits
                 # to have foo=false or foo=0. Other falsish values are
@@ -264,7 +264,7 @@ def test_variant_defaults_listed_explicitly_in_values():
     failing = []
     for pkg in spack.repo.path.all_packages():
         for variant_name, entry in pkg.variants.items():
-            variant = entry[0]
+            variant, _ = entry
             vspec = variant.make_default()
             try:
                 variant.validate_or_raise(vspec, pkg=pkg)
