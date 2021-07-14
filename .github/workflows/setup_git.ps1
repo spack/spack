@@ -9,3 +9,8 @@ if ($(git branch --show-current) -ne "develop")
 {
     git branch develop origin/develop
 }
+
+if ($(git branch --show-current) -ne "features/windows-support")
+{
+    git branch features/windows-support origin/features/windows-support
+}
