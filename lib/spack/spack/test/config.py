@@ -334,6 +334,8 @@ class MockEnv(object):
         self.path = path
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     prefix = spack.paths.prefix.lstrip('/')
 
@@ -437,6 +439,8 @@ def test_merge_with_defaults(mock_low_high_config, write_config_file):
     assert cfg['baz']['version'] == ['c']
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_substitute_user(mock_low_high_config):
     user = getpass.getuser()
     assert '/foo/bar/' + user + '/baz' == spack_path.canonicalize_path(
@@ -444,6 +448,8 @@ def test_substitute_user(mock_low_high_config):
     )
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
     assert tempdir == spack_path.canonicalize_path('$tempdir')
@@ -460,6 +466,8 @@ full_padded_string = os.path.join(
     '/path', os.path.sep.join(reps))[:MAX_PADDED_LEN]
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('config_settings,expected', [
     ([], [None, None, None]),
     ([['config:install_tree:root', '/path']], ['/path', None, None]),
@@ -810,6 +818,8 @@ def test_bad_config_section(mock_low_high_config):
         spack.config.get('foobar')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(getuid() == 0, reason='user is root')
 def test_bad_command_line_scopes(tmpdir, mock_low_high_config):
     cfg = spack.config.Configuration()

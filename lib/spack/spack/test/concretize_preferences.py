@@ -5,6 +5,7 @@
 
 import os
 import stat
+import sys
 
 import pytest
 
@@ -71,6 +72,8 @@ def assert_variant_values(spec, **variants):
         assert concrete.variants[variant].value == value
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('concretize_scope', 'mock_packages')
 class TestConcretizePreferences(object):
     @pytest.mark.parametrize('package_name,variant_value,expected_results', [

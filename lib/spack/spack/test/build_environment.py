@@ -5,6 +5,7 @@
 
 import os
 import platform
+import sys
 
 import pytest
 
@@ -81,6 +82,8 @@ def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
     return _ensure
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_static_to_shared_library(build_environment):
     os.environ['SPACK_TEST_COMMAND'] = 'dump-args'
 
@@ -110,6 +113,8 @@ def test_static_to_shared_library(build_environment):
                 static_lib, shared_lib, os.path.basename(shared_lib)).split())
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('8345')
 @pytest.mark.usefixtures('config', 'mock_packages')
 def test_cc_not_changed_by_modules(monkeypatch, working_env):
@@ -135,6 +140,8 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
     assert os.environ['ANOTHER_VAR'] == 'THIS_IS_SET'
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('initial,modifications,expected', [
     # Set and unset variables
     ({'SOME_VAR_STR': '', 'SOME_VAR_NUM': '0'},
@@ -189,6 +196,8 @@ def test_compiler_config_modifications(
         assert name not in os.environ
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('9107')
 def test_spack_paths_before_module_paths(
         config, mock_packages, monkeypatch, working_env):
@@ -216,6 +225,8 @@ def test_spack_paths_before_module_paths(
     assert paths.index(spack_path) < paths.index(module_path)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_package_inheritance_module_setup(config, mock_packages, working_env):
     s = spack.spec.Spec('multimodule-inheritance')
     s.concretize()
@@ -229,6 +240,8 @@ def test_package_inheritance_module_setup(config, mock_packages, working_env):
     assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_wrapper_variables(
         config, mock_packages, working_env, monkeypatch,
         installation_dir_with_headers
@@ -304,6 +317,8 @@ def test_wrapper_variables(
         delattr(dep_pkg, 'libs')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_external_prefixes_last(mutable_config, mock_packages, working_env,
                                 monkeypatch):
     # Sanity check: under normal circumstances paths associated with
@@ -343,6 +358,8 @@ dt-diamond-left:
                 external_lib_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_parallel_false_is_not_propagating(config, mock_packages):
     class AttributeHolder(object):
         pass
@@ -360,6 +377,8 @@ def test_parallel_false_is_not_propagating(config, mock_packages):
         assert m.make_jobs == expected_jobs
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('config_setting,expected_flag', [
     ('runpath', '' if platform.system() == 'Darwin' else '--enable-new-dtags'),
     ('rpath', '' if platform.system() == 'Darwin' else '--disable-new-dtags'),

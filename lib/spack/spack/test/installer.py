@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import py
 import pytest
@@ -117,6 +118,8 @@ def test_hms(sec, result):
     assert inst._hms(sec) == result
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_get_dependent_ids(install_mockery, mock_packages):
     # Concretize the parent package, which handle dependency too
     spec = spack.spec.Spec('a')
@@ -150,6 +153,8 @@ def test_install_msg(monkeypatch):
     assert inst.install_msg(name, pid) == expected
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_from_cache_errors(install_mockery, capsys):
     """Test to ensure cover _install_from_cache errors."""
     spec = spack.spec.Spec('trivial-install-test-package')
@@ -170,6 +175,8 @@ def test_install_from_cache_errors(install_mockery, capsys):
     assert not spec.package.installed_from_binary_cache
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_from_cache_ok(install_mockery, monkeypatch):
     """Test to ensure cover _install_from_cache to the return."""
     spec = spack.spec.Spec('trivial-install-test-package')
@@ -180,6 +187,8 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
     assert inst._install_from_cache(spec.package, True, True, False)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     """Test to simply cover the external module message path."""
     spec = spack.spec.Spec('trivial-install-test-package')
@@ -208,6 +217,8 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
     assert 'exists in binary cache but' in capfd.readouterr()[0]
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
     def _spec(spec, preferred_mirrors=None):
@@ -228,6 +239,8 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     assert 'from binary cache' in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
                                        monkeypatch):
     """Tests SystemExit path for_try_install_from_binary_cache.
@@ -257,6 +270,8 @@ def test_try_install_from_binary_cache(install_mockery, mock_packages,
     # assert 'add a spack mirror to allow download' in str(captured)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_installer_repr(install_mockery):
     const_arg = installer_args(['trivial-install-test-package'], {})
     installer = create_installer(const_arg)
@@ -267,6 +282,8 @@ def test_installer_repr(install_mockery):
     assert "failed=" in irep
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_installer_str(install_mockery):
     const_arg = installer_args(['trivial-install-test-package'], {})
     installer = create_installer(const_arg)
@@ -300,6 +317,8 @@ def test_check_last_phase_error(install_mockery):
     assert pkg.last_phase in err
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_installer_ensure_ready_errors(install_mockery):
     const_arg = installer_args(['trivial-install-test-package'], {})
     installer = create_installer(const_arg)
@@ -329,6 +348,8 @@ def test_installer_ensure_ready_errors(install_mockery):
         installer._ensure_install_ready(spec.package)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
     """Test _ensure_locked when a non-lock exception is raised."""
     mock_err_msg = 'Mock exception error'
@@ -350,6 +371,8 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
         assert mock_err_msg in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_ensure_locked_have(install_mockery, tmpdir, capsys):
     """Test _ensure_locked when already have lock."""
     const_arg = installer_args(['trivial-install-test-package'], {})
@@ -386,6 +409,8 @@ def test_ensure_locked_have(install_mockery, tmpdir, capsys):
         assert installer._ensure_locked(lock_type, spec.package) == tpl
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('lock_type,reads,writes', [
     ('read', 1, 0),
     ('write', 0, 1)])
@@ -403,6 +428,8 @@ def test_ensure_locked_new_lock(
         assert lock._writes == writes
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
     orig_pl = spack.database.Database.prefix_lock
 
@@ -433,6 +460,8 @@ def test_package_id_err(install_mockery):
         inst.package_id(pkg)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_package_id_ok(install_mockery):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
@@ -441,6 +470,8 @@ def test_package_id_ok(install_mockery):
     assert pkg.name in inst.package_id(pkg)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_fake_install(install_mockery):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
@@ -451,6 +482,8 @@ def test_fake_install(install_mockery):
     assert os.path.isdir(pkg.prefix.lib)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
@@ -461,6 +494,8 @@ def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
     assert not packages
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_packages_needed_to_bootstrap_compiler_packages(install_mockery,
                                                         monkeypatch):
     spec = spack.spec.Spec('trivial-install-test-package')
@@ -480,6 +515,8 @@ def test_packages_needed_to_bootstrap_compiler_packages(install_mockery,
     assert packages
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
     """Test happy path for dump_packages with dependencies."""
 
@@ -492,6 +529,8 @@ def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
     assert os.path.isfile(dest_pkg)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     """Test error paths for dump_packages with dependencies."""
     orig_bpp = spack.store.layout.build_packages_path
@@ -611,6 +650,8 @@ def test_combine_phase_logs(tmpdir):
         assert "Output from %s\n" % log_file in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_check_deps_status_install_failure(install_mockery, monkeypatch):
     const_arg = installer_args(['a'], {})
     installer = create_installer(const_arg)
@@ -623,6 +664,8 @@ def test_check_deps_status_install_failure(install_mockery, monkeypatch):
         installer._check_deps_status(request)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_check_deps_status_write_locked(install_mockery, monkeypatch):
     const_arg = installer_args(['a'], {})
     installer = create_installer(const_arg)
@@ -635,6 +678,8 @@ def test_check_deps_status_write_locked(install_mockery, monkeypatch):
         installer._check_deps_status(request)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_check_deps_status_external(install_mockery, monkeypatch):
     const_arg = installer_args(['a'], {})
     installer = create_installer(const_arg)
@@ -646,6 +691,8 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     assert list(installer.installed)[0].startswith('b')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
     const_arg = installer_args(['a'], {})
     installer = create_installer(const_arg)
@@ -657,6 +704,8 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     assert list(installer.installed)[0].startswith('b')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
     from collections import defaultdict
 
@@ -679,6 +728,8 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
     assert task.compiler
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
     """Test of _prepare_for_install's early return for installed task path."""
     const_arg = installer_args(['dependent-install'], {})
@@ -693,6 +744,8 @@ def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
     installer._prepare_for_install(task)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_installer_init_requests(install_mockery):
     """Test of installer initial requests."""
     spec_name = 'dependent-install'
@@ -706,6 +759,8 @@ def test_installer_init_requests(install_mockery):
         assert request.pkg.name == spec_name
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_task_use_cache(install_mockery, monkeypatch):
     const_arg = installer_args(['trivial-install-test-package'], {})
     installer = create_installer(const_arg)
@@ -717,6 +772,8 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     assert request.pkg_id in installer.installed
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
     config_msg = 'mock add_compilers_to_config'
 
@@ -741,6 +798,8 @@ def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
     assert config_msg in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
     """Test _release_lock for supposed write lock with exception."""
     const_arg = installer_args(['trivial-install-test-package'], {})
@@ -758,6 +817,8 @@ def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
         assert msg in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('installed', [True, False])
 def test_push_task_skip_processed(install_mockery, installed):
     """Test to ensure skip re-queueing a processed package."""
@@ -777,6 +838,8 @@ def test_push_task_skip_processed(install_mockery, installed):
     assert len(list(installer.build_tasks)) == 0
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_requeue_task(install_mockery, capfd):
     """Test to ensure cover _requeue_task."""
     const_arg = installer_args(['a'], {})
@@ -801,6 +864,8 @@ def test_requeue_task(install_mockery, capfd):
     assert ' in progress by another process' in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_cleanup_all_tasks(install_mockery, monkeypatch):
     """Test to ensure cover _cleanup_all_tasks."""
     def _mktask(pkg):
@@ -825,6 +890,8 @@ def test_cleanup_all_tasks(install_mockery, monkeypatch):
     assert len(installer.build_tasks) == 1
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     """Test _setup_install_dir's group change."""
     mock_group = 'mockgroup'
@@ -855,6 +922,8 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     assert expected_msg in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_cleanup_failed_err(install_mockery, tmpdir, monkeypatch, capsys):
     """Test _cleanup_failed exception path."""
     msg = 'Fake release_write exception'
@@ -877,6 +946,8 @@ def test_cleanup_failed_err(install_mockery, tmpdir, monkeypatch, capsys):
         assert msg in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_update_failed_no_dependent_task(install_mockery):
     """Test _update_failed with missing dependent build tasks."""
     const_arg = installer_args(['dependent-install'], {})
@@ -889,6 +960,8 @@ def test_update_failed_no_dependent_task(install_mockery):
         assert installer.failed[task.pkg_id] is None
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     """Test install with uninstalled dependencies."""
     const_arg = installer_args(['dependent-install'], {})
@@ -907,6 +980,8 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     assert 'Detected uninstalled dependencies for' in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_failed(install_mockery, monkeypatch, capsys):
     """Test install with failed install."""
     const_arg = installer_args(['b'], {})
@@ -923,6 +998,8 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     assert 'failed to install' in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     """Test install with failed install."""
     const_arg = installer_args(['a'], {'fail_fast': False})
@@ -939,6 +1016,8 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     assert 'Skipping build of a' in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_fail_on_interrupt(install_mockery, monkeypatch):
     """Test ctrl-c interrupted install."""
     spec_name = 'a'
@@ -963,6 +1042,8 @@ def test_install_fail_on_interrupt(install_mockery, monkeypatch):
     assert spec_name not in installer.installed
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_fail_single(install_mockery, monkeypatch):
     """Test expected results for failure of single package."""
     spec_name = 'a'
@@ -990,6 +1071,8 @@ def test_install_fail_single(install_mockery, monkeypatch):
     assert spec_name not in installer.installed
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_fail_multi(install_mockery, monkeypatch):
     """Test expected results for failure of multiple packages."""
     spec_name = 'c'
@@ -1017,6 +1100,8 @@ def test_install_fail_multi(install_mockery, monkeypatch):
     assert spec_name not in installer.installed
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     """Test fail_fast install when an install failure is detected."""
     const_arg = installer_args(['b'], {'fail_fast': False})
@@ -1048,6 +1133,8 @@ def _test_install_fail_fast_on_except_patch(installer, **kwargs):
     raise RuntimeError('mock patch failure')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     """Test fail_fast install when an install failure results from an error."""
     const_arg = installer_args(['a'], {'fail_fast': True})
@@ -1070,6 +1157,8 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     assert 'Skipping build of a' in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     """Cover basic install lock failure handling in a single pass."""
     def _requeued(installer, task):
@@ -1093,6 +1182,8 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
         assert exp in ln
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     """Cover basic install handling for installed package."""
     const_arg = installer_args(['b'], {})
@@ -1128,6 +1219,8 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
         assert exp in ln
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
     """Cover basic read lock handling for uninstalled package with requeue."""
     orig_fn = inst.PackageInstaller._ensure_locked
@@ -1168,6 +1261,10 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
 
 
 
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_skip_patch(install_mockery, mock_fetch):
     """Test the path skip_patch install path."""
     spec_name = 'b'

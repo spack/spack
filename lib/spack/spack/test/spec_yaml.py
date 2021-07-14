@@ -57,6 +57,8 @@ def test_normal_spec(mock_packages):
     check_json_round_trip(spec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_external_spec(config, mock_packages):
     spec = Spec('externaltool')
     spec.concretize()
@@ -76,6 +78,8 @@ def test_ambiguous_version_spec(mock_packages):
     check_json_round_trip(spec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_concrete_spec(config, mock_packages):
     spec = Spec('mpileaks+debug~opt')
     spec.concretize()
@@ -83,6 +87,8 @@ def test_concrete_spec(config, mock_packages):
     check_json_round_trip(spec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_yaml_multivalue(config, mock_packages):
     spec = Spec('multivalue-variant foo="bar,baz"')
     spec.concretize()
@@ -90,6 +96,8 @@ def test_yaml_multivalue(config, mock_packages):
     check_json_round_trip(spec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_yaml_subdag(config, mock_packages):
     spec = Spec('mpileaks^mpich+debug')
     spec.concretize()
@@ -134,6 +142,8 @@ def test_using_ordered_dict(mock_packages):
     ht.build_hash,
     ht.full_hash
 ])
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_ordered_read_not_required_for_consistent_dag_hash(
         hash_type, config, mock_packages
 ):
@@ -309,8 +319,16 @@ def check_specs_equal(original_spec, spec_yaml_path):
         return original_spec.eq_dag(spec_from_yaml)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_save_dependency_spec_jsons_subset(tmpdir, config):
     output_path = str(tmpdir.mkdir('spec_jsons'))
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+def test_save_dependency_spec_yamls_subset(tmpdir, config):
+    output_path = str(tmpdir.mkdir('spec_yamls'))
 
     default = ('build', 'link')
 
