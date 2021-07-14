@@ -3,16 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import fcntl
 import errno
-import time
+import fcntl
+import os
 import socket
+import time
 from datetime import datetime
 
 import llnl.util.tty as tty
-import spack.util.string
 
+import spack.util.string
 
 __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
            'LockError', 'LockTimeoutError',

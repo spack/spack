@@ -7,6 +7,7 @@ import os
 import sys
 
 import llnl.util.tty as tty
+
 from spack import *
 from spack.operating_systems.mac_os import macos_version
 

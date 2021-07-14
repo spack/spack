@@ -2,10 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
-import llnl.util.tty as tty
-import os
 import glob
+import os
+
+import llnl.util.tty as tty
+
+from spack import *
 
 
 class GaussianSrc(Package):

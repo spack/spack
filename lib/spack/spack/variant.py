@@ -11,20 +11,21 @@ import functools
 import inspect
 import itertools
 import re
-from six import StringIO
 import sys
+
+from six import StringIO
 
 if sys.version_info >= (3, 5):
     from collections.abc import Sequence  # novm
 else:
     from collections import Sequence
 
-import llnl.util.tty.color
 import llnl.util.lang as lang
+import llnl.util.tty.color
 
-from spack.util.string import comma_or
 import spack.directives
 import spack.error as error
+from spack.util.string import comma_or
 
 special_variant_values = [None, 'none', '*']
 

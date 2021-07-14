@@ -9,6 +9,7 @@ import re
 import sys
 
 import llnl.util.tty as tty
+
 import spack.architecture
 import spack.util.executable
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version

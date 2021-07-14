@@ -37,7 +37,7 @@ class Faodel(CMakePackage):
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('libfabric@1.5.3:', when='network=libfabric')
-    depends_on('googletest@1.7.0:', type='build')
+    depends_on('googletest@1.7.0:1.10', type='test')
 
     # FAODEL requires C++11 support which starts with gcc 4.8.1
     conflicts('%gcc@:4.8.0')
@@ -62,20 +62,24 @@ class Faodel(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
+        build_tests = self.run_tests and '+mpi' in spec
+
         args = [
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('BUILD_TESTS', 'mpi'),
-            '-DBOOST_ROOT:PATH={0}'.format(spec['boost'].prefix),
-            '-DGTEST_ROOT:PATH={0}'.format(spec['googletest'].prefix),
-            '-DBUILD_DOCS:BOOL=OFF',
+            self.define('BOOST_ROOT', spec['boost'].prefix),
+            self.define('BUILD_DOCS', False),
+            self.define('BUILD_TESTS', build_tests),
             self.define_from_variant('Faodel_ENABLE_IOM_HDF5', 'hdf5'),
             # self.define_from_variant('Faodel_ENABLE_IOM_LEVELDB', 'leveldb'),
             self.define_from_variant('Faodel_ENABLE_MPI_SUPPORT', 'mpi'),
             self.define_from_variant('Faodel_ENABLE_TCMALLOC', 'tcmalloc'),
-            '-DFaodel_LOGGING_METHOD:STRING={0}'.format(
-                spec.variants['logging'].value),
-            '-DFaodel_NETWORK_LIBRARY:STRING={0}'.format(
-                spec.variants['network'].value),
-            self.define_from_variant('Faodel_ENABLE_CEREAL', 'cereal')
+            self.define_from_variant('Faodel_LOGGING_METHOD', 'logging'),
+            self.define_from_variant('Faodel_NETWORK_LIBRARY', 'network'),
+            self.define_from_variant('Faodel_ENABLE_CEREAL', 'cereal'),
         ]
+        if build_tests:
+            args.extend([
+                self.define('GTEST_ROOT', spec['googletest'].prefix)
+            ])
+
         return args

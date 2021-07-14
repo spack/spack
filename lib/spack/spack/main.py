@@ -21,12 +21,15 @@ import sys
 import traceback
 import warnings
 
-import archspec.cpu
 from six import StringIO
+
+import archspec.cpu
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
+from llnl.util.tty.log import log_output
+
 import spack
 import spack.architecture
 import spack.cmd
@@ -39,7 +42,6 @@ import spack.store
 import spack.util.debug
 import spack.util.executable as exe
 import spack.util.path
-from llnl.util.tty.log import log_output
 from spack.error import SpackError
 
 #: names of profile statistics
@@ -780,7 +782,10 @@ def main(argv=None):
             raise
         sys.stderr.write('\n')
         tty.error("Keyboard interrupt.")
-        return signal.SIGINT.value
+        if sys.version_info >= (3, 5):
+            return signal.SIGINT.value
+        else:
+            return signal.SIGINT
 
     except SystemExit as e:
         if spack.config.get('config:debug'):

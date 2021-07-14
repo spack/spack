@@ -12,13 +12,15 @@ import re
 import socket
 import time
 import xml.sax.saxutils
-from six import iteritems, text_type
-from six.moves.urllib.request import build_opener, HTTPHandler, Request
-from six.moves.urllib.parse import urlencode
 
-from llnl.util.filesystem import working_dir
-import llnl.util.tty as tty
 from ordereddict_backport import OrderedDict
+from six import iteritems, text_type
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.request import HTTPHandler, Request, build_opener
+
+import llnl.util.tty as tty
+from llnl.util.filesystem import working_dir
+
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package

@@ -5,9 +5,9 @@
 
 from __future__ import print_function
 
-import re
 import argparse
 import errno
+import re
 import sys
 
 from six import StringIO

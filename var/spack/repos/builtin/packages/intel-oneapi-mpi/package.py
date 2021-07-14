@@ -7,7 +7,6 @@
 import platform
 import subprocess
 
-
 from spack import *
 
 

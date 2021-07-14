@@ -8,11 +8,11 @@ file in the installed package directory, generating a json file that has
 an index of key, value pairs for environment variables."""
 
 
-from .analyzer_base import AnalyzerBase
+import os
+
 from spack.util.environment import EnvironmentModifications
 
-
-import os
+from .analyzer_base import AnalyzerBase
 
 
 class EnvironmentVariables(AnalyzerBase):

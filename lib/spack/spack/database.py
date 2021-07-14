@@ -39,6 +39,7 @@ except ImportError:
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+
 import spack.repo
 import spack.spec
 import spack.store

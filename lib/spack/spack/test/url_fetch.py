@@ -5,21 +5,22 @@
 
 import collections
 import os
-import pytest
 import sys
 
-from llnl.util.filesystem import working_dir, is_exe
-import llnl.util.tty as tty
+import pytest
 
-import spack.repo
+import llnl.util.tty as tty
+from llnl.util.filesystem import is_exe, working_dir
+
 import spack.config
 import spack.fetch_strategy as fs
-from spack.spec import Spec
-from spack.stage import Stage
-from spack.version import ver
+import spack.repo
 import spack.util.crypto as crypto
 import spack.util.executable
+from spack.spec import Spec
+from spack.stage import Stage
 from spack.util.executable import which
+from spack.version import ver
 
 
 @pytest.fixture(params=list(crypto.hashes.keys()))

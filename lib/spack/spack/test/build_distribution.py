@@ -3,13 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pytest
-
 import os
 import os.path
 
-import spack.spec
+import pytest
+
 import spack.binary_distribution
+import spack.spec
 
 install = spack.main.SpackCommand('install')
 
