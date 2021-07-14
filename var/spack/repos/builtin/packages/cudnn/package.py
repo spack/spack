@@ -189,7 +189,6 @@ class Cudnn(Package):
     #     https://developer.nvidia.com/rdp/cudnn-archive
     # Note that download links don't work from command line,
     # need to use modified URLs like in url_for_version.
-# https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.2.2/11.4_07062021/cudnn-11.4-linux-aarch64sbsa-v8.2.2.26.tgz
     maintainers = ['adamjstewart', 'bvanessen']
 
     for ver, packages in _versions.items():
