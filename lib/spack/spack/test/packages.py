@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import posixpath
 
 import pytest
 
@@ -34,7 +34,7 @@ class TestPackage(object):
     def test_package_filename(self):
         repo = spack.repo.Repo(mock_packages_path)
         filename = repo.filename_for_package_name('mpich')
-        assert filename == os.path.join(
+        assert filename == posixpath.join(
             mock_packages_path,
             'packages',
             'mpich',
@@ -44,7 +44,7 @@ class TestPackage(object):
     def test_nonexisting_package_filename(self):
         repo = spack.repo.Repo(mock_packages_path)
         filename = repo.filename_for_package_name('some-nonexisting-package')
-        assert filename == os.path.join(
+        assert filename == posixpath.join(
             mock_packages_path,
             'packages',
             'some-nonexisting-package',

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import posixpath
 import shutil
 import sys
 
@@ -63,6 +64,9 @@ def test_changed_files(flake8_package):
         for path in changed_files()
     ]
 
+    if sys.platform == "win32":
+        files = [f.replace("\\", "/") for f in files]
+
     # There will likely be other files that have changed
     # when these tests are run
     assert flake8_package in files
@@ -75,6 +79,9 @@ def test_changed_files_all_files(flake8_package):
         for path in changed_files(all_files=True)
     ])
 
+    if sys.platform == "win32":
+        files = [f.replace("\\", "/") for f in files]
+
     # spack has a lot of files -- check that we're in the right ballpark
     assert len(files) > 6000
 
@@ -83,13 +90,13 @@ def test_changed_files_all_files(flake8_package):
     assert zlib.module.__file__ in files
 
     # a core spack file
-    assert os.path.join(spack.paths.module_path, "spec.py") in files
+    assert posixpath.join(spack.paths.module_path, "spec.py") in files
 
     # a mock package
     assert flake8_package in files
 
     # this test
-    assert __file__ in files
+    assert __file__.replace("\\", "/") in files
 
     # ensure externals are excluded
     assert not any(f.startswith(spack.paths.external_path) for f in files)
