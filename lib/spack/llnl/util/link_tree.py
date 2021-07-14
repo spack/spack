@@ -13,7 +13,7 @@ import shutil
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, touch, traverse_tree
-from llnl.util.symlink import symlink
+from llnl.util.symlink import islink, symlink
 
 __all__ = ['LinkTree']
 
@@ -21,7 +21,7 @@ empty_file_name = '.spack-empty'
 
 
 def remove_link(src, dest):
-    if not os.path.islink(dest):
+    if not islink(dest):
         raise ValueError("%s is not a link tree!" % dest)
     # remove if dest is a hardlink/symlink to src; this will only
     # be false if two packages are merged into a prefix and have a
