@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
+
 import six
 
 import llnl.util.tty as tty
