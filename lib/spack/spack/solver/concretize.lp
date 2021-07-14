@@ -355,6 +355,10 @@ external_conditions_hold(Package, LocalIndex) :-
 variant(Package, Variant) :- variant_condition(Package, Variant, ID),
                              condition_holds(ID).
 
+% a variant cannot be set if it is not a variant on the package
+:- variant_set(Package, Variant),
+   not variant(Package, Variant).
+
 % one variant value for single-valued variants.
 1 {
   variant_value(Package, Variant, Value)

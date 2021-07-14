@@ -399,6 +399,8 @@ class Concretizer(object):
                     spec.variants[name] = preferred_variants.get(name)
                 else:
                     spec.variants[name] = variant.make_default()
+            if name in spec.variants and not spec.satisfies(when):
+                raise vt.InvalidVariantForSpecError(name, when, spec)
 
         return changed
 
