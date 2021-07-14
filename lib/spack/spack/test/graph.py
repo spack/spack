@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
+import pytest
 from six import StringIO
 
 import spack.repo
@@ -60,6 +63,8 @@ def test_static_graph_mpileaks(mock_packages):
     assert '  "dyninst" -> "libelf"\n'    in dot
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_dynamic_dot_graph_mpileaks(mock_packages, config):
     """Test dynamically graphing the mpileaks package."""
     s = Spec('mpileaks').concretized()
