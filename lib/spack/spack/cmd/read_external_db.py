@@ -10,7 +10,6 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.hash_types as hash_types
-from spack.spec import Spec
 
 description = "Read packages from a JSON file into Spack's DB"
 section = "build"
@@ -154,28 +153,27 @@ def spec_from_entry(entry):
     if 'arch' in entry:
         arch_format = "arch={platform}-{os}-{target}"
         arch_str = arch_format.format(
-            platform = entry['arch']['platform'],
-            os = entry['arch']['platform_os'],
-            target = entry['arch']['target']['name']
+            platform=entry['arch']['platform'],
+            os=entry['arch']['platform_os'],
+            target=entry['arch']['target']['name']
         )
 
     compiler_str = ""
     if 'compiler' in entry:
         compiler_format  = "%{name}@{version}"
         compiler_str = compiler_format.format(
-            name = entry['compiler']['name'],
-            version = entry['compiler']['version']
+            name=entry['compiler']['name'],
+            version=entry['compiler']['version']
         )
 
     spec_format = "{name}@{version} {compiler} {arch}"
     spec_str = spec_format.format(
-        name = entry['name'],
-        version = entry['version'],
-        compiler = compiler_str,
-        arch = arch_str
+        name=entry['name'],
+        version=entry['version'],
+        compiler=compiler_str,
+        arch=arch_str
     )
 
-    variants_strs = list()
     if 'parameters' in entry:
         variant_strs = list()
         for name, value in entry['parameters'].items():
