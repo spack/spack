@@ -13,8 +13,15 @@ class CandleBenchmarks(Package):
     url      = "https://github.com/ECP-CANDLE/Benchmarks/archive/v0.1.tar.gz"
 
     tags = ['proxy-app', 'ecp-proxy-app']
+    git = "https://github.com/ECP-CANDLE/Benchmarks.git"
+    version('master', branch='master')
+    version('0.1', tag='v0.1')
+    version('0.2', tag='v0.2')
+    version('0.3', tag='v0.3')
 
-    version('0.1', sha256='767f74f43ee3a5d4e0f26750f2a96b8433e25a9cd4f2d29938ac8acf263ab58d')
+    # version('0.1', sha256='767f74f43ee3a5d4e0f26750f2a96b8433e25a9cd4f2d29938ac8acf263ab58d')
+    # version('0.2', sha256='0e5e4ca2648f5318180276a13a9712d182d074d011e7f0ee7171bf7668bc21a1')
+    # version('0.3', sha256='6309173e56ae4d2dfba8ff879fd19fba70bbba77be2291892f8191a94f4e4470')
 
     variant('mpi', default=True, description='Build with MPI support')
 
@@ -24,7 +31,7 @@ class CandleBenchmarks(Package):
     depends_on('py-keras', type=('build', 'run'))
     depends_on('py-matplotlib +image@:2.2.3', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
-    depends_on('py-scikit-learn@0.22.1', type=('build', 'run'))
+    depends_on('py-scikit-learn', type=('build', 'run'))
     depends_on('opencv@3.2.0: +core +imgproc +jpeg +png +tiff -dnn ~eigen ~gtk') # highgui conflict with ~imgcodecs
     depends_on('py-mdanalysis', type=('build', 'run'))
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
