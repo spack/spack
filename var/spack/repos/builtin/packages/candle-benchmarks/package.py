@@ -38,6 +38,7 @@ class CandleBenchmarks(Package):
     depends_on('py-h5py~mpi', when='~mpi', type=('build', 'run'))
     depends_on('py-h5py+mpi', when='+mpi', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
+    depends_on('py-numba', when='@0.3:', type=('build', 'run'))
 
     # see #3244, but use external for now
     # depends_on('tensorflow')
