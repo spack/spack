@@ -150,20 +150,19 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     def test(self):
         test_dir = join_path(self.install_test_root, self.test_src_dir)
         with working_dir(test_dir, create=False):
-            magma_dir = 'MAGMADIR={0}'.format(self.prefix)
-            cuda_dir = 'CUDADIR={0}'.format(self.spec['cuda'].prefix)
-            blas_dir = 'OPENBLASDIR={0}'.format(self.spec['blas'].prefix)
-            make(magma_dir, cuda_dir, blas_dir, 'c')
-            self.run_test('./example_sparse',
-                          purpose='MAGMA smoke test - sparse solver')
-            self.run_test('./example_sparse_operator',
-                          purpose='MAGMA smoke test - sparse operator')
-            self.run_test('./example_v1',
-                          purpose='MAGMA smoke test - legacy v1 interface')
-            self.run_test('./example_v2',
-                          purpose='MAGMA smoke test - v2 interface')
-            if '+fortran' in self.spec:
-                make(magma_dir, cuda_dir, blas_dir, 'fortran')
-                self.run_test('./example_f',
-                              purpose='MAGMA smoke test - Fortran interface')
-            make('clean')
+            pkg_config_path = '{0}/lib/pkgconfig'.format(self.prefix)
+            with spack.util.environment.set_env(PKG_CONFIG_PATH=pkg_config_path):
+                make('c')
+                self.run_test('./example_sparse',
+                              purpose='MAGMA smoke test - sparse solver')
+                self.run_test('./example_sparse_operator',
+                              purpose='MAGMA smoke test - sparse operator')
+                self.run_test('./example_v1',
+                              purpose='MAGMA smoke test - legacy v1 interface')
+                self.run_test('./example_v2',
+                              purpose='MAGMA smoke test - v2 interface')
+                if '+fortran' in self.spec:
+                    make('fortran')
+                    self.run_test('./example_f',
+                                  purpose='MAGMA smoke test - Fortran interface')
+                make('clean')

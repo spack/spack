@@ -782,7 +782,10 @@ def main(argv=None):
             raise
         sys.stderr.write('\n')
         tty.error("Keyboard interrupt.")
-        return signal.SIGINT.value
+        if sys.version_info >= (3, 5):
+            return signal.SIGINT.value
+        else:
+            return signal.SIGINT
 
     except SystemExit as e:
         if spack.config.get('config:debug'):
