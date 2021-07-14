@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import subprocess
+
+from spack import *
 
 
 class Pvm(MakefilePackage):

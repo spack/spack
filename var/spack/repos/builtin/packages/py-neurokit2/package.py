@@ -1,0 +1,29 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class PyNeurokit2(PythonPackage):
+    """The Python Toolbox for Neurophysiological Signal Processing.
+
+    This package is the continuation of NeuroKit 1. It's a user-friendly
+    package providing easy access to advanced biosignal processing routines.
+    Researchers and clinicians without extensive knowledge of programming or
+    biomedical signal processing can analyze physiological data with only two
+    lines of code.
+    """
+
+    homepage = "https://github.com/neuropsychology/NeuroKit"
+    pypi     = "neurokit2/neurokit2-0.1.2.tar.gz"
+
+    version('0.1.2', sha256='5ef40037c2d7078ecb713ab0b77b850267babf133856b59595de9613f29787bc')
+
+    depends_on('py-setuptools@040.6.0:', type='build')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-pandas', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-scikit-learn', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))

@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import sys
 import os
+import sys
+
+from spack import *
 
 
 class Boost(Package):
@@ -217,7 +218,11 @@ class Boost(Package):
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
     # Patch to override the PGI toolset when using the NVIDIA compilers
-    patch('nvhpc.patch', when='%nvhpc')
+    patch('nvhpc-1.74.patch', when='@1.74.0:1.75.9999%nvhpc')
+    patch('nvhpc-1.76.patch', when='@1.76.0:1.76.9999%nvhpc')
+
+    # Patch to workaround compiler bug
+    patch('nvhpc-find_address.patch', when='@1.75.0:1.76.999%nvhpc')
 
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440

@@ -60,20 +60,21 @@ import contextlib
 import functools
 import warnings
 
-import archspec.cpu
 import six
 
-import llnl.util.tty as tty
+import archspec.cpu
+
 import llnl.util.lang as lang
+import llnl.util.tty as tty
 
 import spack.compiler
 import spack.compilers
 import spack.config
-import spack.paths
 import spack.error as serr
+import spack.paths
+import spack.util.classes
 import spack.util.executable
 import spack.version
-import spack.util.classes
 from spack.util.spack_yaml import syaml_dict
 
 

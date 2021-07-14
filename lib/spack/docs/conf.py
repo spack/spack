@@ -17,10 +17,10 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
 import re
 import subprocess
+import sys
 from glob import glob
 
 from sphinx.ext.apidoc import main as sphinx_apidoc
@@ -82,6 +82,8 @@ todo_include_todos = True
 # Disable duplicate cross-reference warnings.
 #
 from sphinx.domains.python import PythonDomain
+
+
 class PatchedPythonDomain(PythonDomain):
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
         if 'refspecific' in node:
@@ -136,6 +138,7 @@ copyright = u'2013-2021, Lawrence Livermore National Laboratory.'
 #
 # The short X.Y version.
 import spack
+
 version = '.'.join(str(s) for s in spack.spack_version_info[:2])
 # The full version, including alpha/beta/rc tags.
 release = spack.spack_version
@@ -179,7 +182,8 @@ exclude_patterns = ['_build', '_spack_root', '.spack-env']
 # We use our own extension of the default style with a few modifications
 from pygments.style import Style
 from pygments.styles.default import DefaultStyle
-from pygments.token import Generic, Comment, Text
+from pygments.token import Comment, Generic, Text
+
 
 class SpackStyle(DefaultStyle):
     styles = DefaultStyle.styles.copy()
@@ -188,6 +192,7 @@ class SpackStyle(DefaultStyle):
     styles[Generic.Prompt] = "bold #346ec9"
 
 import pkg_resources
+
 dist = pkg_resources.Distribution(__file__)
 sys.path.append('.')  # make 'conf' module findable
 ep = pkg_resources.EntryPoint.parse('spack = conf:SpackStyle', dist=dist)

@@ -11,16 +11,23 @@ import re
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack.util.web
 import spack.repo
 import spack.stage
+import spack.util.web
 from spack.spec import Spec
+from spack.url import (
+    UndetectableNameError,
+    UndetectableVersionError,
+    parse_name,
+    parse_version,
+)
 from spack.util.editor import editor
-from spack.util.executable import which, ProcessError
-from spack.util.naming import mod_to_class
-from spack.util.naming import simplify_name, valid_fully_qualified_module_name
-from spack.url import UndetectableNameError, UndetectableVersionError
-from spack.url import parse_name, parse_version
+from spack.util.executable import ProcessError, which
+from spack.util.naming import (
+    mod_to_class,
+    simplify_name,
+    valid_fully_qualified_module_name,
+)
 
 description = "create a new package file"
 section = "packaging"

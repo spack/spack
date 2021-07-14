@@ -24,6 +24,7 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.3.1',  sha256='48ab00b77d49f08cf66c60ccce55abb6455c3079f545e60c90ee7ce857bccb70')
     version('3.3.0',  sha256='190c8f4b56afc767f43836b2a5cd53cc52ee7fdc25eb78c6079c5a244e28efa7')
     version('3.2.3',  sha256='d9ec8458fe97fd02bf36379e7f63eaafce1005eeb60e329ed25bb2d2a17a796f')
     version('3.2.2',  sha256='a7e1e414e5c405af48982bf4724a3da64a05770254f2ce8affb5f58a7604ca57')
@@ -175,7 +176,6 @@ class Gdal(AutotoolsPackage):
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
     conflicts('+jasper', when='@3.5:', msg='JPEG2000 driver removed in GDAL 3.5')
-    conflicts('+openjpeg', when='@3.5:', msg='JPEG2000 driver removed in GDAL 3.5')
     conflicts('+perl', when='@3.5:', msg='Perl bindings removed in GDAL 3.5')
 
     # https://github.com/OSGeo/gdal/issues/3782

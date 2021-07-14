@@ -6,13 +6,19 @@ import inspect
 import os
 import shutil
 
+import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    filter_file,
+    find,
+    get_filetype,
+    path_contains_subdirectory,
+    same_path,
+    working_dir,
+)
+from llnl.util.lang import match_predicate
+
 from spack.directives import extends
 from spack.package import PackageBase, run_after
-
-from llnl.util.filesystem import (working_dir, get_filetype, filter_file,
-                                  path_contains_subdirectory, same_path, find)
-from llnl.util.lang import match_predicate
-import llnl.util.tty as tty
 
 
 class PythonPackage(PackageBase):

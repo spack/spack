@@ -12,13 +12,13 @@ default:
   - /^github\/pr[\d]+_.*$/
   variables:
     SPACK_PR_BRANCH: ${CI_COMMIT_REF_NAME}
-    SPACK_IS_PR_PIPELINE: "True"
+    SPACK_PIPELINE_TYPE: "spack_pull_request"
 
 .develop:
   only:
   - /^github\/develop$/
   variables:
-    SPACK_IS_PR_PIPELINE: "False"
+    SPACK_PIPELINE_TYPE: "spack_protected_branch"
 
 .generate:
   stage: generate
@@ -123,4 +123,38 @@ e4s-develop-build:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: e4s-develop-generate
+    strategy: depend
+
+
+########################################
+# E4S on Power
+########################################
+.power-e4s-generate-tags-and-image:
+  image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
+  tags: ["spack", "public", "medium", "ppc64le"]
+
+.e4s-on-power:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-on-power
+
+e4s-on-power-pr-generate:
+  extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
+
+e4s-on-power-develop-generate:
+  extends: [ ".e4s-on-power", ".develop-generate", ".power-e4s-generate-tags-and-image"]
+
+e4s-on-power-pr-build:
+  extends: [ ".e4s-on-power", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-on-power-pr-generate
+    strategy: depend
+
+e4s-on-power-develop-build:
+  extends: [ ".e4s-on-power", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-on-power-develop-generate
     strategy: depend

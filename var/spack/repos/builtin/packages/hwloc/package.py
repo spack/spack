@@ -30,6 +30,7 @@ class Hwloc(AutotoolsPackage):
     maintainers = ['bgoglin']
 
     version('master', branch='master')
+    version('2.5.0', sha256='38aa8102faec302791f6b4f0d23960a3ffa25af3af6af006c64dbecac23f852c')
     version('2.4.1', sha256='4267fe1193a8989f3ab7563a7499e047e77e33fed8f4dec16822a7aebcf78459')
     version('2.4.0', sha256='30404065dc1d6872b0181269d0bb2424fbbc6e3b0a80491aa373109554006544')
     version('2.3.0', sha256='155480620c98b43ddf9ca66a6c318b363ca24acb5ff0683af9d25d9324f59836')

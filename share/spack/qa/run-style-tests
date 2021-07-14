@@ -18,7 +18,7 @@
 check_dependencies flake8 mypy
 
 # verify that the code style is correct
-spack style
+spack style --root-relative
 
 # verify that the license headers are present
 spack license verify

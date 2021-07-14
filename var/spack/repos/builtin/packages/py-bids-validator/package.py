@@ -1,0 +1,17 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class PyBidsValidator(PythonPackage):
+    """Validator for the Brain Imaging Data Structure"""
+
+    homepage = "https://github.com/bids-standard/bids-validator"
+    pypi     = "bids-validator/bids-validator-1.7.2.tar.gz"
+
+    version('1.7.2', sha256='12398831a3a3a2ed7c67e693cf596610c23dd23e0889bfeae0830bbd1d41e5b9')
+
+    depends_on('py-setuptools', type='build')

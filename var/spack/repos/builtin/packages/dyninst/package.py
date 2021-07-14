@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os.path
+
+from spack import *
 
 
 class Dyninst(CMakePackage):
@@ -16,6 +17,7 @@ class Dyninst(CMakePackage):
     maintainers = ['hainest']
 
     version('master', branch='master')
+    version('11.0.1', tag='v11.0.1')
     version('11.0.0', tag='v11.0.0')
     version('10.2.1', tag='v10.2.1')
     version('10.2.0', tag='v10.2.0')

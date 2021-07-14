@@ -777,7 +777,7 @@ an OpenMPI installed in /opt/local, one would use:
             buildable: False
 
 In general, Spack is easier to use and more reliable if it builds all of
-its own dependencies.  However, there are two packages for which one
+its own dependencies.  However, there are several packages for which one
 commonly needs to use system versions:
 
 ^^^

@@ -20,8 +20,9 @@ class Whizard(AutotoolsPackage):
     maintainers = ['vvolkl']
 
     version('master', branch="master")
+    version('3.0.1', sha256='1463abd6c50ffe72029abc6f5a7d28ec63013852bfe5914cb464b58202c1437c')
     version('3.0.0_alpha', sha256='4636e5a10350bb67ccc98cd105bc891ea04f3393c2420f81be3d21240be20009')
-    version('2.8.5', sha256='0f633e5620aa7dd50336b492e8a76bfae15b15943ea842010346ad7610818ecd', preferred=True)
+    version('2.8.5', sha256='0f633e5620aa7dd50336b492e8a76bfae15b15943ea842010346ad7610818ecd')
     version('2.8.4', sha256='49893f077484470934a9d6e1545bbda7d398076568bceda00880d58132f26432')
     version('2.8.3', sha256='96a9046682d4b992b477eb96d561c3db789207e1049b60c9bd140db40eb1e5d7')
     version('2.8.2', sha256='32c9be342d01b3fc6f947fddce74bf2d81ece37fb39bca1f37778fb0c07e2568')

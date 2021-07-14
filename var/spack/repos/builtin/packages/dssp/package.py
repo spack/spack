@@ -43,8 +43,13 @@ class Dssp(AutotoolsPackage):
 
     @run_after('install')
     def cache_test_sources(self):
+        """Save off the pdb sources for stand-alone testing."""
         self.cache_extra_test_sources('pdb')
 
     def test(self):
-        pdb_path  = join_path(self.install_test_root, 'pdb')
-        self.run_test('mkdssp', options=['1ALK.pdb', '1alk.dssp'], work_dir=pdb_path)
+        """Perform stand-alone/smoke test on installed package."""
+        pdb_path  = join_path(self.test_suite.current_test_cache_dir, 'pdb')
+        self.run_test('mkdssp', options=['1ALK.pdb', '1alk.dssp'],
+                      purpose='test: calculating structure for example',
+                      installed=True,
+                      work_dir=pdb_path)

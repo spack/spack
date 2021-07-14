@@ -3,17 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import os
 import stat
-import pytest
-import collections
 
-import spack.spec
-import spack.modules.tcl
-from spack.modules.common import UpstreamModuleIndex
-from spack.spec import Spec
+import pytest
 
 import spack.error
+import spack.modules.tcl
+import spack.spec
+from spack.modules.common import UpstreamModuleIndex
+from spack.spec import Spec
 
 
 def test_update_dictionary_extending_list():

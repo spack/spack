@@ -14,28 +14,32 @@ import shutil
 import stat
 import sys
 import tempfile
-from six import string_types
-from six import iteritems
 from typing import Dict  # novm
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import partition_path, remove_linked_tree
+from six import iteritems, string_types
 
-import spack.paths
+import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    can_access,
+    install,
+    install_tree,
+    mkdirp,
+    partition_path,
+    remove_linked_tree,
+)
+
 import spack.caches
 import spack.cmd
 import spack.config
 import spack.error
-import spack.mirror
-import spack.util.lock
 import spack.fetch_strategy as fs
-import spack.util.pattern as pattern
+import spack.mirror
+import spack.paths
+import spack.util.lock
 import spack.util.path as sup
+import spack.util.pattern as pattern
 import spack.util.url as url_util
-
-from spack.util.crypto import prefix_bits, bit_length
-
+from spack.util.crypto import bit_length, prefix_bits
 
 # The well-known stage source subdirectory name.
 _source_path_subdir = 'spack-src'

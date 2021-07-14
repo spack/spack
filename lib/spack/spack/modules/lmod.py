@@ -3,22 +3,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
+import itertools
 import os.path
+from typing import Any, Dict  # novm
 
 import llnl.util.lang as lang
-import itertools
-import collections
-from typing import Dict, Any  # novm
 
-import spack.config
 import spack.compilers
-import spack.spec
-import spack.repo
+import spack.config
 import spack.error
+import spack.repo
+import spack.spec
 import spack.tengine as tengine
 
-from .common import BaseConfiguration, BaseFileLayout
-from .common import BaseContext, BaseModuleFileWriter
+from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 
 
 #: lmod specific part of the configuration

@@ -16,7 +16,7 @@ class OpenpmdApi(CMakePackage):
     maintainers = ['ax3l']
 
     # C++14 up until here
-    version('dev', branch='dev')
+    version('develop', branch='dev')
     #   temporary, pre 0.14.0 version for HiPACE++
     version('hipace', commit='ac083025ee662469b8cad1adf93eef48cde35f58')
     version('0.13.4', sha256='46c013be5cda670f21969675ce839315d4f5ada0406a6546a91ec3441402cf5e')
@@ -60,6 +60,12 @@ class OpenpmdApi(CMakePackage):
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
     depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
     depends_on('python@3.6:', when='+python', type=['link', 'test', 'run'])
+
+    conflicts('^hdf5 api=v16', msg='openPMD-api requires HDF5 APIs for 1.8+')
+
+    # Fix breaking HDF5 1.12.0 API when build with legacy api options
+    # https://github.com/openPMD/openPMD-api/pull/1012
+    patch('hdf5-1.12.0.patch', when='@:0.13.99 +hdf5')
 
     extends('python', when='+python')
 

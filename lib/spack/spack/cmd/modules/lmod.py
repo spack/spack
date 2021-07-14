@@ -7,6 +7,7 @@ import functools
 import os
 
 import llnl.util.filesystem
+
 import spack.cmd.common.arguments
 import spack.cmd.modules
 

@@ -23,7 +23,6 @@ import spack.report
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
-
 description = "build and install packages"
 section = "build"
 level = "short"
@@ -346,6 +345,10 @@ environment variables:
             if not args.log_file and not reporter.filename:
                 reporter.filename = default_log_file(specs[0])
             reporter.specs = specs
+
+            # Tell the monitor about the specs
+            if args.use_monitor and specs:
+                monitor.new_configuration(specs)
 
             tty.msg("Installing environment {0}".format(env.name))
             with reporter('build'):

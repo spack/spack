@@ -23,29 +23,28 @@ class Hipblas(CMakePackage):
     version('3.7.0', sha256='9840a493ab4838c86696ceb33ce07c34b5f59f62db4f88cb3af62b69d84f8729')
     version('3.5.0', sha256='d451da80beb048767da71a090afceed2e111d01b3e95a7044deada5054d6e7b1')
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
 
     def cmake_args(self):
         args = [
-            '-DBUILD_CLIENTS_SAMPLES=OFF',
-            '-DBUILD_CLIENTS_TESTS=OFF'
+            self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
+            self.define('BUILD_CLIENTS_TESTS', 'OFF')
         ]
 
         # hipblas actually prefers CUDA over AMD GPUs when you have it
         # installed...
         if self.spec.satisfies('@:3.9.0'):
-            args.append('-DTRY_CUDA=OFF')
+            args.append(self.define('TRY_CUDA', 'OFF'))
 
         else:
-            args.append('-DUSE_CUDA=OFF')
+            args.append(self.define('USE_CUDA', 'OFF'))
 
         return args
 
