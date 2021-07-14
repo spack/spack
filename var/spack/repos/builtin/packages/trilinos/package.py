@@ -191,9 +191,9 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Tpetra')
     variant('trilinoscouplings', default=False,
             description='Compile with TrilinosCouplings')
-    variant('zoltan',       default=True,
+    variant('zoltan',       default=False,
             description='Compile with Zoltan')
-    variant('zoltan2',      default=True,
+    variant('zoltan2',      default=False,
             description='Compile with Zoltan2')
 
     # Internal package options (alphabetical order)
@@ -370,6 +370,8 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('netcdf-c+mpi', when="+netcdf~pnetcdf+mpi")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
     depends_on('parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
+    depends_on('metis', when='+zoltan')
+    depends_on('parmetis', when='+mpi +zoltan')
     depends_on('parmetis', when='+scorec')
     depends_on('cgns', when='+cgns')
     depends_on('adios2', when='+adios2')
