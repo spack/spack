@@ -209,7 +209,7 @@ class Cudnn(Package):
         # Get the system and machine arch for building the file path
         sys = "{0}-{1}".format(platform.system(), platform.machine())
         # Munge it to match Nvidia's naming scheme
-        sys_key = sys.lower().replace('x86_64', 'x64').replace('darwin', 'osx')
+        sys_key = sys.lower().replace('x86_64', 'x64').replace('darwin', 'osx').replace('aarch64', 'aarch64sbsa')
 
         if version >= Version('7.2'):
             directory = version[:3]
