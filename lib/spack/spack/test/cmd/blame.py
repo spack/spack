@@ -38,6 +38,8 @@ def test_blame_by_percent(mock_packages):
     assert 'EMAIL' in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_blame_file(mock_packages):
     """Sanity check the blame command to make sure it works."""
     with working_dir(spack.paths.prefix):

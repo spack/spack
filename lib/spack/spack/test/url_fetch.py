@@ -117,6 +117,8 @@ if sys.platform != "win32":
               ('.tar.xz', 'J'), ('.txz', 'J')]
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('secure', [True, False])
 @pytest.mark.parametrize('use_curl', [True, False])
 @pytest.mark.parametrize('mock_archive',
@@ -163,6 +165,8 @@ def test_fetch(
             assert 'echo Building...' in contents
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('spec,url,digest', [
     ('url-list-test @0.0.0', 'foo-0.0.0.tar.gz', 'abc000'),
     ('url-list-test @1.0.0', 'foo-1.0.0.tar.gz', 'abc100'),
@@ -191,6 +195,8 @@ def test_from_list_url(mock_packages, config, spec, url, digest, use_curl):
         assert fetch_strategy.extra_options == {'timeout': 60}
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('use_curl', [True, False])
 def test_from_list_url_unspecified(mock_packages, config, use_curl):
     """Test non-specific URLs from the url-list-test package."""
@@ -250,6 +256,8 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
         assert '##### 100' in status
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('use_curl', [True, False])
 def test_url_extra_fetch(tmpdir, mock_archive, use_curl):
     """Ensure a fetch after downloading is effectively a no-op."""
