@@ -17,6 +17,10 @@ from spack.util.prefix import Prefix
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '16.0.1': {
+        'Linux-aarch64': ('602b005074777df2a0b4306e20152a6446803edd87ccbab95b2f313c4d9be6ba', 'https://download.java.net/java/GA/jdk16.0.1/7147401fd7354114ac51ef3e1328291f/9/GPL/openjdk-16.0.1_linux-aarch64_bin.tar.gz')},
+    '16.0.1': {
+        'Linux-x86_64': ('b1198ffffb7d26a3fdedc0fa599f60a0d12aa60da1714b56c1defbce95d8b235', 'https://download.java.net/java/GA/jdk16.0.1/7147401fd7354114ac51ef3e1328291f/9/GPL/openjdk-16.0.1_linux-x64_bin.tar.gz')},
     '11.0.9.1_1': {
         'Linux-ppc64le': ('d94b6b46a14ab0974b1c1b89661741126d8cf8a0068b471b8f5fa286a71636b1', 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.9.1%2B1/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.9.1_1.tar.gz')},
     '11.0.8_10': {
@@ -55,6 +59,7 @@ class Openjdk(Package):
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
 
+    provides('java@16', when='@16.0:16.99')
     provides('java@11', when='@11.0:11.99')
     provides('java@10', when='@10.0:10.99')
     provides('java@9', when='@9.0:9.99')
