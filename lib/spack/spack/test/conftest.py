@@ -277,7 +277,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         stage_files = os.listdir(stage_path)
         files_in_stage = set(stage_files) - ignore_stage_files
     except OSError as err:
-        if err.errno == errno.ENOENT:
+        if err.errno == errno.ENOENT or err.errno == errno.EINVAL:
             pass
         else:
             raise
