@@ -13,6 +13,7 @@ from spack.main import SpackCommand
 providers = SpackCommand('providers')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('pkg', [
     ('mpi',),
     ('mpi@2',),
