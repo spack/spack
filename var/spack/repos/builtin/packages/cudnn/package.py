@@ -189,7 +189,7 @@ class Cudnn(Package):
     #     https://developer.nvidia.com/rdp/cudnn-archive
     # Note that download links don't work from command line,
     # need to use modified URLs like in url_for_version.
-
+# https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.2.2/11.4_07062021/cudnn-11.4-linux-aarch64sbsa-v8.2.2.26.tgz
     maintainers = ['adamjstewart', 'bvanessen']
 
     for ver, packages in _versions.items():
@@ -209,7 +209,8 @@ class Cudnn(Package):
         # Get the system and machine arch for building the file path
         sys = "{0}-{1}".format(platform.system(), platform.machine())
         # Munge it to match Nvidia's naming scheme
-        sys_key = sys.lower().replace('x86_64', 'x64').replace('darwin', 'osx').replace('aarch64', 'aarch64sbsa')
+        sys_key = sys.lower().replace('x86_64', 'x64').replace('darwin', 'osx') \
+                             .replace('aarch64', 'aarch64sbsa')
 
         if version >= Version('7.2'):
             directory = version[:3]
