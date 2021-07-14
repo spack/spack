@@ -51,6 +51,10 @@ class Abinit(AutotoolsPackage):
     variant('libxml2', default=False,
             description='Enable libxml2 support, used by multibinit')
 
+    variant('optimization-flavor', default='standard', multi=False,
+            values=('safe', 'standard', 'aggressive'),
+            description='Select the optimization flavor to use.')
+
     # Add dependencies
     depends_on('atompaw')
     depends_on('blas')
@@ -75,7 +79,7 @@ class Abinit(AutotoolsPackage):
     depends_on('libxc@:2', when='@:8')
 
     # libxml2
-    depends_on('libxml2', when='@9:')
+    depends_on('libxml2', when='@9:+libxml2')
 
     # Cannot ask for +scalapack if it does not depend on MPI
     conflicts('+scalapack', when='~mpi')
@@ -122,6 +126,8 @@ class Abinit(AutotoolsPackage):
         options += self.with_or_without('libxml2')
 
         oapp = options.append
+        oapp('--with-optim-flavor={0}'
+             .format(self.spec.variants['optimization-flavor'].value))
 
         if '+wannier90' in spec:
             if '@:8' in spec:
