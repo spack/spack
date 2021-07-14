@@ -18,8 +18,7 @@ from spack.util.prefix import Prefix
 
 _versions = {
     '16.0.1': {
-        'Linux-aarch64': ('602b005074777df2a0b4306e20152a6446803edd87ccbab95b2f313c4d9be6ba', 'https://download.java.net/java/GA/jdk16.0.1/7147401fd7354114ac51ef3e1328291f/9/GPL/openjdk-16.0.1_linux-aarch64_bin.tar.gz')},
-    '16.0.1': {
+        'Linux-aarch64': ('602b005074777df2a0b4306e20152a6446803edd87ccbab95b2f313c4d9be6ba', 'https://download.java.net/java/GA/jdk16.0.1/7147401fd7354114ac51ef3e1328291f/9/GPL/openjdk-16.0.1_linux-aarch64_bin.tar.gz'),
         'Linux-x86_64': ('b1198ffffb7d26a3fdedc0fa599f60a0d12aa60da1714b56c1defbce95d8b235', 'https://download.java.net/java/GA/jdk16.0.1/7147401fd7354114ac51ef3e1328291f/9/GPL/openjdk-16.0.1_linux-x64_bin.tar.gz')},
     '11.0.9.1_1': {
         'Linux-ppc64le': ('d94b6b46a14ab0974b1c1b89661741126d8cf8a0068b471b8f5fa286a71636b1', 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.9.1%2B1/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.9.1_1.tar.gz')},
