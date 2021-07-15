@@ -28,6 +28,7 @@ class Laghos(MakefilePackage):
     version('1.0', sha256='af50a126355a41c758fcda335a43fdb0a3cd97e608ba51c485afda3dd84a5b34')
 
     variant('metis', default=True, description='Enable/disable METIS support')
+    variant('ofast', default=False, description="Enable gcc optimization flags")
 
     depends_on('mfem+mpi+metis', when='+metis')
     depends_on('mfem+mpi~metis', when='~metis')
@@ -50,7 +51,10 @@ class Laghos(MakefilePackage):
         targets.append('TEST_MK=%s' % spec['mfem'].package.test_mk)
         if spec.satisfies('@:2.0'):
             targets.append('CXX=%s' % spec['mpi'].mpicxx)
-
+        if '+ofast' in self.spec:
+            if 'g++' in self.compiler.cxx:
+                targets.append('CXXFLAGS = -Ofast -finline-functions')
+        
         return targets
 
     # See lib/spack/spack/build_systems/makefile.py
