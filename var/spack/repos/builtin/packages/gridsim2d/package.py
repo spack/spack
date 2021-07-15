@@ -25,19 +25,22 @@ class Gridsim2d(MakefilePackage):
     version('v2020-12-21-c3-final', tag='v2020-12-21-c3-final') ## Added by tomaso, 2020-12-21
     version('v2020-12-22-c3-final', tag='v2020-12-22-c3-final')
     version('dat-20210701-c4test', tag='dat-20210701-c4test')
+    version('v2021-07-13',  tag='c4tag-20210713')
 
+    depends_on('automake@1.16.3', type='build')
     depends_on('mpi')
     depends_on('fftw')
     
     def build(self, spec, prefix):
         make('clean')
-        make()
+        make(parallel = False)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('gridsim2dras', prefix.bin)
 
         '''
+        # this is for c3 versions!
         with working_dir('c3-test'):
             #mfiles = ['pmfcode.m', 'make_pmf.m', 'interpolate.m', 'pmfsmooth2.m']
             ## Added by tomaso 2020-11-13:

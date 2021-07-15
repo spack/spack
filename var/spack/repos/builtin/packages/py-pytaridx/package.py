@@ -12,8 +12,10 @@ class PyPytaridx(PythonPackage):
     homepage = "https://lc.llnl.gov/bitbucket/users/tomaso/repos/pytaridx/browse"
     git      = "ssh://git@cz-bitbucket.llnl.gov:7999/~tomaso/pytaridx.git"
 
+    version('0.0.4', tag='v0.0.4')
     version('0.0.3', tag='v0.0.3')
     version('0.0.1',  branch='package/v0.0.1')
     version('master',  branch='master')
 
+    depends_on('python@3:')
     depends_on('py-setuptools', type='build')
