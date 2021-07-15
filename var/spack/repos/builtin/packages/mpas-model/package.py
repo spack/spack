@@ -55,6 +55,12 @@ class MpasModel(MakefilePackage):
                 '-Fwide',
                 '-CcdRR8',
             ])
+        elif satisfies('%intel'):
+            fflags.extend([
+                '-r8',
+                '-convert big_endian',
+                '-FR',
+            ])
             cppflags.append('-DUNDERSCORE')
         targets = [
             'FC_PARALLEL={0}'.format(spec['mpi'].mpifc),
