@@ -35,7 +35,7 @@ class Aml(AutotoolsPackage):
     def run_area_test(self):
         """Run stand alone test: test_area"""
 
-        test_dir = join_path(self.install_test_root, 'tests', 'area')
+        test_dir = join_path(self.test_suite.current_test_cache_dir, 'tests', 'area')
 
         if not os.path.exists(test_dir):
             print('Skipping aml test')
@@ -45,7 +45,7 @@ class Aml(AutotoolsPackage):
 
         self.run_test('gcc',
                       options=['-o', exe, join_path(test_dir, 'test_area.c'),
-                               '-I{0}'.format(join_path(self.install_test_root,
+                               '-I{0}'.format(join_path(self.test_suite.current_test_cache_dir,
                                                         'include')),
                                '-I{0}'.format(self.prefix.include),
                                '-I{0}'.format(self.spec['numactl'].prefix.include),
