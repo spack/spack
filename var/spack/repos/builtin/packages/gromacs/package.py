@@ -95,20 +95,24 @@ class Gromacs(CMakePackage):
 
     depends_on('mpi', when='+mpi')
 
-    # Plumed 2.7.1 needs Gromacs 2021, 2020.5, 2019.6 (https://github.com/plumed/plumed2/tree/v2.7.1/patches)
-    # Plumed 2.7.0 needs Gromacs       2020.4, 2019.6 (https://github.com/plumed/plumed2/tree/v2.7.0/patches)
-    # Plumed 2.6.3 needs Gromacs       2020.4, 2019.6, 2018.8 (https://github.com/plumed/plumed2/tree/v2.6.3/patches)
-    # Plumed 2.6.2 needs Gromacs       2020.4, 2019.6, 2018.8 (https://github.com/plumed/plumed2/tree/v2.6.2/patches)
-    # Plumed 2.6.1 needs Gromacs       2020.2, 2019.6, 2018.8 (https://github.com/plumed/plumed2/tree/v2.6.1/patches)
-    # Plumed 2.6.0 needs Gromacs               2019.4, 2018.8 (https://github.com/plumed/plumed2/tree/v2.6.0/patches)
-    # Plumed 2.5.7 needs Gromacs               2019.4, 2018.8, 2016.6 (https://github.com/plumed/plumed2/tree/v2.5.7/patches)
-    # Plumed 2.5.6 needs Gromacs               2019.4, 2018.8, 2016.6 (https://github.com/plumed/plumed2/tree/v2.5.6/patches)
-    # Plumed 2.5.5 needs Gromacs               2019.4, 2018.8, 2016.6 (https://github.com/plumed/plumed2/tree/v2.5.5/patches)
-    # Plumed 2.5.4 needs Gromacs               2019.4, 2018.8, 2016.6 (https://github.com/plumed/plumed2/tree/v2.5.4/patches)
-    # Plumed 2.5.3 needs Gromacs               2019.4, 2018.8, 2016.6 (https://github.com/plumed/plumed2/tree/v2.5.3/patches)
-    # Plumed 2.5.2 needs Gromacs               2019.2, 2018.6, 2016.6 (https://github.com/plumed/plumed2/tree/v2.5.2/patches)
-    # Plumed 2.5.1 needs Gromacs                       2018.6, 2016.6 (https://github.com/plumed/plumed2/tree/v2.5.1/patches)
-    # Plumed 2.5.0 needs Gromacs                       2018.4, 2016.5 (https://github.com/plumed/plumed2/tree/v2.5.0/patches)
+    # Plumed 2.7.1 needs Gromacs 2021, 2020.5, 2019.6
+    # Plumed 2.7.0 needs Gromacs       2020.4, 2019.6
+    # Plumed 2.6.3 needs Gromacs       2020.4, 2019.6, 2018.8
+    # Plumed 2.6.2 needs Gromacs       2020.4, 2019.6, 2018.8
+    # Plumed 2.6.1 needs Gromacs       2020.2, 2019.6, 2018.8
+    # Plumed 2.6.0 needs Gromacs               2019.4, 2018.8
+    # Plumed 2.5.7 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.6 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.5 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.4 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.3 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.2 needs Gromacs               2019.2, 2018.6, 2016.6
+    # Plumed 2.5.1 needs Gromacs                       2018.6, 2016.6
+    # Plumed 2.5.0 needs Gromacs                       2018.4, 2016.5
+
+    # Above dependencies can be verified, and new versions added, by going to
+    # https://github.com/plumed/plumed2/tree/v2.7.1/patches
+    # and switching tags.
 
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
