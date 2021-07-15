@@ -77,6 +77,7 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import collections
+import fnmatch
 import itertools
 import operator
 import os
@@ -3198,7 +3199,8 @@ class Spec(object):
             return self.concrete and self.dag_hash() == other.dag_hash()
 
         # If the names are different, we need to consider virtuals
-        if self.name != other.name and self.name and other.name:
+        if (self.name != other.name and self.name and other.name and
+                not fnmatch.fnmatchcase(self.name, other.name)):
             # A concrete provider can satisfy a virtual dependency.
             if not self.virtual and other.virtual:
                 try:
@@ -4394,7 +4396,7 @@ class LazySpecCache(collections.defaultdict):
 HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
-spec_id_re = r'\w[\w.-]*'
+spec_id_re = r'[\w*][\w*.-]*'
 
 
 class SpecLexer(spack.parse.Lexer):
