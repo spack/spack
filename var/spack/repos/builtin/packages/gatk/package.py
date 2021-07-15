@@ -100,6 +100,8 @@ class Gatk(Package):
     # output.
     variant('r', default=False, description='Use R for plotting')
 
+    depends_on("samtools", type="run")
+    depends_on("bwa", type="run")
     depends_on("java@8", type="run")
     depends_on("python@2.6:2.8,3.6:", type="run", when="@4.0:")
     depends_on("r@3.2:", type="run", when="@4.0: +r")
