@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -43,14 +44,17 @@ class Freefem(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         options = ['--disable-mkl',
-                'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
-                'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
-                'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
+                   'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
+                   'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
+                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
 
         if '+petsc' in spec:
-            options.append('--with-petsc=%s' % spec['petsc'].prefix.lib.petsc.conf.petscvariables)
-            options.append('--with-slepc-ldflags=%s' % spec['slepc'].libs.ld_flags)
-            options.append('--with-slepc-include=%s' % spec['slepc'].headers.include_flags)
+            options.append('--with-petsc=%s'
+                           % spec['petsc'].prefix.lib.petsc.conf.petscvariables)
+            options.append('--with-slepc-ldflags=%s'
+                           % spec['slepc'].libs.ld_flags)
+            options.append('--with-slepc-include=%s'
+                           % spec['slepc'].headers.include_flags)
         else:
             options.append('--without-petsc')
             options.append('--without-slepc')
