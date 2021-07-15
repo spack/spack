@@ -192,6 +192,7 @@ class InstallRecord(object):
             installation_time=None,
             deprecated_for=None,
             in_buildcache=False,
+            origin=None
     ):
         self.spec = spec
         self.path = str(path) if path else None
@@ -201,6 +202,7 @@ class InstallRecord(object):
         self.installation_time = installation_time or _now()
         self.deprecated_for = deprecated_for
         self.in_buildcache = in_buildcache
+        self.origin = origin
 
     def install_type_matches(self, installed):
         installed = InstallStatuses.canonicalize(installed)
@@ -221,6 +223,9 @@ class InstallRecord(object):
                 rec_dict.update({'deprecated_for': self.deprecated_for})
             else:
                 rec_dict.update({field_name: getattr(self, field_name)})
+
+        if self.origin:
+            rec_dict['origin'] = self.origin
 
         return rec_dict
 
