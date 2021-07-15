@@ -45,8 +45,9 @@ class Aml(AutotoolsPackage):
 
         self.run_test('gcc',
                       options=['-o', exe, join_path(test_dir, 'test_area.c'),
-                               '-I{0}'.format(join_path(self.test_suite.current_test_cache_dir,
-                                                        'include')),
+                               '-I{0}'.format(join_path(
+                                       self.test_suite.current_test_cache_dir,
+                                       'include')),
                                '-I{0}'.format(self.prefix.include),
                                '-I{0}'.format(self.spec['numactl'].prefix.include),
                                '-L{0}'.format(self.prefix.lib),
