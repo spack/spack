@@ -7,7 +7,7 @@ from spack import *
 
 
 class Hpddm(Package):
-    """HPDDM — high-performance unified framework for domain decomposition methods"""
+    """High-performance unified framework for domain decomposition methods."""
 
     homepage = "https://github.com/hpddm/hpddm"
     url      = "https://github.com/hpddm/hpddm"
