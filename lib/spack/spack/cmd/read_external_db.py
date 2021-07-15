@@ -335,12 +335,6 @@ def test_spec_conversion():
     assert openmpi_spec['hwloc']
 
 
-def _json_entries_from_file(path):
-    with open(path, 'r') as json_file:
-        json_data = json.load(json_file)
-        return entries_to_specs(json_data['specs'])
-
-
 def setup_parser(subparser):
     subparser.add_argument('--test', action='store_true',
                            help="run tests")
@@ -352,8 +346,14 @@ def setup_parser(subparser):
 
 def read_external_db(parser, args):
     if args.file:
-        specs = _json_entries_from_file(args.file)
+        with open(args.file, 'r') as json_file:
+            json_data = json.load(json_file)
+        specs = entries_to_specs(json_data['specs'])
+        compilers = list(compiler_from_entry(x)
+                         for x in json_data['compilers'])
         if args.apply_updates:
+            spack.compilers.add_compilers_to_config(
+                compilers, init_config=False)
             for spec in specs.values():
                 spack.store.db.add(spec, directory_layout=None)
 
