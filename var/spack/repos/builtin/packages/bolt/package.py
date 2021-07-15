@@ -52,7 +52,7 @@ class Bolt(CMakePackage):
     def run_sample_nested_example(self):
         """Run stand alone test: sample_nested"""
 
-        test_dir = join_path(self.install_test_root, 'examples')
+        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples')
 
         if not os.path.exists(test_dir):
             print('Skipping bolt test')
@@ -61,10 +61,10 @@ class Bolt(CMakePackage):
         exe = 'sample_nested'
 
         self.run_test('gcc',
-                 options=['-lomp', '{0}'.format(join_path(test_dir, 'sample_nested.c')),
-                          '-L{0}'.format(join_path(self.prefix, 'lib'))],
-                 purpose='test: compile {0} example'.format(exe),
-                 work_dir=test_dir)
+                      options=['{0}'.format(join_path(test_dir, 'sample_nested.c')),
+                               '-L{0}'.format(join_path(self.prefix, 'lib')), '-lomp'],
+                      purpose='test: compile {0} example'.format(exe),
+                      work_dir=test_dir)
 
     def test(self):
         print("Running bolt test")
