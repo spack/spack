@@ -175,9 +175,17 @@ def spec_from_entry(entry):
         arch=arch_str
     )
 
+    package = spack.repo.get(entry['name'])
+
     if 'parameters' in entry:
         variant_strs = list()
         for name, value in entry['parameters'].items():
+            # TODO: also ensure that the variant value is valid?
+            if not (name in package.variants):
+                tty.debug("Omitting variant {0} for entry {1}/{2}"
+                          .format(name, entry['name'], entry['hash'][:7]))
+                continue
+
             # Value could be a list (of strings), boolean, or string
             if isinstance(value, six.string_types):
                 variant_strs.append('{0}={1}'.format(name, value))
@@ -212,6 +220,7 @@ def spec_from_entry(entry):
     spec._hashes_final = True
     spec.external_path = entry['prefix']
     spec.origin = 'external-db'
+    spack.spec.Spec.ensure_valid_variants(spec)
 
     return spec
 
@@ -243,7 +252,7 @@ def generate_openmpi_entries():
         compiler=_common_compiler,
         dependencies=dict([hwloc.as_dependency(deptypes=['link'])]),
         parameters={
-            'internal_hwloc': False,
+            'internal-hwloc': False,
             'fabrics': ['psm'],
             'missing_variant': True
         }
@@ -258,6 +267,11 @@ def entries_to_specs(entries):
         try:
             spec = spec_from_entry(entry)
             spec_dict[spec._hash] = spec
+        except spack.repo.UnknownPackageError:
+            tty.debug("Omitting package {0}: no corresponding repo package"
+                      .format(entry['name']))
+        except spack.error.SpackError:
+            raise
         except Exception:
             tty.warn("Could not parse entry: " + str(entry))
 
