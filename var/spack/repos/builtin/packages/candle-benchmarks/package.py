@@ -14,22 +14,29 @@ class CandleBenchmarks(Package):
 
     tags = ['proxy-app', 'ecp-proxy-app']
     git = "https://github.com/ECP-CANDLE/Benchmarks.git"
+    maintainers = ['0luhancheng0']
+
     version('master', branch='master')
     version('0.1', tag='v0.1')
     version('0.2', tag='v0.2')
     version('0.3', tag='v0.3')
 
+    variant('mpi', default=True, description='Build with MPI support')
+    variant('cuda', default=False, description='Build with CUDA support')
 
     extends('python')
     depends_on('python@2.7:')
+
+    depends_on('py-theano +cuda', when="+cuda",  type=('build', 'run'))
+    depends_on('py-theano ~cuda', when="~cuda",  type=('build', 'run'))
+
     depends_on('opencv@3.2.0: +core +imgproc +jpeg +png +tiff -dnn ~eigen ~gtk')
 
     depends_on('py-astropy', type=('build', 'run'))
 
-    depends_on('py-mpi4py', type=('build', 'run'))
-    depends_on('py-h5py+mpi ^hdf5+hl', type=('build', 'run'))
-
-    depends_on('py-theano', type=('build', 'run'))
+    depends_on('py-mpi4py', when="+mpi", type=('build', 'run'))
+    depends_on('py-h5py+mpi ^hdf5+hl', when="+mpi", type=('build', 'run'))
+    depends_on('py-h5py~mpi ^hdf5+hl', when="~mpi", type=('build', 'run'))
 
     depends_on('py-keras', type=('build', 'run'))
     depends_on('py-mdanalysis', type=('build', 'run'))
