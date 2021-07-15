@@ -7,6 +7,7 @@ import os
 
 from spack import *
 
+
 class DarshanRuntime(AutotoolsPackage):
     """Darshan (runtime) is a scalable HPC I/O characterization tool
     designed to capture an accurate picture of application I/O behavior,
