@@ -181,6 +181,17 @@ class Variant(object):
             return BoolValuedVariant
         return SingleValuedVariant
 
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.default == other.default and
+                self.values == other.values and
+                self.multi == other.multi and
+                self.single_value_validator == other.single_value_validator and
+                self.group_validator, other.group_validator)
+
+    def __ne__(self, other):
+        return not self == other
+
 
 def implicit_variant_conversion(method):
     """Converts other to type(self) and calls method(self, other)
