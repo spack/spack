@@ -1120,6 +1120,10 @@ class Database(object):
                 'explicit': explicit,
                 'installation_time': installation_time
             }
+            # Commands other than 'spack install' may add specs to the DB,
+            # we can record the source of an installed Spec with 'origin'
+            if hasattr(spec, 'origin'):
+                extra_args['origin'] = spec.origin
             self._data[key] = InstallRecord(
                 new_spec, path, installed, ref_count=0, **extra_args
             )

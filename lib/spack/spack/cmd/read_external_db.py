@@ -211,6 +211,7 @@ def spec_from_entry(entry):
     spec._concrete = True
     spec._hashes_final = True
     spec.external_path = entry['prefix']
+    spec.origin = 'external-db'
 
     return spec
 
