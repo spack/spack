@@ -62,8 +62,8 @@ class Mummi(PythonPackage):
     #depends_on('gridsim2d@v2020-10-09.2')
 
     # cg and aa
-    depends_on('ddcmdconverter@1.0.4')
-    depends_on('py-mdanalysis-mummi@mda_1.0.1_ddcmd')
+    depends_on('ddcmdconverter@1.0.5')
+    depends_on('py-mdanalysis-mummi@mda_1.0.4_ddcmd')
 
     depends_on('dssp@3.1.4')
     depends_on('py-parmed@3.2.0')
