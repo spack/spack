@@ -46,6 +46,22 @@ example_x_json_str = """\
 }
 """
 
+example_compiler_entry = """\
+{
+  "name": "gcc",
+  "prefix": "/path/to/compiler/",
+  "version": "7.5.0",
+  "arch": {
+    "os": "centos8",
+    "target": "x86_64"
+  },
+  "executables": {
+    "cc": "/path/to/compiler/cc",
+    "cxx": "/path/to/compiler/cxx",
+    "fc": "/path/to/compiler/fc"
+  }
+}
+"""
 
 class JsonSpecEntry(object):
     def __init__(self, name, hash, prefix, version, arch, compiler,
@@ -147,6 +163,22 @@ def test_compatibility():
     x_from_entry = x.to_dict()
     x_from_str = json.loads(example_x_json_str)
     assert x_from_entry == x_from_str
+
+
+def compiler_from_entry(entry):
+    compiler_name = entry['name']
+    paths = entry['executables']
+    version = entry['version']
+    arch = entry['arch']
+    operating_system = arch['os']
+    target = arch['target']
+
+    compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
+    spec = spack.spec.CompilerSpec(compiler_cls.name, version)
+    paths = [paths.get(x, None) for x in ('cc', 'cxx', 'f77', 'fc')]
+    return compiler_cls(
+        spec, operating_system, target, paths
+    )
 
 
 def spec_from_entry(entry):
@@ -288,6 +320,11 @@ def entries_to_specs(entries):
     return spec_dict
 
 
+def test_compiler_from_entry():
+    compiler_data = json.loads(example_compiler_entry)
+    compiler = compiler_from_entry(compiler_data)
+
+
 def test_spec_conversion():
     """Given JSON entries, check that we can form a set of Specs
        including dependency references.
@@ -323,3 +360,4 @@ def read_external_db(parser, args):
     if args.test:
         test_compatibility()
         test_spec_conversion()
+        test_compiler_from_entry()
