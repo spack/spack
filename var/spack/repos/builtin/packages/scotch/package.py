@@ -12,9 +12,11 @@ class Scotch(Package):
 
     homepage = "https://gitlab.inria.fr/scotch/scotch"
     git      = "https://gitlab.inria.fr/scotch/scotch.git"
-    url      = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.4.tar.gz"
-    list_url = "http://gforge.inria.fr/frs/?group_id=248"
+    url      = "https://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.4.tar.gz"
+    list_url = "https://gforge.inria.fr/frs/?group_id=248"
 
+    version('6.1.1', sha256='39052f59ff474a4a69cefc25cf3caf8429400889deba010ee6403ca188f8b311')
+    version('6.1.0', sha256='a3bc3fa3b243fcb52f8d68de4272562a0328afb18a96f535724d284e36730485')
     version('6.0.10', sha256='fd8b707b8200823312a1571d97d3776ff3dfd3280cfa4b6e38987153cea5dbda')
     version('6.0.9', sha256='622b4143cf01c480bb15708b3651b29c25e4aeb00c8c6447ff196aca2eca5c93')
     version('6.0.8', sha256='0ba3f145026174304f910c8770a3cbb034f213c91d939573751cfbb4fd46d45e')
@@ -68,7 +70,7 @@ class Scotch(Package):
     # always grab these versions for older Scotch versions for simplicity.
     @when('@:6.0.0')
     def url_for_version(self, version):
-        url = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_{0}_esmumps.tar.gz"
+        url = "https://gforge.inria.fr/frs/download.php/latestfile/298/scotch_{0}_esmumps.tar.gz"
         return url.format(version)
 
     @property

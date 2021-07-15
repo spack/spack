@@ -21,6 +21,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('2.6.1', sha256='6cd83808c6e8bc7a44028e05112b3ab4e579bcc73202ed14733f66661127e213')
     version('2.6.0', sha256='50cdd384f44f06a34469e7125f8b2ffae13c1975d373c3f1510d91be2b7638ec')
     version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
     version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
@@ -150,20 +151,19 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     def test(self):
         test_dir = join_path(self.install_test_root, self.test_src_dir)
         with working_dir(test_dir, create=False):
-            magma_dir = 'MAGMADIR={0}'.format(self.prefix)
-            cuda_dir = 'CUDADIR={0}'.format(self.spec['cuda'].prefix)
-            blas_dir = 'OPENBLASDIR={0}'.format(self.spec['blas'].prefix)
-            make(magma_dir, cuda_dir, blas_dir, 'c')
-            self.run_test('./example_sparse',
-                          purpose='MAGMA smoke test - sparse solver')
-            self.run_test('./example_sparse_operator',
-                          purpose='MAGMA smoke test - sparse operator')
-            self.run_test('./example_v1',
-                          purpose='MAGMA smoke test - legacy v1 interface')
-            self.run_test('./example_v2',
-                          purpose='MAGMA smoke test - v2 interface')
-            if '+fortran' in self.spec:
-                make(magma_dir, cuda_dir, blas_dir, 'fortran')
-                self.run_test('./example_f',
-                              purpose='MAGMA smoke test - Fortran interface')
-            make('clean')
+            pkg_config_path = '{0}/lib/pkgconfig'.format(self.prefix)
+            with spack.util.environment.set_env(PKG_CONFIG_PATH=pkg_config_path):
+                make('c')
+                self.run_test('./example_sparse',
+                              purpose='MAGMA smoke test - sparse solver')
+                self.run_test('./example_sparse_operator',
+                              purpose='MAGMA smoke test - sparse operator')
+                self.run_test('./example_v1',
+                              purpose='MAGMA smoke test - legacy v1 interface')
+                self.run_test('./example_v2',
+                              purpose='MAGMA smoke test - v2 interface')
+                if '+fortran' in self.spec:
+                    make('fortran')
+                    self.run_test('./example_f',
+                                  purpose='MAGMA smoke test - Fortran interface')
+                make('clean')
