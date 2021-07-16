@@ -19,12 +19,15 @@ class Dock(Package):
     url      = "file://{0}/dock.6.9_source.tar.gz".format(os.getcwd())
     manual_download = True
 
-    version('6.9', sha256='c2caef9b4bb47bb0cb437f6dc21f4c605fd3d0d9cc817fa13748c050dc87a5a8')
+    version('6.9', preferred=True, sha256='c2caef9b4bb47bb0cb437f6dc21f4c605fd3d0d9cc817fa13748c050dc87a5a8')
+    version('opt', git='file://{0}/dock'.format(os.getcwd()))
 
     variant('mpi', default=True, description='Enable mpi')
+    variant('jemalloc', default=False, description='Enable jemalloc')
 
     depends_on('bison', type='build')
     depends_on('mpi', when='+mpi')
+    depends_on('jemalloc', when='+jemalloc')
 
     def setup_build_environment(self, env):
         if '+mpi' in self.spec:
@@ -36,6 +39,8 @@ class Dock(Package):
             'intel': 'intel',
             'pgi': 'pgi',
             'sgi': 'sgi',
+            'arm': 'arm',
+            'nvhpc': 'nvhpc'
         }
 
         if self.compiler.name not in compiler_targets:
