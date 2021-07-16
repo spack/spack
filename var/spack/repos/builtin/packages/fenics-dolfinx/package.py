@@ -26,7 +26,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("mpi")
     depends_on("hdf5")
     depends_on("boost@1.7.0:+filesystem+program_options+timer")
-    depends_on("petsc+mpi+shared", when="@main")
+    depends_on("petsc+mpi+shared")
     depends_on("petsc+mpi+shared@3.15.0", when="@0.1.0")
     depends_on("scotch+mpi")
 
@@ -34,11 +34,14 @@ class FenicsDolfinx(CMakePackage):
     depends_on("parmetis", when="+parmetis")
     depends_on("slepc", when="+slepc")
 
+    depends_on("py-fenics-ffcx", type=("build", "run"))
     depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
     depends_on("py-fenics-ffcx@0.1.0", type=("build", "run"), when="@0.1.0")
 
+    depends_on("fenics-basix", type=("build", "run"))
     depends_on("fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
+    depends_on("py-fenics-basix", type=("build", "run"))
     depends_on("py-fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("py-fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
 
