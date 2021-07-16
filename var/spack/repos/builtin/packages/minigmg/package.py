@@ -56,14 +56,12 @@ class Minigmg(Package):
             opt_flag = '-D__PREFETCH_NEXT_PLANE_FROM_DRAM -D__FUSION_RESIDUAL_RESTRICTION'
             fast_flag = '-Ofast'
             COLLABORATIVE_THREADING_flag = ''
-            arch_flag = '-march=armv8.2-a'
         else:
             opt_flag = ''
             fast_flag = ''
-            arch_flag = ''
             COLLABORATIVE_THREADING_flag = '-D__COLLABORATIVE_THREADING=6'
 
-        cc('-O3', fast_flag, arch_flag, self.compiler.openmp_flag, self.debug_flags, 'miniGMG.c',
+        cc('-O3', fast_flag, self.compiler.openmp_flag, self.debug_flags, 'miniGMG.c',
             'mg.c', 'box.c', 'solver.c', operators_source_file, 'timer.x86.c',
             '-D__MPI', COLLABORATIVE_THREADING_flag, opt_flag,
             '-D__TEST_MG_CONVERGENCE', '-D__PRINT_NORM', '-D__USE_BICGSTAB', arm_archflag,
