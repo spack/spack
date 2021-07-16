@@ -31,6 +31,7 @@ from spack import *
 #   Failure to do so results in an explosion in one of the tests and an
 #   epic stack trace....
 
+
 class Go(Package):
     """The golang compiler and build environment"""
     homepage = "https://golang.org"
