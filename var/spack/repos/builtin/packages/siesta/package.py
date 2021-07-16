@@ -75,10 +75,6 @@ class Siesta(Package):
             if self.spec.satisfies('%gcc'):
                 configure_args.append('FCFLAGS=-ffree-line-length-0')
 
-        if self.spec.satisfies('%arm'):
-            configure_args.append('FCFLAGS=-DNO_MPI_INTERFACES')
-
-
         for d in ['Obj', 'Obj_trans']:
             with working_dir(d, create=True):
                 sh('../Src/configure', *configure_args)
