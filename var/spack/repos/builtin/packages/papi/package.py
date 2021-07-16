@@ -9,7 +9,7 @@ import sys
 import llnl.util.filesystem as fs
 
 
-class Papi(AutotoolsPackage):
+class Papi(AutotoolsPackage, ROCmPackage):
     """PAPI provides the tool designer and application engineer with a
        consistent interface and methodology for use of the performance
        counter hardware found in most major microprocessors. PAPI
@@ -72,18 +72,21 @@ class Papi(AutotoolsPackage):
     configure_directory = 'src'
 
     def setup_build_environment(self, env):
-        if '+lmsensors' in self.spec and self.version >= Version('6'):
-            env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
-        if '^cuda' in self.spec:
-            env.set('PAPI_CUDA_ROOT', self.spec['cuda'].prefix)
-        if '+rocm' in self.spec:
-            env.set('PAPI_ROCM_ROOT', self.spec['hsa-rocr-dev'].prefix)
-            env.set('CFLAGS', '-I%s/rocprofiler/include' % self.spec['rocprofiler-dev'].prefix)
-            env.set('ROCP_METRICS', '%s/rocprofiler/lib/metrics.xml' % self.spec['rocprofiler-dev'].prefix)
+        spec = self.spec
+        if '+lmsensors' in spec and self.version >= Version('6'):
+            env.set('PAPI_LMSENSORS_ROOT', spec['lm-sensors'].prefix)
+        if '^cuda' in spec:
+            env.set('PAPI_CUDA_ROOT', spec['cuda'].prefix)
+        if '+rocm' in spec:
+            env.set('PAPI_ROCM_ROOT', spec['hsa-rocr-dev'].prefix)
+            env.append_flags('CFLAGS', '-I%s/rocprofiler/include' % spec['rocprofiler-dev'].prefix)
+            env.set('ROCP_METRICS', '%s/rocprofiler/lib/metrics.xml' % spec['rocprofiler-dev'].prefix)
             env.set('ROCPROFILER_LOG', '1')
             env.set('HSA_VEN_AMD_AQLPROFILE_LOG', '1')
             env.set('AQLPROFILE_READ_API', '1')
             env.set('HSA_TOOLS_LIB', 'librocprofiler64.60')
+        if '+rocm_smi' in spec:
+            env.append_flags('CFLAGS', '-I%s' % spec['rocm-smi-lib'].include)
 
     setup_run_environment = setup_build_environment
 
