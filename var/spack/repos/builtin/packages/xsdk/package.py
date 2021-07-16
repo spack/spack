@@ -64,7 +64,7 @@ class Xsdk(BundlePackage):
     depends_on('superlu-dist@5.2.2', when='@0.3.0')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')
 
-    depends_on('trilinos@develop+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan+zoltan2+amesos2~exodus~dtk+intrepid2+shards+stratimikos gotype=int cxxstd=14',
+    depends_on('trilinos@master+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan+zoltan2+amesos2~exodus~dtk+intrepid2+shards+stratimikos gotype=int cxxstd=14',
                when='@develop +trilinos')
     depends_on('trilinos@13.0.1+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan+zoltan2+amesos2~exodus~dtk+intrepid2+shards gotype=int',
                when='@0.6.0 +trilinos')
@@ -74,7 +74,7 @@ class Xsdk(BundlePackage):
                when='@0.4.0 +trilinos')
     depends_on('trilinos@12.12.1+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan~zoltan2~amesos2~exodus',
                when='@0.3.0 +trilinos')
-    depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan~zoltan2~amesos2~exodus',
+    depends_on('trilinos@12.10.xsdk-0-2-0+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan~zoltan2~amesos2~exodus',
                when='@xsdk-0.2.0 +trilinos')
 
     depends_on('datatransferkit@master', when='@develop +trilinos +datatransferkit')
