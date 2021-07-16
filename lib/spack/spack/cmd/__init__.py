@@ -216,10 +216,10 @@ def disambiguate_spec(spec, env, local=False, installed=True, first=False):
         spec (spack.spec.Spec): a spec to disambiguate
         env (spack.environment.Environment): a spack environment,
             if one is active, or None if no environment is active
-        local (boolean, default False): do not search chained spack instances
-        installed (boolean or any, or spack.database.InstallStatus or iterable
-            of spack.database.InstallStatus): install status argument passed to
-            database query. See ``spack.database.Database._query`` for details.
+        local (bool): do not search chained spack instances
+        installed (bool or spack.database.InstallStatus or typing.Iterable):
+            install status argument passed to database query.
+            See ``spack.database.Database._query`` for details.
     """
     hashes = env.all_hashes() if env else None
     return disambiguate_spec_from_hashes(spec, hashes, local, installed, first)
@@ -231,11 +231,11 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False,
 
     Arguments:
         spec (spack.spec.Spec): a spec to disambiguate
-        hashes (iterable): a set of hashes of specs among which to disambiguate
-        local (boolean, default False): do not search chained spack instances
-        installed (boolean or any, or spack.database.InstallStatus or iterable
-            of spack.database.InstallStatus): install status argument passed to
-            database query. See ``spack.database.Database._query`` for details.
+        hashes (typing.Iterable): a set of hashes of specs among which to disambiguate
+        local (bool): do not search chained spack instances
+        installed (bool or spack.database.InstallStatus or typing.Iterable):
+            install status argument passed to database query.
+            See ``spack.database.Database._query`` for details.
     """
     if local:
         matching_specs = spack.store.db.query_local(spec, hashes=hashes,
@@ -333,9 +333,8 @@ def display_specs(specs, args=None, **kwargs):
     namespace.
 
     Args:
-        specs (list of spack.spec.Spec): the specs to display
-        args (optional argparse.Namespace): namespace containing
-            formatting arguments
+        specs (list): the specs to display
+        args (argparse.Namespace or None): namespace containing formatting arguments
 
     Keyword Args:
         paths (bool): Show paths with each displayed spec
@@ -348,9 +347,9 @@ def display_specs(specs, args=None, **kwargs):
         indent (int): indent each line this much
         groups (bool): display specs grouped by arch/compiler (default True)
         decorators (dict): dictionary mappng specs to decorators
-        header_callback (function): called at start of arch/compiler groups
+        header_callback (typing.Callable): called at start of arch/compiler groups
         all_headers (bool): show headers even when arch/compiler aren't defined
-        output (stream): A file object to write to. Default is ``sys.stdout``
+        output (typing.IO): A file object to write to. Default is ``sys.stdout``
 
     """
     def get_arg(name, default=None):

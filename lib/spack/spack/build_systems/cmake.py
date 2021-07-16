@@ -236,7 +236,7 @@ class CMakePackage(PackageBase):
         of ``cmake_var``.
 
         This utility function is similar to
-        :py:meth:`~.AutotoolsPackage.with_or_without`.
+        :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without`.
 
         Examples:
 
