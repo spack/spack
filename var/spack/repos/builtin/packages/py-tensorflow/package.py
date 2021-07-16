@@ -558,6 +558,11 @@ class PyTensorflow(Package, CudaPackage):
         # see third_party/systemlibs/jsoncpp.BUILD
         env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
 
+        # fixing https://stackoverflow.com/questions/56055359/tensorflow-lite-arm64-error-cannot-convert-const-int8x8-t
+        if spec.satisfies('target=aarch64'):
+            env.set("CXXFLAGS", "-flax-vector-conversions -fomit-frame-pointer")
+            env.set("CFLAGS", "-flax-vector-conversions -fomit-frame-pointer")
+
     def patch(self):
         if self.spec.satisfies('@2.3.0:'):
             filter_file('deps = protodeps + well_known_proto_libs(),',
