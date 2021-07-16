@@ -41,7 +41,7 @@ class OmegaH(CMakePackage):
 
     depends_on('gmsh', when='+examples', type='build')
     depends_on('mpi', when='+mpi')
-    depends_on('trilinos +kokkos +teuchos', when='+trilinos')
+    depends_on('trilinos +kokkos', when='+trilinos')
     depends_on('zlib', when='+zlib')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
