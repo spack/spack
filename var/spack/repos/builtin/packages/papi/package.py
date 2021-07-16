@@ -9,7 +9,7 @@ import sys
 import llnl.util.filesystem as fs
 
 
-class Papi(AutotoolsPackage, ROCmPackage):
+class Papi(AutotoolsPackage):
     """PAPI provides the tool designer and application engineer with a
        consistent interface and methodology for use of the performance
        counter hardware found in most major microprocessors. PAPI
