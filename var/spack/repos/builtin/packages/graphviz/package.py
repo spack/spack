@@ -116,6 +116,8 @@ class Graphviz(AutotoolsPackage):
     depends_on('sed', type='build')
     depends_on('libtool', type='build')
     depends_on('pkgconfig', type='build')
+    # to process f-strings used in gen_version.py
+    depends_on('python@3.6:', when='@2.47:', type='build')
 
     conflicts('~doc',
               when='@:2.45',

@@ -19,7 +19,7 @@ class PyJupyterServer(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-jinja2', type=('build', 'run'))
-    depends_on('py-tornado@6.1.0:', type=('build', 'run'))
+    depends_on('py-tornado@6.1:', type=('build', 'run'))
     depends_on('py-pyzmq@17:', type=('build', 'run'))
     depends_on('py-argon2-cffi', type=('build', 'run'))
     depends_on('py-ipython-genutils', type=('build', 'run'))

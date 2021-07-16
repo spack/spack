@@ -16,6 +16,7 @@ class Hohqmesh(CMakePackage):
     maintainers = ['schoonovernumerics']
 
     version('main', branch='main')
+    version('v1.0.1', tag='v1.0.1')
 
     depends_on('ftobjectlibrary')
 

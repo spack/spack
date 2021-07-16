@@ -662,7 +662,7 @@ class RepoPath(object):
         if namespace:
             fullspace = get_full_namespace(namespace)
             if fullspace not in self.by_namespace:
-                raise UnknownNamespaceError(spec.namespace)
+                raise UnknownNamespaceError(namespace)
             return self.by_namespace[fullspace]
 
         # If there's no namespace, search in the RepoPath.
