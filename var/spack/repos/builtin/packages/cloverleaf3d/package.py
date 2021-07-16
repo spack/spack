@@ -15,6 +15,8 @@ class Cloverleaf3d(MakefilePackage):
     url = "http://downloads.mantevo.org/releaseTarballs/miniapps/CloverLeaf3D/CloverLeaf3D-1.0.tar.gz"
 
     tags = ["proxy-app"]
+    
+    maintainers = ['s1913388']
 
     version(
         "1.0", sha256="78d591728c61bdfd6175b3930df7652e09ed04fbcd01b3fc86fb2aa0f237a8ef"
