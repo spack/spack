@@ -25,6 +25,7 @@ import spack.spec
 import spack.store
 import spack.user_environment as uenv
 import spack.util.executable
+import spack.util.path
 from spack.util.environment import EnvironmentModifications
 
 
@@ -216,15 +217,33 @@ def _bootstrap_config_scopes():
 
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
+    bootstrap_store_path = store_path()
     with spack.architecture.use_platform(spack.architecture.real_platform()):
         with spack.repo.use_repositories(spack.paths.packages_path):
-            with spack.store.use_store(spack.paths.user_bootstrap_store):
+            with spack.store.use_store(bootstrap_store_path):
                 # Default configuration scopes excluding command line
                 # and builtin but accounting for platform specific scopes
                 config_scopes = _bootstrap_config_scopes()
                 with spack.config.use_configuration(*config_scopes):
                     with spack_python_interpreter():
                         yield
+
+
+def store_path():
+    """Path to the store used for bootstrapped software"""
+    enabled = spack.config.get('bootstrap:enable', True)
+    if not enabled:
+        msg = ('bootstrapping is currently disabled. '
+               'Use "spack bootstrap enable" to enable it')
+        raise RuntimeError(msg)
+
+    bootstrap_root_path = spack.config.get(
+        'bootstrap:root', spack.paths.user_bootstrap_path
+    )
+    bootstrap_store_path = spack.util.path.canonicalize_path(
+        os.path.join(bootstrap_root_path, 'store')
+    )
+    return bootstrap_store_path
 
 
 def clingo_root_spec():

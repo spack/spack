@@ -51,6 +51,7 @@ import spack.architecture
 import spack.compilers
 import spack.paths
 import spack.schema
+import spack.schema.bootstrap
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
@@ -74,6 +75,7 @@ section_schemas = {
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
     'upstreams': spack.schema.upstreams.schema,
+    'bootstrap': spack.schema.bootstrap.schema
 }
 
 # Same as above, but including keys for environments
