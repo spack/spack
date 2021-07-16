@@ -95,10 +95,8 @@ def make_module_available(module, spec=None, install=False):
         # TODO: make sure run-environment is appropriate
         module_path = os.path.join(ispec.prefix,
                                    ispec['python'].package.site_packages_dir)
-        module_path_64 = module_path.replace('/lib/', '/lib64/')
         try:
             sys.path.append(module_path)
-            sys.path.append(module_path_64)
             __import__(module)
             return
         except ImportError:
@@ -122,10 +120,8 @@ def make_module_available(module, spec=None, install=False):
 
     module_path = os.path.join(spec.prefix,
                                spec['python'].package.site_packages_dir)
-    module_path_64 = module_path.replace('/lib/', '/lib64/')
     try:
         sys.path.append(module_path)
-        sys.path.append(module_path_64)
         __import__(module)
         return
     except ImportError:
