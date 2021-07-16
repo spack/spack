@@ -35,8 +35,8 @@ class Xsdktrilinos(CMakePackage):
     depends_on('petsc@main+mpi~complex', when='@develop+petsc')
     depends_on('trilinos@12.6.4', when='@12.6.4')
     depends_on('trilinos@12.8.1', when='@12.8.1')
-    depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
-    depends_on('trilinos@develop', when='@develop')
+    depends_on('trilinos@12.11.xsdk-0-2-0', when='@xsdk-0.2.0')
+    depends_on('trilinos@master', when='@develop')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/xSDKTrilinos/archive/trilinos-release-{0}.tar.gz"

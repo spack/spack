@@ -34,14 +34,13 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # ###################### Versions ##########################
 
-    version('xsdk-0.2.0', tag='xsdk-0.2.0')
-    version('develop', branch='develop')
     version('master', branch='master')
     version('13.0.1', commit='4796b92fb0644ba8c531dd9953e7a4878b05c62d')  # tag trilinos-release-13-0-1
     version('13.0.0', commit='9fec35276d846a667bc668ff4cbdfd8be0dfea08')  # tag trilinos-release-13-0-0
     version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1
     version('12.14.1', sha256='52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
     version('12.12.1', sha256='5474c5329c6309224a7e1726cf6f0d855025b2042959e4e2be2748bd6bb49e18')
+    version('12.11.xsdk-0-2-0', commit='e8210776222ef277a06451ef934dc1138ecdafe6') # tag xsdk-0.2.0
     version('12.10.1', sha256='ab81d917196ffbc21c4927d42df079dd94c83c1a08bda43fef2dd34d0c1a5512')
     version('12.8.1', sha256='d20fe60e31e3ba1ef36edecd88226240a518f50a4d6edcc195b88ee9dda5b4a1')
     version('12.6.4', sha256='1c7104ba60ee8cc4ec0458a1c4f6a26130616bae7580a7b15f2771a955818b73')
@@ -230,7 +229,7 @@ class Trilinos(CMakePackage, CudaPackage):
              branch='master',
              placement='DataTransferKit',
              submodules=True,
-             when='+dtk @develop')
+             when='+dtk @master')
     resource(name='scorec',
              git='https://github.com/SCOREC/core.git',
              commit='73c16eae073b179e45ec625a5abe4915bc589af2',  # tag v2.2.5
@@ -250,7 +249,7 @@ class Trilinos(CMakePackage, CudaPackage):
              git='https://github.com/trilinos/mesquite.git',
              tag='develop',
              placement='packages/mesquite',
-             when='+mesquite @develop')
+             when='+mesquite @master')
 
     # ###################### Conflicts ##########################
 
@@ -302,10 +301,10 @@ class Trilinos(CMakePackage, CudaPackage):
     # Only allow DTK with Trilinos 12
     conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
-    conflicts('+dtk', when='@0:12.12.99,develop,master')
+    conflicts('+dtk', when='@:12.12.99,develop,master')
 
-    # Only allow Mesquite with older Trilinos 12.12 up to 13
-    conflicts('+mesquite', when='@0:12.10.99,master,develop')
+    # Only allow Mesquite with Trilinos 12.12 and up, and master
+    conflicts('+mesquite', when='@:12.10.99,master')
     # Can only use one type of SuperLU
     conflicts('+superlu-dist', when='+superlu')
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
@@ -334,7 +333,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+cuda_rdc', when='~cuda')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
-    conflicts('cxxstd=11', when='@develop')
+    conflicts('cxxstd=11', when='@master')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
@@ -392,15 +391,15 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
     depends_on('superlu-dist@5.4:6.2.0', when='@12.12.2:13.0.0+superlu-dist')
     depends_on('superlu-dist@6.3.0:', when='@13.0.1:+superlu-dist')
-    depends_on('superlu-dist@develop', when='@develop+superlu-dist')
-    depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
+    depends_on('superlu-dist@develop', when='@master+superlu-dist')
+    depends_on('superlu-dist@xsdk-0.2.0', when='@12.10.xsdk-0-2-0+superlu-dist')
     depends_on('superlu+pic@4.3', when='+superlu')
     depends_on('strumpack+shared', when='+strumpack')
     depends_on('scalapack', when='+strumpack+mpi')
     # Trilinos can not be built against 64bit int hypre
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
-    depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
+    depends_on('hypre@develop~internal-superlu', when='@master+hypre')
     depends_on('python', when='+python')
     depends_on('py-mpi4py', when='+mpi +python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
