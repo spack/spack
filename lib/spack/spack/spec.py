@@ -3516,7 +3516,7 @@ class Spec(object):
         self._concrete = other._concrete
         self._hashes_final = other._hashes_final
 
-        if caches:
+        if caches or self._concrete:
             self._hash = other._hash
             self._build_hash = other._build_hash
             self._dunder_hash = other._dunder_hash
