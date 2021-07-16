@@ -13,7 +13,7 @@ class Poppler(CMakePackage):
     url      = "https://poppler.freedesktop.org/poppler-21.07.0.tar.xz"
     list_url = "https://poppler.freedesktop.org/releases.html"
     git      = "https://gitlab.freedesktop.org/poppler/poppler.git"
-    
+
     version('master', branch='master')
     version('21.07.0', sha256='e26ab29f68065de4d6562f0a3e2b5435a83ca92be573b99a1c81998fa286a4d4')
     version('0.90.1', sha256='984d82e72e91418d280885298c8bdc855a2fd92665fd52a1345b27235e0c71c4')
@@ -93,7 +93,7 @@ class Poppler(CMakePackage):
             args.append('-DENABLE_BOOST=ON')
         else:
             args.append('-DENABLE_BOOST=OFF')
-            
+
         if '+cms' in spec:
             args.append('-DENABLE_CMS=lcms2')
         else:
