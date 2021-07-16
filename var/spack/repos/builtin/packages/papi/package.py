@@ -86,7 +86,7 @@ class Papi(AutotoolsPackage):
             env.set('AQLPROFILE_READ_API', '1')
             env.set('HSA_TOOLS_LIB', 'librocprofiler64.60')
         if '+rocm_smi' in spec:
-            env.append_flags('CFLAGS', '-I%s' % spec['rocm-smi-lib'].prefix.include)
+            env.append_flags('CFLAGS', '-I%s/rocm_smi' % spec['rocm-smi-lib'].prefix.include)
 
     setup_run_environment = setup_build_environment
 
