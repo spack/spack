@@ -375,6 +375,7 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('parmetis', when='+scorec')
     depends_on('cgns', when='+cgns')
     depends_on('adios2', when='+adios2')
+    depends_on('boost', when='+minitensor')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
     # https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html
