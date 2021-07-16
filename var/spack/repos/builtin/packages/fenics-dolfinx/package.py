@@ -21,13 +21,13 @@ class FenicsDolfinx(CMakePackage):
     variant("parmetis", default=False, description="parmetis support")
     variant("slepc", default=False, description="slepc support")
 
-    depends_on("cmake@3.9:", type="build")
+    depends_on("cmake@3.12:")
     depends_on("pkgconfig", type="build")
     depends_on("mpi")
     depends_on("hdf5")
     depends_on("boost@1.7.0:+filesystem+program_options+timer")
     depends_on("petsc+mpi+shared")
-    depends_on("petsc+mpi+shared@3.15.0", when="@0.1.0")
+    depends_on("petsc+mpi+shared@3.15.0:", when="@0.1.0")
     depends_on("scotch+mpi")
 
     depends_on("kahip", when="+kahip")
@@ -41,6 +41,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("fenics-basix", type=("build", "run"))
     depends_on("fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
+
     depends_on("py-fenics-basix", type=("build", "run"))
     depends_on("py-fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("py-fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")

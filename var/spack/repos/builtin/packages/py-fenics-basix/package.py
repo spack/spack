@@ -21,10 +21,10 @@ class PyFenicsBasix(PythonPackage):
     depends_on("fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
 
-    depends_on("python@3.6:", type=('build', 'run'))
+    depends_on("python@3.7:", type=('build', 'run'))
     depends_on("py-setuptools", type="build")
     depends_on("cmake@3.18:", type="build")
-    depends_on("py-pybind11@2.6.1:2.6.99", type="build")
+    depends_on("py-pybind11@2.6.2:", type="build")
 
     phases = ['build_ext', 'build', 'install']
 
