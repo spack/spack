@@ -15,6 +15,8 @@ class Aml(AutotoolsPackage):
     url = "https://www.mcs.anl.gov/research/projects/argo/downloads/aml-0.1.0.tar.gz"
     git = "https://xgitlab.cels.anl.gov/argo/aml.git"
 
+    test_requires_compiler = True
+
     version('0.1.0', sha256='cc89a8768693f1f11539378b21cdca9f0ce3fc5cb564f9b3e4154a051dcea69b')
     version('develop', branch='staging', submodules=True)
     version('master', branch='master', submodules=True)
