@@ -36,14 +36,17 @@ class Comd(MakefilePackage):
     conflicts('+openmp', when='+mpi')
 
     def edit(self, spec, prefix):
-        with working_dir('src-mpi') or working_dir('src-openmp'):
+        with working_dir('src-openmp'):
+            copy('Makefile.vanilla', 'Makefile')
+        with working_dir('src-mpi'):
             copy('Makefile.vanilla', 'Makefile')
 
     @property
     def build_targets(self):
         targets = []
         cflags = ' -std=c99 '
-        optflags = ' -g -O5 '
+        optflags = ' -g -O5 -Ofast'
+
         clib = ' -lm '
         comd_variant = 'CoMD'
         cc = spack_cc
@@ -56,7 +59,7 @@ class Comd(MakefilePackage):
                 comd_variant += '-mpi'
                 targets.append('CC = {0}'.format(self.spec['mpi'].mpicc))
             else:
-                targets.append('CC = {0}'.format('spack_cc'))
+                targets.append(f'CC = {spack_cc}')
 
         else:
             targets.append('--directory=src-mpi')
