@@ -23,6 +23,10 @@ class CandleBenchmarks(Package):
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('cuda', default=False, description='Build with CUDA support')
+    variant('tensorflow', default=False, description="Build with Tensorflow")
+
+
+
 
     extends('python')
     depends_on('python@2.7:')
@@ -34,9 +38,18 @@ class CandleBenchmarks(Package):
 
     depends_on('py-astropy', type=('build', 'run'))
 
-    depends_on('py-mpi4py', when="+mpi", type=('build', 'run'))
-    depends_on('py-h5py+mpi ^hdf5+hl', when="+mpi", type=('build', 'run'))
-    depends_on('py-h5py~mpi ^hdf5+hl', when="~mpi", type=('build', 'run'))
+    # py-torch mkldnn option will introduce mkl dependency, which provides blas, and leads to "multiple blas providers" error
+    with when("+mpi"):
+        depends_on('mpi')
+        depends_on('py-mpi4py', type=('build', 'run'))
+        depends_on('py-torch+cuda+mpi~mkldnn', when="+cuda", type=('build', 'run'))
+        depends_on('py-torch~cuda~nccl~cudnn~magma+mpi~mkldnn', when="~cuda", type=('build', 'run'))
+        depends_on('py-h5py+mpi', type=('build', 'run'))
+    with when('~mpi'):
+        depends_on('py-torch+cuda~mpi~mkldnn', when="+cuda", type=('build', 'run'))
+        depends_on('py-torch~cuda~nccl~cudnn~magma~mpi~mkldnn', when="~cuda", type=('build', 'run'))
+        depends_on('py-h5py~mpi', type=('build', 'run'))
+    depends_on('hdf5+hl', type=('build', 'run'))
 
     depends_on('py-keras', type=('build', 'run'))
     depends_on('py-mdanalysis', type=('build', 'run'))
@@ -48,10 +61,15 @@ class CandleBenchmarks(Package):
     depends_on('py-scikit-learn', type=('build', 'run'))
     depends_on('py-statsmodels', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
-    depends_on('py-torch', type=('build', 'run'))
 
 
 
+
+
+    with when('+tensorflow'):
+        # This won't work because tensorflow ask for a very specific py-gast version https://github.com/spack/spack/pull/24897
+        depends_on('py-tensorflow+cuda', when='+cuda', type=('build', 'run'))
+        depends_on('py-tensorflow~cuda', when='~cuda', type=('build', 'run'))
 
 
 
