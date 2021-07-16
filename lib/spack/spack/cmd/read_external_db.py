@@ -63,6 +63,7 @@ example_compiler_entry = """\
 }
 """
 
+
 class JsonSpecEntry(object):
     def __init__(self, name, hash, prefix, version, arch, compiler,
                  dependencies, parameters):
@@ -322,7 +323,7 @@ def entries_to_specs(entries):
 
 def test_compiler_from_entry():
     compiler_data = json.loads(example_compiler_entry)
-    compiler = compiler_from_entry(compiler_data)
+    compiler_from_entry(compiler_data)
 
 
 def test_spec_conversion():
