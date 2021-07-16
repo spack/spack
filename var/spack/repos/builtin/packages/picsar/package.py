@@ -31,6 +31,10 @@ class Picsar(MakefilePackage):
 
     parallel = False
 
+    def patch(self):
+        if '%arm' in self.spec:
+            filter_file(r'!\$OMP SIMD SAFELEN\(LVEC2\)', '', 'src/diags/diags.F90')
+
     @property
     def build_targets(self):
         targets = []
