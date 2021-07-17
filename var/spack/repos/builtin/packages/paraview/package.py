@@ -110,6 +110,7 @@ class Paraview(CMakePackage, CudaPackage):
     conflicts('+qt', when='+osmesa')
 
     depends_on('bzip2')
+    depends_on('cli11', when='@5.9.1:')
     depends_on('double-conversion')
     depends_on('expat')
     depends_on('eigen@3:')
