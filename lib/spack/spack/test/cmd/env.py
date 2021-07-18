@@ -4,26 +4,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
-from six import StringIO
 
 import pytest
+from six import StringIO
 
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
 
+import spack.environment as ev
 import spack.hash_types as ht
 import spack.modules
-import spack.environment as ev
-
-from spack.cmd.env import _env_create
-from spack.spec import Spec
-from spack.main import SpackCommand, SpackCommandError
-from spack.stage import stage_prefix
-
-from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.spack_json as sjson
+from spack.cmd.env import _env_create
+from spack.main import SpackCommand, SpackCommandError
+from spack.spec import Spec
+from spack.stage import stage_prefix
+from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.path import substitute_path_variables
-
 
 # everything here uses the mock_env_path
 pytestmark = [
@@ -177,6 +174,27 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.user_specs[0].name == 'cmake-client'
     assert e.concretized_user_specs[0].name == 'cmake-client'
     assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
+
+
+def test_env_roots_marked_explicit(install_mockery, mock_fetch):
+    install = SpackCommand('install')
+    install('dependent-install')
+
+    # Check one explicit, one implicit install
+    dependent = spack.store.db.query(explicit=True)
+    dependency = spack.store.db.query(explicit=False)
+    assert len(dependent) == 1
+    assert len(dependency) == 1
+
+    env('create', 'test')
+    with ev.read('test') as e:
+        # make implicit install a root of the env
+        e.add(dependency[0].name)
+        e.concretize()
+        e.install_all()
+
+    explicit = spack.store.db.query(explicit=True)
+    assert len(explicit) == 2
 
 
 def test_env_modifications_error_on_activate(
@@ -2561,3 +2579,15 @@ spack:
 
     assert view_prefix not in full_contents
     assert spec.prefix in full_contents
+
+
+@pytest.mark.regression('24148')
+def test_virtual_spec_concretize_together(tmpdir):
+    # An environment should permit to concretize "mpi"
+    e = ev.create('virtual_spec')
+    e.concretization = 'together'
+
+    e.add('mpi')
+    e.concretize()
+
+    assert any(s.package.provides('mpi') for _, s in e.concretized_specs())

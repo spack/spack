@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
+
 import spack.config
 import spack.modules
 import spack.modules.common
-import llnl.util.tty as tty
 
 
 def _for_each_enabled(spec, method_name):

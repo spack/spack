@@ -21,6 +21,12 @@ class Xsd(MakefilePackage):
     depends_on('xerces-c')
     depends_on('libtool', type='build')
 
+    patch(
+        'https://git.codesynthesis.com/cgit/libxsd-frontend/libxsd-frontend/patch/?id=5029f8665190879285787a9dcdaf5f997cadd2e2',
+        sha256='d57e0aed8784d2b947983209b6513c81ac593c9936c3d7b809b4cd60d4c28607',
+        working_dir='libxsd-frontend'
+    )
+
     def install(self, spec, prefix):
         make('install', 'install_prefix=' + prefix)
 

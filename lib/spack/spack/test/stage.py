@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
-import errno
-import os
 import collections
+import errno
+import getpass
+import os
 import shutil
 import stat
 import tempfile
-import getpass
 
 import pytest
 
@@ -19,9 +19,8 @@ from llnl.util.filesystem import mkdirp, partition_path, touch, working_dir
 import spack.paths
 import spack.stage
 import spack.util.executable
-
 from spack.resource import Resource
-from spack.stage import Stage, StageComposite, ResourceStage, DIYStage
+from spack.stage import DIYStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
 
 # The following values are used for common fetch and stage mocking fixtures:

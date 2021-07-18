@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os.path
 import platform
+
+from spack import *
 
 
 # The viewer and trace viewer tar files and sha256sum depend on the
@@ -38,6 +39,9 @@ class Hpcviewer(Package):
     maintainers = ['mwkrentel']
 
     viewer_sha = {
+        ('2021.05', 'aarch64'): 'a500bf14be14ca9b08a8382f1d122f59b45690b6a567df0932fc2cabd6382a9a',
+        ('2021.05', 'ppc64le'): 'd39f9f6556abcd5a184db242711b72b2e8571d0b78bb08d0e497fd4e6dbe87a1',
+        ('2021.05', 'x86_64'):  'f316c1fd0b134c96392cd4eb5e5aa2bffa36bd449f401d8fe950ab4f761c34ab',
         ('2021.03', 'aarch64'): '1b1f7f51a319a159aa96dee21b2cd77ee23b01df263ea122980fa1567e4dab8d',
         ('2021.03', 'ppc64le'): '8fc4683a9e61263ac78fe35391930b0cdc8e84dd50f8d41dcd0c6d8072b02937',
         ('2021.03', 'x86_64'):  '40b4453fe662b896a853d869486b481ded0d29abdf5e50aab2d8f3bdf8940b04',

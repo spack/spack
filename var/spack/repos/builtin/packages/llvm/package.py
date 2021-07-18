@@ -7,6 +7,7 @@ import re
 import sys
 
 import llnl.util.tty as tty
+
 import spack.util.executable
 
 
@@ -28,6 +29,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('main', branch='main')
+    version('12.0.1', sha256='66b64aa301244975a4aea489f402f205cde2f53dd722dad9e7b77a0459b4c8df')
     version('12.0.0', sha256='8e6c99e482bb16a450165176c2d881804976a2d770e0445af4375e78a1fbf19c')
     version('11.1.0', sha256='53a0719f3f4b0388013cfffd7b10c7d5682eece1929a9553c722348d1f866e79')
     version('11.0.1', sha256='9c7ad8e8ec77c5bde8eb4afa105a318fd1ded7dff3747d14f012758719d7171b')
@@ -187,7 +189,8 @@ class Llvm(CMakePackage, CudaPackage):
     # Introduced in version 11 as a part of LLVM and not a separate package.
     conflicts("+flang", when="@:10.999")
 
-    # LLVM 4 and 5 does not build with GCC 8
+    # Older LLVM do not build with newer GCC
+    conflicts("%gcc@11:", when="@:7")
     conflicts("%gcc@8:", when="@:5")
     conflicts("%gcc@:5.0.999", when="@8:")
 
@@ -220,6 +223,12 @@ class Llvm(CMakePackage, CudaPackage):
 
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
+
+    # https://github.com/spack/spack/issues/24270
+    patch('https://src.fedoraproject.org/rpms/llvm10/raw/7ce7ebd066955ea95ba2b491c41fbc6e4ee0643a/f/llvm10-gcc11.patch',
+          sha256='958c64838c9d469be514eef195eca0f8c3ab069bc4b64a48fad59991c626bab8',
+          when='@8:10 %gcc@11:')
+
     # Backport from llvm master + additional fix
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
     # for a bug report about this problem in llvm master.

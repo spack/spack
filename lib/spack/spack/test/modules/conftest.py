@@ -5,9 +5,9 @@
 import pytest
 
 import spack.config
+import spack.modules.common
 import spack.paths
 import spack.spec
-import spack.modules.common
 import spack.util.path
 
 

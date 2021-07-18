@@ -9,6 +9,7 @@ import os
 from typing import List  # novm
 
 from llnl.util.filesystem import working_dir
+
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, run_after
 
@@ -101,9 +102,9 @@ class MesonPackage(PackageBase):
 
         strip = 'true' if '+strip' in pkg.spec else 'false'
 
-        if 'libs=static,shared' in pkg.spec:
+        if 'default_library=static,shared' in pkg.spec:
             default_library = 'both'
-        elif 'libs=static' in pkg.spec:
+        elif 'default_library=static' in pkg.spec:
             default_library = 'static'
         else:
             default_library = 'shared'

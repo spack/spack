@@ -1,0 +1,7 @@
+bootstrap:
+  # If set to false Spack will not bootstrap missing software,
+  # but will instead raise an error.
+  enable: true
+  # Root directory for bootstrapping work. The software bootstrapped
+  # by Spack is installed in a "store" subfolder of this root directory
+  root: ~/.spack/bootstrap

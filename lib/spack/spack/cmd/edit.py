@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import glob
+import os
 
 import llnl.util.tty as tty
 

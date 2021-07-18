@@ -699,71 +699,73 @@ set -xg _sp_shell "fish"
 
 
 
-#
-# Check whether we need environment-variables (module) <= `use` is not available
-#
-set -l need_module "no"
-if not functions -q use; and not functions -q module
-    set need_module "yes"
-end
-
-
-
-#
-# Make environment-modules available to shell
-#
-function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
-
-    # convert `a='b' to array variable `a b`
-    set -l expr_token (string trim -c "'" (string split "=" $argv))
-
-    # run set command to takes, converting lists of type `a:b:c` to array
-    # variables `a b c` by splitting around the `:` character
-    set -xg $expr_token[1] (string split ":" $expr_token[2])
-end
-
-
-if test "$need_module" = "yes"
-    set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
-
-    for sp_var_expr in $sp_shell_vars
-        sp_apply_shell_vars $sp_var_expr
+if test -z "$SPACK_SKIP_MODULES"
+    #
+    # Check whether we need environment-variables (module) <= `use` is not available
+    #
+    set -l need_module "no"
+    if not functions -q use; and not functions -q module
+        set need_module "yes"
     end
 
-    # _sp_module_prefix is set by spack --print-sh-vars
-    if test "$_sp_module_prefix" != "not_installed"
-        set -xg MODULE_PREFIX $_sp_module_prefix
-        spack_pathadd PATH "$MODULE_PREFIX/bin"
+
+
+    #
+    # Make environment-modules available to shell
+    #
+    function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
+
+        # convert `a='b' to array variable `a b`
+        set -l expr_token (string trim -c "'" (string split "=" $argv))
+
+        # run set command to takes, converting lists of type `a:b:c` to array
+        # variables `a b c` by splitting around the `:` character
+        set -xg $expr_token[1] (string split ":" $expr_token[2])
     end
 
-else
 
-    set -l sp_shell_vars (command spack --print-shell-vars sh)
+    if test "$need_module" = "yes"
+        set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
 
-    for sp_var_expr in $sp_shell_vars
-        sp_apply_shell_vars $sp_var_expr
+        for sp_var_expr in $sp_shell_vars
+            sp_apply_shell_vars $sp_var_expr
+        end
+
+        # _sp_module_prefix is set by spack --print-sh-vars
+        if test "$_sp_module_prefix" != "not_installed"
+            set -xg MODULE_PREFIX $_sp_module_prefix
+            spack_pathadd PATH "$MODULE_PREFIX/bin"
+        end
+
+    else
+
+        set -l sp_shell_vars (command spack --print-shell-vars sh)
+
+        for sp_var_expr in $sp_shell_vars
+            sp_apply_shell_vars $sp_var_expr
+        end
+
     end
 
-end
-
-if test "$need_module" = "yes"
-    function module -d "wrapper for the `module` command to point at Spack's modules instance" --inherit-variable MODULE_PREFIX
-        eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
+    if test "$need_module" = "yes"
+        function module -d "wrapper for the `module` command to point at Spack's modules instance" --inherit-variable MODULE_PREFIX
+            eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
+        end
     end
+
+
+
+    #
+    # set module system roots
+    #
+
+    # Search of MODULESPATHS by trying all possible compatible system types as
+    # module roots.
+    if test -z "$MODULEPATH"
+        set -gx MODULEPATH
+    end
+    sp_multi_pathadd MODULEPATH $_sp_tcl_roots
 end
-
-
-
-#
-# set module system roots
-#
-
-# Search of MODULESPATHS by trying all possible compatible system types as
-# module roots.
-if test -z "$MODULEPATH"
-    set -gx MODULEPATH
-end
-sp_multi_pathadd MODULEPATH $_sp_tcl_roots
 
 
 

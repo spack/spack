@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import platform
+
+from spack import *
 
 
 class Pandoc(Package):
@@ -19,16 +20,28 @@ class Pandoc(Package):
     # the challenges with Haskell. Until the Haskell framework is in Spack this
     # package will meet the needs of packages that have a dependency on pandoc.
 
-    if platform.system() == "Linux":
-        url = "https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-linux.tar.gz"
-        version('2.7.3', sha256='eb775fd42ec50329004d00f0c9b13076e707cdd44745517c8ce2581fb8abdb75')
+    if platform.system() == "Linux" and platform.machine() == 'aarch64':
+        url = "https://github.com/jgm/pandoc/releases/download/2.14.0.3/pandoc-2.14.0.3-linux-arm64.tar.gz"
+        version('2.14.0.3', sha256='1212e528fb717e0ffa6662d4930640abdbe0c36d14d283560a9688c8403bf34c')
+
+    elif platform.system() == "Linux":
+        url = "https://github.com/jgm/pandoc/releases/download/2.14.0.3/pandoc-2.14.0.3-linux-amd64.tar.gz"
+
+        version('2.14.0.3', sha256='3ed8bf98126fb68fa6ce05861ab866f5100edc38bcf47bc0bb000692453344c0')
+        version('2.11.4', sha256='b15ce6009ab833fb51fc472bf8bb9683cd2bd7f8ac948f3ddeb6b8f9a366d69a')
+        version('2.7.3', sha256='eb775fd42ec50329004d00f0c9b13076e707cdd44745517c8ce2581fb8abdb75',
+                url="https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-linux.tar.gz")
+
     elif platform.system() == "Darwin":
-        url = "https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-macOS.zip"
+        url = "https://github.com/jgm/pandoc/releases/download/2.14.0.3/pandoc-2.14.0.3-macOS.zip"
+
+        version('2.14.0.3', sha256='c6c1addd968699733c7d597cf269cc66d692371995703c32e5262f84a125c27b')
+        version('2.11.4', sha256='13b8597860afa6ab802993a684b340be3f31f4d2a06c50b6601f9e726cf76f71')
         version('2.7.3', sha256='fb93800c90f3fab05dbd418ee6180d086b619c9179b822ddfecb608874554ff0')
 
     variant('texlive', default=True, description='Use TeX Live to enable PDF output')
 
-    conflicts('target=aarch64:', msg='aarch64 is not supported.')
+    conflicts('target=aarch64:', msg='aarch64 is not supported.', when='@:2.11')
 
     depends_on('texlive', when='+texlive')
 
