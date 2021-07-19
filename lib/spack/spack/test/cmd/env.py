@@ -1969,6 +1969,7 @@ env:
       select: ['%%gcc']
       exclude: [callpath]
       link_type: copy
+      link: 'roots'
       projections:
         'all': '{name}/{version}-{compiler.name}'""" % viewdir)
     with tmpdir.as_cwd():
