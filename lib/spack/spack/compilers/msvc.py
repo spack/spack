@@ -73,7 +73,24 @@ class Msvc(Compiler):
         if sys.version_info[:2] > (2, 6):
         # If you have setvars.bat, just call it and get the includes,
         # libs variables correct.
-            subprocess.call([self.setvarsfile])
+            # subprocess.call([self.setvarsfile])
+            out = subprocess.check_output(
+                'cmd /u /c "{}" {} && set'.format(self.setvarsfile, 'amd64'),
+                stderr=subprocess.STDOUT)  
+            if sys.version_info[0] >= 3:
+                out = out.decode('utf-16le', errors='replace')
+
+            int_env = {
+                key.lower(): value
+                for key, _, value in
+                (line.partition('=') for line in out.splitlines())
+                if key and value
+            }
+
+            if 'path' in int_env:
+                env.set_path('PATH', int_env['path'].split(';'))
+            env.set_path('INCLUDE', int_env.get('include', '').split(';'))
+            env.set_path('LIB', int_env.get('lib', '').split(';'))
         else:
         # Should not this be an exception?
             print("Cannot pull msvc compiler information in Python 2.6 or below")

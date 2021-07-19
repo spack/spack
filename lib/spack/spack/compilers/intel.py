@@ -10,16 +10,16 @@ from spack.version import ver
 
 class Intel(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['icc', 'icc.exe']
+    cc_names = ['icc']
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['icpc', 'icpc.exe']
+    cxx_names = ['icpc']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ifort', 'ifx.exe']
+    f77_names = ['ifort']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ifort', 'ifx.exe']
+    fc_names = ['ifort']
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'intel/icc',
