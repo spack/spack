@@ -54,7 +54,6 @@ class Laghos(MakefilePackage):
         if '+ofast' in self.spec:
             if 'g++' in self.compiler.cxx:
                 targets.append('CXXFLAGS = -Ofast -finline-functions')
-        
         return targets
 
     # See lib/spack/spack/build_systems/makefile.py
