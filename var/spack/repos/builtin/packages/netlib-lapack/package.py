@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -53,7 +54,7 @@ class NetlibLapack(CMakePackage):
     patch('testing.patch', when='@3.7.0:3.8.9999')
     
     # https://github.com/Reference-LAPACK/lapack/issues/583
-    patch('shared-win.patch', when='platform=windows @0:3.9.1')
+    # patch('shared-win.patch', when='platform=windows @0:3.9.1')
 
     # virtual dependency
     provides('blas', when='~external-blas')
@@ -82,6 +83,11 @@ class NetlibLapack(CMakePackage):
                 '${CMAKE_CURRENT_SOURCE_DIR}/CMAKE/',
                 '${CMAKE_CURRENT_SOURCE_DIR}/cmake/',
                 'CBLAS/CMakeLists.txt', string=True)
+        
+        # Remove duplicate header file that gets generated during CMake shared
+        # builds: https://github.com/Reference-LAPACK/lapack/issues/583
+        if self.spec.satisfies('platform=windows @0:3.9.1'):
+            force_remove('LAPACKE/include/lapacke_mangling.h')
 
     @property
     def blas_libs(self):
