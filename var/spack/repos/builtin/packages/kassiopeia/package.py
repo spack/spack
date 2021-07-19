@@ -56,4 +56,6 @@ class Kassiopeia(CMakePackage):
             self.define_from_variant("KEMField_USE_MPI", "mpi"),
             self.define_from_variant("KEMField_USE_OPENCL", "opencl"),
         ]
+        cxxstd = self.spec['root'].variants['cxxstd'].value
+        args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
         return args
