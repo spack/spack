@@ -13,7 +13,6 @@ class Julia(Package):
     """The Julia Language: A fresh approach to technical computing"""
 
     homepage = "http://julialang.org"
-    url      = "https://github.com/JuliaLang/julia/releases/download/v1.6.2/julia-1.6.2-full.tar.gz"
     git      = "https://github.com/JuliaLang/julia.git"
 
     maintainers = ['glennpj']
