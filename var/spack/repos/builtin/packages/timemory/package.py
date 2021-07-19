@@ -18,6 +18,7 @@ class Timemory(CMakePackage, PythonPackage):
 
     version('master', branch='master', submodules=True)
     version('develop', branch='develop', submodules=True)
+    version('3.2.3', commit='d535e478646e331a4c65cfd8c8f759c9a363ccc9', submodules=True)
     version('3.2.2', commit='4725f4e4a3eea3b80b50a01ea088b5d5a1cf40ab', submodules=True)
     version('3.2.1', commit='76ff978d9b1568b7f88a3de82bb84a2042003630', submodules=True)
     version('3.2.0', commit='2bdd28e87224558060e27da90f9b6fcfb20dd324', submodules=True)
