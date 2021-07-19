@@ -1,0 +1,10 @@
+--- a/LAPACKE/CMakeLists.txt
++++ b/LAPACKE/CMakeLists.txt
+@@ -4,6 +4,7 @@
+ set(LAPACK_INSTALL_EXPORT_NAME ${LAPACKELIB}-targets)
+
+ # Create a header file lapacke_mangling.h for the routines called in my C programs
++file(REMOVE include/lapacke_mangling.h)
+ include(FortranCInterface)
+ ## Ensure that the fortran compiler and c compiler specified are compatible
+ FortranCInterface_VERIFY()

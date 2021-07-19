@@ -51,14 +51,13 @@ class NetlibLapack(CMakePackage):
 
     # https://github.com/Reference-LAPACK/lapack/pull/268
     patch('testing.patch', when='@3.7.0:3.8.9999')
+    
+    # https://github.com/Reference-LAPACK/lapack/issues/583
+    patch('shared-win.patch', when='platform=windows @0:3.9.1')
 
     # virtual dependency
     provides('blas', when='~external-blas')
     provides('lapack')
-    
-    # Adding conflicts call for Windows; duplicated CMake files
-    # create linkage errors in the shared build on current version
-    conflicts('+shared', when='platform=windows @0:3.9.1')
 
     depends_on('blas', when='+external-blas')
     depends_on('netlib-xblas+fortran+plain_blas', when='+xblas')
