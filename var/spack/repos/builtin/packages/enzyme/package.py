@@ -46,7 +46,6 @@ class Enzyme(CMakePackage):
         spec = self.spec
         args = [
             "-DLLVM_DIR=" + spec["llvm"].prefix.lib + "/cmake/llvm"
-            "-DCMAKE_BUILD_TYPE= Release"
 
         ]
         return args
