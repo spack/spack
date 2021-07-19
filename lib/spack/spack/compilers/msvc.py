@@ -73,7 +73,6 @@ class Msvc(Compiler):
         if sys.version_info[:2] > (2, 6):
         # If you have setvars.bat, just call it and get the includes,
         # libs variables correct.
-            # subprocess.call([self.setvarsfile])
             out = subprocess.check_output(
                 'cmd /u /c "{}" {} && set'.format(self.setvarsfile, 'amd64'),
                 stderr=subprocess.STDOUT)  
