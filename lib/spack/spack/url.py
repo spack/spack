@@ -28,6 +28,7 @@ it's never been told about that version before.
 import os
 import re
 
+from six import StringIO
 from six.moves.urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
@@ -36,7 +37,7 @@ from llnl.util.tty.color import cescape, colorize
 import spack.error
 import spack.util.compression as comp
 from spack.version import Version
-from six import StringIO
+
 
 #
 # Note: We call the input to most of these functions a "path" but the functions
