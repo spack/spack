@@ -393,6 +393,10 @@ class Version(object):
                 return self.version < Version(prev_version)
             return False
 
+        # If either is a commit and we haven't indexed yet, can't compare
+        if other.is_commit or self.is_commit and not self.commits:
+            return False
+
         # Use tuple comparison assisted by VersionStrComponent for performance
         return self.version < other.version
 
