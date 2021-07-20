@@ -50,7 +50,10 @@ class Kassiopeia(CMakePackage):
     depends_on('opencl', when='+opencl')
 
     def cmake_args(self):
-        cxxstd = self.spec['root'].variants['cxxstd'].value
+        if '+root' in self.spec:
+            cxxstd = self.spec['root'].variants['cxxstd'].value
+        else:
+            cxxstd = '14'
         args = [
             self.define_from_variant("KASPER_USE_VTK", "vtk"),
             self.define_from_variant("KASPER_USE_TBB", "tbb"),
