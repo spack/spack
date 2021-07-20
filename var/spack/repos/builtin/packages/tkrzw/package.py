@@ -75,6 +75,19 @@ class Tkrzw(AutotoolsPackage):
 
     conflicts('+zlib', when='@:0.9.29')
     conflicts('+lz4', when='@:0.9.29')
-    conflicts('+xz', when='@:0.9.29')
+    conflicts('+lzma', when='@:0.9.29')
     conflicts('+zstd', when='@:0.9.29')
     conflicts('%gcc@:7.2.0')  # need C++17 standard
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+        if '+zlib' in spec:
+            args.append('--enable-zlib')
+        if '+lz4' in spec:
+            args.append('--enable-lz4')
+        if '+lzma' in spec:
+            args.append('--enable-lzma')
+        if '+zstd' in spec:
+            args.append('--enable-zstd')
+        return args
