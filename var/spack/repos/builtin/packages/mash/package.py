@@ -24,7 +24,7 @@ class Mash(AutotoolsPackage):
     depends_on("automake", type='build')
     depends_on("libtool", type='build')
     depends_on("m4", type='build')
-    depends_on("capnproto", type='build')
+    depends_on("capnproto")
     depends_on("gsl")
 
     def configure_args(self):
