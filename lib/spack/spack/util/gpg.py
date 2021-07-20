@@ -207,7 +207,7 @@ def public_keys_to_fingerprint(*args):
 @_autoinit
 def public_keys(*args):
     """Return a list of fingerprints"""
-    keys_and_fpr = _parse_public_keys_output(*args)
+    keys_and_fpr = public_keys_to_fingerprint(*args)
     return [key_and_fpr[1] for key_and_fpr in keys_and_fpr]
 
 
