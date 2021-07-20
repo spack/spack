@@ -280,7 +280,7 @@ class Boost(Package):
     # Allow building context asm sources with GCC on Darwin
     # See https://github.com/spack/spack/pull/24889
     # and https://github.com/boostorg/context/issues/177
-    patch("context-macho-gcc.patch", when="+context platform=darwin %gcc")
+    patch("context-macho-gcc.patch", when="@1.65:1.76 +context platform=darwin %gcc")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
