@@ -24,6 +24,7 @@ class PyNumpy(PythonPackage):
 
     version('main', branch='main')
     version('master', branch='main', deprecated=True)
+    version('1.21.1', sha256='dff4af63638afcc57a3dfb9e4b26d434a7a602d225b42d746ea7fe2edf1342fd')
     version('1.21.0', sha256='e80fe25cba41c124d04c662f33f6364909b985f2eb5998aaa5ae4b9587242cce')
     version('1.20.3', sha256='e55185e51b18d788e49fe8305fd73ef4470596b33fc2c1ceb304566b99c71a69')
     version('1.20.2', sha256='878922bf5ad7550aa044aa9301d417e2d3ae50f0f577de92051d739ac6096cee')
