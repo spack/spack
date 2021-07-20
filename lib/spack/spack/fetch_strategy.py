@@ -1521,9 +1521,9 @@ def for_package_version(pkg, version):
 
         # Figure out the url for the git fetcher
         repo_regex = r'(\w+://)(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)'
-        match = re.search(repo_regex, pkg.url)
+        match = re.search(repo_regex, pkg.git)
         if not match:
-            tty.die("Cannot derive repository from %s." % pkg.url)
+            tty.die("Cannot derive repository from %s." % pkg.git)
         service, _, repository, _, name = match.groups()
         name = "/".join(name.split('/')[0:2])
         repository = "%s%s/%s" % (service, repository, name)
