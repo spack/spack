@@ -69,7 +69,6 @@ class Enzyme(CMakePackage):
         env.set('LLVMENZYME', llvm)
         env.set('CLANGENZYME', clang)
 
-
         env.set(
             'LLVMENZYME',
             self.prefix.lib + "LLVMEnzyme-" + spec["llvm"].version.up_to(1) + libtype
