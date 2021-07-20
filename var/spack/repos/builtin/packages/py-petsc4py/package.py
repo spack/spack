@@ -14,7 +14,7 @@ class PyPetsc4py(PythonPackage):
     url      = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc4py-3.15.0.tar.gz"
     git      = "https://gitlab.com/petsc/petsc.git"
 
-    maintainers = ['dalcinl', 'balay']
+    maintainers = ['balay']
 
     version('main', branch='main')
     version('3.15.2', sha256='d7ed1d79d88b35da563d25e733f276595ba538c52756225f79ba92e1cc4658d3')
