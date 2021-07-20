@@ -32,67 +32,26 @@ class RocprofilerDev(CMakePackage):
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
 
-    resource(name='roctracer-dev',
-             url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-3.5.0.tar.gz',
-             sha256='7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e',
-             expand=True,
-             destination='',
-             placement='roctracer',
-             when='@3.5.0')
-
-    resource(name='roctracer-dev',
-             url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-3.7.0.tar.gz',
-             sha256='6fa5b771e990f09c242237ab334b9f01039ec7d54ccde993e719c5d6577d1518',
-             expand=True,
-             destination='',
-             placement='roctracer',
-             when='@3.7.0')
-
-    resource(name='roctracer-dev',
-             url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-3.8.0.tar.gz',
-             sha256='5154a84ce7568cd5dba756e9508c34ae9fc62f4b0b5731f93c2ad68b21537ed1',
-             expand=True,
-             destination='',
-             placement='roctracer',
-             when='@3.8.0')
-
-    resource(name='roctracer-dev',
-             url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-3.9.0.tar.gz',
-             sha256='0678f9faf45058b16923948c66d77ba2c072283c975d167899caef969169b292',
-             expand=True,
-             destination='',
-             placement='roctracer',
-             when='@3.9.0')
-
-    resource(name='roctracer-dev',
-             url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-3.10.0.tar.gz',
-             sha256='ac4a1d059fc34377e906071fd0e56f5434a7e0e4ded9db8faf9217a115239dec',
-             expand=True,
-             destination='',
-             placement='roctracer',
-             when='@3.10.0')
-
-    resource(name='roctracer-dev',
-             url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-4.0.0.tar.gz',
-             sha256='f47859a46173228b597c463eda850b870e810534af5efd5f2a746067ef04edee',
-             expand=True,
-             destination='',
-             placement='roctracer',
-             when='@4.0.0')
-    resource(name='roctracer-dev',
-             url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-4.1.0.tar.gz',
-             sha256='5d93de4e92895b6eb5f9d098f5dbd182d33923bd9b2ab69cf5a1abbf91d70695',
-             expand=True,
-             destination='',
-             placement='roctracer',
-             when='@4.1.0')
-    resource(name='roctracer-dev',
-             url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-4.2.0.tar.gz',
-             sha256='62a9c0cb1ba50b1c39a0636c886ac86e75a1a71cbf5fec05801517ceb0e67a37',
-             expand=True,
-             destination='',
-             placement='roctracer',
-             when='@4.2.0')
+    # Add roctracer-dev sources thru the below
+    for d_version, d_shasum in [
+        ('4.2.0',  '62a9c0cb1ba50b1c39a0636c886ac86e75a1a71cbf5fec05801517ceb0e67a37'),
+        ('4.1.0',  '5d93de4e92895b6eb5f9d098f5dbd182d33923bd9b2ab69cf5a1abbf91d70695'),
+        ('4.0.0',  'f47859a46173228b597c463eda850b870e810534af5efd5f2a746067ef04edee'),
+        ('3.10.0', 'ac4a1d059fc34377e906071fd0e56f5434a7e0e4ded9db8faf9217a115239dec'),
+        ('3.9.0',  '0678f9faf45058b16923948c66d77ba2c072283c975d167899caef969169b292'),
+        ('3.8.0',  '5154a84ce7568cd5dba756e9508c34ae9fc62f4b0b5731f93c2ad68b21537ed1'),
+        ('3.7.0',  '6fa5b771e990f09c242237ab334b9f01039ec7d54ccde993e719c5d6577d1518'),
+        ('3.5.0',  '7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e')
+    ]:
+        resource(
+            name='roctracer-dev',
+            url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-{0}.tar.gz'.format(d_version),
+            sha256=d_shasum,
+            expand=True,
+            destination='',
+            placement='roctracer',
+            when='@{0}'.format(d_version)
+        )
 
     def patch(self):
         filter_file('${HSA_RUNTIME_LIB_PATH}/../include',
