@@ -391,5 +391,5 @@ jobs:
     - uses: codecov/codecov-action@v2.0.1
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
-        file: ./coverage.xml
+        files: ./coverage.xml
         flags: unittests,macos
