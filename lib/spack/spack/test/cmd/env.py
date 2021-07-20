@@ -867,10 +867,10 @@ packages:
     with open(os.path.join(e.path, 'low-config.yaml'), 'w') as f:
         f.write("""\
 packages:
-mpileaks:
-version: [2.2]
-libelf:
-version: [0.8.12]
+  mpileaks:
+    version: [2.2]
+  libelf:
+    version: [0.8.12]
 """)
 
     with e:
