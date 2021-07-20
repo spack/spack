@@ -337,6 +337,9 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
 
+    # Boost requires minitensor
+    conflicts('~boost', when='+minitensor')
+
     # SCOREC requires shards, stk, and zoltan
     conflicts('+scorec', when='~mpi')
     conflicts('+scorec', when='~shards')
@@ -375,7 +378,6 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('parmetis', when='+scorec')
     depends_on('cgns', when='+cgns')
     depends_on('adios2', when='+adios2')
-    depends_on('boost', when='+minitensor')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
     # https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html
