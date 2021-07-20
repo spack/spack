@@ -59,35 +59,30 @@ class Tkrzw(AutotoolsPackage):
     version('0.9.2',  sha256='9040af148ab3f35c6f1d4c83f2eba8b68625dbd760f2c0537a9981dbc9bbc661')
     version('0.9.1',  sha256='1062502f93d4a9b387372d89265a9ede1704c6bcadd9aac23f5fc8383e26045a')
 
-    variant('zlib', default=False,
-            description='Enable zlib support')
-    variant('lz4', default=False,
-            description='Enable lz4 support')
-    variant('lzma', default=False,
-            description='Enable lzma support')
-    variant('zstd', default=False,
-            description='Enable zstd support')
+    variant('compression',
+            values=any_combination_of('zlib', 'lz4', 'lzma', 'zstd'),
+            description='List of supported compression backends')
 
-    depends_on('zlib', when='+zlib')
-    depends_on('lz4', when='+lz4')
-    depends_on('xz', when='+lzma')  # lzma.h is in the xz package, not in lzma
-    depends_on('zstd', when='+zstd')
+    depends_on('zlib', when='compression=zlib')
+    depends_on('lz4', when='compression=lz4')
+    depends_on('xz', when='compression=lzma')  # lzma.h is in the xz package, not in lzma
+    depends_on('zstd', when='compression=zstd')
 
-    conflicts('+zlib', when='@:0.9.29')
-    conflicts('+lz4', when='@:0.9.29')
-    conflicts('+lzma', when='@:0.9.29')
-    conflicts('+zstd', when='@:0.9.29')
+    conflicts('compression=zlib', when='@:0.9.29')
+    conflicts('compression=lz4', when='@:0.9.29')
+    conflicts('compression=lzma', when='@:0.9.29')
+    conflicts('compression=zstd', when='@:0.9.29')
     conflicts('%gcc@:7.2.0')  # need C++17 standard
 
     def configure_args(self):
         spec = self.spec
         args = []
-        if '+zlib' in spec:
+        if 'compression=zlib' in spec:
             args.append('--enable-zlib')
-        if '+lz4' in spec:
+        if 'compression=lz4' in spec:
             args.append('--enable-lz4')
-        if '+lzma' in spec:
+        if 'compression=lzma' in spec:
             args.append('--enable-lzma')
-        if '+zstd' in spec:
+        if 'compression=zstd' in spec:
             args.append('--enable-zstd')
         return args
