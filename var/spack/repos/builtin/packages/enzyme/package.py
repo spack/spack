@@ -50,12 +50,26 @@ class Enzyme(CMakePackage):
         ]
         return args
 
+    @property
+    def libs(self):
+        ver = self.spec['llvm'].version.up_to(1)
+        libs = [
+            'LLVMEnzyme-{0}'.format(ver),
+            'ClangEnzyme-{0}'.format(ver),
+            'BCPass-{0}'.format(ver)
+        ]
+        return find_libraries(libs, root=self.prefix, recursive=True)
+        
     def setup_dependent_build_environment(self, env, dependent_spec):
-        spec = self.spec
-        if spec.architecture.startswith('darwin'):
-            libtype = ".dylib"
-        else:
-            libtype = ".so"
+        # Get the LLVMEnzyme and ClangEnzyme lib paths
+        llvm, clang = self.libs
+
+        if "LLVMEnzyme-" in clang:
+            llvm, clang = clang, llvm
+
+        env.set('LLVMENZYME', llvm)
+        env.set('CLANGENZYME', clang)
+
 
         env.set(
             'LLVMENZYME',
