@@ -225,6 +225,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
     depends_on('py-breathe', type='build', when='+docs')
+    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
     depends_on('doxygen', type='build', when='+docs')
     depends_on('py-m2r', type='build', when='+docs')
 
