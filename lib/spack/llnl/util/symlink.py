@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import ctypes.wintypes
 import errno
 import os
 import shutil
@@ -104,16 +103,21 @@ def _win32_is_junction(path):
     if os.path.islink(path):
         return False
 
-    GetFileAttributes = ctypes.windll.kernel32.GetFileAttributesW
-    GetFileAttributes.argtypes = (ctypes.wintypes.LPWSTR,)
-    GetFileAttributes.restype = ctypes.wintypes.DWORD
+    if sys.platform == "win32":
+        import ctypes.wintypes
 
-    INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF
-    FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+        GetFileAttributes = ctypes.windll.kernel32.GetFileAttributesW
+        GetFileAttributes.argtypes = (ctypes.wintypes.LPWSTR,)
+        GetFileAttributes.restype = ctypes.wintypes.DWORD
 
-    res = GetFileAttributes(path)
-    return res != INVALID_FILE_ATTRIBUTES and \
-        bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
+        INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF
+        FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+
+        res = GetFileAttributes(path)
+        return res != INVALID_FILE_ATTRIBUTES and \
+            bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
+
+    return False
 
 
 # Based on https://github.com/Erotemic/ubelt/blob/master/ubelt/util_cmd.py

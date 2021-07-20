@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
-import ctypes
 import errno
 import glob
 from sys import platform as _platform
@@ -83,6 +82,7 @@ __all__ = [
 
 def getuid():
     if _platform == "win32":
+        import ctypes
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return 1
         return 0
