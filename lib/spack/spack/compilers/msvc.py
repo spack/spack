@@ -71,8 +71,12 @@ class Msvc(Compiler):
         """Set environment variables for MSVC using the
         Microsoft-provided script."""
         if sys.version_info[:2] > (2, 6):
-        # If you have setvars.bat, just call it and get the includes,
-        # libs variables correct.
+        # Set the build environment variables for spack. Just using
+        # subprocess.call() doesn't work since that operates in its own
+        # environment which is destroyed (along with the adjusted variables)
+        # once the process terminates. So go the long way around: examine
+        # output, sort into dictionary, use that to make the build
+        # environment.
             out = subprocess.check_output(
                 'cmd /u /c "{}" {} && set'.format(self.setvarsfile, 'amd64'),
                 stderr=subprocess.STDOUT)  
