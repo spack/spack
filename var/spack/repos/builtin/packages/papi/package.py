@@ -9,7 +9,7 @@ import sys
 import llnl.util.filesystem as fs
 
 
-class Papi(AutotoolsPackage):
+class Papi(AutotoolsPackage, ROCmPackage):
     """PAPI provides the tool designer and application engineer with a
        consistent interface and methodology for use of the performance
        counter hardware found in most major microprocessors. PAPI
@@ -40,7 +40,7 @@ class Papi(AutotoolsPackage):
     variant('sde', default=False, description='Enable software defined events')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('nvml', default=False, description='Enable NVML support')
-    variant('rocm', default=False, description='Enable ROCm support')
+    #variant('rocm', default=False, description='Enable ROCm support')
     variant('rocm_smi', default=False, description='Enable ROCm SMI support')
 
     variant('shared', default=True, description='Build shared libraries')
