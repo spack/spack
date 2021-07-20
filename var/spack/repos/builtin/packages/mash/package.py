@@ -25,7 +25,7 @@ class Mash(AutotoolsPackage):
     depends_on("libtool", type='build')
     depends_on("m4", type='build')
     depends_on("capnproto", type='build')
-    depends_on("gsl", type=('build', 'run'))
+    depends_on("gsl")
 
     def configure_args(self):
         args = []
