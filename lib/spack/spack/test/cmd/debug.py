@@ -18,7 +18,7 @@ debug = SpackCommand('debug')
 
 
 @pytest.mark.db
-def test_create_db_tarball(tmpdir, database, mock_store):
+def test_create_db_tarball(tmpdir, database):
     with tmpdir.as_cwd():
         debug('create-db-tarball')
 

@@ -1014,14 +1014,8 @@ spack:
             assert('patchelf' in buildcache_list_output)
             # Also test buildcache_spec schema
             bc_files_list = os.listdir(buildcache_path)
-            print(bc_files_list)
             for file_name in bc_files_list:
-                if file_name.endswith('.spec.yaml'):
-                    spec_yaml_path = os.path.join(buildcache_path, file_name)
-                    with open(spec_yaml_path) as yaml_fd:
-                        yaml_object = syaml.load(yaml_fd)
-                        validate(yaml_object, specfile_schema)
-                elif file_name.endswith('.spec.json'):
+                if file_name.endswith('.spec.json'):
                     spec_json_path = os.path.join(buildcache_path, file_name)
                     with open(spec_json_path) as json_fd:
                         json_object = sjson.load(json_fd)
@@ -1039,7 +1033,7 @@ spack:
 
             # Also just make sure that if something goes wrong with the
             # stage logs copy, no exception is thrown
-            # ci.copy_stage_logs_to_artifacts(None, logs_dir.strpath)
+            ci.copy_stage_logs_to_artifacts(None, logs_dir.strpath)
 
             dl_dir = working_dir.join('download_dir')
             if not os.path.exists(dl_dir.strpath):

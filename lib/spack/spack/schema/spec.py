@@ -5,6 +5,8 @@
 
 """Schema for a spec found in spec.yaml or database index.json files
 
+TODO: This needs to be updated? Especially the hashes under properties.
+
 .. literalinclude:: _spack_root/lib/spack/spack/schema/spec.py
    :lines: 13-
 """

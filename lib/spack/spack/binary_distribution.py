@@ -1713,7 +1713,7 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
         cached_pkg_specs = [item[name] for item in nodes if name in item]
     elif nodes and spec_dict['spec']['_meta']['version'] == 2:
         cached_pkg_specs = [item for item in nodes
-                            if item['_hash'] == spec.dag_hash()]
+                            if item[ht.dag_hash.attr] == spec.dag_hash()]
     cached_target = cached_pkg_specs[0] if cached_pkg_specs else None
 
     # If either the full_hash didn't exist in the specfile, or it

@@ -1769,7 +1769,7 @@ class Spec(object):
                 hashes in the dictionary.
 
         """
-        node_list = []
+        node_list = []  # Using a list to preserve preorder traversal.
         hash_list = []
         for s in self.traverse(order='pre', deptype=hash.deptype):
             spec_hash = s.node_dict_with_hashes(hash)[hash.attr]
@@ -1793,7 +1793,7 @@ class Spec(object):
         spec is concrete, the full hash is added as well.  If 'build' is in
         the hash_type, the build hash is also added. """
         node = self.to_node_dict(hash)
-        node['_hash'] = self.dag_hash()
+        node[ht.dag_hash.attr] = self.dag_hash()
 
         # full_hash and build_hash are lazily computed -- but if we write
         # a spec out, we want them to be included. This is effectively
@@ -1817,9 +1817,9 @@ class Spec(object):
                 not self._hashes_final)                     # lazily compute
             # TODO: Check if these keys are correct?
             if write_full_hash:
-                node['_full_hash'] = self.full_hash()
+                node[ht.full_hash.attr] = self.full_hash()
             if write_build_hash:
-                node['_build_hash'] = self.build_hash()
+                node[ht.build_hash.attr] = self.build_hash()
         else:
             node['concrete'] = False
 
@@ -1844,9 +1844,12 @@ class Spec(object):
             # Old format
             name = next(iter(node))
             node = node[name]
-            setattr(spec, ht.dag_hash.attr, node.get('hash', None))
-            setattr(spec, ht.build_hash.attr, node.get('build_hash', None))
-            setattr(spec, ht.full_hash.attr, node.get('full_hash', None))
+            setattr(spec, ht.dag_hash.attr, node.get(ht.dag_hash.attr[1:], 
+                    None))
+            setattr(spec, ht.build_hash.attr, node.get(ht.build_hash.attr[1:],
+                    None))
+            setattr(spec, ht.full_hash.attr, node.get(ht.full_hash.attr[1:],
+                    None))
         spec.name = name
         spec.namespace = node.get('namespace', None)
 
@@ -1916,7 +1919,7 @@ class Spec(object):
         return spec
 
     @staticmethod
-    def build_spec_from_node_dict(node, hash_type='_hash'):
+    def build_spec_from_node_dict(node, hash_type=ht.dag_hash.attr):
         if 'build_spec' not in node.keys():
             return
         build_spec_dict = node['build_spec']
@@ -1936,7 +1939,7 @@ class Spec(object):
             yield t
 
     @staticmethod
-    def read_yaml_dep_specs(deps, hash_type='_hash'):
+    def read_yaml_dep_specs(deps, hash_type=ht.dag_hash.attr):
         """Read the DependencySpec portion of a YAML-formatted Spec.
 
         This needs to be backward-compatible with older spack spec
@@ -1961,7 +1964,8 @@ class Spec(object):
                     # old format
                     dag_hash, deptypes = elt['hash'], elt['type']
                 else:
-                    for key in ('_hash', '_build_hash', '_full_hash'):
+                    for key in (ht.dag_hash.attr, ht.build_hash.attr,
+                                ht.full_hash.attr):
                         if key in elt:
                             dag_hash, deptypes = elt[key], elt['type']
                             hash_type = key
@@ -2187,7 +2191,7 @@ class Spec(object):
                         break
 
         if not any_deps:  # If we never see a dependency...
-            hash_type = '_hash'  # guess
+            hash_type = ht.dag_hash.attr  # use the dag_hash
         elif not hash_type:  # Seen a dependency, still don't know hash_type
             raise spack.error.SpecError("YAML spec contains malformed"
                                         "dependencies. Old format?")
