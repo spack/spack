@@ -1842,7 +1842,7 @@ def prefixes(path):
     if sys.platform == "win32":
         sep = "/"
     else:
-        sep = os.sep()
+        sep = os.sep
 
     if sys.platform == "win32":
         path = path.replace("\\", "/")
