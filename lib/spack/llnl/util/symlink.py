@@ -9,8 +9,6 @@ import sys
 import tempfile
 from os.path import exists, join
 
-import llnl.util.filesystem as fs
-
 __win32_can_symlink__ = None
 
 
@@ -74,6 +72,7 @@ def _win32_can_symlink():
     dlink = join(tempdir, 'dlink')
     flink = join(tempdir, 'flink.txt')
 
+    import llnl.util.filesystem as fs
     fs.touchp(fpath)
 
     try:
