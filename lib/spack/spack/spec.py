@@ -2679,7 +2679,7 @@ class Spec(object):
             reuse (bool): if True try to maximize reuse of already installed
                 specs, if False don't account for installation status.
         """
-        clone = self.copy(caches=True)
+        clone = self.copy()
         clone.concretize(tests=tests, reuse=reuse)
         return clone
 
@@ -3429,7 +3429,7 @@ class Spec(object):
 
         return patches
 
-    def _dup(self, other, deps=True, cleardeps=True, caches=None):
+    def _dup(self, other, deps=True, cleardeps=True):
         """Copy the spec other into self.  This is an overwriting
         copy. It does not copy any dependents (parents), but by default
         copies dependencies.
@@ -3444,10 +3444,6 @@ class Spec(object):
             cleardeps (bool): if True clears the dependencies of ``self``,
                 before possibly copying the dependencies of ``other`` onto
                 ``self``
-            caches (bool or None): preserve cached fields such as
-                ``_normal``, ``_hash``, and ``_dunder_hash``. By
-                default this is ``False`` if DAG structure would be
-                changed by the copy, ``True`` if it's an exact copy.
 
         Returns:
             True if ``self`` changed because of the copy operation,
@@ -3498,12 +3494,6 @@ class Spec(object):
         self.extra_attributes = other.extra_attributes
         self.namespace = other.namespace
 
-        # Cached fields are results of expensive operations.
-        # If we preserved the original structure, we can copy them
-        # safely. If not, they need to be recomputed.
-        if caches is None:
-            caches = (deps is True or deps == dp.all_deptypes)
-
         # If we copy dependencies, preserve DAG structure in the new spec
         if deps:
             # If caller restricted deptypes to be copied, adjust that here.
@@ -3511,12 +3501,12 @@ class Spec(object):
             deptypes = dp.all_deptypes
             if isinstance(deps, (tuple, list)):
                 deptypes = deps
-            self._dup_deps(other, deptypes, caches)
+            self._dup_deps(other, deptypes)
 
         self._concrete = other._concrete
         self._hashes_final = other._hashes_final
 
-        if caches or self._concrete:
+        if self._concrete:
             self._hash = other._hash
             self._build_hash = other._build_hash
             self._dunder_hash = other._dunder_hash
@@ -3533,7 +3523,7 @@ class Spec(object):
 
         return changed
 
-    def _dup_deps(self, other, deptypes, caches):
+    def _dup_deps(self, other, deptypes):
         new_specs = {self.name: self}
         for dspec in other.traverse_edges(cover='edges',
                                           root=False):
@@ -3542,11 +3532,9 @@ class Spec(object):
                 continue
 
             if dspec.parent.name not in new_specs:
-                new_specs[dspec.parent.name] = dspec.parent.copy(
-                    deps=False, caches=caches)
+                new_specs[dspec.parent.name] = dspec.parent.copy(deps=False)
             if dspec.spec.name not in new_specs:
-                new_specs[dspec.spec.name] = dspec.spec.copy(
-                    deps=False, caches=caches)
+                new_specs[dspec.spec.name] = dspec.spec.copy(deps=False)
 
             new_specs[dspec.parent.name]._add_dependency(
                 new_specs[dspec.spec.name], dspec.deptypes)
@@ -4364,22 +4352,19 @@ class Spec(object):
         # _dependents of these specs should not be trusted.
         # Variants may also be ignored here for now...
 
-        # Keep all cached hashes because we will invalidate the ones that need
-        # invalidating later, and we don't want to invalidate unnecessarily
-
         if transitive:
-            self_nodes = dict((s.name, s.copy(deps=False, caches=True))
+            self_nodes = dict((s.name, s.copy(deps=False))
                               for s in self.traverse(root=True)
                               if s.name not in other)
-            other_nodes = dict((s.name, s.copy(deps=False, caches=True))
+            other_nodes = dict((s.name, s.copy(deps=False))
                                for s in other.traverse(root=True))
         else:
             # If we're not doing a transitive splice, then we only want the
             # root of other.
-            self_nodes = dict((s.name, s.copy(deps=False, caches=True))
+            self_nodes = dict((s.name, s.copy(deps=False))
                               for s in self.traverse(root=True)
                               if s.name != other.name)
-            other_nodes = {other.name: other.copy(deps=False, caches=True)}
+            other_nodes = {other.name: other.copy(deps=False)}
 
         nodes = other_nodes.copy()
         nodes.update(self_nodes)
