@@ -59,7 +59,7 @@ class Enzyme(CMakePackage):
             'BCPass-{0}'.format(ver)
         ]
         return find_libraries(libs, root=self.prefix, recursive=True)
-        
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Get the LLVMEnzyme and ClangEnzyme lib paths
         llvm, clang = self.libs
