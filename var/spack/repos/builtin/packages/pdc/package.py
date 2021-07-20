@@ -18,10 +18,10 @@ class Pdc(CMakePackage):
 
     maintainers = ['houjun', 'sbyna']
 
-    version('0.1', sha256='24787806a30cd1cda1fed17220a62e768bdba5de56877f2ea7126279ff2a4f69')
+    version('0.1', sha256='01b4207ecf71594a7f339c315f2869b3fa8fbd34b085963dc4c1bdc5b66bb93e')
 
     conflicts('%clang')
-    depends_on('libfabric@1.11.2')
+    depends_on('libfabric')
     depends_on('mercury')
     depends_on('mpi')
 
