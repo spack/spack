@@ -43,23 +43,22 @@ def mock_calls_for_clean(monkeypatch):
 
 
 all_effects = ['stages', 'downloads', 'caches', 'failures']
-cmd_effects = [
+
+
+@pytest.mark.usefixtures(
+    'mock_packages', 'config'
+)
+@pytest.mark.parametrize('command_line,effects', [
     ('mpileaks', ['package']),
     ('-s',       ['stages']),
     ('-sd',      ['stages', 'downloads']),
     ('-m',       ['caches']),
     ('-f',       ['failures']),
+    ('-a',       all_effects),
     ('',         []),
-]
-if sys.platform != 'win32':
-    cmd_effects += ('-a', all_effects)
-
+])
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
-@pytest.mark.usefixtures(
-    'mock_packages', 'config'
-)
-@pytest.mark.parametrize('command_line,effects', cmd_effects)
 def test_function_calls(command_line, effects, mock_calls_for_clean):
 
     # Call the command with the supplied command line
