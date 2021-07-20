@@ -431,6 +431,15 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                         library=petsclibname, path=spec[library].prefix)
                 )
 
+        if '+cuda' in spec:
+            if not spec.satisfies('cuda_arch=none'):
+                cuda_arch = spec.variants['cuda_arch'].value
+                if spec.satisfies('@3.14:'):
+                    options.append('--with-cuda-gencodearch={0}'.format(cuda_arch[0]))
+                else:
+                    options.append('CUDAFLAGS=-gencode arch=compute_{0},code=sm_{0}'
+                                   .format(cuda_arch[0]))
+
         # PETSc does not pick up SuperluDist from the dir as they look for
         # superlu_dist_4.1.a
         if 'superlu-dist' in spec:
