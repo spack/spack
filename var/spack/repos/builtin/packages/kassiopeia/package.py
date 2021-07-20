@@ -60,5 +60,5 @@ class Kassiopeia(CMakePackage):
             self.define_from_variant("KEMField_USE_MPI", "mpi"),
             self.define_from_variant("KEMField_USE_OPENCL", "opencl"),
             self.define("CMAKE_CXX_STANDARD", cxxstd)
-        ]        
+        ]
         return args
