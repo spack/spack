@@ -116,11 +116,12 @@ def activate(
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
         add_view (bool): generate commands to add view to path variables
-        shell (string): One of `sh`, `csh`, `fish`.
-        prompt (string): string to add to the users prompt, or None
+        shell (str): One of `sh`, `csh`, `fish`.
+        prompt (str): string to add to the users prompt, or None
 
     Returns:
-        cmds: Shell commands to activate environment.
+        str: Shell commands to activate environment.
+
     TODO: environment to use the activated spack environment.
     """
     global _active_environment
@@ -198,10 +199,10 @@ def deactivate(shell='sh'):
     """Undo any configuration or repo settings modified by ``activate()``.
 
     Arguments:
-        shell (string): One of `sh`, `csh`, `fish`. Shell style to use.
+        shell (str): One of `sh`, `csh`, `fish`. Shell style to use.
 
     Returns:
-        (string): shell commands for `shell` to undo environment variables
+        str: shell commands for `shell` to undo environment variables
 
     """
     global _active_environment
@@ -272,7 +273,7 @@ def find_environment(args):
     If an environment is found, read it in.  If not, return None.
 
     Arguments:
-        args (Namespace): argparse namespace wtih command arguments
+        args (argparse.Namespace): argparse namespace wtih command arguments
 
     Returns:
         (Environment): a found environment, or ``None``
@@ -322,7 +323,7 @@ def get_env(args, cmd_name, required=False):
     message that says the calling command *needs* an active environment.
 
     Arguments:
-        args (Namespace): argparse namespace wtih command arguments
+        args (argparse.Namespace): argparse namespace wtih command arguments
         cmd_name (str): name of calling command
         required (bool): if ``True``, raise an exception when no environment
             is found; if ``False``, just return ``None``
@@ -550,7 +551,7 @@ class ViewDescriptor(object):
         Raise if new is None and there is no current view
 
         Arguments:
-            new (string or None): If a string, create a FilesystemView
+            new (str or None): If a string, create a FilesystemView
                 rooted at that path. Default None. This should only be used to
                 regenerate the view, and cannot be used to access specs.
         """
@@ -851,7 +852,7 @@ class Environment(object):
         """Clear the contents of the environment
 
         Arguments:
-            re_read (boolean): If True, do not clear ``new_specs`` nor
+            re_read (bool): If True, do not clear ``new_specs`` nor
                 ``new_installs`` values. These values cannot be read from
                 yaml, and need to be maintained when re-reading an existing
                 environment.
@@ -1119,11 +1120,11 @@ class Environment(object):
         """Add dev-build info for package
 
         Args:
-            spec (Spec): Set constraints on development specs. Must include a
+            spec (spack.spec.Spec): Set constraints on development specs. Must include a
                 concrete version.
-            path (string): Path to find code for developer builds. Relative
+            path (str): Path to find code for developer builds. Relative
                 paths will be resolved relative to the environment.
-            clone (bool, default False): Clone the package code to the path.
+            clone (bool): Clone the package code to the path.
                 If clone is False Spack will assume the code is already present
                 at ``path``.
 
@@ -1552,7 +1553,7 @@ class Environment(object):
         that needs to be done separately with a call to write().
 
         Args:
-            args (Namespace): argparse namespace with command arguments
+            args (argparse.Namespace): argparse namespace with command arguments
             install_args (dict): keyword install arguments
         """
         self.install_specs(None, args=args, **install_args)

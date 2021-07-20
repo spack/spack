@@ -5,14 +5,15 @@
 
 import os
 import shutil
+
 import pytest
 
 from llnl.util.filesystem import mkdirp
+
 import spack.environment as ev
-from spack.main import SpackCommand, SpackCommandError
 import spack.paths
 import spack.stage
-
+from spack.main import SpackCommand, SpackCommandError
 
 # Everything here uses (or can use) the mock config and database.
 pytestmark = pytest.mark.usefixtures('config', 'database')

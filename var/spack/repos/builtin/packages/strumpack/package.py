@@ -147,10 +147,12 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.
                             format(",".join(rocm_archs)))
 
+        if self.spec.satisfies('@:5.1.1'):
+            self.test_data_dir = 'examples/data'
+        else:
+            self.test_data_dir = 'examples/sparse/data'
+        self.test_src_dir = 'test'
         return args
-
-    test_data_dir = 'examples/data'
-    test_src_dir = 'test'
 
     @run_after('install')
     def cache_test_sources(self):
@@ -185,7 +187,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.install_test_root, self.test_src_dir)
         test_exe = 'test_sparse_seq'
         test_exe_mpi = 'test_sparse_mpi'
-        exe_arg = ['../../examples/data/pde900.mtx']
+        exe_arg = [join_path('..', '..', self.test_data_dir, 'pde900.mtx')]
         if '+mpi' in self.spec:
             test_args = ['-n', '4', test_exe_mpi]
             test_args.extend(exe_arg)

@@ -15,7 +15,7 @@ import spack.repo
 import spack.stage
 import spack.util.crypto
 from spack.util.naming import valid_fully_qualified_module_name
-from spack.version import ver, Version
+from spack.version import Version, ver
 
 description = "checksum available versions of a package"
 section = "packaging"

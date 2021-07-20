@@ -59,7 +59,7 @@ def get_dependents(pkg_name, ideps, transitive=False, dependents=None):
     Args:
         pkg_name (str): name of the package whose dependents should be returned
         ideps (dict): dictionary of dependents, from inverted_dependencies()
-        transitive (bool, optional): return transitive dependents when True
+        transitive (bool or None): return transitive dependents when True
     """
     if dependents is None:
         dependents = set()

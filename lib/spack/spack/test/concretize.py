@@ -4,24 +4,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-import pytest
 import jinja2
+import pytest
 
 import archspec.cpu
 
 import llnl.util.lang
 
 import spack.architecture
+import spack.compilers
 import spack.concretize
 import spack.error
+import spack.platforms.test
 import spack.repo
-
 from spack.concretize import find_spec
 from spack.spec import Spec
-from spack.version import ver
 from spack.util.mock_package import MockPackageMultiRepo
-import spack.compilers
-import spack.platforms.test
+from spack.version import ver
 
 
 def check_spec(abstract, concrete):

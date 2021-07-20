@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class DarshanRuntime(Package):
+class DarshanRuntime(AutotoolsPackage):
     """Darshan (runtime) is a scalable HPC I/O characterization tool
     designed to capture an accurate picture of application I/O behavior,
     including properties such as patterns of access within files, with
@@ -38,6 +38,10 @@ class DarshanRuntime(Package):
     depends_on('zlib')
     depends_on('hdf5', when='+hdf5')
     depends_on('papi', when='+apxc')
+    depends_on('autoconf', type='build', when='@main')
+    depends_on('automake', type='build', when='@main')
+    depends_on('libtool',  type='build', when='@main')
+    depends_on('m4',       type='build', when='@main')
 
     variant('mpi', default=True, description='Compile with MPI support')
     variant('hdf5', default=False, description='Compile with HDF5 module')
@@ -61,7 +65,13 @@ class DarshanRuntime(Package):
     conflicts('+apxc', when='@:3.2.1',
               msg='+apxc variant only available starting from version 3.3.0')
 
-    def install(self, spec, prefix):
+    @property
+    def configure_directory(self):
+        return 'darshan-runtime'
+
+    def configure_args(self):
+        spec = self.spec
+        extra_args = []
 
         job_id = 'NONE'
         if '+slurm' in spec:
@@ -73,34 +83,31 @@ class DarshanRuntime(Package):
         if '+sge' in spec:
             job_id = 'JOB_ID'
 
-        # TODO: BG-Q and other platform configure options
-        options = []
-        if '+mpi' in spec:
-            options = ['CC=%s' % spec['mpi'].mpicc]
-        else:
-            options = ['--without-mpi']
-
         if '+hdf5' in spec:
-            options.extend(['--enable-hdf5-mod=%s' % spec['hdf5'].prefix])
-
+            if self.version < Version('3.3.2'):
+                extra_args.append('--enable-hdf5-mod=%s' % spec['hdf5'].prefix)
+            else:
+                extra_args.append('--enable-hdf5-mod')
         if '+apmpi' in spec:
-            options.extend(['--enable-apmpi-mod'])
+            extra_args.append('--enable-apmpi-mod')
         if '+apmpi_sync' in spec:
-            options.extend(['--enable-apmpi-mod',
-                            '--enable-apmpi-coll-sync'])
+            extra_args.append(['--enable-apmpi-mod',
+                               '--enable-apmpi-coll-sync'])
         if '+apxc' in spec:
-            options.extend(['--enable-apxc-mod'])
+            extra_args.append(['--enable-apxc-mod'])
 
-        options.extend(['--with-mem-align=8',
-                        '--with-log-path-by-env=DARSHAN_LOG_DIR_PATH',
-                        '--with-jobid-env=%s' % job_id,
-                        '--with-zlib=%s' % spec['zlib'].prefix])
+        extra_args.append('--with-mem-align=8')
+        extra_args.append('--with-log-path-by-env=DARSHAN_LOG_DIR_PATH')
+        extra_args.append('--with-jobid-env=%s' % job_id)
+        extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
 
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-runtime/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        if '+mpi' in spec:
+            extra_args.append('CC=%s' % self.spec['mpi'].mpicc)
+        else:
+            extra_args.append('CC=%s' % self.compiler.cc)
+            extra_args.append('--without-mpi')
+
+        return extra_args
 
     def setup_run_environment(self, env):
         # default path for log file, could be user or site specific setting

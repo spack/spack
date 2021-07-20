@@ -35,14 +35,20 @@ import six
 import six.moves.urllib.parse as urllib_parse
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    get_single_file,
+    mkdirp,
+    temp_cwd,
+    temp_rename,
+    working_dir,
+)
+
 import spack.config
 import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
-from llnl.util.filesystem import (
-    get_single_file, mkdirp, temp_cwd, temp_rename, working_dir)
 from spack.util.compression import decompressor_for, extension
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
@@ -1248,8 +1254,9 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @property
     def hg(self):
-        """:returns: The hg executable
-        :rtype: Executable
+        """
+        Returns:
+            Executable: the hg executable
         """
         if not self._hg:
             self._hg = which('hg', required=True)
@@ -1399,7 +1406,7 @@ def from_kwargs(**kwargs):
             ``version()`` directive in a package.
 
     Returns:
-        fetch_strategy: The fetch strategy that matches the args, based
+        typing.Callable: The fetch strategy that matches the args, based
             on attribute names (e.g., ``git``, ``hg``, etc.)
 
     Raises:

@@ -13,6 +13,7 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import traceback
 from contextlib import closing
 
 import ruamel.yaml as yaml
@@ -205,7 +206,7 @@ class BinaryCacheIndex(object):
         The cache can be updated by calling ``update()`` on the cache.
 
         Args:
-            spec (Spec): Concrete spec to find
+            spec (spack.spec.Spec): Concrete spec to find
 
         Returns:
             An list of objects containing the found specs and mirror url where
@@ -582,7 +583,7 @@ def get_buildfile_manifest(spec):
                     added = True
 
             if relocate.needs_binary_relocation(m_type, m_subtype):
-                if ((m_subtype in ('x-executable', 'x-sharedlib')
+                if ((m_subtype in ('x-executable', 'x-sharedlib', 'x-pie-executable')
                     and sys.platform != 'darwin') or
                    (m_subtype in ('x-mach-binary')
                     and sys.platform == 'darwin') or
@@ -710,12 +711,6 @@ def generate_package_index(cache_prefix):
     cache_prefix.  This page contains a link for each binary package (.yaml or
     .json) under cache_prefix.
     """
-    tmpdir = tempfile.mkdtemp()
-    db_root_dir = os.path.join(tmpdir, 'db_root')
-    db = spack_db.Database(None, db_dir=db_root_dir,
-                           enable_transaction_locking=False,
-                           record_fields=['spec', 'ref_count', 'in_buildcache'])
-
     try:
         file_list = (
             entry
@@ -736,6 +731,9 @@ def generate_package_index(cache_prefix):
 
     tty.debug('Retrieving spec descriptor files from {0} to build index'.format(
         cache_prefix))
+
+    all_mirror_specs = {}
+
     for file_path in file_list:
         try:
             spec_url = url_util.join(cache_prefix, file_path)
@@ -744,18 +742,86 @@ def generate_package_index(cache_prefix):
             spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
             # Need full spec.json name or this gets confused with index.json.
             if spec_url.endswith('spec.json'):
+                spec_dict = sjson.load(spec_file_contents)
                 s = Spec.from_json(spec_file_contents)
-                db.add(s, None)
-                db.mark(s, 'in_buildcache', True)
             elif spec_url.endswith('yaml'):
+                spec_dict = syaml.load(spec_file_contents)
                 s = Spec.from_yaml(spec_file_contents)
-                db.add(s, None)
-                db.mark(s, 'in_buildcache', True)
+            else:  # Looking at an index.json or something else in file_list
+                continue
+            all_mirror_specs[s.dag_hash()] = {
+                'spec_url': spec_url,
+                'spec': s,
+                'num_deps': len(list(s.traverse(root=False))),
+                'binary_cache_checksum': spec_dict['binary_cache_checksum'],
+                'buildinfo': spec_dict['buildinfo'],
+            }
         except (URLError, web_util.SpackWebError) as url_err:
             tty.error('Error reading specfile: {0}'.format(file_path))
             tty.error(url_err)
 
+    sorted_specs = sorted(all_mirror_specs.keys(),
+                          key=lambda k: all_mirror_specs[k]['num_deps'])
+
+    tmpdir = tempfile.mkdtemp()
+    db_root_dir = os.path.join(tmpdir, 'db_root')
+    db = spack_db.Database(None, db_dir=db_root_dir,
+                           enable_transaction_locking=False,
+                           record_fields=['spec', 'ref_count', 'in_buildcache'])
+
     try:
+        tty.debug('Specs sorted by number of dependencies:')
+        for dag_hash in sorted_specs:
+            spec_record = all_mirror_specs[dag_hash]
+            s = spec_record['spec']
+            num_deps = spec_record['num_deps']
+            tty.debug('  {0}/{1} -> {2}'.format(
+                s.name, dag_hash[:7], num_deps))
+            if num_deps > 0:
+                # Check each of this spec's dependencies (which we have already
+                # processed), as they are the source of truth for their own
+                # full hash.  If the full hash we have for any deps does not
+                # match what those deps have themselves, then we need to splice
+                # this spec with those deps, and push this spliced spec
+                # (spec.yaml file) back to the mirror, as well as update the
+                # all_mirror_specs dictionary with this spliced spec.
+                to_splice = []
+                for dep in s.dependencies():
+                    dep_dag_hash = dep.dag_hash()
+                    if dep_dag_hash in all_mirror_specs:
+                        true_dep = all_mirror_specs[dep_dag_hash]['spec']
+                        if true_dep.full_hash() != dep.full_hash():
+                            to_splice.append(true_dep)
+
+                if to_splice:
+                    tty.debug('    needs the following deps spliced:')
+                    for true_dep in to_splice:
+                        tty.debug('      {0}/{1}'.format(
+                            true_dep.name, true_dep.dag_hash()[:7]))
+                        s = s.splice(true_dep, True)
+
+                    # Push this spliced spec back to the mirror
+                    spliced_yaml = s.to_dict(hash=ht.full_hash)
+                    for key in ['binary_cache_checksum', 'buildinfo']:
+                        spliced_yaml[key] = spec_record[key]
+
+                    temp_yaml_path = os.path.join(tmpdir, 'spliced.spec.yaml')
+                    with open(temp_yaml_path, 'w') as fd:
+                        fd.write(syaml.dump(spliced_yaml))
+
+                    spliced_yaml_url = spec_record['yaml_url']
+                    web_util.push_to_url(
+                        temp_yaml_path, spliced_yaml_url, keep_original=False)
+                    tty.debug('    spliced and wrote {0}'.format(
+                        spliced_yaml_url))
+                    spec_record['spec'] = s
+
+            db.add(s, None)
+            db.mark(s, 'in_buildcache', True)
+
+        # Now that we have fixed any old spec yamls that might have had the wrong
+        # full hash for their dependencies, we can generate the index, compute
+        # the hash, and push those files to the mirror.
         index_json_path = os.path.join(db_root_dir, 'index.json')
         with open(index_json_path, 'w') as f:
             db._write_to_file(f)
@@ -787,6 +853,7 @@ def generate_package_index(cache_prefix):
         msg = 'Encountered problem pushing package index to {0}: {1}'.format(
             cache_prefix, err)
         tty.warn(msg)
+        tty.debug('\n' + traceback.format_exc())
     finally:
         shutil.rmtree(tmpdir)
 
@@ -1039,14 +1106,14 @@ def download_tarball(spec, preferred_mirrors=None):
     path to downloaded tarball if successful, None otherwise.
 
     Args:
-        spec (Spec): Concrete spec
+        spec (spack.spec.Spec): Concrete spec
         preferred_mirrors (list): If provided, this is a list of preferred
-        mirror urls.  Other configured mirrors will only be used if the
-        tarball can't be retrieved from one of these.
+            mirror urls.  Other configured mirrors will only be used if the
+            tarball can't be retrieved from one of these.
 
     Returns:
         Path to the downloaded tarball, or ``None`` if the tarball could not
-            be downloaded from any configured mirrors.
+        be downloaded from any configured mirrors.
     """
     if not spack.mirror.MirrorCollection():
         tty.die("Please add a spack mirror to allow " +
@@ -1445,7 +1512,7 @@ def get_mirrors_for_spec(spec=None, full_hash_match=False,
     indicating the mirrors on which it can be found
 
     Args:
-        spec (Spec): The spec to look for in binary mirrors
+        spec (spack.spec.Spec): The spec to look for in binary mirrors
         full_hash_match (bool): If True, only includes mirrors where the spec
             full hash matches the locally computed full hash of the ``spec``
             argument.  If False, any mirror which has a matching DAG hash
@@ -1752,11 +1819,11 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
 
     Arguments:
         mirrors (dict): Mirrors to check against
-        specs (iterable): Specs to check against mirrors
-        output_file (string): Path to output file to be written.  If provided,
+        specs (typing.Iterable): Specs to check against mirrors
+        output_file (str): Path to output file to be written.  If provided,
             mirrors with missing or out-of-date specs will be formatted as a
             JSON object and written to this file.
-        rebuild_on_errors (boolean): Treat any errors encountered while
+        rebuild_on_errors (bool): Treat any errors encountered while
             checking specs as a signal to rebuild package.
 
     Returns: 1 if any spec was out-of-date on any mirror, 0 otherwise.

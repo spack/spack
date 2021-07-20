@@ -2,11 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 import os
 import re
 import shlex
 import subprocess
+import sys
+
 from six import string_types, text_type
 
 import llnl.util.tty as tty
@@ -123,6 +124,7 @@ class Executable(object):
         env.update(self.default_env)
 
         from spack.util.environment import EnvironmentModifications  # no cycle
+
         # Apply env argument
         if isinstance(env_arg, EnvironmentModifications):
             env_arg.apply_modifications(env)
@@ -295,7 +297,7 @@ def which(*args, **kwargs):
         *args (str): One or more executables to search for
 
     Keyword Arguments:
-        path (:func:`list` or str): The path to search. Defaults to ``PATH``
+        path (list or str): The path to search. Defaults to ``PATH``
         required (bool): If set to True, raise an error if executable not found
 
     Returns:

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-from typing import Dict, Callable  # novm
+from typing import Callable, Dict  # novm
 
 import llnl.util.tty as tty
 
