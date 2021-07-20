@@ -54,8 +54,7 @@ class Enzyme(CMakePackage):
         ver = self.spec['llvm'].version.up_to(1)
         libs = [
             'LLVMEnzyme-{0}'.format(ver),
-            'ClangEnzyme-{0}'.format(ver),
-            'BCPass-{0}'.format(ver)
+            'ClangEnzyme-{0}'.format(ver)
         ]
         return find_libraries(libs, root=self.prefix, recursive=True)
 
