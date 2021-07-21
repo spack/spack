@@ -15,4 +15,4 @@ class PyRequestsFtp(PythonPackage):
     version('0.3.1', sha256='7504ceb5cba8a5c0135ed738596820a78c5f2be92d79b29f96ba99b183d8057a')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-requests@1.0.0:', type=('build', 'run'))
+    depends_on('py-requests', type=('build', 'run'))
