@@ -3,22 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install robodoc
-#
-# You can edit this file again by typing:
-#
-#     spack edit robodoc
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
 
 from spack import *
 
@@ -31,6 +15,7 @@ class Robodoc(AutotoolsPackage):
 
     maintainers = ['wscullin']
 
+    version('develop', git='https://github.com/gumpu/ROBODoc.git')
     version('4.99.44', sha256='8ed875bbde2788d7bc986693077577d6cc6e15e4bc660d522164710977952e90')
 
     depends_on('autoconf', type='build')
@@ -38,12 +23,7 @@ class Robodoc(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
-
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-
     def autoreconf(self, spec, prefix):
-        # FIXME: Modify the autoreconf method as necessary
         autoreconf('--install', '--verbose', '--force')
 
     def configure_args(self):
