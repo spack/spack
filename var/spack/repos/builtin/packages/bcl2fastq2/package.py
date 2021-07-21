@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import glob
 import os
 
@@ -11,6 +10,7 @@ import llnl.util.tty as tty
 
 from spack import *
 from spack.pkg.builtin.boost import Boost
+
 
 # This application uses cmake to build, but they wrap it with a
 # configure script that performs dark magic.  This package does it

@@ -8,6 +8,7 @@ from os import symlink
 from spack import *
 from spack.pkg.builtin.boost import Boost
 
+
 class Bridger(MakefilePackage, SourceforgePackage):
     """Bridger : An Efficient De novo Transcriptome Assembler For
        RNA-Seq Data"""

@@ -8,6 +8,7 @@ import os
 from spack import *
 from spack.pkg.builtin.boost import Boost
 
+
 class Dealii(CMakePackage, CudaPackage):
     """C++ software library providing well-documented tools to build finite
     element codes for a broad variety of PDEs."""

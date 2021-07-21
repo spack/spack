@@ -8,6 +8,7 @@ import os
 from spack import *
 from spack.pkg.builtin.boost import Boost
 
+
 class CbtfArgonavisGui(QMakePackage):
     """CBTF Argo Navis GUI project contains the GUI that views OpenSpeedShop
        performance information by loading in the Sqlite database files.
