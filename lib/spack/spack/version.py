@@ -1005,7 +1005,7 @@ class CommitLookup(object):
 
     @property
     def repository_uri(self):
-        return os.sep.join(self.fetcher.url.split(os.sep)[-3:]).rstrip(".git")
+        return re.sub("[.]git$", "", os.sep.join(self.fetcher.url.split(os.sep)[-3:]))
 
     @property
     def repository_metadata_path(self):
