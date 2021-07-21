@@ -26,7 +26,7 @@ class Nut(CMakePackage):
 
     # The conflict with %nvhpc is inherited from random123,
     # which is a C++ template library
-    conflicts('%nvhpc)
+    conflicts('%nvhpc')
     conflicts('%intel', when='@serial')
     conflicts('%pgi', when='@serial')
     conflicts('%xl', when='@serial')
