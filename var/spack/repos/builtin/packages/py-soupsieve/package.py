@@ -16,7 +16,7 @@ class PySoupsieve(PythonPackage):
     version('1.9.6', sha256='7985bacc98c34923a439967c1a602dc4f1e15f923b6fcf02344184f86cc7efaa')
     version('1.9.3', sha256='8662843366b8d8779dec4e2f921bebec9afd856a5ff2e82cd419acc5054a1a92')
 
-    depends_on('python@3.6:', when='@2.2', type=('build', 'run'))
+    depends_on('python@3.6:', when='@2.2:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools@42:', when='@2.2:', type='build')
     depends_on('py-backports-functools-lru-cache', when='^python@:2', type=('build', 'run'))
