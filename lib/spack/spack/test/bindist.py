@@ -5,6 +5,7 @@
 import glob
 import os
 import platform
+import re
 import sys
 
 import py
@@ -638,29 +639,28 @@ def test_update_index_fix_deps(monkeypatch, tmpdir, mutable_config):
     buildcache_cmd('update-index', '-d', mirror_dir.strpath)
 
     # Simulate an update to b that only affects full hash by simply overwriting
-    # the full hash in the spec.yaml file on the mirror
-    b_spec_yaml_name = bindist.tarball_name(b, '.spec.yaml')
-    b_spec_yaml_path = os.path.join(mirror_dir.strpath,
+    # the full hash in the spec.json file on the mirror
+    b_spec_json_name = bindist.tarball_name(b, '.spec.json')
+    b_spec_json_path = os.path.join(mirror_dir.strpath,
                                     bindist.build_cache_relative_path(),
-                                    b_spec_yaml_name)
-    fs.filter_file(r"full_hash:\s[^\s]+$",
-                   "full_hash: {0}".format(new_b_full_hash),
-                   b_spec_yaml_path)
-
+                                    b_spec_json_name)
+    fs.filter_file(r'"full_hash":\s"\S+"',
+                   '"full_hash": "{0}"'.format(new_b_full_hash),
+                   b_spec_json_path)
     # When we update the index, spack should notice that a's notion of the
     # full hash of b doesn't match b's notion of it's own full hash, and as
-    # a result, spack should fix the spec.yaml for a
+    # a result, spack should fix the spec.json for a
     buildcache_cmd('update-index', '-d', mirror_dir.strpath)
 
-    # Read in the concrete spec yaml of a
-    a_spec_yaml_name = bindist.tarball_name(a, '.spec.yaml')
-    a_spec_yaml_path = os.path.join(mirror_dir.strpath,
+    # Read in the concrete spec json of a
+    a_spec_json_name = bindist.tarball_name(a, '.spec.json')
+    a_spec_json_path = os.path.join(mirror_dir.strpath,
                                     bindist.build_cache_relative_path(),
-                                    a_spec_yaml_name)
+                                    a_spec_json_name)
 
-    # Turn concrete spec yaml into a concrete spec (a)
-    with open(a_spec_yaml_path) as fd:
-        a_prime = spec.Spec.from_yaml(fd.read())
+    # Turn concrete spec json into a concrete spec (a)
+    with open(a_spec_json_path) as fd:
+        a_prime = spec.Spec.from_json(fd.read())
 
-    # Make sure the full hash of b in a's spec yaml matches the new value
+    # Make sure the full hash of b in a's spec json matches the new value
     assert(a_prime[b.name].full_hash() == new_b_full_hash)

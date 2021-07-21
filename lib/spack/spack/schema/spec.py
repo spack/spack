@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Schema for a spec found in spec.yaml or database index.json files
+"""Schema for a spec found in spec descriptor or database index.json files
 
 TODO: This needs to be updated? Especially the hashes under properties.
 

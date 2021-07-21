@@ -715,7 +715,8 @@ def generate_package_index(cache_prefix):
         file_list = (
             entry
             for entry in web_util.list_url(cache_prefix)
-            if entry.endswith('.yaml') or entry.endswith('.json'))
+            if entry.endswith('.yaml') or entry.endswith('spec.json'))
+        print(f for f in file_list)
     except KeyError as inst:
         msg = 'No packages at {0}: {1}'.format(cache_prefix, inst)
         tty.warn(msg)
@@ -741,14 +742,12 @@ def generate_package_index(cache_prefix):
             _, _, spec_file = web_util.read_from_url(spec_url)
             spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
             # Need full spec.json name or this gets confused with index.json.
-            if spec_url.endswith('spec.json'):
+            if spec_url.endswith('json'):
                 spec_dict = sjson.load(spec_file_contents)
                 s = Spec.from_json(spec_file_contents)
             elif spec_url.endswith('yaml'):
                 spec_dict = syaml.load(spec_file_contents)
                 s = Spec.from_yaml(spec_file_contents)
-            else:  # Looking at an index.json or something else in file_list
-                continue
             all_mirror_specs[s.dag_hash()] = {
                 'spec_url': spec_url,
                 'spec': s,
@@ -783,7 +782,7 @@ def generate_package_index(cache_prefix):
                 # full hash.  If the full hash we have for any deps does not
                 # match what those deps have themselves, then we need to splice
                 # this spec with those deps, and push this spliced spec
-                # (spec.yaml file) back to the mirror, as well as update the
+                # (spec.json file) back to the mirror, as well as update the
                 # all_mirror_specs dictionary with this spliced spec.
                 to_splice = []
                 for dep in s.dependencies():
@@ -801,25 +800,25 @@ def generate_package_index(cache_prefix):
                         s = s.splice(true_dep, True)
 
                     # Push this spliced spec back to the mirror
-                    spliced_yaml = s.to_dict(hash=ht.full_hash)
+                    spliced_spec_dict = s.to_dict(hash=ht.full_hash)
                     for key in ['binary_cache_checksum', 'buildinfo']:
-                        spliced_yaml[key] = spec_record[key]
+                        spliced_spec_dict[key] = spec_record[key]
 
-                    temp_yaml_path = os.path.join(tmpdir, 'spliced.spec.yaml')
-                    with open(temp_yaml_path, 'w') as fd:
-                        fd.write(syaml.dump(spliced_yaml))
+                    temp_json_path = os.path.join(tmpdir, 'spliced.spec.json')
+                    with open(temp_json_path, 'w') as fd:
+                        fd.write(sjson.dump(spliced_spec_dict))
 
-                    spliced_yaml_url = spec_record['yaml_url']
+                    spliced_spec_url = spec_record['spec_url']
                     web_util.push_to_url(
-                        temp_yaml_path, spliced_yaml_url, keep_original=False)
+                        temp_json_path, spliced_spec_url, keep_original=False)
                     tty.debug('    spliced and wrote {0}'.format(
-                        spliced_yaml_url))
+                        spliced_spec_url))
                     spec_record['spec'] = s
 
             db.add(s, None)
             db.mark(s, 'in_buildcache', True)
 
-        # Now that we have fixed any old spec yamls that might have had the wrong
+        # Now that we have fixed any old specfiles that might have had the wrong
         # full hash for their dependencies, we can generate the index, compute
         # the hash, and push those files to the mirror.
         index_json_path = os.path.join(db_root_dir, 'index.json')
@@ -1780,7 +1779,7 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
         cached_pkg_specs = [item[name] for item in nodes if name in item]
     elif nodes and spec_dict['spec']['_meta']['version'] == 2:
         cached_pkg_specs = [item for item in nodes
-                            if item[ht.dag_hash.attr] == spec.dag_hash()]
+                            if item[ht.dag_hash.attr[1:]] == spec.dag_hash()]
     cached_target = cached_pkg_specs[0] if cached_pkg_specs else None
 
     # If either the full_hash didn't exist in the specfile, or it
@@ -1792,11 +1791,11 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
     if not cached_target:
         reason = 'did not find spec in specfile contents'
         rebuild = True
-    elif ht.full_hash.attr not in cached_target:
+    elif ht.full_hash.attr[1:] not in cached_target:
         reason = 'full_hash was missing from remote specfile'
         rebuild = True
     else:
-        full_hash = cached_target[ht.full_hash.attr]
+        full_hash = cached_target[ht.full_hash.attr[1:]]
         if full_hash != pkg_full_hash:
             reason = 'hash mismatch, remote = {0}, local = {1}'.format(
                 full_hash, pkg_full_hash)
