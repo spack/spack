@@ -18,6 +18,7 @@ class Hpx(CMakePackage, CudaPackage):
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')
+    version('1.7.0', sha256='05099b860410aa5d8a10d6915b1a8818733aa1aa2d5f2b9774730ca7e6de5fac')
     version('1.6.0', sha256='4ab715613c1e1808edc93451781cc9bc98feec4e422ccd4322858a680f6d9017')
     version('1.5.1', sha256='b2f9358ce2a9446b9d8fb1998c30913e7199b007aa82e46d0aa05c763331c635')
     version('1.5.0', sha256='de2901d8ae017592c513e0af9cf58de295abc9802e55ece00424cbd8a3801920')
@@ -95,6 +96,11 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('boost+context', when='+generic_coroutines')
     _msg_generic_coroutines = 'This platform requires +generic_coroutines'
     conflicts('~generic_coroutines', when='platform=darwin', msg=_msg_generic_coroutines)
+
+    # Asio
+    depends_on('asio cxxstd=11', when='@1.7: cxxstd=11')
+    depends_on('asio cxxstd=14', when='@1.7: cxxstd=14')
+    depends_on('asio cxxstd=17', when='@1.7: cxxstd=17')
 
     # CXX Standard
     depends_on('boost cxxstd=11', when='cxxstd=11')

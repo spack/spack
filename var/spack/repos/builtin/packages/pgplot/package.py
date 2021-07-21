@@ -82,3 +82,10 @@ class Pgplot(MakefilePackage):
         install('libcpgplot.a', prefix.lib)
         install('libpgplot.a', prefix.lib)
         install('libpgplot.so', prefix.lib)
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries(
+            "lib*pgplot", root=self.prefix, shared=shared, recursive=True
+        )
