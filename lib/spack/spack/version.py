@@ -308,14 +308,15 @@ class Version(object):
         a suitable compiler.
         """
         # If we have commits, we require previous versions to match
-        if self.is_commit and other.is_commit and self.commits:
-            version = Version(self.commits[self.version]['prev_version'])
-            other = Version(self.commits[other.version]['prev_version'])
+        commits = self.commits or other.commits
+        if self.is_commit and other.is_commit and commits:
+            version = Version(commits[self.version]['prev_version'])
+            other = Version(commits[other.version]['prev_version'])
 
         # Our version is a commit, and the other is not
         elif self.is_commit and self.commits:
             version = Version(self.commits[self.version]['prev_version'])
-        elif other.is_commit and self.commits:
+        elif other.is_commit and other.commits:
             other = Version(self.commits[other.version]['prev_version'])
         else:
             version = self
@@ -375,28 +376,30 @@ class Version(object):
         if other is None:
             return False
 
-        if self.is_commit and other.is_commit and self.commits:
-            order = self.commits[self.version]['order']
-            other_order = self.commits[other.version]['order']
+        commits = self.commits or other.commits
+
+        if self.is_commit and other.is_commit and commits:
+            order = commits[self.version]['order']
+            other_order = commits[other.version]['order']
             return order < other_order
 
         # This version is a commit, but not the other one
         if self.is_commit and self.commits:
             # Otherwise, get previous version we can compare
-            prev_version = Version(self.commits[self.version]['prev_version'])
+            prev_version = Version(commits[self.version]['prev_version'])
             if prev_version:
                 return prev_version.version < other.version
             return False
 
         # This version is not a commit, and the other is
-        if other.is_commit and self.commits:
-            prev_version = Version(self.commits[other.version]['prev_version'])
+        if other.is_commit and other.commits:
+            prev_version = Version(other.commits[other.version]['prev_version'])
             if prev_version:
                 return self.version < prev_version.version
             return False
 
         # If either is a commit and we haven't indexed yet, can't compare
-        if other.is_commit or self.is_commit and not self.commits:
+        if other.is_commit or self.is_commit and not commits:
             return False
 
         # Use tuple comparison assisted by VersionStrComponent for performance
@@ -443,11 +446,26 @@ class Version(object):
     def __contains__(self, other):
         if other is None:
             return False
+
+        commits = self.commits or other.commits
+
+        if commits and (self.is_commit or other.is_commit):
+            if self.is_commit and other.is_commit:
+                return self == other
+
+            elif self.is_commit:
+                exact_version = commits[self.version].get('exact_version', None)
+                return other in Version(exact_version) if exact_version else False
+
+            elif other.is_commit:
+                exact_version = commits[other.version].get('exact_version', None)
+                return Version(exact_version) in self if exact_version else False
+
         return other.version[:len(self.version)] == self.version
 
     def is_predecessor(self, other):
         """True if the other version is the immediate predecessor of this one.
-           That is, NO versions v exist such that:
+           That is, NO non-commit versions v exist such that:
            (self < v < other and v not in self).
         """
         if len(self.version) != len(other.version):
