@@ -62,6 +62,8 @@ class Bolt(CMakePackage):
 
         exe = 'sample_nested'
 
+        # TODO: Either change to use self.compiler.cc (so using the build-time compiler)
+        #  or add test parts that compile with the different supported compilers.
         self.run_test('gcc',
                       options=['-lomp', '-o', exe,
                                '-L{0}'.format(join_path(self.prefix, 'lib')),
