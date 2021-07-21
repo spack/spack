@@ -198,6 +198,8 @@ class Version(object):
         """
         Determine if the original string is referencing a commit.
         """
+        if self.string in infinity_versions:
+            return False
         return COMMIT_VERSION.match(self.string) is not None
 
     @property
@@ -316,12 +318,12 @@ class Version(object):
         elif other.is_commit and self.commits:
             other = Version(self.commits[other.version]['prev_version'])
         else:
-            version = self.version
+            version = self
 
         # Do the final comparison
-        nself = len(version)
+        nself = len(version.version)
         nother = len(other.version)
-        return nother <= nself and version[:nother] == other.version
+        return nother <= nself and version.version[:nother] == other.version
 
     def __iter__(self):
         return iter(self.version)
@@ -381,16 +383,16 @@ class Version(object):
         # This version is a commit, but not the other one
         if self.is_commit and self.commits:
             # Otherwise, get previous version we can compare
-            prev_version = self.commits[self.version]['prev_version']
+            prev_version = Version(self.commits[self.version]['prev_version'])
             if prev_version:
-                return Version(prev_version) < other.version
+                return prev_version.version < other.version
             return False
 
         # This version is not a commit, and the other is
         if other.is_commit and self.commits:
-            prev_version = self.commits[other.version]['prev_version']
+            prev_version = Version(self.commits[other.version]['prev_version'])
             if prev_version:
-                return self.version < Version(prev_version)
+                return self.version < prev_version.version
             return False
 
         # If either is a commit and we haven't indexed yet, can't compare
