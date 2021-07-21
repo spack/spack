@@ -69,7 +69,6 @@ class Rstudio(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('RSTUDIO_TOOLS_ROOT', self.prefix.tools)
-#        env.set('JAVA_HOME', self.spec['java'].prefix)
 
     def patch(self):
         # fix hardcoded path for node-js in use_system_node patch
