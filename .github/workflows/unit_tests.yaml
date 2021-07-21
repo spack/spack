@@ -384,6 +384,9 @@ jobs:
           coverage run $(which spack) unit-test -x
           coverage combine
           coverage xml
+          # Delete the symlink going from ./lib/spack/docs/_spack_root back to
+          # the initial directory, since it causes ELOOP errors with codecov/actions@2
+          rm lib/spack/docs/_spack_root
         else
           echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
           $(which spack) unit-test -x -m "not maybeslow" -k "package_sanity"
