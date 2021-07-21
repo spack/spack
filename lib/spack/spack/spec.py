@@ -3510,13 +3510,15 @@ class Spec(object):
             self._hash = other._hash
             self._build_hash = other._build_hash
             self._dunder_hash = other._dunder_hash
-            self._normal = other._normal
+            self._normal = True
             self._full_hash = other._full_hash
             self._package_hash = other._package_hash
         else:
             self._hash = None
             self._build_hash = None
             self._dunder_hash = None
+            # Note, we could use other._normal if we are copying all deps, but
+            # always set it False here to avoid the complexity of checking
             self._normal = False
             self._full_hash = None
             self._package_hash = None
