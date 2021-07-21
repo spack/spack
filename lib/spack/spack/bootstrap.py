@@ -182,7 +182,8 @@ def get_executable(exe, spec=None, install=False):
     When ``install`` is True, Spack will use the python used to run Spack as an
     external. The ``install`` option should only be used with packages that
     install quickly (when using external python) or are guaranteed by Spack
-    organization to be in a binary mirror (clingo)."""
+    organization to be in a binary mirror (clingo).
+    """
     # Search the system first
     runner = spack.util.executable.which(exe)
     if runner:
@@ -291,10 +292,10 @@ def _install_clingo_and_try_import(module, abstract_spec_str):
         tty.debug(msg.format(module, abstract_spec))
         spec_str = '/' + item['hash']
         with spack.architecture.use_platform(bincache_platform):
+            # TODO: reconstruct the compiler from the spec being installed
             with spack.config.override(
                     'compilers', [{'compiler': item['compiler']}]
             ):
-                # FIXME: need to check sha256
                 install_args = [
                     'install',
                     '--sha256', item['sha256'],

@@ -5,3 +5,23 @@ bootstrap:
   # Root directory for bootstrapping work. The software bootstrapped
   # by Spack is installed in a "store" subfolder of this root directory
   root: ~/.spack/bootstrap
+  # Methods that can be used to bootstrap software. Each method may or
+  # may not be able to bootstrap all of the software that Spack needs,
+  # depending on its type.
+  sources:
+  - name: 'github-actions'
+    type: buildcache
+    description: |
+      Buildcache generated from a public workflow using Github Actions.
+      Binaries are checksummed (sha256) before being installed.
+    info:
+      # FIXME: Substitute with a public url
+      url: file:///home/culpo/production/spack/mirrors/clingo
+      homepage: https://github.com/alalazo/spack-bootstrap-mirrors
+      releases: https://github.com/alalazo/spack-bootstrap-mirrors/releases
+  - name: spack-install
+    type: install
+    description: |
+      Specs built from sources by Spack. May take a long time.
+  trusted:
+    spack: true

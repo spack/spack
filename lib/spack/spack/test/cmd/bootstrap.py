@@ -99,3 +99,15 @@ def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     _bootstrap('reset', '-y')
     assert not os.path.exists(bootstrap_yaml)
     assert os.path.exists(backup_file)
+
+
+def test_list_sources(capsys):
+    # Get the merged list and ensure we get our defaults
+    with capsys.disabled():
+        output = _bootstrap('list')
+    assert "github-actions" in output
+
+    # Ask for a specific scope and check that the list of sources is empty
+    with capsys.disabled():
+        output = _bootstrap('list', '--scope', 'user')
+    assert "No method available" in output

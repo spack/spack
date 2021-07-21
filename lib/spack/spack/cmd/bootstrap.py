@@ -6,6 +6,7 @@ import os.path
 import shutil
 
 import llnl.util.tty
+import llnl.util.tty.color
 
 import spack.cmd.common.arguments
 import spack.config
@@ -50,6 +51,11 @@ def setup_parser(subparser):
         'path', nargs='?', default=None,
         help='set the bootstrap directory to this value'
     )
+
+    list = sp.add_parser(
+        'list', help='list the methods available for bootstrapping'
+    )
+    _add_scope_option(list)
 
 
 def _enable_or_disable(args):
@@ -100,11 +106,51 @@ def _root(args):
     print(root)
 
 
+def _list(args):
+    sources = spack.config.get(
+        'bootstrap:sources', default=None, scope=args.scope
+    )
+
+    if not sources:
+        llnl.util.tty.msg(
+            "No method available for bootstrapping Spack's dependencies"
+        )
+        return
+
+    def _print_method(source):
+        color = llnl.util.tty.color
+
+        def fmt(header, content):
+            header_fmt = "@*b{{{0}:}} {1}"
+            color.cprint(header_fmt.format(header, content))
+
+        fmt("Name", source['name'])
+        print()
+        fmt("  Type", source['type'])
+        print()
+
+        info_lines = ['\n']
+        for key, value in source.get('info', {}).items():
+            info_lines.append(' ' * 4 + '@*{{{0}}}: {1}\n'.format(key, value))
+        if len(info_lines) > 1:
+            fmt("  Info", ''.join(info_lines))
+
+        description_lines = ['\n']
+        for line in source['description'].split('\n'):
+            description_lines.append(' ' * 4 + line + '\n')
+
+        fmt("  Description", ''.join(description_lines))
+
+    for s in sources:
+        _print_method(s)
+
+
 def bootstrap(parser, args):
     callbacks = {
         'enable': _enable_or_disable,
         'disable': _enable_or_disable,
         'reset': _reset,
-        'root': _root
+        'root': _root,
+        'list': _list
     }
     callbacks[args.subcommand](args)
