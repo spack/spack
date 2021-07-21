@@ -84,7 +84,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
             env.set('ROCPROFILER_LOG', '1')
             env.set('HSA_VEN_AMD_AQLPROFILE_LOG', '1')
             env.set('AQLPROFILE_READ_API', '1')
-            env.set('HSA_TOOLS_LIB', 'librocprofiler64.so')
+            env.set('HSA_TOOLS_LIB', 'librocprofiler64.sot')
         if '+rocm_smi' in spec:
             env.append_flags('CFLAGS', '-I%s/rocm_smi' % spec['rocm-smi-lib'].prefix.include)
 
