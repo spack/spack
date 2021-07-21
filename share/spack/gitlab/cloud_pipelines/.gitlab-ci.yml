@@ -167,7 +167,7 @@ e4s-on-power-develop-build:
 
 .aws-ahug-generate:
   extends: [ ".aws-ahug" ]
-  image: { "name": "scottwittenburg/ubuntu18.04-runner:2021-06-14", "entrypoint": [""] }
+  image: { "name": "public.ecr.aws/a4y4t9s0/spack/amazonlinux:2-arm", "entrypoint": [""] }
   tags: ["spack", "public", "large", "aarch64"]
 
 .aarch64-generate:
