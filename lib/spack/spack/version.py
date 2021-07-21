@@ -454,12 +454,20 @@ class Version(object):
                 return self == other
 
             elif self.is_commit:
-                exact_version = commits[self.version].get('exact_version', None)
-                return other in Version(exact_version) if exact_version else False
+                version_info = commits[self.version]
+                cmp_version = version_info.get(
+                    'exact_version',
+                    version_info.get('prev_version')
+                )
+                return other in Version(cmp_version) if cmp_version else False
 
             elif other.is_commit:
-                exact_version = commits[other.version].get('exact_version', None)
-                return Version(exact_version) in self if exact_version else False
+                version_info = commits[other.version]
+                cmp_version = version_info.get(
+                    'exact_version',
+                    version_info.get('prev_version')
+                )
+                return Version(cmp_version) in self if cmp_version else False
 
         return other.version[:len(self.version)] == self.version
 
