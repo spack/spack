@@ -80,7 +80,15 @@ class Concretizer(object):
             spec.variants.setdefault(
                 'dev_path', vt.SingleValuedVariant('dev_path', path))
             changed = True
-        changed |= spec.constrain(dev_info['spec'])
+
+        dev_spec = spack.spec.Spec(dev_info['spec'])
+        dev_pkg = dev_spec.package
+        if hasattr(dev_pkg, 'git'):
+            dev_spec.version.generate_commit_lookup(
+                spack.fetch_strategy.fetcher_for_version_lookup(dev_pkg),
+                dev_pkg.versions
+            )
+        changed |= spec.constrain(dev_spec)
         return changed
 
     def _valid_virtuals_and_externals(self, spec):

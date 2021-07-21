@@ -38,6 +38,7 @@ import spack.config
 import spack.dependency
 import spack.directives
 import spack.error
+import spack.fetch_strategy
 import spack.package
 import spack.package_prefs
 import spack.repo
@@ -1657,7 +1658,15 @@ def _develop_specs_from_env(spec, env):
         spec.variants.setdefault(
             'dev_path', spack.variant.SingleValuedVariant('dev_path', path)
         )
-    spec.constrain(dev_info['spec'])
+
+    dev_spec = spack.spec.Spec(dev_info['spec'])
+    dev_pkg = dev_spec.package
+    if hasattr(dev_pkg, 'git'):
+        dev_spec.version.generate_commit_lookup(
+            spack.fetch_strategy.fetcher_for_version_lookup(dev_pkg),
+            dev_pkg.versions
+        )
+    spec.constrain(dev_spec)
 
 
 #

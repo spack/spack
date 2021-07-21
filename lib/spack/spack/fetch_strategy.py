@@ -1502,6 +1502,21 @@ def _from_merged_attrs(fetcher, pkg, version):
     return fetcher(**attrs)
 
 
+def fetcher_for_version_lookup(pkg):
+    assert hasattr(pkg, 'git'), "Version lookups only allowed on git fetchers"
+    # Figure out the url for the git fetcher
+    repo_regex = r'(\w+://)(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)'
+    match = re.search(repo_regex, pkg.git)
+    if not match:
+        tty.die("Cannot derive repository from %s." % pkg.git)
+    service, _, repository, _, name = match.groups()
+    name = "/".join(name.split('/')[0:2])
+    repository = "%s%s/%s" % (service, repository, name)
+
+    # Create a GitFetchStrategy for all commits
+    return GitFetchStrategy(git=repository)
+
+
 def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
@@ -1518,20 +1533,8 @@ def for_package_version(pkg, version):
 
     # if it's a commit, we must use a GitURLFetcher
     if version.is_commit and hasattr(pkg, "git"):
-
-        # Figure out the url for the git fetcher
-        repo_regex = r'(\w+://)(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)'
-        match = re.search(repo_regex, pkg.git)
-        if not match:
-            tty.die("Cannot derive repository from %s." % pkg.git)
-        service, _, repository, _, name = match.groups()
-        name = "/".join(name.split('/')[0:2])
-        repository = "%s%s/%s" % (service, repository, name)
-
-        # Create a GitFetchStrategy for all commits
-        fetcher = GitFetchStrategy(git=repository)
-
         # Populate the version with comparisons to other commits
+        fetcher = fetcher_for_version_lookup(pkg)
         version.generate_commit_lookup(fetcher, pkg.versions)
         fetcher = GitFetchStrategy(git=repository, commit=str(version))
         return fetcher
