@@ -28,8 +28,8 @@ def create_s3_session(url):
     # NOTE(opadron): import boto and friends as late as possible.  We don't
     # want to require boto as a dependency unless the user actually wants to
     # access S3 mirrors.
-    from boto3 import Session
-    from botocore.exceptions import ClientError
+    from boto3 import Session  # type: ignore[import]
+    from botocore.exceptions import ClientError  # type: ignore[import]
 
     session = Session()
 
@@ -41,8 +41,8 @@ def create_s3_session(url):
 
     # if no access credentials provided above, then access anonymously
     if not session.get_credentials():
-        from botocore import UNSIGNED
-        from botocore.client import Config
+        from botocore import UNSIGNED  # type: ignore[import]
+        from botocore.client import Config  # type: ignore[import]
 
         s3_client_args["config"] = Config(signature_version=UNSIGNED)
 

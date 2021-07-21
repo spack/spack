@@ -1,15 +1,21 @@
 [tool.isort]
 profile = "black"
 sections = [
-  "FUTURE",
-  "STDLIB",
-  "THIRDPARTY",
-  "ARCHSPEC", "LLNL", "FIRSTPARTY",
-  "LOCALFOLDER",
-]
+    "FUTURE",
+    "STDLIB",
+    "TYPING",
+    "THIRDPARTY",
+    "COMPAT",
+    "ARCHSPEC", "RUAMEL", "LLNL", "FIRSTPARTY",
+    "LOCALFOLDER",
+  ]
 known_first_party = "spack"
 known_archspec = "archspec"
+known_ruamel = "ruamel"
+known_compat = "compat"
 known_llnl = "llnl"
+known_third_party = "six"
+known_typing = ["typing", "typing_extensions"]
 src_paths = "lib"
 honor_noqa = true
 
@@ -67,7 +73,7 @@ omit = [
     'lib/spack/docs/*',
     'lib/spack/external/*',
     'share/spack/qa/*',
-]
+  ]
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
@@ -87,7 +93,7 @@ exclude_lines = [
     'if 0:',
     'if False:',
     'if __name__ == .__main__.:',
-]
+  ]
 ignore_errors = true
 
 [tool.coverage.html]

@@ -20,12 +20,12 @@ from compat import Sequence
 import archspec.cpu
 
 try:
-    import clingo
+    import clingo  # type: ignore[import]
 
     # There may be a better way to detect this
     clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
-    clingo = None  # type: ignore
+    clingo = None
     clingo_cffi = False
 
 import llnl.util.lang

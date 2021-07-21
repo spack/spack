@@ -1363,7 +1363,7 @@ repo:
 class MockBundle(object):
     has_code = False
     name = 'mock-bundle'
-    versions = {}  # type: ignore
+    versions = {}  # type: Dict
 
 
 @pytest.fixture
