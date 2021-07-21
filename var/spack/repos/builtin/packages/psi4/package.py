@@ -6,7 +6,6 @@
 import os
 
 from spack import *
-from spack.pkg.builtin.boost import Boost
 
 
 class Psi4(CMakePackage):
