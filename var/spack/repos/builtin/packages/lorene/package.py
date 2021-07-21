@@ -30,6 +30,7 @@ class Lorene(MakefilePackage):
     variant('bin_star', default=True,
             description='Build Bin_star solver for binary neutron star systems')
 
+    depends_on('blas')
     depends_on('fftw @3:', when='+fftw')
     depends_on('gsl')
     depends_on('lapack')
@@ -38,12 +39,17 @@ class Lorene(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
+        blas_libs = spec['lapack'].libs.link_flags
         fftw_incdirs = "-I" + spec['fftw'].prefix.include if '+fftw' in spec else ""
         fftw_libdirs = "-L" + spec['fftw'].prefix.lib if '+fftw' in spec else ""
+        fftw_libs = spec['fftw'].libs.link_flags
         gsl_incdirs = "-I" + spec['gsl'].prefix.include
         gsl_libdirs = "-L" + spec['gsl'].prefix.lib
+        gsl_libs = spec['gsl'].libs.link_flags
+        lapack_libs = spec['lapack'].libs.link_flags
         pgplot_incdirs = "-I" + spec['pgplot'].prefix.include
         pgplot_libdirs = "-L" + spec['pgplot'].prefix.lib
+        pgplot_libs = spec['pgplot'].libs.link_flags
 
         substitutions = [
             ('@CXX@', self.compiler.cxx),
@@ -59,10 +65,10 @@ class Lorene(MakefilePackage):
             ('@RANLIB@', "ls"),
             ('@MAKEDEPEND@', "cpp $(INC) -M >> $(df).d $<"),
             ('@FFT_DIR@', "FFTW3"),
-            ('@LIB_CXX@', fftw_libdirs + " -lfftw3 -lgfortran"),
-            ('@LIB_GSL@', gsl_libdirs + " -lgsl -lgslcblas"),
-            ('@LIB_LAPACK@', "-llapack -lblas"),
-            ('@LIB_PGPLOT@', pgplot_libdirs + " -lcpgplot -lpgplot"),
+            ('@LIB_CXX@', fftw_libdirs + " " + fftw_libs + " -lgfortran"),
+            ('@LIB_GSL@', gsl_libdirs + " " + gsl_libs),
+            ('@LIB_LAPACK@', lapack_libs + " " + blas_libs),
+            ('@LIB_PGPLOT@', pgplot_libdirs + " " + pgplot_libs),
         ]
         local_settings_template = join_path(
             os.path.dirname(inspect.getmodule(self).__file__),
@@ -94,3 +100,10 @@ class Lorene(MakefilePackage):
         mkdirp(prefix.bin)
         if '+bin_star' in spec:
             install_tree(join_path('Codes', 'Bin_star'), prefix.bin)
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries(
+            "liblorene*", root=self.prefix, shared=shared, recursive=True
+        )

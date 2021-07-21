@@ -6,7 +6,7 @@
 from spack import *
 
 
-class DarshanUtil(Package):
+class DarshanUtil(AutotoolsPackage):
     """Darshan (util) is collection of tools for parsing and summarizing log
     files produced by Darshan (runtime) instrumentation. This package is
     typically installed on systems (front-end) where you intend to analyze
@@ -32,12 +32,15 @@ class DarshanUtil(Package):
     version('3.0.0', sha256='95232710f5631bbf665964c0650df729c48104494e887442596128d189da43e0')
 
     variant('bzip2', default=False, description="Enable bzip2 compression")
-    variant('shared', default=True, description='Build shared libraries')
     variant('apmpi', default=False, description='Compile with AutoPerf MPI module support')
     variant('apxc', default=False, description='Compile with AutoPerf XC module support')
 
     depends_on('zlib')
     depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
+    depends_on('autoconf', type='build', when='@main')
+    depends_on('automake', type='build', when='@main')
+    depends_on('libtool',  type='build', when='@main')
+    depends_on('m4',       type='build', when='@main')
 
     patch('retvoid.patch', when='@3.2.0:3.2.1')
 
@@ -46,20 +49,25 @@ class DarshanUtil(Package):
     conflicts('+apxc', when='@:3.2.1',
               msg='+apxc variant only available starting from version 3.3.0')
 
-    def install(self, spec, prefix):
+    @property
+    def configure_directory(self):
+        return 'darshan-util'
 
-        options = ['CC=%s' % self.compiler.cc,
-                   '--with-zlib=%s' % spec['zlib'].prefix]
-        if '+shared' in spec:
-            options.extend(['--enable-shared'])
+    def configure_args(self):
+        spec = self.spec
+        extra_args = []
 
+        extra_args.append('CC=%s' % self.compiler.cc)
+        extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
         if '+apmpi' in spec:
-            options.extend(['--enable-autoperf-apmpi'])
+            if self.version < Version('3.3.2'):
+                extra_args.append('--enable-autoperf-apmpi')
+            else:
+                extra_args.append('--enable-apmpi-mod')
         if '+apxc' in spec:
-            options.extend(['--enable-autoperf-apxc'])
+            if self.version < Version('3.3.2'):
+                extra_args.append('--enable-autoperf-apxc')
+            else:
+                extra_args.append('--enable-apxc-mod')
 
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-util/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        return extra_args

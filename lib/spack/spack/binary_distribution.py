@@ -206,7 +206,7 @@ class BinaryCacheIndex(object):
         The cache can be updated by calling ``update()`` on the cache.
 
         Args:
-            spec (Spec): Concrete spec to find
+            spec (spack.spec.Spec): Concrete spec to find
 
         Returns:
             An list of objects containing the found specs and mirror url where
@@ -1079,14 +1079,14 @@ def download_tarball(spec, preferred_mirrors=None):
     path to downloaded tarball if successful, None otherwise.
 
     Args:
-        spec (Spec): Concrete spec
+        spec (spack.spec.Spec): Concrete spec
         preferred_mirrors (list): If provided, this is a list of preferred
-        mirror urls.  Other configured mirrors will only be used if the
-        tarball can't be retrieved from one of these.
+            mirror urls.  Other configured mirrors will only be used if the
+            tarball can't be retrieved from one of these.
 
     Returns:
         Path to the downloaded tarball, or ``None`` if the tarball could not
-            be downloaded from any configured mirrors.
+        be downloaded from any configured mirrors.
     """
     if not spack.mirror.MirrorCollection():
         tty.die("Please add a spack mirror to allow " +
@@ -1455,7 +1455,7 @@ def get_mirrors_for_spec(spec=None, full_hash_match=False,
     indicating the mirrors on which it can be found
 
     Args:
-        spec (Spec): The spec to look for in binary mirrors
+        spec (spack.spec.Spec): The spec to look for in binary mirrors
         full_hash_match (bool): If True, only includes mirrors where the spec
             full hash matches the locally computed full hash of the ``spec``
             argument.  If False, any mirror which has a matching DAG hash
@@ -1732,11 +1732,11 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
 
     Arguments:
         mirrors (dict): Mirrors to check against
-        specs (iterable): Specs to check against mirrors
-        output_file (string): Path to output file to be written.  If provided,
+        specs (typing.Iterable): Specs to check against mirrors
+        output_file (str): Path to output file to be written.  If provided,
             mirrors with missing or out-of-date specs will be formatted as a
             JSON object and written to this file.
-        rebuild_on_errors (boolean): Treat any errors encountered while
+        rebuild_on_errors (bool): Treat any errors encountered while
             checking specs as a signal to rebuild package.
 
     Returns: 1 if any spec was out-of-date on any mirror, 0 otherwise.
