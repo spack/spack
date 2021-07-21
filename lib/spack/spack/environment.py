@@ -9,9 +9,11 @@ import re
 import shutil
 import sys
 
-import ruamel.yaml as yaml
 import six
-from ordereddict_backport import OrderedDict
+
+from compat import OrderedDict
+
+import ruamel.yaml as yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty

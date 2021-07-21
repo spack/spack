@@ -26,10 +26,12 @@ import textwrap
 import time
 import traceback
 import types
+
 from typing import Any, Callable, Dict, List, Optional  # novm
 
 import six
-from ordereddict_backport import OrderedDict
+
+from compat import OrderedDict
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty

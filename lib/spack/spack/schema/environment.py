@@ -38,8 +38,9 @@ def parse(config_obj):
         config_obj: a configuration dictionary conforming to the
             schema definition for environment modifications
     """
-    import spack.util.environment as ev
     from compat import Sequence
+
+    import spack.util.environment as ev
 
     env = ev.EnvironmentModifications()
     for command, variable in config_obj.items():

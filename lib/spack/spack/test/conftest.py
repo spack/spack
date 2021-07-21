@@ -16,6 +16,8 @@ import shutil
 import tempfile
 import xml.etree.ElementTree
 
+from typing import Dict  # novm
+
 import py
 import pytest
 

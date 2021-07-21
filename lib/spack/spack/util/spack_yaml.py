@@ -14,18 +14,19 @@
 """
 import ctypes
 import re
+
 from typing import List  # novm
 
-import ruamel.yaml as yaml
-from ruamel.yaml import RoundTripDumper, RoundTripLoader
 from six import StringIO, string_types
 
 from compat import Mapping, OrderedDict
 
+import ruamel.yaml as yaml
+from ruamel.yaml import RoundTripDumper, RoundTripLoader
+
 from llnl.util.tty.color import cextra, clen, colorize
 
 import spack.error
-
 
 # Only export load and dump
 __all__ = ['load', 'dump', 'SpackYAMLError']

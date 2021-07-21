@@ -36,14 +36,16 @@ import os
 import re
 import sys
 from contextlib import contextmanager
+
 from typing import List  # novm
 
 import six
+from six import iteritems
+
+from compat import OrderedDict
 
 import ruamel.yaml as yaml
-from ordereddict_backport import OrderedDict
 from ruamel.yaml.error import MarkedYAMLError
-from six import iteritems
 
 import llnl.util.lang
 import llnl.util.tty as tty

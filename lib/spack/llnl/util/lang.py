@@ -17,7 +17,6 @@ from six import string_types
 
 from compat import Hashable, MutableMapping, zip_longest
 
-
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
 

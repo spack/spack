@@ -17,12 +17,14 @@ import stat
 import sys
 import traceback
 import types
+
 from typing import Dict  # novm
 
-import ruamel.yaml as yaml
 import six
 
 from compat import Mapping
+
+import ruamel.yaml as yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.lang

@@ -30,6 +30,7 @@ The available directives are:
 import functools
 import os.path
 import re
+
 from typing import List, Set  # novm
 
 import six

@@ -6,6 +6,7 @@
 import copy
 import hashlib
 from collections import defaultdict
+
 from compat import Mapping, Sequence
 
 import spack.util.spack_yaml as syaml

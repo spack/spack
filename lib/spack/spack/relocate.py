@@ -10,7 +10,8 @@ import shutil
 
 import macholib.mach_o
 import macholib.MachO
-from ordereddict_backport import OrderedDict
+
+from compat import OrderedDict
 
 import llnl.util.lang
 import llnl.util.tty as tty

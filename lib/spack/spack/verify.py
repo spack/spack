@@ -7,13 +7,10 @@ import os
 
 import llnl.util.tty as tty
 
-import spack.util.py2 as compat
-import spack.util.spack_json as sjson
-import spack.util.file_permissions as fp
-import spack.store
 import spack.filesystem_view
 import spack.store
 import spack.util.file_permissions as fp
+import spack.util.py2 as compat
 import spack.util.spack_json as sjson
 
 

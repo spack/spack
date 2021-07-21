@@ -9,9 +9,7 @@ import re
 import shutil
 import sys
 
-from ordereddict_backport import OrderedDict
-
-from compat import filter, map, zip
+from compat import OrderedDict, filter, map, zip
 
 from llnl.util import tty
 from llnl.util.filesystem import mkdirp, remove_dead_links, remove_empty_directories

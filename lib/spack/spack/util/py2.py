@@ -5,7 +5,7 @@
 
 import base64
 
-from six import binary_type, text_type, PY3
+from six import PY3, binary_type, text_type
 
 
 def b32encode(digest):

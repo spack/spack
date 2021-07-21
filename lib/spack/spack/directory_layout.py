@@ -10,8 +10,9 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 
-import ruamel.yaml as yaml
 import six
+
+import ruamel.yaml as yaml
 
 from llnl.util.filesystem import mkdirp
 

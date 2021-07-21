@@ -35,8 +35,13 @@
 # - E203: white space around slice operators can be required, ignore : warn
 # - W503: see above, already ignored for line-breaks
 #
+# Import failure ignores: these are handled by isort.
+# - I100: Incorrect import order.
+# - I201: Missing newline between import groups.
+# - I202: Additional newline within an import group.
+#
 [flake8]
-ignore = E129,E221,E241,E272,E731,W503,W504,F999,N801,N813,N814,F403,F405
+ignore = E129,E221,E241,E272,E731,W503,W504,F999,N801,N813,N814,F403,F405,I100,I201,I202
 max-line-length = 88
 
 # F4: Import

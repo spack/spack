@@ -5,9 +5,10 @@
 
 """Simple wrapper around JSON to guarantee consistent use of load/dump. """
 import json
+
 from typing import Any, Dict, Optional  # novm
 
-from six import binary_type, iteritems, string_types, PY3
+from six import PY3, binary_type, iteritems, string_types
 
 import spack.error
 

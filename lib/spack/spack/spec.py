@@ -81,12 +81,12 @@ import itertools
 import operator
 import os
 import re
-import sys
 
-import ruamel.yaml as yaml
 import six
 
 from compat import Mapping
+
+import ruamel.yaml as yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -116,7 +116,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.string
 import spack.variant as vt
 import spack.version as vn
-
 
 __all__ = [
     'CompilerSpec',

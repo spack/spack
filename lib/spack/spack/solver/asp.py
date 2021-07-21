@@ -13,9 +13,9 @@ import sys
 import types
 import warnings
 
-from compat import Sequence
-
 from six import string_types
+
+from compat import Sequence
 
 import archspec.cpu
 
@@ -47,7 +47,6 @@ import spack.spec
 import spack.util.timer
 import spack.variant
 import spack.version
-
 
 
 def issequence(obj):

@@ -13,10 +13,11 @@ import socket
 import time
 import xml.sax.saxutils
 
-from ordereddict_backport import OrderedDict
 from six import iteritems, text_type
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import HTTPHandler, Request, build_opener
+
+from compat import OrderedDict
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir

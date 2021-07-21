@@ -16,9 +16,11 @@ import tempfile
 import traceback
 from contextlib import closing
 
-import ruamel.yaml as yaml
-from ordereddict_backport import OrderedDict
 from six.moves.urllib.error import HTTPError, URLError
+
+from compat import OrderedDict
+
+import ruamel.yaml as yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty

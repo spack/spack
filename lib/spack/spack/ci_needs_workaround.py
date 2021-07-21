@@ -5,7 +5,6 @@
 
 from compat import Mapping
 
-
 get_job_name = lambda needs_entry: (
     needs_entry.get('job') if (
         isinstance(needs_entry, Mapping) and
