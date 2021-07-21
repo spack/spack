@@ -1517,7 +1517,7 @@ def for_package_version(pkg, version):
         version = Version(version)
 
     # if it's a commit, we must use a GitURLFetcher
-    if version.is_commit:
+    if version.is_commit and hasattr(pkg, "git"):
 
         # Figure out the url for the git fetcher
         repo_regex = r'(\w+://)(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)'
