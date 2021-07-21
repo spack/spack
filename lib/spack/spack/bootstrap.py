@@ -30,6 +30,160 @@ import spack.util.executable
 import spack.util.path
 from spack.util.environment import EnvironmentModifications
 
+#: Map a bootstrapper type to the corresponding class
+_bootstrap_methods = {}
+
+
+def _bootstrapper(type):
+    """Decorator to register classes implementing bootstrapping
+    methods.
+
+    Args:
+        type (str): string identifying the class
+    """
+    def _register(cls):
+        _bootstrap_methods[type] = cls
+        return cls
+    return _register
+
+
+@_bootstrapper(type='store')
+class _StoreBootstrapper(object):
+    @staticmethod
+    def try_import(module, abstract_spec):
+        """Return True if the module can be imported from an already
+        installed spec, False otherwise.
+
+        Args:
+            module: Python module to be imported
+            abstract_spec: abstract spec that may provide the module
+        """
+        abstract_spec = abstract_spec or module
+
+        # We have to run as part of this python interpreter
+        abstract_spec += ' ^' + spec_for_current_python()
+
+        # Check if any of the already installed specs provide the import
+        msg = "[BOOTSTRAP MODULE {0}] Try installed specs with query '{1}'"
+        tty.debug(msg.format(module, abstract_spec))
+
+        installed_specs = spack.store.db.query(abstract_spec, installed=True)
+
+        for candidate_spec in installed_specs:
+            lib_spd = candidate_spec['python'].package.default_site_packages_dir
+            lib64_spd = lib_spd.replace('lib/', 'lib64/')
+            module_paths = [
+                os.path.join(candidate_spec.prefix, lib_spd),
+                os.path.join(candidate_spec.prefix, lib64_spd)
+            ]
+            sys.path.extend(module_paths)
+
+            if _python_import(module):
+                return True
+
+            tty.warn("Spec {0} did not provide module {1}".format(
+                candidate_spec, module
+            ))
+            sys.path = sys.path[:-2]
+
+        return False
+
+
+@_bootstrapper(type='buildcache')
+class _BuildcacheBootstrapper(object):
+    @staticmethod
+    def try_import(module, abstract_spec_str):
+        # This import is local since it is needed only on Cray
+        import spack.platforms.linux
+
+        # Read information on verified clingo binaries
+        json_filename = '{0}.json'.format(module)
+        json_path = os.path.join(
+            spack.paths.share_path, 'bootstrap', json_filename
+        )
+        with open(json_path) as f:
+            data = json.load(f)
+
+        # Try to install from an unsigned binary cache
+        bincache_platform = spack.architecture.real_platform()
+        abstract_spec = spack.spec.Spec(
+            abstract_spec_str + ' ^' + spec_for_current_python()
+        )
+
+        # On Cray we want to use Linux binaries if available from mirrors
+        if str(bincache_platform) == 'cray':
+            bincache_platform = spack.platforms.linux.Linux()
+            with spack.architecture.use_platform(bincache_platform):
+                abstract_spec = spack.spec.Spec(
+                    abstract_spec_str + ' ^' + spec_for_current_python()
+                )
+                if _StoreBootstrapper.try_import(module, abstract_spec):
+                    return True
+
+        buildcache = spack.main.SpackCommand('buildcache')
+        for item in data['verified']:
+            candidate_spec = item['spec']
+            python_spec = item['python']
+            # Skip specs which are not compatible
+            if not abstract_spec.satisfies(candidate_spec):
+                continue
+
+            if python_spec not in abstract_spec:
+                continue
+
+            msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from binary cache"
+            tty.debug(msg.format(module, abstract_spec))
+            spec_str = '/' + item['hash']
+            with spack.architecture.use_platform(bincache_platform):
+                # TODO: reconstruct the compiler from the spec being installed
+                with spack.config.override(
+                        'compilers', [{'compiler': item['compiler']}]
+                ):
+                    install_args = [
+                        'install',
+                        '--sha256', item['sha256'],
+                        '-a', '-u', '-o', '-f', spec_str
+                    ]
+                    buildcache(*install_args, fail_on_error=False)
+                    if _StoreBootstrapper.try_import(module, abstract_spec_str):
+                        return True
+        return False
+
+
+@_bootstrapper(type='install')
+class _SourceBootstrapper(object):
+    @staticmethod
+    def try_import(module, abstract_spec_str):
+        # Try to build and install from sources
+        with spack_python_interpreter():
+            # Add hint to use frontend operating system on Cray
+            if str(spack.architecture.platform()) == 'cray':
+                abstract_spec_str += ' os=fe'
+
+            concrete_spec = spack.spec.Spec(
+                abstract_spec_str + ' ^' + spec_for_current_python()
+            )
+            # TODO: substitute this call when the old concretizer is deprecated
+            concrete_spec._old_concretize()
+
+        msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from sources"
+        tty.debug(msg.format(module, abstract_spec_str))
+
+        # Install the spec that should make the module importable
+        concrete_spec.package.do_install()
+
+        return _StoreBootstrapper.try_import(
+            module, abstract_spec=abstract_spec_str
+        )
+
+
+def _make_bootstrapper(conf):
+    """Return a bootstrap object built according to the
+    configuration argument
+    """
+    btype = conf['type']
+    return _bootstrap_methods[btype]()
+
 
 def spec_for_current_python():
     """For bootstrapping purposes we are just interested in the Python
@@ -70,15 +224,11 @@ def spack_python_interpreter():
         yield
 
 
-def ensure_module_importable_or_raise(module, abstract_spec=None, install_fn=None):
+def ensure_module_importable_or_raise(module, abstract_spec=None):
     """Make the requested module available for import, or raise.
 
     This function tries to import a Python module in the current interpreter
-    using, in the following order, a few different strategies:
-
-        1. Use the default Python import mechanism
-        2. Search installed specs in the DB that might provide the module
-        3. Install new specs that might provide the module (optional)
+    using, in order, the methods configured in bootstrap.yaml.
 
     If none of the methods succeed, an exception is raised. The function exits
     on first success.
@@ -87,38 +237,29 @@ def ensure_module_importable_or_raise(module, abstract_spec=None, install_fn=Non
         module (str): module to be imported in the current interpreter
         abstract_spec (str): abstract spec that might provide the module. If not
             given it defaults to "module"
-        install_fn: optional callable to try install software that might
-            provide the required module. The callable takes a module and an abstract
-            spec as arguments
 
     Raises:
         ImportError: if the module couldn't be imported
     """
-    # If we already can import it, that's great
+    # If we can import it already, that's great
     tty.debug("[BOOTSTRAP MODULE {0}] Try importing from Python".format(module))
     if _python_import(module):
         return
 
     abstract_spec = abstract_spec or module
-
-    # We have to run as part of this python interpreter
-    abstract_spec += ' ^' + spec_for_current_python()
-
-    # Check if any of the already installed specs provide the import
-    msg = "[BOOTSTRAP MODULE {0}] Try installed specs with query '{1}'"
-    tty.debug(msg.format(module, abstract_spec))
-    if _import_from_store(module, abstract_spec):
-        return
-
-    # Install software and try to import from that
-    install_fn = install_fn or (lambda m, s: False)
-    if install_fn(module, abstract_spec):
-        return
+    source_configs = [{
+        'name': 'bootstrap-store', 'type': 'store'
+    }]
+    source_configs.extend(spack.config.get('bootstrap:sources', []))
+    for current_config in source_configs:
+        b = _make_bootstrapper(current_config)
+        if b.try_import(module, abstract_spec):
+            return
 
     # We couldn't import in any way, so raise an import error
-    msg = 'cannot import module "{0}"'.format(module)
+    msg = 'cannot bootstrap the "{0}" Python module'.format(module)
     if abstract_spec:
-        msg += ' from spec "{0}'.format(abstract_spec)
+        msg += ' from spec "{0}"'.format(abstract_spec)
     raise ImportError(msg)
 
 
@@ -128,47 +269,6 @@ def _python_import(module):
     except ImportError:
         return False
     return True
-
-
-def _import_from_store(module, spec):
-    installed_specs = spack.store.db.query(spec, installed=True)
-
-    for ispec in installed_specs:
-        lib_spd = ispec['python'].package.default_site_packages_dir
-        lib64_spd = lib_spd.replace('lib/', 'lib64/')
-        module_paths = [
-            os.path.join(ispec.prefix, lib_spd),
-            os.path.join(ispec.prefix, lib64_spd)
-        ]
-        sys.path.extend(module_paths)
-
-        if _python_import(module):
-            return True
-
-        tty.warn("Spec %s did not provide module %s" % (ispec, module))
-        sys.path = sys.path[:-2]
-
-    return False
-
-
-def _try_install_from_sources(module, spec):
-    assert spec.concrete, '"{0}" is not a concrete spec'.format(spec)
-
-    # Install the spec that should make the module importable
-    spec.package.do_install()
-
-    lib_spd = spec['python'].package.default_site_packages_dir
-    lib64_spd = lib_spd.replace('lib/', 'lib64/')
-    module_paths = [
-        os.path.join(spec.prefix, lib_spd),
-        os.path.join(spec.prefix, lib64_spd)
-    ]
-    sys.path.extend(module_paths)
-    if _python_import(module):
-        return True
-
-    sys.path = sys.path[:-2]
-    return False
 
 
 def get_executable(exe, spec=None, install=False):
@@ -254,78 +354,6 @@ def _bootstrap_config_scopes():
     return config_scopes
 
 
-def _install_clingo_and_try_import(module, abstract_spec_str):
-    # This import is local since it is needed only on Cray
-    import spack.platforms.linux
-
-    # Read information on verified clingo binaries
-    clingo_json_path = os.path.join(
-        spack.paths.share_path, 'bootstrap', 'clingo.json'
-    )
-    with open(clingo_json_path) as f:
-        data = json.load(f)
-
-    # Try to install from an unsigned binary cache
-    bincache_platform = spack.architecture.real_platform()
-    abstract_spec = spack.spec.Spec(abstract_spec_str)
-
-    # On Cray we want to use Linux binaries if available from mirrors
-    if str(bincache_platform) == 'cray':
-        bincache_platform = spack.platforms.linux.Linux()
-        with spack.architecture.use_platform(bincache_platform):
-            abstract_spec = spack.spec.Spec(abstract_spec_str)
-            if _import_from_store(module, abstract_spec):
-                return True
-
-    buildcache = spack.main.SpackCommand('buildcache')
-    for item in data['verified']:
-        candidate_spec = item['spec']
-        python_spec = item['python']
-        # Skip specs which are not compatible
-        if not abstract_spec.satisfies(candidate_spec):
-            continue
-
-        if python_spec not in abstract_spec:
-            continue
-
-        msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from binary cache"
-        tty.debug(msg.format(module, abstract_spec))
-        spec_str = '/' + item['hash']
-        with spack.architecture.use_platform(bincache_platform):
-            # TODO: reconstruct the compiler from the spec being installed
-            with spack.config.override(
-                    'compilers', [{'compiler': item['compiler']}]
-            ):
-                install_args = [
-                    'install',
-                    '--sha256', item['sha256'],
-                    '-a', '-u', '-o', '-f', spec_str
-                ]
-                buildcache(*install_args, fail_on_error=False)
-                if _import_from_store(module, abstract_spec):
-                    return True
-
-        # TODO: uninstall stuff?
-
-    # Try to build and install from sources
-    with spack_python_interpreter():
-        # Add hint to use frontend operating system on Cray
-        if str(spack.architecture.platform()) == 'cray':
-            abstract_spec_str = clingo_root_spec()
-            abstract_spec_str += ' os=fe ^' + spec_for_current_python()
-
-        concrete_spec = spack.spec.Spec(abstract_spec_str)
-        # TODO: substitute this call when the old concretizer is deprecated
-        concrete_spec._old_concretize()
-
-    msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from sources"
-    tty.debug(msg.format(module, abstract_spec_str))
-    if _try_install_from_sources(module, concrete_spec):
-        return True
-
-    return False
-
-
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
@@ -380,7 +408,5 @@ def clingo_root_spec():
 def ensure_clingo_importable_or_raise():
     """Ensure that the clingo module is available for import."""
     ensure_module_importable_or_raise(
-        module='clingo',
-        abstract_spec=clingo_root_spec(),
-        install_fn=_install_clingo_and_try_import
+        module='clingo', abstract_spec=clingo_root_spec()
     )
