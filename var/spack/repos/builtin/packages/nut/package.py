@@ -31,7 +31,6 @@ class Nut(CMakePackage):
     conflicts('%pgi', when='@serial')
     conflicts('%xl', when='@serial')
     conflicts('%nag', when='@serial')
-    
     build_targets = ['VERBOSE=on']
 
     def setup_build_environment(self, env):
