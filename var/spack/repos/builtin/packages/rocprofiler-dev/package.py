@@ -32,6 +32,8 @@ class RocprofilerDev(CMakePackage):
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
 
+    patch('fix-includes.patch')
+
     resource(name='roctracer-dev',
              url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-3.5.0.tar.gz',
              sha256='7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e',
