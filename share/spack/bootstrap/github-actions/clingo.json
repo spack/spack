@@ -1,417 +1,256 @@
 {
   "verified": [
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "catalina",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "apple-clang@12.0.0",
-        "target": "x86_64"
-      },
-      "hash": "m4ertsh3ooxdisc5tigglublasu4udfe",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "m4ertsh3ooxdisc5tigglublasu4udfe",
+          "f9fb82e81cfa96942463520e10a19c324a33ddb6af9913a871f6660131766efa"
+        ]
+      ],
       "python": "python@3.5",
-      "sha256": "2599a2ed2f27231466b24097b0487148e567a2833bb111340b64908c2bfcde56",
       "spec": "clingo-bootstrap%apple-clang platform=darwin target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "catalina",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "apple-clang@12.0.0",
-        "target": "x86_64"
-      },
-      "hash": "scxnemxpwmjwrwktzkktjdwszjnfprjz",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "iv4gr5vscx2io23ljgdueybwatxlk6wo",
+          "3bfbee7bf405c082dd6a1b56f9034bbb4926cda88f6ef2b1e2096a2c5193f865"
+        ]
+      ],
       "python": "python@3.6",
-      "sha256": "d87e62a1b80f44e0fed90a9e4a5b48020446f837584e7979d6fbc9de90246071",
       "spec": "clingo-bootstrap%apple-clang platform=darwin target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "catalina",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "apple-clang@12.0.0",
-        "target": "x86_64"
-      },
-      "hash": "rjvr6ok2mmvbipwfl7zriwq5c6jakv3z",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "rwxcxsohrkp5iai3yushsltkdprjmexb",
+          "fee806d8ff6bfcf5c8e8f4a97bb790f7cad71dbd17e477c436228fdaa2adf434"
+        ]
+      ],
       "python": "python@3.7",
-      "sha256": "51f69a4cc28ebcb4a6e1d755711d5c8392bb4b7d5c28ffd2d08773dbcb7aad7a",
       "spec": "clingo-bootstrap%apple-clang platform=darwin target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "catalina",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "apple-clang@12.0.0",
-        "target": "x86_64"
-      },
-      "hash": "cqedwajk5vkly3ed7o745cmldcsrpwy3",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "p5on7i4hejl775ezndzfdkhvwra3hatn",
+          "58f4ca2c758f1d56a72c564c273f2c18dd90aa4470a4a5508be86ec03eb4cdfc"
+        ]
+      ],
       "python": "python@3.8",
-      "sha256": "648787c7062019592deea76e13103ae7583bdabb5ec13d84e95def4f82cc06ce",
       "spec": "clingo-bootstrap%apple-clang platform=darwin target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "catalina",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "apple-clang@12.0.0",
-        "target": "x86_64"
-      },
-      "hash": "3lioq5yrjpnmxseesn3k3coehjxcwokc",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "omsvlh5v6fi2saw5qyqvzsbvqpvrf5yw",
+          "29764edeb6fd8bbda50b5d931051dd123892aa8bf9ba0adf1c30f3ad0f679047"
+        ]
+      ],
       "python": "python@3.9",
-      "sha256": "463e3ec080e86b7239a171b0530cdd60b3e544b8794c4492fd3d18442339b920",
       "spec": "clingo-bootstrap%apple-clang platform=darwin target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos7",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.1",
-        "target": "aarch64"
-      },
-      "hash": "qguh44xegb72y4q4lar3ufjddissoumv",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "qguh44xegb72y4q4lar3ufjddissoumv",
+          "68d2d0c06690d75a794aa2c50be9d6d501fec1b566784bf87b1fc5611f84f3c9"
+        ]
+      ],
       "python": "python@3.5",
-      "sha256": "68d2d0c06690d75a794aa2c50be9d6d501fec1b566784bf87b1fc5611f84f3c9",
       "spec": "clingo-bootstrap%gcc platform=linux target=aarch64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos7",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.1",
-        "target": "aarch64"
-      },
-      "hash": "tsypkz7hyylmh5pwpykaf7wcmdunrdiv",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "tsypkz7hyylmh5pwpykaf7wcmdunrdiv",
+          "3b8e3e6e21e399a90c4128776cc591734f9d533f0a7e64ed8babd9cbcf616e3d"
+        ]
+      ],
       "python": "python@3.6",
-      "sha256": "3b8e3e6e21e399a90c4128776cc591734f9d533f0a7e64ed8babd9cbcf616e3d",
       "spec": "clingo-bootstrap%gcc platform=linux target=aarch64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos7",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.1",
-        "target": "aarch64"
-      },
-      "hash": "2w6b4q5j2zgra6t3zfrjfbvsnoi5yqmk",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "2w6b4q5j2zgra6t3zfrjfbvsnoi5yqmk",
+          "4f335e02641f6ecc7ec7d9d2b8293d07d6e7a7234034531713b760aaa507fa7c"
+        ]
+      ],
       "python": "python@3.7",
-      "sha256": "4f335e02641f6ecc7ec7d9d2b8293d07d6e7a7234034531713b760aaa507fa7c",
       "spec": "clingo-bootstrap%gcc platform=linux target=aarch64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos7",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.1",
-        "target": "aarch64"
-      },
-      "hash": "ij7udwpgeghdfoswljwdtwwaylvudze7",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "ij7udwpgeghdfoswljwdtwwaylvudze7",
+          "b5eedf593f198e523aebf6ce127fd8ffcf3d1c980a920cdf1c5a0d2a335e4892"
+        ]
+      ],
       "python": "python@3.8",
-      "sha256": "b5eedf593f198e523aebf6ce127fd8ffcf3d1c980a920cdf1c5a0d2a335e4892",
       "spec": "clingo-bootstrap%gcc platform=linux target=aarch64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos7",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.1",
-        "target": "aarch64"
-      },
-      "hash": "a5ppijpzmk7ubjem4i3zttbxp545vjuz",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "a5ppijpzmk7ubjem4i3zttbxp545vjuz",
+          "8f9755c16c0c99b5c40c420f2c1c6aec2bdff99b25444e001506527af18dd94e"
+        ]
+      ],
       "python": "python@3.9",
-      "sha256": "8f9755c16c0c99b5c40c420f2c1c6aec2bdff99b25444e001506527af18dd94e",
       "spec": "clingo-bootstrap%gcc platform=linux target=aarch64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos7",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.1",
-        "target": "ppc64le"
-      },
-      "hash": "tsnva2bxjguosntz3tk5mqbdgrjvhfcc",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "tsnva2bxjguosntz3tk5mqbdgrjvhfcc",
+          "bcd093c08110309e705beebccd012260a61215eda12c1d47f3a89d4734ec7170"
+        ]
+      ],
       "python": "python@3.5",
-      "sha256": "bcd093c08110309e705beebccd012260a61215eda12c1d47f3a89d4734ec7170",
       "spec": "clingo-bootstrap%gcc platform=linux target=ppc64le"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos7",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.1",
-        "target": "ppc64le"
-      },
-      "hash": "rfu4la457mdbpoffk2g5hikj2hhoek4s",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "rfu4la457mdbpoffk2g5hikj2hhoek4s",
+          "b6417b9b90f3f4e98caaa869393edee08fad3d3c7db37fad8b332c785d0e81e6"
+        ]
+      ],
       "python": "python@3.6",
-      "sha256": "b6417b9b90f3f4e98caaa869393edee08fad3d3c7db37fad8b332c785d0e81e6",
       "spec": "clingo-bootstrap%gcc platform=linux target=ppc64le"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos7",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.1",
-        "target": "ppc64le"
-      },
-      "hash": "qg3utj2csbgtdwc2slqbjmwn25rkor5r",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "qg3utj2csbgtdwc2slqbjmwn25rkor5r",
+          "a1760e064d41d364cdf53f89248f7824dad9bf97c6b999df18343b57d21c06ed"
+        ]
+      ],
       "python": "python@3.7",
-      "sha256": "a1760e064d41d364cdf53f89248f7824dad9bf97c6b999df18343b57d21c06ed",
       "spec": "clingo-bootstrap%gcc platform=linux target=ppc64le"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos7",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.1",
-        "target": "ppc64le"
-      },
-      "hash": "uxkpc2euofdkgveonftklstnxyha5wsf",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "uxkpc2euofdkgveonftklstnxyha5wsf",
+          "d6a04e7b15dae05eacce54806fa18356b392a5e2d212a55bf0960116b8e9dfef"
+        ]
+      ],
       "python": "python@3.8",
-      "sha256": "d6a04e7b15dae05eacce54806fa18356b392a5e2d212a55bf0960116b8e9dfef",
       "spec": "clingo-bootstrap%gcc platform=linux target=ppc64le"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos7",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.1",
-        "target": "ppc64le"
-      },
-      "hash": "i2uoawqsmmkr2uwb42oxfsnt4djzejrj",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "i2uoawqsmmkr2uwb42oxfsnt4djzejrj",
+          "6511837f87e50c40a7f4aab2ec7454e5200594821e4d1fc4a441d3be647b9acb"
+        ]
+      ],
       "python": "python@3.9",
-      "sha256": "6511837f87e50c40a7f4aab2ec7454e5200594821e4d1fc4a441d3be647b9acb",
       "spec": "clingo-bootstrap%gcc platform=linux target=ppc64le"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "centos6",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.0",
-        "target": "x86_64"
-      },
-      "hash": "p3bqplnwqo66lvvolmtaezck77jafrc4",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "p3bqplnwqo66lvvolmtaezck77jafrc4",
+          "436f9483e4028c12c32ba9f4e7e91e944bf9819ef487dfe4e42ddd1d487c93ee"
+        ]
+      ],
       "python": "python@2.6",
-      "sha256": "a4dd21e49dc49eab0d2f85a4c2287ee406cf8d6ba055a9c4e88469a9533f135c",
       "spec": "clingo-bootstrap%gcc platform=linux target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "rhel5",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.0",
-        "target": "x86_64"
-      },
-      "hash": "rpa6yyujr7ilnfcowq2pbmkmh7uzrijp",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "rpa6yyujr7ilnfcowq2pbmkmh7uzrijp",
+          "3be0f4ccd412d45506f9f305ef7f6621cd246fbde97aed081595d01dafe3c397"
+        ]
+      ],
       "python": "python@2.7+ucs4",
-      "sha256": "c5d785775287ec74c1074f4167423ed350abb3056bf37b2646e0cc1d86c54f37",
       "spec": "clingo-bootstrap%gcc platform=linux target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "rhel5",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.0",
-        "target": "x86_64"
-      },
-      "hash": "y32mbn7swer3yxvgf6tmkgekpo23uo5z",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "y32mbn7swer3yxvgf6tmkgekpo23uo5z",
+          "f6e0716bd97f2df123abcd96ec8884c525a9fd10b81e0062784e7b0d2df3f622"
+        ]
+      ],
       "python": "python@2.7~ucs4",
-      "sha256": "c7a97a7cce9393094463bfdb9455c9db5bd69b77088a212f0580cdf1dc8c70ef",
       "spec": "clingo-bootstrap%gcc platform=linux target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "rhel5",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.0",
-        "target": "x86_64"
-      },
-      "hash": "ohtmyp5c74xt75csx4llbjs5anobryp6",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "ohtmyp5c74xt75csx4llbjs5anobryp6",
+          "7d613ddbca1640d761311fb00403c0cb65e279534c44a2129b8d9610f6146e78"
+        ]
+      ],
       "python": "python@3.5",
-      "sha256": "c10f7f117a3cd0d8d83df212b46ca611b2b3c21a447433001e73b259a06cdb87",
       "spec": "clingo-bootstrap%gcc platform=linux target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "rhel5",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.0",
-        "target": "x86_64"
-      },
-      "hash": "vcipwnf57slgoo7busvvkzjkk7vydeb5",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "vcipwnf57slgoo7busvvkzjkk7vydeb5",
+          "db5222760045f20ad1e5c194179d31273b8e4bfa6ade38e15cd3182d685cc05b"
+        ]
+      ],
       "python": "python@3.6",
-      "sha256": "fa09fe71639241f5447ea7db932f46d886beabf19cae2c75ff392d9ae1516b13",
       "spec": "clingo-bootstrap%gcc platform=linux target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "rhel5",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.0",
-        "target": "x86_64"
-      },
-      "hash": "ffoyoewfd6pdwbjniodfkqusyvkrbhyi",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "ffoyoewfd6pdwbjniodfkqusyvkrbhyi",
+          "14cea5f6cfd86bcb8de38ad8c1a5e44cc22955de2e7c78b825b617dccd107dbe"
+        ]
+      ],
       "python": "python@3.7",
-      "sha256": "fcab4fad77bff10b3f8e75589353c885db4c3a02bae01367b7cd0d502f44bcbb",
       "spec": "clingo-bootstrap%gcc platform=linux target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "rhel5",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.0",
-        "target": "x86_64"
-      },
-      "hash": "kt74l7kjzrlp3cgtj2576o33mhsrgyrw",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "kt74l7kjzrlp3cgtj2576o33mhsrgyrw",
+          "e71de4beb68bb3e58bd2dcb98dc3be3a375c82781b6f7cb01bc5d552c2240bd2"
+        ]
+      ],
       "python": "python@3.8",
-      "sha256": "094db908145fd2dc9318562f92570cd3ac4c2ff5d22574e3fc47c915a2155a23",
       "spec": "clingo-bootstrap%gcc platform=linux target=x86_64"
     },
     {
-      "compiler": {
-        "modules": [],
-        "operating_system": "rhel5",
-        "paths": {
-          "cc": "/dev/null",
-          "cxx": "/dev/null",
-          "f77": "/dev/null",
-          "fc": "/dev/null"
-        },
-        "spec": "gcc@9.3.0",
-        "target": "x86_64"
-      },
-      "hash": "hmnv6gk5wha64k6r3s7hid35mzvhkuot",
+      "binaries": [
+        [
+          "clingo-bootstrap",
+          "hmnv6gk5wha64k6r3s7hid35mzvhkuot",
+          "b08ff59357fa184ce39b8cc0a17aaf7f0a925a449ab389e1afa4eab6ae026f2e"
+        ]
+      ],
       "python": "python@3.9",
-      "sha256": "08b75f18a39f92b4ce3f9376dcb338f9b5e86f1172254bb6fc8be59f4d32206c",
       "spec": "clingo-bootstrap%gcc platform=linux target=x86_64"
     }
   ]

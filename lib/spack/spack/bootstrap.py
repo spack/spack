@@ -19,6 +19,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.architecture
+import spack.binary_distribution
 import spack.config
 import spack.main
 import spack.paths
@@ -131,35 +132,58 @@ class _BuildcacheBootstrapper(object):
             data = json.load(f)
 
         buildcache = spack.main.SpackCommand('buildcache')
-        for item in data['verified']:
-            candidate_spec = item['spec']
-            python_spec = item['python']
-            # Skip specs which are not compatible
-            if not abstract_spec.satisfies(candidate_spec):
-                continue
+        # Ensure we see only the buildcache being used to bootstrap
+        mirror_scope = spack.config.InternalConfigScope(
+            'bootstrap', {'mirrors:': {self.name: self.url}}
+        )
+        with spack.config.override(mirror_scope):
+            # This index is currently needed to get the compiler used to build some
+            # specs that wwe know by dag hash.
+            spack.binary_distribution.binary_index.regenerate_spec_cache()
+            index = spack.binary_distribution.update_cache_and_get_specs()
+            for item in data['verified']:
+                candidate_spec = item['spec']
+                python_spec = item['python']
+                # Skip specs which are not compatible
+                if not abstract_spec.satisfies(candidate_spec):
+                    continue
 
-            if python_spec not in abstract_spec:
-                continue
+                if python_spec not in abstract_spec:
+                    continue
 
-            # Ensure we see only the buildcache being used to bootstrap
-            with spack.config.override('mirrors', {self.name: self.url}):
-                msg = ('[BOOTSTRAP MODULE {0}] Try installing "{1}" from binary '
-                       'cache at "{2}"')
-                tty.debug(msg.format(module, abstract_spec, self.url))
-                spec_str = '/' + item['hash']
-                with spack.architecture.use_platform(bincache_platform):
-                    # TODO: reconstruct the compiler from the spec being installed
-                    with spack.config.override(
-                            'compilers', [{'compiler': item['compiler']}]
-                    ):
-                        install_args = [
-                            'install',
-                            '--sha256', item['sha256'],
-                            '-a', '-u', '-o', '-f', spec_str
-                        ]
-                        buildcache(*install_args, fail_on_error=False)
-                        if _StoreBootstrapper.try_import(module, abstract_spec_str):
-                            return True
+                for pkg_name, pkg_hash, pkg_sha256 in item['binaries']:
+                    msg = ('[BOOTSTRAP MODULE {0}] Try installing "{1}" from binary '
+                           'cache at "{2}"')
+                    tty.debug(msg.format(module, pkg_name, self.url))
+                    index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
+                    # Reconstruct the compiler that we need to use for bootstrapping
+                    compiler_entry = {
+                        "modules": [],
+                        "operating_system": str(index_spec.os),
+                        "paths": {
+                            "cc": "/dev/null",
+                            "cxx": "/dev/null",
+                            "f77": "/dev/null",
+                            "fc": "/dev/null"
+                        },
+                        "spec": str(index_spec.compiler),
+                        "target": str(index_spec.target)
+                    }
+                    with spack.architecture.use_platform(bincache_platform):
+                        with spack.config.override(
+                                'compilers', [{'compiler': compiler_entry}]
+                        ):
+                            spec_str = '/' + pkg_hash
+                            install_args = [
+                                'install',
+                                '--sha256', pkg_sha256,
+                                '-a', '-u', '-o', '-f', spec_str
+                            ]
+                            buildcache(*install_args, fail_on_error=False)
+                # TODO: undo installations that didn't complete?
+
+                if _StoreBootstrapper.try_import(module, abstract_spec_str):
+                    return True
         return False
 
 
