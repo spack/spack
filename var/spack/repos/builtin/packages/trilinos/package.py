@@ -411,6 +411,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Variant requirements from packages
     depends_on('metis', when='+zoltan')
+    depends_on('libx11', when='+exodus')
     depends_on('parmetis', when='+mpi +zoltan')
     depends_on('parmetis', when='+scorec')
 
@@ -610,41 +611,35 @@ class Trilinos(CMakePackage, CudaPackage):
 
         # ######################### TPLs #############################
 
-        blas = spec['blas'].libs
-        lapack = spec['lapack'].libs
-        options.extend([
-            define('TPL_ENABLE_BLAS', True),
-            define('BLAS_LIBRARY_NAMES', blas.names),
-            define('BLAS_LIBRARY_DIRS', blas.directories),
-            define('TPL_ENABLE_LAPACK', True),
-            define('LAPACK_LIBRARY_NAMES', lapack.names),
-            define('LAPACK_LIBRARY_DIRS', lapack.directories),
-            define_tpl_enable('Matio'),
-        ])
-
-        options.append(define_tpl_enable('Netcdf'))
-        if '+netcdf' in spec:
-            options.append(define('NetCDF_ROOT', spec['netcdf-c'].prefix))
-
-        options.append(define_tpl_enable('HYPRE'))
-        if '+hypre' in spec:
+        # Enable TPLs based on whether they're in our spec, not whether they're
+        # variant names: packages/features should disable availability
+        for tpl_name, dep_name in [
+            ('ADIOS2', 'adios2'),
+            ('BLAS', 'blas'),
+            ('Boost', 'boost'),
+            ('CGNS', 'cgns'),
+            ('HDF5', 'hdf5'),
+            ('HYPRE', 'hypre'),
+            ('HWLOC', 'hwloc'),
+            ('LAPACK', 'lapack'),
+            ('Matio', 'matio'),
+            ('METIS', 'metis'),
+            ('Netcdf', 'netcdf-c'),
+            ('STRUMPACK', 'strumpack'),
+            ('SuperLU', 'superlu'),
+            ('X11', 'libx11'),
+            ('Zlib', 'zlib'),
+        ]:
+            have_dep = (dep_name in spec)
+            options.append(define('TPL_ENABLE_' + tpl_name, have_dep))
+            if not have_dep:
+                continue
+            depspec = spec[dep_name]
             options.extend([
-                define('HYPRE_INCLUDE_DIRS', spec['hypre'].prefix.include),
-                define('HYPRE_LIBRARY_DIRS', spec['hypre'].prefix.lib),
-            ])
-
-        options.append(define_tpl_enable('Boost'))
-        if '+boost' in spec:
-            options.extend([
-                define('Boost_INCLUDE_DIRS', spec['boost'].prefix.include),
-                define('Boost_LIBRARY_DIRS', spec['boost'].prefix.lib),
-            ])
-
-        options.append(define_tpl_enable('HDF5'))
-        if '+hdf5' in spec:
-            options.extend([
-                define('HDF5_INCLUDE_DIRS', spec['hdf5'].prefix.include),
-                define('HDF5_LIBRARY_DIRS', spec['hdf5'].prefix.lib),
+                define('TPL_' + tpl_name + '_INCLUDE_DIRS', depspec.prefix.include),
+                define(tpl_name + '_ROOT', depspec.prefix),
+                define(tpl_name + '_LIBRARY_NAMES', depspec.libs.names),
+                define(tpl_name + '_LIBRARY_DIRS', depspec.libs.directories),
             ])
 
         if '+suite-sparse' in spec:
@@ -732,22 +727,8 @@ class Trilinos(CMakePackage, CudaPackage):
                     define('HAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG', True),
                 ])
 
-        options.append(define_tpl_enable('SuperLU'))
-        if '+superlu' in spec:
-            options.extend([
-                define('SuperLU_LIBRARY_DIRS', spec['superlu'].prefix.lib),
-                define('SuperLU_INCLUDE_DIRS', spec['superlu'].prefix.include),
-            ])
-
-        options.append(define_tpl_enable('STRUMPACK'))
         if '+strumpack' in spec:
-            options.extend([
-                define('Amesos2_ENABLE_STRUMPACK', True),
-                define('STRUMPACK_LIBRARY_DIRS',
-                       spec['strumpack'].libs.directories[0]),
-                define('STRUMPACK_INCLUDE_DIRS',
-                       spec['strumpack'].headers.directories[0]),
-            ])
+            options.append(define('Amesos2_ENABLE_STRUMPACK', True))
 
         options.append(define_tpl_enable('Pnetcdf'))
         if '+pnetcdf' in spec:
@@ -757,25 +738,7 @@ class Trilinos(CMakePackage, CudaPackage):
                 define('PNetCDF_ROOT', spec['parallel-netcdf'].prefix),
             ])
 
-        options.append(define_tpl_enable('Zlib'))
-        if '+zlib' in spec:
-            options.extend([
-                define('TPL_ENABLE_Zlib', True),
-                define('Zlib_ROOT', spec['zlib'].prefix),
-            ])
-
-        options.append(define_tpl_enable('CGNS'))
-        if '+cgns' in spec:
-            options.extend([
-                define('TPL_ENABLE_CGNS', True),
-                define('CGNS_INCLUDE_DIRS', spec['cgns'].prefix.include),
-                define('CGNS_LIBRARY_DIRS', spec['cgns'].prefix.lib),
-            ])
-
-        options.append(define_from_variant('TPL_ENABLE_ADIOS2', 'adios2'))
-
         if '@13: +kokkos' in spec:
-            options.append(define('TPL_ENABLE_HWLOC', True))
             kkmarch = Kokkos.spack_micro_arch_map.get(spec.target.name, None)
             if kkmarch:
                 options.append(define("Kokkos_ARCH_" + kkmarch.upper(), True))
