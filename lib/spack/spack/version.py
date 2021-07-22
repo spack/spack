@@ -1033,6 +1033,9 @@ class CommitLookup(object):
 
     @property
     def repository_uri(self):
+        # Case 1: It's a path on the filesystem
+        if os.path.exists(self.fetcher.url) or self.fetcher.url.startswith("file://"):
+            return re.sub("file://", "", self.fetcher.url)
         return re.sub("[.]git$", "", os.sep.join(self.fetcher.url.split(os.sep)[-3:]))
 
     @property
@@ -1075,8 +1078,14 @@ class CommitLookup(object):
         if str(version) in self.data:
             return self.data
 
-        # Honor the namespace for the service and repository
-        dest = os.path.join(spack.paths.user_repos_cache_path, self.repository_uri)
+        # Were we given an already cloned path?
+        already_cloned = os.path.exists(self.repository_uri)
+        if already_cloned:
+            dest = self.repository_uri
+
+        # Otherwise honor the namespace for the service and repository
+        else:
+            dest = os.path.join(spack.paths.user_repos_cache_path, self.repository_uri)
 
         # prepare a cache for the repository and metadata
         for path in [dest, self.repository_metadata_path]:
@@ -1094,8 +1103,11 @@ class CommitLookup(object):
 
         # Always pull and fetch
         with working_dir(dest):
-            self.fetcher.git("pull")
-            self.fetcher.git("fetch")
+
+            # Don't do anything if already cloned - it might not have remote
+            if not already_cloned:
+                self.fetcher.git("pull")
+                self.fetcher.git("fetch")
 
             # List tags (refs) by date, so last reference of a tag is newest
             tags = self.fetcher.git("for-each-ref", "--sort=creatordate", "--format",
@@ -1134,7 +1146,7 @@ class CommitLookup(object):
                 commit_to_version[commit.strip()] = spack_version
 
             # Get list of all commits, this is in reverse order
-            commits = self.fetcher.git("rev-list", "--remotes", output=str)
+            commits = self.fetcher.git("log", "--pretty=format:%H", output=str)
 
         # commits[0] is most recent, commits[-2] is first
         commits = [c for c in commits.split('\n') if c]

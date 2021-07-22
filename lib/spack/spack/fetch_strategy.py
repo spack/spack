@@ -1504,7 +1504,12 @@ def _from_merged_attrs(fetcher, pkg, version):
 
 def git_repo_for_package(pkg):
     assert hasattr(pkg, 'git'), "Version lookups only allowed on git fetchers"
-    # Figure out the url for the git fetcher
+
+    # Case 1: We have a file
+    if os.path.exists(pkg.git) or pkg.git.startswith("file://"):
+        return re.sub("file://", "", pkg.git)
+
+    # Case 2: We have a git url
     repo_regex = r'(\w+://)(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)'
     match = re.search(repo_regex, pkg.git)
     if not match:

@@ -21,6 +21,7 @@ import spack.compilers as compilers
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
+import spack.util.executable
 import spack.package
 from spack.error import SpackError
 from spack.main import SpackCommand
@@ -30,9 +31,9 @@ install = SpackCommand('install')
 env = SpackCommand('env')
 add = SpackCommand('add')
 mirror = SpackCommand('mirror')
-uninstall = SpackCommand('uninstall')
 buildcache = SpackCommand('buildcache')
 find = SpackCommand('find')
+uninstall = SpackCommand('uninstall')
 
 
 @pytest.fixture()
@@ -235,6 +236,22 @@ def test_install_overwrite_not_installed(
 
     install('--overwrite', '-y', 'libdwarf')
     assert os.path.exists(spec.prefix)
+
+
+def test_install_commit(mock_git_info, install_mockery, mock_packages, monkeypatch):
+    """
+    Test installing a git package from a commit.
+    """
+    repo_path, commit = mock_git_info
+    pkg = spack.spec.Spec('git-test-commit@%s' % commit).concretized().package
+    pkg.git = "file://%s" % repo_path
+    pkg.do_install()
+
+    # Ensure file1.txt was installed - only present at that commit!
+    package_root = os.path.dirname(os.path.dirname(pkg.install_env_path))
+    bindir = os.path.join(package_root, "bin")
+    installed = os.listdir(bindir)
+    assert "file1.txt" in installed
 
 
 def test_install_overwrite_multiple(

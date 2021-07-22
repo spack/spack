@@ -22,7 +22,7 @@ import pytest
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
-from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
+from llnl.util.filesystem import mkdirp, remove_linked_tree, touch, working_dir
 
 import spack.architecture
 import spack.caches
@@ -58,6 +58,28 @@ def last_two_git_commits(scope='session'):
 
     regex = re.compile(r"^commit\s([^\s]+$)", re.MULTILINE)
     yield regex.findall(git_log_out)
+
+
+@pytest.fixture
+def mock_git_info(tmpdir, scope="session"):
+    git = spack.util.executable.which('git', required=True)
+    tmpdir = str(tmpdir)
+
+    with working_dir(tmpdir):
+        git("init")
+        touch("file1.txt")
+        git("add", "file1.txt")
+        git('commit', '-a', '-m', "Adding file1.txt")
+        os.remove("file1.txt")
+        touch("file2.txt")
+        git("add", "file2.txt")
+        git('commit', '-a', '-m', "Adding file2.txt")
+
+        # Get the first commit to "install"
+        commit = git("rev-parse", "HEAD~1", output=str).strip()
+
+    # Return the git directory to install and the first commit
+    return tmpdir, commit
 
 
 @pytest.fixture(autouse=True)
