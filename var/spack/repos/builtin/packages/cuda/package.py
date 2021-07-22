@@ -25,6 +25,10 @@ from spack import *
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '11.4.0': {
+        'Linux-aarch64': ('f0c8e80d98a601ddca031b6764459984366008c7d3847e7c7f99b36bd4438e3c', 'https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux_sbsa.run'),
+        'Linux-x86_64': ('d219db30f7415a115a4ea22bdbb5984b0a18f7f891cad6074c5da45d223aaa4b', 'https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux.run'),
+        'Linux-ppc64le': ('6eb2fd0d9d5bc39fb243b5e1789ff827f325d098cd1fbb828a0499552b9544cc', 'https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux_ppc64le.run')},
     '11.3.1': {
         'Linux-aarch64': ('39990d3da88b21289ac20850bc183f0b66275f32e1f562b551c05843bf506e4c', 'https://developer.download.nvidia.com/compute/cuda/11.3.1/local_installers/cuda_11.3.1_465.19.01_linux_sbsa.run'),
         'Linux-x86_64': ('ad93ea98efced35855c58d3a0fc326377c60917cb3e8c017d3e6d88819bf2934', 'https://developer.download.nvidia.com/compute/cuda/11.3.1/local_installers/cuda_11.3.1_465.19.01_linux.run'),
