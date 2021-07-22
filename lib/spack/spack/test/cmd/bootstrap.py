@@ -111,3 +111,17 @@ def test_list_sources(capsys):
     with capsys.disabled():
         output = _bootstrap('list', '--scope', 'user')
     assert "No method available" in output
+
+
+@pytest.mark.parametrize('command,value', [
+    ('trust', True),
+    ('untrust', False)
+])
+def test_trust_or_untrust_sources(mutable_config, command, value):
+    key = 'bootstrap:trusted:github-actions'
+    trusted = spack.config.get(key, default=None)
+    assert trusted is None
+
+    _bootstrap(command, 'github-actions')
+    trusted = spack.config.get(key, default=None)
+    assert trusted is value

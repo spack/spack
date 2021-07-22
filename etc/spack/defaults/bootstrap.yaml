@@ -13,7 +13,7 @@ bootstrap:
     type: buildcache
     description: |
       Buildcache generated from a public workflow using Github Actions.
-      Binaries are checksummed (sha256) before being installed.
+      The sha256 checksum of binaries is checked before installation.
     info:
       # FIXME: Substitute with a public url
       url: file:///home/culpo/production/spack/mirrors/clingo
@@ -24,4 +24,4 @@ bootstrap:
     description: |
       Specs built from sources by Spack. May take a long time.
   trusted:
-    spack: true
+    spack-install: true

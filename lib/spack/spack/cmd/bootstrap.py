@@ -57,6 +57,22 @@ def setup_parser(subparser):
     )
     _add_scope_option(list)
 
+    trust = sp.add_parser(
+        'trust', help='trust a bootstrapping method'
+    )
+    _add_scope_option(trust)
+    trust.add_argument(
+        'name', help='name of the method to be trusted'
+    )
+
+    untrust = sp.add_parser(
+        'untrust', help='untrust a bootstrapping method'
+    )
+    _add_scope_option(untrust)
+    untrust.add_argument(
+        'name', help='name of the method to be untrusted'
+    )
+
 
 def _enable_or_disable(args):
     # Set to True if we called "enable", otherwise set to false
@@ -117,14 +133,20 @@ def _list(args):
         )
         return
 
-    def _print_method(source):
+    def _print_method(source, trusted):
         color = llnl.util.tty.color
 
         def fmt(header, content):
             header_fmt = "@*b{{{0}:}} {1}"
             color.cprint(header_fmt.format(header, content))
 
-        fmt("Name", source['name'])
+        trust_str = "@*y{UNKNOWN}"
+        if trusted is True:
+            trust_str = "@*g{TRUSTED}"
+        elif trusted is False:
+            trust_str = "@*r{UNTRUSTED}"
+
+        fmt("Name", source['name'] + ' ' + trust_str)
         print()
         fmt("  Type", source['type'])
         print()
@@ -141,8 +163,34 @@ def _list(args):
 
         fmt("  Description", ''.join(description_lines))
 
+    trusted = spack.config.get('bootstrap:trusted', {})
     for s in sources:
-        _print_method(s)
+        _print_method(s, trusted.get(s['name'], None))
+
+
+def _write_trust_state(args, value):
+    name, sources = args.name, spack.config.get('bootstrap:sources')
+    matches = [s for s in sources if s['name'] == name]
+    if not matches:
+        names = [s['name'] for s in sources]
+        msg = ('there is no bootstrapping method named "{0}". Valid '
+               'method names are: {1}'.format(name, ', '.join(names)))
+        raise RuntimeError(msg)
+    spack.config.set(
+        'bootstrap:trusted:{0}'.format(name), value, scope=args.scope
+    )
+
+
+def _trust(args):
+    _write_trust_state(args, value=True)
+    msg = '"{0}" is now trusted for bootstrapping'
+    llnl.util.tty.msg(msg.format(args.name))
+
+
+def _untrust(args):
+    _write_trust_state(args, value=False)
+    msg = '"{0}" is now untrusted and will not be used for bootstrapping'
+    llnl.util.tty.msg(msg.format(args.name))
 
 
 def bootstrap(parser, args):
@@ -151,6 +199,8 @@ def bootstrap(parser, args):
         'disable': _enable_or_disable,
         'reset': _reset,
         'root': _root,
-        'list': _list
+        'list': _list,
+        'trust': _trust,
+        'untrust': _untrust
     }
     callbacks[args.subcommand](args)

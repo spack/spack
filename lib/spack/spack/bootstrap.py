@@ -49,6 +49,9 @@ def _bootstrapper(type):
 
 @_bootstrapper(type='store')
 class _StoreBootstrapper(object):
+    def __init__(self, conf):
+        self.conf = conf
+
     @staticmethod
     def try_import(module, abstract_spec):
         """Return True if the module can be imported from an already
@@ -59,6 +62,12 @@ class _StoreBootstrapper(object):
             abstract_spec: abstract spec that may provide the module
         """
         abstract_spec = abstract_spec or module
+
+        bincache_platform = spack.architecture.real_platform()
+        if str(bincache_platform) == 'cray':
+            bincache_platform = spack.platforms.linux.Linux()
+            with spack.architecture.use_platform(bincache_platform):
+                abstract_spec = str(spack.spec.Spec(abstract_spec))
 
         # We have to run as part of this python interpreter
         abstract_spec += ' ^' + spec_for_current_python()
@@ -91,34 +100,35 @@ class _StoreBootstrapper(object):
 
 @_bootstrapper(type='buildcache')
 class _BuildcacheBootstrapper(object):
-    @staticmethod
-    def try_import(module, abstract_spec_str):
+    def __init__(self, conf):
+        self.name = conf['name']
+        self.url = conf['info']['url']
+
+    def try_import(self, module, abstract_spec_str):
         # This import is local since it is needed only on Cray
         import spack.platforms.linux
 
-        # Read information on verified clingo binaries
-        json_filename = '{0}.json'.format(module)
-        json_path = os.path.join(
-            spack.paths.share_path, 'bootstrap', json_filename
-        )
-        with open(json_path) as f:
-            data = json.load(f)
-
         # Try to install from an unsigned binary cache
-        bincache_platform = spack.architecture.real_platform()
         abstract_spec = spack.spec.Spec(
             abstract_spec_str + ' ^' + spec_for_current_python()
         )
 
         # On Cray we want to use Linux binaries if available from mirrors
+        bincache_platform = spack.architecture.real_platform()
         if str(bincache_platform) == 'cray':
             bincache_platform = spack.platforms.linux.Linux()
             with spack.architecture.use_platform(bincache_platform):
                 abstract_spec = spack.spec.Spec(
                     abstract_spec_str + ' ^' + spec_for_current_python()
                 )
-                if _StoreBootstrapper.try_import(module, abstract_spec):
-                    return True
+
+        # Read information on verified clingo binaries
+        json_filename = '{0}.json'.format(module)
+        json_path = os.path.join(
+            spack.paths.share_path, 'bootstrap', self.name, json_filename
+        )
+        with open(json_path) as f:
+            data = json.load(f)
 
         buildcache = spack.main.SpackCommand('buildcache')
         for item in data['verified']:
@@ -131,27 +141,33 @@ class _BuildcacheBootstrapper(object):
             if python_spec not in abstract_spec:
                 continue
 
-            msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from binary cache"
-            tty.debug(msg.format(module, abstract_spec))
-            spec_str = '/' + item['hash']
-            with spack.architecture.use_platform(bincache_platform):
-                # TODO: reconstruct the compiler from the spec being installed
-                with spack.config.override(
-                        'compilers', [{'compiler': item['compiler']}]
-                ):
-                    install_args = [
-                        'install',
-                        '--sha256', item['sha256'],
-                        '-a', '-u', '-o', '-f', spec_str
-                    ]
-                    buildcache(*install_args, fail_on_error=False)
-                    if _StoreBootstrapper.try_import(module, abstract_spec_str):
-                        return True
+            # Ensure we see only the buildcache being used to bootstrap
+            with spack.config.override('mirrors', {self.name: self.url}):
+                msg = ('[BOOTSTRAP MODULE {0}] Try installing "{1}" from binary '
+                       'cache at "{2}"')
+                tty.debug(msg.format(module, abstract_spec, self.url))
+                spec_str = '/' + item['hash']
+                with spack.architecture.use_platform(bincache_platform):
+                    # TODO: reconstruct the compiler from the spec being installed
+                    with spack.config.override(
+                            'compilers', [{'compiler': item['compiler']}]
+                    ):
+                        install_args = [
+                            'install',
+                            '--sha256', item['sha256'],
+                            '-a', '-u', '-o', '-f', spec_str
+                        ]
+                        buildcache(*install_args, fail_on_error=False)
+                        if _StoreBootstrapper.try_import(module, abstract_spec_str):
+                            return True
         return False
 
 
 @_bootstrapper(type='install')
 class _SourceBootstrapper(object):
+    def __init__(self, conf):
+        self.conf = conf
+
     @staticmethod
     def try_import(module, abstract_spec_str):
         # Try to build and install from sources
@@ -182,7 +198,18 @@ def _make_bootstrapper(conf):
     configuration argument
     """
     btype = conf['type']
-    return _bootstrap_methods[btype]()
+    return _bootstrap_methods[btype](conf)
+
+
+def _source_is_trusted(conf):
+    trusted, name = spack.config.get('bootstrap:trusted'), conf['name']
+    # We always trust something that is already installed. Since
+    # "bootstrap-store" does not appear in the config, but is added
+    # in the code, we add the corresponding entry here
+    trusted['bootstrap-store'] = True
+    if name not in trusted:
+        return False
+    return trusted[name]
 
 
 def spec_for_current_python():
@@ -252,6 +279,12 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     }]
     source_configs.extend(spack.config.get('bootstrap:sources', []))
     for current_config in source_configs:
+        if not _source_is_trusted(current_config):
+            msg = ('[BOOTSTRAP MODULE {0}] Skipping source "{1}" since it is '
+                   'not trusted').format(module, current_config['name'])
+            tty.debug(msg)
+            continue
+
         b = _make_bootstrapper(current_config)
         if b.try_import(module, abstract_spec):
             return
