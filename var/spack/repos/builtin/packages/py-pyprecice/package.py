@@ -36,7 +36,8 @@ class PyPyprecice(PythonPackage):
     # removes the pip dependency.
     # See also https://github.com/spack/spack/pull/19558
     patch("deactivate-version-check-via-pip.patch", when="@:2.1.1.2")
-    # From v2.2.0.1 versioneer is used in a way that breaks the installation procedure for Spack
+    # From v2.2.0.1 versioneer is used in a way that breaks the installation
+    # procedure for Spack
     patch("setup-v2-versioneer.patch", when="@2.2.0.1:")
 
     depends_on("precice@develop", when="@develop")
