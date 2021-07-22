@@ -1663,7 +1663,8 @@ def _develop_specs_from_env(spec, env):
     dev_pkg = dev_spec.package
     if hasattr(dev_pkg, 'git'):
         dev_spec.version.generate_commit_lookup(
-            spack.fetch_strategy.fetcher_for_version_lookup(dev_pkg),
+            spack.fetch_strategy.GitFetchStrategy(
+                git=spack.fetch_strategy.git_repo_for_package(dev_pkg)),
             dev_pkg.versions
         )
     spec.constrain(dev_spec)
