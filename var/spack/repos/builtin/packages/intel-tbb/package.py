@@ -120,6 +120,10 @@ class IntelTbb(Package):
     # https://github.com/oneapi-src/oneTBB/commit/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch?full_index=1
     patch("macos-arm64.patch", when="@:2021.0")
 
+    # Support for building with %nvhpc
+    # 1) remove flags nvhpc compilers do not recognize
+    patch("intel-tbb.nvhpc-remove-flags.patch", when="%nvhpc")
+
     # Version and tar file names:
     #  2020.0 --> v2020.0.tar.gz  starting with 2020
     #  2017.1 --> 2017_U1.tar.gz  starting with 2017
