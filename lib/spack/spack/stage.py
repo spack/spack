@@ -14,28 +14,32 @@ import shutil
 import stat
 import sys
 import tempfile
-from six import string_types
-from six import iteritems
 from typing import Dict  # novm
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import partition_path, remove_linked_tree
+from six import iteritems, string_types
 
-import spack.paths
+import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    can_access,
+    install,
+    install_tree,
+    mkdirp,
+    partition_path,
+    remove_linked_tree,
+)
+
 import spack.caches
 import spack.cmd
 import spack.config
 import spack.error
-import spack.mirror
-import spack.util.lock
 import spack.fetch_strategy as fs
-import spack.util.pattern as pattern
+import spack.mirror
+import spack.paths
+import spack.util.lock
 import spack.util.path as sup
+import spack.util.pattern as pattern
 import spack.util.url as url_util
-
-from spack.util.crypto import prefix_bits, bit_length
-
+from spack.util.crypto import bit_length, prefix_bits
 
 # The well-known stage source subdirectory name.
 _source_path_subdir = 'spack-src'
@@ -561,8 +565,9 @@ class Stage(object):
         """Perform a fetch if the resource is not already cached
 
         Arguments:
-            mirror (MirrorCache): the mirror to cache this Stage's resource in
-            stats (MirrorStats): this is updated depending on whether the
+            mirror (spack.caches.MirrorCache): the mirror to cache this Stage's
+                resource in
+            stats (spack.mirror.MirrorStats): this is updated depending on whether the
                 caching operation succeeded or failed
         """
         if isinstance(self.default_fetcher, fs.BundleFetchStrategy):
@@ -831,7 +836,7 @@ def get_checksums_for_versions(
     Args:
         url_dict (dict): A dictionary of the form: version -> URL
         name (str): The name of the package
-        first_stage_function (callable): function that takes a Stage and a URL;
+        first_stage_function (typing.Callable): function that takes a Stage and a URL;
             this is run on the stage of the first URL downloaded
         keep_stage (bool): whether to keep staging area when command completes
         batch (bool): whether to ask user how many versions to fetch (false)

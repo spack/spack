@@ -8,33 +8,33 @@ import os
 import re
 import shutil
 import sys
+
 from ordereddict_backport import OrderedDict
 
-from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util import tty
-from llnl.util.lang import match_predicate, index_by
+from llnl.util.filesystem import mkdirp, remove_dead_links, remove_empty_directories
+from llnl.util.lang import index_by, match_predicate
+from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import (
-    mkdirp, remove_dead_links, remove_empty_directories)
 
-import spack.util.spack_yaml as s_yaml
-import spack.util.spack_json as s_json
-
+import spack.config
+import spack.projections
+import spack.relocate
+import spack.schema.projections
 import spack.spec
 import spack.store
-import spack.schema.projections
-import spack.projections
-import spack.config
-import spack.relocate
+import spack.util.spack_json as s_json
+import spack.util.spack_yaml as s_yaml
+from spack.directory_layout import (
+    ExtensionAlreadyInstalledError,
+    YamlViewExtensionsLayout,
+)
 from spack.error import SpackError
-from spack.directory_layout import ExtensionAlreadyInstalledError
-from spack.directory_layout import YamlViewExtensionsLayout
-
 
 # compatability
 if sys.version_info < (3, 0):
-    from itertools import imap as map
     from itertools import ifilter as filter
+    from itertools import imap as map
     from itertools import izip as zip
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]

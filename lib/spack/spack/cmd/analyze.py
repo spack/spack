@@ -17,7 +17,6 @@ import spack.monitor
 import spack.paths
 import spack.report
 
-
 description = "run analyzers on installed packages"
 section = "analysis"
 level = "long"
@@ -59,9 +58,9 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=Fals
     analyze_spec(spec, args.analyzers, args.outdir, monitor)
 
     Args:
-        spec (Spec): spec object of installed package
+        spec (spack.spec.Spec): spec object of installed package
         analyzers (list): list of analyzer (keys) to run
-        monitor (monitor.SpackMonitorClient): a monitor client
+        monitor (spack.monitor.SpackMonitorClient): a monitor client
         overwrite (bool): overwrite result if already exists
     """
     analyzers = analyzers or list(spack.analyzers.analyzer_types.keys())

@@ -8,10 +8,12 @@ import shutil
 import sys
 
 import llnl.util.tty as tty
+
 import spack.architecture
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
@@ -19,16 +21,11 @@ import spack.relocate
 import spack.repo
 import spack.spec
 import spack.store
-import spack.config
-import spack.repo
-import spack.store
 import spack.util.url as url_util
-
+from spack.cmd import display_specs
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.util.string import plural
-
-from spack.cmd import display_specs
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -242,12 +239,13 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
        concretized specs given from cli
 
     Args:
-        pkgs (string): spec to be matched against installed packages
+        pkgs (str): spec to be matched against installed packages
         allow_multiple_matches (bool): if True multiple matches are admitted
-        env (Environment): active environment, or ``None`` if there is not one
+        env (spack.environment.Environment or None): active environment, or ``None``
+            if there is not one
 
     Return:
-        list of specs
+        list: list of specs
     """
     hashes = env.all_hashes() if env else None
 

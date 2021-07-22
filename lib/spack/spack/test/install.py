@@ -9,14 +9,20 @@ import shutil
 import pytest
 
 import llnl.util.filesystem as fs
+
 import spack.error
 import spack.patch
 import spack.repo
 import spack.store
 import spack.util.spack_json as sjson
-from spack.package import InstallError, PackageBase, PackageStillNeededError
-from spack.package import (_spack_build_envfile, _spack_build_logfile,
-                           _spack_configure_argsfile)
+from spack.package import (
+    InstallError,
+    PackageBase,
+    PackageStillNeededError,
+    _spack_build_envfile,
+    _spack_build_logfile,
+    _spack_configure_argsfile,
+)
 from spack.spec import Spec
 
 

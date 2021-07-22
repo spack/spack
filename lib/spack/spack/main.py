@@ -21,12 +21,15 @@ import sys
 import traceback
 import warnings
 
-import archspec.cpu
 from six import StringIO
+
+import archspec.cpu
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
+from llnl.util.tty.log import log_output
+
 import spack
 import spack.architecture
 import spack.cmd
@@ -39,7 +42,6 @@ import spack.store
 import spack.util.debug
 import spack.util.executable as exe
 import spack.util.path
-from llnl.util.tty.log import log_output
 from spack.error import SpackError
 
 #: names of profile statistics
@@ -528,7 +530,7 @@ class SpackCommand(object):
         """Invoke this SpackCommand.
 
         Args:
-            argv (list of str): command line arguments.
+            argv (list): command line arguments.
 
         Keyword Args:
             fail_on_error (optional bool): Don't raise an exception on error
@@ -623,7 +625,7 @@ def print_setup_info(*info):
     """Print basic information needed by setup-env.[c]sh.
 
     Args:
-        info (list of str): list of things to print: comma-separated list
+        info (list): list of things to print: comma-separated list
             of 'csh', 'sh', or 'modules'
 
     This is in ``main.py`` to make it fast; the setup scripts need to
@@ -687,7 +689,7 @@ def main(argv=None):
     """This is the entry point for the Spack command.
 
     Args:
-        argv (list of str or None): command line arguments, NOT including
+        argv (list or None): command line arguments, NOT including
             the executable name. If None, parses from sys.argv.
     """
     # Create a parser with a simple positional argument first.  We'll
@@ -780,7 +782,10 @@ def main(argv=None):
             raise
         sys.stderr.write('\n')
         tty.error("Keyboard interrupt.")
-        return signal.SIGINT.value
+        if sys.version_info >= (3, 5):
+            return signal.SIGINT.value
+        else:
+            return signal.SIGINT
 
     except SystemExit as e:
         if spack.config.get('config:debug'):

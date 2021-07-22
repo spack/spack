@@ -29,6 +29,8 @@ class Atompaw(Package):
     depends_on('libxc')
     depends_on('libxc@:2', when='@:4.0')
 
+    patch('atompaw-4.1.1.0-fix-ifort.patch', when='@4.1.1.0:')
+
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
 

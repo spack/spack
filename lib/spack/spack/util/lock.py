@@ -8,11 +8,12 @@ import os
 import stat
 
 import llnl.util.lock
-from llnl.util.lock import *  # noqa
 
 import spack.config
 import spack.error
 import spack.paths
+
+from llnl.util.lock import *  # noqa
 
 
 class Lock(llnl.util.lock.Lock):  # type: ignore[no-redef]

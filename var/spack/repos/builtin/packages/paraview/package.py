@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Paraview(CMakePackage, CudaPackage):
@@ -140,6 +141,10 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('py-setuptools@:44.99.99', when='+python')
     # Can't contretize with python2 and py-pillow@7.0.0:
     depends_on('pil@:6', when='+python')
+
+    # ParaView depends on cli11 due to changes in MR
+    # https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4951
+    depends_on('cli11@1.9.1', when='@5.10:')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 

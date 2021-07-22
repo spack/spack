@@ -5,7 +5,6 @@
 
 from spack.spec import ConflictsInSpecError
 
-
 yaml_cpp_tests_libcxx_error_msg = 'yaml-cpp tests incompatible with libc++'
 
 
@@ -15,8 +14,10 @@ class YamlCpp(CMakePackage):
     homepage = "https://github.com/jbeder/yaml-cpp"
     url      = "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
     git      = "https://github.com/jbeder/yaml-cpp.git"
+    maintainers = ['eschnett']
 
     version('develop', branch='master')
+    version('0.7.0', sha256='43e6a9fcb146ad871515f0d0873947e5d497a1c9c60c58cb102a97b47208b7c3')
     version('0.6.3', sha256='77ea1b90b3718aa0c324207cb29418f5bced2354c2e483a9523d98c3460af1ed')
     version('0.6.2', sha256='e4d8560e163c3d875fd5d9e5542b5fd5bec810febdcba61481fe5fc4e6b1fd05')
     version('0.5.3', sha256='decc5beabb86e8ed9ebeb04358d5363a5c4f72d458b2c788cb2f3ac9c19467b2')

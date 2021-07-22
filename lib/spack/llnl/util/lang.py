@@ -5,14 +5,15 @@
 
 from __future__ import division
 
+import functools
+import inspect
 import multiprocessing
 import os
 import re
-import functools
-import inspect
-from datetime import datetime, timedelta
-from six import string_types
 import sys
+from datetime import datetime, timedelta
+
+from six import string_types
 
 if sys.version_info < (3, 0):
     from itertools import izip_longest  # novm
@@ -572,8 +573,8 @@ def pretty_date(time, now=None):
     """Convert a datetime or timestamp to a pretty, relative date.
 
     Args:
-        time (datetime or int): date to print prettily
-        now (datetime): dateimte for 'now', i.e. the date the pretty date
+        time (datetime.datetime or int): date to print prettily
+        now (datetime.datetime): datetime for 'now', i.e. the date the pretty date
             is relative to (default is datetime.now())
 
     Returns:
@@ -647,7 +648,7 @@ def pretty_string_to_date(date_str, now=None):
             or be a *pretty date* (like ``yesterday`` or ``two months ago``)
 
     Returns:
-        (datetime): datetime object corresponding to ``date_str``
+        (datetime.datetime): datetime object corresponding to ``date_str``
     """
 
     pattern = {}

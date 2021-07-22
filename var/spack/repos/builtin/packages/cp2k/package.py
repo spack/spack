@@ -2,10 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import copy
 import os
 import os.path
-import copy
 
 import spack.util.environment
 
@@ -68,7 +67,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('lmax',
             description='Maximum supported angular momentum (HFX and others)',
             default='5',
-            values=tuple(map(str, HFX_LMAX_RANGE)),
+            values=[str(x) for x in HFX_LMAX_RANGE],
             multi=False)
 
     depends_on('python', type='build')
@@ -78,71 +77,88 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('lapack')
     depends_on('fftw-api@3')
 
-    # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
-    depends_on('libxsmm@1.11:~header-only', when='smm=libxsmm')
-    # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
-    depends_on('pkgconfig', type='build', when='smm=libxsmm')
-    # ... and in CP2K 7.0+ for linking to libint2
-    depends_on('pkgconfig', type='build', when='+libint@7.0:')
-    depends_on('pkgconfig', type='build', when='+libxc@7.0:')
+    with when('smm=libxsmm'):
+        # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
+        depends_on('libxsmm@1.11:~header-only')
+        # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
+        depends_on('pkgconfig', type='build')
+        # please set variants: smm=blas by configuring packages.yaml or install
+        # cp2k with option smm=blas on aarch64
+        conflicts('target=aarch64:', msg='libxsmm is not available on arm')
 
-    # libint & libxc are always statically linked
-    depends_on('libint@1.1.4:1.2', when='+libint@3.0:6.9', type='build')
-    for lmax in HFX_LMAX_RANGE:
-        # libint2 can be linked dynamically again
-        depends_on('libint@2.6.0:+fortran tune=cp2k-lmax-{0}'.format(lmax),
-                   when='+libint@7.0: lmax={0}'.format(lmax))
+    with when('+libint'):
+        # ... and in CP2K 7.0+ for linking to libint2
+        depends_on('pkgconfig', type='build', when='@7.0:')
+        # libint & libxc are always statically linked
+        depends_on('libint@1.1.4:1.2', when='@3.0:6.9')
+        for lmax in HFX_LMAX_RANGE:
+            # libint2 can be linked dynamically again
+            depends_on('libint@2.6.0:+fortran tune=cp2k-lmax-{0}'.format(lmax),
+                       when='@7.0: lmax={0}'.format(lmax))
 
-    depends_on('libxc@2.2.2:3.99.0', when='+libxc@:5.5999', type='build')
-    depends_on('libxc@4.0.3:4.99.0', when='+libxc@6.0:6.9', type='build')
-    depends_on('libxc@4.0.3:4.99.0', when='+libxc@7.0:8.1')
-    depends_on('libxc@5.1.3:5.1.99', when='+libxc@8.2:')
+    with when('+libxc'):
+        depends_on('pkgconfig', type='build', when='@7.0:')
+        depends_on('libxc@2.2.2:3.99.0', when='@:5.5999', type='build')
+        depends_on('libxc@4.0.3:4.99.0', when='@6.0:6.9', type='build')
+        depends_on('libxc@4.0.3:4.99.0', when='@7.0:8.1')
+        depends_on('libxc@5.1.3:5.1.99', when='@8.2:')
 
-    depends_on('mpi@2:', when='+mpi')
-    depends_on('scalapack', when='+mpi')
-    depends_on('cosma+scalapack', when='+cosma')
-    depends_on('cosma+cuda+scalapack', when='+cosma+cuda')
-    depends_on('elpa@2011.12:2016.13+openmp', when='+openmp+elpa@:5.999')
-    depends_on('elpa@2011.12:2017.11+openmp', when='+openmp+elpa@6.0:6.999')
-    depends_on('elpa@2018.05:+openmp', when='+openmp+elpa@7.0:')
-    depends_on('elpa@2011.12:2016.13~openmp', when='~openmp+elpa@:5.999')
-    depends_on('elpa@2011.12:2017.11~openmp', when='~openmp+elpa@6.0:6.999')
-    depends_on('elpa@2018.05:~openmp', when='~openmp+elpa@7.0:')
-    depends_on('plumed+shared+mpi', when='+plumed+mpi')
-    depends_on('plumed+shared~mpi', when='+plumed~mpi')
+    with when('+mpi'):
+        depends_on('mpi@2:')
+        depends_on('scalapack')
+
+    with when('+cosma'):
+        depends_on('cosma+scalapack')
+        depends_on('cosma+cuda', when='+cuda')
+        conflicts('~mpi')
+        # COSMA support was introduced in 8+
+        conflicts('@:7.999')
+
+    with when('+elpa'):
+        conflicts('~mpi', msg='elpa requires MPI')
+        depends_on('elpa+openmp', when='+openmp')
+        depends_on('elpa~openmp', when='~openmp')
+        depends_on('elpa@2011.12:2016.13', when='@:5.999')
+        depends_on('elpa@2011.12:2017.11', when='@6.0:6.999')
+        depends_on('elpa@2018.05:', when='@7.0:')
+
+    with when('+plumed'):
+        depends_on('plumed+shared')
+        depends_on('plumed+mpi', when='+mpi')
+        depends_on('plumed~mpi', when='~mpi')
 
     # while we link statically against PEXSI, its own deps may be linked in
     # dynamically, therefore can't set this as pure build-type dependency.
-    depends_on('pexsi+fortran@0.9.0:0.9.999', when='+pexsi@:4.999')
-    depends_on('pexsi+fortran@0.10.0:', when='+pexsi@5.0:')
+    with when('+pexsi'):
+        conflicts('~mpi', msg='pexsi requires MPI')
+        depends_on('pexsi+fortran@0.9.0:0.9.999', when='@:4.999')
+        depends_on('pexsi+fortran@0.10.0:', when='@5.0:')
 
-    # only OpenMP should be consistenly used, all other common things
+    # only OpenMP should be consistently used, all other common things
     # like ELPA, SCALAPACK are independent and Spack will ensure that
-    # a consistent/compat. combination is pulled in to the dependency graph.
-    depends_on('sirius@:6.999+fortran+vdwxc+shared+openmp', when='@:7.999+sirius+openmp')
-    depends_on('sirius@:6.999+fortran+vdwxc+shared~openmp', when='@:7.999+sirius~openmp')
+    # a consistent/compatible combination is pulled into the dependency graph.
+    with when('+sirius'):
+        depends_on('sirius+fortran+vdwxc+shared')
+        depends_on('sirius+openmp', when='+openmp')
+        depends_on('sirius~openmp', when='~openmp')
+        depends_on('sirius@:6.999', when='@:7.999')
+        depends_on('sirius@7:', when='@8:')
+        conflicts('~mpi')
+        # sirius support was introduced in 7+
+        conflicts('@:6.999')
 
-    depends_on('sirius@7:+fortran+vdwxc+shared+openmp', when='@8:+sirius+openmp')
+    with when('+libvori'):
+        depends_on('libvori@201219:', when='@8.1', type='build')
+        depends_on('libvori@210412:', when='@8.2:', type='build')
+        # libvori support was introduced in 8+
+        conflicts('@:7.999')
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     # which is written using Python 3
     depends_on('py-numpy', when='@7:+cuda', type='build')
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
-    depends_on('libvori@201219:', when='@8.1+libvori', type='build')
-    depends_on('libvori@210412:', when='@8.2:+libvori', type='build')
     depends_on('spglib', when='+spglib')
-
-    # PEXSI, ELPA, COSMA and SIRIUS depend on MPI
-    conflicts('~mpi', '+pexsi')
-    conflicts('~mpi', '+elpa')
-    conflicts('~mpi', '+sirius')
-    conflicts('~mpi', '+cosma')
-    conflicts('+sirius', '@:6.999')  # sirius support was introduced in 7+
-    conflicts('+cosma', '@:7.999')  # COSMA support was introduced in 8+
-
-    conflicts('+libvori', '@:7.999')  # libvori support was introduced in 8+
-
     conflicts('~cuda', '+cuda_fft')
     conflicts('~cuda', '+cuda_blas')
 
@@ -155,10 +171,6 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%nag')
-
-    # please set variants: smm=blas by configuring packages.yaml or install
-    # cp2k with option smm=blas on aarch64
-    conflicts('smm=libxsmm',  when='target=aarch64:', msg='libxsmm is not available on arm')
 
     conflicts('^fftw~openmp', when='+openmp')
     conflicts('^amdfftw~openmp', when='+openmp')
@@ -235,7 +247,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             'intel': ['-O2', '-pc64', '-unroll', ],
             'pgi': ['-fast'],
             'nvhpc': ['-fast'],
-            'cray': ['-O2'],
+            'cce': ['-O2'],
             'xl': ['-O3'],
             'aocc': ['-O1'],
         }
@@ -281,7 +293,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             ]
         elif '%pgi' in spec or '%nvhpc' in spec:
             fcflags += ['-Mfreeform', '-Mextend']
-        elif '%cray' in spec:
+        elif '%cce' in spec:
             fcflags += ['-emf', '-ffree', '-hflex_mp=strict']
         elif '%xl' in spec:
             fcflags += ['-qpreprocess', '-qstrict', '-q64']
@@ -294,7 +306,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             ldflags.append(self.compiler.openmp_flag)
             nvflags.append('-Xcompiler="{0}"'.format(
                 self.compiler.openmp_flag))
-        elif '%cray' in spec:  # Cray enables OpenMP by default
+        elif '%cce' in spec:  # Cray enables OpenMP by default
             cflags   += ['-hnoomp']
             cxxflags += ['-hnoomp']
             fcflags  += ['-hnoomp']

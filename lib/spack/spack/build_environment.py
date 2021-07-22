@@ -33,44 +33,52 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import inspect
-import re
 import multiprocessing
 import os
+import re
 import shutil
 import sys
 import traceback
 import types
+
 from six import StringIO
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import cescape, colorize
-from llnl.util.filesystem import mkdirp, install, install_tree
+from llnl.util.filesystem import install, install_tree, mkdirp
 from llnl.util.lang import dedupe
+from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
+import spack.architecture as arch
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.config
+import spack.install_test
 import spack.main
-import spack.paths
 import spack.package
+import spack.paths
 import spack.repo
 import spack.schema.environment
 import spack.store
-import spack.install_test
 import spack.subprocess_context
-import spack.architecture as arch
 import spack.util.path
-from spack.util.string import plural
-from spack.util.environment import (
-    env_flag, filter_system_paths, get_path, is_system_path,
-    EnvironmentModifications, validate, preserve_environment)
-from spack.util.environment import system_dirs
-from spack.error import NoLibrariesError, NoHeadersError
-from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, path_from_modules, module
-from spack.util.log_parse import parse_log_events, make_log_context
+from spack.error import NoHeadersError, NoLibrariesError
 from spack.util.cpus import cpus_available
+from spack.util.environment import (
+    EnvironmentModifications,
+    env_flag,
+    filter_system_paths,
+    get_path,
+    is_system_path,
+    preserve_environment,
+    system_dirs,
+    validate,
+)
+from spack.util.executable import Executable
+from spack.util.log_parse import make_log_context, parse_log_events
+from spack.util.module_cmd import load_module, module, path_from_modules
+from spack.util.string import plural
+
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -447,11 +455,11 @@ def determine_number_of_jobs(
     cap to the number of CPUs available to avoid oversubscription.
 
     Parameters:
-        parallel (bool): true when package supports parallel builds
-        command_line (int/None): command line override
-        config_default (int/None): config default number of jobs
-        max_cpus (int/None): maximum number of CPUs available. When None, this
-                             value is automatically determined.
+        parallel (bool or None): true when package supports parallel builds
+        command_line (int or None): command line override
+        config_default (int or None): config default number of jobs
+        max_cpus (int or None): maximum number of CPUs available. When None, this
+            value is automatically determined.
     """
     if not parallel:
         return 1
@@ -677,14 +685,14 @@ def get_std_cmake_args(pkg):
     """List of standard arguments used if a package is a CMakePackage.
 
     Returns:
-        list of str: standard arguments that would be used if this
+        list: standard arguments that would be used if this
         package were a CMakePackage instance.
 
     Args:
-        pkg (PackageBase): package under consideration
+        pkg (spack.package.PackageBase): package under consideration
 
     Returns:
-        list of str: arguments for cmake
+        list: arguments for cmake
     """
     return spack.build_systems.cmake.CMakePackage._std_args(pkg)
 
@@ -693,14 +701,14 @@ def get_std_meson_args(pkg):
     """List of standard arguments used if a package is a MesonPackage.
 
     Returns:
-        list of str: standard arguments that would be used if this
+        list: standard arguments that would be used if this
         package were a MesonPackage instance.
 
     Args:
-        pkg (PackageBase): package under consideration
+        pkg (spack.package.PackageBase): package under consideration
 
     Returns:
-        list of str: arguments for meson
+        list: arguments for meson
     """
     return spack.build_systems.meson.MesonPackage._std_args(pkg)
 
@@ -730,7 +738,7 @@ def load_external_modules(pkg):
     associated with them.
 
     Args:
-        pkg (PackageBase): package to load deps for
+        pkg (spack.package.PackageBase): package to load deps for
     """
     for dep in list(pkg.spec.traverse()):
         external_modules = dep.external_modules or []
@@ -856,7 +864,7 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
     CMAKE_PREFIX_PATH, or PKG_CONFIG_PATH).
 
     Args:
-        spec (Spec): spec for which we want the modifications
+        spec (spack.spec.Spec): spec for which we want the modifications
         context (str): either 'build' for build-time modifications or 'run'
             for run-time modifications
     """
@@ -1054,9 +1062,9 @@ def start_build_process(pkg, function, kwargs):
 
     Args:
 
-        pkg (PackageBase): package whose environment we should set up the
+        pkg (spack.package.PackageBase): package whose environment we should set up the
             child process for.
-        function (callable): argless function to run in the child
+        function (typing.Callable): argless function to run in the child
             process.
 
     Usage::
@@ -1141,7 +1149,7 @@ def get_package_context(traceback, context=3):
     """Return some context for an error message when the build fails.
 
     Args:
-        traceback (traceback): A traceback from some exception raised during
+        traceback: A traceback from some exception raised during
             install
 
         context (int): Lines of context to show before and after the line

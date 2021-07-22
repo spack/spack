@@ -3,14 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 import os
+import sys
 
 import llnl.util.tty as tty
 
-import spack.config
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 import spack.repo
 
 description = "developer build: build from code in current working directory"

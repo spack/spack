@@ -11,8 +11,9 @@ static DSL metadata for packages.
 """
 
 import os
-import pytest
 import shutil
+
+import pytest
 
 import llnl.util.filesystem as fs
 

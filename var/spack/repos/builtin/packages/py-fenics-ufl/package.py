@@ -16,7 +16,7 @@ class PyFenicsUfl(PythonPackage):
     homepage = "https://fenicsproject.org/"
     url = "https://github.com/FEniCS/ufl/archive/2019.1.0.tar.gz"
     git = "https://github.com/FEniCS/ufl.git"
-    maintainers = ["js947", "chrisrichardson"]
+    maintainers = ["js947", "chrisrichardson", "garth-wells"]
 
     version("main", branch="main")
     version('2021.1.0',       sha256='130fdc09bb7fcd39dcd2618426912b8a25a03431d94575711068b38c666b4337')

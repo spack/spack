@@ -34,6 +34,7 @@ class NcbiRmblastn(AutotoolsPackage):
         archive_sha256='e746ee480ade608052306fd21f015c8a323f27029f65399275216f9a4c882d59',
         when='@2.9.0'
     )
+    depends_on('cpio', type='build')
 
     configure_directory = 'c++'
 

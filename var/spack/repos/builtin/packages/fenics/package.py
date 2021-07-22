@@ -131,6 +131,7 @@ class Fenics(CMakePackage):
             self.define_from_variant('DOLFIN_ENABLE_OPENMP', 'openmp'),
             self.define_from_variant('DOLFIN_ENABLE_CHOLMOD', 'suite-sparse'),
             self.define_from_variant('DOLFIN_ENABLE_HDF5', 'hdf5'),
+            self.define_from_variant('HDF5_NO_FIND_PACKAGE_CONFIG_FILE', 'hdf5'),
             self.define_from_variant('DOLFIN_ENABLE_MPI', 'mpi'),
             self.define_from_variant('DOLFIN_ENABLE_PARMETIS', 'parmetis'),
             self.define_from_variant('DOLFIN_ENABLE_PETSC', 'petsc'),

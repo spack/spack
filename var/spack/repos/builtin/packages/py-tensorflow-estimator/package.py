@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import tempfile
+
+from spack import *
 
 
 class PyTensorflowEstimator(Package):

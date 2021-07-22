@@ -58,7 +58,7 @@ spack:
       variants: +bzip2 ~nls +xz
     expat:
       version:
-        - 2.3.0
+        - 2.4.1
     findutils:
       version:
         - 4.8.0
@@ -284,8 +284,7 @@ spack:
     - sz
     - tasmanian
     - tau
-    - trilinos
-    - trilinos +nox +superlu-dist
+    - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +boost +superlu-dist gotype=long
     - turbine
     - umap
     - unifyfs@0.9.1

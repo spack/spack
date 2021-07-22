@@ -3,16 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
-import sys
-import os
-import socket
 import glob
+import os
 import shutil
+import socket
+import sys
+from os import environ as env
 
 import llnl.util.tty as tty
-from os import environ as env
+
+from spack import *
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -76,7 +76,6 @@ class Ascent(Package, CudaPackage):
 
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
-    variant("cuda", default=False, description="Build cuda support")
     variant("mfem", default=False, description="Build MFEM filter support")
     variant("adios", default=False, description="Build Adios filter support")
     variant("dray", default=False, description="Build with Devil Ray support")
