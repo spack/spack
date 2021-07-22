@@ -14,7 +14,7 @@ class PySlepc4py(PythonPackage):
     url      = "https://slepc.upv.es/download/distrib/slepc4py-3.15.1.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
-    maintainers = ['dalcinl', 'joseeroman', 'balay']
+    maintainers = ['joseeroman', 'balay']
 
     version('main', branch='main')
     version('3.15.1', sha256='bcdab6d2101ae00e189f4b33072805358cee2dda806a6b6a8e3c2f1b9f619dfd')

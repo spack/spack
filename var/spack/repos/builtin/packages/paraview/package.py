@@ -142,6 +142,10 @@ class Paraview(CMakePackage, CudaPackage):
     # Can't contretize with python2 and py-pillow@7.0.0:
     depends_on('pil@:6', when='+python')
 
+    # ParaView depends on cli11 due to changes in MR
+    # https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4951
+    depends_on('cli11@1.9.1', when='@5.10:')
+
     patch('stl-reader-pv440.patch', when='@4.4.0')
 
     # Broken gcc-detection - improved in 5.1.0, redundant later

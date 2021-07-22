@@ -52,6 +52,8 @@ class RocprofilerDev(CMakePackage):
             placement='roctracer',
             when='@{0}'.format(d_version)
         )
+    # See https://github.com/ROCm-Developer-Tools/rocprofiler/pull/50
+    patch('fix-includes.patch')
 
     def patch(self):
         filter_file('${HSA_RUNTIME_LIB_PATH}/../include',
