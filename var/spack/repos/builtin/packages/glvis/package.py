@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
 
 
 class Glvis(MakefilePackage):
@@ -93,7 +92,7 @@ class Glvis(MakefilePackage):
     depends_on('fontconfig', when='+fonts')
     depends_on('fontconfig', when='@4.0:,develop')
 
-    depends_on('uuid', when=sys.platform != 'darwin')
+    depends_on('uuid', when='platform!=darwin')
 
     def edit(self, spec, prefix):
 
@@ -108,10 +107,15 @@ class Glvis(MakefilePackage):
                 'MFEM_DIR={0}'.format(mfem.prefix),
                 'CONFIG_MK={0}'.format(config_mk)]
 
-        png_args = ['PNG_OPTS=-DGLVIS_USE_LIBPNG -I{0}'.format(spec['libpng'].prefix.include),
-                    'PNG_LIBS={0}'.format(spec['libpng'].libs.ld_flags)] if 'screenshots=png' in spec else []
-        tiff_args = ['TIFF_OPTS=-DGLVIS_USE_LIBTIFF -I{0}'.format(spec['libtiff'].prefix.include),
-                     'TIFF_LIBS={0}'.format(spec['libtiff'].libs.ld_flags)] if 'screenshots=tiff' in spec else []
+        png_args = ['PNG_OPTS=-DGLVIS_USE_LIBPNG -I{0}'.format(
+            spec['libpng'].prefix.include),
+            'PNG_LIBS={0}'.format(
+            spec['libpng'].libs.ld_flags)] if 'screenshots=png' in spec else []
+
+        tiff_args = ['TIFF_OPTS=-DGLVIS_USE_LIBTIFF -I{0}'.format(
+            spec['libtiff'].prefix.include),
+            'TIFF_LIBS={0}'.format(
+            spec['libtiff'].libs.ld_flags)] if 'screenshots=tiff' in spec else []
 
         if "@4.0:" in spec or "@develop" in spec:
             # TODO: glu and fontconfig dirs
@@ -134,17 +138,17 @@ class Glvis(MakefilePackage):
             gl_libs = spec['glu'].libs + spec['gl'].libs + spec['libx11'].libs
 
             args += ['GL_OPTS=-I{0} -I{1} -I{2}'.format(
-                        spec['libx11'].prefix.include,
-                        spec['gl'].prefix.include,
-                        spec['glu'].prefix.include),
-                     'GL_LIBS={0}'.format(gl_libs.ld_flags)]
+                spec['libx11'].prefix.include,
+                spec['gl'].prefix.include,
+                spec['glu'].prefix.include),
+                'GL_LIBS={0}'.format(gl_libs.ld_flags)]
 
             if 'screenshots=png' in spec:
                 args += ['USE_LIBPNG=YES', 'USE_LIBTIFF=NO']
                 args.extend(png_args)
             elif 'screenshots=tiff' in spec:
                 args += ['USE_LIBPNG=NO', 'USE_LIBTIFF=YES']
-                args.extend(tiff_args);
+                args.extend(tiff_args)
             else:
                 args += ['USE_LIBPNG=NO', 'USE_LIBTIFF=NO']
 
@@ -157,7 +161,6 @@ class Glvis(MakefilePackage):
                     'FT_LIBS={0} {1}'.format(
                         spec['freetype'].libs.ld_flags,
                         spec['fontconfig'].libs.ld_flags)]
-
 
         self.build_targets = args
         self.install_targets += args
