@@ -1513,6 +1513,7 @@ def git_repo_for_package(pkg):
     name = "/".join(name.split('/')[0:2])
     return "%s%s/%s" % (service, repository, name)
 
+
 def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
