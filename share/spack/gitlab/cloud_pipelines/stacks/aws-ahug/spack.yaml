@@ -193,7 +193,7 @@ spack:
   gitlab-ci:
   # bootstrap:
   #   - name: bootstrap-compilers
-    image: { "name": "public.ecr.aws/a4y4t9s0/spack/amazonlinux:2-arm", "entrypoint": [""] }
+    image: { "name": "public.ecr.aws/l6r1l7v9/spack/gitlab/amazonlinux-runner:latest", "entrypoint": [""] }
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
@@ -215,7 +215,7 @@ spack:
         - spack --version
         - cd share/spack/gitlab/cloud_pipelines/stacks/aws-ahug
         - spack env activate --without-view .
-      image: { "name": "public.ecr.aws/a4y4t9s0/spack/amazonlinux:2-arm", "entrypoint": [""] }
+      image: { "name": "public.ecr.aws/l6r1l7v9/spack/gitlab/amazonlinux-runner:latest", "entrypoint": [""] }
       #before_script:
       #  - . "./share/spack/setup-env.sh"
       #  - spack --version
