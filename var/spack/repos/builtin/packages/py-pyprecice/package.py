@@ -30,10 +30,14 @@ class PyPyprecice(PythonPackage):
     version("2.0.0.2", sha256="5f055d809d65ec2e81f4d001812a250f50418de59990b47d6bcb12b88da5f5d7")
     version("2.0.0.1", sha256="96eafdf421ec61ad6fcf0ab1d3cf210831a815272984c470b2aea57d4d0c9e0e")
 
+    # Update setup.py structure to v2.0.0.2 such that the next patch can be applied
+    patch("setup-v2.0.0.1.patch", when="@2.0.0.1")
     # Older versions of the bindings checked versions via pip. This patch
     # removes the pip dependency.
     # See also https://github.com/spack/spack/pull/19558
-    patch("deactivate-version-check-via-pip.patch", when="@:2.1.1.1")
+    patch("deactivate-version-check-via-pip.patch", when="@:2.1.1.2")
+    # From v2.2.0.1 versioneer is used in a way that breaks the installation procedure for Spack
+    patch("setup-v2-versioneer.patch", when="@2.2.0.1:")
 
     depends_on("precice@develop", when="@develop")
     depends_on("precice@2.2.1", when="@2.2.1.1:2.2.1.99")
@@ -50,7 +54,7 @@ class PyPyprecice(PythonPackage):
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-cython@0.29:", type=("build"))
 
-    phases = ['install_lib', 'build_ext', 'install']
+    phases = ['build_ext', 'install']
 
     def build_ext_args(self, spec, prefix):
         return [
@@ -58,8 +62,12 @@ class PyPyprecice(PythonPackage):
             "--library-dirs=" + spec["precice"].libs.directories[0]
         ]
 
-    def install(self, spec, prefix):
+    def install_args(self, spec, prefix):
+        args = super(PyPyprecice, self).install_args(spec, prefix)
+
         # Older versions of the bindings had a non-standard installation routine
         # See also https://github.com/spack/spack/pull/19558#discussion_r513123239
-        if self.version <= Version("2.1.1.1"):
-            self.setup_py("install", "--prefix={0}".format(prefix))
+        if self.version <= Version("2.1.1.2"):
+            args = ["--prefix={0}".format(prefix)]
+
+        return args

@@ -1,0 +1,55 @@
+diff --git a/setup.py b/setup.py
+index 8c554a1..ef7c221 100644
+--- a/setup.py
++++ b/setup.py
+@@ -1,7 +1,17 @@
+ import os
+ import subprocess
+-from enum import Enum
++import warnings
++from packaging import version
++import pip
++
++if version.parse(pip.__version__) < version.parse("19.0"):
++    # version 19.0 is required, since we are using pyproject.toml for definition of build-time depdendencies. See https://pip.pypa.io/en/stable/news/#id209
++    warnings.warn("You are using pip version {}. However, pip version > 19.0 is recommended. You can continue with the installation, but installation problems can occour. Please refer to https://github.com/precice/python-bindings#build-time-dependencies-cython-numpy-defined-in-pyprojecttoml-are-not-installed-automatically for help.".format(pip.__version__))
++
++if version.parse(pip.__version__) < version.parse("10.0.1"):        
++    warnings.warn("You are using pip version {}. However, pip version > 10.0.1 is required. If you continue with installation it is likely that you will face an error. See https://github.com/precice/python-bindings#version-of-pip3-is-too-old".format(pip.__version__))
+ 
++from enum import Enum
+ from setuptools import setup
+ from setuptools.command.test import test
+ from Cython.Distutils.extension import Extension
+@@ -9,11 +19,8 @@ from Cython.Distutils.build_ext import new_build_ext as build_ext
+ from Cython.Build import cythonize
+ from distutils.command.install import install
+ from distutils.command.build import build
+-from packaging import version
+-import pip
+ import numpy
+ 
+-assert(version.parse(pip.__version__) >= version.parse("10.0.1"))  # minimum version 10.0.1 is required. See https://github.com/precice/precice/wiki/Non%E2%80%93standard-APIs#python-bindings-version-of-pip3-is-too-old
+ 
+ # name of Interfacing API
+ APPNAME = "pyprecice"
+@@ -104,11 +111,19 @@ class my_test(test, object):
+         self.distribution.is_test = True       
+         super().initialize_options()
+ 
++        
++this_directory = os.path.abspath(os.path.dirname(__file__))
++with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
++    long_description = f.read()
++    
++    
+ # build precice.so python extension to be added to "PYTHONPATH" later
+ setup(
+     name=APPNAME,
+     version=str(APPVERSION),
+     description='Python language bindings for the preCICE coupling library',
++    long_description=long_description,
++    long_description_content_type='text/markdown',
+     url='https://github.com/precice/python-bindings',
+     author='the preCICE developers',
+     author_email='info@precice.org',
