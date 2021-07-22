@@ -21,8 +21,8 @@ import spack.compilers as compilers
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
-import spack.util.executable
 import spack.package
+import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.spec import CompilerSpec, Spec
