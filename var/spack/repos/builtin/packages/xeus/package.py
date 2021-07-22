@@ -45,7 +45,7 @@ class Xeus(CMakePackage):
     depends_on('nlohmann-json@3.2.0', when='@0.15.0')
     depends_on('nlohmann-json@3.1.1', when='@0.14.1')
 
-    depends_on('uuid', when=sys.platform == "linux")
+    depends_on('uuid', when='platform=linux')
 
     # finds cryptopp not built with cmake, removes c++17 attribute
     # in check_cxx_source_compiles
