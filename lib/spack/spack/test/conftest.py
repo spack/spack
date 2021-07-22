@@ -67,6 +67,10 @@ def mock_git_info(tmpdir, scope="session"):
 
     with working_dir(tmpdir):
         git("init")
+
+        git('config', 'user.name', 'Spack')
+        git('config', 'user.email', 'spack@spack.io')
+
         touch("file1.txt")
         git("add", "file1.txt")
         git('commit', '-a', '-m', "Adding file1.txt")
