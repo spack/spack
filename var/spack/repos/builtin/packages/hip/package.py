@@ -255,8 +255,8 @@ class Hip(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DPROF_API_HEADER_PATH={0}/roctracer/inc/ext'.format(
-                self.stage.source_path),
+            self.define('PROF_API_HEADER_PATH', join_path(
+                self.stage.source_path, 'roctracer', 'inc', 'ext')),
             self.define('HIP_COMPILER', 'clang'),
             self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         ]
