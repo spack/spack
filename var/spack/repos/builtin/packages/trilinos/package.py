@@ -40,7 +40,6 @@ class Trilinos(CMakePackage, CudaPackage):
     version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1
     version('12.14.1', sha256='52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
     version('12.12.1', sha256='5474c5329c6309224a7e1726cf6f0d855025b2042959e4e2be2748bd6bb49e18')
-    version('12.11.xsdk-0-2-0', commit='e8210776222ef277a06451ef934dc1138ecdafe6') # tag xsdk-0.2.0
     version('12.10.1', sha256='ab81d917196ffbc21c4927d42df079dd94c83c1a08bda43fef2dd34d0c1a5512')
     version('12.8.1', sha256='d20fe60e31e3ba1ef36edecd88226240a518f50a4d6edcc195b88ee9dda5b4a1')
     version('12.6.4', sha256='1c7104ba60ee8cc4ec0458a1c4f6a26130616bae7580a7b15f2771a955818b73')
@@ -327,7 +326,6 @@ class Trilinos(CMakePackage, CudaPackage):
         msg='Cannot build Trilinos with STK as a shared library on Darwin.'
     )
     conflicts('+adios2', when='@:12.14.1')
-    conflicts('+adios2', when='@xsdk-0.2.0')
     conflicts('+pnetcdf', when='~netcdf')
     conflicts('+pnetcdf', when='~mpi')
     conflicts('+cuda_rdc', when='~cuda')
@@ -392,13 +390,11 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('superlu-dist@5.4:6.2.0', when='@12.12.2:13.0.0+superlu-dist')
     depends_on('superlu-dist@6.3.0:', when='@13.0.1:+superlu-dist')
     depends_on('superlu-dist@develop', when='@master+superlu-dist')
-    depends_on('superlu-dist@xsdk-0.2.0', when='@12.10.xsdk-0-2-0+superlu-dist')
     depends_on('superlu+pic@4.3', when='+superlu')
     depends_on('strumpack+shared', when='+strumpack')
     depends_on('scalapack', when='+strumpack+mpi')
     # Trilinos can not be built against 64bit int hypre
     depends_on('hypre~internal-superlu~int64', when='+hypre')
-    depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@master+hypre')
     depends_on('python', when='+python')
     depends_on('py-mpi4py', when='+mpi +python', type=('build', 'run'))

@@ -17,7 +17,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
     version('main', branch='main')
-    version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
     version('3.15.2', sha256='3b10c19c69fc42e01a38132668724a01f1da56f5c353105cd28f1120cc9041d8')
     version('3.15.1', sha256='c0ac6566e69d1d70b431e07e7598e9de95e84891c2452db1367c846b75109deb')
