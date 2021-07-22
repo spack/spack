@@ -63,7 +63,7 @@ spack:
     # Note skipping spot since no spack package for it
     - ahug_miniapps:
       - cloverleaf
-      - coevp
+    # - coevp
       - cohmm
     # - examinimd
       - exampm
