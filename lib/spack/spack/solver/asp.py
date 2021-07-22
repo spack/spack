@@ -1659,15 +1659,7 @@ def _develop_specs_from_env(spec, env):
             'dev_path', spack.variant.SingleValuedVariant('dev_path', path)
         )
 
-    dev_spec = spack.spec.Spec(dev_info['spec'])
-    dev_pkg = dev_spec.package
-    if hasattr(dev_pkg, 'git'):
-        dev_spec.version.generate_commit_lookup(
-            spack.fetch_strategy.GitFetchStrategy(
-                git=spack.fetch_strategy.git_repo_for_package(dev_pkg)),
-            dev_pkg.versions
-        )
-    spec.constrain(dev_spec)
+    spec.constrain(dev_info['spec'])
 
 
 #

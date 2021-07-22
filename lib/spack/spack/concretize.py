@@ -81,15 +81,7 @@ class Concretizer(object):
                 'dev_path', vt.SingleValuedVariant('dev_path', path))
             changed = True
 
-        dev_spec = spack.spec.Spec(dev_info['spec'])
-        dev_pkg = dev_spec.package
-        if hasattr(dev_pkg, 'git'):
-            dev_spec.version.generate_commit_lookup(
-                spack.fetch_strategy.GitFetchStrategy(
-                    git=spack.fetch_strategy.git_repo_for_package(dev_pkg)),
-                dev_pkg.versions
-            )
-        changed |= spec.constrain(dev_spec)
+        changed |= spec.constrain(dev_info['spec'])
         return changed
 
     def _valid_virtuals_and_externals(self, spec):
