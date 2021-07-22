@@ -28,3 +28,4 @@ class Imlib2(AutotoolsPackage, SourceforgePackage):
     depends_on('libpng')
     depends_on('libid3tag')
     depends_on('libjpeg-turbo')
+    depends_on('pkg-config', type='build')
