@@ -22,7 +22,7 @@ class SstDumpi(AutotoolsPackage):
     url      = "https://github.com/sstsimulator/sst-dumpi/archive/6.1.0.tar.gz"
     git      = "https://github.com/sstsimulator/sst-dumpi.git"
 
-    maintainers=['sknigh', 'jpkenny', 'calewis']
+    maintainers = ['sknigh', 'jpkenny', 'calewis']
 
     version('master', branch='master')
     version('7.1.0', sha256='628eb3f7c2d0975461d45065f91c723d3abac756fa36af93c09f4fed195794bf')

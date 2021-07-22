@@ -48,8 +48,6 @@ class SstCore(AutotoolsPackage):
     depends_on('m4', type='build', when='@master:')
     depends_on('gettext')
 
-    conflicts("+dumpi", when="+dumpi", msg="useroot requires system_install")
-
     # force out-of-source builds
     build_directory = 'spack-build'
 
