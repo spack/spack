@@ -83,25 +83,12 @@ class SstElements(AutotoolsPackage):
     depends_on('libtool@1.2.4:', type='build')
     depends_on('m4', type='build')
 
+    conflicts('+dumpi', msg='Dumpi not currently supported, contact SST Developers for help')
+    conflicts('+otf', msg='OTF not currently supported, contact SST Developers for help')
+    conflicts('+otf2', msg='OTF2 not currently supported, contact SST Developers for help')
+
     # force out-of-source builds
     build_directory = 'spack-build'
-
-    @run_before('autoreconf')
-    def check_compatibility(self):
-        """Work in progress. Components will be removed as the builds are
-        tested and fixed"""
-        spec = self.spec
-        msg = "%s not currently supported. "\
-              "Contact SST developers for help."
-
-        if "+otf" in spec:
-            raise InstallError(msg % "OTF2")
-
-        if "+otf2" in spec:
-            raise InstallError(msg % "OTF2")
-
-        if "+dumpi" in spec:
-            raise InstallError(msg % "Dumpi")
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
