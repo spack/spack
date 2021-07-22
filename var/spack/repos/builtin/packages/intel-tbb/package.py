@@ -123,6 +123,9 @@ class IntelTbb(Package):
     # Support for building with %nvhpc
     # 1) remove flags nvhpc compilers do not recognize
     patch("intel-tbb.nvhpc-remove-flags.patch", when="%nvhpc")
+    # 2) Fix generation of version script tbb.def for ld (nvc++ -E
+    # appears to produce more output than g++ -E which was causing problems)
+    patch("intel-tbb.nvhpc-version-script-fix.patch", when="%nvhpc")
 
     # Version and tar file names:
     #  2020.0 --> v2020.0.tar.gz  starting with 2020
