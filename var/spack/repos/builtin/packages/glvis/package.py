@@ -92,7 +92,7 @@ class Glvis(MakefilePackage):
     depends_on('fontconfig', when='+fonts')
     depends_on('fontconfig', when='@4.0:,develop')
 
-    depends_on('uuid', when='platform!=darwin')
+    depends_on('uuid', when='platform=linux')
 
     def edit(self, spec, prefix):
 
