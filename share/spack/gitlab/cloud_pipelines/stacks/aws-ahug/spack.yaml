@@ -66,7 +66,8 @@ spack:
       - cohmm
     # - examinimd
       - exampm
-      - exasp2
+    # depends on openblas version conflicting on gcc@7.3.1
+    # - exasp2
       - gamess-ri-mp2-miniapp
       - hpcg
       - laghos
