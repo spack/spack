@@ -68,7 +68,8 @@ spack:
       - exampm
     # depends on openblas version conflicting on gcc@7.3.1
     # - exasp2
-      - gamess-ri-mp2-miniapp
+    # depends on openblas version conflicting on gcc@7.3.1
+    # - gamess-ri-mp2-miniapp
       - hpcg
       - laghos
       - lulesh
