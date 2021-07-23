@@ -20,8 +20,8 @@ class PyOmegaconf(PythonPackage):
 
     version('2.1.0', sha256='0168f962822b7059c7553c4346541596ea48c0b542628d41a348a12eeaf971ff')
 
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('python', type=('build', 'run'))
     depends_on('py-antlr4-python3-runtime@4.8', type=('build', 'run'))
     depends_on('py-pyyaml@5.1.0:', type=('build', 'run'))
     depends_on('py-dataclasses', when='^python@:3.6', type=('build', 'run'))
