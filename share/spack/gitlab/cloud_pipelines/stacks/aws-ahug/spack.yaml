@@ -90,7 +90,7 @@ spack:
       - pennant
       - picsarlite
       - quicksilver
-      - remhos
+    # - remhos
       - rsbench
       - simplemoc
       - snap
