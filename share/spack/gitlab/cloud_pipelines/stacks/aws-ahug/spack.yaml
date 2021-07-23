@@ -205,7 +205,7 @@ spack:
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-      - spack compiler find
+      - spack compiler find /bootstrap/view/
       - spack compilers
       - spack -d ci rebuild
     mappings:
