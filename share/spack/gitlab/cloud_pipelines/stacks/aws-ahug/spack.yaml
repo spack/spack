@@ -63,7 +63,8 @@ spack:
     - ahug_miniapps:
       - cloverleaf
     # - coevp
-      - cohmm
+    # Bad code pushed to github; needs specific versioning
+    # - cohmm
     # - examinimd
       - exampm
     # depends on openblas version conflicting on gcc@7.3.1
