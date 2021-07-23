@@ -152,6 +152,15 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
         filter_file(r'-arch x86_64', '', 'Makefile')
+        
+        if spec.satisfies('+dynamic'):
+            # This variant only makes sense for Windows
+            if spec.satisfies('platform=windows'):
+                filter_file(r'MT', 'MD', 'makefile')
+            else:
+                tty.warn("Dynamic runtime builds are only available for "
+                "Windows operating systems. Please disable +dynamic to "
+                "suppress this warning.")
 
         if spec.satisfies('platform=windows'):
             nmake = Executable('nmake')
