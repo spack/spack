@@ -6,12 +6,12 @@
 import os
 import subprocess
 import sys
-
 from typing import List  # novm
 
-from spack.compiler import Compiler
 import spack.util.executable
 import spack.operating_systems.windows_os
+from spack.compiler import Compiler
+
 
 
 class Msvc(Compiler):
