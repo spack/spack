@@ -71,7 +71,8 @@ spack:
     # depends on openblas version conflicting on gcc@7.3.1
     # - gamess-ri-mp2-miniapp
       - hpcg
-      - laghos
+    # depends on openblas version conflicting on gcc@7.3.1
+    # - laghos
       - lulesh
     # - miniaero
       - miniamr
@@ -80,7 +81,8 @@ spack:
     # fails due to x86 specific timer (asm instructions)
     # - minigmg
       - minimd
-      - miniqmc
+    # depends on openblas version conflicting on gcc@7.3.1
+    # - miniqmc
       - minismac2d
       - minitri
       - minivite
@@ -94,7 +96,8 @@ spack:
       - snap
       - snappy
       - tealeaf
-      - thornado-mini
+    # depends on openblas version conflicting on gcc@7.3.1
+    # - thornado-mini
       - tycho2
       - xsbench 
 
