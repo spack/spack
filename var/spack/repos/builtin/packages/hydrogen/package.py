@@ -164,7 +164,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DCMAKE_CUDA_STANDARD=14')
             archs = spec.variants['cuda_arch'].value
             if archs != 'none':
-                arch_str = ",".join(archs)
+                arch_str = ";".join(archs)
             args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
 
         if '+rocm' in spec:
