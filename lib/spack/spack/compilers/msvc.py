@@ -8,10 +8,9 @@ import subprocess
 import sys
 from typing import List  # novm
 
-import spack.util.executable
 import spack.operating_systems.windows_os
+import spack.util.executable
 from spack.compiler import Compiler
-
 
 
 class Msvc(Compiler):
