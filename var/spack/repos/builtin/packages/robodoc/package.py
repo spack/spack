@@ -10,7 +10,7 @@ from spack import *
 class Robodoc(AutotoolsPackage):
     """ROBODoc is program documentation tool."""
 
-    homepage = "http://www.xs4all.nl/~rfsber/Robo/index.html"
+    homepage = "https://www.xs4all.nl/~rfsber/Robo/index.html"
     url      = "https://github.com/gumpu/ROBODoc/archive/refs/tags/v4.99.44.tar.gz"
 
     maintainers = ['wscullin']
