@@ -191,9 +191,9 @@ spack:
   - matrix:
     - [$ahug_miniapps]
     - [$compilers]
-  - matrix:
-    - [$ahug_fullapps]
-    - [$compilers]
+# - matrix:
+#   - [$ahug_fullapps]
+#   - [$compilers]
 
   gitlab-ci:
   # bootstrap:
