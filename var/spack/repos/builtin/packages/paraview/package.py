@@ -273,6 +273,9 @@ class Paraview(CMakePackage, CudaPackage):
             '-DBUILD_TESTING:BOOL=OFF',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY']
 
+        if spec.satisfies('@5.10:'):
+            cmake_args.append('-DVTK_MODULE_USE_EXTERNAL_ParaView_vtkcatalyst:BOOL=OFF')
+
         if spec.satisfies('@:5.7') and spec['cmake'].satisfies('@3.17:'):
             cmake_args.append('-DFPHSA_NAME_MISMATCHED:BOOL=ON')
 
