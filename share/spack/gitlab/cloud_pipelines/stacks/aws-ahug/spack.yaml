@@ -48,7 +48,6 @@ spack:
   definitions:
   # - compilers: 
   #   - '%gcc@7.5.0'
-  #   - '%gcc@10.3.0'
   #   - '%arm@21.0.0.879'
   #   - '%nvhpc@21.2'
     - when: arch.satisfies('os=ubuntu18.04')
