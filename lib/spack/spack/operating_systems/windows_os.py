@@ -37,14 +37,17 @@ class WindowsOs(OperatingSystem):
             extra_args = {}
             if sys.version_info[:3] >= (3, 6, 0):
                 extra_args = {'encoding': 'mbcs', 'errors': 'strict'}
-            paths = subprocess.check_output([
-                os.path.join(root, "Microsoft Visual Studio",
-                "Installer", "vswhere.exe"),
-                "-prerelease",
-                "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
-                "-property", "installationPath",
-                "-products", "*",
-            ], **extra_args).strip()  # type: ignore[call-overload]
+            vswhere_path = os.path.join(root, "Microsoft Visual Studio",
+                                        "Installer", "vswhere.exe")
+            vswhere_args = [vswhere_path,
+                            "-prerelease",
+                            "-requires",
+                            "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+                            "-property", "installationPath",
+                            "-products", "*",
+                            ]
+            paths = subprocess.check_output(vswhere_args, **extra_args).strip()
+            # type: ignore[call-overload]
             if (3, 0) <= sys.version_info[:2] <= (3, 5):
                 paths = paths.decode()
             vs_install_paths = paths.split('\n')
@@ -55,10 +58,11 @@ class WindowsOs(OperatingSystem):
                     glob.glob(os.path.join(p, '*', 'bin', 'Hostx64', 'x64')))
             if os.getenv("ONEAPI_ROOT"):
                 intelsetvars = os.path.join(os.getenv("ONEAPI_ROOT"),
-                    "setvars.bat")
+                                            "setvars.bat")
                 subprocess.call([intelsetvars])
-                comp_search_paths.extend(glob.glob(os.path.join(os.getenv("ONEAPI_ROOT"), 
-                'compiler', '*', 'windows', 'bin')))
+                comp_search_paths.extend(
+                    glob.glob(os.path.join(os.getenv("ONEAPI_ROOT"),
+                              'compiler', '*', 'windows', 'bin')))
         except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
             pass
     if comp_search_paths:

@@ -34,10 +34,10 @@ class Intel(Compiler):
         version_argument = '/QV'
     else:
         version_argument = '--version'
-    
+
     if sys.platform == 'win32':
-        version_regex = '([1-9][0-9]*\.[0-9]*\.[0-9]*)'
-    else:        
+        version_regex = r'([1-9][0-9]*\.[0-9]*\.[0-9]*)'
+    else:
         version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
 
     @property

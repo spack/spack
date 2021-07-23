@@ -5,15 +5,14 @@
 
 import os
 import subprocess
-import re
 import sys
 
-import llnl.util.lang
 from typing import List  # novm
 
 from spack.compiler import Compiler
 import spack.util.executable
 import spack.operating_systems.windows_os
+
 
 class Msvc(Compiler):
     # Subclasses use possible names of C compiler
@@ -33,7 +32,7 @@ class Msvc(Compiler):
                   'cxx': '',
                   'f77': '',
                   'fc': ''}
-    
+
     #: Compiler argument that produces version information
     version_argument = ''
 
@@ -51,14 +50,14 @@ class Msvc(Compiler):
         super(Msvc, self).__init__(*args, **kwargs)
         if os.getenv("ONEAPI_ROOT"):
             # If this found, it sets all the vars
-            self.setvarsfile = os.path.join(os.getenv("ONEAPI_ROOT"),
-                "setvars.bat")
+            self.setvarsfile = os.path.join(
+                os.getenv("ONEAPI_ROOT"), "setvars.bat")
         else:
             self.setvarsfile = os.path.abspath(
                 os.path.join(self.cc, '../../../../../../..'))
-            self.setvarsfile = os.path.join(self.setvarsfile,
-                'Auxiliary', 'Build', 'vcvars64.bat')
-        
+            self.setvarsfile = os.path.join(
+                self.setvarsfile, 'Auxiliary', 'Build', 'vcvars64.bat')
+
     @property
     def verbose_flag(self):
         return ""
@@ -71,15 +70,15 @@ class Msvc(Compiler):
         """Set environment variables for MSVC using the
         Microsoft-provided script."""
         if sys.version_info[:2] > (2, 6):
-        # Set the build environment variables for spack. Just using
-        # subprocess.call() doesn't work since that operates in its own
-        # environment which is destroyed (along with the adjusted variables)
-        # once the process terminates. So go the long way around: examine
-        # output, sort into dictionary, use that to make the build
-        # environment.
+            # Set the build environment variables for spack. Just using
+            # subprocess.call() doesn't work since that operates in its own
+            # environment which is destroyed (along with the adjusted variables)
+            # once the process terminates. So go the long way around: examine
+            # output, sort into dictionary, use that to make the build
+            # environment.
             out = subprocess.check_output(
                 'cmd /u /c "{}" {} && set'.format(self.setvarsfile, 'amd64'),
-                stderr=subprocess.STDOUT)  
+                stderr=subprocess.STDOUT)
             if sys.version_info[0] >= 3:
                 out = out.decode('utf-16le', errors='replace')
 
@@ -95,11 +94,11 @@ class Msvc(Compiler):
             env.set_path('INCLUDE', int_env.get('include', '').split(';'))
             env.set_path('LIB', int_env.get('lib', '').split(';'))
         else:
-        # Should not this be an exception?
+            # Should not this be an exception?
             print("Cannot pull msvc compiler information in Python 2.6 or below")
 
-    # fc_version only loads the ifx compiler into the first MSVC stanza; 
-    # if there are other versions of Microsoft VS installed and detected, they 
+    # fc_version only loads the ifx compiler into the first MSVC stanza;
+    # if there are other versions of Microsoft VS installed and detected, they
     # will only have cl.exe as the C/C++ compiler
 
     @classmethod
@@ -109,12 +108,12 @@ class Msvc(Compiler):
         if os.getenv("ONEAPI_ROOT"):
             try:
                 sps = spack.operating_systems.windows_os.WindowsOs.compiler_search_paths
-            except:
+            except Exception:
                 print("sps not found.")
                 raise
             try:
-                clp = spack.util.executable.which_string("cl", path = sps)
-            except:
+                clp = spack.util.executable.which_string("cl", path=sps)
+            except Exception:
                 print("cl not found.")
                 raise
             ver = cls.default_version(clp)

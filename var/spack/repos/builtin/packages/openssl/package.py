@@ -5,7 +5,6 @@
 
 import os
 import re
-import spack.util.executable
 
 import llnl.util.tty as tty
 
@@ -125,9 +124,13 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if self.spec.satisfies('%nvhpc os=centos7'):
             options.append('-D__STDC_NO_ATOMICS__')
 
+        # Make a flag for shared library builds
+        shared_flag = ''
+        if spec.satisfies('~shared'):
+            shared_flag = 'no-shared'
+
         # On Windows, we use perl for configuration and build through MSVC
         # nmake.
-        
         if spec.satisfies('platform=windows'):
             config = Executable('perl')
             config('Configure',
@@ -135,6 +138,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                    '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
                    'CC=\"%s\"' % os.environ.get('SPACK_CC'),
                    'CXX=\"%s\"' % os.environ.get('SPACK_CXX'),
+                   '%s' % shared_flag,
                    'VC-WIN64A')
         else:
             config = Executable('./config')
@@ -148,7 +152,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
         filter_file(r'-arch x86_64', '', 'Makefile')
-        
+
         if spec.satisfies('platform=windows'):
             nmake = Executable('nmake')
             nmake()
