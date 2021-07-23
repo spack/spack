@@ -163,6 +163,7 @@ class DarshanRuntime(AutotoolsPackage):
                 env.pop('LD_PRELOAD')
 
                 import llnl.util.tty as tty
+
                 # verify existence of log and size is > 0
                 tty.msg("Test for existince of log:")
                 if os.path.exists(logname):
