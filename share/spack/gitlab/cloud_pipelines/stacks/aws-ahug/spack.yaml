@@ -50,14 +50,14 @@ spack:
   #   - '%gcc@7.5.0'
   #   - '%arm@21.0.0.879'
   #   - '%nvhpc@21.2'
-    - when: arch.satisfies('os=ubuntu18.04')
-      compilers: ['%gcc@7.5.0']
-    - when: arch.satisfies('os=amzn2')
-      compilers: ['%gcc@7.3.1', '%gcc@10.3.0']
-  # - bootstrap-compilers:
-  #   - 'gcc@10.3.0'
-    # - 'nvhpc@21.2'
+    - bootstrap-compilers:
+      - 'gcc@10.3.0'
+      - 'nvhpc@21.2'
     # - 'arm@21.0.0.879'
+    - when: arch.satisfies('os=ubuntu18.04')
+      compilers: ['gcc@7.5.0', $bootstrap-compilers]
+    - when: arch.satisfies('os=amzn2')
+      compilers: ['gcc@7.3.1', $bootstrap-compilers]
 
     # Note skipping spot since no spack package for it
     - ahug_miniapps:
@@ -191,10 +191,13 @@ spack:
   specs:
   - matrix:
     - [$ahug_miniapps]
-    - [$compilers]
+    - [$%compilers]
 # - matrix:
 #   - [$ahug_fullapps]
-#   - [$compilers]
+#   - [$%compilers]
+  # Build compilers to stage in binary cache
+  - matrix:
+    - [$bootstrap-compilers]
 
   gitlab-ci:
   # bootstrap:
