@@ -25,7 +25,7 @@ class Rstudio(CMakePackage):
     depends_on('boost+pic@1.69:')
     depends_on('qt+webkit@5.12:')
     depends_on('patchelf@0.9:')
-    depends_on('yaml-cpp')
+    depends_on('yaml-cpp@:0.6.3')  # find_package fails with newest version
     depends_on('node-js')
     depends_on('yarn')
     depends_on('pandoc@2.11.4:')
