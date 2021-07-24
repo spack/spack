@@ -88,17 +88,27 @@ attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
 #defined imposed_constraint/5.
 
 %-----------------------------------------------------------------------------
+% Concrete specs
+%-----------------------------------------------------------------------------
+% if a package is assigned a hash, it's concrete.
+concrete(Package) :- hash(Package, _), node(Package).
+
+%-----------------------------------------------------------------------------
 % Dependency semantics
 %-----------------------------------------------------------------------------
 % Dependencies of any type imply that one package "depends on" another
 depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 
-% a dependency holds if its condition holds
+% a dependency holds if its condition holds and if it is not external or
+% concrete. We chop off dependencies for externals, and dependencies of
+% concrete specs don't need to be resolved -- they arise from the concrete
+% specs themselves.
 dependency_holds(Package, Dependency, Type) :-
   dependency_condition(ID, Package, Dependency),
   dependency_type(ID, Type),
   condition_holds(ID),
-  not external(Package).
+  not external(Package),
+  not concrete(Package).
 
 % We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
@@ -251,6 +261,7 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 % These allow us to easily define conditional dependency and conflict rules
 % without enumerating all spec attributes every time.
 node(Package)                          :- attr("node", Package).
+hash(Package, Hash)                    :- attr("hash", Package, Hash).
 version(Package, Version)              :- attr("version", Package, Version).
 version_satisfies(Package, Constraint) :- attr("version_satisfies", Package, Constraint).
 node_platform(Package, Platform)       :- attr("node_platform", Package, Platform).
@@ -261,12 +272,14 @@ variant_value(Package, Variant, Value) :- attr("variant_value", Package, Variant
 variant_set(Package, Variant, Value)   :- attr("variant_set", Package, Variant, Value).
 node_flag(Package, FlagType, Flag)     :- attr("node_flag", Package, FlagType, Flag).
 node_compiler(Package, Compiler)       :- attr("node_compiler", Package, Compiler).
+depends_on(Package, Dependency, Type)  :- attr("depends_on", Package, Dependency, Type).
 node_compiler_version(Package, Compiler, Version)
   :- attr("node_compiler_version", Package, Compiler, Version).
 node_compiler_version_satisfies(Package, Compiler, Version)
   :- attr("node_compiler_version_satisfies", Package, Compiler, Version).
 
 attr("node", Package)                          :- node(Package).
+attr("hash", Package, Hash)                    :- hash(Package, Hash).
 attr("version", Package, Version)              :- version(Package, Version).
 attr("version_satisfies", Package, Constraint) :- version_satisfies(Package, Constraint).
 attr("node_platform", Package, Platform)       :- node_platform(Package, Platform).
@@ -277,6 +290,7 @@ attr("variant_value", Package, Variant, Value) :- variant_value(Package, Variant
 attr("variant_set", Package, Variant, Value)   :- variant_set(Package, Variant, Value).
 attr("node_flag", Package, FlagType, Flag)     :- node_flag(Package, FlagType, Flag).
 attr("node_compiler", Package, Compiler)       :- node_compiler(Package, Compiler).
+attr("depends_on", Package, Dependency, Type)  :- depends_on(Package, Dependency, Type).
 attr("node_compiler_version", Package, Compiler, Version)
   :- node_compiler_version(Package, Compiler, Version).
 attr("node_compiler_version_satisfies", Package, Compiler, Version)
@@ -732,6 +746,21 @@ no_flags(Package, FlagType)
 #defined node_flag/3.
 #defined node_flag_set/3.
 
+
+%-----------------------------------------------------------------------------
+% Installed packages
+%-----------------------------------------------------------------------------
+% the solver is free to choose at most one installed hash for each package
+{ hash(Package, Hash) : installed_hash(Package, Hash) } 1 :- node(Package).
+
+% if a hash is selected, we impose all the constraints that implies
+impose(Hash) :- hash(Package, Hash).
+
+% if we haven't selected a hash for a package, we'll be building it
+build(Package) :- not hash(Package, _), node(Package).
+
+#defined installed_hash/2.
+
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
 %-----------------------------------------------------------------------------
@@ -740,12 +769,17 @@ no_flags(Package, FlagType)
 %   2. a `#minimize{ 0@2 : #true }.` statement that ensures the criterion
 %      is displayed (clingo doesn't display sums over empty sets by default)
 
+% Try hard to reuse installed packages (i.e., minimize the number built)
+opt_criterion(17, "number of packages to build (vs. reuse)").
+#minimize { 0@17 : #true }.
+#minimize { 1@17,Package : build(Package) }.
+
 % Minimize the number of deprecated versions being used
 opt_criterion(16, "deprecated versions used").
 #minimize{ 0@16 : #true }.
 #minimize{ 1@16,Package : deprecated(Package, _)}.
 
-% The highest priority is to minimize the:
+% Minimize the:
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root(Package)
