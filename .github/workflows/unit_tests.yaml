@@ -39,7 +39,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools flake8 isort>=4.3.5 mypy>=0.900 black types-six
+        pip install --upgrade pip six setuptools types-six
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
@@ -180,7 +180,7 @@ jobs:
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v2.0.2
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
@@ -232,7 +232,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v2.0.2
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: shelltests,linux
@@ -348,7 +348,7 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v2.0.2
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,clingo
@@ -370,7 +370,6 @@ jobs:
       run: |
           pip install --upgrade pip six setuptools
           pip install --upgrade codecov coverage[toml]
-          pip install --upgrade flake8 isort>=4.3.5 mypy>=0.900
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg2 kcov
@@ -384,12 +383,15 @@ jobs:
           coverage run $(which spack) unit-test -x
           coverage combine
           coverage xml
+          # Delete the symlink going from ./lib/spack/docs/_spack_root back to
+          # the initial directory, since it causes ELOOP errors with codecov/actions@2
+          rm lib/spack/docs/_spack_root
         else
           echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
           $(which spack) unit-test -x -m "not maybeslow" -k "package_sanity"
         fi
-    - uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v2.0.2
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
-        file: ./coverage.xml
+        files: ./coverage.xml
         flags: unittests,macos

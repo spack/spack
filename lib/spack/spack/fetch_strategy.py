@@ -1254,8 +1254,9 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @property
     def hg(self):
-        """:returns: The hg executable
-        :rtype: Executable
+        """
+        Returns:
+            Executable: the hg executable
         """
         if not self._hg:
             self._hg = which('hg', required=True)
@@ -1405,7 +1406,7 @@ def from_kwargs(**kwargs):
             ``version()`` directive in a package.
 
     Returns:
-        fetch_strategy: The fetch strategy that matches the args, based
+        typing.Callable: The fetch strategy that matches the args, based
             on attribute names (e.g., ``git``, ``hg``, etc.)
 
     Raises:

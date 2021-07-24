@@ -239,12 +239,13 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
        concretized specs given from cli
 
     Args:
-        pkgs (string): spec to be matched against installed packages
+        pkgs (str): spec to be matched against installed packages
         allow_multiple_matches (bool): if True multiple matches are admitted
-        env (Environment): active environment, or ``None`` if there is not one
+        env (spack.environment.Environment or None): active environment, or ``None``
+            if there is not one
 
     Return:
-        list of specs
+        list: list of specs
     """
     hashes = env.all_hashes() if env else None
 

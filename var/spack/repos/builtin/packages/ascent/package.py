@@ -76,7 +76,6 @@ class Ascent(Package, CudaPackage):
 
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
-    variant("cuda", default=False, description="Build cuda support")
     variant("mfem", default=False, description="Build MFEM filter support")
     variant("adios", default=False, description="Build Adios filter support")
     variant("dray", default=False, description="Build with Devil Ray support")

@@ -50,6 +50,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # All options are defined in CMakeLists.txt.
     # Some are listed in setup.py, but not all.
     variant('caffe2', default=True, description='Build Caffe2')
+    variant('test', default=False, description='Build C++ test binaries')
     variant('cuda', default=not is_darwin, description='Use CUDA')
     variant('rocm', default=False, description='Use ROCm')
     variant('cudnn', default=not is_darwin, description='Use cuDNN')
@@ -131,12 +132,14 @@ class PyTorch(PythonPackage, CudaPackage):
     # depends_on('cpuinfo@master', when='@master')
     # depends_on('cpuinfo@2020-12-17', when='@1.8.0:1.9.999')
     # depends_on('cpuinfo@2020-06-11', when='@1.6.0:1.7.999')
-    depends_on('sleef@master', when='@master')
-    depends_on('sleef@3.5.1_2020-12-22', when='@1.8.0:1.9.999')
+    # https://github.com/shibatch/sleef/issues/427
+    # depends_on('sleef@master', when='@master')
+    # depends_on('sleef@3.5.1_2020-12-22', when='@1.8.0:1.9.999')
     # https://github.com/pytorch/pytorch/issues/60334
     # depends_on('sleef@3.4.0_2019-07-30', when='@1.6.0:1.7.999')
-    depends_on('fp16@master', when='@master')
-    depends_on('fp16@2020-05-14', when='@1.6.0:1.9.999')
+    # https://github.com/Maratyszcza/FP16/issues/18
+    # depends_on('fp16@master', when='@master')
+    # depends_on('fp16@2020-05-14', when='@1.6.0:1.9.999')
     depends_on('pthreadpool@master', when='@master')
     depends_on('pthreadpool@2021-04-13', when='@1.9.0:1.9.999')
     depends_on('pthreadpool@2020-10-05', when='@1.8.0:1.8.999')
@@ -145,7 +148,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('psimd@2020-05-17', when='@1.6.0:1.9.999')
     depends_on('fxdiv@master', when='@master')
     depends_on('fxdiv@2020-04-17', when='@1.6.0:1.9.999')
-    depends_on('benchmark', when='@1.6:')
+    depends_on('benchmark', when='@1.6:+test')
 
     # Optional dependencies
     depends_on('cuda@7.5:', when='+cuda', type=('build', 'link', 'run'))
@@ -203,7 +206,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # Fixes fatal error: sleef.h: No such file or directory
     # https://github.com/pytorch/pytorch/pull/35359
     # https://github.com/pytorch/pytorch/issues/26555
-    patch('sleef.patch', when='@1.0.0:1.5.999')
+    # patch('sleef.patch', when='@1.0.0:1.5.999')
 
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     # https://github.com/pytorch/pytorch/pull/37086
@@ -286,6 +289,9 @@ class PyTorch(PythonPackage, CudaPackage):
 
         # Spack logs have trouble handling colored output
         env.set('COLORIZE_OUTPUT', 'OFF')
+
+        if self.spec.satisfies('@0.4:'):
+            enable_or_disable('test', keyword='BUILD')
 
         if self.spec.satisfies('@1.7:'):
             enable_or_disable('caffe2', keyword='BUILD')
@@ -393,15 +399,16 @@ class PyTorch(PythonPackage, CudaPackage):
         if self.spec.satisfies('@1.10:'):
             env.set('USE_SYSTEM_PYBIND11', 'ON')
         # https://github.com/pytorch/pytorch/issues/60334
-        if self.spec.satisfies('@1.8:'):
-            env.set('USE_SYSTEM_SLEEF', 'ON')
+        # if self.spec.satisfies('@1.8:'):
+        #     env.set('USE_SYSTEM_SLEEF', 'ON')
         if self.spec.satisfies('@1.6:'):
             # env.set('USE_SYSTEM_LIBS', 'ON')
             # https://github.com/pytorch/pytorch/issues/60329
             # env.set('USE_SYSTEM_CPUINFO', 'ON')
             # https://github.com/pytorch/pytorch/issues/60270
             # env.set('USE_SYSTEM_GLOO', 'ON')
-            env.set('USE_SYSTEM_FP16', 'ON')
+            # https://github.com/Maratyszcza/FP16/issues/18
+            # env.set('USE_SYSTEM_FP16', 'ON')
             env.set('USE_SYSTEM_PTHREADPOOL', 'ON')
             env.set('USE_SYSTEM_PSIMD', 'ON')
             env.set('USE_SYSTEM_FXDIV', 'ON')

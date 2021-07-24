@@ -21,6 +21,9 @@ class Pvm(MakefilePackage):
     depends_on('m4', type='build')
     depends_on('libtirpc', type='link')
 
+    variant('fpic', default=False,
+            description='Enables -fPIC compilation flag on static libraries.')
+
     parallel = False
 
     @property
@@ -33,6 +36,17 @@ class Pvm(MakefilePackage):
         # Before building PVM, you must set the environment
         # variable "PVM_ROOT" to the path where PVM resides
         env['PVM_ROOT'] = self.stage.source_path
+
+    def patch(self):
+
+        pvm_arch = self.pvm_arch
+
+        if '+fpic' in self.spec:
+            filter_file(
+                '^SHAREDCFLAGS =',
+                'SHAREDCFLAGS = -fPIC',
+                join_path('conf', pvm_arch + '.def')
+            )
 
     def setup_build_environment(self, env):
         tirpc = self.spec['libtirpc'].prefix
