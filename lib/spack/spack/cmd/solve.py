@@ -68,6 +68,9 @@ def setup_parser(subparser):
         '--stats', action='store_true', default=False,
         help='print out statistics from clingo')
     subparser.add_argument(
+        '--reuse', action='store_true', default=False,
+        help='reuse installed dependencies')
+    subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
 
@@ -103,7 +106,8 @@ def solve(parser, args):
 
     # dump generated ASP program
     result = asp.solve(
-        specs, dump=dump, models=models, timers=args.timers, stats=args.stats
+        specs, dump=dump, models=models, timers=args.timers, stats=args.stats,
+        reuse=args.reuse,
     )
     if 'solutions' not in dump:
         return

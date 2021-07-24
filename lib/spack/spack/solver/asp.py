@@ -440,7 +440,7 @@ class PyclingoDriver(object):
 
     def solve(
             self, solver_setup, specs, dump=None, nmodels=0,
-            timers=False, stats=False, tests=False
+            timers=False, stats=False, tests=False, reuse=False,
     ):
         timer = spack.util.timer.Timer()
 
@@ -457,7 +457,7 @@ class PyclingoDriver(object):
         self.assumptions = []
         with self.control.backend() as backend:
             self.backend = backend
-            solver_setup.setup(self, specs, tests=tests)
+            solver_setup.setup(self, specs, tests=tests, reuse=reuse)
         timer.phase("setup")
 
         # read in the main ASP program and display logic -- these are
@@ -1475,7 +1475,7 @@ class SpackSolverSetup(object):
         for pkg, variant, value in sorted(self.variant_values_from_specs):
             self.gen.fact(fn.variant_possible_value(pkg, variant, value))
 
-    def setup(self, driver, specs, tests=False):
+    def setup(self, driver, specs, tests=False, reuse=False):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1803,7 +1803,8 @@ def _develop_specs_from_env(spec, env):
 #
 # These are handwritten parts for the Spack ASP model.
 #
-def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False):
+def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
+          reuse=False):
     """Solve for a stable model of specs.
 
     Arguments:
@@ -1823,4 +1824,6 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False):
             spack.spec.Spec.ensure_valid_variants(s)
 
     setup = SpackSolverSetup()
-    return driver.solve(setup, specs, dump, models, timers, stats, tests)
+    return driver.solve(
+        setup, specs, dump, models, timers, stats, tests, reuse
+    )
