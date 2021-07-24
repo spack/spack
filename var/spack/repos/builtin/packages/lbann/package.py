@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from spack import *
 
@@ -111,7 +112,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hydrogen@1.5.0:', when='@:0.90,0.102:')
 
     # Add Hydrogen variants
-    depends_on('hydrogen +openmp +openmp_blas +shared +int64')
+    depends_on('hydrogen +openmp +shared +int64')
+    depends_on('hydrogen +openmp_blas', when=sys.platform != 'darwin')
     depends_on('hydrogen ~al', when='~al')
     depends_on('hydrogen +al', when='+al')
     depends_on('hydrogen ~cuda', when='~cuda')
@@ -138,6 +140,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('dihydrogen@0.2.0:', when='@:0.90,0.102:')
     depends_on('dihydrogen +openmp', when='+dihydrogen')
+    depends_on('dihydrogen +openmp_blas', when=sys.platform != 'darwin')
     depends_on('dihydrogen ~cuda', when='+dihydrogen ~cuda')
     depends_on('dihydrogen +cuda', when='+dihydrogen +cuda')
     depends_on('dihydrogen ~al', when='+dihydrogen ~al')
@@ -222,6 +225,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
     depends_on('py-breathe', type='build', when='+docs')
+    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
     depends_on('doxygen', type='build', when='+docs')
     depends_on('py-m2r', type='build', when='+docs')
 

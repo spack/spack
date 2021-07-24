@@ -12,7 +12,7 @@ class FenicsDolfinx(CMakePackage):
     homepage = "https://github.com/FEniCS/dolfinx"
     git = "https://github.com/FEniCS/dolfinx.git"
     url = "https://github.com/FEniCS/dolfinx/archive/0.1.0.tar.gz"
-    maintainers = ["js947", "chrisrichardson"]
+    maintainers = ["js947", "chrisrichardson", "garth-wells"]
 
     version("main", branch="main")
     version("0.1.0", sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33")
@@ -21,25 +21,29 @@ class FenicsDolfinx(CMakePackage):
     variant("parmetis", default=False, description="parmetis support")
     variant("slepc", default=False, description="slepc support")
 
-    depends_on("cmake@3.9:", type="build")
+    depends_on("cmake@3.12:")
     depends_on("pkgconfig", type="build")
     depends_on("mpi")
     depends_on("hdf5")
     depends_on("boost@1.7.0:+filesystem+program_options+timer")
-    depends_on("petsc+mpi+shared", when="@main")
-    depends_on("petsc+mpi+shared@3.15.0", when="@0.1.0")
+    depends_on("petsc+mpi+shared")
+    depends_on("petsc+mpi+shared@3.15.0:", when="@0.1.0")
     depends_on("scotch+mpi")
 
     depends_on("kahip", when="+kahip")
     depends_on("parmetis", when="+parmetis")
     depends_on("slepc", when="+slepc")
 
-    depends_on("py-fenics-ffcx", type=("build", "run"), when="@main")
+    depends_on("py-fenics-ffcx", type=("build", "run"))
+    depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
     depends_on("py-fenics-ffcx@0.1.0", type=("build", "run"), when="@0.1.0")
 
-    depends_on("fenics-basix", type=("build", "run"), when="@main")
+    depends_on("fenics-basix", type=("build", "run"))
+    depends_on("fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
-    depends_on("py-fenics-basix", type=("build", "run"), when="@main")
+
+    depends_on("py-fenics-basix", type=("build", "run"))
+    depends_on("py-fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("py-fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
 
     conflicts('%gcc@:8', msg='Improved C++17 support required')

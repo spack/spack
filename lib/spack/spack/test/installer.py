@@ -65,7 +65,7 @@ def create_build_task(pkg, install_args={}):
     Create a built task for the given (concretized) package
 
     Args:
-        pkg (PackageBase): concretized package associated with the task
+        pkg (spack.package.PackageBase): concretized package associated with the task
         install_args (dict): dictionary of kwargs (or install args)
 
     Return:
@@ -80,10 +80,10 @@ def create_installer(installer_args):
     Create an installer using the concretized spec for each arg
 
     Args:
-        installer_args (list of tuples): the list of (spec name, kwargs) tuples
+        installer_args (list): the list of (spec name, kwargs) tuples
 
     Return:
-        installer (PackageInstaller): the associated package installer
+        spack.installer.PackageInstaller: the associated package installer
     """
     const_arg = [(spec.package, kwargs) for spec, kwargs in installer_args]
     return inst.PackageInstaller(const_arg)
@@ -93,11 +93,11 @@ def installer_args(spec_names, kwargs={}):
     """Return a the installer argument with each spec paired with kwargs
 
     Args:
-        spec_names (list of str): list of spec names
+        spec_names (list): list of spec names
         kwargs (dict or None): install arguments to apply to all of the specs
 
     Returns:
-        list of (spec, kwargs): the installer constructor argument
+        list: list of (spec, kwargs), the installer constructor argument
     """
     arg = []
     for name in spec_names:

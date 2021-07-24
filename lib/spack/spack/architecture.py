@@ -193,8 +193,8 @@ class Target(object):
         the compiler passed as argument.
 
         Args:
-            compiler (CompilerSpec or Compiler): object that contains both the
-                name and the version of the compiler we want to use
+            compiler (spack.spec.CompilerSpec or spack.compiler.Compiler): object that
+                contains both the name and the version of the compiler we want to use
         """
         # Mixed toolchains are not supported yet
         import spack.compilers

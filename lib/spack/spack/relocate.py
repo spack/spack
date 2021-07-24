@@ -869,7 +869,7 @@ def is_relocatable(spec):
     """Returns True if an installed spec is relocatable.
 
     Args:
-        spec (Spec): spec to be analyzed
+        spec (spack.spec.Spec): spec to be analyzed
 
     Returns:
         True if the binaries of an installed spec

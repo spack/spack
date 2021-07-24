@@ -465,7 +465,7 @@ def test_log_pathname(test_stage, spec):
 
     Args:
         test_stage (str): path to the test stage directory
-        spec (Spec): instance of the spec under test
+        spec (spack.spec.Spec): instance of the spec under test
 
     Returns:
         (str): the pathname of the test log file
@@ -725,14 +725,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Return dict of possible dependencies of this package.
 
         Args:
-            transitive (bool, optional): return all transitive dependencies if
+            transitive (bool or None): return all transitive dependencies if
                 True, only direct dependencies if False (default True)..
-            expand_virtuals (bool, optional): expand virtual dependencies into
+            expand_virtuals (bool or None): expand virtual dependencies into
                 all possible implementations (default True)
-            deptype (str or tuple, optional): dependency types to consider
-            visited (dicct, optional): dict of names of dependencies visited so
+            deptype (str or tuple or None): dependency types to consider
+            visited (dict or None): dict of names of dependencies visited so
                 far, mapped to their immediate dependencies' names.
-            missing (dict, optional): dict to populate with packages and their
+            missing (dict or None): dict to populate with packages and their
                 *missing* dependencies.
             virtuals (set): if provided, populate with virtuals seen so far.
 
@@ -1756,7 +1756,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         during install testing.
 
         Args:
-            srcs (str or list of str): relative path for files and or
+            srcs (str or list): relative path for files and or
                 subdirectories located in the staged source path that are to
                 be copied to the corresponding location(s) under the install
                 testing directory.
@@ -1803,10 +1803,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         Args:
             exe (str): the name of the executable
-            options (str or list of str): list of options to pass to the runner
-            expected (str or list of str): list of expected output strings.
+            options (str or list): list of options to pass to the runner
+            expected (str or list): list of expected output strings.
                 Each string is a regex expected to match part of the output.
-            status (int or list of int): possible passing status values
+            status (int or list): possible passing status values
                 with 0 meaning the test is expected to succeed
             installed (bool): if ``True``, the executable must be in the
                 install prefix
@@ -2010,9 +2010,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Spack's store.
 
         Args:
-            env (EnvironmentModifications): environment modifications to be
-                applied when the package is built. Package authors can call
-                methods on it to alter the build environment.
+            env (spack.util.environment.EnvironmentModifications): environment
+                modifications to be applied when the package is built. Package authors
+                can call methods on it to alter the build environment.
         """
         legacy_fn = self._get_legacy_environment_method('setup_environment')
         if legacy_fn:
@@ -2023,9 +2023,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Sets up the run environment for a package.
 
         Args:
-            env (EnvironmentModifications): environment modifications to be
-                applied when the package is run. Package authors can call
-                methods on it to alter the run environment.
+            env (spack.util.environment.EnvironmentModifications): environment
+                modifications to be applied when the package is run. Package authors
+                can call methods on it to alter the run environment.
         """
         legacy_fn = self._get_legacy_environment_method('setup_environment')
         if legacy_fn:
@@ -2052,11 +2052,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             variable.
 
         Args:
-            env (EnvironmentModifications): environment modifications to be
-                applied when the dependent package is built. Package authors
-                can call methods on it to alter the build environment.
+            env (spack.util.environment.EnvironmentModifications): environment
+                modifications to be applied when the dependent package is built.
+                Package authors can call methods on it to alter the build environment.
 
-            dependent_spec (Spec): the spec of the dependent package
+            dependent_spec (spack.spec.Spec): the spec of the dependent package
                 about to be built. This allows the extendee (self) to query
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
@@ -2079,11 +2079,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for dependencies.
 
         Args:
-            env (EnvironmentModifications): environment modifications to be
-                applied when the dependent package is run. Package authors
-                can call methods on it to alter the build environment.
+            env (spack.util.environment.EnvironmentModifications): environment
+                modifications to be applied when the dependent package is run.
+                Package authors can call methods on it to alter the build environment.
 
-            dependent_spec (Spec): The spec of the dependent package
+            dependent_spec (spack.spec.Spec): The spec of the dependent package
                 about to be run. This allows the extendee (self) to query
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
@@ -2125,7 +2125,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 object of the dependent package. Packages can use this to set
                 module-scope variables for the dependent to use.
 
-            dependent_spec (Spec): The spec of the dependent package
+            dependent_spec (spack.spec.Spec): The spec of the dependent package
                 about to be built. This allows the extendee (self) to
                 query the dependent's state.  Note that *this*
                 package's spec is available as ``self.spec``.

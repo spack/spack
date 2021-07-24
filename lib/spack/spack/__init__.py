@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 #: major, minor, patch version for Spack, in a tuple
 spack_version_info = (0, 16, 1)
 
