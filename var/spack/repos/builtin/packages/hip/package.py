@@ -41,31 +41,12 @@ class Hip(CMakePackage):
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
+        depends_on('rocprofiler-dev-api@' + ver, when='@' + ver)
 
     # hipcc likes to add `-lnuma` by default :(
     # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
     depends_on('numactl', when='@3.7.0:')
     # Add roctracer-dev sources thru the below
-
-    for d_version, d_shasum in [
-        ('4.2.0',  '62a9c0cb1ba50b1c39a0636c886ac86e75a1a71cbf5fec05801517ceb0e67a37'),
-        ('4.1.0',  '5d93de4e92895b6eb5f9d098f5dbd182d33923bd9b2ab69cf5a1abbf91d70695'),
-        ('4.0.0',  'f47859a46173228b597c463eda850b870e810534af5efd5f2a746067ef04edee'),
-        ('3.10.0', 'ac4a1d059fc34377e906071fd0e56f5434a7e0e4ded9db8faf9217a115239dec'),
-        ('3.9.0',  '0678f9faf45058b16923948c66d77ba2c072283c975d167899caef969169b292'),
-        ('3.8.0',  '5154a84ce7568cd5dba756e9508c34ae9fc62f4b0b5731f93c2ad68b21537ed1'),
-        ('3.7.0',  '6fa5b771e990f09c242237ab334b9f01039ec7d54ccde993e719c5d6577d1518'),
-        ('3.5.0',  '7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e')
-    ]:
-        resource(
-            name='roctracer-dev',
-            url='https://github.com/ROCm-Developer-Tools/roctracer/archive/rocm-{0}.tar.gz'.format(d_version),
-            sha256=d_shasum,
-            expand=True,
-            destination='',
-            placement='roctracer',
-            when='@{0}'.format(d_version)
-        )
 
     # Note: the ROCm ecosystem expects `lib/` and `bin/` folders with symlinks
     # in the parent directory of the package, which is incompatible with spack.
@@ -256,10 +237,11 @@ class Hip(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('PROF_API_HEADER_PATH', join_path(
-                self.stage.source_path, 'roctracer', 'inc', 'ext')),
+                self.spec['rocprofiler-dev-api'].prefix, 'roctracer', 'inc', 'ext')),
             self.define('HIP_COMPILER', 'clang'),
             self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         ]
+        print('PROF_API_HEADER_PATH')
         if self.spec.satisfies('@:4.0.0'):
             args.append(self.define('HIP_RUNTIME', 'ROCclr'))
             args.append(self.define('HIP_PLATFORM', 'rocclr'))
