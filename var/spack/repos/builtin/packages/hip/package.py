@@ -46,7 +46,6 @@ class Hip(CMakePackage):
     # hipcc likes to add `-lnuma` by default :(
     # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
     depends_on('numactl', when='@3.7.0:')
-    # Add roctracer-dev sources thru the below
 
     # Note: the ROCm ecosystem expects `lib/` and `bin/` folders with symlinks
     # in the parent directory of the package, which is incompatible with spack.
@@ -241,7 +240,6 @@ class Hip(CMakePackage):
             self.define('HIP_COMPILER', 'clang'),
             self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         ]
-        print('PROF_API_HEADER_PATH')
         if self.spec.satisfies('@:4.0.0'):
             args.append(self.define('HIP_RUNTIME', 'ROCclr'))
             args.append(self.define('HIP_PLATFORM', 'rocclr'))
