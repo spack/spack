@@ -1466,6 +1466,7 @@ class Database(object):
             end_date=None,
             hashes=None,
             in_buildcache=any,
+            origin=None
     ):
         """Run a query on the database."""
 
@@ -1492,6 +1493,9 @@ class Database(object):
 
         for key, rec in self._data.items():
             if hashes is not None and rec.spec.dag_hash() not in hashes:
+                continue
+
+            if origin and not (origin == rec.origin):
                 continue
 
             if not rec.install_type_matches(installed):
