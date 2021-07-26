@@ -48,64 +48,72 @@ def _bootstrapper(type):
     return _register
 
 
+def _try_import_from_store(module, abstract_spec):
+    """Return True if the module can be imported from an already
+    installed spec, False otherwise.
+
+    Args:
+        module: Python module to be imported
+        abstract_spec: abstract spec that may provide the module
+    """
+    abstract_spec = abstract_spec or module
+
+    bincache_platform = spack.architecture.real_platform()
+    if str(bincache_platform) == 'cray':
+        bincache_platform = spack.platforms.linux.Linux()
+        with spack.architecture.use_platform(bincache_platform):
+            abstract_spec = str(spack.spec.Spec(abstract_spec))
+
+    # We have to run as part of this python interpreter
+    abstract_spec += ' ^' + spec_for_current_python()
+
+    # Check if any of the already installed specs provide the import
+    msg = "[BOOTSTRAP MODULE {0}] Try installed specs with query '{1}'"
+    tty.debug(msg.format(module, abstract_spec))
+
+    installed_specs = spack.store.db.query(abstract_spec, installed=True)
+
+    for candidate_spec in installed_specs:
+        lib_spd = candidate_spec['python'].package.default_site_packages_dir
+        lib64_spd = lib_spd.replace('lib/', 'lib64/')
+        module_paths = [
+            os.path.join(candidate_spec.prefix, lib_spd),
+            os.path.join(candidate_spec.prefix, lib64_spd)
+        ]
+        sys.path.extend(module_paths)
+
+        try:
+            if _python_import(module):
+                return True
+        except Exception as e:
+            msg = ('unexpected error while trying to import module '
+                   '"{0}" from spec "{1}" [error="{2}"]')
+            tty.warn(msg.format(module, candidate_spec, str(e)))
+        else:
+            msg = "Spec {0} did not provide module {1}"
+            tty.warn(msg.format(candidate_spec, module))
+
+        sys.path = sys.path[:-2]
+
+    return False
+
+
 @_bootstrapper(type='store')
 class _StoreBootstrapper(object):
+    """Wrapper class that adapts checking the current store for needed
+    software into the protocol used for bootstrapping.
+    """
     def __init__(self, conf):
         self.conf = conf
 
     @staticmethod
     def try_import(module, abstract_spec):
-        """Return True if the module can be imported from an already
-        installed spec, False otherwise.
-
-        Args:
-            module: Python module to be imported
-            abstract_spec: abstract spec that may provide the module
-        """
-        abstract_spec = abstract_spec or module
-
-        bincache_platform = spack.architecture.real_platform()
-        if str(bincache_platform) == 'cray':
-            bincache_platform = spack.platforms.linux.Linux()
-            with spack.architecture.use_platform(bincache_platform):
-                abstract_spec = str(spack.spec.Spec(abstract_spec))
-
-        # We have to run as part of this python interpreter
-        abstract_spec += ' ^' + spec_for_current_python()
-
-        # Check if any of the already installed specs provide the import
-        msg = "[BOOTSTRAP MODULE {0}] Try installed specs with query '{1}'"
-        tty.debug(msg.format(module, abstract_spec))
-
-        installed_specs = spack.store.db.query(abstract_spec, installed=True)
-
-        for candidate_spec in installed_specs:
-            lib_spd = candidate_spec['python'].package.default_site_packages_dir
-            lib64_spd = lib_spd.replace('lib/', 'lib64/')
-            module_paths = [
-                os.path.join(candidate_spec.prefix, lib_spd),
-                os.path.join(candidate_spec.prefix, lib64_spd)
-            ]
-            sys.path.extend(module_paths)
-
-            try:
-                if _python_import(module):
-                    return True
-            except Exception as e:
-                msg = ('unexpected error while trying to import module '
-                       '"{0}" from spec "{1}" [error="{2}"]')
-                tty.warn(msg.format(module, candidate_spec, str(e)))
-            else:
-                msg = "Spec {0} did not provide module {1}"
-                tty.warn(msg.format(candidate_spec, module))
-
-            sys.path = sys.path[:-2]
-
-        return False
+        return _try_import_from_store(module, abstract_spec)
 
 
 @_bootstrapper(type='buildcache')
 class _BuildcacheBootstrapper(object):
+    """Install the software needed during bootstrapping from a buildcache."""
     def __init__(self, conf):
         self.name = conf['name']
         self.url = conf['info']['url']
@@ -187,13 +195,14 @@ class _BuildcacheBootstrapper(object):
                             buildcache(*install_args, fail_on_error=False)
                 # TODO: undo installations that didn't complete?
 
-                if _StoreBootstrapper.try_import(module, abstract_spec_str):
+                if _try_import_from_store(module, abstract_spec_str):
                     return True
         return False
 
 
 @_bootstrapper(type='install')
 class _SourceBootstrapper(object):
+    """Install the software needed during bootstrapping from sources."""
     def __init__(self, conf):
         self.conf = conf
 
@@ -221,9 +230,7 @@ class _SourceBootstrapper(object):
         # Install the spec that should make the module importable
         concrete_spec.package.do_install()
 
-        return _StoreBootstrapper.try_import(
-            module, abstract_spec=abstract_spec_str
-        )
+        return _try_import_from_store(module, abstract_spec=abstract_spec_str)
 
 
 def _make_bootstrapper(conf):
