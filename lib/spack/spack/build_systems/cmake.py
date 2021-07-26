@@ -170,7 +170,7 @@ class CMakePackage(PackageBase):
             define('CMAKE_C_COMPILER:FILEPATH', pkg.compiler.cc.replace('\\', '/')),
             define('CMAKE_CXX_COMPILER:FILEPATH', pkg.compiler.cxx.replace('\\', '/'))
         ]
-        
+
         if pkg.compiler.fc is not None:
             args.append(define('CMAKE_Fortran_COMPILER:FILEPATH',
                                pkg.compiler.fc.replace('\\', '/')))
