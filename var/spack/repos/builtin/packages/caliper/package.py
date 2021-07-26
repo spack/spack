@@ -137,3 +137,9 @@ class Caliper(CMakePackage, CudaPackage):
             args.append('-DWITH_CUPTI=Off')
 
         return args
+
+    run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([join_path('examples', 'apps')])
