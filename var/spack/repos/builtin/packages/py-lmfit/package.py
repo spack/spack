@@ -18,7 +18,7 @@ class PyLmfit(PythonPackage):
 
     depends_on('python@3.5:',               type=('build', 'run'), when='@1:')
     depends_on('python@2.7:2.8,3.5:',       type=('build', 'run'), when='@0.9.15')
-    depends_on('py-asteval@0.9.16',         type=('build', 'run'), when='@0.9.15:')
+    depends_on('py-asteval@0.9.16:',        type=('build', 'run'), when='@0.9.15:')
     depends_on('py-numpy@1.5:',             type=('build', 'run'), when='@0.9.5:')
     depends_on('py-numpy@1.16:',            type=('build', 'run'), when='@0.9.15:')
     depends_on('py-scipy@0.14:',            type=('build', 'run'), when='@0.9.5')
