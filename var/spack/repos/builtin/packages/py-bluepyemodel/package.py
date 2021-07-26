@@ -12,7 +12,7 @@ class PyBluepyemodel(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/cells/BluePyEModel"
     git      = "ssh://bbpcode.epfl.ch/cells/BluePyEModel"
 
-    version('0.0.3', tag='BluePyEModel-v0.0.3')
+    version('0.0.5', tag='BluePyEModel-v0.0.5')
 
     depends_on('py-setuptools', type='build')
 
