@@ -169,7 +169,9 @@ def _list(args):
 
 
 def _write_trust_state(args, value):
-    name, sources = args.name, spack.config.get('bootstrap:sources')
+    name = args.name
+    sources = spack.config.get('bootstrap:sources')
+
     matches = [s for s in sources if s['name'] == name]
     if not matches:
         names = [s['name'] for s in sources]
