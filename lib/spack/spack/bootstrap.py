@@ -208,8 +208,12 @@ class _SourceBootstrapper(object):
             concrete_spec = spack.spec.Spec(
                 abstract_spec_str + ' ^' + spec_for_current_python()
             )
-            # TODO: substitute this call when the old concretizer is deprecated
-            concrete_spec._old_concretize()
+
+            if module == 'clingo':
+                # TODO: remove when the old concretizer is deprecated
+                concrete_spec._old_concretize()
+            else:
+                concrete_spec.concretize()
 
         msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from sources"
         tty.debug(msg.format(module, abstract_spec_str))
