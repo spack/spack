@@ -25,3 +25,4 @@ class PyOmegaconf(PythonPackage):
     depends_on('py-antlr4-python3-runtime@4.8', type=('build', 'run'))
     depends_on('py-pyyaml@5.1.0:', type=('build', 'run'))
     depends_on('py-dataclasses', when='^python@:3.6', type=('build', 'run'))
+    depends_on('java', type='build')
