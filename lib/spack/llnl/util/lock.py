@@ -117,14 +117,28 @@ class Lock(object):
             self.LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK  # exclusive lock
             self.LOCK_SH = 0  # shared lock, default
             self.LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY  # non-blocking
+            self.LOCK_CATCH = pywintypes.error
         else:
             self.LOCK_EX = fcntl.LOCK_EX
             self.LOCK_SH = fcntl.LOCK_SH
             self.LOCK_NB = fcntl.LOCK_NB
             self.LOCK_UN = fcntl.LOCK_UN
+            self.LOCK_CATCH = IOError
 
         # Mapping of supported locks to description
         self.lock_type = {self.LOCK_SH: 'read', self.LOCK_EX: 'write'}
+
+    @property
+    def lock_fail_condition(self):
+        if self.lock_condition is None:
+            if _platform == "win32":
+                # 33 "The process cannot access the file because another
+                #     process has locked a portion of the file."
+                # 32 "The process cannot access the file because it is being
+                #     used by another process"
+                return e.args[0] not in (32, 33)
+            else:
+                return e.errno not in (errno.EAGAIN, errno.EACCES)
 
     @staticmethod
     def _poll_interval_generator(_wait_times=None):
@@ -261,16 +275,8 @@ class Lock(object):
 
             return True
 
-        except IOError as e:
-            # EAGAIN and EACCES == locked by another process (so try again)
-            if e.errno not in (errno.EAGAIN, errno.EACCES):
-                raise
-        except pywintypes.error as e:
-            if e.args[0] not in (32, 33):
-                # 33 "The process cannot access the file because another
-                #     process has locked a portion of the file."
-                # 32 "The process cannot access the file because it is being
-                #     used by another process"
+        except self.LOCK_CATCH as e:
+            if self.lock_fail_condition:
                 raise
 
         return False

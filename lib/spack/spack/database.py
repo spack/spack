@@ -1017,7 +1017,7 @@ class Database(object):
                 os.remove(temp_file)
             raise
 
-    def _read(self):
+    def _read(self):######################################################################################################################
         """Re-read Database from the data in the set location.
 
         This does no locking, with one exception: it will automatically
