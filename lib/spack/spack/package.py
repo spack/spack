@@ -2657,15 +2657,15 @@ build_system_flags = PackageBase.build_system_flags
 
 
 class BundlePackage(PackageBase):
-    """General purpose bundle, or no-code, package class."""
-    # There are no phases by default but the property is required to support
-    # post-install hooks (e.g., for module generation).
+    #"""General purpose bundle, or no-code, package class."""
+    #: There are no phases by default but the property is required to support
+    #: post-install hooks (e.g., for module generation).
     phases = []  # type: List[str]
-    # This attribute is used in UI queries that require to know which
-    # build-system class we are using
+    #: This attribute is used in UI queries that require to know which
+    #: build-system class we are using
     build_system_class = 'BundlePackage'
 
-    # Bundle packages do not have associated source or binary code.
+    #: Bundle packages do not have associated source or binary code.
     has_code = False
 
 
