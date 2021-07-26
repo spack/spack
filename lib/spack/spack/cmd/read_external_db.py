@@ -136,6 +136,19 @@ def entries_to_specs(entries):
     return spec_dict
 
 
+def _read_external_db(path, apply_updates):
+    with open(path, 'r') as json_file:
+        json_data = json.load(json_file)
+    specs = entries_to_specs(json_data['specs'])
+    compilers = list(compiler_from_entry(x)
+                     for x in json_data['compilers'])
+    if apply_updates:
+        spack.compilers.add_compilers_to_config(
+            compilers, init_config=False)
+        for spec in specs.values():
+            spack.store.db.add(spec, directory_layout=None)
+
+
 def setup_parser(subparser):
     subparser.add_argument('--file',
                            help="path to json description of Spack DB")
@@ -145,13 +158,4 @@ def setup_parser(subparser):
 
 def read_external_db(parser, args):
     if args.file:
-        with open(args.file, 'r') as json_file:
-            json_data = json.load(json_file)
-        specs = entries_to_specs(json_data['specs'])
-        compilers = list(compiler_from_entry(x)
-                         for x in json_data['compilers'])
-        if args.apply_updates:
-            spack.compilers.add_compilers_to_config(
-                compilers, init_config=False)
-            for spec in specs.values():
-                spack.store.db.add(spec, directory_layout=None)
+        _read_external_db(args.file, args.apply_updates)

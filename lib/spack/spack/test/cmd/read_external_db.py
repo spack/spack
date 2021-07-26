@@ -5,7 +5,11 @@
 
 import json
 
+import spack.cmd.read_external_db
 from spack.cmd.read_external_db import entries_to_specs, compiler_from_entry
+from spack.main import SpackCommand
+
+read_external_db = SpackCommand('read-external-db')
 
 
 example_x_json_str = """\
@@ -169,9 +173,11 @@ def generate_openmpi_entries():
     """Generate two example JSON entries that refer to an OpenMPI
        installation and a hwloc dependency.
     """
+    # The hashes need to be padded with 'a' at the end to align with 8-byte
+    # boundaries (for base-32 decoding)
     hwloc = JsonSpecEntry(
         name='hwloc',
-        hash='hwloc-fake-hash',
+        hash='hwlocfakehashaaa',
         prefix='/path/to/hwloc-install/',
         version='2.0.3',
         arch=_common_arch,
@@ -185,8 +191,8 @@ def generate_openmpi_entries():
     # descriptions.
     openmpi = JsonSpecEntry(
         name='openmpi',
-        hash='openmpi-fake-hash',
-        prefix='/path/to/packagex-install/',
+        hash='openmpifakehasha',
+        prefix='/path/to/openmpi-install/',
         version='4.1.0',
         arch=_common_arch,
         compiler=_common_compiler,
@@ -209,3 +215,23 @@ def test_spec_conversion():
     specs = entries_to_specs(entries)
     openmpi_spec, = list(x for x in specs.values() if x.name == 'openmpi')
     assert openmpi_spec['hwloc']
+
+
+def _example_db():
+    return {
+        'specs': list(x.to_dict() for x in generate_openmpi_entries()),
+        'compilers': []
+    }
+
+
+def test_read_external_db(
+        tmpdir, config, install_mockery):
+
+    with tmpdir.as_cwd():
+        test_db_fname = 'external-db.json'
+        with open(test_db_fname, 'w') as db_file:
+            json.dump(_example_db(), db_file)
+        spack.cmd.read_external_db._read_external_db(test_db_fname, True)
+        # read_external_db('--file {0} --apply-updates'.format(test_db_fname))
+        specs = spack.store.db.query('openmpi')
+        assert any(x.dag_hash() == 'openmpifakehasha' for x in specs)
