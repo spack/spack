@@ -4,8 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import random
 import shutil
+import stat
+import string
 import sys
+import tarfile
+import time
+from math import floor
+from multiprocessing import Process
+from pathlib import Path
+
+import yaml
 
 import llnl.util.tty as tty
 
@@ -21,6 +31,8 @@ import spack.relocate
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.gpg as gpg
+import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.cmd import display_specs
 from spack.error import SpecError
@@ -232,6 +244,43 @@ def setup_parser(subparser):
         '-k', '--keys', default=False, action='store_true',
         help='If provided, key index will be updated as well as package index')
     update_index.set_defaults(func=buildcache_update_index)
+
+    resign = subparsers.add_parser(
+        're-sign', help="re-sign local build cache")
+    resign.add_argument(
+        '--strip-build-env',
+        action='store_true',
+        default=False,
+        dest='strip_build_env',
+        help='strip spack-build-env.txt from archives')
+    resign.add_argument(
+        '--workdir',
+        type=str,
+        required=True,
+        help='directory to use for staging work-in-progress')
+    resign.add_argument(
+        '--key',
+        type=str,
+        required=True,
+        help='key to use for re-signing')
+    resign.add_argument(
+        "--np",
+        type=int,
+        required=False,
+        default=1,
+        help='number of threads')
+    resign.add_argument(
+        "--startover",
+        action='store_true',
+        required=False,
+        default=False,
+        help='start over by deleting existing "done" markers')
+    resign.add_argument(
+        'archive',
+        metavar='archive',
+        type=str,
+        help='build cache location')
+    resign.set_defaults(func=init_resigning)
 
 
 def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
@@ -789,6 +838,288 @@ def buildcache_update_index(args):
         outdir = args.mirror_url
 
     update_index(outdir, update_keys=args.keys)
+
+
+def chunkify(ds, n):
+    chunkSize = len(ds) / n
+    if len(ds) % n != 0:
+        chunkSize += 1
+    chunks = []
+    lasti = 0
+    for i in range(n):
+        i0 = lasti
+        i1 = floor(i0 + chunkSize)
+        if i == n - 1 or i1 > len(ds):
+            i1 = len(ds)
+        chunks.append(ds[i0:i1])
+        lasti = i1
+    return chunks
+
+
+def random_string(n):
+    str = string.ascii_lowercase
+    return ''.join(random.choice(str) for i in range(n))
+
+
+def create_worker_gpghome(srcdir, tmpdir):
+    """ setup a clone of gpg srcdir beneath tmpdir, to be used by concurrent worker """
+    ntries = 5
+    dstdir = None
+    for _ in range(ntries):
+        dstdir = os.path.join(tmpdir, ".gnupg-{0}".format(random_string(4)))
+        if not os.path.exists(dstdir):
+            break
+        else:
+            dstdir = None
+    if not dstdir:
+        tty.error("failed to generate a uniquely named clone of {0} "
+                  "beneath {1} after {2} tries".format(srcdir, tmpdir, ntries))
+        return None
+
+    os.makedirs(dstdir, exist_ok=True)
+
+    for f in ['pubring.kbx', 'trustdb.gpg']:
+        sf = os.path.join(srcdir, f)
+        df = os.path.join(dstdir, f)
+        shutil.copyfile(sf, df)
+
+    sf = os.path.join(srcdir, 'private-keys-v1.d')
+    df = os.path.join(dstdir, 'private-keys-v1.d')
+    os.symlink(sf, df)
+
+    for r, _, f in os.walk(dstdir):
+        os.chmod(r, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
+
+    return dstdir
+
+
+def resign_worker(workernum, baseworkdir, key, paths, strip_build_env, gpghome):
+    def debug(msg):
+        tty.debug("worker-{0}-{1}: {2}".format(workernum, os.getpid(), msg))
+
+    os.environ['SPACK_GNUPGHOME'] = gpghome
+    debug("GPGHOME = {0}".format(gpghome))
+    gpg.clear()
+    gpg.init()
+
+    for p in paths:
+        srcdir, tarfn = os.path.split(p)
+
+        debug("starting {0}".format(tarfn))
+
+        basefn = os.path.splitext(tarfn)[0]
+        newtarfn = "{0}.new".format(tarfn)
+        specfn = "{0}.spec.yaml".format(basefn)
+        sigfn = "{0}.spec.yaml.asc".format(basefn)
+        tgzfn = "{0}.tar.gz".format(basefn)
+        newtgzfn = "{0}.new".format(tgzfn)
+        tar_contents = [specfn, sigfn, tgzfn]
+
+        donefile = os.path.join(srcdir, "{0}.done".format(basefn))
+
+        if os.path.exists(donefile):
+            debug("skipping, already done: {0}".format(tarfn))
+            continue
+
+        workdir = os.path.join(baseworkdir, basefn)
+        os.makedirs(workdir)
+        os.chdir(workdir)
+
+        def cleanup():
+            debug("finished {0}".format(tarfn))
+            shutil.rmtree(workdir)
+
+        debug("workdir = {0}".format(workdir))
+
+        def srcpath(f):
+            return os.path.join(srcdir, f)
+
+        def wrkpath(f):
+            return os.path.join(workdir, f)
+
+        with tarfile.open(p, 'r') as tf:
+            actual = set(tf.getnames())
+            expected = set(tar_contents)
+            extra = actual.difference(expected)
+            missing = expected.difference(actual)
+
+            abort = False
+            if len(extra) > 0:
+                debug("extra files in archive: {0} \n{1}"
+                      .format(tarfn, "\n".join(extra)))
+                abort = True
+
+            if len(missing) > 0:
+                debug("missing files in archive: {0}\n{1}"
+                      .format(tarfn, "\n".join(missing)))
+                abort = True
+
+            if abort:
+                debug("skipping: archive has missing and/or extra files: {0}"
+                      .format(tarfn))
+                cleanup()
+                continue
+
+            tf.extractall()
+
+        os.remove(sigfn)
+
+        if strip_build_env:
+            delete, add = [], []
+            with tarfile.open(tgzfn, 'r') as tf:
+                for n in tf.getnames():
+                    add.append(Path(n).parts[0])
+                    if 'spack-build-env.txt' in n:
+                        delete.append(n)
+                add = list(set(add))
+
+                if len(delete) > 0:
+                    tf.extractall()
+
+            if len(delete) > 0:
+                for n in delete:
+                    if os.path.exists(n):
+                        debug("removing {}".format(n))
+                        os.remove(n)
+
+                with tarfile.open(newtgzfn, 'w:gz') as tf:
+                    for n in add:
+                        tf.add(n)
+
+                for p in add + [tgzfn]:
+                    if os.path.isdir(p):
+                        shutil.rmtree(p, ignore_errors=True)
+                    else:
+                        os.remove(p)
+
+                os.rename(newtgzfn, tgzfn)
+
+                checksum = bindist.checksum_tarball(tgzfn)
+
+                with open(specfn, 'r') as f:
+                    spec_dict = yaml.load(f.read(), Loader=yaml.FullLoader)
+
+                if 'binary_cache_checksum' not in spec_dict:
+                    debug("error: binary_cache_checksum property not found: {0}"
+                          .format(srcpath(specfn)))
+                    cleanup()
+                    continue
+
+                spec_dict['binary_cache_checksum'] = {
+                    'hash_algorithm': 'sha256',
+                    'hash': checksum
+                }
+
+                with open(specfn, 'w') as f:
+                    f.write(syaml.dump(spec_dict))
+
+        try:
+            gpg.sign(key, specfn, sigfn)
+        except Exception:
+            debug("signing failed")
+            cleanup()
+            raise
+
+        with tarfile.open(srcpath(newtarfn), 'w') as tf:
+            for fn in tar_contents:
+                tf.add(fn)
+
+        os.remove(srcpath(tarfn))
+        os.rename(srcpath(newtarfn), srcpath(tarfn))
+
+        open(donefile, 'w').close()
+        cleanup()
+
+    debug("done!")
+    return 0
+
+
+def init_resigning(args):
+    archivedir = os.path.abspath(args.archive)
+    workdir = args.workdir
+    key = args.key
+    np = args.np
+    strip = args.strip_build_env
+    startover = args.startover
+
+    archives = []
+    for r, _, fs in os.walk(archivedir):
+        for f in fs:
+            fp = os.path.join(r, f)
+            if f.endswith(".spack"):
+                archives.append(fp)
+            elif f.endswith(".done") and startover:
+                tty.debug("starting over: deleting: {0}".format(fp))
+                os.remove(fp)
+
+    if len(archives) <= 0:
+        tty.msg("Nothing to do! No .spack archives found in {0}".format(archivedir))
+        return 0
+
+    uniqdir = None
+    for i in range(5):
+        d = os.path.join(workdir, "{0}".format(random_string(6)))
+        if not os.path.exists(d):
+            uniqdir = d
+            break
+    if uniqdir is None:
+        tty.error("Could not create unique work dir under {0}".format(workdir))
+        return 1
+    workdir = uniqdir
+
+    random.shuffle(archives)
+    work_chunks = chunkify(archives, np)
+
+    keys = gpg.signing_keys(key)
+    if len(keys) <= 0:
+        raise spack.error.SpackError("signing key not found: {0}".format(key))
+    elif len(keys) > 1:
+        msg = "Multiple keys available for signing\n"
+        for i, k in enumerate(keys):
+            msg += "\n"
+            msg += "{0: <3} User ID: {1}\n".format("{0}.".format(i), k.uid)
+            msg += "{0: <3} Fingerprint: {1}\n".format("", k.fingerprint)
+        msg += "\nKey selection must be made unambiguously using the"
+        msg += " associated fingerprint or user-id."
+        raise spack.error.SpackError(msg)
+    key = keys[0].fingerprint
+
+    os.makedirs(workdir)
+
+    def cleanup():
+        shutil.rmtree(workdir)
+
+    tty.debug("Working directory = {0}".format(workdir))
+
+    gpgdirs = []
+    for _ in range(np):
+        d = create_worker_gpghome(gpg.GNUPGHOME, workdir)
+        if not d:
+            tty.error("failed to setup GPGHOME for worker")
+            return 1
+        gpgdirs.append(d)
+
+    procs = []
+    for i in range(np):
+        gpgdir = gpgdirs[i]
+        work = work_chunks[i]
+        tty.debug("Worker #{0} GPGHOME = {1}".format(i, gpgdir))
+        p = Process(target=resign_worker, args=(i, workdir, key, work, strip, gpgdir))
+        p.start()
+        procs.append(p)
+
+    cnt = 0
+    while cnt < np:
+        for p in procs:
+            if not p.is_alive():
+                tty.debug("worker subprocess {0} finished with code = {1}"
+                          .format(p.pid, p.exitcode))
+                cnt += 1
+        tty.debug("waiting for worker subprocesses to finish...")
+        time.sleep(0.2)
+
+    tty.debug("all worker subprocesses have finished!")
+    return 0
 
 
 def buildcache(parser, args):
