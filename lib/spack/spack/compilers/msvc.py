@@ -79,9 +79,9 @@ class Msvc(Compiler):
                 'cmd /u /c "{}" {} && set'.format(self.setvarsfile, 'amd64'),
                 stderr=subprocess.STDOUT)
             if sys.version_info[0] >= 3:
-                out = out.decode('utf-16le', errors='replace')
+                out = out.decode('utf-16le', errors='replace')  # novermin
 
-            int_env = {
+            int_env = {  # novermin
                 key.lower(): value
                 for key, _, value in
                 (line.partition('=') for line in out.splitlines())
