@@ -167,7 +167,7 @@ class _BuildcacheBootstrapper(object):
                             "fc": "/dev/null"
                         },
                         "spec": str(index_spec.compiler),
-                        "target": str(index_spec.target)
+                        "target": str(index_spec.target.family)
                     }
                     with spack.architecture.use_platform(bincache_platform):
                         with spack.config.override(
