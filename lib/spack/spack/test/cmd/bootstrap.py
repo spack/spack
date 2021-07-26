@@ -125,3 +125,23 @@ def test_trust_or_untrust_sources(mutable_config, command, value):
     _bootstrap(command, 'github-actions')
     trusted = spack.config.get(key, default=None)
     assert trusted is value
+
+
+def test_trust_or_untrust_fails_with_no_method(mutable_config):
+    with pytest.raises(RuntimeError, match='no bootstrapping method'):
+        _bootstrap('trust', 'foo')
+
+
+def test_trust_or_untrust_fails_with_more_than_one_method(mutable_config):
+    wrong_config = {'sources': [
+        {'name': 'github-actions',
+         'type': 'buildcache',
+         'description': ''},
+        {'name': 'github-actions',
+         'type': 'buildcache',
+         'description': 'Another entry'}],
+        'trusted': {}
+    }
+    with spack.config.override('bootstrap', wrong_config):
+        with pytest.raises(RuntimeError, match='more than one'):
+            _bootstrap('trust', 'github-actions')

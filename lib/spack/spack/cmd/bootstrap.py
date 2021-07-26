@@ -178,6 +178,13 @@ def _write_trust_state(args, value):
         msg = ('there is no bootstrapping method named "{0}". Valid '
                'method names are: {1}'.format(name, ', '.join(names)))
         raise RuntimeError(msg)
+
+    if len(matches) > 1:
+        msg = ('there is more than one bootstrapping method named "{0}". '
+               'Please delete all methods but one from bootstrap.yaml '
+               'before proceeding').format(name)
+        raise RuntimeError(msg)
+
     spack.config.set(
         'bootstrap:trusted:{0}'.format(name), value, scope=args.scope
     )
