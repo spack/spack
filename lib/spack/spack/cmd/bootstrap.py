@@ -185,8 +185,11 @@ def _write_trust_state(args, value):
                'before proceeding').format(name)
         raise RuntimeError(msg)
 
-    spack.config.set(
-        'bootstrap:trusted:{0}'.format(name), value, scope=args.scope
+    # Setting the scope explicitly is needed to not copy over to a new scope
+    # the entire default configuration for bootstrap.yaml
+    scope = args.scope or spack.config.default_modify_scope('bootstrap')
+    spack.config.add(
+        'bootstrap:trusted:{0}:{1}'.format(name, str(value)), scope=scope
     )
 
 
