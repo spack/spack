@@ -8,9 +8,13 @@ from spack import *
 class SpatialIndex(PythonPackage):
     """Spatial indexer for geometries and morphologies"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/hpc/SpatialIndex"
-    git      = "ssh://bbpcode.epfl.ch/hpc/SpatialIndex"
-    url      = "ssh://bbpcode.epfl.ch/hpc/SpatialIndex"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/SpatialIndex"
+    git      = "git@bbpgitlab.epfl.ch:hpc/SpatialIndex.git"
+    url      = "git@bbpgitlab.epfl.ch:hpc/SpatialIndex.git"
+
+    version('develop', branch='master', submodules=True)
+    version('0.2.1', tag='0.2.1', submodules=True)
+    version('0.1.0', tag='0.1.0', submodules=True)
 
     depends_on("py-setuptools")
     depends_on("cmake")
@@ -21,10 +25,6 @@ class SpatialIndex(PythonPackage):
     depends_on("py-morpho-kit",  type="run")
     depends_on("py-numpy-quaternion", type="run", when="@0.2.1:")
     depends_on("py-libsonata",   type="run", when="@0.2.2:")
-
-    version('develop', branch='master', submodules=True)
-    version('0.2.1', tag='0.2.1', submodules=True)
-    version('0.1.0', tag='0.1.0', submodules=True)
 
     @run_after('install')
     def install_headers(self):
