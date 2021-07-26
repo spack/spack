@@ -37,7 +37,7 @@ class WindowsOs(OperatingSystem):
             extra_args = {}
             if sys.version_info[:3] >= (3, 6, 0):
                 extra_args = {'encoding': 'mbcs', 'errors': 'strict'}
-            paths = subprocess.check_output([
+            paths = subprocess.check_output([  # novermin
                 os.path.join(root, "Microsoft Visual Studio",
                              "Installer", "vswhere.exe"),
                 "-prerelease",

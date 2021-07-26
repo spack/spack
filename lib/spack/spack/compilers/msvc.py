@@ -75,7 +75,7 @@ class Msvc(Compiler):
             # once the process terminates. So go the long way around: examine
             # output, sort into dictionary, use that to make the build
             # environment.
-            out = subprocess.check_output(
+            out = subprocess.check_output(  # novermin
                 'cmd /u /c "{}" {} && set'.format(self.setvarsfile, 'amd64'),
                 stderr=subprocess.STDOUT)
             if sys.version_info[0] >= 3:
