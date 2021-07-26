@@ -168,10 +168,12 @@ class CMakePackage(PackageBase):
             define('CMAKE_INSTALL_PREFIX', pkg.prefix.replace('\\', '/')),
             define('CMAKE_BUILD_TYPE', build_type),
             define('CMAKE_C_COMPILER:FILEPATH', pkg.compiler.cc.replace('\\', '/')),
-            define('CMAKE_CXX_COMPILER:FILEPATH', pkg.compiler.cxx.replace('\\', '/')),
-            define('CMAKE_Fortran_COMPILER:FILEPATH',
-                   pkg.compiler.fc.replace('\\', '/'))
+            define('CMAKE_CXX_COMPILER:FILEPATH', pkg.compiler.cxx.replace('\\', '/'))
         ]
+        
+        if pkg.compiler.fc is not None:
+            args.append(define('CMAKE_Fortran_COMPILER:FILEPATH',
+                               pkg.compiler.fc.replace('\\', '/')))
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
         if pkg.spec.satisfies('^cmake@3.9:'):
