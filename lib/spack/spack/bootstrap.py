@@ -326,8 +326,12 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
             continue
 
         b = _make_bootstrapper(current_config)
-        if b.try_import(module, abstract_spec):
-            return
+        try:
+            if b.try_import(module, abstract_spec):
+                return
+        except Exception as e:
+            msg = '[BOOTSTRAP MODULE {0}] Unexpected error "{1}"'
+            tty.debug(msg.format(module, str(e)))
 
     # We couldn't import in any way, so raise an import error
     msg = 'cannot bootstrap the "{0}" Python module'.format(module)
