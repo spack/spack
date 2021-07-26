@@ -14,6 +14,7 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.filesystem import working_dir
 
+import spack.bootstrap
 import spack.paths
 from spack.util.executable import which
 
@@ -44,9 +45,15 @@ initial_working_dir = None
 #: List of directories to exclude from checks.
 exclude_directories = [spack.paths.external_path]
 
-#: order in which tools should be run. flake8 is last so that it can
+#: Order in which tools should be run. flake8 is last so that it can
 #: double-check the results of other tools (if, e.g., --fix was provided)
-tool_order = ["isort", "mypy", "black", "flake8"]
+#: The list maps an executable name to a spack spec needed to install it.
+tool_order = [
+    ("isort", "py-isort@4.3.5:"),
+    ("mypy", "py-mypy@0.900:"),
+    ("black", "py-black"),
+    ("flake8", "py-flake8"),
+]
 
 #: tools we run in spack style
 tools = {}
@@ -210,7 +217,7 @@ def rewrite_and_print_output(
 
 
 def print_style_header(file_list, args):
-    tools = [tool for tool in tool_order if getattr(args, tool)]
+    tools = [tool for tool, _ in tool_order if getattr(args, tool)]
     tty.msg("Running style checks on spack:", "selected: " + ", ".join(tools))
 
     # translate modified paths to cwd_relative if needed
@@ -338,15 +345,20 @@ def style(parser, args):
 
         # run tools in order defined in tool_order
         returncode = 0
-        for tool_name in tool_order:
+        for tool_name, tool_spec in tool_order:
             if getattr(args, tool_name):
                 run_function, required = tools[tool_name]
                 print_tool_header(tool_name)
 
-                cmd = which(tool_name, required=required)
-                if not cmd:
-                    color.cprint("  @y{%s not in PATH, skipped}" % tool_name)
-                    continue
+                # Bootstrap tools so we don't need to require install
+                with spack.bootstrap.ensure_bootstrap_configuration():
+                    spec = spack.spec.Spec(tool_spec)
+                    cmd = spack.bootstrap.get_executable(
+                        tool_name, spec=spec, install=True
+                    )
+                    if not cmd:
+                        color.cprint("  @y{%s not in PATH, skipped}" % tool_name)
+                        continue
 
                 returncode |= run_function(cmd, file_list, args)
 

@@ -65,6 +65,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Build data services')
     variant('particles',  default=False,
             description='Build particle classes')
+    variant('plotfile_tools', default=False,
+            description='Build plotfile_tools like fcompare')
     variant('sundials', default=False,
             description='Build AMReX with SUNDIALS support')
     variant('hdf5',  default=False,
@@ -168,6 +170,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
                                      'linear_solvers'),
             self.define_from_variant('AMReX_AMRDATA', 'amrdata'),
             self.define_from_variant('AMReX_PARTICLES', 'particles'),
+            self.define_from_variant('AMReX_PLOTFILE_TOOLS', 'plotfile_tools'),
             self.define_from_variant('AMReX_HDF5', 'hdf5'),
             self.define_from_variant('AMReX_HYPRE', 'hypre'),
             self.define_from_variant('AMReX_PETSC', 'petsc'),

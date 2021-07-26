@@ -613,14 +613,13 @@ class Trilinos(CMakePackage, CudaPackage):
 
         # Enable TPLs based on whether they're in our spec, not whether they're
         # variant names: packages/features should disable availability
-        for tpl_name, dep_name in [
+        tpl_dep_map = [
             ('ADIOS2', 'adios2'),
             ('BLAS', 'blas'),
             ('Boost', 'boost'),
             ('CGNS', 'cgns'),
             ('HDF5', 'hdf5'),
             ('HYPRE', 'hypre'),
-            ('HWLOC', 'hwloc'),
             ('LAPACK', 'lapack'),
             ('Matio', 'matio'),
             ('METIS', 'metis'),
@@ -629,7 +628,10 @@ class Trilinos(CMakePackage, CudaPackage):
             ('SuperLU', 'superlu'),
             ('X11', 'libx11'),
             ('Zlib', 'zlib'),
-        ]:
+        ]
+        if spec.satisfies('@13:'):
+            tpl_dep_map.append(('HWLOC', 'hwloc'))
+        for tpl_name, dep_name in tpl_dep_map:
             have_dep = (dep_name in spec)
             options.append(define('TPL_ENABLE_' + tpl_name, have_dep))
             if not have_dep:
