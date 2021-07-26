@@ -52,9 +52,6 @@ class NetlibLapack(CMakePackage):
     # https://github.com/Reference-LAPACK/lapack/pull/268
     patch('testing.patch', when='@3.7.0:3.8.9999')
 
-    # https://github.com/Reference-LAPACK/lapack/issues/583
-    # patch('shared-win.patch', when='platform=windows @0:3.9.1')
-
     # virtual dependency
     provides('blas', when='~external-blas')
     provides('lapack')
