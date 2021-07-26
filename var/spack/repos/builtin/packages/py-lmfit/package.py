@@ -22,15 +22,15 @@ class PyLmfit(PythonPackage):
 
     depends_on('py-asteval@0.9.16:',        type=('build', 'run'), when='@0.9.15:')
     depends_on('py-asteval@0.9.21:',        type=('build', 'run'), when='@1.0.2:')
-    
+
     depends_on('py-numpy@1.5:',             type=('build', 'run'), when='@0.9.5:')
     depends_on('py-numpy@1.16:',            type=('build', 'run'), when='@0.9.15:')
     depends_on('py-numpy@1.18:',            type=('build', 'run'), when='@1.0.2:')
-    
+
     depends_on('py-scipy@0.14:',            type=('build', 'run'), when='@0.9.5')
     depends_on('py-scipy@1.2:',             type=('build', 'run'), when='@0.9.15:')
     depends_on('py-scipy@1.3:',             type=('build', 'run'), when='@1.0.2:')
-    
+
     depends_on('py-setuptools',             type='build')
     depends_on('py-six@1.11:',              type=('build', 'run'), when='@0.9.15')
     depends_on('py-uncertainties@3.0.1:',   type=('build', 'run'), when='@0.9.15:')
