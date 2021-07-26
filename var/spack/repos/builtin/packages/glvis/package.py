@@ -12,7 +12,7 @@ class Glvis(MakefilePackage):
     homepage = "http://glvis.org"
     git      = "https://github.com/glvis/glvis.git"
 
-    maintainers = ['goxberry', 'v-dobrev', 'tzanio', 'stitt4']
+    maintainers = ['goxberry', 'v-dobrev', 'tzanio', 'tomstitt']
 
     # glvis (like mfem) is downloaded from a URL shortener at request
     # of upstream author Tzanio Kolev <tzanio@llnl.gov>.  See here:
