@@ -19,9 +19,13 @@ bootstrap:
       url: file:///home/culpo/production/spack/mirrors/clingo
       homepage: https://github.com/alalazo/spack-bootstrap-mirrors
       releases: https://github.com/alalazo/spack-bootstrap-mirrors/releases
+  # This method is just Spack bootstrapping the software it needs from sources.
+  # It has been added here so that users can selectively disable bootstrapping
+  # from sources by "untrusting" it.
   - name: spack-install
     type: install
     description: |
       Specs built from sources by Spack. May take a long time.
   trusted:
+    # By default the only method we trust is Spack bootstrapping software from sources
     spack-install: true
