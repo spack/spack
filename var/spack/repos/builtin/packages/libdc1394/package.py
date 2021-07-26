@@ -19,5 +19,8 @@ class Libdc1394(AutotoolsPackage):
     depends_on('libusb')
 
     def configure_args(self):
-        args = ['--disable-dependency-tracking', '--disable-examples', '--disable-sdltest']
+        args = []
+        args.append('--disable-dependency-tracking')
+        args.append('--disable-examples')
+        args.append('--disable-sdltest')
         return args
