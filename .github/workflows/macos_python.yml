@@ -11,6 +11,7 @@ on:
   pull_request:
     branches:
     - develop
+    - features/windows-support
     paths:
       # Run if we modify this yaml file
       - '.github/workflows/macos_python.yml'
