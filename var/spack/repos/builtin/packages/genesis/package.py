@@ -19,11 +19,24 @@ class Genesis(AutotoolsPackage, CudaPackage):
 
     version("master", branch="master")
     version(
+        "1.6.0",
+        sha256="d0185a5464ed4231f6ee81f6dcaa15935a99fa30b96658d2b7c25d7fbc5b38e9",
+        url="https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/12/genesis-1.6.0.tar.bz2",
+    )
+    version(
         "1.5.1",
         sha256="62a453a573c36779484b4ffed2dfa56ea03dfe1308d631b33ef03f733259b3ac",
         url="https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/09/genesis-1.5.1.tar.bz2",
     )
 
+    resource(
+        when="@1.6.0",
+        name="user_guide",
+        url="https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/12/GENESIS-1.6.0.pdf",
+        sha256="4a6d54eb8f66edde57a4099cdac40cc8e0e2fd6bdb84946da6bf2b3ed84a4ba1",
+        expand=False,
+        placement="doc",
+    )
     resource(
         when="@1.5.1",
         name="user_guide",
