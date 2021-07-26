@@ -16,29 +16,33 @@ class PyTensorboard(Package):
 
     maintainers = ['aweits']
 
+    version('2.5.0', sha256='58c9e0c31062821ab1c02845c3b7902da92574ef7192d701b1828dacbe4ee610')
     version('2.4.1', sha256='736dc204aa292d221f5871077e60994a9a9ea8e33b841f0d754d510fe6cc7635')
     version('2.4.0', sha256='28a30794c1c797357b2086477394b59afa0b18ca48592ca3c0627f7f10536373')
     version('2.3.0', sha256='947a58702c2841eb4559637dbf8639633f79de9a0f422be9737f3563a1725440')
     version('2.2.0', sha256='d0dfbf0e4b3b5ebbc3fafa6d281d4b9aa5478eac6bac3330652ab6674278ab77')
 
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
+    depends_on('bazel@3.7.0:', type='build', when='@2.5.0:')
     depends_on('bazel@2.1.0:', type='build', when='@2.2.0:')
-    depends_on('py-setuptools@41.0.0:', type=('build', 'run'))
     depends_on('py-absl-py@0.4:', type=('build', 'run'))
-    depends_on('py-markdown@2.6.8:', type=('build', 'run'))
-    depends_on('py-requests@2.21.0:2.999', type=('build', 'run'))
     depends_on('py-futures@3.1.1:', type=('build', 'run'), when='^python@:2')
     depends_on('py-grpcio@1.24.3:', type=('build', 'run'), when='@2.3:')
     depends_on('py-grpcio@1.23.3:', type=('build', 'run'), when='@2.2')
     depends_on('py-google-auth@1.6.3:1.99.99', type=('build', 'run'))
+    depends_on('py-google-auth-oauthlib@0.4.1:0.4.999', type=('build', 'run'))
+    depends_on('py-markdown@2.6.8:', type=('build', 'run'))
     depends_on('py-numpy@1.12.0:', type=('build', 'run'))
     depends_on('py-protobuf@3.6.0:', type=('build', 'run'))
-    depends_on('py-six@1.10.0:', type=('build', 'run'))
+    depends_on('py-requests@2.21.0:2.999', type=('build', 'run'))
+    depends_on('py-setuptools@41.0.0:', type=('build', 'run'))
+    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.4')
+    # Built as an internal dependency?
+    # depends_on('py-tensorboard-data-server@0.6.0:0.6.999', type=('build', 'run'), when='@2.5.0:')
+    depends_on('py-tensorboard-plugin-wit@1.6.0:', type=('build', 'run'), when='@2.2.0:')
     depends_on('py-werkzeug@0.11.15:', type=('build', 'run'))
     depends_on('py-wheel', type=('build', 'run'))
     depends_on('py-wheel@0.26:', type=('build', 'run'), when='@0.6: ^python@3:')
-    depends_on('py-google-auth-oauthlib@0.4.1:0.4.999', type=('build', 'run'))
-    depends_on('py-tensorboard-plugin-wit@1.6.0:', type=('build', 'run'), when='@2.2.0:')
 
     extends('python')
 
