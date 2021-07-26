@@ -58,4 +58,3 @@ class Gurobi(Package):
         with working_dir('linux64'):
             python = which('python')
             python('setup.py', 'install', '--prefix={0}'.format(self.prefix))
-
