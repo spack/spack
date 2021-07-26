@@ -12,7 +12,6 @@ class PyGoogleCommon(PythonPackage):
     homepage = "http://pypi.python.org/pypi/google-common"
     pypi     = "google-common/google-common-0.0.1.tar.gz"
 
-
     version('0.0.1', sha256='add3cf494034fa11080e77cef2cc1f55a436a3353f5f5f95cc4f2b9788a678d1')
 
     depends_on('py-setuptools', type='build')
