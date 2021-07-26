@@ -2657,7 +2657,7 @@ build_system_flags = PackageBase.build_system_flags
 
 
 class BundlePackage(PackageBase):
-    #"""General purpose bundle, or no-code, package class."""
+    """General purpose bundle, or no-code, package class."""
     #: There are no phases by default but the property is required to support
     #: post-install hooks (e.g., for module generation).
     phases = []  # type: List[str]
