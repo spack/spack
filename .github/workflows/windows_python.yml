@@ -3,13 +3,12 @@ name: windows tests
 on:
   push:
     branches:
+      - develop
       - features/windows-support
-      - windows-ci*
   pull_request:
     branches:
-      - features/windows-support
-      - windows-ci*
       - develop
+      - features/windows-support
 defaults:
   run:
     shell:
