@@ -28,6 +28,10 @@ properties = {
             'sources': {
                 'type': 'array',
                 'items': _source_schema
+            },
+            'trusted': {
+                'type': 'object',
+                'patternProperties': {r'\w[\w-]*': {'type': 'boolean'}}
             }
         }
     }
