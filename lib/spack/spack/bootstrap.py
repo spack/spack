@@ -88,12 +88,17 @@ class _StoreBootstrapper(object):
             ]
             sys.path.extend(module_paths)
 
-            if _python_import(module):
-                return True
+            try:
+                if _python_import(module):
+                    return True
+            except Exception as e:
+                msg = ('unexpected error while trying to import module '
+                       '"{0}" from spec "{1}" [error="{2}"]')
+                tty.warn(msg.format(module, candidate_spec, str(e)))
+            else:
+                msg = "Spec {0} did not provide module {1}"
+                tty.warn(msg.format(candidate_spec, module))
 
-            tty.warn("Spec {0} did not provide module {1}".format(
-                candidate_spec, module
-            ))
             sys.path = sys.path[:-2]
 
         return False
