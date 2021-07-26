@@ -106,7 +106,15 @@ class Aocc(Compiler):
         )
         if match:
             loc_ver = output.split('AOCC_')[1].split('-')[0]
-        return loc_ver
+            #Maintaining compatibility with previous release
+            #versioning format where dots are used instead
+            #of underscores.
+            #Only 3.1.0 is an expection, next release by default
+            #will have dots instead of underscores
+            if loc_ver == '3_1_0':
+                return '3.1.0'
+            else:
+                return loc_ver
 
     @classmethod
     def fc_version(cls, fortran_compiler):
