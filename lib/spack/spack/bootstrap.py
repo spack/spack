@@ -56,8 +56,6 @@ def _try_import_from_store(module, abstract_spec):
         module: Python module to be imported
         abstract_spec: abstract spec that may provide the module
     """
-    abstract_spec = abstract_spec or module
-
     bincache_platform = spack.architecture.real_platform()
     if str(bincache_platform) == 'cray':
         bincache_platform = spack.platforms.linux.Linux()
@@ -66,10 +64,6 @@ def _try_import_from_store(module, abstract_spec):
 
     # We have to run as part of this python interpreter
     abstract_spec += ' ^' + spec_for_current_python()
-
-    # Check if any of the already installed specs provide the import
-    msg = "[BOOTSTRAP MODULE {0}] Try installed specs with query '{1}'"
-    tty.debug(msg.format(module, abstract_spec))
 
     installed_specs = spack.store.db.query(abstract_spec, installed=True)
 
@@ -84,6 +78,11 @@ def _try_import_from_store(module, abstract_spec):
 
         try:
             if _python_import(module):
+                msg = ('[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
+                       'provides the "{0}" Python module').format(
+                    module, abstract_spec, candidate_spec.dag_hash()
+                )
+                tty.debug(msg)
                 return True
         except Exception as e:
             msg = ('unexpected error while trying to import module '
@@ -98,19 +97,6 @@ def _try_import_from_store(module, abstract_spec):
     return False
 
 
-@_bootstrapper(type='store')
-class _StoreBootstrapper(object):
-    """Wrapper class that adapts checking the current store for needed
-    software into the protocol used for bootstrapping.
-    """
-    def __init__(self, conf):
-        self.conf = conf
-
-    @staticmethod
-    def try_import(module, abstract_spec):
-        return _try_import_from_store(module, abstract_spec)
-
-
 @_bootstrapper(type='buildcache')
 class _BuildcacheBootstrapper(object):
     """Install the software needed during bootstrapping from a buildcache."""
@@ -121,6 +107,9 @@ class _BuildcacheBootstrapper(object):
     def try_import(self, module, abstract_spec_str):
         # This import is local since it is needed only on Cray
         import spack.platforms.linux
+
+        if _try_import_from_store(module, abstract_spec_str):
+            return True
 
         # Try to install from an unsigned binary cache
         abstract_spec = spack.spec.Spec(
@@ -208,6 +197,9 @@ class _SourceBootstrapper(object):
 
     @staticmethod
     def try_import(module, abstract_spec_str):
+        if _try_import_from_store(module, abstract_spec_str):
+            return True
+
         # Try to build and install from sources
         with spack_python_interpreter():
             # Add hint to use frontend operating system on Cray
@@ -314,10 +306,7 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
         return
 
     abstract_spec = abstract_spec or module
-    source_configs = [{
-        'name': 'bootstrap-store', 'type': 'store'
-    }]
-    source_configs.extend(spack.config.get('bootstrap:sources', []))
+    source_configs = spack.config.get('bootstrap:sources', [])
     for current_config in source_configs:
         if not _source_is_trusted(current_config):
             msg = ('[BOOTSTRAP MODULE {0}] Skipping source "{1}" since it is '
