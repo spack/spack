@@ -6,8 +6,8 @@
 from spack import *
 
 
-class RocprofilerDevApi(Package):
-    """ROCPROFILER library hearder files for adding to hip """
+class RoctracerDevApi(Package):
+    """ROCtracer library header files for adding to hip package """
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocprofiler"
     git      = "https://github.com/ROCm-Developer-Tools/rocprofiler.git"
@@ -46,7 +46,6 @@ class RocprofilerDevApi(Package):
         )
 
     def install(self, spec, prefix):
-        print("Installing  ... ")
         source_directory = self.stage.source_path
         include = join_path(source_directory, 'roctracer', 'inc')
         mkdirp(prefix.roctracer.inc)

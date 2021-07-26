@@ -41,7 +41,7 @@ class Hip(CMakePackage):
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
-        depends_on('rocprofiler-dev-api@' + ver, when='@' + ver)
+        depends_on('roctracer-dev-api@' + ver, when='@' + ver)
 
     # hipcc likes to add `-lnuma` by default :(
     # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
@@ -236,7 +236,7 @@ class Hip(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('PROF_API_HEADER_PATH', join_path(
-                self.spec['rocprofiler-dev-api'].prefix, 'roctracer', 'inc', 'ext')),
+                self.spec['roctracer-dev-api'].prefix, 'roctracer', 'inc', 'ext')),
             self.define('HIP_COMPILER', 'clang'),
             self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         ]
