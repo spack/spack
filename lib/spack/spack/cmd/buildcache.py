@@ -503,8 +503,9 @@ def install_tarball(spec, args):
                 msg = ('cannot verify checksum for "{0}"'
                        ' [expected={1}]')
                 msg = msg.format(tarball, args.sha256)
-                assert checker.check(tarball), msg
-                tty.msg('Verified SHA256 checksum of the build cache')
+                if not checker.check(tarball):
+                    raise RuntimeError(msg)
+                tty.debug('Verified SHA256 checksum of the build cache')
 
             tty.msg('Installing buildcache for spec %s' % spec.format())
             bindist.extract_tarball(spec, tarball, args.allow_root,
