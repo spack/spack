@@ -79,16 +79,19 @@ class tool(object):
         return fun
 
 
-def changed_files(base=None, untracked=True, all_files=False, root=None):
-    """Get list of changed files in the Spack repository."""
+def changed_files(base="develop", untracked=True, all_files=False, root=None):
+    """Get list of changed files in the Spack repository.
+
+    Arguments:
+        base (str): name of base branch to evaluate differences with.
+        untracked (bool): include untracked files in the list.
+        all_files (bool): list all files in the repository.
+        root (str): use this directory instead of the Spack prefix.
+    """
     if root is None:
         root = spack.paths.prefix
 
     git = which("git", required=True)
-
-    # GITHUB_BASE_REF is set to the base branch for pull request actions
-    if base is None:
-        base = os.environ.get("GITHUB_BASE_REF", "develop")
 
     # ensure base is in the repo
     git("show-ref", "--verify", "--quiet", "refs/heads/%s" % base,
@@ -147,8 +150,8 @@ def setup_parser(subparser):
         "-b",
         "--base",
         action="store",
-        default=None,
-        help="select base branch for collecting list of modified files",
+        default="develop",
+        help="branch to compare against to determine changed files (default: develop)",
     )
     subparser.add_argument(
         "-a",
