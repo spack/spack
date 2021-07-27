@@ -223,7 +223,7 @@ def _example_db():
 
 
 def test_read_external_db(
-        tmpdir, config, install_mockery):
+        tmpdir, config, mock_packages, mutable_database):
 
     with tmpdir.as_cwd():
         test_db_fname = 'external-db.json'
