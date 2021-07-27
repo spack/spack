@@ -4,11 +4,11 @@ CONFIG=$1
 
 . /etc/profile.d/modules.sh
 
-export MODULEPATH=""
+unset MODULEPATH
 . ${CONFIG}
 
 RELEASE=unstable
-STAGES="libraries applications"
+STAGES="applications"
 VENV=$(mktemp -d)/venv
 MAKEFILE=$(mktemp)
 

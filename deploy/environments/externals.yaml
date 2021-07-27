@@ -100,7 +100,8 @@ spack:
     - ncurses
     - ninja
     - openblas
-    - optix
+    # Special deployment location is no bueno!
+    # - optix
     - poppler
     - python
     - qhull@2015.2

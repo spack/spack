@@ -11,15 +11,15 @@ spack:
         - meshball
         - ultraliser
   specs:
-    - brayns%gcc +brion ^brion@3.3.1 ^ospray%intel
-    - brayns@1.0.1%gcc +brion ^brion@3.1.0 ^ospray%intel
-    - brayns-brainatlas@0.1.0%gcc ^brayns@0.8.0 ^ospray@1.7.3%intel
-    - brayns-membranelessorganelles@0.1.0%gcc ^brayns@0.8.0 ^ospray@1.7.3%intel
-    - brayns@0.8.0%gcc +opendeck +brion ^brion@3.1.0 ^ospray@1.7.3%intel
+    - brayns%gcc +brion ^brion@3.3.1 ^ospray%intel target=x86_64
+    - brayns@1.0.1%gcc +brion ^brion@3.1.0 ^ospray%intel target=x86_64
+    - brayns-brainatlas@0.1.0%gcc ^brayns@0.8.0 ^ospray@1.7.3%intel target=x86_64
+    - brayns-membranelessorganelles@0.1.0%gcc ^brayns@0.8.0 ^ospray@1.7.3%intel target=x86_64
+    - brayns@0.8.0%gcc +opendeck +brion ^brion@3.1.0 ^ospray@1.7.3%intel target=x86_64
     - brion@3.1.0 +python
     - brion@3.2.0 +python
     - brion@3.3.0 +python
     - brion@3.3.1 +python
-    - brayns-topologyviewer@0.1.0%gcc ^brayns@0.8.0 ^ospray@1.7.3%intel
+    - brayns-topologyviewer@0.1.0%gcc ^brayns@0.8.0 ^ospray@1.7.3%intel target=x86_64
     - meshball ^brion@3.1.0
     - ultraliser ^hdf5~mpi

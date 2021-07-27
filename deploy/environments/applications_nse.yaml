@@ -9,7 +9,7 @@ spack:
         - emsim
         - gene-expression-volume
         - psp-validation
-        - py-atlas-building-tools
+        # - py-atlas-building-tools  # F'in Ultraliser used as a dependency
         - py-bbp-analysis-framework
         - py-bbp-workflow
         - py-bluepy

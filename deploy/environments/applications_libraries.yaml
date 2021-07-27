@@ -39,8 +39,6 @@ spack:
             highfive+mpi,
             neuron,
             neuron+debug,
-            ospray@1.7.3,
-            ospray@1.8.5,
             python,
             py-h5py,
             py-mpi4py,
@@ -76,7 +74,6 @@ spack:
     - parmetis
     - petsc~int64+mpi
     - petsc+int64+mpi
-    - pugixml
     - py-argcomplete
     - py-argparse
     - py-aspy-yaml

@@ -103,7 +103,7 @@ packages:
     version: [xsdk-0.4.0-rc1]
   all:
     compiler: [gcc@9.3.0, intel@19.1.2.254, gcc@4.8.5]
-    target: [x86_64]
+    target: [skylake]
     providers:
       mpi: [hpe-mpi]
       scalapack: [intel-mkl, netlib-scalapack]

@@ -10,12 +10,12 @@ class PyBasalt(PythonPackage):
     """C++11 Graph Storage library with Python interface"""
 
     homepage = "https://github.com/BlueBrain/basalt"
-    url      = "git@github.com:BlueBrain/basalt.git"
+    git      = "https://github.com/BlueBrain/basalt.git"
 
-    version('develop', git=url, branch='master', submodules=True, get_full_repo=True)
-    version('0.2.9', git=url, tag='v0.2.9', submodules=True, get_full_repo=True)
-    version('0.2.4', git=url, tag='v0.2.4', submodules=True, get_full_repo=True)
-    version('0.1.1', git=url, tag='v0.1.1', submodules=True, get_full_repo=True)
+    version('develop', branch='master', submodules=True, get_full_repo=True)
+    version('0.2.9', tag='v0.2.9', submodules=True, get_full_repo=True)
+    version('0.2.4', tag='v0.2.4', submodules=True, get_full_repo=True)
+    version('0.1.1', tag='v0.1.1', submodules=True, get_full_repo=True)
 
     depends_on('benchmark', type='build')
     depends_on('cmake@3.7:')

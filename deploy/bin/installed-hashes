@@ -7,9 +7,8 @@ import sys
 import llnl.util.tty as tty
 
 import spack.environment as ev
-import spack.error
-import spack.report
-import spack.spec
+import spack.repo
+import spack.store
 
 
 def run():
@@ -17,8 +16,7 @@ def run():
     environment
     """
     parser = ArgumentParser()
-    parser.add_argument('-e', '--env', required=True,
-                        help='environment to use')
+    parser.add_argument('-e', '--env', help='environment to use')
     parser.add_argument('-m', '--missing', default=False, action='store_true',
                         help='list uninstalled specs')
     args = parser.parse_args()
@@ -28,15 +26,18 @@ def run():
     missing = []
 
     env = ev.get_env(args, 'deploy', required=True)
-    for requested, spec in env.concretized_specs():
-        stringified = "/{0} {1}".format(spec.dag_hash(8), requested)
-        if spec.package.installed:
-            if "%" in str(requested):
-                staged.append(stringified)
+    ev.activate(env, False, add_view=False)
+    with spack.store.db.read_transaction():
+        for requested, spec in env.concretized_specs():
+            stringified = "/{0} {1}".format(spec.dag_hash(7), requested)
+            package = spack.repo.get(spec)
+            if package.installed:
+                if "%" in str(requested):
+                    staged.append(stringified)
+                else:
+                    native.append(stringified)
             else:
-                native.append(stringified)
-        else:
-            missing.append(stringified)
+                missing.append(stringified)
 
     if args.missing:
         for l in missing:
