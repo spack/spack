@@ -504,7 +504,7 @@ def install_tarball(spec, args):
                        ' [expected={1}]')
                 msg = msg.format(tarball, args.sha256)
                 if not checker.check(tarball):
-                    raise RuntimeError(msg)
+                    raise spack.binary_distribution.NoChecksumException(msg)
                 tty.debug('Verified SHA256 checksum of the build cache')
 
             tty.msg('Installing buildcache for spec %s' % spec.format())
