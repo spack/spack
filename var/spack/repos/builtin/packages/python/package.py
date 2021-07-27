@@ -917,6 +917,15 @@ class Python(AutotoolsPackage):
         env.prepend_path('CPATH', os.pathsep.join(
             self.spec['python'].headers.directories))
 
+    def _site_packages(self, spec):
+        """Get the existing site-packages directories for `spec`."""
+        for lib in ['lib', 'lib64']:
+            pth = join_path(
+                spec.prefix, lib, 'python' + str(self.version.up_to(2)),
+                'site-packages')
+            if os.path.exists(pth):
+                yield pth
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on."""
@@ -940,10 +949,8 @@ class Python(AutotoolsPackage):
             if d.package.extends(self.spec):
                 # Python libraries may be installed in lib or lib64
                 # See issues #18520 and #17126
-                for lib in ['lib', 'lib64']:
-                    python_paths.append(join_path(
-                        d.prefix, lib, 'python' + str(self.version.up_to(2)),
-                        'site-packages'))
+                for pth in self._site_packages(d):
+                    python_paths.append(pth)
 
         pythonpath = ':'.join(python_paths)
         env.set('PYTHONPATH', pythonpath)
@@ -952,10 +959,8 @@ class Python(AutotoolsPackage):
         # For run time environment set only the path for
         # dependent_spec and prepend it to PYTHONPATH
         if dependent_spec.package.extends(self.spec):
-            for lib in ['lib', 'lib64']:
-                env.prepend_path('PYTHONPATH', join_path(
-                    dependent_spec.prefix, lib,
-                    'python' + str(self.version.up_to(2)), 'site-packages'))
+            for pth in self._site_packages(dependent_spec):
+                env.prepend_path('PYTHONPATH', pth)
 
         # For run time environment set path for all dependent_spec
         # recursively and prepend it to PYTHONPATH
