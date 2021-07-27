@@ -99,7 +99,7 @@ def external_read_cray_manifest(args):
     if args.file:
         path = args.file
     elif os.path.exists(cray_manifest.default_path):
-        path = args.file
+        path = cray_manifest.default_path
     else:
         raise ValueError(
             "No --file specified, and no manifest found at {0}"
@@ -119,5 +119,6 @@ def external_list(args):
 
 
 def external(parser, args):
-    action = {'find': external_find, 'list': external_list}
+    action = {'find': external_find, 'list': external_list,
+              'read-cray-manifest', external_read_cray_manifest}
     action[args.external_command](args)
