@@ -284,8 +284,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc@:1.999', when='@:3.999.999 ~internal-hwloc')
 
     depends_on('hwloc +cuda', when='+cuda ~internal-hwloc')
-    # Still need cuda as dependent when using external hwloc
-    depends_on('cuda', when='+cuda ~internal-hwloc')
+    depends_on('cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('zlib', when='@3.0.0:')
