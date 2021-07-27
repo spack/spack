@@ -21,7 +21,7 @@ class FenicsDolfinx(CMakePackage):
     variant("parmetis", default=False, description="parmetis support")
     variant("slepc", default=False, description="slepc support")
 
-    depends_on("cmake@3.12:")
+    depends_on("cmake@3.18:")
     depends_on("pkgconfig", type="build")
     depends_on("mpi")
     depends_on("hdf5")
@@ -29,6 +29,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("petsc+mpi+shared")
     depends_on("petsc+mpi+shared@3.15.0:", when="@0.1.0")
     depends_on("scotch+mpi")
+    depends_on("xtensor@0.23.10:")
 
     depends_on("kahip", when="+kahip")
     depends_on("parmetis", when="+parmetis")

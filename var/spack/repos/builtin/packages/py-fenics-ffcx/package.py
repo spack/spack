@@ -17,7 +17,7 @@ class PyFenicsFfcx(PythonPackage):
     version('main', branch='main')
     version('0.1.0', sha256='98a47906146ac892fb4a358e04cbfd04066f12d0a4cdb505a6b08ff0b1a17e89')
 
-    depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cffi', type=('build', 'run'))
 
