@@ -23,8 +23,9 @@ def windows_version():
 class WindowsOs(OperatingSystem):
     """This class represents the Windows operating system.  This will be
     auto detected using the python platform.win32_ver() once we have a
-    python setup that runs natively.  The Windows platform will be represented
-    using the major version operating system number, e.g. 10.
+    python setup that runs natively.  The Windows platform will be
+    represented using the major version operating system number, e.g.
+    10.
     """
 
     # Find MSVC directories using vswhere
@@ -37,8 +38,8 @@ class WindowsOs(OperatingSystem):
             if sys.version_info[:3] >= (3, 6, 0):
                 extra_args = {'encoding': 'mbcs', 'errors': 'strict'}
             paths = subprocess.check_output([  # novermin
-                os.path.join(root, "Microsoft Visual Studio", "Installer",
-                             "vswhere.exe"),
+                os.path.join(root, "Microsoft Visual Studio",
+                             "Installer", "vswhere.exe"),
                 "-prerelease",
                 "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
                 "-property", "installationPath",
@@ -52,6 +53,14 @@ class WindowsOs(OperatingSystem):
             for p in msvc_paths:
                 comp_search_paths.extend(
                     glob.glob(os.path.join(p, '*', 'bin', 'Hostx64', 'x64')))
+            if os.getenv("ONEAPI_ROOT"):
+                intelsetvars = os.path.join(str(os.getenv("ONEAPI_ROOT")),
+                                            "setvars.bat")
+                subprocess.call([intelsetvars])
+                comp_search_paths.extend(glob.glob(os.path.join(
+                    str(os.getenv("ONEAPI_ROOT")),
+                    'compiler', '*',
+                    'windows', 'bin')))
         except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
             pass
     if comp_search_paths:

@@ -210,7 +210,6 @@ def find_compilers(path_hints=None):
     for o in all_os_classes():
         search_paths = getattr(o, 'compiler_search_paths', default_paths)
         arguments.extend(arguments_to_detect_version_fn(o, search_paths))
-
     # Here we map the function arguments to the corresponding calls
     tp = multiprocessing.pool.ThreadPool()
     try:
