@@ -17,7 +17,7 @@ class PyLmfit(PythonPackage):
     version('0.9.15', sha256='cd7bdf47c09a3d49f30dff9a1c7f778973d15d1e1b5dc642f14c22f6630eaf2f')
     version('0.9.5',  sha256='eebc3c34ed9f3e51bdd927559a5482548c423ad5a0690c6fdcc414bfb5be6667')
 
-    depends_on('python@3.5:',               type=('build', 'run'), when='@1:')
+    depends_on('python@3.6:',               type=('build', 'run'), when='@1:')
     depends_on('python@2.7:2.8,3.5:',       type=('build', 'run'), when='@0.9.15')
 
     depends_on('py-asteval@0.9.16:',        type=('build', 'run'), when='@0.9.15:')
