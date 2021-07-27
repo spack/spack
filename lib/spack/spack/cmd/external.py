@@ -120,5 +120,5 @@ def external_list(args):
 
 def external(parser, args):
     action = {'find': external_find, 'list': external_list,
-              'read-cray-manifest', external_read_cray_manifest}
+              'read-cray-manifest': external_read_cray_manifest}
     action[args.external_command](args)
