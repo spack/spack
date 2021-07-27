@@ -48,24 +48,24 @@ def _bootstrapper(type):
     return _register
 
 
-def _try_import_from_store(module, abstract_spec):
+def _try_import_from_store(module, abstract_spec_str):
     """Return True if the module can be imported from an already
     installed spec, False otherwise.
 
     Args:
         module: Python module to be imported
-        abstract_spec: abstract spec that may provide the module
+        abstract_spec_str: abstract spec that may provide the module
     """
     bincache_platform = spack.architecture.real_platform()
     if str(bincache_platform) == 'cray':
         bincache_platform = spack.platforms.linux.Linux()
         with spack.architecture.use_platform(bincache_platform):
-            abstract_spec = str(spack.spec.Spec(abstract_spec))
+            abstract_spec_str = str(spack.spec.Spec(abstract_spec_str))
 
     # We have to run as part of this python interpreter
-    abstract_spec += ' ^' + spec_for_current_python()
+    abstract_spec_str += ' ^' + spec_for_current_python()
 
-    installed_specs = spack.store.db.query(abstract_spec, installed=True)
+    installed_specs = spack.store.db.query(abstract_spec_str, installed=True)
 
     for candidate_spec in installed_specs:
         lib_spd = candidate_spec['python'].package.default_site_packages_dir
@@ -80,7 +80,7 @@ def _try_import_from_store(module, abstract_spec):
             if _python_import(module):
                 msg = ('[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
                        'provides the "{0}" Python module').format(
-                    module, abstract_spec, candidate_spec.dag_hash()
+                    module, abstract_spec_str, candidate_spec.dag_hash()
                 )
                 tty.debug(msg)
                 return True
@@ -222,7 +222,7 @@ class _SourceBootstrapper(object):
         # Install the spec that should make the module importable
         concrete_spec.package.do_install()
 
-        return _try_import_from_store(module, abstract_spec=abstract_spec_str)
+        return _try_import_from_store(module, abstract_spec_str=abstract_spec_str)
 
 
 def _make_bootstrapper(conf):
