@@ -1778,7 +1778,6 @@ def build_process(pkg, kwargs):
                                 filter_fn=filter_fn
                             ) as logger:
 
-
                                 with logger.force_echo():
                                     inner_debug_level = tty.debug_level()
                                     tty.set_debug(debug_level)

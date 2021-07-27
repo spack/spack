@@ -1089,6 +1089,8 @@ class TestSpecSematics(object):
         assert (out['splice-h'].build_hash() == dep.build_hash()) == transitive
         assert out['splice-z'].build_hash() == out_z_expected.build_hash()
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_input_unchanged(self, transitive):
         spec = Spec('splice-t').concretized()
