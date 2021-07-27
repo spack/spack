@@ -1,0 +1,4 @@
+config:
+  locks: false
+  build_stage::
+    - '~/.spack'
