@@ -31,6 +31,7 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("py-petsc4py", type=("build", "run"))
     depends_on("py-pybind11@2.6.2:2.7.99", type=("build", "run"))
     depends_on("xtensor@0.23.10:")
+    depends_on("xtl@0.7.2:")
 
     depends_on("py-fenics-ffcx@main", type=("run"), when="@main")
     depends_on("py-fenics-ffcx@0.1.0", type=("run"), when="@0.1.0")
