@@ -307,7 +307,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('knem', when='fabrics=knem')
 
     depends_on('lsf', when='schedulers=lsf')
-    depends_on('openpbs', when='schedulers=tm')
+    depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
 
     depends_on('openssh', type='run')
@@ -588,7 +588,7 @@ class Openmpi(AutotoolsPackage):
     def with_or_without_tm(self, activated):
         if not activated:
             return '--without-tm'
-        return '--with-tm={0}'.format(self.spec['openpbs'].prefix)
+        return '--with-tm={0}'.format(self.spec['pbs'].prefix)
 
     @run_before('autoreconf')
     def die_without_fortran(self):
