@@ -235,10 +235,6 @@ def _make_bootstrapper(conf):
 
 def _source_is_trusted(conf):
     trusted, name = spack.config.get('bootstrap:trusted'), conf['name']
-    # We always trust something that is already installed. Since
-    # "bootstrap-store" does not appear in the config, but is added
-    # in the code, we add the corresponding entry here
-    trusted['bootstrap-store'] = True
     if name not in trusted:
         return False
     return trusted[name]
