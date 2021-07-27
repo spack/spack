@@ -5,11 +5,9 @@
 
 import json
 
-import spack.cmd.read_external_db
-from spack.cmd.read_external_db import compiler_from_entry, entries_to_specs
-from spack.main import SpackCommand
-
-read_external_db = SpackCommand('read-external-db')
+import spack
+import spack.cray_manifest as cray_manifest
+from spack.cray_manifest import compiler_from_entry, entries_to_specs
 
 
 example_x_json_str = """\
@@ -231,7 +229,7 @@ def test_read_external_db(
         test_db_fname = 'external-db.json'
         with open(test_db_fname, 'w') as db_file:
             json.dump(_example_db(), db_file)
-        spack.cmd.read_external_db._read_external_db(test_db_fname, True)
+        cray_manifest.read(test_db_fname, True)
         # read_external_db('--file {0} --apply-updates'.format(test_db_fname))
         specs = spack.store.db.query('openmpi')
         assert any(x.dag_hash() == 'openmpifakehasha' for x in specs)

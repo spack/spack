@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import argparse
+import os
 import sys
 
 import llnl.util.tty as tty
@@ -13,6 +14,7 @@ import llnl.util.tty.colify as colify
 import spack
 import spack.cmd
 import spack.cmd.common.arguments
+import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
 import spack.util.environment
@@ -45,6 +47,13 @@ def setup_parser(subparser):
     sp.add_parser(
         'list', help='list detectable packages, by repository and name'
     )
+
+    read_cray_manifest = sp.add_parser(
+        'read-cray-manifest', help="read a spack.json file"
+    )
+    read_cray_manifest.add_argument(
+        '--file', default=None,
+        help="specify a location other than the default")
 
 
 def external_find(args):
@@ -84,6 +93,19 @@ def external_find(args):
         spack.cmd.display_specs(new_entries)
     else:
         tty.msg('No new external packages detected')
+
+
+def external_read_cray_manifest(args):
+    if args.file:
+        path = args.file
+    elif os.path.exists(cray_manifest.default_path):
+        path = args.file
+    else:
+        raise ValueError(
+            "No --file specified, and no manifest found at {0}"
+            .format(cray_manifest.default_path))
+
+    cray_manifest.read(path, True)
 
 
 def external_list(args):

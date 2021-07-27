@@ -12,9 +12,8 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.hash_types as hash_types
 
-description = "Read packages from a JSON file into Spack's DB"
-section = "build"
-level = "long"
+
+default_path = '/opt/cray/pe/search-tree/spack.json'
 
 
 def compiler_from_entry(entry):
@@ -136,7 +135,7 @@ def entries_to_specs(entries):
     return spec_dict
 
 
-def _read_external_db(path, apply_updates):
+def read(path, apply_updates):
     with open(path, 'r') as json_file:
         json_data = json.load(json_file)
     specs = entries_to_specs(json_data['specs'])
@@ -147,15 +146,3 @@ def _read_external_db(path, apply_updates):
             compilers, init_config=False)
         for spec in specs.values():
             spack.store.db.add(spec, directory_layout=None)
-
-
-def setup_parser(subparser):
-    subparser.add_argument('--file',
-                           help="path to json description of Spack DB")
-    subparser.add_argument('--apply-updates', action='store_true',
-                           help="add parsed specs to the database")
-
-
-def read_external_db(parser, args):
-    if args.file:
-        _read_external_db(args.file, args.apply_updates)
