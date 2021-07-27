@@ -14,6 +14,8 @@ class Torque(Package):
     homepage = "https://github.com/abarbu/torque"
     has_code = False
 
+    maintainers = ['sethrj']
+
     version('3.0.4')
     version('3.0.2')
 
