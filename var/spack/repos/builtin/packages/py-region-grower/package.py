@@ -9,8 +9,8 @@ from spack import *
 class PyRegionGrower(PythonPackage):
     """Python library for space-aware neuron synthesis"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/molecularsystems/region-grower"
-    git      = "ssh://bbpcode.epfl.ch/molecularsystems/region-grower"
+    homepage = "https://bbpgitlab.epfl.ch/neuromath/region-grower"
+    git      = "git@bbpgitlab.epfl.ch:neuromath/region-grower.git"
 
     version('develop', branch='master')
     version('0.2.3', tag='region-grower-v0.2.3')
