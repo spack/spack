@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 
+
 class Creduce(CMakePackage):
     """C-Reduce is a tool that takes a large C, C++, or OpenCL file that has a
     property of interest (such as triggering a compiler bug) and automatically
@@ -15,6 +16,7 @@ class Creduce(CMakePackage):
     homepage = "https://embed.cs.utah.edu/creduce/"
     url      = "https://github.com/csmith-project/creduce"
     git      = "https://github.com/csmith-project/creduce"
+    maintainers = ['olupton']
 
     version('develop', branch='master')
     version('2.10.0', tag='creduce-2.10.0')
