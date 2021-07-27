@@ -73,6 +73,9 @@ _spack_build_logfile = 'spack-build-out.txt'
 # Filename for the Spack build/install environment file.
 _spack_build_envfile = 'spack-build-env.txt'
 
+# Filename for the Spack build/install environment modifications file.
+_spack_build_envmodsfile = 'spack-build-env-mods.txt'
+
 # Filename of json with total build and phase times (seconds)
 _spack_times_log = 'install_times.json'
 
@@ -1040,6 +1043,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             return old_filename
         else:
             return os.path.join(self.stage.path, _spack_build_envfile)
+
+    @property
+    def env_mods_path(self):
+        """
+        Return the build environment modifications file path associated with
+        staging.
+        """
+        return os.path.join(self.stage.path, _spack_build_envmodsfile)
 
     @property
     def metadata_dir(self):

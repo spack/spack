@@ -128,7 +128,8 @@ def dump_environment(path, environment=None):
     use_env = environment or os.environ
     hidden_vars = set(['PS1', 'PWD', 'OLDPWD', 'TERM_SESSION_ID'])
 
-    with open(path, 'w') as env_file:
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT, 0o600)
+    with os.fdopen(fd, 'w') as env_file:
         for var, val in sorted(use_env.items()):
             env_file.write(''.join(['#' if var in hidden_vars else '',
                                     env_var_to_source_line(var, val),
@@ -596,10 +597,15 @@ class EnvironmentModifications(object):
             for x in actions:
                 x.execute(env)
 
-    def shell_modifications(self, shell='sh'):
+    def shell_modifications(self, shell='sh', explicit=False, env=None):
         """Return shell code to apply the modifications and clears the list."""
         modifications = self.group_by_name()
         new_env = os.environ.copy()
+
+        if env is None:
+            env = os.environ
+
+        new_env = env.copy()
 
         for name, actions in sorted(modifications.items()):
             for x in actions:
@@ -607,10 +613,10 @@ class EnvironmentModifications(object):
 
         cmds = ''
 
-        for name in set(new_env) | set(os.environ):
+        for name in sorted(set(modifications)):
             new = new_env.get(name, None)
-            old = os.environ.get(name, None)
-            if new != old:
+            old = env.get(name, None)
+            if explicit or new != old:
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
@@ -989,7 +995,7 @@ def environment_after_sourcing_files(*files, **kwargs):
         # go with sys.executable. Below we just need a working
         # Python interpreter, not necessarily sys.executable.
         python_cmd = executable.which('python3', 'python', 'python2')
-        python_cmd = python_cmd.name if python_cmd else sys.executable
+        python_cmd = python_cmd.path if python_cmd else sys.executable
 
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
         dump_environment = python_cmd + ' -E -c "{0}"'.format(dump_cmd)

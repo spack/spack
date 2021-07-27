@@ -55,7 +55,7 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.store
 import spack.util.executable
-from spack.util.environment import dump_environment
+from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 from spack.util.timer import Timer
 
@@ -556,8 +556,8 @@ def log(pkg):
         log_file = os.path.join(os.path.dirname(packages_dir), log_file)
         fs.install(phase_log, log_file)
 
-    # Archive the environment used for the build
-    fs.install(pkg.env_path, pkg.install_env_path)
+    # Archive the environment modifications for the build.
+    fs.install(pkg.env_mods_path, pkg.install_env_path)
 
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
@@ -1730,6 +1730,10 @@ class BuildProcessInstaller(object):
         # env before starting installation
         self.unmodified_env = install_args.get('unmodified_env', {})
 
+        # env modifications by Spack
+        self.env_mods = install_args.get(
+            'env_modifications', EnvironmentModifications())
+
         # timer for build phases
         self.timer = Timer()
 
@@ -1818,6 +1822,15 @@ class BuildProcessInstaller(object):
         with fs.working_dir(pkg.stage.source_path):
             # Save the build environment in a file before building.
             dump_environment(pkg.env_path)
+
+            # Save just the changes to the environment.  This file can be
+            # safely installed, since it does not contain secret variables.
+            with open(pkg.env_mods_path, 'w') as env_mods_file:
+                mods = self.env_mods.shell_modifications(
+                    explicit=True,
+                    env=self.unmodified_env
+                )
+                env_mods_file.write(mods)
 
             for attr in ('configure_args', 'cmake_args'):
                 try:
