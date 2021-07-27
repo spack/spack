@@ -12,7 +12,6 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.hash_types as hash_types
 
-
 default_path = '/opt/cray/pe/search-tree/spack.json'
 
 
