@@ -54,9 +54,6 @@ class WindowsOs(OperatingSystem):
                 comp_search_paths.extend(
                     glob.glob(os.path.join(p, '*', 'bin', 'Hostx64', 'x64')))
             if os.getenv("ONEAPI_ROOT"):
-                intelsetvars = os.path.join(str(os.getenv("ONEAPI_ROOT")),
-                                            "setvars.bat")
-                subprocess.call([intelsetvars])
                 comp_search_paths.extend(glob.glob(os.path.join(
                     str(os.getenv("ONEAPI_ROOT")),
                     'compiler', '*',
