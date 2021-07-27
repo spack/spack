@@ -6,7 +6,7 @@
 import json
 
 import spack.cmd.read_external_db
-from spack.cmd.read_external_db import entries_to_specs, compiler_from_entry
+from spack.cmd.read_external_db import compiler_from_entry, entries_to_specs
 from spack.main import SpackCommand
 
 read_external_db = SpackCommand('read-external-db')
