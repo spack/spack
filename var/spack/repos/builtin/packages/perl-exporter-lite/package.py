@@ -7,6 +7,9 @@ from spack import *
 
 
 class PerlExporterLite(PerlPackage):
+    """Exporter::Lite is an alternative to Exporter, intended to provide a
+    lightweight subset of the most commonly-used functionality. It supports
+    import(), @EXPORT and @EXPORT_OK and not a whole lot else."""
     homepage = "https://metacpan.org/pod/Exporter::Lite"
     url      = "https://cpan.metacpan.org/authors/id/N/NE/NEILB/Exporter-Lite-0.08.tar.gz"
 

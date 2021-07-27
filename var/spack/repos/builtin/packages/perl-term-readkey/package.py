@@ -7,6 +7,10 @@ from spack import *
 
 
 class PerlTermReadkey(PerlPackage):
+    """Term::ReadKey is a compiled perl module dedicated to providing simple
+    control over terminal driver modes (cbreak, raw, cooked, etc.,) support
+    for non-blocking reads, if the architecture allows, and some generalized
+    handy functions for working with terminals."""
     homepage = "https://metacpan.org/pod/Term::ReadKey"
     url      = "https://cpan.metacpan.org/authors/id/J/JS/JSTOWE/TermReadKey-2.38.tar.gz"
 

@@ -7,6 +7,8 @@ from spack import *
 
 
 class PerlGetoptTabular(PerlPackage):
+    """Getopt::Tabular is a Perl 5 module for table-driven argument parsing,
+    vaguely inspired by John Ousterhout's Tk_ParseArgv."""
     homepage = "https://metacpan.org/pod/Getopt::Tabular"
     url      = "https://cpan.metacpan.org/authors/id/G/GW/GWARD/Getopt-Tabular-0.3.tar.gz"
 
