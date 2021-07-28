@@ -21,8 +21,7 @@ class Re2(CMakePackage):
             description='Build shared instead of static libraries')
 
     def cmake_args(self):
-        args = [
-            '-DBUILD_SHARED_LIBS:Bool={0}'.format(
-            'ON' if '+shared' in self.spec else 'OFF')]
+        args = ['-DBUILD_SHARED_LIBS:Bool={0}'.format(
+                'ON' if '+shared' in self.spec else 'OFF')]
 
         return args
