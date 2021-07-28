@@ -9,8 +9,8 @@ import sys
 
 import llnl.util.tty as tty
 
-from spack.build_systems.windows_variants import WindowsPackage
 from spack import *
+from spack.build_systems.windows_variants import WindowsPackage
 
 
 class Openssl(Package, WindowsPackage):   # Uses Fake Autotools, should subclass Package
