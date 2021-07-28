@@ -119,7 +119,7 @@ class Octopus(Package):
         if '+cuda' in spec:
             args.extend([
                 '--enable-cuda'
-                ])
+            ])
 
         # --with-etsf-io-prefix=
         # --with-sparskit=${prefix}/lib/libskit.a
