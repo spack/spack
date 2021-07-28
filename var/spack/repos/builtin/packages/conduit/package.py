@@ -75,7 +75,7 @@ class Conduit(CMakePackage):
             description="Build Conduit with HDF5 1.8.x (compatibility mode)")
     variant("silo", default=False, description="Build Conduit Silo support")
     variant("adios", default=False, description="Build Conduit ADIOS support")
-    variant("parmetis",default=False, description="Build Conduit Parmetis support" )
+    variant("parmetis", default=False, description="Build Conduit Parmetis support")
 
     # zfp compression
     variant("zfp", default=False, description="Build Conduit ZFP support")
@@ -562,7 +562,6 @@ class Conduit(CMakePackage):
         else:
             cfg.write("# parmetis not built by spack \n")
 
-
         #######################
         # Finish host-config
         #######################
@@ -570,7 +569,6 @@ class Conduit(CMakePackage):
         cfg.write("# end spack generated host-config\n")
         cfg.write("##################################\n")
         cfg.close()
-
 
         host_cfg_fname = os.path.abspath(host_cfg_fname)
         tty.info("spack generated conduit host-config file: " + host_cfg_fname)
