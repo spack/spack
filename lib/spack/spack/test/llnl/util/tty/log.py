@@ -85,6 +85,8 @@ def _log_filter_fn(string):
     return string.replace("foo", "bar")
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_log_output_with_filter(capfd, tmpdir):
     with tmpdir.as_cwd():
         with log_output('foo.txt', filter_fn=_log_filter_fn):
@@ -112,6 +114,7 @@ def test_log_output_with_filter(capfd, tmpdir):
 
     # echoed output is filtered.
     assert capfd.readouterr()[0] == 'bar blah\nblah bar\nbar bar\n'
+
 
 @pytest.mark.skipif(not which('echo') or os.name == 'nt', reason="needs echo command")
 def test_log_subproc_and_echo_output_no_capfd(capfd, tmpdir):
