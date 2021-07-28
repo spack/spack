@@ -130,7 +130,7 @@ class IntelTbb(Package):
     patch("intel-tbb.nvhpc-remove-flags.2019.7.patch",
           when="@2019.7:2019.8 %nvhpc")
     # The 2019.9 patch below was tested successfully
-    #on @2019.9, @2020.0, and @2020.3
+    # on @2019.9, @2020.0, and @2020.3
     patch("intel-tbb.nvhpc-remove-flags.2019.9.patch",
           when="@2019.9: %nvhpc")
     # 2) Fix generation of version script tbb.def for ld (nvc++ -E
