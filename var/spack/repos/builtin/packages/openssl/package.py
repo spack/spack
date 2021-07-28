@@ -142,6 +142,10 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             options.append('-D__STDC_NO_ATOMICS__')
 
         # Make a flag for shared library builds
+        shared_flag = ''
+        if self.spec.satisfies('~shared'):
+            shared_flag = 'no-shared'
+
         base_args = ['--prefix=%s' % prefix,
                      '--openssldir=%s'
                      % join_path(prefix, 'etc', 'openssl')]
@@ -161,6 +165,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                 ]
             )
             base_args.extend(options)
+
         # On Windows, we use perl for configuration and build through MSVC
         # nmake.
         if spec.satisfies('platform=windows'):
@@ -173,10 +178,9 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # (e.g. gcc) will not accept them.
         filter_file(r'-arch x86_64', '', 'Makefile')
 
-        if spec.satisfies('+dynamic'):
-            # This variant only makes sense for Windows
-            if spec.satisfies('platform=windows'):
-                filter_file(r'MT', 'MD', 'makefile')
+        # This variant only makes sense for Windows
+        if self.spec.satisfies('platform=windows ~shared~staticmt'):
+            filter_file(r'MT', 'MD', 'makefile')
 
         if spec.satisfies('platform=windows'):
             host_make = nmake
