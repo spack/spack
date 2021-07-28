@@ -4,18 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import spack.cmd
-import spack.cmd.common.arguments as arguments
-import spack.environment as ev
-import spack.util.environment
-import spack.solver.asp as asp
+import operator
+import sys
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
-import spack.util.spack_json as sjson
-import operator
+
 import spack.cmd
-import sys
+import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.solver.asp as asp
+import spack.util.environment
+import spack.util.spack_json as sjson
 
 description = "compare two specs"
 section = "basic"
