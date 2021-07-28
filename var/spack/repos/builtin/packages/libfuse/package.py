@@ -72,9 +72,9 @@ class Libfuse(MesonPackage):
             "INIT_D_PATH={0}".format(self.prefix.etc),
         ]
 
-        args.append('--enable-static' if 'libs=static' in self.spec
+        args.append('--enable-static' if 'default_library=static' in self.spec
                     else '--disable-static')
-        args.append('--enable-shared' if 'libs=shared' in self.spec
+        args.append('--enable-shared' if 'default_library=shared' in self.spec
                     else '--disable-shared')
 
         configure(*args)
