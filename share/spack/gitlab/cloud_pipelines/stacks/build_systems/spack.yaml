@@ -26,6 +26,8 @@ spack:
         - - $default_specs
         - - $arch
 
+  mirrors: { "mirror": "s3://spack-binaries-develop/build_systems" }
+
   gitlab-ci:
     script:
       - . "./share/spack/setup-env.sh"
