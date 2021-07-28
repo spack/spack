@@ -19,9 +19,10 @@ known_typing = ["typing", "typing_extensions"]
 src_paths = "lib"
 honor_noqa = true
 
+[mypy]
+
 [tool.mypy]
 python_version = 3.7
-files = ['lib/spack/llnl/**/*.py', 'lib/spack/spack/**/*.py']
 mypy_path = ['bin', 'lib/spack', 'lib/spack/external', 'var/spack/repos/builtin']
 
 # This and a generated import file allows supporting packages

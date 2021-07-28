@@ -295,12 +295,19 @@ def run_mypy(mypy_cmd, file_list, args):
         "--package", "spack",
         "--package", "llnl",
         "--show-error-codes",
+        "--follow-imports=silent",
+        "--ignore-missing-imports",
     ]
     # not yet, need other updates to enable this
     # if any([is_package(f) for f in file_list]):
     #     mypy_args.extend(["--package", "packages"])
 
-    output = mypy_cmd(*mypy_args, fail_on_error=False, output=str)
+    output = mypy_cmd(
+        *mypy_args, fail_on_error=False, output=str,
+        extra_env={
+            'MYPYPATH': 'bin:lib/spack:lib/spack/external:var/spack/repos/builtin',
+        }
+    )
     returncode = mypy_cmd.returncode
 
     rewrite_and_print_output(output, args)
