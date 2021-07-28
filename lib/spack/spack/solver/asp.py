@@ -28,7 +28,6 @@ except ImportError:
 
 import llnl.util.lang
 import llnl.util.tty as tty
-import llnl.util.lang as lang
 
 import spack
 import spack.architecture
