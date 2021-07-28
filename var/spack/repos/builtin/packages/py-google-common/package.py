@@ -14,4 +14,4 @@ class PyGoogleCommon(PythonPackage):
 
     version('0.0.1', sha256='add3cf494034fa11080e77cef2cc1f55a436a3353f5f5f95cc4f2b9788a678d1')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
