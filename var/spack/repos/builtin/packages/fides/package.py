@@ -15,7 +15,7 @@ class Fides(CMakePackage) :
     maintainers = ['caitlin.ross', 'dpugmire']
 
     version('master', branch='master')
-    version('1.1.0', sha256='5772e674236fef701411f9134dd6aed55d2194d817d31fccd8b79215873ae51a')
+    version('1.1.0', sha256='40d2e08b8d5cfdfc809eae6ed2ae0731108ce3b1383485f4934a5ec8aaa9425e')
     version('1.0.0', sha256='c355fdb4ca3790c1fa9a4491a0d294b8f883b6946c540ad9e5633c9fd8c8c3aa')
 
     variant("mpi", default=True, description="build mpi support")
