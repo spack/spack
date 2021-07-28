@@ -5,10 +5,10 @@
 
 import pytest
 
-import spack.config
-import spack.store
 import spack.cmd.diff
+import spack.config
 import spack.main
+import spack.store
 import spack.util.spack_json as sjson
 
 install = spack.main.SpackCommand('install')
