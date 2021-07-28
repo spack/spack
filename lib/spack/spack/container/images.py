@@ -7,8 +7,9 @@ import json
 import os.path
 import sys
 
-import llnl.util.tty as tty
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
+
 import spack.util.executable as executable
 
 #: Global variable used to cache in memory the content of images.json

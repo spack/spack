@@ -12,8 +12,14 @@ import spack.environment as ev
 import spack.schema.env
 import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
-from spack.container.images import data, build_info, commands_for, os_package_manager_for
-from spack.container.images import bootstrap_template_for, checkout_command
+from spack.container.images import (
+    bootstrap_template_for,
+    build_info,
+    checkout_command,
+    commands_for,
+    data,
+    os_package_manager_for,
+)
 
 #: Caches all the writers that are currently supported
 _writer_factory = {}

@@ -6,8 +6,8 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-import spack.main
 import spack.container.images
+import spack.main
 
 containerize = spack.main.SpackCommand('containerize')
 
