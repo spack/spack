@@ -40,7 +40,7 @@ def encode_json_dict(data):
 def dump(data, stream=None):
     # type: (Dict, Optional[Any]) -> Optional[str]
     """Dump JSON with a reasonable amount of indentation and separation."""
-    data = _strify(data, encode_strings=False)
+    data = _strify(data)
     if stream is None:
         return json.dumps(data, **_json_dump_args)     # type: ignore[arg-type]
     json.dump(data, stream, **_json_dump_args)         # type: ignore[arg-type]
@@ -50,11 +50,11 @@ def dump(data, stream=None):
 def decode_json_dict(data):
     # type: (Dict) -> Dict
     """Converts str to python 2 unicodes in JSON data."""
-    return _strify(data, encode_strings=False)
+    return _strify(data)
 
 
-def _strify(data, ignore_dicts=False, encode_strings=True):
-    # type: (Dict, bool, bool) -> Dict
+def _strify(data, ignore_dicts=False):
+    # type: (Dict, bool) -> Dict
     """Helper method for ``encode_json_dict()`` and ``decode_json_dict()``.
 
     Converts python 2 unicodes to str in JSON data, or the other way around."""
@@ -63,12 +63,10 @@ def _strify(data, ignore_dicts=False, encode_strings=True):
         return data
 
     # if this is a unicode string in python 2, return its string representation
-    if encode_strings:
-        if isinstance(data, string_types):
-            return data.encode('utf-8')
-    else:
-        if isinstance(data, binary_type):
-            return data.decode()
+    if isinstance(data, string_types):
+        return data.encode('utf-8')
+    elif isinstance(data, binary_type):
+        return data.decode()
 
     # if this is a list of values, return list of byteified values
     if isinstance(data, list):
