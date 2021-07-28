@@ -9,10 +9,11 @@ import sys
 
 import llnl.util.tty as tty
 
+from spack.build_systems.windows_variants import WindowsPackage
 from spack import *
 
 
-class Openssl(Package):   # Uses Fake Autotools, should subclass Package
+class Openssl(Package, WindowsPackage):   # Uses Fake Autotools, should subclass Package
     """OpenSSL is an open source project that provides a robust,
        commercial-grade, and full-featured toolkit for the Transport
        Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
@@ -84,8 +85,6 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             description=('Use certificates from the ca-certificates-mozilla '
                          'package, symlink system certificates, or none'))
     variant('docs', default=False, description='Install docs and manpages')
-    variant('shared', default=False, description="Build shared library version")
-    variant('staticmt', default=False, description="Build static version with static runtime libraries")
 
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
