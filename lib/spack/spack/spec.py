@@ -2975,8 +2975,8 @@ class Spec(object):
                 "Attempting to normalize anonymous spec")
 
         # Set _normal and _concrete to False when forced
-        if force:
-            self._mark_concrete(False)
+        if force and not self._concrete:
+            self._normal = False
 
         if self._normal:
             return False

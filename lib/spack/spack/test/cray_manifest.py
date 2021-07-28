@@ -236,5 +236,7 @@ def test_read_cray_manifest(
         assert any(x.dag_hash() == 'openmpifakehasha' for x in query_specs)
 
         concretized_specs = spack.cmd.parse_specs(
-            'openmpi ^/openmpifakehasha'.split(), concretize=True)
+            'depends-on-openmpi %gcc@4.5.0 arch=test-redhat6-x86_64'
+            ' ^/openmpifakehasha'.split(),
+            concretize=True)
         assert concretized_specs[0]['hwloc'].dag_hash() == 'hwlocfakehashaaa'
