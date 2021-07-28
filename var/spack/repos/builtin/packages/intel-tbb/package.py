@@ -3,12 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
 import glob
 import inspect
 import platform
 import sys
-
-from spack import *
 
 
 class IntelTbb(Package):
@@ -122,10 +121,24 @@ class IntelTbb(Package):
 
     # Support for building with %nvhpc
     # 1) remove flags nvhpc compilers do not recognize
-    patch("intel-tbb.nvhpc-remove-flags.patch", when="%nvhpc")
+    patch("intel-tbb.nvhpc-remove-flags.2017.patch",
+          when="@2017:2018.9 %nvhpc")
+    patch("intel-tbb.nvhpc-remove-flags.2019.patch",
+          when="@2019:2019.0 %nvhpc")
+    patch("intel-tbb.nvhpc-remove-flags.2019.1.patch",
+          when="@2019.1:2019.6 %nvhpc")
+    patch("intel-tbb.nvhpc-remove-flags.2019.7.patch",
+          when="@2019.7:2019.8 %nvhpc")
+    # The 2019.9 patch below was tested successfully
+    #on @2019.9, @2020.0, and @2020.3
+    patch("intel-tbb.nvhpc-remove-flags.2019.9.patch",
+          when="@2019.9: %nvhpc")
     # 2) Fix generation of version script tbb.def for ld (nvc++ -E
     # appears to produce more output than g++ -E which was causing problems)
-    patch("intel-tbb.nvhpc-version-script-fix.patch", when="%nvhpc")
+    # The 2017 patch below was tested on @2017, @2017.8, @2018,
+    # @2018.3, @2018.6, 2019, @2019.[1-9], and @2020.[0-3]
+    patch("intel-tbb.nvhpc-version-script-fix.2017.patch",
+          when="@2017 %nvhpc")
 
     # Version and tar file names:
     #  2020.0 --> v2020.0.tar.gz  starting with 2020
@@ -142,11 +155,6 @@ class IntelTbb(Package):
         else:
             name = '{0}'.format(version)
         return url.format(name)
-
-    # We set OS here in case the user has it set to something else
-    # that TBB doesn't expect.
-    def setup_build_environment(self, env):
-        env.set('OS', platform.system())
 
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:
