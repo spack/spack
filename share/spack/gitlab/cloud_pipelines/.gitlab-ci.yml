@@ -62,7 +62,7 @@ default:
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
 ########################################
 #
-# First add a new spack.yml defining the pipline to run in
+# First add a new spack.yml defining the pipeline to run in
 # share/spack/gitlab/cloud_pipelines/stacks/my-super-cool-stack/spack.yaml
 #
 # Then add the following entries at the bottom of this file:
