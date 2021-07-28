@@ -8,10 +8,11 @@ import re
 
 import llnl.util.tty as tty
 
+from spack.build_systems.windows_variants import WindowsPackage
 from spack import *
 
 
-class Openssl(Package):   # Uses Fake Autotools, should subclass Package
+class Openssl(Package, WindowsPackage):   # Uses Fake Autotools, should subclass Package
     """OpenSSL is an open source project that provides a robust,
        commercial-grade, and full-featured toolkit for the Transport
        Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
@@ -89,9 +90,6 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             description=('Use certificates from the ca-certificates-mozilla '
                          'package, symlink system certificates, or none'))
     variant('docs', default=False, description='Install docs and manpages')
-    variant('shared', default=False, description="Build shared library version")
-    with when('platform=windows'):
-        variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
 
     # Currently nvhpc segfaults NVC++-F-0000-Internal compiler error.
     # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
