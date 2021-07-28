@@ -15,7 +15,7 @@ class Fides(CMakePackage) :
     maintainers = ['caitlin.ross', 'dpugmire']
 
     version('master', branch='master')
-    # TODO: CYRUS: I BELEVIE ASCENT NEEDS A TAG beyond 1.0.0
+    version('1.1.0', sha256='5772e674236fef701411f9134dd6aed55d2194d817d31fccd8b79215873ae51a')
     version('1.0.0', sha256='c355fdb4ca3790c1fa9a4491a0d294b8f883b6946c540ad9e5633c9fd8c8c3aa')
 
     variant("mpi", default=True, description="build mpi support")
