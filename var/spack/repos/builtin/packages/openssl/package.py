@@ -135,7 +135,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
         # Make a flag for shared library builds
         shared_flag = ''
-        if spec.satisfies('~shared'):
+        if self.spec.satisfies('~shared'):
             shared_flag = 'no-shared'
 
         # On Windows, we use perl for configuration and build through MSVC
@@ -163,8 +163,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         filter_file(r'-arch x86_64', '', 'Makefile')
 
         # This variant only makes sense for Windows
-        if spec.satisfies('platform=windows ~shared~staticmt'):
-           filter_file(r'MT', 'MD', 'makefile')
+        if self.spec.satisfies('platform=windows ~shared~staticmt'):
+            filter_file(r'MT', 'MD', 'makefile')
 
         if spec.satisfies('platform=windows'):
             nmake = Executable('nmake')
