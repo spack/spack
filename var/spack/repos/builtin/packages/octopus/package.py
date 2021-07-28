@@ -120,11 +120,11 @@ class Octopus(Package):
             args.extend([
                 '--enable-cuda'
                 ])
-
-            # --with-etsf-io-prefix=
-            # --with-sparskit=${prefix}/lib/libskit.a
-            # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
-            # --with-berkeleygw-prefix=${prefix}
+            
+        # --with-etsf-io-prefix=
+        # --with-sparskit=${prefix}/lib/libskit.a
+        # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
+        # --with-berkeleygw-prefix=${prefix}
 
         # When preprocessor expands macros (i.e. CFLAGS) defined as quoted
         # strings the result may be > 132 chars and is terminated.
