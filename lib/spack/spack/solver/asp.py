@@ -94,7 +94,6 @@ def _id(thing):
         return '"%s"' % str(thing)
 
 
-@lang.key_ordering
 class AspFunction(AspObject):
     def __init__(self, name, args=None):
         self.name = name
