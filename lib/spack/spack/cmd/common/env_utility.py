@@ -8,10 +8,11 @@ import argparse
 import os
 
 import llnl.util.tty as tty
+
 import spack.build_environment as build_environment
-import spack.paths
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.paths
 from spack.util.environment import dump_environment, pickle_environment
 
 
@@ -52,6 +53,9 @@ def emulate_env_utility(cmd_name, context, args):
     else:
         spec = args.spec[0]
         cmd = args.spec[1:]
+
+    if not spec:
+        tty.die("spack %s requires a spec." % cmd_name)
 
     specs = spack.cmd.parse_specs(spec, concretize=False)
     if len(specs) > 1:

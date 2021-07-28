@@ -4,26 +4,25 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import contextlib
+import itertools
 import os
 import platform
 import re
-import itertools
 import shutil
 import tempfile
-from typing import Sequence, List  # novm
+from typing import List, Sequence  # novm
 
 import llnl.util.lang
-from llnl.util.filesystem import (
-    path_contains_subdirectory, paths_containing_libs)
 import llnl.util.tty as tty
+from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 
+import spack.architecture
+import spack.compilers
 import spack.error
 import spack.spec
-import spack.version
-import spack.architecture
 import spack.util.executable
 import spack.util.module_cmd
-import spack.compilers
+import spack.version
 from spack.util.environment import filter_system_paths
 
 __all__ = ['Compiler']
@@ -345,8 +344,11 @@ class Compiler(object):
         """
         if not self._real_version:
             try:
-                self._real_version = spack.version.Version(
+                real_version = spack.version.Version(
                     self.get_real_version())
+                if real_version == spack.version.Version('unknown'):
+                    return self.version
+                self._real_version = real_version
             except spack.util.executable.ProcessError:
                 self._real_version = self.version
         return self._real_version

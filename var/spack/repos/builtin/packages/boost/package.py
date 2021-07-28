@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import sys
 import os
+import sys
+
+from spack import *
 
 
 class Boost(Package):
@@ -25,6 +26,7 @@ class Boost(Package):
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.76.0', sha256='f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41')
     version('1.75.0', sha256='953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb')
     version('1.74.0', sha256='83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1')
     version('1.73.0', sha256='4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402')
@@ -159,7 +161,13 @@ class Boost(Package):
             description='Default symbol visibility in compiled libraries '
             '(1.69.0 or later)')
 
+    # Unicode support
     depends_on('icu4c', when='+icu')
+    depends_on('icu4c cxxstd=11', when='+icu cxxstd=11')
+    depends_on('icu4c cxxstd=14', when='+icu cxxstd=14')
+    depends_on('icu4c cxxstd=17', when='+icu cxxstd=17')
+    conflicts('cxxstd=98', when='+icu')  # Requires c++11 at least
+
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
@@ -190,6 +198,14 @@ class Boost(Package):
     # Container's Extended Allocators were not added until 1.56.0
     conflicts('+container', when='@:1.55.99')
 
+    # Boost.System till 1.76 (included) was relying on mutex, which was not
+    # detected correctly on Darwin platform when using GCC
+    #
+    # More details here:
+    # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878889166
+    # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878913339
+    conflicts('%gcc', when='@:1.76 +system platform=darwin')
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
@@ -210,7 +226,11 @@ class Boost(Package):
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
     # Patch to override the PGI toolset when using the NVIDIA compilers
-    patch('nvhpc.patch', when='%nvhpc')
+    patch('nvhpc-1.74.patch', when='@1.74.0:1.75.9999%nvhpc')
+    patch('nvhpc-1.76.patch', when='@1.76.0:1.76.9999%nvhpc')
+
+    # Patch to workaround compiler bug
+    patch('nvhpc-find_address.patch', when='@1.75.0:1.76.999%nvhpc')
 
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440
@@ -263,7 +283,12 @@ class Boost(Package):
     # Fix B2 bootstrap toolset during installation
     # See https://github.com/spack/spack/issues/20757
     # and https://github.com/spack/spack/pull/21408
-    patch("bootstrap-toolset.patch", when="@1.75:")
+    patch("bootstrap-toolset.patch", when="@1.75")
+
+    # Allow building context asm sources with GCC on Darwin
+    # See https://github.com/spack/spack/pull/24889
+    # and https://github.com/boostorg/context/issues/177
+    patch("context-macho-gcc.patch", when="@1.65:1.76 +context platform=darwin %gcc")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
@@ -280,7 +305,7 @@ class Boost(Package):
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
-            url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"
+            url = "https://boostorg.jfrog.io/artifactory/main/release/{0}/source/boost_{1}.tar.bz2"
         else:
             url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
 
@@ -331,6 +356,11 @@ class Boost(Package):
         if '+python' in spec:
             options.append('--with-python=%s' % spec['python'].command.path)
 
+        if '+icu' in spec:
+            options.append('--with-icu')
+        else:
+            options.append('--without-icu')
+
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
@@ -366,8 +396,10 @@ class Boost(Package):
         else:
             options.append('variant=release')
 
-        if '+icu_support' in spec:
-            options.extend(['-s', 'ICU_PATH=%s' % spec['icu'].prefix])
+        if '+icu' in spec:
+            options.extend(['-s', 'ICU_PATH=%s' % spec['icu4c'].prefix])
+        else:
+            options.append('--disable-icu')
 
         if '+iostreams' in spec:
             options.extend([
@@ -532,7 +564,11 @@ class Boost(Package):
 
         threading_opts = self.determine_b2_options(spec, b2_options)
 
-        b2('--clean')
+        # Create headers if building from a git checkout
+        if '@develop' in spec:
+            b2('headers', *b2_options)
+
+        b2('--clean', *b2_options)
 
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.

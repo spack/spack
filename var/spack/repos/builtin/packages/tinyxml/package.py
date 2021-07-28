@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os.path
+
+from spack import *
 
 
 class Tinyxml(CMakePackage):
@@ -26,6 +27,4 @@ class Tinyxml(CMakePackage):
              "CMakeLists.txt"), "CMakeLists.txt")
 
     def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]
+        return [self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]

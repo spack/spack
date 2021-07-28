@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import shutil
+
+from spack import *
 
 
 class Mumax(MakefilePackage, CudaPackage):
@@ -29,7 +30,7 @@ class Mumax(MakefilePackage, CudaPackage):
             description='Use gnuplot for graphs')
 
     depends_on('cuda')
-    depends_on('go', type='build')
+    depends_on('go@:1.15', type='build')
     depends_on('gnuplot', type='run', when='+gnuplot')
 
     conflicts('~cuda', msg='mumax requires cuda')

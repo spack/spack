@@ -15,6 +15,7 @@ class Ffmpeg(AutotoolsPackage):
 
     maintainers = ['xjrc']
 
+    version('4.3.2', sha256='ab3a6d6a70358ba0a5f67f37f91f6656b7302b02e98e5b8c846c16763c99913a')
     version('4.2.2',  sha256='b620d187c26f76ca19e74210a0336c3b8380b97730df5cdf45f3e69e89000e5c')
     version('4.1.1',  sha256='0cb40e3b8acaccd0ecb38aa863f66f0c6e02406246556c2992f67bf650fab058')
     version('4.1',    sha256='b684fb43244a5c4caae652af9022ed5d85ce15210835bce054a33fb26033a1a5')

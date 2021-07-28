@@ -37,10 +37,8 @@ class Mpilander(CMakePackage):
     def cmake_args(self):
         args = [
             # tests and examples
-            '-DBUILD_TESTING:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
-            '-DBUILD_EXAMPLES:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
+            self.define('BUILD_TESTING', self.run_tests),
+            self.define('BUILD_EXAMPLES', self.run_tests),
         ]
 
         return args

@@ -18,21 +18,11 @@ import traceback
 
 import six
 from six.moves.urllib.error import URLError
-from six.moves.urllib.request import urlopen, Request
+from six.moves.urllib.request import Request, urlopen
 
-if sys.version_info < (3, 0):
-    # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParser, HTMLParseError  # novm
-else:
-    # In Python 3, things moved to html.parser
-    from html.parser import HTMLParser
-
-    # Also, HTMLParseError is deprecated and never raised.
-    class HTMLParseError(Exception):
-        pass
-
-from llnl.util.filesystem import mkdirp
+import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 
 import spack.cmd
 import spack.config
@@ -41,10 +31,18 @@ import spack.url
 import spack.util.crypto
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
-import llnl.util.lang
-
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
+if sys.version_info < (3, 0):
+    # Python 2 had these in the HTMLParser package.
+    from HTMLParser import HTMLParseError, HTMLParser  # novm
+else:
+    # In Python 3, things moved to html.parser
+    from html.parser import HTMLParser
+
+    # Also, HTMLParseError is deprecated and never raised.
+    class HTMLParseError(Exception):
+        pass
 
 # Timeout in seconds for web requests
 _timeout = 10
@@ -106,7 +104,8 @@ def read_from_url(url, accept_content_type=None):
         else:
             # User has explicitly indicated that they do not want SSL
             # verification.
-            context = ssl._create_unverified_context()
+            if not __UNABLE_TO_VERIFY_SSL:
+                context = ssl._create_unverified_context()
 
     req = Request(url_util.format(url))
     content_type = None
@@ -211,11 +210,10 @@ def url_exists(url):
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
-        from botocore.exceptions import ClientError
         try:
-            s3.get_object(Bucket=url.netloc, Key=url.path)
+            s3.get_object(Bucket=url.netloc, Key=url.path.lstrip('/'))
             return True
-        except ClientError as err:
+        except s3.ClientError as err:
             if err.response['Error']['Code'] == 'NoSuchKey':
                 return False
             raise err
@@ -279,7 +277,7 @@ def remove_url(url, recursive=False):
                 r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
                 _debug_print_delete_results(r)
         else:
-            s3.delete_object(Bucket=bucket, Key=url.path)
+            s3.delete_object(Bucket=bucket, Key=url.path.lstrip('/'))
         return
 
     # Don't even try for other URL schemes.
@@ -369,7 +367,7 @@ def spider(root_urls, depth=0, concurrency=32):
     up to <depth> levels of links from each root.
 
     Args:
-        root_urls (str or list of str): root urls used as a starting point
+        root_urls (str or list): root urls used as a starting point
             for spidering
         depth (int): level of recursion into links
         concurrency (int): number of simultaneous requests that can be sent

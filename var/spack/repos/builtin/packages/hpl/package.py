@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import platform
+
+from spack import *
 
 
 class Hpl(AutotoolsPackage):
@@ -112,6 +113,7 @@ class Hpl(AutotoolsPackage):
             config = ['CFLAGS=-O3']
 
         if (self.spec.satisfies('^intel-mkl') or
+            self.spec.satisfies('^intel-oneapi-mkl') or
             self.spec.satisfies('^intel-parallel-studio+mkl')):
             config.append('LDFLAGS={0}'.format(
                 self.spec['blas'].libs.ld_flags))

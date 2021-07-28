@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class Curl(AutotoolsPackage):
@@ -15,6 +16,9 @@ class Curl(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url      = "http://curl.haxx.se/download/curl-7.74.0.tar.bz2"
 
+    version('7.76.1', sha256='7a8e184d7d31312c4ebf6a8cb59cd757e61b2b2833a9ed4f9bf708066e7695e9')
+    version('7.76.0', sha256='e29bfe3633701590d75b0071bbb649ee5ca4ca73f00649268bd389639531c49a')
+    version('7.75.0', sha256='50552d4501c178e4cc68baaecc487f466a3d6d19bbf4e50a01869effb316d026')
     version('7.74.0', sha256='0f4d63e6681636539dc88fa8e929f934cd3a840c46e0bf28c73be11e521b77a5')
     version('7.73.0', sha256='cf34fe0b07b800f1c01a499a6e8b2af548f6d0e044dca4a29d88a4bee146d131')
     version('7.72.0', sha256='ad91970864102a59765e20ce16216efc9d6ad381471f7accceceab7d905703ef')
@@ -66,16 +70,27 @@ class Curl(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = ['--with-zlib={0}'.format(spec['zlib'].prefix)]
-        args.append('--with-libidn2={0}'.format(spec['libidn2'].prefix))
+        args = [
+            '--with-zlib=' + spec['zlib'].prefix,
+            '--with-libidn2=' + spec['libidn2'].prefix,
+            # Prevent unintentional linking against system libraries: we could
+            # add variants for these in the future
+            '--without-libbrotli',
+            '--without-libgsasl',
+            '--without-libmetalink',
+            '--without-libpsl',
+            '--without-zstd',
+        ]
 
         if spec.satisfies('+darwinssl'):
             args.append('--with-darwinssl')
         else:
-            args.append('--with-ssl={0}'.format(spec['openssl'].prefix))
+            args.append('--with-ssl=' + spec['openssl'].prefix)
 
         if spec.satisfies('+gssapi'):
-            args.append('--with-gssapi={0}'.format(spec['krb5'].prefix))
+            args.append('--with-gssapi=' + spec['krb5'].prefix)
+        else:
+            args.append('--without-gssapi')
 
         args += self.with_or_without('nghttp2')
         args += self.with_or_without('libssh2')

@@ -23,11 +23,12 @@ filesystem.
 import contextlib
 import datetime
 import os
-import six
 import socket
 import sys
 import time
 from typing import Dict  # novm
+
+import six
 
 try:
     import uuid
@@ -170,13 +171,13 @@ class InstallRecord(object):
     dependents left.
 
     Args:
-        spec (Spec): spec tracked by the install record
+        spec (spack.spec.Spec): spec tracked by the install record
         path (str): path where the spec has been installed
         installed (bool): whether or not the spec is currently installed
         ref_count (int): number of specs that depend on this one
-        explicit (bool, optional): whether or not this spec was explicitly
+        explicit (bool or None): whether or not this spec was explicitly
             installed, or pulled-in as a dependency of something else
-        installation_time (time, optional): time of the installation
+        installation_time (datetime.datetime or None): time of the installation
     """
 
     def __init__(
@@ -187,7 +188,8 @@ class InstallRecord(object):
             ref_count=0,
             explicit=False,
             installation_time=None,
-            deprecated_for=None
+            deprecated_for=None,
+            in_buildcache=False,
     ):
         self.spec = spec
         self.path = str(path) if path else None
@@ -196,6 +198,7 @@ class InstallRecord(object):
         self.explicit = explicit
         self.installation_time = installation_time or _now()
         self.deprecated_for = deprecated_for
+        self.in_buildcache = in_buildcache
 
     def install_type_matches(self, installed):
         installed = InstallStatuses.canonicalize(installed)
@@ -253,34 +256,39 @@ _query_docstring = """
                 database.  If it is a spec, we'll evaluate
                 ``spec.satisfies(query_spec)``
 
-            known (bool or any, optional): Specs that are "known" are those
+            known (bool or None): Specs that are "known" are those
                 for which Spack can locate a ``package.py`` file -- i.e.,
                 Spack "knows" how to install them.  Specs that are unknown may
                 represent packages that existed in a previous version of
                 Spack, but have since either changed their name or
                 been removed
 
-            installed (bool or any, or InstallStatus or iterable of
-                InstallStatus, optional): if ``True``, includes only installed
+            installed (bool or InstallStatus or typing.Iterable or None):
+                if ``True``, includes only installed
                 specs in the search; if ``False`` only missing specs, and if
                 ``any``, all specs in database. If an InstallStatus or iterable
                 of InstallStatus, returns specs whose install status
                 (installed, deprecated, or missing) matches (one of) the
                 InstallStatus. (default: True)
 
-            explicit (bool or any, optional): A spec that was installed
+            explicit (bool or None): A spec that was installed
                 following a specific user request is marked as explicit. If
                 instead it was pulled-in as a dependency of a user requested
                 spec it's considered implicit.
 
-            start_date (datetime, optional): filters the query discarding
-                specs that have been installed before ``start_date``.
+            start_date (datetime.datetime or None): filters the query
+                discarding specs that have been installed before ``start_date``.
 
-            end_date (datetime, optional): filters the query discarding
+            end_date (datetime.datetime or None): filters the query discarding
                 specs that have been installed after ``end_date``.
 
-            hashes (container): list or set of hashes that we can use to
+            hashes (typing.Container): list or set of hashes that we can use to
                 restrict the search
+
+            in_buildcache (bool or None): Specs that are marked in
+                this database as part of an associated binary cache are
+                ``in_buildcache``. All other specs are not. This field is used
+                for querying mirror indices. Default is ``any``.
 
         Returns:
             list of specs that match the query
@@ -375,6 +383,11 @@ class Database(object):
                                 desc='database')
         self._data = {}
 
+        # For every installed spec we keep track of its install prefix, so that
+        # we can answer the simple query whether a given path is already taken
+        # before installing a different spec.
+        self._installed_prefixes = set()
+
         self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
 
         # whether there was an error at the start of a read transaction
@@ -436,7 +449,7 @@ class Database(object):
         see `mark_failed()`.
 
         Args:
-            spec (Spec): the spec whose failure indicators are being removed
+            spec (spack.spec.Spec): the spec whose failure indicators are being removed
             force (bool): True if the failure information should be cleared
                 when a prefix failure lock exists for the file or False if
                 the failure should not be cleared (e.g., it may be
@@ -767,6 +780,7 @@ class Database(object):
 
         # Pass 1: Iterate through database and build specs w/o dependencies
         data = {}
+        installed_prefixes = set()
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
@@ -777,6 +791,9 @@ class Database(object):
                 # TODO: would a more immmutable spec implementation simplify
                 #       this?
                 data[hash_key] = InstallRecord.from_dict(spec, rec)
+
+                if not spec.external and 'installed' in rec and rec['installed']:
+                    installed_prefixes.add(rec['path'])
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -798,6 +815,7 @@ class Database(object):
             rec.spec._mark_root_concrete()
 
         self._data = data
+        self._installed_prefixes = installed_prefixes
 
     def reindex(self, directory_layout):
         """Build database index from scratch based on a directory layout.
@@ -817,6 +835,7 @@ class Database(object):
             except CorruptDatabaseError as e:
                 self._error = e
                 self._data = {}
+                self._installed_prefixes = set()
 
         transaction = lk.WriteTransaction(
             self.lock, acquire=_read_suppress_error, release=self._write
@@ -831,12 +850,14 @@ class Database(object):
                 self._error = None
 
             old_data = self._data
+            old_installed_prefixes = self._installed_prefixes
             try:
                 self._construct_from_directory_layout(
                     directory_layout, old_data)
             except BaseException:
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
+                self._installed_prefixes = old_installed_prefixes
                 raise
 
     def _construct_entry_from_directory_layout(self, directory_layout,
@@ -873,6 +894,7 @@ class Database(object):
         with directory_layout.disable_upstream_check():
             # Initialize data in the reconstructed DB
             self._data = {}
+            self._installed_prefixes = set()
 
             # Start inspecting the installed prefixes
             processed_specs = set()
@@ -1080,6 +1102,8 @@ class Database(object):
             path = None
             if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
+                if path in self._installed_prefixes:
+                    raise Exception("Install prefix collision.")
                 try:
                     directory_layout.check_installed(spec)
                     installed = True
@@ -1087,6 +1111,7 @@ class Database(object):
                     tty.warn(
                         'Dependency missing: may be deprecated or corrupted:',
                         path, str(e))
+                self._installed_prefixes.add(path)
             elif spec.external_path:
                 path = spec.external_path
 
@@ -1166,6 +1191,7 @@ class Database(object):
 
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
+
             for dep in spec.dependencies(_tracked_deps):
                 self._decrement_ref_count(dep)
 
@@ -1183,11 +1209,17 @@ class Database(object):
         key = self._get_matching_spec_key(spec)
         rec = self._data[key]
 
+        # This install prefix is now free for other specs to use, even if the
+        # spec is only marked uninstalled.
+        if not rec.spec.external:
+            self._installed_prefixes.remove(rec.path)
+
         if rec.ref_count > 0:
             rec.installed = False
             return rec.spec
 
         del self._data[key]
+
         for dep in rec.spec.dependencies(_tracked_deps):
             # FIXME: the two lines below needs to be updated once #11983 is
             # FIXME: fixed. The "if" statement should be deleted and specs are
@@ -1254,6 +1286,16 @@ class Database(object):
         spec_rec.deprecated_for = deprecator_key
         spec_rec.installed = False
         self._data[spec_key] = spec_rec
+
+    @_autospec
+    def mark(self, spec, key, value):
+        """Mark an arbitrary record on a spec."""
+        with self.write_transaction():
+            return self._mark(spec, key, value)
+
+    def _mark(self, spec, key, value):
+        record = self._data[self._get_matching_spec_key(spec)]
+        setattr(record, key, value)
 
     @_autospec
     def deprecate(self, spec, deprecator):
@@ -1349,10 +1391,10 @@ class Database(object):
 
         Arguments:
             dag_hash (str): hash (or hash prefix) to look up
-            default (object, optional): default value to return if dag_hash is
+            default (object or None): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, or InstallStatus or iterable of
-                InstallStatus, optional): if ``True``, includes only installed
+            installed (bool or InstallStatus or typing.Iterable or None):
+                if ``True``, includes only installed
                 specs in the search; if ``False`` only missing specs, and if
                 ``any``, all specs in database. If an InstallStatus or iterable
                 of InstallStatus, returns specs whose install status
@@ -1375,14 +1417,13 @@ class Database(object):
 
         Arguments:
             dag_hash (str): hash (or hash prefix) to look up
-            default (object, optional): default value to return if dag_hash is
+            default (object or None): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, or InstallStatus or iterable of
-                InstallStatus, optional): if ``True``, includes only installed
-                specs in the search; if ``False`` only missing specs, and if
-                ``any``, all specs in database. If an InstallStatus or iterable
-                of InstallStatus, returns specs whose install status
-                (installed, deprecated, or missing) matches (one of) the
+            installed (bool or InstallStatus or typing.Iterable or None):
+                if ``True``, includes only installed specs in the search; if ``False``
+                only missing specs, and if ``any``, all specs in database. If an
+                InstallStatus or iterable of InstallStatus, returns specs whose install
+                status (installed, deprecated, or missing) matches (one of) the
                 InstallStatus. (default: any)
 
         ``installed`` defaults to ``any`` so that we can refer to any
@@ -1415,7 +1456,8 @@ class Database(object):
             explicit=any,
             start_date=None,
             end_date=None,
-            hashes=None
+            hashes=None,
+            in_buildcache=any,
     ):
         """Run a query on the database."""
 
@@ -1445,6 +1487,9 @@ class Database(object):
                 continue
 
             if not rec.install_type_matches(installed):
+                continue
+
+            if in_buildcache is not any and rec.in_buildcache != in_buildcache:
                 continue
 
             if explicit is not any and rec.explicit != explicit:
@@ -1517,6 +1562,10 @@ class Database(object):
         upstream, record = self.query_by_spec_hash(key)
         return record and not record.installed
 
+    def is_occupied_install_prefix(self, path):
+        with self.read_transaction():
+            return path in self._installed_prefixes
+
     @property
     def unused_specs(self):
         """Return all the specs that are currently installed but not needed
@@ -1546,7 +1595,7 @@ class Database(object):
         Update the spec's explicit state in the database.
 
         Args:
-            spec (Spec): the spec whose install record is being updated
+            spec (spack.spec.Spec): the spec whose install record is being updated
             explicit (bool): ``True`` if the package was requested explicitly
                 by the user, ``False`` if it was pulled in as a dependency of
                 an explicit package.

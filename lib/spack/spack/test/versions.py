@@ -373,6 +373,9 @@ def test_intersect_with_containment():
     check_intersection('1.6:1.6.5', ':1.6.5', '1.6')
     check_intersection('1.6:1.6.5', '1.6', ':1.6.5')
 
+    check_intersection('11.2', '11', '11.2')
+    check_intersection('11.2', '11.2', '11')
+
 
 def test_union_with_containment():
     check_union(':1.6', '1.6.5', ':1.6')
@@ -562,3 +565,14 @@ def test_list_highest():
     assert vl2.highest_numeric() is None
     assert vl2.preferred() == Version('develop')
     assert vl2.lowest() == Version('master')
+
+
+@pytest.mark.parametrize('version_str', [
+    "foo 1.2.0",
+    "!",
+    "1!2"
+])
+def test_invalid_versions(version_str):
+    """Ensure invalid versions are rejected with a ValueError"""
+    with pytest.raises(ValueError):
+        Version(version_str)

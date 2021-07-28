@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import textwrap
+
 from six.moves import zip_longest
 
 import llnl.util.tty as tty
@@ -13,10 +14,9 @@ import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
 import spack.cmd.common.arguments as arguments
+import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
-import spack.fetch_strategy as fs
-
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -121,10 +121,12 @@ class VariantFormatter(object):
                 )
                 allowed = v.allowed_values.replace('True, False', 'on, off')
                 allowed = textwrap.wrap(allowed, width=self.column_widths[1])
-                description = textwrap.wrap(
-                    v.description,
-                    width=self.column_widths[2]
-                )
+                description = []
+                for d_line in v.description.split('\n'):
+                    description += textwrap.wrap(
+                        d_line,
+                        width=self.column_widths[2]
+                    )
                 for t in zip_longest(
                         name, allowed, description, fillvalue=''
                 ):
@@ -152,6 +154,26 @@ def print_text_info(pkg):
         mnt = " ".join(['@@' + m for m in pkg.maintainers])
         color.cprint('')
         color.cprint(section_title('Maintainers: ') + mnt)
+
+    color.cprint('')
+    color.cprint(section_title('Externally Detectable: '))
+
+    # If the package has an 'executables' field, it can detect an installation
+    if hasattr(pkg, 'executables'):
+        find_attributes = []
+        if hasattr(pkg, 'determine_version'):
+            find_attributes.append('version')
+
+        if hasattr(pkg, 'determine_variants'):
+            find_attributes.append('variants')
+
+        # If the package does not define 'determine_version' nor
+        # 'determine_variants', then it must use some custom detection
+        # mechanism. In this case, just inform the user it's detectable somehow.
+        color.cprint('    True{0}'.format(
+            ' (' + ', '.join(find_attributes) + ')' if find_attributes else ''))
+    else:
+        color.cprint('    False')
 
     color.cprint('')
     color.cprint(section_title("Tags: "))

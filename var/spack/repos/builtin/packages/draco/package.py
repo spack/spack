@@ -18,6 +18,7 @@ class Draco(CMakePackage):
     maintainers = ['KineticTheory']
 
     version('develop', branch='develop')
+    version('7.10.0',  sha256='3530263a23a648fc7ae65748568f0a725a8b2c9bac9a41cc3cb1250c4af579de')
     version('7.9.1',  sha256='c8fd029d5b74afc68670f7d449d60c24f2d284c9d6a944a2d3dce6efeb6ad097')
     version('7.9.0',  sha256='17b54301897da0d4f9b91fef15cc2ec5e6c65a8e8c1c09e6e7b516c0fb82b50f')
     version('7.8.0',  sha256='f6de794457441f69025619be58810bca432f3e0dd773ea9b9a7977b1dc09530d')
@@ -91,7 +92,7 @@ class Draco(CMakePackage):
         options = []
         options.extend([
             '-Wno-dev',
-            '-DBUILD_TESTING={0}'.format('ON' if self.run_tests else 'OFF'),
+            self.define('BUILD_TESTING', self.run_tests),
             '-DUSE_CUDA={0}'.format('ON' if '+cuda' in self.spec else 'OFF'),
             '-DUSE_QT={0}'.format('ON' if '+qt' in self.spec else 'OFF')
         ])

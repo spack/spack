@@ -3,11 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.main import SpackCommand
 import os.path
+
 import pytest
 
 import spack.util.spack_yaml as s_yaml
+from spack.main import SpackCommand
 
 activate = SpackCommand('activate')
 extensions = SpackCommand('extensions')

@@ -1,0 +1,15 @@
+diff --git a/src/io_tools.F90 b/src/io_tools.F90
+index fe94582..5da3abc 100644
+--- a/src/io_tools.F90
++++ b/src/io_tools.F90
+@@ -8,7 +8,9 @@
+ #endif
+ 
+ MODULE io_tools
+-
++#if defined (__INTEL_COMPILER)
++ USE IFPORT
++#endif
+  IMPLICIT NONE
+ 
+  PRIVATE

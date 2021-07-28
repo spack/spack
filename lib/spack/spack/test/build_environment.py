@@ -8,15 +8,20 @@ import platform
 
 import pytest
 
+from llnl.util.filesystem import HeaderList, LibraryList
+
 import spack.build_environment
 import spack.config
 import spack.spec
+import spack.util.spack_yaml as syaml
+from spack.build_environment import (
+    _static_to_shared_library,
+    determine_number_of_jobs,
+    dso_suffix,
+)
 from spack.paths import build_env_path
-from spack.build_environment import dso_suffix, _static_to_shared_library
-from spack.util.executable import Executable
 from spack.util.environment import EnvironmentModifications
-
-from llnl.util.filesystem import LibraryList, HeaderList
+from spack.util.executable import Executable
 
 
 @pytest.fixture
@@ -224,7 +229,7 @@ def test_package_inheritance_module_setup(config, mock_packages, working_env):
     assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
 
 
-def test_set_build_environment_variables(
+def test_wrapper_variables(
         config, mock_packages, working_env, monkeypatch,
         installation_dir_with_headers
 ):
@@ -263,8 +268,8 @@ def test_set_build_environment_variables(
     try:
         pkg = root.package
         env_mods = EnvironmentModifications()
-        spack.build_environment.set_build_environment_variables(
-            pkg, env_mods, dirty=False)
+        spack.build_environment.set_wrapper_variables(
+            pkg, env_mods)
 
         env_mods.apply_modifications()
 
@@ -297,6 +302,45 @@ def test_set_build_environment_variables(
 
     finally:
         delattr(dep_pkg, 'libs')
+
+
+def test_external_prefixes_last(mutable_config, mock_packages, working_env,
+                                monkeypatch):
+    # Sanity check: under normal circumstances paths associated with
+    # dt-diamond-left would appear first. We'll mark it as external in
+    # the test to check if the associated paths are placed last.
+    assert 'dt-diamond-left' < 'dt-diamond-right'
+
+    cfg_data = syaml.load_config("""\
+dt-diamond-left:
+  externals:
+  - spec: dt-diamond-left@1.0
+    prefix: /fake/path1
+  buildable: false
+""")
+    spack.config.set("packages", cfg_data)
+    top = spack.spec.Spec('dt-diamond').concretized()
+
+    def _trust_me_its_a_dir(path):
+        return True
+    monkeypatch.setattr(
+        os.path, 'isdir', _trust_me_its_a_dir
+    )
+
+    env_mods = EnvironmentModifications()
+    spack.build_environment.set_wrapper_variables(
+        top.package, env_mods)
+
+    env_mods.apply_modifications()
+    link_dir_var = os.environ['SPACK_LINK_DIRS']
+    link_dirs = link_dir_var.split(':')
+    external_lib_paths = set(['/fake/path1/lib', '/fake/path1/lib64'])
+    # The external lib paths should be the last two entries of the list and
+    # should not appear anywhere before the last two entries
+    assert (set(os.path.normpath(x) for x in link_dirs[-2:]) ==
+            external_lib_paths)
+    assert not (set(os.path.normpath(x) for x in link_dirs[:-2]) &
+                external_lib_paths)
 
 
 def test_parallel_false_is_not_propagating(config, mock_packages):
@@ -339,3 +383,22 @@ def test_setting_dtags_based_on_config(
 
         dtags_to_add = modifications['SPACK_DTAGS_TO_ADD'][0]
         assert dtags_to_add.value == expected_flag
+
+
+def test_build_jobs_sequential_is_sequential():
+    assert determine_number_of_jobs(
+        parallel=False, command_line=8, config_default=8, max_cpus=8) == 1
+
+
+def test_build_jobs_command_line_overrides():
+    assert determine_number_of_jobs(
+        parallel=True, command_line=10, config_default=1, max_cpus=1) == 10
+    assert determine_number_of_jobs(
+        parallel=True, command_line=10, config_default=100, max_cpus=100) == 10
+
+
+def test_build_jobs_defaults():
+    assert determine_number_of_jobs(
+        parallel=True, command_line=None, config_default=1, max_cpus=10) == 1
+    assert determine_number_of_jobs(
+        parallel=True, command_line=None, config_default=100, max_cpus=10) == 10

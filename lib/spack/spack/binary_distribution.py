@@ -4,22 +4,21 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
+import glob
+import hashlib
+import json
 import os
 import re
+import shutil
 import sys
 import tarfile
-import shutil
 import tempfile
-import hashlib
-import glob
-from ordereddict_backport import OrderedDict
-
+import traceback
 from contextlib import closing
+
 import ruamel.yaml as yaml
-
-import json
-
-from six.moves.urllib.error import URLError, HTTPError
+from ordereddict_backport import OrderedDict
+from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -29,20 +28,18 @@ import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.fetch_strategy as fs
-import spack.util.file_cache as file_cache
+import spack.hash_types as ht
+import spack.mirror
 import spack.relocate as relocate
+import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.mirror
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.caches import misc_cache_location
 from spack.spec import Spec
 from spack.stage import Stage
-
-
-#: default root, relative to the Spack install path
-default_binary_index_root = os.path.join(spack.paths.opt_path, 'spack')
 
 _build_cache_relative_path = 'build_cache'
 _build_cache_keys_relative_path = '_pgp'
@@ -67,9 +64,8 @@ class BinaryCacheIndex(object):
     mean we should have paid the price to update the cache earlier?
     """
 
-    def __init__(self, cache_root=None):
-        self._cache_root = cache_root or default_binary_index_root
-        self._index_cache_root = os.path.join(self._cache_root, 'indices')
+    def __init__(self, cache_root):
+        self._index_cache_root = cache_root
 
         # the key associated with the serialized _local_index_cache
         self._index_contents_key = 'contents.json'
@@ -159,7 +155,7 @@ class BinaryCacheIndex(object):
             with self._index_file_cache.read_transaction(cache_key):
                 db._read_from_file(cache_path)
 
-            spec_list = db.query_local(installed=False)
+            spec_list = db.query_local(installed=False, in_buildcache=True)
 
             for indexed_spec in spec_list:
                 dag_hash = indexed_spec.dag_hash()
@@ -210,7 +206,7 @@ class BinaryCacheIndex(object):
         The cache can be updated by calling ``update()`` on the cache.
 
         Args:
-            spec (Spec): Concrete spec to find
+            spec (spack.spec.Spec): Concrete spec to find
 
         Returns:
             An list of objects containing the found specs and mirror url where
@@ -440,13 +436,15 @@ class BinaryCacheIndex(object):
         return True
 
 
+def binary_index_location():
+    """Set up a BinaryCacheIndex for remote buildcache dbs in the user's homedir."""
+    cache_root = os.path.join(misc_cache_location(), 'indices')
+    return spack.util.path.canonicalize_path(cache_root)
+
+
 def _binary_index():
     """Get the singleton store instance."""
-    cache_root = spack.config.get(
-        'config:binary_index_root', default_binary_index_root)
-    cache_root = spack.util.path.canonicalize_path(cache_root)
-
-    return BinaryCacheIndex(cache_root)
+    return BinaryCacheIndex(binary_index_location())
 
 
 #: Singleton binary_index instance
@@ -551,52 +549,70 @@ def read_buildinfo_file(prefix):
     return buildinfo
 
 
-def write_buildinfo_file(spec, workdir, rel=False):
+def get_buildfile_manifest(spec):
     """
-    Create a cache file containing information
-    required for the relocation
+    Return a data structure with information about a build, including
+    text_to_relocate, binary_to_relocate, binary_to_relocate_fullpath
+    link_to_relocate, and other, which means it doesn't fit any of previous
+    checks (and should not be relocated). We blacklist docs (man) and
+    metadata (.spack). This can be used to find a particular kind of file
+    in spack, or to generate the build metadata.
     """
-    prefix = spec.prefix
-    text_to_relocate = []
-    binary_to_relocate = []
-    link_to_relocate = []
+    data = {"text_to_relocate": [], "binary_to_relocate": [],
+            "link_to_relocate": [], "other": [],
+            "binary_to_relocate_fullpath": []}
+
     blacklist = (".spack", "man")
-    prefix_to_hash = dict()
-    prefix_to_hash[str(spec.package.prefix)] = spec.dag_hash()
-    deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in deps:
-        prefix_to_hash[str(d.prefix)] = d.dag_hash()
+
     # Do this at during tarball creation to save time when tarball unpacked.
     # Used by make_package_relative to determine binaries to change.
-    for root, dirs, files in os.walk(prefix, topdown=True):
+    for root, dirs, files in os.walk(spec.prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in blacklist]
         for filename in files:
             path_name = os.path.join(root, filename)
             m_type, m_subtype = relocate.mime_type(path_name)
+            rel_path_name = os.path.relpath(path_name, spec.prefix)
+            added = False
+
             if os.path.islink(path_name):
                 link = os.readlink(path_name)
                 if os.path.isabs(link):
                     # Relocate absolute links into the spack tree
                     if link.startswith(spack.store.layout.root):
-                        rel_path_name = os.path.relpath(path_name, prefix)
-                        link_to_relocate.append(rel_path_name)
-                    else:
-                        msg = 'Absolute link %s to %s ' % (path_name, link)
-                        msg += 'outside of prefix %s ' % prefix
-                        msg += 'should not be relocated.'
-                        tty.warn(msg)
+                        data['link_to_relocate'].append(rel_path_name)
+                    added = True
 
             if relocate.needs_binary_relocation(m_type, m_subtype):
-                if ((m_subtype in ('x-executable', 'x-sharedlib')
+                if ((m_subtype in ('x-executable', 'x-sharedlib', 'x-pie-executable')
                     and sys.platform != 'darwin') or
                    (m_subtype in ('x-mach-binary')
                     and sys.platform == 'darwin') or
                    (not filename.endswith('.o'))):
-                    rel_path_name = os.path.relpath(path_name, prefix)
-                    binary_to_relocate.append(rel_path_name)
+                    data['binary_to_relocate'].append(rel_path_name)
+                    data['binary_to_relocate_fullpath'].append(path_name)
+                    added = True
+
             if relocate.needs_text_relocation(m_type, m_subtype):
-                rel_path_name = os.path.relpath(path_name, prefix)
-                text_to_relocate.append(rel_path_name)
+                data['text_to_relocate'].append(rel_path_name)
+                added = True
+
+            if not added:
+                data['other'].append(path_name)
+    return data
+
+
+def write_buildinfo_file(spec, workdir, rel=False):
+    """
+    Create a cache file containing information
+    required for the relocation
+    """
+    manifest = get_buildfile_manifest(spec)
+
+    prefix_to_hash = dict()
+    prefix_to_hash[str(spec.package.prefix)] = spec.dag_hash()
+    deps = spack.build_environment.get_rpath_deps(spec.package)
+    for d in deps:
+        prefix_to_hash[str(d.prefix)] = d.dag_hash()
 
     # Create buildinfo data and write it to disk
     import spack.hooks.sbang as sbang
@@ -606,10 +622,10 @@ def write_buildinfo_file(spec, workdir, rel=False):
     buildinfo['buildpath'] = spack.store.layout.root
     buildinfo['spackprefix'] = spack.paths.prefix
     buildinfo['relative_prefix'] = os.path.relpath(
-        prefix, spack.store.layout.root)
-    buildinfo['relocate_textfiles'] = text_to_relocate
-    buildinfo['relocate_binaries'] = binary_to_relocate
-    buildinfo['relocate_links'] = link_to_relocate
+        spec.prefix, spack.store.layout.root)
+    buildinfo['relocate_textfiles'] = manifest['text_to_relocate']
+    buildinfo['relocate_binaries'] = manifest['binary_to_relocate']
+    buildinfo['relocate_links'] = manifest['link_to_relocate']
     buildinfo['prefix_to_hash'] = prefix_to_hash
     filename = buildinfo_file_name(workdir)
     with open(filename, 'w') as outfile:
@@ -695,12 +711,6 @@ def generate_package_index(cache_prefix):
     cache_prefix.  This page contains a link for each binary package (.yaml)
     under cache_prefix.
     """
-    tmpdir = tempfile.mkdtemp()
-    db_root_dir = os.path.join(tmpdir, 'db_root')
-    db = spack_db.Database(None, db_dir=db_root_dir,
-                           enable_transaction_locking=False,
-                           record_fields=['spec', 'ref_count'])
-
     try:
         file_list = (
             entry
@@ -721,21 +731,90 @@ def generate_package_index(cache_prefix):
 
     tty.debug('Retrieving spec.yaml files from {0} to build index'.format(
         cache_prefix))
+
+    all_mirror_specs = {}
+
     for file_path in file_list:
         try:
             yaml_url = url_util.join(cache_prefix, file_path)
             tty.debug('fetching {0}'.format(yaml_url))
             _, _, yaml_file = web_util.read_from_url(yaml_url)
             yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
-            # yaml_obj = syaml.load(yaml_contents)
-            # s = Spec.from_yaml(yaml_obj)
+            spec_dict = syaml.load(yaml_contents)
             s = Spec.from_yaml(yaml_contents)
-            db.add(s, None)
+            all_mirror_specs[s.dag_hash()] = {
+                'yaml_url': yaml_url,
+                'spec': s,
+                'num_deps': len(list(s.traverse(root=False))),
+                'binary_cache_checksum': spec_dict['binary_cache_checksum'],
+                'buildinfo': spec_dict['buildinfo'],
+            }
         except (URLError, web_util.SpackWebError) as url_err:
             tty.error('Error reading spec.yaml: {0}'.format(file_path))
             tty.error(url_err)
 
+    sorted_specs = sorted(all_mirror_specs.keys(),
+                          key=lambda k: all_mirror_specs[k]['num_deps'])
+
+    tmpdir = tempfile.mkdtemp()
+    db_root_dir = os.path.join(tmpdir, 'db_root')
+    db = spack_db.Database(None, db_dir=db_root_dir,
+                           enable_transaction_locking=False,
+                           record_fields=['spec', 'ref_count', 'in_buildcache'])
+
     try:
+        tty.debug('Specs sorted by number of dependencies:')
+        for dag_hash in sorted_specs:
+            spec_record = all_mirror_specs[dag_hash]
+            s = spec_record['spec']
+            num_deps = spec_record['num_deps']
+            tty.debug('  {0}/{1} -> {2}'.format(
+                s.name, dag_hash[:7], num_deps))
+            if num_deps > 0:
+                # Check each of this spec's dependencies (which we have already
+                # processed), as they are the source of truth for their own
+                # full hash.  If the full hash we have for any deps does not
+                # match what those deps have themselves, then we need to splice
+                # this spec with those deps, and push this spliced spec
+                # (spec.yaml file) back to the mirror, as well as update the
+                # all_mirror_specs dictionary with this spliced spec.
+                to_splice = []
+                for dep in s.dependencies():
+                    dep_dag_hash = dep.dag_hash()
+                    if dep_dag_hash in all_mirror_specs:
+                        true_dep = all_mirror_specs[dep_dag_hash]['spec']
+                        if true_dep.full_hash() != dep.full_hash():
+                            to_splice.append(true_dep)
+
+                if to_splice:
+                    tty.debug('    needs the following deps spliced:')
+                    for true_dep in to_splice:
+                        tty.debug('      {0}/{1}'.format(
+                            true_dep.name, true_dep.dag_hash()[:7]))
+                        s = s.splice(true_dep, True)
+
+                    # Push this spliced spec back to the mirror
+                    spliced_yaml = s.to_dict(hash=ht.full_hash)
+                    for key in ['binary_cache_checksum', 'buildinfo']:
+                        spliced_yaml[key] = spec_record[key]
+
+                    temp_yaml_path = os.path.join(tmpdir, 'spliced.spec.yaml')
+                    with open(temp_yaml_path, 'w') as fd:
+                        fd.write(syaml.dump(spliced_yaml))
+
+                    spliced_yaml_url = spec_record['yaml_url']
+                    web_util.push_to_url(
+                        temp_yaml_path, spliced_yaml_url, keep_original=False)
+                    tty.debug('    spliced and wrote {0}'.format(
+                        spliced_yaml_url))
+                    spec_record['spec'] = s
+
+            db.add(s, None)
+            db.mark(s, 'in_buildcache', True)
+
+        # Now that we have fixed any old spec yamls that might have had the wrong
+        # full hash for their dependencies, we can generate the index, compute
+        # the hash, and push those files to the mirror.
         index_json_path = os.path.join(db_root_dir, 'index.json')
         with open(index_json_path, 'w') as f:
             db._write_to_file(f)
@@ -767,6 +846,7 @@ def generate_package_index(cache_prefix):
         msg = 'Encountered problem pushing package index to {0}: {1}'.format(
             cache_prefix, err)
         tty.warn(msg)
+        tty.debug('\n' + traceback.format_exc())
     finally:
         shutil.rmtree(tmpdir)
 
@@ -999,14 +1079,14 @@ def download_tarball(spec, preferred_mirrors=None):
     path to downloaded tarball if successful, None otherwise.
 
     Args:
-        spec (Spec): Concrete spec
+        spec (spack.spec.Spec): Concrete spec
         preferred_mirrors (list): If provided, this is a list of preferred
-        mirror urls.  Other configured mirrors will only be used if the
-        tarball can't be retrieved from one of these.
+            mirror urls.  Other configured mirrors will only be used if the
+            tarball can't be retrieved from one of these.
 
     Returns:
         Path to the downloaded tarball, or ``None`` if the tarball could not
-            be downloaded from any configured mirrors.
+        be downloaded from any configured mirrors.
     """
     if not spack.mirror.MirrorCollection():
         tty.die("Please add a spack mirror to allow " +
@@ -1161,7 +1241,7 @@ def relocate_package(spec, allow_root):
             text_names.append(text_name)
 
     # If we are not installing back to the same install tree do the relocation
-    if old_layout_root != new_layout_root:
+    if old_prefix != new_prefix:
         files_to_relocate = [os.path.join(workdir, filename)
                              for filename in buildinfo.get('relocate_binaries')
                              ]
@@ -1375,7 +1455,7 @@ def get_mirrors_for_spec(spec=None, full_hash_match=False,
     indicating the mirrors on which it can be found
 
     Args:
-        spec (Spec): The spec to look for in binary mirrors
+        spec (spack.spec.Spec): The spec to look for in binary mirrors
         full_hash_match (bool): If True, only includes mirrors where the spec
             full hash matches the locally computed full hash of the ``spec``
             argument.  If False, any mirror which has a matching DAG hash
@@ -1540,7 +1620,9 @@ def push_keys(*mirrors, **kwargs):
                 filename = fingerprint + '.pub'
 
                 export_target = os.path.join(prefix, filename)
-                spack.util.gpg.export_keys(export_target, fingerprint)
+
+                # Export public keys (private is set to False)
+                spack.util.gpg.export_keys(export_target, [fingerprint])
 
                 # If mirror is local, the above export writes directly to the
                 # mirror (export_target points directly to the mirror).
@@ -1650,11 +1732,11 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
 
     Arguments:
         mirrors (dict): Mirrors to check against
-        specs (iterable): Specs to check against mirrors
-        output_file (string): Path to output file to be written.  If provided,
+        specs (typing.Iterable): Specs to check against mirrors
+        output_file (str): Path to output file to be written.  If provided,
             mirrors with missing or out-of-date specs will be formatted as a
             JSON object and written to this file.
-        rebuild_on_errors (boolean): Treat any errors encountered while
+        rebuild_on_errors (bool): Treat any errors encountered while
             checking specs as a signal to rebuild package.
 
     Returns: 1 if any spec was out-of-date on any mirror, 0 otherwise.

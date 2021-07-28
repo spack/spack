@@ -4,14 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-from typing import Dict, Callable  # novm
+from typing import Callable, Dict  # novm
 
 import llnl.util.tty as tty
 
 import spack.cmd.modules.lmod
 import spack.cmd.modules.tcl
 
-description = "manipulate module files"
+description = "generate/manage module files"
 section = "user environment"
 level = "short"
 

@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import re
+
+from spack import *
 
 
 class Zoltan(AutotoolsPackage):
@@ -92,6 +93,9 @@ class Zoltan(AutotoolsPackage):
         # PGI runtime libraries
         if '%pgi' in spec:
             config_ldflags.append('-pgf90libs')
+        # NVHPC runtime libraries
+        if '%nvhpc' in spec:
+            config_ldflags.append('-fortranlibs')
         if '+shared' in spec:
             config_args.extend([
                 'RANLIB=echo',

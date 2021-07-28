@@ -11,8 +11,8 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
-import re
 import os
+import re
 from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
@@ -34,12 +34,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)
+    version('5.35.0', sha256='d6c0eb4763d1c73c1d18730664d43fcaf6100c31573c3b81e1504ec8f5b22708')
     version('5.33.3', sha256='4f4ba0aceb932e6cf7c05674d05e51ef759d1c97f0685dee65a8f3d190f737cd')
     version('5.31.7', sha256='d05c4e72128f95ef6ffad42728ecbbd0d9437290bf0f88268b51af011f26b57d')
     version('5.31.4', sha256='418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5')
 
     # Maintenance releases (even numbers, recommended)
-    version('5.32.1', sha256='03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c', preferred=True)
+    version('5.34.0', sha256='551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a', preferred=True)
+    version('5.32.1', sha256='03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c')
     version('5.32.0', sha256='efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4')
     version('5.30.3', sha256='32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f')
     version('5.30.2', sha256='66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689')
@@ -63,6 +65,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     depends_on('gdbm')
     depends_on('berkeley-db')
+    depends_on('bzip2+shared')
+    depends_on('zlib+shared')
 
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
@@ -78,8 +82,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     patch('macos-11-version-check.patch', when='@5.24.1:5.32.0 platform=darwin')
 
     # Enable builds with the NVIDIA compiler
+    # The Configure script assumes some gcc specific behavior, and use
+    # the mini Perl environment to bootstrap installation.
     patch('nvhpc-5.30.patch', when='@5.30.0:5.30.99 %nvhpc')
-    conflicts('@5.32.0:', when='%nvhpc',
+    patch('nvhpc-5.32.patch', when='@5.32.0:5.32.99 %nvhpc')
+    conflicts('@5.32.0:', when='%nvhpc@:20.11',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
 
     # Installing cpanm alongside the core makes it safe and simple for
@@ -265,11 +272,21 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             mkdirp(module.perl_lib_dir)
 
     def setup_build_environment(self, env):
+        spec = self.spec
+
         # This is to avoid failures when using -mmacosx-version-min=11.1
         # since not all Apple Clang compilers support that version range
         # See https://eclecticlight.co/2020/07/21/big-sur-is-both-10-16-and-11-0-its-official/
-        if self.spec.satisfies('os=bigsur'):
+        if spec.satisfies('os=bigsur'):
             env.set('SYSTEM_VERSION_COMPAT', 1)
+
+        # This is how we tell perl the locations of bzip and zlib.
+        env.set('BUILD_BZIP2', 0)
+        env.set('BZIP2_INCLUDE', spec['bzip2'].prefix.include)
+        env.set('BZIP2_LIB', spec['bzip2'].libs.directories[0])
+        env.set('BUILD_ZLIB', 0)
+        env.set('ZLIB_INCLUDE', spec['zlib'].prefix.include)
+        env.set('ZLIB_LIB', spec['zlib'].libs.directories[0])
 
     @run_after('install')
     def filter_config_dot_pm(self):

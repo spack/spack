@@ -41,7 +41,7 @@ class OmegaH(CMakePackage):
 
     depends_on('gmsh', when='+examples', type='build')
     depends_on('mpi', when='+mpi')
-    depends_on('trilinos +kokkos +teuchos', when='+trilinos')
+    depends_on('trilinos +kokkos', when='+trilinos')
     depends_on('zlib', when='+zlib')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
@@ -93,4 +93,8 @@ class OmegaH(CMakePackage):
         flags = list(flags)
         if name == 'cxxflags':
             flags.append(self.compiler.cxx11_flag)
+
+            if self.spec.satisfies('%cce'):
+                flags.append("-Wno-final-dtor-non-final-class")
+
         return (None, None, flags)

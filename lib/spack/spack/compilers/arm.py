@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.compiler
 import re
+
+import spack.compiler
 
 
 class Arm(spack.compiler.Compiler):

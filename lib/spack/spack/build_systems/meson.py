@@ -9,6 +9,7 @@ import os
 from typing import List  # novm
 
 from llnl.util.filesystem import working_dir
+
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, run_after
 
@@ -52,9 +53,12 @@ class MesonPackage(PackageBase):
 
     build_time_test_callbacks = ['check']
 
-    variant('buildtype', default='release',
+    variant('buildtype', default='debugoptimized',
             description='Meson build type',
             values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
+    variant('default_library', default='shared', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+    variant('strip', default=False, description='Strip targets on install')
 
     depends_on('meson', type='build')
     depends_on('ninja', type='build')
@@ -96,6 +100,15 @@ class MesonPackage(PackageBase):
         except KeyError:
             build_type = 'release'
 
+        strip = 'true' if '+strip' in pkg.spec else 'false'
+
+        if 'default_library=static,shared' in pkg.spec:
+            default_library = 'both'
+        elif 'default_library=static' in pkg.spec:
+            default_library = 'static'
+        else:
+            default_library = 'shared'
+
         args = [
             '--prefix={0}'.format(pkg.prefix),
             # If we do not specify libdir explicitly, Meson chooses something
@@ -103,8 +116,9 @@ class MesonPackage(PackageBase):
             # find libraries and pkg-config files.
             # See https://github.com/mesonbuild/meson/issues/2197
             '--libdir={0}'.format(pkg.prefix.lib),
-            '--buildtype={0}'.format(build_type),
-            '--strip',
+            '-Dbuildtype={0}'.format(build_type),
+            '-Dstrip={0}'.format(strip),
+            '-Ddefault_library={0}'.format(default_library)
         ]
 
         return args
@@ -131,6 +145,7 @@ class MesonPackage(PackageBase):
         * ``--libdir``
         * ``--buildtype``
         * ``--strip``
+        * ``--default_library``
 
         which will be set automatically.
 

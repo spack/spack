@@ -2,12 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 from spack import *
 
 
-class MlperfDeepcam(Package):
+class MlperfDeepcam(Package, CudaPackage):
     """PyTorch implementation for the climate segmentation benchmark,
        based on the Exascale Deep Learning for Climate Analytics"""
 

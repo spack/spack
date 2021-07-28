@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack import *
 
 
@@ -58,11 +57,11 @@ class Geopm(AutotoolsPackage):
     depends_on('doxygen', type='build', when='+doc')
     depends_on('numactl', when="@:1.0.0-rc2")
     depends_on('mpi', when='+mpi')
-    depends_on('hwloc@1.11.9', when='@:0.5.1+hwloc')
+    depends_on('hwloc@1.11.9', when='@:0.5.1')
     depends_on('json-c', when='@:0.9.9')
     depends_on('py-cycler@0.10.0:', when="@1.0.0:", type=('build', 'run'))
     depends_on('py-pandas@0.22.0:', type=('build', 'run'))
-    depends_on('py-tables@3.4.3:3.5.2', when="@1.0.0:", type=('build', 'run'))
+    depends_on('py-tables@3.4.3:', when="@1.0.0:", type=('build', 'run'))
     depends_on('py-cffi@1.6.0:', when="@1.1.0:", type=('build', 'run'))
     depends_on('py-pyyaml@5.1.0:', when="@1.1.0:", type=('build', 'run'))
     depends_on('py-mock@3.0.0:', when="@1.1.0:", type=('build', 'run'))

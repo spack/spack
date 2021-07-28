@@ -1,10 +1,18 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
 import os
 import sys
+
+try:
+    import sysconfig  # novm
+except ImportError:
+    # Not supported on Python 2.6
+    pass
+
+import archspec.cpu
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -17,7 +25,27 @@ import spack.spec
 import spack.store
 import spack.user_environment as uenv
 import spack.util.executable
+import spack.util.path
 from spack.util.environment import EnvironmentModifications
+
+
+def spec_for_current_python():
+    """For bootstrapping purposes we are just interested in the Python
+    minor version (all patches are ABI compatible with the same minor)
+    and on whether ucs4 support has been enabled for Python 2.7
+
+    See:
+      https://www.python.org/dev/peps/pep-0513/
+      https://stackoverflow.com/a/35801395/771663
+    """
+    version_str = '.'.join(str(x) for x in sys.version_info[:2])
+    variant_str = ''
+    if sys.version_info[0] == 2 and sys.version_info[1] == 7:
+        unicode_size = sysconfig.get_config_var('Py_UNICODE_SIZE')
+        variant_str = '+ucs4' if unicode_size == 4 else '~ucs4'
+
+    spec_fmt = 'python@{0} {1}'
+    return spec_fmt.format(version_str, variant_str)
 
 
 @contextlib.contextmanager
@@ -26,11 +54,8 @@ def spack_python_interpreter():
     which Spack is currently running as the only Python external spec
     available.
     """
-    python_cls = type(spack.spec.Spec('python').package)
     python_prefix = os.path.dirname(os.path.dirname(sys.executable))
-    externals = python_cls.determine_spec_details(
-        python_prefix, [os.path.basename(sys.executable)])
-    external_python = externals[0]
+    external_python = spec_for_current_python()
 
     entry = {
         'buildable': False,
@@ -60,24 +85,22 @@ def make_module_available(module, spec=None, install=False):
     # We can constrain by a shortened version in place of a version range
     # because this spec is only used for querying or as a placeholder to be
     # replaced by an external that already has a concrete version. This syntax
-    # is not suffucient when concretizing without an external, as it will
+    # is not sufficient when concretizing without an external, as it will
     # concretize to python@X.Y instead of python@X.Y.Z
-    spec.constrain('^python@%d.%d' % sys.version_info[:2])
+    python_requirement = '^' + spec_for_current_python()
+    spec.constrain(python_requirement)
     installed_specs = spack.store.db.query(spec, installed=True)
 
     for ispec in installed_specs:
         # TODO: make sure run-environment is appropriate
-        module_path = os.path.join(ispec.prefix,
-                                   ispec['python'].package.site_packages_dir)
-        module_path_64 = module_path.replace('/lib/', '/lib64/')
+        module_path = ispec['python'].package.get_python_lib(prefix=ispec.prefix)
         try:
             sys.path.append(module_path)
-            sys.path.append(module_path_64)
             __import__(module)
             return
         except ImportError:
             tty.warn("Spec %s did not provide module %s" % (ispec, module))
-            sys.path = sys.path[:-2]
+            sys.path = sys.path[:-1]
 
     def _raise_error(module_name, module_spec):
         error_msg = 'cannot import module "{0}"'.format(module_name)
@@ -94,16 +117,13 @@ def make_module_available(module, spec=None, install=False):
         spec.concretize()
     spec.package.do_install()
 
-    module_path = os.path.join(spec.prefix,
-                               spec['python'].package.site_packages_dir)
-    module_path_64 = module_path.replace('/lib/', '/lib64/')
+    module_path = spec['python'].package.get_python_lib(prefix=spec.prefix)
     try:
         sys.path.append(module_path)
-        sys.path.append(module_path_64)
         __import__(module)
         return
     except ImportError:
-        sys.path = sys.path[:-2]
+        sys.path = sys.path[:-1]
         _raise_error(module, spec)
 
 
@@ -112,7 +132,7 @@ def get_executable(exe, spec=None, install=False):
 
     Args:
         exe (str): needed executable name
-        spec (Spec or str): spec to search for exe in (default exe)
+        spec (spack.spec.Spec or str): spec to search for exe in (default exe)
         install (bool): install spec if not available
 
     When ``install`` is True, Spack will use the python used to run Spack as an
@@ -171,18 +191,74 @@ def get_executable(exe, spec=None, install=False):
     _raise_error(exe, spec)
 
 
+def _bootstrap_config_scopes():
+    tty.debug('[BOOTSTRAP CONFIG SCOPE] name=_builtin')
+    config_scopes = [
+        spack.config.InternalConfigScope('_builtin', spack.config.config_defaults)
+    ]
+    for name, path in spack.config.configuration_paths:
+        platform = spack.architecture.platform().name
+        platform_scope = spack.config.ConfigScope(
+            '/'.join([name, platform]), os.path.join(path, platform)
+        )
+        generic_scope = spack.config.ConfigScope(name, path)
+        config_scopes.extend([generic_scope, platform_scope])
+        msg = '[BOOTSTRAP CONFIG SCOPE] name={0}, path={1}'
+        tty.debug(msg.format(generic_scope.name, generic_scope.path))
+        tty.debug(msg.format(platform_scope.name, platform_scope.path))
+    return config_scopes
+
+
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
-    # Default configuration scopes excluding command
-    # line and builtin
-    config_scopes = [
-        spack.config.ConfigScope(name, path)
-        for name, path in spack.config.configuration_paths
-    ]
-
+    bootstrap_store_path = store_path()
     with spack.architecture.use_platform(spack.architecture.real_platform()):
-        with spack.config.use_configuration(*config_scopes):
-            with spack.repo.use_repositories(spack.paths.packages_path):
-                with spack.store.use_store(spack.paths.user_bootstrap_store):
+        with spack.repo.use_repositories(spack.paths.packages_path):
+            with spack.store.use_store(bootstrap_store_path):
+                # Default configuration scopes excluding command line
+                # and builtin but accounting for platform specific scopes
+                config_scopes = _bootstrap_config_scopes()
+                with spack.config.use_configuration(*config_scopes):
                     with spack_python_interpreter():
                         yield
+
+
+def store_path():
+    """Path to the store used for bootstrapped software"""
+    enabled = spack.config.get('bootstrap:enable', True)
+    if not enabled:
+        msg = ('bootstrapping is currently disabled. '
+               'Use "spack bootstrap enable" to enable it')
+        raise RuntimeError(msg)
+
+    bootstrap_root_path = spack.config.get(
+        'bootstrap:root', spack.paths.user_bootstrap_path
+    )
+    bootstrap_store_path = spack.util.path.canonicalize_path(
+        os.path.join(bootstrap_root_path, 'store')
+    )
+    return bootstrap_store_path
+
+
+def clingo_root_spec():
+    # Construct the root spec that will be used to bootstrap clingo
+    spec_str = 'clingo-bootstrap@spack+python'
+
+    # Add a proper compiler hint to the root spec. We use GCC for
+    # everything but MacOS.
+    if str(spack.architecture.platform()) == 'darwin':
+        spec_str += ' %apple-clang'
+    else:
+        spec_str += ' %gcc'
+
+    # Add hint to use frontend operating system on Cray
+    if str(spack.architecture.platform()) == 'cray':
+        spec_str += ' os=fe'
+
+    # Add the generic target
+    generic_target = archspec.cpu.host().family
+    spec_str += ' target={0}'.format(str(generic_target))
+
+    tty.debug('[BOOTSTRAP ROOT SPEC] clingo: {0}'.format(spec_str))
+
+    return spack.spec.Spec(spec_str)

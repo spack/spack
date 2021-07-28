@@ -2,13 +2,15 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import pytest
 import os
 import shutil
+
+import pytest
+
 import llnl.util.filesystem as fs
 
-import spack.spec
 import spack.environment as ev
+import spack.spec
 from spack.main import SpackCommand
 
 develop = SpackCommand('develop')

@@ -4,18 +4,25 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-import pytest
 
-from spack.error import SpecError, UnsatisfiableSpecError
-from spack.spec import UnconstrainableDependencySpecError
-from spack.spec import Spec, SpecFormatSigilError, SpecFormatStringError
-from spack.variant import InvalidVariantValueError, UnknownVariantError
-from spack.variant import MultipleValuesInExclusiveVariantError
-from spack.variant import substitute_abstract_variants
+import pytest
 
 import spack.architecture
 import spack.directives
 import spack.error
+from spack.error import SpecError, UnsatisfiableSpecError
+from spack.spec import (
+    Spec,
+    SpecFormatSigilError,
+    SpecFormatStringError,
+    UnconstrainableDependencySpecError,
+)
+from spack.variant import (
+    InvalidVariantValueError,
+    MultipleValuesInExclusiveVariantError,
+    UnknownVariantError,
+    substitute_abstract_variants,
+)
 
 
 def make_spec(spec_like, concrete):
@@ -776,7 +783,7 @@ class TestSpecSematics(object):
         sigil_package_segments = [("{@VERSIONS}", '@' + str(spec.version)),
                                   ("{%compiler}", '%' + str(spec.compiler)),
                                   ("{arch=architecture}",
-                                   ' arch=' + str(spec.architecture))]
+                                   'arch=' + str(spec.architecture))]
 
         compiler_segments = [("{compiler.name}", "name"),
                              ("{compiler.version}", "versions")]
@@ -798,7 +805,7 @@ class TestSpecSematics(object):
         for named_str, prop in package_segments:
             expected = getattr(spec, prop, "")
             actual = spec.format(named_str)
-            assert str(expected) == actual
+            assert str(expected).strip() == actual
 
         for named_str, expected in sigil_package_segments:
             actual = spec.format(named_str)
@@ -1019,6 +1026,36 @@ class TestSpecSematics(object):
                 spec['splice-t'].full_hash())
         # Finally, the spec should know it's been spliced:
         assert out.spliced
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_with_cached_hashes(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+
+        # monkeypatch hashes so we can test that they are cached
+        spec._full_hash = 'aaaaaa'
+        spec._build_hash = 'aaaaaa'
+        dep._full_hash = 'bbbbbb'
+        dep._build_hash = 'bbbbbb'
+        spec['splice-h']._full_hash = 'cccccc'
+        spec['splice-h']._build_hash = 'cccccc'
+        spec['splice-z']._full_hash = 'dddddd'
+        spec['splice-z']._build_hash = 'dddddd'
+        dep['splice-z']._full_hash = 'eeeeee'
+        dep['splice-z']._build_hash = 'eeeeee'
+
+        out = spec.splice(dep, transitive=transitive)
+        out_z_expected = (dep if transitive else spec)['splice-z']
+
+        assert out.full_hash() != spec.full_hash()
+        assert (out['splice-h'].full_hash() == dep.full_hash()) == transitive
+        assert out['splice-z'].full_hash() == out_z_expected.full_hash()
+
+        assert out.build_hash() != spec.build_hash()
+        assert (out['splice-h'].build_hash() == dep.build_hash()) == transitive
+        assert out['splice-z'].build_hash() == out_z_expected.build_hash()
 
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_input_unchanged(self, transitive):

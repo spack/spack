@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Gdb(AutotoolsPackage, GNUMirrorPackage):
@@ -18,6 +19,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers = ['robertu94']
 
+    version('10.2',   sha256='b33ad58d687487a821ec8d878daab0f716be60d0936f2e3ac5cf08419ce70350')
     version('10.1',   sha256='f12f388b99e1408c01308c3f753313fafa45517740c81ab7ed0d511b13e2cf55')
     version('9.2',    sha256='38ef247d41ba7cc3f6f93a612a78bab9484de9accecbe3b0150a3c0391a3faf0')
     version('9.1',    sha256='fcda54d4f35bc53fb24b50009a71ca98410d71ff2620942e3c829a7f5d614252')
@@ -44,6 +46,14 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     variant('gold', default=False, description='Enable gold linker')
     variant('ld', default=False, description='Enable ld')
     variant('tui', default=False, description='Enable tui')
+
+    # Resolves the undefined references to libintl_gettext while linking gdbserver
+    # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
+    patch('gdb-libintl.patch', level=0, when='@10.1:')
+
+    # Silence warnings about imp being deprecated on new python versions
+    # https://sourceware.org/pipermail/gdb-patches/2021-February/176622.html
+    patch('importlib.patch', when="@8.3.1:10.2 ^python@3.4:")
 
     # Required dependency
     depends_on('texinfo', type='build')

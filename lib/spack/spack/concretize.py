@@ -16,33 +16,31 @@ TODO: make this customizable and allow users to configure
 """
 from __future__ import print_function
 
-import platform
 import os.path
+import platform
 import tempfile
+from contextlib import contextmanager
+from itertools import chain
+
+from functools_backport import reverse_order
 
 import archspec.cpu
 
 import llnl.util.filesystem as fs
+import llnl.util.lang
 import llnl.util.tty as tty
 
-from itertools import chain
-from functools_backport import reverse_order
-from contextlib import contextmanager
-
-import llnl.util.lang
-
-import spack.repo
 import spack.abi
-import spack.spec
-import spack.compilers
 import spack.architecture
+import spack.compilers
 import spack.error
+import spack.repo
+import spack.spec
 import spack.tengine
 import spack.variant as vt
 from spack.config import config
-from spack.version import ver, Version, VersionList, VersionRange
-from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
-
+from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
+from spack.version import Version, VersionList, VersionRange, ver
 
 #: impements rudimentary logic for ABI compatibility
 _abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
@@ -724,6 +722,23 @@ def concretize_specs_together(*abstract_specs, **kwargs):
     Returns:
         List of concretized specs
     """
+    if spack.config.get('config:concretizer') == 'original':
+        return _concretize_specs_together_original(*abstract_specs, **kwargs)
+    return _concretize_specs_together_new(*abstract_specs, **kwargs)
+
+
+def _concretize_specs_together_new(*abstract_specs, **kwargs):
+    import spack.solver.asp
+    result = spack.solver.asp.solve(abstract_specs)
+
+    if not result.satisfiable:
+        result.print_cores()
+        tty.die("Unsatisfiable spec.")
+
+    return [s.copy() for s in result.specs]
+
+
+def _concretize_specs_together_original(*abstract_specs, **kwargs):
     def make_concretization_repository(abstract_specs):
         """Returns the path to a temporary repository created to contain
         a fake package that depends on all of the abstract specs.

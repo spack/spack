@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
-import errno
-import os
 import collections
+import errno
+import getpass
+import os
 import shutil
 import stat
 import tempfile
-import getpass
 
 import pytest
 
@@ -19,9 +19,8 @@ from llnl.util.filesystem import mkdirp, partition_path, touch, working_dir
 import spack.paths
 import spack.stage
 import spack.util.executable
-
 from spack.resource import Resource
-from spack.stage import Stage, StageComposite, ResourceStage, DIYStage
+from spack.stage import DIYStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
 
 # The following values are used for common fetch and stage mocking fixtures:
@@ -691,14 +690,14 @@ class TestStage(object):
         shutil.rmtree(str(name))
 
     def test_create_stage_root(self, tmpdir, no_path_access):
-        """Test _create_stage_root permissions."""
+        """Test create_stage_root permissions."""
         test_dir = tmpdir.join('path')
         test_path = str(test_dir)
 
         try:
             if getpass.getuser() in str(test_path).split(os.sep):
                 # Simply ensure directory created if tmpdir includes user
-                spack.stage._create_stage_root(test_path)
+                spack.stage.create_stage_root(test_path)
                 assert os.path.exists(test_path)
 
                 p_stat = os.stat(test_path)
@@ -706,7 +705,7 @@ class TestStage(object):
             else:
                 # Ensure an OS Error is raised on created, non-user directory
                 with pytest.raises(OSError) as exc_info:
-                    spack.stage._create_stage_root(test_path)
+                    spack.stage.create_stage_root(test_path)
 
                 assert exc_info.value.errno == errno.EACCES
         finally:
@@ -748,10 +747,10 @@ class TestStage(object):
         #
         #  with monkeypatch.context() as m:
         #      m.setattr(os, 'stat', _stat)
-        #      spack.stage._create_stage_root(user_path)
+        #      spack.stage.create_stage_root(user_path)
         #      assert os.stat(user_path).st_uid != os.getuid()
         monkeypatch.setattr(os, 'stat', _stat)
-        spack.stage._create_stage_root(user_path)
+        spack.stage.create_stage_root(user_path)
 
         # The following check depends on the patched os.stat as a poor
         # substitute for confirming the generated warnings.

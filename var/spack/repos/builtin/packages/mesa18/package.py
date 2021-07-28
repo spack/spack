@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import sys
+
+from spack import *
 
 
 class Mesa18(AutotoolsPackage):
@@ -28,7 +28,7 @@ class Mesa18(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
+    depends_on('binutils+plugins', when=(sys.platform != 'darwin'), type='build')
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('gettext', type='build')

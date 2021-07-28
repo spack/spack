@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class Xsdk(BundlePackage):
@@ -41,6 +42,7 @@ class Xsdk(BundlePackage):
     variant('butterflypack', default=True, description='Enable butterflypack package build')
     variant('heffte', default=True, description='Enable heffte package build')
     variant('slate', default=True, description='Enable slate package build')
+    variant('arborx', default=True, description='Enable ArborX build')
 
     depends_on('hypre@develop+superlu-dist+shared', when='@develop')
     depends_on('hypre@2.20.0+superlu-dist+shared', when='@0.6.0')
@@ -62,17 +64,17 @@ class Xsdk(BundlePackage):
     depends_on('superlu-dist@5.2.2', when='@0.3.0')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')
 
-    depends_on('trilinos@develop+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus~dtk+intrepid2+shards+stratimikos gotype=int cxxstd=14',
+    depends_on('trilinos@develop+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan+zoltan2+amesos2~exodus~dtk+intrepid2+shards+stratimikos gotype=int cxxstd=14',
                when='@develop +trilinos')
-    depends_on('trilinos@13.0.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus~dtk+intrepid2+shards gotype=int',
+    depends_on('trilinos@13.0.1+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan+zoltan2+amesos2~exodus~dtk+intrepid2+shards gotype=int',
                when='@0.6.0 +trilinos')
-    depends_on('trilinos@12.18.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
+    depends_on('trilinos@12.18.1+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
                when='@0.5.0 +trilinos')
-    depends_on('trilinos@12.14.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
+    depends_on('trilinos@12.14.1+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan+zoltan2+amesos2~exodus+dtk+intrepid2+shards',
                when='@0.4.0 +trilinos')
-    depends_on('trilinos@12.12.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
+    depends_on('trilinos@12.12.1+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan~zoltan2~amesos2~exodus',
                when='@0.3.0 +trilinos')
-    depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
+    depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan~zoltan2~amesos2~exodus',
                when='@xsdk-0.2.0 +trilinos')
 
     depends_on('datatransferkit@master', when='@develop +trilinos +datatransferkit')
@@ -97,7 +99,7 @@ class Xsdk(BundlePackage):
     depends_on('dealii +trilinos~adol-c', when='+trilinos +dealii')
     depends_on('dealii ~trilinos', when='~trilinos +dealii')
     depends_on('dealii@master~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5~netcdf+metis~sundials~ginkgo~symengine~nanoflann', when='@develop +dealii')
-    depends_on('dealii@9.2.0~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5~netcdf+metis~sundials~ginkgo~symengine', when='@0.6.0 +dealii')
+    depends_on('dealii@9.2.0~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5~netcdf+metis~sundials~ginkgo~symengine~simplex~arborx', when='@0.6.0 +dealii')
     depends_on('dealii@9.1.1~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5~netcdf+metis~sundials~ginkgo~symengine', when='@0.5.0 +dealii')
     depends_on('dealii@9.0.1~assimp~python~doc~gmsh+petsc~slepc+mpi~int64+hdf5~netcdf+metis~ginkgo~symengine', when='@0.4.0 +dealii')
 
@@ -175,6 +177,8 @@ class Xsdk(BundlePackage):
     depends_on('tasmanian@7.0+xsdkflags+mpi+blas+cuda+magma' + tasmanian_openmp, when='@0.5.0 +cuda')
     depends_on('tasmanian@6.0+xsdkflags+blas~openmp', when='@0.4.0')
     depends_on('tasmanian@6.0+xsdkflags+blas+cuda+magma~openmp', when='@0.4.0 +cuda')
+
+    depends_on('arborx@1.0', when='@develop +arborx')
 
     # the Fortran 2003 bindings of phist require python@3:, but this
     # creates a conflict with other packages like petsc@main. Actually

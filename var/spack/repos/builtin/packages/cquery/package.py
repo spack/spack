@@ -18,6 +18,9 @@ class Cquery(CMakePackage):
 
     depends_on('llvm')
 
+    # trivial patch (missing header) by mueller@kip.uni-heidelberg.de
+    patch('fix-gcc10.patch', level=0, when='%gcc@10.0:')
+
     def cmake_args(self):
         args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=YES',
                 '-DSYSTEM_CLANG=ON']

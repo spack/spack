@@ -11,7 +11,7 @@ archspec
 
 * Homepage: https://pypi.python.org/pypi/archspec
 * Usage: Labeling, comparison and detection of microarchitectures
-* Version: 0.1.2 (commit 068b0ebd641211971acf10f39aa876703a34bae4)
+* Version: 0.1.2 (commit 4dbf253daf37e4a008e4beb6489f347b4a35aed4)
 
 argparse
 --------

@@ -15,9 +15,13 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     url      = "https://github.com/AMReX-Codes/amrex/releases/download/20.05/amrex-20.05.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
 
-    maintainers = ['mic84', 'asalmgren']
+    maintainers = ['WeiqunZhang', 'asalmgren']
 
     version('develop', branch='development')
+    version('21.07', sha256='9630b8c0c7ffbf3f5ea4d973a3fdb40b9b10fec0f8df33b9e24d76d2c1d15771')
+    version('21.06', sha256='6982c22837d7c0bc4583065d9da55e0aebcf07b54386e4b90a779391fe73fd53')
+    version('21.05', sha256='eb6d21e48279ad67278413c77b29a1754c18ffe741aa6b3a9f3f01eeac13177f')
+    version('21.04', sha256='1c610e4b0800b16f7f1da74193ff11af0abfb12198b36a7e565a6a7f793087fa')
     version('21.03', sha256='6307bf75c80c2076bf5bd1cff4d12483280a32b5175fe117f32eed9c89cd1ac5')
     version('21.02', sha256='4a7ef997c43f9f03f1b06dd1aafa01218773a3265a5c1811f77eb4521b5e75b3')
     version('21.01', sha256='59de3ed429347ee6a7ad4f09c0c431248f2e081f59c301db37cacb36993622f4')
@@ -61,6 +65,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Build data services')
     variant('particles',  default=False,
             description='Build particle classes')
+    variant('plotfile_tools', default=False,
+            description='Build plotfile_tools like fcompare')
     variant('sundials', default=False,
             description='Build AMReX with SUNDIALS support')
     variant('hdf5',  default=False,
@@ -84,12 +90,16 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.17:', type='build', when='^cuda @11:')
     depends_on('hdf5@1.10.4: +mpi', when='+hdf5')
     depends_on('rocrand', type='build', when='+rocm')
+    depends_on('rocprim', type='build', when='@21.05: +rocm')
     depends_on('hypre@2.18.2:', type='link', when='@:21.02 +hypre')
     depends_on('hypre@2.19.0:', type='link', when='@21.03: ~cuda +hypre')
     depends_on('hypre@2.20.0:', type='link', when='@21.03: +cuda +hypre')
     depends_on('petsc', type='link', when='+petsc')
-    conflicts('%apple-clang')
-    conflicts('%clang')
+
+    # these versions of gcc have lambda function issues
+    # see https://github.com/spack/spack/issues/22310
+    conflicts('%gcc@8.1.0:8.3.0', when='@21.03')
+    conflicts('%gcc@8.1.0:8.2.0', when='@21.01:21.02')
 
     # Check options compatibility
     conflicts('+sundials', when='~fortran',
@@ -107,7 +117,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+petsc', when='@:20.06',
               msg='PETSc support needs AMReX newer than version 20.06')
     conflicts('+petsc', when='@:20.07 ~fortran',
-              msg='AMReX < 20.08 needs the Fortran API (+fortran) for PETSc supportx')
+              msg='AMReX < 20.08 needs the Fortran API (+fortran) for PETSc support')
     conflicts('+petsc', when='~linear_solvers',
               msg='AMReX PETSc support needs variant +linear_solvers')
     conflicts('+cuda', when='@:19.08',
@@ -121,6 +131,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('cuda_arch=30', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('cuda_arch=32', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('+rocm', when='@:20.11', msg='AMReX HIP support needs AMReX newer than version 20.11')
+    conflicts('%rocm@4.2.0:4.2.99', when='+rocm',
+              msg='AMReX does not support rocm-4.2 due to a compiler bug')
     conflicts('+cuda', when='+rocm', msg='CUDA and HIP support are exclusive')
 
     def url_for_version(self, version):
@@ -158,6 +170,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
                                      'linear_solvers'),
             self.define_from_variant('AMReX_AMRDATA', 'amrdata'),
             self.define_from_variant('AMReX_PARTICLES', 'particles'),
+            self.define_from_variant('AMReX_PLOTFILE_TOOLS', 'plotfile_tools'),
             self.define_from_variant('AMReX_HDF5', 'hdf5'),
             self.define_from_variant('AMReX_HYPRE', 'hypre'),
             self.define_from_variant('AMReX_PETSC', 'petsc'),
