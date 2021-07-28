@@ -120,7 +120,7 @@ class Octopus(Package):
             args.extend([
                 '--enable-cuda'
                 ])
-            
+
         # --with-etsf-io-prefix=
         # --with-sparskit=${prefix}/lib/libskit.a
         # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
