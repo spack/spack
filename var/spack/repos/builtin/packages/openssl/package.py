@@ -8,10 +8,11 @@ import re
 
 import llnl.util.tty as tty
 
-from spack.package import *
+from spack.build_systems.windows_variants import WindowsPackage
+from spack import *
 
 
-class Openssl(Package):  # Uses Fake Autotools, should subclass Package
+class Openssl(Package, WindowsPackage):   # Uses Fake Autotools, should subclass Package
     """OpenSSL is an open source project that provides a robust,
     commercial-grade, and full-featured toolkit for the Transport
     Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
