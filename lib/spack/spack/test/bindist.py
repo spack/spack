@@ -624,6 +624,8 @@ def test_update_sbang(tmpdir, test_mirror):
         uninstall_cmd('-y', '/%s' % new_spec.dag_hash())
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 # Need one where the platform has been changed to the test platform.
 def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
                              mock_packages):
@@ -633,6 +635,8 @@ def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
     uninstall_cmd('-y', '/t5mczux3tfqpxwmg7egp7axy2jvyulqk')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures(
     'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
 )
