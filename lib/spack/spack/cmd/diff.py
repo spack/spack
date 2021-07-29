@@ -41,7 +41,7 @@ def setup_parser(subparser):
         help="load the first match if multiple packages match the spec"
     )
     subparser.add_argument(
-        '-a', '--attributes',
+        '-a', '--attribute',
         action='append',
         help="select the attributes to show (defaults to all)"
     )
