@@ -68,11 +68,12 @@ class SstElements(AutotoolsPackage):
     depends_on("sst-dumpi@master",     when="+dumpi")
     depends_on("flashdimmsim",     when="+flashdimmsim")
     depends_on("hybridsim@2.0.1",  when="+hybridsim")
+    depends_on("dramsim3@master",  when="+hybridsim")
+    depends_on("nvdimmsim@2.0.0",  when="+hybridsim")
     depends_on("nvdimmsim@2.0.0",  when="+nvdimmsim")
     depends_on("goblin-hmc-sim",   when="+goblin")
     depends_on("ramulator@sst",    when="+ramulator")
     depends_on("hbm-dramsim2",     when="+hbm")
-    depends_on("nvdimmsim@2.0.0",  when="+hybridsim")
     depends_on("otf",              when="+otf")
     depends_on("otf2",             when="+otf2")
     depends_on("gettext")
@@ -86,6 +87,8 @@ class SstElements(AutotoolsPackage):
     conflicts('+dumpi', msg='Dumpi not currently supported, contact SST Developers for help')
     conflicts('+otf', msg='OTF not currently supported, contact SST Developers for help')
     conflicts('+otf2', msg='OTF2 not currently supported, contact SST Developers for help')
+    conflicts('~dramsim2', when='+hybridsim', msg='hybridsim requires dramsim2, spec to include +dramsim2')
+    conflicts('~nvdimmsim', when='+hybridsim', msg='hybridsim requires nvdimmsim, spec should include +nvdimmsim')
 
     # force out-of-source builds
     build_directory = 'spack-build'
