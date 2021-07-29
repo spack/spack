@@ -13,6 +13,7 @@ class PySonataNetworkReduction(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/sonata-network-reduction"
 
     version('develop', branch='master')
+    version('0.1.8', tag='sonata-network-reduction-v0.1.8')
     version('0.1.7', tag='sonata-network-reduction-v0.1.7')
     version('0.1.0', tag='sonata-network-reduction-v0.1.0')
 
