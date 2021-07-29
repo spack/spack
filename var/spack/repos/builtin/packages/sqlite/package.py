@@ -202,6 +202,26 @@ class Sqlite(AutotoolsPackage):
             args.append("CPPFLAGS=-DSQLITE_ENABLE_COLUMN_METADATA=1")
 
         return args
+        
+    def configure(self, spec, prefix):
+        if not self.spec.satisfies('platform=windows'):
+            super(Sqlite, self).configure(spec, prefix)
+            
+    def build(self, spec, prefix):
+        if self.spec.satisfies('platform=windows'):
+            nmake = Executable('nmake.exe')            
+            print(self.configure_flag_args)
+            nmake('CC = \"%s\"' % os.environ.get('SPACK_CC'),
+                  'Makefile.msc')
+        else:
+            super(Sqlite, self).build(spec, prefix)
+
+    def install(self, spec, prefix):
+        if self.spec.satisfies('platform=windows'):
+            nmake = Executable('nmake.exe')
+            nmake('install')
+        else:
+            super(Sqlite, self).install(spec, prefix)
 
     @run_after("install")
     def build_libsqlitefunctions(self):
