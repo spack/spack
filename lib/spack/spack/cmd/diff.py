@@ -173,7 +173,7 @@ def diff(parser, args):
                       colorful=not args.dump_json)
 
     # Default to all attributes
-    attributes = args.attributes or ["all"]
+    attributes = args.attribute or ["all"]
 
     if args.dump_json:
         print(sjson.dump(c))
