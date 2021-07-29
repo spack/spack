@@ -7,7 +7,7 @@ from spack import *
 import llnl.util.tty as tty
 
 
-class Octopus(Package):
+class Octopus(Package, CudaPackage):
     """A real-space finite-difference (time-dependent) density-functional
     theory code."""
 
@@ -30,8 +30,6 @@ class Octopus(Package):
             description='Compile with Netcdf')
     variant('arpack', default=False,
             description='Compile with ARPACK')
-    variant('cuda', default=False,
-            description='Compile with CUDA')
 
     depends_on('blas')
     depends_on('gsl@1.9:')
@@ -48,7 +46,6 @@ class Octopus(Package):
     depends_on('scalapack', when='+scalapack')
     depends_on('netcdf-fortran', when='+netcdf')
     depends_on('arpack-ng', when='+arpack')
-    depends_on('cuda', when='+cuda')
 
     # optional dependencies:
     # TODO: etsf-io, sparskit,
