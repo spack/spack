@@ -768,7 +768,7 @@ def mutable_database(database_mutable_config, _store_dir_and_cache):
     store_path, store_cache = _store_dir_and_cache
     store_path.join('.spack-db').chmod(mode=0o755, rec=1)
 
-    yield database
+    yield database_mutable_config
 
     # Restore the initial state by copying the content of the cache back into
     # the store and making the database read-only
