@@ -87,7 +87,7 @@ class SstElements(AutotoolsPackage):
     conflicts('+dumpi', msg='Dumpi not currently supported, contact SST Developers for help')
     conflicts('+otf', msg='OTF not currently supported, contact SST Developers for help')
     conflicts('+otf2', msg='OTF2 not currently supported, contact SST Developers for help')
-    conflicts('~dramsim2', when='+hybridsim', msg='hybridsim requires dramsim2, spec to include +dramsim2')
+    conflicts('~dramsim2', when='+hybridsim', msg='hybridsim requires dramsim2, spec should include +dramsim2')
     conflicts('~nvdimmsim', when='+hybridsim', msg='hybridsim requires nvdimmsim, spec should include +nvdimmsim')
 
     # force out-of-source builds
