@@ -1779,15 +1779,23 @@ class Spec(object):
         """
         node_list = []  # Using a list to preserve preorder traversal.
         hash_list = []
+        root_node_dict = self.node_dict_with_hashes(hash)
+        hash_attr = 'full_hash'
+        if hash_attr not in root_node_dict:
+            hash_attr = 'build_hash'
+        if hash_attr not in root_node_dict:
+            hash_attr = 'hash'
+        #node_list.append(root_node_dict)
+        #hash_list.append(root_node_dict[hash_attr])
         for s in self.traverse(order='pre', deptype=hash.deptype):
-            spec_hash = s.node_dict_with_hashes(hash)[hash.attr[1:]]
+            spec_hash = s.node_dict_with_hashes(hash)[hash_attr]
             if spec_hash not in hash_list:
                 node_list.append(s.node_dict_with_hashes(hash))
                 hash_list.append(spec_hash)
             if s.build_spec is not s:
-                build_spec_list = s.build_spec.to_dict()['spec']['nodes']
+                build_spec_list = s.build_spec.to_dict(hash)['spec']['nodes']
                 for node in build_spec_list:
-                    node_hash = node[hash.attr[1:]]
+                    node_hash = node[hash_attr]
                     if node_hash not in hash_list:
                         node_list.append(node)
                         hash_list.append(node_hash)
@@ -1823,7 +1831,6 @@ class Spec(object):
             write_build_hash = 'build' in hash.deptype and (
                 self._hashes_final and self._build_hash or  # cached and final
                 not self._hashes_final)                     # lazily compute
-            # TODO: Check if these keys are correct?
             if write_full_hash:
                 node[ht.full_hash.attr[1:]] = self.full_hash()
             if write_build_hash:
@@ -1846,24 +1853,15 @@ class Spec(object):
         if 'name' in node.keys():
             # New format
             name = node['name']
-            for hash_type in ht.SpecHashDescriptor.hash_types:
-                setattr(spec, hash_type, node.get(hash_type[1:], None))
         else:
             # Old format
             name = next(iter(node))
             node = node[name]
-            setattr(spec, ht.dag_hash.attr, node.get(ht.dag_hash.attr[1:], 
-                    None))
-            setattr(spec, ht.build_hash.attr, node.get(ht.build_hash.attr[1:],
-                    None))
-            setattr(spec, ht.full_hash.attr, node.get(ht.full_hash.attr[1:],
-                    None))
+        for hash_type in ht.SpecHashDescriptor.hash_types:
+            setattr(spec, hash_type, node.get(hash_type[1:], None))
+
         spec.name = name
         spec.namespace = node.get('namespace', None)
-        spec._hash = node.get('hash', None)
-        spec._build_hash = node.get('build_hash', None)
-        spec._full_hash = node.get('full_hash', None)
-        spec._package_hash = node.get('package_hash', None)
 
         if 'version' in node or 'versions' in node:
             spec.versions = vn.VersionList.from_dict(node)
@@ -1926,14 +1924,15 @@ class Spec(object):
                 mvar._patches_in_order_of_appearance = patches
 
         # Don't read dependencies here; from_node_dict() is used by
-        # from_yaml() to read the root *and* each dependency spec.
+        # from_yaml() and from_json() to read the root *and* each dependency
+        # spec.
 
         return spec
 
     @staticmethod
     def build_spec_from_node_dict(node, hash_type=ht.dag_hash.attr[1:]):
         if 'build_spec' not in node.keys():
-            return
+            return None
         build_spec_dict = node['build_spec']
         return build_spec_dict['name'], build_spec_dict[hash_type], hash_type
 
@@ -1966,30 +1965,26 @@ class Spec(object):
                 dep_name = dep['name']
             if isinstance(elt, six.string_types):
                 # original format, elt is just the dependency hash.
-                dag_hash, deptypes = elt, ['build', 'link']
+                dep_hash, deptypes = elt, ['build', 'link']
             elif isinstance(elt, tuple):
                 # original deptypes format: (used tuples, not future-proof)
-                dag_hash, deptypes = elt
+                dep_hash, deptypes = elt
             elif isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
-                if 'hash' in elt:
-                    # old format
-                    dag_hash, deptypes = elt['hash'], elt['type']
-                else:
-                    for key in (ht.dag_hash.attr[1:], ht.build_hash.attr[1:],
-                                ht.full_hash.attr[1:]):
-                        if key in elt:
-                            dag_hash, deptypes = elt[key], elt['type']
-                            hash_type = key
-                            break
-                    else:
-                        raise spack.error.SpecError(
-                            "Couldn't parse dependency spec.")
+                for key in (ht.dag_hash.attr[1:],
+                            ht.build_hash.attr[1:],
+                            ht.full_hash.attr[1:]):
+                    if key in elt:
+                        dep_hash, deptypes = elt[key], elt['type']
+                        hash_type = key
+                        break
+                else:  # We never determined a hash type...
+                    raise spack.error.SpecError(
+                        "Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError(
                     "Couldn't parse dependency types in spec.")
-
-            yield dep_name, dag_hash, list(deptypes), hash_type
+            yield dep_name, dep_hash, list(deptypes), hash_type
 
     @staticmethod
     def from_literal(spec_dict, normal=True):
@@ -2203,32 +2198,41 @@ class Spec(object):
                         break
 
         if not any_deps:  # If we never see a dependency...
-            hash_type = ht.dag_hash.attr[1:]  # use the dag_hash
+            hash_type = ht.full_hash.attr[1:]  # use the full_hash provenance
         elif not hash_type:  # Seen a dependency, still don't know hash_type
-            raise spack.error.SpecError("YAML spec contains malformed"
+            raise spack.error.SpecError("Spec dictionary contains malformed"
                                         "dependencies. Old format?")
 
         hash_dict = {}
         root_spec_hash = None
 
         # Pass 1: Create a single lookup dictionary by hash
-        # Possible hash issues...
         for i, node in enumerate(nodes):
-            node_hash = node[hash_type]
+            if 'build_spec' in node.keys():
+                node_hash = node[ht.full_hash.attr[1:]]
+            else:
+                node_hash = node[hash_type]
             node_spec = Spec.from_node_dict(node)
             hash_dict[node_hash] = node
             hash_dict[node_hash]['node_spec'] = node_spec
             if i == 0:
                 root_spec_hash = node_hash
-
         if not root_spec_hash:
-            raise spack.error.SpecError("YAML spec contains no nodes.")
+            raise spack.error.SpecError("Spec dictionary contains no nodes.")
+        
+        from pprint import pprint
+        pprint(hash_dict)
 
         # Pass 2: Finish construction of all DAG edges (including build specs)
         for node_hash, node in hash_dict.items():
             node_spec = node['node_spec']
             for _, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
                 node_spec._add_dependency(hash_dict[dhash]['node_spec'], dtypes)
+            # TODO: Issue: In the case of a transitive splice, this leaves a
+            # build spec dangling because it does not account for the full hash.
+            # In other words, it will match the last dag_hash. Problem is: we
+            # store build specs by dag hash and it is possible for 2 build specs
+            # to have the same dag hash but different full hashes.
             if 'build_spec' in node.keys():
                 _, bhash, _ = Spec.build_spec_from_node_dict(node)
                 node_spec._build_spec = hash_dict[bhash]['node_spec']

@@ -1102,8 +1102,30 @@ class TestSpecSematics(object):
         assert spec.full_hash() != dep.full_hash()
         assert out.full_hash() != dep.full_hash()
         assert out.full_hash() != spec.full_hash()
+        node_list = out.to_dict()['spec']['nodes']
+        root_nodes = [n for n in node_list if n['full_hash'] == out.full_hash()]
+        build_spec_nodes = [n for n in node_list if n['full_hash'] == spec.full_hash()]
+        assert spec.full_hash() == out.build_spec.full_hash()
+        assert len(root_nodes) == 1
+        assert len(build_spec_nodes) == 1
 
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_dict_roundtrip(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
+
+        # Sanity check all hashes are unique...
+        assert spec.full_hash() != dep.full_hash()
+        assert out.full_hash() != dep.full_hash()
+        assert out.full_hash() != spec.full_hash()
+        from pprint import pprint
+        pprint(out.to_dict())
         out_rt_spec = Spec.from_dict(out.to_dict())  # rt is "round trip"
+        pprint(out_rt_spec.to_dict())
+        assert out_rt_spec.full_hash() == out.full_hash()
         out_rt_spec_bld_hash = out_rt_spec.build_spec.full_hash()
         out_rt_spec_h_bld_hash = out_rt_spec['splice-h'].build_spec.full_hash()
         out_rt_spec_z_bld_hash = out_rt_spec['splice-z'].build_spec.full_hash()

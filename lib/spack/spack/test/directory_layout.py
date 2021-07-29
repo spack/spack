@@ -15,7 +15,7 @@ import spack.paths
 import spack.repo
 from spack.directory_layout import (
     DirectoryLayout,
-    InvalidDirectoryLayoutParametersError
+    InvalidDirectoryLayoutParametersError,
 )
 from spack.spec import Spec
 
