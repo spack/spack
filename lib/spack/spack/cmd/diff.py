@@ -156,7 +156,7 @@ def print_difference(diffset, attributes="all", out=None):
                 out.write(bold("%s\n" % category.upper()))
 
             # Write the attribute
-            out.write("%s\n" % entry[1])
+            out.write("  %s\n" % entry[1])
 
 
 def diff(parser, args):
