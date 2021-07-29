@@ -7,13 +7,12 @@ from spack import *
 
 
 class Fides(CMakePackage) :
-    """A library that provides a schema for ADIOS2 streams.
-    """
+    """A library that provides a schema for ADIOS2 streams."""
     homepage = "https://gitlab.kitware.com/vtk/fides"
     url      = "https://gitlab.kitware.com/vtk/fides/-/archive/v1.0.0/fides-v1.0.0.tar.gz"
     git      = "https://gitlab.kitware.com/vtk/fides.git"
 
-    maintainers = ['caitlin.ross', 'dpugmire']
+    maintainers = ['caitlinross', 'dpugmire']
 
     version('master', branch='master')
     version('1.1.0', sha256='40d2e08b8d5cfdfc809eae6ed2ae0731108ce3b1383485f4934a5ec8aaa9425e')
@@ -32,11 +31,10 @@ class Fides(CMakePackage) :
 
     def cmake_args(self):
         spec = self.spec
-
-        options = []
-        options.append("-DVTKm_DIR={0}".format(spec['vtk-m'].prefix))
-        options.append("-DADIOS2_DIR={0}".format(spec['adios2'].prefix))
-        options.append("-DFIDES_ENABLE_TESTING=OFF")
-        options.append("-DFIDES_ENABLE_EXAMPLES=OFF")
-
+        options = [
+            self.define("VTKm_DIR", spec['vtk-m'].prefix),
+            self.define("ADIOS2_DIR", spec['adios2'].prefix),
+            self.define("FIDES_ENABLE_TESTING", "OFF"),
+            self.define("FIDES_ENABLE_EXAMPLES", "OFF")
+        ]
         return options
