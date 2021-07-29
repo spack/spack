@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Fides(CMakePackage) :
+class Fides(CMakePackage):
     """A library that provides a schema for ADIOS2 streams."""
     homepage = "https://gitlab.kitware.com/vtk/fides"
     url      = "https://gitlab.kitware.com/vtk/fides/-/archive/v1.0.0/fides-v1.0.0.tar.gz"
