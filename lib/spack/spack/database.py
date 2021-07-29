@@ -28,8 +28,6 @@ import sys
 import time
 from typing import Dict  # novm
 
-import six
-
 try:
     import uuid
     _use_uuid = True
