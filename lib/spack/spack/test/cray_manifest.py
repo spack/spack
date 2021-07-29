@@ -224,7 +224,7 @@ def _example_db():
 
 
 def test_read_cray_manifest(
-        tmpdir, config, mock_packages, mutable_database):
+        tmpdir, mutable_config, mock_packages, mutable_database):
     """Check that (a) we can read the cray manifest and add it to the Spack
        Database and (b) we can concretize specs based on that.
     """
