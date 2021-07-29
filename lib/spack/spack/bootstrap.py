@@ -93,7 +93,7 @@ def make_module_available(module, spec=None, install=False):
 
     for ispec in installed_specs:
         # TODO: make sure run-environment is appropriate
-        module_path = ispec['python'].package.get_python_lib(prefix=ispec.prefix)
+        module_path = ispec.package.site_packages_dir
         try:
             sys.path.append(module_path)
             __import__(module)
@@ -117,7 +117,7 @@ def make_module_available(module, spec=None, install=False):
         spec.concretize()
     spec.package.do_install()
 
-    module_path = spec['python'].package.get_python_lib(prefix=spec.prefix)
+    module_path = spec.package.site_packages_dir
     try:
         sys.path.append(module_path)
         __import__(module)

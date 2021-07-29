@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import llnl.util.filesystem
+
 import spack.compilers
 from spack.pkg.builtin.clingo import Clingo
 
@@ -67,3 +69,10 @@ class ClingoBootstrap(Clingo):
 
         env.set('CXXFLAGS', opts)
         env.set('LDFLAGS', opts)
+
+    @property
+    def site_packages_dir(self):
+        libraries = llnl.util.filesystem.FileList(llnl.util.filesystem.find(
+            root=self.prefix, files=['clingo*.so'], recursive=True
+        ))
+        return libraries.directories.pop()
