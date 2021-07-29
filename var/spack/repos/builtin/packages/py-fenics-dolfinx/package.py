@@ -32,13 +32,13 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("py-pybind11@2.6.2:2.7.99", type=("build", "run"))
     depends_on("xtensor@0.23.10:", type="build")
 
-    depends_on("py-fenics-ffcx@main", type=("run"), when="@main")
-    depends_on("py-fenics-ffcx@0.1.0", type=("run"), when="@0.1.0")
-    depends_on("py-fenics-ufl@main", type=("run"), when="@main")
-    depends_on("py-fenics-ufl@2021.1.0", type=("run"), when="@0.1.0")
+    depends_on("py-fenics-ffcx@main", type="run", when="@main")
+    depends_on("py-fenics-ffcx@0.1.0", type="run", when="@0.1.0")
+    depends_on("py-fenics-ufl@main", type="run", when="@main")
+    depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1.0")
 
-    depends_on("py-cffi", type=("run"))
-    depends_on("py-numpy", type=("run"))
+    depends_on("py-cffi", type="run")
+    depends_on("py-numpy", type="run")
 
     phases = ['build_ext', 'build', 'install']
 
