@@ -28,5 +28,5 @@ class Creduce(CMakePackage):
     depends_on('perl-file-which')
     depends_on('perl-getopt-tabular')
     depends_on('perl-regexp-common')
-    depends_on('perl-term-readkey')
+    depends_on('perl-termreadkey')
     depends_on('zlib')
