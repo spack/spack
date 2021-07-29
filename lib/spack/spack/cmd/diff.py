@@ -44,11 +44,6 @@ def setup_parser(subparser):
         '-a',
         dest='attributes',
         action='append',
-        choices=[
-            'all', 'version', 'concrete', 'node', 'node_compiler_set',
-            'node_compiler_version_set', 'node_os_set', 'node_platform_set',
-            'node_target_set', 'variant_set'
-        ],
         help="select the attributes to show (defaults to all)"
     )
 
