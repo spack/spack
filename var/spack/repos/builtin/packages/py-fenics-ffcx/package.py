@@ -21,7 +21,7 @@ class PyFenicsFfcx(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cffi', type=('run'))
 
-    depends_on('py-fenics-ufl@main', type=('run'), when='@main')
+    depends_on('py-fenics-ufl@main', type='run', when='@main')
     depends_on('py-fenics-ufl@2021.1.0', type=('run'), when='@0.1.0')
 
     depends_on('py-fenics-basix@main', type=('run'), when='@main')
