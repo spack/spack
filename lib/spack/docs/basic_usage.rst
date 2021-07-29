@@ -738,7 +738,8 @@ Oh no! We can see from the above that we have two different versions of zlib ins
 and the only difference between the two is the hash. This is a good use case for 
 ``spack diff``, which can easily show us the "diff" or set difference 
 between properties for two packages. Let's try it out.
-Since the only difference between these two is the hash, we provide the hashes:
+Since the only difference we see in the ``spack find`` view is the hash, let's use
+``spack diff`` to look for more detail. We will provide the two hashes:
 
 .. code-block::console
 
