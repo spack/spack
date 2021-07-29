@@ -6,7 +6,7 @@ import os
 import re
 from tempfile import NamedTemporaryFile
 
-import spack.platforms
+from spack import *
 
 
 class Sqlite(AutotoolsPackage):
@@ -192,15 +192,14 @@ class Sqlite(AutotoolsPackage):
             args.append('CPPFLAGS=-DSQLITE_ENABLE_COLUMN_METADATA=1')
 
         return args
-        
+
     def configure(self, spec, prefix):
         if not self.spec.satisfies('platform=windows'):
             super(Sqlite, self).configure(spec, prefix)
-            
+
     def build(self, spec, prefix):
         if self.spec.satisfies('platform=windows'):
-            nmake = Executable('nmake.exe')            
-            print(self.configure_flag_args)
+            nmake = Executable('nmake.exe')
             nmake('CC = \"%s\"' % os.environ.get('SPACK_CC'),
                   'Makefile.msc')
         else:
@@ -208,8 +207,13 @@ class Sqlite(AutotoolsPackage):
 
     def install(self, spec, prefix):
         if self.spec.satisfies('platform=windows'):
-            nmake = Executable('nmake.exe')
-            nmake('install')
+            mkdirp(self.prefix.include)
+            mkdirp(self.prefix.lib)
+            mkdirp(self.prefix.bin)
+            install('*.h', self.prefix.include)
+            install('*.lib', self.prefix.lib)
+            install('*.dll', self.prefix.bin)
+            install('*.exe', self.prefix.bin)
         else:
             super(Sqlite, self).install(spec, prefix)
 
