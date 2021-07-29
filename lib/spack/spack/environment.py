@@ -454,15 +454,19 @@ def _eval_conditional(string):
     return eval(string, valid_variables)
 
 
+_default_keep = 5
+
+
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
-                 link=default_view_link):
+                 link=default_view_link, keep=_default_keep):
         self.base = base_path
         self.root = spack.util.path.canonicalize_path(root)
         self.projections = projections
         self.select = select
         self.exclude = exclude
         self.link = link
+        self.keep = keep
 
     def select_fn(self, spec):
         return any(spec.satisfies(s) for s in self.select)
@@ -475,7 +479,8 @@ class ViewDescriptor(object):
                     self.projections == other.projections,
                     self.select == other.select,
                     self.exclude == other.exclude,
-                    self.link == other.link])
+                    self.link == other.link,
+                    self.keep == other.keep])
 
     def to_dict(self):
         ret = syaml.syaml_dict([('root', self.root)])
@@ -492,6 +497,8 @@ class ViewDescriptor(object):
             ret['exclude'] = self.exclude
         if self.link != default_view_link:
             ret['link'] = self.link
+        if self.keep != _default_keep:
+            ret['keep'] = self.keep
         return ret
 
     @staticmethod
@@ -501,7 +508,13 @@ class ViewDescriptor(object):
                               d.get('projections', {}),
                               d.get('select', []),
                               d.get('exclude', []),
-                              d.get('link', default_view_link))
+                              d.get('link', default_view_link),
+                              d.get('keep', _default_keep))
+
+    @property
+    def _impl_dir(self):
+        root_dir, root_name = os.path.split(self.root)
+        return os.path.join(root_dir, '._%s' % root_name)
 
     @property
     def _current_root(self):
@@ -517,9 +530,7 @@ class ViewDescriptor(object):
 
     def _next_root(self, specs):
         content_hash = self.content_hash(specs)
-        root_dir = os.path.dirname(self.root)
-        root_name = os.path.basename(self.root)
-        return os.path.join(root_dir, '._%s' % root_name, content_hash)
+        return os.path.join(self._impl_dir, content_hash)
 
     def content_hash(self, specs):
         d = syaml.syaml_dict([
@@ -650,12 +661,25 @@ class ViewDescriptor(object):
                 raise SpackEnvironmentViewError(msg)
             os.rename(tmp_symlink_name, self.root)
 
-            # remove old_root
-            if old_root and os.path.exists(old_root):
+            # If we have more than the number of views to keep in the directory
+            # delete the oldest until the correct number remain. Do not count
+            # things that aren't named as a root would be.
+            roots = [os.path.join(self._impl_dir, entry)
+                     for entry in os.listdir(self._impl_dir)
+                     if re.match(r'[a-z0-9]{32}', entry)]
+
+            num_to_remove = len(roots) - self.keep
+            if num_to_remove <= 0:
+                return
+
+            # sorting by st_mtime means the oldest come first
+            oldest_roots = sorted(roots, key=lambda path: os.stat(path).st_mtime)
+            for root_to_delete in oldest_roots[:num_to_remove]:
+                # remove old_root
                 try:
-                    shutil.rmtree(old_root)
+                    shutil.rmtree(root_to_delete)
                 except (IOError, OSError) as e:
-                    msg = "Failed to remove old view at %s\n" % old_root
+                    msg = "Failed to remove old view at %s\n" % root_to_delete
                     msg += str(e)
                     tty.warn(msg)
 

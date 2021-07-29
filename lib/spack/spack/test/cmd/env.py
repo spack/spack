@@ -2581,6 +2581,36 @@ spack:
     assert spec.prefix in full_contents
 
 
+def test_view_keep_number(tmpdir, install_mockery, mock_fetch):
+    spack_yaml = """
+spack:
+  specs:
+  - trivial-install-test-package
+  view:
+    default:
+      root: view
+      keep: 1
+"""
+    _env_create('test', StringIO(spack_yaml))
+
+    with ev.read('test') as e:
+        install()
+
+        # Add something that will affect the view hash
+        e.default_view.exclude = ['gcc']
+        e.regenerate_views()
+
+        view_path = e.default_view._impl_dir
+
+    assert len(os.listdir(view_path)) == 1
+
+    with ev.read('test') as e:
+        e.default_view.keep = 2
+        e.regenerate_views()
+
+    assert len(os.listdir(view_path)) == 2
+
+
 @pytest.mark.regression('24148')
 def test_virtual_spec_concretize_together(tmpdir):
     # An environment should permit to concretize "mpi"

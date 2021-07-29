@@ -126,6 +126,10 @@ schema = {
                                                 'type': 'string',
                                                 'pattern': '(roots|all)',
                                             },
+                                            'keep': {
+                                                'type': 'integer',
+                                                'minimum': 1,
+                                            },
                                             'select': {
                                                 'type': 'array',
                                                 'items': {
