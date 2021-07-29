@@ -44,7 +44,6 @@ can take a number of specs as input.
 """
 import itertools
 import sys
-
 from heapq import heapify, heappop, heappush
 
 from llnl.util.tty.color import ColorStream
