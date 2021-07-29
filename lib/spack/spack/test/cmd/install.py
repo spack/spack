@@ -12,7 +12,6 @@ import time
 
 import pytest
 from six.moves import builtins
-from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fs
 
@@ -491,7 +490,7 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with pytest.raises((HTTPError, URLError)):
+            with pytest.raises(SpackError):
                 install(
                     '--log-format=cdash',
                     '--log-file=cdash_reports',
