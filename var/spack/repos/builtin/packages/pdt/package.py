@@ -17,6 +17,8 @@ class Pdt(AutotoolsPackage):
        through a class library supporting common PDB operations.
 
     """
+    
+    maintainers = ['wspear', 'eugeneswalker', 'khuck', 'sameershende']
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
     url      = "http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.25.1.tar.gz"
 
