@@ -89,7 +89,7 @@ def compare_specs(a, b, to_string=False, colorful=True):
     spec2_not_spec1 = list(b_facts.difference(a_facts))
 
     # Format the spec names to be colored
-    fmt = "{name}{@version}{hash}"
+    fmt = "{name}{@version}{/hash}"
     a_name = a.format(fmt, color=color.get_color_when())
     b_name = b.format(fmt, color=color.get_color_when())
 
@@ -98,8 +98,8 @@ def compare_specs(a, b, to_string=False, colorful=True):
         "intersect": flatten(intersect) if to_string else intersect,
         "a_not_b": flatten(spec1_not_spec2) if to_string else spec1_not_spec2,
         "b_not_a": flatten(spec2_not_spec1) if to_string else spec2_not_spec1,
-        "a_name": a_name if colorful else a.format("{name}{@version}{hash}"),
-        "b_name": b_name if colorful else b.format("{name}{@version}{hash}")
+        "a_name": a_name if colorful else a.format("{name}{@version}{/hash}"),
+        "b_name": b_name if colorful else b.format("{name}{@version}{/hash}")
     }
 
 
