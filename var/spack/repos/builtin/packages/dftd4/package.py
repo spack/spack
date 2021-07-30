@@ -10,13 +10,13 @@ class Dftd4(MesonPackage):
     """Generally Applicable Atomic-Charge Dependent London Dispersion Correction"""
 
     homepage = "https://www.chemie.uni-bonn.de/pctc/mulliken-center/software/dftd4"
-    url = "https://github.com/dftd4/dftd4/archive/refs/tags/v3.2.0.tar.gz"
+    url = "https://github.com/dftd4/dftd4/releases/download/v3.2.0/dftd4-3.2.0-source.tar.xz"
     git = "https://github.com/dftd4/dftd4.git"
 
     version("main", branch="main")
-    version("3.2.0", "9874db9e2329519db258dd75ee7ce7c97947f975b00087ba5fdf9a28741088f1")
-    version("3.1.0", "cba67cce1ebd194e844c582b3ebec250ba7d349894ee6e8052686e39c70131ce")
-    version("3.0.0", "6db4ee4c815dbafd5e2efb6f35259798a0b99057ec0e7c40f0cc5a91c094e08e")
+    version("3.2.0", "cef505e091469aa9b8f008ee1756545bb87b02760bb2c7ca54854e20ba8c590a")
+    version("3.1.0", "b652aa7cbf8d087c91bcf80f2d5801459ecf89c5d4176ebb39e963ee740ed54b")
+    version("3.0.0", "a7539d68d48d851bf37b79e37ea907c9da5eee908d0aa58a0a7dc15f04f8bc35")
 
     variant("openmp", default=True, description="Use OpenMP parallelisation")
     variant("python", default=False, description="Build Python extension module")
