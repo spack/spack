@@ -99,7 +99,9 @@ class Lorene(MakefilePackage):
         install_tree('Lib', prefix.lib)
         mkdirp(prefix.bin)
         if '+bin_star' in spec:
-            install_tree(join_path('Codes', 'Bin_star'), prefix.bin)
+            for exe in ['coal', 'lit_bin', 'init_bin', 'coal_regu',
+                        'init_bin_regu', 'analyse', 'prepare_seq']:
+                install(join_path('Codes', 'Bin_star', exe), prefix.bin)
 
     @property
     def libs(self):
