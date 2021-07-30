@@ -51,6 +51,24 @@ def _attempts_str(wait_time, nattempts):
     return ' after {0:0.2f}s and {1}'.format(wait_time, attempts)
 
 
+def lock_checking(func):
+    from functools import wraps
+    @wraps(func)
+    def win_lock(self, *args, **kwargs):
+        if _platform == "win32" and self._reads > 0:
+            self._partial_unlock()
+            try:
+                suc = func(self,*args,**kwargs)
+            except Exception as e:
+                if self.current_lock:
+                    self._lock(self.current_lock, timeout=kwargs['timeout'])
+                raise e
+        else:
+            suc = func(self,*args, **kwargs)
+        return suc
+    return win_lock
+
+
 class Lock(object):
     """This is an implementation of a filesystem lock using Python's lockf.
 
@@ -64,6 +82,8 @@ class Lock(object):
     functions of this object are not thread-safe. A process also must not
     maintain multiple locks on the same file.
     """
+
+    file_map = {}
 
     def __init__(self, path, start=0, length=0, default_timeout=None,
                  debug=False, desc=''):
@@ -89,11 +109,12 @@ class Lock(object):
                 helpful for distinguishing between different Spack locks.
         """
         self.path = path
-        self._file = None
+        self.__file = None
         self._file_mode = ""
         self._reads = 0
         self._writes = 0
-
+        if self.path not in Lock.file_map:
+            Lock.file_map[self.path] = self
         # byte range parameters
         self._start = start
         self._length = length
@@ -127,18 +148,32 @@ class Lock(object):
 
         # Mapping of supported locks to description
         self.lock_type = {self.LOCK_SH: 'read', self.LOCK_EX: 'write'}
+        self.current_lock = None
 
     @property
-    def lock_fail_condition(self):
-        if self.lock_condition is None:
-            if _platform == "win32":
-                # 33 "The process cannot access the file because another
-                #     process has locked a portion of the file."
-                # 32 "The process cannot access the file because it is being
-                #     used by another process"
-                return e.args[0] not in (32, 33)
-            else:
-                return e.errno not in (errno.EAGAIN, errno.EACCES)
+    def _file(self):
+        if self == Lock.file_map[self.path]:
+            return self.__file
+        else:
+            return Lock.file_map[self.path]._file
+
+    @_file.setter
+    def _file(self, val):
+        if not self is Lock.file_map[self.path]:
+            Lock.file_map[self.path]._file = val
+        else:
+            print(Lock.file_map.keys())
+            self.__file is val
+
+    def __lock_fail_condition(self,e):
+        if _platform == "win32":
+            # 33 "The process cannot access the file because another
+            #     process has locked a portion of the file."
+            # 32 "The process cannot access the file because it is being
+            #     used by another process"
+            return e.args[0] not in (32, 33)
+        else:
+            return e.errno not in (errno.EAGAIN, errno.EACCES)
 
     @staticmethod
     def _poll_interval_generator(_wait_times=None):
@@ -178,6 +213,7 @@ class Lock(object):
         activity = '#reads={0}, #writes={1}'.format(self._reads, self._writes)
         return '({0}, {1}, {2})'.format(location, timeout, activity)
 
+    @lock_checking
     def _lock(self, op, timeout=None):
         """This takes a lock using POSIX locks (``fcntl.lockf``).
 
@@ -276,7 +312,8 @@ class Lock(object):
             return True
 
         except self.LOCK_CATCH as e:
-            if self.lock_fail_condition:
+            # check if lock failure or lock is already held
+            if self.__lock_fail_condition(e):
                 raise
 
         return False
@@ -331,7 +368,7 @@ class Lock(object):
         self._file.flush()
         os.fsync(self._file.fileno())
 
-    def _unlock(self):
+    def _partial_unlock(self):
         """Releases a lock using POSIX locks (``fcntl.lockf``)
 
         Releases the lock regardless of mode. Note that read locks may
@@ -347,6 +384,17 @@ class Lock(object):
         else:
             fcntl.lockf(self._file, self.LOCK_UN,
                         self._length, self._start, os.SEEK_SET)
+
+
+    def _unlock(self):
+        """Releases a lock using POSIX locks (``fcntl.lockf``)
+
+        Releases the lock regardless of mode. Note that read locks may
+        be masquerading as write locks, but this removes either.
+
+        Reset all lock attributes to initial states
+        """
+        self._partial_unlock()
 
         self._file.close()
         self._file = None
@@ -371,6 +419,7 @@ class Lock(object):
             # can raise LockError.
             wait_time, nattempts = self._lock(self.LOCK_SH, timeout=timeout)
             self._reads += 1
+            self.current_lock = self.LOCK_SH
             # Log if acquired, which includes counts when verbose
             self._log_acquired('READ LOCK', wait_time, nattempts)
             return True
@@ -396,6 +445,7 @@ class Lock(object):
             # can raise LockError.
             wait_time, nattempts = self._lock(self.LOCK_EX, timeout=timeout)
             self._writes += 1
+            self.LOCK_EX
             # Log if acquired, which includes counts when verbose
             self._log_acquired('WRITE LOCK', wait_time, nattempts)
 
