@@ -59,7 +59,7 @@ spack:
     - [$compilers]
 
   gitlab-ci:
-    image: { "name": "ecpe4s/ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
+    image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
@@ -81,7 +81,7 @@ spack:
         - spack --version
         - cd share/spack/gitlab/cloud_pipelines/stacks/radiuss
         - spack env activate --without-view .
-      image: { "name": "ecpe4s/ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
+      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
       #before_script:
       #  - . "./share/spack/setup-env.sh"
       #  - spack --version

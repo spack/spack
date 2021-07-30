@@ -196,7 +196,7 @@ build_systems-develop-build:
 
 .radiuss-generate:
   extends: [ ".radiuss"]
-  image: { "name": "ecpe4s/ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
+  image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
 
 # ---------  PRs ---------
 radiuss-pr-generate:
