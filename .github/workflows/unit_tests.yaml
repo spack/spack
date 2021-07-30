@@ -1,4 +1,4 @@
-name: linux tests
+name: Style checks and Unit tests
 
 on:
   push:
@@ -91,7 +91,7 @@ jobs:
         fi
 
   # Run unit tests with different configurations on linux
-  unittests:
+  unit-tests-ubuntu:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     strategy:
@@ -167,7 +167,7 @@ jobs:
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
-  shell:
+  unit-tests-shell:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
@@ -279,7 +279,7 @@ jobs:
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
-  build:
+  unit-tests-macos:
     needs: [ validate, style, changes ]
     runs-on: macos-latest
     strategy:
