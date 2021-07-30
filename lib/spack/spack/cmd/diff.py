@@ -189,7 +189,7 @@ def print_difference(c, attributes="all", out=None):
             category = key
 
             # print category in bold, colorized
-            out.write(boldblue("@@ %s @@\n" % category.capitalize()))
+            out.write(boldblue("@@ %s @@\n" % category))
 
         # Print subtractions first
         while subtraction:

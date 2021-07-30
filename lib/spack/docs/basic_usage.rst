@@ -748,7 +748,7 @@ Since the only difference we see in the ``spack find`` view is the hash, let's u
 
     --- zlib@1.2.11efzjziyc3dmb5h5u5azsthgbgog5mj7g
     +++ zlib@1.2.11sl7m27mzkbejtkrajigj3a3m37ygv4u2
-    @@ Variant_value @@
+    @@ variant_value @@
     -  zlib optimize bool(False)
     +  zlib optimize bool(True)
 
@@ -762,7 +762,7 @@ will render nicely! Here is an example:
     ```diff
     --- zlib@1.2.11efzjziyc3dmb5h5u5azsthgbgog5mj7g
     +++ zlib@1.2.11sl7m27mzkbejtkrajigj3a3m37ygv4u2
-    @@ Variant_value @@
+    @@ variant_value @@
     -  zlib optimize bool(False)
     +  zlib optimize bool(True)
     ```
@@ -783,10 +783,10 @@ removed in B (red). Here is another example with an additional difference type, 
 
     --- python@2.7.8tsxdi6gl4lihp25qrm4d6nys3nypufbf
     +++ python@3.8.11yjtseru4nbpllbaxb46q7wfkyxbuvzxx
-    @@ Variant_value @@
+    @@ variant_value @@
     -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
     +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
-    @@ Version @@
+    @@ version @@
     -  openssl Version(1.0.2u)
     +  openssl Version(1.1.1k)
     -  python Version(2.7.8)
@@ -805,7 +805,7 @@ Here is how you would filter to show just versions:
 
     --- python@2.7.8tsxdi6gl4lihp25qrm4d6nys3nypufbf
     +++ python@3.8.11yjtseru4nbpllbaxb46q7wfkyxbuvzxx
-    @@ Version @@
+    @@ version @@
     -  openssl Version(1.0.2u)
     +  openssl Version(1.1.1k)
     -  python Version(2.7.8)
