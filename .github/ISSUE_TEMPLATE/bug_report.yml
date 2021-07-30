@@ -53,6 +53,6 @@ body:
     attributes:
       value: |
         We encourage you to try, as much as possible, to reduce your problem to the minimal example that still reproduces the issue. That would help us a lot in fixing it quickly and effectively!
-        If you want to ask a question about the tool (how to use it, what it can currently do, etc.), try the `#general` channel on our Slack first. We have a welcoming community and chances are you'll get your reply faster and without opening an issue.
+        If you want to ask a question about the tool (how to use it, what it can currently do, etc.), try the `#general` channel on [our Slack](https://slack.spack.io/) first. We have a welcoming community and chances are you'll get your reply faster and without opening an issue.
         
         Other than that, thanks for taking the time to contribute to Spack!

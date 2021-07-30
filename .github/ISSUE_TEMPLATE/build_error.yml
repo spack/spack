@@ -40,11 +40,15 @@ body:
     attributes:
       label: Additional information
       description: |
-        Please upload the following files. They should be present in the stage directory of the failing build. Also upload any config.log or similar file if one exists.
+        Please upload the following files:
+        * **`spack-build-out.txt`**
+        * **`spack-build-env.txt`**
+        
+        They should be present in the stage directory of the failing build. Also upload any `config.log` or similar file if one exists.
   - type: markdown
     attributes:
       value: |
-        Some packages have maintainers who have volunteered to debug build failures. Run `spack maintainers <name-of-the-package>` and @mention them here if they exist.
+        Some packages have maintainers who have volunteered to debug build failures. Run `spack maintainers <name-of-the-package>` and **@mention** them here if they exist.
   - type: checkboxes
     id: checks
     attributes:
@@ -52,7 +56,7 @@ body:
       options:
         - label: I have run `spack debug report` and reported the version of Spack/Python/Platform
           required: true
-        - label: I have run `spack maintainers <name-of-the-package>` and @mentioned any maintainers
+        - label: I have run `spack maintainers <name-of-the-package>` and **@mentioned** any maintainers
           required: true
         - label: I have uploaded the build log and environment files
           required: true
