@@ -8,7 +8,7 @@ import llnl.util.tty as tty
 from spack import *
 
 
-class Octopus(Package):
+class Octopus(Package, CudaPackage):
     """A real-space finite-difference (time-dependent) density-functional
     theory code."""
 
@@ -114,10 +114,15 @@ class Octopus(Package):
                 '--with-scalapack=%s' % spec['scalapack'].libs
             ])
 
-            # --with-etsf-io-prefix=
-            # --with-sparskit=${prefix}/lib/libskit.a
-            # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
-            # --with-berkeleygw-prefix=${prefix}
+        if '+cuda' in spec:
+            args.extend([
+                '--enable-cuda'
+            ])
+
+        # --with-etsf-io-prefix=
+        # --with-sparskit=${prefix}/lib/libskit.a
+        # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
+        # --with-berkeleygw-prefix=${prefix}
 
         # When preprocessor expands macros (i.e. CFLAGS) defined as quoted
         # strings the result may be > 132 chars and is terminated.
