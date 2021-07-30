@@ -63,7 +63,7 @@ class Lorene(MakefilePackage):
               "-I$(HOME_LORENE)/C++/Include_extra " +
               fftw_incdirs + " " + gsl_incdirs + " " + pgplot_incdirs)),
             ('@RANLIB@', "ls"),
-            ('@MAKEDEPEND@', ": >$(df).d"), # "cpp $(INC) -M >> $(df).d $<"
+            ('@MAKEDEPEND@', ": >$(df).d"),
             ('@FFT_DIR@', "FFTW3"),
             ('@LIB_CXX@', fftw_libdirs + " " + fftw_libs + " -lgfortran"),
             ('@LIB_GSL@', gsl_libdirs + " " + gsl_libs),
