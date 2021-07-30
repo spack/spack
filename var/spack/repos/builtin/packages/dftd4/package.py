@@ -10,12 +10,13 @@ class Dftd4(MesonPackage):
     """Generally Applicable Atomic-Charge Dependent London Dispersion Correction"""
 
     homepage = "https://www.chemie.uni-bonn.de/pctc/mulliken-center/software/dftd4"
+    url = "https://github.com/dftd4/dftd4/archive/refs/tags/v3.2.0.tar.gz"
     git = "https://github.com/dftd4/dftd4.git"
 
     version("main", branch="main")
-    version("3.2.0", tag="v3.2.0")
-    version("3.1.0", tag="v3.1.0")
-    version("3.0.0", tag="v3.0.0")
+    version("3.2.0", "9874db9e2329519db258dd75ee7ce7c97947f975b00087ba5fdf9a28741088f1")
+    version("3.1.0", "cba67cce1ebd194e844c582b3ebec250ba7d349894ee6e8052686e39c70131ce")
+    version("3.0.0", "6db4ee4c815dbafd5e2efb6f35259798a0b99057ec0e7c40f0cc5a91c094e08e")
 
     variant("openmp", default=True, description="Use OpenMP parallelisation")
     variant("python", default=False, description="Build Python extension module")
