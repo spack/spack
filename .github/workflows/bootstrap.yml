@@ -1,0 +1,43 @@
+name: Bootstrapping
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - releases/**
+    paths-ignore:
+      # Don't run if we only modified packages in the
+      # built-in repository or documentation
+      - 'var/spack/repos/builtin/**'
+      - '!var/spack/repos/builtin/packages/clingo-bootstrap/**'
+      - 'lib/spack/docs/**'
+  schedule:
+    # nightly at 2:16 AM
+    - cron: '16 2 * * *'
+
+jobs:
+
+  fedora:
+    runs-on: ubuntu-latest
+    container: "fedora:latest"
+    steps:
+    - name: Install dependencies
+      run: |
+        dnf install -y \
+            bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
+            make patch tcl unzip which xz \
+            cmake bison bison-devel libstdc++-static python3 python3-devel
+    - uses: actions/checkout@v2
+    - name: Setup repo and non-root user
+      run: |
+        git --version
+        git fetch --unshallow
+        . .github/workflows/setup_git.sh
+        useradd spack-test
+        chown -R spack-test .
+    - name: Run unit tests
+      shell: runuser -u spack-test -- bash {0}
+      run: |
+          source share/spack/setup-env.sh
+          spack external find cmake bison
+          spack -d solve zlib
