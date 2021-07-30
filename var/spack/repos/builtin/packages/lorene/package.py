@@ -39,7 +39,7 @@ class Lorene(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
-        blas_libs = spec['lapack'].libs.link_flags
+        blas_libs = spec['blas'].libs.link_flags
         fftw_incdirs = "-I" + spec['fftw'].prefix.include if '+fftw' in spec else ""
         fftw_libdirs = "-L" + spec['fftw'].prefix.lib if '+fftw' in spec else ""
         fftw_libs = spec['fftw'].libs.link_flags
