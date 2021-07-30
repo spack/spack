@@ -45,7 +45,7 @@ class Pdt(AutotoolsPackage):
         options = ['-prefix=%s' % prefix]
         if self.compiler.name == 'xl':
             options.append('-XLC')
-        elif self.compiler.name == 'intel':
+        elif self.compiler.name == 'intel' or self.compiler.name == 'oneapi':
             options.append('-icpc')
         elif self.compiler.name == 'pgi':
             options.append('-pgCC')
