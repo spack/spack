@@ -13,6 +13,7 @@ class Dftd4(MesonPackage):
     git = "https://github.com/dftd4/dftd4.git"
 
     version("main", branch="main")
+    version("3.2.0", tag="v3.2.0")
     version("3.1.0", tag="v3.1.0")
     version("3.0.0", tag="v3.0.0")
 
