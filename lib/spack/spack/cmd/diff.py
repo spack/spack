@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import operator
 import sys
 
 import llnl.util.tty as tty
@@ -47,11 +46,19 @@ def setup_parser(subparser):
     )
 
 
-def bold(string):
+def boldblue(string):
     """
-    Make a header string bold so we can easily see it
+    Make a header string bold and blue we can easily see it
     """
-    return color.colorize("@*{%s}" % string)
+    return color.colorize("@*b{%s}" % string)
+
+
+def green(string):
+    return color.colorize("@G{%s}" % string)
+
+
+def red(string):
+    return color.colorize("@R{%s}" % string)
 
 
 def compare_specs(a, b, to_string=False, colorful=True):
@@ -82,17 +89,17 @@ def compare_specs(a, b, to_string=False, colorful=True):
     spec2_not_spec1 = list(b_facts.difference(a_facts))
 
     # Format the spec names to be colored
-    fmt = "{name}{@version}{/hash:7}"
+    fmt = "{name}{@version}{hash}"
     a_name = a.format(fmt, color=color.get_color_when())
-    b_name = a.format(fmt, color=color.get_color_when())
+    b_name = b.format(fmt, color=color.get_color_when())
 
     # We want to show what is the same, and then difference for each
     return {
         "intersect": flatten(intersect) if to_string else intersect,
         "a_not_b": flatten(spec1_not_spec2) if to_string else spec1_not_spec2,
         "b_not_a": flatten(spec2_not_spec1) if to_string else spec2_not_spec1,
-        "a_name": a_name if colorful else a.format("{name}{@version}{/hash:7}"),
-        "b_name": b_name if colorful else b.format("{name}{@version}{/hash:7}")
+        "a_name": a_name if colorful else a.format("{name}{@version}{hash}"),
+        "b_name": b_name if colorful else b.format("{name}{@version}{hash}")
     }
 
 
@@ -125,38 +132,74 @@ def flatten(tuple_list):
     return updated
 
 
-def print_difference(diffset, attributes="all", out=None):
+def print_difference(c, attributes="all", out=None):
     """
     Print the difference.
 
-    Given a diffset and a user preference (e.g., print versions or print all)
-    print a tabular, organized version of the diffset
+    Given a diffset for A and a diffset for B, print red/green diffs to show
+    the differences.
     """
     # Default to standard out unless another stream is provided
     out = out or sys.stdout
 
+    A = c['b_not_a']
+    B = c['a_not_b']
+
+    out.write(red("--- %s\n" % c["a_name"]))
+    out.write(green("+++ %s\n" % c["b_name"]))
+
     # Cut out early if we don't have any differences!
-    if not diffset:
+    if not A and not B:
         print("No differences\n")
         return
 
-    # Sort by name so they are grouped together
-    sorted_diffset = sorted(diffset, key=operator.itemgetter(0))
+    def group_by_type(diffset):
+        grouped = {}
+        for entry in diffset:
+            if entry[0] not in grouped:
+                grouped[entry[0]] = []
+            grouped[entry[0]].append(entry[1])
 
-    # Always print a new category
+        # Sort by second value to make comparison slightly closer
+        for key, values in grouped.items():
+            values.sort()
+        return grouped
+
+    A = group_by_type(A)
+    B = group_by_type(B)
+
+    # print a directionally relevant diff
+    keys = list(A) + list(B)
+
     category = None
-    for entry in sorted_diffset:
-        if "all" in attributes or entry[0] in attributes:
+    for key in keys:
+        if "all" not in attributes and key not in attributes:
+            continue
 
-            # If we have a new category, create a new section
-            if category != entry[0]:
-                category = entry[0]
+        # Write the attribute, B is subtraction A is addition
+        subtraction = [] if key not in B else B[key]
+        addition = [] if key not in A else A[key]
 
-                # print category in bold, colorized
-                out.write(bold("%s\n" % category.upper()))
+        # Bail out early if we don't have any entries
+        if not subtraction and not addition:
+            continue
 
-            # Write the attribute
-            out.write("  %s\n" % entry[1])
+        # If we have a new category, create a new section
+        if category != key:
+            category = key
+
+            # print category in bold, colorized
+            out.write(boldblue("@@ %s @@\n" % category.capitalize()))
+
+        # Print subtractions first
+        while subtraction:
+            out.write(red("-  %s\n" % subtraction.pop(0)))
+            if addition:
+                out.write(green("+  %s\n" % addition.pop(0)))
+
+        # Any additions left?
+        while addition:
+            out.write(green("+  %s\n" % addition.pop(0)))
 
 
 def diff(parser, args):
@@ -179,9 +222,4 @@ def diff(parser, args):
         print(sjson.dump(c))
     else:
         tty.warn("This interface is subject to change.\n")
-
-        # For each spec, print the differences wanted by the user
-        tty.info("diff(%s, %s)" % (c['a_name'], c['b_name']))
-        print_difference(c['a_not_b'], attributes)
-        tty.info("diff(%s, %s)" % (c['b_name'], c['a_name']))
-        print_difference(c['b_not_a'], attributes)
+        print_difference(c, attributes)
