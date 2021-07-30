@@ -45,13 +45,16 @@ spack:
         - 1.21.0
     cmake:
       version:
-        - 3.20.3
+        - 3.20.5
     curl:
       version:
         - 7.76.1
     diffutils:
       version:
         - 3.7
+    doxygen:
+      version:
+        - 1.8.20
     elfutils:
       version:
         - 0.185
@@ -71,6 +74,9 @@ spack:
     git:
       version:
         - 2.31.1
+    glib:
+      version:
+        - 2.68.2
     hdf5:
       variants: +fortran +hl +shared
       version:
@@ -133,8 +139,11 @@ spack:
         - 2.0.14
     openblas:
       version:
-        - 0.3.15
+        - 0.3.17
       variants: threads=openmp
+    openssl:
+      version:
+        - 1.1.1k
     perl:
       version:
         - 5.34.0
@@ -156,6 +165,10 @@ spack:
     texinfo:
       version:
         - 6.5
+    trilinos:
+      version:
+        - 13.0.1
+      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       version:
         - 5.2.5
@@ -225,7 +238,7 @@ spack:
     - faodel
     - flecsi@1.4.2 +external_cinch
     - flit
-    - fortrilinos ^trilinos +nox +superlu-dist +stratimikos
+    - fortrilinos
     - gasnet
     - ginkgo
     - globalarrays
@@ -284,7 +297,7 @@ spack:
     - sz
     - tasmanian
     - tau
-    - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +boost +superlu-dist gotype=long
+    - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     - turbine
     - umap
     - unifyfs@0.9.1
