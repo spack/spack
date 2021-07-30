@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Rnpletal(Package):
@@ -29,7 +28,6 @@ class Rnpletal(Package):
 
     depends_on('bison', type='build')
     depends_on('flex', type='build')
-    # depends_on('xforms')
 
     parallel = False
 
