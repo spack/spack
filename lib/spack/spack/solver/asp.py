@@ -96,7 +96,10 @@ def _id(thing):
 class AspFunction(AspObject):
     def __init__(self, name, args=None):
         self.name = name
-        self.args = [] if args is None else args
+        self.args = () if args is None else args
+
+    def _cmp_key(self):
+        return (self.name, self.args)
 
     def __call__(self, *args):
         return AspFunction(self.name, args)
@@ -111,10 +114,6 @@ class AspFunction(AspObject):
                 return clingo.String(str(arg))
         return clingo.Function(
             self.name, [argify(arg) for arg in self.args], positive=positive)
-
-    def __getitem___(self, *args):
-        self.args[:] = args
-        return self
 
     def __str__(self):
         return "%s(%s)" % (
