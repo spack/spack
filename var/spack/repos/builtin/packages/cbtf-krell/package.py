@@ -39,7 +39,7 @@ class CbtfKrell(CMakePackage):
             description="Build mpi experiment collector for mpich MPI.")
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
-    variant('build_type', default='None', values=('None'),
+    variant('build_type', default='None', values=('None',),
             description='CMake build type')
     variant('cti', default=False,
             description="Build MRNet with the CTI startup option")

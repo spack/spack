@@ -338,6 +338,7 @@ class EnvironmentModifications(object):
             return path
         values = values.split(os.pathsep)
         path = path.split(os.pathsep)
+
         def good(p):
             # If the path in question is already in the environment *and*
             # is a system path, don't add it to the environment
@@ -548,13 +549,18 @@ class EnvironmentModifications(object):
 
         return rev
 
-    def apply_modifications(self):
+    def apply_modifications(self, env=None):
         """Applies the modifications and clears the list."""
+        # Use os.environ if not specified
+        # Do not copy, we want to modify it in place
+        if env is None:
+            env = os.environ
+
         modifications = self.group_by_name()
         # Apply modifications one variable at a time
         for name, actions in sorted(modifications.items()):
             for x in actions:
-                x.execute(os.environ)
+                x.execute(env)
 
     def shell_modifications(self, shell='sh'):
         """Return shell code to apply the modifications and clears the list."""
@@ -957,7 +963,10 @@ def environment_after_sourcing_files(*files, **kwargs):
             source_file, suppress_output,
             concatenate_on_success, dump_environment,
         ])
-        output = shell(source_file_arguments, output=str, env=environment)
+        output = shell(
+            source_file_arguments, output=str, env=environment,
+            ignore_quotes=True
+        )
         environment = json.loads(output)
 
         # If we're in python2, convert to str objects instead of unicode

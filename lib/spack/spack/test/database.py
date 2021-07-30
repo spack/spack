@@ -81,7 +81,7 @@ def test_installed_upstream(upstream_and_downstream_db):
     y = mock_repo.add_package('y', [z], [default])
     mock_repo.add_package('w', [x, y], [default, default])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         spec = spack.spec.Spec('w')
         spec.concretize()
 
@@ -122,7 +122,7 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
     z = mock_repo.add_package('z', [], [])
     mock_repo.add_package('y', [z], [default])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         spec = spack.spec.Spec('y')
         spec.concretize()
 
@@ -155,7 +155,7 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
     mock_repo = MockPackageMultiRepo()
     mock_repo.add_package('x', [], [])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         spec = spack.spec.Spec('x')
         spec.concretize()
 
@@ -197,7 +197,7 @@ def test_cannot_write_upstream(tmpdir_factory, test_store, gen_mock_layout):
     upstream_dbs = spack.store._construct_upstream_dbs_from_install_roots(
         [roots[1]], _test=True)
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         spec = spack.spec.Spec('x')
         spec.concretize()
 
@@ -216,7 +216,7 @@ def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
     y = mock_repo.add_package('y', [z], [default])
     mock_repo.add_package('x', [y], [default])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         spec = spack.spec.Spec('x')
         spec.concretize()
         db_c = spack.database.Database(roots[2])
@@ -694,7 +694,7 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database):
     # Dont add any package definitions to this repository, the idea is that
     # packages should not have to be defined in the repository once they
     # are installed
-    with spack.repo.swap(MockPackageMultiRepo()):
+    with spack.repo.use_repositories(MockPackageMultiRepo()):
         spack.store.store.reindex()
         _check_db_sanity(mutable_database)
 

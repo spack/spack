@@ -194,7 +194,7 @@ def test_handle_unknown_package(layout_and_dir, config, mock_packages):
         layout.create_install_directory(spec)
         installed_specs[spec] = layout.path_for_spec(spec)
 
-    with spack.repo.swap(mock_db):
+    with spack.repo.use_repositories(mock_db):
         # Now check that even without the package files, we know
         # enough to read a spec from the spec file.
         for spec, path in installed_specs.items():

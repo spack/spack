@@ -31,6 +31,7 @@ class A(AutotoolsPackage):
     variant('bvv', default=True, description='The good old BV variant')
 
     depends_on('b', when='foobar=bar')
+    depends_on('test-dependency', type='test')
 
     parallel = False
 

@@ -181,6 +181,19 @@ def parse_specs(args, **kwargs):
         raise spack.error.SpackError(msg)
 
 
+def matching_spec_from_env(spec):
+    """
+    Returns a concrete spec, matching what is available in the environment.
+    If no matching spec is found in the environment (or if no environment is
+    active), this will return the given spec but concretized.
+    """
+    env = spack.environment.get_env({}, cmd_name)
+    if env:
+        return env.matching_spec(spec) or spec.concretized()
+    else:
+        return spec.concretized()
+
+
 def elide_list(line_list, max_num=10):
     """Takes a long list and limits it to a smaller number of elements,
        replacing intervening elements with '...'.  For example::
@@ -197,7 +210,8 @@ def elide_list(line_list, max_num=10):
         return line_list
 
 
-def disambiguate_spec(spec, env, local=False, installed=True, first=False, last_installed=False):
+def disambiguate_spec(spec, env, local=False, installed=True, first=False,
+                      last_installed=False):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
@@ -210,11 +224,13 @@ def disambiguate_spec(spec, env, local=False, installed=True, first=False, last_
             database query. See ``spack.database.Database._query`` for details.
     """
     hashes = env.all_hashes() if env else None
-    return disambiguate_spec_from_hashes(spec, hashes, local, installed, first, last_installed)
+    return disambiguate_spec_from_hashes(spec, hashes, local, installed, first,
+                                         last_installed)
 
 
 def disambiguate_spec_from_hashes(spec, hashes, local=False,
-                                  installed=True, first=False, last_installed=False):
+                                  installed=True, first=False,
+                                  last_installed=False):
     """Given a spec and a list of hashes, get concrete spec the spec refers to.
 
     Arguments:
@@ -440,7 +456,7 @@ def display_specs(specs, args=None, **kwargs):
     out = ''
     if groups:
         for specs in iter_groups(specs, indent, all_headers):
-            out += format_list(specs)
+            output.write(format_list(specs))
     else:
         out = format_list(sorted(specs))
 

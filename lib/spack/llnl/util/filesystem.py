@@ -23,6 +23,12 @@ from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
 from spack.util.executable import Executable
 
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Sequence  # novm
+else:
+    from collections import Sequence
+
 __all__ = [
     'FileFilter',
     'FileList',
@@ -635,6 +641,7 @@ def force_remove(*paths):
         except OSError:
             pass
 
+
 def copy_all(src, dst, copyfunc=shutil.copy):
     """Copy/process all files in a src dir into a destination dir.
     """
@@ -642,6 +649,7 @@ def copy_all(src, dst, copyfunc=shutil.copy):
     for name in os.listdir(src):
         pth = join_path(src, name)
         isdir(pth) or copyfunc(pth, dst)
+
 
 def make_link(src, dst):
     """Create a symlink in a given destination.
@@ -670,6 +678,7 @@ def make_link(src, dst):
     if os.path.islink(dst):
         os.remove(dst)
     os.symlink(src, dst)
+
 
 @contextmanager
 def working_dir(dirname, **kwargs):
@@ -1141,7 +1150,7 @@ def find(root, files, recursive=True):
 
     Parameters:
         root (str): The root directory to start searching from
-        files (str or collections.Sequence): Library name(s) to search for
+        files (str or Sequence): Library name(s) to search for
         recurse (bool, optional): if False search only root folder,
             if True descends top-down from the root. Defaults to True.
 
@@ -1204,7 +1213,7 @@ def _find_non_recursive(root, search_files):
 # Utilities for libraries and headers
 
 
-class FileList(collections.Sequence):
+class FileList(Sequence):
     """Sequence of absolute paths to files.
 
     Provides a few convenience methods to manipulate file paths.
@@ -1447,7 +1456,7 @@ def find_headers(headers, root, recursive=False):
     """
     if isinstance(headers, six.string_types):
         headers = [headers]
-    elif not isinstance(headers, collections.Sequence):
+    elif not isinstance(headers, Sequence):
         message = '{0} expects a string or sequence of strings as the '
         message += 'first argument [got {1} instead]'
         message = message.format(find_headers.__name__, type(headers))
@@ -1615,7 +1624,7 @@ def find_system_libraries(libraries, shared=True):
     """
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
-    elif not isinstance(libraries, collections.Sequence):
+    elif not isinstance(libraries, Sequence):
         message = '{0} expects a string or sequence of strings as the '
         message += 'first argument [got {1} instead]'
         message = message.format(find_system_libraries.__name__,
@@ -1669,7 +1678,7 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     """
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
-    elif not isinstance(libraries, collections.Sequence):
+    elif not isinstance(libraries, Sequence):
         message = '{0} expects a string or sequence of strings as the '
         message += 'first argument [got {1} instead]'
         message = message.format(find_libraries.__name__, type(libraries))

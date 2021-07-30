@@ -12,5 +12,6 @@ class Externaltool(Package):
 
     version('1.0', '1234567890abcdef1234567890abcdef')
     version('0.9', '1234567890abcdef1234567890abcdef')
+    version('0.8.1', '1234567890abcdef1234567890abcdef')
 
     depends_on('externalprereq')

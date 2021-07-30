@@ -82,8 +82,7 @@ class Variant(object):
         else:
             # Otherwise assume values is the set of allowed explicit values
             self.values = values
-            allowed = tuple(self.values) + (self.default,)
-            self.single_value_validator = lambda x: x in allowed
+            self.single_value_validator = lambda x: x in tuple(self.values)
 
         self.multi = multi
         self.group_validator = validator

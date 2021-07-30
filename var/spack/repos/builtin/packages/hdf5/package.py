@@ -20,6 +20,8 @@ class Hdf5(AutotoolsPackage):
     git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
     maintainers = ['lrknox']
 
+    test_requires_compiler = True
+
     version('develop', branch='develop')
 
     version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a')
@@ -65,7 +67,7 @@ class Hdf5(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     # Build HDF5 with API compaitibility.
-    variant('api', default='none', description='choose api compatibility', values=('v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
+    variant('api', default='none', description='choose api compatibility', values=('none', 'v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
 
     conflicts('api=v114', when='@1.6:1.12.99', msg='v114 is not compatible with this release')
     conflicts('api=v112', when='@1.6:1.10.99', msg='v112 is not compatible with this release')
@@ -426,5 +428,4 @@ HDF5 version {version} {version}
         self._test_example()
 
         # Run existing install check
-        # TODO: Restore once address built vs. installed state
-        # self._check_install()
+        self._check_install()

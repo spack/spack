@@ -23,6 +23,7 @@ def macos_sdk_path():
     xcrun = Executable('xcrun')
     return xcrun('--show-sdk-path', output=str, error=str).rstrip()
 
+
 class MacOs(OperatingSystem):
     """This class represents the macOS operating system. This will be
     auto detected using the python platform.mac_ver. The macOS
@@ -54,10 +55,14 @@ class MacOs(OperatingSystem):
             '10.14': 'mojave',
             '10.15': 'catalina',
             '10.16': 'bigsur',
-            '11.0':  'bigsur',
+            '11':  'bigsur',
         }
 
-        mac_ver = str(macos_version().up_to(2))
+        # Big Sur versions go 11.0, 11.0.1, 11.1 (vs. prior versions that
+        # only used the minor component)
+        part = 1 if macos_version() >= Version('11') else 2
+
+        mac_ver = str(macos_version().up_to(part))
         name = mac_releases.get(mac_ver, "macos")
         super(MacOs, self).__init__(name, mac_ver)
 

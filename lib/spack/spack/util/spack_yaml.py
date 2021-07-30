@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@
 
 """
 import ctypes
-import collections
+import sys
 
 from ordereddict_backport import OrderedDict
 from six import string_types, StringIO
@@ -24,6 +24,13 @@ from ruamel.yaml import RoundTripLoader, RoundTripDumper
 from llnl.util.tty.color import colorize, clen, cextra
 
 import spack.error
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Mapping  # novm
+else:
+    from collections import Mapping
+
 
 # Only export load and dump
 __all__ = ['load', 'dump', 'SpackYAMLError']
@@ -343,7 +350,7 @@ def sorted_dict(dict_like):
     """
     result = syaml_dict(sorted(dict_like.items()))
     for key, value in result.items():
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, Mapping):
             result[key] = sorted_dict(value)
     return result
 

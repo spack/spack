@@ -29,13 +29,14 @@ class Oneapi(Compiler):
     PrgEnv_compiler = 'oneapi'
 
     version_argument = '--version'
-    version_regex = r'\((?:IFORT|ICC)\)|DPC\+\+ [^ ]+ [^ ]+ [^ ]+ \(([^ ]+)\)'
+    version_regex = r'(?:(?:oneAPI DPC\+\+ Compiler)|(?:ifx \(IFORT\))) (\S+)'
 
     @property
     def verbose_flag(self):
         return "-v"
 
-    required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng']
+    required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng',
+                     'libsvml', 'libintlc', 'libimf']
 
     @property
     def debug_flags(self):

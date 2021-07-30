@@ -450,7 +450,8 @@ def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
     spec.concretize()
     assert spec.concrete
 
-    packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
+    packages = inst._packages_needed_to_bootstrap_compiler(
+        spec.compiler, spec.architecture, [spec.package])
     assert not packages
 
 
@@ -468,18 +469,19 @@ def test_packages_needed_to_bootstrap_compiler_packages(install_mockery,
     monkeypatch.setattr(spack.compilers, 'pkg_spec_for_compiler', _conc_spec)
     monkeypatch.setattr(spack.spec.Spec, 'concretize', _noop)
 
-    packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
+    packages = inst._packages_needed_to_bootstrap_compiler(
+        spec.compiler, spec.architecture, [spec.package])
     assert packages
 
 
-def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_repo_path):
+def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
     """Test happy path for dump_packages with dependencies."""
 
     spec_name = 'simple-inheritance'
     spec = spack.spec.Spec(spec_name).concretized()
     inst.dump_packages(spec, str(tmpdir))
 
-    repo = mock_repo_path.repos[0]
+    repo = mock_packages.repos[0]
     dest_pkg = repo.filename_for_package_name(spec_name)
     assert os.path.isfile(dest_pkg)
 
@@ -626,7 +628,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
     from collections import defaultdict
 
-    def _pkgs(pkg):
+    def _pkgs(compiler, architecture, pkgs):
         spec = spack.spec.Spec('mpi').concretized()
         return [(spec.package, True)]
 
@@ -636,7 +638,8 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
     all_deps = defaultdict(set)
 
     monkeypatch.setattr(inst, '_packages_needed_to_bootstrap_compiler', _pkgs)
-    installer._add_bootstrap_compilers(request.pkg, request, all_deps)
+    installer._add_bootstrap_compilers(
+        'fake', 'fake', [request.pkg], request, all_deps)
 
     ids = list(installer.build_tasks)
     assert len(ids) == 1

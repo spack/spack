@@ -46,7 +46,7 @@ class Openspeedshop(CMakePackage):
     variant('gui', default='qt3', values=('none', 'qt3', 'qt4'),
             description='Build or not build a GUI of choice')
 
-    variant('build_type', default='None', values=('None'),
+    variant('build_type', default='None', values=('None',),
             description='CMake build type')
 
     # MPI variants

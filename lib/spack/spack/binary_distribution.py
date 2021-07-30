@@ -12,6 +12,7 @@ import shutil
 import tempfile
 import hashlib
 import glob
+from ordereddict_backport import OrderedDict
 
 from contextlib import closing
 import ruamel.yaml as yaml
@@ -598,7 +599,9 @@ def write_buildinfo_file(spec, workdir, rel=False):
                 text_to_relocate.append(rel_path_name)
 
     # Create buildinfo data and write it to disk
+    import spack.hooks.sbang as sbang
     buildinfo = {}
+    buildinfo['sbang_install_path'] = sbang.sbang_install_path()
     buildinfo['relative_rpaths'] = rel
     buildinfo['buildpath'] = spack.store.layout.root
     buildinfo['spackprefix'] = spack.paths.prefix
@@ -1084,6 +1087,10 @@ def relocate_package(spec, allow_root):
     new_prefix = str(spec.prefix)
     new_rel_prefix = str(os.path.relpath(new_prefix, new_layout_root))
     new_spack_prefix = str(spack.paths.prefix)
+
+    old_sbang_install_path = None
+    if 'sbang_install_path' in buildinfo:
+        old_sbang_install_path = str(buildinfo['sbang_install_path'])
     old_layout_root = str(buildinfo['buildpath'])
     old_spack_prefix = str(buildinfo.get('spackprefix'))
     old_rel_prefix = buildinfo.get('relative_prefix')
@@ -1105,11 +1112,32 @@ def relocate_package(spec, allow_root):
     new_deps = spack.build_environment.get_rpath_deps(spec.package)
     for d in new_deps:
         hash_to_prefix[d.format('{hash}')] = str(d.prefix)
-    prefix_to_prefix = dict()
+    # Spurious replacements (e.g. sbang) will cause issues with binaries
+    # For example, the new sbang can be longer than the old one.
+    # Hence 2 dictionaries are maintained here.
+    prefix_to_prefix_text = OrderedDict({})
+    prefix_to_prefix_bin = OrderedDict({})
+
+    if old_sbang_install_path:
+        import spack.hooks.sbang as sbang
+        prefix_to_prefix_text[old_sbang_install_path] = \
+            sbang.sbang_install_path()
+
+    prefix_to_prefix_text[old_prefix] = new_prefix
+    prefix_to_prefix_bin[old_prefix] = new_prefix
+    prefix_to_prefix_text[old_layout_root] = new_layout_root
+    prefix_to_prefix_bin[old_layout_root] = new_layout_root
     for orig_prefix, hash in prefix_to_hash.items():
-        prefix_to_prefix[orig_prefix] = hash_to_prefix.get(hash, None)
-    prefix_to_prefix[old_prefix] = new_prefix
-    prefix_to_prefix[old_layout_root] = new_layout_root
+        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
+        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
+    # This is vestigial code for the *old* location of sbang. Previously,
+    # sbang was a bash script, and it lived in the spack prefix. It is
+    # now a POSIX script that lives in the install prefix. Old packages
+    # will have the old sbang location in their shebangs.
+    import spack.hooks.sbang as sbang
+    orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(old_spack_prefix)
+    new_sbang = sbang.sbang_shebang_line()
+    prefix_to_prefix_text[orig_sbang] = new_sbang
 
     tty.debug("Relocating package from",
               "%s to %s." % (old_layout_root, new_layout_root))
@@ -1137,15 +1165,14 @@ def relocate_package(spec, allow_root):
             relocate.relocate_macho_binaries(files_to_relocate,
                                              old_layout_root,
                                              new_layout_root,
-                                             prefix_to_prefix, rel,
+                                             prefix_to_prefix_bin, rel,
                                              old_prefix,
                                              new_prefix)
-
         if 'elf' in platform.binary_formats:
             relocate.relocate_elf_binaries(files_to_relocate,
                                            old_layout_root,
                                            new_layout_root,
-                                           prefix_to_prefix, rel,
+                                           prefix_to_prefix_bin, rel,
                                            old_prefix,
                                            new_prefix)
             # Relocate links to the new install prefix
@@ -1156,12 +1183,7 @@ def relocate_package(spec, allow_root):
 
         # For all buildcaches
         # relocate the install prefixes in text files including dependencies
-        relocate.relocate_text(text_names,
-                               old_layout_root, new_layout_root,
-                               old_prefix, new_prefix,
-                               old_spack_prefix,
-                               new_spack_prefix,
-                               prefix_to_prefix)
+        relocate.relocate_text(text_names, prefix_to_prefix_text)
 
         paths_to_relocate = [old_prefix, old_layout_root]
         paths_to_relocate.extend(prefix_to_hash.keys())
@@ -1171,22 +1193,13 @@ def relocate_package(spec, allow_root):
             map(lambda filename: os.path.join(workdir, filename),
                 buildinfo['relocate_binaries'])))
         # relocate the install prefixes in binary files including dependencies
-        relocate.relocate_text_bin(files_to_relocate,
-                                   old_prefix, new_prefix,
-                                   old_spack_prefix,
-                                   new_spack_prefix,
-                                   prefix_to_prefix)
+        relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
 
-# If we are installing back to the same location
-# relocate the sbang location if the spack directory changed
+    # If we are installing back to the same location
+    # relocate the sbang location if the spack directory changed
     else:
         if old_spack_prefix != new_spack_prefix:
-            relocate.relocate_text(text_names,
-                                   old_layout_root, new_layout_root,
-                                   old_prefix, new_prefix,
-                                   old_spack_prefix,
-                                   new_spack_prefix,
-                                   prefix_to_prefix)
+            relocate.relocate_text(text_names, prefix_to_prefix_text)
 
 
 def extract_tarball(spec, filename, allow_root=False, unsigned=False,
