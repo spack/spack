@@ -54,6 +54,7 @@ import spack.package
 import spack.package_prefs as prefs
 import spack.repo
 import spack.store
+import spack.util.executable
 from spack.util.environment import dump_environment
 from spack.util.executable import which
 from spack.util.timer import Timer
@@ -1883,7 +1884,10 @@ def build_process(pkg, install_args):
 
     """
     installer = BuildProcessInstaller(pkg, install_args)
-    return installer.run()
+
+    # don't print long padded paths in executable debug output.
+    with spack.util.executable.filter_padding():
+        return installer.run()
 
 
 class BuildTask(object):
