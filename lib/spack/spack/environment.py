@@ -34,6 +34,7 @@ import spack.util.lock as lk
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+from spack.database import tracked_deptypes as db_tracked_deptypes
 from spack.filesystem_view import YamlFilesystemView
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
@@ -1754,7 +1755,7 @@ class Environment(object):
         for spec_hash in self.concretized_order:
             spec = self.specs_by_hash[spec_hash]
 
-            specs = (spec.traverse(deptype=('link', 'run'))
+            specs = (spec.traverse(deptype=db_tracked_deptypes)
                      if recurse_dependencies else (spec,))
 
             spec_list.extend(specs)

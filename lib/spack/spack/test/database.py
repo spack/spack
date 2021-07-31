@@ -65,7 +65,7 @@ def test_installed_upstream(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
         downstream_db, downstream_layout = (upstream_and_downstream_db)
 
-    default = ('build', 'link')
+    default = spack.database.tracked_deptypes
     mock_repo = MockPackageMultiRepo()
     x = mock_repo.add_package('x', [], [])
     z = mock_repo.add_package('z', [], [])
@@ -108,7 +108,7 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
         downstream_db, downstream_layout = (upstream_and_downstream_db)
 
-    default = ('build', 'link')
+    default = spack.database.tracked_deptypes
     mock_repo = MockPackageMultiRepo()
     z = mock_repo.add_package('z', [], [])
     mock_repo.add_package('y', [z], [default])
@@ -201,7 +201,7 @@ def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/', '/rc/']]
 
-    default = ('build', 'link')
+    default = spack.database.tracked_deptypes
     mock_repo = MockPackageMultiRepo()
     z = mock_repo.add_package('z', [], [])
     y = mock_repo.add_package('y', [z], [default])

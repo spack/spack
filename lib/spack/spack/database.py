@@ -93,8 +93,10 @@ _db_lock_timeout = 120
 # ensure a failed install is properly tracked).
 _pkg_lock_timeout = None
 
-# Types of dependencies tracked by the database
-_tracked_deps = ('link', 'run')
+# TODO: Consider retaining test deps as abstract stubs and concretizing at
+#   test time (per becker33, 2021 Jul 30).
+#: Types of dependencies tracked by the database
+tracked_deptypes = ('build', 'link', 'run', 'test')
 
 # Default list of fields written for each install record
 default_install_record_fields = [
@@ -960,7 +962,7 @@ class Database(object):
         counts = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            for dep in rec.spec.dependencies(_tracked_deps):
+            for dep in rec.spec.dependencies(tracked_deptypes):
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
@@ -1088,7 +1090,7 @@ class Database(object):
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
-        for dep in spec.dependencies(_tracked_deps):
+        for dep in spec.dependencies(tracked_deptypes):
             dkey = dep.dag_hash()
             if dkey not in self._data:
                 extra_args = {
@@ -1127,7 +1129,7 @@ class Database(object):
 
             # Connect dependencies from the DB to the new copy.
             for name, dep in six.iteritems(
-                    spec.dependencies_dict(_tracked_deps)
+                    spec.dependencies_dict(tracked_deptypes)
             ):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
@@ -1192,7 +1194,7 @@ class Database(object):
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
 
-            for dep in spec.dependencies(_tracked_deps):
+            for dep in spec.dependencies(tracked_deptypes):
                 self._decrement_ref_count(dep)
 
     def _increment_ref_count(self, spec):
@@ -1220,7 +1222,7 @@ class Database(object):
 
         del self._data[key]
 
-        for dep in rec.spec.dependencies(_tracked_deps):
+        for dep in rec.spec.dependencies(tracked_deptypes):
             # FIXME: the two lines below needs to be updated once #11983 is
             # FIXME: fixed. The "if" statement should be deleted and specs are
             # FIXME: to be removed from dependents by hash and not by name.
