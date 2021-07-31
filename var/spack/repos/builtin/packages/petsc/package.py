@@ -366,71 +366,84 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         else:
             options.append('--with-clanguage=C')
 
-        # PETSc depends on scalapack when '+mumps' (see depends())
-        # help PETSc pick up Scalapack from MKL
-        if spec.satisfies('+mumps'):
-            scalapack = spec['scalapack'].libs
-            options.extend([
-                '--with-scalapack-lib=%s' % scalapack.joined(),
-                '--with-scalapack=1'
-            ])
-        else:
-            options.extend([
-                '--with-scalapack=0'
-            ])
-
         # Activates library support if needed (i.e. direct dependency)
-        if '^libjpeg-turbo' in spec:
-            jpeg_library = ('libjpeg-turbo', 'libjpeg')
-        else:
-            jpeg_library = 'libjpeg'
+        jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
+        scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
 
+        # tuple format (spacklibname, petsclibname, useinc, uselib)
+        # default: 'gmp', => ('gmp', 'gmp', True, True)
+        # any other combination needs a full tuple
+        # if not (useinc || uselib): usedir - i.e (False, False)
         for library in (
-                'cuda',
-                'hip',
+                ('cuda', 'cuda', False, False),
+                ('hip', 'hip', False, False),
                 'metis',
                 'hypre',
                 'parmetis',
+                ('superlu-dist', 'superlu_dist', True, True),
+                ('scotch', 'ptscotch', True, True),
+                ('suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,camd,amd, \
+                suitesparseconfig', 'suitesparse', True, True),
+                ('hdf5:hl,fortran', 'hdf5', True, True),
+                'zlib',
                 'mumps',
                 'trilinos',
-                'fftw',
-                'valgrind',
+                ('fftw:mpi', 'fftw', True, True),
+                ('valgrind', 'valgrind', False, False),
                 'gmp',
                 'libpng',
-                'giflib',
+                ('giflib', 'giflib', False, False),
                 'mpfr',
-                ('netcdf-c', 'netcdf'),
-                ('parallel-netcdf', 'pnetcdf'),
-                'moab',
+                ('netcdf-c', 'netcdf', True, True),
+                ('parallel-netcdf', 'pnetcdf', True, True),
+                ('moab', 'moab', False, False),
                 'openmp',
-                'random123',
+                ('random123', 'random123', False, False),
                 'exodusii',
                 'cgns',
                 'memkind',
                 'p4est',
-                'saws',
-                ('libyaml', 'yaml'),
+                ('saws', 'saws', False, False),
+                ('libyaml', 'yaml', True, True),
                 'hwloc',
-                jpeg_library,
+                (jpeg_sp, 'libjpeg', True, True),
+                (scalapack_sp, 'scalapack', False, True),
         ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
             if isinstance(library, tuple):
-                library, petsclibname = library
+                spacklibname, petsclibname, useinc, uselib = library
             else:
+                spacklibname = library
                 petsclibname = library
+                useinc = True
+                uselib = True
 
-            library_requested = library in spec.dependencies_dict()
+            library_requested = spacklibname.split(':')[0] in spec.dependencies_dict()
             options.append(
                 '--with-{library}={value}'.format(
                     library=petsclibname,
                     value=('1' if library_requested else '0'))
             )
             if library_requested:
-                options.append(
-                    '--with-{library}-dir={path}'.format(
-                        library=petsclibname, path=spec[library].prefix)
-                )
+                if useinc or uselib:
+                    if useinc:
+                        options.append(
+                            '--with-{library}-include={value}'.format(
+                                library=petsclibname,
+                                value=spec[spacklibname].prefix.include)
+                        )
+                    if uselib:
+                        options.append(
+                            '--with-{library}-lib={value}'.format(
+                                library=petsclibname,
+                                value=spec[spacklibname].libs.joined())
+                        )
+                else:
+                    options.append(
+                        '--with-{library}-dir={path}'.format(
+                            library=petsclibname, path=spec[spacklibname].prefix)
+                    )
 
         if '+cuda' in spec:
             if not spec.satisfies('cuda_arch=none'):
@@ -441,67 +454,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                     options.append('CUDAFLAGS=-gencode arch=compute_{0},code=sm_{0}'
                                    .format(cuda_arch[0]))
 
-        # PETSc does not pick up SuperluDist from the dir as they look for
-        # superlu_dist_4.1.a
         if 'superlu-dist' in spec:
             if spec.satisfies('@3.10.3:'):
                 options.append('--with-cxx-dialect=C++11')
-            options.extend([
-                '--with-superlu_dist-include=%s' %
-                spec['superlu-dist'].prefix.include,
-                '--with-superlu_dist-lib=%s' %
-                join_path(spec['superlu-dist'].prefix.lib,
-                          'libsuperlu_dist.a'),
-                '--with-superlu_dist=1'
-            ])
-        else:
-            options.append(
-                '--with-superlu_dist=0'
-            )
-        # SuiteSparse: configuring using '--with-suitesparse-dir=...' has some
-        # issues, so specify directly the include path and the libraries.
-        if '+suite-sparse' in spec:
-            ss_spec = 'suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,' \
-                'camd,amd,suitesparseconfig'
-            options.extend([
-                '--with-suitesparse-include=%s' % spec[ss_spec].prefix.include,
-                '--with-suitesparse-lib=%s' % spec[ss_spec].libs.joined(),
-                '--with-suitesparse=1'
-            ])
-        else:
-            options.append('--with-suitesparse=0')
-
-        # PTScotch: Since we are not using the Parmetis wrapper for now,
-        # we cannot use '--with-ptscotch-dir=...'
-        if '+ptscotch' in spec:
-            options.extend([
-                '--with-ptscotch-include=%s' % spec['scotch'].prefix.include,
-                '--with-ptscotch-lib=%s' % spec['scotch'].libs.joined(),
-                '--with-ptscotch=1'
-            ])
-        else:
-            options.append('--with-ptscotch=0')
-
-        # hdf5: configure detection is convoluted for pflotran
-        if '+hdf5' in spec:
-            options.extend([
-                '--with-hdf5-include=%s' % spec['hdf5'].prefix.include,
-                '--with-hdf5-lib=%s' % spec['hdf5:hl,fortran'].libs.joined(),
-                '--with-hdf5=1'
-            ])
-        else:
-            options.append('--with-hdf5=0')
-
-        # zlib: configuring using '--with-zlib-dir=...' has some issues with
-        # SuiteSparse so specify directly the include path and the libraries.
-        if 'zlib' in spec:
-            options.extend([
-                '--with-zlib-include=%s' % spec['zlib'].prefix.include,
-                '--with-zlib-lib=%s'     % spec['zlib'].libs.joined(),
-                '--with-zlib=1'
-            ])
-        else:
-            options.append('--with-zlib=0')
 
         if '+mkl-pardiso' in spec:
             options.append(

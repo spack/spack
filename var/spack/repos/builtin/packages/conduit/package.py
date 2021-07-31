@@ -75,6 +75,7 @@ class Conduit(CMakePackage):
             description="Build Conduit with HDF5 1.8.x (compatibility mode)")
     variant("silo", default=False, description="Build Conduit Silo support")
     variant("adios", default=False, description="Build Conduit ADIOS support")
+    variant("parmetis", default=False, description="Build Conduit Parmetis support")
 
     # zfp compression
     variant("zfp", default=False, description="Build Conduit ZFP support")
@@ -143,6 +144,12 @@ class Conduit(CMakePackage):
 
     # hdf5 zfp plugin when both hdf5 and zfp are on
     depends_on("h5z-zfp~fortran", when="+hdf5+zfp")
+
+    #######################
+    # Parmetis
+    #######################
+    depends_on("parmetis", when="+parmetis")
+    depends_on("metis", when="+parmetis")
 
     #######################
     # MPI
@@ -543,6 +550,21 @@ class Conduit(CMakePackage):
         else:
             cfg.write("# adios not built by spack \n")
 
+        #######################
+        # Parmetis
+        #######################
+
+        cfg.write("# parmetis from spack \n")
+
+        if "+parmetis" in spec:
+            cfg.write(cmake_cache_entry("METIS_DIR", spec['metis'].prefix))
+            cfg.write(cmake_cache_entry("PARMETIS_DIR", spec['parmetis'].prefix))
+        else:
+            cfg.write("# parmetis not built by spack \n")
+
+        #######################
+        # Finish host-config
+        #######################
         cfg.write("##################################\n")
         cfg.write("# end spack generated host-config\n")
         cfg.write("##################################\n")

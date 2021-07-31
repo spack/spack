@@ -17,6 +17,7 @@ class OpenpmdApi(CMakePackage):
 
     # C++14 up until here
     version('develop', branch='dev')
+    version('0.14.0', sha256='7bb561c1a6f54e9a6a1b56aaf1d4d098bbe290d204f84ebe5a6f11b3cab2be6e')
     #   temporary, pre 0.14.0 version for HiPACE++
     version('hipace', commit='ac083025ee662469b8cad1adf93eef48cde35f58')
     version('0.13.4', sha256='46c013be5cda670f21969675ce839315d4f5ada0406a6546a91ec3441402cf5e')
@@ -44,6 +45,7 @@ class OpenpmdApi(CMakePackage):
     depends_on('cmake@3.15.0:', type='build')
     depends_on('mpark-variant@1.4.0:')
     depends_on('catch2@2.6.1:', type='test')
+    depends_on('catch2@2.13.4:', type='test', when='@0.14.0:')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
     depends_on('hdf5@1.8.13:', when='+hdf5')
     depends_on('hdf5@1.8.13: ~mpi', when='~mpi +hdf5')
@@ -53,10 +55,11 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios@1.13.1: +mpi ~sz', when='+mpi +adios1')
     depends_on('adios2@2.5.0:', when='+adios2')
     depends_on('adios2@2.6.0:', when='+adios2 @0.12.0:')
+    depends_on('adios2@2.7.0:', when='+adios2 @0.14.0:')
     depends_on('adios2@2.5.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.5.0: +mpi', when='+mpi +adios2')
     depends_on('nlohmann-json@3.9.1:')
-    depends_on('py-pybind11@2.6.1:', when='+python', type='link')
+    depends_on('py-pybind11@2.6.2:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
     depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
     depends_on('python@3.6:', when='+python', type=['link', 'test', 'run'])

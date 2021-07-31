@@ -50,8 +50,8 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl'),
-            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL')
+    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl', 'libsci'),
+            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL/LibSci')
     variant('mpfr', default=False,
             description='Support GNU MPFR\'s'
             'arbitrary-precision floating-point arithmetic')
@@ -89,6 +89,9 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('essl +ilp64', when='blas=essl +int64_blas')
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
     depends_on('netlib-lapack +external-blas', when='blas=essl')
+
+    depends_on('cray-libsci', when='blas=libsci')
+    depends_on('cray-libsci +openmp', when='blas=libsci +openmp_blas')
 
     # Specify the correct version of Aluminum
     depends_on('aluminum@:0.3.99', when='@:1.3.99 +al')

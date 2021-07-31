@@ -16,8 +16,13 @@
 #
 . "$(dirname $0)/setup.sh"
 
+BASE=""
+if [ -n "$GITHUB_BASE_REF" ]; then
+    BASE="--base ${GITHUB_BASE_REF}"
+fi
+
 # verify that the code style is correct
-spack style --root-relative
+spack style --root-relative $BASE
 
 # verify that the license headers are present
 spack license verify

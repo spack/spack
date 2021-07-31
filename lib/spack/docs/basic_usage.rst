@@ -695,6 +695,136 @@ structured the way you want:
     }
 
 
+^^^^^^^^^^^^^^
+``spack diff``
+^^^^^^^^^^^^^^
+
+It's often the case that you have two versions of a spec that you need to
+disambiguate. Let's say that we've installed two variants of zlib, one with
+and one without the optimize variant:
+
+.. code-block:: console
+
+   $ spack install zlib
+   $ spack install zlib -optimize
+
+When we do ``spack find`` we see the two versions.
+
+.. code-block:: console
+
+    $ spack find zlib
+    ==> 2 installed packages
+    -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
+    zlib@1.2.11  zlib@1.2.11
+
+
+Let's now say that we want to uninstall zlib. We run the command, and hit a problem
+real quickly since we have two!
+
+.. code-block:: console
+
+    $ spack uninstall zlib
+    ==> Error: zlib matches multiple packages:
+
+        -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
+        efzjziy zlib@1.2.11  sl7m27m zlib@1.2.11
+
+    ==> Error: You can either:
+        a) use a more specific spec, or
+        b) specify the spec by its hash (e.g. `spack uninstall /hash`), or
+        c) use `spack uninstall --all` to uninstall ALL matching specs.
+
+Oh no! We can see from the above that we have two different versions of zlib installed,
+and the only difference between the two is the hash. This is a good use case for 
+``spack diff``, which can easily show us the "diff" or set difference 
+between properties for two packages. Let's try it out.
+Since the only difference we see in the ``spack find`` view is the hash, let's use
+``spack diff`` to look for more detail. We will provide the two hashes:
+
+.. code-block::console
+
+    $ spack diff /efzjziy /sl7m27m
+    ==> Warning: This interface is subject to change.
+
+    --- zlib@1.2.11efzjziyc3dmb5h5u5azsthgbgog5mj7g
+    +++ zlib@1.2.11sl7m27mzkbejtkrajigj3a3m37ygv4u2
+    @@ variant_value @@
+    -  zlib optimize bool(False)
+    +  zlib optimize bool(True)
+
+
+The output is colored, and written in the style of a git diff. This means that you
+can copy paste it into a GitHub markdown as a code block with language "diff" and it
+will render nicely! Here is an example:
+
+.. code-block::markdown
+
+    ```diff
+    --- zlib@1.2.11/efzjziyc3dmb5h5u5azsthgbgog5mj7g
+    +++ zlib@1.2.11/sl7m27mzkbejtkrajigj3a3m37ygv4u2
+    @@ variant_value @@
+    -  zlib optimize bool(False)
+    +  zlib optimize bool(True)
+    ```
+
+Awesome! Now let's read the diff. It tells us that our first zlib was built without optimize (False)
+and the second was built with optimize (True). You can't see it in the docs here, but
+the output above is also colored based on the content being an addition (+) or subtraction (-).
+
+This is a small example, but there are actually several kinds of differences that you can view, a variant value
+being just one of them. The first package that you provide (A)
+being diffed against B means that we see what is added to B but not in A (green) and what is present in A that is
+removed in B (red). Here is another example with an additional difference type, ``VERSION``:
+
+.. code-block::console
+
+    $ spack diff python@2.7.8 python@3.8.11
+    ==> Warning: This interface is subject to change.
+
+    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
+    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
+    @@ variant_value @@
+    -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
+    +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
+    @@ version @@
+    -  openssl Version(1.0.2u)
+    +  openssl Version(1.1.1k)
+    -  python Version(2.7.8)
+    +  python Version(3.8.11)
+
+Let's say that we were only interested in one kind of attribute above, versions!
+We can ask the command to only output this attribute.  To do this, you'd add 
+the ``-a`` for attribute parameter, which defaults to all. 
+Here is how you would filter to show just versions:
+
+
+.. code-block:: console
+
+    $ spack diff -a version python@2.7.8 python@3.8.11
+    ==> Warning: This interface is subject to change.
+
+    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
+    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
+    @@ version @@
+    -  openssl Version(1.0.2u)
+    +  openssl Version(1.1.1k)
+    -  python Version(2.7.8)
+    +  python Version(3.8.11)
+
+And you can add as many attributes as you'd like with multiple `-a`.
+Finally, if you want to view the data as json (and possibly pipe into an output file)
+just add ``--json``:
+
+
+.. code-block:: console
+   
+    $ spack diff --json python@2.7.8 python@3.8.11
+
+
+This data will be much longer because along with the differences for A vs. B and
+B vs. A, we also capture the intersection.
+
+
 ------------------------
 Using installed packages
 ------------------------

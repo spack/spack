@@ -62,7 +62,7 @@ default:
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
 ########################################
 #
-# First add a new spack.yml defining the pipline to run in
+# First add a new spack.yml defining the pipeline to run in
 # share/spack/gitlab/cloud_pipelines/stacks/my-super-cool-stack/spack.yaml
 #
 # Then add the following entries at the bottom of this file:
@@ -157,4 +157,34 @@ e4s-on-power-develop-build:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: e4s-on-power-develop-generate
+    strategy: depend
+
+
+#########################################
+# Build tests for different build-systems
+#########################################
+.build_systems:
+  variables:
+    SPACK_CI_STACK_NAME: build_systems
+
+build_systems-pr-generate:
+  extends: [ ".build_systems", ".pr-generate"]
+
+build_systems-develop-generate:
+  extends: [ ".build_systems", ".develop-generate"]
+
+build_systems-pr-build:
+  extends: [ ".build_systems", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: build_systems-pr-generate
+    strategy: depend
+
+build_systems-develop-build:
+  extends: [ ".build_systems", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: build_systems-develop-generate
     strategy: depend
