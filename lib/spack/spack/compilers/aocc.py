@@ -98,8 +98,6 @@ class Aocc(Compiler):
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
-        loc_ver = 'unknown'
-
         match = re.search(
             r'AOCC_(\d)[._](\d)[._](\d)',
             output
