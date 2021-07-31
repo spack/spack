@@ -596,7 +596,7 @@ class ViewDescriptor(object):
             if spec.concrete:  # Do not link unconcretized roots
                 # We preserve _hash _normal to avoid recomputing DAG
                 # hashes (DAG hashes don't consider build deps)
-                spec_copy = spec.copy(deps=('link', 'run'))
+                spec_copy = spec.copy(deps=ht.dag_deptypes)
                 spec_copy._hash = spec._hash
                 spec_copy._normal = spec._normal
                 specs_for_view.append(spec_copy)

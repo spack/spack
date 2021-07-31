@@ -2,10 +2,15 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Definitions that control how Spack creates Spec hashes."""
 
 import spack.dependency as dp
+
+#: Spec build hash dependency types
+build_deptypes = ('build', 'link', 'run')
+
+#: Spec DAG hash dependency types, which don't consider build dependencies
+dag_deptypes = ('link', 'run')
 
 
 class SpecHashDescriptor(object):
@@ -21,7 +26,7 @@ class SpecHashDescriptor(object):
 
     hash_types = ('_dag_hash', '_build_hash', '_full_hash', '_package_hash')
 
-    def __init__(self, deptype=('link', 'run'), package_hash=False, attr=None,
+    def __init__(self, deptype=dag_deptypes, package_hash=False, attr=None,
                  override=None):
         self.deptype = dp.canonical_deptype(deptype)
         self.package_hash = package_hash
@@ -31,18 +36,18 @@ class SpecHashDescriptor(object):
 
 
 #: Default Hash descriptor, used by Spec.dag_hash() and stored in the DB.
-dag_hash = SpecHashDescriptor(deptype=('link', 'run'), package_hash=False,
+dag_hash = SpecHashDescriptor(deptype=dag_deptypes, package_hash=False,
                               attr='_hash')
 
 
 #: Hash descriptor that includes build dependencies.
 build_hash = SpecHashDescriptor(
-    deptype=('build', 'link', 'run'), package_hash=False, attr='_build_hash')
+    deptype=build_deptypes, package_hash=False, attr='_build_hash')
 
 
 #: Full hash used in build pipelines to determine when to rebuild packages.
 full_hash = SpecHashDescriptor(
-    deptype=('build', 'link', 'run'), package_hash=True, attr='_full_hash')
+    deptype=build_deptypes, package_hash=True, attr='_full_hash')
 
 
 #: Package hash used as part of full hash
