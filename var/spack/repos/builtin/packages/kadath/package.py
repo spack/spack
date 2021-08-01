@@ -19,7 +19,7 @@ class Kadath(CMakePackage):
     """
 
     homepage = "https://kadath.obspm.fr/fuka/"
-    url      = "https://gitlab.obspm.fr/grandcle/Kadath.git"
+    git      = "https://gitlab.obspm.fr/grandcle/Kadath.git"
 
     maintainers = ['eschnett']
 
