@@ -23,7 +23,7 @@ class Kadath(CMakePackage):
 
     maintainers = ['eschnett']
 
-    version('fuka', git="https://gitlab.obspm.fr/grandcle/Kadath.git", branch='fuka')
+    version('fuka', branch='fuka')
 
     variant('mpi', default=True)
 
