@@ -735,13 +735,13 @@ real quickly since we have two!
         c) use `spack uninstall --all` to uninstall ALL matching specs.
 
 Oh no! We can see from the above that we have two different versions of zlib installed,
-and the only difference between the two is the hash. This is a good use case for 
-``spack diff``, which can easily show us the "diff" or set difference 
+and the only difference between the two is the hash. This is a good use case for
+``spack diff``, which can easily show us the "diff" or set difference
 between properties for two packages. Let's try it out.
 Since the only difference we see in the ``spack find`` view is the hash, let's use
 ``spack diff`` to look for more detail. We will provide the two hashes:
 
-.. code-block::console
+.. code-block:: console
 
     $ spack diff /efzjziy /sl7m27m
     ==> Warning: This interface is subject to change.
@@ -749,34 +749,35 @@ Since the only difference we see in the ``spack find`` view is the hash, let's u
     --- zlib@1.2.11efzjziyc3dmb5h5u5azsthgbgog5mj7g
     +++ zlib@1.2.11sl7m27mzkbejtkrajigj3a3m37ygv4u2
     @@ variant_value @@
-    -  zlib optimize bool(False)
-    +  zlib optimize bool(True)
+    -  zlib optimize False
+    +  zlib optimize True
 
 
 The output is colored, and written in the style of a git diff. This means that you
-can copy paste it into a GitHub markdown as a code block with language "diff" and it
-will render nicely! Here is an example:
+can copy and paste it into a GitHub markdown as a code block with language "diff"
+and it will render nicely! Here is an example:
 
-.. code-block::markdown
+.. code-block:: markdown
 
     ```diff
     --- zlib@1.2.11/efzjziyc3dmb5h5u5azsthgbgog5mj7g
     +++ zlib@1.2.11/sl7m27mzkbejtkrajigj3a3m37ygv4u2
     @@ variant_value @@
-    -  zlib optimize bool(False)
-    +  zlib optimize bool(True)
+    -  zlib optimize False
+    +  zlib optimize True
     ```
 
-Awesome! Now let's read the diff. It tells us that our first zlib was built without optimize (False)
-and the second was built with optimize (True). You can't see it in the docs here, but
-the output above is also colored based on the content being an addition (+) or subtraction (-).
+Awesome! Now let's read the diff. It tells us that our first zlib was built with ``~optimize``
+(``False``) and the second was built with ``+optimize`` (``True``). You can't see it in the docs
+here, but the output above is also colored based on the content being an addition (+) or
+subtraction (-).
 
-This is a small example, but there are actually several kinds of differences that you can view, a variant value
-being just one of them. The first package that you provide (A)
-being diffed against B means that we see what is added to B but not in A (green) and what is present in A that is
-removed in B (red). Here is another example with an additional difference type, ``VERSION``:
+This is a small example, but you will be able to see differences for any attributes on the
+installation spec. Running ``spack diff A B`` means we'll see which spec attributes are on
+``B`` but not on ``A`` (green) and which are on ``A`` but not on ``B`` (red). Here is another
+example with an additional difference type, ``version``:
 
-.. code-block::console
+.. code-block:: console
 
     $ spack diff python@2.7.8 python@3.8.11
     ==> Warning: This interface is subject to change.
@@ -787,42 +788,41 @@ removed in B (red). Here is another example with an additional difference type, 
     -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
     +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
     @@ version @@
-    -  openssl Version(1.0.2u)
-    +  openssl Version(1.1.1k)
-    -  python Version(2.7.8)
-    +  python Version(3.8.11)
+    -  openssl 1.0.2u
+    +  openssl 1.1.1k
+    -  python 2.7.8
+    +  python 3.8.11
 
-Let's say that we were only interested in one kind of attribute above, versions!
-We can ask the command to only output this attribute.  To do this, you'd add 
-the ``-a`` for attribute parameter, which defaults to all. 
-Here is how you would filter to show just versions:
-
+Let's say that we were only interested in one kind of attribute above, ``version``.
+We can ask the command to only output this attribute.  To do this, you'd add
+the ``--attribute`` for attribute parameter, which defaults to all. Here is how you
+would filter to show just versions:
 
 .. code-block:: console
 
-    $ spack diff -a version python@2.7.8 python@3.8.11
+    $ spack diff --attribute version python@2.7.8 python@3.8.11
     ==> Warning: This interface is subject to change.
 
     --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
     +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
     @@ version @@
-    -  openssl Version(1.0.2u)
-    +  openssl Version(1.1.1k)
-    -  python Version(2.7.8)
-    +  python Version(3.8.11)
+    -  openssl 1.0.2u
+    +  openssl 1.1.1k
+    -  python 2.7.8
+    +  python 3.8.11
 
-And you can add as many attributes as you'd like with multiple `-a`.
-Finally, if you want to view the data as json (and possibly pipe into an output file)
-just add ``--json``:
+And you can add as many attributes as you'd like with multiple `--attribute` arguments
+(for lots of attributes, you can use ``-a`` for short). Finally, if you want to view the
+data as json (and possibly pipe into an output file) just add ``--json``:
 
 
 .. code-block:: console
-   
+
     $ spack diff --json python@2.7.8 python@3.8.11
 
 
-This data will be much longer because along with the differences for A vs. B and
-B vs. A, we also capture the intersection.
+This data will be much longer because along with the differences for ``A`` vs. ``B`` and
+``B`` vs. ``A``, the JSON output also showsthe intersection.
 
 
 ------------------------
