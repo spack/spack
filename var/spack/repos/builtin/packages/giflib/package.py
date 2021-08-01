@@ -32,7 +32,7 @@ class Giflib(MakefilePackage, SourceforgePackage):
             targets.append('LIBMAJOR={1}'.format(self.spec.version.up_to(1))
             targets.append('LIBVER={2}'.format(self.spec.version))
 
-    return targets
+        return targets
 
     def check(self):
         make('check', parallel=False)
