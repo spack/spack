@@ -25,7 +25,7 @@ class Kadath(CMakePackage):
 
     version('fuka', branch='fuka')
 
-    variant('mpi', default=True)
+    variant('mpi', default=True, description='Enable MPI support')
 
     variant('codes', multi=True,
             description="Codes to enable",
