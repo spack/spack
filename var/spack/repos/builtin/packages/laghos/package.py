@@ -51,9 +51,8 @@ class Laghos(MakefilePackage):
         targets.append('TEST_MK=%s' % spec['mfem'].package.test_mk)
         if spec.satisfies('@:2.0'):
             targets.append('CXX=%s' % spec['mpi'].mpicxx)
-        if '+ofast' in self.spec:
-            if 'g++' in self.compiler.cxx:
-                targets.append('CXXFLAGS = -Ofast -finline-functions')
+        if '+ofast %gcc' in self.spec:
+            targets.append('CXXFLAGS = -Ofast -finline-functions')
         return targets
 
     # See lib/spack/spack/build_systems/makefile.py
