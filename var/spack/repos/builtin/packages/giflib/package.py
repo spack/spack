@@ -29,8 +29,8 @@ class Giflib(MakefilePackage, SourceforgePackage):
         targets = ['install']
         if self.spec.satisfies('@5.2.0:'):
             targets.append('PREFIX={0}'.format(self.spec.prefix))
-            targets.append('LIBMAJOR={1}'.format(self.spec.version.up_to(1)))
-            targets.append('LIBVER={2}'.format(self.spec.version))
+            targets.append('LIBMAJOR={0}'.format(self.spec.version.up_to(1)))
+            targets.append('LIBVER={0}'.format(self.spec.version))
 
         return targets
 
