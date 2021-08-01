@@ -112,9 +112,10 @@ class Dpcpp(CMakePackage):
         for env_var_name, compiler in zip(['CC', 'CXX'], ['clang', 'clang++']):
             env.set(env_var_name, os.path.join(bin_path, compiler))
 
-        env.set('FC', str(self.compiler.fc) if self.compiler.fc else '')
-        env.set('F77', str(self.compiler.f77) if self.compiler.f77 else '')
-
         include_env_vars = ['C_INCLUDE_PATH', 'CPLUS_INCLUDE_PATH', 'INCLUDE']
         for var in include_env_vars:
             env.prepend_path(var, self.prefix.include)
+
+        sycl_build_pi_rocm_platform = self.spec.variants['rocm-platform'].value
+        if '+cuda' in self.spec or sycl_build_pi_rocm_platform == 'cuda':
+            env.prepend_path('PATH', self.spec['cuda'].prefix.bin)
