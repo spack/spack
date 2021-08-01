@@ -35,7 +35,7 @@ class Kadath(CMakePackage):
     depends_on('blas')
     depends_on('boost cxxstd=17')         # kadath uses std=C++17
     depends_on('cmake @2.8:', type='build')
-    depends_on('fftw @3:')
+    depends_on('fftw-api @3:')
     depends_on('gsl')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
