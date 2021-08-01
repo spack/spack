@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -49,10 +51,20 @@ class Rnpletal(AutotoolsPackage):
 
     parallel = False
 
+    # This is only one of the configure scripts. (We will use other scripts as
+    # well, depending on which packages will be installed.) We define this so
+    # that Spack does not try to create a configure script.
+    @property
+    def configure_abs_path(self):
+        return os.path.join(
+            os.path.abspath(self.configure_directory), 'rnpl', 'configure')
+
     def configure(self, spec, prefix):
+        options = ['--prefix={0}'.format(prefix)]
         for package in self.spec.variants['packages'].value:
             with working_dir(package):
-                configure()
+                configure = which("./configure")
+                configure(*options)
 
     def build(self, spec, prefix):
         for package in self.spec.variants['packages'].value:
@@ -66,8 +78,7 @@ class Rnpletal(AutotoolsPackage):
 
     @property
     def libs(self):
-        shared = "+shared" in self.spec
         return find_libraries(
             ["libbbhutil", "librnpl"],
-            root=self.prefix, shared=shared, recursive=True
+            root=self.prefix, shared=False, recursive=True
         )
