@@ -30,8 +30,8 @@ class Kadath(CMakePackage):
 
     variant('codes', multi=True,
             description="Codes to enable",
-            values=('BBH', 'BH', 'BHNS', 'BNS', 'NS'),
-            default=())
+            values=('none', 'BBH', 'BH', 'BHNS', 'BNS', 'NS'),
+            default='none')
 
     depends_on('blas')
     depends_on('boost cxxstd=17')         # kadath uses std=C++17
@@ -47,10 +47,11 @@ class Kadath(CMakePackage):
 
     def patch(self):
         for code in self.spec.variants['codes'].value:
-            # Disable unwanted explicit include directory settings
-            filter_file(r"include_directories\(/usr",
-                        "# include_directories(/usr",
-                        join_path("codes", code, "CMakeLists.txt"))
+            if code != 'none':
+                # Disable unwanted explicit include directory settings
+                filter_file(r"include_directories\(/usr",
+                            "# include_directories(/usr",
+                            join_path("codes", code, "CMakeLists.txt"))
 
     def setup_build_environment(self, env):
         env.set('HOME_KADATH', self.stage.source_path)
@@ -68,15 +69,17 @@ class Kadath(CMakePackage):
         with working_dir(self.build_directory, create=True):
             cmake(*options)
         for code in self.spec.variants['codes'].value:
-            with working_dir(join_path("codes", code)):
-                cmake(*options)
+            if code != 'none':
+                with working_dir(join_path("codes", code)):
+                    cmake(*options)
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
             make(*self.build_targets)
         for code in self.spec.variants['codes'].value:
-            with working_dir(join_path("codes", code)):
-                make(*self.build_targets)
+            if code != 'none':
+                with working_dir(join_path("codes", code)):
+                    make(*self.build_targets)
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)
