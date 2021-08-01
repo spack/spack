@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Rnpletal(Package):
+class Rnpletal(AutotoolsPackage):
     """The acronym RNPL stands for Rapid Numerical Prototyping Language. It is
     a language for expressing time-dependent systems of partial differential
     equations and the information necessary for solving them using
@@ -24,6 +24,24 @@ class Rnpletal(Package):
 
     maintainers = ['eschnett']
 
+    variant('packages', multi=True,
+            description="Packages to enable",
+            values=(
+                # "rvs",
+                # "cliser",
+                "rnpl",
+                # "svs",
+                # "vutil",
+                # "utilmath",
+                # "visutil",
+                # "utilio",
+                # "cvtestsdf",
+                # "netlib_linpack",
+                # "netlib_odepack",
+                # "netlib_fftpack",
+                # "netlib_lapack3.0",
+            ), default="rnpl")
+
     patch("corrections.diff")
 
     depends_on('bison', type='build')
@@ -31,32 +49,19 @@ class Rnpletal(Package):
 
     parallel = False
 
-    def install(self, spec, prefix):
-        packages = [
-            # "rvs",
-            # "cliser",
-            "rnpl",
-            # "svs",
-            # "vutil",
-            # "utilmath",
-            # "visutil",
-            # "utilio",
-            # "cvtestsdf",
-            # "netlib_linpack",
-            # "netlib_odepack",
-            # "netlib_fftpack",
-            # "netlib_lapack3.0",
-        ]
-
-        configure_args = [
-            "--prefix=" + prefix,
-            # "CFLAGS=-Wno-error,-Wimplicit-function-declaration",
-        ]
-
-        for package in packages:
+    def configure(self, spec, prefix):
+        for package in self.spec.variants['packages'].value:
             with working_dir(package):
-                configure = which("./configure")
-                configure(*configure_args)
+                configure()
+
+    def build(self, spec, prefix):
+        for package in self.spec.variants['packages'].value:
+            with working_dir(package):
+                make()
+
+    def install(self, spec, prefix):
+        for package in self.spec.variants['packages'].value:
+            with working_dir(package):
                 make("install")
 
     @property
