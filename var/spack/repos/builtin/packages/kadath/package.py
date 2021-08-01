@@ -8,7 +8,7 @@ from spack import *
 
 
 class Kadath(CMakePackage):
-    """KADATH SPECTRAL SOLVER
+    """KADATH SPECTRAL SOLVER.
 
     The Frankfurt University/Kadath (FUKA) Initial Data solver branch is
     a collection of ID solvers aimed at delivering consistent initial
