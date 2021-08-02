@@ -21,8 +21,8 @@ class Rnpletal(AutotoolsPackage):
     url      = "ftp://laplace.physics.ubc.ca/pub/rnpletal/rnpletal.tar.gz"
 
     # RNPL is distributed via tarballs that are updated from time to time, but
-    # which carry no version number. We arbitrarily choose "1.0.0".
-    version('1.0.0', sha256='2886f96393b64703fccf61b3dbc34e0fa45a79297232be76352f29cb83863d4d')
+    # which carry no version number.
+    version('develop', sha256='2886f96393b64703fccf61b3dbc34e0fa45a79297232be76352f29cb83863d4d')
 
     maintainers = ['eschnett']
 
