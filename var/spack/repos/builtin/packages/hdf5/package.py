@@ -189,11 +189,11 @@ class Hdf5(CMakePackage):
 
         if name == "cflags":
             if self.spec.satisfies('%gcc') \
-                    or self.spec.satisfies('%clang') \
-                    and not self.spec.satisfies('%nvhpc'):
+                    or self.spec.satisfies('%clang'):
                 # Quiet warnings/errors about implicit declaration of functions
                 # in C99:
                 cmake_flags.append("-Wno-implicit-function-declaration")
+                # Note that this flag will cause an error if building %nvhpc.
             if self.spec.satisfies('@:1.8.12~shared'):
                 # More recent versions set CMAKE_POSITION_INDEPENDENT_CODE to
                 # True and build with PIC flags.
