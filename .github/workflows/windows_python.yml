@@ -137,8 +137,12 @@ jobs:
         ProgressPreference: SilentlyContinue
     - uses: actions/upload-artifact@v2
       with:
-        name: Windows Installer Bundle
+        name: Windows Installer Bundled
         path: ${{ env.installer_root }}\pkg\Spack.exe
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Windows Spack Installer
+        path: ${{ env.installer_root}}\pkg\Spack.msi
   execute-installer:
     needs: generate-installer-test
     runs-on: windows-latest
@@ -160,7 +164,7 @@ jobs:
       with:
         name: Windows Installer Bundle
         path: ${{ env.spack_installer }}
-    - name: Execute Installer
+    - name: Execute Bundled Installer
       run: |
         $proc = Start-Process  ${{ env.spack_installer }}\spack.exe "/install /quiet" -Passthru
         $handle = $proc.Handle # cache proc.Handle
@@ -168,3 +172,13 @@ jobs:
         $LASTEXITCODE
       env:
         ProgressPreference: SilentlyContinue
+    - uses: actions/download-artifact@v2
+      with:
+        name: Windows MSI installer
+        path: ${{ env.spack_installer }}
+    - name: Execute MSI
+      run: |
+        $proc = Start-Process  ${{ env.spack_installer }}\spack.msi "/quiet" -Passthru
+        $handle = $proc.Handle # cache proc.Handle
+        $proc.WaitForExit();
+        $LASTEXITCODE
