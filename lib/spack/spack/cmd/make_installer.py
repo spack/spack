@@ -26,6 +26,14 @@ def setup_parser(subparser):
         help='full path to spack source')
 
     subparser.add_argument(
+        '-g', '--git-installer-verbosity', default="",
+        choices={'SILENT', 'VERYSILENT'},
+        help="Level of verbosity provided by bundled Git Installer.\
+             Default is fully verbose",
+        required=False, action='store', dest="git_verbosity"
+    )
+
+    subparser.add_argument(
         'output_dir', help="output directory")
 
 
@@ -40,6 +48,10 @@ def make_installer(parser, args):
         cmake_path = os.path.join(cmake_spec.prefix, "bin", "cmake.exe")
         cpack_path = os.path.join(cmake_spec.prefix, "bin", "cpack.exe")
         spack_source = args.spack_source
+        git_verbosity = ""
+        if args.git_verbosity:
+            git_verbosity = "/" + args.git_verbosity
+
         if spack_source:
             if not os.path.exists(spack_source):
                 print("%s does not exist" % spack_source)
@@ -62,13 +74,14 @@ def make_installer(parser, args):
         try:
             subprocess.check_call(
                 ('"%s" -S "%s" -B "%s" -DSPACK_VERSION=%s '
-                 '-DSPACK_SOURCE="%s" -DSPACK_LICENSE="%s" -DSPACK_LOGO="%s"')
+                 '-DSPACK_SOURCE="%s" -DSPACK_LICENSE="%s" '
+                 '-DSPACK_LOGO="%s" -DSPACK_GIT_VERBOSITY="%s"')
                 % (cmake_path, source_dir, output_dir, spack_version, spack_source,
-                   spack_license, spack_logo),
+                   spack_license, spack_logo, git_verbosity),
                 shell=True)
         except subprocess.CalledProcessError:
             print("Failed to generate installer")
-            return
+            return subprocess.CalledProcessError.returncode
 
         try:
             subprocess.check_call(
@@ -77,7 +90,7 @@ def make_installer(parser, args):
                 shell=True)
         except subprocess.CalledProcessError:
             print("Failed to generate installer")
-            return
+            return subprocess.CalledProcessError.returncode
         try:
             subprocess.check_call(
                 '"%s/bin/candle.exe" -ext WixBalExtension "%s/bundle.wxs"'
@@ -85,7 +98,7 @@ def make_installer(parser, args):
                 % (os.environ.get('WIX'), output_dir, output_dir), shell=True)
         except subprocess.CalledProcessError:
             print("Failed to generate installer chain")
-            return
+            return subprocess.CalledProcessError.returncode
         try:
             subprocess.check_call(
                 '"%s/bin/light.exe" -sw1134 -ext WixBalExtension "%s/bundle.wixobj"'
@@ -93,7 +106,7 @@ def make_installer(parser, args):
                 % (os.environ.get('WIX'), output_dir, output_dir), shell=True)
         except subprocess.CalledProcessError:
             print("Failed to generate installer chain")
-            return
+            return subprocess.CalledProcessError.returncode
         print("Successfully generated Spack.exe in %s" % (output_dir))
     else:
         print('The make-installer command is currently only supported on Windows.')
