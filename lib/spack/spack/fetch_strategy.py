@@ -338,7 +338,7 @@ class URLFetchStrategy(FetchStrategy):
     def _existing_url(self, url):
         tty.debug('Checking existence of {0}'.format(url))
 
-        if spack.config.get('config:use_curl'):
+        if spack.config.get('config:url_fetch_method') == 'curl':
             curl = self.curl
             # Telling curl to fetch the first byte (-r 0-0) is supposed to be
             # portable.
@@ -357,7 +357,7 @@ class URLFetchStrategy(FetchStrategy):
             return (response.getcode() is None or response.getcode() == 200)
 
     def _fetch_from_url(self, url):
-        if spack.config.get('config:use_curl'):
+        if spack.config.get('config:url_fetch_method') == 'curl':
             return self._fetch_curl(url)
         else:
             return self._fetch_urllib(url)
@@ -1254,8 +1254,9 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @property
     def hg(self):
-        """:returns: The hg executable
-        :rtype: Executable
+        """
+        Returns:
+            Executable: the hg executable
         """
         if not self._hg:
             self._hg = which('hg', required=True)
@@ -1405,7 +1406,7 @@ def from_kwargs(**kwargs):
             ``version()`` directive in a package.
 
     Returns:
-        fetch_strategy: The fetch strategy that matches the args, based
+        typing.Callable: The fetch strategy that matches the args, based
             on attribute names (e.g., ``git``, ``hg``, etc.)
 
     Raises:

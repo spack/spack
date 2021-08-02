@@ -530,7 +530,7 @@ class SpackCommand(object):
         """Invoke this SpackCommand.
 
         Args:
-            argv (list of str): command line arguments.
+            argv (list): command line arguments.
 
         Keyword Args:
             fail_on_error (optional bool): Don't raise an exception on error
@@ -625,7 +625,7 @@ def print_setup_info(*info):
     """Print basic information needed by setup-env.[c]sh.
 
     Args:
-        info (list of str): list of things to print: comma-separated list
+        info (list): list of things to print: comma-separated list
             of 'csh', 'sh', or 'modules'
 
     This is in ``main.py`` to make it fast; the setup scripts need to
@@ -689,7 +689,7 @@ def main(argv=None):
     """This is the entry point for the Spack command.
 
     Args:
-        argv (list of str or None): command line arguments, NOT including
+        argv (list or None): command line arguments, NOT including
             the executable name. If None, parses from sys.argv.
     """
     # Create a parser with a simple positional argument first.  We'll

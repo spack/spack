@@ -122,7 +122,9 @@ else:
 
 
 __all__ = [
+    'CompilerSpec',
     'Spec',
+    'SpecParser',
     'parse',
     'SpecParseError',
     'DuplicateDependencyError',
@@ -143,7 +145,9 @@ __all__ = [
     'AmbiguousHashError',
     'InvalidHashError',
     'NoSuchHashError',
-    'RedundantSpecError']
+    'RedundantSpecError',
+    'SpecDeprecatedError',
+]
 
 #: Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
@@ -1495,7 +1499,7 @@ class Spec(object):
         """Utility method for computing different types of Spec hashes.
 
         Arguments:
-            hash (SpecHashDescriptor): type of hash to generate.
+            hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
         """
         # TODO: curently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
@@ -1513,7 +1517,7 @@ class Spec(object):
         in the supplied attribute on this spec.
 
         Arguments:
-            hash (SpecHashDescriptor): type of hash to generate.
+            hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
         """
         if not hash.attr:
             return self._spec_hash(hash)[:length]
@@ -1615,7 +1619,7 @@ class Spec(object):
         hashes).
 
         Arguments:
-            hash (SpecHashDescriptor) type of hash to generate.
+            hash (spack.hash_types.SpecHashDescriptor) type of hash to generate.
          """
         d = syaml.syaml_dict()
 
@@ -2987,7 +2991,7 @@ class Spec(object):
             spec (Spec): spec to be analyzed
 
         Raises:
-            UnknownVariantError: on the first unknown variant found
+            spack.variant.UnknownVariantError: on the first unknown variant found
         """
         pkg_cls = spec.package_class
         pkg_variants = pkg_cls.variants
@@ -4437,6 +4441,7 @@ _lexer = SpecLexer()
 
 
 class SpecParser(spack.parse.Parser):
+    """Parses specs."""
 
     def __init__(self, initial_spec=None):
         """Construct a new SpecParser.

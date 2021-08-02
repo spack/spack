@@ -502,7 +502,7 @@ def remove_separators(version):
     Unfortunately, this also means that 1.23 and 12.3 are equal.
 
     Args:
-        version (str or Version): A version
+        version (str or spack.version.Version): A version
 
     Returns:
         str: The version with all separator characters removed

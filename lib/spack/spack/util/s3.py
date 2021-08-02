@@ -11,6 +11,13 @@ import spack
 import spack.util.url as url_util
 
 
+def _parse_s3_endpoint_url(endpoint_url):
+    if not urllib_parse.urlparse(endpoint_url, scheme='').scheme:
+        endpoint_url = '://'.join(('https', endpoint_url))
+
+    return endpoint_url
+
+
 def create_s3_session(url):
     url = url_util.parse(url)
     if url.scheme != 's3':
@@ -30,10 +37,7 @@ def create_s3_session(url):
 
     endpoint_url = os.environ.get('S3_ENDPOINT_URL')
     if endpoint_url:
-        if urllib_parse.urlparse(endpoint_url, scheme=None).scheme is None:
-            endpoint_url = '://'.join(('https', endpoint_url))
-
-        s3_client_args['endpoint_url'] = endpoint_url
+        s3_client_args['endpoint_url'] = _parse_s3_endpoint_url(endpoint_url)
 
     # if no access credentials provided above, then access anonymously
     if not session.get_credentials():

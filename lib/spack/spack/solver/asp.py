@@ -93,10 +93,14 @@ def _id(thing):
         return '"%s"' % str(thing)
 
 
+@llnl.util.lang.key_ordering
 class AspFunction(AspObject):
     def __init__(self, name, args=None):
         self.name = name
-        self.args = [] if args is None else args
+        self.args = () if args is None else args
+
+    def _cmp_key(self):
+        return (self.name, self.args)
 
     def __call__(self, *args):
         return AspFunction(self.name, args)
@@ -111,10 +115,6 @@ class AspFunction(AspObject):
                 return clingo.String(str(arg))
         return clingo.Function(
             self.name, [argify(arg) for arg in self.args], positive=positive)
-
-    def __getitem___(self, *args):
-        self.args[:] = args
-        return self
 
     def __str__(self):
         return "%s(%s)" % (
@@ -679,14 +679,14 @@ class SpackSolverSetup(object):
         """Generate facts for a dependency or virtual provider condition.
 
         Arguments:
-            required_spec (Spec): the spec that triggers this condition
-            imposed_spec (optional, Spec): the sepc with constraints that
+            required_spec (spack.spec.Spec): the spec that triggers this condition
+            imposed_spec (spack.spec.Spec or None): the sepc with constraints that
                 are imposed when this condition is triggered
-            name (optional, str): name for `required_spec` (required if
+            name (str or None): name for `required_spec` (required if
                 required_spec is anonymous, ignored if not)
 
         Returns:
-            (int): id of the condition created by this function
+            int: id of the condition created by this function
         """
         named_cond = required_spec.copy()
         named_cond.name = named_cond.name or name
@@ -922,7 +922,7 @@ class SpackSolverSetup(object):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
-            spec (Spec): the spec to analyze
+            spec (spack.spec.Spec): the spec to analyze
             body (bool): if True, generate clauses to be used in rule bodies
                 (final values) instead of rule heads (setters).
             transitive (bool): if False, don't generate clauses from
