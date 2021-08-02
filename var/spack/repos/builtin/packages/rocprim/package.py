@@ -37,9 +37,6 @@ class Rocprim(CMakePackage):
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
-
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 

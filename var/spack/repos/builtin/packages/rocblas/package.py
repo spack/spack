@@ -44,9 +44,6 @@ class Rocblas(CMakePackage):
     for ver in ['4.0.0', '4.1.0', '4.2.0']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, when='@' + ver)
-
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
 
