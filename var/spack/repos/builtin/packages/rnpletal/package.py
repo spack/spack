@@ -63,7 +63,6 @@ class Rnpletal(AutotoolsPackage):
         options = ['--prefix={0}'.format(prefix)]
         for package in self.spec.variants['packages'].value:
             with working_dir(package):
-                configure = which("./configure")
                 configure(*options)
 
     def build(self, spec, prefix):
