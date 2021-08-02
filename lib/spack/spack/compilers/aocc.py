@@ -99,7 +99,7 @@ class Aocc(Compiler):
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
         match = re.search(
-            r'AOCC_(\d)[._](\d)[._](\d)',
+            r'AOCC_(\d+)[._](\d+)[._](\d+)',
             output
         )
         if match:
