@@ -1028,13 +1028,6 @@ class Python(AutotoolsPackage):
         module.site_packages_dir = join_path(dependent_spec.prefix,
                                              self.site_packages_dir)
 
-        # This checks if the dependent spec has a "site_packages_dir"
-        # property or attribute already defined. If not we set a default
-        # which is the same as the module level.
-        if not (hasattr(type(dependent_spec.package), 'site_packages_dir') or
-                hasattr(dependent_spec.package, 'site_packages_dir')):
-            dependent_spec.package.site_packages_dir = module.site_packages_dir
-
         self.spec.home = self.home
 
         # Make the site packages directory for extensions

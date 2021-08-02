@@ -72,9 +72,6 @@ class ClingoBootstrap(Clingo):
 
     @property
     def site_packages_dir(self):
-        # This property is usable only at run-time, since it's based
-        # on the inspection of the prefix. This is fine since clingo
-        # doesn't need it at build-time.
         libraries = llnl.util.filesystem.FileList(llnl.util.filesystem.find(
             root=self.prefix, files=['clingo*.so'], recursive=True
         ))
