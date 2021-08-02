@@ -96,3 +96,17 @@ jobs:
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install cmake bison@2.7 tree
+      - uses: actions/checkout@v2
+      - name: Bootstrap clingo
+        run: |
+          source share/spack/setup-env.sh
+          spack external find --not-buildable cmake bison
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
