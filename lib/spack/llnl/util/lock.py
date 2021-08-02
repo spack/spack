@@ -84,8 +84,6 @@ class Lock(object):
     maintain multiple locks on the same file.
     """
 
-    # file_map = {}
-
     def __init__(self, path, start=0, length=0, default_timeout=None,
                  debug=False, desc=''):
         """Construct a new lock on the file at ``path``.
@@ -429,7 +427,7 @@ class Lock(object):
             # can raise LockError.
             wait_time, nattempts = self._lock(self.LOCK_EX, timeout=timeout)
             self._writes += 1
-            self.LOCK_EX
+            self.current_lock = self.LOCK_EX
             # Log if acquired, which includes counts when verbose
             self._log_acquired('WRITE LOCK', wait_time, nattempts)
 
