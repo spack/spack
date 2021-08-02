@@ -25,17 +25,16 @@ class Cloverleaf(MakefilePackage):
     variant('ieee', default=False, description='Build with IEEE standards')
     variant('debug', default=False, description='Build with DEBUG flags')
 
-    patch('cloverleaf_aocc.patch', when="@master %aocc", level=0)
-
     depends_on('mpi', when='build=cuda')
     depends_on('mpi', when='build=mpi_only')
     depends_on('mpi', when='build=openacc_cray')
     depends_on('mpi', when='build=ref')
     depends_on('cuda', when='build=cuda')
 
-    conflicts('build=cuda', when='@master %aocc', msg="Currently AOCC supports only ref variant")
-    conflicts('build=openacc_cray', when='@master %aocc', msg="Currently AOCC supports only ref variant")
-    conflicts('build=serial', when='@master %aocc', msg="Currently AOCC supports only ref variant")
+    conflicts('build=cuda', when='%aocc', msg="Currently AOCC supports only ref variant")
+    conflicts('build=openacc_cray', when='%aocc', msg="Currently AOCC supports only ref variant")
+    conflicts('build=serial', when='%aocc', msg="Currently AOCC supports only ref variant")
+    conflicts('@1.1', when='%aocc', msg="AOCC support is provided from version v.1.3 and above")
 
     @property
     def type_of_build(self):
