@@ -331,6 +331,16 @@ class Openblas(MakefilePackage):
         if "~fortran" not in self.spec:
             make_defs += ["FC={0}".format(spack_fc)]
 
+        if self.spec.satisfies('platform=windows'):
+            make_defs.extend([
+                'CC=\"{0}\"'.format(os.environ.get('SPACK_CC')),
+                'FC=\"{0}\"'.format(os.environ.get('SPACK_FC')),
+            ])
+        else:
+            make_defs.extend([
+                'CC={0}'.format(spack_cc),
+                'FC={0}'.format(spack_fc),
+            ])
         # force OpenBLAS to use externally defined parallel build
         if self.spec.version < Version("0.3"):
             make_defs.append("MAKE_NO_J=1")  # flag defined by our make.patch
@@ -437,7 +447,14 @@ class Openblas(MakefilePackage):
 
         return self.make_defs + targets
 
-    @run_after("build")
+    def build(self, spec, prefix):
+        if self.spec.satisfies('platform=windows'):
+            nmake = Executable('nmake.exe')
+            nmake(*self.build_targets)
+        else:
+            super(OpenBLAS, self).build(spec, prefix)
+
+    @run_after('build')
     @on_package_attributes(run_tests=True)
     def check_build(self):
         make("tests", *self.make_defs, parallel=False)
@@ -450,7 +467,14 @@ class Openblas(MakefilePackage):
         ]
         return make_args + self.make_defs
 
-    @run_after("install")
+    def install(self, spec, prefix):
+        if self.spec.satisfies('platform=windows'):
+            nmake = Executable('nmake.exe')
+            nmake(*self.install_targets)
+        else:
+            super(OpenBLAS, self).install(spec, prefix)
+
+    @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
         spec = self.spec
