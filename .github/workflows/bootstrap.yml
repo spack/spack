@@ -107,6 +107,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
+          export PATH=/usr/local/opt/bison@2.7/bin:$PATH
           spack external find --not-buildable cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
