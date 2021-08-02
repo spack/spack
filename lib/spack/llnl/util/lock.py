@@ -83,7 +83,7 @@ class Lock(object):
     maintain multiple locks on the same file.
     """
 
-    file_map = {}
+    # file_map = {}
 
     def __init__(self, path, start=0, length=0, default_timeout=None,
                  debug=False, desc=''):
@@ -109,12 +109,12 @@ class Lock(object):
                 helpful for distinguishing between different Spack locks.
         """
         self.path = path
-        self.__file = None
+        self._file = None
         self._file_mode = ""
         self._reads = 0
         self._writes = 0
-        if self.path not in Lock.file_map:
-            Lock.file_map[self.path] = self
+        # if self.path not in Lock.file_map:
+        #     Lock.file_map[self.path] = (self.__file, 0)
         # byte range parameters
         self._start = start
         self._length = length
@@ -150,20 +150,22 @@ class Lock(object):
         self.lock_type = {self.LOCK_SH: 'read', self.LOCK_EX: 'write'}
         self.current_lock = None
 
-    @property
-    def _file(self):
-        if self == Lock.file_map[self.path]:
-            return self.__file
-        else:
-            return Lock.file_map[self.path]._file
+    # @property
+    # def _file(self):
+    #     if self == Lock.file_map[self.path][0]:
+    #         return self.__file
+    #     else:
+    #         return Lock.file_map[self.path][0]._file
 
-    @_file.setter
-    def _file(self, val):
-        if not self is Lock.file_map[self.path]:
-            Lock.file_map[self.path]._file = val
-        else:
-            print(Lock.file_map.keys())
-            self.__file is val
+    # @_file.setter
+    # def _file(self, val):
+    #     if not self is Lock.file_map[self.path]:
+    #         if val is None:
+    #             Lock.file_map[self.path][1] -= 1
+    #         else:
+    #             Lock.file_map[self.path]._file = val
+    #     else:
+    #         self.__file is val
 
     def __lock_fail_condition(self,e):
         if _platform == "win32":

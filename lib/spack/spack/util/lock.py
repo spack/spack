@@ -6,6 +6,7 @@
 """Wrapper for ``llnl.util.lock`` allows locking to be enabled/disabled."""
 import os
 import stat
+import sys
 
 import llnl.util.lock
 
@@ -73,3 +74,19 @@ def check_lock_safety(path):
                 "Running a shared spack without locks is unsafe. You must "
                 "restrict permissions on {0} or enable locks.").format(path)
             raise spack.error.SpackError(msg, long_msg)
+
+class LockFactory(object):
+
+    __lock_map = {}
+
+    def __init__(self):
+        raise RuntimeWarning("Call static lock method. LockFactory.lock(*args,**kwargs)")
+
+    @staticmethod
+    def lock(*args, **kwargs):
+        if sys.platform == "win32":
+            if args[0] not in LockFactory.__lock_map:
+                LockFactory.__lock_map[args[0]] = Lock(*args,**kwargs)
+            return LockFactory.__lock_map[args[0]]
+        else:
+            return Lock(*args, **kwargs)
