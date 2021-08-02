@@ -97,6 +97,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             description='Activates support for MUMPS (only parallel)')
     variant('superlu-dist', default=True,
             description='Activates support for SuperluDist (only parallel)')
+    variant('strumpack', default=False,
+            description='Activates support for Strumpack')
+    variant('scalapack', default=False,
+            description='Activates support for Scalapack')
     variant('trilinos', default=False,
             description='Activates support for Trilinos (only parallel)')
     variant('mkl-pardiso', default=False,
@@ -255,6 +259,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@main+superlu-dist+mpi~int64')
     depends_on('superlu-dist@develop+int64', when='@main+superlu-dist+mpi+int64')
+    depends_on('strumpack', when='+strumpack')
+    depends_on('scalapack', when='+strumpack')
+    depends_on('metis', when='+strumpack')
+    depends_on('scalapack', when='+scalapack')
     depends_on('mumps+mpi~int64~metis~parmetis~openmp', when='+mumps~metis~openmp')
     depends_on('mumps+mpi~int64+metis+parmetis~openmp', when='+mumps+metis~openmp')
     depends_on('mumps+mpi~int64~metis~parmetis+openmp', when='+mumps~metis+openmp')
@@ -408,6 +416,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 'hwloc',
                 (jpeg_sp, 'libjpeg', True, True),
                 (scalapack_sp, 'scalapack', False, True),
+                'strumpack',
         ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
