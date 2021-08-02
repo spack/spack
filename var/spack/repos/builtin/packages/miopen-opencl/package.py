@@ -59,6 +59,10 @@ class MiopenOpencl(CMakePackage):
                 'HIP_CXX_COMPILER',
                 '{0}/bin/clang++'.format(self.spec['llvm-amdgpu'].prefix)
             ),
+            self.define(
+                'MIOPEN_AMDGCN_ASSEMBLER',
+                '{0}/bin/clang'.format(self.spec['llvm-amdgpu'].prefix)
+            ),
             self.define('Boost_USE_STATIC_LIBS', 'Off')
         ]
         return args

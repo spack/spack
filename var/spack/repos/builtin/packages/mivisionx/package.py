@@ -41,6 +41,10 @@ class Mivisionx(CMakePackage):
                         self.spec['rocm-opencl'].prefix,
                         'amd_openvx/cmake/FindOpenCL.cmake',
                         string=True)
+            filter_file('/opt/rocm/mivisionx/include',
+                        self.spec['mivisionx'].prefix.include,
+                        'utilities/mv_deploy/CMakeLists.txt',
+                        string=True)
 
     def flag_handler(self, name, flags):
         spec = self.spec

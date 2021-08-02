@@ -93,15 +93,14 @@ def make_module_available(module, spec=None, install=False):
 
     for ispec in installed_specs:
         # TODO: make sure run-environment is appropriate
-        module_path = os.path.join(ispec.prefix,
-                                   ispec['python'].package.site_packages_dir)
+        module_path = ispec['python'].package.get_python_lib(prefix=ispec.prefix)
         try:
             sys.path.append(module_path)
             __import__(module)
             return
         except ImportError:
             tty.warn("Spec %s did not provide module %s" % (ispec, module))
-            sys.path = sys.path[:-2]
+            sys.path = sys.path[:-1]
 
     def _raise_error(module_name, module_spec):
         error_msg = 'cannot import module "{0}"'.format(module_name)
@@ -118,14 +117,13 @@ def make_module_available(module, spec=None, install=False):
         spec.concretize()
     spec.package.do_install()
 
-    module_path = os.path.join(spec.prefix,
-                               spec['python'].package.site_packages_dir)
+    module_path = spec['python'].package.get_python_lib(prefix=spec.prefix)
     try:
         sys.path.append(module_path)
         __import__(module)
         return
     except ImportError:
-        sys.path = sys.path[:-2]
+        sys.path = sys.path[:-1]
         _raise_error(module, spec)
 
 

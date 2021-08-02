@@ -28,7 +28,6 @@ class RoctracerDev(CMakePackage):
     version('3.5.0', sha256='7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e')
 
     depends_on('cmake@3:', type='build')
-    depends_on('py-setuptools@:44', type='build')
     depends_on('python@:2', type='build', when='@:4.1.0')
     depends_on('python@3:', type='build', when='@4.2.0:')
     depends_on('py-cppheaderparser', type='build')
