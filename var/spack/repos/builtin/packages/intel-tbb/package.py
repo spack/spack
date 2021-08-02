@@ -10,6 +10,7 @@ import sys
 
 from spack import *
 
+
 class IntelTbb(Package):
     """Widely used C++ template library for task parallelism.
     Intel Threading Building Blocks (Intel TBB) lets you easily write parallel
