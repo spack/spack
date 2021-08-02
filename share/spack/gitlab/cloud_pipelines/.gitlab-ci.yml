@@ -125,7 +125,6 @@ e4s-develop-build:
         job: e4s-develop-generate
     strategy: depend
 
-
 ########################################
 # E4S on Power
 ########################################
@@ -159,7 +158,6 @@ e4s-on-power-develop-build:
         job: e4s-on-power-develop-generate
     strategy: depend
 
-
 #########################################
 # Build tests for different build-systems
 #########################################
@@ -187,4 +185,39 @@ build_systems-develop-build:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: build_systems-develop-generate
+    strategy: depend
+
+#########################################
+# RADIUSS
+#########################################
+.radiuss:
+  variables:
+    SPACK_CI_STACK_NAME: radiuss
+
+.radiuss-generate:
+  extends: [ ".radiuss"]
+  image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
+
+# ---------  PRs ---------
+radiuss-pr-generate:
+  extends: [ ".radiuss-generate", ".pr-generate" ]
+
+radiuss-pr-build:
+  extends: [ ".radiuss", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-pr-generate
+    strategy: depend
+
+# ---------  Develop ---------
+radiuss-develop-generate:
+  extends: [ ".radiuss-generate", ".develop-generate" ]
+
+radiuss-develop-build:
+  extends: [ ".radiuss", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-develop-generate
     strategy: depend
