@@ -1180,6 +1180,10 @@ class Environment(object):
             return True
         return False
 
+    def is_develop(self, spec):
+        """Returns true when the spec is built from local sources"""
+        return spec.name in self.dev_specs
+
     def concretize(self, force=False, tests=False):
         """Concretize user_specs in this environment.
 
