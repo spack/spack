@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import platform
+
+from spack import *
 
 
 class Bwa(Package):
@@ -38,6 +39,11 @@ class Bwa(Package):
                     'Makefile')
         # use spack C compiler
         filter_file('^CC=.*', 'CC={0}'.format(spack_cc), 'Makefile')
+        # fix gcc 10+ errors
+        if self.spec.satisfies('%gcc@10:'):
+            filter_file('const uint8_t rle_auxtab[8]',
+                        'extern const uint8_t rle_auxtab[8]',
+                        'rle.h', string=True)
         make()
 
         mkdirp(prefix.bin)

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 from spack import *
 
 
@@ -42,6 +43,8 @@ class Cgns(CMakePackage):
     variant('legacy',     default=False, description='Enable legacy options')
     variant('mem_debug',  default=False, description='Enable memory debugging option')
 
+    depends_on('cmake@3.8:', when='@4.2:', type='build')
+    depends_on('cmake@2.8:', when='@:4.1.99', type='build')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('mpi', when='+mpi')

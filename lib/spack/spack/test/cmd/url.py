@@ -8,11 +8,9 @@ import sys
 import pytest
 
 import spack.repo
-from spack.url import UndetectableVersionError
+from spack.cmd.url import name_parsed_correctly, url_summary, version_parsed_correctly
 from spack.main import SpackCommand
-from spack.cmd.url import name_parsed_correctly, version_parsed_correctly
-from spack.cmd.url import url_summary
-
+from spack.url import UndetectableVersionError
 
 url = SpackCommand('url')
 

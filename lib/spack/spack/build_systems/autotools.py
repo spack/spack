@@ -7,13 +7,13 @@ import itertools
 import os
 import os.path
 import stat
-from subprocess import PIPE
-from subprocess import check_call
+from subprocess import PIPE, check_call
 from typing import List  # novm
 
-import llnl.util.tty as tty
 import llnl.util.filesystem as fs
-from llnl.util.filesystem import working_dir, force_remove
+import llnl.util.tty as tty
+from llnl.util.filesystem import force_remove, working_dir
+
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
@@ -30,7 +30,7 @@ class AutotoolsPackage(PackageBase):
 
     They all have sensible defaults and for many packages the only thing
     necessary will be to override the helper method
-    :py:meth:`~.AutotoolsPackage.configure_args`.
+    :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`.
     For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
@@ -331,7 +331,7 @@ class AutotoolsPackage(PackageBase):
 
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
-        :py:meth:`~.AutotoolsPackage.configure_args`
+        :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`
         and an appropriately set prefix.
         """
         options = getattr(self, 'configure_flag_args', [])
@@ -345,8 +345,11 @@ class AutotoolsPackage(PackageBase):
         """Makes the build targets specified by
         :py:attr:``~.AutotoolsPackage.build_targets``
         """
+        # See https://autotools.io/automake/silent.html
+        params = ['V=1']
+        params += self.build_targets
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make(*self.build_targets)
+            inspect.getmodule(self).make(*params)
 
     def install(self, spec, prefix):
         """Makes the install targets specified by
@@ -373,8 +376,8 @@ class AutotoolsPackage(PackageBase):
             activation_value=None
     ):
         """This function contains the current implementation details of
-        :py:meth:`~.AutotoolsPackage.with_or_without` and
-        :py:meth:`~.AutotoolsPackage.enable_or_disable`.
+        :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without` and
+        :meth:`~spack.build_systems.autotools.AutotoolsPackage.enable_or_disable`.
 
         Args:
             name (str): name of the variant that is being processed
@@ -382,7 +385,7 @@ class AutotoolsPackage(PackageBase):
                 case of ``with_or_without``)
             deactivation_word (str): the default deactivation word ('without'
                 in the case of ``with_or_without``)
-            activation_value (callable): callable that accepts a single
+            activation_value (typing.Callable): callable that accepts a single
                 value. This value is either one of the allowed values for a
                 multi-valued variant or the name of a bool-valued variant.
                 Returns the parameter to be used when the value is activated.
@@ -417,7 +420,7 @@ class AutotoolsPackage(PackageBase):
             for ``<spec-name> foo=x +bar``
 
         Returns:
-            list of strings that corresponds to the activation/deactivation
+            list: list of strings that corresponds to the activation/deactivation
             of the variant that has been processed
 
         Raises:
@@ -498,7 +501,7 @@ class AutotoolsPackage(PackageBase):
 
         Args:
             name (str): name of a valid multi-valued variant
-            activation_value (callable): callable that accepts a single
+            activation_value (typing.Callable): callable that accepts a single
                 value and returns the parameter to be used leading to an entry
                 of the type ``--with-{name}={parameter}``.
 
@@ -511,12 +514,13 @@ class AutotoolsPackage(PackageBase):
         return self._activate_or_not(name, 'with', 'without', activation_value)
 
     def enable_or_disable(self, name, activation_value=None):
-        """Same as :py:meth:`~.AutotoolsPackage.with_or_without` but substitute
-        ``with`` with ``enable`` and ``without`` with ``disable``.
+        """Same as
+        :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without`
+        but substitute ``with`` with ``enable`` and ``without`` with ``disable``.
 
         Args:
             name (str): name of a valid multi-valued variant
-            activation_value (callable): if present accepts a single value
+            activation_value (typing.Callable): if present accepts a single value
                 and returns the parameter to be used leading to an entry of the
                 type ``--enable-{name}={parameter}``
 

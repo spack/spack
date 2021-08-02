@@ -1,0 +1,28 @@
+commit 8c06c4fd8b3f5b41431a06eb72bcc827b729db86
+Author: Tiziano Müller <tiziano.mueller@chem.uzh.ch>
+Date:   Mon Jun 14 22:20:17 2021 +0200
+
+    use separate whole-archive/no-whole-archive to fix build with Cray compiler wrappers
+
+diff --git a/Makefile b/Makefile
+index d50f9d19..0c7c15c4 100644
+--- a/Makefile
++++ b/Makefile
+@@ -566,7 +566,7 @@ ifeq ($(FLA_ENABLE_MAX_ARG_LIST_HACK),yes)
+ ifeq ($(OS_NAME),Darwin)
+ 	$(LINKER) $(SOFLAGS) -o $@ -Wl,-force_load,$(LIBFLAME_A) $(LDFLAGS)
+ else
+-	$(LINKER) $(SOFLAGS) -o $@ -Wl,--whole-archive,$(LIBFLAME_A),--no-whole-archive $(LDFLAGS)
++	$(LINKER) $(SOFLAGS) -o $@ -Wl,--whole-archive $(LIBFLAME_A) -Wl,--no-whole-archive $(LDFLAGS)
+ endif
+ else
+ #	NOTE: Can't use $^ automatic variable as long as $(AR_OBJ_LIST_FILE) is in
+@@ -580,7 +580,7 @@ ifeq ($(FLA_ENABLE_MAX_ARG_LIST_HACK),yes)
+ ifeq ($(OS_NAME),Darwin)
+ 	@$(LINKER) $(SOFLAGS) -o $@ -Wl,-force_load,$(LIBFLAME_A) $(LDFLAGS)
+ else
+-	@$(LINKER) $(SOFLAGS) -o $@ -Wl,--whole-archive,$(LIBFLAME_A),--no-whole-archive $(LDFLAGS)
++	@$(LINKER) $(SOFLAGS) -o $@ -Wl,--whole-archive $(LIBFLAME_A) -Wl,--no-whole-archive $(LDFLAGS)
+ endif
+ else
+ #	NOTE: Can't use $^ automatic variable as long as $(AR_OBJ_LIST_FILE) is in

@@ -60,20 +60,21 @@ import contextlib
 import functools
 import warnings
 
-import archspec.cpu
 import six
 
-import llnl.util.tty as tty
+import archspec.cpu
+
 import llnl.util.lang as lang
+import llnl.util.tty as tty
 
 import spack.compiler
 import spack.compilers
 import spack.config
-import spack.paths
 import spack.error as serr
+import spack.paths
+import spack.util.classes
 import spack.util.executable
 import spack.version
-import spack.util.classes
 from spack.util.spack_yaml import syaml_dict
 
 
@@ -192,8 +193,8 @@ class Target(object):
         the compiler passed as argument.
 
         Args:
-            compiler (CompilerSpec or Compiler): object that contains both the
-                name and the version of the compiler we want to use
+            compiler (spack.spec.CompilerSpec or spack.compiler.Compiler): object that
+                contains both the name and the version of the compiler we want to use
         """
         # Mixed toolchains are not supported yet
         import spack.compilers

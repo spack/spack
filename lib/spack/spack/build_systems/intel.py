@@ -4,26 +4,32 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
-import sys
 import glob
-import tempfile
-import re
 import inspect
+import os
+import re
+import sys
+import tempfile
 import xml.etree.ElementTree as ElementTree
+
 import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    HeaderList,
+    LibraryList,
+    ancestor,
+    filter_file,
+    find_headers,
+    find_libraries,
+    find_system_libraries,
+    install,
+)
 
-from llnl.util.filesystem import \
-    install, ancestor, filter_file, \
-    HeaderList, find_headers, \
-    LibraryList, find_libraries, find_system_libraries
-
-from spack.version import Version, ver
-from spack.package import PackageBase, run_after, InstallError
+from spack.build_environment import dso_suffix
+from spack.package import InstallError, PackageBase, run_after
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
-from spack.build_environment import dso_suffix
+from spack.version import Version, ver
 
 # A couple of utility functions that might be useful in general. If so, they
 # should really be defined elsewhere, unless deemed heretical.
@@ -362,7 +368,7 @@ class IntelPackage(PackageBase):
                 toplevel psxevars.sh or equivalent file to source (and thus by
                 the modulefiles that Spack produces).
 
-            version_globs (list of str): Suffix glob patterns (most specific
+            version_globs (list): Suffix glob patterns (most specific
                 first) expected to qualify suite_dir_name to its fully
                 version-specific install directory (as opposed to a
                 compatibility directory or symlink).
@@ -1089,7 +1095,7 @@ class IntelPackage(PackageBase):
                 # Intel MPI since 2019 depends on libfabric which is not in the
                 # lib directory but in a directory of its own which should be
                 # included in the rpath
-                if self.version >= ver('2019'):
+                if self.version_yearlike >= ver('2019'):
                     d = ancestor(self.component_lib_dir('mpi'))
                     libfabrics_path = os.path.join(d, 'libfabric', 'lib')
                     env.append_path('SPACK_COMPILER_EXTRA_RPATHS',

@@ -12,6 +12,7 @@ class PyNipype(PythonPackage):
     homepage = "http://nipy.org/nipype"
     pypi     = "nipype/nipype-1.6.0.tar.gz"
 
+    version('1.6.1', sha256='8428cfc633d8e3b8c5650e241e9eedcf637b7969bcd40f3423334d4c6b0992b5')
     version('1.6.0', sha256='bc56ce63f74c9a9a23c6edeaf77631377e8ad2bea928c898cc89527a47f101cf')
 
     depends_on('python@3.6:', type=('build', 'run'))

@@ -14,7 +14,7 @@ class Hipsparse(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-4.2.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('4.2.0', sha256='cdedf3766c10200d3ebabe86cbb9c0fe6504e4b3317dccca289327d7c189bb3f')
     version('4.1.0', sha256='66710c390489922f0bd1ac38fd8c32fcfb5b7760b92c2d282f7d1abf214742ee')
@@ -31,27 +31,24 @@ class Hipsparse(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('rocsparse@' + ver, type='link', when='@' + ver)
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
+        depends_on('hip@' + ver,                      when='@' + ver)
+        depends_on('rocsparse@' + ver,                when='@' + ver)
 
     for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
-        depends_on('rocprim@' + ver, type='link', when='@' + ver)
+        depends_on('rocprim@' + ver, when='@' + ver)
+
     for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     patch('e79985dccde22d826aceb3badfc643a3227979d2.patch', when='@3.5.0')
     patch('530047af4a0f437dafc02f76b3a17e3b1536c7ec.patch', when='@3.5.0')
 
     def cmake_args(self):
-        args = [
-            '-DCMAKE_CXX_STANDARD=14',
-            '-DBUILD_CLIENTS_SAMPLES=OFF',
-            '-DBUILD_CLIENTS_TESTS=OFF',
+        return [
+            self.define('CMAKE_CXX_STANDARD', '14'),
+            self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
+            self.define('BUILD_CLIENTS_TESTS', 'OFF'),
         ]
-        return args
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)

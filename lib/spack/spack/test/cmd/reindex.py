@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-from spack.main import SpackCommand
+
 import spack.store
+from spack.main import SpackCommand
 
 install = SpackCommand('install')
 deprecate = SpackCommand('deprecate')

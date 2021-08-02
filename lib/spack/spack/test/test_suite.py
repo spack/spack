@@ -5,6 +5,7 @@
 import os
 
 import llnl.util.filesystem as fs
+
 import spack.install_test
 import spack.spec
 

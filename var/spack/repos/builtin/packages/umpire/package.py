@@ -48,6 +48,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
 
     patch('camp_target_umpire_3.0.0.patch', when='@3.0.0')
     patch('cmake_version_check.patch', when='@4.1')
+    patch('missing_header_for_numeric_limits.patch', when='@4.1:5.0.1')
 
     variant('fortran', default=False, description='Build C/Fortran API')
     variant('c', default=True, description='Build C API')
@@ -73,6 +74,10 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
     depends_on('camp')
+    depends_on('camp+cuda', when='+cuda')
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on('camp cuda_arch={0}'.format(sm_),
+                   when='cuda_arch={0}'.format(sm_))
 
     conflicts('+numa', when='@:0.3.2')
     conflicts('~c', when='+fortran', msg='Fortran API requires C API')
@@ -96,6 +101,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
+                options.append('-DCMAKE_CUDA_ARCHITECTURES={0}'.format(cuda_arch[0]))
                 flag = '-arch sm_{0}'.format(cuda_arch[0])
                 options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
 

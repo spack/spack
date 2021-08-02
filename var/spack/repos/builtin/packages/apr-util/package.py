@@ -32,6 +32,14 @@ class AprUtil(AutotoolsPackage):
     depends_on('sqlite', when='+sqlite')
     depends_on('unixodbc', when='+odbc')
 
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libaprutil-{0}'.format(self.version.up_to(1))],
+            root=self.prefix,
+            recursive=True,
+        )
+
     def configure_args(self):
         spec = self.spec
 

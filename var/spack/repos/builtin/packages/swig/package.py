@@ -5,7 +5,6 @@
 
 import os
 
-
 from spack import *
 
 

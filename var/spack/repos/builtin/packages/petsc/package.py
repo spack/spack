@@ -5,7 +5,7 @@
 import os
 
 
-class Petsc(Package):
+class Petsc(Package, CudaPackage, ROCmPackage):
     """PETSc is a suite of data structures and routines for the scalable
     (parallel) solution of scientific applications modeled by partial
     differential equations.
@@ -19,6 +19,8 @@ class Petsc(Package):
     version('main', branch='main')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.15.2', sha256='3b10c19c69fc42e01a38132668724a01f1da56f5c353105cd28f1120cc9041d8')
+    version('3.15.1', sha256='c0ac6566e69d1d70b431e07e7598e9de95e84891c2452db1367c846b75109deb')
     version('3.15.0', sha256='ac46db6bfcaaec8cd28335231076815bd5438f401a4a05e33736b4f9ff12e59a')
     version('3.14.6', sha256='4de0c8820419fb15bc683b780127ff57067b62ca18749e864a87c6d7c93f1230')
     version('3.14.5', sha256='8b8ff5c4e10468f696803b354a502d690c7d25c19d694a7e10008a302fdbb048')
@@ -76,7 +78,6 @@ class Petsc(Package):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
     variant('mpi',     default=True,  description='Activates MPI support')
-    variant('cuda',    default=False, description='Activates CUDA support')
     variant('double',  default=True,
             description='Switches between single and double precision')
     variant('complex', default=False, description='Build with complex numbers')
@@ -192,6 +193,9 @@ class Petsc(Package):
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
+    depends_on('hip', when='+rocm')
+    depends_on('hipblas', when='+rocm')
+    depends_on('hipsparse', when='+rocm')
 
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
@@ -362,116 +366,97 @@ class Petsc(Package):
         else:
             options.append('--with-clanguage=C')
 
-        # PETSc depends on scalapack when '+mumps' (see depends())
-        # help PETSc pick up Scalapack from MKL
-        if spec.satisfies('+mumps'):
-            scalapack = spec['scalapack'].libs
-            options.extend([
-                '--with-scalapack-lib=%s' % scalapack.joined(),
-                '--with-scalapack=1'
-            ])
-        else:
-            options.extend([
-                '--with-scalapack=0'
-            ])
-
-        if spec.satisfies('+openmp'):
-            options.append('--with-openmp=1')
-
         # Activates library support if needed (i.e. direct dependency)
-        if '^libjpeg-turbo' in spec:
-            jpeg_library = 'libjpeg-turbo'
-        else:
-            jpeg_library = 'libjpeg'
+        jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
+        scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
 
-        for library in ('cuda', 'metis', 'hypre', 'parmetis', 'mumps',
-                        'trilinos', 'fftw', 'valgrind', 'gmp', 'libpng',
-                        'giflib', 'mpfr', 'netcdf-c', 'parallel-netcdf',
-                        'moab', 'random123', 'exodusii', 'cgns', 'memkind',
-                        'p4est', 'saws', 'libyaml', 'hwloc', jpeg_library):
+        # tuple format (spacklibname, petsclibname, useinc, uselib)
+        # default: 'gmp', => ('gmp', 'gmp', True, True)
+        # any other combination needs a full tuple
+        # if not (useinc || uselib): usedir - i.e (False, False)
+        for library in (
+                ('cuda', 'cuda', False, False),
+                ('hip', 'hip', False, False),
+                'metis',
+                'hypre',
+                'parmetis',
+                ('superlu-dist', 'superlu_dist', True, True),
+                ('scotch', 'ptscotch', True, True),
+                ('suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,camd,amd, \
+                suitesparseconfig', 'suitesparse', True, True),
+                ('hdf5:hl,fortran', 'hdf5', True, True),
+                'zlib',
+                'mumps',
+                'trilinos',
+                ('fftw:mpi', 'fftw', True, True),
+                ('valgrind', 'valgrind', False, False),
+                'gmp',
+                'libpng',
+                ('giflib', 'giflib', False, False),
+                'mpfr',
+                ('netcdf-c', 'netcdf', True, True),
+                ('parallel-netcdf', 'pnetcdf', True, True),
+                ('moab', 'moab', False, False),
+                'openmp',
+                ('random123', 'random123', False, False),
+                'exodusii',
+                'cgns',
+                'memkind',
+                'p4est',
+                ('saws', 'saws', False, False),
+                ('libyaml', 'yaml', True, True),
+                'hwloc',
+                (jpeg_sp, 'libjpeg', True, True),
+                (scalapack_sp, 'scalapack', False, True),
+        ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
-            library_requested = library in spec.dependencies_dict()
+            if isinstance(library, tuple):
+                spacklibname, petsclibname, useinc, uselib = library
+            else:
+                spacklibname = library
+                petsclibname = library
+                useinc = True
+                uselib = True
+
+            library_requested = spacklibname.split(':')[0] in spec.dependencies_dict()
             options.append(
                 '--with-{library}={value}'.format(
-                    library=('libjpeg' if library == 'libjpeg-turbo'
-                             else 'netcdf' if library == 'netcdf-c'
-                             else 'pnetcdf' if library == 'parallel-netcdf'
-                             else 'yaml' if library == 'libyaml'
-                             else library),
+                    library=petsclibname,
                     value=('1' if library_requested else '0'))
             )
             if library_requested:
-                options.append(
-                    '--with-{library}-dir={path}'.format(
-                        library=('libjpeg' if library == 'libjpeg-turbo'
-                                 else 'netcdf' if library == 'netcdf-c'
-                                 else 'pnetcdf' if library == 'parallel-netcdf'
-                                 else 'yaml' if library == 'libyaml'
-                                 else library), path=spec[library].prefix)
-                )
+                if useinc or uselib:
+                    if useinc:
+                        options.append(
+                            '--with-{library}-include={value}'.format(
+                                library=petsclibname,
+                                value=spec[spacklibname].prefix.include)
+                        )
+                    if uselib:
+                        options.append(
+                            '--with-{library}-lib={value}'.format(
+                                library=petsclibname,
+                                value=spec[spacklibname].libs.joined())
+                        )
+                else:
+                    options.append(
+                        '--with-{library}-dir={path}'.format(
+                            library=petsclibname, path=spec[spacklibname].prefix)
+                    )
 
-        # PETSc does not pick up SuperluDist from the dir as they look for
-        # superlu_dist_4.1.a
+        if '+cuda' in spec:
+            if not spec.satisfies('cuda_arch=none'):
+                cuda_arch = spec.variants['cuda_arch'].value
+                if spec.satisfies('@3.14:'):
+                    options.append('--with-cuda-gencodearch={0}'.format(cuda_arch[0]))
+                else:
+                    options.append('CUDAFLAGS=-gencode arch=compute_{0},code=sm_{0}'
+                                   .format(cuda_arch[0]))
+
         if 'superlu-dist' in spec:
             if spec.satisfies('@3.10.3:'):
                 options.append('--with-cxx-dialect=C++11')
-            options.extend([
-                '--with-superlu_dist-include=%s' %
-                spec['superlu-dist'].prefix.include,
-                '--with-superlu_dist-lib=%s' %
-                join_path(spec['superlu-dist'].prefix.lib,
-                          'libsuperlu_dist.a'),
-                '--with-superlu_dist=1'
-            ])
-        else:
-            options.append(
-                '--with-superlu_dist=0'
-            )
-        # SuiteSparse: configuring using '--with-suitesparse-dir=...' has some
-        # issues, so specify directly the include path and the libraries.
-        if '+suite-sparse' in spec:
-            ss_spec = 'suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,' \
-                'camd,amd,suitesparseconfig'
-            options.extend([
-                '--with-suitesparse-include=%s' % spec[ss_spec].prefix.include,
-                '--with-suitesparse-lib=%s' % spec[ss_spec].libs.joined(),
-                '--with-suitesparse=1'
-            ])
-        else:
-            options.append('--with-suitesparse=0')
-
-        # PTScotch: Since we are not using the Parmetis wrapper for now,
-        # we cannot use '--with-ptscotch-dir=...'
-        if '+ptscotch' in spec:
-            options.extend([
-                '--with-ptscotch-include=%s' % spec['scotch'].prefix.include,
-                '--with-ptscotch-lib=%s' % spec['scotch'].libs.joined(),
-                '--with-ptscotch=1'
-            ])
-        else:
-            options.append('--with-ptscotch=0')
-
-        # hdf5: configure detection is convoluted for pflotran
-        if '+hdf5' in spec:
-            options.extend([
-                '--with-hdf5-include=%s' % spec['hdf5'].prefix.include,
-                '--with-hdf5-lib=%s' % spec['hdf5:hl,fortran'].libs.joined(),
-                '--with-hdf5=1'
-            ])
-        else:
-            options.append('--with-hdf5=0')
-
-        # zlib: configuring using '--with-zlib-dir=...' has some issues with
-        # SuiteSparse so specify directly the include path and the libraries.
-        if 'zlib' in spec:
-            options.extend([
-                '--with-zlib-include=%s' % spec['zlib'].prefix.include,
-                '--with-zlib-lib=%s'     % spec['zlib'].libs.joined(),
-                '--with-zlib=1'
-            ])
-        else:
-            options.append('--with-zlib=0')
 
         if '+mkl-pardiso' in spec:
             options.append(

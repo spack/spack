@@ -24,6 +24,7 @@ class Dd4hep(CMakePackage):
     tags = ['hep']
 
     version('master', branch='master')
+    version('1.17', sha256='036a9908aaf1e13eaf5f2f43b6f5f4a8bdda8183ddc5befa77a4448dbb485826')
     version('1.16.1', sha256='c8b1312aa88283986f89cc008d317b3476027fd146fdb586f9f1fbbb47763f1a')
     version('1.16', sha256='ea9755cd255cf1b058e0e3cd743101ca9ca5ff79f4c60be89f9ba72b1ae5ec69')
     version('1.15', sha256='992a24bd4b3dfaffecec9d1c09e8cde2c7f89d38756879a47b23208242f4e352')
@@ -44,6 +45,9 @@ class Dd4hep(CMakePackage):
     # See https://github.com/AIDASoft/DD4hep/pull/613 .
     patch('tbb-workarounds.patch', when='@1.11')
     patch('tbb2.patch', when='@1.12.1')
+    # Workaround for failing build file generation in some cases
+    # See https://github.com/spack/spack/issues/24232
+    patch('cmake_language.patch', when='@:1.17')
 
     variant('xercesc', default=False, description="Enable 'Detector Builders' based on XercesC")
     variant('geant4', default=False, description="Enable the simulation part based on Geant4")
@@ -67,6 +71,10 @@ class Dd4hep(CMakePackage):
     depends_on('hepmc3', when="+hepmc3")
     depends_on('lcio', when="+lcio")
     depends_on('edm4hep', when="+edm4hep")
+
+    # See https://github.com/AIDASoft/DD4hep/pull/771
+    conflicts('^cmake@3.16:3.17.0', when='@1.15',
+              msg='cmake version with buggy FindPython breaks dd4hep cmake config')
 
     def cmake_args(self):
         spec = self.spec

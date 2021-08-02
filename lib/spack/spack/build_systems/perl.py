@@ -7,10 +7,11 @@
 import inspect
 import os
 
+from llnl.util.filesystem import filter_file
+
 from spack.directives import extends
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
-from llnl.util.filesystem import filter_file
 
 
 class PerlPackage(PackageBase):

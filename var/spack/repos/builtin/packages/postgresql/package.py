@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -85,7 +87,7 @@ class Postgresql(AutotoolsPackage):
         return config_args
 
     def install(self, spec, prefix):
-        if '+client-only' in self.spec:
+        if '+client_only' in self.spec:
             for subdir in ('bin', 'include', 'interfaces', 'pl'):
                 with working_dir(os.path.join('src', subdir)):
                     make('install')
