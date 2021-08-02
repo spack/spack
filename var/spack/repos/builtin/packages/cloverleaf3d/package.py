@@ -49,8 +49,8 @@ class Cloverleaf3d(MakefilePackage):
 
         if "%gcc" in self.spec:
             targets.append("COMPILER=GNU")
-            targets.append("FLAGS_GNU=-g -O3 -march=native -funroll-loops")
-            targets.append("CFLAGS_GNU=-g -O3 -march=native -funroll-loops")
+            targets.append("FLAGS_GNU=-O3 -funroll-loops")
+            targets.append("CFLAGS_GNU=-O3 -funroll-loops")
             targets.append("OMP_GNU=-fopenmp")
         elif "%cce" in self.spec:
             targets.append("COMPILER=CRAY")
@@ -70,13 +70,13 @@ class Cloverleaf3d(MakefilePackage):
             targets.append("CFLAGS_XLF=")
         elif "%arm" in self.spec:
             targets.append("COMPILER=ARM")
-            targets.append("FLAGS_ARM=-g -O3 -mcpu=native -funroll-loops")
-            targets.append("CFLAGS_ARM=-g -O3 -mcpu=native -funroll-loops")
+            targets.append("FLAGS_ARM=-O3 -funroll-loops")
+            targets.append("CFLAGS_ARM=-O3 -funroll-loops")
             targets.append("OMP_ARM=-fopenmp")
         elif "%nvhpc" in self.spec:
             targets.append("COMPILER=NVHPC")
-            targets.append("FLAGS_NVHPC=-g -O3 -fast")
-            targets.append("CFLAGS_NVHPC=-g -O3 -fast")
+            targets.append("FLAGS_NVHPC=-O3 -fast")
+            targets.append("CFLAGS_NVHPC=-O3 -fast")
             targets.append("OMP_NVHPC=-mp=multicore")
 
         return targets
