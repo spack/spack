@@ -399,10 +399,3 @@ class PythonPackage(PackageBase):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
-
-    @property
-    def site_packages_dir(self):
-        site_packages_dir = os.path.join(
-            self.prefix, self.spec['python'].package.site_packages_dir
-        )
-        return site_packages_dir
