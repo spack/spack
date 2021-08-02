@@ -53,18 +53,19 @@ def _attempts_str(wait_time, nattempts):
 
 def lock_checking(func):
     from functools import wraps
+
     @wraps(func)
     def win_lock(self, *args, **kwargs):
         if _platform == "win32" and self._reads > 0:
             self._partial_unlock()
             try:
-                suc = func(self,*args,**kwargs)
+                suc = func(self, *args, **kwargs)
             except Exception as e:
                 if self.current_lock:
                     self._lock(self.current_lock, timeout=kwargs['timeout'])
                 raise e
         else:
-            suc = func(self,*args, **kwargs)
+            suc = func(self, *args, **kwargs)
         return suc
     return win_lock
 
@@ -113,8 +114,7 @@ class Lock(object):
         self._file_mode = ""
         self._reads = 0
         self._writes = 0
-        # if self.path not in Lock.file_map:
-        #     Lock.file_map[self.path] = (self.__file, 0)
+
         # byte range parameters
         self._start = start
         self._length = length
@@ -150,24 +150,7 @@ class Lock(object):
         self.lock_type = {self.LOCK_SH: 'read', self.LOCK_EX: 'write'}
         self.current_lock = None
 
-    # @property
-    # def _file(self):
-    #     if self == Lock.file_map[self.path][0]:
-    #         return self.__file
-    #     else:
-    #         return Lock.file_map[self.path][0]._file
-
-    # @_file.setter
-    # def _file(self, val):
-    #     if not self is Lock.file_map[self.path]:
-    #         if val is None:
-    #             Lock.file_map[self.path][1] -= 1
-    #         else:
-    #             Lock.file_map[self.path]._file = val
-    #     else:
-    #         self.__file is val
-
-    def __lock_fail_condition(self,e):
+    def __lock_fail_condition(self, e):
         if _platform == "win32":
             # 33 "The process cannot access the file because another
             #     process has locked a portion of the file."
@@ -386,7 +369,6 @@ class Lock(object):
         else:
             fcntl.lockf(self._file, self.LOCK_UN,
                         self._length, self._start, os.SEEK_SET)
-
 
     def _unlock(self):
         """Releases a lock using POSIX locks (``fcntl.lockf``)

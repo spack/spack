@@ -7,6 +7,7 @@
 import os
 import stat
 import sys
+from typing import Dict
 
 import llnl.util.lock
 
@@ -75,18 +76,32 @@ def check_lock_safety(path):
                 "restrict permissions on {0} or enable locks.").format(path)
             raise spack.error.SpackError(msg, long_msg)
 
-class LockFactory(object):
 
-    __lock_map = {}
+class LockFactory(object):
+    """
+    Flyweight factory to manage spack.Lock object instances.
+    Primarily required to serve Locking functionality on Windows arch.
+    Requests for a lock instance are made to LockFactory.lock rather
+    than directly to spack.Lock and an instance of spack.Lock is returned.
+
+    Calls to LockFactory.lock should be of the signature
+
+    `spack.LockFactory.lock(*args,**kwargs)` with arguments matching
+    `spack.Lock(*args,**kwargs)`
+
+    The spack.Lock type should not be used directly.
+    """
+    __lock_map = {}  # type: Dict[str, spack.util.lock.Lock]
 
     def __init__(self):
-        raise RuntimeWarning("Call static lock method. LockFactory.lock(*args,**kwargs)")
+        raise RuntimeWarning("Call static lock method. \
+            LockFactory.lock(*args,**kwargs)")
 
     @staticmethod
     def lock(*args, **kwargs):
         if sys.platform == "win32":
             if args[0] not in LockFactory.__lock_map:
-                LockFactory.__lock_map[args[0]] = Lock(*args,**kwargs)
+                LockFactory.__lock_map[args[0]] = Lock(*args, **kwargs)
             return LockFactory.__lock_map[args[0]]
         else:
             return Lock(*args, **kwargs)

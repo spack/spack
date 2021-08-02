@@ -578,7 +578,7 @@ def test_clear_failures_success(install_mockery):
 
     # Set up a test prefix failure lock
     lock = lk.LockFactory.lock(spack.store.db.prefix_fail_path, start=1, length=1,
-                   default_timeout=1e-9, desc='test')
+                               default_timeout=1e-9, desc='test')
     try:
         lock.acquire_write()
     except lk.LockTimeoutError:
