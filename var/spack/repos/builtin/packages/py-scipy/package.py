@@ -18,6 +18,7 @@ class PyScipy(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.7.1',  sha256='6b47d5fa7ea651054362561a28b1ccc8da9368a39514c1bbf6c0977a1c376764')
     version('1.7.0',  sha256='998c5e6ea649489302de2c0bc026ed34284f531df89d2bdc8df3a0d44d165739')
     version('1.6.3',  sha256='a75b014d3294fce26852a9d04ea27b5671d86736beb34acdfc05859246260707')
     version('1.6.2',  sha256='e9da33e21c9bc1b92c20b5328adb13e5f193b924c9b969cd700c8908f315aa59')
