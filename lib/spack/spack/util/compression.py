@@ -32,10 +32,11 @@ def _bunzip2(archive_file):
     try:
         import bz2
         decompressed_file = os.path.basename(archive_file.strip(".bz2"))
-        archive_out = os.path.join(os.getcwd(),decompressed_file)
-        with bz2.open(archive_file,mode='rb') as bzf:
-            with open(archive_out,'wb') as ar:
-                ar.write(bzf.read())
+        archive_out = os.path.join(os.getcwd(), decompressed_file)
+        f_bz = bz2.BZ2File(archive_file, mode='rb')
+        with open(archive_out, 'wb') as ar:
+            ar.write(f_bz.read())
+        f_bz.close()
     except ImportError:
         bunzip2 = which('bunzip2', required=True)
         bunzip2.add_default_arg('-q')
