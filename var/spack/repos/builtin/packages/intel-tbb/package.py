@@ -120,6 +120,27 @@ class IntelTbb(Package):
     # https://github.com/oneapi-src/oneTBB/commit/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch?full_index=1
     patch("macos-arm64.patch", when="@:2021.0")
 
+    # Support for building with %nvhpc
+    # 1) remove flags nvhpc compilers do not recognize
+    patch("intel-tbb.nvhpc-remove-flags.2017.patch",
+          when="@2017:2018.9 %nvhpc")
+    patch("intel-tbb.nvhpc-remove-flags.2019.patch",
+          when="@2019:2019.0 %nvhpc")
+    patch("intel-tbb.nvhpc-remove-flags.2019.1.patch",
+          when="@2019.1:2019.6 %nvhpc")
+    patch("intel-tbb.nvhpc-remove-flags.2019.7.patch",
+          when="@2019.7:2019.8 %nvhpc")
+    # The 2019.9 patch below was tested successfully
+    # on @2019.9, @2020.0, and @2020.3
+    patch("intel-tbb.nvhpc-remove-flags.2019.9.patch",
+          when="@2019.9: %nvhpc")
+    # 2) Fix generation of version script tbb.def for ld (nvc++ -E
+    # appears to produce more output than g++ -E which was causing problems)
+    # The 2017 patch below was tested on @2017, @2017.8, @2018,
+    # @2018.3, @2018.6, 2019, @2019.[1-9], and @2020.[0-3]
+    patch("intel-tbb.nvhpc-version-script-fix.2017.patch",
+          when="@2017 %nvhpc")
+
     # Version and tar file names:
     #  2020.0 --> v2020.0.tar.gz  starting with 2020
     #  2017.1 --> 2017_U1.tar.gz  starting with 2017
