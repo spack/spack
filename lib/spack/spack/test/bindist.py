@@ -5,7 +5,6 @@
 import glob
 import os
 import platform
-import re
 import sys
 
 import py

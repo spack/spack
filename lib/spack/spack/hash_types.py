@@ -5,8 +5,6 @@
 
 """Definitions that control how Spack creates Spec hashes."""
 
-from typing import List  # novm
-
 import spack.dependency as dp
 
 

@@ -1785,8 +1785,6 @@ class Spec(object):
             hash_attr = 'build_hash'
         if hash_attr not in root_node_dict:
             hash_attr = 'hash'
-        #node_list.append(root_node_dict)
-        #hash_list.append(root_node_dict[hash_attr])
         for s in self.traverse(order='pre', deptype=hash.deptype):
             spec_hash = s.node_dict_with_hashes(hash)[hash_attr]
             if spec_hash not in hash_list:
