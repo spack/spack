@@ -23,6 +23,7 @@ class Libcircle(AutotoolsPackage):
     depends_on('libpciaccess', type='link')
     depends_on('autoconf', when='%cce')
     depends_on('automake', when='%cce')
+    depends_on('libtool', when='%cce')
 
     patch('CrayPE_configure-ac.patch', when='%cce')
 
