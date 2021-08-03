@@ -20,7 +20,7 @@ class PyBotocore(PythonPackage):
     version('1.12.169', sha256='25b44c3253b5ed1c9093efb57ffca440c5099a2d62fa793e8b6c52e72f54b01e')
 
     depends_on('python@2.6:', when='@1.12:1.13', type=('build', 'run'))
-    depends_on('python@2.7:', when='@1.19', type=('build','run'))
+    depends_on('python@2.7:', when='@1.19', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.6:', when='@1.20', type=('build', 'run'))
     depends_on('python@3.6:', when='@1.21', type=('build', 'run'))
 
