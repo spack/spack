@@ -22,7 +22,7 @@ class PyBoto3(PythonPackage):
     depends_on('python@2.7:2.8,3.6:', when='@1.17.27', type=('build', 'run'))
     depends_on('python@2.6:', when='@1.9:1.10', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-botocore@1.21.12:1.21.999',  when='@1.18.12', type=('build', 'run'))
+    depends_on('py-botocore@1.21.12:1.21.999',  when='@1.18.12:', type=('build', 'run'))
     depends_on('py-botocore@1.20.27:1.20.999',  when='@1.17.27', type=('build', 'run'))
     depends_on('py-botocore@1.13.44:1.13.999',  when='@1.10.44', type=('build', 'run'))
     depends_on('py-botocore@1.13.38:1.13.999',  when='@1.10.38', type=('build', 'run'))
