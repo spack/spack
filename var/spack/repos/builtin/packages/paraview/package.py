@@ -124,13 +124,15 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('libpng')
     depends_on('libtheora')
     depends_on('libtiff')
-    depends_on('netcdf-c')
+    # parallel-netcdf is needed by seacas
+    depends_on('netcdf-c+parallel-netcdf')
     depends_on('pegtl')
     depends_on('protobuf@3.4:')
     depends_on('libxml2')
     depends_on('lz4')
     depends_on('xz')
     depends_on('zlib')
+    depends_on('seacas', when='@5.10:')
 
     # Older builds of pugi export their symbols differently,
     # and pre-5.9 is unable to handle that.
