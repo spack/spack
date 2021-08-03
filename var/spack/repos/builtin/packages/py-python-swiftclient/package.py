@@ -32,4 +32,4 @@ class PyPythonSwiftclient(PythonPackage):
     depends_on('py-requests@1.1.0:', type=('build', 'run'))
     depends_on('py-six@1.9:', type=('build', 'run'))
 
-    depends_on('py-python-keystoneclient@0.7.0:', type=('build', 'run'))
+    depends_on('py-python-keystoneclient@0.7.0:', when='+keystone', type=('build', 'run'))
