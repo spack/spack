@@ -22,7 +22,6 @@ class Xeus(CMakePackage):
 
     variant('examples', default=False, description="Build examples")
     variant('shared', default=True, description="Build shared libraries")
-    variant('tests', default=False, description="Build tests")
 
     conflicts('%gcc@:4.8')
     conflicts('%clang@:3.6')
@@ -58,8 +57,8 @@ class Xeus(CMakePackage):
         elif "@1.0.4:" in self.spec:
             args.extend([
                 self.define_from_variant('XEUS_BUILD_SHARED_LIBS', 'shared'),
-                self.define_from_variant('XEUS_BUILD_TESTS', 'tests'),
-                self.define_from_variant('XEUS_DOWNLOAD_GTEST', 'tests')
+                self.define('XEUS_BUILD_TESTS', self.run_tests),
+                self.define('XEUS_DOWNLOAD_GTEST', self.run_tests)
             ])
 
         return args
