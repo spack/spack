@@ -9,7 +9,7 @@
 from spack import *
 
 
-class Abinit(AutotoolsPackage):
+class Abinit(AutotoolsPackage, CudaPackage):
     """ABINIT is a package whose main program allows one to find the total
     energy, charge density and electronic structure of systems made of
     electrons and nuclei (molecules and periodic solids) within
@@ -30,6 +30,7 @@ class Abinit(AutotoolsPackage):
     homepage = 'http://www.abinit.org'
     url      = 'https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz'
 
+    version('9.4.2', sha256='d40886f5c8b138bb4aa1ca05da23388eb70a682790cfe5020ecce4db1b1a76bc')
     version('8.10.3', sha256='ed626424b4472b93256622fbb9c7645fa3ffb693d4b444b07d488771ea7eaa75')
     version('8.10.2', sha256='4ee2e0329497bf16a9b2719fe0536cc50c5d5a07c65e18edaf15ba02251cbb73')
     version('8.8.2', sha256='15216703bd56a799a249a112b336d07d733627d3756487a4b1cb48ebb625c3e7')
@@ -79,6 +80,7 @@ class Abinit(AutotoolsPackage):
     depends_on('fftw~openmp', when='~openmp')
     depends_on('fftw+openmp', when='+openmp')
 
+    depends_on('netcdf-c', when='@:9.4')
     depends_on('netcdf-fortran', when='+hdf5')
     depends_on('hdf5+mpi', when='+mpi+hdf5')  # required for NetCDF-4 support
 
@@ -88,19 +90,18 @@ class Abinit(AutotoolsPackage):
     # Cannot ask for +scalapack if it does not depend on MPI
     conflicts('+scalapack', when='~mpi')
 
-    depends_on("wannier90+shared", when='+wannier90')
+    depends_on('wannier90+shared', when='+wannier90')
 
     # Elpa is a substitute for scalapack and needs mpi
     # conflicts('+elpa', when='~mpi')
     # conflicts('+elpa', when='+scalapack')
 
-    patch('rm_march_settings.patch')
+    patch('rm_march_settings.patch', when='@:9.2')
     patch('fix_for_fujitsu.patch', level=0, when='%fj')
 
+    @when('@:9.2')
     def configure_args(self):
-
         spec = self.spec
-
         options = []
         oapp = options.append
 
@@ -188,6 +189,46 @@ class Abinit(AutotoolsPackage):
 
         return options
 
+    @when('@9.4:')
+    def configure_args(self):
+        spec = self.spec
+        options = []
+        oapp = options.append
+
+        oapp('--with-netcdf=%s' % spec['netcdf-c'].prefix)
+        oapp('--with-netcdf-fortran=%s' % spec['netcdf-fortran'].prefix)
+        oapp('--with-libxc=%s' % spec['libxc'].prefix)
+
+        if '+wannier90' in spec:
+            oapp('--with-wannier90=%s' % spec['wannier90'].prefix)
+        if '+mpi' in spec:
+            oapp('--with-mpi=%s' % spec['mpi'].prefix)
+            oapp('CC={0}'.format(spec['mpi'].mpicc))
+            oapp('CXX={0}'.format(spec['mpi'].mpicxx))
+            oapp('FC={0}'.format(spec['mpi'].mpifc))
+        if '+libxml2' in spec:
+            oapp('--with-libxml2=%s' % spec['libxml2'].prefix)
+        if '+hdf5' in spec:
+            oapp('--with-hdf5=%s' % spec['hdf5:hl'].prefix)
+        if '+pfft' in spec:
+            oapp('--with-pfft=%s' % spec['pfft'].prefix)
+        if '+wannier90' in spec:
+            oapp('--with-wannier90=%s' % spec['wannier90'].prefix)
+        if '+xmlf90' in spec:
+            oapp('--with-xmlf90=%s' % spec['xmlf90'].prefix)            
+        if '+cuda' in spec:
+            oapp('--with-gpu=%s' % spec['cuda'].prefix)
+            oapp('LDFLAGS=-lcudart -lcublas -lcufft')
+            oapp('CUDA_LDFLAGS="-lcublas -lcudart -lculibos"')
+
+        return options
+
+    @when('@9.4:')
+    def patch(self):
+        filter_file('sd_wannier90_libs_def="-lwannier90"',
+                    'sd_wannier90_libs_def="-lwannier"',
+                    join_path(self.stage.source_path, 'configure'))
+        
     def check(self):
         """This method is called after the build phase if tests have been
         explicitly activated by user.
