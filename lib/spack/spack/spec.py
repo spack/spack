@@ -2198,7 +2198,7 @@ class Spec(object):
                         break
 
         if not any_deps:  # If we never see a dependency...
-            hash_type = ht.full_hash.attr[1:]  # use the full_hash provenance
+            hash_type = ht.dag_hash.attr[1:]  # use the full_hash provenance
         elif not hash_type:  # Seen a dependency, still don't know hash_type
             raise spack.error.SpecError("Spec dictionary contains malformed"
                                         "dependencies. Old format?")
@@ -2209,7 +2209,7 @@ class Spec(object):
         # Pass 1: Create a single lookup dictionary by hash
         for i, node in enumerate(nodes):
             if 'build_spec' in node.keys():
-                node_hash = node[ht.full_hash.attr[1:]]
+                node_hash = node[hash_type]
             else:
                 node_hash = node[hash_type]
             node_spec = Spec.from_node_dict(node)
@@ -2219,9 +2219,6 @@ class Spec(object):
                 root_spec_hash = node_hash
         if not root_spec_hash:
             raise spack.error.SpecError("Spec dictionary contains no nodes.")
-        
-        from pprint import pprint
-        pprint(hash_dict)
 
         # Pass 2: Finish construction of all DAG edges (including build specs)
         for node_hash, node in hash_dict.items():

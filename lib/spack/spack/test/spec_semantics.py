@@ -1121,10 +1121,7 @@ class TestSpecSematics(object):
         assert spec.full_hash() != dep.full_hash()
         assert out.full_hash() != dep.full_hash()
         assert out.full_hash() != spec.full_hash()
-        from pprint import pprint
-        pprint(out.to_dict())
         out_rt_spec = Spec.from_dict(out.to_dict())  # rt is "round trip"
-        pprint(out_rt_spec.to_dict())
         assert out_rt_spec.full_hash() == out.full_hash()
         out_rt_spec_bld_hash = out_rt_spec.build_spec.full_hash()
         out_rt_spec_h_bld_hash = out_rt_spec['splice-h'].build_spec.full_hash()
