@@ -10,6 +10,7 @@ import pytest
 
 import spack.binary_distribution
 import spack.spec
+import spack.mirror
 
 install = spack.main.SpackCommand('install')
 
@@ -22,13 +23,14 @@ def test_build_tarball_overwrite(
         install(str(spec))
 
         # Runs fine the first time, throws the second time
-        spack.binary_distribution.build_tarball(spec, '.', unsigned=True)
+        mirror = spack.mirror.MirrorCollection().lookup('.')
+        spack.binary_distribution.build_tarball(spec, mirror, unsigned=True)
         with pytest.raises(spack.binary_distribution.NoOverwriteException):
-            spack.binary_distribution.build_tarball(spec, '.', unsigned=True)
+            spack.binary_distribution.build_tarball(spec, mirror, unsigned=True)
 
         # Should work fine with force=True
         spack.binary_distribution.build_tarball(
-            spec, '.', force=True, unsigned=True)
+            spec, mirror, force=True, unsigned=True)
 
         # Remove the tarball and try again.
         # This must *also* throw, because of the existing .spec.yaml file
@@ -38,4 +40,4 @@ def test_build_tarball_overwrite(
             spack.binary_distribution.tarball_name(spec, '.spack')))
 
         with pytest.raises(spack.binary_distribution.NoOverwriteException):
-            spack.binary_distribution.build_tarball(spec, '.', unsigned=True)
+            spack.binary_distribution.build_tarball(spec, mirror, unsigned=True)

@@ -916,7 +916,7 @@ def generate_key_index(key_prefix, tmpdir=None):
                 shutil.rmtree(tmpdir)
 
 
-def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
+def build_tarball(spec, mirror, force=False, rel=False, unsigned=False,
                   allow_root=False, key=None, regenerate_index=False):
     """
     Build a tarball from given spec and put it into the directory structure
@@ -935,10 +935,19 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     spackfile_path = os.path.join(
         cache_prefix, tarball_path_name(spec, '.spack'))
 
+    outdir = mirror.push_url
     remote_spackfile_path = url_util.join(
+        mirror.fetch_url, os.path.relpath(spackfile_path, tmpdir))
+    local_spackfile_path = url_util.join(
         outdir, os.path.relpath(spackfile_path, tmpdir))
 
     mkdirp(tarfile_dir)
+    if web_util.url_exists(local_spackfile_path):
+        if force:
+            web_util.remove_url(local_spackfile_path)
+        else:
+            raise NoOverwriteException(url_util.format(local_spackfile_path))
+
     if web_util.url_exists(remote_spackfile_path):
         if force:
             web_util.remove_url(remote_spackfile_path)
