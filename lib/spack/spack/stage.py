@@ -352,7 +352,7 @@ class Stage(object):
                 stage_lock_path = os.path.join(get_stage_root(), '.lock')
 
                 tty.debug("Creating stage lock {0}".format(self.name))
-                Stage.stage_locks[self.name] = spack.util.lock.Lock(
+                Stage.stage_locks[self.name] = spack.util.lock.LockFactory.lock(
                     stage_lock_path, lock_id, 1, desc=self.name)
 
             self._lock = Stage.stage_locks[self.name]
