@@ -17,7 +17,7 @@ class Mvapich2(AutotoolsPackage):
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.6.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
-    maintainers = ['natshineman', 'harisubramoni']
+    maintainers = ['natshineman', 'harisubramoni', 'ndcontini']
 
     executables = ['^mpiname$']
 

@@ -1,0 +1,28 @@
+--- a/java/Makefile.am	2019-12-26 08:21:51.000000000 -0600
++++ b/java/Makefile.am	2021-06-11 17:30:44.522469994 -0500
+@@ -36,11 +36,11 @@
+ 	com/google/scrollview/ScrollView.class
+ 
+ SCROLLVIEW_LIBS = \
+-	piccolo2d-core-3.0.jar \
+-	piccolo2d-extras-3.0.jar \
++	piccolo2d-core-3.0.1.jar \
++	piccolo2d-extras-3.0.1.jar \
+ 	jaxb-api-2.3.1.jar
+ 
+-CLASSPATH = piccolo2d-core-3.0.jar:piccolo2d-extras-3.0.jar:jaxb-api-2.3.1.jar
++CLASSPATH = piccolo2d-core-3.0.1.jar:piccolo2d-extras-3.0.1.jar:jaxb-api-2.3.1.jar
+ 
+ ScrollView.jar : $(SCROLLVIEW_CLASSES)
+ 	$(JAR) cfm $@ $(srcdir)/Manifest.txt com/google/scrollview/*.class \
+@@ -51,8 +51,8 @@
+ 
+ .PHONY: fetch-jars
+ fetch-jars $(SCROLLVIEW_LIBS):
+-	curl -L http://search.maven.org/remotecontent?filepath=org/piccolo2d/piccolo2d-core/3.0/piccolo2d-core-3.0.jar > piccolo2d-core-3.0.jar
+-	curl -L http://search.maven.org/remotecontent?filepath=org/piccolo2d/piccolo2d-extras/3.0/piccolo2d-extras-3.0.jar > piccolo2d-extras-3.0.jar
++	curl -L http://search.maven.org/remotecontent?filepath=org/piccolo2d/piccolo2d-core/3.0.1/piccolo2d-core-3.0.1.jar > piccolo2d-core-3.0.1.jar
++	curl -L http://search.maven.org/remotecontent?filepath=org/piccolo2d/piccolo2d-extras/3.0.1/piccolo2d-extras-3.0.1.jar > piccolo2d-extras-3.0.1.jar
+ 	curl -L http://search.maven.org/remotecontent?filepath=javax/xml/bind/jaxb-api/2.3.1/jaxb-api-2.3.1.jar > jaxb-api-2.3.1.jar
+ 
+ .PHONY: install-jars

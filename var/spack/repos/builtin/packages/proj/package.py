@@ -107,3 +107,17 @@ class Proj(AutotoolsPackage):
                 args.append('--without-curl')
 
         return args
+
+    def setup_run_environment(self, env):
+        # PROJ_LIB doesn't need to be set. However, it may be set by conda.
+        # If an incompatible version of PROJ is found in PROJ_LIB, it can
+        # cause the package to fail at run-time. See the following for details:
+        # * https://proj.org/usage/environmentvars.html
+        # * https://rasterio.readthedocs.io/en/latest/faq.html
+        env.set('PROJ_LIB', self.prefix.share.proj)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)

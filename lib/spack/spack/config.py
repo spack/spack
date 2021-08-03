@@ -536,7 +536,7 @@ class Configuration(object):
             msg = ('The "{0}" section of the configuration needs to be written'
                    ' to disk, but is currently using a deprecated format. '
                    'Please update it using:\n\n'
-                   '\tspack config [--scope=<scope] update {0}\n\n'
+                   '\tspack config [--scope=<scope>] update {0}\n\n'
                    'Note that previous versions of Spack will not be able to '
                    'use the updated configuration.')
             msg = msg.format(section)
@@ -1238,11 +1238,12 @@ def use_configuration(*scopes_or_paths):
 
     saved_config, config = config, configuration
 
-    yield configuration
-
-    # Restore previous config files
-    spack.compilers._cache_config_file = saved_compiler_cache
-    config = saved_config
+    try:
+        yield configuration
+    finally:
+        # Restore previous config files
+        spack.compilers._cache_config_file = saved_compiler_cache
+        config = saved_config
 
 
 @llnl.util.lang.memoized

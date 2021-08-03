@@ -71,3 +71,44 @@ class DarshanUtil(AutotoolsPackage):
                 extra_args.append('--enable-apxc-mod')
 
         return extra_args
+
+    @property
+    def basepath(self):
+        return join_path('darshan-test', 'example-output')
+
+    @run_after('install')
+    def _copy_test_inputs(self):
+        # add darshan-test/example-output/mpi-io-test-spack-expected.txt"
+        test_inputs = [
+            join_path(self.basepath,
+                      "mpi-io-test-x86_64-{0}.darshan".format(self.spec.version))]
+        self.cache_extra_test_sources(test_inputs)
+
+    def _test_parser(self):
+        purpose = "Verify darshan-parser can parse an example log \
+                   from the current version and check some expected counter values"
+        # Switch to loading the expected strings from the darshan source in future
+        # filename = self.test_suite.current_test_cache_dir.
+        #            join(join_path(self.basepath, "mpi-io-test-spack-expected.txt"))
+        # expected_output = self.get_escaped_text_output(filename)
+        expected_output = [r"POSIX\s+-1\s+\w+\s+POSIX_OPENS\s+\d+",
+                           r"MPI-IO\s+-1\s+\w+\s+MPIIO_INDEP_OPENS\s+\d+",
+                           r"STDIO\s+0\s+\w+\s+STDIO_OPENS\s+\d+"]
+        logname = self.test_suite.current_test_cache_dir.join(
+            join_path(self.basepath,
+                      "mpi-io-test-x86_64-{0}.darshan".format(self.spec.version)))
+        exe = 'darshan-parser'
+        options = [logname]
+        status = [0]
+        installed = True
+        self.run_test(exe,
+                      options,
+                      expected_output,
+                      status,
+                      installed,
+                      purpose,
+                      skip_missing=False,
+                      work_dir=None)
+
+    def test(self):
+        self._test_parser()

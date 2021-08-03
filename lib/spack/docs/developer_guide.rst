@@ -818,6 +818,29 @@ Developer commands
 ``spack doc``
 ^^^^^^^^^^^^^
 
+.. _cmd-spack-style:
+
+^^^^^^^^^^^^^^^
+``spack style``
+^^^^^^^^^^^^^^^
+
+spack style exists to help the developer user to check imports and style with
+mypy, flake8, isort, and (soon) black. To run all style checks, simply do:
+
+.. code-block:: console
+
+    $ spack style
+
+To run automatic fixes for isort you can do:
+
+.. code-block:: console
+
+    $ spack style --fix
+
+You do not need any of these Python packages installed on your system for
+the checks to work! Spack will bootstrap install them from packages for
+your use.
+
 ^^^^^^^^^^^^^^^^^^^
 ``spack unit-test``
 ^^^^^^^^^^^^^^^^^^^
