@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import contextlib
 import os
 import re
 import shlex
@@ -15,6 +16,27 @@ import llnl.util.tty as tty
 import spack.error
 
 __all__ = ['Executable', 'which', 'ProcessError']
+
+#: optionally filter padding on debug output in spack.util.executable
+_filter_padding = False
+
+
+@contextlib.contextmanager
+def filter_padding():
+    """Context manager to safely disable path padding in debug output.
+
+    This is needed because Spack's debug output gets extremely long when we use a
+    long padded installation path.
+    """
+    global _filter_padding
+    try:
+        # don't bother filtering if padding isn't actually enabled
+        padding = spack.config.get("config:install_tree:padded_length", None)
+        if padding:
+            _filter_padding = True
+        yield
+    finally:
+        _filter_padding = False
 
 
 class Executable(object):
@@ -187,7 +209,10 @@ class Executable(object):
         cmd_line = "'%s'" % "' '".join(
             map(lambda arg: arg.replace("'", "'\"'\"'"), cmd))
 
-        tty.debug(cmd_line)
+        debug_cmd_line = cmd_line
+        if _filter_padding:
+            debug_cmd_line = [spack.util.path.padding_filter(elt) for elt in cmd_line]
+        tty.debug(debug_cmd_line)
 
         try:
             proc = subprocess.Popen(
