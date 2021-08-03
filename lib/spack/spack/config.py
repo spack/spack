@@ -536,7 +536,7 @@ class Configuration(object):
             msg = ('The "{0}" section of the configuration needs to be written'
                    ' to disk, but is currently using a deprecated format. '
                    'Please update it using:\n\n'
-                   '\tspack config [--scope=<scope] update {0}\n\n'
+                   '\tspack config [--scope=<scope>] update {0}\n\n'
                    'Note that previous versions of Spack will not be able to '
                    'use the updated configuration.')
             msg = msg.format(section)
