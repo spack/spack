@@ -1238,11 +1238,12 @@ def use_configuration(*scopes_or_paths):
 
     saved_config, config = config, configuration
 
-    yield configuration
-
-    # Restore previous config files
-    spack.compilers._cache_config_file = saved_compiler_cache
-    config = saved_config
+    try:
+        yield configuration
+    finally:
+        # Restore previous config files
+        spack.compilers._cache_config_file = saved_compiler_cache
+        config = saved_config
 
 
 @llnl.util.lang.memoized
