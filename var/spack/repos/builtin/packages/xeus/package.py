@@ -55,7 +55,7 @@ class Xeus(CMakePackage):
         if "@:0.15.0" in self.spec:
             args.append(self.define_from_variant('BUILD_EXAMPLES', 'examples'))
 
-        elif "@1.0.4:" in self.spec or "@develop" in self.spec:
+        elif "@1.0.4:" in self.spec:
             args.extend([
                 self.define_from_variant('XEUS_BUILD_SHARED_LIBS', 'shared'),
                 self.define_from_variant('XEUS_BUILD_TESTS', 'tests'),
