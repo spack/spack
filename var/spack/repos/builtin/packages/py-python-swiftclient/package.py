@@ -22,7 +22,7 @@ class PyPythonSwiftclient(PythonPackage):
     version('3.8.0', sha256='107a9d5356663365a9f7c0b3a2b55da97a0a9ba7f10da2319b3972481510f33d')
     version('3.7.1', sha256='06bda5a6f81ea132e5cb52d0eb0616a0ab0958b4ec0d1cb7f850f04bf178852f')
 
-    variant('keystone', default=True, description='Enable keystone authentication')
+    variant('keystone', default=False, description='Enable keystone authentication')
 
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
