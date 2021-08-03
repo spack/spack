@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 from spack import *
@@ -20,6 +21,8 @@ class Caliper(CMakePackage, CudaPackage):
     url      = "https://github.com/LLNL/Caliper/archive/v2.6.0.tar.gz"
 
     maintainers = ["daboehme"]
+
+    test_requires_compiler = True
 
     version('master', branch='master')
     version('2.6.0', sha256='6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f')
@@ -143,3 +146,34 @@ class Caliper(CMakePackage, CudaPackage):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([join_path('examples', 'apps')])
+
+    def setup_run_environment(self, env):
+        env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix, 'lib64'))
+
+    def run_cxx_example_test(self):
+        """Run stand alone test: cxx_example"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'apps')
+
+        if not os.path.exists(test_dir):
+            print('Skipping caliper test')
+            return
+
+        exe = 'cxx-example'
+
+        self.run_test(exe='gcc',
+                      options=['{0}'.format(join_path(self.prefix, '.spack', 'test', 'examples', 'apps', 'cxx-example.cpp')),
+                               '-L{0}'.format(join_path(self.prefix, 'lib64')),
+                               '-I{0}'.format(join_path(self.prefix, 'include')),
+                               '-std=c++11', '-o', '-lcaliper', '-lstdc++', exe],
+                      purpose='test: compile {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        """self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)"""
+
+    def test(self):
+        print('{0}'.format(self.test_suite.current_test_cache_dir))
+        print("Running caliper example test")
+        self.run_cxx_example_test()
