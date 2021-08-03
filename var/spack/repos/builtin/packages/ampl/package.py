@@ -28,22 +28,27 @@ class Ampl(Package):
     license_files    = ['ampl.lic']
     license_url = 'https://ampl.com/resources/floating-licenses/installation/'
 
-    resourceList = [
-        # [version, name, destination, placement, url ,sha256sum]
-        ('20210226', 'amplapi', '', 'amplapi', 'file://{0}/amplapi-linux64.2.0.0.zip'.format(os.getcwd()), 'a4abe111f142b862f11fcd8700f964b688d5d2291e9e055f6e7adbd92b0e243a'),
-        ('20210226', 'amplide', '', 'amplide', 'file://{0}/amplide-linux64.3.5.tgz'.format(os.getcwd()), 'c2163896df672b71901d2e46cd5cf1c1c4f0451e478ef32d0971705aaf86d6ac'),
-        ('20190529', 'amplapi', '', 'amplapi', 'file://{0}/amplapi-linux64.2.0.0.zip'.format(os.getcwd()), 'a4abe111f142b862f11fcd8700f964b688d5d2291e9e055f6e7adbd92b0e243a'),
-        ('20190529', 'amplide', '', 'amplide', 'file://{0}/amplide-linux64.3.5.tgz'.format(os.getcwd()), 'c2163896df672b71901d2e46cd5cf1c1c4f0451e478ef32d0971705aaf86d6ac'),
-    ]
-
-    for rsver, rsname, rsdest, rsplace, rsurl, rschecksum in resourceList:
-        resource(when='@{0}'.format(rsver),
-                 name=rsname,
-                 url=rsurl,
-                 sha256=rschecksum,
-                 destination=rsdest,
-                 placement=rsplace
-                 )
+    resource(
+        name='amplapi',
+        url='file://{0}/amplapi-linux64.2.0.0.zip'.format(os.getcwd()),
+        sha256='a4abe111f142b862f11fcd8700f964b688d5d2291e9e055f6e7adbd92b0e243a',
+        destination='',
+        placement='amplapi'
+    )
+    resource(
+        name='amplide',
+        url='file://{0}/amplide-linux64.3.5.tgz'.format(os.getcwd()),
+        sha256='c2163896df672b71901d2e46cd5cf1c1c4f0451e478ef32d0971705aaf86d6ac',
+        destination='',
+        placement='amplide'
+    )
+    resource(
+        name='ampl_lic',
+        url='file://{0}/ampl_lic.linux-intel64.20210618.tgz'.format(os.getcwd()),
+        sha256='f5c38638d6cc99c85e0d6de001722b64a03e2adeaf5aed9ed622401654d9ff33',
+        destination='',
+        placement=''
+    )
 
     def url_for_version(self, version):
         return "file://{0}/ampl.linux-intel64.{1}.tgz".format(os.getcwd(), version)
@@ -54,5 +59,12 @@ class Ampl(Package):
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
-        install_tree('amplapi', prefix)
-        install_tree('amplide', prefix)
+
+        for key in self.resources:
+            for res in self.resources[key]:
+                res_namne = res.name
+                if res.name == 'ampl_lic':
+                    res_path = join_path(res.fetcher.stage.source_path, res.name)
+                    install(res_path, prefix)
+
+
