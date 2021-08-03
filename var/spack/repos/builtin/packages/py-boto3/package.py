@@ -18,7 +18,7 @@ class PyBoto3(PythonPackage):
     version('1.10.38', sha256='6cdb063b2ae5ac7b93ded6b6b17e3da1325b32232d5ff56e6800018d4786bba6')
     version('1.9.169', sha256='9d8bd0ca309b01265793b7e8d7b88c1df439737d77c8725988f0277bbf58d169')
 
-    depends_on('python@3.6:', when='@1.18.12', type=('build', 'run'))
+    depends_on('python@3.6:', when='@1.18:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.6:', when='@1.17.27', type=('build', 'run'))
     depends_on('python@2.6:', when='@1.9:1.10', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
