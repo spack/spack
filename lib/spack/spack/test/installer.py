@@ -383,7 +383,7 @@ def test_ensure_locked_have(install_mockery, tmpdir, capsys):
 
     with tmpdir.as_cwd():
         # Test "downgrade" of a read lock (to a read lock)
-        lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
+        lock = lk.LockFactory.lock('./test', default_timeout=1e-9, desc='test')
         lock_type = 'read'
         tpl = (lock_type, lock)
         installer.locks[pkg_id] = tpl
@@ -577,8 +577,8 @@ def test_clear_failures_success(install_mockery):
     """Test the clear_failures happy path."""
 
     # Set up a test prefix failure lock
-    lock = lk.Lock(spack.store.db.prefix_fail_path, start=1, length=1,
-                   default_timeout=1e-9, desc='test')
+    lock = lk.LockFactory.lock(spack.store.db.prefix_fail_path, start=1, length=1,
+                               default_timeout=1e-9, desc='test')
     try:
         lock.acquire_write()
     except lk.LockTimeoutError:
@@ -808,7 +808,7 @@ def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
 
     pkg_id = 'test'
     with tmpdir.as_cwd():
-        lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
+        lock = lk.LockFactory.lock('./test', default_timeout=1e-9, desc='test')
         installer.locks[pkg_id] = ('write', lock)
         assert lock._writes == 0
 
@@ -938,7 +938,7 @@ def test_cleanup_failed_err(install_mockery, tmpdir, monkeypatch, capsys):
     monkeypatch.setattr(lk.Lock, 'release_write', _raise_except)
     pkg_id = 'test'
     with tmpdir.as_cwd():
-        lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
+        lock = lk.LockFactory.lock('./test', default_timeout=1e-9, desc='test')
         installer.failed[pkg_id] = lock
 
         installer._cleanup_failed(pkg_id)
