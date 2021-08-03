@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.util.prefix import Prefix
-from spack.hooks.sbang import filter_shebang
 import os
+
+from spack.hooks.sbang import filter_shebang
+from spack.util.prefix import Prefix
 
 
 class Hip(CMakePackage):
@@ -40,6 +41,7 @@ class Hip(CMakePackage):
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
+        depends_on('roctracer-dev-api@' + ver, when='@' + ver)
 
     # hipcc likes to add `-lnuma` by default :(
     # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
@@ -233,6 +235,8 @@ class Hip(CMakePackage):
 
     def cmake_args(self):
         args = [
+            self.define('PROF_API_HEADER_PATH', join_path(
+                self.spec['roctracer-dev-api'].prefix, 'roctracer', 'inc', 'ext')),
             self.define('HIP_COMPILER', 'clang'),
             self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         ]

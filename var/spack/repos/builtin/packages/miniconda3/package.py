@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from os.path import split
 import platform
+from os.path import split
 
+from spack import *
 
 _versions = {
     '4.9.2': {

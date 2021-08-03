@@ -35,7 +35,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     version('3.2.0', sha256='34d93e1b2a3b8908ef89804b7e08c5a884cbbc0b2c9f139061627c0d2de282c1')
     version('3.1.1', sha256='c1c3446ee023f7b24baa97b24907735e89ce4ae9f5ef516645dfe390165d1778')
 
-    variant('shared', default=False, description='Build shared libraries')
+    variant('shared', default=True, description='Build shared libraries')
     variant('mpi', default=True, description='Use MPI')
     variant('openmp', default=True,
             description='Enable thread parallellism via tasking with OpenMP')
@@ -147,10 +147,12 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.
                             format(",".join(rocm_archs)))
 
+        if self.spec.satisfies('@:5.1.1'):
+            self.test_data_dir = 'examples/data'
+        else:
+            self.test_data_dir = 'examples/sparse/data'
+        self.test_src_dir = 'test'
         return args
-
-    test_data_dir = 'examples/data'
-    test_src_dir = 'test'
 
     @run_after('install')
     def cache_test_sources(self):
@@ -185,7 +187,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.install_test_root, self.test_src_dir)
         test_exe = 'test_sparse_seq'
         test_exe_mpi = 'test_sparse_mpi'
-        exe_arg = ['../../examples/data/pde900.mtx']
+        exe_arg = [join_path('..', '..', self.test_data_dir, 'pde900.mtx')]
         if '+mpi' in self.spec:
             test_args = ['-n', '4', test_exe_mpi]
             test_args.extend(exe_arg)

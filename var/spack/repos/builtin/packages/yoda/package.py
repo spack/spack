@@ -88,9 +88,8 @@ class Yoda(AutotoolsPackage):
     def configure_args(self):
         args = []
         if self.spec.satisfies('@:1.6.0'):
-            args += '--with-boost=' + self.spec['boost'].prefix
+            args.append('--with-boost=' + self.spec['boost'].prefix)
 
-        if '+root' in self.spec:
-            args += '--enable-root'
+        args.extend(self.enable_or_disable('root'))
 
         return args

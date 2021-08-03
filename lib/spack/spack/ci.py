@@ -21,6 +21,7 @@ from six.moves.urllib.request import HTTPHandler, Request, build_opener
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+
 import spack
 import spack.binary_distribution as bindist
 import spack.cmd
@@ -38,7 +39,6 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
 from spack.spec import Spec
-
 
 JOB_RETRY_CONDITIONS = [
     'always',
@@ -1316,17 +1316,20 @@ def relate_cdash_builds(spec_map, cdash_base_url, job_build_id, cdash_project,
 
         request = Request(cdash_api_url, data=enc_data, headers=headers)
 
-        response = opener.open(request)
-        response_code = response.getcode()
+        try:
+            response = opener.open(request)
+            response_code = response.getcode()
 
-        if response_code != 200 and response_code != 201:
-            msg = 'Relate builds ({0} -> {1}) failed (resp code = {2})'.format(
-                job_build_id, dep_build_id, response_code)
-            tty.warn(msg)
-            return
+            if response_code != 200 and response_code != 201:
+                msg = 'Relate builds ({0} -> {1}) failed (resp code = {2})'.format(
+                    job_build_id, dep_build_id, response_code)
+                tty.warn(msg)
+                return
 
-        response_text = response.read()
-        tty.debug('Relate builds response: {0}'.format(response_text))
+            response_text = response.read()
+            tty.debug('Relate builds response: {0}'.format(response_text))
+        except Exception as e:
+            print("Relating builds in CDash failed: {0}".format(e))
 
 
 def write_cdashid_to_mirror(cdashid, spec, mirror_url):
@@ -1395,7 +1398,7 @@ def push_mirror_contents(env, spec, yaml_path, mirror_url, sign_binaries):
         #     BaseException
         #     object
         err_msg = 'Error msg: {0}'.format(inst)
-        if 'Access Denied' in err_msg:
+        if any(x in err_msg for x in ['Access Denied', 'InvalidAccessKeyId']):
             tty.msg('Permission problem writing to {0}'.format(
                 mirror_url))
             tty.msg(err_msg)

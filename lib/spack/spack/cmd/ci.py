@@ -14,6 +14,7 @@ import tempfile
 from six.moves.urllib.parse import urlencode
 
 import llnl.util.tty as tty
+
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
 import spack.cmd.buildcache as buildcache
@@ -21,15 +22,16 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
+import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
-
 
 description = "manage continuous integration pipelines"
 section = "build"
 level = "long"
 
 CI_REBUILD_INSTALL_BASE_ARGS = ['spack', '-d', '-v']
+INSTALL_FAIL_CODE = 1
 
 
 def get_env_var(variable_name):
@@ -491,7 +493,7 @@ def ci_rebuild(args):
     # If a spec fails to build in a spack develop pipeline, we add it to a
     # list of known broken full hashes.  This allows spack PR pipelines to
     # avoid wasting compute cycles attempting to build those hashes.
-    if install_exit_code == 1 and spack_is_develop_pipeline:
+    if install_exit_code == INSTALL_FAIL_CODE and spack_is_develop_pipeline:
         tty.debug('Install failed on develop')
         if 'broken-specs-url' in gitlab_ci:
             broken_specs_url = gitlab_ci['broken-specs-url']
@@ -502,9 +504,17 @@ def ci_rebuild(args):
             tmpdir = tempfile.mkdtemp()
             empty_file_path = os.path.join(tmpdir, 'empty.txt')
 
+            broken_spec_details = {
+                'broken-spec': {
+                    'job-url': get_env_var('CI_JOB_URL'),
+                    'pipeline-url': get_env_var('CI_PIPELINE_URL'),
+                    'concrete-spec-yaml': job_spec.to_dict(hash=ht.full_hash)
+                }
+            }
+
             try:
                 with open(empty_file_path, 'w') as efd:
-                    efd.write('')
+                    efd.write(syaml.dump(broken_spec_details))
                 web_util.push_to_url(
                     empty_file_path,
                     broken_spec_path,
@@ -566,6 +576,26 @@ def ci_rebuild(args):
                     cdash_build_id, pipeline_mirror_url))
                 spack_ci.write_cdashid_to_mirror(
                     cdash_build_id, job_spec, pipeline_mirror_url)
+
+        # If this is a develop pipeline, check if the spec that we just built is
+        # on the broken-specs list. If so, remove it.
+        if spack_is_develop_pipeline and 'broken-specs-url' in gitlab_ci:
+            broken_specs_url = gitlab_ci['broken-specs-url']
+            just_built_hash = job_spec.full_hash()
+            broken_spec_path = url_util.join(broken_specs_url, just_built_hash)
+            if web_util.url_exists(broken_spec_path):
+                tty.msg('Removing {0} from the list of broken specs'.format(
+                    broken_spec_path))
+                try:
+                    web_util.remove_url(broken_spec_path)
+                except Exception as err:
+                    # If we got some kind of S3 (access denied or other connection
+                    # error), the first non boto-specific class in the exception
+                    # hierarchy is Exception.  Just print a warning and return
+                    msg = 'Error removing {0} from broken specs list: {1}'.format(
+                        broken_spec_path, err)
+                    tty.warn(msg)
+
     else:
         tty.debug('spack install exited non-zero, will not create buildcache')
 

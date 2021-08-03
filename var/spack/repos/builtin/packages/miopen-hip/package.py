@@ -67,6 +67,10 @@ class MiopenHip(CMakePackage):
                 'CMAKE_CXX_COMPILER',
                 '{0}/bin/clang++'.format(spec['llvm-amdgpu'].prefix)
             ),
+            self.define(
+                'MIOPEN_AMDGCN_ASSEMBLER',
+                '{0}/bin/clang'.format(spec['llvm-amdgpu'].prefix)
+            ),
             self.define('Boost_USE_STATIC_LIBS', 'Off'),
             self.define('HIP_PREFIX_PATH', spec['hip'].prefix),
             self.define('DEVICELIBS_PREFIX_PATH', self.get_bitcode_dir())

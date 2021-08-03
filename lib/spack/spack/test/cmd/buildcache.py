@@ -4,14 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import errno
-import platform
 import os
+import platform
 
 import pytest
 
-import spack.main
 import spack.binary_distribution
 import spack.environment as ev
+import spack.main
 import spack.spec
 from spack.spec import Spec
 

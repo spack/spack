@@ -4,28 +4,26 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import os
 import filecmp
+import os
 import re
-from six.moves import builtins
-import time
 import shutil
+import time
 
 import pytest
+from six.moves import builtins
 
 import llnl.util.filesystem as fs
 
-import spack.config
+import spack.cmd.install
 import spack.compilers as compilers
+import spack.config
+import spack.environment as ev
 import spack.hash_types as ht
 import spack.package
-import spack.cmd.install
 from spack.error import SpackError
-from spack.spec import Spec, CompilerSpec
 from spack.main import SpackCommand
-import spack.environment as ev
-
-from six.moves.urllib.error import HTTPError, URLError
+from spack.spec import CompilerSpec, Spec
 
 install = SpackCommand('install')
 env = SpackCommand('env')
@@ -492,7 +490,7 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with pytest.raises((HTTPError, URLError)):
+            with pytest.raises(SpackError):
                 install(
                     '--log-format=cdash',
                     '--log-file=cdash_reports',

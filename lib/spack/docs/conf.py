@@ -17,10 +17,10 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
 import re
 import subprocess
+import sys
 from glob import glob
 
 from sphinx.ext.apidoc import main as sphinx_apidoc
@@ -82,6 +82,8 @@ todo_include_todos = True
 # Disable duplicate cross-reference warnings.
 #
 from sphinx.domains.python import PythonDomain
+
+
 class PatchedPythonDomain(PythonDomain):
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
         if 'refspecific' in node:
@@ -95,15 +97,19 @@ def setup(sphinx):
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.8'
+needs_sphinx = '3.4'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.graphviz',
-              'sphinx.ext.napoleon',
-              'sphinx.ext.todo',
-              'sphinxcontrib.programoutput']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.graphviz',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
+    'sphinx.ext.viewcode',
+    'sphinxcontrib.programoutput',
+]
 
 # Set default graphviz options
 graphviz_dot_args = [
@@ -136,6 +142,7 @@ copyright = u'2013-2021, Lawrence Livermore National Laboratory.'
 #
 # The short X.Y version.
 import spack
+
 version = '.'.join(str(s) for s in spack.spack_version_info[:2])
 # The full version, including alpha/beta/rc tags.
 release = spack.spack_version
@@ -161,6 +168,19 @@ gettext_uuid = False
 # directories to ignore when looking for source files.
 exclude_patterns = ['_build', '_spack_root', '.spack-env']
 
+nitpicky = True
+nitpick_ignore = [
+    # Python classes that intersphinx is unable to resolve
+    ('py:class', 'argparse.HelpFormatter'),
+    ('py:class', 'contextlib.contextmanager'),
+    ('py:class', 'module'),
+    ('py:class', '_io.BufferedReader'),
+    ('py:class', 'unittest.case.TestCase'),
+    ('py:class', '_frozen_importlib_external.SourceFileLoader'),
+    # Spack classes that are private and we don't want to expose
+    ('py:class', 'spack.provider_index._IndexBase'),
+]
+
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
 
@@ -179,7 +199,8 @@ exclude_patterns = ['_build', '_spack_root', '.spack-env']
 # We use our own extension of the default style with a few modifications
 from pygments.style import Style
 from pygments.styles.default import DefaultStyle
-from pygments.token import Generic, Comment, Text
+from pygments.token import Comment, Generic, Text
+
 
 class SpackStyle(DefaultStyle):
     styles = DefaultStyle.styles.copy()
@@ -188,6 +209,7 @@ class SpackStyle(DefaultStyle):
     styles[Generic.Prompt] = "bold #346ec9"
 
 import pkg_resources
+
 dist = pkg_resources.Distribution(__file__)
 sys.path.append('.')  # make 'conf' module findable
 ep = pkg_resources.EntryPoint.parse('spack = conf:SpackStyle', dist=dist)
@@ -353,3 +375,11 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+
+# -- Extension configuration -------------------------------------------------
+
+# sphinx.ext.intersphinx
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+}

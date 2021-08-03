@@ -29,6 +29,7 @@ class PyPandas(PythonPackage):
         'pandas._config'
     ]
 
+    version('1.3.1',  sha256='341935a594db24f3ff07d1b34d1d231786aa9adfa84b76eab10bf42907c8aed3')
     version('1.3.0',  sha256='c554e6c9cf2d5ea1aba5979cc837b3649539ced0e18ece186f055450c86622e2')
     version('1.2.5',  sha256='14abb8ea73fce8aebbb1fb44bec809163f1c55241bcc1db91c2c780e97265033')
     version('1.2.4',  sha256='649ecab692fade3cbfcf967ff936496b0cfba0af00a55dfaacd82bdda5cb2279')

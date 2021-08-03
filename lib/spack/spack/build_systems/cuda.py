@@ -3,10 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import PackageBase
-from spack.directives import depends_on, variant, conflicts
-
 import spack.variant
+from spack.directives import conflicts, depends_on, variant
+from spack.package import PackageBase
 
 
 class CudaPackage(PackageBase):
