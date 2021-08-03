@@ -1,0 +1,31 @@
+From 23f2e974e51306f3a4c6eec5463480d080dfc411 Mon Sep 17 00:00:00 2001
+From: Pieter Ghysels <pghysels@lbl.gov>
+Date: Tue, 3 Aug 2021 15:31:34 -0400
+Subject: [PATCH] Fix for building shared libs with ROCm
+ (https://github.com/spack/spack/issues/25225)
+
+---
+ CMakeLists.txt | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1a9358a..7c874d0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -447,7 +447,12 @@ if(STRUMPACK_USE_HIP)
+   set_source_files_properties(
+     src/sparse/fronts/FrontalMatrixHIP.hip.cpp
+     PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
+-  hip_add_library(strumpack "src/sparse/fronts/FrontalMatrixHIP.hip.cpp")
++  if (BUILD_SHARED_LIBS)
++    set(STATIC_OR_SHARED SHARED)
++  else()
++    set(STATIC_OR_SHARED STATIC)
++  endif()
++  hip_add_library(strumpack "src/sparse/fronts/FrontalMatrixHIP.hip.cpp" ${STATIC_OR_SHARED})
+ else()
+   add_library(strumpack "")
+ endif()
+-- 
+2.30.2
+
