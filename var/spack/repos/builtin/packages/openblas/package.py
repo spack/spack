@@ -10,7 +10,7 @@ from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
 
-class Openblas(MakefilePackage):
+class Openblas(CMakePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
@@ -214,7 +214,7 @@ class Openblas(MakefilePackage):
         # unclear whether setting `-j N` externally was supported before 0.3
         return self.spec.version >= Version("0.3.0")
 
-    @run_before("edit")
+    @run_before('cmake')
     def check_compilers(self):
         # As of 06/2016 there is no mechanism to specify that packages which
         # depends on Blas/Lapack need C or/and Fortran symbols. For now
@@ -413,6 +413,10 @@ class Openblas(MakefilePackage):
         if self.spec.satisfies("+bignuma"):
             make_defs.append("BIGNUMA=1")
 
+    def cmake_defs(self):
+        make_defs = []
+
+        make_defs.extend(['-DDYNAMIC_ARCH:BOOL=TRUE', '-DUSE_THREAD:BOOL=FALSE'])
         return make_defs
 
     @property
