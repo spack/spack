@@ -32,7 +32,7 @@ def test_disable_locking(tmpdir):
     old_value = spack.config.get('config:locks')
 
     with spack.config.override('config:locks', False):
-        lock = lk.Lock(lock_path)
+        lock = lk.LockFactory.lock(lock_path)
 
         lock.acquire_read()
         assert not os.path.exists(lock_path)
