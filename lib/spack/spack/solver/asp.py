@@ -821,9 +821,9 @@ class SpackSolverSetup(object):
 
         return condition_id
 
-    def impose(self, condition_id, imposed_spec, node=True, name=None):
+    def impose(self, condition_id, imposed_spec, node=True, name=None, body=False):
         imposed_constraints = self.spec_clauses(
-            imposed_spec, body=False, required_from=name)
+            imposed_spec, body=body, required_from=name)
         for pred in imposed_constraints:
             # imposed "node"-like conditions are no-ops
             if not node and pred.name in ("node", "virtual_node"):
@@ -1505,7 +1505,7 @@ class SpackSolverSetup(object):
                     self.gen.fact(fn.installed_hash(spec.name, h))
 
                     # this describes what constraints it imposes on the solve
-                    self.impose(h, spec)
+                    self.impose(h, spec, body=True)
                     self.gen.newline()
 
     def setup(self, driver, specs, tests=False, reuse=False):
