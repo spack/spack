@@ -920,8 +920,12 @@ class Python(AutotoolsPackage):
         try:
             return self.get_python_lib(prefix='')
         except (ProcessError, RuntimeError):
-            return os.path.join(
-                'lib', 'python{0}'.format(self.version.up_to(2)), 'site-packages')
+            return self.default_site_packages_dir
+
+    @property
+    def default_site_packages_dir(self):
+        python_dir = 'python{0}'.format(self.version.up_to(2))
+        return os.path.join('lib', python_dir, 'site-packages')
 
     @property
     def easy_install_file(self):
@@ -1011,7 +1015,8 @@ class Python(AutotoolsPackage):
         """
         for d in dependent_spec.traverse(deptype=('run'), root=True):
             if d.package.extends(self.spec):
-                env.prepend_path('PYTHONPATH', d.package.site_packages_dir)
+                env.prepend_path('PYTHONPATH', join_path(
+                    d.prefix, self.site_packages_dir))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods."""
