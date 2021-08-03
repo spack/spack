@@ -17,6 +17,8 @@ class Ampl(Package):
     homepage = "https://ampl.com/"
     manual_download = True
 
+    maintainers = ['robgics']
+
     # Use the version as you would expect the user to know it, not necessarily the
     # version as it appears in the file name.  To get the checksum, use sha256sum.
     version('20210226', sha256='d9ffaed591c0491e311a44c2b246d9d81785f6c0b2747a7e32a783e522e18450')
