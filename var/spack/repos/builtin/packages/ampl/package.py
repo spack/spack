@@ -64,9 +64,6 @@ class Ampl(Package):
 
         for key in self.resources:
             for res in self.resources[key]:
-                res_namne = res.name
                 if res.name == 'ampl_lic':
                     res_path = join_path(res.fetcher.stage.source_path, res.name)
                     install(res_path, prefix)
-
-
