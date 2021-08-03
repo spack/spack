@@ -36,7 +36,9 @@ class Hpcg(AutotoolsPackage):
         if not spec.satisfies('%aocc') and not spec.satisfies('%cce'):
             CXXFLAGS += ' -ftree-vectorizer-verbose=0 '
         if spec.satisfies('%cce'):
-            CXXFLAGS += ' -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize '
+            CXXFLAGS += ' -Rpass=loop-vectorize'
+            CXXFLAGS += ' -Rpass-missed=loop-vectorize'
+            CXXFLAGS += ' -Rpass-analysis=loop-vectorize '
         if '+openmp' in self.spec:
             CXXFLAGS += self.compiler.openmp_flag
         config = [
