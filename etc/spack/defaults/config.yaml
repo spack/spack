@@ -134,6 +134,10 @@ config:
   # enabling locks.
   locks: true
 
+  # The default url fetch method to use. 
+  # If set to 'curl', Spack will require curl on the user's system
+  # If set to 'urllib', Spack will use python built-in libs to fetch
+  url_fetch_method: urllib
 
   # The maximum number of jobs to use for the build system (e.g. `make`), when
   # the -j flag is not given on the command line. Defaults to 16 when not set.

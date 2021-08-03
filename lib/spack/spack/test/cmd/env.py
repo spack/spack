@@ -2591,3 +2591,15 @@ def test_virtual_spec_concretize_together(tmpdir):
     e.concretize()
 
     assert any(s.package.provides('mpi') for _, s in e.concretized_specs())
+
+
+def test_query_develop_specs():
+    """Test whether a spec is develop'ed or not"""
+    env('create', 'test')
+    with ev.read('test') as e:
+        e.add('mpich')
+        e.add('mpileaks')
+        e.develop(Spec('mpich@1'), 'here', clone=False)
+
+        assert e.is_develop(Spec('mpich'))
+        assert not e.is_develop(Spec('mpileaks'))

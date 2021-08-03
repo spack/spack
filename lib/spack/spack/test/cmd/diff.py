@@ -30,8 +30,8 @@ def test_diff(install_mockery, mock_fetch, mock_archive, mock_packages):
     c = spack.cmd.diff.compare_specs(specA, specB, to_string=True)
     assert len(c['a_not_b']) == 1
     assert len(c['b_not_a']) == 1
-    assert c['a_not_b'][0] == ['variant_value', 'mpileaks debug bool(False)']
-    assert c['b_not_a'][0] == ['variant_value', 'mpileaks debug bool(True)']
+    assert c['a_not_b'][0] == ['variant_value', 'mpileaks debug False']
+    assert c['b_not_a'][0] == ['variant_value', 'mpileaks debug True']
 
 
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
@@ -75,5 +75,5 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
 
     assert len(result['a_not_b']) == 1
     assert len(result['b_not_a']) == 1
-    assert result['a_not_b'][0] == ['variant_value', 'mpileaks debug bool(False)']
-    assert result['b_not_a'][0] == ['variant_value', 'mpileaks debug bool(True)']
+    assert result['a_not_b'][0] == ['variant_value', 'mpileaks debug False']
+    assert result['b_not_a'][0] == ['variant_value', 'mpileaks debug True']

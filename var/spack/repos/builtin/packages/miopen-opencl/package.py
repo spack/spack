@@ -45,9 +45,6 @@ class MiopenOpencl(CMakePackage):
                 '4.2.0']:
         depends_on('miopengemm@' + ver, when='@' + ver)
 
-    for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, when='@' + ver)
-
     def cmake_args(self):
         args = [
             self.define('MIOPEN_BACKEND', 'OpenCL'),
@@ -58,6 +55,10 @@ class MiopenOpencl(CMakePackage):
             self.define(
                 'HIP_CXX_COMPILER',
                 '{0}/bin/clang++'.format(self.spec['llvm-amdgpu'].prefix)
+            ),
+            self.define(
+                'MIOPEN_AMDGCN_ASSEMBLER',
+                '{0}/bin/clang'.format(self.spec['llvm-amdgpu'].prefix)
             ),
             self.define('Boost_USE_STATIC_LIBS', 'Off')
         ]
