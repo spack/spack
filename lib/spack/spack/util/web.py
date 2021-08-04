@@ -190,8 +190,11 @@ def push_to_url(
             remote_path = remote_path[1:]
 
         s3 = s3_util.create_s3_session(remote_url)
+        from boto3.s3.transfer import TransferConfig
+        transfer_cfg = TransferConfig(multipart_threshold=1024 ** 4)
         s3.upload_file(local_file_path, remote_url.netloc,
-                       remote_path, ExtraArgs=extra_args)
+                       remote_path, ExtraArgs=extra_args,
+                       Config=transfer_cfg)
 
         if not keep_original:
             os.remove(local_file_path)
