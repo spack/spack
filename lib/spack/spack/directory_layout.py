@@ -104,9 +104,9 @@ class DirectoryLayout(object):
             # The hash the the projection is the DAG hash but we write out the
             # full provenance by full hash so it's availabe if we want it later
             extension = os.path.splitext(path)[-1].lower()
-            if extension == '.json':
+            if 'json' in extension:
                 spec.to_json(f, hash=ht.full_hash)
-            elif extension == '.yaml':
+            elif 'yaml' in extension:
                 spec.to_yaml(f, hash=ht.full_hash)
 
     def write_host_environment(self, spec):
@@ -148,7 +148,6 @@ class DirectoryLayout(object):
         _check_concrete(spec)
         # Attempts to convert to JSON if possible.
         # Otherwise just returns the YAML.
-        # TODO: Needs a test case?
         yaml_path = os.path.join(
             self.metadata_path(spec), self._spec_file_name_yaml)
         json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)

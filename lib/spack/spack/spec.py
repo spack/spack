@@ -1779,21 +1779,15 @@ class Spec(object):
         """
         node_list = []  # Using a list to preserve preorder traversal.
         hash_list = []
-        root_node_dict = self.node_dict_with_hashes(hash)
-        hash_attr = 'full_hash'
-        if hash_attr not in root_node_dict:
-            hash_attr = 'build_hash'
-        if hash_attr not in root_node_dict:
-            hash_attr = 'hash'
         for s in self.traverse(order='pre', deptype=hash.deptype):
-            spec_hash = s.node_dict_with_hashes(hash)[hash_attr]
+            spec_hash = s.node_dict_with_hashes(hash)[hash.attr[1:]]
             if spec_hash not in hash_list:
                 node_list.append(s.node_dict_with_hashes(hash))
                 hash_list.append(spec_hash)
             if s.build_spec is not s:
                 build_spec_list = s.build_spec.to_dict(hash)['spec']['nodes']
                 for node in build_spec_list:
-                    node_hash = node[hash_attr]
+                    node_hash = node[hash.attr[1:]]
                     if node_hash not in hash_list:
                         node_list.append(node)
                         hash_list.append(node_hash)
@@ -1969,12 +1963,13 @@ class Spec(object):
                 dep_hash, deptypes = elt
             elif isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
-                for key in (ht.dag_hash.attr[1:],
+                for key in (ht.full_hash.attr[1:],
                             ht.build_hash.attr[1:],
-                            ht.full_hash.attr[1:]):
+                            ht.dag_hash.attr[1:]):
                     if key in elt:
                         dep_hash, deptypes = elt[key], elt['type']
                         hash_type = key
+                        print('ryds hash type:', hash_type)
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError(
@@ -2223,13 +2218,9 @@ class Spec(object):
             node_spec = node['node_spec']
             for _, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
                 node_spec._add_dependency(hash_dict[dhash]['node_spec'], dtypes)
-            # TODO: Issue: In the case of a transitive splice, this leaves a
-            # build spec dangling because it does not account for the full hash.
-            # In other words, it will match the last dag_hash. Problem is: we
-            # store build specs by dag hash and it is possible for 2 build specs
-            # to have the same dag hash but different full hashes.
             if 'build_spec' in node.keys():
-                _, bhash, _ = Spec.build_spec_from_node_dict(node)
+                _, bhash, _ = Spec.build_spec_from_node_dict(node,
+                                                             hash_type=hash_type)
                 node_spec._build_spec = hash_dict[bhash]['node_spec']
 
         return hash_dict[root_spec_hash]['node_spec']
@@ -2735,7 +2726,6 @@ class Spec(object):
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
         """
-        # TODO: This used to be False; this could break other things.
         clone = self.copy(caches=True)
         clone.concretize(tests=tests)
         return clone

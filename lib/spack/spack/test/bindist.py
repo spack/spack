@@ -618,7 +618,7 @@ def test_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
     'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
 )
 def test_update_index_fix_deps(monkeypatch, tmpdir, mutable_config):
-    """Ensure spack buildcache update-index properly fixes up spec.yaml
+    """Ensure spack buildcache update-index properly fixes up spec descriptor
     files on the mirror when updating the buildcache index."""
 
     # Create a temp mirror directory for buildcache usage
