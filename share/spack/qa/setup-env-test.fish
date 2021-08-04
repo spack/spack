@@ -90,9 +90,11 @@ function spt_succeeds
 
     set -l output (eval $argv 2>&1)
 
-    if test $status -ne 0
+    set cmd_status $status
+
+    if test $cmd_status -ne 0
         fail
-        echo_red "Command failed with error $status"
+        echo_red "Command failed with error $cmd_status"
         if test -n "$output"
             echo_msg "Output:"
             echo "$output"
@@ -116,7 +118,7 @@ function spt_fails
 
     if test $status -eq 0
         fail
-        echo_red "Command failed with error $status"
+        echo_red "Command succeeded, but should fail"
         if test -n "$output"
             echo_msg "Output:"
             echo "$output"
@@ -141,10 +143,13 @@ function spt_contains
     printf "'$remaining_args' output contains '$target_string' ... "
 
     set -l output (eval $remaining_args 2>&1)
+    set cmd_status $status
 
     if not echo "$output" | string match -q -r ".*$target_string.*"
         fail
-        echo_red "Command exited with error $status"
+        if test $cmd_status -ne 0
+            echo_red "Command exited with error $cmd_status"
+        end
         echo_red "'$target_string' was not in output."
         if test -n "$output"
             echo_msg "Output:"
