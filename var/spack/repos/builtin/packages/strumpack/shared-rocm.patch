@@ -1,18 +1,8 @@
-From 23f2e974e51306f3a4c6eec5463480d080dfc411 Mon Sep 17 00:00:00 2001
-From: Pieter Ghysels <pghysels@lbl.gov>
-Date: Tue, 3 Aug 2021 15:31:34 -0400
-Subject: [PATCH] Fix for building shared libs with ROCm
- (https://github.com/spack/spack/issues/25225)
-
----
- CMakeLists.txt | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 1a9358a..7c874d0 100644
+index c63e8f0..e362d4c 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -447,7 +447,12 @@ if(STRUMPACK_USE_HIP)
+@@ -439,7 +439,12 @@ if(STRUMPACK_USE_HIP)
    set_source_files_properties(
      src/sparse/fronts/FrontalMatrixHIP.hip.cpp
      PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
@@ -26,6 +16,87 @@ index 1a9358a..7c874d0 100644
  else()
    add_library(strumpack "")
  endif()
--- 
-2.30.2
-
+diff --git a/cmake/Modules/FindHIP.cmake b/cmake/Modules/FindHIP.cmake
+index b4a5cb2..6b69837 100644
+--- a/cmake/Modules/FindHIP.cmake
++++ b/cmake/Modules/FindHIP.cmake
+@@ -11,6 +11,7 @@ set(HIP_HCC_FLAGS "" CACHE STRING "Semicolon delimited flags for HCC")
+ set(HIP_CLANG_FLAGS "" CACHE STRING "Semicolon delimited flags for CLANG")
+ set(HIP_NVCC_FLAGS "" CACHE STRING "Semicolon delimted flags for NVCC")
+ mark_as_advanced(HIP_HIPCC_FLAGS HIP_HCC_FLAGS HIP_CLANG_FLAGS HIP_NVCC_FLAGS)
++
+ set(_hip_configuration_types ${CMAKE_CONFIGURATION_TYPES} ${CMAKE_BUILD_TYPE} Debug MinSizeRel Release RelWithDebInfo)
+ list(REMOVE_DUPLICATES _hip_configuration_types)
+ foreach(config ${_hip_configuration_types})
+@@ -205,8 +206,13 @@ set(CMAKE_SHARED_LIBRARY_LINK_DYNAMIC_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_LINK_DYNA
+ set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "")
+ set(HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS "")
+ 
+-if("${HIP_COMPILER}" STREQUAL "hcc")
+-    # Set the CMake Flags to use the HCC Compiler.
++if("${HIP_COMPILER}" STREQUAL "nvcc")
++    # Set the CMake Flags to use the nvcc Compiler.
++    set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${HIP_HIPCC_CMAKE_LINKER_HELPER} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
++    set(CMAKE_HIP_CREATE_SHARED_MODULE "${HIP_HIPCC_CMAKE_LINKER_HELPER} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <LINK_LIBRARIES> -shared" )
++    set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
++elseif("${HIP_COMPILER}" STREQUAL "hcc")
++    # Set the CMake Flags to use the hcc Compiler.
+     set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_HOME} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+     set(CMAKE_HIP_CREATE_SHARED_MODULE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_HOME} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <LINK_LIBRARIES> -shared" )
+     set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_HOME} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+@@ -221,7 +227,7 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
+     endif()
+     if(HIP_CLANG_NUM_PARALLEL_JOBS GREATER 1)
+       if(${HIP_CLANG_SUPPORTS_PARALLEL_JOBS})
+-        set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS} -Wno-format-nonliteral")
++        set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "-Wno-format-nonliteral -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}")
+         set(HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS "-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}")
+       else()
+         message("clang compiler doesn't support parallel jobs")
+@@ -232,6 +238,13 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
+     set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+     set(CMAKE_HIP_CREATE_SHARED_MODULE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <LINK_LIBRARIES> -shared" )
+     set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
++
++    if("${HIP_RUNTIME}" STREQUAL "rocclr")
++      if(TARGET host)
++        message(STATUS "host interface - found")
++        set(HIP_HOST_INTERFACE host)
++      endif()
++    endif()
+ endif()
+ 
+ ###############################################################################
+@@ -637,6 +650,8 @@ macro(HIP_ADD_EXECUTABLE hip_target)
+             endif()
+         endif()
+         set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
++    else()
++        set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+     endif()
+     if ("${_sources}" STREQUAL "")
+         add_executable(${hip_target} ${_cmake_options} ${_generated_files} "")
+@@ -644,6 +659,11 @@ macro(HIP_ADD_EXECUTABLE hip_target)
+         add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
+     endif()
+     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE HIP)
++    # Link with host
++    if (HIP_HOST_INTERFACE)
++        # hip rt should be rocclr, compiler should be clang
++        target_link_libraries(${hip_target} ${HIP_HOST_INTERFACE})
++    endif()
+ endmacro()
+ 
+ ###############################################################################
+@@ -662,6 +682,11 @@ macro(HIP_ADD_LIBRARY hip_target)
+         add_library(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
+     endif()
+     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE ${HIP_C_OR_CXX})
++    # Link with host
++    if (HIP_HOST_INTERFACE)
++        # hip rt should be rocclr, compiler should be clang
++        target_link_libraries(${hip_target} ${HIP_HOST_INTERFACE})
++    endif()
+ endmacro()
+ 
+ # vim: ts=4:sw=4:expandtab:smartindent
