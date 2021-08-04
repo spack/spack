@@ -29,7 +29,7 @@ def txt_to_rtf(file_path):
     def line_to_rtf(str):
         return str.replace("\n", "\\par")
     contents = ""
-    with open(file_path,"r+") as f:
+    with open(file_path, "r+") as f:
         for line in f.readlines():
             contents += line_to_rtf(line)
     return rtf_header.format(contents)
