@@ -24,7 +24,7 @@ function allocate_testing_global -d "allocate global variables used for testing"
 end
 
 
-function delete_testing_global -d "deallocate global varialbes used for testing"
+function delete_testing_global -d "deallocate global variables used for testing"
 
     set -e __spt_red
     set -e __spt_cyan
