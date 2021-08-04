@@ -254,10 +254,9 @@ class Openblas(CMakePackage):
 
         return args
 
-    def cmake_defs(self):
+    def cmake_args(self):
         make_defs = []
-
-        make_defs.extend(['-DDYNAMIC_ARCH:BOOL=TRUE', '-DUSE_THREAD:BOOL=FALSE'])
+        make_defs.extend(['-DUSE_THREAD:BOOL=FALSE', '-DTARGET:STRING=GENERIC'])
         return make_defs
 
     @property
