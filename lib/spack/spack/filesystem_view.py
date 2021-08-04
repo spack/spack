@@ -101,12 +101,13 @@ def view_copy(src, dst, view, spec=None):
 def view_func_parser(parsed_name):
     # What method are we using for this view
     if parsed_name in ("hardlink", "hard"):
-        link_fn = view_hardlink
+        return view_hardlink
     elif parsed_name in ("copy", "relocate"):
-        link_fn = view_copy
+        return view_copy
+    elif parsed_name == "symlink":
+        return view_symlink
     else:
-        link_fn = view_symlink
-    return link_fn
+        raise ValueError("invalid link type for view: '%s'" % parsed_name)
 
 
 def inverse_view_func_parser(view_type):
