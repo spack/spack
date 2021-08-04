@@ -32,6 +32,9 @@ class Hipblas(CMakePackage):
         depends_on('rocsolver@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+
+    patch('hipblas-remove-opt-rocm-reference.patch', when='@4.2.0:')
 
     def cmake_args(self):
         args = [
@@ -53,3 +56,4 @@ class Hipblas(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
+        env.set('HIP_PATH', self.spec['hip'].prefix)
