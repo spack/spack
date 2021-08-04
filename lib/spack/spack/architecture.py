@@ -593,17 +593,20 @@ def use_platform(new_platform):
     assert isinstance(new_platform, Platform), msg.format(new_platform)
 
     original_platform_fn, original_all_platforms_fn = platform, all_platforms
-    platform = _PickleableCallable(new_platform)
-    all_platforms = _PickleableCallable([type(new_platform)])
 
-    # Clear configuration and compiler caches
-    spack.config.config.clear_caches()
-    spack.compilers._cache_config_files = []
+    try:
+        platform = _PickleableCallable(new_platform)
+        all_platforms = _PickleableCallable([type(new_platform)])
 
-    yield new_platform
+        # Clear configuration and compiler caches
+        spack.config.config.clear_caches()
+        spack.compilers._cache_config_files = []
 
-    platform, all_platforms = original_platform_fn, original_all_platforms_fn
+        yield new_platform
 
-    # Clear configuration and compiler caches
-    spack.config.config.clear_caches()
-    spack.compilers._cache_config_files = []
+    finally:
+        platform, all_platforms = original_platform_fn, original_all_platforms_fn
+
+        # Clear configuration and compiler caches
+        spack.config.config.clear_caches()
+        spack.compilers._cache_config_files = []

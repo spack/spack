@@ -301,9 +301,10 @@ def use_store(store_or_path):
     db, layout = store.db, store.layout
     root, unpadded_root = store.root, store.unpadded_root
 
-    yield temporary_store
-
-    # Restore the original store
-    store = original_store
-    db, layout = original_store.db, original_store.layout
-    root, unpadded_root = original_store.root, original_store.unpadded_root
+    try:
+        yield temporary_store
+    finally:
+        # Restore the original store
+        store = original_store
+        db, layout = original_store.db, original_store.layout
+        root, unpadded_root = original_store.root, original_store.unpadded_root
