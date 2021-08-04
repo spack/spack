@@ -28,7 +28,10 @@ class Bzip2(Package, SourcewarePackage):
     variant('pic', default=False, description='Build static libraries with PIC')
     variant('debug', default=False, description='Enable debug symbols and disable optimization')
 
-    depends_on('diffutils', type='build')
+    # makefile.msc doesn't provide a shared recipe
+    conflicts('+shared', when='platform=windows')
+
+    # depends_on('diffutils', type='build')
 
     @classmethod
     def determine_version(cls, exe):
@@ -55,9 +58,10 @@ class Bzip2(Package, SourcewarePackage):
 
     def patch(self):
         if self.spec.satisfies('+debug'):
-            for makefile in ['Makefile', 'Makefile-libbz2_so']:
+            for makefile in ['Makefile', 'Makefile-libbz2_so', 'makefile.msc']:
                 filter_file(r'-O ', '-O0 ', makefile)
                 filter_file(r'-O2 ', '-O0 ', makefile)
+                filter_file(r'-Ox ', '-O0 ', makefile)
 
         # bzip2 comes with two separate Makefiles for static and dynamic builds
         # Tell both to use Spack's compiler wrapper instead of GCC
@@ -104,8 +108,23 @@ class Bzip2(Package, SourcewarePackage):
             make('-f', 'Makefile-libbz2_so')
 
         # Build the static library and everything else
-        make()
-        make('install', 'PREFIX={0}'.format(prefix))
+        if self.spec.satisfies('platform=windows'):
+            # Build step
+            nmake = Executable('nmake.exe')
+            nmake('-f', 'makefile.msc')
+            # Install step
+            mkdirp(self.prefix.include)
+            mkdirp(self.prefix.lib)
+            mkdirp(self.prefix.bin)
+            mkdirp(self.prefix.man)
+            mkdirp(self.prefix.man.man1)
+            install('*.h', self.prefix.include)
+            install('*.lib', self.prefix.lib)
+            install('*.exe', self.prefix.bin)
+            install('*.1', self.prefix.man.man1)
+        else:
+            make()
+            make('install', 'PREFIX={0}'.format(prefix))
 
         if '+shared' in spec:
             install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
