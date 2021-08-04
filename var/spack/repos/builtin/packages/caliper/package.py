@@ -147,9 +147,6 @@ class Caliper(CMakePackage, CudaPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([join_path('examples', 'apps')])
 
-    def setup_run_environment(self, env):
-        env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix, 'lib64'))
-
     def run_cxx_example_test(self):
         """Run stand alone test: cxx_example"""
 
@@ -174,5 +171,4 @@ class Caliper(CMakePackage, CudaPackage):
                       work_dir=test_dir)
 
     def test(self):
-        print("Running caliper example test")
         self.run_cxx_example_test()
