@@ -103,6 +103,7 @@ properties = {
                 'type': 'string',
                 'enum': ['urllib', 'curl']
             },
+            'multipart_threshold': {'type': 'integer', 'minimum': 1}
         },
     },
 }

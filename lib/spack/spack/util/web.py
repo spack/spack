@@ -182,6 +182,7 @@ def push_to_url(
                     raise
 
     elif remote_url.scheme == 's3':
+        from boto3.s3.transfer import TransferConfig
         if extra_args is None:
             extra_args = {}
 
@@ -190,8 +191,16 @@ def push_to_url(
             remote_path = remote_path[1:]
 
         s3 = s3_util.create_s3_session(remote_url)
-        from boto3.s3.transfer import TransferConfig
-        transfer_cfg = TransferConfig(multipart_threshold=1024 ** 4)
+
+        # See https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html
+        # We default to 100MB as the threshold for multipart upload.
+        # For Openstack Swift Object Storage even larger thresholds are
+        # advisable, since Openstack does not assemble the parts after upload,
+        # and hence requires multipart Static Large Object downloads, which is
+        # not supported by spack's url fetchers.
+        mp_threshold = spack.config.get('config:multipart_threshold', 100 * 1024 ** 2)
+        transfer_cfg = TransferConfig(multipart_threshold=mp_threshold)
+
         s3.upload_file(local_file_path, remote_url.netloc,
                        remote_path, ExtraArgs=extra_args,
                        Config=transfer_cfg)

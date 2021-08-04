@@ -191,3 +191,8 @@ config:
   # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit
   # manipulation by unprivileged user (e.g. AFS)
   allow_sgid: true
+
+
+  # The transfer size threshold in bytes for which multipart uploads will be
+  # triggered when uploading to an s3 bucket (defaults to 100MB)
+  multipart_threshold: 104857600
