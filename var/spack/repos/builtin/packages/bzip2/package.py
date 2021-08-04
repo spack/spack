@@ -25,9 +25,13 @@ class Bzip2(Package, SourcewarePackage):
     version('1.0.7', sha256='e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b')
     version('1.0.6', sha256='a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd')
 
-    variant('shared', default=False, description='Enables the build of shared libraries.')
+    variant('shared', default=True, description='Enables the build of shared libraries.')
     variant('pic', default=False, description='Build static libraries with PIC')
     variant('debug', default=False, description='Enable debug symbols and disable optimization')
+
+    # makefile.msc doesn't provide a shared recipe
+    conflicts('+shared', when='platform=windows', 
+              msg='Windows makefile does not have a recipe for shared builds, use ~shared.')
 
     # depends_on('diffutils', type='build')
 
