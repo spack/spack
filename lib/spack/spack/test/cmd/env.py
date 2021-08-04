@@ -1948,6 +1948,103 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
+def test_view_link_type_symlink(tmpdir, mock_fetch, mock_packages, mock_archive,
+                                install_mockery):
+    filename = str(tmpdir.join('spack.yaml'))
+    viewdir = str(tmpdir.join('view'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - compilers: ['%%gcc', '%%clang']
+  specs:
+    - matrix:
+        - [$packages]
+        - [$compilers]
+
+  view:
+    combinatorial:
+      root: %s
+      select: ['%%gcc']
+      exclude: [callpath]
+      link_type: symlink
+      link: 'roots'
+      projections:
+        'all': '{name}/{version}-{compiler.name}'""" % viewdir)
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            install()
+
+        test = ev.read('test')
+
+        for spec in test._get_environment_specs():
+            view_path = os.path.join(viewdir, spec.name, '%s-%s' %
+                                     (spec.version, spec.compiler.name))
+            if spec in test.roots() and (spec.satisfies('%gcc') and
+                                         not spec.satisfies('callpath')):
+                assert os.path.exists(view_path)
+
+                file_to_test = os.path.join(view_path, spec.name)
+
+                assert os.path.isfile(file_to_test)
+                assert os.path.islink(file_to_test)
+            else:
+                assert not os.path.exists(view_path)
+
+
+def test_view_link_type_hardlink(tmpdir, mock_fetch, mock_packages, mock_archive,
+                                 install_mockery):
+    filename = str(tmpdir.join('spack.yaml'))
+    viewdir = str(tmpdir.join('view'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - compilers: ['%%gcc', '%%clang']
+  specs:
+    - matrix:
+        - [$packages]
+        - [$compilers]
+
+  view:
+    combinatorial:
+      root: %s
+      select: ['%%gcc']
+      exclude: [callpath]
+      link_type: hardlink
+      link: 'roots'
+      projections:
+        'all': '{name}/{version}-{compiler.name}'""" % viewdir)
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            install()
+
+        test = ev.read('test')
+        view_descriptor = test.views['combinatorial']
+        view = view_descriptor.view()
+
+        assert os.path.exists(view._root)
+        assert not os.path.islink(view._root)
+
+        for spec in test._get_environment_specs():
+            view_path = os.path.join(viewdir, spec.name, '%s-%s' %
+                                     (spec.version, spec.compiler.name))
+            if spec in test.roots() and (spec.satisfies('%gcc') and
+                                         not spec.satisfies('callpath')):
+                assert os.path.exists(view_path)
+
+                file_to_test = os.path.join(view_path, spec.name)
+
+                assert os.path.isfile(file_to_test)
+                assert not os.path.islink(file_to_test)
+            else:
+                assert not os.path.exists(view_path)
+
+
 def test_view_link_type_copy(tmpdir, mock_fetch, mock_packages, mock_archive,
                              install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -1978,16 +2075,25 @@ env:
             install()
 
         test = ev.read('test')
+        view_descriptor = test.views['combinatorial']
+        view = view_descriptor.view()
+
+        assert os.path.exists(view._root)
+        assert not os.path.islink(view._root)
+
         for spec in test._get_environment_specs():
+            view_path = os.path.join(viewdir, spec.name, '%s-%s' %
+                                     (spec.version, spec.compiler.name))
             if spec in test.roots() and (spec.satisfies('%gcc') and
                                          not spec.satisfies('callpath')):
-                assert os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
-                                 (spec.version, spec.compiler.name)))
+                assert os.path.exists(view_path)
+
+                file_to_test = os.path.join(view_path, spec.name)
+
+                assert os.path.isfile(file_to_test)
+                assert not os.path.islink(file_to_test)
             else:
-                assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
-                                 (spec.version, spec.compiler.name)))
+                assert not os.path.exists(view_path)
 
 
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,

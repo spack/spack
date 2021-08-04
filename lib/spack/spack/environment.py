@@ -38,7 +38,6 @@ from spack.filesystem_view import (
     YamlFilesystemView,
     inverse_view_func_parser,
     view_func_parser,
-    view_symlink,
 )
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
@@ -509,7 +508,7 @@ class ViewDescriptor(object):
                               d.get('select', []),
                               d.get('exclude', []),
                               d.get('link', default_view_link),
-                              d.get('link_type', view_symlink))
+                              d.get('link_type', 'symlink'))
 
     @property
     def _current_root(self):
