@@ -949,9 +949,7 @@ def build_tarball(spec, mirror, force=False, rel=False, unsigned=False,
             raise NoOverwriteException(url_util.format(push_spackfile_path))
 
     if web_util.url_exists(fetch_spackfile_path):
-        if force:
-            web_util.remove_url(fetch_spackfile_path)
-        else:
+        if not force:
             raise NoOverwriteException(url_util.format(fetch_spackfile_path))
 
     # need to copy the spec file so the build cache can be downloaded
