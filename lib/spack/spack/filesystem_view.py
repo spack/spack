@@ -104,7 +104,7 @@ def view_func_parser(parsed_name):
         return view_hardlink
     elif parsed_name in ("copy", "relocate"):
         return view_copy
-    elif parsed_name == "symlink":
+    elif parsed_name in ("add", "symlink", "soft"):
         return view_symlink
     else:
         raise ValueError("invalid link type for view: '%s'" % parsed_name)
