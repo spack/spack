@@ -29,6 +29,10 @@ class Bzip2(Package, SourcewarePackage):
     variant("pic", default=False, description="Build static libraries with PIC")
     variant("debug", default=False, description="Enable debug symbols and disable optimization")
 
+    # makefile.msc doesn't provide a shared recipe
+    conflicts('+shared', when='platform=windows', 
+              msg='Windows makefile does not have a recipe for shared builds, use ~shared.')
+
     # depends_on('diffutils', type='build')
 
     @classmethod
