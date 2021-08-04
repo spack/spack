@@ -254,13 +254,7 @@ echo "Creating a mock environment"
 spack env create spack_test_env
 
 # ensure that we uninstall b on exit
-function spt_cleanup
-
-    set trapped_error false
-    if test $status -ne 0
-        set trapped_error true
-    end
-
+function spt_cleanup -p %self
     echo "Removing test environment before exiting."
     spack env deactivate 2>&1 > /dev/null
     spack env rm -y spack_test_env
@@ -273,29 +267,8 @@ function spt_cleanup
     echo "$__spt_success tests succeeded."
     echo "$__spt_errors tests failed."
 
-    if test "$trapped_error" = false
-        echo "Exited due to an error."
-    end
-
-    if test "$__spt_errors" -eq 0
-        if test "$trapped_error" = false
-            pass
-            exit 0
-        else
-            fail
-            exit 1
-        end
-    else
-        fail
-        exit 1
-    end
-
     delete_testing_global
 end
-
-trap spt_cleanup EXIT
-
-
 
 # -----------------------------------------------------------------------
 # Test all spack commands with special env support
@@ -398,3 +371,5 @@ is_not_set SPACK_ENV
 # despacktivate
 # is_not_set SPACK_ENV
 # is_not_set SPACK_OLD_PS1
+
+test "$__spt_errors" -eq 0
