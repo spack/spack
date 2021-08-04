@@ -338,11 +338,11 @@ def chmod(entry, perms, recursive=False):
 
     chmod_f = _chmod_one_s if isinstance(perms, str) else _chmod_one_o
 
+    chmod_f(entry, perms)
     if recursive:
-        for root, _, files in os.walk(entry):
-            chmod_f(entry, perms)
-    else:
-        chmod_f(entry, perms)
+        for root, dirs, files in os.walk(entry):
+            for entry in itertools.chain(dirs, files):
+                chmod_f(entry, perms)
 
 
 def _chmod_one_o(entry, perms):
