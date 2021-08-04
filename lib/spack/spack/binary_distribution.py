@@ -936,23 +936,23 @@ def build_tarball(spec, mirror, force=False, rel=False, unsigned=False,
         cache_prefix, tarball_path_name(spec, '.spack'))
 
     outdir = mirror.push_url
-    remote_spackfile_path = url_util.join(
+    fetch_spackfile_path = url_util.join(
         mirror.fetch_url, os.path.relpath(spackfile_path, tmpdir))
-    local_spackfile_path = url_util.join(
+    push_spackfile_path = url_util.join(
         outdir, os.path.relpath(spackfile_path, tmpdir))
 
     mkdirp(tarfile_dir)
-    if web_util.url_exists(local_spackfile_path):
+    if web_util.url_exists(push_spackfile_path):
         if force:
-            web_util.remove_url(local_spackfile_path)
+            web_util.remove_url(push_spackfile_path)
         else:
-            raise NoOverwriteException(url_util.format(local_spackfile_path))
+            raise NoOverwriteException(url_util.format(push_spackfile_path))
 
-    if web_util.url_exists(remote_spackfile_path):
+    if web_util.url_exists(fetch_spackfile_path):
         if force:
-            web_util.remove_url(remote_spackfile_path)
+            web_util.remove_url(fetch_spackfile_path)
         else:
-            raise NoOverwriteException(url_util.format(remote_spackfile_path))
+            raise NoOverwriteException(url_util.format(fetch_spackfile_path))
 
     # need to copy the spec file so the build cache can be downloaded
     # without concretizing with the current spack packages
@@ -1055,12 +1055,12 @@ def build_tarball(spec, mirror, force=False, rel=False, unsigned=False,
         os.remove('%s.asc' % specfile_path)
 
     web_util.push_to_url(
-        spackfile_path, remote_spackfile_path, keep_original=False)
+        spackfile_path, fetch_spackfile_path, keep_original=False)
     web_util.push_to_url(
         specfile_path, remote_specfile_path, keep_original=False)
 
     tty.debug('Buildcache for "{0}" written to \n {1}'
-              .format(spec, remote_spackfile_path))
+              .format(spec, fetch_spackfile_path))
 
     try:
         # push the key to the build cache's _pgp directory so it can be
