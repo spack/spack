@@ -42,6 +42,9 @@ class Rocfft(CMakePackage):
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
+    # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+    conflicts('^cmake@3.21.0:', msg='ROCMClang is poorly supported in CMake 3.21')
+
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
