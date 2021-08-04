@@ -9,8 +9,8 @@ import os.path
 import pytest
 
 import spack.binary_distribution
-import spack.spec
 import spack.mirror
+import spack.spec
 
 install = spack.main.SpackCommand('install')
 
