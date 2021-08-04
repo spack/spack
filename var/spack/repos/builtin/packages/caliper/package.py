@@ -162,18 +162,17 @@ class Caliper(CMakePackage, CudaPackage):
         exe = 'cxx-example'
 
         self.run_test(exe='gcc',
-                      options=['{0}'.format(join_path(self.prefix, '.spack', 'test', 'examples', 'apps', 'cxx-example.cpp')),
+                      options=['{0}'.format(join_path(test_dir, 'cxx-example.cpp')),
                                '-L{0}'.format(join_path(self.prefix, 'lib64')),
                                '-I{0}'.format(join_path(self.prefix, 'include')),
-                               '-std=c++11', '-o', '-lcaliper', '-lstdc++', exe],
+                               '-std=c++11', '-lcaliper', '-lstdc++', '-o', exe],
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)
 
-        """self.run_test(exe,
+        self.run_test(exe,
                       purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)"""
+                      work_dir=test_dir)
 
     def test(self):
-        print('{0}'.format(self.test_suite.current_test_cache_dir))
         print("Running caliper example test")
         self.run_cxx_example_test()
