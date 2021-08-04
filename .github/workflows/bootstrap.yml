@@ -115,3 +115,23 @@ jobs:
           spack external find --not-buildable cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
+
+  macos-clingo-binaries:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ['3.5', '3.6', '3.7', '3.8', '3.9']
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install tree
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Bootstrap clingo
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust spack-install
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
