@@ -174,7 +174,7 @@ jobs:
         ProgressPreference: SilentlyContinue
     - uses: actions/download-artifact@v2
       with:
-        name: Windows MSI installer
+        name: Windows Spack Installer
         path: ${{ env.spack_installer }}
     - name: Execute MSI
       run: |
