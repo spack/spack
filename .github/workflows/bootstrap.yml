@@ -135,3 +135,25 @@ jobs:
           spack bootstrap untrust spack-install
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
+
+
+  ubuntu-clingo-binaries:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9']
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+      - name: Bootstrap clingo
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust spack-install
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
