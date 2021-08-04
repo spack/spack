@@ -15,8 +15,7 @@ bootstrap:
       Buildcache generated from a public workflow using Github Actions.
       The sha256 checksum of binaries is checked before installation.
     info:
-      # FIXME: Substitute with a public url
-      url: file:///home/culpo/production/spack/mirrors/clingo
+      url: https://mirror.spack.io/bootstrap/github-actions/v0.1
       homepage: https://github.com/alalazo/spack-bootstrap-mirrors
       releases: https://github.com/alalazo/spack-bootstrap-mirrors/releases
   # This method is just Spack bootstrapping the software it needs from sources.
@@ -27,5 +26,7 @@ bootstrap:
     description: |
       Specs built from sources by Spack. May take a long time.
   trusted:
-    # By default the only method we trust is Spack bootstrapping software from sources
+    # By default we trust bootstrapping from sources and from binaries
+    # produced on Github via the workflow
+    github-actions: true
     spack-install: true

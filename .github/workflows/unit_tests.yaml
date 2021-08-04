@@ -159,13 +159,13 @@ jobs:
           mkdir -p ${KCOV_ROOT}/build
           cd ${KCOV_ROOT}/build && cmake -Wno-dev ${KCOV_ROOT}/kcov-${KCOV_VERSION} && cd -
           make -C ${KCOV_ROOT}/build && sudo  make -C ${KCOV_ROOT}/build install
-    - name: Bootstrap clingo from sources
+    - name: Bootstrap clingo
       if: ${{ matrix.concretizer == 'clingo' }}
       env:
           SPACK_PYTHON: python
       run: |
           . share/spack/setup-env.sh
-          spack external find --not-buildable cmake bison
+          spack bootstrap untrust spack-install
           spack -v solve zlib
     - name: Run unit tests (full suite with coverage)
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
