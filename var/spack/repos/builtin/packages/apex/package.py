@@ -12,12 +12,13 @@ class Apex(CMakePackage):
     """Autonomic Performance Environment for eXascale (APEX)."""
 
     maintainers = ['khuck']
-    homepage = "https://github.com/khuck/xpress-apex"
-    url      = "https://github.com/khuck/xpress-apex/archive/v2.3.1.tar.gz"
-    git      = "https://github.com/khuck/xpress-apex"
+    homepage = "https://uo-oaciss.github.io/apex"
+    url      = "https://github.com/UO-OACISS/apex/archive/v2.3.1.tar.gz"
+    git      = "https://github.com/UO-OACISS/apex"
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('2.4.1', sha256='055d09dd36c529ebd3bab4defbec4ad1d227c004a291faf26e77e4ab79ce470c')
     version('2.4.0', sha256='15d8957da7b37d2c684a6f0f32aef65b0b26be6558da17963cf71f3fd3cfdf2f')
     version('2.3.2', sha256='acf37c024a2283cafbf206f508929208b62c8f800af22ad7c74c570863a31bb4')
     version('2.3.1', sha256='86bf6933f2c53531fcb24cda9fc7dc9919909bed54740d1e0bc3e7ce6ed78091')
