@@ -10,7 +10,7 @@ from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
 
-class Openblas(CMakePackage):
+class Openblas(MakefilePackage, CMakePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
@@ -413,10 +413,9 @@ class Openblas(CMakePackage):
         if self.spec.satisfies("+bignuma"):
             make_defs.append("BIGNUMA=1")
 
-    def cmake_defs(self):
+    def cmake_args(self):
         make_defs = []
-
-        make_defs.extend(['-DDYNAMIC_ARCH:BOOL=TRUE', '-DUSE_THREAD:BOOL=FALSE'])
+        make_defs.extend(['-DUSE_THREAD:BOOL=FALSE', '-DTARGET:STRING=GENERIC'])
         return make_defs
 
     @property
