@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import sys
 
 from spack.package import *
 
@@ -27,9 +28,6 @@ class Bzip2(Package, SourcewarePackage):
     variant("shared", default=True, description="Enables the build of shared libraries.")
     variant("pic", default=False, description="Build static libraries with PIC")
     variant("debug", default=False, description="Enable debug symbols and disable optimization")
-
-    # makefile.msc doesn't provide a shared recipe
-    conflicts('+shared', when='platform=windows')
 
     # depends_on('diffutils', type='build')
 
@@ -143,7 +141,9 @@ class Bzip2(Package, SourcewarePackage):
                 for libname in (lib, lib1, lib2):
                     symlink(lib3, libname)
 
-        with working_dir(prefix.bin):
-            force_remove("bunzip2", "bzcat")
-            symlink("bzip2", "bunzip2")
-            symlink("bzip2", "bzcat")
+        # These files won't be in a Windows installation
+        if sys.platform != 'win32':
+            with working_dir(prefix.bin):
+                force_remove('bunzip2', 'bzcat')
+                symlink('bzip2', 'bunzip2')
+                symlink('bzip2', 'bzcat')
