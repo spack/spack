@@ -16,6 +16,25 @@ section = "admin"
 level = "long"
 
 
+def txt_to_rtf(file_path):
+    rtf_header = """{{\\rtf1\\ansi\\deff0\\nouicompat
+    {{\\fonttbl{{\\f0\\fnil\\fcharset0 Courier New;}}}}
+    {{\\colortbl ;\\red0\\green0\\blue255;}}
+    {{\\*\\generator Riched20 10.0.19041}}\\viewkind4\\uc1
+    \\f0\\fs22\\lang1033
+    {}
+    }}
+    """
+
+    def line_to_rtf(str):
+        return str.replace("\n", "\\par")
+    contents = ""
+    with open(file_path, "r+") as f:
+        for line in f.readlines():
+            contents += line_to_rtf(line)
+    return rtf_header.format(contents)
+
+
 def setup_parser(subparser):
     spack_source_group = subparser.add_mutually_exclusive_group(required=True)
     spack_source_group.add_argument(
@@ -67,7 +86,13 @@ def make_installer(parser, args):
         source_dir = os.path.join(here, "installer")
         posix_root = spack.paths.spack_root.replace('\\', '/')
         spack_license = posixpath.join(posix_root, "LICENSE-APACHE")
+        rtf_spack_license = txt_to_rtf(spack_license)
+        spack_license = posixpath.join(source_dir, "LICENSE.rtf")
 
+        with open(spack_license, 'w') as rtf_license:
+            written = rtf_license.write(rtf_spack_license)
+            if written == 0:
+                raise RuntimeError("Failed to generate properly formatted license file")
         spack_logo = posixpath.join(posix_root,
                                     "share/spack/logo/favicon.ico")
 
