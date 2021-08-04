@@ -1543,11 +1543,11 @@ Step 1: Install prerequisites
 To use Spack on Windows, you will need the following packages:
 
 * Microsoft Visual Studio
-* Intel Fortran
+* Intel Fortran (needed for some packages)
 * Python 
 * Git
-* Perl
-* NASM
+* Perl (needed for some packages)
+* NASM (needed for some packages)
 * CMake
 
 """""""""""""""""""""""
@@ -1592,6 +1592,10 @@ A bash console and GUI can be downloaded from https://git-scm.com/downloads.
 If you are unfamiliar with Git, there are a myriad of resources online to help
 guide you through checking out repositories and switching development branches.
 
+When given the option of adjusting your ``PATH``, choose the ``Git from the
+command line and also from 3rd-party software`` option. This will automatically
+update your ``PATH`` variable to include the ``git`` command.
+
 """"
 Perl
 """"
@@ -1627,30 +1631,18 @@ clone the Spack repo, hosted at https://github.com/spack/spack.git.
 
 The files and scripts used for Windows installation are on the
 features/windows-support branch; ``cd`` into the repo and use 
-``git checkout`` to switch to it. Then navigate to 
-``bin`` and copy the ``scripts`` directory and ``spack_cmd.bat`` up to 
-the top-level ``spack_install`` directory.
-
-Your file structure should look like this after following the above
-steps:
-
-.. code-block:: console
-
-   spack_install
-       |--------spack
-       |--------scripts
-       |--------spack_cmd.bat
-
+``git checkout`` to switch to it. 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 3: Run and configure Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To use Spack, run ``spack_cmd.bat`` (you may need to Run as Administrator).  This will provide
-a Windows command prompt with an environment properly set up with Spack and its prerequisites.
-If you receive a warning message that Python is not in your ``PATH`` (which may happen if you
-installed Python from the website and not the Windows Store) add the location of the Python executable
-to your ``PATH`` now.
+To use Spack, run ``bin\spack_cmd.bat`` (you may need to Run as Administrator) from the top-level spack
+directory.  This will providea Windows command prompt with an environment properly set up with Spack
+and its prerequisites. If you receive a warning message that Python is not in your ``PATH``
+(which may happen if you installed Python from the website and not the Windows Store) add the location
+of the Python executable to your ``PATH`` now. You can permanently add Python to your ``PATH`` variable
+by using the ``Edit the system environment variables`` utility in Windows Control Panel.
 
 To configure Spack, first run the following command inside the Spack console:
 
@@ -1658,7 +1650,7 @@ To configure Spack, first run the following command inside the Spack console:
 
    spack compiler find
 
-This creates a ``.spack`` directory in our home directory, along with a windows subdirectory
+This creates a ``.spack`` directory in our home directory, along with a ``windows`` subdirectory
 containing a ``compilers.yaml`` file. On a fresh Windows install with the above packages
 installed, this command should only detect Microsoft Visual Studio and the Intel Fortran
 compiler will be integrated within the first version of MSVC present in the ``compilers.yaml``
@@ -1666,14 +1658,28 @@ output.
 
 Spack provides a default ``config.yaml`` file for Windows that it will use unless overridden.
 This file is located at ``etc\spack\defaults\windows\config.yaml``. You can read more on how to
-do this and write your own configuration files in the Configuration Files section of our
+do this and write your own configuration files in the :ref:`Configuration Files<configuration>` section of our
 documentation. If you do this, pay particular attention to the ``build_stage`` block of the file
 as this specifies the directory that will temporarily hold the source code for the packages to
 be installed. This path name must be sufficiently short for compliance with cmd, otherwise you
 will see build errors during installation (particularly with CMake) tied to long path names.
 
-For the ``packages.yaml`` file, we need to direct spack towards the CMake and Ninja installations
-we set up with Visual Studio. Therefore, your ``packages.yaml`` file will look something
+For the ``packages.yaml`` file, there are two options. The first
+and easiest choice is to use Spack to find installation on your system. In
+the Spack terminal, run the following commands:
+
+.. code-block:: console
+
+   spack external find cmake
+   spack external find ninja
+
+The ``spack external find <name>`` will find executables on your system
+with the same name given. The command will store the items found in
+``packages.yaml`` in the ``.spack\`` directory.
+
+Assuming that the command found CMake and Ninja executables in the previous
+step, continue to Step 4. If no executables were found, we need to manually direct spack towards the CMake
+and Ninja installations we set up with Visual Studio. Therefore, your ``packages.yaml`` file will look something
 like this, with possibly slight variants in the paths to CMake and Ninja:
 
 .. code-block:: yaml
@@ -1692,7 +1698,7 @@ like this, with possibly slight variants in the paths to CMake and Ninja:
 
 You can also use an separate installation of CMake if you have one and prefer
 to use it. If you don't have a path to Ninja analogous to the above, then you can
-obtain it by running the Visual Studio Insaller and following the instructions
+obtain it by running the Visual Studio Installer and following the instructions
 at the start of this section. Also note that .yaml files use spaces for indentation
 and not tabs, so ensure that this is the case when editing one directly.
 
@@ -1718,6 +1724,9 @@ packages known to work on Windows:
 * abseil-cpp
 * cpuinfo
 * glm
+* netlib-lapack (requires Intel Fortran)
+* openssl
+* zlib
 
 ^^^^^^^^^^^^^^
 For developers
