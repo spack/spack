@@ -8,6 +8,7 @@ import os.path
 import shutil
 
 import pytest
+
 import spack.binary_distribution
 import spack.mirror
 import spack.spec
