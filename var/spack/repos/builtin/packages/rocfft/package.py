@@ -42,9 +42,6 @@ class Rocfft(CMakePackage):
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
-    # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
-    conflicts('^cmake@3.21.0:', msg='ROCMClang is poorly supported in CMake 3.21')
-
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
@@ -65,5 +62,9 @@ class Rocfft(CMakePackage):
 
         if tgt_sram[0] != 'none' and '@3.9.0:' in self.spec:
             args.append(self.define('AMDGPU_TARGETS_SRAM_ECC', ";".join(tgt_sram)))
+
+        # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

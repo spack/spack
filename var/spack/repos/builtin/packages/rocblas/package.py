@@ -74,9 +74,6 @@ class Rocblas(CMakePackage):
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch('0001-Fix-compilation-error-with-StringRef-to-basic-string.patch', when='@:3.8')
 
-    # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
-    conflicts('^cmake@3.21.0:', msg='ROCMClang is poorly supported in CMake 3.21')
-
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
@@ -108,5 +105,9 @@ class Rocblas(CMakePackage):
             if arch == 'gfx906' or arch == 'gfx908':
                 arch = arch + ':xnack-'
         args.append(self.define('Tensile_ARCHITECTURE', arch))
+
+        # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args
