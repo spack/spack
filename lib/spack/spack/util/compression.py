@@ -61,6 +61,7 @@ def _unzip(archive_file):
 
 def decompressor_for(path, extension=None):
     """Get the appropriate decompressor for a path."""
+    print(extension)
     if ((extension and re.match(r'\.?zip$', extension)) or
             path.endswith('.zip')):
         return _unzip
