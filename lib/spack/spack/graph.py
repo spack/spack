@@ -49,7 +49,6 @@ from llnl.util.tty.color import ColorStream
 
 from spack.dependency import all_deptypes, canonical_deptype
 
-
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
 

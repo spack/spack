@@ -7,8 +7,8 @@
 
 import ordereddict_backport
 
-import spack.util.naming
 import spack.provider_index
+import spack.util.naming
 from spack.dependency import Dependency
 from spack.spec import Spec
 from spack.version import Version

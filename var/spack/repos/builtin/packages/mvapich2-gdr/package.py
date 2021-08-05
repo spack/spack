@@ -19,7 +19,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     homepage = 'http://mvapich.cse.ohio-state.edu'
     url      = 'http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2-gdr/mvapich2-gdr-2.3.5.tar.gz'
 
-    maintainers = ['apreifsteck', 'nithintsk', 'harisubramoni']
+    maintainers = ['ndcontini', 'natshineman', 'harisubramoni']
 
     version('2.3.5', sha256='bcfe8197875405af0ddbf6462e585efc21668108bec9b481fe53616ad36a98b4')
     version('2.3.4', sha256='ed78101e6bb807e979213006ee5f20ff466369b01f96b6d1cf0c471baf7e35aa')
@@ -92,8 +92,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     depends_on('libxml2@2.9.10')
     depends_on('cuda@9.2.88:11.1.1', when='+cuda')
     depends_on('pmix@3.1.3', when='pmi_version=pmix')
-
-    depends_on('hip@3.9.0', when='+rocm')
+    depends_on('hip@3.9.0:4.0.0', when='+rocm')
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'

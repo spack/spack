@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 import hashlib
-from typing import Dict, Callable, Any  # novm
+import sys
+from typing import Any, Callable, Dict  # novm
 
 import llnl.util.tty as tty
 

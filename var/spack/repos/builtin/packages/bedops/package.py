@@ -13,8 +13,10 @@ class Bedops(MakefilePackage):
     arbitrary scale."""
 
     homepage = "https://bedops.readthedocs.io"
-    url      = "https://github.com/bedops/bedops/archive/v2.4.30.tar.gz"
+    url      = "https://github.com/bedops/bedops/archive/v2.4.39.tar.gz"
 
+    version('2.4.40', sha256='0670f9ce2da4b68ab13f82c023c84509c7fce5aeb5df980c385fac76eabed4fb')
+    version('2.4.39', sha256='f8bae10c6e1ccfb873be13446c67fc3a54658515fb5071663883f788fc0e4912')
     version('2.4.35', sha256='da0265cf55ef5094834318f1ea4763d7a3ce52a6900e74f532dd7d3088c191fa')
     version('2.4.34', sha256='533a62a403130c048d3378e6a975b73ea88d156d4869556a6b6f58d90c52ed95')
     version('2.4.30', sha256='218e0e367aa79747b2f90341d640776eea17befc0fdc35b0cec3c6184098d462')

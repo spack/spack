@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from llnl.util.filesystem import join_path
-from spack import *
 import os
+
+from llnl.util.filesystem import join_path
+
+from spack import *
 
 
 class Lua(Package):
@@ -33,6 +35,8 @@ class Lua(Package):
             description='Builds a shared version of the library')
 
     extendable = True
+
+    provides('lua-lang')
 
     depends_on('ncurses+termlib')
     depends_on('readline')

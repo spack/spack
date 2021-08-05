@@ -3,13 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import re
+
 import llnl.util.tty as tty
 
 from spack import *
-import spack.architecture
-
-import os
-import re
 
 
 class Openssl(Package):   # Uses Fake Autotools, should subclass Package
@@ -115,7 +114,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             options.append('no-krb5')
         # clang does not support the .arch directive in assembly files.
         if ('clang' in self.compiler.cc or 'nvc' in self.compiler.cc) and \
-           'aarch64' in spack.architecture.sys_type():
+           spec.target.family == 'aarch64':
             options.append('no-asm')
 
         # The default glibc provided by CentOS 7 does not provide proper

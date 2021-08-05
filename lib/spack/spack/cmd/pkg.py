@@ -9,8 +9,8 @@ import os
 import re
 
 import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
 from llnl.util.filesystem import working_dir
+from llnl.util.tty.colify import colify
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments

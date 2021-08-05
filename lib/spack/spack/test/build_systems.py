@@ -5,14 +5,15 @@
 
 import glob
 import os
+
 import pytest
 
 import llnl.util.filesystem as fs
+
 import spack.repo
 from spack.build_environment import get_std_cmake_args, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
-
 
 DATA_PATH = os.path.join(spack.paths.test_path, 'data')
 

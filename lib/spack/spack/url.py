@@ -27,6 +27,7 @@ it's never been told about that version before.
 """
 import os
 import re
+
 from six import StringIO
 from six.moves.urllib.parse import urlsplit, urlunsplit
 
@@ -416,11 +417,11 @@ def parse_version_offset(path):
         path (str): The filename or URL for the package
 
     Returns:
-        tuple of (Version, int, int, int, str): A tuple containing:
+        tuple: A tuple containing:
             version of the package,
             first index of version,
             length of version string,
-            the index of the matching regex
+            the index of the matching regex,
             the matching regex
 
     Raises:
@@ -631,11 +632,11 @@ def parse_name_offset(path, v=None):
         v (str): The version of the package
 
     Returns:
-        tuple of (str, int, int, int, str): A tuple containing:
+        tuple: A tuple containing:
             name of the package,
             first index of name,
             length of name,
-            the index of the matching regex
+            the index of the matching regex,
             the matching regex
 
     Raises:
@@ -773,9 +774,7 @@ def parse_name_and_version(path):
         path (str): The filename or URL for the package
 
     Returns:
-        tuple of (str, Version)A tuple containing:
-            The name of the package
-            The version of the package
+        tuple: a tuple containing the package (name, version)
 
     Raises:
         UndetectableVersionError: If the URL does not match any regexes

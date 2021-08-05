@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 
 
@@ -52,8 +53,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             description='Use OpenMP for threading in the BLAS library')
     variant('int64_blas', default=False,
             description='Use 64bit integers for BLAS.')
-    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl'),
-            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL')
+    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl', 'libsci'),
+            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL/LibSci')
 
     conflicts('~cuda', when='+nvshmem')
 
@@ -99,6 +100,9 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('essl +ilp64', when='blas=essl +int64_blas')
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
     depends_on('netlib-lapack +external-blas', when='blas=essl')
+
+    depends_on('cray-libsci', when='blas=libsci')
+    depends_on('cray-libsci +openmp', when='blas=libsci +openmp_blas')
 
     # Distconv builds require cuda
     conflicts('~cuda', when='+distconv')
@@ -158,8 +162,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 args.append('-DCMAKE_CUDA_STANDARD=14')
             archs = spec.variants['cuda_arch'].value
             if archs != 'none':
-                arch_str = ",".join(archs)
-            args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+                arch_str = ";".join(archs)
+                args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
 
         if '+cuda' in spec or '+distconv' in spec:
             args.append('-DcuDNN_DIR={0}'.format(

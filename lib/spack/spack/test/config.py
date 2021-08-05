@@ -3,29 +3,28 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import collections
 import getpass
+import os
 import tempfile
-from six import StringIO
-
-from llnl.util.filesystem import touch, mkdirp
 
 import pytest
+from six import StringIO
 
-import spack.paths
+from llnl.util.filesystem import mkdirp, touch
+
 import spack.config
-import spack.main
 import spack.environment
+import spack.main
+import spack.paths
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
-import spack.schema.packages
 import spack.schema.mirrors
+import spack.schema.packages
 import spack.schema.repos
-import spack.util.spack_yaml as syaml
 import spack.util.path as spack_path
-
+import spack.util.spack_yaml as syaml
 
 # sample config data
 config_low = {

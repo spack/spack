@@ -5,6 +5,7 @@
 import contextlib
 import os
 import sys
+
 try:
     import sysconfig  # novm
 except ImportError:
@@ -24,6 +25,7 @@ import spack.spec
 import spack.store
 import spack.user_environment as uenv
 import spack.util.executable
+import spack.util.path
 from spack.util.environment import EnvironmentModifications
 
 
@@ -90,13 +92,14 @@ def make_module_available(module, spec=None, install=False):
     installed_specs = spack.store.db.query(spec, installed=True)
 
     for ispec in installed_specs:
-        # TODO: make sure run-environment is appropriate
-        module_path = os.path.join(ispec.prefix,
-                                   ispec['python'].package.site_packages_dir)
-        module_path_64 = module_path.replace('/lib/', '/lib64/')
+        lib_spd = ispec['python'].package.default_site_packages_dir
+        lib64_spd = lib_spd.replace('lib/', 'lib64/')
+        module_paths = [
+            os.path.join(ispec.prefix, lib_spd),
+            os.path.join(ispec.prefix, lib64_spd)
+        ]
         try:
-            sys.path.append(module_path)
-            sys.path.append(module_path_64)
+            sys.path.extend(module_paths)
             __import__(module)
             return
         except ImportError:
@@ -118,12 +121,14 @@ def make_module_available(module, spec=None, install=False):
         spec.concretize()
     spec.package.do_install()
 
-    module_path = os.path.join(spec.prefix,
-                               spec['python'].package.site_packages_dir)
-    module_path_64 = module_path.replace('/lib/', '/lib64/')
+    lib_spd = spec['python'].package.default_site_packages_dir
+    lib64_spd = lib_spd.replace('lib/', 'lib64/')
+    module_paths = [
+        os.path.join(spec.prefix, lib_spd),
+        os.path.join(spec.prefix, lib64_spd)
+    ]
     try:
-        sys.path.append(module_path)
-        sys.path.append(module_path_64)
+        sys.path.extend(module_paths)
         __import__(module)
         return
     except ImportError:
@@ -136,7 +141,7 @@ def get_executable(exe, spec=None, install=False):
 
     Args:
         exe (str): needed executable name
-        spec (Spec or str): spec to search for exe in (default exe)
+        spec (spack.spec.Spec or str): spec to search for exe in (default exe)
         install (bool): install spec if not available
 
     When ``install`` is True, Spack will use the python used to run Spack as an
@@ -215,15 +220,33 @@ def _bootstrap_config_scopes():
 
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
+    bootstrap_store_path = store_path()
     with spack.architecture.use_platform(spack.architecture.real_platform()):
         with spack.repo.use_repositories(spack.paths.packages_path):
-            with spack.store.use_store(spack.paths.user_bootstrap_store):
+            with spack.store.use_store(bootstrap_store_path):
                 # Default configuration scopes excluding command line
                 # and builtin but accounting for platform specific scopes
                 config_scopes = _bootstrap_config_scopes()
                 with spack.config.use_configuration(*config_scopes):
                     with spack_python_interpreter():
                         yield
+
+
+def store_path():
+    """Path to the store used for bootstrapped software"""
+    enabled = spack.config.get('bootstrap:enable', True)
+    if not enabled:
+        msg = ('bootstrapping is currently disabled. '
+               'Use "spack bootstrap enable" to enable it')
+        raise RuntimeError(msg)
+
+    bootstrap_root_path = spack.config.get(
+        'bootstrap:root', spack.paths.user_bootstrap_path
+    )
+    bootstrap_store_path = spack.util.path.canonicalize_path(
+        os.path.join(bootstrap_root_path, 'store')
+    )
+    return bootstrap_store_path
 
 
 def clingo_root_spec():

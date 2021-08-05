@@ -3,13 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import os
 import fnmatch
 import glob
+import os
 import platform
 import sys
+
 from llnl.util.filesystem import join_path
+
+from spack import *
 
 
 class Tau(Package):
@@ -114,6 +116,10 @@ class Tau(Package):
     conflicts('+sqlite', when='@:2.29.1')
 
     patch('unwind.patch', when="@2.29.0")
+
+    filter_compiler_wrappers('Makefile', relative_root='include')
+    filter_compiler_wrappers('Makefile.tau*', relative_root='lib')
+    filter_compiler_wrappers('Makefile.tau*', relative_root='lib64')
 
     def set_compiler_options(self, spec):
 
@@ -305,7 +311,6 @@ class Tau(Package):
         self.link_tau_arch_dirs()
         # TAU may capture Spack's internal compiler wrapper. Replace
         # it with the correct compiler.
-        self.fix_tau_compilers()
 
     def link_tau_arch_dirs(self):
         for subdir in os.listdir(self.prefix):
@@ -314,22 +319,6 @@ class Tau(Package):
                 dest = join_path(self.prefix, d)
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
-
-    def fix_tau_compilers(self):
-        filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' + self.compiler.cc,
-                    self.prefix + '/include/Makefile', backup=False,
-                    string=True)
-        filter_file('FULL_CXX=' + spack_cxx, 'FULL_CXX=' +
-                    self.compiler.cxx, self.prefix + '/include/Makefile',
-                    backup=False, string=True)
-        for makefile in os.listdir(self.prefix.lib):
-            if makefile.startswith('Makefile.tau'):
-                filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' +
-                            self.compiler.cc, self.prefix.lib + "/" +
-                            makefile, backup=False, string=True)
-                filter_file('FULL_CXX=' + spack_cxx, 'FULL_CXX=' +
-                            self.compiler.cxx, self.prefix.lib +
-                            "/" + makefile, backup=False, string=True)
 
     def setup_run_environment(self, env):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
@@ -342,3 +331,36 @@ class Tau(Package):
         # in the latter case.
         if files:
             env.set('TAU_MAKEFILE', files[0])
+
+    matmult_test = join_path('examples', 'mm')
+
+    @run_after('install')
+    def setup_build_tests(self):
+        """Copy the build test files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(self.matmult_test)
+
+    def _run_matmult_test(self):
+        mm_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
+        self.run_test('make', ['all'], [], 0, False,
+                      'Instrument and build matrix multiplication test code',
+                      False, mm_dir)
+        test_exe = 'matmult'
+        if '+mpi' in self.spec:
+            test_args = ['-n', '4', test_exe]
+            mpiexe_list = ['mpirun', 'mpiexec', 'srun']
+            for mpiexe in mpiexe_list:
+                if which(mpiexe) is not None:
+                    self.run_test(mpiexe, test_args, [], 0, False,
+                                  'Run matmult test with mpi', False, mm_dir)
+                    break
+        else:
+            self.run_test(test_exe, [], [], 0, False,
+                          'Run sequential matmult test', False, mm_dir)
+        self.run_test('pprof', [], [], 0, False,
+                      'Run pprof profile analysis tool on profile output',
+                      False, mm_dir)
+
+    def test(self):
+        # Run mm test program pulled from the build
+        self._run_matmult_test()
