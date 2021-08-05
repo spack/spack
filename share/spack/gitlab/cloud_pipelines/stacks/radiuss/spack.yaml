@@ -23,12 +23,12 @@ spack:
     
     # Note skipping spot since no spack package for it
     - radiuss:
-      #- ascent  # ^conduit@0.6.0
-      #- axom
+      - ascent  # ^conduit@0.6.0
+      - axom
       - blt
       - caliper
       #- care
-      #- chai
+      - chai
       - conduit  # ^hdf5+shared
       - flux-core
       #- flux-sched
@@ -41,11 +41,11 @@ spack:
       #- py-maestrowf
       #- py-merlin
       #- py-shroud
-      #- raja
+      - raja
       #- samrai
       - scr
-      #- sundials
-      #- umpire ~openmp
+      - sundials
+      - umpire #~openmp
       #- visit   # ^mesa-glu@9.0.0
       - xbraid
       - zfp
