@@ -42,7 +42,11 @@ import spack.environment as ev
 import spack.schema.projections
 import spack.store
 from spack.config import validate
-from spack.filesystem_view import YamlFilesystemView, view_func_parser
+from spack.filesystem_view import (
+    YamlFilesystemView,
+    view_func_parser,
+    view_symlink,
+)
 from spack.util import spack_yaml as s_yaml
 
 description = "project packages to a compact naming scheme on the filesystem."
@@ -182,7 +186,10 @@ def view(parser, args):
         ordered_projections = {}
 
     # What method are we using for this view
-    link_fn = view_func_parser(args.action)
+    if args.action in actions_link:
+        link_fn = view_func_parser(args.action)
+    else:
+        link_fn = view_symlink
 
     view = YamlFilesystemView(
         path, spack.store.layout,
