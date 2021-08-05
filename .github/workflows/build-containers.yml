@@ -6,10 +6,6 @@ on:
   # Let's also build & tag Spack containers on releases.
   release:
     types: [published]
-  # And let's build but not release Spack containers on a PR to develop.
-  pull_request:
-    branches:
-      - develop
 
 jobs:
   deploy-images:
@@ -31,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set Container Tag Normal (PR & Nightly)
+      - name: Set Container Tag Normal (Nightly)
         run: |
           container="ghcr.io/spack/${{ matrix.dockerfile[0]}}:latest"
           echo "container=${container}" >> $GITHUB_ENV
