@@ -2,7 +2,7 @@ name: Build & Deploy Docker Containers
 on:
   # Build new Spack develop containers nightly.
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '34 0 * * *'
   # Let's also build & tag Spack containers on releases.
   release:
     types: [published]
