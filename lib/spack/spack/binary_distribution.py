@@ -949,7 +949,8 @@ def build_tarball(spec, mirror, force=False, rel=False, unsigned=False,
         else:
             raise NoOverwriteException(url_util.format(push_spackfile_path))
 
-    if web_util.url_exists(fetch_spackfile_path) and not force:
+    if (push_spackfile_path != fetch_spackfile_path and
+            web_util.url_exists(fetch_spackfile_path) and not force):
         raise NoOverwriteException(url_util.format(fetch_spackfile_path))
 
     # need to copy the spec file so the build cache can be downloaded
@@ -971,7 +972,8 @@ def build_tarball(spec, mirror, force=False, rel=False, unsigned=False,
         else:
             raise NoOverwriteException(url_util.format(push_specfile_path))
 
-    if web_util.url_exists(fetch_specfile_path) and not force:
+    if (push_specfile_path != fetch_specfile_path and
+            web_util.url_exists(fetch_specfile_path) and not force):
         raise NoOverwriteException(url_util.format(fetch_specfile_path))
 
     # make a copy of the install directory to work with
