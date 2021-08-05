@@ -41,7 +41,7 @@ jobs:
       - name: Set Container Tag on Release
         if: github.event_name == 'release'
         run: |
-          versioned="$ghcr.io/spack/${{matrix.dockerfile[0]}}:${GITHUB_REF##*/}"
+          versioned="ghcr.io/spack/${{matrix.dockerfile[0]}}:${GITHUB_REF##*/}"
           echo "versioned=${versioned}" >> $GITHUB_ENV
 
       - name: Check ${{ matrix.dockerfile[1] }} Exists
