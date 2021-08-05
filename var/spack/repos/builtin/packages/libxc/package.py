@@ -80,7 +80,7 @@ class Libxc(AutotoolsPackage, CudaPackage):
         env.append_flags('FCFLAGS', optflags)
 
         if '%intel' in self.spec:
-            env.set('CFLAGS', '-std=c99')
+            env.append_flags('CFLAGS', '-std=c99')
             if  which('xiar'):
                 env.set('AR', 'xiar')
 
