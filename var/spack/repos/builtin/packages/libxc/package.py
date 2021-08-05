@@ -81,7 +81,7 @@ class Libxc(AutotoolsPackage, CudaPackage):
 
         if '%intel' in self.spec:
             env.append_flags('CFLAGS', '-std=c99')
-            if  which('xiar'):
+            if which('xiar'):
                 env.set('AR', 'xiar')
 
         if '%aocc' in self.spec:
