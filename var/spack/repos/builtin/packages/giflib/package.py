@@ -33,7 +33,7 @@ class Giflib(MakefilePackage, SourceforgePackage):
             targets.append('LIBVER={0}'.format(self.spec.version))
 
         return targets
- 
+
     @property
     def install_targets(self):
         targets = ['install']
