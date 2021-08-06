@@ -103,11 +103,15 @@ default:
   variables:
     SPACK_CI_STACK_NAME: e4s
 
+.e4s-clingo-generate:
+  extends: [".e4s"]
+  image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-x86_64:2021-07-01", "entrypoint": [""] }
+
 e4s-pr-generate:
-  extends: [ ".e4s", ".pr-generate"]
+  extends: [ ".e4s-clingo-generate", ".pr-generate"]
 
 e4s-develop-generate:
-  extends: [ ".e4s", ".develop-generate"]
+  extends: [ ".e4s-clingo-generate", ".develop-generate"]
 
 e4s-pr-build:
   extends: [ ".e4s", ".pr-build" ]
