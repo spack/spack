@@ -9,7 +9,9 @@ import collections
 import os
 import os.path
 import re
+import sys
 import warnings
+
 
 import llnl.util.filesystem
 import llnl.util.tty
@@ -73,6 +75,8 @@ def by_executable(packages_to_check, path_hints=None):
     for pkg in packages_to_check:
         if hasattr(pkg, 'executables'):
             for exe in pkg.executables:
+                if sys.platform == 'win32':
+                    exe = exe.replace('$', r'\.exe$')
                 exe_pattern_to_pkgs[exe].append(pkg)
 
     pkg_to_found_exes = collections.defaultdict(set)
