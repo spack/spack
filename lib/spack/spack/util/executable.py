@@ -22,6 +22,8 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
+        if sys.platform == 'win32':
+            name = name.replace('\\', '/')
         self.exe = shlex.split(str(name))
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
