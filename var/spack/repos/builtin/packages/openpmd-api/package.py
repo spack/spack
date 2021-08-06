@@ -130,3 +130,23 @@ class OpenpmdApi(CMakePackage):
         env.prepend_path('CMAKE_PREFIX_PATH',
                          self.spec['mpark-variant'].prefix)
         env.prepend_path('CPATH', self.spec['mpark-variant'].prefix.include)
+
+    def check(self):
+        """CTest checks after the build phase"""
+        # note: for MPI-parallel tests, you can overwrite the standard CMake
+        #       option -DMPIEXEC_EXECUTABLE=$(which jsrun) for jsrun or srun,
+        #       etc.. Alternatively, you can also use -E <regex> to exclude
+        #       parallel and MPI tests
+        with working_dir(self.build_directory):
+            # -j1 because individual tests create files that are read again by
+            # later tests
+            ctest('--output-on-failure', '-j1')
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        exes = ['openpmd-ls']  # in 0.11.1+
+        for exe in exes:
+            spec_vers_str = '{0}'.format(self.spec.version)
+            reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
+            self.run_test(exe, ['--version'], [spec_vers_str],
+                          installed=True, purpose=reason, skip_missing=False)
