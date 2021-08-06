@@ -17,6 +17,7 @@ class OpenpmdApi(CMakePackage):
 
     # C++14 up until here
     version('develop', branch='dev')
+    version('0.14.1', sha256='172fd1d785627d01c77f1170adc5a18bd8a6302e804d0f271dc0d616a5156791')
     version('0.14.0', sha256='7bb561c1a6f54e9a6a1b56aaf1d4d098bbe290d204f84ebe5a6f11b3cab2be6e')
     #   temporary, pre 0.14.0 version for HiPACE++
     version('hipace', commit='ac083025ee662469b8cad1adf93eef48cde35f58')
