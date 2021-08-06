@@ -31,7 +31,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output
+from llnl.util.tty.log import log_output, winlog
 
 import spack
 import spack.cmd
@@ -491,6 +491,7 @@ def setup_main_options(args):
 
     # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
+    tty.debug(spack.config.config)
     if args.debug:
         spack.error.debug = True
         spack.util.debug.register_interrupt_handler()
@@ -608,9 +609,14 @@ class SpackCommand(object):
 
         out = StringIO()
         try:
-            with log_output(out):
-                self.returncode = _invoke_command(
-                    self.command, self.parser, args, unknown)
+            if sys.platform == 'win32':
+                with winlog(out):
+                    self.returncode = _invoke_command(
+                        self.command, self.parser, args, unknown)
+            else:
+                with log_output(out):
+                    self.returncode = _invoke_command(
+                        self.command, self.parser, args, unknown)
 
         except SystemExit as e:
             self.returncode = e.code
