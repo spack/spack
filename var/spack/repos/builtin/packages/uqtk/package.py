@@ -54,7 +54,7 @@ class Uqtk(CMakePackage):
         ]
 
         if self.spec.variants['pyuqtk'].value == True:
-            args.extend([ f"-DPyUQTk=ON"])
+            args.extend([ '-DPyUQTk=ON'])
 
         return args
 
