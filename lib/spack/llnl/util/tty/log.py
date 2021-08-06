@@ -12,10 +12,15 @@ import errno
 import multiprocessing
 import os
 import re
+import io
 import select
 import signal
 import sys
+import ctypes
 import traceback
+import tempfile
+import threading
+from threading import Thread
 from contextlib import contextmanager
 from types import ModuleType  # novm
 from typing import Optional  # novm
@@ -669,6 +674,166 @@ class log_output(object):
         finally:
             sys.stdout.write(xoff)
             sys.stdout.flush()
+
+
+class StreamWrapper:
+    """ Wrapper class to handle redirection of io streams """
+    def __init__(self, sys_attr):
+        self.sys_attr = sys_attr
+        self.saved_stream = None
+        if sys.platform.startswith('win32'):
+            if sys.version_info < (3, 5):
+                libc = ctypes.CDLL(ctypes.util.find_library('c'))
+            else:
+                if hasattr(sys, 'gettotalrefcount'):  # debug build
+                    libc = ctypes.CDLL('ucrtbased')
+                else:
+                    libc = ctypes.CDLL('api-ms-win-crt-stdio-l1-1-0')
+
+            kernel32 = ctypes.WinDLL('kernel32')
+
+            # https://docs.microsoft.com/en-us/windows/console/getstdhandle
+            if self.sys_attr == 'stdout':
+                STD_HANDLE = -11
+            elif self.sys_attr == 'stderr':
+                STD_HANDLE = -12
+            else:
+                raise KeyError(self.sys_attr)
+
+            c_stdout = kernel32.GetStdHandle(STD_HANDLE)
+            self.libc = libc
+            self.c_stream = c_stdout
+        else:
+            # The original fd stdout points to. Usually 1 on POSIX systems for stdout.
+            self.libc = ctypes.CDLL(None)
+            self.c_stream = ctypes.c_void_p.in_dll(self.libc, self.sys_attr)
+        self.sys_stream = getattr(sys, self.sys_attr)
+        self.orig_stream_fd = self.sys_stream.fileno()
+        # Save a copy of the original stdout fd in saved_stream
+        self.saved_stream = os.dup(self.orig_stream_fd)
+
+    def redirect_stream(self, to_fd):
+        """Redirect stdout to the given file descriptor."""
+        # Flush the C-level buffer stream
+        if sys.platform.startswith('win32'):
+            self.libc.fflush(None)
+        else:
+            self.libc.fflush(self.c_stream)
+        # Flush and close sys_stream - also closes the file descriptor (fd)
+        sys_stream = getattr(sys, self.sys_attr)
+        sys_stream.flush()
+        sys_stream.close()
+        # Make orig_stream_fd point to the same file as to_fd
+        os.dup2(to_fd, self.orig_stream_fd)
+        # Set sys_stream to a new stream that points to the redirected fd
+        new_buffer = open(self.orig_stream_fd, 'wb')
+        new_stream = io.TextIOWrapper(new_buffer)
+        setattr(sys, self.sys_attr, new_stream)
+        self.sys_stream = getattr(sys, self.sys_attr)
+
+    def flush(self):
+        if sys.platform.startswith('win32'):
+            self.libc.fflush(None)
+        else:
+            self.libc.fflush(self.c_stream)
+        self.sys_stream.flush()
+
+    def close(self):
+        """Redirect back to the original system stream, and close stream"""
+        try:
+            if self.saved_stream is not None:
+                self.redirect_stream(self.saved_stream)
+        finally:
+            if self.saved_stream is not None:
+                os.close(self.saved_stream)
+
+
+class winlog:
+    def __init__(self, logfile, echo=False, debug=0, env=None):
+        self.env = env
+        self.debug = debug
+        self.echo = echo
+        self.logfile = logfile
+        self.stdout = StreamWrapper('stdout')
+        self.stderr = StreamWrapper('stderr')
+        self._active = False
+
+    def __enter__(self):
+        if self._active:
+            raise RuntimeError("Can't re-enter the same log_output!")
+
+        if self.logfile is None:
+            raise RuntimeError(
+                "file argument must be set by __init__ ")
+
+        # Open both write and reading on logfile
+        if type(self.logfile) == StringIO:
+            # cannot have two streams on tempfile, so we must make our own
+            self.writer = open('temp.txt', mode='wb+')
+            self.reader = open('temp.txt', mode='rb+')
+        else:
+            self.writer = open(self.logfile, mode='wb+')
+            self.reader = open(self.logfile, mode='rb+')
+        # Dup stdout so we can still write to it after redirection
+        self.echo_writer = open(os.dup(sys.stdout.fileno()), "w")
+        # Redirect stdout and stderr to write to logfile
+        self.stderr.redirect_stream(self.writer.fileno())
+        self.stdout.redirect_stream(self.writer.fileno())
+        self._kill = threading.Event()
+
+        def background_reader(reader, echo_writer, _kill):
+            # for each line printed to logfile, read it
+            # if echo: write line to user
+            while True:
+                is_killed = _kill.wait(.1)
+                self.stderr.flush()
+                self.stdout.flush()
+                line = reader.readline()
+                while line:
+                    if self.echo:
+                        self.echo_writer.write('{0}'.format(line.decode()))
+                        self.echo_writer.flush()
+                    line = reader.readline()
+
+                if is_killed:
+                    break
+
+        self._active = True
+        with replace_environment(self.env):
+            self._thread = Thread(target=background_reader, args=(self.reader, self.echo_writer, self._kill))
+            self._thread.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.echo_writer.flush()
+        self.stdout.flush()
+        self.stderr.flush()
+        self._kill.set()
+        self._thread.join()
+        self.stdout.close()
+        self.stderr.close()
+        if os.path.exists("temp.txt"):
+            os.remove("temp.txt")
+        self._active = False
+
+    @contextmanager
+    def force_echo(self):
+        """Context manager to force local echo, even if echo is off."""
+        if not self._active:
+            raise RuntimeError(
+                "Can't call force_echo() outside log_output region!")
+
+        # This uses the xon/xoff to highlight regions to be echoed in the
+        # output. We use these control characters rather than, say, a
+        # separate pipe, because they're in-band and assured to appear
+        # exactly before and after the text we want to echo.
+        sys.stdout.write(xon)
+        sys.stdout.flush()
+        try:
+            yield
+        finally:
+            sys.stdout.write(xoff)
+            sys.stdout.flush()
+
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
