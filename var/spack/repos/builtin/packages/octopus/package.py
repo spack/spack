@@ -214,6 +214,7 @@ class Octopus(Package, CudaPackage):
                 'FCFLAGS=-O2 -ffree-line-length-none'
             ])
 
+        autoreconf('-i')
         configure(*args)
         make()
         # short tests take forever...
