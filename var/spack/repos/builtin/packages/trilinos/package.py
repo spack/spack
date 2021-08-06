@@ -440,7 +440,8 @@ class Trilinos(CMakePackage, CudaPackage):
         if self.spec.satisfies('%cce'):
             if name == 'ldflags':
                 flags.append('-fuse-ld=gold')
-        return (None, None, flags)
+            return (None, None, flags)
+        return (flags, None, None)
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
