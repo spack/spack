@@ -1519,7 +1519,7 @@ class Database(object):
     def query_local(self, *args, **kwargs):
         """Query only the local Spack database."""
         with self.read_transaction():
-            return sorted(self._query(*args, **kwargs))
+            return self._query(*args, **kwargs)
 
     if query_local.__doc__ is None:
         query_local.__doc__ = ""
@@ -1539,7 +1539,7 @@ class Database(object):
         results = list(local_results) + list(
             x for x in upstream_results if x not in local_results)
 
-        return sorted(results)
+        return results
 
     if query.__doc__ is None:
         query.__doc__ = ""
