@@ -43,7 +43,7 @@ import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output
+from llnl.util.tty.log import log_output, winlog
 
 import spack.binary_distribution as binary_distribution
 import spack.compilers
@@ -1936,61 +1936,80 @@ class BuildProcessInstaller(object):
 
             # Spawn a daemon that reads from a pipe and redirects
             # everything to log_path, and provide the phase for logging
-            for i, (phase_name, phase_attr) in enumerate(zip(
-                    pkg.phases, pkg._InstallPhase_phases)):
+            if sys.platform != 'win32':
+                for i, (phase_name, phase_attr) in enumerate(zip(
+                        pkg.phases, pkg._InstallPhase_phases)):
 
-                # Keep a log file for each phase
-                log_dir = os.path.dirname(pkg.log_path)
-                log_file = "spack-build-%02d-%s-out.txt" % (
-                    i + 1, phase_name.lower()
-                )
-                log_file = os.path.join(log_dir, log_file)
-
-                try:
-                    # DEBUGGING TIP - to debug this section, insert an IPython
-                    # embed here, and run the sections below without log capture
-                    log_contextmanager = log_output(
-                        log_file,
-                        self.echo,
-                        True,
-                        env=self.unmodified_env,
-                        filter_fn=self.filter_fn
+                    # Keep a log file for each phase
+                    log_dir = os.path.dirname(pkg.log_path)
+                    log_file = "spack-build-%02d-%s-out.txt" % (
+                        i + 1, phase_name.lower()
                     )
+                    log_file = os.path.join(log_dir, log_file)
 
-                    with log_contextmanager as logger:
-                        with logger.force_echo():
-                            inner_debug_level = tty.debug_level()
-                            tty.set_debug(debug_level)
-                            tty.msg(
-                                "{0} Executing phase: '{1}'" .format(
-                                    self.pre,
-                                    phase_name
+                    try:
+                        # DEBUGGING TIP - to debug this section, insert an IPython
+                        # embed here, and run the sections below without log capture
+                        log_contextmanager = log_output(
+                            log_file,
+                            self.echo,
+                            True,
+                            env=self.unmodified_env,
+                            filter_fn=self.filter_fn
+                        )
+
+                        with log_contextmanager as logger:
+                            with logger.force_echo():
+                                inner_debug_level = tty.debug_level()
+                                tty.set_debug(debug_level)
+                                tty.msg(
+                                    "{0} Executing phase: '{1}'" .format(
+                                        self.pre,
+                                        phase_name
+                                    )
                                 )
-                            )
-                            tty.set_debug(inner_debug_level)
+                                tty.set_debug(inner_debug_level)
+
+                            # Redirect stdout and stderr to daemon pipe
+                            phase = getattr(pkg, phase_attr)
+                            self.timer.phase(phase_name)
+
+                            # Catch any errors to report to logging
+                            phase(pkg.spec, pkg.prefix)
+                            spack.hooks.on_phase_success(pkg, phase_name, log_file)
+
+                    except BaseException:
+                        combine_phase_logs(pkg.phase_log_files, pkg.log_path)
+                        spack.hooks.on_phase_error(pkg, phase_name, log_file)
+
+                        # phase error indicates install error
+                        spack.hooks.on_install_failure(pkg.spec)
+                        raise
+
+                    # We assume loggers share echo True/False
+                    self.echo = logger.echo
+            else:
+                with winlog(pkg.log_path, True, True,
+                            env=self.unmodified_env) as logger:
+
+                    for phase_name, phase_attr in zip(
+                            pkg.phases, pkg._InstallPhase_phases):
+
+                        # with logger.force_echo():
+                        #    inner_debug_level = tty.debug_level()
+                        #    tty.set_debug(debug_level)
+                        #    tty.msg("{0} Executing phase: '{1}'"
+                        #            .format(pre, phase_name))
+                        #    tty.set_debug(inner_debug_level)
 
                         # Redirect stdout and stderr to daemon pipe
                         phase = getattr(pkg, phase_attr)
-                        self.timer.phase(phase_name)
-
-                        # Catch any errors to report to logging
                         phase(pkg.spec, pkg.prefix)
-                        spack.hooks.on_phase_success(pkg, phase_name, log_file)
 
-                except BaseException:
-                    combine_phase_logs(pkg.phase_log_files, pkg.log_path)
-                    spack.hooks.on_phase_error(pkg, phase_name, log_file)
-
-                    # phase error indicates install error
-                    spack.hooks.on_install_failure(pkg.spec)
-                    raise
-
-                # We assume loggers share echo True/False
-                self.echo = logger.echo
-
-        # After log, we can get all output/error files from the package stage
-        combine_phase_logs(pkg.phase_log_files, pkg.log_path)
-        log(pkg)
+        if sys.platform != 'win32':
+            # After log, we can get all output/error files from the package stage
+            combine_phase_logs(pkg.phase_log_files, pkg.log_path)
+            log(pkg)
 
 
 def build_process(pkg, install_args):
