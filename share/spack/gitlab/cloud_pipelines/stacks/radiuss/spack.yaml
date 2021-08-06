@@ -27,8 +27,8 @@ spack:
       - axom
       - blt
       - caliper
-      - care
-      - chai
+      #- care
+      #- chai
       - conduit  # ^hdf5+shared
       - flux-core
       #- flux-sched
