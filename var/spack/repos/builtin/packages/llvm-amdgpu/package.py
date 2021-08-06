@@ -51,7 +51,7 @@ class LlvmAmdgpu(CMakePackage):
     patch('fix-ncurses-3.9.0.patch', when='@3.9.0:4.0.0')
 
     # This is already fixed in upstream but not in 4.2.0 rocm release
-    patch('fix-spack-detection-4.2.0.patch', when='@4.2.0')
+    patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:')
 
     conflicts('^cmake@3.19.0')
 
@@ -94,12 +94,26 @@ class LlvmAmdgpu(CMakePackage):
             'compiler-rt'
         ]
 
+        if self.spec.satisfies('@4.2.0:'):
+            llvm_projects.append('libcxx')
+            llvm_projects.append('libcxxabi')
+
+            args = [
+                self.define('LIBCXX_ENABLE_SHARED', 'OFF'),
+                self.define('LIBCXX_ENABLE_STATIC', 'ON'),
+                self.define('LIBCXX_INSTALL_LIBRARY', 'OFF'),
+                self.define('LIBCXX_INSTALL_HEADERS', 'OFF'),
+                self.define('LIBCXXABI_ENABLE_SHARED', 'OFF'),
+                self.define('LIBCXXABI_ENABLE_STATIC', 'ON'),
+                self.define('LIBCXXABI_INSTALL_STATIC_LIBRARY', 'OFF'),
+                self.define('LLVM_ENABLE_ZLIB', 'ON'),
+                self.define('LLVM_ENABLE_Z3_SOLVER', 'OFF')
+            ]
+
         if '+openmp' in self.spec:
             llvm_projects.append('openmp')
 
-        args = [
-            self.define('LLVM_ENABLE_PROJECTS', ';'.join(llvm_projects))
-        ]
+        args.append(self.define('LLVM_ENABLE_PROJECTS', ';'.join(llvm_projects)))
 
         # Enable rocm-device-libs as a external project
         if '+rocm-device-libs' in self.spec:
