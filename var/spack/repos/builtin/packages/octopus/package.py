@@ -55,6 +55,10 @@ class Octopus(Package, CudaPackage):
     variant('debug', default=False,
             description='Compile with debug flags')
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
 
     depends_on('blas')
     depends_on('gsl@1.9:')
