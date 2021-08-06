@@ -1,5 +1,5 @@
---- a/build-config/common/m4/ac_scorep_sys_detection.m4
-+++ b/build-config/common/m4/ac_scorep_sys_detection.m4
+--- a/vendor/common/build-config/m4/ac_scorep_sys_detection.m4	2019-07-19 01:31:13.409311556 -0500
++++ b/vendor/common/build-config/m4/ac_scorep_sys_detection.m4	2021-03-04 22:11:30.278313559 -0600
 @@ -100,6 +100,8 @@
                    [test "x${build_cpu}" = "xpowerpc64" && test -d /bgsys],
                        [ac_scorep_platform="bgp"],
