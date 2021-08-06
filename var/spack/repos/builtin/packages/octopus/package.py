@@ -92,6 +92,9 @@ class Octopus(Package, CudaPackage):
         lapack = spec['lapack'].libs
         blas = spec['blas'].libs
         args = []
+        fflags = []
+        fcflags = []
+
         args.extend([
             '--prefix=%s' % prefix,
             '--with-blas=%s' % blas.ld_flags,
@@ -195,6 +198,14 @@ class Octopus(Package, CudaPackage):
                 '--enable-cuda'
             ])
 
+        if '+openmp' in spec:
+            if spec.satisfies('%gcc'):
+                fflags.append('-fopenmp')
+                fcflags.append('-fopenmp')
+            if spec.satisfies('%intel'):
+                fflags.append('-qopenmp')
+                fcflags.append('-qopenmp')
+
         # --with-etsf-io-prefix=
         # --with-sparskit=${prefix}/lib/libskit.a
         # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
@@ -213,14 +224,14 @@ class Octopus(Package, CudaPackage):
             # In case of GCC version 10, we will have errors because of argument mismatching.
             # Need to provide a flag to turn this into a warning and build sucessfully
             if (spec.satisfies('%gcc@10:')):
-                args.extend([
-                    'FCFLAGS=-O2 -ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz',
-                    'FFLAGS=-O2 -ffree-line-length-none -fallow-argument-mismatch -fallow-invalid-boz'])
+                fcflags.extend(['-O2', '-ffree-line-length-none', '-fallow-argument-mismatch', '-fallow-invalid-boz'])
+                fflags.extend(['-O2', '-ffree-line-length-none', '-fallow-argument-mismatch', '-fallow-invalid-boz'])
             else:
-                args.extend([
-                    'FCFLAGS=-O2 -ffree-line-length-none'
-                    'FFLAGS=-O2 -ffree-line-length-none'
-                ])
+                fcflags.extend(['-O2', '-ffree-line-length-none'])
+                fflags.extend(['-O2', '-ffree-line-length-none'])
+
+        args.append('FCFLAGS=' + ' '.join(fcflags))
+        args.append('FFLAGS=' + ' '.join(fflags))
 
         autoreconf('-i')
         configure(*args)
