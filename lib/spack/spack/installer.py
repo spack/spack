@@ -1886,7 +1886,7 @@ def build_process(pkg, install_args):
     installer = BuildProcessInstaller(pkg, install_args)
 
     # don't print long padded paths in executable debug output.
-    with spack.util.executable.filter_padding():
+    with spack.util.path.filter_padding():
         return installer.run()
 
 
