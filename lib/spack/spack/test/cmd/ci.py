@@ -908,6 +908,8 @@ spack:
             assert('fake download buildcache archive-files' in ci_out)
 
             env_cmd('deactivate')
+            import spack.binary_distribution as bindist
+            bindist.clear_spec_cache()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -1569,7 +1571,7 @@ spack:
             ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
 
         with ev.read('test'):
-            ci_cmd('generate', '--output-file', outputfile)
+            print(ci_cmd('generate', '--output-file', outputfile, global_args=['-d']))
 
             with open(outputfile) as of:
                 pipeline_doc = syaml.load(of.read())
@@ -1743,13 +1745,12 @@ spack:
 
     monkeypatch.setattr(ci, 'download_and_extract_artifacts',
                         fake_download_and_extract_artifacts)
-
     rep_out = ci_cmd('reproduce-build',
                      'https://some.domain/api/v1/projects/1/jobs/2/artifacts',
                      '--working-dir',
                      working_dir.strpath,
-                     output=str)
-
+                     output=str, fail_on_error=False)
+    print(rep_out)
     expect_out = 'docker run --rm -v {0}:{0} -ti {1}'.format(
         working_dir.strpath, image_name)
 

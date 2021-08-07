@@ -716,7 +716,6 @@ def generate_package_index(cache_prefix):
             entry
             for entry in web_util.list_url(cache_prefix)
             if entry.endswith('.yaml') or entry.endswith('spec.json'))
-        print(f for f in file_list)
     except KeyError as inst:
         msg = 'No packages at {0}: {1}'.format(cache_prefix, inst)
         tty.warn(msg)

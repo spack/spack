@@ -203,9 +203,9 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     install_cmd('--no-cache', cspec.name)
 
     # Create a buildache
-    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec.name, fail_on_error=False)
+    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec.name)
     # Test force overwrite create buildcache (-f option)
-    buildcache_cmd('create', '-auf', '-d', mirror_dir, cspec.name, fail_on_error=False)
+    buildcache_cmd('create', '-auf', '-d', mirror_dir, cspec.name)
 
     # Create mirror index
     mirror_url = 'file://{0}'.format(mirror_dir)
@@ -488,6 +488,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
 
 
 def test_generate_indices_key_error(monkeypatch, capfd):
+
     def mock_list_url(url, recursive=False):
         print('mocked list_url({0}, {1})'.format(url, recursive))
         raise KeyError('Test KeyError handling')
@@ -510,6 +511,7 @@ def test_generate_indices_key_error(monkeypatch, capfd):
 
 
 def test_generate_indices_exception(monkeypatch, capfd):
+
     def mock_list_url(url, recursive=False):
         print('mocked list_url({0}, {1})'.format(url, recursive))
         raise Exception('Test Exception handling')

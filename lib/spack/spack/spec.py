@@ -3296,7 +3296,7 @@ class Spec(object):
             return spec_like
         return Spec(spec_like)
 
-    def satisfies(self, other, deps=True, strict=False, strict_deps=False, debug=False):
+    def satisfies(self, other, deps=True, strict=False, strict_deps=False):
         """Determine if this spec satisfies all constraints of another.
 
         There are two senses for satisfies:
@@ -3309,11 +3309,6 @@ class Spec(object):
           * `strict`: strict means that we *must* meet all the
             constraints specified on other.
         """
-        if debug:
-            print('self is concrete?:', self.concrete)
-            print('self dag hash:', self.dag_hash())
-            print('other is concrete?:', other.concrete)
-            print('other dag hash:', other.dag_hash())
 
         other = self._autospec(other)
 

@@ -871,6 +871,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             tty.debug(debug_msg)
 
                 if prune_dag and not rebuild_spec:
+                    tty.debug('Pruning spec that does not need to be rebuilt.')
                     continue
 
                 # Check if this spec is in our list of known failures, now that
@@ -916,13 +917,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 if enable_artifacts_buildcache:
                     bc_root = os.path.join(
                         local_mirror_dir, 'build_cache')
-                    json_path = bindist.tarball_name(release_spec, '.spec.json')
-                    yaml_path = bindist.tarball_name(release_spec, '.spec.yaml')
-                    # TODO: Make sure this works here.
-                    specfile_path = (json_path if os.path.exists(json_path)
-                                     else yaml_path)
                     artifact_paths.extend([os.path.join(bc_root, p) for p in [
-                        specfile_path,
+                        bindist.tarball_name(release_spec, '.spec.json'),
                         bindist.tarball_name(release_spec, '.cdashid'),
                         bindist.tarball_directory_name(release_spec),
                     ]])
@@ -1424,7 +1420,6 @@ def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
             build_out_src, build_out_dst))
         shutil.copyfile(build_out_src, build_out_dst)
     except Exception as inst:
-        raise
         msg = ('Unable to copy build logs from stage to artifacts '
                'due to exception: {0}').format(inst)
         tty.error(msg)
@@ -1568,6 +1563,10 @@ def reproduce_ci_job(url, work_dir):
         concrete_env_dir))
 
     yaml_files = fs.find(work_dir, ['*.yaml', '*.yml'])
+
+    print('work dir:', work_dir)
+    for root, dirs, files in os.walk(work_dir):
+        print(root, dirs, files)
 
     tty.debug('yaml files:')
     for yaml_file in yaml_files:

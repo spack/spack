@@ -407,8 +407,6 @@ environment variables:
                 s = spack.spec.Spec.from_yaml(f)
 
         concretized = s.concretized()
-        tty.debug('reconcretized dag hash:', concretized.dag_hash())
-        tty.debug('original dag hash:', s.dag_hash())
         if concretized.dag_hash() != s.dag_hash():
             msg = 'skipped invalid file "{0}". '
             msg += 'The file does not contain a concrete spec.'
