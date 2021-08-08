@@ -107,8 +107,7 @@ dependency_holds(Package, Dependency, Type) :-
   dependency_condition(ID, Package, Dependency),
   dependency_type(ID, Type),
   condition_holds(ID),
-  not external(Package),
-  not concrete(Package).
+  build(Package).
 
 % We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
@@ -153,10 +152,10 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 % Conflicts
 %-----------------------------------------------------------------------------
 :- node(Package),
-   not external(Package),
    conflict(Package, TriggerID, ConstraintID),
    condition_holds(TriggerID),
    condition_holds(ConstraintID),
+   not external(Package),  % ignore conflicts for externals
    error("A conflict was triggered").
 
 #defined conflict/3.
@@ -402,7 +401,11 @@ variant(Package, Variant) :- variant_condition(ID, Package, Variant),
 variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 
 % A variant cannot have a value that is not also a possible value
-:- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value),
+% This only applies to packages we need to build -- concrete packages may
+% have been built w/different variants from older/different package versions.
+:- variant_value(Package, Variant, Value),
+   not variant_possible_value(Package, Variant, Value),
+   build(Package),
    error("Variant set to invalid value").
 
 % Some multi valued variants accept multiple values from disjoint sets.
@@ -477,8 +480,11 @@ variant_default_value(Package, Variant, Value) :- variant_default_value_from_cli
 
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
-:- 2 {variant_value(Package, Variant, Value): variant_possible_value(Package, Variant, Value)},
+:- 2 {
+     variant_value(Package, Variant, Value) : variant_possible_value(Package, Variant, Value)
+   },
    variant_value(Package, Variant, "none"),
+   build(Package),
    error("Variant value 'none' cannot be combined with any other value").
 
 % patches and dev_path are special variants -- they don't have to be
@@ -603,6 +609,7 @@ target_weight(Target, Package, Weight)
    not compiler_supports_target(Compiler, Version, Target),
    node_compiler(Package, Compiler),
    node_compiler_version(Package, Compiler, Version),
+   build(Package),
    error("No satisfying compiler available is compatible with a satisfying target").
 
 % if a target is set explicitly, respect it
@@ -673,6 +680,7 @@ node_compiler_version(Package, Compiler, Version) :- node_compiler_version_set(P
 :- node_compiler_version(Package, Compiler, Version), node_os(Package, OS),
    not compiler_supports_os(Compiler, Version, OS),
    not allow_compiler(Compiler, Version),
+   build(Package),
    error("No satisfying compiler available is compatible with a satisfying os").
 
 % If a package and one of its dependencies don't have the
@@ -891,4 +899,3 @@ opt_criterion(2, "target mismatches").
 opt_criterion(1, "non-preferred targets").
 #minimize{ 0@1: #true }.
 #minimize{ Weight@1,Package : node_target_weight(Package, Weight) }.
-
