@@ -478,54 +478,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         make('MAKE_NP=%s' % make_jobs, parallel=False)
         make("install")
 
-        # solve Poisson equation in 2D to make sure nothing is broken:
-        if ('mpi' in spec) and self.run_tests:
-            with working_dir('src/ksp/ksp/examples/tutorials'):
-                env['PETSC_DIR'] = self.prefix
-                cc = Executable(spec['mpi'].mpicc)
-                cc('ex50.c', '-I%s' % prefix.include, '-L%s' % prefix.lib,
-                   '-lpetsc', '-lm', '-o', 'ex50')
-                run = Executable(join_path(spec['mpi'].prefix.bin, 'mpirun'))
-                # For Spectrum MPI, if -np is omitted, the default behavior is
-                # to assign one process per process slot, where the default
-                # process slot allocation is one per core. On systems with
-                # many cores, the number of processes can exceed the size of
-                # the grid specified when the testcase is run and the test case
-                # fails. Specify a small number of processes to prevent
-                # failure.
-                # For more information about Spectrum MPI invocation, see URL
-                # https://www.ibm.com/support/knowledgecenter/en/SSZTET_10.1.0/smpi02/smpi02_mpirun_options.html
-                if ('spectrum-mpi' in spec):
-                    run.add_default_arg('-np')
-                    run.add_default_arg('4')
-                run('ex50', '-da_grid_x', '4', '-da_grid_y', '4')
-                if 'superlu-dist' in spec:
-                    run('ex50',
-                        '-da_grid_x', '4',
-                        '-da_grid_y', '4',
-                        '-pc_type', 'lu',
-                        '-pc_factor_mat_solver_package', 'superlu_dist')
-
-                if 'mumps' in spec:
-                    run('ex50',
-                        '-da_grid_x', '4',
-                        '-da_grid_y', '4',
-                        '-pc_type', 'lu',
-                        '-pc_factor_mat_solver_package', 'mumps')
-
-                if 'hypre' in spec:
-                    run('ex50',
-                        '-da_grid_x', '4',
-                        '-da_grid_y', '4',
-                        '-pc_type', 'hypre',
-                        '-pc_hypre_type', 'boomeramg')
-
-                if 'mkl-pardiso' in spec:
-                    run('ex50',
-                        '-da_grid_x', '4',
-                        '-da_grid_y', '4',
-                        '-pc_type', 'lu',
-                        '-pc_factor_mat_solver_package', 'mkl_pardiso')
+        if self.run_tests:
+            make('check PETSC_ARCH="" PETSC_DIR={0}'.format(self.prefix),
+                 parallel=False)
 
     def setup_build_environment(self, env):
         # configure fails if these env vars are set outside of Spack
@@ -548,3 +503,49 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             or None  # return None to indicate failure
 
     # For the 'libs' property - use the default handler.
+
+    @run_after('install')
+    def setup_build_tests(self):
+        """Copy the build test files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources('src/ksp/ksp/tutorials')
+
+    def test(self):
+        # solve Poisson equation in 2D to make sure nothing is broken:
+        spec = self.spec
+        env['PETSC_DIR'] = self.prefix
+        env['PETSC_ARCH'] = ''
+        if ('+mpi' in spec):
+            runexe = Executable(join_path(spec['mpi'].prefix.bin,
+                                          'mpiexec')).command
+            runopt = ['-n', '4']
+        else:
+            runexe = Executable(join_path(self.prefix,
+                                          'lib/petsc/bin/petsc-mpiexec.uni')).command
+            runopt = ['-n', '1']
+        w_dir = join_path(self.install_test_root, 'src/ksp/ksp/tutorials')
+        with working_dir(w_dir):
+            testexe = ['ex50', '-da_grid_x', '4', '-da_grid_y', '4']
+            testdict = {
+                None: [],
+                '+superlu-dist':
+                ['-pc_type', 'lu', '-pc_factor_mat_solver_type', 'superlu_dist'],
+                '+mumps':
+                ['-pc_type', 'lu', '-pc_factor_mat_solver_type', 'mumps'],
+                '+hypre':
+                ['-pc_type', 'hypre', '-pc_hypre_type', 'boomeramg'],
+                '+mkl-pardiso':
+                ['-pc_type', 'lu', '-pc_factor_mat_solver_type', 'mkl_pardiso'],
+            }
+            make('ex50', parallel=False)
+            for feature, featureopt in testdict.items():
+                if not feature or feature in spec:
+                    self.run_test(runexe, runopt + testexe + featureopt)
+            if '+cuda' in spec:
+                make('ex7', parallel=False)
+                testexe = ['ex7', '-mat_type', 'aijcusparse',
+                           '-sub_pc_factor_mat_solver_type', 'cusparse',
+                           '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
+                           '-use_gpu_aware_mpi', '0']
+                self.run_test(runexe, runopt + testexe)
+            make('clean', parallel=False)
