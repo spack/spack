@@ -196,6 +196,14 @@ class Conduit(CMakePackage):
     # Note: cmake, build, and install stages are handled by CMakePackage
     ####################################################################
 
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name == 'ldflags':
+            if '+hdf5' in spec:
+                if spec['hdf5'].satisfies('~shared'):
+                    flags.extend(['-ldl', '-lz'])
+        return super(Conduit, self).flag_handler(name, flags)
+
     # provide cmake args (pass host config as cmake cache file)
     def cmake_args(self):
         host_config = self._get_host_config_path(self.spec)

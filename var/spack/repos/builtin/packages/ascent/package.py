@@ -185,7 +185,11 @@ class Ascent(Package, CudaPackage):
         with working_dir('spack-build', create=True):
             py_site_pkgs_dir = None
             if "+python" in spec:
-                py_site_pkgs_dir = site_packages_dir
+                try:
+                    py_site_pkgs_dir = site_packages_dir
+                except NameError:
+                    # spack's  won't exist in a subclass
+                    pass
 
             host_cfg_fname = self.create_host_config(spec,
                                                      prefix,
@@ -356,6 +360,7 @@ class Ascent(Package, CudaPackage):
         if cppflags:
             # avoid always ending up with ' ' with no flags defined
             cppflags += ' '
+        cppflags += '-lz '
         cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
         if cflags:
             cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
