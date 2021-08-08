@@ -53,12 +53,11 @@ class Uqtk(CMakePackage):
             '-DBLAS_LIBRARIES={0}'.format(blas_libs),
         ]
 
-        if self.spec.variants['pyuqtk'].value == True:
-            args.extend([ '-DPyUQTk=ON'])
+        if self.spec.variants['pyuqtk'].value:
+            args.extend(['-DPyUQTk=ON'])
 
         return args
 
     def setup_run_environment(self, env):
-        if self.spec.variants['pyuqtk'].value == True:
+        if self.spec.variants['pyuqtk'].value:
             env.prepend_path('PYTHONPATH', self.prefix)
-
