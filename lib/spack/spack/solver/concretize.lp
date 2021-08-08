@@ -529,29 +529,43 @@ node_platform_set(Package) :- node_platform_set(Package, _).
 %-----------------------------------------------------------------------------
 % OS semantics
 %-----------------------------------------------------------------------------
+% convert weighted OS declarations to simple one
+os(OS) :- os(OS, _).
+
 % one os per node
 1 { node_os(Package, OS) : os(OS) } 1 :- node(Package), error("Each node must have exactly one OS").
 
-% node_os_set implies that the node must have that os
-node_os(Package, OS) :- node(Package), node_os_set(Package, OS).
-node_os_set(Package) :- node_os_set(Package, _).
+% can't have a non-buildable OS on a node we need to build
+:- build(Package), node_os(Package, OS), not buildable_os(OS).
 
-% inherit OS along dependencies
-node_os_inherit(Package, OS) :- node_os_set(Package, OS).
-node_os_inherit(Dependency, OS)
-  :- node_os_inherit(Package, OS), depends_on(Package, Dependency),
-     not node_os_set(Dependency).
-node_os_inherit(Package) :- node_os_inherit(Package, _).
+% can't have dependencies on incompatible OS's
+:- depends_on(Package, Dependency),
+   node_os(Package, PackageOS),
+   node_os(Dependency, DependencyOS),
+   not os_compatible(PackageOS, DependencyOS),
+   build(Package).
 
-node_os(Package, OS) :- node_os_inherit(Package, OS).
+% give OS choice weights according to os declarations
+node_os_weight(Package, Weight)
+ :- node(Package),
+    node_os(Package, OS),
+    os(OS, Weight).
 
-% fall back to default if not set or inherited
-node_os(Package, OS)
-  :- node(Package),
-     not node_os_set(Package), not node_os_inherit(Package),
-     node_os_default(OS).
+% match semantics for OS's
+node_os_match(Package, Dependency) :-
+   depends_on(Package, Dependency), node_os(Package, OS), node_os(Dependency, OS).
+node_os_mismatch(Package, Dependency) :-
+   depends_on(Package, Dependency), not node_os_match(Package, Dependency).
+
+% every OS is compatible with itself. We can use `os_compatible` to declare
+os_compatible(OS, OS) :- os(OS).
+
+% OS compatibility rules for reusing solves.
+% catalina binaries can be used on bigsur. Direction is package -> dependency.
+os_compatible("bigsur", "catalina").
 
 #defined node_os_set/2.
+#defined os_compatible/2.
 
 %-----------------------------------------------------------------------------
 % Target semantics
@@ -770,61 +784,61 @@ build(Package) :- not hash(Package, _), node(Package).
 %      is displayed (clingo doesn't display sums over empty sets by default)
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
-opt_criterion(17, "number of packages to build (vs. reuse)").
-#minimize { 0@17 : #true }.
-#minimize { 1@17,Package : build(Package) }.
+opt_criterion(16, "number of packages to build (vs. reuse)").
+#minimize { 0@16: #true }.
+#minimize { 1@16,Package : build(Package) }.
 
 % Minimize the number of deprecated versions being used
-opt_criterion(16, "deprecated versions used").
-#minimize{ 0@16 : #true }.
-#minimize{ 1@16,Package : deprecated(Package, _)}.
+opt_criterion(15, "deprecated versions used").
+#minimize{ 0@15: #true }.
+#minimize{ 1@15,Package : deprecated(Package, _)}.
 
 % Minimize the:
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root(Package)
-opt_criterion(15, "version weight").
-#minimize{ 0@15 : #true }.
-#minimize { Weight@15 : root(Package),version_weight(Package, Weight) }.
+opt_criterion(14, "version weight").
+#minimize{ 0@14: #true }.
+#minimize { Weight@14: root(Package),version_weight(Package, Weight) }.
 
-opt_criterion(14, "number of non-default variants (roots)").
-#minimize{ 0@14 : #true }.
+opt_criterion(13, "number of non-default variants (roots)").
+#minimize{ 0@13: #true }.
 #minimize {
-    Weight@14,Package,Variant,Value
+    Weight@13,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight), root(Package)
 }.
 
-opt_criterion(13, "preferred providers for roots").
-#minimize{ 0@13 : #true }.
+opt_criterion(12, "preferred providers for roots").
+#minimize{ 0@12: #true }.
 #minimize{
-    Weight@13,Provider,Virtual
+    Weight@12,Provider,Virtual
     : provider_weight(Provider, Virtual, Weight), root(Provider)
 }.
 
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
-opt_criterion(12, "number of values in multi valued variants (root)").
-#minimize{ 0@12 : #true }.
+opt_criterion(11, "number of values in multi-valued variants (root)").
+#minimize{ 0@11: #true }.
 #maximize {
-    1@12,Package,Variant,Value
+    1@11,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight),
     not variant_single_value(Package, Variant),
     root(Package)
 }.
 
 % Try to use default variants or variants that have been set
-opt_criterion(11, "number of non-default variants (non-roots)").
-#minimize{ 0@11 : #true }.
+opt_criterion(10, "number of non-default variants (non-roots)").
+#minimize{ 0@10: #true }.
 #minimize {
-    Weight@11,Package,Variant,Value
+    Weight@10,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight), not root(Package)
 }.
 
 % Minimize the weights of the providers, i.e. use as much as
 % possible the most preferred providers
 opt_criterion(9, "preferred providers (non-roots)").
-#minimize{ 0@9 : #true }.
+#minimize{ 0@9: #true }.
 #minimize{
     Weight@9,Provider,Virtual
     : provider_weight(Provider, Virtual, Weight), not root(Provider)
@@ -832,39 +846,49 @@ opt_criterion(9, "preferred providers (non-roots)").
 
 % Try to minimize the number of compiler mismatches in the DAG.
 opt_criterion(8, "compiler mismatches").
-#minimize{ 0@8 : #true }.
+#minimize{ 0@8: #true }.
 #minimize{ 1@8,Package,Dependency : compiler_mismatch(Package, Dependency) }.
 
+% Try to minimize the number of compiler mismatches in the DAG.
+opt_criterion(7, "OS mismatches").
+#minimize{ 0@7: #true }.
+#minimize{ 1@7,Package,Dependency : node_os_mismatch(Package, Dependency) }.
+
+opt_criterion(6, "non-preferred OSes").
+#minimize{ 0@6: #true }.
+#minimize{ Weight@6,Package : node_os_weight(Package, Weight) }.
+
 % Choose more recent versions for nodes
-opt_criterion(7, "version badness").
-#minimize{ 0@7 : #true }.
+opt_criterion(5, "version badness").
+#minimize{ 0@5: #true }.
 #minimize{
-    Weight@7,Package : version_weight(Package, Weight)
+    Weight@5,Package : version_weight(Package, Weight)
 }.
 
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
-opt_criterion(6, "number of values in multi valued variants (non-root)").
-#minimize{ 0@6 : #true }.
+opt_criterion(4, "number of values in multi valued variants (non-root)").
+#minimize{ 0@4: #true }.
 #maximize {
-    1@6,Package,Variant,Value
+    1@4,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, _),
     not variant_single_value(Package, Variant),
     not root(Package)
 }.
 
 % Try to use preferred compilers
-opt_criterion(5, "non-preferred compilers").
-#minimize{ 0@5 : #true }.
-#minimize{ Weight@5,Package : compiler_weight(Package, Weight) }.
+opt_criterion(3, "non-preferred compilers").
+#minimize{ 0@3: #true }.
+#minimize{ Weight@3,Package : compiler_weight(Package, Weight) }.
 
 % Minimize the number of mismatches for targets in the DAG, try
 % to select the preferred target.
-opt_criterion(4, "target mismatches").
-#minimize{ 0@4 : #true }.
-#minimize{ 1@4,Package,Dependency : node_target_mismatch(Package, Dependency) }.
+opt_criterion(2, "target mismatches").
+#minimize{ 0@2: #true }.
+#minimize{ 1@2,Package,Dependency : node_target_mismatch(Package, Dependency) }.
 
-opt_criterion(3, "non-preferred targets").
-#minimize{ 0@3 : #true }.
-#minimize{ Weight@3,Package : node_target_weight(Package, Weight) }.
+opt_criterion(1, "non-preferred targets").
+#minimize{ 0@1: #true }.
+#minimize{ Weight@1,Package : node_target_weight(Package, Weight) }.
+

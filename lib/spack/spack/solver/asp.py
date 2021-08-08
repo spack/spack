@@ -568,6 +568,7 @@ class SpackSolverSetup(object):
 
         self.possible_virtuals = None
         self.possible_compilers = []
+        self.possible_oses = set()
         self.variant_values_from_specs = set()
         self.version_constraints = set()
         self.target_constraints = set()
@@ -1234,18 +1235,30 @@ class SpackSolverSetup(object):
         platform = spack.platforms.host()
 
         # create set of OS's to consider
-        possible = set([
+        buildable = set([
             platform.front_os, platform.back_os, platform.default_os])
         for spec in specs:
             if spec.architecture and spec.architecture.os:
-                possible.add(spec.architecture.os)
+                # TODO: does this make sense?
+                buildable.add(spec.architecture.os)
 
-        # make directives for possible OS's
-        for possible_os in sorted(possible):
-            self.gen.fact(fn.os(possible_os))
+        # make directives for buildable OS's
+        for build_os in sorted(buildable):
+            self.gen.fact(fn.buildable_os(build_os))
 
-        # mark this one as default
-        self.gen.fact(fn.node_os_default(platform.default_os))
+        def keyfun(os):
+            return (
+                os == platform.default_os,  # prefer default
+                os not in buildable,        # then prefer buildables
+                os,                         # then sort by name
+            )
+
+        all_oses = buildable.union(self.possible_oses)
+        ordered_oses = sorted(all_oses, key=keyfun, reverse=True)
+
+        # output the preference order of OS's for the concretizer to choose
+        for i, os_name in enumerate(ordered_oses):
+            self.gen.fact(fn.os(os_name, i))
 
     def target_defaults(self, specs):
         """Add facts about targets and target compatibility."""
@@ -1508,6 +1521,9 @@ class SpackSolverSetup(object):
                     self.impose(h, spec, body=True)
                     self.gen.newline()
 
+                    # add OS to possible OS's
+                    self.possible_oses.add(spec.os)
+
     def setup(self, driver, specs, tests=False, reuse=False):
         """Generate an ASP program with relevant constraints for specs.
 
@@ -1551,6 +1567,10 @@ class SpackSolverSetup(object):
 
         # traverse all specs and packages to build dict of possible versions
         self.build_version_dict(possible, specs)
+
+        if reuse:
+            self.gen.h1("Installed packages")
+            self.define_installed_packages(possible)
 
         self.gen.h1('General Constraints')
         self.available_compilers()
@@ -1609,10 +1629,6 @@ class SpackSolverSetup(object):
 
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
-
-        if reuse:
-            self.gen.h1("Installed packages")
-            self.define_installed_packages(possible)
 
 
 class SpecBuilder(object):
