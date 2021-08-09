@@ -395,7 +395,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('hdf5:hl,fortran', 'hdf5', True, True),
                 'zlib',
                 'mumps',
-                'trilinos',
+                ('trilinos', 'trilinos', False, False),
                 ('fftw:mpi', 'fftw', True, True),
                 ('valgrind', 'valgrind', False, False),
                 'gmp',
