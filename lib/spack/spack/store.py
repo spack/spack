@@ -16,12 +16,6 @@ Spack.  The simplest store could just contain prefixes named by DAG hash,
 but we use a fancier directory layout to make browsing the store and
 debugging easier.
 
-The directory layout is currently hard-coded to be a DirectoryLayout,
-so called because it stores build metadata within each prefix, in
-`spec.json` files. In future versions of Spack we may consider allowing
-install trees to define their own layouts with some per-tree
-configuration.
-
 """
 import contextlib
 import os

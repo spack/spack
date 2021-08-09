@@ -968,7 +968,6 @@ spack:
             with open(yaml_path, 'w') as ypfd:
                 ypfd.write(spec_yaml)
 
-            # I believe this is where the YAML gets converted to JSON.
             install_cmd('--keep-stage', yaml_path)
 
             # env, spec, yaml_path, mirror_url, build_id, sign_binaries
@@ -1571,7 +1570,7 @@ spack:
             ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
 
         with ev.read('test'):
-            print(ci_cmd('generate', '--output-file', outputfile, global_args=['-d']))
+            ci_cmd('generate', '--output-file', outputfile, global_args=['-d'])
 
             with open(outputfile) as of:
                 pipeline_doc = syaml.load(of.read())
@@ -1749,8 +1748,7 @@ spack:
                      'https://some.domain/api/v1/projects/1/jobs/2/artifacts',
                      '--working-dir',
                      working_dir.strpath,
-                     output=str, fail_on_error=False)
-    print(rep_out)
+                     output=str)
     expect_out = 'docker run --rm -v {0}:{0} -ti {1}'.format(
         working_dir.strpath, image_name)
 

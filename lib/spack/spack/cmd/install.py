@@ -401,10 +401,10 @@ environment variables:
     # 2. Concrete specs from yaml files
     for file in args.specfiles:
         with open(file, 'r') as f:
-            if file.endswith('json'):
-                s = spack.spec.Spec.from_json(f)
-            elif file.endswith('yaml'):
+            if file.endswith('yaml') or file.endswith('yml'):
                 s = spack.spec.Spec.from_yaml(f)
+            else:
+                s = spack.spec.Spec.from_json(f)
 
         concretized = s.concretized()
         if concretized.dag_hash() != s.dag_hash():

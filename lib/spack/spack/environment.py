@@ -1773,7 +1773,7 @@ class Environment(object):
                 dag_hash_all = s.build_hash()
                 if dag_hash_all not in concrete_specs:
                     spec_dict = s.to_node_dict(hash=ht.build_hash)
-                    # Assumes new format, since this was just created.
+                    # Assumes no legacy formats, since this was just created.
                     spec_dict[ht.dag_hash.attr[1:]] = s.dag_hash()
                     concrete_specs[dag_hash_all] = spec_dict
 

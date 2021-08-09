@@ -14,7 +14,7 @@ schema = {
     '$schema': 'http://json-schema.org/schema#',
     'title': 'Spack buildcache specfile schema',
     'type': 'object',
-    # 'additionalProperties': True,
+    'additionalProperties': False,
     'properties': {
         'buildinfo': {
             'type': 'object',

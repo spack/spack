@@ -1969,7 +1969,6 @@ class Spec(object):
                     if key in elt:
                         dep_hash, deptypes = elt[key], elt['type']
                         hash_type = key
-                        print('ryds hash type:', hash_type)
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError(
