@@ -350,5 +350,22 @@ class Legion(CMakePackage):
 
         exe = 'local_function_tasks'
 
+        cmake_args = ['-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc),
+                      '-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx),
+                      '-DLegion_DIR={0}'.format(join_path(self.prefix, 'share', 'Legion', 'cmake'))]
+
+        self.run_test('cmake',
+                      options=cmake_args,
+                      purpose='test: compile {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test('make',
+                      purpose='test: build {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
     def test(self):
         self.run_local_function_tasks_test()
