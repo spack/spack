@@ -31,3 +31,9 @@ class Papyrus(CMakePackage):
         env.prepend_path('CPATH', self.prefix.include)
         env.prepend_path('LIBRARY_PATH', lib_dir)
         env.prepend_path('LD_LIBRARY_PATH', lib_dir)
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([join_path('kv', 'tests', '01_open_close')])
