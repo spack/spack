@@ -15,6 +15,7 @@ class Libtree(CMakePackage):
 
     maintainers = ['haampie']
 
+    version('1.2.3', sha256='4a912cf97109219fe931942a30579336b6ab9865395447bd157bbfa74bf4e8cf')
     version('1.2.2', sha256='4ccf09227609869b85a170550b636defcf0b0674ecb0785063b81785b1c29bdd')
     version('1.2.1', sha256='26791c0f418b93d502879db0e1fd2fd3081b885ad87326611d992a5f8977a9b0')
     version('1.2.0', sha256='3e74655f22b1dcc19e8a1b9e7796b8ad44bc37f29e9a99134119e8521e28be97')
