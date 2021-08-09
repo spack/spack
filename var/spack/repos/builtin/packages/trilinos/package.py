@@ -634,7 +634,7 @@ class Trilinos(CMakePackage, CudaPackage):
                 continue
             depspec = spec[dep_name]
             options.extend([
-                define('TPL_' + tpl_name + '_INCLUDE_DIRS', depspec.prefix.include),
+                define(tpl_name + '_INCLUDE_DIRS', depspec.prefix.include),
                 define(tpl_name + '_ROOT', depspec.prefix),
                 define(tpl_name + '_LIBRARY_NAMES', depspec.libs.names),
                 define(tpl_name + '_LIBRARY_DIRS', depspec.libs.directories),
