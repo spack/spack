@@ -4,17 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 from spack import *
 
 
 class Mpibind(AutotoolsPackage):
-    """A memory-driven algorithm to map parallel codes 
+    """A memory-driven algorithm to map parallel codes
     to heterogeneous architectures"""
 
     homepage    = "https://github.com/LLNL/mpibind"
     url         = "https://github.com/LLNL/mpibind/archive/refs/tags/v0.5.0.tar.gz"
     git         = "https://github.com/LLNL/mpibind.git"
-    
+
     maintainers = ['eleon']
 
     # The build process uses 'git describe --tags' to get the
@@ -26,7 +27,7 @@ class Mpibind(AutotoolsPackage):
             description='Build w/support for NVIDIA GPUs.')
     variant('rocm', default=False,
             description='Build w/support for AMD GPUs.')
-        
+
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
@@ -41,12 +42,10 @@ class Mpibind(AutotoolsPackage):
                type=('build', 'link'))
     depends_on('hwloc@2.4:+rocm+opencl', when='+rocm',
                type=('build', 'link'))
-    
+
     def autoreconf(self, spec, prefix):
         autoreconf('--install', '--verbose', '--force')
 
     # To build and run the tests, make sure 'libtap' is installed
     # on the target system and is recognized by pkg-config.
-    # Unfortunately, libtap is not in Spack. 
-
-
+    # Unfortunately, libtap is not in Spack.
