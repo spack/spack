@@ -49,13 +49,11 @@ class Uqtk(CMakePackage):
         blas_libs = spec['blas'].libs.joined(';')
 
         args = [
-            '-DCMAKE_SUNDIALS_DIR={0}'.format(spec['sundials'].prefix),
-            '-DLAPACK_LIBRARIES={0}'.format(lapack_libs),
-            '-DBLAS_LIBRARIES={0}'.format(blas_libs),
+            self.define('CMAKE_SUNDIALS_DIR', spec['sundials'].prefix),
+            self.define('LAPACK_LIBRARIES', lapack_libs),
+            self.define('BLAS_LIBRARIES', blas_libs),
+            self.define_from_variant('PyUQTk', 'pyuqtk')
         ]
-
-        if self.spec.variants['pyuqtk'].value:
-            args.extend(['-DPyUQTk=ON'])
 
         return args
 
