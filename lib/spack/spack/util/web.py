@@ -508,17 +508,20 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
-    # We don't pass 'context' parameter because it was only introduced starting
-    # with versions 2.7.9 and 3.4.3 of Python.
-    if 'context' in kwargs:
-        del kwargs['context']
-
     opener = urlopen
     if url_util.parse(url).scheme == 's3':
         import spack.s3_handler
         opener = spack.s3_handler.open
 
-    return opener(req, *args, **kwargs)
+    try:
+        return opener(req, *args, **kwargs)
+    except:
+        # Note: 'context' parameter was only introduced starting
+        # with versions 2.7.9 and 3.4.3 of Python.
+        # If the above fails, call without 'context.
+        if 'context' in kwargs:
+            del kwargs['context']
+        return opener(req, *args, **kwargs)
 
 
 def find_versions_of_archive(
