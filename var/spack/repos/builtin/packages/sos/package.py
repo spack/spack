@@ -51,8 +51,7 @@ class Sos(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        if '+xpmem' in self.spec:
-            args.append('--with-xpmem')
+        args.extend(self.with_or_without('xpmem'))
         if '+ofi'  in self.spec:
             args.append('--with-ofi')
         # This option is not compatiable with remote atomics
