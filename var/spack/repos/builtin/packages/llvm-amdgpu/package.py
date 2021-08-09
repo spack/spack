@@ -94,7 +94,7 @@ class LlvmAmdgpu(CMakePackage):
             'compiler-rt'
         ]
 
-        if self.spec.satisfies('@4.2.0:'):
+        if self.spec.satisfies('@4.3.0:'):
             llvm_projects.append('libcxx')
             llvm_projects.append('libcxxabi')
 
