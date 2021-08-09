@@ -508,6 +508,11 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
+    # Note: 'context' parameter was only introduced starting
+    # with versions 2.7.9 and 3.4.3 of Python.
+    if __UNABLE_TO_VERIFY_SSL:
+        del kwargs['context']
+
     opener = urlopen
     if url_util.parse(url).scheme == 's3':
         import spack.s3_handler
@@ -515,11 +520,9 @@ def _urlopen(req, *args, **kwargs):
 
     try:
         return opener(req, *args, **kwargs)
-    except:
-        # Note: 'context' parameter was only introduced starting
-        # with versions 2.7.9 and 3.4.3 of Python.
-        # If the above fails, call without 'context.
-        if 'context' in kwargs:
+    except TypeError as err:
+        # If the above fails because of 'context', call without 'context'.
+        if 'context' in kwargs and 'context' in str(err):
             del kwargs['context']
         return opener(req, *args, **kwargs)
 
