@@ -58,7 +58,7 @@ class Uqtk(CMakePackage):
         return args
 
     def setup_run_environment(self, env):
-        if self.spec.variants['pyuqtk'].value:
+        if '+pyuqtk' in self.spec:
             env.prepend_path('PYTHONPATH', self.prefix)
             env.prepend_path('PYTHONPATH', '{0}/PyUQTk'.format(self.prefix))
             env.prepend_path('LD_LIBRARY_PATH', '{0}/PyUQTk/'.format(self.prefix))
