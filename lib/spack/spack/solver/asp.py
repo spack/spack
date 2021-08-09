@@ -1570,6 +1570,8 @@ class SpackSolverSetup(object):
 
         if reuse:
             self.gen.h1("Installed packages")
+            self.gen.fact(fn.optimize_for_reuse())
+            self.gen.newline()
             self.define_installed_packages(possible)
 
         self.gen.h1('General Constraints')
