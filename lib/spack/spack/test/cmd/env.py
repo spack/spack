@@ -1948,7 +1948,17 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
-@pytest.mark.parametrize('link_type', ['symlink', 'hardlink', 'copy'])
+def print_dir(path):
+    for dirpath, dirnames, filenames in os.walk(path):
+        directory_level = dirpath.replace(path, "")
+        directory_level = directory_level.count(os.sep)
+        indent = " " * 4
+        print("%s%s/" % (indent * directory_level, os.path.basename(dirpath)))
+        for f in filenames:
+            print("%s%s" % (indent * (directory_level + 1), f))
+
+
+@pytest.mark.parametrize('link_type', ['hardlink', 'copy', 'symlink'])
 def test_view_link_type(link_type, tmpdir, mock_fetch, mock_packages, mock_archive,
                         install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -1970,13 +1980,14 @@ env:
         test = ev.read('test')
 
         for spec in test._get_environment_specs():
-            view_path = os.path.join(viewdir, spec.name)
-            assert os.path.exists(view_path)
-
-            file_to_test = os.path.join(test.default_view.view()._root, spec.name)
-
-            assert os.path.isfile(file_to_test)
-            assert os.path.islink(file_to_test) == (link_type == 'symlink')
+            try:
+                file_to_test = os.path.join(
+                    test.default_view.view()._root, spec.name)
+                assert os.path.islink(file_to_test)  == (link_type == 'symlink')
+            except AssertionError as ae:
+                print("The failing spec is: ", spec.name)
+                print_dir(test.default_view.view()._root)
+                raise ae
 
 
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,
