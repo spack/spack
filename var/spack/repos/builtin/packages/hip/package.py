@@ -63,9 +63,17 @@ class Hip(CMakePackage):
     patch('0003-Improve-compilation-without-git-repo.3.10.0.patch', when='@3.10.0:4.0.0')
     patch('0003-Improve-compilation-without-git-repo.4.1.0.patch', when='@4.1.0')
     patch('0003-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.4.2.0.patch', when='@4.2.0')
+
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.10.0.patch', when='@3.10.0:4.1.0')
+
+    # Tests are broken when using cmake 3.21
+    with when('^cmake@3.21:'):
+        patch('0005-Disable-tests-3.5.0.patch', when='@3.5.0')
+        patch('0005-Disable-tests-3.6.0.patch', when='@3.6.0:3.8.0')
+        patch('0005-Disable-tests-3.9.0.patch', when='@3.9.0:4.0.0')
+        patch('0005-Disable-tests-4.1.0.patch', when='@4.1.0:')
 
     def get_paths(self):
         if self.spec.external:
