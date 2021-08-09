@@ -54,6 +54,6 @@ class Sos(AutotoolsPackage):
         args.extend(self.with_or_without('xpmem'))
         args.extend(self.with_or_without('ofi'))
         # This option is not compatiable with remote atomics
-        args.extend(self.with_or_without('shr-atomics'))
+        args.extend(self.enable_or_disable('shr-atomics'))
         args.append('--enable-pmi-simple')
         return args
