@@ -25,10 +25,11 @@ class Otf2(AutotoolsPackage):
     version('1.3.1', sha256='c4605ace845d89fb1a19223137b92cc503b01e3db5eda8c9e0715d0cfcf2e4b9')
     version('1.2.1', sha256='1db9fb0789de4a9c3c96042495e4212a22cb581f734a1593813adaf84f2288e4')
 
-    depends_on('autoconf', type='build', when='@2.2 %cce')
-    depends_on('automake', type='build', when='@2.2 %cce')
-    depends_on('libtool', type='build', when='@2.2 %cce')
-    depends_on('m4', type='build', when='@2.2 %cce')
+    with when('@2.2 %cce'):
+        depends_on('autoconf', type='build')
+        depends_on('automake', type='build')
+        depends_on('libtool', type='build')
+        depends_on('m4', type='build')
 
     # Fix missing initialization of variable resulting in issues when used by
     # APEX/HPX: https://github.com/STEllAR-GROUP/hpx/issues/5239
