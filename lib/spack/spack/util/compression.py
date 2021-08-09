@@ -7,7 +7,6 @@ import os
 import re
 import sys
 from itertools import product
-import shutil
 
 from spack.util.executable import which
 
@@ -24,6 +23,7 @@ ALLOWED_ARCHIVE_TYPES = [".".join(ext) for ext in product(
 def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
+
 def _tar(archive_file):
     outfile = os.path.basename(archive_file)
     remnant = os.path.join(os.getcwd(), outfile)
@@ -39,6 +39,7 @@ def _tar(archive_file):
         tar.add_default_arg('-oxf')
         tar(archive_file)
     return outfile
+
 
 def _bunzip2(archive_file):
     """ Use Python's bz2 module to decompress bz2 compressed archives
@@ -59,6 +60,7 @@ def _bunzip2(archive_file):
         bunzip2.add_default_arg('-q')
         return bunzip2(archive_file)
     return archive_out
+
 
 def _gunzip(archive_file):
     """Like gunzip, but extracts in the current working directory
@@ -105,8 +107,8 @@ def _unzip(archive_file):
 
 def composer(funcA):
     def b(funcB):
-        def c(*args,**kwargs):
-            return funcA(funcB(*args,**kwargs))
+        def c(*args, **kwargs):
+            return funcA(funcB(*args, **kwargs))
         return c
     return b
 
@@ -119,7 +121,8 @@ def decompressor_for(path, ext=None):
         if not ext_l[1:]:
             return select_decompressor_for(path, ext_l[0])
         else:
-            return composer(decompressor_for(path,ext_l[0]))(decompressor_for(path, ext = ".".join(ext_l[1:])))
+            return composer(decompressor_for(path, ext_l[0]))
+            (decompressor_for(path, ext=".".join(ext_l[1:])))
     else:
         return select_decompressor_for(path, ext)
 
