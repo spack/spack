@@ -342,7 +342,8 @@ class Legion(CMakePackage):
     def run_local_function_tasks_test(self):
         """Run stand alone test: local_function_tasks"""
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'local_function_tasks')
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'examples', 'local_function_tasks')
 
         if not os.path.exists(test_dir):
             print('Skipping local_function_tasks test')
@@ -352,7 +353,10 @@ class Legion(CMakePackage):
 
         cmake_args = ['-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc),
                       '-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx),
-                      '-DLegion_DIR={0}'.format(join_path(self.prefix, 'share', 'Legion', 'cmake'))]
+                      '-DLegion_DIR={0}'.format(join_path(self.prefix,
+                                                          'share',
+                                                          'Legion',
+                                                          'cmake'))]
 
         self.run_test('cmake',
                       options=cmake_args,
