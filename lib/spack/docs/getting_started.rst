@@ -24,6 +24,7 @@ before Spack is run:
 #. The ``patch`` command to apply patches
 #. The ``git`` and ``curl`` commands for fetching
 #. If using the ``gpg`` subcommand, ``gnupg2`` is required
+#. If using the ``unit-test`` subcommand, ``file`` is required
 
 These requirements can be easily installed on most modern Linux systems;
 on macOS, XCode is required.  Spack is designed to run on HPC
