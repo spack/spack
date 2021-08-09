@@ -29,10 +29,18 @@ def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
 
     # Calculate the comparison (c)
     c = spack.cmd.diff.compare_specs(specA, specB, to_string=True)
-    assert len(c['a_not_b']) == 1
-    assert len(c['b_not_a']) == 1
-    assert c['a_not_b'][0] == ['variant_value', 'mpileaks debug False']
-    assert c['b_not_a'][0] == ['variant_value', 'mpileaks debug True']
+
+    # these particular diffs should have the same length b/c thre aren't
+    # any node differences -- just value differences.
+    assert len(c['a_not_b']) == len(c['b_not_a'])
+
+    # ensure that variant diffs are in here the result
+    assert ['variant_value', 'mpileaks debug False'] in c['a_not_b']
+    assert ['variant_value', 'mpileaks debug True'] in c['b_not_a']
+
+    # ensure that hash diffs are in here the result
+    assert ['hash', 'mpileaks %s' % specA.dag_hash()] in c['a_not_b']
+    assert ['hash', 'mpileaks %s' % specB.dag_hash()] in c['b_not_a']
 
 
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
