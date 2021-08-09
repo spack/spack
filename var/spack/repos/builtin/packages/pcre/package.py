@@ -53,8 +53,18 @@ class Pcre(CMakePackage):
 
     def cmake_args(self):
         args = []
-        
-        #TODO: Find CMake translations of the options above
+
+        if '+jit' in self.spec:
+            args.append('-DPCRE_SUPPORT_JIT:BOOL=ON')
+
+        if '+multibyte' in self.spec:
+            args.append('-DPCRE_BUILD_PCRE16:BOOL=ON')
+            args.append('-DPCRE_BUILD_PCRE32:BOOL=ON')
+
+        if '+utf' in self.spec:
+            args.append('-DPCRE_SUPPORT_UTF:BOOL=ON')
+            args.append('-DPCRE_SUPPORT_UNICODE_PROPERTIES:BOOL=ON')
+
         return args
 
     def cmake(self, spec, prefix):
