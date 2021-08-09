@@ -24,24 +24,22 @@ class Giflib(MakefilePackage, SourceforgePackage):
 
     patch('bsd-head.patch')
 
-    @property
-    def build_targets(self):
-        targets = ['all']
+    def set_libver_prefix(self, targets):
         if self.spec.satisfies('@5.2.0:'):
             targets.append('PREFIX={0}'.format(self.spec.prefix))
             targets.append('LIBMAJOR={0}'.format(self.spec.version.up_to(1)))
             targets.append('LIBVER={0}'.format(self.spec.version))
 
+    @property
+    def build_targets(self):
+        targets = ['all']
+        self.set_libver_prefix(targets)
         return targets
 
     @property
     def install_targets(self):
         targets = ['install']
-        if self.spec.satisfies('@5.2.0:'):
-            targets.append('PREFIX={0}'.format(self.spec.prefix))
-            targets.append('LIBMAJOR={0}'.format(self.spec.version.up_to(1)))
-            targets.append('LIBVER={0}'.format(self.spec.version))
-
+        self.set_libver_prefix(targets)        
         return targets
 
     def check(self):
