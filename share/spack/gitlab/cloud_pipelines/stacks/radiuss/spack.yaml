@@ -23,8 +23,8 @@ spack:
     
     # Note skipping spot since no spack package for it
     - radiuss:
-      #- ascent  # ^conduit@0.6.0
-      #- axom
+      - ascent  # ^conduit@0.6.0
+      - axom
       - blt
       - caliper
       #- care
@@ -35,17 +35,17 @@ spack:
       #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm
       - hypre
       - lbann
-      #- lvarray ^raja~openmp  # per Ben Corbett Issue #23192
+      #- lvarray # ^raja~openmp  # per Ben Corbett Issue #23192
       - mfem
-      #- py-hatchet
-      #- py-maestrowf
-      #- py-merlin
-      #- py-shroud
+      - py-hatchet
+      - py-maestrowf
+      - py-merlin
+      - py-shroud
       #- raja
-      #- samrai
+      - samrai
       - scr
-      #- sundials
-      #- umpire ~openmp
+      - sundials
+      #- umpire #~openmp
       #- visit   # ^mesa-glu@9.0.0
       - xbraid
       - zfp
