@@ -106,4 +106,8 @@ class Rocblas(CMakePackage):
                 arch = arch + ':xnack-'
         args.append(self.define('Tensile_ARCHITECTURE', arch))
 
+        # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
         return args
