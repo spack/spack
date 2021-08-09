@@ -103,6 +103,7 @@ def env_activate(args):
         tty.die("No such environment: '%s'" % env)
 
     if spack_env == os.environ.get('SPACK_ENV'):
+        tty.debug("Environment %s is already active" % args.activate_env)
         return
 
     active_env = ev.get_env(namedtuple('args', ['env'])(env),
