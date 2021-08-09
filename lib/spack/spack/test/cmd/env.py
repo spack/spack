@@ -1973,7 +1973,7 @@ env:
             view_path = os.path.join(viewdir, spec.name)
             assert os.path.exists(view_path)
 
-            file_to_test = os.path.join(view_path, spec.name)
+            file_to_test = os.path.join(test.default_view.view()._root, spec.name)
 
             assert os.path.isfile(file_to_test)
             assert os.path.islink(file_to_test) == (link_type == 'symlink')
