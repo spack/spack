@@ -26,16 +26,49 @@ def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
+def _untar(archive_file):
+    """ Untar archive. Prefer native Python `tarfile`
+    but fall back to system utility failing
+    to find the native Python module (tar on Unix).
+    Filters archives through native support gzip and xz
+    compression formats.
+
+    Args:
+        archive_file (str): absolute path to the archive to be extracted.
+        Can be one of .tar.(gz|bz2|xz|Z) or .(tgz|tbz|tbz2|txz).
+    """
+    outfile = os.path.basename(archive_file)
+    remnant = os.path.join(os.getcwd(), outfile)
+    try:
+        import tarfile
+        if ext in [".xz", ".txz"]:
+            # Sucessful import of lzma module indicates
+            # support for xz compression type
+            import lzma  # noqa # novermin
+        tar = tarfile.open(archive_file)
+        tar.extractall()
+        tar.close()
+        if sys.platform == "win32":
+            if os.path.exists(remnant):
+                os.remove(remnant)
+    except ImportError:
+        tar = which('tar', required=True)
+        tar.add_default_arg('-oxf')
+        tar(archive_file)
+    return outfile
+
+
 def _bunzip2(archive_file):
     """ Use Python's bz2 module to decompress bz2 compressed archives
+    Fall back to system utility failing to find Python module `bz2`
 
     Args:
         archive_file (str): absolute path to the bz2 archive to be decompressed
     """
+    decompressed_file = os.path.basename(archive_file.strip(".bz2"))
+    archive_out = os.path.join(os.getcwd(), decompressed_file)
     try:
         import bz2
-        decompressed_file = os.path.basename(archive_file.strip(".bz2"))
-        archive_out = os.path.join(os.getcwd(), decompressed_file)
         f_bz = bz2.BZ2File(archive_file, mode='rb')
         with open(archive_out, 'wb') as ar:
             ar.write(f_bz.read())
@@ -43,23 +76,32 @@ def _bunzip2(archive_file):
     except ImportError:
         bunzip2 = which('bunzip2', required=True)
         bunzip2.add_default_arg('-q')
-        return bunzip2
+        return bunzip2(archive_file)
+    return archive_out
 
 
 def _gunzip(archive_file):
-    """Like gunzip, but extracts in the current working directory
+    """ Decompress `.gz` extensions. Prefer native Python `gzip` module.
+    Failing back to system utility gunzip.
+    Like gunzip, but extracts in the current working directory
     instead of in-place.
 
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
-    import gzip
     decompressed_file = os.path.basename(archive_file.strip('.gz'))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
-    with gzip.open(archive_file, "rb") as f_in:
-        with open(destination_abspath, "wb") as f_out:
-            f_out.write(f_in.read())
+    try:
+        import gzip
+        with gzip.open(archive_file, "rb") as f_in:
+            with open(destination_abspath, "wb") as f_out:
+                f_out.write(f_in.read())
+    except ImportError:
+        gzip = which("gzip")
+        gzip.add_default_arg("-d")
+        gzip(archive_file)
+    return destination_abspath
 
 
 def _unzip(archive_file):
@@ -71,17 +113,75 @@ def _unzip(archive_file):
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
-    exe = 'unzip'
-    arg = '-q'
-    if is_windows:
-        exe = 'tar'
-        arg = '-xf'
-    unzip = which(exe, required=True)
-    unzip.add_default_arg(arg)
-    unzip(archive_file)
+
+    destination_abspath = os.getcwd()
+    try:
+        from zipfile import ZipFile
+        with ZipFile(archive_file, 'r') as zf:
+            zf.extractall(destination_abspath)
+    except ImportError:
+        exe = 'unzip'
+        arg = '-q'
+        if is_windows:
+            exe = 'tar'
+            arg = '-xf'
+        unzip = which(exe, required=True)
+        unzip.add_default_arg(arg)
+        unzip(archive_file)
+    return destination_abspath
 
 
-def decompressor_for(path, extension=None):
+def composer(funcA):
+    """Utility method currying function pointers
+    returns a function pointer to be called with
+    a function to be curried with the current function
+    argument.
+
+    Args:
+        funcA (function): Function to be curried.
+    """
+    def b(funcB):
+        def c(*args, **kwargs):
+            return funcA(funcB(*args, **kwargs))
+        return c
+    return b
+
+
+def decompressor_for(path, ext=None):
+    """Wrapper for select_decompressor_for, returns
+    a function pointer to appropriate decompression
+    algorithm.
+
+    On Unix - simply invokes select_decompressor_for
+
+    On Windows - archives with one extension are
+    passed through to select_decompressor_for. Multiple
+    extension archives are decomposed into their component
+    extensions and the requsite decompression algorithms are
+    curried and returned as a single callable function pointer.
+
+    Args:
+        path (str): path of the archive file requiring decompression
+        ext (str): Extension of archive file
+    """
+    if sys.platform == 'win32':
+        if ext is None:
+            ext = extension(path)
+        ext_l = ext.split(".")
+        if not ext_l[1:]:
+            return select_decompressor_for(path, ext_l[0])
+        else:
+            return composer(
+                decompressor_for(path, ext_l[0])
+            )(
+                decompressor_for(
+                    path, ext=".".join(ext_l[1:]))
+            )
+    else:
+        return select_decompressor_for(path, ext)
+
+
+def select_decompressor_for(path, extension=None):
     """Get the appropriate decompressor for a path."""
     if ((extension and re.match(r'\.?zip$', extension)) or
             path.endswith('.zip')):
@@ -90,9 +190,7 @@ def decompressor_for(path, extension=None):
         return _gunzip
     if extension and re.match(r'bz2', extension):
         return _bunzip2
-    tar = which('tar', required=True)
-    tar.add_default_arg('-oxf')
-    return tar
+    return _untar
 
 
 def strip_extension(path):
