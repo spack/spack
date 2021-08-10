@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import shutil
 import sys
+
+from spack import *
 
 
 class Mfem(Package, CudaPackage, ROCmPackage):
@@ -48,10 +49,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # other version.
     version('develop', branch='master')
 
+    version('4.3.0',
+            sha256='3a495602121b986049286ea0b23512279cdbdfb43c15c42a1511b521051fbe38',
+            url='https://bit.ly/mfem-4-3', extension='tar.gz')
+
     version('4.2.0',
             '4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d',
-            url='https://bit.ly/mfem-4-2', extension='tar.gz',
-            preferred=True)
+            url='https://bit.ly/mfem-4-2', extension='tar.gz')
 
     version('4.1.0',
             '4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d',
@@ -195,7 +199,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('hypre@2.10.0:2.13.99', when='@:3.3.99+mpi')
-    depends_on('hypre', when='@3.4:+mpi')
+    depends_on('hypre@:2.20.0', when='@3.4:4.2.99+mpi')
+    depends_on('hypre', when='@4.3.0:+mpi')
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')

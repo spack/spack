@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Paraview(CMakePackage, CudaPackage):
@@ -141,6 +142,10 @@ class Paraview(CMakePackage, CudaPackage):
     # Can't contretize with python2 and py-pillow@7.0.0:
     depends_on('pil@:6', when='+python')
 
+    # ParaView depends on cli11 due to changes in MR
+    # https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4951
+    depends_on('cli11@1.9.1', when='@5.10:')
+
     patch('stl-reader-pv440.patch', when='@4.4.0')
 
     # Broken gcc-detection - improved in 5.1.0, redundant later
@@ -267,6 +272,9 @@ class Paraview(CMakePackage, CudaPackage):
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
             '-DBUILD_TESTING:BOOL=OFF',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY']
+
+        if spec.satisfies('@5.10:'):
+            cmake_args.append('-DVTK_MODULE_USE_EXTERNAL_ParaView_vtkcatalyst:BOOL=OFF')
 
         if spec.satisfies('@:5.7') and spec['cmake'].satisfies('@3.17:'):
             cmake_args.append('-DFPHSA_NAME_MISMATCHED:BOOL=ON')

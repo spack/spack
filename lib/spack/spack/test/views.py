@@ -5,9 +5,9 @@
 
 import os
 
-from spack.spec import Spec
 from spack.directory_layout import YamlDirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
+from spack.spec import Spec
 
 
 def test_global_activation(install_mockery, mock_fetch):

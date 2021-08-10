@@ -7,29 +7,31 @@
 https://github.com/spack/spack-monitor/blob/main/script/spackmoncli.py
 """
 
-from datetime import datetime
-import hashlib
 import base64
+import hashlib
 import os
 import re
+from datetime import datetime
 
 try:
-    from urllib.request import Request, urlopen
     from urllib.error import URLError
+    from urllib.request import Request, urlopen
 except ImportError:
     from urllib2 import urlopen, Request, URLError  # type: ignore  # novm
+
+from copy import deepcopy
+from glob import glob
+
+import llnl.util.tty as tty
 
 import spack
 import spack.config
 import spack.hash_types as ht
 import spack.main
 import spack.store
+import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.path
-import llnl.util.tty as tty
-from copy import deepcopy
-from glob import glob
 
 # A global client to instantiate once
 cli = None
@@ -172,7 +174,7 @@ class SpackMonitorClient:
         env_file = os.path.join(pkg_dir, "install_environment.json")
         build_environment = read_json(env_file)
         if not build_environment:
-            tty.warning(
+            tty.warn(
                 "install_environment.json not found in package folder. "
                 " This means that the current environment metadata will be used."
             )
@@ -282,6 +284,12 @@ class SpackMonitorClient:
                 msg = e.reason
             elif hasattr(e, 'code'):
                 msg = e.code
+
+            # If we can parse the message, try it
+            try:
+                msg += "\n%s" % e.read().decode("utf8", 'ignore')
+            except Exception:
+                pass
 
             if self.allow_fail:
                 tty.warning("Request to %s was not successful, but continuing." % e.url)

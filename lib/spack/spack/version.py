@@ -24,15 +24,15 @@ be called on any of the types::
   intersection
   concrete
 """
-import re
 import numbers
+import re
 from bisect import bisect_left
 from functools import wraps
+
 from six import string_types
 
 import spack.error
 from spack.util.spack_yaml import syaml_dict
-
 
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 

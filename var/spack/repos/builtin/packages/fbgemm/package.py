@@ -35,4 +35,12 @@ class Fbgemm(CMakePackage):
     depends_on('python', type='build')
     depends_on('llvm-openmp', when='%apple-clang')
 
+    conflicts('%gcc@:4', msg='FBGEMM requires GCC 5+')
+
     generator = 'Ninja'
+
+    @run_before('cmake')
+    def check_requirements(self):
+        if 'avx2' not in self.spec.target:
+            raise RuntimeError(
+                'FBGEMM requires a CPU with support for AVX2 instruction set or higher')

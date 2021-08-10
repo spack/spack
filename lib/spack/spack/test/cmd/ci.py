@@ -6,9 +6,10 @@
 import filecmp
 import json
 import os
-import pytest
-from jsonschema import validate, ValidationError
 import shutil
+
+import pytest
+from jsonschema import ValidationError, validate
 
 import spack
 import spack.ci as ci
@@ -20,14 +21,14 @@ import spack.hash_types as ht
 import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
+import spack.util.gpg
+import spack.util.spack_yaml as syaml
+import spack.util.url as url_util
 from spack.schema.buildcache_spec import schema as spec_yaml_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
-from spack.spec import Spec, CompilerSpec
+from spack.spec import CompilerSpec, Spec
 from spack.util.mock_package import MockPackageMultiRepo
-import spack.util.spack_yaml as syaml
-import spack.util.gpg
-
 
 ci_cmd = spack.main.SpackCommand('ci')
 env_cmd = spack.main.SpackCommand('env')
@@ -612,14 +613,14 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
-            os.environ['SPACK_IS_PR_PIPELINE'] = 'True'
+            os.environ['SPACK_PIPELINE_TYPE'] = 'spack_pull_request'
             os.environ['SPACK_PR_BRANCH'] = 'fake-test-branch'
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
             try:
                 ci_cmd('generate', '--output-file', outputfile)
             finally:
-                del os.environ['SPACK_IS_PR_PIPELINE']
+                del os.environ['SPACK_PIPELINE_TYPE']
                 del os.environ['SPACK_PR_BRANCH']
 
         with open(outputfile) as f:
@@ -630,8 +631,8 @@ spack:
 
             assert('variables' in yaml_contents)
             pipeline_vars = yaml_contents['variables']
-            assert('SPACK_IS_PR_PIPELINE' in pipeline_vars)
-            assert(pipeline_vars['SPACK_IS_PR_PIPELINE'] == 'True')
+            assert('SPACK_PIPELINE_TYPE' in pipeline_vars)
+            assert(pipeline_vars['SPACK_PIPELINE_TYPE'] == 'spack_pull_request')
 
 
 def test_ci_generate_with_external_pkg(tmpdir, mutable_mock_env_path,
@@ -689,8 +690,12 @@ def test_ci_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
     mirror_dir = working_dir.join('mirror')
     mirror_url = 'file://{0}'.format(mirror_dir.strpath)
 
-    broken_specs_url = 's3://some-bucket/naughty-list'
+    broken_specs_path = os.path.join(working_dir.strpath, 'naughty-list')
+    broken_specs_url = url_util.join('file://', broken_specs_path)
     temp_storage_url = 'file:///path/to/per/pipeline/storage'
+
+    ci_job_url = 'https://some.domain/group/project/-/jobs/42'
+    ci_pipeline_url = 'https://some.domain/group/project/-/pipelines/7'
 
     signing_key_dir = spack_paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, 'package-signing-key')
@@ -743,14 +748,17 @@ spack:
 
             root_spec_build_hash = None
             job_spec_dag_hash = None
+            job_spec_full_hash = None
 
             for h, s in env.specs_by_hash.items():
                 if s.name == 'archive-files':
                     root_spec_build_hash = h
                     job_spec_dag_hash = s.dag_hash()
+                    job_spec_full_hash = s.full_hash()
 
             assert root_spec_build_hash
             assert job_spec_dag_hash
+            assert job_spec_full_hash
 
     def fake_cdash_register(build_name, base_url, project, site, track):
         return ('fakebuildid', 'fakestamp')
@@ -760,6 +768,7 @@ spack:
     monkeypatch.setattr(spack.cmd.ci, 'CI_REBUILD_INSTALL_BASE_ARGS', [
         'notcommand'
     ])
+    monkeypatch.setattr(spack.cmd.ci, 'INSTALL_FAIL_CODE', 127)
 
     with env_dir.as_cwd():
         env_cmd('activate', '--without-view', '--sh', '-d', '.')
@@ -779,7 +788,9 @@ spack:
         set_env_var('SPACK_CDASH_BUILD_NAME', '(specs) archive-files')
         set_env_var('SPACK_RELATED_BUILDS_CDASH', '')
         set_env_var('SPACK_REMOTE_MIRROR_URL', mirror_url)
-        set_env_var('SPACK_IS_DEVELOP_PIPELINE', 'True')
+        set_env_var('SPACK_PIPELINE_TYPE', 'spack_protected_branch')
+        set_env_var('CI_JOB_URL', ci_job_url)
+        set_env_var('CI_PIPELINE_URL', ci_pipeline_url)
 
         ci_cmd('rebuild', fail_on_error=False)
 
@@ -814,6 +825,12 @@ spack:
         assert('-f' in install_parts)
         flag_index = install_parts.index('-f')
         assert('archive-files.yaml' in install_parts[flag_index + 1])
+
+        broken_spec_file = os.path.join(broken_specs_path, job_spec_full_hash)
+        with open(broken_spec_file) as fd:
+            broken_spec_content = fd.read()
+            assert(ci_job_url in broken_spec_content)
+            assert(ci_pipeline_url) in broken_spec_content
 
         env_cmd('deactivate')
 
@@ -894,8 +911,9 @@ spack:
 
 @pytest.mark.disable_clean_stage_check
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
-                              install_mockery, mock_packages, mock_fetch,
-                              mock_stage, mock_gnupghome, project_dir_env):
+                              install_mockery_mutable_config, mock_packages,
+                              mock_fetch, mock_stage, mock_gnupghome,
+                              project_dir_env):
     project_dir_env(tmpdir.strpath)
     working_dir = tmpdir.join('working_dir')
 
@@ -951,7 +969,9 @@ spack:
 
             # env, spec, yaml_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(
-                env, concrete_spec, yaml_path, mirror_url, '42', True)
+                env, concrete_spec, yaml_path, mirror_url, True)
+
+            ci.write_cdashid_to_mirror('42', concrete_spec, mirror_url)
 
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 
@@ -1054,7 +1074,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
     monkeypatch.setattr(buildcache, '_createtarball', faked)
 
     url = 'fakejunk'
-    ci.push_mirror_contents(None, None, None, url, None, None)
+    ci.push_mirror_contents(None, None, None, url, None)
 
     captured = capsys.readouterr()
     std_out = captured[0]
@@ -1604,7 +1624,10 @@ spack:
     broken-specs-url: "{0}"
     mappings:
       - match:
-          - archive-files
+          - a
+          - flatten-deps
+          - b
+          - dependency-install
         runner-attributes:
           tags:
             - donotcare

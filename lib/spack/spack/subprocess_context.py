@@ -13,17 +13,15 @@ modifications to global state in memory that must be replicated in the
 child process.
 """
 
-from types import ModuleType
-
+import io
+import multiprocessing
 import pickle
 import pydoc
-import io
 import sys
-import multiprocessing
+from types import ModuleType
 
 import spack.architecture
 import spack.config
-
 
 _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
 

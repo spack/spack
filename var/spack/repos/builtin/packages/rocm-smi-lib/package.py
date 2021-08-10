@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+import os
 import shutil
+
+from spack import *
 
 
 class RocmSmiLib(CMakePackage):
@@ -32,6 +34,7 @@ class RocmSmiLib(CMakePackage):
     variant('shared', default=True, description='Build shared or static library')
 
     depends_on('cmake@3:', type='build')
+    depends_on('python@3:', type=('build', 'run'), when='@3.9.0:')
 
     def cmake_args(self):
         return [
@@ -43,3 +46,6 @@ class RocmSmiLib(CMakePackage):
         shutil.rmtree(self.prefix.lib)
         install_tree(self.prefix.rocm_smi,  self.prefix)
         shutil.rmtree(self.prefix.rocm_smi)
+        os.remove(join_path(self.prefix.bin, 'rsmiBindings.py'))
+        symlink('../bindings/rsmiBindings.py',
+                join_path(self.prefix.bin, 'rsmiBindings.py'))

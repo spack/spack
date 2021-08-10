@@ -26,6 +26,7 @@ class Pumi(CMakePackage):
     # scorec/core develop branch and we perfer not to expose spack users
     # to the added instability.
     version('master', submodules=True, branch='master')
+    version('2.2.6', commit='4dd330e960b1921ae0d8d4039b8de8680a20d993')  # tag 2.2.6
     version('2.2.5', commit='73c16eae073b179e45ec625a5abe4915bc589af2')  # tag 2.2.5
     version('2.2.4', commit='8072fdbafd53e0c9a63248a269f4cce5000a4a8e')  # tag 2.2.4
     version('2.2.3', commit='d200cb366813695d0f18b514d8d8ecc382cb79fc')  # tag 2.2.3

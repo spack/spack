@@ -28,19 +28,19 @@ class RoctracerDev(CMakePackage):
     version('3.5.0', sha256='7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e')
 
     depends_on('cmake@3:', type='build')
-    depends_on('py-setuptools@:44', type='build')
     depends_on('python@:2', type='build', when='@:4.1.0')
     depends_on('python@3:', type='build', when='@4.2.0:')
     depends_on('py-cppheaderparser', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
-        depends_on('rocminfo@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver, type='build', when='@' + ver)
-        if ver in ['4.2.0']:
-            depends_on('rocprofiler-dev@' + ver, type='link', when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('rocminfo@' + ver, when='@' + ver)
+        depends_on('hip@' + ver, when='@' + ver)
+
+    for ver in ['4.2.0']:
+        depends_on('rocprofiler-dev@' + ver, when='@' + ver)
 
     def setup_build_environment(self, build_env):
         spec = self.spec

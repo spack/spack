@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Gloo(CMakePackage):
+class Gloo(CMakePackage, CudaPackage):
     """Gloo is a collective communications library."""
 
     homepage = "https://github.com/facebookincubator/gloo"
@@ -28,3 +28,6 @@ class Gloo(CMakePackage):
     depends_on('ninja', type='build')
 
     generator = 'Ninja'
+
+    def cmake_args(self):
+        return [self.define_from_variant('USE_CUDA', 'cuda')]

@@ -6,13 +6,14 @@ import os
 
 import ordereddict_backport
 import pytest
-import spack.config
-import spack.paths
-import spack.util.web
-import spack.util.s3
-from spack.version import ver
 
 import llnl.util.tty as tty
+
+import spack.config
+import spack.paths
+import spack.util.s3
+import spack.util.web
+from spack.version import ver
 
 
 def _create_url(relative_url):
@@ -278,3 +279,8 @@ def test_s3_url_exists(monkeypatch, capfd):
 
     fake_s3_url_does_not_exist = 's3://my-bucket/subdirectory/my-notfound-file'
     assert(not spack.util.web.url_exists(fake_s3_url_does_not_exist))
+
+
+def test_s3_url_parsing():
+    assert(spack.util.s3._parse_s3_endpoint_url("example.com") == 'https://example.com')
+    assert(spack.util.s3._parse_s3_endpoint_url("http://example.com") == 'http://example.com')

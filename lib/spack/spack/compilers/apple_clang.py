@@ -6,8 +6,9 @@ import os.path
 import re
 import shutil
 
-import llnl.util.tty as tty
 import llnl.util.lang
+import llnl.util.tty as tty
+
 import spack.compiler
 import spack.compilers.clang
 import spack.util.executable
