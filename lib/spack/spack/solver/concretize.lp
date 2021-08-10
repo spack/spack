@@ -193,45 +193,34 @@ provides_virtual(Provider, Virtual) :-
 %-----------------------------------------------------------------------------
 % Virtual dependency weights
 %-----------------------------------------------------------------------------
-% give dependents the virtuals they want
-provider_weight(Dependency, 0)
- :- virtual(Virtual), depends_on(Package, Dependency),
-    provider(Dependency, Virtual),
-    external(Dependency).
 
-provider_weight(Dependency, Weight)
- :- virtual(Virtual), depends_on(Package, Dependency),
-    provider(Dependency, Virtual),
-    pkg_provider_preference(Package, Virtual, Dependency, Weight),
-    not external(Dependency).
+% A provider may have different possible weights depending on whether it's an external
+% or not, or on preferences expressed in packages.yaml etc. This rule ensures that
+% we select the weight, among the possible ones, that minimizes the overall objective function.
+1 { provider_weight(Dependency, Weight, Reason) : possible_provider_weight(Dependency, Weight, Reason) } 1
+ :- provider(Dependency, _).
 
-provider_weight(Dependency, Weight)
- :- virtual(Virtual), depends_on(Package, Dependency),
-    provider(Dependency, Virtual),
-    not pkg_provider_preference(Package, Virtual, Dependency, _),
-    not external(Dependency),
-    default_provider_preference(Virtual, Dependency, Weight).
+% Get rid or the reason for enabling the possible weight (useful for debugging)
+provider_weight(Dependency, Weight) :- provider_weight(Dependency, Weight, _).
 
-% if there's no preference for something, it costs 100 to discourage its
-% use with minimization
-provider_weight(Dependency, 100)
- :- virtual(Virtual),
-    provider(Dependency, Virtual),
-    depends_on(Package, Dependency),
-    not external(Dependency),
-    not pkg_provider_preference(Package, Virtual, Dependency, _),
-    not default_provider_preference(Virtual, Dependency, _).
+% A provider that is an external can use a weight of 0
+possible_provider_weight(Dependency, 0, "external") :- provider(Dependency, Virtual), external(Dependency).
 
-% Do the same for virtual roots
-provider_weight(Package, Weight)
- :- virtual_root(Virtual),
-    provider(Package, Virtual),
-    default_provider_preference(Virtual, Package, Weight).
+% A provider mentioned in packages.yaml can use a weight
+% according to its priority in the list of providers
+possible_provider_weight(Dependency, Weight, "packages_yaml")
+  :- provider(Dependency, Virtual),
+     depends_on(Package, Dependency),
+     pkg_provider_preference(Package, Virtual, Dependency, Weight).
 
-provider_weight(Package, 100)
- :- virtual_root(Virtual),
-    provider(Package, Virtual),
-    not default_provider_preference(Virtual, Package, _).
+% A provider mentioned in the default configuration can use a weight
+% according to its priority in the list of providers
+possible_provider_weight(Dependency, Weight, "default")
+  :- provider(Dependency, Virtual),
+     default_provider_preference(Virtual, Dependency, Weight).
+
+% Any provider can use 100 as a weight, which is very high and discourage its use
+possible_provider_weight(Dependency, 100, "fallback") :- provider(Dependency, Virtual).
 
 #defined possible_provider/2.
 #defined provider_condition/3.
