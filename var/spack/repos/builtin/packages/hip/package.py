@@ -76,7 +76,7 @@ class Hip(CMakePackage):
         patch('0005-Disable-tests-3.9.0.patch', when='@3.9.0:4.0.0')
         patch('0005-Disable-tests-4.1.0.patch', when='@4.1.0:')
 
-    patch('Add_missing_open_cl_header_file_for_4.3.0.patch',when='@4.3.0')
+    patch('Add_missing_open_cl_header_file_for_4.3.0.patch', when='@4.3.0')
 
     def get_paths(self):
         if self.spec.external:
