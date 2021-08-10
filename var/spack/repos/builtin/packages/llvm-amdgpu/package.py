@@ -138,4 +138,3 @@ class LlvmAmdgpu(CMakePackage):
             args.append(self.define('GCC_INSTALL_PREFIX', gcc_prefix))
 
         return args
-    
