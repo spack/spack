@@ -38,4 +38,3 @@ class Cxxopts(CMakePackage):
             self.define('CXXOPTS_BUILD_TESTS', 'OFF'),
             self.define_from_variant('CXXOPTS_USE_UNICODE_HELP', 'unicode')
         ]
-
