@@ -1163,7 +1163,7 @@ completed, the steps to make the major release are:
    ``releases/vX.Y``. That is, you should create a ``releases/vX.Y``
    branch if you are preparing the ``X.Y.0`` release.
 
-#. Remove the ``dev`` pre-release suffix from the version tuple in
+#. Remove the ``dev0`` development release segment from the version tuple in
    ``lib/spack/spack/__init__.py``.
 
    The version number itself should already be correct and should not be
@@ -1192,9 +1192,9 @@ completed, the steps to make the major release are:
 #. Bump the major version in the ``develop`` branch.
 
    Create a pull request targeting the ``develop`` branch, bumping the major
-   version in ``lib/spack/spack/__init__.py`` with a ``dev`` pre-release suffix.
+   version in ``lib/spack/spack/__init__.py`` with a ``dev0`` release segment.
    For instance when you have just released ``v0.15.0``, set the version
-   to ``('0', '16', '0', 'dev')`` on ``develop``.
+   to ``(0, 16, 0, 'dev0')`` on ``develop``.
 
 #. Follow the steps in :ref:`publishing-releases`.
 

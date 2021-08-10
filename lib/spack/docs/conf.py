@@ -144,7 +144,7 @@ copyright = u'2013-2021, Lawrence Livermore National Laboratory.'
 # The short X.Y version.
 import spack
 
-version = '.'.join(spack.spack_version_info[:2])
+version = '.'.join(str(s) for s in spack.spack_version_info[:2])
 # The full version, including alpha/beta/rc tags.
 release = spack.spack_version
 
