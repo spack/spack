@@ -479,7 +479,8 @@ class ViewDescriptor(object):
                     self.projections == other.projections,
                     self.select == other.select,
                     self.exclude == other.exclude,
-                    self.link == other.link])
+                    self.link == other.link,
+                    self.link_type == other.link_type])
 
     def to_dict(self):
         ret = syaml.syaml_dict([('root', self.root)])
