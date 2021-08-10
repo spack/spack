@@ -12,3 +12,4 @@ if len(spack_version_info) >= 4:
     spack_version += '-' + spack_version_info[3]
 
 __all__ = ['spack_version_info', 'spack_version']
+__version__ = spack_version
