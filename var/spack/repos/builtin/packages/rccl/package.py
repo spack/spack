@@ -50,4 +50,8 @@ class Rccl(CMakePackage):
                 'NUMACTL_DIR',
                 self.spec['numactl'].prefix
             ))
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
         return args

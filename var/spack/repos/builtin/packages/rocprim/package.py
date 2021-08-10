@@ -41,10 +41,15 @@ class Rocprim(CMakePackage):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        return [
+        args = [
             self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('ONLY_INSTALL', 'ON'),
             self.define('BUILD_TEST', 'OFF'),
             self.define('BUILD_BENCHMARK', 'OFF'),
             self.define('BUILD_EXAMPLE', 'OFF')
         ]
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
+        return args

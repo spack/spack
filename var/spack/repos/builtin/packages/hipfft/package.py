@@ -36,5 +36,11 @@ class Hipfft(CMakePackage):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        args = ['-DBUILD_CLIENTS_SAMPLES=OFF']
+        args = [
+            self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
+        ]
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
         return args
