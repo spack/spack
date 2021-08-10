@@ -94,6 +94,7 @@ class LlvmAmdgpu(CMakePackage):
             'compiler-rt'
         ]
 
+        args = []
         if self.spec.satisfies('@4.3.0:'):
             llvm_projects.append('libcxx')
             llvm_projects.append('libcxxabi')
@@ -106,14 +107,12 @@ class LlvmAmdgpu(CMakePackage):
                 self.define('LIBCXXABI_ENABLE_SHARED', 'OFF'),
                 self.define('LIBCXXABI_ENABLE_STATIC', 'ON'),
                 self.define('LIBCXXABI_INSTALL_STATIC_LIBRARY', 'OFF'),
-                self.define('LLVM_ENABLE_ZLIB', 'ON'),
-                self.define('LLVM_ENABLE_Z3_SOLVER', 'OFF')
             ]
 
         if '+openmp' in self.spec:
             llvm_projects.append('openmp')
 
-        args.append(self.define('LLVM_ENABLE_PROJECTS', ';'.join(llvm_projects)))
+        args.extend([self.define('LLVM_ENABLE_PROJECTS', ';'.join(llvm_projects))])
 
         # Enable rocm-device-libs as a external project
         if '+rocm-device-libs' in self.spec:
@@ -139,3 +138,4 @@ class LlvmAmdgpu(CMakePackage):
             args.append(self.define('GCC_INSTALL_PREFIX', gcc_prefix))
 
         return args
+    
