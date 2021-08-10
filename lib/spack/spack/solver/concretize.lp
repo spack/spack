@@ -197,30 +197,33 @@ provides_virtual(Provider, Virtual) :-
 % A provider may have different possible weights depending on whether it's an external
 % or not, or on preferences expressed in packages.yaml etc. This rule ensures that
 % we select the weight, among the possible ones, that minimizes the overall objective function.
-1 { provider_weight(Dependency, Weight, Reason) : possible_provider_weight(Dependency, Weight, Reason) } 1
- :- provider(Dependency, _).
+1 { provider_weight(Dependency, Virtual, Weight, Reason) :
+    possible_provider_weight(Dependency, Virtual, Weight, Reason) } 1
+ :- provider(Dependency, Virtual).
 
 % Get rid or the reason for enabling the possible weight (useful for debugging)
-provider_weight(Dependency, Weight) :- provider_weight(Dependency, Weight, _).
+provider_weight(Dependency, Virtual, Weight) :- provider_weight(Dependency, Virtual, Weight, _).
 
 % A provider that is an external can use a weight of 0
-possible_provider_weight(Dependency, 0, "external") :- provider(Dependency, Virtual), external(Dependency).
+possible_provider_weight(Dependency, Virtual, 0, "external")
+  :- provider(Dependency, Virtual),
+     external(Dependency).
 
 % A provider mentioned in packages.yaml can use a weight
 % according to its priority in the list of providers
-possible_provider_weight(Dependency, Weight, "packages_yaml")
+possible_provider_weight(Dependency, Virtual, Weight, "packages_yaml")
   :- provider(Dependency, Virtual),
      depends_on(Package, Dependency),
      pkg_provider_preference(Package, Virtual, Dependency, Weight).
 
 % A provider mentioned in the default configuration can use a weight
 % according to its priority in the list of providers
-possible_provider_weight(Dependency, Weight, "default")
+possible_provider_weight(Dependency, Virtual, Weight, "default")
   :- provider(Dependency, Virtual),
      default_provider_preference(Virtual, Dependency, Weight).
 
 % Any provider can use 100 as a weight, which is very high and discourage its use
-possible_provider_weight(Dependency, 100, "fallback") :- provider(Dependency, Virtual).
+possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Dependency, Virtual).
 
 #defined possible_provider/2.
 #defined provider_condition/3.
@@ -736,8 +739,8 @@ opt_criterion(13, "multi-valued variants").
 opt_criterion(12, "preferred providers for roots").
 #minimize{ 0@12 : #true }.
 #minimize{
-    Weight@12,Provider
-    : provider_weight(Provider, Weight), root(Provider)
+    Weight@12,Provider,Virtual
+    : provider_weight(Provider, Virtual, Weight), root(Provider)
 }.
 
 % Try to use default variants or variants that have been set
@@ -753,8 +756,8 @@ opt_criterion(11, "number of non-default variants (non-roots)").
 opt_criterion(9, "preferred providers (non-roots)").
 #minimize{ 0@9 : #true }.
 #minimize{
-    Weight@9,Provider
-    : provider_weight(Provider, Weight), not root(Provider)
+    Weight@9,Provider,Virtual
+    : provider_weight(Provider, Virtual, Weight), not root(Provider)
 }.
 
 % Try to minimize the number of compiler mismatches in the DAG.
