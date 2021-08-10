@@ -1274,9 +1274,6 @@ completed, the steps to make the point release are:
 
 #. Bump the version in ``lib/spack/spack/__init__.py``.
 
-   See `this example from 0.14.1
-   <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
-
 #. Update ``CHANGELOG.md`` with a list of the changes.
 
    This is typically a summary of the commits you cherry-picked onto the
