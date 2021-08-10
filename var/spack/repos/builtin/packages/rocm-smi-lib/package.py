@@ -16,11 +16,12 @@ class RocmSmiLib(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm_smi_lib"
     git      = "https://github.com/RadeonOpenCompute/rocm_smi_lib.git"
-    url      = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('4.3.0', sha256='c3ff56a14d334cb688a2e9a748dac46d9c2f7f576fe1f53416b1a0edbe842f8b')
     version('4.2.0', sha256='c31bf91c492f00d0c5ab21e45afbd7baa990e4a8d7ce9b01e3b988e5fdd53f50')
     version('4.1.0', sha256='0c1d2152e40e14bb385071ae16e7573290fb9f74afa5ab887c54f4dd75849a6b')
     version('4.0.0', sha256='93d19229b5a511021bf836ddc2a9922e744bf8ee52ee0e2829645064301320f4')
