@@ -42,9 +42,11 @@ class Hipblas(CMakePackage):
         # installed...
         if self.spec.satisfies('@:3.9.0'):
             args.append(self.define('TRY_CUDA', 'OFF'))
-
         else:
             args.append(self.define('USE_CUDA', 'OFF'))
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args
 

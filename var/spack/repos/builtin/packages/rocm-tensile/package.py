@@ -82,6 +82,9 @@ class RocmTensile(CMakePackage):
                 arch = arch + ':xnack-'
         args.append(self.define('Tensile_ARCHITECTURE', arch))
 
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
         return args
 
     def install(self, spec, prefix):

@@ -66,6 +66,12 @@ class Rocrand(CMakePackage):
                            join_path(self.prefix.lib, lib))
 
     def cmake_args(self):
-        args = ['-DBUILD_BENCHMARK=OFF',
-                '-DBUILD_TEST=OFF']
+        args = [
+            self.define('BUILD_BENCHMARK', 'OFF'),
+            self.define('BUILD_TEST', 'OFF')
+        ]
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
         return args

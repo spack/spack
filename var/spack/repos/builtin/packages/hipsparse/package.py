@@ -41,11 +41,16 @@ class Hipsparse(CMakePackage):
     patch('530047af4a0f437dafc02f76b3a17e3b1536c7ec.patch', when='@3.5.0')
 
     def cmake_args(self):
-        return [
+        args = [
             self.define('CMAKE_CXX_STANDARD', '14'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
             self.define('BUILD_CLIENTS_TESTS', 'OFF'),
         ]
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
+        return args
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)

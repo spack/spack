@@ -60,8 +60,13 @@ class Rocalution(CMakePackage):
                 filter_file(match, substitute, *files, **kwargs)
 
     def cmake_args(self):
-        return [
+        args = [
             self.define('SUPPORT_HIP', 'ON'),
             self.define('SUPPORT_MPI', 'OFF'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
         ]
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
+        return args

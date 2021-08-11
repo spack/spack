@@ -39,6 +39,11 @@ class Hipcub(CMakePackage):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        return [
+        args = [
             self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake)
         ]
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
+        return args
