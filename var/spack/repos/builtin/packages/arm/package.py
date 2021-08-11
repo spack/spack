@@ -6,8 +6,43 @@ import os.path
 import re
 
 import llnl.util.tty as tty
+
 import spack.compiler
 import spack.util.executable
+import subprocess
+
+_os_map = {
+        'ubuntu18.04': 'Ubuntu-18.04',
+        'ubuntu20.04': 'Ubuntu-20.04',
+        'sles15': 'SLES-15',
+        'centos7': 'RHEL-7',
+        'centos8': 'RHEL-8',
+        'amzn2': 'RHEL-7'
+        }
+
+
+_versions = {
+            '21.0': {
+                'RHEL-7': ('fa67a4b9c1e562ec73e270aa4ef7a969af99bdd792ce8916b69ee47f7906110b',
+                    'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-0/ACfL/arm-compiler-for-linux_21.0_RHEL-7_aarch64.tar'),
+                'RHEL-8': ('a1bf517fc108100878233610ec5cc9538ee09cd114670bfacab0419bbdef0780',
+                    'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-0/ACfL/arm-compiler-for-linux_21.0_RHEL-8_aarch64.tar'),
+                'SLES-15': ('0307c67425fcf6c2c171c16732353767f79a7dd45e77cd7e4d94675d769cce77',
+                    'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-0/ACfL/arm-compiler-for-linux_21.0_SLES-15_aarch64.tar'),
+                'Ubuntu-18.04': ('f57bd4652ea87282705073ea81ca108fef8e0725eb4bc441240ec2fc51ff5980',
+                    'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-0/ACfL/arm-compiler-for-linux_21.0_Ubuntu-18.04_aarch64.tar'),
+                'Ubuntu-20.04': ('dd93254b9fe9baa802baebb9da5d00e0076a639b47f3515a8645b06742900eea',
+                    'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-0/ACfL/arm-compiler-for-linux_21.0_Ubuntu-20.04_aarch64.tar')
+                }
+            }
+
+def get_os():
+   spack_os = spack.architecture.platform().default_os
+   if spack_os in _os_map:
+       return _os_map[spack_os]
+   else:
+       return 'RHEL-7' # Default value
+
 
 
 class Arm(Package):
@@ -18,17 +53,39 @@ class Arm(Package):
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/arm-allinea-studio"
     url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/20-2-1/Ubuntu16.04/arm-compiler-for-linux_20.2.1_Ubuntu-16.04_aarch64.tar"
 
-    # FIXME: The version is checksummed for Ubuntu 16.04, but this is not
-    # FIXME: important at the moment since the package is only meant to
-    # FIXME: provide detection
-    version('20.2.1', sha256='dc3f945b05b867809d9b507cb8ebba9cf72a6818d349207dbe1392c13dc0ad79')
+    maintainers = ['OliverPerks']
 
-    def install(self, spec, prefix):
-        raise InstallError(
-            'No install method available yet, only system detection.'
-        )
+    # Build Versions: establish OS for URL
+    acfl_os=get_os()
+
+    # Build Versions
+    for ver, packages in _versions.items():
+        pkg = packages.get(acfl_os)
+        if pkg:
+            version(ver, sha256=pkg[0], url=pkg[1])
+
+    # Only install for Aarch64
+    conflicts('target=x86_64:', msg='Only available on Aarch64')
+    conflicts('target=ppc64:', msg='Only available on Aarch64')
+    conflicts('target=ppc64le:', msg='Only available on Aarch64')
 
     executables = [r'armclang', r'armclang\+\+', r'armflang']
+
+    # Licensing
+    license_required = True
+    license_comment = "#"
+    license_files = ["licences/Licence"]
+    license_vars = [
+        "ARM_LICENSE_DIR",
+    ]
+    license_url = "https://developer.arm.com/tools-and-software/server-and-hpc/help/help-and-tutorials/system-administration/licensing/arm-licence-server"
+
+
+    # Run the installer with the desired install directory
+    def install(self, spec, prefix):
+        exe='./arm-compiler-for-linux_{0}_{1}.sh'.format(spec.version, get_os())
+        subprocess.call([exe, "--accept", "--force", "--install-to", prefix])
+
 
     @classmethod
     def determine_version(cls, exe):
@@ -84,3 +141,4 @@ class Arm(Package):
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('fortran', None)
         return str(self.spec.prefix.bin.armflang)
+
