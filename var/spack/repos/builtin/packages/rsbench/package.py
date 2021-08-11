@@ -42,7 +42,7 @@ class Rsbench(MakefilePackage):
             cflags += ' -ffast-math '
         elif self.compiler.name == 'intel':
             cflags += ' -xhost -ansi-alias -no-prec-div '
-        elif self.compiler.name == 'nvhpc':
+        elif self.compiler.name == 'pgi' or self.compiler.name == 'nvhpc':
             cflags += ' -fastsse '
         elif self.compiler.name == 'arm':
             cflags += ' -ffast-math '
@@ -56,4 +56,4 @@ class Rsbench(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('{0}/rsbench'.format(self.build_directory), prefix.bin)
+        install(join_path(self.build_directory, 'rsbench'), prefix.bin)
