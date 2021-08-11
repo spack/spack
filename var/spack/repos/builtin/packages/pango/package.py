@@ -40,6 +40,7 @@ class Pango(AutotoolsPackage):
     depends_on('gobject-introspection')
     depends_on('fontconfig')
     depends_on('freetype@2:')
+    depends_on('fribidi', when='@1.42:')
     depends_on('libffi')
 
     depends_on('harfbuzz@1.2.3:', when='@1.41.0')
