@@ -308,8 +308,6 @@ class Trilinos(CMakePackage, CudaPackage):
     # https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
     conflicts('+superlu-dist', when='+complex+amesos2')
     conflicts('+strumpack', when='@:13.0.99')
-    # PnetCDF was only added after v12.10.1
-    conflicts('+pnetcdf', when='@0:12.10.1')
     # https://github.com/trilinos/Trilinos/issues/2994
     conflicts(
         '+shared', when='+stk platform=darwin',
@@ -394,7 +392,7 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('matio', when='+exodus')
     depends_on('netcdf-c', when="+exodus")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+exodus+mpi@12.12.1:")
-    depends_on('pnetcdf', when='+exodus+mpi')
+    depends_on('parallel-netcdf', when='+exodus+mpi')
     depends_on('parmetis', when='+mpi +zoltan')
     depends_on('parmetis', when='+scorec')
 
