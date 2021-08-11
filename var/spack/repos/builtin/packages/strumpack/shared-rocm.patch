@@ -1,3 +1,13 @@
+From dea93a02299c9c2ac6143d7f6f170310316d5989 Mon Sep 17 00:00:00 2001
+From: Pieter Ghysels <pghysels@lbl.gov>
+Date: Wed, 4 Aug 2021 15:15:21 -0700
+Subject: [PATCH 1/2] patch for building shared lib with ROCm
+
+---
+ CMakeLists.txt              |  7 ++++++-
+ cmake/Modules/FindHIP.cmake | 31 ++++++++++++++++++++++++++++---
+ 2 files changed, 34 insertions(+), 4 deletions(-)
+
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index c63e8f0..e362d4c 100644
 --- a/CMakeLists.txt
@@ -100,3 +110,32 @@ index b4a5cb2..6b69837 100644
  endmacro()
  
  # vim: ts=4:sw=4:expandtab:smartindent
+-- 
+2.30.2
+
+
+From 66c79092ee9aabd8b76f2c510d6ac1310cf3646b Mon Sep 17 00:00:00 2001
+From: Pieter Ghysels <pghysels@lbl.gov>
+Date: Wed, 11 Aug 2021 15:45:04 -0700
+Subject: [PATCH 2/2] extra fix for HIP
+
+---
+ cmake/Modules/FindHIP/run_hipcc.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmake/Modules/FindHIP/run_hipcc.cmake b/cmake/Modules/FindHIP/run_hipcc.cmake
+index 63c7bb3..ce0b406 100644
+--- a/cmake/Modules/FindHIP/run_hipcc.cmake
++++ b/cmake/Modules/FindHIP/run_hipcc.cmake
+@@ -48,7 +48,7 @@ execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --compiler OUTPUT_VARIABLE H
+ execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --runtime OUTPUT_VARIABLE HIP_RUNTIME OUTPUT_STRIP_TRAILING_WHITESPACE)
+ if(NOT host_flag)
+     set(__CC ${HIP_HIPCC_EXECUTABLE})
+-    if("${HIP_PLATFORM}" STREQUAL "hcc")
++    if("${HIP_PLATFORM}" STREQUAL "amd")
+         if("${HIP_COMPILER}" STREQUAL "hcc")
+             if(NOT "x${HCC_HOME}" STREQUAL "x")
+                 set(ENV{HCC_HOME} ${HCC_HOME})
+-- 
+2.30.2
+
