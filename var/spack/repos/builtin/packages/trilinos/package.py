@@ -97,8 +97,6 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with HDF5')
     variant('hypre',        default=False,
             description='Compile with Hypre preconditioner')
-    variant('matio',        default=False,
-            description='Compile with Matio')
     variant('mpi',          default=True,
             description='Compile with MPI parallelism')
     variant('mumps',        default=False,
@@ -358,7 +356,6 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when="+hdf5+mpi")
     depends_on('lapack')
-    depends_on('matio', when='+matio')
     depends_on('mpi', when='+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('zlib', when="+zlib")
@@ -396,6 +393,7 @@ class Trilinos(CMakePackage, CudaPackage):
     # Variant requirements from packages
     depends_on('metis', when='+zoltan')
     depends_on('libx11', when='+exodus')
+    depends_on('matio', when='+exodus')
     depends_on('netcdf-c', when="+exodus")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+exodus+mpi@12.12.1:")
     depends_on('pnetcdf', when='+exodus+mpi')
