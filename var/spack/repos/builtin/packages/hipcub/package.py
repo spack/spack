@@ -11,10 +11,11 @@ class Hipcub(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipCUB"
     git      = "https://github.com/ROCmSoftwarePlatform/hipCUB.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.0', sha256='733499a8d55e2d73bf874d43a98ee7425e4325f77e03fb0c80debf36c740cb70')
     version('4.2.0', sha256='56b50e185b7cdf4615d2f56d3a4e86fe76f885e9ad04845f3d0671afcb315c69')
     version('4.1.0', sha256='6d33cc371b9a5ac9c0ab9853bac736f6cea0d2192f4dc9e6d8175d207ee4b4f2')
     version('4.0.0', sha256='656bd6ec547810fd74bcebba41453e6e729f3fdb7346f5564ab71fc0346c3fb5')
@@ -30,7 +31,7 @@ class Hipcub(CMakePackage):
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)

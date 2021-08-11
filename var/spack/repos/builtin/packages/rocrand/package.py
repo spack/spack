@@ -15,10 +15,11 @@ class Rocrand(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
     git      = "https://github.com/ROCmSoftwarePlatform/rocRAND.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.0', sha256='a85ced6c155befb7df8d58365518f4d9afc4407ee4e01d4640b5fd94604ca3e0')
     version('4.2.0', sha256='15725c89e9cc9cc76bd30415fd2c0c5b354078831394ab8b23fe6633497b92c8')
     version('4.1.0', sha256='94327e38739030ab6719a257f5a928a35842694750c7f46d9e11ff2164c2baed')
     version('4.0.0', sha256='1cafdbfa15cde635bd424d2a858dc5cc94d668f9a211ff39606ee01ed1715f41')
@@ -32,14 +33,14 @@ class Rocrand(CMakePackage):
     depends_on('numactl', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocminfo@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-    for ver in ['4.1.0', '4.2.0']:
+    for ver in ['4.1.0', '4.2.0', '4.3.0']:
         depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):

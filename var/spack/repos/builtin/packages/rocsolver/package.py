@@ -12,7 +12,7 @@ class Rocsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
     git      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
@@ -21,6 +21,7 @@ class Rocsolver(CMakePackage):
             size and compile time by adding specialized kernels \
             for small matrix sizes')
 
+    version('4.3.0', sha256='63cc88dd285c0fe01ec2394321ec3b4e1e59bb98ce05b06e4b4d8fadcf1ff028')
     version('4.2.0', sha256='e9ef72d7c29e7c36bf02be63a64ca23b444e1ca71751749f7d66647873d9fdea')
     version('4.1.0', sha256='da5cc800dabf7367b02b73c93780b2967f112bb45232e4b06e5fd07b4d5b8d88')
     version('4.0.0', sha256='be9a52644c276813f76d78f2c11eddaf8c2d7f9dd04f4570f23d328ad30d5880')
@@ -33,11 +34,12 @@ class Rocsolver(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('numactl', type='link', when='@3.7.0:')
 
-    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
+    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
+                '4.3.0']:
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)

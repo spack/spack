@@ -12,10 +12,11 @@ class RocmTensile(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/Tensile/"
     git      = "https://github.com/ROCmSoftwarePlatform/Tensile.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('4.3.0', sha256='911c0cdb0146d43a2a59170e6a803f414a2b68df7d9ff369ab784d11a08d7264')
     version('4.2.0', sha256='198e357a14a79366b27b1097856d4821996bc36163be0cd2668910b253721060')
     version('4.1.0', sha256='92b8ee13dfc11a67d5136227ee985622685790fd3f0f0e1ec6db411d4e9a3419')
     version('4.0.0', sha256='cf105ce8c3e352d19713b3bf8bda77f25c1a692c4f2ca82d631ba15523ecc1cd')
@@ -36,7 +37,7 @@ class RocmTensile(CMakePackage):
     depends_on('boost', type=('build', 'link'))
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('rocm-cmake@' + ver, type='build',  when='@' + ver)
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('comgr@' + ver,                     when='@' + ver)
@@ -47,7 +48,7 @@ class RocmTensile(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.0.0', '4.1.0', '4.2.0']:
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     root_cmakelists_dir = 'Tensile/Source'
