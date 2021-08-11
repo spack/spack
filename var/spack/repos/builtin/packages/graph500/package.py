@@ -21,6 +21,8 @@ class Graph500(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter(join_path(self.build_directory, 'Makefile'))
         makefile.filter(r'^MPICC\s*=.*', 'MPICC={0}'.format(spec['mpi'].mpicc))
+        if spec.satisfies('%gcc@10.2.0:'):
+            makefile.filter(r'^CFLAGS\s*=\s*', 'CFLAGS = -fcommon ')
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
