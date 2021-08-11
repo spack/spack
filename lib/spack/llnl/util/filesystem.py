@@ -1102,14 +1102,14 @@ def find(root, files, recursive=True):
 
     Accepts any glob characters accepted by fnmatch:
 
-    =======  ====================================
-    Pattern  Meaning
-    =======  ====================================
-    *        matches everything
-    ?        matches any single character
-    [seq]    matches any character in ``seq``
-    [!seq]   matches any character not in ``seq``
-    =======  ====================================
+    ==========  ====================================
+    Pattern     Meaning
+    ==========  ====================================
+    ``*``       matches everything
+    ``?``       matches any single character
+    ``[seq]``   matches any character in ``seq``
+    ``[!seq]``  matches any character not in ``seq``
+    ==========  ====================================
 
     Parameters:
         root (str): The root directory to start searching from
