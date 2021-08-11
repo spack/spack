@@ -89,8 +89,6 @@ class Trilinos(CMakePackage, CudaPackage):
     # TPLs (alphabet order)
     variant('boost',        default=False,
             description='Compile with Boost')
-    variant('cgns',         default=False,
-            description='Enable CGNS')
     variant('adios2',       default=False,
             description='Enable ADIOS2')
     variant('hdf5',         default=False,
@@ -351,7 +349,7 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('adios2', when='+adios2')
     depends_on('blas')
     depends_on('boost', when='+boost')
-    depends_on('cgns', when='+cgns')
+    depends_on('cgns', when='+exodus')
     depends_on('hdf5+hl', when='+hdf5')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when="+hdf5+mpi")
@@ -403,12 +401,9 @@ class Trilinos(CMakePackage, CudaPackage):
     # ###################### Patches ##########################
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
-    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
-    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl_r')
-    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %clang')
-    patch('xlf_tpetra.patch', when='@12.12.1%xl')
-    patch('xlf_tpetra.patch', when='@12.12.1%xl_r')
-    patch('xlf_tpetra.patch', when='@12.12.1%clang')
+    for _compiler in ['xl', 'xl_r', 'clang']:
+        patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %' + _compiler)
+        patch('xlf_tpetra.patch', when='@12.12.1 %' + _compiler)
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
     patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
     patch('cray_secas.patch', when='@12.14.1:%cce')
