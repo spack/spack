@@ -290,7 +290,7 @@ class Trilinos(CMakePackage, CudaPackage):
     # Only allow DTK with Trilinos 12
     conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
-    conflicts('+dtk', when='@:12.12.99,develop,master')
+    conflicts('+dtk', when='@:12.12.99,master')
 
     # Only allow Mesquite with Trilinos 12.12 and up, and master
     conflicts('+mesquite', when='@:12.10.99,master')
