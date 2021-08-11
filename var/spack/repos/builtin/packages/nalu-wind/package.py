@@ -56,7 +56,7 @@ class NaluWind(CMakePackage, CudaPackage):
     depends_on('tioga@master,develop', when='+tioga')
     depends_on('hypre@develop,2.18.2: +int64+mpi~superlu-dist', when='+hypre')
     depends_on('kokkos-nvcc-wrapper', type='build', when='+cuda')
-    depends_on('trilinos@master,develop +exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+zlib+pnetcdf+shards~hypre cxxstd=14')
+    depends_on('trilinos@master +exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+zlib+shards~hypre cxxstd=14')
     # Cannot build Trilinos as a shared library with STK on Darwin
     # https://github.com/trilinos/Trilinos/issues/2994
     depends_on('trilinos~shared', when=(sys.platform == 'darwin'))
