@@ -1671,7 +1671,7 @@ class Spec(object):
                 package_hash = package_hash.decode('utf-8')
             d['package_hash'] = package_hash
 
-        # Note: Depends on key sort.
+        # Note: Relies on sorting dict by keys later in algorithm.
         deps = self.dependencies_dict(deptype=hash.deptype)
 
         if deps:
@@ -4879,7 +4879,7 @@ def parse(string):
 
 
 def save_dependency_specfiles(
-        root_spec_as_json, output_directory, dependencies=None,
+        root_spec_info, output_directory, dependencies=None,
         spec_format='json'):
     """Given a root spec (represented as a yaml object), index it with a subset
        of its dependencies, and write each dependency to a separate yaml file
@@ -4890,9 +4890,9 @@ def save_dependency_specfiles(
        parameter. This can be used to convert from yaml specfiles to the
        json format."""
     if spec_format == 'json':
-        root_spec = Spec.from_json(root_spec_as_json)
+        root_spec = Spec.from_json(root_spec_info)
     elif spec_format == 'yaml':
-        root_spec = Spec.from_yaml(root_spec_as_json)
+        root_spec = Spec.from_yaml(root_spec_info)
     else:
         raise SpecParseError('Unrecognized spec format {0}.'.format(
             spec_format))

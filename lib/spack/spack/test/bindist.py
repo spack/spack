@@ -66,7 +66,6 @@ def test_mirror(mirror_dir):
 def test_legacy_mirror(mutable_config):
     mirror_url = 'file://%s' % legacy_mirror_dir
     mirror_cmd('add', '--scope', 'site', 'test-legacy-yaml', mirror_url)
-    buildcache_cmd('update-index', '-d', mirror_url)
     yield legacy_mirror_dir
     mirror_cmd('rm', '--scope=site', 'test-legacy-yaml')
 

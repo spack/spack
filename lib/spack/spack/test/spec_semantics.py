@@ -532,8 +532,8 @@ class TestSpecSematics(object):
         # Spack's hashing algorithm.  This just reverses s2's hash.
         s2._hash = s1.dag_hash()[-1::-1]
 
-        assert not s1.satisfies(s2, debug=True)
-        assert not s2.satisfies(s1, debug=True)
+        assert not s1.satisfies(s2)
+        assert not s2.satisfies(s1)
 
     # ========================================================================
     # Indexing specs

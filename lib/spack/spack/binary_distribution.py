@@ -1025,7 +1025,6 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     checksum = checksum_tarball(tarfile_path)
 
     # add sha256 checksum to spec.json
-    # spec_dict = spack.store.layout.read_spec(spec_file)
 
     with open(spec_file, 'r') as inputfile:
         content = inputfile.read()
