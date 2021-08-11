@@ -173,14 +173,16 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
         usage = super(
             SpackHelpFormatter, self)._format_actions_usage(actions, groups)
 
+        # Eliminate any occurrence of two or more consecutive spaces
+        usage = re.sub(r'[ ]{2,}', ' ', usage)
+
         # compress single-character flags that are not mutually exclusive
         # at the beginning of the usage string
         chars = ''.join(re.findall(r'\[-(.)\]', usage))
         usage = re.sub(r'\[-.\] ?', '', usage)
         if chars:
-            return '[-%s] %s' % (chars, usage)
-        else:
-            return usage
+            usage = '[-%s] %s' % (chars, usage)
+        return usage.strip()
 
 
 class SpackArgumentParser(argparse.ArgumentParser):
