@@ -72,6 +72,8 @@ def test_longest_prefix_re():
     )
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_output_filtering(capfd, install_mockery, mutable_config):
     """Test filtering padding out of tty messages."""
     long_path = "/" + "/".join([sup.SPACK_PATH_PADDING_CHARS] * 200)
