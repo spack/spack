@@ -34,14 +34,10 @@ class Mpibind(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('pkgconf',  type='build')
 
-    depends_on('hwloc@2:+libxml2',
-               type=('build', 'link'))
-    depends_on('hwloc@2:+pci', when=(sys.platform != 'darwin'),
-               type=('build', 'link'))
-    depends_on('hwloc@2:+cuda+nvml', when='+cuda',
-               type=('build', 'link'))
-    depends_on('hwloc@2.4:+rocm+opencl', when='+rocm',
-               type=('build', 'link'))
+    depends_on('hwloc@2:+libxml2', type='link')
+    depends_on('hwloc@2:+pci', when=(sys.platform != 'darwin'), type='link')
+    depends_on('hwloc@2:+cuda+nvml', when='+cuda', type='link')
+    depends_on('hwloc@2.4:+rocm+opencl', when='+rocm', type='link')
 
     def autoreconf(self, spec, prefix):
         autoreconf('--install', '--verbose', '--force')
