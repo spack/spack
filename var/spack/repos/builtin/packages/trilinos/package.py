@@ -610,7 +610,6 @@ class Trilinos(CMakePackage, CudaPackage):
             ('Matio', 'matio'),
             ('METIS', 'metis'),
             ('Netcdf', 'netcdf-c'),
-            ('STRUMPACK', 'strumpack'),
             ('SuperLU', 'superlu'),
             ('SuperLUDist', 'superlu-dist'),
             ('X11', 'libx11'),
@@ -619,7 +618,10 @@ class Trilinos(CMakePackage, CudaPackage):
         if spec.satisfies('@12.12.1:'):
             tpl_dep_map.append(('Pnetcdf', 'parallel-netcdf'))
         if spec.satisfies('@13:'):
-            tpl_dep_map.append(('HWLOC', 'hwloc'))
+            tpl_dep_map.extend([
+                ('HWLOC', 'hwloc'),
+                ('STRUMPACK', 'strumpack'),
+            ])
 
         for tpl_name, dep_name in tpl_dep_map:
             have_dep = (dep_name in spec)
