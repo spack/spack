@@ -1000,6 +1000,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         HTTP protocol or by no-protocol file specifications.
         Use (e.g.) https:// or file:// instead."""
         return not (self.url.startswith('http://') or
+                    self.url.startswith('https://') or
                     self.url.startswith('/'))
 
     def __str__(self):
