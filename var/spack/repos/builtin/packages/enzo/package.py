@@ -22,9 +22,10 @@ class Enzo(MakefilePackage):
     depends_on('sse2neon', when='target=aarch64:')
 
     variant(
-        'opt', default='high', 
-        description='Optimization, some compilers do not produce stable code with high+ optimizations',
-        values=('warn', 'debug', 'cudadebug', 'high', 'aggressive'), 
+        'opt', default='high',
+        description='Optimization, some compilers do not ' +
+                    'produce stable code with high+ optimizations',
+        values=('warn', 'debug', 'cudadebug', 'high', 'aggressive'),
         multi=False
     )
 
@@ -87,4 +88,3 @@ class Enzo(MakefilePackage):
         install_tree('run', prefix.run)
         with working_dir(join_path('src', 'ring')):
             install('ring.exe', join_path(prefix.bin, 'ring'))
-
