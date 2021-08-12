@@ -249,6 +249,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         # Environment variables
         cppflags = []
         cppflags.append('-DLBANN_SET_EL_RNG')
+        cppflags.append('-std=c++17')
         args = []
         args.extend([
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),
