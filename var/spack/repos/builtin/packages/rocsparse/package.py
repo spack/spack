@@ -38,3 +38,11 @@ class Rocsparse(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
+
+    def cmake_args(self):
+        args = []
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
+        return args

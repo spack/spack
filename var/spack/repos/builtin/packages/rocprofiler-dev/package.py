@@ -12,10 +12,11 @@ class RocprofilerDev(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocprofiler"
     git      = "https://github.com/ROCm-Developer-Tools/rocprofiler.git"
-    url      = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.0', sha256='3b876a0e601d2c6ae56ddf2a6027afe45b3533f4445b0c2da748d020b6b00cf2')
     version('4.2.0', sha256='c5888eda1404010f88219055778cfeb00d9c21901e172709708720008b1af80f')
     version('4.1.0', sha256='2eead5707016da606d636b97f3af1c98cb471da78659067d5a77d4a2aa43ef4c')
     version('4.0.0', sha256='e9960940d1ec925814a0e55ee31f5fc2fb23fa839d1c6a909f72dd83f657fb25')
@@ -27,7 +28,7 @@ class RocprofilerDev(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)

@@ -767,7 +767,7 @@ class SpackSolverSetup(object):
 
             for i, provider in enumerate(providers):
                 provider_name = spack.spec.Spec(provider).name
-                func(vspec, provider_name, i + 10)
+                func(vspec, provider_name, i)
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")
