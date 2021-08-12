@@ -21,6 +21,13 @@ class Enzo(MakefilePackage):
     depends_on('hdf5~mpi')
     depends_on('sse2neon', when='target=aarch64:')
 
+    variant(
+        'opt', default='high', 
+        description='Optimization, some compilers do not produce stable code with high+ optimizations',
+        values=('warn', 'debug', 'cudadebug', 'high', 'aggressive'), 
+        multi=False
+    )
+
     patch('for_aarch64.patch', when='target=aarch64:')
 
     # https://github.com/enzo-project/enzo-dev/pull/158
@@ -41,6 +48,7 @@ class Enzo(MakefilePackage):
 
         with working_dir('src/enzo'):
             copy('Make.mach.linux-gnu', 'Make.mach.spack')
+
             filter_file('^MACH_FILE.*',
                         'MACH_FILE = Make.mach.spack',
                         'Make.mach.spack')
@@ -53,11 +61,18 @@ class Enzo(MakefilePackage):
             filter_file('^LOCAL_HYPRE_INSTALL.*',
                         'LOCAL_HYPRE_INSTALL =',
                         'Make.mach.spack')
+            if spec.satisfies('%gcc@10.2.0:'):
+                filter_file(r'^MACH_FFLAGS\s*=\s*',
+                            'MACH_FFLAGS   = -fallow-argument-mismatch ',
+                            'Make.mach.spack')
+                filter_file(r'^MACH_F90FLAGS\s*=\s*',
+                            'MACH_F90FLAGS = -fallow-argument-mismatch ',
+                            'Make.mach.spack')
 
     def build(self, spec, prefix):
         with working_dir('src/enzo'):
             make('machine-spack')
-            make('opt-high')
+            make('opt-' + self.spec.variants['opt'].value)
             make('show-config')
             make()
         with working_dir('src/inits'):
