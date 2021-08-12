@@ -251,30 +251,29 @@ spack:
     - omega-h
     - openmpi
     - openpmd-api ^hdf5@1.12.0 +fortran +shared +hl api=default
-
+    - papi
+    - papyrus@1.0.1
+    - parallel-netcdf
+    - pdt
+    - petsc
+    - plasma
+    - precice
+    - pumi
+    - py-jupyterhub
+    - py-libensemble
+    - py-petsc4py
+    - py-warpx ^warpx dims=2 ^hdf5@1.12.0 +fortran +shared +hl api=default
+    - py-warpx ^warpx dims=3 ^hdf5@1.12.0 +fortran +shared +hl api=default
+    - py-warpx ^warpx dims=rz ^hdf5@1.12.0 +fortran +shared +hl api=default
+    - qthreads scheduler=distrib
+    - raja
+    - rempi
+    - scr
+    - slate ~cuda
+    - slepc
+    - stc
+    - strumpack ~slate
     # holding off on the specs until infrastructure is ready
-    # - papi
-    # - papyrus@1.0.1
-    # - parallel-netcdf
-    # - pdt
-    # - petsc
-    # - plasma
-    # - precice
-    # - pumi
-    # - py-jupyterhub
-    # - py-libensemble
-    # - py-petsc4py
-    # - py-warpx ^warpx dims=2 ^hdf5@1.12.0 +fortran +shared +hl api=default
-    # - py-warpx ^warpx dims=3 ^hdf5@1.12.0 +fortran +shared +hl api=default
-    # - py-warpx ^warpx dims=rz ^hdf5@1.12.0 +fortran +shared +hl api=default
-    # - qthreads scheduler=distrib
-    # - raja
-    # - rempi
-    # - scr
-    # - slate ~cuda
-    # - slepc
-    # - stc
-    # - strumpack ~slate
     # - sundials
     # - superlu
     # - superlu-dist
