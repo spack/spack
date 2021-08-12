@@ -93,6 +93,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
               msg='STRUMPACK requires openblas with OpenMP threading support')
 
     patch('intel-19-compile.patch', when='@3.1.1')
+    patch('shared-rocm.patch', when='@5.1.1')
 
     def cmake_args(self):
         spec = self.spec
