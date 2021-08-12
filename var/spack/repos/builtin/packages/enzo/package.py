@@ -23,7 +23,8 @@ class Enzo(MakefilePackage):
 
     variant(
         'opt', default='high', 
-        description='Optimization, some compilers do not produce stable code with high+ optimizations',
+        description='Optimization, ' + \
+                'some compilers do not produce stable code with high+ optimizations',
         values=('warn', 'debug', 'cudadebug', 'high', 'aggressive'), 
         multi=False
     )
