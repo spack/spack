@@ -24,7 +24,7 @@ class MakeExecutableTest(unittest.TestCase):
 
         make_exe = os.path.join(self.tmpdir, 'make')
         with open(make_exe, 'w') as f:
-            f.write('#!/bin/sh\n')
+            f.write('#!/usr/bin/env sh\n')
             f.write('echo "$@"')
         os.chmod(make_exe, 0o700)
 

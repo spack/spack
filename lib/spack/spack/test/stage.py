@@ -30,7 +30,7 @@ _extra_fn = 'extra.sh'
 _hidden_fn = '.hidden'
 _readme_fn = 'README.txt'
 
-_extra_contents = '#!/bin/sh\n'
+_extra_contents = '#!/usr/bin/env sh\n'
 _hidden_contents = ''
 _readme_contents = 'hello world!\n'
 

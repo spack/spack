@@ -10,7 +10,7 @@ def test_log_parser(tmpdir):
     log_file = tmpdir.join('log.txt')
 
     with log_file.open('w') as f:
-        f.write("""#!/bin/sh\n
+        f.write("""#!/usr/bin/env sh\n
 checking build system type... x86_64-apple-darwin16.6.0
 checking host system type... x86_64-apple-darwin16.6.0
 error: weird_error.c:145: something weird happened                          E

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This script acts like bash but runs kcov on the input script. We use it
 # to get coverage for Spack's bash scripts.

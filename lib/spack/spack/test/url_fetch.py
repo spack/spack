@@ -155,7 +155,7 @@ def test_fetch(
 
             with open('configure') as f:
                 contents = f.read()
-            assert contents.startswith('#!/bin/sh')
+            assert contents.startswith('#!/usr/bin/env sh')
             assert 'echo Building...' in contents
 
 

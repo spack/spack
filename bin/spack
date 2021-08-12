@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 # -*- python -*-
 #
 # Copyright 2013-2021 Lawrence Livermore National Security, LLC and other

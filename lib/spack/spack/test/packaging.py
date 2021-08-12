@@ -55,7 +55,7 @@ def test_buildcache(mock_archive, tmpdir):
     mkdirp(os.path.join(pkg.prefix, "bin"))
     patchelfscr = os.path.join(pkg.prefix, "bin", "patchelf")
     f = open(patchelfscr, 'w')
-    body = """#!/bin/bash
+    body = """#!/usr/bin/env bash
 echo $PATH"""
     f.write(body)
     f.close()

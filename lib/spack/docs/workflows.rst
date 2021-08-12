@@ -101,7 +101,7 @@ again in the future.  For example:
 
 .. code-block:: sh
 
-   #!/bin/sh
+   #!/usr/bin/env sh
    spack install modele-utils
    spack install emacs
    spack install ncview
@@ -175,7 +175,7 @@ of usage:
 
 .. code-block:: sh
 
-   #!/bin/bash
+   #!/usr/bin/env bash
 
    compilers=(
        %gcc
@@ -308,7 +308,7 @@ example:
 
 .. code-block:: sh
 
-   #!/bin/sh
+   #!/usr/bin/env sh
    #
    # Generate module load commands in ~/env/spackenv
 

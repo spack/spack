@@ -14,9 +14,9 @@ from spack.main import get_version, main
 def test_get_version_no_match_git(tmpdir, working_env):
     git = str(tmpdir.join("git"))
     with open(git, "w") as f:
-        f.write("""#!/bin/sh
+        f.write("""#!{0}
 echo v0.13.3
-""")
+""".format(spack.util.executable.which("sh")))
     fs.set_executable(git)
 
     os.environ["PATH"] = str(tmpdir)
@@ -26,9 +26,9 @@ echo v0.13.3
 def test_get_version_match_git(tmpdir, working_env):
     git = str(tmpdir.join("git"))
     with open(git, "w") as f:
-        f.write("""#!/bin/sh
+        f.write("""#!{0}
 echo v0.13.3-912-g3519a1762
-""")
+""".format(spack.util.executable.which("sh")))
     fs.set_executable(git)
 
     os.environ["PATH"] = str(tmpdir)
@@ -54,9 +54,9 @@ def test_main_calls_get_version(tmpdir, capsys, working_env):
 def test_get_version_bad_git(tmpdir, working_env):
     bad_git = str(tmpdir.join("git"))
     with open(bad_git, "w") as f:
-        f.write("""#!/bin/sh
+        f.write("""#!{0}
 exit 1
-""")
+""".format(spack.util.executable.which("sh")))
     fs.set_executable(bad_git)
 
     os.environ["PATH"] = str(tmpdir)

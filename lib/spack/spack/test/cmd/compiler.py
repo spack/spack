@@ -45,7 +45,7 @@ def mock_compiler_dir(tmpdir, mock_compiler_version):
     gfortran_path = bin_dir.join('gfortran')
 
     gcc_path.write("""\
-#!/bin/sh
+#!/usr/bin/env sh
 
 for arg in "$@"; do
     if [ "$arg" = -dumpversion ]; then
@@ -67,9 +67,9 @@ def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir):
     with tmpdir.as_cwd():
         with open('gcc', 'w') as f:
             f.write("""\
-#!/bin/sh
+#!{0}
 echo "0.0.0"
-""")
+""".format(spack.util.executable.which('sh')))
         os.chmod('gcc', 0o700)
 
     os.environ['PATH'] = str(tmpdir)
@@ -84,7 +84,7 @@ def test_compiler_find_no_apple_gcc(no_compilers_yaml, working_env, tmpdir):
         # make a script to emulate apple gcc's version args
         with open('gcc', 'w') as f:
             f.write("""\
-#!/bin/sh
+#!{0}
 if [ "$1" = "-dumpversion" ]; then
     echo "4.2.1"
 elif [ "$1" = "--version" ]; then
@@ -96,7 +96,7 @@ elif [ "$1" = "--version" ]; then
 else
     echo "clang: error: no input files"
 fi
-""")
+""".format(spack.util.executable.which('sh')))
         os.chmod('gcc', 0o700)
 
     os.environ['PATH'] = str(tmpdir)
@@ -150,7 +150,7 @@ def clangdir(tmpdir):
     with tmpdir.as_cwd():
         with open('clang', 'w') as f:
             f.write("""\
-#!/bin/sh
+#!{0}
 if [ "$1" = "--version" ]; then
     echo "clang version 11.0.0 (clang-1100.0.33.16)"
     echo "Target: x86_64-apple-darwin18.7.0"
@@ -160,30 +160,31 @@ else
     echo "clang: error: no input files"
     exit 1
 fi
-""")
+""".format(spack.util.executable.which('sh')))
         shutil.copy('clang', 'clang++')
 
         gcc_script = """\
-#!/bin/sh
+#!{0}
 if [ "$1" = "-dumpversion" ]; then
     echo "8"
 elif [ "$1" = "-dumpfullversion" ]; then
     echo "8.4.0"
 elif [ "$1" = "--version" ]; then
-    echo "{0} (GCC) 8.4.0 20120313 (Red Hat 8.4.0-1)"
+    echo "{1} (GCC) 8.4.0 20120313 (Red Hat 8.4.0-1)"
     echo "Copyright (C) 2010 Free Software Foundation, Inc."
 else
-    echo "{1}: fatal error: no input files"
+    echo "{2}: fatal error: no input files"
     echo "compilation terminated."
     exit 1
 fi
 """
+        sh = spack.util.executable.which('sh')
         with open('gcc-8', 'w') as f:
-            f.write(gcc_script.format('gcc', 'gcc-8'))
+            f.write(gcc_script.format(sh, 'gcc', 'gcc-8'))
         with open('g++-8', 'w') as f:
-            f.write(gcc_script.format('g++', 'g++-8'))
+            f.write(gcc_script.format(sh, 'g++', 'g++-8'))
         with open('gfortran-8', 'w') as f:
-            f.write(gcc_script.format('GNU Fortran', 'gfortran-8'))
+            f.write(gcc_script.format(sh, 'GNU Fortran', 'gfortran-8'))
         os.chmod('clang', 0o700)
         os.chmod('clang++', 0o700)
         os.chmod('gcc-8', 0o700)

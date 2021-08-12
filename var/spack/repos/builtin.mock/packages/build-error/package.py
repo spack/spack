@@ -16,7 +16,7 @@ class BuildError(Package):
 
     def install(self, spec, prefix):
         with open('configure', 'w') as f:
-            f.write("""#!/bin/sh\n
+            f.write("""#!/usr/bin/env sh\n
 echo 'checking build system type... x86_64-apple-darwin16.6.0'
 echo 'checking host system type... x86_64-apple-darwin16.6.0'
 echo 'checking for gcc... /Users/gamblin2/src/spack/lib/spack/env/clang/clang'

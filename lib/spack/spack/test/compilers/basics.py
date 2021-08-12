@@ -269,7 +269,7 @@ def test_get_compiler_link_paths_no_verbose_flag():
 def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
     gcc = str(tmpdir.join('gcc'))
     with open(gcc, 'w') as f:
-        f.write("""#!/bin/bash
+        f.write("""#!/usr/bin/env bash
 if [[ $ENV_SET == "1" && $MODULE_LOADED == "1" ]]; then
   echo '""" + no_flag_output + """'
 fi
@@ -704,7 +704,7 @@ def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
     # Create compiler
     gcc = str(tmpdir.join('gcc'))
     with open(gcc, 'w') as f:
-        f.write("""#!/bin/bash
+        f.write("""#!/usr/bin/env bash
 if [[ $CMP_ON == "1" ]]; then
     echo "$CMP_VER"
 fi
@@ -754,7 +754,7 @@ def test_compiler_get_real_version_fails(working_env, monkeypatch, tmpdir):
     # Create compiler
     gcc = str(tmpdir.join('gcc'))
     with open(gcc, 'w') as f:
-        f.write("""#!/bin/bash
+        f.write("""#!/usr/bin/env bash
 if [[ $CMP_ON == "1" ]]; then
     echo "$CMP_VER"
 fi
@@ -810,7 +810,7 @@ def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
     # Create compiler
     gcc = str(tmpdir.join('gcc'))
     with open(gcc, 'w') as f:
-        f.write("""#!/bin/bash
+        f.write("""#!/usr/bin/env bash
 echo "4.4.4"
 """)  # Version for which c++11 flag is -std=c++0x
     fs.set_executable(gcc)

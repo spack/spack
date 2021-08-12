@@ -16,7 +16,7 @@ class BuildWarnings(Package):
 
     def install(self, spec, prefix):
         with open('configure', 'w') as f:
-            f.write("""#!/bin/sh\n
+            f.write("""#!/usr/bin/env sh\n
 echo 'checking for gcc... /Users/gamblin2/src/spack/lib/spack/env/clang/clang'
 echo 'checking whether the C compiler works... yes'
 echo 'checking for C compiler default output file name... a.out'

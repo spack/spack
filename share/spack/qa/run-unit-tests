@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 #
 # Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
@@ -20,6 +20,7 @@
 #-----------------------------------------------------------
 # Run a few initial commands and set up test environment
 #-----------------------------------------------------------
+set -e
 ORIGINAL_PATH="$PATH"
 
 . "$(dirname $0)/setup.sh"

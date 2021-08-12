@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 #
 # Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
@@ -9,7 +9,7 @@
 # Description:
 #     Common setup code to be sourced by Spack's test scripts.
 #
-
+set -e
 QA_DIR="$(dirname ${BASH_SOURCE[0]})"
 export SPACK_ROOT=$(realpath "$QA_DIR/../../..")
 

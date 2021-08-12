@@ -876,7 +876,7 @@ def mock_archive(request, tmpdir_factory):
                                      'configure'))
     with open(configure_path, 'w') as f:
         f.write(
-            "#!/bin/sh\n"
+            "#!/usr/bin/env sh\n"
             "prefix=$(echo $1 | sed 's/--prefix=//')\n"
             "cat > Makefile <<EOF\n"
             "all:\n"

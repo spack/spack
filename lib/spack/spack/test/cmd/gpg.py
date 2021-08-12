@@ -27,7 +27,7 @@ gpg = SpackCommand('gpg')
     ('gpg2', 'gpg (GnuPG) 2.2.19'),  # gpg2 command
 ])
 def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
-    TEMPLATE = ('#!/bin/sh\n'
+    TEMPLATE = ('#!/usr/bin/env sh\n'
                 'echo "{version}"\n')
 
     with tmpdir.as_cwd():

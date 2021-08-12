@@ -466,7 +466,7 @@ def ci_rebuild(args):
 
     # Write the install command to a shell script
     with open('install.sh', 'w') as fd:
-        fd.write('#!/bin/bash\n\n')
+        fd.write('#!/usr/bin/env bash\n\n')
         fd.write('\n# spack install command\n')
         fd.write(' '.join(['"{0}"'.format(i) for i in install_args]))
         fd.write('\n')

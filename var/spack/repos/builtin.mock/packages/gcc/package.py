@@ -22,5 +22,5 @@ class Gcc(Package):
         # Create the minimal compiler that will fool `spack compiler find`
         mkdirp(prefix.bin)
         with open(prefix.bin.gcc, 'w') as f:
-            f.write('#!/bin/bash\necho "%s"' % str(spec.version))
+            f.write('#!/usr/bin/env bash\necho "%s"' % str(spec.version))
         set_executable(prefix.bin.gcc)
