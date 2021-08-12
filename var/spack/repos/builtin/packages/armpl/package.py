@@ -24,7 +24,7 @@ def get_os():
 
 def get_armpl_prefix(spec):
 
-    acfl_prefix = spec['acfl'].prefix
+    acfl_prefix = spec['arm'].prefix
 
     # SVE
     if spec.satisfies('+sve'):
