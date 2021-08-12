@@ -25,6 +25,7 @@ import archspec.cpu.schema
 from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 
 import spack.architecture
+import spack.binary_distribution
 import spack.caches
 import spack.compilers
 import spack.config
@@ -314,6 +315,15 @@ def mock_fetch_cache(monkeypatch):
     """
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
+@pytest.fixture(autouse=True)
+def mock_binary_index(monkeypatch, tmpdir):
+    """Changes the directory for the binary index and creates binary index for
+    every test. Clears its own index when it's done.
+    """
+    index_path = tmpdir.join('binary_index').strpath
+    mock_index = spack.binary_distribution.BinaryCacheIndex(index_path)
+    monkeypatch.setattr(spack.binary_distribution, 'binary_index', mock_index)
+    yield
 
 @pytest.fixture(autouse=True)
 def _skip_if_missing_executables(request):

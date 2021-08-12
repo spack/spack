@@ -13,6 +13,7 @@ from contextlib import contextmanager
 import ruamel.yaml as yaml
 
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 import spack.config
 import spack.hash_types as ht
@@ -103,11 +104,11 @@ class DirectoryLayout(object):
         with open(path, 'w') as f:
             # The hash the the projection is the DAG hash but we write out the
             # full provenance by full hash so it's availabe if we want it later
-            extension = os.path.splitext(path)[-1].lower()
-            if 'json' in extension:
-                spec.to_json(f, hash=ht.full_hash)
-            elif 'yaml' in extension:
-                spec.to_yaml(f, hash=ht.full_hash)
+            # extension = os.path.splitext(path)[-1].lower()
+            # if 'json' in extension:
+            spec.to_json(f, hash=ht.full_hash)
+            # elif 'yaml' in extension:
+            #     spec.to_yaml(f, hash=ht.full_hash)
 
     def write_host_environment(self, spec):
         """The host environment is a json file with os, kernel, and spack
@@ -153,6 +154,11 @@ class DirectoryLayout(object):
         json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)
         if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
             self.write_spec(spec, json_path)
+            try:
+                os.remove(yaml_path)
+            except OSError as err:
+                tty.debug('Could not remove deprecated {0}'.format(yaml_path))
+                tty.debug(err)
         elif os.path.exists(yaml_path):
             return yaml_path
         return json_path
@@ -183,6 +189,11 @@ class DirectoryLayout(object):
 
         if (os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path)):
             self.write_spec(deprecated_spec, json_path)
+            try:
+                os.remove(yaml_path)
+            except OSError as err:
+                tty.debug('Could not remove deprecated {0}'.format(yaml_path))
+                tty.debug(err)
         elif os.path.exists(yaml_path):
             return yaml_path
 
@@ -269,9 +280,11 @@ class DirectoryLayout(object):
         for _, path_scheme in self.projections.items():
             path_elems = ["*"] * len(path_scheme.split(os.sep))
             # NOTE: Does not validate filename extension; should happen later
-            path_elems += [self.metadata_dir, 'spec.*']
+            path_elems += [self.metadata_dir, 'spec.json']
             pattern = os.path.join(self.root, *path_elems)
             spec_files = glob.glob(pattern)
+            if not spec_files:
+                path_elems += [self.metadata_dir, 'spec.yaml']
             specs.extend([self.read_spec(s) for s in spec_files])
         return specs
 

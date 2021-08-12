@@ -972,7 +972,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     if force:
         if web_util.url_exists(remote_specfile_path):
             web_util.remove_url(remote_specfile_path)
-        elif web_util.url_exists(remote_specfile_path_deprecated):
+        if web_util.url_exists(remote_specfile_path_deprecated):
             web_util.remove_url(remote_specfile_path_deprecated)
     elif (web_util.url_exists(remote_specfile_path) or
             web_util.url_exists(remote_specfile_path_deprecated)):
@@ -1465,22 +1465,18 @@ def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
         buildcache_fetch_url_json = url_util.join(
             mirror.fetch_url, _build_cache_relative_path, specfile_name)
         try:
-            if web_util.url_exists(buildcache_fetch_url_json):
-                _, _, fs = web_util.read_from_url(buildcache_fetch_url_json)
-            elif web_util.url_exists(buildcache_fetch_url_yaml):
+            _, _, fs = web_util.read_from_url(buildcache_fetch_url_json)
+        except (URLError, web_util.SpackWebError, HTTPError) as url_err:
+            try:
                 _, _, fs = web_util.read_from_url(buildcache_fetch_url_yaml)
                 specfile_is_json = False
-            else:
-                raise URLError('')
-            specfile_contents = codecs.getreader('utf-8')(fs).read()
-        except (URLError, web_util.SpackWebError, HTTPError) as url_err:
-            if specfile_is_json:
+            except (URLError, web_util.SpackWebError, HTTPError) as url_err_y:
                 tty.debug('Did not find {0} on {1}'.format(
                     specfile_name, buildcache_fetch_url_json), url_err)
-            else:
                 tty.debug('Did not find {0} on {1}'.format(
-                    deprecated_specfile_name, buildcache_fetch_url_yaml), url_err)
-            continue
+                    specfile_name, buildcache_fetch_url_yaml), url_err_y)
+                continue
+        specfile_contents = codecs.getreader('utf-8')(fs).read()
 
         # read the spec from the build cache file. All specs in build caches
         # are concrete (as they are built) so we need to mark this spec
@@ -1728,26 +1724,26 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
         spec.short_spec, '' if rebuild_on_errors else 'not ')
 
     try:
-        if web_util.url_exists(deprecated_specfile_path):
+        _, _, spec_file = web_util.read_from_url(specfile_path)
+    except (URLError, web_util.SpackWebError) as url_err:
+        try:
             _, _, spec_file = web_util.read_from_url(deprecated_specfile_path)
             specfile_is_json = False
-        elif web_util.url_exists(specfile_path):
-            _, _, spec_file = web_util.read_from_url(specfile_path)
-        else:
-            raise URLError('')
-        spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
-    except (URLError, web_util.SpackWebError) as url_err:
-        err_msg = [
-            'Unable to determine whether {0} needs rebuilding,',
-            ' caught exception attempting to read from {1}.',
-        ]
-        tty.error(''.join(err_msg).format(
-            spec.short_spec,
-            specfile_path if specfile_is_json else deprecated_specfile_path))
-        tty.debug(url_err)
-        tty.warn(result_of_error)
-        return rebuild_on_errors
+        except (URLError, web_util.SpackWebError) as url_err_y:
+            err_msg = [
+                'Unable to determine whether {0} needs rebuilding,',
+                ' caught exception attempting to read from {1} or {2}.',
+            ]
+            tty.error(''.join(err_msg).format(
+                spec.short_spec,
+                specfile_path,
+                deprecated_specfile_path))
+            tty.debug(url_err)
+            tty.debug(url_err_y)
+            tty.warn(result_of_error)
+            return rebuild_on_errors
 
+    spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
     if not spec_file_contents:
         tty.error('Reading {0} returned nothing'.format(
             specfile_path if specfile_is_json else deprecated_specfile_path))
@@ -1855,27 +1851,23 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
 
 def _download_buildcache_entry(mirror_root, descriptions):
     for description in descriptions:
-        missing = 0
+        path = description['path']
+        mkdirp(path)
+        fail_if_missing = description['required']
         for url in description['url']:
             description_url = os.path.join(mirror_root, url)
-            path = description['path']
-            fail_if_missing = description['required']
-
-            mkdirp(path)
-
             stage = Stage(
                 description_url, name="build_cache", path=path, keep=True)
-
             try:
                 stage.fetch()
                 break
             except fs.FetchError as e:
-                missing += 1
                 tty.debug(e)
-                if fail_if_missing and missing == len(description[url]):
-                    tty.error('Failed to download required url {0}'.format(
-                        description_url))
-                    return False
+        else:
+            if fail_if_missing:
+                tty.error('Failed to download required url {0}'.format(
+                    description_url))
+                return False
     return True
 
 

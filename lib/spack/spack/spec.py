@@ -1777,20 +1777,20 @@ class Spec(object):
                 hashes in the dictionary.
 
         """
-        node_list = []  # Using a list to preserve preorder traversal.
-        hash_list = []
+        node_list = []  # Using a list to preserve preorder traversal for hash.
+        hash_set = set()
         for s in self.traverse(order='pre', deptype=hash.deptype):
             spec_hash = s.node_dict_with_hashes(hash)[hash.attr[1:]]
-            if spec_hash not in hash_list:
+            if spec_hash not in hash_set:
                 node_list.append(s.node_dict_with_hashes(hash))
-                hash_list.append(spec_hash)
+                hash_set.add(spec_hash)
             if s.build_spec is not s:
                 build_spec_list = s.build_spec.to_dict(hash)['spec']['nodes']
                 for node in build_spec_list:
                     node_hash = node[hash.attr[1:]]
-                    if node_hash not in hash_list:
+                    if node_hash not in hash_set:
                         node_list.append(node)
-                        hash_list.append(node_hash)
+                        hash_set.add(node_hash)
         meta_dict = syaml.syaml_dict([('version', 2)])
         inner_dict = syaml.syaml_dict([('_meta', meta_dict), ('nodes', node_list)])
         spec_dict = syaml.syaml_dict([('spec', inner_dict)])

@@ -909,7 +909,7 @@ spack:
 
             env_cmd('deactivate')
             import spack.binary_distribution as bindist
-            bindist.clear_spec_cache()
+            # bindist.clear_spec_cache()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -963,16 +963,16 @@ spack:
             spec_map = ci.get_concrete_specs(
                 env, 'patchelf', 'patchelf', '', 'FIND_ANY')
             concrete_spec = spec_map['patchelf']
-            spec_yaml = concrete_spec.to_yaml(hash=ht.build_hash)
-            yaml_path = str(tmpdir.join('spec.yaml'))
-            with open(yaml_path, 'w') as ypfd:
-                ypfd.write(spec_yaml)
+            spec_json = concrete_spec.to_json(hash=ht.build_hash)
+            json_path = str(tmpdir.join('spec.json'))
+            with open(json_path, 'w') as ypfd:
+                ypfd.write(spec_json)
 
-            install_cmd('--keep-stage', yaml_path)
+            install_cmd('--keep-stage', json_path)
 
-            # env, spec, yaml_path, mirror_url, build_id, sign_binaries
+            # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(
-                env, concrete_spec, yaml_path, mirror_url, True)
+                env, concrete_spec, json_path, mirror_url, True)
 
             ci.write_cdashid_to_mirror('42', concrete_spec, mirror_url)
 
@@ -1056,7 +1056,7 @@ spack:
             dl_dir = working_dir.join('download_dir')
             if not os.path.exists(dl_dir.strpath):
                 os.makedirs(dl_dir.strpath)
-            buildcache_cmd('download', '--spec-file', yaml_path, '--path',
+            buildcache_cmd('download', '--spec-file', json_path, '--path',
                            dl_dir.strpath, '--require-cdashid')
             dl_dir_list = os.listdir(dl_dir.strpath)
 
