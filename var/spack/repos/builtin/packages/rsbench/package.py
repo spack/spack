@@ -20,8 +20,8 @@ class Rsbench(MakefilePackage):
 
     tags = ['proxy-app']
 
-    # To-Do: Add build support for other parallelism versions in v12: 
-    # CUDA, Sycl, OpenCL, OpenMP Offload 
+    # To-Do: Add build support for other parallelism versions in v12:
+    # CUDA, Sycl, OpenCL, OpenMP Offload
 
     @property
     def build_directory(self):
@@ -29,7 +29,6 @@ class Rsbench(MakefilePackage):
             return 'src'
         else:
             return 'openmp-threading'
-    
 
     @property
     def build_targets(self):
