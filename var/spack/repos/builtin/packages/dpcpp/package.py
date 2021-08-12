@@ -44,6 +44,8 @@ class Dpcpp(CMakePackage):
 
     root_cmakelists_dir = 'llvm'
 
+    patch('cuda-backend.patch', when='+cuda')
+
     def cmake_args(self):
         llvm_external_projects = 'sycl;llvm-spirv;opencl;libdevice;xpti;xptifw'
 
