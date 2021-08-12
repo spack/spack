@@ -70,5 +70,6 @@ class Enzo(MakefilePackage):
         install_tree('doc', prefix.doc)
         install_tree('input', prefix.input)
         install_tree('run', prefix.run)
-        install('src/ring/ring.exe', prefix.bin)
+        with working_dir(join_path('src', 'ring')):
+            install('ring.exe', join_path(prefix.bin, 'ring'))
 
