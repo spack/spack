@@ -43,14 +43,11 @@ class Zlib(Package):
         if '+optimize' in self.spec:
             env.append_flags('CFLAGS', '-O2')
 
-
-
     def install(self, spec, prefix):
         config_args = []
         if '~shared' in spec:
             config_args.append('--static')
         configure('--prefix={0}'.format(prefix), *config_args)
-
 
         make()
         if self.run_tests:
