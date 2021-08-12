@@ -72,9 +72,7 @@ class Arm(Package):
     license_required = True
     license_comment = "#"
     license_files = ["licences/Licence"]
-    license_vars = [
-        "ARM_LICENSE_DIR",
-    ]
+    license_vars = ["ARM_LICENSE_DIR"]
     license_url = "https://developer.arm.com/tools-and-software/server-and-hpc/help/help-and-tutorials/system-administration/licensing/arm-licence-server"
 
 
