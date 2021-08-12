@@ -13,7 +13,7 @@ spack:
   packages:
     all:
       compiler:
-        - gcc@7.5.0
+        - gcc@9.3.0
       providers:
         blas:
           - openblas
@@ -314,7 +314,7 @@ spack:
     #- variorum # root fails
 
   - arch:
-    - '%gcc@7.5.0 arch=linux-ubuntu18.04-x86_64'
+    - '%gcc@9.3.0 arch=linux-ubuntu20.04-x86_64'
 
 
   specs:
@@ -364,7 +364,7 @@ spack:
         runner-attributes:
           image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-x86_64:2021-07-01", "entrypoint": [""] }
           tags: ["spack", "public", "xlarge", "x86_64"]
-      - match: ['os=ubuntu18.04']
+      - match: ['os=ubuntu20.04']
         runner-attributes:
           image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-x86_64:2021-07-01", "entrypoint": [""] }
           tags: ["spack", "public", "large", "x86_64"]
