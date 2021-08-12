@@ -93,7 +93,7 @@ class OpenfoamOrg(Package):
 
     depends_on('mpi')
     depends_on('zlib')
-    depends_on('flex')
+    depends_on('flex@:2.6.1,2.6.4:')
     depends_on('cmake', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
