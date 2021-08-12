@@ -295,6 +295,9 @@ class SpackArgumentParser(argparse.ArgumentParser):
     def add_subparsers(self, **kwargs):
         """Ensure that sensible defaults are propagated to subparsers"""
         kwargs.setdefault('metavar', 'SUBCOMMAND')
+        if sys.version_info[0] == 3:
+            kwargs.setdefault('required', True)
+
         sp = super(SpackArgumentParser, self).add_subparsers(**kwargs)
         old_add_parser = sp.add_parser
 
