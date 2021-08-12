@@ -2681,3 +2681,15 @@ spack:
     with spack.environment.Environment(str(tmpdir)):
         assert str(spack.store.root) == '/tmp/store'
     assert str(spack.store.root) == current_store_root
+
+
+def test_activate_temp(monkeypatch, tmpdir):
+    """Tests whether `spack env activate --temp` creates an environment in a
+    temporary directory"""
+    env_dir = lambda: str(tmpdir)
+    monkeypatch.setattr(spack.cmd.env, "create_temp_env_directory", env_dir)
+    shell = env('activate', '--temp', '--sh')
+    active_env_var = next(line for line in shell.splitlines()
+                          if ev.spack_env_var in line)
+    assert str(tmpdir) in active_env_var
+    assert ev.is_env_dir(str(tmpdir))
