@@ -60,9 +60,15 @@ class Enzo(MakefilePackage):
             make('opt-high')
             make('show-config')
             make()
+        with working_dir('src/inits'):
+            make()
+        with working_dir('src/ring'):
+            make()
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
         install_tree('doc', prefix.doc)
         install_tree('input', prefix.input)
         install_tree('run', prefix.run)
+        install('src/ring/ring.exe', prefix.bin)
+
