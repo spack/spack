@@ -180,7 +180,7 @@ class Boost(Package):
 
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
-    depends_on('bzip2', when='+iostreams')
+    # depends_on('bzip2', when='+iostreams')
     depends_on('zlib', when='+iostreams')
     depends_on('py-numpy', when='+numpy', type=('build', 'run'))
 
@@ -573,12 +573,15 @@ class Boost(Package):
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = self.stage.source_path
 
-        bootstrap = Executable('./bootstrap.sh')
-
         bootstrap_options = ['--prefix=%s' % prefix]
         self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
-        bootstrap(*bootstrap_options)
+        if self.spec.satisfies('platform=windows'):
+            bootstrap = Executable('./bootstrap.bat')
+            bootstrap(*bootstrap_options)
+        else:
+            bootstrap = Executable('./bootstrap.sh')
+            bootstrap(*bootstrap_options) 
 
         # strip the toolchain to avoid double include errors (intel) or
         # user-config being overwritten (again intel, but different boost version)
@@ -587,6 +590,8 @@ class Boost(Package):
 
         # b2 used to be called bjam, before 1.47 (sigh)
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
+        if self.spec.satisfies('platform=windows'):
+            b2name = 'b2.exe' if spec.satisfies('@1.47:') else 'bjam.exe'
 
         b2 = Executable(b2name)
         jobs = make_jobs
