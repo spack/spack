@@ -12,7 +12,7 @@ from spack import *
 class IntelOneapiDal(IntelOneApiLibraryPackage):
     """Intel oneAPI DAL."""
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onedal.html'
 

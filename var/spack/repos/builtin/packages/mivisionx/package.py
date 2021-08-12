@@ -13,7 +13,7 @@ class Mivisionx(CMakePackage):
 
     homepage = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX"
     git      = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git"
-    url      = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
@@ -24,6 +24,7 @@ class Mivisionx(CMakePackage):
         url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('4.3.0', sha256='31f6ab9fb7f40b23d4b24c9a70f809623720943e0492c3d357dd22dcfa50efb2')
     version('4.2.0', sha256='172857b1b340373ae81ed6aa241559aa781e32250e75c82d7ba3c002930a8a3a')
     version('4.1.0', sha256='0b431a49807682b9a81adac6a64160a0712ddaa3963e0f05595c93b92be777ea')
     version('4.0.0', sha256='e09d4890b729740ded056b3974daea84c8eb1fc93714c52bf89f853c2eef1fb5')
@@ -63,7 +64,8 @@ class Mivisionx(CMakePackage):
     depends_on('miopengemm@1.1.6', when='@1.7')
     depends_on('openssl', when='@4.0.0:4.2.0')
 
-    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
+    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
+                '4.3.0']:
         depends_on('rocm-opencl@' + ver,   when='@' + ver)
         depends_on('miopengemm@' + ver,    when='@' + ver)
         depends_on('miopen-opencl@' + ver, when='@' + ver)

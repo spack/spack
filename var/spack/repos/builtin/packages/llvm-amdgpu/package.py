@@ -15,11 +15,12 @@ class LlvmAmdgpu(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
     git      = "https://github.com/RadeonOpenCompute/llvm-project.git"
-    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-4.1.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
+    version('4.3.0', sha256='1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87')
     version('4.2.0', sha256='751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661')
     version('4.1.0', sha256='244e38d824fa7dfa8d0edf3c036b3c84e9c17a16791828e4b745a8d31eb374ae')
     version('4.0.0', sha256='aa1f80f429fded465e86bcfaef72255da1af1c5c52d58a4c979bc2f6c2da5a69')
@@ -50,7 +51,7 @@ class LlvmAmdgpu(CMakePackage):
     patch('fix-ncurses-3.9.0.patch', when='@3.9.0:4.0.0')
 
     # This is already fixed in upstream but not in 4.2.0 rocm release
-    patch('fix-spack-detection-4.2.0.patch', when='@4.2.0')
+    patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:')
 
     conflicts('^cmake@3.19.0')
 
@@ -59,6 +60,7 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ('4.3.0',  '055a67e63da6491c84cd45865500043553fb33c44d538313dd87040a6f3826f2'),
         ('4.2.0',  '34a2ac39b9bb7cfa8175cbab05d30e7f3c06aaffce99eed5f79c616d0f910f5f'),
         ('4.1.0',  'f5f5aa6bfbd83ff80a968fa332f80220256447c4ccb71c36f1fbd2b4a8e9fc1b'),
         ('4.0.0',  'd0aa495f9b63f6d8cf8ac668f4dc61831d996e9ae3f15280052a37b9d7670d2a'),
@@ -92,12 +94,25 @@ class LlvmAmdgpu(CMakePackage):
             'compiler-rt'
         ]
 
+        args = []
+        if self.spec.satisfies('@4.3.0:'):
+            llvm_projects.append('libcxx')
+            llvm_projects.append('libcxxabi')
+
+            args = [
+                self.define('LIBCXX_ENABLE_SHARED', 'OFF'),
+                self.define('LIBCXX_ENABLE_STATIC', 'ON'),
+                self.define('LIBCXX_INSTALL_LIBRARY', 'OFF'),
+                self.define('LIBCXX_INSTALL_HEADERS', 'OFF'),
+                self.define('LIBCXXABI_ENABLE_SHARED', 'OFF'),
+                self.define('LIBCXXABI_ENABLE_STATIC', 'ON'),
+                self.define('LIBCXXABI_INSTALL_STATIC_LIBRARY', 'OFF'),
+            ]
+
         if '+openmp' in self.spec:
             llvm_projects.append('openmp')
 
-        args = [
-            self.define('LLVM_ENABLE_PROJECTS', ';'.join(llvm_projects))
-        ]
+        args.extend([self.define('LLVM_ENABLE_PROJECTS', ';'.join(llvm_projects))])
 
         # Enable rocm-device-libs as a external project
         if '+rocm-device-libs' in self.spec:
