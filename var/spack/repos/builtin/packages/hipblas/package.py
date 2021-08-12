@@ -34,10 +34,10 @@ class Hipblas(CMakePackage):
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
-    patch('hipblas-remove-opt-rocm-reference.patch', when='@4.2.0:')
-
     def cmake_args(self):
         args = [
+            # Make sure find_package(HIP) finds the module.
+            self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
             self.define('BUILD_CLIENTS_TESTS', 'OFF')
         ]

@@ -38,6 +38,8 @@ class Hipfft(CMakePackage):
 
     def cmake_args(self):
         args = [
+            # Make sure find_package(HIP) finds the module.
+            self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
         ]
 

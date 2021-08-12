@@ -40,10 +40,11 @@ class Hipsparse(CMakePackage):
 
     patch('e79985dccde22d826aceb3badfc643a3227979d2.patch', when='@3.5.0')
     patch('530047af4a0f437dafc02f76b3a17e3b1536c7ec.patch', when='@3.5.0')
-    patch('hipsparse-remove-opt-rocm-reference.patch', when='@4.2.0:')
 
     def cmake_args(self):
         args = [
+            # Make sure find_package(HIP) finds the module.
+            self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('CMAKE_CXX_STANDARD', '14'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
             self.define('BUILD_CLIENTS_TESTS', 'OFF'),
