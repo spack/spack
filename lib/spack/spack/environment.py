@@ -125,7 +125,8 @@ def activate(
         prompt (str): string to add to the users prompt, or None
 
     Returns:
-        str: Shell commands to activate environment.
+        str: Shell header to activate environment.
+        env_mods: Environment variables modifications to activate environment.
 
     TODO: environment to use the activated spack environment.
     """
@@ -176,6 +177,8 @@ def activate(
             cmds += 'fi;\n'
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
 
+    env_mod = spack.util.environment.EnvironmentModifications()
+
     #
     # NOTE in the fish-shell: Path variables are a special kind of variable
     # used to support colon-delimited path lists including PATH, CDPATH,
@@ -185,7 +188,7 @@ def activate(
     try:
         if add_view and default_view_name in env.views:
             with spack.store.db.read_transaction():
-                cmds += env.add_default_view_to_shell(shell)
+                env.add_default_view_to_env(env_mod)
     except (spack.repo.UnknownPackageError,
             spack.repo.UnknownNamespaceError) as e:
         tty.error(e)
@@ -197,7 +200,7 @@ def activate(
             'force concretize with the command:\n',
             '    spack -e {0} concretize --force'.format(env.name))
 
-    return cmds
+    return cmds, env_mod
 
 
 def deactivate(shell='sh'):
@@ -207,7 +210,8 @@ def deactivate(shell='sh'):
         shell (str): One of `sh`, `csh`, `fish`. Shell style to use.
 
     Returns:
-        str: shell commands for `shell` to undo environment variables
+        str: shell script header for `shell` to undo environment variables
+        env_mods: Environment variables modifications to deactivate environment.
 
     """
     global _active_environment
@@ -248,20 +252,22 @@ def deactivate(shell='sh'):
         cmds += '    unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
         cmds += 'fi;\n'
 
+    env_mods = spack.util.environment.EnvironmentModifications()
+
     try:
         if default_view_name in _active_environment.views:
             with spack.store.db.read_transaction():
-                cmds += _active_environment.rm_default_view_from_shell(shell)
+                _active_environment.rm_default_view_from_env(env_mods)
     except (spack.repo.UnknownPackageError,
             spack.repo.UnknownNamespaceError) as e:
         tty.warn(e)
         tty.warn('Could not fully deactivate view due to missing package '
                  'or repo, shell environment may be corrupt.')
 
-    tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
+    tty.debug("Deactivated environment '%s'" % _active_environment.name)
     _active_environment = None
 
-    return cmds
+    return cmds, env_mods
 
 
 def active_environment():
@@ -1332,12 +1338,10 @@ class Environment(object):
 
         return all_mods, errors
 
-    def add_default_view_to_shell(self, shell):
-        env_mod = spack.util.environment.EnvironmentModifications()
-
+    def add_default_view_to_env(self, env_mod):
         if default_view_name not in self.views:
-            # No default view to add to shell
-            return env_mod.shell_modifications(shell)
+            # No default view to add
+            return env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view))
@@ -1352,14 +1356,12 @@ class Environment(object):
         for env_var in env_mod.group_by_name():
             env_mod.prune_duplicate_paths(env_var)
 
-        return env_mod.shell_modifications(shell)
+        return env_mod
 
-    def rm_default_view_from_shell(self, shell):
-        env_mod = spack.util.environment.EnvironmentModifications()
-
+    def rm_default_view_from_env(self, env_mod):
         if default_view_name not in self.views:
-            # No default view to add to shell
-            return env_mod.shell_modifications(shell)
+            # No default view to remove
+            return env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view).reversed())
@@ -1367,7 +1369,7 @@ class Environment(object):
         mods, _ = self._env_modifications_for_default_view(reverse=True)
         env_mod.extend(mods)
 
-        return env_mod.shell_modifications(shell)
+        return env_mod
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.

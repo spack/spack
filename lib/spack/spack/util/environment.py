@@ -593,6 +593,8 @@ class EnvironmentModifications(object):
             for x in actions:
                 x.execute(env)
 
+        return env
+
     def shell_modifications(self, shell='sh'):
         """Return shell code to apply the modifications and clears the list."""
         modifications = self.group_by_name()

@@ -81,6 +81,8 @@ def env_activate_setup_parser(subparser):
 
 def env_activate(args):
     env = args.activate_env
+    env_mods = spack.util.environment.EnvironmentModifications()
+
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate",
@@ -89,26 +91,39 @@ def env_activate(args):
         return 1
 
     if ev.exists(env) and not args.dir:
-        spack_env = ev.root(env)
+        env_path = ev.root(env)
         short_name = env
         env_prompt = '[%s]' % env
 
     elif ev.is_env_dir(env):
-        spack_env = os.path.abspath(env)
-        short_name = os.path.basename(os.path.abspath(env))
+        env_path = os.path.abspath(env)
+        short_name = os.path.basename(env_path)
         env_prompt = '[%s]' % short_name
 
     else:
         tty.die("No such environment: '%s'" % env)
 
-    if spack_env == os.environ.get('SPACK_ENV'):
-        tty.debug("Environment %s is already active" % args.activate_env)
-        return
+    # Shell commands
+    cmds = ''
 
-    cmds = ev.activate(
-        ev.Environment(spack_env), add_view=args.with_view, shell=args.shell,
+    # Deactivate the current environment first.  We don't properly support
+    # stacked environments at the moment.
+    if ev.active_environment() is not None:
+        deactivate_cmds, deactivate_mods = ev.deactivate(shell=args.shell)
+        cmds += deactivate_cmds
+        env_mods.extend(deactivate_mods)
+
+    # Activate the new environment
+    active_env = ev.Environment(env_path)
+    activate_cmds, activate_mods = ev.activate(
+        active_env, add_view=args.with_view, shell=args.shell,
         prompt=env_prompt if args.prompt else None
     )
+
+    cmds += activate_cmds
+    env_mods.extend(activate_mods)
+
+    cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
 
@@ -137,10 +152,11 @@ def env_deactivate(args):
         )
         return 1
 
-    if 'SPACK_ENV' not in os.environ:
+    if ev.active_environment() is None:
         tty.die('No environment is currently active.')
 
-    cmds = ev.deactivate(shell=args.shell)
+    cmds, env_mods = ev.deactivate(shell=args.shell)
+    cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
 

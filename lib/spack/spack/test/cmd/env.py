@@ -228,8 +228,9 @@ def test_activate_adds_transitive_run_deps_to_path(
     with e:
         install('depends-on-run-env')
 
-    cmds = ev.activate(e)
-    assert 'DEPENDENCY_ENV_VAR=1' in cmds
+    _, mods = ev.activate(e)
+    env_variables = mods.apply_modifications({})
+    assert env_variables['DEPENDENCY_ENV_VAR'] == '1'
 
 
 def test_env_install_same_spec_twice(install_mockery, mock_fetch):
@@ -553,15 +554,10 @@ packages:
         e.install_all()
         e.write()
 
-        env_modifications = e.add_default_view_to_shell('sh')
-        individual_modifications = env_modifications.split('\n')
-
-        def path_includes_fake_prefix(cmd):
-            return 'export PATH' in cmd and str(fake_bin) in cmd
-
-        assert any(
-            path_includes_fake_prefix(cmd) for cmd in individual_modifications
-        )
+        env_mod = spack.util.environment.EnvironmentModifications()
+        e.add_default_view_to_env(env_mod)
+        env_variables = env_mod.apply_modifications({})
+        assert str(fake_bin) in env_variables['PATH']
 
 
 def test_init_with_file_and_remove(tmpdir):
