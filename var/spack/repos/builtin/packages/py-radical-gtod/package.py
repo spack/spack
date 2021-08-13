@@ -18,8 +18,8 @@ class PyRadicalGtod(PythonPackage):
 
     maintainers = ['andre-merzky']
 
-    version('devel', branch='devel')
-    version('1.6.7', sha256='8d7d32e3d0bcf6d7cf176454a9892a46919b03e1ed96bee389380e6d75d6eff8')
+    version('develop', branch='devel')
+    version('1.6.7',   sha256='8d7d32e3d0bcf6d7cf176454a9892a46919b03e1ed96bee389380e6d75d6eff8')
 
     depends_on('python@3.6:',   type=('build', 'run'))
     depends_on('py-setuptools', type='build')
