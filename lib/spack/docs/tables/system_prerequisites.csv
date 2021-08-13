@@ -3,6 +3,7 @@ Python, 2.6/2.7/3.5-3.9, , Interpreter for Spack
 C/C++ Compilers, , , Building software
 make, , , Build software
 patch, , , Build software
+bash, , , Compiler wrappers
 tar, , , Extract/create archives
 gzip, , , Compress/Decompress archives
 unzip, , , Compress/Decompress archives
