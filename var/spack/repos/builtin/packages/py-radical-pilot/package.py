@@ -17,15 +17,13 @@ class PyRadicalPilot(PythonPackage):
 
     maintainers = ['andre-merzky']
 
-    version('devel', branch='devel')
-    version('1.6.7', sha256='6ca0a3bd3cda65034fa756f37fa05681d5a43441c1605408a58364f89c627970')
+    version('develop', branch='devel')
+    version('1.6.7',   sha256='6ca0a3bd3cda65034fa756f37fa05681d5a43441c1605408a58364f89c627970')
 
-    depends_on('py-radical-utils',       type=('build', 'run'))
-    depends_on('py-radical-saga',        type=('build', 'run'))
-    depends_on('py-radical-utils@devel', type=('build', 'run'), when='@devel')
-    depends_on('py-radical-saga@devel',  type=('build', 'run'), when='@devel')
+    depends_on('py-radical-utils@1.6.7:', type=('build', 'run'))
+    depends_on('py-radical-saga@1.6.6:',  type=('build', 'run'))
 
-    depends_on('python@3.6:',            type=('build', 'run'))
-    depends_on('py-pymongo',             type=('build', 'run'))
-    depends_on('py-setproctitle',        type=('build', 'run'))
-    depends_on('py-setuptools',          type='build')
+    depends_on('python@3.6:',             type=('build', 'run'))
+    depends_on('py-pymongo',              type=('build', 'run'))
+    depends_on('py-setproctitle',         type=('build', 'run'))
+    depends_on('py-setuptools',           type='build')
