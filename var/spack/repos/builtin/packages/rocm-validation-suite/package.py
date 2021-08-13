@@ -19,6 +19,7 @@ class RocmValidationSuite(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.0', sha256='f7a918b513c51dd5eadce3f2e091679b2dfe6544a913960ac483567792a06a4c')
     version('4.2.0', sha256='b25e58a842a8eb90bfd6c4ae426ca5cfdd5de2f8a091761f83597f7cfc2cd0f3')
     version('4.1.0', sha256='f9618f89384daa0ae897b36638a3737bcfa47e98778e360338267cd1fe2bbc66')
     version('4.0.0', sha256='04743ca8901b94a801759a3c13c8caf3e6ea950ffcda6408173e6f9ef7b86e74')
@@ -32,6 +33,7 @@ class RocmValidationSuite(CMakePackage):
 
     patch('001-fixes-for-rocblas-rocm-smi-install-prefix-path.patch')
     patch('002-remove-force-setting-hip-inc-path.patch', when='@4.1.0:')
+    patch('003-cmake-change-to-remove-installs-and-sudo.patch', when='@4.1.0:')
 
     depends_on('cmake@3.5:', type='build')
     depends_on('zlib', type='link')
@@ -41,7 +43,7 @@ class RocmValidationSuite(CMakePackage):
         build_env.set("HIPCC_PATH", spec['hip'].prefix)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('hip-rocclr@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
