@@ -9,6 +9,7 @@ on:
     branches:
       - features/windows-support
       - windows-ci*
+      - develop
 defaults:
   run:
     shell:
