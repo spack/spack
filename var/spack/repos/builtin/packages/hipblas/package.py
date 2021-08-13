@@ -56,4 +56,3 @@ class Hipblas(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
-        env.set('HIP_PATH', self.spec['hip'].prefix)
