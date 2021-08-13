@@ -16,10 +16,11 @@ class Hip(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/HIP"
     git      = "https://github.com/ROCm-Developer-Tools/HIP.git"
-    url      = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-
+    version('master', branch='master')
+    version('4.3.0', sha256='293b5025b5e153f2f25e465a2e0006a2b4606db7b7ec2ae449f8a4c0b52d491b')
     version('4.2.0', sha256='ecb929e0fc2eaaf7bbd16a1446a876a15baf72419c723734f456ee62e70b4c24')
     version('4.1.0', sha256='e21c10b62868ece7aa3c8413ec0921245612d16d86d81fe61797bf9a64bc37eb')
     version('4.0.0', sha256='d7b78d96cec67c55b74ea3811ce861b16d300410bc687d0629e82392e8d7c857')
@@ -34,7 +35,7 @@ class Hip(CMakePackage):
     depends_on('mesa18~llvm@18.3:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('hip-rocclr@' + ver, when='@' + ver)
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
@@ -74,6 +75,8 @@ class Hip(CMakePackage):
         patch('0005-Disable-tests-3.6.0.patch', when='@3.6.0:3.8.0')
         patch('0005-Disable-tests-3.9.0.patch', when='@3.9.0:4.0.0')
         patch('0005-Disable-tests-4.1.0.patch', when='@4.1.0:')
+
+    patch('Add_missing_open_cl_header_file_for_4.3.0.patch', when='@4.3.0')
 
     def get_paths(self):
         if self.spec.external:
