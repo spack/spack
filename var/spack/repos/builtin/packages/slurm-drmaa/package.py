@@ -7,8 +7,13 @@ from spack import *
 
 
 class SlurmDrmaa(AutotoolsPackage):
-    """Slurm-DRMAA is the Slurm implementation of DRMAA"""
-
+    '''
+    DRMAA for Slurm is an implementation of Open Grid Forum DRMAA 1.0 (Distributed
+    Resource Management Application API) specification for submission and control of
+    jobs to SLURM.  Using DRMAA, grid applications builders, portal developers and
+    ISVs can use the same high-level API to link their software with different
+    cluster/resource management systems.
+    '''
     homepage = "https://github.com/natefoo/slurm-drmaa"
     url      = "https://github.com/natefoo/slurm-drmaa/releases/download/1.1.2/slurm-drmaa-1.1.2.tar.gz"
 
@@ -16,6 +21,7 @@ class SlurmDrmaa(AutotoolsPackage):
 
     depends_on("slurm")
     depends_on("gperf")
+    depends_on("ragel")
 
     def configure_args(self):
         args = []
