@@ -189,9 +189,15 @@ class Coreneuron(CMakePackage):
 
         if spec.satisfies('+gpu'):
             gcc = which("gcc")
-            options.extend(['-DCUDA_HOST_COMPILER=%s' % gcc,
-                            '-DCUDA_PROPAGATE_HOST_FLAGS=OFF',
-                            '-DCORENRN_ENABLE_GPU=ON'])
+            if spec.satisfies('@1.0.0.20210709:'):
+                # After https://github.com/BlueBrain/CoreNeuron/pull/609
+                nvcc = which("nvcc")
+                options.extend(['-DCMAKE_CUDA_COMPILER=%s' % nvcc,
+                                '-DCMAKE_CUDA_HOST_COMPILER=%s' % gcc])
+            else:
+                options.extend(['-DCUDA_HOST_COMPILER=%s' % gcc,
+                                '-DCUDA_PROPAGATE_HOST_FLAGS=OFF'])
+            options.append('-DCORENRN_ENABLE_GPU=ON')
 
         return options
 
