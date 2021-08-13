@@ -181,7 +181,8 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 cxxflags_str = " ".join(self.spec.compiler_flags['cxxflags'])
                 args.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
-                    ' -g -fsized-deallocation -fPIC {1} -std=c++17'.format(arch_str, cxxflags_str)
+                    ' -g -fsized-deallocation -fPIC {1}'
+                    ' -std=c++17'.format(arch_str, cxxflags_str)
                 )
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
