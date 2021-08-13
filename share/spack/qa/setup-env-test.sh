@@ -70,13 +70,13 @@ b_module=$(spack -m module tcl find b)
 # Create a test environment for testing environment commands
 echo "Creating a mock environment"
 spack env create spack_test_env
-test_env_location=$(spack location -e spack_test_env)
+spack env create spack_test_2_env
 
 # Ensure that we uninstall b on exit
 cleanup() {
     echo "Removing test environment before exiting."
     spack env deactivate 2>&1 > /dev/null
-    spack env rm -y spack_test_env
+    spack env rm -y spack_test_env spack_test_2_env
 
     title "Cleanup"
     echo "Removing test packages before exiting."
@@ -173,3 +173,9 @@ echo "Testing 'despacktivate'"
 despacktivate
 is_not_set SPACK_ENV
 is_not_set SPACK_OLD_PS1
+
+echo "Testing spack env activate repeatedly"
+spack env activate spack_test_env
+spack env activate spack_test_2_env
+contains "spack_test_2_env" sh -c 'echo $PATH'
+does_not_contain "spack_test_env" sh -c 'echo $PATH'

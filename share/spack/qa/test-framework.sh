@@ -133,6 +133,33 @@ contains() {
 }
 
 #
+# Ensure that a string is not in the output of a command.
+# Suppresses output on success.
+# On failure, echo the exit code and output.
+#
+does_not_contain() {
+    string="$1"
+    shift
+
+    printf "'%s' output does not contain '$string' ... " "$*"
+    output=$("$@" 2>&1)
+    err="$?"
+
+    if [ "${output#*$string}" = "${output}" ]; then
+        pass
+    else
+        fail
+        echo_red "'$string' was in the output."
+        if [ -n "$output" ]; then
+            echo_msg "Output:"
+            echo "$output"
+        else
+            echo_msg "No output."
+        fi
+    fi
+}
+
+#
 # Ensure that a variable is set.
 #
 is_set() {
