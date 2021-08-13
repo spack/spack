@@ -33,6 +33,7 @@ class RocmValidationSuite(CMakePackage):
 
     patch('001-fixes-for-rocblas-rocm-smi-install-prefix-path.patch')
     patch('002-remove-force-setting-hip-inc-path.patch', when='@4.1.0:')
+    patch('003-cmake-change-to-remove-installs-and-sudo.patch', when='@4.1.0:')
 
     depends_on('cmake@3.5:', type='build')
     depends_on('zlib', type='link')
