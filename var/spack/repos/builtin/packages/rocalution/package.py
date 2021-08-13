@@ -45,8 +45,6 @@ class Rocalution(CMakePackage):
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0']:
         depends_on('rocrand@' + ver, when='@' + ver)
 
-    patch('0001-fix-hip-build-error.patch')
-
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
@@ -62,6 +60,7 @@ class Rocalution(CMakePackage):
 
     def cmake_args(self):
         args = [
+            self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('SUPPORT_HIP', 'ON'),
             self.define('SUPPORT_MPI', 'OFF'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
