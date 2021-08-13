@@ -8,15 +8,15 @@ from spack import *
 
 class PyAtlasBuildingTools(PythonPackage):
     """BBP Python tools to build brain region atlases."""
-    homepage = "https://bbpcode.epfl.ch/browse/code/nse/atlas-building-tools/tree/"
-    git      = "ssh://bbpcode.epfl.ch/nse/atlas-building-tools"
+    homepage = "https://bbpgitlab.epfl.ch/nse/atlas-building-tools"
+    git      = "git@bbpgitlab.epfl.ch:nse/atlas-building-tools.git"
 
+    version('0.1.4', tag='atlas-building-tools-v0.1.4')
     version('0.1.3', tag='atlas-building-tools-v0.1.3')
     version('0.1.2', tag='atlas-building-tools-v0.1.2')
     version('0.1.1', tag='atlas_building_tools-v0.1.1')
 
     depends_on('py-setuptools', type=('build', 'run'))
-
     depends_on('py-cgal-pybind@0.1.1:', type=('build', 'run'), when='@0.1.2:')
     depends_on('py-cgal-pybind@0.1.0:', type=('build', 'run'), when='@0.1.1')
     depends_on('py-click@7.0:', type=('build', 'run'))
