@@ -88,7 +88,7 @@ end
 function spt_succeeds
     printf "'$argv' succeeds ... "
 
-    set -l output (eval $argv 2>&1)
+    set -l output ($argv 2>&1)
 
     if test $status -ne 0
         fail
@@ -112,7 +112,7 @@ end
 function spt_fails
     printf "'$argv' fails ... "
 
-    set -l output (eval $argv 2>&1)
+    set -l output ($argv 2>&1)
 
     if test $status -eq 0
         fail
@@ -140,7 +140,7 @@ function spt_contains
 
     printf "'$remaining_args' output contains '$target_string' ... "
 
-    set -l output (eval $remaining_args 2>&1)
+    set -l output ($remaining_args 2>&1)
 
     if not echo "$output" | string match -q -r ".*$target_string.*"
         fail
