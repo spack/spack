@@ -37,6 +37,8 @@ class Pythia6(CMakePackage):
 
     tags = ['hep']
 
+    maintainers = ['gartung', 'chissg']
+
     version('6.4.28', url='https://pythia.org/download/pythia6/pythia6428-split.tgz',
             sha256='01cbff47e99365b5e46f6d62c1735d3cae1932c4710604850d59f538cb758020')
 
