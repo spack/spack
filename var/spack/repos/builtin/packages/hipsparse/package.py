@@ -43,6 +43,8 @@ class Hipsparse(CMakePackage):
 
     def cmake_args(self):
         args = [
+            # Make sure find_package(HIP) finds the module.
+            self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('CMAKE_CXX_STANDARD', '14'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
             self.define('BUILD_CLIENTS_TESTS', 'OFF'),
