@@ -159,6 +159,34 @@ end
 
 
 #
+# Ensure that a string is not in the output of a command.
+# Suppresses output on success.
+# On failure, echo the exit code and output.
+#
+function spt_does_not_contain
+    set -l target_string $argv[1]
+    set -l remaining_args $argv[2..-1]
+
+    printf "'$remaining_args' does not contain '$target_string' ... "
+
+    set -l output ($remaining_args 2>&1)
+
+    if not echo "$output" | string match -q -r ".*$target_string.*"
+        pass
+    else
+        fail
+        echo_red "'$target_string' was in the output."
+        if test -n "$output"
+            echo_msg "Output:"
+            echo "$output"
+        else
+            echo_msg "No output."
+        end
+    end
+end
+
+
+#
 # Ensure that a variable is set.
 #
 function is_set
@@ -247,6 +275,7 @@ spack -m install --fake a
 # create a test environment for testing environment commands
 echo "Creating a mock environment"
 spack env create spack_test_env
+spack env create spack_test_2_env
 
 # ensure that we uninstall b on exit
 function spt_cleanup
@@ -258,7 +287,7 @@ function spt_cleanup
 
     echo "Removing test environment before exiting."
     spack env deactivate 2>&1 > /dev/null
-    spack env rm -y spack_test_env
+    spack env rm -y spack_test_env spack_test_2_env
 
     title "Cleanup"
     echo "Removing test packages before exiting."
@@ -379,6 +408,12 @@ is_set SPACK_ENV
 echo "Testing 'despacktivate'"
 despacktivate
 is_not_set SPACK_ENV
+
+echo "Testing spack env activate repeatedly"
+spack env activate spack_test_env
+spack env activate spack_test_2_env
+spt_contains 'spack_test_2_env' 'fish' '-c' 'echo $PATH'
+spt_does_not_contain 'spack_test_env' 'fish' '-c' 'echo $PATH'
 
 #
 # NOTE: `--prompt` on fish does nothing => currently not implemented.
