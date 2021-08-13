@@ -3,17 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.pkg.builtin.py_radical_saga import PyRadicalSaga
 
 
-class PySagaPython(PythonPackage):
-    """A light-weight access layer for distributed computing infrastructure"""
-
-    homepage = "http://radical.rutgers.edu"
-    pypi = "saga-python/saga-python-0.41.3.tar.gz"
-
-    version('0.41.3', sha256='b30961e634f32f6008e292aa1fe40560f257d5294b0cda95baac1cf5391feb5d')
-
-    depends_on('py-setuptools',      type='build')
-    depends_on('py-apache-libcloud', type=('build', 'run'))
-    depends_on('py-radical-utils',   type=('build', 'run'))
+class PySagaPython(PyRadicalSaga):
+    """Obsolete name (alias), preserved for consistency."""
+    pass
