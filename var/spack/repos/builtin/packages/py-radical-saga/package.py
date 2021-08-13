@@ -18,14 +18,13 @@ class PyRadicalSaga(PythonPackage):
 
     maintainers = ['andre-merzky']
 
-    version('devel',  branch='devel')
-    version('1.6.10', sha256='8fe7e281e9f81234f34f5c7c7986871761e9e37230d2a874c65d18daeccd976a')
-    version('1.6.8',  sha256='d5e9f95a027087fb637cef065ff3af848e5902e403360189e36c9aa7c3f6f29b')
+    version('develop', branch='devel')
+    version('1.6.10',  sha256='8fe7e281e9f81234f34f5c7c7986871761e9e37230d2a874c65d18daeccd976a')
+    version('1.6.8',   sha256='d5e9f95a027087fb637cef065ff3af848e5902e403360189e36c9aa7c3f6f29b')
 
-    depends_on('py-radical-utils',       type=('build', 'run'))
-    depends_on('py-radical-utils@devel', type=('build', 'run'), when='@devel')
+    depends_on('py-radical-utils',   type=('build', 'run'))
 
-    depends_on('python@3.6:',            type=('build', 'run'))
-    depends_on('py-apache-libcloud',     type=('build', 'run'))
-    depends_on('py-parse',               type=('build', 'run'))
-    depends_on('py-setuptools',          type='build')
+    depends_on('python@3.6:',        type=('build', 'run'))
+    depends_on('py-apache-libcloud', type=('build', 'run'))
+    depends_on('py-parse',           type=('build', 'run'))
+    depends_on('py-setuptools',      type='build')
