@@ -16,16 +16,12 @@ class PyRadicalEntk(PythonPackage):
 
     maintainers = ['andre-merzky']
 
-    version('devel', branch='devel')
-    version('1.6.7', sha256='9384568279d29b9619a565c075f287a08bca8365e2af55e520af0c2f3595f8a2')
+    version('develop', branch='devel')
+    version('1.6.7',   sha256='9384568279d29b9619a565c075f287a08bca8365e2af55e520af0c2f3595f8a2')
 
-    depends_on('py-radical-utils',       type=('build', 'run'))
-    depends_on('py-radical-saga',        type=('build', 'run'))
-    depends_on('py-radical-pilot',       type=('build', 'run'))
-    depends_on('py-radical-utils@devel', type=('build', 'run'), when='@devel')
-    depends_on('py-radical-saga@devel',  type=('build', 'run'), when='@devel')
-    depends_on('py-radical-pilot@devel', type=('build', 'run'), when='@devel')
+    depends_on('py-radical-utils', type=('build', 'run'))
+    depends_on('py-radical-pilot', type=('build', 'run'))
 
-    depends_on('python@3.6:',            type=('build', 'run'))
-    depends_on('py-pika',                type=('build', 'run'))
-    depends_on('py-setuptools',          type='build')
+    depends_on('python@3.6:',      type=('build', 'run'))
+    depends_on('py-pika@0.13.0',   type=('build', 'run'))
+    depends_on('py-setuptools',    type='build')
