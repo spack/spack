@@ -72,6 +72,7 @@ class Fenics(CMakePackage):
     patch('hdf5~cxx-detection.patch', when='@:1.6.0')
 
     patch('header_fix.patch', when='@2019.1.0.post0')
+    patch('byte_order.patch', when='@2019.1.0.post0')
     patch('petsc_3_11.patch', when='@2018.1.0.post1')
 
     # enable extension support for fenics package
