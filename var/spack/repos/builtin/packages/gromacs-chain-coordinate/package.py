@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack.pkg.builtin.gromacs import Gromacs as BuiltinGromacs
 
 
