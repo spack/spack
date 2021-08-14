@@ -17,6 +17,8 @@ class SlurmDrmaa(AutotoolsPackage):
     homepage = "https://github.com/natefoo/slurm-drmaa"
     url      = "https://github.com/natefoo/slurm-drmaa/releases/download/1.1.2/slurm-drmaa-1.1.2.tar.gz"
 
+    maintainers = ['pwablito']
+
     version('1.2.0-dev.635b7ac', sha256='5aaf12e87010315ebf5217fe8a21003ab967c42b74efea33243dff221c85c2dc')
 
     depends_on("slurm")
