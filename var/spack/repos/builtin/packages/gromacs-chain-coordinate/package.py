@@ -25,7 +25,8 @@ class GromacsChainCoordinate(BuiltinGromacs):
 
     version('main', branch='main')
     version('2021.2-0.1', sha256="879fdd04662370a76408b72c9fbc4aff60a6387b459322ac2700d27359d0dd87",
-            url="https://gitlab.com/cbjh/gromacs-chain-coordinate/-/archive/release-2021.chaincoord-0.1/gromacs-chain-coordinate-release-2021.chaincoord-0.1.tar.bz2", preferred=True)
+            url="https://gitlab.com/cbjh/gromacs-chain-coordinate/-/archive/release-2021.chaincoord-0.1/gromacs-chain-coordinate-release-2021.chaincoord-0.1.tar.bz2",
+            preferred=True)
 
     def __init__(self, spec):
         super().__init__(spec)
