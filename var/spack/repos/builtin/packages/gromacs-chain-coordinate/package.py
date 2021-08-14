@@ -28,6 +28,6 @@ class GromacsChainCoordinate(BuiltinGromacs):
             preferred=True)
 
     def __init__(self, spec):
-        super(BuiltinGromacs, self).__init__(spec)
+        super(GromacsChainCoordinate, self).__init__(spec)
 
         self.versions = filter_versions(self.versions, ['main', '2021.2-0.1'])
