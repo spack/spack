@@ -328,11 +328,11 @@ class Root(CMakePackage):
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        v = [] # list of determined variants 
+        v = []  # list of determined variants
         # there is a fairly direct mapping between build options ( which
         # root-config helpfully outputs) and variants
         output = Executable(exes[0])('--features', output=str, error=str)
-        f = set(output.strip().split()) # features as reported by root-config
+        f = set(output.strip().split())  # features as reported by root-config
         # only multivalued variant: cxxstd
         if "cxx11" in f:
             v.append("cxxstd=11")
