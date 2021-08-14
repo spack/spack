@@ -326,6 +326,79 @@ class Root(CMakePackage):
         # into the format used in this recipe (6.22.06)
         return output.strip().replace('/', '.')
 
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        variants = []
+        # there is a fairly direct mapping between build options ( which
+        # which root-config helpfully outputs) and variants
+        output = Executable('root-config')('--features', output=str, error=str)
+        features = set(output.strip().split(" "))
+        # only multivalued variant: cxxstd
+        if "cxx11" in features:
+            variants.append("cxxstd=11")
+        elif "cxx14" in features:
+            variants.append("cxxstd=14")
+        elif "cxx17" in features:
+            variants.append("cxxstd=17")
+
+        # helper function: check if featurename is in features, and if it is,
+        # append variantname to variants. featurename may be a list/tuple, in
+        # which case the variant is only added if all of them are present
+        def _add_variant_from_feature(variants, features, featurename, variantname):
+            if isinstance(featurename, str):
+                if featurename in features:
+                    variants.append('%s' % variantname)
+                else:
+                    variants.append('~%s' % variantname[1:])
+            else:
+                if set(featurename).issubset(features):
+                    variants.append('%s' % variantname)
+                else:
+                    variants.append('~%s' % variantname[1:])
+
+        _add_variant_from_feature(variants, features, 'cocoa', '+aqua')
+        _add_variant_from_feature(variants, features, 'davix', '+davix')
+        _add_variant_from_feature(variants, features, 'dcache', '+dcache')
+        _add_variant_from_feature(variants, features, 'fftw3', '+fftw')
+        _add_variant_from_feature(variants, features, 'fitsio', '+fits')
+        _add_variant_from_feature(variants, features, ('ftgl', 'opengl'), '+opengl')
+        _add_variant_from_feature(variants, features, 'gdml', '+gdml')
+        _add_variant_from_feature(variants, features, 'mathmore', '+math')
+        _add_variant_from_feature(variants, features, 'gviz', '+graphviz')
+        _add_variant_from_feature(variants, features, 'http', '+http')
+        _add_variant_from_feature(variants, features, ('imt', 'tbb'), '+tbb')
+        _add_variant_from_feature(variants, features, 'jemalloc', '+jemalloc')
+        _add_variant_from_feature(variants, features, 'memstat', '+memstat')
+        _add_variant_from_feature(variants, features, ('minuit', 'minuit2'), '+minuit')
+        _add_variant_from_feature(variants, features, 'mlp', '+mlp')
+        _add_variant_from_feature(variants, features, 'mysql', '+mysql')
+        _add_variant_from_feature(variants, features, 'oracle', '+oracle')
+        _add_variant_from_feature(variants, features, 'pgsql', '+postgres')
+        _add_variant_from_feature(variants, features, 'pythia6', '+pythia6')
+        _add_variant_from_feature(variants, features, 'pythia8', '+pythia8')
+        _add_variant_from_feature(variants, features, 'pyroot', '+python')
+        _add_variant_from_feature(variants, features, ('qt', 'qtgsi'), '+qt4')
+        _add_variant_from_feature(variants, features, 'r', '+r')
+        _add_variant_from_feature(variants, features, 'roofit', '+roofit')
+        _add_variant_from_feature(variants, features, ('root7', 'webui'), '+root7')
+        _add_variant_from_feature(variants, features, 'rpath', '+rpath')
+        _add_variant_from_feature(variants, features, 'shadowpw', '+shadow')
+        _add_variant_from_feature(variants, features, 'spectrum', '+spectrum')
+        _add_variant_from_feature(variants, features, 'sqlite', '+sqlite')
+        _add_variant_from_feature(variants, features, 'ssl', '+ssl')
+        _add_variant_from_feature(variants, features, 'table', '+table')
+        _add_variant_from_feature(variants, features, 'thread', '+threads')
+        _add_variant_from_feature(variants, features, 'tmva', '+tmva')
+        _add_variant_from_feature(variants, features, 'unuran', '+unuran')
+        _add_variant_from_feature(variants, features, 'vc', '+vc')
+        _add_variant_from_feature(variants, features, 'vdt', '+vdt')
+        _add_variant_from_feature(variants, features, 'veccore', '+veccore')
+        _add_variant_from_feature(variants, features, 'vmc', '+vmc')
+        _add_variant_from_feature(variants, features, ('x11', 'xft'), '+x')
+        _add_variant_from_feature(variants, features, 'xml', '+xml')
+        _add_variant_from_feature(variants, features, 'xrootd', '+xrootd')
+        return " ".join(variants)
+
     def cmake_args(self):
         spec = self.spec
         define = self.define
