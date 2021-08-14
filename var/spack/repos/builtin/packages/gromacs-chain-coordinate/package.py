@@ -3,13 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack.pkg.builtin.gromacs import Gromacs as BuiltinGromacs
 
 
 def filter_versions(version_list, allowed_names):
-    return dict((key, value) for key, value in version_list.items() if str(key) in allowed_names)
+    return dict((key, value) for key, value in version_list.items()
+                if str(key) in allowed_names)
 
 
 class GromacsChainCoordinate(BuiltinGromacs):
