@@ -3,15 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+# This is a partial copy of Spack Gromacs package
+# - modified URL and versions
+# - removed Plumed patches
+# - calling original patch and cmake-related procedures to not duplicate them
+# - simplified variants/dependencies because this fork starts at Gromacs 2021
+
+import os
+
 from spack.pkg.builtin.gromacs import Gromacs as BuiltinGromacs
 
 
-def filter_versions(version_list, allowed_names):
-    return dict((key, value) for key, value in version_list.items()
-                if str(key) in allowed_names)
-
-
-class GromacsChainCoordinate(BuiltinGromacs):
+class GromacsChainCoordinate(CMakePackage):
     """
     A modification of GROMACS that implements the "chain coordinate", a reaction
     coordinate for pore formation in membranes and stalk formation between membranes.
@@ -27,7 +30,50 @@ class GromacsChainCoordinate(BuiltinGromacs):
             url="https://gitlab.com/cbjh/gromacs-chain-coordinate/-/archive/release-2021.chaincoord-0.1/gromacs-chain-coordinate-release-2021.chaincoord-0.1.tar.bz2",
             preferred=True)
 
-    def __init__(self, spec):
-        super(GromacsChainCoordinate, self).__init__(spec)
+    variant('mpi', default=True,
+            description='Activate MPI support (disable for Thread-MPI support)')
+    variant('shared', default=True,
+            description='Enables the build of shared libraries')
+    variant(
+        'double', default=False,
+        description='Produces a double precision version of the executables')
+    variant('cuda', default=False, description='Enable CUDA support')
+    variant('opencl', default=False, description='Enable OpenCL support')
+    variant('sycl', default=False, description='Enable SYCL support')
+    variant('nosuffix', default=False, description='Disable default suffixes')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
+                    'Reference', 'RelWithAssert', 'Profile'))
+    variant('openmp', default=True,
+            description='Enables OpenMP at configure time')
+    variant('hwloc', default=True,
+            description='Use the hwloc portable hardware locality library')
+    variant('lapack', default=False,
+            description='Enables an external LAPACK library')
+    variant('blas', default=False,
+            description='Enables an external BLAS library')
+    variant('cycle_subcounters', default=False,
+            description='Enables cycle subcounters')
 
-        self.versions = filter_versions(self.versions, ['main', '2021.2-0.1'])
+    depends_on('mpi', when='+mpi')
+    depends_on('fftw-api@3')
+    depends_on('cmake@3.16.0:3.99.99', type='build')
+    depends_on('cuda', when='+cuda')
+    depends_on('sycl', when='+sycl')
+    depends_on('lapack', when='+lapack')
+    depends_on('blas', when='+blas')
+    depends_on('hwloc', when='+hwloc')
+
+    filter_compiler_wrappers(
+        '*.cmake',
+        relative_root=os.path.join('share', 'cmake', 'gromacs_mpi'))
+    filter_compiler_wrappers(
+        '*.cmake',
+        relative_root=os.path.join('share', 'cmake', 'gromacs'))
+
+    def patch(self):
+        BuiltinGromacs.patch(self)
+
+    def cmake_args(self):
+        return super(GromacsChainCoordinate, self).cmake_args()
