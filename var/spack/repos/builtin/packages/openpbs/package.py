@@ -31,7 +31,7 @@ class Openpbs(AutotoolsPackage):
     depends_on('ssmtp', type=('build', 'run'))
     depends_on('xauth', type=('build', 'run'))
 
-    depends_on('python@3.5:3.9', type=('build', 'link', 'run'), when='@20')
+    depends_on('python@3.5:3.9', type=('build', 'link', 'run'), when='@20:')
     depends_on('python@2.6:2.7', type=('build', 'link', 'run'), when='@:19')
 
     depends_on('libx11')
