@@ -89,24 +89,16 @@ class Trilinos(CMakePackage, CudaPackage):
     # TPLs (alphabet order)
     variant('boost',        default=False,
             description='Compile with Boost')
-    variant('cgns',         default=False,
-            description='Enable CGNS')
     variant('adios2',       default=False,
             description='Enable ADIOS2')
     variant('hdf5',         default=False,
             description='Compile with HDF5')
     variant('hypre',        default=False,
             description='Compile with Hypre preconditioner')
-    variant('matio',        default=False,
-            description='Compile with Matio')
     variant('mpi',          default=True,
             description='Compile with MPI parallelism')
     variant('mumps',        default=False,
             description='Compile with support for MUMPS solvers')
-    variant('netcdf',       default=False,
-            description='Compile with netcdf')
-    variant('pnetcdf',      default=False,
-            description='Compile with parallel-netcdf')
     variant('suite-sparse', default=False,
             description='Compile with SuiteSparse solvers')
     variant('superlu-dist', default=False,
@@ -138,7 +130,6 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Epetra')
     variant('epetraext',    default=True,
             description='Compile with EpetraExt')
-    # Disable Exodus by default as it requires netcdf
     variant('exodus',       default=False,
             description='Compile with Exodus from SEACAS')
     variant('ifpack',       default=True,
@@ -285,7 +276,6 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('+zoltan2')
 
     conflicts('+basker', when='~amesos2')
-    conflicts('+exodus', when='~netcdf')
     conflicts('+ifpack2', when='~belos')
     conflicts('+intrepid', when='~sacado')
     conflicts('+intrepid', when='~shards')
@@ -300,7 +290,7 @@ class Trilinos(CMakePackage, CudaPackage):
     # Only allow DTK with Trilinos 12
     conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
-    conflicts('+dtk', when='@:12.12.99,develop,master')
+    conflicts('+dtk', when='@:12.12.99,master')
 
     # Only allow Mesquite with Trilinos 12.12 and up, and master
     conflicts('+mesquite', when='@:12.10.99,master')
@@ -318,16 +308,12 @@ class Trilinos(CMakePackage, CudaPackage):
     # https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
     conflicts('+superlu-dist', when='+complex+amesos2')
     conflicts('+strumpack', when='@:13.0.99')
-    # PnetCDF was only added after v12.10.1
-    conflicts('+pnetcdf', when='@0:12.10.1')
     # https://github.com/trilinos/Trilinos/issues/2994
     conflicts(
         '+shared', when='+stk platform=darwin',
         msg='Cannot build Trilinos with STK as a shared library on Darwin.'
     )
     conflicts('+adios2', when='@:12.14.1')
-    conflicts('+pnetcdf', when='~netcdf')
-    conflicts('+pnetcdf', when='~mpi')
     conflicts('+cuda_rdc', when='~cuda')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
@@ -361,16 +347,12 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('adios2', when='+adios2')
     depends_on('blas')
     depends_on('boost', when='+boost')
-    depends_on('cgns', when='+cgns')
+    depends_on('cgns', when='+exodus')
     depends_on('hdf5+hl', when='+hdf5')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when="+hdf5+mpi")
     depends_on('lapack')
-    depends_on('matio', when='+matio')
     depends_on('mpi', when='+mpi')
-    depends_on('netcdf-c+mpi+parallel-netcdf', when="+netcdf+pnetcdf@master,12.12.1:")
-    depends_on('netcdf-c+mpi', when="+netcdf~pnetcdf+mpi")
-    depends_on('netcdf-c', when="+netcdf")
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('zlib', when="+zlib")
 
@@ -407,18 +389,19 @@ class Trilinos(CMakePackage, CudaPackage):
     # Variant requirements from packages
     depends_on('metis', when='+zoltan')
     depends_on('libx11', when='+exodus')
+    depends_on('matio', when='+exodus')
+    depends_on('netcdf-c', when="+exodus")
+    depends_on('netcdf-c+mpi+parallel-netcdf', when="+exodus+mpi@12.12.1:")
+    depends_on('parallel-netcdf', when='+exodus+mpi')
     depends_on('parmetis', when='+mpi +zoltan')
     depends_on('parmetis', when='+scorec')
 
     # ###################### Patches ##########################
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
-    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl')
-    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %xl_r')
-    patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %clang')
-    patch('xlf_tpetra.patch', when='@12.12.1%xl')
-    patch('xlf_tpetra.patch', when='@12.12.1%xl_r')
-    patch('xlf_tpetra.patch', when='@12.12.1%clang')
+    for _compiler in ['xl', 'xl_r', 'clang']:
+        patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %' + _compiler)
+        patch('xlf_tpetra.patch', when='@12.12.1 %' + _compiler)
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
     patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
     patch('cray_secas.patch', when='@12.14.1:%cce')
@@ -620,13 +603,19 @@ class Trilinos(CMakePackage, CudaPackage):
             ('Matio', 'matio'),
             ('METIS', 'metis'),
             ('Netcdf', 'netcdf-c'),
-            ('STRUMPACK', 'strumpack'),
             ('SuperLU', 'superlu'),
+            ('SuperLUDist', 'superlu-dist'),
             ('X11', 'libx11'),
             ('Zlib', 'zlib'),
         ]
+        if spec.satisfies('@12.12.1:'):
+            tpl_dep_map.append(('Pnetcdf', 'parallel-netcdf'))
         if spec.satisfies('@13:'):
-            tpl_dep_map.append(('HWLOC', 'hwloc'))
+            tpl_dep_map.extend([
+                ('HWLOC', 'hwloc'),
+                ('STRUMPACK', 'strumpack'),
+            ])
+
         for tpl_name, dep_name in tpl_dep_map:
             have_dep = (dep_name in spec)
             options.append(define('TPL_ENABLE_' + tpl_name, have_dep))
@@ -665,18 +654,7 @@ class Trilinos(CMakePackage, CudaPackage):
                 define('TPL_ENABLE_UMFPACK', False),
             ])
 
-        # METIS and ParMETIS mostly depend on transitive dependencies
-        # STRUMPACK and SuperLU-dist, so don't provide a separate variant for
-        # them.
-        have_metis = 'metis' in spec
-        options.append(define('TPL_ENABLE_METIS', have_metis))
-        if have_metis:
-            options.extend([
-                define('METIS_LIBRARY_DIRS', spec['metis'].prefix.lib),
-                define('METIS_LIBRARY_NAMES', 'metis'),
-                define('TPL_METIS_INCLUDE_DIRS', spec['metis'].prefix.include),
-            ])
-
+        # ParMETIS dependencies have to be transitive explicitly
         have_parmetis = 'parmetis' in spec
         options.append(define('TPL_ENABLE_ParMETIS', have_parmetis))
         if have_parmetis:
@@ -710,26 +688,15 @@ class Trilinos(CMakePackage, CudaPackage):
                 '-DMUMPS_5_0'
             ])
 
-        options.append(define_tpl_enable('SuperLUDist', 'superlu-dist'))
-        if '+superlu-dist' in spec:
+        if spec.satisfies('^superlu-dist@4.0:'):
             options.extend([
-                define('KokkosTSQR_ENABLE_Complex', False),
-                define('TPL_ENABLE_SuperLUDist', True),
-                define('SuperLUDist_LIBRARY_DIRS',
-                       spec['superlu-dist'].prefix.lib),
-                define('SuperLUDist_INCLUDE_DIRS',
-                       spec['superlu-dist'].prefix.include),
+                define('HAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG', True),
             ])
-            if spec.satisfies('^superlu-dist@4.0:'):
-                options.extend([
-                    define('HAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG', True),
-                ])
 
         if '+strumpack' in spec:
             options.append(define('Amesos2_ENABLE_STRUMPACK', True))
 
-        options.append(define_tpl_enable('Pnetcdf'))
-        if '+pnetcdf' in spec:
+        if spec.satisfies('^parallel-netcdf'):
             options.extend([
                 define('TPL_Netcdf_Enables_Netcdf4', True),
                 define('TPL_Netcdf_PARALLEL', True),
@@ -784,8 +751,6 @@ class Trilinos(CMakePackage, CudaPackage):
                 ))
 
         # Explicit Template Instantiation (ETI) in Tpetra
-        # NOTE: Trilinos will soon move to fixed std::uint64_t for GO and
-        # std::int32_t or std::int64_t for local.
         options.append(define_from_variant(
             'Trilinos_ENABLE_EXPLICIT_INSTANTIATION',
             'explicit_template_instantiation'))
