@@ -89,7 +89,10 @@ class Gmsh(CMakePackage):
     depends_on('metis',   when='+metis+external')
     depends_on('cgns',    when='+cgns')
     # Gmsh's high quality vector PostScript, PDF and SVG output is produced by GL2PS.
-    depends_on('gl2ps')
+    # But Gmsh ships with its own version of this library, so it is not a
+    # dependency of this package.
+    # See https://gitlab.onelab.info/gmsh/gmsh/-/blob/master/Graphics/gl2ps.h
+    # and https://gitlab.onelab.info/gmsh/gmsh/-/blob/master/Graphics/gl2ps.cpp
 
     conflicts('+slepc', when='~petsc')
     conflicts('+oce', when='+opencascade')
