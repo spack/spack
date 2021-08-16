@@ -7,7 +7,6 @@ import sys
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
@@ -55,7 +54,7 @@ the dependencies"""
 
 
 def load(parser, args):
-    env = ev.get_env(args, 'load')
+    env = spack.cmd.get_env_for_command('load')
     specs = [spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
              for spec in spack.cmd.parse_specs(args.specs)]
 

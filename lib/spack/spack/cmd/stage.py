@@ -9,7 +9,6 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 import spack.repo
 import spack.stage
 
@@ -34,7 +33,7 @@ def stage(parser, args):
         spack.stage.create_stage_root(custom_path)
 
     if not args.specs:
-        env = ev.get_env(args, 'stage')
+        env = spack.cmd.get_env_for_command('stage')
         if env:
             tty.msg("Staging specs from environment %s" % env.name)
             for spec in env.specs_by_hash.values():

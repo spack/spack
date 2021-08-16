@@ -11,7 +11,6 @@ from llnl.util.tty.colify import colify
 
 import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 import spack.repo
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
@@ -67,7 +66,7 @@ def extensions(parser, args):
     if not spec[0].package.extendable:
         tty.die("%s is not an extendable package." % spec[0].name)
 
-    env = ev.get_env(args, 'extensions')
+    env = spack.cmd.get_env_for_command('extensions')
     spec = cmd.disambiguate_spec(spec[0], env)
 
     if not spec.package.extendable:

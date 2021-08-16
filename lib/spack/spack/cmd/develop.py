@@ -9,7 +9,6 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 from spack.error import SpackError
 
 description = "add a spec to an environment's dev-build information"
@@ -37,7 +36,7 @@ def setup_parser(subparser):
 
 
 def develop(parser, args):
-    env = ev.get_env(args, 'develop', required=True)
+    env = spack.cmd.get_env_for_command('develop', required=True)
 
     if not args.spec:
         if args.clone is False:

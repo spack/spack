@@ -10,7 +10,6 @@ from llnl.util.tty.colify import colify
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 import spack.package
 import spack.repo
 import spack.store
@@ -41,7 +40,7 @@ def dependencies(parser, args):
         tty.die("spack dependencies takes only one spec.")
 
     if args.installed:
-        env = ev.get_env(args, 'dependencies')
+        env = spack.cmd.get_env_for_command('dependencies')
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         format_string = '{name}{@version}{%compiler}{/hash:7}'

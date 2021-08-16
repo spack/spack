@@ -14,7 +14,6 @@ import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
-import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
 import spack.relocate
@@ -420,7 +419,7 @@ def createtarball(args):
     """create a binary package from an existing install"""
 
     # restrict matching to current environment if one is active
-    env = ev.get_env(args, 'buildcache create')
+    env = spack.cmd.get_env_for_command('buildcache create')
 
     output_location = None
     if args.directory:
@@ -555,7 +554,7 @@ def check_binaries(args):
     if args.spec or args.spec_yaml:
         specs = [get_concrete_spec(args)]
     else:
-        env = ev.get_env(args, 'buildcache', required=True)
+        env = spack.cmd.get_env_for_command('buildcache', required=True)
         env.concretize()
         specs = env.all_specs()
 

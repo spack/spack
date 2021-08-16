@@ -11,7 +11,6 @@ import spack.analyzers
 import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 import spack.fetch_strategy
 import spack.monitor
 import spack.paths
@@ -95,7 +94,7 @@ def analyze(parser, args, **kwargs):
         sys.exit(0)
 
     # handle active environment, if any
-    env = ev.get_env(args, 'analyze')
+    env = spack.cmd.get_env_for_command('analyze')
 
     # Get an disambiguate spec (we should only have one)
     specs = spack.cmd.parse_specs(args.spec)

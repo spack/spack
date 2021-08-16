@@ -7,7 +7,6 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 from spack.filesystem_view import YamlFilesystemView
 
 description = "activate a package extension"
@@ -30,7 +29,7 @@ def activate(parser, args):
     if len(specs) != 1:
         tty.die("activate requires one spec.  %d given." % len(specs))
 
-    env = ev.get_env(args, 'activate')
+    env = spack.cmd.get_env_for_command('activate')
     spec = spack.cmd.disambiguate_spec(specs[0], env)
     if not spec.package.is_extension:
         tty.die("%s is not an extension." % spec.name)

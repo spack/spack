@@ -38,7 +38,6 @@ from llnl.util.link_tree import MergeConflictError
 from llnl.util.tty.color import colorize
 
 import spack.cmd
-import spack.environment as ev
 import spack.schema.projections
 import spack.store
 from spack.config import validate
@@ -202,7 +201,7 @@ def view(parser, args):
 
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
-        env = ev.get_env(args, 'view link')
+        env = spack.cmd.get_env_for_command('view link')
         specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
 
     elif args.action in actions_status:

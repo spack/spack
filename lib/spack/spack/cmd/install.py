@@ -204,7 +204,7 @@ def install_specs(cli_args, kwargs, specs):
     """
 
     # handle active environment, if any
-    env = ev.get_env(cli_args, 'install')
+    env = spack.cmd.get_env_for_command('install')
 
     try:
         if env:
@@ -327,7 +327,7 @@ environment variables:
     if not args.spec and not args.specfiles:
         # if there are no args but an active environment
         # then install the packages from it.
-        env = ev.get_env(args, 'install')
+        env = spack.cmd.get_env_for_command('install')
         if env:
             tests = get_tests(env.user_specs)
             kwargs['tests'] = tests

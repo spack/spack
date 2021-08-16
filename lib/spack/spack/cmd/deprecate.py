@@ -22,7 +22,6 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 import spack.store
 from spack.database import InstallStatuses
 from spack.error import SpackError
@@ -71,7 +70,7 @@ def setup_parser(sp):
 
 def deprecate(parser, args):
     """Deprecate one spec in favor of another"""
-    env = ev.get_env(args, 'deprecate')
+    env = spack.cmd.get_env_for_command('deprecate')
     specs = spack.cmd.parse_specs(args.specs)
 
     if len(specs) != 2:
