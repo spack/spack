@@ -27,25 +27,25 @@ spack:
       - axom
       - blt
       - caliper
-      #- care
-      #- chai
+      #- care  ## ~benchmarks ~examples ~tests
+      #- chai  ## ~benchmarks ~examples ~tests
       - conduit  # ^hdf5+shared
       - flux-core
       #- flux-sched
-      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm
+      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm  # same issue w/chai
       - hypre
       - lbann
-      #- lvarray # ^raja~openmp  # per Ben Corbett Issue #23192
+      - lvarray ~tests  # per Spack issue #23192  # ~examples
       - mfem
       - py-hatchet
       - py-maestrowf
       - py-merlin
       - py-shroud
-      #- raja
+      - raja # ~examples  # ~tests
       - samrai
       - scr
       - sundials
-      #- umpire #~openmp
+      - umpire # ~openmp
       #- visit   # ^mesa-glu@9.0.0
       - xbraid
       - zfp
@@ -71,7 +71,7 @@ spack:
       - match: [ascent, axom, sundials, umpire, vtk-h, vtk-m]
         runner-attributes:
           tags: ["spack", "public", "xlarge", "x86_64"]
-      - match: ['@:']
+      - match: ['os=ubuntu18.04']
         runner-attributes:
           tags: ["spack", "public", "large", "x86_64"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
