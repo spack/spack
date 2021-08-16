@@ -72,6 +72,11 @@ class Fenics(CMakePackage):
     patch('hdf5~cxx-detection.patch', when='@:1.6.0')
 
     patch('header_fix.patch', when='@2019.1.0.post0')
+    # endian.hpp for byte order detection was removed with Boost 1.73,
+    # use __BYTE_ORDER__ instead
+    patch('https://bitbucket.org/fenics-project/dolfin/issues/attachments/1116/fenics-project/dolfin/1602778118.04/1116/0001-Use-__BYTE_ORDER__-instead-of-removed-Boost-endian.h.patch',
+          sha256='1cc69e612df18feb5ebdc78cd902cfefda5ffc077735f0b67a1dcb1bf82e63c9',
+          when='@2019.1.0.post0')
     patch('petsc_3_11.patch', when='@2018.1.0.post1')
 
     # enable extension support for fenics package
