@@ -71,11 +71,12 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     assert "variant" in diff_cmd('--first', 'mpileaks', 'mpileaks+debug')
 
     # This matches them exactly
-    hashes = find_cmd('--format', '{hash}', 'mpileaks@2.3')
-    hash_list = hashes.split()
+    debug_hash = find_cmd('--format', '{hash}', 'mpileaks+debug').strip()
+    no_debug_hashes = find_cmd('--format', '{hash}', 'mpileaks~debug')
+    no_debug_hash = no_debug_hashes.split()[0]
     output = diff_cmd("--json",
-                      "mpileaks@2.3/{0}".format(hash_list[0]),
-                      "mpileaks@2.3/{0}".format(hash_list[1]))
+                      "mpileaks/{0}".format(debug_hash),
+                      "mpileaks/{0}".format(no_debug_hash))
     result = sjson.load(output)
 
     assert len(result['a_not_b']) == 1
