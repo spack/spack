@@ -515,7 +515,7 @@ def get_env_for_command(cmd_name, required=False):
             is found; if ``False``, just return ``None``
 
     Returns:
-        (Environment): if there is an active environment
+        (spack.environment.Environment): if there is an active environment
     """
     env = spack.environment.get_env()
 
@@ -545,7 +545,7 @@ def find_environment(args):
         args (argparse.Namespace): argparse namespace wtih command arguments
 
     Returns:
-        (Environment): a found environment, or ``None``
+        (spack.environment.Environment): a found environment, or ``None``
     """
 
     # treat env as a name
