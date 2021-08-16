@@ -194,7 +194,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch('xlf_fix-dup-petscfecreate.patch', when='@3.11.0')
     patch('disable-DEPRECATED_ENUM.diff', when='@3.14.1 +cuda')
 
-    depends_on('gmake')
     depends_on('diffutils', type='build')
 
     # Virtual dependencies
@@ -433,10 +432,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 'strumpack',
                 'mmg',
                 'parmmg',
-                'tetgen',
-                # ('mmg', 'mmg', True, True),
-                # ('parmmg', 'parmmg', True, True),
-                # ('tetgen', 'tetgen', True, True),
+                ('tetgen', 'tetgen', False, False),
         ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
