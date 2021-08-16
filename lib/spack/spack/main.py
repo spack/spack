@@ -27,6 +27,7 @@ import archspec.cpu
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.tty.colify
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
@@ -348,6 +349,15 @@ class SpackArgumentParser(argparse.ArgumentParser):
         else:
             # in subparsers, self.prog is, e.g., 'spack install'
             return super(SpackArgumentParser, self).format_help()
+
+    def _check_value(self, action, value):
+        # converted value must be one of the choices (if specified)
+        if action.choices is not None and value not in action.choices:
+            cols = llnl.util.tty.colify.colified(
+                sorted(action.choices), indent=4, tty=True
+            )
+            msg = 'invalid choice: %r choose from:\n%s' % (value, cols)
+            raise argparse.ArgumentError(action, msg)
 
 
 def make_argument_parser(**kwargs):
