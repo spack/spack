@@ -23,3 +23,5 @@ class PySalib(PythonPackage):
     depends_on('py-matplotlib@3.2.2:', type=('build', 'run'))
     depends_on('py-pandas@1.1.2:', type=('build', 'run'))
     depends_on('py-pathos@0.2.5:', type=('build', 'run'))
+    depends_on('py-importlib-metadata', type=('build', 'run'), when='@1.4.4: ^python@:3.7')
+    depends_on('py-setuptools-scm', type=('build', 'run'), when='@1.4.4:')
