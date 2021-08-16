@@ -1753,7 +1753,11 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
     spec_dict = (sjson.load(spec_file_contents)
                  if specfile_is_json else syaml.load(spec_file_contents))
 
-    nodes = spec_dict['spec']['nodes']
+    try:
+        nodes = spec_dict['spec']['nodes']
+    except KeyError:
+        # Prior node dict format omitted 'nodes' key
+        nodes = spec_dict['spec']
     name = spec.name
 
     # In the old format:
