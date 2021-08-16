@@ -28,6 +28,7 @@ exit 1
 from __future__ import print_function
 
 import os
+import os.path
 import sys
 
 min_python3 = (3, 5)
@@ -69,6 +70,21 @@ if "ruamel.yaml" in sys.modules:
 
 if "ruamel" in sys.modules:
     del sys.modules["ruamel"]
+
+# The following code is here to avoid failures when updating
+# the develop version, due to spurious argparse.pyc files remaining
+# in the libs/spack/external directory, see:
+# https://github.com/spack/spack/pull/25376
+# TODO: Remove in v0.18.0 or later
+try:
+    import argparse
+except ImportError:
+    argparse_pyc = os.path.join(spack_external_libs, 'argparse.pyc')
+    if not os.path.exists(argparse_pyc):
+        raise
+    os.remove(argparse_pyc)
+    import argparse  # noqa
+
 
 import spack.main  # noqa
 
