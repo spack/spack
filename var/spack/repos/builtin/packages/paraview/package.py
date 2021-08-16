@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import os
 
 from spack import *
@@ -53,10 +54,7 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
-    variant('cuda_arch', default='native', multi=False,
-            values=('native', 'fermi', 'kepler', 'maxwell',
-                    'pascal', 'volta', 'turing', 'ampere', 'all', 'none'),
-            description='CUDA architecture')
+
     variant('advanced_debug', default=False, description="Enable all other debug flags beside build_type, such as VTK_DEBUG_LEAK")
 
     conflicts('+python', when='+python3')
@@ -67,6 +65,17 @@ class Paraview(CMakePackage, CudaPackage):
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
     conflicts('~opengl2', when='@5.5:')
+
+    # We only support one single Architecture
+    for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
+        conflicts(
+            'cuda_arch={0}'.format(_arch),
+            when='cuda_arch={0}'.format(_other_arch),
+            msg='Paraview only accepts one architecture value'
+        )
+
+    for _arch in range(10, 14):
+        conflicts('cuda_arch=%d' % _arch, when="+cuda", msg='ParaView requires cuda_arch >= 20')
 
     depends_on('cmake@3.3:', type='build')
 
@@ -366,9 +375,42 @@ class Paraview(CMakePackage, CudaPackage):
         else:
             cmake_args.append('-DVTKm_ENABLE_CUDA:BOOL=%s' %
                               variant_bool('+cuda'))
-        if spec.satisfies('+cuda') and not spec.satisfies('cuda_arch=native'):
-            cmake_args.append('-DVTKm_CUDA_Architecture=%s' %
-                              spec.variants['cuda_arch'].value)
+
+        # VTK-m expects cuda_arch to be the arch name vs. the arch version.
+        if spec.satisfies('+cuda'):
+            supported_cuda_archs = {
+
+                # VTK-m and transitively ParaView does not support Tesla Arch
+                '20': 'fermi',
+                '21': 'fermi',
+                '30': 'kepler',
+                '32': 'kepler',
+                '35': 'kepler',
+                '37': 'kepler',
+                '50': 'maxwel',
+                '52': 'maxwel',
+                '53': 'maxwel',
+                '60': 'pascal',
+                '61': 'pascal',
+                '62': 'pascal',
+                '70': 'volta',
+                '72': 'volta',
+                '75': 'turing',
+                '80': 'ampere',
+                '86': 'ampere',
+            }
+
+            cuda_arch_value = 'native'
+            requested_arch = spec.variants['cuda_arch'].value
+
+            # ParaView/VTK-m only accepts one arch, default to first element
+            if requested_arch[0] != 'none':
+                try:
+                    cuda_arch_value = supported_cuda_archs[requested_arch[0]]
+                except KeyError:
+                    raise InstallError("Incompatible cuda_arch=" + requested_arch[0])
+
+            cmake_args.append(self.define('VTKm_CUDA_Architecture', cuda_arch_value))
 
         if 'darwin' in spec.architecture:
             cmake_args.extend([
