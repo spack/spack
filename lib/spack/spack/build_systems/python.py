@@ -268,7 +268,7 @@ class PythonPackage(PackageBase):
                  '--install-purelib=%s' % pure_site_packages_dir,
                  '--install-platlib=%s' % plat_site_packages_dir,
                  '--install-scripts=bin',
-                 '--install-data=""',
+                 '--install-data=data',
                  '--install-headers=%s' % inc_dir
                  ]
 
