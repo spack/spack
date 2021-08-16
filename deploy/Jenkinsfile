@@ -152,7 +152,7 @@ pipeline {
                                       ]]])
                         }
                         dir("${DEPLOYMENT_ROOT}/spack/etc/spack/licenses") {
-                            git(url: "ssh://bbpcode.epfl.ch/hpc/spack-licenses")
+                            git(url: "git@bbpgitlab.epfl.ch:hpc/spack-licenses.git")
                         }
                     }
                 }
@@ -177,7 +177,7 @@ pipeline {
                                       ]]])
                         }
                         dir("${DEPLOYMENT_ROOT}/spack/etc/spack/licenses") {
-                            git(url: "ssh://bbpcode.epfl.ch/hpc/spack-licenses")
+                            git(url: "git@bbpgitlab.epfl.ch:hpc/spack-licenses.git")
                         }
                     }
                 }
