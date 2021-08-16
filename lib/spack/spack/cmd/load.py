@@ -54,7 +54,7 @@ the dependencies"""
 
 
 def load(parser, args):
-    env = spack.cmd.get_env_for_command('load')
+    env = spack.environment.get_active_env()
     specs = [spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
              for spec in spack.cmd.parse_specs(args.specs)]
 

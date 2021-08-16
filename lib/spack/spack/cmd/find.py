@@ -219,7 +219,7 @@ def find(parser, args):
     added = set()
     removed = set()
 
-    env = spack.cmd.get_env_for_command('find')
+    env = spack.environment.get_active_env()
     if env:
         decorator, added, roots, removed = setup_env(env)
 

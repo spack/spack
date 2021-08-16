@@ -21,7 +21,7 @@ def setup_parser(subparser):
 
 
 def add(parser, args):
-    env = spack.cmd.get_env_for_command('add', required=True)
+    env = spack.cmd.require_env('add')
 
     with env.write_transaction():
         for spec in spack.cmd.parse_specs(args.specs):

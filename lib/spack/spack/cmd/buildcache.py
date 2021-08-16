@@ -419,7 +419,7 @@ def createtarball(args):
     """create a binary package from an existing install"""
 
     # restrict matching to current environment if one is active
-    env = spack.cmd.get_env_for_command('buildcache create')
+    env = spack.environment.get_active_env()
 
     output_location = None
     if args.directory:
@@ -554,7 +554,7 @@ def check_binaries(args):
     if args.spec or args.spec_yaml:
         specs = [get_concrete_spec(args)]
     else:
-        env = spack.cmd.get_env_for_command('buildcache', required=True)
+        env = spack.cmd.require_env('buildcache')
         env.concretize()
         specs = env.all_specs()
 

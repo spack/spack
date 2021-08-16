@@ -360,7 +360,7 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
 
     # Fake an active environment and $env is replaced properly
     fake_env_path = '/quux/quuux'
-    monkeypatch.setattr(spack.environment, 'get_env',
+    monkeypatch.setattr(spack.environment, 'get_active_env',
                         lambda: MockEnv(fake_env_path))
     assert spack_path.canonicalize_path(
         '$env/foo/bar/baz'

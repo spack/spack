@@ -252,7 +252,7 @@ def _determine_specs_to_mirror(args):
                         "To mirror all packages, use the '--all' option"
                         " (this will require significant time and space).")
 
-            env = spack.cmd.get_env_for_command('mirror')
+            env = spack.environment.get_active_env()
             if env:
                 env_specs = env.all_specs()
             else:

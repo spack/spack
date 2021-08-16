@@ -174,7 +174,7 @@ def print_difference(c, attributes="all", out=None):
 
 
 def diff(parser, args):
-    env = spack.cmd.get_env_for_command('diff')
+    env = spack.environment.get_active_env()
 
     if len(args.specs) != 2:
         tty.die("You must provide two specs to diff.")

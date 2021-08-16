@@ -70,7 +70,7 @@ def setup_parser(sp):
 
 def deprecate(parser, args):
     """Deprecate one spec in favor of another"""
-    env = spack.cmd.get_env_for_command('deprecate')
+    env = spack.environment.get_active_env()
     specs = spack.cmd.parse_specs(args.specs)
 
     if len(specs) != 2:

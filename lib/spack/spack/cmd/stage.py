@@ -33,7 +33,7 @@ def stage(parser, args):
         spack.stage.create_stage_root(custom_path)
 
     if not args.specs:
-        env = spack.cmd.get_env_for_command('stage')
+        env = spack.environment.get_active_env()
         if env:
             tty.msg("Staging specs from environment %s" % env.name)
             for spec in env.specs_by_hash.values():

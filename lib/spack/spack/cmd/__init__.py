@@ -186,7 +186,7 @@ def matching_spec_from_env(spec):
     If no matching spec is found in the environment (or if no environment is
     active), this will return the given spec but concretized.
     """
-    env = spack.environment.get_env()
+    env = spack.environment.get_active_env()
     if env:
         return env.matching_spec(spec) or spec.concretized()
     else:
@@ -503,26 +503,22 @@ def extant_file(f):
     return f
 
 
-def get_env_for_command(cmd_name, required=False):
+def require_env(cmd_name):
     """Used by commands to get the active environment
 
-    If an environment is not found *and* is required, print an error
-    message that says the calling command *needs* an active environment.
+    If an environment is not found, print an error message that says the calling
+    command *needs* an active environment.
 
     Arguments:
         cmd_name (str): name of calling command
-        required (bool): if ``True``, raise an exception when no environment
-            is found; if ``False``, just return ``None``
 
     Returns:
-        (spack.environment.Environment): if there is an active environment
+        (spack.environment.Environment): the active environment
     """
-    env = spack.environment.get_env()
+    env = spack.environment.get_active_env()
 
     if env:
         return env
-    elif not required:
-        return None
     else:
         tty.die(
             '`spack %s` requires an environment' % cmd_name,
@@ -542,7 +538,7 @@ def find_environment(args):
     If an environment is found, read it in.  If not, return None.
 
     Arguments:
-        args (argparse.Namespace): argparse namespace wtih command arguments
+        args (argparse.Namespace): argparse namespace with command arguments
 
     Returns:
         (spack.environment.Environment): a found environment, or ``None``
@@ -550,8 +546,9 @@ def find_environment(args):
 
     # treat env as a name
     env = args.env
-    if env and spack.environment.exists(env):
-        return spack.environment.read(env)
+    if env:
+        if spack.environment.exists(env):
+            return spack.environment.read(env)
 
     else:
         # if env was specified, see if it is a directory otherwise, look

@@ -94,7 +94,7 @@ def analyze(parser, args, **kwargs):
         sys.exit(0)
 
     # handle active environment, if any
-    env = spack.cmd.get_env_for_command('analyze')
+    env = spack.environment.get_active_env()
 
     # Get an disambiguate spec (we should only have one)
     specs = spack.cmd.parse_specs(args.spec)

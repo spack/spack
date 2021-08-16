@@ -46,7 +46,7 @@ def fetch(parser, args):
         # fetch all uninstalled specs from it otherwise fetch all.
         # If we are also not in an environment, complain to the
         # user that we don't know what to do.
-        env = spack.cmd.get_env_for_command('fetch')
+        env = spack.environment.get_active_env()
         if env:
             if args.missing:
                 specs = env.uninstalled_specs()

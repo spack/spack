@@ -27,7 +27,7 @@ def setup_parser(subparser):
 
 
 def remove(parser, args):
-    env = spack.cmd.get_env_for_command('remove', required=True)
+    env = spack.cmd.require_env('remove')
 
     with env.write_transaction():
         if args.all:

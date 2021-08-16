@@ -40,7 +40,7 @@ def dependencies(parser, args):
         tty.die("spack dependencies takes only one spec.")
 
     if args.installed:
-        env = spack.cmd.get_env_for_command('dependencies')
+        env = spack.environment.get_active_env()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         format_string = '{name}{@version}{%compiler}{/hash:7}'

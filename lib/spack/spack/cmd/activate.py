@@ -29,8 +29,7 @@ def activate(parser, args):
     if len(specs) != 1:
         tty.die("activate requires one spec.  %d given." % len(specs))
 
-    env = spack.cmd.get_env_for_command('activate')
-    spec = spack.cmd.disambiguate_spec(specs[0], env)
+    spec = spack.cmd.disambiguate_spec(specs[0], spack.environment.get_active_env())
     if not spec.package.is_extension:
         tty.die("%s is not an extension." % spec.name)
 

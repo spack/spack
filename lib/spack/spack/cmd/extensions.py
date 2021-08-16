@@ -66,7 +66,7 @@ def extensions(parser, args):
     if not spec[0].package.extendable:
         tty.die("%s is not an extendable package." % spec[0].name)
 
-    env = spack.cmd.get_env_for_command('extensions')
+    env = spack.environment.get_active_env()
     spec = cmd.disambiguate_spec(spec[0], env)
 
     if not spec.package.extendable:

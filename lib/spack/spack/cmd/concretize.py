@@ -24,7 +24,7 @@ chosen, test dependencies are enabled for all packages in the environment.""")
 
 
 def concretize(parser, args):
-    env = spack.cmd.get_env_for_command('concretize', required=True)
+    env = spack.cmd.require_env('concretize')
 
     if args.test == 'all':
         tests = True

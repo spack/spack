@@ -201,7 +201,7 @@ def view(parser, args):
 
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
-        env = spack.cmd.get_env_for_command('view link')
+        env = spack.environment.get_active_env()
         specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
 
     elif args.action in actions_status:

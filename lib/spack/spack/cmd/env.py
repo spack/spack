@@ -312,7 +312,7 @@ def env_view_setup_parser(subparser):
 
 
 def env_view(args):
-    env = spack.cmd.get_env_for_command('env view')
+    env = spack.environment.get_active_env()
 
     if env:
         if args.action == ViewAction.regenerate:
@@ -339,7 +339,7 @@ def env_status_setup_parser(subparser):
 
 
 def env_status(args):
-    env = spack.cmd.get_env_for_command('env status')
+    env = spack.environment.get_active_env()
     if env:
         if env.path == os.getcwd():
             tty.msg('Using %s in current directory: %s'
@@ -370,7 +370,7 @@ def env_loads_setup_parser(subparser):
 
 
 def env_loads(args):
-    env = spack.cmd.get_env_for_command('env loads', required=True)
+    env = spack.cmd.require_env('env loads')
 
     # Set the module types that have been selected
     module_type = args.module_type

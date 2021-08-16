@@ -35,7 +35,7 @@ def deactivate(parser, args):
     if len(specs) != 1:
         tty.die("deactivate requires one spec.  %d given." % len(specs))
 
-    env = spack.cmd.get_env_for_command('deactivate')
+    env = spack.environment.get_active_env()
     spec = spack.cmd.disambiguate_spec(specs[0], env)
     pkg = spec.package
 

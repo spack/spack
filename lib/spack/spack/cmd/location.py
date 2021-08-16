@@ -96,7 +96,7 @@ def location(parser, args):
 
     # install_dir command matches against installed specs.
     if args.install_dir:
-        env = spack.cmd.get_env_for_command('location')
+        env = spack.environment.get_active_env()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
         print(spec.prefix)
         return
