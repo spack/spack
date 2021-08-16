@@ -187,6 +187,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         if '+rocm' in spec:
             args.extend([
+                '-DCMAKE_CXX_FLAGS=-std=c++17',
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
                 '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)])
             archs = self.spec.variants['amdgpu_target'].value
@@ -194,7 +195,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 arch_str = ",".join(archs)
                 args.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
-                    ' -g -fsized-deallocation -fPIC'.format(arch_str)
+                    ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
                 )
 
         return args
