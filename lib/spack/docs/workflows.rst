@@ -448,8 +448,8 @@ A single-prefix filesystem view is a single directory tree that is the
 union of the directory hierarchies of a number of installed packages;
 it is similar to the directory hierarchy that might exist under
 ``/usr/local``.  The files of the view's installed packages are
-brought into the view by symbolic or hard links, referencing the
-original Spack installation.
+brought into the view by symbolic links or hard links, referencing the
+original Spack installation, or a copy / relocate.
 
 A combinatorial filesystem view can contain more software than a
 single-prefix view. Combinatorial filesystem views are created by

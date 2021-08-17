@@ -719,6 +719,27 @@ from the filesystem for users who want to access those packages
 directly. For more information on filesystem views, see the section
 :ref:`filesystem-views`.
 
+For a spack environment defined in a ``spack.yaml``, here are examples
+for how to define each type of filesystem view, namely hard and symbolic linked,
+or copy / relocate:
+
+.. code-block:: yaml
+
+    spack:
+      specs: [pkgconf]
+      view:
+        copy:
+          root: /Users/spackuser/soft/test/copy
+          link_type: copy
+        symlink:
+          root: /Users/spackuser/soft/test/symlink
+          link_type: symlink
+        hardlink:
+          root: /Users/spackuser/soft/test/hardlink
+          link_type: hardlink
+
+
+Note that the ``link_type`` key controls the type of view.
 Spack Environment managed views are updated every time the environment
 is written out to the lock file ``spack.lock``, so the concrete
 environment and the view are always compatible.
