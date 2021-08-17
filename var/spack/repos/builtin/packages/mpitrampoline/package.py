@@ -17,7 +17,13 @@ class Mpitrampoline(CMakePackage):
 
     version('main', git='https://github.com/eschnett/MPItrampoline', branch='main')
 
+    variant('shared', default=True,
+            description='Build a shared version of the library')
+
     provides("mpi @3.1")
+
+    def cmake_args(self):
+        return [define_from_variant('BUILD_SHARED_LIBS', 'shared')]
 
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
