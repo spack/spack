@@ -1,0 +1,103 @@
+diff --git a/Makefile b/Makefile
+index b0053e3..3bef696 100644
+--- a/Makefile
++++ b/Makefile
+@@ -16,10 +16,10 @@ libarmpl_mp-summarylog.so: preload-sumgen.c src/summary.c src/PROTOTYPES
+ 	cd src && ${CC} -fPIC ${CFLAGS} ${OMPFLAG} -shared -o ../lib/$@ preload-sumgen.c summary.c -ldl
+ 
+ preload-gen.c: src/makepreload.py src/PROTOTYPES
+-	cd src && python makepreload.py 
++	cd src && python3 makepreload.py 
+ 
+ preload-sumgen.c: src/makepreload-post.py src/PROTOTYPES
+-	cd src && python makepreload-post.py
++	cd src && python3 makepreload-post.py
+ 
+ tools: tools/Process-dgemm
+ 
+diff --git a/src/PROTOTYPES b/src/PROTOTYPES
+index 1b7bd13..c062e03 100644
+--- a/src/PROTOTYPES
++++ b/src/PROTOTYPES
+@@ -1,7 +1,3 @@
+-armpl_singlecomplex_t cdotc_(armpl_singlecomplex_t *ret_val, armpl_int_t *n, armpl_singlecomplex_t *x, armpl_int_t *incx, armpl_singlecomplex_t *y, armpl_int_t *incy)
+-armpl_singlecomplex_t cdotu_(armpl_singlecomplex_t *ret_val, armpl_int_t *n, armpl_singlecomplex_t *x, armpl_int_t *incx, armpl_singlecomplex_t *y, armpl_int_t *incy)
+-armpl_doublecomplex_t zdotc_(armpl_doublecomplex_t *ret_val, armpl_int_t *n, armpl_doublecomplex_t *x, armpl_int_t *incx, armpl_doublecomplex_t *y, armpl_int_t *incy)
+-armpl_doublecomplex_t zdotu_(armpl_doublecomplex_t *ret_val, armpl_int_t *n, armpl_doublecomplex_t *x, armpl_int_t *incx, armpl_doublecomplex_t *y, armpl_int_t *incy)
+ void caxpby_(armpl_int_t *n, armpl_singlecomplex_t *alpha, armpl_singlecomplex_t *x, armpl_int_t *incx, armpl_singlecomplex_t *beta, armpl_singlecomplex_t *y, armpl_int_t *incy)
+ void caxpy_(armpl_int_t *n, armpl_singlecomplex_t *alpha, armpl_singlecomplex_t *x, armpl_int_t *incx, armpl_singlecomplex_t *y, armpl_int_t *incy)
+ void ccopy_(armpl_int_t *n, armpl_singlecomplex_t *x, armpl_int_t *incx, armpl_singlecomplex_t *y, armpl_int_t *incy)
+diff --git a/src/armpl.h b/src/armpl.h
+index 86e282c..0b64ce7 100644
+--- a/src/armpl.h
++++ b/src/armpl.h
+@@ -4741,7 +4741,6 @@ void zfft3d(armpl_int_t mode, armpl_int_t l, armpl_int_t m, armpl_int_t n, armpl
+ void zfft3dx(armpl_int_t mode, double scale, armpl_int_t ltrans, armpl_int_t inpl, armpl_int_t l, armpl_int_t m, armpl_int_t n, armpl_doublecomplex_t *x, armpl_doublecomplex_t *y, armpl_doublecomplex_t *comm, armpl_int_t *info);
+ void zfft3dy(armpl_int_t mode, double scale, armpl_int_t inpl, armpl_int_t l, armpl_int_t m, armpl_int_t n, armpl_doublecomplex_t *x, armpl_int_t incx1, armpl_int_t incx2, armpl_int_t incx3, armpl_doublecomplex_t *y, armpl_int_t incy1, armpl_int_t incy2, armpl_int_t incy3, armpl_doublecomplex_t *comm, armpl_int_t lcomm, armpl_int_t *info);
+ 
+-#include <xblas.h>
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/src/makepreload-post.py b/src/makepreload-post.py
+index da4b37e..df83034 100644
+--- a/src/makepreload-post.py
++++ b/src/makepreload-post.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ #    perf-libs-tools
+ #    Copyright 2017 Arm Limited. 
+diff --git a/src/makepreload.py b/src/makepreload.py
+index 002302a..955d8bc 100644
+--- a/src/makepreload.py
++++ b/src/makepreload.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ #   perf-libs-tools
+ #   Copyright 2017 Arm Limited. 
+diff --git a/tools/blas_usage.py b/tools/blas_usage.py
+index 81dbbc0..ce18b4d 100755
+--- a/tools/blas_usage.py
++++ b/tools/blas_usage.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ #   perf-libs-tools
+ #   Copyright 2017 Arm Limited.
+diff --git a/tools/heat_dgemm.py b/tools/heat_dgemm.py
+index 506714b..2eea14c 100755
+--- a/tools/heat_dgemm.py
++++ b/tools/heat_dgemm.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ #   perf-libs-tools
+ #   Copyright 2017 Arm Limited. 
+diff --git a/tools/process-components.py b/tools/process-components.py
+index 3f7e101..97ac9f2 100755
+--- a/tools/process-components.py
++++ b/tools/process-components.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ #   perf-libs-tools
+ #   Copyright 2017 Arm Limited. 
+diff --git a/tools/process_summary.py b/tools/process_summary.py
+index 20d0d60..8efcccf 100755
+--- a/tools/process_summary.py
++++ b/tools/process_summary.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ #   perf-libs-tools
+ #   Copyright 2017-8 Arm Limited. 
+
+
