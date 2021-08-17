@@ -24,6 +24,10 @@ class Reframe(Package):
     maintainers = ['victorusu', 'vkarak']
 
     version('master', branch='master')
+    version('3.7.3',  sha256='52427fbbaa558082b71f73b2b8aea37340584d14dc3b1aca1e9bdd8923fa4c65')
+    version('3.7.2',  sha256='b4ba0f0a8788ee43471202d40be43157ec2687ad510c3b02c0869af6c48bb7d0')
+    version('3.7.1',  sha256='fb2efc3ad31056156e797f1d4fe705c79d20ebf66472b2144e84d4e2f4b2b125')
+    version('3.7.0',  sha256='aa2513fafef44ce31120c7d0e3e3788b6c8a57535499e646086bd01af88f2013')
     version('3.6.3',  sha256='3616478c886c89385385d04f5bce625a690eec6bdca603cd5ac3a6f443168ac2')
     version('3.6.2',  sha256='b4725e434f4cd721ca825a56a652e67aa77e7af5ed7ca00f281747585827060d')
     version('3.6.1',  sha256='1ee35a2de42cdd2476c17cc15caf6a7795d976ba7b058d518da7d314e7af2136')
@@ -62,6 +66,7 @@ class Reframe(Package):
     depends_on('py-setuptools', type='build')
 
     # runtime dependencies
+    depends_on('py-archspec', when='@3.7.0:', type='run')
     depends_on('py-argcomplete', when='@3.4.1:', type='run')
     depends_on('py-importlib-metadata', when='^python@:3.7', type='run')
     depends_on('py-jsonschema', type='run')

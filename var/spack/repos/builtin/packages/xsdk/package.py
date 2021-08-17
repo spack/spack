@@ -22,8 +22,8 @@ class Xsdk(BundlePackage):
     version('develop')
     version('0.6.0')
     version('0.5.0')
-    version('0.4.0')
-    version('0.3.0')
+    version('0.4.0', deprecated=True)
+    version('0.3.0', deprecated=True)
 
     variant('debug', default=False, description='Compile in debug mode')
     variant('cuda', default=False, description='Enable CUDA dependent packages')

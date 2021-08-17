@@ -66,17 +66,6 @@ def test_exit_with_failure(database, module_type, failure_args):
 
 
 @pytest.mark.db
-@pytest.mark.parametrize('deprecated_command', [
-    ('refresh', '-m', 'tcl', 'mpileaks'),
-    ('rm', '-m', 'tcl', '-m', 'lmod', 'mpileaks'),
-    ('find', 'mpileaks'),
-])
-def test_deprecated_command(database, deprecated_command):
-    with pytest.raises(spack.main.SpackCommandError):
-        module(*deprecated_command)
-
-
-@pytest.mark.db
 def test_remove_and_add(database, module_type):
     """Tests adding and removing a tcl module file."""
 

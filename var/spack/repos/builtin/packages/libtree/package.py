@@ -12,10 +12,11 @@ class Libtree(CMakePackage):
 
     homepage = "https://github.com/haampie/libtree"
     git      = "https://github.com/haampie/libtree.git"
-    url      = "https://github.com/haampie/libtree/releases/download/v1.0.3/sources.tar.gz"
+    url      = "https://github.com/haampie/libtree/archive/refs/tags/v2.0.0.tar.gz"
     maintainers = ['haampie']
 
     version('master', branch='master')
+    version('2.0.0', sha256='099e85d8ba3c3d849ce05b8ba2791dd25cd042a813be947fb321b0676ef71883')
     version('1.2.3', sha256='4a912cf97109219fe931942a30579336b6ab9865395447bd157bbfa74bf4e8cf')
     version('1.2.2', sha256='4ccf09227609869b85a170550b636defcf0b0674ecb0785063b81785b1c29bdd')
     version('1.2.1', sha256='26791c0f418b93d502879db0e1fd2fd3081b885ad87326611d992a5f8977a9b0')
@@ -27,6 +28,12 @@ class Libtree(CMakePackage):
     version('1.1.0', sha256='6cf36fb9a4c8c3af01855527d4931110732bb2d1c19be9334c689f1fd1c78536')
     version('1.0.4', sha256='b15a54b6f388b8bd8636e288fcb581029f1e65353660387b0096a554ad8e9e45')
     version('1.0.3', sha256='67ce886c191d50959a5727246cdb04af38872cd811c9ed4e3822f77a8f40b20b')
+
+    def url_for_version(self, version):
+        if version < Version("2.0.0"):
+            return "https://github.com/haampie/libtree/releases/download/v{0}/sources.tar.gz".format(version)
+
+        return "https://github.com/haampie/libtree/archive/refs/tags/v{0}.tar.gz".format(version)
 
     variant('chrpath', default=False, description='Use chrpath for deployment')
     variant('strip', default=False, description='Use binutils strip for deployment')
