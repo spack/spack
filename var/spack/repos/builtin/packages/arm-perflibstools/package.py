@@ -18,6 +18,8 @@ class ArmPerflibstools(MakefilePackage):
 
     version('master', branch='master')
 
+    depends_on('python@3:')
+
     # Patch to remove xblas.h include and non gcc routines
     patch('simple.patch')
 
