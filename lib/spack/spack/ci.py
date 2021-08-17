@@ -1564,10 +1564,6 @@ def reproduce_ci_job(url, work_dir):
 
     yaml_files = fs.find(work_dir, ['*.yaml', '*.yml'])
 
-    print('work dir:', work_dir)
-    for root, dirs, files in os.walk(work_dir):
-        print(root, dirs, files)
-
     tty.debug('yaml files:')
     for yaml_file in yaml_files:
         tty.debug('  {0}'.format(yaml_file))

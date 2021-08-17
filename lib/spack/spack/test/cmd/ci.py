@@ -1568,7 +1568,7 @@ spack:
             ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
 
         with ev.read('test'):
-            ci_cmd('generate', '--output-file', outputfile, global_args=['-d'])
+            ci_cmd('generate', '--output-file', outputfile)
 
             with open(outputfile) as of:
                 pipeline_doc = syaml.load(of.read())
