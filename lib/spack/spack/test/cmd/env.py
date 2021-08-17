@@ -1948,6 +1948,35 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
+@pytest.mark.parametrize('link_type', ['hardlink', 'copy', 'symlink'])
+def test_view_link_type(link_type, tmpdir, mock_fetch, mock_packages, mock_archive,
+                        install_mockery):
+    filename = str(tmpdir.join('spack.yaml'))
+    viewdir = str(tmpdir.join('view'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  specs:
+    - mpileaks
+  view:
+    default:
+      root: %s
+      link_type: %s""" % (viewdir, link_type))
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            install()
+
+        test = ev.read('test')
+
+        for spec in test.roots():
+            file_path = test.default_view.view()._root
+            file_to_test = os.path.join(
+                file_path, spec.name)
+            assert os.path.isfile(file_to_test)
+            assert os.path.islink(file_to_test)  == (link_type == 'symlink')
+
+
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,
                        install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
