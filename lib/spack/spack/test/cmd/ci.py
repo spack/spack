@@ -908,8 +908,6 @@ spack:
             assert('fake download buildcache archive-files' in ci_out)
 
             env_cmd('deactivate')
-            import spack.binary_distribution as bindist
-            # bindist.clear_spec_cache()
 
 
 @pytest.mark.disable_clean_stage_check

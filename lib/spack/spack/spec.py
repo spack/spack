@@ -1643,7 +1643,7 @@ class Spec(object):
             )
         )
 
-        params.update(sorted(self.compiler_flags.items()))
+        params.update(sorted(any(self.compiler_flags.items())))
         if params:
             d['parameters'] = params
 

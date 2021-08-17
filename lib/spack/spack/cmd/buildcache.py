@@ -210,7 +210,7 @@ def setup_parser(subparser):
         '-s', '--specs', default=None,
         help='List of dependent specs for which saved yaml is desired')
     savespecfile.add_argument(
-        '-y', '--specfile-dir', default=None,
+        '--specfile-dir', default=None,
         help='Path to directory where spec yamls should be saved')
     savespecfile.set_defaults(func=save_specfiles)
 
@@ -340,10 +340,13 @@ def _createtarball(env, spec_file=None, packages=None, add_spec=True,
                    unsigned=False, allow_root=False, rebuild_index=False):
     if spec_file:
         with open(spec_file, 'r') as fd:
-            yaml_text = fd.read()
-            tty.debug('createtarball read spec yaml:')
-            tty.debug(yaml_text)
-            s = Spec.from_yaml(yaml_text)
+            specfile_contents = fd.read()
+            tty.debug('createtarball read specfile contents:')
+            tty.debug(specfile_contents)
+            if spec_file.endswith('json'):
+                s = Spec.from_json(specfile_contents)
+            else:
+                s = Spec.from_yaml(specfile_contents)
             package = '/{0}'.format(s.dag_hash())
             matches = find_matching_specs(package, env=env)
 

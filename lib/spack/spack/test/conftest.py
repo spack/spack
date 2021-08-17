@@ -315,6 +315,7 @@ def mock_fetch_cache(monkeypatch):
     """
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
+
 @pytest.fixture(autouse=True)
 def mock_binary_index(monkeypatch, tmpdir):
     """Changes the directory for the binary index and creates binary index for
@@ -324,6 +325,7 @@ def mock_binary_index(monkeypatch, tmpdir):
     mock_index = spack.binary_distribution.BinaryCacheIndex(index_path)
     monkeypatch.setattr(spack.binary_distribution, 'binary_index', mock_index)
     yield
+
 
 @pytest.fixture(autouse=True)
 def _skip_if_missing_executables(request):
