@@ -12,6 +12,7 @@ class P7zip(MakefilePackage):
 
     version('16.02', sha256='5eb20ac0e2944f6cb9c2d51dd6c4518941c185347d4089ea89087ffdd6e2341f')
 
+    conflicts('%gcc@10:')
     # all3 includes 7z, 7za, and 7zr
     build_targets = ['all3']
 
