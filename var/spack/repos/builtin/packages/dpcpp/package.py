@@ -23,12 +23,12 @@ class Dpcpp(CMakePackage):
     variant('rocm', default=False, description='switch from OpenCL to ROCm')
     variant('rocm-platform', default='AMD', values=('AMD', 'NVIDIA'), multi=False, description='choose ROCm backend')
     variant('arm', default=False, description='build ARM support rather than x86')
-    variant('disable-esimd-cpu', default=False, description='build without ESIMD_CPU support')
-    variant('no-assertions', default=False, description='build without assertions')
+    variant('esimd-cpu', default=False, description='build with ESIMD_CPU support')
+    variant('assertions', default=False, description='build with assertions')
     variant('docs', default=False, description='build Doxygen documentation')
-    variant('no-werror', default=False, description='Do not treat warnings as errors')
-    variant('shared-libs', default=False, description='Build shared libraries')
-    variant('use-lld', default=False, description='Use LLD linker for build')
+    variant('werror', default=False, description='Treat warnings as errors')
+    variant('shared', default=False, description='Build shared libraries')
+    variant('lld', default=False, description='Use LLD linker for build')
 
     depends_on('cmake@3.16.2:', type='build')
     depends_on('ninja@1.10.0:', type='build')
@@ -36,7 +36,7 @@ class Dpcpp(CMakePackage):
     depends_on('cuda@10.2.0:10.2.999', when='+cuda')
 
     # NOTE: AMD HIP needs to be tested; it will be done in the next update
-    # depends_on('cuda@10.2.89', when='rocm-platform=NVIDIA', type='build')
+    # depends_on('cuda@10.2.0:10.2.999', when='rocm-platform=NVIDIA', type='build')
     # depends_on('hip@4.0.0:', when='+rocm', type='build')
 
     build_targets = ['deploy-sycl-toolchain']
@@ -44,7 +44,7 @@ class Dpcpp(CMakePackage):
 
     root_cmakelists_dir = 'llvm'
 
-    patch('cuda-backend.patch', when='+cuda')
+    patch('cuda-backend.patch', when='@stable +cuda')
 
     def cmake_args(self):
         llvm_external_projects = 'sycl;llvm-spirv;opencl;libdevice;xpti;xptifw'
@@ -82,7 +82,7 @@ class Dpcpp(CMakePackage):
                 libclc_targets_to_build += ';nvptx64--;nvptx64--nvidiacl'
 
         args = [
-            self.define_from_variant('LLVM_ENABLE_ASSERTIONS', 'no-assertions'),
+            self.define_from_variant('LLVM_ENABLE_ASSERTIONS', 'assertions'),
             self.define('LLVM_TARGETS_TO_BUILD', llvm_targets_to_build),
             self.define('LLVM_EXTERNAL_PROJECTS', llvm_external_projects),
             self.define('LLVM_EXTERNAL_SYCL_SOURCE_DIR', sycl_dir),
@@ -93,19 +93,23 @@ class Dpcpp(CMakePackage):
             self.define('LLVM_EXTERNAL_LIBDEVICE_SOURCE_DIR', libdevice_dir),
             self.define('LLVM_ENABLE_PROJECTS', llvm_enable_projects),
             self.define('LIBCLC_TARGETS_TO_BUILD', libclc_targets_to_build),
-            self.define('SYCL_BUILD_PI_CUDA', 'ON' if is_cuda else 'OFF'),
-            self.define('SYCL_BUILD_PI_ROCM', 'ON' if is_rocm else 'OFF'),
+            self.define_from_variant('SYCL_BUILD_PI_CUDA', 'cuda'),
+            self.define_from_variant('SYCL_BUILD_PI_ROCM', 'rocm'),
             self.define('SYCL_BUILD_PI_ROCM_PLATFORM', sycl_build_pi_rocm_platform),
             self.define('LLVM_BUILD_TOOLS', True),
-            self.define_from_variant('SYCL_ENABLE_WERROR', 'no-werror'),
+            self.define_from_variant('SYCL_ENABLE_WERROR', 'werror'),
             self.define('SYCL_INCLUDE_TESTS', True),
             self.define_from_variant('LLVM_ENABLE_DOXYGEN', 'docs'),
             self.define_from_variant('LLVM_ENABLE_SPHINX', 'docs'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared-libs'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define('SYCL_ENABLE_XPTI_TRACING', 'ON'),
-            self.define_from_variant('LLVM_ENABLE_LLD', 'use-lld'),
-            self.define_from_variant('SYCL_BUILD_PI_ESIMD_CPU', 'disable-esimd-cpu'),
+            self.define_from_variant('LLVM_ENABLE_LLD', 'lld'),
+            self.define_from_variant('SYCL_BUILD_PI_ESIMD_CPU', 'esimd-cpu'),
         ]
+
+        if self.compiler.name == 'gcc':
+            gcc_prefix = ancestor(self.compiler.cc, 2)
+            args.append(self.define('GCC_INSTALL_PREFIX', gcc_prefix))
 
         return args
 
@@ -117,6 +121,7 @@ class Dpcpp(CMakePackage):
         include_env_vars = ['C_INCLUDE_PATH', 'CPLUS_INCLUDE_PATH', 'INCLUDE']
         for var in include_env_vars:
             env.prepend_path(var, self.prefix.include)
+            env.prepend_path(var, self.prefix.include.sycl)
 
         sycl_build_pi_rocm_platform = self.spec.variants['rocm-platform'].value
         if '+cuda' in self.spec or sycl_build_pi_rocm_platform == 'cuda':
