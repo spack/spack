@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os.path
 import re
 import subprocess
 
@@ -48,6 +47,17 @@ _versions = {
 def get_os():
     spack_os = spack.architecture.platform().default_os
     return _os_map.get(spack_os, 'RHEL-7')
+
+
+def get_acfl_prefix(spec):
+    acfl_prefix = spec.prefix
+    return join_path(
+        acfl_prefix,
+        'arm-linux-compiler-{0}_Generic-AArch64_{1}_aarch64-linux'.format(
+            spec.version,
+            get_os()
+        )
+    )
 
 
 class Arm(Package):
@@ -125,7 +135,7 @@ class Arm(Package):
         assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('c', None)
-        return str(self.spec.prefix.bin.armclang)
+        return join_path(get_acfl_prefix(self.spec), 'bin', 'armclang')
 
     @property
     def cxx(self):
@@ -133,7 +143,7 @@ class Arm(Package):
         assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('cxx', None)
-        return os.path.join(self.spec.prefix.bin, 'armclang++')
+        return join_path(get_acfl_prefix(self.spec), 'bin', 'armclang++')
 
     @property
     def fortran(self):
@@ -141,4 +151,14 @@ class Arm(Package):
         assert self.spec.concrete, msg
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('fortran', None)
-        return str(self.spec.prefix.bin.armflang)
+        return join_path(get_acfl_prefix(self.spec), 'bin', 'armflang')
+
+    def setup_run_environment(self, env):
+        arm_dir = get_acfl_prefix(self.spec)
+        env.set("ARM_LINUX_COMPILER_DIR", arm_dir)
+        env.set("ARM_LINUX_COMPILER_INCLUDES", join_path(arm_dir, 'includes'))
+        env.prepend_path("LD_LIBRARY_PATH", join_path(arm_dir, 'lib'))
+        env.prepend_path("PATH", join_path(arm_dir, 'bin'))
+        env.prepend_path("CPATH", join_path(arm_dir, 'include'))
+        env.prepend_path("MANPATH", join_path(arm_dir, 'share', 'man'))
+        env.prepend_path("ARM_LICENSE_DIR", join_path(self.prefix, 'licences'))
