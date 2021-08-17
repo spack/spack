@@ -14,7 +14,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import force_remove, working_dir
 
 from spack.build_environment import InstallError
-from spack.directives import depends_on
+from spack.directives import conflicts, depends_on
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
@@ -102,6 +102,7 @@ class AutotoolsPackage(PackageBase):
     depends_on('gnuconfig', type='build', when='target=ppc64le:')
     depends_on('gnuconfig', type='build', when='target=aarch64:')
     depends_on('gnuconfig', type='build', when='target=riscv64:')
+    conflicts('platform=windows')
 
     @property
     def _removed_la_files_log(self):
