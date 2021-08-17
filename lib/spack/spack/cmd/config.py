@@ -118,7 +118,7 @@ def _get_scope_and_section(args):
 
     # w/no args and an active environment, point to env manifest
     if not section:
-        env = spack.environment.get_active_env()
+        env = ev.get_active_env()
         if env:
             scope = env.env_file_config_scope_name()
 

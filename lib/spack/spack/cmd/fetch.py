@@ -8,6 +8,7 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
+import spack.environment as ev
 import spack.repo
 
 description = "fetch archives for packages"
@@ -46,7 +47,7 @@ def fetch(parser, args):
         # fetch all uninstalled specs from it otherwise fetch all.
         # If we are also not in an environment, complain to the
         # user that we don't know what to do.
-        env = spack.environment.get_active_env()
+        env = ev.get_active_env()
         if env:
             if args.missing:
                 specs = env.uninstalled_specs()

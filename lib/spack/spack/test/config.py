@@ -14,7 +14,7 @@ from six import StringIO
 from llnl.util.filesystem import mkdirp, touch
 
 import spack.config
-import spack.environment
+import spack.environment as ev
 import spack.main
 import spack.paths
 import spack.schema.compilers
@@ -360,7 +360,7 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
 
     # Fake an active environment and $env is replaced properly
     fake_env_path = '/quux/quuux'
-    monkeypatch.setattr(spack.environment, 'get_active_env',
+    monkeypatch.setattr(ev, 'get_active_env',
                         lambda: MockEnv(fake_env_path))
     assert spack_path.canonicalize_path(
         '$env/foo/bar/baz'

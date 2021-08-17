@@ -21,6 +21,7 @@ from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
 import spack.config
+import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.paths
@@ -186,7 +187,7 @@ def matching_spec_from_env(spec):
     If no matching spec is found in the environment (or if no environment is
     active), this will return the given spec but concretized.
     """
-    env = spack.environment.get_active_env()
+    env = ev.get_active_env()
     if env:
         return env.matching_spec(spec) or spec.concretized()
     else:
@@ -515,7 +516,7 @@ def require_env(cmd_name):
     Returns:
         (spack.environment.Environment): the active environment
     """
-    env = spack.environment.get_active_env()
+    env = ev.get_active_env()
 
     if env:
         return env
@@ -547,8 +548,8 @@ def find_environment(args):
     # treat env as a name
     env = args.env
     if env:
-        if spack.environment.exists(env):
-            return spack.environment.read(env)
+        if ev.exists(env):
+            return ev.read(env)
 
     else:
         # if env was specified, see if it is a directory otherwise, look
@@ -557,7 +558,7 @@ def find_environment(args):
 
         # if no argument, look for the environment variable
         if not env:
-            env = os.environ.get(spack.environment.spack_env_var)
+            env = os.environ.get(ev.spack_env_var)
 
             # nothing was set; there's no active environment
             if not env:
@@ -565,7 +566,7 @@ def find_environment(args):
 
     # if we get here, env isn't the name of a spack environment; it has
     # to be a path to an environment, or there is something wrong.
-    if spack.environment.is_env_dir(env):
-        return spack.environment.Environment(env)
+    if ev.is_env_dir(env):
+        return ev.Environment(env)
 
-    raise spack.environment.SpackEnvironmentError('no environment in %s' % env)
+    raise ev.SpackEnvironmentError('no environment in %s' % env)

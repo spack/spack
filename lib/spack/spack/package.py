@@ -1519,6 +1519,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return patches
 
     def content_hash(self, content=None):
+        import spack.environment as ev
         """Create a hash based on the sources and logic used to build the
         package. This includes the contents of all applied patches and the
         contents of applicable functions in the package subclass."""
@@ -1537,7 +1538,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # should this attempt to download the source and set one? This
             # probably only happens for source repositories which are
             # referenced by branch name rather than tag or commit ID.
-            env = spack.environment.get_active_env()
+            env = ev.get_active_env()
             from_local_sources = env and env.is_develop(self.spec)
             if not self.spec.external and not from_local_sources:
                 message = 'Missing a source id for {s.name}@{s.version}'

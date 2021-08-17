@@ -16,6 +16,7 @@ import llnl.util.tty.color as color
 import spack.bootstrap
 import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 import spack.repo
 import spack.user_environment as uenv
 from spack.database import InstallStatuses
@@ -219,7 +220,7 @@ def find(parser, args):
     added = set()
     removed = set()
 
-    env = spack.environment.get_active_env()
+    env = ev.get_active_env()
     if env:
         decorator, added, roots, removed = setup_env(env)
 

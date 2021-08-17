@@ -14,6 +14,7 @@ import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
+import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
 import spack.relocate
@@ -419,7 +420,7 @@ def createtarball(args):
     """create a binary package from an existing install"""
 
     # restrict matching to current environment if one is active
-    env = spack.environment.get_active_env()
+    env = ev.get_active_env()
 
     output_location = None
     if args.directory:

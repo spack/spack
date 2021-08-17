@@ -11,6 +11,7 @@ from llnl.util.tty.color import cprint, get_color_when
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 import spack.solver.asp as asp
 import spack.util.environment
 import spack.util.spack_json as sjson
@@ -174,7 +175,7 @@ def print_difference(c, attributes="all", out=None):
 
 
 def diff(parser, args):
-    env = spack.environment.get_active_env()
+    env = ev.get_active_env()
 
     if len(args.specs) != 2:
         tty.die("You must provide two specs to diff.")

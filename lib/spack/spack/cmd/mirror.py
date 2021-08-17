@@ -12,6 +12,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.concretize
 import spack.config
+import spack.environment as ev
 import spack.mirror
 import spack.repo
 import spack.util.url as url_util
@@ -252,7 +253,7 @@ def _determine_specs_to_mirror(args):
                         "To mirror all packages, use the '--all' option"
                         " (this will require significant time and space).")
 
-            env = spack.environment.get_active_env()
+            env = ev.get_active_env()
             if env:
                 env_specs = env.all_specs()
             else:

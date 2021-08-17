@@ -56,7 +56,7 @@ def project_dir_env():
 @pytest.fixture()
 def env_deactivate():
     yield
-    spack.environment._active_environment = None
+    ev._active_environment = None
     os.environ.pop('SPACK_ENV', None)
 
 

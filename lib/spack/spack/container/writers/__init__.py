@@ -8,7 +8,7 @@ convenience functions.
 import collections
 import copy
 
-import spack.environment
+import spack.environment as ev
 import spack.schema.env
 import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
@@ -37,7 +37,7 @@ def create(configuration):
     Args:
         configuration: how to generate the current recipe
     """
-    name = spack.environment.config_dict(configuration)['container']['format']
+    name = ev.config_dict(configuration)['container']['format']
     return _writer_factory[name](configuration)
 
 
@@ -56,7 +56,7 @@ class PathContext(tengine.Context):
     directly via PATH.
     """
     def __init__(self, config):
-        self.config = spack.environment.config_dict(config)
+        self.config = ev.config_dict(config)
         self.container_config = self.config['container']
 
     @tengine.context_property
