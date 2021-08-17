@@ -33,7 +33,6 @@ class Melissa(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('BUILD_TESTING', self.run_tests),
-            self.define_from_variant('CMAKE_BUILD_TYPE', 'build_type'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('MELISSA_ENABLE_NO_MPI_API', 'no_mpi_api')
         ]
