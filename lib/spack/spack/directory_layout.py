@@ -191,7 +191,7 @@ class DirectoryLayout(object):
             self.write_spec(deprecated_spec, json_path)
             try:
                 os.remove(yaml_path)
-            except OSError as err:
+            except (IOError, OSError) as err:
                 tty.debug('Could not remove deprecated {0}'.format(yaml_path))
                 tty.debug(err)
         elif os.path.exists(yaml_path):
