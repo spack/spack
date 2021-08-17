@@ -121,8 +121,7 @@ def decompressor_for(path, ext=None):
         if not ext_l[1:]:
             return select_decompressor_for(path, ext_l[0])
         else:
-            return composer(decompressor_for(path, ext_l[0]))
-            (decompressor_for(path, ext=".".join(ext_l[1:])))
+            return composer(decompressor_for(path, ext_l[0]))(decompressor_for(path, ext=".".join(ext_l[1:])))
     else:
         return select_decompressor_for(path, ext)
 
