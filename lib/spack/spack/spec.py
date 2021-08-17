@@ -1643,7 +1643,8 @@ class Spec(object):
             )
         )
 
-        params.update(sorted(any(self.compiler_flags.items())))
+        min_comp_flags = {k: v for k, v in self.compiler_flags.items() if v}
+        params.update(sorted(min_comp_flags.items()))
         if params:
             d['parameters'] = params
 

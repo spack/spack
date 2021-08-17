@@ -283,8 +283,10 @@ class DirectoryLayout(object):
             path_elems += [self.metadata_dir, 'spec.json']
             pattern = os.path.join(self.root, *path_elems)
             spec_files = glob.glob(pattern)
-            if not spec_files:
+            if not spec_files:  # we're probably looking at legacy yaml...
                 path_elems += [self.metadata_dir, 'spec.yaml']
+                pattern = os.path.join(self.root, *path_elems)
+                spec_files = glob.glob(pattern)
             specs.extend([self.read_spec(s) for s in spec_files])
         return specs
 
