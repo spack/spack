@@ -36,7 +36,7 @@ def setup_parser(subparser):
 
 
 def develop(parser, args):
-    env = spack.cmd.require_env('develop')
+    env = spack.cmd.require_active_env(cmd_name='develop')
 
     if not args.spec:
         if args.clone is False:

@@ -555,7 +555,7 @@ def check_binaries(args):
     if args.spec or args.spec_yaml:
         specs = [get_concrete_spec(args)]
     else:
-        env = spack.cmd.require_env('buildcache')
+        env = spack.cmd.require_active_env(cmd_name='buildcache')
         env.concretize()
         specs = env.all_specs()
 

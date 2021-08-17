@@ -370,7 +370,7 @@ def env_loads_setup_parser(subparser):
 
 
 def env_loads(args):
-    env = spack.cmd.require_env('env loads')
+    env = spack.cmd.require_active_env(cmd_name='env loads')
 
     # Set the module types that have been selected
     module_type = args.module_type

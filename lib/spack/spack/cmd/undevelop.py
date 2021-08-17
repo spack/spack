@@ -21,7 +21,7 @@ def setup_parser(subparser):
 
 
 def undevelop(parser, args):
-    env = spack.cmd.require_env('undevelop')
+    env = spack.cmd.require_active_env(cmd_name='undevelop')
 
     if args.all:
         specs = env.dev_specs.keys()

@@ -504,7 +504,7 @@ def extant_file(f):
     return f
 
 
-def require_env(cmd_name):
+def require_active_env(cmd_name):
     """Used by commands to get the active environment
 
     If an environment is not found, print an error message that says the calling
