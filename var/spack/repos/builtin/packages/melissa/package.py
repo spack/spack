@@ -28,7 +28,6 @@ class Melissa(CMakePackage):
     depends_on('mpi')
     depends_on('pkgconfig', type='build')
     depends_on('python@3.5.3:', type=('build', 'run'))
-    depends_on('py-numpy')
 
     def cmake_args(self):
         args = [
