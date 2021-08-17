@@ -14,6 +14,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.filesystem import force_remove, working_dir
 
+from spack.directives import conflicts
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
@@ -82,6 +83,8 @@ class AutotoolsPackage(PackageBase):
     #: If False deletes all the .la files in the prefix folder
     #: after the installation. If True instead it installs them.
     install_libtool_archives = False
+
+    conflicts('platform=windows')
 
     @property
     def _removed_la_files_log(self):
