@@ -67,9 +67,6 @@ import archspec.cpu
 import llnl.util.lang as lang
 import llnl.util.tty as tty
 
-import spack.compiler
-import spack.compilers
-import spack.config
 import spack.error as serr
 import spack.paths
 import spack.util.classes
@@ -197,6 +194,7 @@ class Target(object):
                 contains both the name and the version of the compiler we want to use
         """
         # Mixed toolchains are not supported yet
+        import spack.compiler
         import spack.compilers
         if isinstance(compiler, spack.compiler.Compiler):
             if spack.compilers.is_mixed_toolchain(compiler):
@@ -587,6 +585,8 @@ class _PickleableCallable(object):
 
 @contextlib.contextmanager
 def use_platform(new_platform):
+    import spack.compilers
+    import spack.config
     global platform, all_platforms
 
     msg = '"{0}" must be an instance of Platform'
