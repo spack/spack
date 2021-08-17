@@ -39,6 +39,7 @@ from spack.filesystem_view import (
     inverse_view_func_parser,
     view_func_parser,
 )
+from spack.installer import PackageInstaller, update_kwargs_from_args
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
@@ -1482,8 +1483,6 @@ class Environment(object):
         self.install_specs(None, args=args, **install_args)
 
     def install_specs(self, specs=None, args=None, **install_args):
-        from spack.installer import PackageInstaller
-
         tty.debug('Assessing installation status of environment packages')
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
@@ -1523,7 +1522,7 @@ class Environment(object):
             if install_args:
                 kwargs.update(install_args)
             if args:
-                spack.cmd.install.update_kwargs_from_args(args, kwargs)
+                update_kwargs_from_args(args, kwargs)
 
             installs.append((spec.package, kwargs))
 

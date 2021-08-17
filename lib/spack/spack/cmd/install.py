@@ -21,47 +21,11 @@ import spack.monitor
 import spack.paths
 import spack.report
 from spack.error import SpackError
-from spack.installer import PackageInstaller
+from spack.installer import PackageInstaller, update_kwargs_from_args
 
 description = "build and install packages"
 section = "build"
 level = "short"
-
-
-def update_kwargs_from_args(args, kwargs):
-    """Parse cli arguments and construct a dictionary
-    that will be passed to the package installer."""
-
-    kwargs.update({
-        'fail_fast': args.fail_fast,
-        'keep_prefix': args.keep_prefix,
-        'keep_stage': args.keep_stage,
-        'restage': not args.dont_restage,
-        'install_source': args.install_source,
-        'verbose': args.verbose,
-        'fake': args.fake,
-        'dirty': args.dirty,
-        'use_cache': args.use_cache,
-        'cache_only': args.cache_only,
-        'include_build_deps': args.include_build_deps,
-        'explicit': True,  # Always true for install command
-        'stop_at': args.until,
-        'unsigned': args.unsigned,
-        'full_hash_match': args.full_hash_match,
-    })
-
-    kwargs.update({
-        'install_deps': ('dependencies' in args.things_to_install),
-        'install_package': ('package' in args.things_to_install)
-    })
-
-    if hasattr(args, 'setup'):
-        setups = set()
-        for arglist_s in args.setup:
-            for arg in [x.strip() for x in arglist_s.split(',')]:
-                setups.add(arg)
-        kwargs['setup'] = setups
-        tty.msg('Setup={0}'.format(kwargs['setup']))
 
 
 def setup_parser(subparser):
