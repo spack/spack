@@ -91,9 +91,9 @@ class CMakePackage(PackageBase):
     #: for more information.
 
     variant('generator',
-            default='Make' if sys.platform != 'win32' else 'Ninja',
+            default='Unix Makefiles' if sys.platform != 'win32' else 'Ninja',
             description='Build system to generate',
-            values=('Make', 'Ninja'))
+            values=('Unix Makefiles', 'Ninja'))
 
     depends_on('ninja', when='generator=Ninja')
 
@@ -149,8 +149,7 @@ class CMakePackage(PackageBase):
         try:
             pkg.generator = pkg.spec.variants['generator'].value
         except KeyError:
-            pkg.generator = 'Make' if sys.platform != 'win32' else 'Ninja'
-        primary_generator = CMakePackage.generatorMap[pkg.generator]
+            pkg.generator = 'Unix Makefiles' if sys.platform != 'win32' else 'Ninja'
 
         try:
             build_type = pkg.spec.variants['build_type'].value
@@ -164,22 +163,16 @@ class CMakePackage(PackageBase):
 
         define = CMakePackage.define
         args = [
-            '-G', primary_generator,
+            '-G', pkg.generator,
             define('CMAKE_INSTALL_PREFIX', pkg.prefix.replace('\\', '/')),
             define('CMAKE_BUILD_TYPE', build_type),
-            define('CMAKE_C_COMPILER:FILEPATH', pkg.compiler.cc.replace('\\', '/')),
-            define('CMAKE_CXX_COMPILER:FILEPATH', pkg.compiler.cxx.replace('\\', '/'))
         ]
-
-        if pkg.compiler.fc is not None:
-            args.append(define('CMAKE_Fortran_COMPILER:FILEPATH',
-                               pkg.compiler.fc.replace('\\', '/')))
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
         if pkg.spec.satisfies('^cmake@3.9:'):
             args.append(define('CMAKE_INTERPROCEDURAL_OPTIMIZATION', ipo))
 
-        if primary_generator == 'Unix Makefiles':
+        if pkg.generator == 'Unix Makefiles':
             args.append(define('CMAKE_VERBOSE_MAKEFILE', True))
 
         if platform.mac_ver()[0]:
