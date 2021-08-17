@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
+
+from spack import *
 
 
 class Dealii(CMakePackage, CudaPackage):
@@ -197,7 +197,7 @@ class Dealii(CMakePackage, CudaPackage):
     # depends_on('taskflow',         when='@9.3:+taskflow')
     depends_on('trilinos gotype=int', when='+trilinos@12.18.1:')
     # TODO: next line fixes concretization with trilinos and adol-c
-    depends_on('trilinos~exodus~netcdf',    when='@9.0:+adol-c+trilinos')
+    depends_on('trilinos~exodus',    when='@9.0:+adol-c+trilinos')
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
@@ -210,16 +210,11 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('symengine@0.6:', when='@9.2:+symengine')
     depends_on('tbb',            when='+threads')
     # do not require +rol to make concretization of xsdk possible
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',
-               when='+trilinos+mpi~int64~cuda')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre',
-               when='+trilinos+mpi+int64~cuda')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado', when='+trilinos')
+    depends_on('trilinos~hypre', when='+trilinos+int64')
     # TODO: temporary disable Tpetra when using CUDA due to
     # namespace "Kokkos::Impl" has no member "cuda_abort"
-    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',
-               when='+trilinos+mpi~int64+cuda')
-    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',
-               when='+trilinos+mpi+int64+cuda')
+    depends_on('trilinos@master+rol~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+cuda')
 
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
@@ -301,12 +296,9 @@ class Dealii(CMakePackage, CudaPackage):
     conflicts('+adol-c', when='^trilinos+chaco',
               msg='Symbol clash between the ADOL-C library and '
                   'Trilinos SEACAS Chaco.')
-    conflicts('+adol-c', when='^trilinos+netcdf',
+    conflicts('+adol-c', when='^trilinos+exodus',
               msg='Symbol clash between the ADOL-C library and '
                   'Trilinos Netcdf.')
-    conflicts('+adol-c', when='^trilinos+pnetcdf',
-              msg='Symbol clash between the ADOL-C library and '
-                  'Trilinos parallel Netcdf.')
 
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '

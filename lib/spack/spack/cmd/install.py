@@ -23,7 +23,6 @@ import spack.report
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
-
 description = "build and install packages"
 section = "build"
 level = "short"
@@ -199,9 +198,9 @@ def install_specs(cli_args, kwargs, specs):
     """Do the actual installation.
 
     Args:
-        cli_args (Namespace): argparse namespace with command arguments
+        cli_args (argparse.Namespace): argparse namespace with command arguments
         kwargs (dict):  keyword arguments
-        specs (list of tuples):  list of (abstract, concrete) spec tuples
+        specs (list):  list of (abstract, concrete) spec tuples
     """
 
     # handle active environment, if any

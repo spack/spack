@@ -2,17 +2,19 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import multiprocessing.pool
 import os
 import platform
 import re
 import shutil
-import multiprocessing.pool
+
+import macholib.mach_o
+import macholib.MachO
 from ordereddict_backport import OrderedDict
 
 import llnl.util.lang
 import llnl.util.tty as tty
-import macholib.MachO
-import macholib.mach_o
+
 import spack.architecture
 import spack.cmd
 import spack.repo
@@ -867,7 +869,7 @@ def is_relocatable(spec):
     """Returns True if an installed spec is relocatable.
 
     Args:
-        spec (Spec): spec to be analyzed
+        spec (spack.spec.Spec): spec to be analyzed
 
     Returns:
         True if the binaries of an installed spec

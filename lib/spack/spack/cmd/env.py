@@ -8,21 +8,20 @@ import shutil
 import sys
 from collections import namedtuple
 
-import llnl.util.tty as tty
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
-import spack.config
-import spack.schema.env
 import spack.cmd.common.arguments
-import spack.cmd.install
-import spack.cmd.uninstall
-import spack.cmd.modules
 import spack.cmd.common.arguments as arguments
+import spack.cmd.install
+import spack.cmd.modules
+import spack.cmd.uninstall
+import spack.config
 import spack.environment as ev
+import spack.schema.env
 import spack.util.string as string
-
 
 description = "manage virtual environments"
 section = "environments"
@@ -104,7 +103,8 @@ def env_activate(args):
         tty.die("No such environment: '%s'" % env)
 
     if spack_env == os.environ.get('SPACK_ENV'):
-        tty.die("Environment %s is already active" % args.activate_env)
+        tty.debug("Environment %s is already active" % args.activate_env)
+        return
 
     active_env = ev.get_env(namedtuple('args', ['env'])(env),
                             'activate')

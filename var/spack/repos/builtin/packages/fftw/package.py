@@ -5,7 +5,9 @@
 
 import os
 import os.path
+
 import llnl.util.lang
+
 from spack import *
 
 

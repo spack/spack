@@ -2,6 +2,7 @@ packages:
   all:
     providers:
       mpi: [openmpi, mpich]
+      blas: [openblas]
   externaltool:
     buildable: False
     externals:

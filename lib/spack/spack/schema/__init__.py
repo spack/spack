@@ -8,6 +8,7 @@ import six
 
 import llnl.util.lang
 import llnl.util.tty
+
 import spack.spec
 
 

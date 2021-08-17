@@ -12,10 +12,11 @@ class Rocfft(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
     git      = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('4.3.0', sha256='cb5b8f62330bc61b17a3a2fd1500068ee05d48cb51797901dd259dbc84610478')
     version('4.2.0', sha256='db29c9067f0cfa98bddd3574f6aa7200cfc790cc6da352d19e4696c3f3982163')
     version('4.1.0', sha256='df23fcb05aae72557461ae3687be7e3b8b78be4132daf1aa9dc07339f4eba0cc')
     version('4.0.0', sha256='d1d10d270f822e0bab64307313ef163ba449b058bf3352962bbb26d4f4db89d0')
@@ -38,12 +39,9 @@ class Rocfft(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-
-    for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -65,5 +63,9 @@ class Rocfft(CMakePackage):
 
         if tgt_sram[0] != 'none' and '@3.9.0:' in self.spec:
             args.append(self.define('AMDGPU_TARGETS_SRAM_ECC', ";".join(tgt_sram)))
+
+        # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

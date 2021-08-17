@@ -9,9 +9,9 @@ import sys
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack.environment as ev
 import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 import spack.repo
 import spack.store
 from spack.filesystem_view import YamlFilesystemView

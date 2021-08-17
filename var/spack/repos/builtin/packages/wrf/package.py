@@ -3,17 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
-from sys import stdout
 import glob
+import re
+import time
+from fcntl import F_GETFL, F_SETFL, fcntl
 from os import O_NONBLOCK, rename
 from os.path import basename
-from fcntl import fcntl, F_GETFL, F_SETFL
-from subprocess import Popen, PIPE
-import time
+from subprocess import PIPE, Popen
+from sys import stdout
+
 from llnl.util import tty
-import re
+
+from spack import *
 
 re_optline = re.compile(r'\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+')
 re_paroptname = re.compile(r'\((serial|smpar|dmpar|dm\+sm)\)')
@@ -107,6 +108,7 @@ class Wrf(Package):
     patch("patches/3.9/add_aarch64.patch", when="@3.9.1.1")
     patch("patches/3.9/configure_aocc_2.3.patch", when="@3.9.1.1 %aocc@:2.4.0")
     patch("patches/3.9/configure_aocc_3.0.patch", when="@3.9.1.1 %aocc@3.0.0")
+    patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0")
 
     # These patches deal with netcdf & netcdf-fortran being two diff things
     # Patches are based on:
@@ -132,7 +134,8 @@ class Wrf(Package):
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
     patch("patches/4.2/add_aarch64.patch", when="@4.2")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
-    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0")
+    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
+    patch("patches/4.2/hdf5_fix.patch", when="@4.2 %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
 
     depends_on("pkgconfig", type=("build"))
@@ -338,7 +341,7 @@ class Wrf(Package):
 
     @run_after("configure")
     def patch_for_libmvec(self):
-        if self.spec.satisfies("@3.9.1.1 %aocc@:3.0"):
+        if self.spec.satisfies("@3.9.1.1 %aocc"):
             fp = self.package_dir + "/patches/3.9/aocc_lmvec.patch"
             which('patch')('-s', '-p1', '-i', '{0}'.format(fp), '-d', '.')
 

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
+
 from spack.spec import Spec
 
 

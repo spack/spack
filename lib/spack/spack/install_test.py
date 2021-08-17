@@ -12,12 +12,10 @@ import tty
 
 import llnl.util.filesystem as fs
 
-from spack.spec import Spec
-
 import spack.error
 import spack.util.prefix
 import spack.util.spack_json as sjson
-
+from spack.spec import Spec
 
 test_suite_filename = 'test_suite.lock'
 results_filename = 'results.txt'
@@ -30,7 +28,7 @@ def get_escaped_text_output(filename):
         filename (str): path to the file
 
     Returns:
-        (list of str): escaped text lines read from the file
+        list: escaped text lines read from the file
     """
     with open(filename, 'r') as f:
         # Ensure special characters are escaped as needed

@@ -6,7 +6,7 @@
 import os
 
 from spack import *
-from spack.package_test import compile_c_and_execute, compare_output_file
+from spack.package_test import compare_output_file, compile_c_and_execute
 
 
 class Pocl(CMakePackage):

@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class Curl(AutotoolsPackage):
@@ -47,6 +48,9 @@ class Curl(AutotoolsPackage):
     variant('libssh',     default=False, description='enable libssh support')  # , when='7.58:')
     variant('darwinssl',  default=sys.platform == 'darwin', description="use Apple's SSL/TLS implementation")
     variant('gssapi',     default=False, description='enable Kerberos support')
+    variant('librtmp',    default=False, description='enable Rtmp support')
+    variant('ldap',       default=False, description='enable ldap support')
+    variant('libidn2',    default=False,  description='enable libidn2 support')
 
     conflicts('+libssh', when='@:7.57.99')
     # on OSX and --with-ssh the configure steps fails with
@@ -59,7 +63,7 @@ class Curl(AutotoolsPackage):
     conflicts('platform=linux', when='+darwinssl')
 
     depends_on('openssl', when='~darwinssl')
-    depends_on('libidn2')
+    depends_on('libidn2', when='+libidn2')
     depends_on('zlib')
     depends_on('nghttp2', when='+nghttp2')
     depends_on('libssh2', when='+libssh2')
@@ -69,18 +73,31 @@ class Curl(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = ['--with-zlib={0}'.format(spec['zlib'].prefix)]
-        args.append('--with-libidn2={0}'.format(spec['libidn2'].prefix))
+        args = [
+            '--with-zlib=' + spec['zlib'].prefix,
+            # Prevent unintentional linking against system libraries: we could
+            # add variants for these in the future
+            '--without-brotli',
+            '--without-libgsasl',
+            '--without-libmetalink',
+            '--without-libpsl',
+            '--without-zstd',
+        ]
 
         if spec.satisfies('+darwinssl'):
             args.append('--with-darwinssl')
         else:
-            args.append('--with-ssl={0}'.format(spec['openssl'].prefix))
+            args.append('--with-ssl=' + spec['openssl'].prefix)
 
         if spec.satisfies('+gssapi'):
-            args.append('--with-gssapi={0}'.format(spec['krb5'].prefix))
+            args.append('--with-gssapi=' + spec['krb5'].prefix)
+        else:
+            args.append('--without-gssapi')
 
+        args += self.with_or_without('libidn2', 'prefix')
+        args += self.with_or_without('librtmp')
         args += self.with_or_without('nghttp2')
         args += self.with_or_without('libssh2')
         args += self.with_or_without('libssh')
+        args += self.enable_or_disable('ldap')
         return args
