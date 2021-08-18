@@ -35,6 +35,7 @@ class Trilinos(CMakePackage, CudaPackage):
     # ###################### Versions ##########################
 
     version('master', branch='master')
+    version('develop', branch='develop')
     version('13.0.1', commit='4796b92fb0644ba8c531dd9953e7a4878b05c62d')  # tag trilinos-release-13-0-1
     version('13.0.0', commit='9fec35276d846a667bc668ff4cbdfd8be0dfea08')  # tag trilinos-release-13-0-0
     version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1
@@ -214,12 +215,6 @@ class Trilinos(CMakePackage, CudaPackage):
              placement='DataTransferKit',
              submodules=True,
              when='+dtk @12.18:12.18.99')
-    resource(name='dtk',
-             git='https://github.com/ornl-cees/DataTransferKit.git',
-             branch='master',
-             placement='DataTransferKit',
-             submodules=True,
-             when='+dtk @master')
     resource(name='scorec',
              git='https://github.com/SCOREC/core.git',
              commit='73c16eae073b179e45ec625a5abe4915bc589af2',  # tag v2.2.5
@@ -287,10 +282,10 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+tempus', when='~nox')
     conflicts('+zoltan2', when='~zoltan')
 
-    # Only allow DTK with Trilinos 12
+    # Only allow DTK with Trilinos 12.14, 12.18
     conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
-    conflicts('+dtk', when='@:12.12.99,master')
+    conflicts('+dtk', when='@:12.12,13:')
 
     # Only allow Mesquite with Trilinos 12.12 and up, and master
     conflicts('+mesquite', when='@:12.10.99,master')
@@ -317,7 +312,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+cuda_rdc', when='~cuda')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
-    conflicts('cxxstd=11', when='@master')
+    conflicts('cxxstd=11', when='@master:')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
@@ -370,14 +365,14 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
     depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
     depends_on('superlu-dist@5.4:6.2.0', when='@12.12.2:13.0.0+superlu-dist')
-    depends_on('superlu-dist@6.3.0:', when='@13.0.1:+superlu-dist')
-    depends_on('superlu-dist@develop', when='@master+superlu-dist')
+    depends_on('superlu-dist@6.3.0:', when='@13.0.1:99 +superlu-dist')
+    depends_on('superlu-dist@develop', when='@master: +superlu-dist')
     depends_on('superlu+pic@4.3', when='+superlu')
     depends_on('strumpack+shared', when='+strumpack')
     depends_on('scalapack', when='+strumpack+mpi')
     # Trilinos can not be built against 64bit int hypre
     depends_on('hypre~internal-superlu~int64', when='+hypre')
-    depends_on('hypre@develop~internal-superlu', when='@master+hypre')
+    depends_on('hypre@develop', when='@master: +hypre')
     depends_on('python', when='+python')
     depends_on('py-mpi4py', when='+mpi +python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))

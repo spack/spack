@@ -61,7 +61,7 @@ class Xsdk(BundlePackage):
     depends_on('superlu-dist@6.1.0', when='@0.4.0')
     depends_on('superlu-dist@5.2.2', when='@0.3.0')
 
-    depends_on('trilinos@master+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan+zoltan2+amesos2~exodus~dtk+intrepid2+shards+stratimikos gotype=int cxxstd=14',
+    depends_on('trilinos@develop+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan+zoltan2+amesos2~exodus~dtk+intrepid2+shards+stratimikos gotype=int cxxstd=14',
                when='@develop +trilinos')
     depends_on('trilinos@13.0.1+hypre+superlu-dist+hdf5~mumps+boost~suite-sparse+tpetra+nox+ifpack2+zoltan+zoltan2+amesos2~exodus~dtk+intrepid2+shards gotype=int',
                when='@0.6.0 +trilinos')
