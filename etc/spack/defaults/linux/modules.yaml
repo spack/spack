@@ -14,9 +14,8 @@
 #   ~/.spack/modules.yaml
 # -------------------------------------------------------------------------
 modules:
-  default:
-    prefix_inspections:
-      lib:
-        - LD_LIBRARY_PATH
-      lib64:
-        - LD_LIBRARY_PATH
+  prefix_inspections:
+    lib:
+      - LD_LIBRARY_PATH
+    lib64:
+      - LD_LIBRARY_PATH

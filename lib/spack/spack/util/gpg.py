@@ -13,7 +13,6 @@ import spack.paths
 import spack.util.executable
 import spack.version
 
-
 #: Executable instance for "gpg", initialized lazily
 GPG = None
 #: Executable instance for "gpgconf", initialized lazily

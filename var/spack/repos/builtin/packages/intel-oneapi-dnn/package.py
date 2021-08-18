@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from sys import platform
+import platform
 
 from spack import *
 
@@ -12,11 +12,15 @@ from spack import *
 class IntelOneapiDnn(IntelOneApiLibraryPackage):
     """Intel oneAPI DNN."""
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onednn.html'
 
-    if platform == 'linux':
+    if platform.system() == 'Linux':
+        version('2021.3.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17923/l_onednn_p_2021.3.0.344_offline.sh',
+                sha256='1521f6cbffcf9ce0c7b5dfcf1a2546a4a0c8d8abc99f3011709039aaa9e0859a',
+                expand=False)
         version('2021.2.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17751/l_onednn_p_2021.2.0.228_offline.sh',
                 sha256='62121a3355298211a124ff4e71c42fc172bf1061019be6c6120830a1a502aa88',

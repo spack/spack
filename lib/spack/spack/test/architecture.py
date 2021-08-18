@@ -14,10 +14,10 @@ import pytest
 
 import spack.architecture
 import spack.concretize
-from spack.spec import Spec
 from spack.platforms.cray import Cray
-from spack.platforms.linux import Linux
 from spack.platforms.darwin import Darwin
+from spack.platforms.linux import Linux
+from spack.spec import Spec
 
 
 def test_dict_functions_for_architecture():

@@ -1,0 +1,32 @@
+bootstrap:
+  # If set to false Spack will not bootstrap missing software,
+  # but will instead raise an error.
+  enable: true
+  # Root directory for bootstrapping work. The software bootstrapped
+  # by Spack is installed in a "store" subfolder of this root directory
+  root: ~/.spack/bootstrap
+  # Methods that can be used to bootstrap software. Each method may or
+  # may not be able to bootstrap all of the software that Spack needs,
+  # depending on its type.
+  sources:
+  - name: 'github-actions'
+    type: buildcache
+    description: |
+      Buildcache generated from a public workflow using Github Actions.
+      The sha256 checksum of binaries is checked before installation.
+    info:
+      url: https://mirror.spack.io/bootstrap/github-actions/v0.1
+      homepage: https://github.com/alalazo/spack-bootstrap-mirrors
+      releases: https://github.com/alalazo/spack-bootstrap-mirrors/releases
+  # This method is just Spack bootstrapping the software it needs from sources.
+  # It has been added here so that users can selectively disable bootstrapping
+  # from sources by "untrusting" it.
+  - name: spack-install
+    type: install
+    description: |
+      Specs built from sources by Spack. May take a long time.
+  trusted:
+    # By default we trust bootstrapping from sources and from binaries
+    # produced on Github via the workflow
+    github-actions: true
+    spack-install: true

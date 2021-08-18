@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from sys import platform
+import platform
 
 from spack import *
 
@@ -12,11 +12,15 @@ from spack import *
 class IntelOneapiMkl(IntelOneApiLibraryPackage):
     """Intel oneAPI MKL."""
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html'
 
-    if platform == 'linux':
+    if platform.system() == 'Linux':
+        version('2021.3.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17901/l_onemkl_p_2021.3.0.520_offline.sh',
+                sha256='a06e1cdbfd8becc63440b473b153659885f25a6e3c4dcb2907ad9cd0c3ad59ce',
+                expand=False)
         version('2021.2.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17757/l_onemkl_p_2021.2.0.296_offline.sh',
                 sha256='816e9df26ff331d6c0751b86ed5f7d243f9f172e76f14e83b32bf4d1d619dbae',

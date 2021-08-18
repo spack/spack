@@ -6,6 +6,7 @@
 
 import os
 import sys
+
 from spack import *
 
 
@@ -42,6 +43,11 @@ class Vtk(CMakePackage):
     variant('mpi', default=True, description='Enable MPI support')
 
     patch('gcc.patch', when='@6.1.0')
+    # patch to fix some missing stl includes
+    # which lead to build errors on newer compilers
+    # version range to be updated once the linked patch is released
+    patch('https://gitlab.kitware.com/vtk/vtk/-/commit/e066c3f4fbbfe7470c6207db0fc3f3952db633c.diff',
+          when="@9:", sha256='0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d')
 
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change
@@ -89,6 +95,9 @@ class Vtk(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     depends_on('expat')
+    # See <https://gitlab.kitware.com/vtk/vtk/-/issues/18033> for why vtk doesn't
+    # work yet with freetype 2.10.3 (including possible patches)
+    depends_on('freetype @:2.10.2')
     depends_on('freetype')
     depends_on('glew')
     # set hl variant explicitly, similar to issue #7145
@@ -109,6 +118,12 @@ class Vtk(CMakePackage):
 
     # For finding Fujitsu-MPI wrapper commands
     patch('find_fujitsu_mpi.patch', when='@:8.2.0%fj')
+    # Freetype@2.10.3 no longer exports FT_CALLBACK_DEF, this
+    # patch replaces FT_CALLBACK_DEF with simple extern "C"
+    # See https://gitlab.kitware.com/vtk/vtk/-/issues/18033
+    patch('https://gitlab.kitware.com/vtk/vtk/uploads/c6fa799a1a028b8f8a728a40d26d3fec/vtk-freetype-2.10.3-replace-FT_CALLBACK_DEF.patch',
+          sha256='eefda851f844e8a1dfb4ebd8a9ff92d2b78efc57f205774052c5f4c049cc886a',
+          when='^freetype@2.10.3:')
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"

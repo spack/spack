@@ -20,6 +20,16 @@ class PyProtobuf(PythonPackage):
     variant('cpp', default=False,
             description='Enable the cpp implementation')
 
+    version('3.17.3',  sha256='3253c6d17ec0bb6f6382e555cf5ca0a9ffab8d81b691f100f96ce9f5e753018e')
+    version('3.17.2',  sha256='1edd5de2cf5bc3807ba14abdf475c3e7597007f116a68702be5d59bb3eb77b0c')
+    version('3.17.1',  sha256='644b759b76824b13397f1ad6708e720edf4aea2a2b1570ea06824df620d978c7')
+    version('3.17.0',  sha256='3011bfbc18d1c695ee393cb0dc1042282cfa33ef6573fe82732aefc9f7286121')
+    version('3.16.0',  sha256='7f1b19ff546e1f7417361c70028e6da7a4978eaac254e8cc67a570f6459ff9dd')
+    version('3.15.8',  sha256='26496db804123bc8b058054e8b1fabc592e7648729e4f92ff60d120c7803eaeb')
+    version('3.15.7',  sha256='2d03fc2591543cd2456d0b72230b50c4519546a8d379ac6fd3ecd84c6df61e5d')
+    version('3.15.6',  sha256='2b974519a2ae83aa1e31cff9018c70bbe0e303a46a598f982943c49ae1d4fcd3')
+    version('3.15.5',  sha256='be8a929c6178bb6cbe9e2c858be62fa08966a39ae758a8493a88f0ed1efb6097')
+    version('3.15.1',  sha256='824dbae3390fcc3ea1bf96748e6da951a601802894cf7e1465e72b4732538cab')
     version('3.12.2',  sha256='49ef8ab4c27812a89a76fa894fe7a08f42f2147078392c0dee51d4a444ef6df5')
     version('3.11.2',  sha256='3d7a7d8d20b4e7a8f63f62de2d192cfd8b7a53c56caba7ece95367ca2b80c574')
     version('3.11.1',  sha256='aecdf12ef6dc7fd91713a6da93a86c2f2a8fe54840a3b1670853a2b7402e77c9')

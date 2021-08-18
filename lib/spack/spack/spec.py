@@ -76,30 +76,30 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
-import sys
 import collections
 import itertools
 import operator
 import os
 import re
+import sys
 
-import six
 import ruamel.yaml as yaml
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
-import llnl.util.tty.color as clr
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
 
-import spack.paths
 import spack.architecture
 import spack.compiler
-import spack.compilers as compilers
+import spack.compilers
 import spack.config
 import spack.dependency as dp
 import spack.error
 import spack.hash_types as ht
 import spack.parse
+import spack.paths
 import spack.provider_index
 import spack.repo
 import spack.solver
@@ -115,7 +115,6 @@ import spack.util.string
 import spack.variant as vt
 import spack.version as vn
 
-
 if sys.version_info >= (3, 3):
     from collections.abc import Mapping  # novm
 else:
@@ -123,7 +122,9 @@ else:
 
 
 __all__ = [
+    'CompilerSpec',
     'Spec',
+    'SpecParser',
     'parse',
     'SpecParseError',
     'DuplicateDependencyError',
@@ -144,7 +145,9 @@ __all__ = [
     'AmbiguousHashError',
     'InvalidHashError',
     'NoSuchHashError',
-    'RedundantSpecError']
+    'RedundantSpecError',
+    'SpecDeprecatedError',
+]
 
 #: Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
@@ -1031,9 +1034,8 @@ class Spec(object):
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
 
-    def __init__(self, spec_like=None,
-                 normal=False, concrete=False, external_path=None,
-                 external_modules=None, full_hash=None):
+    def __init__(self, spec_like=None, normal=False,
+                 concrete=False, external_path=None, external_modules=None):
         """Create a new Spec.
 
         Arguments:
@@ -1047,8 +1049,6 @@ class Spec(object):
         self._concrete = concrete
         self.external_path = external_path
         self.external_module = external_module
-        self._full_hash = full_hash
-
         """
 
         # Copy if spec_like is a Spec.
@@ -1069,6 +1069,8 @@ class Spec(object):
 
         self._hash = None
         self._build_hash = None
+        self._full_hash = None
+        self._package_hash = None
         self._dunder_hash = None
         self._package = None
 
@@ -1083,7 +1085,6 @@ class Spec(object):
         self._concrete = concrete
         self.external_path = external_path
         self.external_modules = Spec._format_module_list(external_modules)
-        self._full_hash = full_hash
 
         # Older spack versions did not compute full_hash or build_hash,
         # and we may not have the necessary information to recompute them
@@ -1498,10 +1499,12 @@ class Spec(object):
         """Utility method for computing different types of Spec hashes.
 
         Arguments:
-            hash (SpecHashDescriptor): type of hash to generate.
+            hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
         """
         # TODO: curently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
+        if hash.override is not None:
+            return hash.override(self)
         node_dict = self.to_node_dict(hash=hash)
         yaml_text = syaml.dump(node_dict, default_flow_style=True)
         return spack.util.hash.b32_hash(yaml_text)
@@ -1514,7 +1517,7 @@ class Spec(object):
         in the supplied attribute on this spec.
 
         Arguments:
-            hash (SpecHashDescriptor): type of hash to generate.
+            hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
         """
         if not hash.attr:
             return self._spec_hash(hash)[:length]
@@ -1528,6 +1531,10 @@ class Spec(object):
                 setattr(self, hash.attr, hash_string)
 
             return hash_string[:length]
+
+    def package_hash(self):
+        """Compute the hash of the contents of the package for this node"""
+        return self._cached_hash(ht.package_hash)
 
     def dag_hash(self, length=None):
         """This is Spack's default hash, used to identify installations.
@@ -1612,7 +1619,7 @@ class Spec(object):
         hashes).
 
         Arguments:
-            hash (SpecHashDescriptor) type of hash to generate.
+            hash (spack.hash_types.SpecHashDescriptor) type of hash to generate.
          """
         d = syaml.syaml_dict()
 
@@ -1654,7 +1661,7 @@ class Spec(object):
                 d['patches'] = variant._patches_in_order_of_appearance
 
         if hash.package_hash:
-            package_hash = self.package.content_hash()
+            package_hash = self.package_hash()
 
             # Full hashes are in bytes
             if (not isinstance(package_hash, six.text_type)
@@ -1823,6 +1830,7 @@ class Spec(object):
         spec._hash = node.get('hash', None)
         spec._build_hash = node.get('build_hash', None)
         spec._full_hash = node.get('full_hash', None)
+        spec._package_hash = node.get('package_hash', None)
 
         if 'version' in node or 'versions' in node:
             spec.versions = vn.VersionList.from_dict(node)
@@ -2967,7 +2975,7 @@ class Spec(object):
 
             # validate compiler in addition to the package name.
             if spec.compiler:
-                if not compilers.supported(spec.compiler):
+                if not spack.compilers.supported(spec.compiler):
                     raise UnsupportedCompilerError(spec.compiler.name)
 
             # Ensure correctness of variants (if the spec is not virtual)
@@ -2983,7 +2991,7 @@ class Spec(object):
             spec (Spec): spec to be analyzed
 
         Raises:
-            UnknownVariantError: on the first unknown variant found
+            spack.variant.UnknownVariantError: on the first unknown variant found
         """
         pkg_cls = spec.package_class
         pkg_variants = pkg_cls.variants
@@ -3442,12 +3450,14 @@ class Spec(object):
             self._dunder_hash = other._dunder_hash
             self._normal = other._normal
             self._full_hash = other._full_hash
+            self._package_hash = other._package_hash
         else:
             self._hash = None
             self._build_hash = None
             self._dunder_hash = None
             self._normal = False
             self._full_hash = None
+            self._package_hash = None
 
         return changed
 
@@ -4282,19 +4292,22 @@ class Spec(object):
         # _dependents of these specs should not be trusted.
         # Variants may also be ignored here for now...
 
+        # Keep all cached hashes because we will invalidate the ones that need
+        # invalidating later, and we don't want to invalidate unnecessarily
+
         if transitive:
-            self_nodes = dict((s.name, s.copy(deps=False))
+            self_nodes = dict((s.name, s.copy(deps=False, caches=True))
                               for s in self.traverse(root=True)
                               if s.name not in other)
-            other_nodes = dict((s.name, s.copy(deps=False))
+            other_nodes = dict((s.name, s.copy(deps=False, caches=True))
                                for s in other.traverse(root=True))
         else:
             # If we're not doing a transitive splice, then we only want the
             # root of other.
-            self_nodes = dict((s.name, s.copy(deps=False))
+            self_nodes = dict((s.name, s.copy(deps=False, caches=True))
                               for s in self.traverse(root=True)
                               if s.name != other.name)
-            other_nodes = {other.name: other.copy(deps=False)}
+            other_nodes = {other.name: other.copy(deps=False, caches=True)}
 
         nodes = other_nodes.copy()
         nodes.update(self_nodes)
@@ -4315,17 +4328,41 @@ class Spec(object):
                 if any(dep not in other_nodes for dep in dependencies):
                     nodes[name].build_spec = other[name].build_spec
 
-        # Clear cached hashes
-        nodes[self.name].clear_cached_hashes()
+        ret = nodes[self.name]
+
+        # Clear cached hashes for all affected nodes
+        # Do not touch unaffected nodes
+        for dep in ret.traverse(root=True, order='post'):
+            opposite = other_nodes if dep.name in self_nodes else self_nodes
+            if any(name in dep for name in opposite.keys()):
+                # Record whether hashes are already cached
+                # So we don't try to compute a hash from insufficient
+                # provenance later
+                has_build_hash = getattr(dep, ht.build_hash.attr, None)
+                has_full_hash = getattr(dep, ht.full_hash.attr, None)
+
+                # package hash cannot be affected by splice
+                dep.clear_cached_hashes(ignore=['_package_hash'])
+
+                # Since this is a concrete spec, we want to make sure hashes
+                # are cached writing specs only writes cached hashes in case
+                # the spec is too old to have full provenance for these hashes,
+                # so we can't rely on doing it at write time.
+                if has_build_hash:
+                    _ = dep.build_hash()
+                if has_full_hash:
+                    _ = dep.full_hash()
+
         return nodes[self.name]
 
-    def clear_cached_hashes(self):
+    def clear_cached_hashes(self, ignore=()):
         """
         Clears all cached hashes in a Spec, while preserving other properties.
         """
         for attr in ht.SpecHashDescriptor.hash_types:
-            if hasattr(self, attr):
-                setattr(self, attr, None)
+            if attr not in ignore:
+                if hasattr(self, attr):
+                    setattr(self, attr, None)
 
     def __hash__(self):
         # If the spec is concrete, we leverage the DAG hash and just use
@@ -4404,6 +4441,7 @@ _lexer = SpecLexer()
 
 
 class SpecParser(spack.parse.Parser):
+    """Parses specs."""
 
     def __init__(self, initial_spec=None):
         """Construct a new SpecParser.

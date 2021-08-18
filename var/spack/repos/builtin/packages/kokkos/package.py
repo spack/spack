@@ -2,8 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
 import os.path
+
+from spack import *
 
 
 class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
@@ -196,7 +197,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     variant("pic", default=False, description="Build position independent code")
 
     # nvcc does not currently work with C++17 or C++20
-    conflicts("+cuda", when="std=17")
+    conflicts("+cuda", when="std=17 ^cuda@:10.99.99")
     conflicts("+cuda", when="std=20")
 
     variant('shared', default=True, description='Build shared libraries')

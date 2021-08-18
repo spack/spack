@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from sys import platform
+import platform
 
 from spack import *
 
@@ -11,11 +11,11 @@ from spack import *
 class IntelOneapiVpl(IntelOneApiLibraryPackage):
     """Intel oneAPI VPL."""
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onevpl.html'
 
-    if platform == 'linux':
+    if platform.system() == 'Linux':
         version('2021.2.2',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17733/l_oneVPL_p_2021.2.2.212_offline.sh',
                 sha256='21106ba5cde22f3e31fd55280fbccf263508fa054030f12d5dff4a5379ef3bb7',

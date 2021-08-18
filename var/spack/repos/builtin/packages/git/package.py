@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-import re
 import os
+import re
+import sys
+
 from spack import *
 
 
@@ -259,7 +260,8 @@ class Git(AutotoolsPackage):
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
-        match = re.search(r'git version (\S+)', output)
+        match = re.search(
+            spack.fetch_strategy.GitFetchStrategy.git_version_re, output)
         return match.group(1) if match else None
 
     @classmethod

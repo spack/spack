@@ -4,12 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import os.path
+
 import spack.container
+import spack.monitor
 
 description = ("creates recipes to build images for different"
                " container runtimes")
 section = "container"
 level = "long"
+
+
+def setup_parser(subparser):
+    monitor_group = spack.monitor.get_monitor_group(subparser)  # noqa
 
 
 def containerize(parser, args):
@@ -21,5 +27,12 @@ def containerize(parser, args):
 
     config = spack.container.validate(config_file)
 
+    # If we have a monitor request, add monitor metadata to config
+    if args.use_monitor:
+        config['spack']['monitor'] = {"disable_auth": args.monitor_disable_auth,
+                                      "host": args.monitor_host,
+                                      "keep_going": args.monitor_keep_going,
+                                      "prefix": args.monitor_prefix,
+                                      "tags": args.monitor_tags}
     recipe = spack.container.recipe(config)
     print(recipe)

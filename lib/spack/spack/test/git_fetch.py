@@ -9,15 +9,15 @@ import shutil
 
 import pytest
 
-from llnl.util.filesystem import working_dir, touch, mkdirp
+from llnl.util.filesystem import mkdirp, touch, working_dir
 
-import spack.repo
 import spack.config
+import spack.repo
+from spack.fetch_strategy import GitFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.version import ver
-from spack.fetch_strategy import GitFetchStrategy
 from spack.util.executable import which
+from spack.version import ver
 
 pytestmark = pytest.mark.skipif(
     not which('git'), reason='requires git to be installed')
@@ -37,7 +37,8 @@ def git_version(request, monkeypatch):
     use the backward-compatibility code paths with newer git versions.
     """
     git = which('git', required=True)
-    real_git_version = ver(git('--version', output=str).lstrip('git version '))
+    real_git_version = (
+        spack.fetch_strategy.GitFetchStrategy.version_from_git(git))
 
     if request.param is None:
         # Don't patch; run with the real git_version method.

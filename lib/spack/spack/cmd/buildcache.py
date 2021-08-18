@@ -2,16 +2,18 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import argparse
 import os
 import shutil
 import sys
 
 import llnl.util.tty as tty
+
 import spack.architecture
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
@@ -19,16 +21,12 @@ import spack.relocate
 import spack.repo
 import spack.spec
 import spack.store
-import spack.config
-import spack.repo
-import spack.store
+import spack.util.crypto
 import spack.util.url as url_util
-
+from spack.cmd import display_specs
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.util.string import plural
-
-from spack.cmd import display_specs
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -100,6 +98,8 @@ def setup_parser(subparser):
     install.add_argument('-o', '--otherarch', action='store_true',
                          help="install specs from other architectures" +
                               " instead of default platform and OS")
+    # This argument is needed by the bootstrapping logic to verify checksums
+    install.add_argument('--sha256', help=argparse.SUPPRESS)
 
     arguments.add_common_arguments(install, ['specs'])
     install.set_defaults(func=installtarball)
@@ -242,12 +242,13 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
        concretized specs given from cli
 
     Args:
-        pkgs (string): spec to be matched against installed packages
+        pkgs (str): spec to be matched against installed packages
         allow_multiple_matches (bool): if True multiple matches are admitted
-        env (Environment): active environment, or ``None`` if there is not one
+        env (spack.environment.Environment or None): active environment, or ``None``
+            if there is not one
 
     Return:
-        list of specs
+        list: list of specs
     """
     hashes = env.all_hashes() if env else None
 
@@ -497,6 +498,15 @@ def install_tarball(spec, args):
     else:
         tarball = bindist.download_tarball(spec)
         if tarball:
+            if args.sha256:
+                checker = spack.util.crypto.Checker(args.sha256)
+                msg = ('cannot verify checksum for "{0}"'
+                       ' [expected={1}]')
+                msg = msg.format(tarball, args.sha256)
+                if not checker.check(tarball):
+                    raise spack.binary_distribution.NoChecksumException(msg)
+                tty.debug('Verified SHA256 checksum of the build cache')
+
             tty.msg('Installing buildcache for spec %s' % spec.format())
             bindist.extract_tarball(spec, tarball, args.allow_root,
                                     args.unsigned, args.force)

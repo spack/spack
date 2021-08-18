@@ -27,9 +27,10 @@ class Datatransferkit(CMakePackage):
             description='enable the build of shared lib')
 
     depends_on('arborx@1.0:', when='+external-arborx')
+    depends_on('boost')
     depends_on('cmake', type='build')
-    depends_on('trilinos+intrepid2+shards~dtk', when='+serial')
-    depends_on('trilinos+intrepid2+shards+openmp~dtk', when='+openmp')
+    depends_on('trilinos+intrepid2+shards~dtk')
+    depends_on('trilinos+openmp', when='+openmp')
     depends_on('trilinos+stratimikos+belos', when='@master')
     depends_on('trilinos@13:13.99', when='@3.1-rc2')
 

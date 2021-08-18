@@ -7,14 +7,15 @@
 This module contains routines related to the module command for accessing and
 parsing environment modules.
 """
-import subprocess
-import os
-import sys
 import json
+import os
 import re
+import subprocess
+import sys
+
+import llnl.util.tty as tty
 
 import spack
-import llnl.util.tty as tty
 
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.
@@ -95,6 +96,7 @@ def load_module(mod):
     load that module. It then loads the provided module. Depends on the
     modulecmd implementation of modules used in cray and lmod.
     """
+    tty.debug("module_cmd.load_module: {0}".format(mod))
     # Read the module and remove any conflicting modules
     # We do this without checking that they are already installed
     # for ease of programming because unloading a module that is not

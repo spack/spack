@@ -7,10 +7,10 @@ import os
 
 import llnl.util.tty as tty
 
-import spack.environment as ev
-import spack.repo
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.repo
 import spack.stage
 
 description = "expand downloaded archive in preparation for install"
@@ -40,6 +40,8 @@ def stage(parser, args):
             for spec in env.specs_by_hash.values():
                 for dep in spec.traverse():
                     dep.package.do_stage()
+                    tty.msg("Staged {0} in {1}".format(dep.package.name,
+                                                       dep.package.stage.path))
             return
         else:
             tty.die("`spack stage` requires a spec or an active environment")
@@ -62,3 +64,4 @@ def stage(parser, args):
         if custom_path:
             package.path = custom_path
         package.do_stage()
+        tty.msg("Staged {0} in {1}".format(package.name, package.stage.path))

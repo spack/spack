@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
-from os import path
+import platform
 import subprocess
-from sys import platform
+from os import path
 
 from spack import *
 
@@ -15,16 +15,26 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     """Intel OneAPI compilers
 
     Provides Classic and Beta compilers for: Fortran, C, C++"""
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
     depends_on('patchelf', type='build')
 
-    if platform == 'linux':
+    if platform.system() == 'Linux':
+        version('2021.3.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17928/l_dpcpp-cpp-compiler_p_2021.3.0.3168_offline.sh',
+                sha256='f848d81b7cabc76c2841c9757abb2290921efd7b82491d830605f5785600e7a1',
+                expand=False)
+        resource(name='fortran-installer',
+                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17959/l_fortran-compiler_p_2021.3.0.3168_offline.sh',
+                 sha256='c4553f7e707be8e8e196f625e4e7fbc8eff5474f64ab85fc7146b5ed53ebc87c',
+                 expand=False,
+                 placement='fortran-installer',
+                 when='@2021.3.0')
         version('2021.2.0',
-                sha256='5d01cbff1a574c3775510cd97ffddd27fdf56d06a6b0c89a826fb23da4336d59',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17749/l_dpcpp-cpp-compiler_p_2021.2.0.118_offline.sh',
+                sha256='5d01cbff1a574c3775510cd97ffddd27fdf56d06a6b0c89a826fb23da4336d59',
                 expand=False)
         resource(name='fortran-installer',
                  url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17756/l_fortran-compiler_p_2021.2.0.136_offline.sh',

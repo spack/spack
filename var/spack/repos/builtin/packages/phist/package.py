@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import spack.hooks.sbang as sbang
+from spack import *
 
 
 class Phist(CMakePackage):
@@ -124,7 +124,7 @@ class Phist(CMakePackage):
     depends_on('eigen', when='kernel_lib=eigen')
     depends_on('ghost', when='kernel_lib=ghost')
 
-    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
+    depends_on('trilinos+anasazi+belos', when='+trilinos')
     depends_on('parmetis+int64', when='+parmetis+int64')
     depends_on('parmetis~int64', when='+parmetis~int64')
 

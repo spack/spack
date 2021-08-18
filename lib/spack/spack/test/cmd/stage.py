@@ -4,12 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 import pytest
-from spack.main import SpackCommand
+
 import spack.environment as ev
 import spack.repo
+from spack.main import SpackCommand
 from spack.version import Version
-
 
 stage = SpackCommand('stage')
 env = SpackCommand('env')
