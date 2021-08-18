@@ -11,9 +11,9 @@ from spack import *
 class Spykfunc(PythonPackage):
     """Spykfunc - Spark functionalizer developed by Blue Brain Project, EPFL
     """
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/Spykfunc"
-    url      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
-    git      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/circuit-building/spykfunc"
+    url      = "git@bbpgitlab.epfl.ch:hpc/circuit-building/spykfunc.git"
+    git      = "git@bbpgitlab.epfl.ch:hpc/circuit-building/spykfunc.git"
 
     version('develop', submodules=True, get_full_repo=True)
     version('0.16.99', tag='v0.16.99', submodules=True, get_full_repo=True)
