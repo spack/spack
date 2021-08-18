@@ -371,11 +371,14 @@ class URLFetchStrategy(FetchStrategy):
 
     def _check_existing_url_by_header_request(self, url):
         tty.debug('Checking existence of {0}'.format(url))
-        curl = self.curl
-        # Try a header request to the url
-        curl_args = ['--stderr', '-', '-s', '-f', '-I', url]
-        _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
-        return curl.returncode == 0
+        if spack.config.get('config:url_fetch_method') == 'curl':
+            curl = self.curl
+            # Try a header request to the url
+            curl_args = ['--stderr', '-', '-s', '-f', '-I', url]
+            _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
+            return curl.returncode == 0
+        else:
+            return False
 
     def _fetch_from_url(self, url):
         if spack.config.get('config:url_fetch_method') == 'curl':
