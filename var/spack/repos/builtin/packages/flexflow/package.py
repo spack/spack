@@ -47,7 +47,19 @@ class Flexflow(CMakePackage):
   depends_on('ucx', when='conduit=ucx')
   depends_on('mpi', when='conduit=mpi')
   
-  variant('max_dims', values=int, default=4, description="Set max number of dimensions for logical regions.")
+  cuda_arch_list = ('0', '60', '70', '75', '80')
+  max_dims_list = ('4', '5')
+  gasnet_conduit_list = ('aries', 'ibv', 'udp', 'mpi', 'ucx', 'none')
+  for nvarch in cuda_arch_list:
+    for maxdims in max_dims_list:
+      for gasnet_conduit in gasnet_conduit_list:
+        depends_on('legion@flexflow +cuda cuda_arch={0} +cuda_hijack -gpu_reduction +python max_dims={1} conduit={2}'.format(nvarch, maxdims, gasnet_conduit),
+                   when='cuda_arch={0} max_dims={1} conduit={2}'.format(nvarch, maxdims, gasnet_conduit))
+  
+  variant('max_dims', default='4',
+          values=max_dims_list,
+          description="Set max number of dimensions for logical regions.",
+          multi=False)
   
   variant('zlib', default=True, description="Enable zlib support.")
   
@@ -62,24 +74,17 @@ class Flexflow(CMakePackage):
   variant('gasnet', default=False, description="Enable GASNet support.")
  
   variant('conduit', default='none',
-          values=('aries', 'ibv', 'udp', 'mpi', 'ucx', 'none'),
+          values=gasnet_conduit_list,
           description="The gasnet conduit(s) to enable.",
           multi=False)
   conflicts('conduit=none', when='gasnet=True',
             msg="a conduit must be selected when enable GASNet")
   
   # cuda_arch=0 means FlexFlow will automatically detect the cuda arch of the current platform
-  cuda_arch_list = ('0', '60', '70', '75', '80')
   variant('cuda_arch', default='0',
           values=cuda_arch_list,
           description="GPU/CUDA architecture to build for.",
           multi=False)
-  
-  # legion
-  spec = self.spec
-  cuda_arch = spec.variants['cuda_arch'].value 
-  legion_deps = 'legion@flexflow +cuda cuda_arch=%s +python max_dims=4 +cuda_hijack -gpu_reduction', % cuda_arch
-  depends_on(legion_deps)
 
   def cmake_args(self):
     spec = self.spec
@@ -113,8 +118,8 @@ class Flexflow(CMakePackage):
     else:
       options.append('-DFF_USE_GASNET=OFF')
 
-    maxdims = int(spec.variants['max_dims'].value)
-    options.append('-DFF_MAX_DIM=%d' % maxdims)
+    maxdims = spec.variants['max_dims'].value
+    options.append('-DFF_MAX_DIM=%s' % maxdims)
   
     cuda_arch = spec.variants['cuda_arch'].value
     if cuda_arch != '0': 
