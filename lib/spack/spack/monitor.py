@@ -87,7 +87,7 @@ def get_monitor_group(subparser):
     monitor_group = subparser.add_argument_group()
     monitor_group.add_argument(
         '--monitor', action='store_true', dest='use_monitor', default=False,
-        help="interact with a montor server during builds.")
+        help="interact with a monitor server during builds.")
     monitor_group.add_argument(
         '--monitor-save-local', action='store_true', dest='monitor_save_local',
         default=False, help="save monitor results to .spack instead of server.")
