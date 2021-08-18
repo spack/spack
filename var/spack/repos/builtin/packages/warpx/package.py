@@ -173,6 +173,7 @@ class Warpx(CMakePackage):
     def test(self):
         """Perform smoke tests on the installed package."""
         if '+app' not in self.spec:
+            print("Smoke tests skipped: requires variant +app")
             pass
 
         # our executable names are a variant-dependent and naming evolves
