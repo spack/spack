@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Pango(AutotoolsPackage):
+class Pango(MesonPackage):
     """Pango is a library for laying out and rendering of text, with
        an emphasis on internationalization. It can be used anywhere
        that text layout is needed, though most of the work on Pango so
@@ -30,6 +30,7 @@ class Pango(AutotoolsPackage):
 
     variant('X', default=False, description="Enable an X toolkit")
 
+    depends_on("meson@0.54:", type="build")
     depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("harfbuzz")
     depends_on("cairo+ft+fc")
@@ -68,9 +69,6 @@ class Pango(AutotoolsPackage):
         args.append('GTKDOC_REBASE={0}'.format(true))
 
         return args
-
-    def install(self, spec, prefix):
-        make("install", parallel=False)
 
     def setup_run_environment(self, env):
         env.prepend_path("GI_TYPELIB_PATH",
