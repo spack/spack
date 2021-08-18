@@ -20,6 +20,7 @@ import spack.fetch_strategy
 import spack.monitor
 import spack.paths
 import spack.report
+import spack.config
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
@@ -75,6 +76,12 @@ the default is to install the package along with all its dependencies.
 alternatively one can decide to install only the package or only
 the dependencies"""
     )
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
+    subparser.add_argument(
+        '--min-scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope('compilers'),
+        help="min configuration scope to use for installing packages")
     subparser.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
