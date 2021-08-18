@@ -517,7 +517,7 @@ _spack_buildcache_get_buildcache_name() {
 }
 
 _spack_buildcache_save_specfile() {
-    SPACK_COMPREPLY="-h --help --root-spec --root-specfile -s --specs -y --specfile-dir"
+    SPACK_COMPREPLY="-h --help --root-spec --root-specfile -s --specs --specfile-dir"
 }
 
 _spack_buildcache_copy() {
