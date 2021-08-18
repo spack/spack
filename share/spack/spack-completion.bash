@@ -421,7 +421,7 @@ _spack_bootstrap() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="enable disable reset root"
+        SPACK_COMPREPLY="enable disable reset root list trust untrust"
     fi
 }
 
@@ -438,6 +438,28 @@ _spack_bootstrap_reset() {
 }
 
 _spack_bootstrap_root() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --scope"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_bootstrap_list() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_bootstrap_trust() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --scope"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_bootstrap_untrust() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --scope"
@@ -476,7 +498,7 @@ _spack_buildcache_create() {
 _spack_buildcache_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch"
+        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch --sha256"
     else
         _all_packages
     fi
