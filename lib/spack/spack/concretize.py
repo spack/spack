@@ -33,6 +33,7 @@ import llnl.util.tty as tty
 import spack.abi
 import spack.architecture
 import spack.compilers
+import spack.environment
 import spack.error
 import spack.repo
 import spack.spec
@@ -63,11 +64,10 @@ class Concretizer(object):
         self._adjust_target_answer_generator = None
 
     def concretize_develop(self, spec):
-        import spack.environment as ev
         """
         Add ``dev_path=*`` variant to packages built from local source.
         """
-        env = ev.get_active_env()
+        env = spack.environment.get_active_env()
         dev_info = env.dev_specs.get(spec.name, {}) if env else {}
         if not dev_info:
             return False
