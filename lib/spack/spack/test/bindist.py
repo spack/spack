@@ -66,7 +66,7 @@ def test_mirror(mirror_dir):
 @pytest.fixture(scope='function')
 def test_legacy_mirror(mutable_config, tmpdir):
     mirror_dir = tmpdir.join('legacy_yaml_mirror')
-    shutil.copytree(legacy_mirror_dir, mirror_dir)
+    shutil.copytree(legacy_mirror_dir, mirror_dir.strpath)
     mirror_url = 'file://%s' % mirror_dir
     mirror_cmd('add', '--scope', 'site', 'test-legacy-yaml', mirror_url)
     yield mirror_dir
