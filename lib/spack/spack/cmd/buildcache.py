@@ -420,7 +420,7 @@ def createtarball(args):
     """create a binary package from an existing install"""
 
     # restrict matching to current environment if one is active
-    env = ev.get_active_env()
+    env = ev.active_environment()
 
     output_location = None
     if args.directory:

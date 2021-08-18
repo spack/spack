@@ -312,7 +312,7 @@ def env_view_setup_parser(subparser):
 
 
 def env_view(args):
-    env = ev.get_active_env()
+    env = ev.active_environment()
 
     if env:
         if args.action == ViewAction.regenerate:
@@ -339,7 +339,7 @@ def env_status_setup_parser(subparser):
 
 
 def env_status(args):
-    env = ev.get_active_env()
+    env = ev.active_environment()
     if env:
         if env.path == os.getcwd():
             tty.msg('Using %s in current directory: %s'

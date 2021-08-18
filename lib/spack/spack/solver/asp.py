@@ -1403,7 +1403,7 @@ class SpackSolverSetup(object):
             self.preferred_versions(pkg)
 
         # Inject dev_path from environment
-        env = ev.get_active_env()
+        env = ev.active_environment()
         if env:
             for spec in sorted(specs):
                 for dep in spec.traverse():
@@ -1633,7 +1633,7 @@ class SpecBuilder(object):
             spack.spec.Spec.ensure_external_path_if_external(s)
 
         for s in self._specs.values():
-            _develop_specs_from_env(s, ev.get_active_env())
+            _develop_specs_from_env(s, ev.active_environment())
 
         for s in self._specs.values():
             s._mark_concrete()

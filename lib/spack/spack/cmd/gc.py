@@ -24,7 +24,7 @@ def gc(parser, args):
 
     # Restrict garbage collection to the active environment
     # speculating over roots that are yet to be installed
-    env = ev.get_active_env()
+    env = ev.active_environment()
     if env:
         msg = 'Restricting the garbage collection to the "{0}" environment'
         tty.msg(msg.format(env.name))

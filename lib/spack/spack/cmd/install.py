@@ -168,7 +168,7 @@ def install_specs(cli_args, kwargs, specs):
     """
 
     # handle active environment, if any
-    env = ev.get_active_env()
+    env = ev.active_environment()
 
     try:
         if env:
@@ -291,7 +291,7 @@ environment variables:
     if not args.spec and not args.specfiles:
         # if there are no args but an active environment
         # then install the packages from it.
-        env = ev.get_active_env()
+        env = ev.active_environment()
         if env:
             tests = get_tests(env.user_specs)
             kwargs['tests'] = tests

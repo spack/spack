@@ -38,7 +38,7 @@ def _for_each_enabled(spec, method_name):
 
 def post_install(spec):
     import spack.environment as ev  # break import cycle
-    if ev.get_active_env():
+    if ev.active_environment():
         # If the installed through an environment, we skip post_install
         # module generation and generate the modules on env_write so Spack
         # can manage interactions between env views and modules

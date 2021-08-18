@@ -698,7 +698,7 @@ class BaseContext(tengine.Context):
             if use_view is True:
                 use_view = ev.default_view_name
 
-            env = ev.get_active_env()
+            env = ev.active_environment()
             if not env:
                 raise ev.SpackEnvironmentViewError("Module generation with views "
                                                    "requires active environment")

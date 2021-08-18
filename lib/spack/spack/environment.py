@@ -264,7 +264,7 @@ def deactivate(shell='sh'):
     return cmds
 
 
-def get_active_env():
+def active_environment():
     """Returns the active environment when there is any"""
     return _active_environment
 

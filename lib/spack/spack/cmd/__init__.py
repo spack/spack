@@ -187,7 +187,7 @@ def matching_spec_from_env(spec):
     If no matching spec is found in the environment (or if no environment is
     active), this will return the given spec but concretized.
     """
-    env = ev.get_active_env()
+    env = ev.active_environment()
     if env:
         return env.matching_spec(spec) or spec.concretized()
     else:
@@ -500,7 +500,7 @@ def require_active_env(cmd_name):
     Returns:
         (spack.environment.Environment): the active environment
     """
-    env = ev.get_active_env()
+    env = ev.active_environment()
 
     if env:
         return env
