@@ -30,6 +30,8 @@ class PySphinx(PythonPackage):
     version('1.4.5', sha256='c5df65d97a58365cbf4ea10212186a9a45d89c61ed2c071de6090cdf9ddb4028')
     version('1.3.1', sha256='1a6e5130c2b42d2de301693c299f78cc4bd3501e78b610c08e45efc70e2b5114')
 
+    variant('levenshtein', default=False, description='Use C library for levenshtein to speed up gettext_uuid')
+
     extends('python', ignore='bin/(pybabel|pygmentize)')
 
     # See here for upstream list of dependencies:
@@ -65,3 +67,5 @@ class PySphinx(PythonPackage):
     depends_on('py-packaging', when='@1.7.4:', type=('build', 'run'))
     depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
     depends_on('py-typing', when='@1.6.2:^python@2.7:3.4', type=('build', 'run'))
+
+    depends_on('py-python-levenshtein', when='+levenshtein', type=('build', 'run'))
