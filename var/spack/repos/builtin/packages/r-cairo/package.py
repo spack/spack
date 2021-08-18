@@ -31,5 +31,7 @@ class RCairo(RPackage):
     version('1.5-10', sha256='7837f0c384cd49bb3342cb39a916d7a80b02fffbf123913a58014e597f69b5d5')
     version('1.5-9', sha256='2a867b6cae96671d6bc3acf9334d6615dc01f6ecf1953a27cde8a43c724a38f4')
 
+    depends_on('r+X', type=('build', 'run'))
     depends_on('r@2.4.0:', type=('build', 'run'))
     depends_on('cairo@1.2:')
+    depends_on('libxt')

@@ -164,7 +164,9 @@ class Python(AutotoolsPackage):
     # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
     depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
     depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
-    depends_on('sqlite@3.0.8:', when='+sqlite3')
+    depends_on('openssl@1.1.1:', when='@3.10:+ssl')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+    depends_on('sqlite@3.0.8:', when='@:3.9+sqlite3')
+    depends_on('sqlite@3.7.15:', when='@3.10:+sqlite3')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
     depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
     depends_on('libnsl', when='+nis')
     depends_on('zlib@1.1.3:', when='+zlib')

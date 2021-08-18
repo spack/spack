@@ -175,7 +175,8 @@ def _check_license(lines, path):
             if error:
                 return error
 
-    print('{0}: the license does not match the expected format'.format(path))
+    print('{0}: the license header at the top of the file does not match the \
+          expected format'.format(path))
     return GENERAL_MISMATCH
 
 

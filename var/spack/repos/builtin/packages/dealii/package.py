@@ -197,7 +197,7 @@ class Dealii(CMakePackage, CudaPackage):
     # depends_on('taskflow',         when='@9.3:+taskflow')
     depends_on('trilinos gotype=int', when='+trilinos@12.18.1:')
     # TODO: next line fixes concretization with trilinos and adol-c
-    depends_on('trilinos~exodus~netcdf',    when='@9.0:+adol-c+trilinos')
+    depends_on('trilinos~exodus',    when='@9.0:+adol-c+trilinos')
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
@@ -296,12 +296,9 @@ class Dealii(CMakePackage, CudaPackage):
     conflicts('+adol-c', when='^trilinos+chaco',
               msg='Symbol clash between the ADOL-C library and '
                   'Trilinos SEACAS Chaco.')
-    conflicts('+adol-c', when='^trilinos+netcdf',
+    conflicts('+adol-c', when='^trilinos+exodus',
               msg='Symbol clash between the ADOL-C library and '
                   'Trilinos Netcdf.')
-    conflicts('+adol-c', when='^trilinos+pnetcdf',
-              msg='Symbol clash between the ADOL-C library and '
-                  'Trilinos parallel Netcdf.')
 
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '

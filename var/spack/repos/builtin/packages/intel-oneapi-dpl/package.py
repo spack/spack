@@ -12,7 +12,7 @@ from spack import *
 class IntelOneapiDpl(IntelOneApiLibraryPackage):
     """Intel oneAPI DPL."""
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     homepage = 'https://github.com/oneapi-src/oneDPL'
 

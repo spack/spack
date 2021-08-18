@@ -11,10 +11,11 @@ class Migraphx(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX"
     git      = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX.git"
-    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-4.2.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.0', sha256='99cf202a5e86cf5502b0f8bf12f152dbd5a6aacc204b3d9d5efca67a54793408')
     version('4.2.0', sha256='93f22f6c641dde5d7fb8abcbd99621b3c81e332e125a6f3a258d5e4cf2055f55')
     version('4.1.0', sha256='f9b1d2e25cdbaf5d0bfb07d4c8ccef0abaa291757c4bce296c3b5b9488174045')
     version('4.0.0', sha256='b8b845249626e9169353dbfa2530db468972a7569b248c8118ff19e029a12e55')
@@ -48,7 +49,7 @@ class Migraphx(CMakePackage):
     depends_on('py-pybind11@2.6:', type='build', when='@4.1.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
