@@ -39,6 +39,7 @@ from spack.filesystem_view import (
     inverse_view_func_parser,
     view_func_parser,
 )
+from spack.installer import PackageInstaller
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
@@ -1469,21 +1470,18 @@ class Environment(object):
                     uninstalled_specs.append(spec)
         return uninstalled_specs
 
-    def install_all(self, args=None, **install_args):
+    def install_all(self, **install_args):
         """Install all concretized specs in an environment.
 
         Note: this does not regenerate the views for the environment;
         that needs to be done separately with a call to write().
 
         Args:
-            args (argparse.Namespace): argparse namespace with command arguments
             install_args (dict): keyword install arguments
         """
-        self.install_specs(None, args=args, **install_args)
+        self.install_specs(None, **install_args)
 
-    def install_specs(self, specs=None, args=None, **install_args):
-        from spack.installer import PackageInstaller
-
+    def install_specs(self, specs=None, **install_args):
         tty.debug('Assessing installation status of environment packages')
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
@@ -1517,15 +1515,7 @@ class Environment(object):
 
         installs = []
         for spec in specs_to_install:
-            # Parse cli arguments and construct a dictionary
-            # that will be passed to the package installer
-            kwargs = dict()
-            if install_args:
-                kwargs.update(install_args)
-            if args:
-                spack.cmd.install.update_kwargs_from_args(args, kwargs)
-
-            installs.append((spec.package, kwargs))
+            installs.append((spec.package, install_args))
 
         try:
             builder = PackageInstaller(installs)
