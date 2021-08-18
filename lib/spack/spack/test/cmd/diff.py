@@ -81,5 +81,5 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
 
     assert len(result['a_not_b']) == 1
     assert len(result['b_not_a']) == 1
-    assert result['a_not_b'][0] == ['variant_value', 'mpileaks debug False']
-    assert result['b_not_a'][0] == ['variant_value', 'mpileaks debug True']
+    assert result['a_not_b'][0] == ['variant_value', 'mpileaks debug True']
+    assert result['b_not_a'][0] == ['variant_value', 'mpileaks debug False']
