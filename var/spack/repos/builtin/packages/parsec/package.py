@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
-from spack import *
 import llnl.util.tty as tty
+
+from spack import *
 
 
 class Parsec(CMakePackage, CudaPackage):
@@ -38,6 +39,8 @@ class Parsec(CMakePackage, CudaPackage):
 
     depends_on('cmake@3.16:', type='build')
     depends_on('python', type='build')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
     depends_on('hwloc')
     depends_on('mpi')
     depends_on('papi', when='+profile')

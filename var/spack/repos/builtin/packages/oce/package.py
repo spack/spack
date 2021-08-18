@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import platform
+
 from spack import *
 from spack.operating_systems.mac_os import macos_version
-import platform
 
 
 class Oce(Package):

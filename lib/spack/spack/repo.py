@@ -13,12 +13,13 @@ import itertools
 import os
 import re
 import shutil
-import six
 import stat
 import sys
 import traceback
 import types
 from typing import Dict  # novm
+
+import six
 
 if sys.version_info >= (3, 5):
     from collections.abc import Mapping  # novm
@@ -27,19 +28,20 @@ else:
 
 import ruamel.yaml as yaml
 
+import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
-import llnl.util.filesystem as fs
-import spack.config
+
 import spack.caches
+import spack.config
 import spack.error
 import spack.patch
-import spack.spec
-import spack.util.spack_json as sjson
-import spack.util.imp as simp
 import spack.provider_index
-import spack.util.path
+import spack.spec
+import spack.util.imp as simp
 import spack.util.naming as nm
+import spack.util.path
+import spack.util.spack_json as sjson
 
 #: Super-namespace for all packages.
 #: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
@@ -660,7 +662,7 @@ class RepoPath(object):
         if namespace:
             fullspace = get_full_namespace(namespace)
             if fullspace not in self.by_namespace:
-                raise UnknownNamespaceError(spec.namespace)
+                raise UnknownNamespaceError(namespace)
             return self.by_namespace[fullspace]
 
         # If there's no namespace, search in the RepoPath.
@@ -1297,19 +1299,24 @@ def use_repositories(*paths_and_repos):
     """
     global path
 
+    remove_from_meta = None
+
     # Construct a temporary RepoPath object from
     temporary_repositories = RepoPath(*paths_and_repos)
 
     # Swap the current repository out
     saved = path
-    remove_from_meta = set_path(temporary_repositories)
 
-    yield temporary_repositories
+    try:
+        remove_from_meta = set_path(temporary_repositories)
 
-    # Restore _path and sys.meta_path
-    if remove_from_meta:
-        sys.meta_path.remove(temporary_repositories)
-    path = saved
+        yield temporary_repositories
+
+    finally:
+        # Restore _path and sys.meta_path
+        if remove_from_meta:
+            sys.meta_path.remove(temporary_repositories)
+        path = saved
 
 
 class RepoError(spack.error.SpackError):

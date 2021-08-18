@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import re
+
 import llnl.util.tty as tty
 
 from spack import *
-
-import os
-import re
 
 
 class Openssl(Package):   # Uses Fake Autotools, should subclass Package

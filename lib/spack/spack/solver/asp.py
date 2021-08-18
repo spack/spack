@@ -10,15 +10,16 @@ import itertools
 import os
 import pprint
 import sys
-import time
 import types
 import warnings
+
 from six import string_types
 
 import archspec.cpu
 
 try:
     import clingo
+
     # There may be a better way to detect this
     clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
@@ -30,46 +31,25 @@ import llnl.util.tty as tty
 
 import spack
 import spack.architecture
+import spack.bootstrap
 import spack.cmd
 import spack.compilers
 import spack.config
 import spack.dependency
 import spack.directives
 import spack.error
-import spack.spec
 import spack.package
 import spack.package_prefs
 import spack.repo
-import spack.bootstrap
+import spack.spec
+import spack.util.timer
 import spack.variant
 import spack.version
-
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm
 else:
     from collections import Sequence
-
-
-class Timer(object):
-    """Simple timer for timing phases of a solve"""
-    def __init__(self):
-        self.start = time.time()
-        self.last = self.start
-        self.phases = {}
-
-    def phase(self, name):
-        last = self.last
-        now = time.time()
-        self.phases[name] = now - last
-        self.last = now
-
-    def write(self, out=sys.stdout):
-        now = time.time()
-        out.write("Time:\n")
-        for phase, t in self.phases.items():
-            out.write("    %-15s%.4f\n" % (phase + ":", t))
-        out.write("Total: %.4f\n" % (now - self.start))
 
 
 def issequence(obj):
@@ -113,10 +93,14 @@ def _id(thing):
         return '"%s"' % str(thing)
 
 
+@llnl.util.lang.key_ordering
 class AspFunction(AspObject):
     def __init__(self, name, args=None):
         self.name = name
-        self.args = [] if args is None else args
+        self.args = () if args is None else args
+
+    def _cmp_key(self):
+        return (self.name, self.args)
 
     def __call__(self, *args):
         return AspFunction(self.name, args)
@@ -131,10 +115,6 @@ class AspFunction(AspObject):
                 return clingo.String(str(arg))
         return clingo.Function(
             self.name, [argify(arg) for arg in self.args], positive=positive)
-
-    def __getitem___(self, *args):
-        self.args[:] = args
-        return self
 
     def __str__(self):
         return "%s(%s)" % (
@@ -331,7 +311,7 @@ class PyclingoDriver(object):
             self, solver_setup, specs, dump=None, nmodels=0,
             timers=False, stats=False, tests=False
     ):
-        timer = Timer()
+        timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
         self.control = clingo.Control()
@@ -428,7 +408,7 @@ class PyclingoDriver(object):
                 result.cores.append(core_symbols)
 
         if timers:
-            timer.write()
+            timer.write_tty()
             print()
         if stats:
             print("Statistics:")
@@ -699,14 +679,14 @@ class SpackSolverSetup(object):
         """Generate facts for a dependency or virtual provider condition.
 
         Arguments:
-            required_spec (Spec): the spec that triggers this condition
-            imposed_spec (optional, Spec): the sepc with constraints that
+            required_spec (spack.spec.Spec): the spec that triggers this condition
+            imposed_spec (spack.spec.Spec or None): the sepc with constraints that
                 are imposed when this condition is triggered
-            name (optional, str): name for `required_spec` (required if
+            name (str or None): name for `required_spec` (required if
                 required_spec is anonymous, ignored if not)
 
         Returns:
-            (int): id of the condition created by this function
+            int: id of the condition created by this function
         """
         named_cond = required_spec.copy()
         named_cond.name = named_cond.name or name
@@ -786,7 +766,8 @@ class SpackSolverSetup(object):
                 continue
 
             for i, provider in enumerate(providers):
-                func(vspec, provider, i + 10)
+                provider_name = spack.spec.Spec(provider).name
+                func(vspec, provider_name, i)
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")
@@ -941,7 +922,7 @@ class SpackSolverSetup(object):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
-            spec (Spec): the spec to analyze
+            spec (spack.spec.Spec): the spec to analyze
             body (bool): if True, generate clauses to be used in rule bodies
                 (final values) instead of rule heads (setters).
             transitive (bool): if False, don't generate clauses from

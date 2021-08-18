@@ -6,10 +6,10 @@
 import ast
 import hashlib
 
-import spack.repo
-import spack.package
 import spack.directives
 import spack.error
+import spack.package
+import spack.repo
 import spack.spec
 import spack.util.naming
 
@@ -49,10 +49,10 @@ class RemoveDirectives(ast.NodeTransformer):
         callbacks are sometimes represented).
 
         Args:
-            node (AST): the AST node being checked
+            node (ast.AST): the AST node being checked
 
         Returns:
-            (bool): ``True`` if the node represents a known directive,
+            bool: ``True`` if the node represents a known directive,
                 ``False`` otherwise
         """
         return (isinstance(node, ast.Expr) and

@@ -17,7 +17,8 @@ Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
 #. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.9) to run Spack
-#. A C/C++ compiler for building
+#. A C/C++ compiler for building and the ``bash`` shell for Spack's compiler
+   wrapper
 #. The ``make`` executable for building
 #. The ``tar``, ``gzip``, ``unzip``, ``bzip2``, ``xz`` and optionally ``zstd``
    executables for extracting source code
@@ -777,7 +778,7 @@ an OpenMPI installed in /opt/local, one would use:
             buildable: False
 
 In general, Spack is easier to use and more reliable if it builds all of
-its own dependencies.  However, there are two packages for which one
+its own dependencies.  However, there are several packages for which one
 commonly needs to use system versions:
 
 ^^^

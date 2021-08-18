@@ -72,6 +72,10 @@ class Hwloc(AutotoolsPackage):
         default=False,
         description="Enable netloc [requires MPI]"
     )
+    variant('opencl', default=False,
+            description="Support an OpenCL library at run time")
+    variant('rocm', default=False,
+            description="Support ROCm devices")
 
     # netloc isn't available until version 2.0.0
     conflicts('+netloc', when="@:1.99.99")
@@ -109,16 +113,27 @@ class Hwloc(AutotoolsPackage):
     # See https://github.com/spack/spack/issues/15836 for details
     depends_on('mpi', when='+netloc')
 
+    with when('+rocm'):
+        depends_on('rocm-smi-lib')
+        depends_on('rocm-opencl', when='+opencl')
+        # Avoid a circular dependency since the openmp
+        # variant of llvm-amdgpu depends on hwloc.
+        depends_on('llvm-amdgpu~openmp', when='+opencl')
+
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
 
     def configure_args(self):
-        args = [
-            # Disable OpenCL, since hwloc might pick up an OpenCL
-            # library at build time that is then not found at run time
-            # (Alternatively, we could require OpenCL as dependency.)
-            "--disable-opencl",
-        ]
+        args = []
+
+        # If OpenCL is not enabled, disable it since hwloc might
+        # pick up an OpenCL library at build time that is then
+        # not found at run time.
+        # The OpenCl variant allows OpenCl providers such as
+        # 'cuda' and 'rocm-opencl' to be used.
+        if '+opencl' not in self.spec:
+            args.append('--disable-opencl')
+
         if '+netloc' in self.spec:
             args.append('--enable-netloc')
 

@@ -8,10 +8,11 @@ the package install folder, so this analyzer simply moves it to the user
 analyzer folder for further processing."""
 
 
-import spack.monitor
-from .analyzer_base import AnalyzerBase
-
 import os
+
+import spack.monitor
+
+from .analyzer_base import AnalyzerBase
 
 
 class InstallFiles(AnalyzerBase):

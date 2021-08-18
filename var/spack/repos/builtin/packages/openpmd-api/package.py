@@ -16,10 +16,13 @@ class OpenpmdApi(CMakePackage):
     maintainers = ['ax3l']
 
     # C++14 up until here
-    version('dev', branch='dev')
+    version('develop', branch='dev')
+    version('0.14.1', sha256='172fd1d785627d01c77f1170adc5a18bd8a6302e804d0f271dc0d616a5156791')
+    version('0.14.0', sha256='7bb561c1a6f54e9a6a1b56aaf1d4d098bbe290d204f84ebe5a6f11b3cab2be6e')
     #   temporary, pre 0.14.0 version for HiPACE++
     version('hipace', commit='ac083025ee662469b8cad1adf93eef48cde35f58')
-    version('0.13.4', sha256='46c013be5cda670f21969675ce839315d4f5ada0406a6546a91ec3441402cf5e')
+    version('0.13.4', preferred=True,
+            sha256='46c013be5cda670f21969675ce839315d4f5ada0406a6546a91ec3441402cf5e')
     version('0.13.3', sha256='4b8f84bd89cd540c73ffe8c21085970453cb7f0e4f125f11a4e288433f64b58c')
     version('0.13.2', sha256='2e5170d41bb7b2c0608ec833eee7f9adf8175b46734743f6e46dcce6f6685fb0')
     version('0.13.1', sha256='81ff79419982eb1b0865d1736f73f950f5d4c356d3c78200ceeab7f54dc07fd7')
@@ -44,6 +47,7 @@ class OpenpmdApi(CMakePackage):
     depends_on('cmake@3.15.0:', type='build')
     depends_on('mpark-variant@1.4.0:')
     depends_on('catch2@2.6.1:', type='test')
+    depends_on('catch2@2.13.4:', type='test', when='@0.14.0:')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
     depends_on('hdf5@1.8.13:', when='+hdf5')
     depends_on('hdf5@1.8.13: ~mpi', when='~mpi +hdf5')
@@ -53,10 +57,11 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios@1.13.1: +mpi ~sz', when='+mpi +adios1')
     depends_on('adios2@2.5.0:', when='+adios2')
     depends_on('adios2@2.6.0:', when='+adios2 @0.12.0:')
+    depends_on('adios2@2.7.0:', when='+adios2 @0.14.0:')
     depends_on('adios2@2.5.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.5.0: +mpi', when='+mpi +adios2')
     depends_on('nlohmann-json@3.9.1:')
-    depends_on('py-pybind11@2.6.1:', when='+python', type='link')
+    depends_on('py-pybind11@2.6.2:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
     depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
     depends_on('python@3.6:', when='+python', type=['link', 'test', 'run'])
@@ -125,3 +130,23 @@ class OpenpmdApi(CMakePackage):
         env.prepend_path('CMAKE_PREFIX_PATH',
                          self.spec['mpark-variant'].prefix)
         env.prepend_path('CPATH', self.spec['mpark-variant'].prefix.include)
+
+    def check(self):
+        """CTest checks after the build phase"""
+        # note: for MPI-parallel tests, you can overwrite the standard CMake
+        #       option -DMPIEXEC_EXECUTABLE=$(which jsrun) for jsrun or srun,
+        #       etc.. Alternatively, you can also use -E <regex> to exclude
+        #       parallel and MPI tests
+        with working_dir(self.build_directory):
+            # -j1 because individual tests create files that are read again by
+            # later tests
+            ctest('--output-on-failure', '-j1')
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        exes = ['openpmd-ls']  # in 0.11.1+
+        for exe in exes:
+            spec_vers_str = '{0}'.format(self.spec.version)
+            reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
+            self.run_test(exe, ['--version'], [spec_vers_str],
+                          installed=True, purpose=reason, skip_missing=False)

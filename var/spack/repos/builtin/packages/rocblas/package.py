@@ -12,10 +12,11 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git      = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('4.3.0', sha256='b15a66c861b3394cb83c56b64530b2c7e57b2b4c50f55d0e66bb3d1483b50ec4')
     version('4.2.0', sha256='547f6d5d38a41786839f01c5bfa46ffe9937b389193a8891f251e276a1a47fb0')
     version('4.1.0', sha256='8be20c722bab169bc4badd79a9eab9a1aa338e0e5ff58ad85ba6bf09e8ac60f4')
     version('4.0.0', sha256='78e37a7597b581d90a29e4b956fa65d0f8d1c8fb51667906b5fe2a223338d401')
@@ -32,7 +33,7 @@ class Rocblas(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('llvm-amdgpu@' + ver,               when='@' + ver)
         depends_on('rocm-cmake@' + ver,  type='build', when='@' + ver)
@@ -41,11 +42,8 @@ class Rocblas(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.0.0', '4.1.0', '4.2.0']:
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
-
-    for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
@@ -66,7 +64,8 @@ class Rocblas(CMakePackage):
         ('@3.10.0', 'ab44bf46b609b5a40053f310bef2ab7511f726ae'),
         ('@4.0.0',  'ab44bf46b609b5a40053f310bef2ab7511f726ae'),
         ('@4.1.0',  'd175277084d3253401583aa030aba121e8875bfd'),
-        ('@4.2.0',  '3438af228dc812768b20a068b0285122f327fa5b')
+        ('@4.2.0',  '3438af228dc812768b20a068b0285122f327fa5b'),
+        ('@4.3.0',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf')
     ]:
         resource(name='Tensile',
                  git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
@@ -108,5 +107,9 @@ class Rocblas(CMakePackage):
             if arch == 'gfx906' or arch == 'gfx908':
                 arch = arch + ':xnack-'
         args.append(self.define('Tensile_ARCHITECTURE', arch))
+
+        # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

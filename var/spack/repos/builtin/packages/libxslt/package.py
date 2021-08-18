@@ -57,3 +57,8 @@ class Libxslt(AutotoolsPackage):
         if '+python' in self.spec:
             with working_dir('spack-test', create=True):
                 python('-c', 'import libxslt')
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-Wmissing-format-attribute', '', 'configure')

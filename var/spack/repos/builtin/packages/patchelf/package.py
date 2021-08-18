@@ -2,8 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
 import os
+
+from spack import *
 
 
 class Patchelf(AutotoolsPackage):
@@ -15,6 +16,7 @@ class Patchelf(AutotoolsPackage):
     list_url = "https://nixos.org/releases/patchelf/"
     list_depth = 1
 
+    version('0.13', sha256='4c7ed4bcfc1a114d6286e4a0d3c1a90db147a4c3adda1814ee0eee0f9ee917ed')
     version('0.12', sha256='699a31cf52211cf5ad6e35a8801eb637bc7f3c43117140426400d67b7babd792')
     version('0.11', sha256='e52378cc2f9379c6e84a04ac100a3589145533a7b0cd26ef23c79dfd8a9038f9')
     version('0.10', sha256='b2deabce05c34ce98558c0efb965f209de592197b2c88e930298d740ead09019')

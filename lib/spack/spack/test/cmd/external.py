@@ -2,15 +2,15 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import pytest
-
 import os
 import os.path
 
+import pytest
+
 import spack
-from spack.spec import Spec
 from spack.cmd.external import ExternalPackageEntry
 from spack.main import SpackCommand
+from spack.spec import Spec
 
 
 def test_find_external_single_package(mock_executable):

@@ -18,21 +18,11 @@ import traceback
 
 import six
 from six.moves.urllib.error import URLError
-from six.moves.urllib.request import urlopen, Request
-
-try:
-    # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParser, HTMLParseError  # novm
-except ImportError:
-    # In Python 3, things moved to html.parser
-    from html.parser import HTMLParser
-
-    # Also, HTMLParseError is deprecated and never raised.
-    class HTMLParseError(Exception):
-        pass
-
+from six.moves.urllib.request import Request, urlopen
 from llnl.util.filesystem import mkdirp
+import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 
 import spack.cmd
 import spack.config
@@ -42,10 +32,18 @@ import spack.util.crypto
 import spack.util.s3 as s3_util
 import spack.util.gcs as gcs_util
 import spack.util.url as url_util
-import llnl.util.lang
-
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
+if sys.version_info < (3, 0):
+    # Python 2 had these in the HTMLParser package.
+    from HTMLParser import HTMLParseError, HTMLParser  # novm
+else:
+    # In Python 3, things moved to html.parser
+    from html.parser import HTMLParser
+
+    # Also, HTMLParseError is deprecated and never raised.
+    class HTMLParseError(Exception):
+        pass
 
 # Timeout in seconds for web requests
 _timeout = 10
@@ -113,7 +111,8 @@ def read_from_url(url, accept_content_type=None):
         else:
             # User has explicitly indicated that they do not want SSL
             # verification.
-            context = ssl._create_unverified_context()
+            if not __UNABLE_TO_VERIFY_SSL:
+                context = ssl._create_unverified_context()
 
     if url.scheme == 'gs':
         gcs = gcs_util.GCSBlob(url)
@@ -362,7 +361,7 @@ def spider(root_urls, depth=0, concurrency=32):
     up to <depth> levels of links from each root.
 
     Args:
-        root_urls (str or list of str): root urls used as a starting point
+        root_urls (str or list): root urls used as a starting point
             for spidering
         depth (int): level of recursion into links
         concurrency (int): number of simultaneous requests that can be sent
