@@ -175,10 +175,6 @@ class Warpx(CMakePackage):
         if '+app' not in self.spec:
             pass
 
-        # TODO @reviewer: "where" am I, directory-wise?
-        # Do I need to create and cd into a working_dir or is one set up?
-        # Do I need to clean up?
-
         # our executable names are a variant-dependent and naming evolves
         exe = find(self.prefix.bin, 'warpx.*', recursive=False)[0]
 
