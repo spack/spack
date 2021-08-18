@@ -11,7 +11,7 @@ class SoapdenovoTrans(MakefilePackage):
        SOAPdenovo framework, adapt to alternative splicing and different
        expression level among transcripts."""
 
-    homepage = "http://soap.genomics.org.cn/SOAPdenovo-Trans.html"
+    homepage = "https://github.com/aquaskyline/SOAPdenovo-Trans"
     url      = "https://github.com/aquaskyline/SOAPdenovo-Trans/archive/1.0.4.tar.gz"
 
     version('1.0.4', sha256='378a54cde0ebe240fb515ba67197c053cf95393645c1ae1399b3a611be2a9795')

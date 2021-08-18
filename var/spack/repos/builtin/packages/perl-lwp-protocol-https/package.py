@@ -9,7 +9,7 @@ from spack import *
 class PerlLwpProtocolHttps(PerlPackage):
     """ Provide https support for LWP::UserAgent"""
 
-    homepage = "http://search.cpan.org/~gaas/LWP-Protocol-https-6.04/lib/LWP/Protocol/https.pm"
+    homepage = "https://metacpan.org/pod/LWP::Protocol::https"
     url      = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/LWP-Protocol-https-6.04.tar.gz"
 
     version('6.04', sha256='1ef67750ee363525cf729b59afde805ac4dc80eaf8d36ca01082a4d78a7af629')

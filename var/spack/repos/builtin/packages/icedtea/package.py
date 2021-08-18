@@ -14,7 +14,7 @@ class Icedtea(AutotoolsPackage):
     of key features to the upstream OpenJDK codebase. IcedTea requires an
     existing IcedTea or OpenJDK install to build."""
 
-    homepage = "http://icedtea.classpath.org/wiki/Main_Page"
+    homepage = "https://openjdk.java.net/projects/icedtea/"
     url      = "http://icedtea.wildebeest.org/download/source/icedtea-3.4.0.tar.gz"
 
     version('3.9.0', sha256='84a63bc59f4e101ce8fa183060a59c7e8cbe270945310e90c92b8609a9b8bc88')

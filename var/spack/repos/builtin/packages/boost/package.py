@@ -18,7 +18,7 @@ class Boost(Package):
        across a broad spectrum of applications. The Boost license
        encourages both commercial and non-commercial use.
     """
-    homepage = "http://www.boost.org"
+    homepage = "https://www.boost.org"
     url      = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
     git      = "https://github.com/boostorg/boost.git"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"

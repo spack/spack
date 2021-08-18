@@ -12,7 +12,7 @@ class PyPyprecice(PythonPackage):
     C++ library preCICE.
     """
 
-    homepage = "https://www.precice.org"
+    homepage = "https://precice.org"
     git = "https://github.com/precice/python-bindings.git"
     url = "https://github.com/precice/python-bindings/archive/v2.0.0.1.tar.gz"
     maintainers = ["ajaust", "BenjaminRodenberg", "IshaanDesai"]

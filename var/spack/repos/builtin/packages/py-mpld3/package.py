@@ -10,7 +10,7 @@ class PyMpld3(PythonPackage):
     """An interactive D3js-based viewer which brings matplotlib graphics
     to the browser."""
 
-    homepage = "http://mpld3.github.com/"
+    homepage = "https://mpld3.github.io/"
     pypi = "mpld3/mpld3-0.3.tar.gz"
 
     version('0.3', sha256='4d455884a211bf99b37ecc760759435c7bb6a5955de47d8daf4967e301878ab7')
