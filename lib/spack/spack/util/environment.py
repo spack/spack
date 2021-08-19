@@ -6,7 +6,6 @@
 """Utilities for setting and modifying environment variables."""
 import collections
 import contextlib
-import inspect
 import json
 import os
 import os.path
