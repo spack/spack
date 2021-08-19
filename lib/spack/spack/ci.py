@@ -45,6 +45,8 @@ JOB_RETRY_CONDITIONS = [
 ]
 
 SPACK_PR_MIRRORS_ROOT_URL = 's3://spack-binaries-prs'
+SPACK_SHARED_PR_MIRROR_URL = url_util.join(SPACK_PR_MIRRORS_ROOT_URL,
+                                           'shared_pr_mirror')
 TEMP_STORAGE_MIRROR_NAME = 'ci_temporary_mirror'
 
 spack_gpg = spack.main.SpackCommand('gpg')
@@ -612,11 +614,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         'strip-compilers': False,
     })
 
-    # Add this mirror if it's enabled, as some specs might be up to date
-    # here and thus not need to be rebuilt.
+    # Add per-PR mirror (and shared PR mirror) if enabled, as some specs might
+    # be up to date in one of those and thus not need to be rebuilt.
     if pr_mirror_url:
         spack.mirror.add(
             'ci_pr_mirror', pr_mirror_url, cfg.default_modify_scope())
+        spack.mirror.add('ci_shared_pr_mirror',
+                         SPACK_SHARED_PR_MIRROR_URL,
+                         cfg.default_modify_scope())
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
