@@ -5,8 +5,8 @@
 
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
-from spack.package import PackageBase
 from spack.multimethod import when
+from spack.package import PackageBase
 
 
 class CudaPackage(PackageBase):
@@ -110,7 +110,8 @@ class CudaPackage(PackageBase):
         conflicts('%clang@:3.7,5.1:', when='+cuda ^cuda@9.2 target=x86_64:')
         conflicts('%clang@:3.7,6.1:', when='+cuda ^cuda@10.0.130 target=x86_64:')
         conflicts('%clang@:3.7,7.1:', when='+cuda ^cuda@10.1.105 target=x86_64:')
-        conflicts('%clang@:3.7,8.1:', when='+cuda ^cuda@10.1.105:10.1.243 target=x86_64:')
+        conflicts('%clang@:3.7,8.1:',
+                  when='+cuda ^cuda@10.1.105:10.1.243 target=x86_64:')
         conflicts('%clang@:3.2,9:', when='+cuda ^cuda@10.2.89 target=x86_64:')
         conflicts('%clang@:5', when='+cuda ^cuda@11.0.2: target=x86_64:')
         conflicts('%clang@10:', when='+cuda ^cuda@:11.0.3 target=x86_64:')
