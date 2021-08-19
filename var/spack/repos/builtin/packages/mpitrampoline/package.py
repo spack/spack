@@ -37,7 +37,7 @@ class Mpitrampoline(CMakePackage):
         env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
         env.set('MPIF77', join_path(self.prefix.bin, 'mpifc'))
         env.set('MPIF90', join_path(self.prefix.bin, 'mpifc'))
-    
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
 
