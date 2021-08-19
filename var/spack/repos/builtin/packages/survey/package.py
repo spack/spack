@@ -22,8 +22,14 @@ class Survey(CMakePackage):
        AMD, ARM, and IBM P8/9 processors and integrated GPUs.
     """
 
+    # To access the survey source and build with
+    # spack please contact: Trenza Inc. via:
+    # dmont@trenzasynergy.com
     homepage = "http://www.trenzasynergy.com"
     git      = "git@gitlab.com:trenza/survey.git"
+
+    maintainers = ['jgalarowicz']
+
     version('develop', branch='master')
     version('1.0.0', branch='1.0.0')
 
