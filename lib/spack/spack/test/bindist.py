@@ -609,8 +609,8 @@ def test_update_sbang(tmpdir, test_mirror):
 
 
 # Need one where the platform has been changed to the test platform.
-def test_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
-                     mock_packages):
+def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
+                             mock_packages):
     install_cmd('--no-check-signature', '--cache-only', '-f', legacy_mirror_dir
                 + '/build_cache/test-debian6-core2-gcc-4.5.0-zlib-' +
                 '1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml')

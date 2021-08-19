@@ -334,3 +334,112 @@ def test_save_dependency_spec_jsons_subset(tmpdir, config):
 
         assert check_specs_equal(b_spec, os.path.join(output_path, 'b.json'))
         assert check_specs_equal(c_spec, os.path.join(output_path, 'c.json'))
+
+
+def test_legacy_yaml(tmpdir, install_mockery, mock_packages):
+    """Tests a simple legacy YAML with a dependency."""
+    yaml = """
+spec:
+- a:
+    version: '2.0'
+    arch:
+      platform: linux
+      platform_os: rhel7
+      target:
+        name: broadwell
+        vendor: GenuineIntel
+        features:
+        - adx
+        - aes
+        - avx
+        - avx2
+        - bmi1
+        - bmi2
+        - f16c
+        - fma
+        - mmx
+        - movbe
+        - pclmulqdq
+        - popcnt
+        - rdrand
+        - rdseed
+        - sse
+        - sse2
+        - sse4_1
+        - sse4_2
+        - ssse3
+        generation: 0
+        parents:
+        - haswell
+    compiler:
+      name: gcc
+      version: 8.3.0
+    namespace: builtin.mock
+    parameters:
+      bvv: true
+      foo:
+      - bar
+      foobar: bar
+      cflags: []
+      cppflags: []
+      cxxflags: []
+      fflags: []
+      ldflags: []
+      ldlibs: []
+    dependencies:
+      b:
+        hash: iaapywazxgetn6gfv2cfba353qzzqvhn
+        type:
+        - build
+        - link
+    hash: obokmcsn3hljztrmctbscmqjs3xclazz
+    full_hash: avrk2tqsnzxeabmxa6r776uq7qbpeufv
+    build_hash: obokmcsn3hljztrmctbscmqjs3xclazz
+- b:
+    version: '1.0'
+    arch:
+      platform: linux
+      platform_os: rhel7
+      target:
+        name: broadwell
+        vendor: GenuineIntel
+        features:
+        - adx
+        - aes
+        - avx
+        - avx2
+        - bmi1
+        - bmi2
+        - f16c
+        - fma
+        - mmx
+        - movbe
+        - pclmulqdq
+        - popcnt
+        - rdrand
+        - rdseed
+        - sse
+        - sse2
+        - sse4_1
+        - sse4_2
+        - ssse3
+        generation: 0
+        parents:
+        - haswell
+    compiler:
+      name: gcc
+      version: 8.3.0
+    namespace: builtin.mock
+    parameters:
+      cflags: []
+      cppflags: []
+      cxxflags: []
+      fflags: []
+      ldflags: []
+      ldlibs: []
+    hash: iaapywazxgetn6gfv2cfba353qzzqvhn
+    full_hash: qvsxvlmjaothtpjluqijv7qfnni3kyyg
+    build_hash: iaapywazxgetn6gfv2cfba353qzzqvhn
+"""
+    spec = Spec.from_yaml(yaml)
+    spec.concretize()

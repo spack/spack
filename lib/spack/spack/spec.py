@@ -1923,8 +1923,6 @@ class Spec(object):
 
     @staticmethod
     def build_spec_from_node_dict(node, hash_type=ht.dag_hash.attr[1:]):
-        if 'build_spec' not in node.keys():
-            return None
         build_spec_dict = node['build_spec']
         return build_spec_dict['name'], build_spec_dict[hash_type], hash_type
 
