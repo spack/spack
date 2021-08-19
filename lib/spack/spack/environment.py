@@ -34,7 +34,11 @@ import spack.util.lock as lk
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.filesystem_view import YamlFilesystemView
+from spack.filesystem_view import (
+    YamlFilesystemView,
+    inverse_view_func_parser,
+    view_func_parser,
+)
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
@@ -456,12 +460,13 @@ def _eval_conditional(string):
 
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
-                 link=default_view_link):
+                 link=default_view_link, link_type='symlink'):
         self.base = base_path
         self.root = spack.util.path.canonicalize_path(root)
         self.projections = projections
         self.select = select
         self.exclude = exclude
+        self.link_type = view_func_parser(link_type)
         self.link = link
 
     def select_fn(self, spec):
@@ -475,7 +480,8 @@ class ViewDescriptor(object):
                     self.projections == other.projections,
                     self.select == other.select,
                     self.exclude == other.exclude,
-                    self.link == other.link])
+                    self.link == other.link,
+                    self.link_type == other.link_type])
 
     def to_dict(self):
         ret = syaml.syaml_dict([('root', self.root)])
@@ -490,6 +496,8 @@ class ViewDescriptor(object):
             ret['select'] = self.select
         if self.exclude:
             ret['exclude'] = self.exclude
+        if self.link_type:
+            ret['link_type'] = inverse_view_func_parser(self.link_type)
         if self.link != default_view_link:
             ret['link'] = self.link
         return ret
@@ -501,7 +509,8 @@ class ViewDescriptor(object):
                               d.get('projections', {}),
                               d.get('select', []),
                               d.get('exclude', []),
-                              d.get('link', default_view_link))
+                              d.get('link', default_view_link),
+                              d.get('link_type', 'symlink'))
 
     @property
     def _current_root(self):
@@ -565,7 +574,8 @@ class ViewDescriptor(object):
             raise SpackEnvironmentViewError(msg)
         return YamlFilesystemView(root, spack.store.layout,
                                   ignore_conflicts=True,
-                                  projections=self.projections)
+                                  projections=self.projections,
+                                  link=self.link_type)
 
     def __contains__(self, spec):
         """Is the spec described by the view descriptor

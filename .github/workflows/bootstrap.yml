@@ -18,7 +18,7 @@ on:
 
 jobs:
 
-  fedora:
+  fedora-sources:
     runs-on: ubuntu-latest
     container: "fedora:latest"
     steps:
@@ -40,11 +40,12 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
+          spack bootstrap untrust github-actions
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
-  ubuntu:
+  ubuntu-sources:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
     steps:
@@ -69,11 +70,12 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
+          spack bootstrap untrust github-actions
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
-  opensuse:
+  opensuse-sources:
     runs-on: ubuntu-latest
     container: "opensuse/tumbleweed:latest"
     steps:
@@ -93,11 +95,12 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
+          spack bootstrap untrust github-actions
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
-  macos:
+  macos-sources:
     runs-on: macos-latest
     steps:
       - name: Install dependencies
@@ -108,6 +111,50 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           export PATH=/usr/local/opt/bison@2.7/bin:$PATH
+          spack bootstrap untrust github-actions
           spack external find --not-buildable cmake bison
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
+
+  macos-clingo-binaries:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ['3.5', '3.6', '3.7', '3.8', '3.9']
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install tree
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Bootstrap clingo
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust spack-install
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
+
+
+  ubuntu-clingo-binaries:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9']
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+      - name: Bootstrap clingo
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust spack-install
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/

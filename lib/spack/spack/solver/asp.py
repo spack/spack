@@ -267,14 +267,8 @@ class PyclingoDriver(object):
         """
         global clingo
         if not clingo:
-            # TODO: Find a way to vendor the concrete spec
-            # in a cross-platform way
             with spack.bootstrap.ensure_bootstrap_configuration():
-                clingo_spec = spack.bootstrap.clingo_root_spec()
-                clingo_spec._old_concretize()
-                spack.bootstrap.make_module_available(
-                    'clingo', spec=clingo_spec, install=True
-                )
+                spack.bootstrap.ensure_clingo_importable_or_raise()
                 import clingo
         self.out = asp or llnl.util.lang.Devnull()
         self.cores = cores
@@ -767,7 +761,7 @@ class SpackSolverSetup(object):
 
             for i, provider in enumerate(providers):
                 provider_name = spack.spec.Spec(provider).name
-                func(vspec, provider_name, i + 10)
+                func(vspec, provider_name, i)
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")

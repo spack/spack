@@ -11,7 +11,7 @@ class Rdc(CMakePackage):
     """ROCm Data Center Tool"""
 
     homepage = "https://github.com/RadeonOpenCompute/rdc"
-    url      = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
@@ -22,6 +22,7 @@ class Rdc(CMakePackage):
         url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('4.3.0', sha256='d3dda2022ec1f8c7de4de64696009125a903fcb2f82c38b3ac07e4ab35bf9190')
     version('4.2.0', sha256='ea2c7c07d55f607968f58d7e30326cae5db5b48c1ba354caa5727394d5bad258')
     version('4.1.0', sha256='dc81ee9727c8913c05dcf20a00669ce611339ef6d6db8af34e57f42bcfa804ac')
     version('4.0.0', sha256='e9ebfc46dfa983400909ed8a9da4fa37869ab118a8426c2e4f793e21174ca07f')
@@ -34,7 +35,7 @@ class Rdc(CMakePackage):
     depends_on('protobuf', type=('build', 'link'))
     depends_on('libcap', type=('build', 'link'))
 
-    for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
+    for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0']:
         depends_on('rocm-smi-lib@' + ver, type=('build', 'link'), when='@' + ver)
 
     def patch(self):

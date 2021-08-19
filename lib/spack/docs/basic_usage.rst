@@ -757,7 +757,7 @@ The output is colored, and written in the style of a git diff. This means that y
 can copy and paste it into a GitHub markdown as a code block with language "diff"
 and it will render nicely! Here is an example:
 
-.. code-block:: markdown
+.. code-block:: md
 
     ```diff
     --- zlib@1.2.11/efzjziyc3dmb5h5u5azsthgbgog5mj7g

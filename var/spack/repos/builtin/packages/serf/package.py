@@ -19,13 +19,13 @@ class Serf(SConsPackage):
     variant('debug', default=False,
             description='Enable debugging info and strict compile warnings')
 
-    depends_on('scons@2.3.0:', type='build')
-
     depends_on('apr')
     depends_on('apr-util')
     depends_on('openssl')
-    depends_on('zlib')
+    depends_on('python+pythoncmd', type='build')
+    depends_on('scons@2.3.0:', type='build')
     depends_on('uuid')
+    depends_on('zlib')
 
     patch('py3syntax.patch')
 

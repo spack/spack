@@ -60,13 +60,16 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            '-DCMAKE_CXX_STANDARD=14',
+            '-DCMAKE_CXX_STANDARD:STRING=17',
             '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec or '+rccl' in spec),
             '-DALUMINUM_ENABLE_ROCM:BOOL=%s' % ('+rocm' in spec)]
 
         if '+cuda' in spec:
-            args.append('-DCMAKE_CUDA_STANDARD=14')
+            if spec.satisfies('^cuda@11.0:'):
+                args.append('-DCMAKE_CUDA_STANDARD=17')
+            else:
+                args.append('-DCMAKE_CUDA_STANDARD=14')
             archs = spec.variants['cuda_arch'].value
             if archs != 'none':
                 arch_str = ";".join(archs)
@@ -98,13 +101,14 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
         if '+rocm' in spec:
             args.extend([
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)])
+                '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc),
+                '-DCMAKE_CXX_FLAGS=-std=c++17'])
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
                 args.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
-                    ' -g -fsized-deallocation -fPIC'.format(arch_str)
+                    ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
                 )
 
         return args

@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import contextlib
+
 import os
 import re
 import shlex
@@ -16,27 +16,6 @@ import llnl.util.tty as tty
 import spack.error
 
 __all__ = ['Executable', 'which', 'ProcessError']
-
-#: optionally filter padding on debug output in spack.util.executable
-_filter_padding = False
-
-
-@contextlib.contextmanager
-def filter_padding():
-    """Context manager to safely disable path padding in debug output.
-
-    This is needed because Spack's debug output gets extremely long when we use a
-    long padded installation path.
-    """
-    global _filter_padding
-    try:
-        # don't bother filtering if padding isn't actually enabled
-        padding = spack.config.get("config:install_tree:padded_length", None)
-        if padding:
-            _filter_padding = True
-        yield
-    finally:
-        _filter_padding = False
 
 
 class Executable(object):
@@ -206,13 +185,9 @@ class Executable(object):
 
         cmd = self.exe + list(args)
 
-        cmd_line = "'%s'" % "' '".join(
-            map(lambda arg: arg.replace("'", "'\"'\"'"), cmd))
-
-        debug_cmd_line = cmd_line
-        if _filter_padding:
-            debug_cmd_line = [spack.util.path.padding_filter(elt) for elt in cmd_line]
-        tty.debug(debug_cmd_line)
+        escaped_cmd = ["'%s'" % arg.replace("'", "'\"'\"'") for arg in cmd]
+        cmd_line_string = " ".join(escaped_cmd)
+        tty.debug(cmd_line_string)
 
         try:
             proc = subprocess.Popen(
@@ -239,7 +214,7 @@ class Executable(object):
 
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
-                long_msg = cmd_line
+                long_msg = cmd_line_string
                 if result:
                     # If the output is not captured in the result, it will have
                     # been stored either in the specified files (e.g. if
@@ -254,13 +229,13 @@ class Executable(object):
 
         except OSError as e:
             raise ProcessError(
-                '%s: %s' % (self.exe[0], e.strerror), 'Command: ' + cmd_line)
+                '%s: %s' % (self.exe[0], e.strerror), 'Command: ' + cmd_line_string)
 
         except subprocess.CalledProcessError as e:
             if fail_on_error:
                 raise ProcessError(
                     str(e), '\nExit status %d when invoking command: %s' %
-                    (proc.returncode, cmd_line))
+                    (proc.returncode, cmd_line_string))
 
         finally:
             if close_ostream:

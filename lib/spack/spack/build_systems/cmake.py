@@ -254,9 +254,9 @@ class CMakePackage(PackageBase):
 
             .. code-block:: python
 
-                [define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-                 define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
-                 define_from_variant('SWR')]
+                [self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+                 self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
+                 self.define_from_variant('SWR')]
 
             will generate the following configuration options:
 
