@@ -1490,8 +1490,8 @@ class Environment(object):
         # or one of the dependencies has been reinstalled since
         # the last install
 
-        # if it's not installed, we don't need to overwrite it
-        if not spec.package.installed:
+        # if it's not installed, and it's not a dev spec we don't need to overwrite it
+        if not spec.package.installed and spec.variants.get('dev_path', None) is None:
             return False
 
         # if spec and all deps aren't dev builds, we don't need to overwrite it
