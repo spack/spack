@@ -14,6 +14,12 @@ class Sina(CachedCMakePackage):
     homepage = 'https://github.com/LLNL/Sina'
     url = 'https://github.com/LLNL/Sina/releases/download/v1.10.0/sina-cpp-1.10.0.tar.gz'
 
+    maintainers = [
+        'pauli2@llnl.gov',
+        'haluska2@llnl.gov',
+        'murray55@llnl.gov',
+    ]
+
     version('1.10.0', sha256='b34379ce8cc5eca5a0f16893053fac75be14c2109d1beed4c6d48e11f9b281c7')
 
     variant('docs', default=False,
