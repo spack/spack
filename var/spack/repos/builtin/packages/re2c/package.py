@@ -29,7 +29,7 @@ class Re2c(AutotoolsPackage):
             '--disable-debug',
             '--disable-dependency-tracking',
             '--disable-docs',
-            '--disable-lexers', # requires existing system re2c
-            '--disable-libs', # experimental
+            '--disable-lexers',  # requires existing system re2c
+            '--disable-libs',  # experimental
             '--enable-golang',
         ]
