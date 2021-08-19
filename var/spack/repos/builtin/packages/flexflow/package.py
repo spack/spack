@@ -50,11 +50,6 @@ class Flexflow(CMakePackage):
   cuda_arch_list = ('0', '60', '70', '75', '80')
   max_dims_list = ('4', '5')
   gasnet_conduit_list = ('aries', 'ibv', 'udp', 'mpi', 'ucx', 'none')
-  for nvarch in cuda_arch_list:
-    for maxdims in max_dims_list:
-      for gasnet_conduit in gasnet_conduit_list:
-        depends_on('legion@flexflow +cuda cuda_arch={0} +cuda_hijack -gpu_reduction +python max_dims={1} conduit={2}'.format(nvarch, maxdims, gasnet_conduit),
-                   when='cuda_arch={0} max_dims={1} conduit={2}'.format(nvarch, maxdims, gasnet_conduit))
   
   variant('max_dims', default='4',
           values=max_dims_list,
@@ -72,6 +67,8 @@ class Flexflow(CMakePackage):
   variant('avx2', default=False, description="Enable AVX2 support.")  
 
   variant('gasnet', default=False, description="Enable GASNet support.")
+  
+  variant('internal_legion', default=False, description="Use internal Legion.")
  
   variant('conduit', default='none',
           values=gasnet_conduit_list,
@@ -80,11 +77,18 @@ class Flexflow(CMakePackage):
   conflicts('conduit=none', when='gasnet=True',
             msg="a conduit must be selected when enable GASNet")
   
-  # cuda_arch=0 means FlexFlow will automatically detect the cuda arch of the current platform
   variant('cuda_arch', default='0',
           values=cuda_arch_list,
           description="GPU/CUDA architecture to build for.",
           multi=False)
+          
+  for nvarch in cuda_arch_list:
+    for maxdims in max_dims_list:
+      depends_on('legion@flexflow +shared +cuda cuda_arch={0} +cuda_hijack -gpu_reduction +python max_dims={1}'.format(nvarch, maxdims),
+                 when='-internal_legion cuda_arch={0} max_dims={1}'.format(nvarch, maxdims))
+      for gasnet_conduit in gasnet_conduit_list:
+        depends_on('legion@flexflow +shared +cuda cuda_arch={0} +cuda_hijack -gpu_reduction +python max_dims={1} network=gasnet conduit={2}'.format(nvarch, maxdims, gasnet_conduit),
+                   when='-internal_legion cuda_arch={0} max_dims={1} +gasnet conduit={2}'.format(nvarch, maxdims, gasnet_conduit))
 
   def cmake_args(self):
     spec = self.spec
@@ -125,6 +129,9 @@ class Flexflow(CMakePackage):
     if cuda_arch != '0': 
       options.append('-DFF_CUDA_ARCH=%s' % cuda_arch)
   
-    legion_root = '/vast/home/wwu/spack/opt/spack/linux-centos7-broadwell/gcc-8.1.0/legion-flexflow-ewcwauwrlac6z3lofy7mh24xg4oa22vt'
-    options.append('-DLEGION_ROOT=%s' %legion_root)  
+    if '+internal_legion' in spec:
+      options.append('-DFF_USE_EXTERNAL_LEGION=OFF')
+    else:
+      options.append('-DFF_USE_EXTERNAL_LEGION=ON')
+      
     return options
