@@ -12,6 +12,7 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='develop', submodules='True')
     version('main',  branch='main',  submodules='True')
+    version('0.14.0', tag='v0.14.0', submodules='True')
     version('0.13.0', tag='v0.13.0', submodules='True')
     version('0.12.1', tag='v0.12.1', submodules="True")
     version('0.12.0', tag='v0.12.0', submodules="True")
@@ -37,7 +38,7 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
     # and remove the +tests conflict below.
     variant('tests', default=False, description='Build tests')
 
-    depends_on('blt@0.4.0:', type='build', when='@0.13.1:')
+    depends_on('blt@0.4.1:', type='build', when='@0.14.0:')
     depends_on('blt@:0.3.6', type='build', when='@:0.13.0')
 
     # variants +rocm and amdgpu_targets are not automatically passed to
