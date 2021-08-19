@@ -98,6 +98,9 @@ class Seacas(CMakePackage):
 
     depends_on('cmake@3.1:', type='build')
 
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.lib)
+
     def cmake_args(self):
         spec = self.spec
         from_variant = self.define_from_variant
