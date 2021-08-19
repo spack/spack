@@ -62,7 +62,8 @@ class Neuron(CMakePackage):
     )
 
     variant("cmake",      default=True, description="Build NEURON using cmake")
-    variant("binary",     default=True, description="Create special as a binary instead of shell script")
+    variant("binary",     default=True, description="Create special as a binary instead of shell script (until 8.0.0)")
+    conflicts("~binary", when='@8.0.1:')
     variant("coreneuron", default=False, description="Enable CoreNEURON support")
     variant("mod-compatibility",  default=True, description="Enable CoreNEURON compatibility for MOD files")
     variant("cross-compile",  default=False, description="Build for cross-compile environment")
@@ -152,7 +153,7 @@ class Neuron(CMakePackage):
             args.append("-DCMAKE_BUILD_TYPE=Custom")
         if "+mod-compatibility" in self.spec:
             args.append("-DNRN_ENABLE_MOD_COMPATIBILITY:BOOL=ON")
-        if "+binary" in self.spec:
+        if "+binary" in self.spec and '@:8.0.0' in self.spec:
             args.append("-DNRN_ENABLE_BINARY_SPECIAL=ON")
         if "+legacy-unit" in self.spec:
             args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
