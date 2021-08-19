@@ -482,7 +482,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-yaml copy update-index"
+        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-yaml copy sync update-index"
     fi
 }
 
@@ -544,6 +544,10 @@ _spack_buildcache_save_yaml() {
 
 _spack_buildcache_copy() {
     SPACK_COMPREPLY="-h --help --base-dir --spec-yaml --destination-url"
+}
+
+_spack_buildcache_sync() {
+    SPACK_COMPREPLY="-h --help --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
 }
 
 _spack_buildcache_update_index() {

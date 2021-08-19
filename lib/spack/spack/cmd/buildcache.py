@@ -6,6 +6,7 @@ import argparse
 import os
 import shutil
 import sys
+import tempfile
 
 import llnl.util.tty as tty
 
@@ -15,6 +16,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
+import spack.fetch_strategy as fs
 import spack.hash_types as ht
 import spack.mirror
 import spack.relocate
@@ -23,9 +25,11 @@ import spack.spec
 import spack.store
 import spack.util.crypto
 import spack.util.url as url_util
+import spack.util.web as web_util
 from spack.cmd import display_specs
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
+from spack.stage import Stage
 from spack.util.string import plural
 
 description = "create, download and install binary packages"
@@ -225,6 +229,36 @@ def setup_parser(subparser):
         '--destination-url', default=None,
         help='Destination mirror url')
     copy.set_defaults(func=buildcache_copy)
+
+    # Sync buildcache entries from one mirror to another
+    sync = subparsers.add_parser('sync', help=buildcache_sync.__doc__)
+    source = sync.add_mutually_exclusive_group(required=True)
+    source.add_argument('--src-directory',
+                        metavar='DIRECTORY',
+                        type=str,
+                        help="Source mirror as a local file path")
+    source.add_argument('--src-mirror-name',
+                        metavar='MIRROR_NAME',
+                        type=str,
+                        help="Name of the source mirror")
+    source.add_argument('--src-mirror-url',
+                        metavar='MIRROR_URL',
+                        type=str,
+                        help="URL of the source mirror")
+    dest = sync.add_mutually_exclusive_group(required=True)
+    dest.add_argument('--dest-directory',
+                      metavar='DIRECTORY',
+                      type=str,
+                      help="Destination mirror as a local file path")
+    dest.add_argument('--dest-mirror-name',
+                      metavar='MIRROR_NAME',
+                      type=str,
+                      help="Name of the destination mirror")
+    dest.add_argument('--dest-mirror-url',
+                      metavar='MIRROR_URL',
+                      type=str,
+                      help="URL of the destination mirror")
+    sync.set_defaults(func=buildcache_sync)
 
     # Update buildcache index without copying any additional packages
     update_index = subparsers.add_parser(
@@ -777,6 +811,123 @@ def buildcache_copy(args):
     if os.path.exists(cdashid_src_path):
         tty.msg('Copying {0}'.format(cdashidfile_rel_path))
         shutil.copyfile(cdashid_src_path, cdashid_dest_path)
+
+
+def buildcache_sync(args):
+    """ Syncs binaries (and associated metadata) from one mirror to another.
+    Requires an active environment in order to know which specs to sync.
+
+    Args:
+        src (str): Source mirror URL
+        dest (str): Destination mirror URL
+    """
+    # Figure out the source mirror
+    source_location = None
+    if args.src_directory:
+        source_location = args.src_directory
+        scheme = url_util.parse(source_location, scheme='<missing>').scheme
+        if scheme != '<missing>':
+            raise ValueError(
+                '"--src-directory" expected a local path; got a URL, instead')
+        # Ensure that the mirror lookup does not mistake this for named mirror
+        source_location = 'file://' + source_location
+    elif args.src_mirror_name:
+        source_location = args.src_mirror_name
+        result = spack.mirror.MirrorCollection().lookup(source_location)
+        if result.name == "<unnamed>":
+            raise ValueError(
+                'no configured mirror named "{name}"'.format(
+                    name=source_location))
+    elif args.src_mirror_url:
+        source_location = args.src_mirror_url
+        scheme = url_util.parse(source_location, scheme='<missing>').scheme
+        if scheme == '<missing>':
+            raise ValueError(
+                '"{url}" is not a valid URL'.format(url=source_location))
+
+    src_mirror = spack.mirror.MirrorCollection().lookup(source_location)
+    src_mirror_url = url_util.format(src_mirror.fetch_url)
+
+    # Figure out the destination mirror
+    dest_location = None
+    if args.dest_directory:
+        dest_location = args.dest_directory
+        scheme = url_util.parse(dest_location, scheme='<missing>').scheme
+        if scheme != '<missing>':
+            raise ValueError(
+                '"--dest-directory" expected a local path; got a URL, instead')
+        # Ensure that the mirror lookup does not mistake this for named mirror
+        dest_location = 'file://' + dest_location
+    elif args.dest_mirror_name:
+        dest_location = args.dest_mirror_name
+        result = spack.mirror.MirrorCollection().lookup(dest_location)
+        if result.name == "<unnamed>":
+            raise ValueError(
+                'no configured mirror named "{name}"'.format(
+                    name=dest_location))
+    elif args.dest_mirror_url:
+        dest_location = args.dest_mirror_url
+        scheme = url_util.parse(dest_location, scheme='<missing>').scheme
+        if scheme == '<missing>':
+            raise ValueError(
+                '"{url}" is not a valid URL'.format(url=dest_location))
+
+    dest_mirror = spack.mirror.MirrorCollection().lookup(dest_location)
+    dest_mirror_url = url_util.format(dest_mirror.fetch_url)
+
+    # Get the active environment
+    env = ev.get_env(args, 'buildcache sync', required=True)
+
+    tty.msg('Syncing environment buildcache files from {0} to {1}'.format(
+        src_mirror_url, dest_mirror_url))
+
+    build_cache_dir = bindist.build_cache_relative_path()
+    buildcache_rel_paths = []
+
+    tty.debug('Syncing the following specs:')
+    for s in env.all_specs():
+        tty.debug('  {0}{1}: {2}'.format(
+            '* ' if s in env.roots() else '  ', s.name, s.dag_hash()))
+
+        buildcache_rel_paths.extend([
+            os.path.join(
+                build_cache_dir, bindist.tarball_path_name(s, '.spack')),
+            os.path.join(
+                build_cache_dir, bindist.tarball_name(s, '.spec.yaml')),
+            os.path.join(
+                build_cache_dir, bindist.tarball_name(s, '.cdashid'))
+        ])
+
+    tmpdir = tempfile.mkdtemp()
+
+    try:
+        for rel_path in buildcache_rel_paths:
+            src_url = url_util.join(src_mirror_url, rel_path)
+            local_path = os.path.join(tmpdir, rel_path)
+            dest_url = url_util.join(dest_mirror_url, rel_path)
+
+            tty.debug('Copying {0} to {1} via {2}'.format(
+                src_url, dest_url, local_path))
+
+            stage = Stage(src_url,
+                          name="temporary_file",
+                          path=os.path.dirname(local_path),
+                          keep=True)
+
+            try:
+                stage.create()
+                stage.fetch()
+                web_util.push_to_url(
+                    local_path,
+                    dest_url,
+                    keep_original=True)
+            except fs.FetchError as e:
+                tty.debug('spack buildcache unable to sync {0}'.format(rel_path))
+                tty.debug(e)
+            finally:
+                stage.destroy()
+    finally:
+        shutil.rmtree(tmpdir)
 
 
 def update_index(mirror_url, update_keys=False):
