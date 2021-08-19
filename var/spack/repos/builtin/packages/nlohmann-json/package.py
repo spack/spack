@@ -27,7 +27,7 @@ class NlohmannJson(CMakePackage):
     version('3.1.2',  sha256='e8fffa6cbdb3c15ecdff32eebf958b6c686bc188da8ad5c6489462d16f83ae54')
     version('3.1.1',  sha256='9f3549824af3ca7e9707a2503959886362801fb4926b869789d6929098a79e47')
 
-    variant('single_header', default=True,
+    variant('multiple_headers', default=False,
             description='Use amalgamated single-header')
 
     depends_on('cmake@3.8:', type='build')
@@ -42,6 +42,6 @@ class NlohmannJson(CMakePackage):
 
     def cmake_args(self):
         return [
-            self.define_from_variant('JSON_MultipleHeaders', 'single_header'),
+            self.define_from_variant('JSON_MultipleHeaders', 'multiple_headers'),
             self.define('JSON_BuildTests', self.run_tests),
         ]
