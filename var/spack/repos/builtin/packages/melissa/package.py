@@ -12,6 +12,7 @@ class Melissa(CMakePackage):
     """
 
     homepage = 'https://gitlab.inria.fr/melissa/melissa'
+    url = 'https://gitlab.inria.fr/melissa/melissa/-/archive/v1.0/melissa-v1.0.tar.bz2'
     git = 'https://gitlab.inria.fr/melissa/melissa.git'
 
     # attention: Git**Hub**.com accounts
@@ -19,6 +20,7 @@ class Melissa(CMakePackage):
 
     version('master', branch='master')
     version('develop', branch='develop')
+    version('0.7.0', sha256='a801d0b512e31a0750f98cfca80f8338985e06abf9b26e96f7645a022864e41c')
 
     variant('no_mpi_api', default=False, description="Enable the deprecated no-MPI API")
     variant('shared', default=True, description="Build shared libraries")
