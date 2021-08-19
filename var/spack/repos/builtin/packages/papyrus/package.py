@@ -22,6 +22,8 @@ class Papyrus(CMakePackage):
 
     depends_on('mpi')
 
+    test_requires_compiler = True
+
     def setup_run_environment(self, env):
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
@@ -37,3 +39,35 @@ class Papyrus(CMakePackage):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([join_path('kv', 'tests', '01_open_close')])
+
+    def run_01_open_close_test(self):
+        """Run stand alone test: 01_open_close"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                            'kv', 'tests', '01_open_close')
+
+        if not os.path.exists(test_dir):
+            print('Skipping 01_open_close test')
+            return
+
+        if os.path.isdir(self.prefix.lib64):
+            lib_dir = self.prefix.lib64
+        else:
+            lib_dir = self.prefix.lib
+
+        exe = 'test01_open_close'
+
+        options = ['-I{0}'.format(join_path(self.prefix, 'include')),
+                   '-L{0}'.format(lib_dir), '-lpapyruskv', '-g', '-o',
+                   exe, 'test01_open_close.c', '-lpthread', '-lm']
+
+        self.run_test(self.spec['mpi'].mpicxx, options,
+                      purpose  ='test: compile {0} example'.format(exe),
+                      work_dir =test_dir)
+
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_01_open_close_test()
