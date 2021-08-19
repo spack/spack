@@ -158,7 +158,7 @@ class Warpx(CMakePackage):
         """Checks after the build phase"""
         if '+app' not in self.spec:
             print("WarpX check skipped: requires variant +app")
-            pass
+            return
 
         with working_dir("spack-check", create=True):
             cli_args = self._get_input_options(False)
@@ -175,7 +175,7 @@ class Warpx(CMakePackage):
         """Perform smoke tests on the installed package."""
         if '+app' not in self.spec:
             print("WarpX smoke tests skipped: requires variant +app")
-            pass
+            return
 
         # our executable names are a variant-dependent and naming evolves
         exe = find(self.prefix.bin, 'warpx.*', recursive=False)[0]
