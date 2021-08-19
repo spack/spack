@@ -351,15 +351,7 @@ class PruneDuplicatePaths(NameModifier):
 
 
 class EnvironmentModifications(object):
-    """Keeps track of requests to modify the current environment.
-
-    Each call to a method to modify the environment stores the extra
-    information on the caller in the request:
-
-        * 'filename' : filename of the module where the caller is defined
-        * 'lineno': line number where the request occurred
-        * 'context' : line of code that issued the request that failed
-    """
+    """Keeps track of requests to modify the current environment."""
 
     def __init__(self, other=None):
         """Initializes a new instance, copying commands from 'other'
@@ -389,18 +381,6 @@ class EnvironmentModifications(object):
             raise TypeError(
                 'other must be an instance of EnvironmentModifications')
 
-    def _get_outside_caller_attributes(self):
-        stack = inspect.stack()
-        try:
-            _, filename, lineno, _, context, index = stack[2]
-            context = context[index].strip()
-        except Exception:
-            filename = 'unknown file'
-            lineno = 'unknown line'
-            context = 'unknown context'
-        args = {'filename': filename, 'lineno': lineno, 'context': context}
-        return args
-
     def set(self, name, value, **kwargs):
         """Stores a request to set an environment variable.
 
@@ -408,7 +388,6 @@ class EnvironmentModifications(object):
             name: name of the environment variable to be set
             value: value of the environment variable
         """
-        kwargs.update(self._get_outside_caller_attributes())
         item = SetEnv(name, value, **kwargs)
         self.env_modifications.append(item)
 
@@ -421,7 +400,6 @@ class EnvironmentModifications(object):
             value: value to append to the environment variable
         Appends with spaces separating different additions to the variable
         """
-        kwargs.update(self._get_outside_caller_attributes())
         kwargs.update({'separator': sep})
         item = AppendFlagsEnv(name, value, **kwargs)
         self.env_modifications.append(item)
@@ -432,7 +410,6 @@ class EnvironmentModifications(object):
         Args:
             name: name of the environment variable to be unset
         """
-        kwargs.update(self._get_outside_caller_attributes())
         item = UnsetEnv(name, **kwargs)
         self.env_modifications.append(item)
 
@@ -446,7 +423,6 @@ class EnvironmentModifications(object):
             value: value to remove to the environment variable
             sep: separator to assume for environment variable
         """
-        kwargs.update(self._get_outside_caller_attributes())
         kwargs.update({'separator': sep})
         item = RemoveFlagsEnv(name, value, **kwargs)
         self.env_modifications.append(item)
@@ -458,7 +434,6 @@ class EnvironmentModifications(object):
             name: name o the environment variable to be set.
             elements: elements of the path to set.
         """
-        kwargs.update(self._get_outside_caller_attributes())
         item = SetPath(name, elements, **kwargs)
         self.env_modifications.append(item)
 
@@ -469,7 +444,6 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be appended
         """
-        kwargs.update(self._get_outside_caller_attributes())
         item = AppendPath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -480,7 +454,6 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be pre-pended
         """
-        kwargs.update(self._get_outside_caller_attributes())
         item = PrependPath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -491,7 +464,6 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be removed
         """
-        kwargs.update(self._get_outside_caller_attributes())
         item = RemovePath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -502,7 +474,6 @@ class EnvironmentModifications(object):
         Args:
             name: name of the path list in the environment.
         """
-        kwargs.update(self._get_outside_caller_attributes())
         item = DeprioritizeSystemPaths(name, **kwargs)
         self.env_modifications.append(item)
 
@@ -513,7 +484,6 @@ class EnvironmentModifications(object):
         Args:
             name: name of the path list in the environment.
         """
-        kwargs.update(self._get_outside_caller_attributes())
         item = PruneDuplicatePaths(name, **kwargs)
         self.env_modifications.append(item)
 
@@ -815,8 +785,8 @@ def set_or_unset_not_first(variable, changes, errstream):
                not item.args.get('force', False) and
                type(item) in [SetEnv, UnsetEnv]]
     if indexes:
-        good = '\t    \t{context} at {filename}:{lineno}'
-        nogood = '\t--->\t{context} at {filename}:{lineno}'
+        good = '\t    \t{context}'
+        nogood = '\t--->\t{context}'
         message = "Suspicious requests to set or unset '{var}' found"
         errstream(message.format(var=variable))
         for ii, item in enumerate(changes):
