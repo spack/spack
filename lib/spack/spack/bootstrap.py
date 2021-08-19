@@ -489,6 +489,14 @@ def _bootstrap_config_scopes():
 
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
+    # We may need to compile code from sources, so ensure we have compilers
+    # for the current platform before switching parts. We use "spack compiler
+    # list" as it searches for compilers lazily i.e. only if we don't have
+    # them already in compilers.yaml
+    compiler_cmd = spack.main.SpackCommand('compiler')
+    compiler_cmd(
+        'list', output=os.devnull, error=os.devnull, fail_on_error=False
+    )
     bootstrap_store_path = store_path()
     with spack.environment.deactivate_environment():
         with spack.architecture.use_platform(spack.architecture.real_platform()):

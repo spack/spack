@@ -164,7 +164,7 @@ config:
   #
   # 'clingo' currently requires the clingo ASP solver to be installed and
   # built with python bindings. 'original' is built in.
-  concretizer: original
+  concretizer: clingo
 
 
   # How long to wait to lock the Spack installation database. This lock is used
