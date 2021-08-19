@@ -360,7 +360,7 @@ class Legion(CMakePackage):
 
         self.run_test('cmake',
                       options=cmake_args,
-                      purpose='test: compile {0} example'.format(exe),
+                      purpose='test: generate makefile for {0} example'.format(exe),
                       work_dir=test_dir)
 
         self.run_test('make',
