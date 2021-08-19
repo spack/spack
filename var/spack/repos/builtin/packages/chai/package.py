@@ -13,6 +13,8 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/CHAI"
     git      = "https://github.com/LLNL/CHAI.git"
+    
+    maintainers = ['davidbeckingsale']
 
     version('develop', branch='develop', submodules=True)
     version('master', branch='main', submodules=True)
