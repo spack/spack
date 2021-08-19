@@ -57,7 +57,7 @@ else:
 __all__ = ['DirectiveError', 'DirectiveMeta']
 
 #: These are variant names used by Spack internally; packages can't use them
-reserved_names = ['patches', 'dev_path']
+reserved_names = ['patches', 'dev_path', 'commit_sha']
 
 _patch_order_index = 0
 

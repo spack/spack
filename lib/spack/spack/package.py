@@ -993,9 +993,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Construct a composite stage on top of the composite FetchStrategy
         composite_fetcher = self.fetcher
+        commit_sha_var = self.spec.variants.get('commit_sha', None)
         composite_stage = StageComposite()
         resources = self._get_needed_resources()
         for ii, fetcher in enumerate(composite_fetcher):
+            if commit_sha_var:
+                fetcher.commit_sha = commit_sha_var.value[0]
             if ii == 0:
                 # Construct root stage first
                 stage = self._make_root_stage(fetcher)
@@ -1004,6 +1007,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 resource = resources[ii - 1]  # ii == 0 is root!
                 stage = self._make_resource_stage(composite_stage[0], fetcher,
                                                   resource)
+
+
             # Append the item to the composite
             composite_stage.append(stage)
 

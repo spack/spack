@@ -815,7 +815,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     Repositories are cloned into the standard stage source path directory.
     """
     url_attr = 'git'
-    optional_attrs = ['tag', 'branch', 'commit', 'submodules',
+    optional_attrs = ['tag', 'branch', 'commit', 'submodules', 'commit_sha',
                       'get_full_repo', 'submodules_delete']
 
     git_version_re = r'git version (\S+)'
@@ -898,7 +898,9 @@ class GitFetchStrategy(VCSFetchStrategy):
         tty.debug('Cloning git repository: {0}'.format(self._repo_info()))
 
         git = self.git
-        if self.commit:
+        if self.commit or self.commit_sha:
+            if self.commit_sha:
+              self.commit = self.commit_sha
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
             debug = spack.config.get('config:debug')
@@ -969,6 +971,8 @@ class GitFetchStrategy(VCSFetchStrategy):
 
                     git(*pull_args, ignore_errors=1)
                     git(*co_args)
+
+        self.commit_sha = git('rev-parse', 'HEAD')
 
         if self.submodules_delete:
             with working_dir(self.stage.source_path):
