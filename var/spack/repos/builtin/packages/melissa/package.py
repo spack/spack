@@ -7,8 +7,8 @@ from spack import *
 
 
 class Melissa(CMakePackage):
-    """Melissa is a file avoiding, adaptive, fault tolerant and elastic
-    framework, to run large scale sensitivity analysis on supercomputers.
+    """Melissa is a file-avoiding, adaptive, fault-tolerant and elastic
+    framework, to run large-scale sensitivity analysis on supercomputers.
     """
 
     homepage = 'https://gitlab.inria.fr/melissa/melissa'
