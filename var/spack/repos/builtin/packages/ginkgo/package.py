@@ -132,7 +132,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             return
         with working_dir(self.build_directory):
             make("test_install")
-        smoke_test_path = join_path(self.build_directory, 'test_install')
+        smoke_test_path = join_path(self.build_directory, 'test', 'test_install')
         with working_dir(smoke_test_path):
             make("install")
 
