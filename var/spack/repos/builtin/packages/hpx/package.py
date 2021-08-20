@@ -9,7 +9,7 @@ import sys
 from spack import *
 
 
-class Hpx(CMakePackage, CudaPackage):
+class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     """C++ runtime system for parallel and distributed applications."""
 
     homepage = "https://hpx.stellar-group.org/"
@@ -108,6 +108,9 @@ class Hpx(CMakePackage, CudaPackage):
     conflicts('cxxstd=14', when='@master')
     conflicts('cxxstd=14', when='@stable')
 
+    # HIP support is available from 1.6.0 onwards
+    conflicts('+rocm', when='@:1.5')
+
     map_cxxstd = lambda cxxstd : '2a' if cxxstd == '20' else cxxstd
     for cxxstd in cxxstds:
         depends_on('asio cxxstd={0}'.format(map_cxxstd(cxxstd)), when='@1.7: cxxstd={0}'.format(cxxstd))
@@ -152,6 +155,7 @@ class Hpx(CMakePackage, CudaPackage):
 
             self.define_from_variant('HPX_WITH_MALLOC', 'malloc'),
             self.define_from_variant('HPX_WITH_CUDA', 'cuda'),
+            self.define_from_variant('HPX_WITH_HIP', 'rocm'),
             self.define_from_variant('HPX_WITH_TOOLS', 'tools'),
             self.define_from_variant('HPX_WITH_EXAMPLES', 'examples'),
             self.define_from_variant('HPX_WITH_ASYNC_MPI', 'async_mpi'),
@@ -177,6 +181,12 @@ class Hpx(CMakePackage, CudaPackage):
         # Enable unity builds when available
         if spec.satisfies("@1.7:"):
             args += [self.define('HPX_WITH_UNITY_BUILD', True)]
+
+        # HIP support requires compiling with hipcc
+        if '+rocm' in self.spec:
+            args += [self.define('CMAKE_CXX_COMPILER', self.spec['hip'].hipcc)]
+            if self.spec.satisfies('^cmake@3.21:'):
+                args += [self.define('__skip_rocmclang', True)]
 
         # Instrumentation
         args += self.instrumentation_args()
