@@ -7,7 +7,7 @@ import os.path
 import pytest
 
 import spack.config
-import spack.environment
+import spack.environment as ev
 import spack.main
 
 _bootstrap = spack.main.SpackCommand('bootstrap')
@@ -65,7 +65,7 @@ def test_reset_in_file_scopes(mutable_config, scopes):
 def test_reset_in_environment(mutable_mock_env_path, mutable_config):
     env = spack.main.SpackCommand('env')
     env('create', 'bootstrap-test')
-    current_environment = spack.environment.read('bootstrap-test')
+    current_environment = ev.read('bootstrap-test')
 
     with current_environment:
         _bootstrap('disable')

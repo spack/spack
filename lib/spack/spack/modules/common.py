@@ -698,7 +698,11 @@ class BaseContext(tengine.Context):
             if use_view is True:
                 use_view = ev.default_view_name
 
-            env = ev.get_env({}, 'post_env_write_hook', required=True)
+            env = ev.active_environment()
+            if not env:
+                raise ev.SpackEnvironmentViewError("Module generation with views "
+                                                   "requires active environment")
+
             view = env.views[use_view]
 
             spec.prefix = view.get_projection_for_spec(spec)

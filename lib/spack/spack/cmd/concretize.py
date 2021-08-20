@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.cmd
 import spack.environment as ev
 
 description = 'concretize an environment and write a lockfile'
@@ -23,7 +24,7 @@ chosen, test dependencies are enabled for all packages in the environment.""")
 
 
 def concretize(parser, args):
-    env = ev.get_env(args, 'concretize', required=True)
+    env = spack.cmd.require_active_env(cmd_name='concretize')
 
     if args.test == 'all':
         tests = True

@@ -67,7 +67,7 @@ def extensions(parser, args):
     if not spec[0].package.extendable:
         tty.die("%s is not an extendable package." % spec[0].name)
 
-    env = ev.get_env(args, 'extensions')
+    env = ev.active_environment()
     spec = cmd.disambiguate_spec(spec[0], env)
 
     if not spec.package.extendable:

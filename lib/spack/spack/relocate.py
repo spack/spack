@@ -16,7 +16,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.architecture
-import spack.cmd
 import spack.repo
 import spack.spec
 import spack.util.executable as executable
