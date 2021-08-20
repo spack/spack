@@ -737,7 +737,7 @@ class BaseContext(tengine.Context):
                 index.update(ups.get(kind, {}))
 
         def _valid(spec):
-            if spec.external or not validate:
+            if (spec.external and spec.external_modules) or not validate:
                 return True
             _load_indices(spec)
             if (
