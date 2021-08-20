@@ -31,8 +31,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     version('1.1.0', sha256='1f28bbe58d8f0da600d60c3a74a644d75ac777b20a018a5c1c6030a470e8a1c9')
 
     generator = 'Ninja'
-    depends_on('ninja', type='build')
 
+    map_cxxstd = lambda cxxstd: '2a' if cxxstd == '20' else cxxstd
     cxxstds = ('11', '14', '17', '20')
     variant('cxxstd',
             default='17',
@@ -72,26 +72,81 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     variant('async_mpi', default=False, description='Enable MPI Futures.')
     variant('async_cuda', default=False, description='Enable CUDA Futures.')
 
-    depends_on('hwloc')
+    # Build dependencies
     depends_on('python', type=('build', 'test', 'run'))
+    depends_on('ninja', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('git', type='build')
+    depends_on('cmake', type='build')
 
-    # Recommended dependency versions for 1.2.X
-    depends_on('cmake@3.9.0:', when='@:1.2.1', type='build')
-    depends_on('boost@1.62.0:', when='@:1.2.1')
-    depends_on('hwloc@1.11:', when='@:1.2.1')
+    # Other dependecies
+    depends_on('hwloc')
+    depends_on('boost')
+    for cxxstd in cxxstds:
+        depends_on(
+            "boost cxxstd={0}".format(map_cxxstd(cxxstd)),
+            when="cxxstd={0}".format(cxxstd)
+        )
+    depends_on('asio', when='@1.7:')
+    for cxxstd in cxxstds:
+        depends_on(
+            "asio cxxstd={0}".format(map_cxxstd(cxxstd)),
+            when="cxxstd={0} ^asio".format(cxxstd),
+        )
 
-    # Recommended dependency versions before 1.2
-    depends_on('boost@1.55.0:', when='@:1.1.0')
-    depends_on('hwloc@1.6:', when='@:1.1.0')
+    depends_on('gperftools', when='malloc=tcmalloc')
+    depends_on('jemalloc', when='malloc=jemalloc')
+    depends_on('tbb', when='malloc=tbbmalloc')
+
+    depends_on('mpi', when='networking=mpi')
+    depends_on('mpi', when='+async_mpi')
+
+    depends_on('cuda', when='+async_cuda')
+
+    depends_on('otf2', when='instrumentation=apex')
+    depends_on('gperftools', when='instrumentation=google_perftools')
+    depends_on('papi', when='instrumentation=papi')
+    depends_on('valgrind', when='instrumentation=valgrind')
+
+    # Restrictions for stable/master
+    with when("@master"):
+        conflicts("cxxstd=14")
+        depends_on("cuda@11:", when="+cuda")
+
+    with when("@stable"):
+        conflicts("cxxstd=14")
+        depends_on("cuda@11:", when="+cuda")
+
+    # Restrictions for 1.7.X
+    with when('@1.7:'):
+        depends_on('cmake@3.18.0:', type='build')
+        depends_on('boost@1.71.0:')
+        depends_on('asio@1.12.0:')
+        conflicts('%gcc@:6')
+        conflicts('%clang@:6')
+
+    # Restrictions for 1.6.X
+    conflicts('+rocm', when='@:1.5')
+
+    # Restrictions for 1.5.x
+    conflicts('cxxstd=11', when='@1.5:')
+
+    # Restrictions for 1.2.X
+    with when('@:1.2.1'):
+        depends_on('cmake@3.9.0:', type='build')
+        depends_on('boost@1.62.0:')
+        depends_on('hwloc@1.11:')
+
+    # Restrictions before 1.2
+    with when('@:1.1.0'):
+        depends_on('boost@1.55.0:')
+        depends_on('hwloc@1.6:')
+
+    # Patches and one-off conflicts
 
     # boost 1.73.0 build problem with HPX 1.4.0 and 1.4.1
     # https://github.com/STEllAR-GROUP/hpx/issues/4728#issuecomment-640685308
     depends_on('boost@:1.72.0', when='@:1.4')
-
-    # Asio
-    depends_on('asio', when='@1.7:')
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
@@ -101,38 +156,6 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('boost+context', when='+generic_coroutines')
     _msg_generic_coroutines = 'This platform requires +generic_coroutines'
     conflicts('~generic_coroutines', when='platform=darwin', msg=_msg_generic_coroutines)
-
-    # CXX Standard
-    conflicts('cxxstd=11', when='@1.5:')
-    conflicts('cxxstd=14', when='@1.8:')
-    conflicts('cxxstd=14', when='@master')
-    conflicts('cxxstd=14', when='@stable')
-
-    # HIP support is available from 1.6.0 onwards
-    conflicts('+rocm', when='@:1.5')
-
-    map_cxxstd = lambda cxxstd : '2a' if cxxstd == '20' else cxxstd
-    for cxxstd in cxxstds:
-        depends_on('asio cxxstd={0}'.format(map_cxxstd(cxxstd)), when='@1.7: cxxstd={0}'.format(cxxstd))
-        depends_on('boost cxxstd={0}'.format(map_cxxstd(cxxstd)), when='cxxstd={0}'.format(cxxstd))
-
-    # Malloc
-    depends_on('gperftools', when='malloc=tcmalloc')
-    depends_on('jemalloc', when='malloc=jemalloc')
-    depends_on('tbb', when='malloc=tbbmalloc')
-
-    # MPI
-    depends_on('mpi', when='networking=mpi')
-    depends_on('mpi', when='+async_mpi')
-
-    # CUDA
-    depends_on('cuda', when='+async_cuda')
-
-    # Instrumentation
-    depends_on('otf2', when='instrumentation=apex')
-    depends_on('gperftools', when='instrumentation=google_perftools')
-    depends_on('papi', when='instrumentation=papi')
-    depends_on('valgrind', when='instrumentation=valgrind')
 
     # Patches APEX
     patch('git_external.patch', when='@1.3.0 instrumentation=apex')
