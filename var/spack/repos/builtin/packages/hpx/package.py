@@ -33,9 +33,10 @@ class Hpx(CMakePackage, CudaPackage):
     generator = 'Ninja'
     depends_on('ninja', type='build')
 
+    cxxstds = ('11', '14', '17', '20')
     variant('cxxstd',
             default='17',
-            values=('11', '14', '17', '20'),
+            values=cxxstds,
             description='Use the specified C++ standard when building.')
 
     variant(
@@ -89,6 +90,9 @@ class Hpx(CMakePackage, CudaPackage):
     # https://github.com/STEllAR-GROUP/hpx/issues/4728#issuecomment-640685308
     depends_on('boost@:1.72.0', when='@:1.4')
 
+    # Asio
+    depends_on('asio', when='@1.7:')
+
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
     # for additional information see:
@@ -98,15 +102,16 @@ class Hpx(CMakePackage, CudaPackage):
     _msg_generic_coroutines = 'This platform requires +generic_coroutines'
     conflicts('~generic_coroutines', when='platform=darwin', msg=_msg_generic_coroutines)
 
-    # Asio
-    depends_on('asio cxxstd=11', when='@1.7: cxxstd=11')
-    depends_on('asio cxxstd=14', when='@1.7: cxxstd=14')
-    depends_on('asio cxxstd=17', when='@1.7: cxxstd=17')
-
     # CXX Standard
-    depends_on('boost cxxstd=11', when='cxxstd=11')
-    depends_on('boost cxxstd=14', when='cxxstd=14')
-    depends_on('boost cxxstd=17', when='cxxstd=17')
+    conflicts('cxxstd=11', when='@1.5:')
+    conflicts('cxxstd=14', when='@1.8:')
+    conflicts('cxxstd=14', when='@master')
+    conflicts('cxxstd=14', when='@stable')
+
+    map_cxxstd = lambda cxxstd : '2a' if cxxstd == '20' else cxxstd
+    for cxxstd in cxxstds:
+        depends_on('asio cxxstd={0}'.format(map_cxxstd(cxxstd)), when='@1.7: cxxstd={0}'.format(cxxstd))
+        depends_on('boost cxxstd={0}'.format(map_cxxstd(cxxstd)), when='cxxstd={0}'.format(cxxstd))
 
     # Malloc
     depends_on('gperftools', when='malloc=tcmalloc')
