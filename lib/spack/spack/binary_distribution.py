@@ -916,7 +916,7 @@ def generate_key_index(key_prefix, tmpdir=None):
                 shutil.rmtree(tmpdir)
 
 
-def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
+def build_tarball(spec, mirror, force=False, rel=False, unsigned=False,
                   allow_root=False, key=None, regenerate_index=False):
     """
     Build a tarball from given spec and put it into the directory structure
@@ -935,15 +935,23 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     spackfile_path = os.path.join(
         cache_prefix, tarball_path_name(spec, '.spack'))
 
-    remote_spackfile_path = url_util.join(
-        outdir, os.path.relpath(spackfile_path, tmpdir))
+    pushdir = url_util.format(mirror.push_url)
+    fetchdir = url_util.format(mirror.fetch_url)
+    fetch_spackfile_path = url_util.join(
+        fetchdir, os.path.relpath(spackfile_path, tmpdir))
+    push_spackfile_path = url_util.join(
+        pushdir, os.path.relpath(spackfile_path, tmpdir))
 
     mkdirp(tarfile_dir)
-    if web_util.url_exists(remote_spackfile_path):
+    if web_util.url_exists(push_spackfile_path):
         if force:
-            web_util.remove_url(remote_spackfile_path)
+            web_util.remove_url(push_spackfile_path)
         else:
-            raise NoOverwriteException(url_util.format(remote_spackfile_path))
+            raise NoOverwriteException(url_util.format(push_spackfile_path))
+
+    if (push_spackfile_path != fetch_spackfile_path and
+            web_util.url_exists(fetch_spackfile_path) and not force):
+        raise NoOverwriteException(url_util.format(fetch_spackfile_path))
 
     # need to copy the spec file so the build cache can be downloaded
     # without concretizing with the current spack packages
@@ -953,14 +961,20 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     specfile_path = os.path.realpath(
         os.path.join(cache_prefix, specfile_name))
 
-    remote_specfile_path = url_util.join(
-        outdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir)))
+    push_specfile_path = url_util.join(
+        pushdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir)))
+    fetch_specfile_path = url_util.join(
+        fetchdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir)))
 
-    if web_util.url_exists(remote_specfile_path):
+    if web_util.url_exists(push_specfile_path):
         if force:
-            web_util.remove_url(remote_specfile_path)
+            web_util.remove_url(push_specfile_path)
         else:
-            raise NoOverwriteException(url_util.format(remote_specfile_path))
+            raise NoOverwriteException(url_util.format(push_specfile_path))
+
+    if (push_specfile_path != fetch_specfile_path and
+            web_util.url_exists(fetch_specfile_path) and not force):
+        raise NoOverwriteException(url_util.format(fetch_specfile_path))
 
     # make a copy of the install directory to work with
     workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
@@ -1046,18 +1060,18 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         os.remove('%s.asc' % specfile_path)
 
     web_util.push_to_url(
-        spackfile_path, remote_spackfile_path, keep_original=False)
+        spackfile_path, push_spackfile_path, keep_original=False)
     web_util.push_to_url(
-        specfile_path, remote_specfile_path, keep_original=False)
+        specfile_path, push_specfile_path, keep_original=False)
 
     tty.debug('Buildcache for "{0}" written to \n {1}'
-              .format(spec, remote_spackfile_path))
+              .format(spec, push_spackfile_path))
 
     try:
         # push the key to the build cache's _pgp directory so it can be
         # imported
         if not unsigned:
-            push_keys(outdir,
+            push_keys(pushdir,
                       keys=[key],
                       regenerate_index=regenerate_index,
                       tmpdir=tmpdir)
@@ -1066,7 +1080,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         # found
         if regenerate_index:
             generate_package_index(url_util.join(
-                outdir, os.path.relpath(cache_prefix, tmpdir)))
+                pushdir, os.path.relpath(cache_prefix, tmpdir)))
     finally:
         shutil.rmtree(tmpdir)
 
