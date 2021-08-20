@@ -174,6 +174,10 @@ class Hpx(CMakePackage, CudaPackage):
             self.define('HPX_DATASTRUCTURES_WITH_ADAPT_STD_TUPLE', False),
         ]
 
+        # Enable unity builds when available
+        if spec.satisfies("@1.7:"):
+            args += [self.define('HPX_WITH_UNITY_BUILD', True)]
+
         # Instrumentation
         args += self.instrumentation_args()
 
