@@ -31,15 +31,15 @@ spack:
       - axom
       - blt
       - caliper
-      #- care  ## ~benchmarks ~examples ~tests
-      #- chai  ## ~benchmarks ~examples ~tests
+      - care  ## ~benchmarks ~examples ~tests
+      - chai  ## ~benchmarks ~examples ~tests
       - conduit  # ^hdf5+shared
       - flux-core
       #- flux-sched
-      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm  # same issue w/chai
+      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm  # lib/sdl_x11.hpp errors
       - hypre
       - lbann
-      - lvarray ~tests  # per Spack issue #23192  # ~examples
+      - lvarray
       - mfem
       - py-hatchet
       - py-maestrowf
@@ -50,7 +50,7 @@ spack:
       - scr
       - sundials
       - umpire # ~openmp
-      #- visit   # ^mesa-glu@9.0.0
+      #- visit   # ^mesa-glu@9.0.0  # skipped due to qt build failures
       - xbraid
       - zfp
 
