@@ -876,7 +876,7 @@ def buildcache_sync(args):
     dest_mirror_url = url_util.format(dest_mirror.fetch_url)
 
     # Get the active environment
-    env = ev.get_env(args, 'buildcache sync', required=True)
+    env = spack.cmd.require_active_env(cmd_name='buildcache sync')
 
     tty.msg('Syncing environment buildcache files from {0} to {1}'.format(
         src_mirror_url, dest_mirror_url))
