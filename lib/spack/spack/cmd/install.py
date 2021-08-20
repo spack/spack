@@ -79,9 +79,9 @@ the dependencies"""
     scopes = spack.config.scopes()
     scopes_metavar = spack.config.scopes_metavar
     subparser.add_argument(
-        '--min-scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.config.default_modify_scope('compilers'),
-        help="min configuration scope to use for installing packages")
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope('packages'),
+        help="configuration scope to use for installing packages")
     subparser.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
@@ -422,6 +422,11 @@ environment variables:
 
     if len(specs) == 0:
         tty.die('The `spack install` command requires a spec to install.')
+
+    if args.scope:
+        # TODO: Get necessary install variables from config module
+        # TODO: Set configuration within scope
+        pass
 
     if not args.log_file and not reporter.filename:
         reporter.filename = default_log_file(specs[0])
