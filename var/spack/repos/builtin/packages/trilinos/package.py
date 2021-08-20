@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import sys
 
 from spack import *
@@ -92,9 +91,6 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('anasazi',      default=True, description='Compile with Anasazi')
     variant('aztec',        default=True, description='Compile with Aztec')
     variant('belos',        default=True, description='Compile with Belos')
-    # chaco is disabled by default. As of 12.14.1 libchaco.so
-    # has the global symbol divide (and maybe others) that can
-    # lead to symbol clash.
     variant('chaco',        default=False, description='Compile with Chaco from SEACAS')
     variant('epetra',       default=True, description='Compile with Epetra')
     variant('epetraext',    default=True, description='Compile with EpetraExt')
@@ -265,9 +261,10 @@ class Trilinos(CMakePackage, CudaPackage):
     # CUDA without wrapper requires clang
     for _compiler in spack.compilers.supported_compilers():
         if _compiler != 'clang':
-            conflicts('+cuda', when='~wrapper %' +_compiler,
+            conflicts('+cuda', when='~wrapper %' + _compiler,
                       msg='trilinos~wrapper+cuda can only be built with the '
                       'Clang compiler')
+
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
     conflicts('+stokhos', when='%xl_r')
@@ -390,6 +387,8 @@ class Trilinos(CMakePackage, CudaPackage):
                 env.set('CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
 
     def cmake_args(self):
+        options = []
+
         spec = self.spec
         define = CMakePackage.define
         define_from_variant = self.define_from_variant
@@ -410,9 +409,6 @@ class Trilinos(CMakePackage, CudaPackage):
         define_trilinos_enable = _make_definer("Trilinos_ENABLE_")
         # Same but for TPLs
         define_tpl_enable = _make_definer("TPL_ENABLE_")
-
-        cxx_flags = []
-        options = []
 
         # #################### Base Settings #######################
 
@@ -664,7 +660,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
             define_kok_enable = _make_definer("Kokkos_ENABLE_")
             options.extend([
-                define_kok_enable('CUDA')),
+                define_kok_enable('CUDA'),
                 define_kok_enable('OPENMP' if spec.version >= Version('13')
                                   else 'OpenMP'),
             ])
@@ -674,8 +670,9 @@ class Trilinos(CMakePackage, CudaPackage):
                     define_kok_enable('CUDA_LAMBDA', True),
                     define_kok_enable('CUDA_RELOCATABLE_DEVICE_CODE', 'cuda_rdc')
                 ])
+                arch_map = Kokkos.spack_cuda_arch_map
                 options.extend(
-                    define("Kokkos_ARCH_" + Kokkos.spack_cuda_arch_map[arch].upper(), True)
+                    define("Kokkos_ARCH_" + arch_map[arch].upper(), True)
                     for arch in spec.variants['cuda_arch'].value
                 )
 
@@ -683,7 +680,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
         # Fortran lib (assumes clang is built with gfortran!)
         if ('+fortran +mpi' in spec
-            and spec.compiler.name in ['gcc', 'clang', 'apple-clang']):
+                and spec.compiler.name in ['gcc', 'clang', 'apple-clang']):
             mpifc = Executable(spec['mpi'].mpifc)
             libgfortran = mpifc('--print-file-name libgfortran.a', output=str)
             options.append(define(
