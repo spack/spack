@@ -28,7 +28,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.cmd import display_specs
 from spack.error import SpecError
-from spack.spec import Spec, save_dependency_spec_yamls
+from spack.spec import Spec, save_dependency_specfiles
 from spack.stage import Stage
 from spack.util.string import plural
 
