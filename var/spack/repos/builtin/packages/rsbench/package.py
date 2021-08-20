@@ -27,8 +27,7 @@ class Rsbench(MakefilePackage):
     def build_directory(self):
         if self.spec.satisfies('@:2'):
             return 'src'
-        else:
-            return 'openmp-threading'
+        return 'openmp-threading'
 
     @property
     def build_targets(self):
