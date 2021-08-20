@@ -53,6 +53,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                                      'Aggressively vectorize loops'],
         'compiler_warnings': [False,
                               'Print all compiler warnings'],
+        'cuda_constexpr': [False,
+                           'Activate experimental constexpr features'],
         'cuda_lambda': [False,
                         'Activate experimental lambda features'],
         'cuda_ldg_intrinsic': [False,
