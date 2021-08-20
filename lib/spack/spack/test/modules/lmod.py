@@ -342,7 +342,7 @@ class TestLmod(object):
             self, tmpdir, modulefile_content, module_configuration, install_mockery):
         with ev.Environment(str(tmpdir), with_view=True) as e:
             module_configuration('with_view')
-            install('cmake')
+            install('--fake', 'cmake')
 
             spec = spack.spec.Spec('cmake').concretized()
 

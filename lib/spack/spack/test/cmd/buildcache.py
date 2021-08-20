@@ -84,7 +84,7 @@ def tests_buildcache_create(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
     """"Ensure that buildcache create creates output files"""
     pkg = 'trivial-install-test-package'
-    install(pkg)
+    install('--fake', pkg)
 
     buildcache('create', '-d', str(tmpdir), '--unsigned', pkg)
 
@@ -129,7 +129,7 @@ def test_buildcache_create_fails_on_noargs(tmpdir):
 def test_buildcache_create_fail_on_perm_denied(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
     """Ensure that buildcache create fails on permission denied error."""
-    install('trivial-install-test-package')
+    install('--fake', 'trivial-install-test-package')
 
     tmpdir.chmod(0)
     with pytest.raises(OSError) as error:
@@ -155,7 +155,7 @@ def test_update_key_index(tmpdir, mutable_mock_env_path,
     s = Spec('libdwarf').concretized()
 
     # Install a package
-    install(s.name)
+    install('--fake', s.name)
 
     # Put installed package in the buildcache, which, because we're signing
     # it, should result in the public key getting pushed to the buildcache
@@ -210,7 +210,7 @@ def test_buildcache_sync(mutable_mock_env_path, install_mockery_mutable_config,
 
     # Install a package and put it in the buildcache
     s = Spec(out_env_pkg).concretized()
-    install(s.name)
+    install('--fake', s.name)
     buildcache(
         'create', '-u', '-f', '-a', '--mirror-url', src_mirror_url, s.name)
 

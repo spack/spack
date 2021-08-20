@@ -14,7 +14,7 @@ extensions = SpackCommand('extensions')
 def test_activate(
         mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
-    install('extension1')
+    install('--fake', 'extension1')
     activate('extension1')
     output = extensions('--show', 'activated', 'extendee')
     assert 'extension1' in output
@@ -23,7 +23,7 @@ def test_activate(
 def test_deactivate(
         mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
-    install('extension1')
+    install('--fake', 'extension1')
     activate('extension1')
     deactivate('extension1')
     output = extensions('--show', 'activated', 'extendee')
@@ -33,8 +33,8 @@ def test_deactivate(
 def test_deactivate_all(
         mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
-    install('extension1')
-    install('extension2')
+    install('--fake', 'extension1')
+    install('--fake', 'extension2')
     activate('extension1')
     activate('extension2')
     deactivate('--all', 'extendee')

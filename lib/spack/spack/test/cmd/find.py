@@ -316,7 +316,7 @@ def test_find_prefix_in_env(mutable_mock_env_path, install_mockery, mock_fetch,
     """Test `find` formats requiring concrete specs work in environments."""
     env('create', 'test')
     with ev.read('test'):
-        install('mpileaks')
+        install('--fake', 'mpileaks')
         find('-p')
         find('-l')
         find('-L')

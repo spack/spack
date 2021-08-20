@@ -36,7 +36,7 @@ def test_diff(install_mockery, mock_fetch, mock_archive, mock_packages):
 
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
-    install('mpileaks')
+    install('--fake', 'mpileaks')
 
     # Only one version of mpileaks will work
     diff('mpileaks', 'mpileaks')
@@ -60,7 +60,7 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     assert "intersect" in result and len(result['intersect']) > 50
 
     # After we install another version, it should ask us to disambiguate
-    install('mpileaks+debug')
+    install('--fake', 'mpileaks+debug')
 
     # There are two versions of mpileaks
     with pytest.raises(spack.main.SpackCommandError):

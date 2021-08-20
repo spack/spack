@@ -200,7 +200,7 @@ def test_mirror_destroy(install_mockery_mutable_config,
     spec_name = 'libdwarf'
 
     # Put a binary package in a buildcache
-    install('--no-cache', spec_name)
+    install('--fake', '--no-cache', spec_name)
     buildcache('create', '-u', '-a', '-f', '-d', mirror_dir.strpath, spec_name)
 
     contents = os.listdir(mirror_dir.strpath)

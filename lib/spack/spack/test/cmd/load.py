@@ -50,7 +50,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive,
                         mock_packages):
     """Test that the '-r' option to the load command prepends dependency prefix
     inspections in post-order"""
-    install('mpileaks')
+    install('--fake', 'mpileaks')
     mpileaks_spec = spack.spec.Spec('mpileaks').concretized()
 
     sh_out = load('--sh', 'mpileaks')
@@ -79,7 +79,7 @@ def test_load_includes_run_env(install_mockery, mock_fetch, mock_archive,
     """Tests that environment changes from the package's
     `setup_run_environment` method are added to the user environment in
     addition to the prefix inspections"""
-    install('mpileaks')
+    install('--fake', 'mpileaks')
 
     sh_out = load('--sh', 'mpileaks')
     csh_out = load('--csh', 'mpileaks')
@@ -90,8 +90,8 @@ def test_load_includes_run_env(install_mockery, mock_fetch, mock_archive,
 
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
-    install('libelf@0.8.12')
-    install('libelf@0.8.13')
+    install('--fake', 'libelf@0.8.12')
+    install('--fake', 'libelf@0.8.13')
     # Now there are two versions of libelf
     with pytest.raises(SpackCommandError):
         # This should cause an error due to multiple versions
@@ -103,7 +103,7 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
 def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive,
                              mock_packages):
     """Test that spack load prints an error message without a shell."""
-    install('mpileaks')
+    install('--fake', 'mpileaks')
 
     out = load('mpileaks', fail_on_error=False)
     assert "To set up shell support" in out
@@ -113,7 +113,7 @@ def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages,
                 working_env):
     """Tests that any variables set in the user environment are undone by the
     unload command"""
-    install('mpileaks')
+    install('--fake', 'mpileaks')
     mpileaks_spec = spack.spec.Spec('mpileaks').concretized()
 
     # Set so unload has something to do
@@ -134,7 +134,7 @@ def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages,
 def test_unload_fails_no_shell(install_mockery, mock_fetch, mock_archive,
                                mock_packages, working_env):
     """Test that spack unload prints an error message without a shell."""
-    install('mpileaks')
+    install('--fake', 'mpileaks')
     mpileaks_spec = spack.spec.Spec('mpileaks').concretized()
     os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
 

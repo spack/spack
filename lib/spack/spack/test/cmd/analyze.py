@@ -63,8 +63,8 @@ def test_analyze_output(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     Test that an analyzer errors if requested name does not exist.
     """
-    install('libdwarf')
-    install('python@3.8')
+    install('--fake', 'libdwarf')
+    install('--fake', 'python@3.8')
     analyzer_dir = tmpdir.join('analyzers')
 
     # An analyzer that doesn't exist should not work
@@ -108,7 +108,7 @@ def test_installfiles_analyzer(tmpdir, mock_fetch, install_mockery_mutable_confi
     """
     test the install files analyzer
     """
-    install('libdwarf')
+    install('--fake', 'libdwarf')
     output_file = _run_analyzer("install_files", "libdwarf", tmpdir)
 
     # Ensure it's the correct content
@@ -170,7 +170,7 @@ def test_configargs_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config)
 
     Since we don't have any, this should return an empty result.
     """
-    install('libdwarf')
+    install('--fake', 'libdwarf')
     analyzer_dir = tmpdir.join('analyzers')
     out = analyze('run', '-a', 'config_args', '-p', str(analyzer_dir), 'libdwarf')
     assert out == ''
