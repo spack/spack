@@ -11,6 +11,8 @@ packages:
       prefix: /usr
   boost:
     variants: +pic
+  cmake:
+    version: [3.15.7]
   cuda:
     version: [11.1.0]
   curl:
