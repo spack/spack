@@ -20,6 +20,7 @@ class Openssh(AutotoolsPackage):
     homepage = "https://www.openssh.com/"
     url      = "https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-7.6p1.tar.gz"
 
+    version('8.6p1', sha256='c3e6e4da1621762c850d03b47eed1e48dff4cc9608ddeb547202a234df8ed7ae')
     version('8.5p1', sha256='f52f3f41d429aa9918e38cf200af225ccdd8e66f052da572870c89737646ec25')
     version('8.4p1', sha256='5a01d22e407eb1c05ba8a8f7c654d388a13e9f226e4ed33bd38748dafa1d2b24')
     version('8.3p1', sha256='f2befbe0472fe7eb75d23340eb17531cb6b3aac24075e2066b41f814e12387b2')
