@@ -743,7 +743,7 @@ def main(argv=None):
 
     # activate an environment if one was specified on the command line
     if not args.no_env:
-        env = ev.find_environment(args)
+        env = spack.cmd.find_environment(args)
         if env:
             ev.activate(env, args.use_env_repo, add_view=False)
 

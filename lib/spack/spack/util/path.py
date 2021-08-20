@@ -85,7 +85,7 @@ def substitute_config_variables(path):
     environment yaml files.
     """
     import spack.environment as ev  # break circular
-    env = ev.get_env({}, '')
+    env = ev.active_environment()
     if env:
         replacements.update({'env': env.path})
     else:

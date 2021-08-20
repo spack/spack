@@ -6,7 +6,6 @@
 import os
 import shutil
 import sys
-from collections import namedtuple
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -106,10 +105,8 @@ def env_activate(args):
         tty.debug("Environment %s is already active" % args.activate_env)
         return
 
-    active_env = ev.get_env(namedtuple('args', ['env'])(env),
-                            'activate')
     cmds = ev.activate(
-        active_env, add_view=args.with_view, shell=args.shell,
+        ev.Environment(spack_env), add_view=args.with_view, shell=args.shell,
         prompt=env_prompt if args.prompt else None
     )
     sys.stdout.write(cmds)
@@ -315,7 +312,7 @@ def env_view_setup_parser(subparser):
 
 
 def env_view(args):
-    env = ev.get_env(args, 'env view')
+    env = ev.active_environment()
 
     if env:
         if args.action == ViewAction.regenerate:
@@ -342,7 +339,7 @@ def env_status_setup_parser(subparser):
 
 
 def env_status(args):
-    env = ev.get_env(args, 'env status')
+    env = ev.active_environment()
     if env:
         if env.path == os.getcwd():
             tty.msg('Using %s in current directory: %s'
@@ -373,7 +370,7 @@ def env_loads_setup_parser(subparser):
 
 
 def env_loads(args):
-    env = ev.get_env(args, 'env loads', required=True)
+    env = spack.cmd.require_active_env(cmd_name='env loads')
 
     # Set the module types that have been selected
     module_type = args.module_type

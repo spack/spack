@@ -220,7 +220,7 @@ def find(parser, args):
     added = set()
     removed = set()
 
-    env = ev.get_env(args, 'find')
+    env = ev.active_environment()
     if env:
         decorator, added, roots, removed = setup_env(env)
 

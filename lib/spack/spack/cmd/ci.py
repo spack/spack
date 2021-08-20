@@ -118,7 +118,7 @@ def ci_generate(args):
        for creating a build group for the generated workload and registering
        all generated jobs under that build group.  If this environment
        variable is not set, no build group will be created on CDash."""
-    env = ev.get_env(args, 'ci generate', required=True)
+    env = spack.cmd.require_active_env(cmd_name='ci generate')
 
     output_file = args.output_file
     copy_yaml_to = args.copy_to
@@ -152,7 +152,7 @@ def ci_generate(args):
 def ci_reindex(args):
     """Rebuild the buildcache index associated with the mirror in the
        active, gitlab-enabled environment. """
-    env = ev.get_env(args, 'ci rebuild-index', required=True)
+    env = spack.cmd.require_active_env(cmd_name='ci rebuild-index')
     yaml_root = ev.config_dict(env.yaml)
 
     if 'mirrors' not in yaml_root or len(yaml_root['mirrors'].values()) < 1:
@@ -169,7 +169,7 @@ def ci_rebuild(args):
     """Check a single spec against the remote mirror, and rebuild it from
        source if the mirror does not contain the full hash match of the spec
        as computed locally. """
-    env = ev.get_env(args, 'ci rebuild', required=True)
+    env = spack.cmd.require_active_env(cmd_name='ci rebuild')
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
     # to do.
