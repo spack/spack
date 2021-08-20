@@ -231,7 +231,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
 
-        if spec.satisfies('~wrapper+cuda') and not spec.satisfies('%clang'):
+        if spec.satisfies("~wrapper+cuda") and not (
+            spec.satisfies("%clang") or spec.satisfies("%cce")
+        ):
             raise InstallError("Kokkos requires +wrapper when using +cuda"
                                "without clang")
 
