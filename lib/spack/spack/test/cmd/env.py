@@ -168,7 +168,7 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
 
     e = ev.read('test')
     with e:
-        install('cmake-client')
+        install('--fake', 'cmake-client')
 
     e = ev.read('test')
     assert e.user_specs[0].name == 'cmake-client'
@@ -178,7 +178,7 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
 
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install = SpackCommand('install')
-    install('dependent-install')
+    install('--fake', 'dependent-install')
 
     # Check one explicit, one implicit install
     dependent = spack.store.db.query(explicit=True)
@@ -204,7 +204,7 @@ def test_env_modifications_error_on_activate(
 
     e = ev.read('test')
     with e:
-        install('cmake-client')
+        install('--fake', 'cmake-client')
 
     def setup_error(pkg, env):
         raise RuntimeError("cmake-client had issues!")
@@ -226,7 +226,7 @@ def test_activate_adds_transitive_run_deps_to_path(
 
     e = ev.read('test')
     with e:
-        install('depends-on-run-env')
+        install('--fake', 'depends-on-run-env')
 
     cmds = ev.activate(e)
     assert 'DEPENDENCY_ENV_VAR=1' in cmds
@@ -238,11 +238,11 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch):
     e = ev.read('test')
     with e:
         # The first installation outputs the package prefix, updates the view
-        out = install('cmake-client')
+        out = install('--fake', 'cmake-client')
         assert 'Updating view at' in out
 
         # The second installation reports all packages already installed
-        out = install('cmake-client')
+        out = install('--fake', 'cmake-client')
         assert 'already installed' in out
 
 
@@ -372,7 +372,7 @@ def test_env_status_broken_view(
     install_mockery
 ):
     with ev.create('test'):
-        install('trivial-install-test-package')
+        install('--fake', 'trivial-install-test-package')
 
         # switch to a new repo that doesn't include the installed package
         # test that Spack detects the missing package and warns the user
@@ -393,7 +393,7 @@ def test_env_activate_broken_view(
     install_mockery
 ):
     with ev.create('test'):
-        install('trivial-install-test-package')
+        install('--fake', 'trivial-install-test-package')
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
@@ -1783,7 +1783,7 @@ env:
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            install()
+            install('--fake')
 
         test = ev.read('test')
         for spec in test._get_environment_specs():
@@ -1816,7 +1816,7 @@ env:
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            install()
+            install('--fake')
 
         test = ev.read('test')
         for spec in test._get_environment_specs():
@@ -1854,7 +1854,7 @@ env:
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            install()
+            install('--fake')
 
         test = ev.read('test')
         for spec in test._get_environment_specs():
@@ -1893,7 +1893,7 @@ env:
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            install()
+            install('--fake')
 
         test = ev.read('test')
         for spec in test._get_environment_specs():
@@ -1933,7 +1933,7 @@ env:
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            install()
+            install('--fake')
 
         test = ev.read('test')
         for spec in test._get_environment_specs():
@@ -2003,7 +2003,7 @@ env:
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            install()
+            install('--fake')
 
         test = ev.read('test')
         for spec in test._get_environment_specs():
@@ -2040,7 +2040,7 @@ env:
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            install()
+            install('--fake')
 
         shell = env('activate', '--sh', 'test')
 
@@ -2073,7 +2073,7 @@ env:
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            install()
+            install('--fake')
 
         shell = env('activate', '--sh', 'test')
         assert 'PATH' not in shell
@@ -2110,7 +2110,7 @@ env:
     with tmpdir.as_cwd():
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            install()
+            install('--fake')
 
         shell = env('activate', '--sh', 'test')
         assert 'PATH' in shell
@@ -2548,7 +2548,7 @@ spack:
     _env_create('test', StringIO(spack_yaml))
 
     with ev.read('test') as e:
-        install()
+        install('--fake')
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.get_projection_for_spec(spec)
@@ -2583,7 +2583,7 @@ spack:
     _env_create('test', StringIO(spack_yaml))
 
     with ev.read('test') as e:
-        install()
+        install('--fake')
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.get_projection_for_spec(spec)

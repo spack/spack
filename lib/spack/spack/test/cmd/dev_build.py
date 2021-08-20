@@ -246,7 +246,7 @@ env:
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
             with pytest.raises(spack.spec.UnsatisfiableVersionSpecError):
-                install()
+                install('--fake')
 
 
 def test_dev_build_multiple(tmpdir, mock_packages, install_mockery,
@@ -392,11 +392,11 @@ env:
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            install()
+            install('--fake')
 
             reset_string()  # so the package will accept rebuilds
 
             fs.touch(os.path.join(str(build_dir), 'test'))
-            output = install()
+            output = install('--fake')
 
     assert 'Installing %s' % test_spec in output

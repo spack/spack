@@ -106,7 +106,7 @@ def tests_buildcache_create_env(
     env('create', 'test')
     with ev.read('test'):
         add(pkg)
-        install()
+        install('--fake')
 
         buildcache('create', '-d', str(tmpdir), '--unsigned')
 
@@ -217,7 +217,7 @@ def test_buildcache_sync(mutable_mock_env_path, install_mockery_mutable_config,
     env('create', 'test')
     with ev.read('test'):
         add(in_env_pkg)
-        install()
+        install('--fake')
         buildcache(
             'create', '-u', '-f', '-a', '--mirror-url', src_mirror_url, in_env_pkg)
 
