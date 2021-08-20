@@ -22,4 +22,3 @@ class Ip2(CMakePackage):
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('sp')
-

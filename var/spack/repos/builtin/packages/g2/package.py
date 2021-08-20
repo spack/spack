@@ -23,4 +23,3 @@ class G2(CMakePackage):
 
     depends_on('jasper')
     depends_on('libpng')
-

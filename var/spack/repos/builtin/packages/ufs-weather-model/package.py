@@ -27,8 +27,11 @@ class UfsWeatherModel(CMakePackage):
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     variant('ccpp', default=True, description='Enable the Common Community Physics Package (CCPP))')
-    variant('ccpp_suites', default='FV3_GFS_v15p2,FV3_RRFS_v1alpha', description='CCPP suites to compile',
-            values=('FV3_GFS_v15p2', 'FV3_RRFS_v1alpha', 'FV3_GFS_v15p2,FV3_RRFS_v1alpha'),
+    variant('ccpp_suites', default='FV3_GFS_v15p2,FV3_RRFS_v1alpha',
+            description='CCPP suites to compile',
+            values=('FV3_GFS_v15p2',
+                    'FV3_RRFS_v1alpha',
+                    'FV3_GFS_v15p2,FV3_RRFS_v1alpha'),
             multi=True)
     variant('inline_post', default=False, description='Compile post processing inline')
     variant('multi_gases', default=False, description='Enable multi gases in physics routines')
@@ -53,9 +56,10 @@ class UfsWeatherModel(CMakePackage):
         env.set('CMAKE_C_COMPILER', spec['mpi'].mpicc)
         env.set('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx)
         env.set('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc)
-        env.set('ESMFMKFILE', join_path(spec['esmf'].prefix.lib,'esmf.mk'))
+        env.set('ESMFMKFILE', join_path(spec['esmf'].prefix.lib, 'esmf.mk'))
 
-        env.set('CCPP_SUITES', ','.join([x for x in spec.variants['ccpp_suites'].value if x]))
+        env.set('CCPP_SUITES', ','.join(
+            [x for x in spec.variants['ccpp_suites'].value if x]))
 
         if spec.platform == 'linux' and spec.satisfies('%intel'):
             env.set('CMAKE_Platform', 'linux.intel')
@@ -68,15 +72,13 @@ class UfsWeatherModel(CMakePackage):
             msg += "are not supported by UFS."
             raise InstallError(msg.format(spec.platform, self.compiler.name))
 
-
     def cmake_args(self):
         spec = self.spec
         from_variant = self.define_from_variant
-        args = [
-                self.define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
+        args = [self.define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
                 self.define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
                 self.define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
-        ]
+                ]
         args.extend([
             from_variant('32BIT', '32bit'),
             from_variant('AVX2', 'avx2'),
@@ -98,5 +100,3 @@ class UfsWeatherModel(CMakePackage):
         ufs_dst = join_path(prefix.bin, "ufs_weather_model")
         install(ufs_src, ufs_dst)
         set_executable(ufs_dst)
-
-

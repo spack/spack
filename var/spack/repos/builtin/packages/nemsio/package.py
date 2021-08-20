@@ -7,7 +7,7 @@ from spack import *
 
 
 class Nemsio(CMakePackage):
-    """The NOAA Environmental Modeling System I/O (NEMSIO) library. The 
+    """The NOAA Environmental Modeling System I/O (NEMSIO) library. The
     basic functions it provides are to read and write data sets for all the
     NEMS applications."""
 

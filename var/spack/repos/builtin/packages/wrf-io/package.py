@@ -23,4 +23,3 @@ class WrfIo(CMakePackage):
 
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')
-

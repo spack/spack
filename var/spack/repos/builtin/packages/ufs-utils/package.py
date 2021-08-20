@@ -39,5 +39,4 @@ class UfsUtils(CMakePackage):
     depends_on('zlib')
 
     def setup_build_environment(self, env):
-        env.set('ESMFMKFILE', join_path(self.spec['esmf'].prefix.lib,'esmf.mk'))
-
+        env.set('ESMFMKFILE', join_path(self.spec['esmf'].prefix.lib, 'esmf.mk'))
