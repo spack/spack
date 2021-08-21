@@ -4530,7 +4530,7 @@ class SpecLexer(spack.parse.Lexer):
             (r'\=', lambda scanner, val: self.token(EQ,    val)),
 
             # Filenames match before identifiers, so no initial filename
-            # component is parsed as a spec (e.g., in subdir/spec.yaml)
+            # component is parsed as a spec (e.g., in subdir/spec.yaml/json)
             (r'[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*',
              lambda scanner, v: self.token(FILE, v)),
 
@@ -4690,8 +4690,8 @@ class SpecParser(spack.parse.Parser):
         1. We require that filenames end in .yaml, which means that no valid
            filename can be interpreted as a hash (hashes can't have '.')
 
-        2. We avoid treating paths like /path/to/spec.yaml as hashes, or paths
-           like subdir/spec.yaml as ids by lexing filenames before hashes.
+        2. We avoid treating paths like /path/to/spec.json as hashes, or paths
+           like subdir/spec.json as ids by lexing filenames before hashes.
 
         3. For spec names that match file and id regexes, like 'builtin.yaml',
            we backtrack from spec_from_file() and treat them as spec names.

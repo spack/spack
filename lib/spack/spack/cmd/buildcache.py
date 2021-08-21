@@ -175,7 +175,7 @@ def setup_parser(subparser):
 
     check.set_defaults(func=check_binaries)
 
-    # Download tarball and spec.yaml
+    # Download tarball and specfile
     dltarball = subparsers.add_parser('download', help=get_tarball.__doc__)
     dltarball.add_argument(
         '-s', '--spec', default=None,
@@ -797,9 +797,14 @@ def buildcache_copy(args):
     tarball_dest_path = os.path.join(dest_root_path, tarball_rel_path)
 
     specfile_rel_path = os.path.join(
-        build_cache_dir, bindist.tarball_name(spec, '.spec.yaml'))
+        build_cache_dir, bindist.tarball_name(spec, '.spec.json'))
     specfile_src_path = os.path.join(args.base_dir, specfile_rel_path)
     specfile_dest_path = os.path.join(dest_root_path, specfile_rel_path)
+
+    specfile_rel_path_yaml = os.path.join(
+        build_cache_dir, bindist.tarball_name(spec, '.spec.yaml'))
+    specfile_src_path_yaml = os.path.join(args.base_dir, specfile_rel_path)
+    specfile_dest_path_yaml = os.path.join(dest_root_path, specfile_rel_path)
 
     cdashidfile_rel_path = os.path.join(
         build_cache_dir, bindist.tarball_name(spec, '.cdashid'))
@@ -815,6 +820,9 @@ def buildcache_copy(args):
 
     tty.msg('Copying {0}'.format(specfile_rel_path))
     shutil.copyfile(specfile_src_path, specfile_dest_path)
+
+    tty.msg('Copying {0}'.format(specfile_rel_path_yaml))
+    shutil.copyfile(specfile_src_path_yaml, specfile_dest_path_yaml)
 
     # Copy the cdashid file (if exists) to the destination mirror
     if os.path.exists(cdashid_src_path):
