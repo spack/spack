@@ -47,7 +47,7 @@ class PyPythran(PythonPackage):
     depends_on('llvm-openmp', when='%apple-clang', type=('build', 'run'))
 
     patch('https://patch-diff.githubusercontent.com/raw/serge-sans-paille/pythran/pull/1856.patch',
-          sha256='7b346d820ccff761dafaf407ab5fea0406d3efea0a44b5e7b5077afd27c2bb08',
+          sha256='18f5e8985d636ad9c73b2f96b601aae299e0c315aa4c0dbee7b2599a63177218',
           when='@0.9.10:0.9.12')
 
     def patch(self):
