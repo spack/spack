@@ -82,6 +82,7 @@ class Curl(AutotoolsPackage):
     conflicts('platform=darwin', when='+libssh2')
     conflicts('platform=darwin', when='+libssh')
     conflicts('platform=linux', when='tls=secure_transport')
+    conflicts('tls=mbedtls', when='@:7.45')
 
     depends_on('gnutls', when='tls=gnutls')
     depends_on('mbedtls', when='tls=mbedtls')
@@ -134,10 +135,11 @@ class Curl(AutotoolsPackage):
             return '--without-gnutls'
 
     def with_or_without_mbedtls(self, activated):
-        if activated:
-            return '--with-mbedtls=' + self.spec['mbedtls'].prefix
-        else:
-            return '--without-mbedtls'
+        if self.spec.satisfies('@7.46:'):
+            if activated:
+                return '--with-mbedtls=' + self.spec['mbedtls'].prefix
+            else:
+                return '--without-mbedtls'
 
     def with_or_without_nss(self, activated):
         if activated:
@@ -146,25 +148,25 @@ class Curl(AutotoolsPackage):
             return '--without-nss'
 
     def with_or_without_openssl(self, activated):
-        if activated:
-            if self.spec.satisfies('@7.77:'):
+        if self.spec.satisfies('@7.77:'):
+            if activated:
                 return '--with-openssl=' + self.spec['openssl'].prefix
             else:
-                return '--with-ssl=' + self.spec['openssl'].prefix
-        else:
-            if self.spec.satisfies('@7.77:'):
                 return '--without-openssl'
+        else:
+            if activated:
+                return '--with-ssl=' + self.spec['openssl'].prefix
             else:
                 return '--without-ssl'
 
     def with_or_without_secure_transport(self, activated):
-        if activated:
-            if self.spec.satisfies('@7.65:'):
+        if self.spec.satisfies('@7.65:'):
+            if activated:
                 return '--with-secure-transport'
             else:
-                return '--with-darwinssl'
-        else:
-            if self.spec.satisfies('@7.65:'):
                 return '--without-secure-transport'
+        else:
+            if activated:
+                return '--with-darwinssl'
             else:
                 return '--without-darwinssl'
