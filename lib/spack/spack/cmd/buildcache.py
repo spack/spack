@@ -904,6 +904,8 @@ def buildcache_sync(args):
             os.path.join(
                 build_cache_dir, bindist.tarball_name(s, '.spec.yaml')),
             os.path.join(
+                build_cache_dir, bindist.tarball_name(s, '.spec.json')),
+            os.path.join(
                 build_cache_dir, bindist.tarball_name(s, '.cdashid'))
         ])
 

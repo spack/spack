@@ -955,12 +955,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     # and preferences
 
     spec_file = spack.store.layout.spec_file_path(spec)
-    deprecated_specfile_name = tarball_name(spec, '.spec.yaml')
-    deprecated_specfile_path = os.path.realpath(
-        os.path.join(cache_prefix, deprecated_specfile_name))
     specfile_name = tarball_name(spec, '.spec.json')
-    specfile_path = os.path.realpath(
-        os.path.join(cache_prefix, specfile_name))
+    specfile_path = os.path.realpath(os.path.join(cache_prefix, specfile_name))
+    deprecated_specfile_path = specfile_path.replace('.spec.json', '.spec.yaml')
 
     remote_specfile_path = url_util.join(
         outdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir)))
