@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+from tempfile import NamedTemporaryFile
 
 from spack import architecture
 
@@ -84,6 +85,70 @@ class Sqlite(AutotoolsPackage):
         # version number as well.
         match = re.match(r'(\S+) \d{4}-\d{2}-\d{2}', output)
         return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        all_variants = []
+
+        def call(exe, feature, query):
+            prefix = 'spack-sqlite-{:s}-'.format(feature)
+            with NamedTemporaryFile(mode='w', prefix=prefix) as sqlite_stdin:
+                sqlite_stdin.write(query + '\n')
+                sqlite_stdin.flush()
+                e = Executable(exe)
+                e(fail_on_error=False,
+                  input=sqlite_stdin.name,
+                  output='/dev/null',
+                  error='/dev/null')
+            return e.returncode
+
+        def get_variant(name, has_variant):
+            fmt = "+{:s}" if has_variant else "~{:s}"
+            return fmt.format(name)
+
+        for exe in exes:
+            variants = []
+
+            # check for fts
+            def query_fts(version):
+                return 'CREATE VIRTUAL TABLE name ' \
+                       'USING fts{:d}(sender, title, body);'.format(version)
+
+            rc_fts4 = call(exe, 'fts4', query_fts(4))
+            rc_fts5 = call(exe, 'fts5', query_fts(5))
+            variants.append(get_variant('fts', rc_fts4 == 0 and rc_fts5 == 0))
+
+            # check for functions
+            # SQL query taken from extension-functions.c usage instructions
+            query_functions = "SELECT load_extension('libsqlitefunctions');"
+            rc_functions = call(exe, 'functions', query_functions)
+            variants.append(get_variant('functions', rc_functions == 0))
+
+            # check for rtree
+            query_rtree = 'CREATE VIRTUAL TABLE name USING rtree(id, x, y);'
+            rc_rtree = call(exe, 'rtree', query_rtree)
+            variants.append(get_variant('rtree', rc_rtree == 0))
+
+            # The column metadata feature enables six additional functions in
+            # the C API, see SQLITE_ENABLE_COLUMN_METADATA at
+            # https://www.sqlite.org/compile.html. Usually one would have to
+            # check the SQLite library to determine if this feature is enabled.
+            # Spack only examines executables but due to a quirk of the SQLite
+            # setup, it can still be possible to extract this information:
+            # By default, the `sqlite` executable is linked _statically_
+            # against the SQLite library and by default, the GNU linker does
+            # not remove unused symbols from binaries. Thus, one could check
+            # for this feature by looking at the list of external defined
+            # symbols in the `sqlite` executable (e.g., with `nm`).
+            # The original author of the `determine_variants` function decided
+            # not to implement this because on CentOS 7, Centos 8, Devuan
+            # Beowulf, and Ubuntu 20.04, the `sqlite` executable has been
+            # stripped so the implementation will probably be useless most of
+            # the time.
+
+            all_variants.append(''.join(variants))
+
+        return all_variants
 
     def url_for_version(self, version):
         full_version = list(version.version) + [0 * (4 - len(version.version))]
