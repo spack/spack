@@ -231,8 +231,11 @@ class Python(AutotoolsPackage):
 
     conflicts('%nvhpc')
 
-    # Used to cache home locations, since computing them might be expensive
+    # Used to cache various attributes that are expensive to compute
     _homes = {}
+    _python_include_dirs = {}
+    _python_lib_dirs = {}
+    _site_packages_dirs = {}
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
@@ -871,10 +874,15 @@ class Python(AutotoolsPackage):
         Returns:
             str: include files directory
         """
-        try:
-            return self.get_python_inc(prefix='')
-        except (ProcessError, RuntimeError):
-            return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
+        dag_hash = self.spec.dag_hash()
+        if dag_hash not in self._python_include_dirs:
+            try:
+                include_dir = self.get_python_inc(prefix='')
+            except (ProcessError, RuntimeError):
+                include_dir = os.path.join(
+                    'include', 'python{0}'.format(self.version.up_to(2)))
+            self._python_include_dirs[dag_hash] = include_dir
+        return self._python_include_dirs[dag_hash]
 
     @property
     def python_lib_dir(self):
@@ -895,10 +903,14 @@ class Python(AutotoolsPackage):
         Returns:
             str: standard library directory
         """
-        try:
-            return self.get_python_lib(standard_lib=True, prefix='')
-        except (ProcessError, RuntimeError):
-            return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
+        dag_hash = self.spec.dag_hash()
+        if dag_hash not in self._python_lib_dirs:
+            try:
+                lib_dir = self.get_python_lib(standard_lib=True, prefix='')
+            except (ProcessError, RuntimeError):
+                lib_dir = os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
+            self._python_lib_dirs[dag_hash] = lib_dir
+        return self._python_lib_dirs[dag_hash]
 
     @property
     def site_packages_dir(self):
@@ -919,10 +931,14 @@ class Python(AutotoolsPackage):
         Returns:
             str: site-packages directory
         """
-        try:
-            return self.get_python_lib(prefix='')
-        except (ProcessError, RuntimeError):
-            return self.default_site_packages_dir
+        dag_hash = self.spec.dag_hash()
+        if dag_hash not in self._site_packages_dirs:
+            try:
+                site_packages_dir = self.get_python_lib(prefix='')
+            except (ProcessError, RuntimeError):
+                site_packages_dir = self.default_site_packages_dir
+            self._site_packages_dirs[dag_hash] = site_packages_dir
+        return self._site_packages_dirs[dag_hash]
 
     @property
     def default_site_packages_dir(self):
