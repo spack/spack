@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import architecture
 
 
@@ -70,6 +72,18 @@ class Sqlite(AutotoolsPackage):
     # Starting version 3.21.0 SQLite doesn't use the built-ins if Intel
     # compiler is used.
     patch('remove_overflow_builtins.patch', when='@3.17.0:3.20%intel')
+
+    executables = ['^sqlite3$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        # `sqlite3 --version` prints only the version number, timestamp, commit
+        # hash(?) but not the program name. As a basic sanity check, the code
+        # calls re.match() and attempts to match the ISO 8601 date following the
+        # version number as well.
+        match = re.match(r'(\S+) \d{4}-\d{2}-\d{2}', output)
+        return match.group(1) if match else None
 
     def url_for_version(self, version):
         full_version = list(version.version) + [0 * (4 - len(version.version))]
