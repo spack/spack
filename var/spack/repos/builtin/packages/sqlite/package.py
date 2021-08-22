@@ -118,8 +118,7 @@ class Sqlite(AutotoolsPackage):
             args.extend(['--disable-fts4', '--disable-fts5'])
 
         # Ref: https://sqlite.org/rtree.html
-        if '+rtree' in self.spec:
-            args.append('CPPFLAGS=-DSQLITE_ENABLE_RTREE=1')
+        args.extend(self.enable_or_disable('rtree'))
 
         # Ref: https://sqlite.org/compile.html
         if '+column_metadata' in self.spec:
