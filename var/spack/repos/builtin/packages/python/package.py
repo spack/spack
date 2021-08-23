@@ -10,7 +10,7 @@ import re
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import get_filetype, path_contains_subdirectory
-from llnl.util.lang import match_predicate, memoized
+from llnl.util.lang import match_predicate
 
 from spack import *
 from spack.util.environment import is_system_path
@@ -231,6 +231,9 @@ class Python(AutotoolsPackage):
               msg='python+tix requires python+tix+tkinter')
 
     conflicts('%nvhpc')
+
+    # Used to cache various attributes that are expensive to compute
+    _config_vars = {}
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
@@ -685,7 +688,6 @@ class Python(AutotoolsPackage):
             return 'print({0})'.format(string)
 
     @property
-    @memoized
     def config_vars(self):
         """Return a set of variable definitions associated with a Python installation.
 
@@ -722,12 +724,15 @@ for plat_specific in [True, False]:
 %s
 """ % self.print_string("json.dumps(config)")
 
-        try:
-            return json.loads(self.command('-c', cmd, output=str))
-        except (ProcessError, RuntimeError):
-            return {}
+        dag_hash = self.spec.dag_hash()
+        if dag_hash not in self._config_vars:
+            try:
+                config = json.loads(self.command('-c', cmd, output=str))
+            except (ProcessError, RuntimeError):
+                config = {}
+            self._config_vars[dag_hash] = config
+        return self._config_vars[dag_hash]
 
-    @memoized
     def get_sysconfigdata_name(self):
         """Return the full path name of the sysconfigdata file."""
 
@@ -744,7 +749,6 @@ for plat_specific in [True, False]:
         return join_path(libdest, filename)
 
     @property
-    @memoized
     def home(self):
         """Most of the time, ``PYTHONHOME`` is simply
         ``spec['python'].prefix``. However, if the user is using an
