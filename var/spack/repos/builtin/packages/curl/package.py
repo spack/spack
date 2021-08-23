@@ -45,10 +45,29 @@ class Curl(AutotoolsPackage):
     version('7.43.0', sha256='baa654a1122530483ccc1c58cc112fec3724a82c11c6a389f1e6a37dc8858df9')
     version('7.42.1', sha256='e2905973391ec2dfd7743a8034ad10eeb58dab8b3a297e7892a41a7999cac887')
 
+    default_tls = 'openssl'
+    if sys.platform == 'darwin':
+        default_tls = 'secure_transport'
+
+    # TODO: add dependencies for other possible TLS backends
+    values_tls = [
+        # 'amissl',
+        # 'bearssl',
+        'gnutls',
+        'mbedtls',
+        # 'mesalink',
+        'nss',
+        'openssl',
+        # 'rustls',
+        # 'schannel',
+        'secure_transport',
+        # 'wolfssl',
+    ]
+
+    variant('tls', default=default_tls, description='TLS backend', values=values_tls, multi=True)
     variant('nghttp2',    default=False, description='build nghttp2 library (requires C++11)')
     variant('libssh2',    default=False, description='enable libssh2 support')
     variant('libssh',     default=False, description='enable libssh support')  # , when='7.58:')
-    variant('darwinssl',  default=sys.platform == 'darwin', description="use Apple's SSL/TLS implementation")
     variant('gssapi',     default=False, description='enable Kerberos support')
     variant('librtmp',    default=False, description='enable Rtmp support')
     variant('ldap',       default=False, description='enable ldap support')
@@ -62,9 +81,14 @@ class Curl(AutotoolsPackage):
     # C.f. https://github.com/spack/spack/issues/7777
     conflicts('platform=darwin', when='+libssh2')
     conflicts('platform=darwin', when='+libssh')
-    conflicts('platform=linux', when='+darwinssl')
+    conflicts('platform=cray', when='tls=secure_transport', msg='Only supported on macOS')
+    conflicts('platform=linux', when='tls=secure_transport', msg='Only supported on macOS')
+    conflicts('tls=mbedtls', when='@:7.45')
 
-    depends_on('openssl', when='~darwinssl')
+    depends_on('gnutls', when='tls=gnutls')
+    depends_on('mbedtls', when='tls=mbedtls')
+    depends_on('nss', when='tls=nss')
+    depends_on('openssl', when='tls=openssl')
     depends_on('libidn2', when='+libidn2')
     depends_on('zlib')
     depends_on('nghttp2', when='+nghttp2')
@@ -91,16 +115,12 @@ class Curl(AutotoolsPackage):
         if spec.satisfies('@:7.77'):
             args.append('--without-libmetalink')
 
-        if spec.satisfies('+darwinssl'):
-            args.append('--with-darwinssl')
-        else:
-            args.append('--with-ssl=' + spec['openssl'].prefix)
-
         if spec.satisfies('+gssapi'):
             args.append('--with-gssapi=' + spec['krb5'].prefix)
         else:
             args.append('--without-gssapi')
 
+        args += self.with_or_without('tls')
         args += self.with_or_without('libidn2', 'prefix')
         args += self.with_or_without('librtmp')
         args += self.with_or_without('nghttp2')
@@ -108,3 +128,46 @@ class Curl(AutotoolsPackage):
         args += self.with_or_without('libssh')
         args += self.enable_or_disable('ldap')
         return args
+
+    def with_or_without_gnutls(self, activated):
+        if activated:
+            return '--with-gnutls=' + self.spec['gnutls'].prefix
+        else:
+            return '--without-gnutls'
+
+    def with_or_without_mbedtls(self, activated):
+        if self.spec.satisfies('@7.46:'):
+            if activated:
+                return '--with-mbedtls=' + self.spec['mbedtls'].prefix
+            else:
+                return '--without-mbedtls'
+
+    def with_or_without_nss(self, activated):
+        if activated:
+            return '--with-nss=' + self.spec['nss'].prefix
+        else:
+            return '--without-nss'
+
+    def with_or_without_openssl(self, activated):
+        if self.spec.satisfies('@7.77:'):
+            if activated:
+                return '--with-openssl=' + self.spec['openssl'].prefix
+            else:
+                return '--without-openssl'
+        else:
+            if activated:
+                return '--with-ssl=' + self.spec['openssl'].prefix
+            else:
+                return '--without-ssl'
+
+    def with_or_without_secure_transport(self, activated):
+        if self.spec.satisfies('@7.65:'):
+            if activated:
+                return '--with-secure-transport'
+            else:
+                return '--without-secure-transport'
+        else:
+            if activated:
+                return '--with-darwinssl'
+            else:
+                return '--without-darwinssl'
