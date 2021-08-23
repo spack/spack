@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import sys
 
 
 class Nccmp(Package, SourceforgePackage):
@@ -25,5 +26,6 @@ class Nccmp(Package, SourceforgePackage):
 
         configure('--prefix=%s' % prefix)
         make()
-        make("check")
+        if sys.platform != 'darwin':
+            make("check")
         make("install")
