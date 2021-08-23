@@ -113,4 +113,4 @@ class AnalyzerBase(object):
                 spack.monitor.write_json(result[self.name], outfile)
 
         # This hook runs after a save result
-        spack.hooks.on_analyzer_save(self.spec.package, result)
+        spack.hooks.runner('on_analyzer_save', self.spec.package, result)

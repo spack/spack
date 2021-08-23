@@ -2190,7 +2190,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             if pkg is not None:
                 try:
-                    spack.hooks.pre_uninstall(spec)
+                    spack.hooks.runner('pre_uninstall', spec)
                 except Exception as error:
                     if force:
                         error_msg = (
@@ -2227,7 +2227,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if pkg is not None:
             try:
-                spack.hooks.post_uninstall(spec)
+                spack.hooks.runner('post_uninstall', spec)
             except Exception:
                 # If there is a failure here, this is our only chance to do
                 # something about it: at this point the Spec has been removed

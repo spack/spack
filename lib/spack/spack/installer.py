@@ -279,7 +279,7 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False,
 
     tty.debug('Successfully extracted {0} from binary cache'.format(pkg_id))
     _print_installed_pkg(pkg.spec.prefix)
-    spack.hooks.post_install(pkg.spec)
+    spack.hooks.runner('post_install', pkg.spec)
     return True
 
 
@@ -332,7 +332,7 @@ def _process_external_package(pkg, explicit):
         # For external packages we just need to run
         # post-install hooks to generate module files.
         tty.debug('{0} generating module file'.format(pre))
-        spack.hooks.post_install(spec)
+        spack.hooks.runner('post_install', spec)
 
         # Add to the DB
         tty.debug('{0} registering into DB'.format(pre))
@@ -1431,7 +1431,7 @@ class PackageInstaller(object):
             if task is None:
                 continue
 
-            spack.hooks.on_install_start(task.request.pkg.spec)
+            spack.hooks.runner('on_install_start', task.request.pkg.spec)
             install_args = task.request.install_args
             keep_prefix = install_args.get('keep_prefix')
 
@@ -1456,7 +1456,7 @@ class PackageInstaller(object):
                 dep_str = 'dependencies' if task.priority > 1 else 'dependency'
 
                 # Hook to indicate task failure, but without an exception
-                spack.hooks.on_install_failure(task.request.pkg.spec)
+                spack.hooks.runner('on_install_failure', task.request.pkg.spec)
 
                 raise InstallError(
                     'Cannot proceed with {0}: {1} uninstalled {2}: {3}'
@@ -1480,7 +1480,7 @@ class PackageInstaller(object):
                 # Mark that the package failed
                 # TODO: this should also be for the task.pkg, but we don't
                 # model transitive yet.
-                spack.hooks.on_install_failure(task.request.pkg.spec)
+                spack.hooks.runner('on_install_failure', task.request.pkg.spec)
 
                 if self.fail_fast:
                     raise InstallError(fail_fast_err)
@@ -1591,7 +1591,7 @@ class PackageInstaller(object):
                 # Only terminate at this point if a single build request was
                 # made.
                 if task.explicit and single_explicit_spec:
-                    spack.hooks.on_install_failure(task.request.pkg.spec)
+                    spack.hooks.runner('on_install_failure', task.request.pkg.spec)
                     raise
 
                 if task.explicit:
@@ -1603,12 +1603,12 @@ class PackageInstaller(object):
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
-                spack.hooks.on_install_failure(task.request.pkg.spec)
+                spack.hooks.runner('on_install_failure', task.request.pkg.spec)
                 raise
 
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)
-                spack.hooks.on_install_failure(task.request.pkg.spec)
+                spack.hooks.runner('on_install_failure', task.request.pkg.spec)
 
                 # Best effort installs suppress the exception and mark the
                 # package as a failure.
@@ -1746,7 +1746,7 @@ class BuildProcessInstaller(object):
         with self.pkg.stage:
             # Run the pre-install hook in the child process after
             # the directory is created.
-            spack.hooks.pre_install(self.pkg.spec)
+            spack.hooks.runner('pre_install', self.pkg.spec)
             if self.fake:
                 _do_fake_install(self.pkg)
             else:
@@ -1761,7 +1761,7 @@ class BuildProcessInstaller(object):
                 self.timer.write_json(timelog)
 
             # Run post install hooks before build stage is removed.
-            spack.hooks.post_install(self.pkg.spec)
+            spack.hooks.runner('post_install', self.pkg.spec)
 
         build_time = self.timer.total - self.pkg._fetch_time
         tty.msg('{0} Successfully installed {1}'.format(self.pre, self.pkg_id),
@@ -1771,7 +1771,7 @@ class BuildProcessInstaller(object):
         _print_installed_pkg(self.pkg.prefix)
 
         # Send final status that install is successful
-        spack.hooks.on_install_success(self.pkg.spec)
+        spack.hooks.runner('on_install_success', self.pkg.spec)
 
         # preserve verbosity across runs
         return self.echo
@@ -1852,11 +1852,12 @@ class BuildProcessInstaller(object):
 
                         # Catch any errors to report to logging
                         phase(pkg.spec, pkg.prefix)
-                        spack.hooks.on_phase_success(pkg, phase_name, log_file)
+                        spack.hooks.runner('on_phase_success', pkg, phase_name,
+                                           log_file)
 
                 except BaseException:
                     combine_phase_logs(pkg.phase_log_files, pkg.log_path)
-                    spack.hooks.on_phase_error(pkg, phase_name, log_file)
+                    spack.hooks.runner('on_phase_error', pkg, phase_name, log_file)
                     raise
 
                 # We assume loggers share echo True/False
