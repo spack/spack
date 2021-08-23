@@ -682,7 +682,7 @@ class Trilinos(CMakePackage, CudaPackage):
         if ('+fortran +mpi' in spec
                 and spec.compiler.name in ['gcc', 'clang', 'apple-clang']):
             mpifc = Executable(spec['mpi'].mpifc)
-            libgfortran = mpifc('--print-file-name libgfortran.a', output=str)
+            libgfortran = mpifc('--print-file-name', 'libgfortran.a', output=str)
             options.append(define(
                 'Trilinos_EXTRA_LINK_FLAGS',
                 '-L%s/ -lgfortran' % (libgfortran),
