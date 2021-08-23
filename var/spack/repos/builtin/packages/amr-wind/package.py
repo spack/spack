@@ -28,7 +28,7 @@ class AmrWind(CMakePackage, CudaPackage):
     homepage = "https://github.com/Exawind/amr-wind"
     git      = "https://github.com/Exawind/amr-wind.git"
 
-    maintainers = ['sayerhs', 'jrood-nrel', 'michaeljbrazell']
+    maintainers = ['jrood-nrel', 'michaeljbrazell']
 
     tags = ['ecp', 'ecp-apps']
 
