@@ -424,9 +424,20 @@ environment variables:
         tty.die('The `spack install` command requires a spec to install.')
 
     if args.scope:
-        # TODO: Get necessary install variables from config module
-        # TODO: Set configuration within scope
-        pass
+        kept_scope = None
+        all_scopes = []
+        while True:
+            scope = spack.config.config.pop_scope()
+            if not scope:
+                break
+            all_scopes.append(scope)
+            if scope.name == args.scope:
+                kept_scope = scope
+                break
+        if kept_scope:
+            spack.config.config.push_scope(kept_scope)
+        else:
+            raise Exception("Scope not found")
 
     if not args.log_file and not reporter.filename:
         reporter.filename = default_log_file(specs[0])
