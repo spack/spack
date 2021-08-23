@@ -14,6 +14,7 @@ class OpenclCHeaders(Package):
 
     homepage = "https://www.khronos.org/registry/OpenCL/"
     url      = "https://github.com/KhronosGroup/OpenCL-Headers/archive/v2020.06.16.tar.gz"
+    maintainers = ['lorddavidiii']
 
     version('2021.06.30', sha256='6640d590c30d90f89351f5e3043ae6363feeb19ac5e64bc35f8cfa1a6cd5498e')
     version('2021.04.29', sha256='477e2b26125d99a9b2f20c68262f27ca3f3ca7899593a8af2b7fe077bdce18d1')
