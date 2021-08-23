@@ -19,6 +19,7 @@ import spack.cmd.modules
 import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
+import spack.environment.shell
 import spack.schema.env
 import spack.util.string as string
 
@@ -81,6 +82,7 @@ def env_activate_setup_parser(subparser):
 
 def env_activate(args):
     env = args.activate_env
+
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate",
@@ -110,10 +112,19 @@ def env_activate(args):
         tty.debug("Environment %s is already active" % args.activate_env)
         return
 
-    cmds = ev.activate(
-        ev.Environment(spack_env), add_view=args.with_view, shell=args.shell,
+    # Activate new environment
+    active_env = ev.Environment(spack_env)
+    cmds = spack.environment.shell.activate_header(
+        env=active_env,
+        shell=args.shell,
         prompt=env_prompt if args.prompt else None
     )
+    env_mods = spack.environment.shell.activate(
+        env=active_env,
+        add_view=args.with_view
+    )
+    cmds += env_mods.shell_modifications(args.shell)
+
     sys.stdout.write(cmds)
 
 
@@ -150,7 +161,9 @@ def env_deactivate(args):
     if 'SPACK_ENV' not in os.environ:
         tty.die('No environment is currently active.')
 
-    cmds = ev.deactivate(shell=args.shell)
+    cmds = spack.environment.shell.deactivate_header(args.shell)
+    env_mods = spack.environment.shell.deactivate()
+    cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
 
