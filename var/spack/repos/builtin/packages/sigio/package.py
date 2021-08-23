@@ -16,6 +16,3 @@ class Sigio(CMakePackage):
     maintainers = ['t-brown']
 
     version('2.3.2', sha256='333f3cf3a97f97103cbafcafc2ad89b24faa55b1332a98adc1637855e8a5b613')
-
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))

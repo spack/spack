@@ -17,6 +17,3 @@ class Bufr(CMakePackage):
     maintainers = ['t-brown']
 
     version('11.5.0', sha256='d154839e29ef1fe82e58cf20232e9f8a4f0610f0e8b6a394b7ca052e58f97f43')
-
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))

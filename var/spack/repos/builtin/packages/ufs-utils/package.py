@@ -18,9 +18,6 @@ class UfsUtils(CMakePackage):
 
     version('1_6_0', sha256='829ba4b50162e4202f96ec92a65b9fa824f71db65d2b63b70822db07d061cd92')
 
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
-
     depends_on('bacio')
     depends_on('esmf')
     depends_on('g2')

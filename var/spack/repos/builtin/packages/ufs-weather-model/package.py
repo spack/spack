@@ -24,8 +24,6 @@ class UfsWeatherModel(CMakePackage):
 
     variant('32bit', default=True, description='Enable 32-bit single precision arithmetic in dycore')
     variant('avx2', default=False, description='Enable AVX2 instructions')
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     variant('ccpp', default=True, description='Enable the Common Community Physics Package (CCPP))')
     variant('ccpp_suites', default='FV3_GFS_v15p2,FV3_RRFS_v1alpha',
             description='CCPP suites to compile',

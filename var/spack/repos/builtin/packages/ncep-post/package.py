@@ -17,9 +17,6 @@ class NcepPost(CMakePackage):
 
     version('10.0.8', sha256='b3b27d03250450159a8261c499d57168bdd833790c1c80c854d081fe37aaab47')
 
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
-
     variant('wrf-io', default=True, description='Enable WRF I/O.')
 
     depends_on('bacio')

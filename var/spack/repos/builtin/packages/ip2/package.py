@@ -18,7 +18,4 @@ class Ip2(CMakePackage):
 
     version('1.1.2', sha256='73c6beec8fd463ec7ccba3633d8c5d53d385c43d507367efde918c2db0af42ab')
 
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
-
     depends_on('sp')

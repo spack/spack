@@ -16,6 +16,3 @@ class Sfcio(CMakePackage):
     maintainers = ['t-brown']
 
     version('1.4.1', sha256='d9f900cf18ec1a839b4128c069b1336317ffc682086283443354896746b89c59')
-
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))

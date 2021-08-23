@@ -18,8 +18,5 @@ class G2(CMakePackage):
 
     version('3.4.3', sha256='679ea99b225f08b168cbf10f4b29f529b5b011232f298a5442ce037ea84de17c')
 
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
-
     depends_on('jasper')
     depends_on('libpng')

@@ -17,9 +17,6 @@ class Wgrib2(CMakePackage):
 
     version('2.0.8-cmake-v6', sha256='745cd008b4ce0245ea44247733e57e2b9ec6c5205d171d457e18d0ff8f87172d')
 
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
-
     depends_on('ip2')
     depends_on('jasper')
     depends_on('libpng')

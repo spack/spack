@@ -16,6 +16,3 @@ class Sp(CMakePackage):
     maintainers = ['t-brown']
 
     version('2.3.3', sha256='c0d465209e599de3c0193e65671e290e9f422f659f1da928505489a3edeab99f')
-
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))

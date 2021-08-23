@@ -18,8 +18,5 @@ class WrfIo(CMakePackage):
 
     version('1.2.0', sha256='000cf5294a2c68460085258186e1f36c86d3d0d9c433aa969a0f92736b745617')
 
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
-
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')

@@ -18,6 +18,3 @@ class Crtm(CMakePackage):
     maintainers = ['t-brown']
 
     version('2.3.0', sha256='3e2c87ae5498c33dd98f9ede5c39e33ee7f298c7317b12adeb552e3a572700ce')
-
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))

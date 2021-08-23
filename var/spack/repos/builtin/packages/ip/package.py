@@ -17,7 +17,5 @@ class Ip(CMakePackage):
     maintainers = ['t-brown']
 
     version('3.3.3', sha256='d5a569ca7c8225a3ade64ef5cd68f3319bcd11f6f86eb3dba901d93842eb3633')
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('sp')

@@ -15,6 +15,3 @@ class G2tmpl(CMakePackage):
     maintainers = ['t-brown']
 
     version('1.10.0', sha256='dcc0e40b8952f91d518c59df7af64e099131c17d85d910075bfa474c8822649d')
-
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))

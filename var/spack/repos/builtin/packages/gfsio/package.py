@@ -16,6 +16,3 @@ class Gfsio(CMakePackage):
     maintainers = ['t-brown']
 
     version('1.4.1', sha256='eab106302f520600decc4f9665d7c6a55e7b4901fab6d9ef40f29702b89b69b1')
-
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))

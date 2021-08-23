@@ -16,6 +16,3 @@ class W3emc(CMakePackage):
     maintainers = ['t-brown']
 
     version('2.9.0', sha256='994f59635ab91e34e96cab5fbaf8de54389d09461c7bac33b3104a1187e6c98a')
-
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))

@@ -17,6 +17,3 @@ class Bacio(CMakePackage):
     maintainers = ['t-brown']
 
     version('2.4.1', sha256='7b9b6ba0a288f438bfba6a08b6e47f8133f7dba472a74ac56a5454e2260a7200')
-
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
