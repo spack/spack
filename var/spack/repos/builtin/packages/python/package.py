@@ -710,18 +710,17 @@ config = get_config_vars()
 config['config_h_filename'] = get_config_h_filename()
 config['makefile_filename'] = get_makefile_filename()
 config['python_inc'] = get_python_inc(prefix='')
-config['python_lib'] = {{}}
+config['python_lib'] = {}
 
 for plat_specific in [True, False]:
-    config['python_lib'][plat_specific] = {{}}
+    config['python_lib'][plat_specific] = {}
     for standard_lib in [True, False]:
         config['python_lib'][plat_specific][standard_lib] = get_python_lib(
             plat_specific, standard_lib, prefix=''
         )
 
-{0}
-""".format(self.print_string("json.dumps(config)"))  # novm
-        # vermin false positive: https://github.com/netromdk/vermin/issues/75
+%s
+""" % self.print_string("json.dumps(config)")
 
         try:
             return json.loads(self.command('-c', cmd, output=str))
