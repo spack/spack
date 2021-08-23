@@ -38,36 +38,44 @@ class Papyrus(CMakePackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([join_path('kv', 'tests', '01_open_close')])
+        self.cache_extra_test_sources([join_path('kv', 'tests')])
 
-    def run_01_open_close_test(self):
+    def run_example_tests(self):
         """Run stand alone test: 01_open_close"""
-
-        test_dir = join_path(self.test_suite.current_test_cache_dir,
-                            'kv', 'tests', '01_open_close')
-
-        if not os.path.exists(test_dir):
-            print('Skipping 01_open_close test')
-            return
 
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
 
-        exe = 'test01_open_close'
+        example_list = ['01_open_close', '02_put_get', '03_barrier',
+                        '04_delete', '05_fence', #'06_signal'],
+                        '07_consistency', '08_protect', '09_cache',
+                        '10_checkpoint', '11_restart', '12_free']
 
-        options = ['-I{0}'.format(join_path(self.prefix, 'include')),
-                   '-L{0}'.format(lib_dir), '-lpapyruskv', '-g', '-o',
-                   exe, 'test01_open_close.c', '-lpthread', '-lm']
+        for example in example_list:
 
-        self.run_test(self.spec['mpi'].mpicxx, options,
-                      purpose  ='test: compile {0} example'.format(exe),
-                      work_dir =test_dir)
+            test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'kv', 'tests', example)
 
-        self.run_test(exe,
-                      purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)
+            if not os.path.exists(test_dir):
+                print('Skipping {} test'.format(example))
+                continue
+
+            test_example = 'test{}.c'.format(example)
+
+            self.run_test(self.spec['mpi'].mpicxx,
+                          options=['{0}'.format(join_path(test_dir, test_example)),
+                                   '-I{0}'.format(join_path(self.prefix, 'include')),
+                                   '-L{0}'.format(lib_dir), '-lpapyruskv', '-g', '-o',
+                                   example, '-lpthread',
+                                   '-lm'],
+                          purpose='test: compile {0} example'.format(example),
+                          work_dir=test_dir)
+
+            self.run_test(example,
+                          purpose='test: run {0} example'.format(example),
+                          work_dir=test_dir)
 
     def test(self):
-        self.run_01_open_close_test()
+        self.run_example_tests()
