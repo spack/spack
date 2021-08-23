@@ -90,6 +90,7 @@ function spt_succeeds
 
     set -l output (eval $argv 2>&1)
 
+    # Save the command result
     set cmd_status $status
 
     if test $cmd_status -ne 0
@@ -143,6 +144,8 @@ function spt_contains
     printf "'$remaining_args' output contains '$target_string' ... "
 
     set -l output (eval $remaining_args 2>&1)
+
+    # Save the command result
     set cmd_status $status
 
     if not echo "$output" | string match -q -r ".*$target_string.*"
