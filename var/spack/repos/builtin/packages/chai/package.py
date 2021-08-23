@@ -46,21 +46,30 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('blt@:0.3.6', type='build', when='@:2.3.0')
 
     depends_on('umpire')
-    depends_on('raja', when="+raja")
-
     depends_on('umpire@6.0.0', when="@2.4.0")
-    depends_on('raja@0.14.0', when="@2.4.0")
-
+    depends_on('umpire@main', when='@main')
     depends_on('umpire+cuda', when="+cuda")
-    depends_on('raja+cuda', when="+raja+cuda")
-
-    # variants +rocm and amdgpu_targets are not automatically passed to
-    # dependencies, so do it manually.
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on('umpire+cuda cuda_arch={0}'.format(sm_),
+                   when='cuda_arch={0}'.format(sm_))
     depends_on('umpire+rocm', when='+rocm')
-    depends_on('raja+rocm', when="+raja+rocm")
     for val in ROCmPackage.amdgpu_targets:
         depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
-        depends_on('raja amdgpu_target=%s' % val, when='+raja amdgpu_target=%s' % val)
+
+    with when('+raja'):
+        depends_on('raja')
+        depends_on('raja@0.14.0', when="@2.4.0")
+        depends_on('raja@main', when='@main')
+        with when('+cuda'):
+            depends_on('raja+cuda')
+            for sm_ in CudaPackage.cuda_arch_values:
+                depends_on('raja+cuda cuda_arch={0}'.format(sm_),
+                        when='cuda_arch={0}'.format(sm_))
+        with when('+rocm'):
+            depends_on('raja+rocm')
+            for val in ROCmPackage.amdgpu_targets:
+                depends_on('raja amdgpu_target=%s' % val,
+                        when='amdgpu_target=%s' % val)
 
     conflicts('+benchmarks', when='~tests')
 
