@@ -720,7 +720,8 @@ for plat_specific in [True, False]:
         )
 
 {0}
-""".format(self.print_string("json.dumps(config)"))
+""".format(self.print_string("json.dumps(config)"))  # novm
+        # vermin false positive: https://github.com/netromdk/vermin/issues/75
 
         try:
             return json.loads(self.command('-c', cmd, output=str))
@@ -859,7 +860,7 @@ for plat_specific in [True, False]:
             str: standard library directory
         """
         if 'python_lib' in self.config_vars:
-            return self.config_vars['python_lib'][False][True]
+            return self.config_vars['python_lib']['false']['true']
         else:
             return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
 
@@ -883,7 +884,7 @@ for plat_specific in [True, False]:
             str: site-packages directory
         """
         if 'python_lib' in self.config_vars:
-            return self.config_vars['python_lib'][False][False]
+            return self.config_vars['python_lib']['false']['false']
         else:
             return self.default_site_packages_dir
 

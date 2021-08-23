@@ -65,7 +65,7 @@ class SIPPackage(PackageBase):
         """
         modules = []
         root = os.path.join(
-            self.prefix, self.spec['python'].package.config_vars[False][False]
+            self.prefix, self.spec['python'].package.config_vars['false']['false']
         )
 
         # Some Python libraries are packages: collections of modules

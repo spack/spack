@@ -128,7 +128,7 @@ class PythonPackage(PackageBase):
         """
         modules = []
         root = os.path.join(
-            self.prefix, self.spec['python'].package.config_vars[False][False]
+            self.prefix, self.spec['python'].package.config_vars['false']['false']
         )
 
         # Some Python libraries are packages: collections of modules
@@ -255,9 +255,9 @@ class PythonPackage(PackageBase):
         # We query the python with which these will be used for the lib and inc
         # directories. This ensures we use `lib`/`lib64` as expected by python.
         pure_site_packages_dir = spec['python'].package.config_vars[
-            'python_lib'][False][False]
+            'python_lib']['false']['false']
         plat_site_packages_dir = spec['python'].package.config_vars[
-            'python_lib'][False][True]
+            'python_lib']['false']['true']
         inc_dir = spec['python'].package.config_vars['python_inc']
 
         args += ['--root=%s' % prefix,
