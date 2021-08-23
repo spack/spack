@@ -89,6 +89,10 @@ class Neuron(CMakePackage):
             description="Perform additional code checks like "
                         "formatting or static analysis")
 
+    # Build with `ninja` instead of `make`
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
+
     depends_on("autoconf",  type="build", when="~cmake")
     depends_on("automake",  type="build", when="~cmake")
     depends_on("bison",     type="build")

@@ -45,6 +45,10 @@ class Coreneuron(CMakePackage):
     variant('ispc', default=False, description="Enable ISPC backend")
     variant("legacy-unit", default=True, description="Enable legacy units")
 
+    # Build with `ninja` instead of `make`
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
+
     depends_on('bison', type='build')
     depends_on('cmake@3:', type='build')
     depends_on('flex', type='build')

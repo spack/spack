@@ -53,6 +53,7 @@ modules:
       - julia
       - llvm
       - mvapich2
+      - ninja
       - nvhpc
       - pgi
       - python

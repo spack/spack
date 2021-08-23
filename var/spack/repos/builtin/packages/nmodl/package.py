@@ -23,6 +23,10 @@ class Nmodl(CMakePackage):
     variant("legacy-unit", default=True, description="Enable legacy units")
     variant("python", default=False, description="Enable python bindings")
 
+    # Build with `ninja` instead of `make`
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
+
     depends_on('bison@3.0:3.4.99', when='@:0.3', type='build')
     depends_on('bison@3.0.5:', when='@0.3.1:', type='build')
     depends_on('cmake@3.3.0:', type='build')
