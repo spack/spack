@@ -19,8 +19,10 @@ import spack.cmd.modules
 import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
+import spack.environment.shell
 import spack.schema.env
 import spack.util.string as string
+from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
 section = "environments"
@@ -81,7 +83,7 @@ def env_activate_setup_parser(subparser):
 
 def env_activate(args):
     env = args.activate_env
-    env_mods = spack.util.environment.EnvironmentModifications()
+    env_mods = EnvironmentModifications()
 
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
@@ -106,22 +108,22 @@ def env_activate(args):
     # Shell commands
     cmds = ''
 
-    # Deactivate the current environment first.  We don't properly support
-    # stacked environments at the moment.
+    # Deactivate current environment if any
     if ev.active_environment() is not None:
-        deactivate_cmds, deactivate_mods = ev.deactivate(shell=args.shell)
-        cmds += deactivate_cmds
-        env_mods.extend(deactivate_mods)
+        cmds += spack.environment.shell.deactivate_header(args.shell)
+        env_mods.extend(spack.environment.shell.deactivate())
 
-    # Activate the new environment
+    # Activate new environment
     active_env = ev.Environment(env_path)
-    activate_cmds, activate_mods = ev.activate(
-        active_env, add_view=args.with_view, shell=args.shell,
+    cmds += spack.environment.shell.activate_header(
+        env=active_env,
+        shell=args.shell,
         prompt=env_prompt if args.prompt else None
     )
-
-    cmds += activate_cmds
-    env_mods.extend(activate_mods)
+    env_mods.extend(spack.environment.shell.activate(
+        env=active_env,
+        add_view=args.with_view
+    ))
 
     cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
@@ -155,7 +157,8 @@ def env_deactivate(args):
     if ev.active_environment() is None:
         tty.die('No environment is currently active.')
 
-    cmds, env_mods = ev.deactivate(shell=args.shell)
+    env_mods = spack.environment.shell.deactivate()
+    cmds = spack.environment.shell.deactivate_header(args.shell)
     cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 

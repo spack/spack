@@ -745,7 +745,7 @@ def main(argv=None):
     if not args.no_env:
         env = spack.cmd.find_environment(args)
         if env:
-            ev.activate(env, args.use_env_repo, add_view=False)
+            ev.activate(env, args.use_env_repo)
 
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(','))

@@ -12,8 +12,10 @@ import llnl.util.filesystem as fs
 import llnl.util.link_tree
 
 import spack.environment as ev
+import spack.environment.shell
 import spack.hash_types as ht
 import spack.modules
+import spack.repo
 import spack.util.spack_json as sjson
 from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
@@ -211,8 +213,8 @@ def test_env_modifications_error_on_activate(
 
     pkg = spack.repo.path.get_pkg_class("cmake-client")
     monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
-    with e:
-        pass
+
+    spack.environment.shell.activate(e)
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
@@ -228,8 +230,7 @@ def test_activate_adds_transitive_run_deps_to_path(
     with e:
         install('depends-on-run-env')
 
-    _, mods = ev.activate(e)
-    env_variables = mods.apply_modifications({})
+    env_variables = spack.environment.shell.activate(e).apply_modifications({})
     assert env_variables['DEPENDENCY_ENV_VAR'] == '1'
 
 
