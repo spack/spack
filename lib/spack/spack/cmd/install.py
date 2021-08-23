@@ -243,7 +243,7 @@ def install_specs(cli_args, kwargs, specs):
 
                 if m_spec in env.roots() or cli_args.no_add:
                     # either the single match is a root spec (and --no-add is
-                    # the default for roots) or --no-add was stated explictly
+                    # the default for roots) or --no-add was stated explicitly
                     tty.debug('just install {0}'.format(m_spec.name))
                     specs_to_install.append(m_spec)
                 else:
