@@ -13,6 +13,7 @@ class Libarchive(AutotoolsPackage):
     homepage = "http://www.libarchive.org"
     url      = "http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
 
+    version('3.5.2', sha256='5f245bd5176bc5f67428eb0aa497e09979264a153a074d35416521a5b8e86189')
     version('3.5.1', sha256='9015d109ec00bb9ae1a384b172bf2fc1dff41e2c66e5a9eeddf933af9db37f5a')
     version('3.4.1', sha256='fcf87f3ad8db2e4f74f32526dee62dd1fb9894782b0a503a89c9d7a70a235191')
     version('3.3.2', sha256='ed2dbd6954792b2c054ccf8ec4b330a54b85904a80cef477a1c74643ddafa0ce')
