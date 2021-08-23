@@ -71,23 +71,17 @@ class UfsWeatherModel(CMakePackage):
             raise InstallError(msg.format(spec.platform, self.compiler.name))
 
     def cmake_args(self):
-        spec = self.spec
         from_variant = self.define_from_variant
-        args = [self.define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
-                self.define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
-                self.define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
+        args = [from_variant('32BIT', '32bit'),
+                from_variant('AVX2', 'avx2'),
+                from_variant('CCPP', 'ccpp'),
+                from_variant('INLINE_POST', 'inline_post'),
+                from_variant('MULTI_GASES', 'multi_gases'),
+                from_variant('OPENMP', 'openmp'),
+                from_variant('PARALLEL_NETCDF', 'parallel_netcdf'),
+                from_variant('QUAD_PRECISION', 'quad_precision'),
+                from_variant('SIMDMULTIARCH', 'simdmultiarch'),
                 ]
-        args.extend([
-            from_variant('32BIT', '32bit'),
-            from_variant('AVX2', 'avx2'),
-            from_variant('CCPP', 'ccpp'),
-            from_variant('INLINE_POST', 'inline_post'),
-            from_variant('MULTI_GASES', 'multi_gases'),
-            from_variant('OPENMP', 'openmp'),
-            from_variant('PARALLEL_NETCDF', 'parallel_netcdf'),
-            from_variant('QUAD_PRECISION', 'quad_precision'),
-            from_variant('SIMDMULTIARCH', 'simdmultiarch'),
-        ])
 
         return args
 
