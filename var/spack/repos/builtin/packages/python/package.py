@@ -3,13 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import json
 import os
 import platform
 import re
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import get_filetype, path_contains_subdirectory
-from llnl.util.lang import match_predicate
+from llnl.util.lang import match_predicate, memoized
 
 from spack import *
 from spack.util.environment import is_system_path
@@ -230,12 +231,6 @@ class Python(AutotoolsPackage):
               msg='python+tix requires python+tix+tkinter')
 
     conflicts('%nvhpc')
-
-    # Used to cache various attributes that are expensive to compute
-    _homes = {}
-    _python_include_dirs = {}
-    _python_lib_dirs = {}
-    _site_packages_dirs = {}
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
@@ -509,7 +504,7 @@ class Python(AutotoolsPackage):
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
         filenames = [
-            self.get_sysconfigdata_name(), self.get_makefile_filename()
+            self.get_sysconfigdata_name(), self.config_vars['makefile_filename']
         ]
 
         filter_file(spack_cc,  self.compiler.cc,  *filenames, **kwargs)
@@ -689,87 +684,54 @@ class Python(AutotoolsPackage):
         else:
             return 'print({0})'.format(string)
 
-    def get_config_var(self, key):
-        """Return the value of a single variable. Wrapper around
-        ``distutils.sysconfig.get_config_var()``."""
+    @property
+    @memoized
+    def config_vars(self):
+        """Return a set of variable definitions associated with a Python installation.
 
-        cmd = 'from distutils.sysconfig import get_config_var; '
-        cmd += self.print_string("get_config_var('{0}')".format(key))
-
-        return self.command('-c', cmd, output=str).strip()
-
-    def get_config_h_filename(self):
-        """Return the full path name of the configuration header.
-        Wrapper around ``distutils.sysconfig.get_config_h_filename()``."""
-
-        cmd = 'from distutils.sysconfig import get_config_h_filename; '
-        cmd += self.print_string('get_config_h_filename()')
-
-        return self.command('-c', cmd, output=str).strip()
-
-    def get_makefile_filename(self):
-        """Return the full path name of ``Makefile`` used to build Python.
-        Wrapper around ``distutils.sysconfig.get_makefile_filename()``."""
-
-        cmd = 'from distutils.sysconfig import get_makefile_filename; '
-        cmd += self.print_string('get_makefile_filename()')
-
-        return self.command('-c', cmd, output=str).strip()
-
-    def get_python_inc(self, plat_specific=False, prefix=None):
-        """Return the directory for either the general or platform-dependent C
-        include files. Wrapper around ``distutils.sysconfig.get_python_inc()``.
-
-        Parameters:
-            plat_specific (bool): if true, the platform-dependent include directory
-                is returned, else the platform-independent directory is returned
-            prefix (str): prefix to use instead of ``distutils.sysconfig.PREFIX``
+        Wrapper around various ``distutils.sysconfig`` functions.
 
         Returns:
-            str: include files directory
+            dict: variable definitions
         """
-        # Wrap strings in quotes
-        if prefix is not None:
-            prefix = '"{0}"'.format(prefix)
+        # TODO: distutils is deprecated in Python 3.10 and will be removed in
+        # Python 3.12, find a different way to access this information.
+        cmd = """
+import json
+from distutils.sysconfig import (
+    get_config_vars,
+    get_config_h_filename,
+    get_makefile_filename,
+    get_python_inc,
+    get_python_lib,
+)
 
-        args = 'plat_specific={0}, prefix={1}'.format(plat_specific, prefix)
+config = get_config_vars()
+config['config_h_filename'] = get_config_h_filename()
+config['makefile_filename'] = get_makefile_filename()
+config['python_inc'] = get_python_inc(prefix='')
+config['python_lib'] = {{}}
 
-        cmd = 'from distutils.sysconfig import get_python_inc; '
-        cmd += self.print_string('get_python_inc({0})'.format(args))
+for plat_specific in [True, False]:
+    config['python_lib'][plat_specific] = {{}}
+    for standard_lib in [True, False]:
+        config['python_lib'][plat_specific][standard_lib] = get_python_lib(
+            plat_specific, standard_lib, prefix=''
+        )
 
-        return self.command('-c', cmd, output=str).strip()
+{0}
+""".format(self.print_string("json.dumps(config)"))
 
-    def get_python_lib(self, plat_specific=False, standard_lib=False, prefix=None):
-        """Return the directory for either the general or platform-dependent
-        library installation. Wrapper around ``distutils.sysconfig.get_python_lib()``.
+        try:
+            return json.loads(self.command('-c', cmd, output=str))
+        except (ProcessError, RuntimeError):
+            return {}
 
-        Parameters:
-            plat_specific (bool): if true, the platform-dependent library directory
-                is returned, else the platform-independent directory is returned
-            standard_lib (bool): if true, the directory for the standard library is
-                returned rather than the directory for the installation of
-                third-party extensions
-            prefix (str): prefix to use instead of ``distutils.sysconfig.PREFIX``
-
-        Returns:
-            str: library installation directory
-        """
-        # Wrap strings in quotes
-        if prefix is not None:
-            prefix = '"{0}"'.format(prefix)
-
-        args = 'plat_specific={0}, standard_lib={1}, prefix={2}'.format(
-            plat_specific, standard_lib, prefix)
-
-        cmd = 'from distutils.sysconfig import get_python_lib; '
-        cmd += self.print_string('get_python_lib({0})'.format(args))
-
-        return self.command('-c', cmd, output=str).strip()
-
+    @memoized
     def get_sysconfigdata_name(self):
         """Return the full path name of the sysconfigdata file."""
 
-        libdest = self.get_config_var('LIBDEST')
+        libdest = self.config_vars['LIBDEST']
 
         filename = '_sysconfigdata.py'
         if self.spec.satisfies('@3.6:'):
@@ -782,6 +744,7 @@ class Python(AutotoolsPackage):
         return join_path(libdest, filename)
 
     @property
+    @memoized
     def home(self):
         """Most of the time, ``PYTHONHOME`` is simply
         ``spec['python'].prefix``. However, if the user is using an
@@ -793,14 +756,11 @@ class Python(AutotoolsPackage):
         determine exactly where it is installed. Fall back on
         ``spec['python'].prefix`` if that doesn't work."""
 
-        dag_hash = self.spec.dag_hash()
-        if dag_hash not in self._homes:
-            try:
-                prefix = self.get_config_var('prefix')
-            except ProcessError:
-                prefix = self.prefix
-            self._homes[dag_hash] = Prefix(prefix)
-        return self._homes[dag_hash]
+        if 'prefix' in self.config_vars:
+            prefix = self.config_vars['prefix']
+        else:
+            prefix = self.prefix
+        return Prefix(prefix)
 
     @property
     def libs(self):
@@ -808,19 +768,19 @@ class Python(AutotoolsPackage):
         # installs them into lib64. If the user is using an externally
         # installed package, it may be in either lib or lib64, so we need
         # to ask Python where its LIBDIR is.
-        libdir = self.get_config_var('LIBDIR')
+        libdir = self.config_vars['LIBDIR']
 
         # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
         # in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
-        libpl = self.get_config_var('LIBPL')
+        libpl = self.config_vars['LIBPL']
 
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
-        frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
+        frameworkprefix = self.config_vars['PYTHONFRAMEWORKPREFIX']
 
         if '+shared' in self.spec:
-            ldlibrary = self.get_config_var('LDLIBRARY')
+            ldlibrary = self.config_vars['LDLIBRARY']
 
             if os.path.exists(os.path.join(libdir, ldlibrary)):
                 return LibraryList(os.path.join(libdir, ldlibrary))
@@ -832,7 +792,7 @@ class Python(AutotoolsPackage):
                 msg = 'Unable to locate {0} libraries in {1}'
                 raise RuntimeError(msg.format(ldlibrary, libdir))
         else:
-            library = self.get_config_var('LIBRARY')
+            library = self.config_vars['LIBRARY']
 
             if os.path.exists(os.path.join(libdir, library)):
                 return LibraryList(os.path.join(libdir, library))
@@ -844,16 +804,16 @@ class Python(AutotoolsPackage):
 
     @property
     def headers(self):
-        try:
-            config_h = self.get_config_h_filename()
+        if 'config_h_filename' in self.config_vars:
+            config_h = self.config_vars['config_h_filename']
 
             if not os.path.exists(config_h):
-                includepy = self.get_config_var('INCLUDEPY')
+                includepy = self.config_vars['INCLUDEPY']
                 msg = 'Unable to locate {0} headers in {1}'
                 raise RuntimeError(msg.format(self.name, includepy))
 
             headers = HeaderList(config_h)
-        except ProcessError:
+        else:
             headers = find_headers(
                 'pyconfig', self.prefix.include, recursive=True)
             config_h = headers[0]
@@ -874,15 +834,10 @@ class Python(AutotoolsPackage):
         Returns:
             str: include files directory
         """
-        dag_hash = self.spec.dag_hash()
-        if dag_hash not in self._python_include_dirs:
-            try:
-                include_dir = self.get_python_inc(prefix='')
-            except (ProcessError, RuntimeError):
-                include_dir = os.path.join(
-                    'include', 'python{0}'.format(self.version.up_to(2)))
-            self._python_include_dirs[dag_hash] = include_dir
-        return self._python_include_dirs[dag_hash]
+        if 'python_inc' in self.config_vars:
+            return self.config_vars['python_inc']
+        else:
+            return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
 
     @property
     def python_lib_dir(self):
@@ -903,14 +858,10 @@ class Python(AutotoolsPackage):
         Returns:
             str: standard library directory
         """
-        dag_hash = self.spec.dag_hash()
-        if dag_hash not in self._python_lib_dirs:
-            try:
-                lib_dir = self.get_python_lib(standard_lib=True, prefix='')
-            except (ProcessError, RuntimeError):
-                lib_dir = os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
-            self._python_lib_dirs[dag_hash] = lib_dir
-        return self._python_lib_dirs[dag_hash]
+        if 'python_lib' in self.config_vars:
+            return self.config_vars['python_lib'][False][True]
+        else:
+            return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
 
     @property
     def site_packages_dir(self):
@@ -931,14 +882,10 @@ class Python(AutotoolsPackage):
         Returns:
             str: site-packages directory
         """
-        dag_hash = self.spec.dag_hash()
-        if dag_hash not in self._site_packages_dirs:
-            try:
-                site_packages_dir = self.get_python_lib(prefix='')
-            except (ProcessError, RuntimeError):
-                site_packages_dir = self.default_site_packages_dir
-            self._site_packages_dirs[dag_hash] = site_packages_dir
-        return self._site_packages_dirs[dag_hash]
+        if 'python_lib' in self.config_vars:
+            return self.config_vars['python_lib'][False][False]
+        else:
+            return self.default_site_packages_dir
 
     @property
     def default_site_packages_dir(self):
@@ -994,8 +941,8 @@ class Python(AutotoolsPackage):
         for compile_var, link_var in [('CC', 'LDSHARED'),
                                       ('CXX', 'LDCXXSHARED')]:
             # First, we get the values from the sysconfigdata:
-            config_compile = self.get_config_var(compile_var)
-            config_link = self.get_config_var(link_var)
+            config_compile = self.config_vars[compile_var]
+            config_link = self.config_vars[link_var]
 
             # The dependent environment will have the compilation command set to
             # the following:

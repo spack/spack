@@ -62,7 +62,7 @@ class Migraphx(CMakePackage):
         CMake based on current spec
         """
         python_spec = self.spec['python']
-        include_dir = python_spec.package.get_python_inc()
+        include_dir = python_spec.package.config_vars['python_inc']
         return [
             self.define('Python_INCLUDE_DIR', include_dir)
         ]
