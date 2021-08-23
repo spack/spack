@@ -45,6 +45,6 @@ class GtkDoc(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            '--with-xml-catalog={0}'.format(self.spec['docbook-xml'].prefix.catalog)
+            '--with-xml-catalog={0}'.format(self.spec['docbook-xml'].package.catalog)
         ]
         return args
