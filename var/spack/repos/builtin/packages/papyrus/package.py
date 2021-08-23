@@ -49,31 +49,30 @@ class Papyrus(CMakePackage):
             lib_dir = self.prefix.lib
 
         example_list = ['01_open_close', '02_put_get', '03_barrier',
-                        '04_delete', '05_fence', #'06_signal'],
+                        '04_delete', '05_fence', '06_signal',
                         '07_consistency', '08_protect', '09_cache',
                         '10_checkpoint', '11_restart', '12_free']
 
         for example in example_list:
 
             test_dir = join_path(self.test_suite.current_test_cache_dir,
-                             'kv', 'tests', example)
+                                 'kv', 'tests', example)
+            test_example = 'test{0}.c'.format(example)
 
             if not os.path.exists(test_dir):
-                print('Skipping {} test'.format(example))
+                print('Skipping {0} test'.format(example))
                 continue
-
-            test_example = 'test{}.c'.format(example)
 
             self.run_test(self.spec['mpi'].mpicxx,
                           options=['{0}'.format(join_path(test_dir, test_example)),
                                    '-I{0}'.format(join_path(self.prefix, 'include')),
                                    '-L{0}'.format(lib_dir), '-lpapyruskv', '-g', '-o',
-                                   example, '-lpthread',
-                                   '-lm'],
+                                   example, '-lpthread', '-lm'],
                           purpose='test: compile {0} example'.format(example),
                           work_dir=test_dir)
 
-            self.run_test(example,
+            self.run_test(self.spec['mpi'].prefix.bin.mpirun,
+                          options=['-np', '4', example],
                           purpose='test: run {0} example'.format(example),
                           work_dir=test_dir)
 
