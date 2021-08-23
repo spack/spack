@@ -15,6 +15,7 @@ import llnl.util.tty as tty
 import spack.binary_distribution
 import spack.compilers
 import spack.directory_layout as dl
+import spack.hooks
 import spack.installer as inst
 import spack.package_prefs as prefs
 import spack.repo
@@ -176,9 +177,10 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     monkeypatch.setattr(inst, '_try_install_from_binary_cache', _true)
-    monkeypatch.setattr(spack.hooks, 'post_install', _noop)
 
-    assert inst._install_from_cache(spec.package, True, True, False)
+    # Disable hooks.
+    with spack.hooks.use_hook_runner(spack.hooks.HookRunner()):
+        assert inst._install_from_cache(spec.package, True, True, False)
 
 
 def test_process_external_package_module(install_mockery, monkeypatch, capfd):
