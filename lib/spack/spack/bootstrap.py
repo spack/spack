@@ -487,25 +487,13 @@ def _bootstrap_config_scopes():
     return config_scopes
 
 
-def _has_compiler_for_host():
-    """True if the current configuration has at least one compiler for the host"""
-    host = spack.architecture.default_arch()
-    host_target, host_os = str(host.target.microarchitecture.family), str(host.os)
-    compilers = spack.compilers.get_compiler_config(init_config=False)
-    for entry in compilers:
-        compiler = entry['compiler']
-        compiler_is_for_host = (compiler['operating_system'] == host_os and
-                                compiler['target'] == host_target)
-        if compiler_is_for_host:
-            return True
-    return False
-
-
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     # We may need to compile code from sources, so ensure we have compilers
     # for the current platform before switching parts.
-    if not _has_compiler_for_host():
+    arch = spack.architecture.default_arch()
+    arch = spack.spec.ArchSpec(str(arch))  # The call below expects an ArchSpec object
+    if not spack.compilers.compilers_for_arch(arch):
         compiler_cmd = spack.main.SpackCommand('compiler')
         compiler_cmd(
             'find', output=os.devnull, error=os.devnull, fail_on_error=False
