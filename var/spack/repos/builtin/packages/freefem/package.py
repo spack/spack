@@ -29,7 +29,7 @@ class Freefem(AutotoolsPackage):
     variant('mpi', default=False,
             description='Activate MPI support')
     variant('petsc', default=False,
-            description='Compiler with PETSc/SLEPSc')
+            description='Compile with PETSc/SLEPc')
 
     depends_on('mpi', when='+mpi')
     depends_on('slepc', when='+petsc')
