@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Mbedtls(CMakePackage):
+class Mbedtls(MakefilePackage):
     """mbed TLS (formerly known as PolarSSL) makes it trivially easy for
        developers to include cryptographic and SSL/TLS capabilities in
        their (embedded) products, facilitating this functionality with a
@@ -29,31 +29,32 @@ class Mbedtls(CMakePackage):
     version('2.1.3', sha256='94da4618d5a518b99f7914a5e348be436e3571113d9a9978d130725a1fc7bfac')
     version('1.3.16', sha256='0c2666222b66cf09c4630fa60a715aafd7decb1a09933b75c0c540b0625ac5df')
 
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release', 'Coverage', 'ASan', 'ASanDbg',
-                    'MemSan', 'MemSanDbg', 'Check', 'CheckFull'))
+    variant('pic', default=False, description='Compile with position independent code.')
+    variant('libs', default='static', values=('shared', 'static'),
+            multi=True, description='What libraries to build')
 
-    variant('pic', default=False,
-            description='Compile with position independent code.')
-    variant('shared', default=False,
-            description='Build shared libraries')
-
-    depends_on('cmake@3.10.2:', type='build', when='@3.0.0:')
-    depends_on('cmake@3.1.0:', type='build', when='@2.8.0:')
-    depends_on('cmake@2.6:', type='build')
     depends_on('perl', type='test')
 
-    def cmake_args(self):
-        return [
-            self.define('ENABLE_TESTING', self.run_tests),
-            self.define_from_variant('USE_SHARED_MBEDTLS_LIBRARY', 'shared')
-        ]
+    # TODO: Can't express this in spack right now; but we can live with
+    # libs=shared building both shared and static libs.
+    # conflicts('libs=shared', msg='Makefile build cannot build shared libs only now')
 
     def flag_handler(self, name, flags):
-
         # Compile with PIC, if requested.
         if name == 'cflags' and '+pic' in self.spec:
             flags.append(self.compiler.cc_pic_flag)
 
         return (flags, None, None)
+
+    def setup_build_environment(self, env):
+        if 'libs=shared' in self.spec:
+            env.set('SHARED', 'yes')
+
+    def build(self, spec, prefix):
+        # In version @:1 we have to run make before make install, in @2: we can
+        # just run make install to avoid building tests.
+        if '@:1' in spec:
+            make()
+
+    def install(self, spec, prefix):
+        make('install', 'DESTDIR={0}'.format(prefix))
