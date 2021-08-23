@@ -698,6 +698,8 @@ class Python(AutotoolsPackage):
         """
         # TODO: distutils is deprecated in Python 3.10 and will be removed in
         # Python 3.12, find a different way to access this information.
+        # Also, calling the python executable disallows us from cross-compiling,
+        # so we want to try to avoid that if possible.
         cmd = """
 import json
 from distutils.sysconfig import (
