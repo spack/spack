@@ -14,6 +14,7 @@ class OpenclClhpp(CMakePackage):
 
     homepage = "https://www.khronos.org/registry/OpenCL/"
     url      = "https://github.com/KhronosGroup/OpenCL-CLHPP/archive/v2.0.12.tar.gz"
+    maintainers = ['lorddavidiii']
 
     version('2.0.15', sha256='0175806508abc699586fc9a9387e01eb37bf812ca534e3b493ff3091ec2a9246')
     version('2.0.14', sha256='c8821a7638e57a2c4052631c941af720b581edda634db6ab0b59924c958d69b6')
