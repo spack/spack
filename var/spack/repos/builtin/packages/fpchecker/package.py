@@ -3,10 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 from spack import *
 
+
 class Fpchecker(CMakePackage):
-    """FPChecker (Floating-Point Checker) is a dynamic analysis tool to detect floating-point errors in HPC applications."""
+    """FPChecker (Floating-Point Checker) is a dynamic analysis tool
+       to detect floating-point errors in HPC applications.
+    """
 
     homepage = "https://fpchecker.org/"
     url      = "https://github.com/LLNL/FPChecker/archive/refs/tags/v0.3.0.tar.gz"
@@ -22,4 +26,3 @@ class Fpchecker(CMakePackage):
     def cmake_args(self):
         args = ['-DCMAKE_C_COMPILER=clang', '-DCMAKE_CXX_COMPILER=clang++']
         return args
-
