@@ -41,7 +41,13 @@ class Papyrus(CMakePackage):
         self.cache_extra_test_sources([join_path('kv', 'tests')])
 
     def run_example_tests(self):
-        """Run stand alone test: 01_open_close"""
+        """Run all c & c++ stand alone test"""
+
+        example_dir = join_path(self.test_suite.current_test_cache_dir, 'kv', 'tests')
+
+        if not os.path.exists(example_dir):
+            print('Skipping all test')
+            return
 
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
