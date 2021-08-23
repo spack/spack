@@ -1833,7 +1833,7 @@ class Environment(object):
             self.regenerate_views()
 
             # Run post_env_hooks
-            spack.hooks.post_env_write(self)
+            spack.hooks.runner('post_env_write', self)
 
         # new specs and new installs reset at write time
         self.new_specs = []

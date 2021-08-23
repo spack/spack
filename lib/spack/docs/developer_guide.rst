@@ -761,7 +761,7 @@ In this example, we use it outside of a logger that is already defined:
     import spack.hooks
 
     # We do something here to generate a logger and message
-    spack.hooks.post_log_write(message, logger.level)
+    spack.hooks.runner('post_log_write', message, logger.level)
 
 
 This is not to say that this would be the best way to implement an integration

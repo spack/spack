@@ -113,4 +113,5 @@ class Libabigail(AnalyzerBase):
             # A result needs an analyzer, value or binary_value, and name
             data = {"value": content, "install_file": rel_path, "name": "abidw-xml"}
             tty.info("Sending result for %s %s to monitor." % (name, rel_path))
-            spack.hooks.on_analyzer_save(self.spec.package, {"libabigail": [data]})
+            spack.hooks.runner('on_analyzer_save', self.spec.package, {
+                "libabigail": [data]})

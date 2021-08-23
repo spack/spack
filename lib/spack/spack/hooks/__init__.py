@@ -28,71 +28,61 @@ This can be used to implement support for things like module
 systems (e.g. modules, lmod, etc.) or to add other custom
 features.
 """
-import llnl.util.lang
-
-import spack.paths
+import contextlib
 
 
-class _HookRunner(object):
+class HookRunner(object):
     #: Stores all hooks on first call, shared among
     #: all HookRunner objects
     _hooks = None
 
-    def __init__(self, hook_name):
-        self.hook_name = hook_name
+    def __init__(self, hooks=[]):
+        self.hooks_names = hooks
 
-    @classmethod
-    def _populate_hooks(cls):
+    def _init_hooks(cls):
         # Lazily populate the list of hooks
         cls._hooks = []
-        relative_names = list(llnl.util.lang.list_modules(
-            spack.paths.hooks_path
-        ))
 
-        # We want this hook to be the last registered
-        relative_names.sort(key=lambda x: x == 'write_install_manifest')
-        assert relative_names[-1] == 'write_install_manifest'
-
-        for name in relative_names:
+        for name in cls.hooks_names:
             module_name = __name__ + '.' + name
             # When importing a module from a package, __import__('A.B', ...)
             # returns package A when 'fromlist' is empty. If fromlist is not
             # empty it returns the submodule B instead
             # See: https://stackoverflow.com/a/2725668/771663
-            module_obj = __import__(module_name, fromlist=[None])
-            cls._hooks.append((module_name, module_obj))
+            cls._hooks.append(__import__(module_name, fromlist=[None]))
 
     @property
     def hooks(self):
         if not self._hooks:
-            self._populate_hooks()
+            self._init_hooks()
         return self._hooks
 
-    def __call__(self, *args, **kwargs):
-        for _, module in self.hooks:
-            if hasattr(module, self.hook_name):
-                hook = getattr(module, self.hook_name)
+    def __call__(self, hook_name, *args, **kwargs):
+        for module in self.hooks:
+            if hasattr(module, hook_name):
+                hook = getattr(module, hook_name)
                 if hasattr(hook, '__call__'):
                     hook(*args, **kwargs)
 
 
-# pre/post install and run by the install subprocess
-pre_install = _HookRunner('pre_install')
-post_install = _HookRunner('post_install')
+_default_runner = HookRunner([
+    'extensions',
+    'licensing',
+    'module_file_generation',
+    'permissions_setters',
+    'monitor',
+    'sbang',
+    'write_install_manifest'
+])
 
-# These hooks are run within an install subprocess
-pre_uninstall = _HookRunner('pre_uninstall')
-post_uninstall = _HookRunner('post_uninstall')
-on_phase_success = _HookRunner('on_phase_success')
-on_phase_error = _HookRunner('on_phase_error')
 
-# These are hooks in installer.py, before starting install subprocess
-on_install_start = _HookRunner('on_install_start')
-on_install_success = _HookRunner('on_install_success')
-on_install_failure = _HookRunner('on_install_failure')
+runner = _default_runner
 
-# Analyzer hooks
-on_analyzer_save = _HookRunner('on_analyzer_save')
 
-# Environment hooks
-post_env_write = _HookRunner('post_env_write')
+@contextlib.contextmanager
+def use_hook_runner(new_runner):
+    global runner
+    old_runner = runner
+    runner = new_runner
+    yield
+    runner = old_runner
