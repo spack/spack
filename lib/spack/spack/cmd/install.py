@@ -219,7 +219,7 @@ def install_specs(cli_args, kwargs, specs):
 
                 # If there is any ambiguity in the above call to matching_spec
                 # (i.e. if more than one spec in the environment matches), then
-                # SpackEnvironmentError is rasied, with a message listing the
+                # SpackEnvironmentError is raised, with a message listing the
                 # the matches.  Getting to this point means there were either
                 # no matches or exactly one match.
 
