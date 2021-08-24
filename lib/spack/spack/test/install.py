@@ -132,7 +132,7 @@ def test_failing_overwrite_install_should_keep_previous_installation(
 ):
     """
     Make sure that whenever `spack install --overwrite` fails, spack restores
-    the original build directory instead of cleaning it.
+    the original install prefix instead of cleaning it.
     """
     # Do a successful install
     spec = Spec('canfail').concretized()
