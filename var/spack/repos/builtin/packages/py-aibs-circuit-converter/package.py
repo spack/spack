@@ -9,9 +9,8 @@ from spack import *
 class PyAibsCircuitConverter(PythonPackage):
     """Pythonic API for conversion between Allen Institute and BBP"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/aibs-circuit-converter"
-    git      = "ssh://bbpcode.epfl.ch/nse/aibs-circuit-converter"
-    url      = "ssh://bbpcode.epfl.ch/nse/aibs-circuit-converter"
+    homepage = "https://bbpgitlab.epfl.ch/nse/aibs-circuit-converter"
+    git      = "git@bbpgitlab.epfl.ch:nse/aibs-circuit-converter.git"
 
     version('develop', branch='master')
     version('0.0.3', tag='aibs-circuit-converter-v0.0.3')

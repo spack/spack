@@ -9,8 +9,8 @@ from spack import *
 class PySonataNetworkReduction(PythonPackage):
     """Pythonic Sonata circuit reduction API"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/sonata-network-reduction"
-    git      = "ssh://bbpcode.epfl.ch/nse/sonata-network-reduction"
+    homepage = "https://bbpgitlab.epfl.ch/nse/sonata-network-reduction/"
+    git      = "git@bbpgitlab.epfl.ch:nse/sonata-network-reduction.git"
 
     version('develop', branch='master')
     version('0.1.8', tag='sonata-network-reduction-v0.1.8')

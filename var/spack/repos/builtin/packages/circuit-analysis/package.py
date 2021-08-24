@@ -9,8 +9,8 @@ from spack import *
 class CircuitAnalysis(PythonPackage):
     """Pythonic Sonata circuit reduction API"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/circuit-analysis"
-    git      = "ssh://bbpcode.epfl.ch/nse/circuit-analysis"
+    homepage = "https://bbpgitlab.epfl.ch/nse/circuit-analysis"
+    git      = "git@bbpgitlab.epfl.ch:nse/circuit-analysis.git"
 
     version('develop', branch='master')
     version('0.0.4', tag='circuit-analysis-v0.0.4')

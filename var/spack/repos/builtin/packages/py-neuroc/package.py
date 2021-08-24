@@ -10,9 +10,8 @@ from spack import *
 class PyNeuroc(PythonPackage):
     """Python library neuron morphology analysis"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/neuroc"
-    url = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/neuroc"
-    git = "ssh://bbpcode.epfl.ch/nse/NeuroC"
+    homepage = "https://bbpgitlab.epfl.ch/nse/neuroc"
+    git = "git@bbpgitlab.epfl.ch:nse/neuroc.git"
 
     version('develop', branch='master')
     version('0.2.7', tag='neuroc-v0.2.7')

@@ -9,8 +9,8 @@ from spack import *
 class PlacementAlgorithm(PythonPackage):
     """Morphology placement algorithm"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/placementAlgorithm"
-    git      = "ssh://bbpcode.epfl.ch/building/placementAlgorithm"
+    homepage = "https://bbpgitlab.epfl.ch/nse/placement-algorithm/"
+    git      = "git@bbpgitlab.epfl.ch:nse/placement-algorithm.git"
 
     version('develop', branch='master')
     version('2.1.2', tag='placement-algorithm-v2.1.2')

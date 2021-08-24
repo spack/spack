@@ -9,8 +9,8 @@ from spack import *
 class Brainbuilder(PythonPackage):
     """Miscellaneous circuit building utilities"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/brainbuilder"
-    git      = "ssh://bbpcode.epfl.ch/nse/brainbuilder"
+    homepage = "https://bbpgitlab.epfl.ch/nse/brainbuilder/"
+    git      = "git@bbpgitlab.epfl.ch:nse/brainbuilder.git"
 
     version('develop', branch='master')
     version('0.16.1', tag='brainbuilder-v0.16.1')

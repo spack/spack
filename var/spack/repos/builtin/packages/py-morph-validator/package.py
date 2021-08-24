@@ -10,8 +10,8 @@ from spack import *
 class PyMorphValidator(PythonPackage):
     """Python library neuron morphology analysis"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/morph-validator"
-    git      = "ssh://bbpcode.epfl.ch/nse/morph-validator"
+    homepage = "https://bbpgitlab.epfl.ch/nse/morph-validator"
+    git      = "git@bbpgitlab.epfl.ch:nse/morph-validator.git"
     version('develop', branch='master')
     version('0.2.3', tag='morph-validator-v0.2.3')
 

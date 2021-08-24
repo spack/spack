@@ -9,8 +9,8 @@ from spack import *
 class PyVoxcell(PythonPackage):
     """Python library for handling volumetric data"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/voxcell"
-    git      = "ssh://bbpcode.epfl.ch/nse/voxcell"
+    homepage = "https://bbpgitlab.epfl.ch/nse/voxcell"
+    git      = "git@bbpgitlab.epfl.ch:nse/voxcell.git"
 
     version('develop', branch='master')
     version('3.0.0', tag='voxcell-v3.0.0')
