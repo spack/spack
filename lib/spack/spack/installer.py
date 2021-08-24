@@ -1564,6 +1564,9 @@ class PackageInstaller(object):
                             if os.path.exists(rec.path):
                                 with fs.replace_directory_transaction(
                                         rec.path):
+                                    # fs transaction will put the old prefix
+                                    # back on failure, so make sure to keep it.
+                                    keep_prefix = True
                                     self._install_task(task)
                             else:
                                 tty.debug("Missing installation to overwrite")
