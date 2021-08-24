@@ -36,7 +36,7 @@ class HookRunner(object):
     #: all HookRunner objects
     _hooks = None
 
-    def __init__(self, hooks):
+    def __init__(self, hooks=None):
         self.hooks_names = hooks or []
 
     def _init_hooks(cls):
