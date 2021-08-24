@@ -29,11 +29,22 @@ class Mbedtls(MakefilePackage):
     version('2.1.3', sha256='94da4618d5a518b99f7914a5e348be436e3571113d9a9978d130725a1fc7bfac')
     version('1.3.16', sha256='0c2666222b66cf09c4630fa60a715aafd7decb1a09933b75c0c540b0625ac5df')
 
-    variant('pic', default=False, description='Compile with position independent code.')
+    variant('pic', default=True, description='Compile with position independent code.')
+    variant('build_type', default='Release', description='Build type',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     variant('libs', default='static', values=('shared', 'static'),
             multi=True, description='What libraries to build')
 
     depends_on('perl', type='test')
+    depends_on('python@3:', type='test', when='@3:')
+    depends_on('python@:2', type='test', when='@:2')
+
+    build_type_to_flags = {
+        'Debug': '-O0 -g',
+        'Release': '-O3',
+        'RelWithDebInfo': '-O2 -g',
+        'MinSizeRel': '-Os',
+    }
 
     # TODO: Can't express this in spack right now; but we can live with
     # libs=shared building both shared and static libs.
@@ -41,20 +52,20 @@ class Mbedtls(MakefilePackage):
 
     def flag_handler(self, name, flags):
         # Compile with PIC, if requested.
-        if name == 'cflags' and '+pic' in self.spec:
-            flags.append(self.compiler.cc_pic_flag)
+        if name == 'cflags':
+            build_type = self.spec.variants['build_type'].value
+            flags.append(self.build_type_to_flags[build_type])
+            if self.spec.variants['pic'].value:
+                flags.append(self.compiler.cc_pic_flag)
 
-        return (flags, None, None)
+        return (None, flags, None)
 
     def setup_build_environment(self, env):
-        if 'libs=shared' in self.spec:
+        if 'shared' in self.spec.variants['libs'].value:
             env.set('SHARED', 'yes')
 
     def build(self, spec, prefix):
-        # In version @:1 we have to run make before make install, in @2: we can
-        # just run make install to avoid building tests.
-        if '@:1' in spec:
-            make()
+        make('no_test')
 
     def install(self, spec, prefix):
         make('install', 'DESTDIR={0}'.format(prefix))
