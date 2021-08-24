@@ -21,7 +21,7 @@ class Quinoa(CMakePackage):
 
     depends_on('hdf5+mpi')
     depends_on("charmpp backend=mpi")
-    depends_on("trilinos+exodus+mpi+netcdf")
+    depends_on("trilinos+exodus+mpi")
     depends_on("boost")
     depends_on("hypre~internal-superlu")
     depends_on("random123")

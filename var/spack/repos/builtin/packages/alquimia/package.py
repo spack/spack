@@ -20,7 +20,6 @@ class Alquimia(CMakePackage):
     version('xsdk-0.5.0', commit='8397c3b00a09534c5473ff3ab21f0e32bb159380')
     version('xsdk-0.4.0', commit='2edad6733106142d014bb6e6a73c2b21d5e3cf2d')
     version('xsdk-0.3.0', tag='xsdk-0.3.0')
-    version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -35,7 +34,6 @@ class Alquimia(CMakePackage):
     depends_on('pflotran@develop', when='@develop')
     depends_on('petsc@3.10.0:3.10.99', when='@xsdk-0.4.0')
     depends_on('petsc@3.8.0:3.8.99', when='@xsdk-0.3.0')
-    depends_on('petsc@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('petsc@3.10:', when='@develop')
 
     def cmake_args(self):

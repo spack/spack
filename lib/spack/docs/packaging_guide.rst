@@ -612,6 +612,7 @@ it executable, then runs it with some arguments.
        installer = Executable(self.stage.archive_file)
        installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
 
+.. _deprecate:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Deprecating old versions

@@ -20,6 +20,7 @@ class HsaRocrDev(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='master')
+    version('4.3.0', sha256='2a08657a517971447fc233cb2c8ee2e117c6ab5efc31af147b28b3ef59b3847d')
     version('4.2.0', sha256='fa0e7bcd64e97cbff7c39c9e87c84a49d2184dc977b341794770805ec3f896cc')
     version('4.1.0', sha256='c223a5f7ccac280520abb6ea49fdd36fa9468718098a9d984be6ef839ccbc6db')
     version('4.0.0', sha256='e84c48e80ea38698a5bd5da3940048ad3cab3696d10a53132acad07ca357f17c')
@@ -41,7 +42,7 @@ class HsaRocrDev(CMakePackage):
     depends_on('libelf@0.8:', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', 'master']:
+                '4.2.0', '4.3.0', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
         # allow standalone rocm-device-libs (useful for aomp)

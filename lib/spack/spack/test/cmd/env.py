@@ -53,7 +53,7 @@ def check_viewdir_removal(viewdir):
 @pytest.fixture()
 def env_deactivate():
     yield
-    spack.environment._active_environment = None
+    ev._active_environment = None
     os.environ.pop('SPACK_ENV', None)
 
 
@@ -228,7 +228,7 @@ def test_activate_adds_transitive_run_deps_to_path(
     with e:
         install('depends-on-run-env')
 
-    cmds = spack.environment.activate(e)
+    cmds = ev.activate(e)
     assert 'DEPENDENCY_ENV_VAR=1' in cmds
 
 
@@ -1143,7 +1143,7 @@ def test_env_without_view_install(
     env('create', '--without-view', 'test')
 
     test_env = ev.read('test')
-    with pytest.raises(spack.environment.SpackEnvironmentError):
+    with pytest.raises(ev.SpackEnvironmentError):
         test_env.default_view
 
     view_dir = tmpdir.join('view')
@@ -1946,6 +1946,35 @@ env:
                 assert not os.path.exists(
                     os.path.join(viewdir, spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
+
+
+@pytest.mark.parametrize('link_type', ['hardlink', 'copy', 'symlink'])
+def test_view_link_type(link_type, tmpdir, mock_fetch, mock_packages, mock_archive,
+                        install_mockery):
+    filename = str(tmpdir.join('spack.yaml'))
+    viewdir = str(tmpdir.join('view'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  specs:
+    - mpileaks
+  view:
+    default:
+      root: %s
+      link_type: %s""" % (viewdir, link_type))
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            install()
+
+        test = ev.read('test')
+
+        for spec in test.roots():
+            file_path = test.default_view.view()._root
+            file_to_test = os.path.join(
+                file_path, spec.name)
+            assert os.path.isfile(file_to_test)
+            assert os.path.islink(file_to_test)  == (link_type == 'symlink')
 
 
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,

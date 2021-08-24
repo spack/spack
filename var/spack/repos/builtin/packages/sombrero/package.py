@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from os import symlink
+
 from llnl.util.filesystem import join_path
 
 from spack import *
@@ -44,5 +46,7 @@ class Sombrero(MakefilePackage):
         install('sombrero.sh', prefix.bin)
         # Install all executables
         for i in range(1, 7):
-            install(join_path('sombrero', 'sombrero{0}'.format(i)),
-                    sombrero_dir)
+            src = join_path('sombrero', 'sombrero{0}'.format(i))
+            install(src, sombrero_dir)
+            symlink(join_path(sombrero_dir, 'sombrero{0}'.format(i)),
+                    join_path(prefix.bin, 'sombrero{0}'.format(i)))

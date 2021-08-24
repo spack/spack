@@ -19,6 +19,7 @@ class Comgr(CMakePackage):
 
     version('master', branch='amd-stg-open')
 
+    version('4.3.0', sha256='f77b505abb474078374701dfc49e651ad3eeec5349ce6edda54549943a3775ee')
     version('4.2.0', sha256='40a1ea50d2aea0cf75c4d17cdd6a7fe44ae999bf0147d24a756ca4675ce24e36')
     version('4.1.0', sha256='ffb625978555c63582aa46857672431793261166aa31761eff4fe5c2cab661ae')
     version('4.0.0', sha256='f389601fb70b2d9a60d0e2798919af9ddf7b8376a2e460141507fe50073dfb31')
@@ -32,7 +33,7 @@ class Comgr(CMakePackage):
 
     # Disable the hip compile tests.  Spack should not be using
     # /opt/rocm, and this breaks the build when /opt/rocm exists.
-    patch('hip-tests.patch')
+    patch('hip-tests.patch', when='@:4.2.0')
 
     depends_on('cmake@3.2.0:',  type='build', when='@:3.8.99')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
@@ -42,7 +43,7 @@ class Comgr(CMakePackage):
     depends_on('ncurses', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', 'master']:
+                '4.2.0', '4.3.0', 'master']:
         # llvm libs are linked statically, so this *could* be a build dep
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
 

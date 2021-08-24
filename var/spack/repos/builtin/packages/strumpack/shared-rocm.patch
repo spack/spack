@@ -1,0 +1,141 @@
+From dea93a02299c9c2ac6143d7f6f170310316d5989 Mon Sep 17 00:00:00 2001
+From: Pieter Ghysels <pghysels@lbl.gov>
+Date: Wed, 4 Aug 2021 15:15:21 -0700
+Subject: [PATCH 1/2] patch for building shared lib with ROCm
+
+---
+ CMakeLists.txt              |  7 ++++++-
+ cmake/Modules/FindHIP.cmake | 31 ++++++++++++++++++++++++++++---
+ 2 files changed, 34 insertions(+), 4 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c63e8f0..e362d4c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -439,7 +439,12 @@ if(STRUMPACK_USE_HIP)
+   set_source_files_properties(
+     src/sparse/fronts/FrontalMatrixHIP.hip.cpp
+     PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
+-  hip_add_library(strumpack "src/sparse/fronts/FrontalMatrixHIP.hip.cpp")
++  if (BUILD_SHARED_LIBS)
++    set(STATIC_OR_SHARED SHARED)
++  else()
++    set(STATIC_OR_SHARED STATIC)
++  endif()
++  hip_add_library(strumpack "src/sparse/fronts/FrontalMatrixHIP.hip.cpp" ${STATIC_OR_SHARED})
+ else()
+   add_library(strumpack "")
+ endif()
+diff --git a/cmake/Modules/FindHIP.cmake b/cmake/Modules/FindHIP.cmake
+index b4a5cb2..6b69837 100644
+--- a/cmake/Modules/FindHIP.cmake
++++ b/cmake/Modules/FindHIP.cmake
+@@ -11,6 +11,7 @@ set(HIP_HCC_FLAGS "" CACHE STRING "Semicolon delimited flags for HCC")
+ set(HIP_CLANG_FLAGS "" CACHE STRING "Semicolon delimited flags for CLANG")
+ set(HIP_NVCC_FLAGS "" CACHE STRING "Semicolon delimted flags for NVCC")
+ mark_as_advanced(HIP_HIPCC_FLAGS HIP_HCC_FLAGS HIP_CLANG_FLAGS HIP_NVCC_FLAGS)
++
+ set(_hip_configuration_types ${CMAKE_CONFIGURATION_TYPES} ${CMAKE_BUILD_TYPE} Debug MinSizeRel Release RelWithDebInfo)
+ list(REMOVE_DUPLICATES _hip_configuration_types)
+ foreach(config ${_hip_configuration_types})
+@@ -205,8 +206,13 @@ set(CMAKE_SHARED_LIBRARY_LINK_DYNAMIC_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_LINK_DYNA
+ set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "")
+ set(HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS "")
+ 
+-if("${HIP_COMPILER}" STREQUAL "hcc")
+-    # Set the CMake Flags to use the HCC Compiler.
++if("${HIP_COMPILER}" STREQUAL "nvcc")
++    # Set the CMake Flags to use the nvcc Compiler.
++    set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${HIP_HIPCC_CMAKE_LINKER_HELPER} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
++    set(CMAKE_HIP_CREATE_SHARED_MODULE "${HIP_HIPCC_CMAKE_LINKER_HELPER} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <LINK_LIBRARIES> -shared" )
++    set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
++elseif("${HIP_COMPILER}" STREQUAL "hcc")
++    # Set the CMake Flags to use the hcc Compiler.
+     set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_HOME} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+     set(CMAKE_HIP_CREATE_SHARED_MODULE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_HOME} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <LINK_LIBRARIES> -shared" )
+     set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_HOME} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+@@ -221,7 +227,7 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
+     endif()
+     if(HIP_CLANG_NUM_PARALLEL_JOBS GREATER 1)
+       if(${HIP_CLANG_SUPPORTS_PARALLEL_JOBS})
+-        set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS} -Wno-format-nonliteral")
++        set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "-Wno-format-nonliteral -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}")
+         set(HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS "-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}")
+       else()
+         message("clang compiler doesn't support parallel jobs")
+@@ -232,6 +238,13 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
+     set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+     set(CMAKE_HIP_CREATE_SHARED_MODULE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <LINK_LIBRARIES> -shared" )
+     set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
++
++    if("${HIP_RUNTIME}" STREQUAL "rocclr")
++      if(TARGET host)
++        message(STATUS "host interface - found")
++        set(HIP_HOST_INTERFACE host)
++      endif()
++    endif()
+ endif()
+ 
+ ###############################################################################
+@@ -637,6 +650,8 @@ macro(HIP_ADD_EXECUTABLE hip_target)
+             endif()
+         endif()
+         set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
++    else()
++        set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+     endif()
+     if ("${_sources}" STREQUAL "")
+         add_executable(${hip_target} ${_cmake_options} ${_generated_files} "")
+@@ -644,6 +659,11 @@ macro(HIP_ADD_EXECUTABLE hip_target)
+         add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
+     endif()
+     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE HIP)
++    # Link with host
++    if (HIP_HOST_INTERFACE)
++        # hip rt should be rocclr, compiler should be clang
++        target_link_libraries(${hip_target} ${HIP_HOST_INTERFACE})
++    endif()
+ endmacro()
+ 
+ ###############################################################################
+@@ -662,6 +682,11 @@ macro(HIP_ADD_LIBRARY hip_target)
+         add_library(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
+     endif()
+     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE ${HIP_C_OR_CXX})
++    # Link with host
++    if (HIP_HOST_INTERFACE)
++        # hip rt should be rocclr, compiler should be clang
++        target_link_libraries(${hip_target} ${HIP_HOST_INTERFACE})
++    endif()
+ endmacro()
+ 
+ # vim: ts=4:sw=4:expandtab:smartindent
+-- 
+2.30.2
+
+
+From 66c79092ee9aabd8b76f2c510d6ac1310cf3646b Mon Sep 17 00:00:00 2001
+From: Pieter Ghysels <pghysels@lbl.gov>
+Date: Wed, 11 Aug 2021 15:45:04 -0700
+Subject: [PATCH 2/2] extra fix for HIP
+
+---
+ cmake/Modules/FindHIP/run_hipcc.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmake/Modules/FindHIP/run_hipcc.cmake b/cmake/Modules/FindHIP/run_hipcc.cmake
+index 63c7bb3..ce0b406 100644
+--- a/cmake/Modules/FindHIP/run_hipcc.cmake
++++ b/cmake/Modules/FindHIP/run_hipcc.cmake
+@@ -48,7 +48,7 @@ execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --compiler OUTPUT_VARIABLE H
+ execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --runtime OUTPUT_VARIABLE HIP_RUNTIME OUTPUT_STRIP_TRAILING_WHITESPACE)
+ if(NOT host_flag)
+     set(__CC ${HIP_HIPCC_EXECUTABLE})
+-    if("${HIP_PLATFORM}" STREQUAL "hcc")
++    if("${HIP_PLATFORM}" STREQUAL "amd")
+         if("${HIP_COMPILER}" STREQUAL "hcc")
+             if(NOT "x${HCC_HOME}" STREQUAL "x")
+                 set(ENV{HCC_HOME} ${HCC_HOME})
+-- 
+2.30.2
+

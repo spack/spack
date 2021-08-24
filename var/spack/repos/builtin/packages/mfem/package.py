@@ -49,10 +49,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # other version.
     version('develop', branch='master')
 
+    version('4.3.0',
+            sha256='3a495602121b986049286ea0b23512279cdbdfb43c15c42a1511b521051fbe38',
+            url='https://bit.ly/mfem-4-3', extension='tar.gz')
+
     version('4.2.0',
             '4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d',
-            url='https://bit.ly/mfem-4-2', extension='tar.gz',
-            preferred=True)
+            url='https://bit.ly/mfem-4-2', extension='tar.gz')
 
     version('4.1.0',
             '4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d',

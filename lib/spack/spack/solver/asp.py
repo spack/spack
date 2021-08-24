@@ -37,6 +37,7 @@ import spack.compilers
 import spack.config
 import spack.dependency
 import spack.directives
+import spack.environment as ev
 import spack.error
 import spack.package
 import spack.package_prefs
@@ -267,14 +268,8 @@ class PyclingoDriver(object):
         """
         global clingo
         if not clingo:
-            # TODO: Find a way to vendor the concrete spec
-            # in a cross-platform way
             with spack.bootstrap.ensure_bootstrap_configuration():
-                clingo_spec = spack.bootstrap.clingo_root_spec()
-                clingo_spec._old_concretize()
-                spack.bootstrap.make_module_available(
-                    'clingo', spec=clingo_spec, install=True
-                )
+                spack.bootstrap.ensure_clingo_importable_or_raise()
                 import clingo
         self.out = asp or llnl.util.lang.Devnull()
         self.cores = cores
@@ -767,7 +762,7 @@ class SpackSolverSetup(object):
 
             for i, provider in enumerate(providers):
                 provider_name = spack.spec.Spec(provider).name
-                func(vspec, provider_name, i + 10)
+                func(vspec, provider_name, i)
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")
@@ -1402,7 +1397,7 @@ class SpackSolverSetup(object):
             self.preferred_versions(pkg)
 
         # Inject dev_path from environment
-        env = spack.environment.get_env(None, None)
+        env = ev.active_environment()
         if env:
             for spec in sorted(specs):
                 for dep in spec.traverse():
@@ -1631,9 +1626,8 @@ class SpecBuilder(object):
         for s in self._specs.values():
             spack.spec.Spec.ensure_external_path_if_external(s)
 
-        env = spack.environment.get_env(None, None)
         for s in self._specs.values():
-            _develop_specs_from_env(s, env)
+            _develop_specs_from_env(s, ev.active_environment())
 
         for s in self._specs.values():
             s._mark_concrete()
