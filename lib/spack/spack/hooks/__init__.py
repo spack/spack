@@ -36,8 +36,8 @@ class HookRunner(object):
     #: all HookRunner objects
     _hooks = None
 
-    def __init__(self, hooks=[]):
-        self.hooks_names = hooks
+    def __init__(self, hooks):
+        self.hooks_names = hooks or []
 
     def _init_hooks(cls):
         # Lazily populate the list of hooks
@@ -82,7 +82,8 @@ runner = _default_runner
 @contextlib.contextmanager
 def use_hook_runner(new_runner):
     global runner
-    old_runner = runner
-    runner = new_runner
-    yield
-    runner = old_runner
+    old_runner, runner = runner, new_runner
+    try:
+        yield
+    finally:
+        runner = old_runner
