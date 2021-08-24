@@ -701,10 +701,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
             dst=os.path.dirname(directory_name)
         )
         tty.debug('DIRECTORY RECOVERED [{0}]'.format(directory_name))
-
-        msg = 'the transactional move of "{0}" failed.'
-        msg += '\n    ' + str(e)
-        raise RuntimeError(msg.format(directory_name))
+        raise e
     else:
         # Otherwise delete the temporary directory
         shutil.rmtree(tmp_dir)
