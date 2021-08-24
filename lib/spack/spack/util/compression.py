@@ -8,7 +8,9 @@ import re
 import sys
 from itertools import product
 
-from spack.util.executable import which
+from six import string_types
+
+from spack.util.executable import CommandNotFoundError, which
 
 # Supported archive extensions.
 PRE_EXTS   = ["tar", "TAR"]
@@ -26,13 +28,41 @@ def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
+def try_exec(exec):
+    try:
+        return which(exec, required=True)
+    except CommandNotFoundError:
+        pass
+    return None
+
+
+def derive_fallback_executable(fallback):
+    for strategy in fallback:
+        test_exec = strategy
+        islist = False
+        if not isinstance(strategy, string_types):
+            test_exec = strategy[0]
+            islist = True
+        executor = try_exec(test_exec)
+        if executor:
+            args = ''
+            if islist:
+                args = strategy[1:]
+            return executor, args
+    return None, None
+
+
 def _system_fallback(archive_file):
-    print(archive_file)
-    print(os.getcwd())
+    import spack.config as sconf
     outfile = os.path.basename(archive_file)
-    fallback = sconf.config.get('config:decompression_strategy')
-    extractor = which(fallback[0], required=True)
-    [extractor.add_default_arg(arg) for arg in fallback[1:]]
+    fallback = sconf.config.get('config:fallback_decompression_strategy')
+    if isinstance(fallback, string_types):
+        fallback = [fallback]
+    extractor, args = derive_fallback_executable(fallback)
+    if not extractor:
+        raise CommandNotFoundError("Unable to find system fallback unpacking utility")
+    if args:
+        [extractor.add_default_arg(arg) for arg in args[1:]]
     extractor(archive_file)
     return outfile
 
@@ -105,9 +135,9 @@ def _gunzip(archive_file):
     destination_abspath = os.path.join(working_dir, decompressed_file)
     try:
         import gzip
-        with gzip.open(archive_file, "rb") as f_in:
-            with open(destination_abspath, "wb") as f_out:
-                f_out.write(f_in.read())
+        f_in =  gzip.open(archive_file, "rb")
+        with open(destination_abspath, "wb") as f_out:
+            f_out.write(f_in.read())
     except ImportError:
         gzip = which("gzip")
         gzip.add_default_arg("-d")
@@ -128,8 +158,9 @@ def _unzip(archive_file):
     destination_abspath = os.getcwd()
     try:
         from zipfile import ZipFile
-        with ZipFile(archive_file, 'r') as zf:
-            zf.extractall(destination_abspath)
+        zf = ZipFile(archive_file, 'r')
+        zf.extractall(destination_abspath)
+        zf.close()
     except ImportError:
         exe = 'unzip'
         arg = '-q'
@@ -175,13 +206,15 @@ def decompressor_for(path, ext=None):
         path (str): path of the archive file requiring decompression
         ext (str): Extension of archive file
     """
+    if ext:
+        assert allowed_archive(ext)
     if sys.platform == 'win32':
         if ext is None:
             ext = extension(path)
         ext_l = ext.split(".")
         # special case as there is no consistently
         # available native python tool for .Z files
-        if not ext_l[1:] or re.search(r'.Z',ext):
+        if not ext_l[1:] or re.search(r'.Z|xz',ext):
             return select_decompressor_for(path, ext)
         else:
             return composer(
@@ -211,7 +244,7 @@ def select_decompressor_for(path, extension=None):
     # files with .xz style extensions due to inconsistent
     # availability of the lzma module needed to decompress
     # .xz files
-    if extension and not re.search(r'\.?Z', extension):
+    if extension and not re.search(r'Z$', extension):
         return _untar
     return _system_fallback
 

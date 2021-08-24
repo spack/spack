@@ -149,10 +149,12 @@ config:
   # out of the box on some systems
   # Options are not limited to specific tools, but whatever is selected must
   # be available on the system or on PATH on windows.
-  # Note: This can be a python module if said module is executable from a shell.
-  # ex: decompression_strategy: tar
-  # ex: decompression_strategy: 7zip
-  decompression_strategy: tar
+  # Option can be a string, or a lists of some combination of strings or lists
+  # ex: fallback_decompression_strategy: tar
+  # ex: fallback_decompression_strategy: [[tar, -oxf], 7z]
+  fallback_decompression_strategy:
+    - [tar, '-oxf']
+    - 7z
 
   # The maximum number of jobs to use for the build system (e.g. `make`), when
   # the -j flag is not given on the command line. Defaults to 16 when not set.
