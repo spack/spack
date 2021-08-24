@@ -142,6 +142,18 @@ config:
   # If set to 'urllib', Spack will use python built-in libs to fetch
   url_fetch_method: urllib
 
+  # The default fallback decompression/unpacking strategy used to
+  # unpackage archived/compressed files when current Spack strategies
+  # are unable to resolve for a particular package.
+  # Should be configured on a per system basis, as tar may not be available
+  # out of the box on some systems
+  # Options are not limited to specific tools, but whatever is selected must
+  # be available on the system or on PATH on windows.
+  # Note: This can be a python module if said module is executable from a shell.
+  # ex: decompression_strategy: tar
+  # ex: decompression_strategy: 7zip
+  decompression_strategy: tar
+
   # The maximum number of jobs to use for the build system (e.g. `make`), when
   # the -j flag is not given on the command line. Defaults to 16 when not set.
   # Note that the maximum number of jobs is limited by the number of cores

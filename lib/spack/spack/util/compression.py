@@ -26,6 +26,17 @@ def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
+def _system_fallback(archive_file):
+    print(archive_file)
+    print(os.getcwd())
+    outfile = os.path.basename(archive_file)
+    fallback = sconf.config.get('config:decompression_strategy')
+    extractor = which(fallback[0], required=True)
+    [extractor.add_default_arg(arg) for arg in fallback[1:]]
+    extractor(archive_file)
+    return outfile
+
+
 def _untar(archive_file):
     """ Untar archive. Prefer native Python `tarfile`
     but fall back to system utility failing
@@ -168,8 +179,10 @@ def decompressor_for(path, ext=None):
         if ext is None:
             ext = extension(path)
         ext_l = ext.split(".")
-        if not ext_l[1:]:
-            return select_decompressor_for(path, ext_l[0])
+        # special case as there is no consistently
+        # available native python tool for .Z files
+        if not ext_l[1:] or re.search(r'.Z',ext):
+            return select_decompressor_for(path, ext)
         else:
             return composer(
                 decompressor_for(path, ext_l[0])
@@ -190,8 +203,17 @@ def select_decompressor_for(path, extension=None):
         return _gunzip
     if extension and re.match(r'bz2', extension):
         return _bunzip2
-    return _untar
-
+    # Catch unexpected extensions and .Z files
+    # here. Python does not have native support
+    # of any kind for .Z files. In these cases, fall back
+    # to system defined strategy.
+    # Additionally, use python (or system) tarfile for
+    # files with .xz style extensions due to inconsistent
+    # availability of the lzma module needed to decompress
+    # .xz files
+    if extension and not re.search(r'\.?Z', extension):
+        return _untar
+    return _system_fallback
 
 def strip_extension(path):
     """Get the part of a path that does not include its compressed
