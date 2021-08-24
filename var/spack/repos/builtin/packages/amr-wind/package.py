@@ -63,8 +63,8 @@ class AmrWind(CMakePackage, CudaPackage):
         dopt = '+particles' + opt
         depends_on('amrex@develop' + dopt, when='~internal-amrex' + opt)
 
-    depends_on('hypre+shared+mpi+int64~cuda@2.20.0:', when='+mpi~cuda+hypre')
-    depends_on('hypre+shared~mpi+int64~cuda@2.20.0:', when='~mpi~cuda+hypre')
+    depends_on('hypre+shared+mpi~int64~cuda@2.20.0:', when='+mpi~cuda+hypre')
+    depends_on('hypre+shared~mpi~int64~cuda@2.20.0:', when='~mpi~cuda+hypre')
     for arch in CudaPackage.cuda_arch_values:
         depends_on('hypre+shared+mpi~int64+cuda cuda_arch=%s @2.20.0:' % arch,
                    when='+mpi+cuda+hypre cuda_arch=%s' % arch)
