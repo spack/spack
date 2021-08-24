@@ -307,9 +307,6 @@ class Version(object):
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler.
         """
-        # If we have commits, we require previous versions to match
-        commits = self.commits or other.commits
-
         # Translate commits to highest versions prior to the commit
         if self.is_commit and self.commits:
             version = Version(self.commits[self.version]['prev_version'])
