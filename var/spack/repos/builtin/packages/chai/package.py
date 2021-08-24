@@ -17,7 +17,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['davidbeckingsale']
 
     version('develop', branch='develop', submodules=True)
-    version('master', branch='main', submodules=True)
+    version('main', branch='main', submodules=True)
     version('2.4.0', tag='v2.4.0', submodules=True)
     version('2.3.0', tag='v2.3.0', submodules=True)
     version('2.2.2', tag='v2.2.2', submodules=True)
@@ -47,6 +47,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('umpire')
     depends_on('umpire@6.0.0', when="@2.4.0")
+    depends_on('umpire@4.1.2', when="@2.3.0")
     depends_on('umpire@main', when='@main')
     depends_on('umpire+cuda', when="+cuda")
     for sm_ in CudaPackage.cuda_arch_values:
@@ -59,6 +60,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     with when('+raja'):
         depends_on('raja')
         depends_on('raja@0.14.0', when="@2.4.0")
+        depends_on('raja@0.13.0', when="@2.3.0")
         depends_on('raja@main', when='@main')
         with when('+cuda'):
             depends_on('raja+cuda')
