@@ -309,14 +309,11 @@ class Version(object):
         """
         # If we have commits, we require previous versions to match
         commits = self.commits or other.commits
-        if self.is_commit and other.is_commit and commits:
-            version = Version(commits[self.version]['prev_version'])
-            other = Version(commits[other.version]['prev_version'])
 
-        # Our version is a commit, and the other is not
-        elif self.is_commit and self.commits:
+        # Translate commits to highest versions prior to the commit
+        if self.is_commit and self.commits:
             version = Version(self.commits[self.version]['prev_version'])
-        elif other.is_commit and other.commits:
+        if other.is_commit and self.commits:
             other = Version(self.commits[other.version]['prev_version'])
         else:
             version = self
