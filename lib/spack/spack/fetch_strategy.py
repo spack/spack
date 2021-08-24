@@ -870,6 +870,10 @@ class GitFetchStrategy(VCSFetchStrategy):
     def source_id(self):
         return self.commit or self.tag
 
+    @property
+    def source_digest(self):
+        return self.commit or self.tag or self.branch
+
     def mirror_id(self):
         repo_ref = self.commit or self.tag or self.branch
         if repo_ref:
@@ -895,7 +899,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.debug('Already fetched {0}'.format(self.stage.source_path))
             return
 
-        self.clone(commit=self.commit)
+        self.clone(commit=self.source_digest)
 
     def clone(self, dest=None, commit=None):
         """

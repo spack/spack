@@ -521,7 +521,7 @@ class Version(object):
         be one and the same with the source cache.
 
         Args:
-            version: the requested version, which should be a commit.
+            fetcher: the fetcher to use.
             versions: the known versions of the package
         """
         # Sanity check we have a commit
