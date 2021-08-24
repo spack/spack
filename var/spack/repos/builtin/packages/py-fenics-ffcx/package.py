@@ -16,7 +16,7 @@ class PyFenicsFfcx(PythonPackage):
 
     version('main', branch='main')
     version('0.1.0', sha256='98a47906146ac892fb4a358e04cbfd04066f12d0a4cdb505a6b08ff0b1a17e89')
-    version('0.2.0', sha256='0457168cdba0e86ffbfc5b1d44f7b1e1b91fd8a73f54f1eff5998d4b61e6bd10')
+    version('0.2.0', sha256='562a704163a6427e0341d267e69b8bf55d8f53d673829170b443191577e8d9b6')
 
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
