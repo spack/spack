@@ -34,7 +34,8 @@ class Freefem(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
     depends_on('slepc', when='+petsc')
 
-    # Patches to help configure find correctly MPI flags when using full path for compilers.
+    # Patches to help configure find correctly MPI flags
+    # when using full path for compilers.
     patch('acmpi.patch', when='@4.9', sha256='8157d89fc19227a555b54a4f2eb1c44da8aef3192077a6df2e88093b850f4c50')
     patch('acmpi4.8.patch', when='@:4.8', sha256='be84f7b1b8182ff0151c258056a09bda70d72a611b0a4da1fa1954df2e0fe84e')
 
