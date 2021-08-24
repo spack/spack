@@ -19,4 +19,5 @@ class PyMeshio(PythonPackage):
     patch('setup.patch')
 
     depends_on('python@3.7:')
+    depends_on('py-setuptools')
     depends_on('py-numpy')
