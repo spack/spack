@@ -14,17 +14,15 @@ class PerlFth(Package):
        It can handle some LaTeX comments inside the source files.
        It only needs to be put somewhere into your disk since it uses Perl.
        It also provides javatex2.pl initmak.pl getin.pl tex3ht.pl and view.pl:
-        - javatex2 complements latex2html to make nice browsing,
-        - initmak makes fortran 90 dependencies, either full deps or partial
+       (1) javatex2 complements latex2html to make nice browsing,
+       (2) initmak makes fortran 90 dependencies, either full deps or partial
           (when interface is not modified it is silly to recompile everything)
-        - getin is an advanced search tool for Fortran variables and calls,
-        - view.pl is used for CGI search when source is on http server.
+       (3) getin is an advanced search tool for Fortran variables and calls,
+       (4) view.pl is used for CGI search when source is on http server.
     """
 
     homepage = "https://sourceforge.net/projects/ftagshtml/"
     url      = "https://downloads.sourceforge.net/project/ftagshtml/ftagshtml-0.524.tgz"
-    list_url = "https://downloads.sourceforge.net/project/ftagshtml/download/"
-    git      = "https://sourceforge.net/p/ftagshtml/git"
 
     maintainers = ['cessenat']
 
