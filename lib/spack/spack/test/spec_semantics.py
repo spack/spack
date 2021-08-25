@@ -1187,3 +1187,33 @@ def test_is_extension_after_round_trip_to_dict(config, spec_str):
     # Using 'y' since the round-trip make us lose build dependencies
     for d in y.traverse():
         assert x[d.name].package.is_extension == y[d.name].package.is_extension
+
+
+def test_malformed_spec_dict():
+    try:
+        Spec.from_dict({'spec': {'nodes': [{'dependencies': {'name': 'foo'}}]}})
+    except SpecError as e:
+        assert 'malformed' in str(e)
+
+
+def test_spec_dict_hashless_dep():
+    try:
+        Spec.from_dict(
+            {
+                'spec': {
+                    'nodes': [
+                        {
+                            'name': 'foo',
+                            'hash': 'thehash',
+                            'dependencies': [
+                                {
+                                    'name': 'bar'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        )
+    except SpecError as e:
+        assert "Couldn't parse" in str(e)

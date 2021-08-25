@@ -2154,8 +2154,7 @@ class Spec(object):
             if 'dependencies' not in node[name]:
                 continue
 
-            yaml_deps = node[name]['dependencies']
-            for dname, dhash, dtypes, _ in Spec.read_yaml_dep_specs(yaml_deps):
+            for dname, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
                 deps[name]._add_dependency(deps[dname], dtypes)
 
         return spec
@@ -2167,13 +2166,11 @@ class Spec(object):
         Parameters:
         data -- a nested dict/list data structure read from YAML or JSON.
         """
-        # Check for the old format
 
-        if isinstance(data['spec'], list):
+        if isinstance(data['spec'], list):  # Legacy specfile format
             return Spec.from_old_dict(data)
 
-        # New Design
-
+        # Current specfile format
         nodes = data['spec']['nodes']
         hash_type = None
         any_deps = False
@@ -2190,7 +2187,7 @@ class Spec(object):
         if not any_deps:  # If we never see a dependency...
             hash_type = ht.dag_hash.attr[1:]  # use the full_hash provenance
         elif not hash_type:  # Seen a dependency, still don't know hash_type
-            raise spack.error.SpecError("Spec dictionary contains malformed"
+            raise spack.error.SpecError("Spec dictionary contains malformed "
                                         "dependencies. Old format?")
 
         hash_dict = {}

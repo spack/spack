@@ -394,7 +394,7 @@ spec:
         - link
     hash: obokmcsn3hljztrmctbscmqjs3xclazz
     full_hash: avrk2tqsnzxeabmxa6r776uq7qbpeufv
-    build_hash: obokmcsn3hljztrmctbscmqjs3xclazz
+    build_hash: obokmcsn3hljztrmctbscmqjs3xclazy
 - b:
     version: '1.0'
     arch:
@@ -439,7 +439,8 @@ spec:
       ldlibs: []
     hash: iaapywazxgetn6gfv2cfba353qzzqvhn
     full_hash: qvsxvlmjaothtpjluqijv7qfnni3kyyg
-    build_hash: iaapywazxgetn6gfv2cfba353qzzqvhn
+    build_hash: iaapywazxgetn6gfv2cfba353qzzqvhy
 """
     spec = Spec.from_yaml(yaml)
     spec.concretize()
+    print(spec.to_yaml(hash=ht.build_hash))
