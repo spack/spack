@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from __future__ import print_function
+
 import contextlib
 import json
 import os
@@ -265,7 +267,7 @@ def spack_python_interpreter():
     which Spack is currently running as the only Python external spec
     available.
     """
-    python_prefix = os.path.dirname(os.path.dirname(sys.executable))
+    python_prefix = sys.exec_prefix
     external_python = spec_for_current_python()
 
     entry = {

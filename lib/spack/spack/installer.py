@@ -1163,7 +1163,7 @@ class PackageInstaller(object):
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
-            pid = '{0}: '.format(pkg.pid) if tty.show_pid() else ''
+            pid = '{0}: '.format(self.pid) if tty.show_pid() else ''
             tty.debug('{0}{1}'.format(pid, str(e)))
             tty.debug('Package stage directory: {0}' .format(pkg.stage.source_path))
 
@@ -1715,7 +1715,7 @@ class BuildProcessInstaller(object):
         self.filter_fn = spack.util.path.padding_filter if filter_padding else None
 
         # info/debug information
-        pid = '{0}: '.format(pkg.pid) if tty.show_pid() else ''
+        pid = '{0}: '.format(os.getpid()) if tty.show_pid() else ''
         self.pre = '{0}{1}:'.format(pid, pkg.name)
         self.pkg_id = package_id(pkg)
 
