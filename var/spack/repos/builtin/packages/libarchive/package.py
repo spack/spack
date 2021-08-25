@@ -28,7 +28,7 @@ class Libarchive(AutotoolsPackage):
 
     # TODO: BLAKE2 and zstd (can't just add this, because libarchive is a dependency of
     # cmake, and zstd currently uses cmake as a build system)
-    variant('compression', 'bz2lib,lz4,lzo2,lzma,zlib', values=('bz2lib', 'lz4', 'lzo2', 'lzma', 'zlib'), multi=True, description='Supported compression')
+    variant('compression', default='bz2lib,lz4,lzo2,lzma,zlib', values=('bz2lib', 'lz4', 'lzo2', 'lzma', 'zlib'), multi=True, description='Supported compression')
     variant('xar', default='libxml2', values=('libxml2', 'expat'), description='What library to use for xar support')
     variant('crypto', default='mbedtls', values=('mbedtls', 'nettle', 'openssl'), description='What crypto library to use for mtree and xar hashes')
     variant('iconv', default=True, description='Support iconv')
