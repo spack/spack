@@ -233,7 +233,7 @@ def _find(parser, args):
         msg = "No package matches the query: {0}"
         msg = msg.format(' '.join(args.constraint))
         tty.msg(msg)
-        return 1
+        raise SystemExit(1)
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:
