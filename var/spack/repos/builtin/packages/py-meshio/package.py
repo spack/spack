@@ -18,6 +18,6 @@ class PyMeshio(PythonPackage):
     # This patch adds a small setup.py file that spack can call.
     patch('setup.patch')
 
-    depends_on('python@3.7:')
+    depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-setuptools')
     depends_on('py-numpy')
