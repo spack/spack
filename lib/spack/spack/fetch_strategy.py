@@ -907,8 +907,6 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         This is the fetch logic, but does not require a stage.
         """
-        assert sum(x is not None for x in (commit, branch, tag)) == 1
-
         # Default to spack source path
         dest = dest or self.stage.source_path
         tty.debug('Cloning git repository: {0}'.format(self._repo_info()))
