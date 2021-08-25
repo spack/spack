@@ -23,6 +23,7 @@ import llnl.util.tty as tty
 import spack.architecture
 import spack.binary_distribution
 import spack.config
+import spack.environment
 import spack.main
 import spack.paths
 import spack.repo
@@ -421,15 +422,16 @@ def _bootstrap_config_scopes():
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
-    with spack.architecture.use_platform(spack.architecture.real_platform()):
-        with spack.repo.use_repositories(spack.paths.packages_path):
-            with spack.store.use_store(bootstrap_store_path):
-                # Default configuration scopes excluding command line
-                # and builtin but accounting for platform specific scopes
-                config_scopes = _bootstrap_config_scopes()
-                with spack.config.use_configuration(*config_scopes):
-                    with spack_python_interpreter():
-                        yield
+    with spack.environment.deactivate_environment():
+        with spack.architecture.use_platform(spack.architecture.real_platform()):
+            with spack.repo.use_repositories(spack.paths.packages_path):
+                with spack.store.use_store(bootstrap_store_path):
+                    # Default configuration scopes excluding command line
+                    # and builtin but accounting for platform specific scopes
+                    config_scopes = _bootstrap_config_scopes()
+                    with spack.config.use_configuration(*config_scopes):
+                        with spack_python_interpreter():
+                            yield
 
 
 def store_path():
