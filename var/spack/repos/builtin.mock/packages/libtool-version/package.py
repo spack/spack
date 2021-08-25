@@ -7,7 +7,7 @@ class LibtoolVersion(AutotoolsPackage):
     selection by clingo.
     """
     homepage = "https://www.gnu.org/software/make/"
-    url = "http://www.example.com/libtool-deletion-1.0.tar.gz"
+    url = "http://www.example.com/libtool-version-1.0.tar.gz"
 
     version('develop', git='https://git.savannah.gnu.org/git/libtool.git',
             branch='master', submodules=True)
