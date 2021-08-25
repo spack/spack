@@ -14,13 +14,15 @@ class Eospac(Package):
 
     homepage = "http://laws.lanl.gov/projects/data/eos.html"
     list_url = "http://laws.lanl.gov/projects/data/eos/eospacReleases.php"
+    maintainers = ['KineticTheory']
 
     # An EOSPAC release labeled "beta" doesn't always imply that the
     # release is less suitable for production.  According to the
     # current EOSPAC release procedure, even a release that only fixes
     # known bugs in a previous stable release will appear first as a
     # new beta.
-    version('6.5.0beta',   sha256='42e6d491aaf296e4d6ab946481aaafd64b0a4e9801fc2ff098cc16aa118f54c8',
+    version('6.5.0beta',
+            sha256='42e6d491aaf296e4d6ab946481aaafd64b0a4e9801fc2ff098cc16aa118f54c8',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.0beta_859ce5b1b8c4106057ca61d03a6c9c713a7f0328.tgz")
     version('6.4.2', preferred=True,
             sha256='13627a5c94d3a456659d1bba0f3cec157380933fbd401e13e25906166150a252',
