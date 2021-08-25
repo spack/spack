@@ -66,12 +66,12 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
             depends_on('raja+cuda')
             for sm_ in CudaPackage.cuda_arch_values:
                 depends_on('raja+cuda cuda_arch={0}'.format(sm_),
-                        when='cuda_arch={0}'.format(sm_))
+                           when='cuda_arch={0}'.format(sm_))
         with when('+rocm'):
             depends_on('raja+rocm')
             for val in ROCmPackage.amdgpu_targets:
                 depends_on('raja amdgpu_target=%s' % val,
-                        when='amdgpu_target=%s' % val)
+                           when='amdgpu_target=%s' % val)
 
     conflicts('+benchmarks', when='~tests')
 

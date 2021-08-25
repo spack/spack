@@ -9,6 +9,7 @@ import llnl.util.tty as tty
 
 from spack import *
 
+
 class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     """An application-focused API for memory management on NUMA & GPU
     architectures"""
@@ -78,12 +79,11 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     with when('@5.0.0:'):
         for sm_ in CudaPackage.cuda_arch_values:
             depends_on('camp cuda_arch={0}'.format(sm_),
-                    when='cuda_arch={0}'.format(sm_))
+                       when='cuda_arch={0}'.format(sm_))
 
         depends_on('camp+rocm', when='+rocm')
         for val in ROCmPackage.amdgpu_targets:
             depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
-
 
     conflicts('+numa', when='@:0.3.2')
     conflicts('~c', when='+fortran', msg='Fortran API requires C API')
@@ -97,7 +97,8 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
 
         options = []
         options.append("-DBLT_SOURCE_DIR={0}".format(spec['blt'].prefix))
-        options.append("-Dcamp_DIR={0}".format(spec['camp'].prefix))
+        if spec.satisfies('@5.0.0:'):
+            options.append("-Dcamp_DIR={0}".format(spec['camp'].prefix))
 
         if '+cuda' in spec:
             options.extend([
