@@ -94,8 +94,8 @@ class PerlFth(Package):
                     dos2unix = which('dos2unix')
                     dos2unix(fic)
                     fthfile = FileFilter(fic)
-                    fthfile.filter('#!/usr/bin/perl', mstr)
-                    fthfile.filter('#!/usr/bin/env perl', mstr)
+                    fthfile.filter('#!/usr/bin/perl', mstr, backup=False)
+                    fthfile.filter('#!/usr/bin/env perl', mstr, backup=False)
 
         # Adds a Makefile with an rsync rule
         makefile_inc = [
