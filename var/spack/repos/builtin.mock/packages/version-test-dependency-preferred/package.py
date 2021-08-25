@@ -2,8 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-class Xz(AutotoolsPackage):
-    """Dependency of libtool-version, which has a multi-valued
+class VersionTestDependencyPreferred(AutotoolsPackage):
+    """Dependency of version-test-pkg, which has a multi-valued
     variant with two default values (a very low priority optimization
     criterion for clingo is to maximize their number)
     """
