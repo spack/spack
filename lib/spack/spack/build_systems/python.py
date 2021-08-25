@@ -257,7 +257,7 @@ class PythonPackage(PackageBase):
         pure_site_packages_dir = spec['python'].package.config_vars[
             'python_lib']['false']['false']
         plat_site_packages_dir = spec['python'].package.config_vars[
-            'python_lib']['false']['true']
+            'python_lib']['true']['false']
         inc_dir = spec['python'].package.config_vars['python_inc']
 
         args += ['--root=%s' % prefix,
