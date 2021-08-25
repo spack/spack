@@ -899,14 +899,16 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.debug('Already fetched {0}'.format(self.stage.source_path))
             return
 
-        self.clone(commit=self.source_digest)
+        self.clone(commit=self.commit, branch=self.branch, tag=self.tag)
 
-    def clone(self, dest=None, commit=None):
+    def clone(self, dest=None, commit=None, branch=None, tag=None):
         """
         Clone a repository to a path.
 
         This is the fetch logic, but does not require a stage.
         """
+        assert sum(x is not None for x in (commit, branch, tag)) == 1
+
         # Default to spack source path
         dest = dest or self.stage.source_path
         tty.debug('Cloning git repository: {0}'.format(self._repo_info()))
@@ -940,10 +942,10 @@ class GitFetchStrategy(VCSFetchStrategy):
                 args.append('--quiet')
 
             # If we want a particular branch ask for it.
-            if self.branch:
-                args.extend(['--branch', self.branch])
-            elif self.tag and self.git_version >= ver('1.8.5.2'):
-                args.extend(['--branch', self.tag])
+            if branch:
+                args.extend(['--branch', branch])
+            elif tag and self.git_version >= ver('1.8.5.2'):
+                args.extend(['--branch', tag])
 
             # Try to be efficient if we're using a new enough git.
             # This checks out only one branch's history
@@ -973,7 +975,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 # For tags, be conservative and check them out AFTER
                 # cloning.  Later git versions can do this with clone
                 # --branch, but older ones fail.
-                if self.tag and self.git_version < ver('1.8.5.2'):
+                if tag and self.git_version < ver('1.8.5.2'):
                     # pull --tags returns a "special" error code of 1 in
                     # older versions that we have to ignore.
                     # see: https://github.com/git/git/commit/19d122b
