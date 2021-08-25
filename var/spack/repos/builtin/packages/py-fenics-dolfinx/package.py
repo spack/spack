@@ -16,7 +16,7 @@ class PyFenicsDolfinx(PythonPackage):
     maintainers = ["js947", "chrisrichardson", "garth-wells"]
 
     version("main", branch="main")
-    version("0.3.0", branch="version-0.3.0")
+    version("0.3.0", sha256="4857d0fcb44a4e9bf9eb298ba5377abdee17a7ad0327448bdd06cce73d109bed")
     version("0.2.0", sha256="4c9b5a5c7ef33882c99299c9b4d98469fb7aa470a37a91bc5be3bb2fc5b863a4")
     version("0.1.0", sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33")
 
