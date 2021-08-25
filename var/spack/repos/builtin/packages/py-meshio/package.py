@@ -12,7 +12,7 @@ class PyMeshio(PythonPackage):
     homepage = "https://github.com/nschloe/meshio"
     pypi = "meshio/meshio-5.0.0.tar.gz"
 
-    version('5.0.0', sha256='68c221872226d504296f94294b61f278cc838dd42dfcb08708398cf30790c38b')
+    version('5.0.0', sha256='f6327c06d6171d30e0991d3dcb048751035f9cfac1f19e2444971275fd971188')
 
     # MeshIO uses a setup.cfg/pyproject.toml structure, which spack doesn't yet handle.
     # This patch adds a small setup.py file that spack can call.
