@@ -384,3 +384,15 @@ mpi:
 
         assert '~external' in s['vdefault-or-external']
         assert 'externaltool' not in s
+
+    @pytest.mark.regression('25585')
+    def test_dependencies_cant_make_version_parent_score_better(self):
+        """Test that a package can't select a worse version for a
+        dependent (libtool) because doing so it can pull-in a dependency
+        that makes the overall version score even or better and maybe
+        has a better score in some lower priority criteria.
+        """
+        s = Spec('aml').concretized()
+
+        assert s.satisfies('^libtool-version@2.4.6')
+        assert 'xz' not in s
