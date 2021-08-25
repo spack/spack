@@ -15,6 +15,7 @@ class FenicsBasix(CMakePackage):
     maintainers = ["mscroggs", "chrisrichardson", "garth-wells"]
 
     version("main", branch="main")
+    version("0.3.0", branch="version-0.3.0")
     version("0.1.0", sha256="2ab41fe6ad4f6c42f01b17a6e7c39debb4e0ae61c334d1caebee78b741bca4e7")
     version("0.2.0", sha256="e1ec537737adb283717060221635092474e3f2b5b5ba79dfac74aa496bec2fcb")
 
