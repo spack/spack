@@ -520,12 +520,18 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             prune_dag=False, check_index_only=False,
                             run_optimizer=False, use_dependencies=False,
-                            artifacts_root=None):
+                            artifacts_root=None, return_only=False):
+    """
+    Args:
+      return_only: Don't write or copy files, only return the json structure.
+    """
     with spack.concretize.disable_compiler_existence_check():
         with env.write_transaction():
             env.concretize()
             env.write()
 
+    import IPython
+    IPython.embed()
     yaml_root = ev.config_dict(env.yaml)
 
     if 'gitlab-ci' not in yaml_root:

@@ -64,6 +64,7 @@ or refer to the full manual below.
 
    configuration
    config_yaml
+   dags
    build_settings
    environments
    containers
