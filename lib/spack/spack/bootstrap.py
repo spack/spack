@@ -267,7 +267,7 @@ def spack_python_interpreter():
     which Spack is currently running as the only Python external spec
     available.
     """
-    python_prefix = os.path.dirname(os.path.dirname(sys.executable))
+    python_prefix = sys.exec_prefix
     external_python = spec_for_current_python()
 
     entry = {
