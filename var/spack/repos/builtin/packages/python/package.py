@@ -713,7 +713,7 @@ from distutils.sysconfig import (
 config = get_config_vars()
 config['config_h_filename'] = get_config_h_filename()
 config['makefile_filename'] = get_makefile_filename()
-config['python_inc'] = get_python_inc(prefix='')
+config['python_inc'] = get_python_inc(True, prefix='')
 config['python_lib'] = {}
 
 for plat_specific in [True, False]:
