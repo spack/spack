@@ -12,10 +12,8 @@ import spack.util.path
 
 @pytest.fixture
 def active_mock_environment(mutable_config, mutable_mock_env_path):
-    env = spack.environment.create('bootstrap-test')
-    spack.environment.activate(env)
-    yield env
-    spack.environment.deactivate()
+    with spack.environment.create('bootstrap-test') as env:
+        yield env
 
 
 @pytest.mark.regression('22294')
