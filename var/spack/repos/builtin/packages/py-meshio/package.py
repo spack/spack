@@ -10,7 +10,7 @@ class PyMeshio(PythonPackage):
     """MeshIO is a Python library to read and write many mesh formats."""
 
     homepage = "https://github.com/nschloe/meshio"
-    url      = "https://github.com/nschloe/meshio/archive/refs/tags/5.0.0.tar.gz"
+    pypi = "meshio/meshio-5.0.0.tar.gz"
 
     version('5.0.0', sha256='68c221872226d504296f94294b61f278cc838dd42dfcb08708398cf30790c38b')
 
