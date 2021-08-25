@@ -6,15 +6,14 @@
 from spack import *
 
 
-class IntelTbbOneapi(CMakePackage):
+class IntelTbbCmake(CMakePackage):
     """Widely used C++ template library for task parallelism.
     Intel Threading Building Blocks (Intel TBB) lets you easily write parallel
     C++ programs that take full advantage of multicore performance, that are
     portable and composable, and that have future-proof scalability.
     """
     homepage = "http://www.threadingbuildingblocks.org/"
-    url_prefix = 'https://github.com/oneapi-src/oneTBB/'
-    url = url_prefix + 'archive/v2020.1.tar.gz'
+    url = 'https://github.com/oneapi-src/oneTBB/archive/v2021.1.1.tar.gz'
 
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
@@ -32,15 +31,8 @@ class IntelTbbOneapi(CMakePackage):
 
     # Build and install CMake config files if we're new enough.
     depends_on('cmake@3.0.0:', type='build')
-    depends_on('hwloc')
 
-    # Version and tar file names:
-    #  2020.0 --> v2020.0.tar.gz  starting with 2020
-    #
-    def url_for_version(self, version):
-        url = self.url_prefix + 'archive/{0}.tar.gz'
-        name = 'v{0}'.format(version)
-        return url.format(name)
+    depends_on('hwloc')
 
     def cmake_args(self):
         spec = self.spec
