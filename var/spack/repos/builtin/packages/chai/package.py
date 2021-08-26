@@ -84,6 +84,8 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
         if '+cuda' in spec:
             options.extend([
                 '-DENABLE_CUDA=ON',
+                '-DCMAKE_CUDA_SEPARABLE_COMPILATION=On',
+                '-DCUDA_SEPARABLE_COMPILATION=On',
                 '-DCUDA_TOOLKIT_ROOT_DIR=' + spec['cuda'].prefix])
 
             if not spec.satisfies('cuda_arch=none'):
