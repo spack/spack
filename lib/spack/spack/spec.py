@@ -1019,13 +1019,18 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
     def __init__(self, spec, name, query_parameters):
         super(SpecBuildInterface, self).__init__(spec)
-
+        # Adding new attributes goes after super() call since the ObjectWrapper
+        # resets __dict__ to behave like the passed object
+        self.token = spec, name, query_parameters
         is_virtual = spack.repo.path.is_virtual(name)
         self.last_query = QueryState(
             name=name,
             extra_parameters=query_parameters,
             isvirtual=is_virtual
         )
+
+    def __reduce__(self):
+        return SpecBuildInterface, self.token
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
