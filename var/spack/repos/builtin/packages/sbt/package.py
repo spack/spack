@@ -9,7 +9,7 @@ from spack import *
 class Sbt(Package):
     """Scala Build Tool"""
 
-    homepage = 'http://www.scala-sbt.org'
+    homepage = 'https://www.scala-sbt.org'
     url      = "https://github.com/sbt/sbt/releases/download/v1.1.4/sbt-1.1.4.tgz"
 
     version('1.1.6', sha256='f545b530884e3abbca026df08df33d5a15892e6d98da5b8c2297413d1c7b68c1')

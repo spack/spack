@@ -27,7 +27,7 @@ class Abinit(AutotoolsPackage):
     programs are provided.
     """
 
-    homepage = 'http://www.abinit.org'
+    homepage = 'https://www.abinit.org/'
     url      = 'https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz'
 
     version('9.4.2', sha256='d40886f5c8b138bb4aa1ca05da23388eb70a682790cfe5020ecce4db1b1a76bc')

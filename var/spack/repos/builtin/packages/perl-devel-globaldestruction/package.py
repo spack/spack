@@ -9,7 +9,7 @@ from spack import *
 class PerlDevelGlobaldestruction(PerlPackage):
     """Makes Perl's global destruction less tricky to deal with"""
 
-    homepage = "http://search.cpan.org/~haarg/Devel-GlobalDestruction-0.14/lib/Devel/GlobalDestruction.pm"
+    homepage = "https://metacpan.org/pod/Devel::GlobalDestruction"
     url      = "http://search.cpan.org/CPAN/authors/id/H/HA/HAARG/Devel-GlobalDestruction-0.14.tar.gz"
 
     version('0.14', sha256='34b8a5f29991311468fe6913cadaba75fd5d2b0b3ee3bb41fe5b53efab9154ab')

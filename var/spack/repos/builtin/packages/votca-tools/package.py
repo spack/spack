@@ -15,7 +15,7 @@ class VotcaTools(CMakePackage):
 
        This package contains the basic tools library of VOTCA.
     """
-    homepage = "http://www.votca.org"
+    homepage = "https://www.votca.org"
     url      = "https://github.com/votca/tools/tarball/v1.4"
     git      = "https://github.com/votca/tools.git"
     maintainers = ['junghans']

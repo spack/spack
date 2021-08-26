@@ -9,7 +9,7 @@ from spack import *
 class Xfsdump(MakefilePackage):
     """XFS Dump Tools."""
 
-    homepage = "http://oss.sgi.com/projects/xfs/"
+    homepage = "https://github.com/pcacjr/xfsdump"
     url      = "https://github.com/pcacjr/xfsdump/archive/v3.1.6.tar.gz"
 
     version('3.1.6', sha256='bbf659758107cad9b41cf3001df121e6428485b341109a1f1a952fd477a7010b')
