@@ -5,8 +5,15 @@
 import pytest
 
 import spack.bootstrap
+import spack.environment
 import spack.store
 import spack.util.path
+
+
+@pytest.fixture
+def active_mock_environment(mutable_config, mutable_mock_env_path):
+    with spack.environment.create('bootstrap-test') as env:
+        yield env
 
 
 @pytest.mark.regression('22294')
@@ -49,3 +56,11 @@ def test_raising_exception_if_bootstrap_disabled(mutable_config):
     # Check the correct exception is raised
     with pytest.raises(RuntimeError, match='bootstrapping is currently disabled'):
         spack.bootstrap.store_path()
+
+
+@pytest.mark.regression('25603')
+def test_bootstrap_deactivates_environments(active_mock_environment):
+    assert spack.environment.active_environment() == active_mock_environment
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.environment.active_environment() is None
+    assert spack.environment.active_environment() == active_mock_environment

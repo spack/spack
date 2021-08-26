@@ -104,6 +104,6 @@ def clean(parser, args):
     if args.bootstrap:
         msg = 'Removing software in "{0}"'
         tty.msg(msg.format(spack.bootstrap.store_path()))
-        with spack.store.use_store(spack.bootstrap.store_path()):
+        with spack.bootstrap.ensure_bootstrap_configuration():
             uninstall = spack.main.SpackCommand('uninstall')
             uninstall('-a', '-y')

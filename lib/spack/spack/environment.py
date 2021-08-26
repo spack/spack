@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import contextlib
 import copy
 import os
 import re
@@ -2142,6 +2143,17 @@ def is_latest_format(manifest):
     top_level_key = _top_level_key(data)
     changed = spack.schema.env.update(data[top_level_key])
     return not changed
+
+
+@contextlib.contextmanager
+def deactivate_environment():
+    """Deactivate an active environment for the duration of the context."""
+    global _active_environment
+    current, _active_environment = _active_environment, None
+    try:
+        yield
+    finally:
+        _active_environment = current
 
 
 class SpackEnvironmentError(spack.error.SpackError):
