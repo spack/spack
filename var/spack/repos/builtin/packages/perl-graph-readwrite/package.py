@@ -9,7 +9,7 @@ from spack import *
 class PerlGraphReadwrite(PerlPackage):
     """Write out directed graph in Dot format"""
 
-    homepage = "http://search.cpan.org/~neilb/Graph-ReadWrite/lib/Graph/Writer/Dot.pm"
+    homepage = "https://metacpan.org/pod/Graph::ReadWrite"
     url      = "http://search.cpan.org/CPAN/authors/id/N/NE/NEILB/Graph-ReadWrite-2.09.tar.gz"
 
     version('2.09', sha256='b01ef06ce922eea12d5ce614d63ddc5f3ee7ad0d05f9577051d3f87a89799a4a')

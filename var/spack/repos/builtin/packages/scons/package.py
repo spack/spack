@@ -9,7 +9,7 @@ from spack import *
 class Scons(PythonPackage):
     """SCons is a software construction tool"""
 
-    homepage = "http://scons.org"
+    homepage = "https://scons.org"
     pypi = "scons/scons-3.1.1.tar.gz"
 
     version('3.1.2', sha256='8aaa483c303efeb678e6f7c776c8444a482f8ddc3ad891f8b6cdd35264da9a1f')

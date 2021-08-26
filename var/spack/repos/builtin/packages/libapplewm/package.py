@@ -11,7 +11,7 @@ class Libapplewm(AutotoolsPackage, XorgPackage):
     extension. This extension allows X window managers to better interact with
     the Mac OS X Aqua user interface when running X11 in a rootless mode."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libAppleWM"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libAppleWM"
     xorg_mirror_path = "lib/libAppleWM-1.4.1.tar.gz"
 
     version('1.4.1', sha256='d7fb098d65ad4d840f60e5c92de7f58f1725bd70d0d132755ea453462fd50049')

@@ -9,7 +9,7 @@ from spack import *
 
 class G4photonevaporation(Package):
     """Geant4 data for photon evaporation"""
-    homepage = "http://geant4.web.cern.ch"
+    homepage = "https://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4PhotonEvaporation.4.3.2.tar.gz"
 
     tags = ['hep']

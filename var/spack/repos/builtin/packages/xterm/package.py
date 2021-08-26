@@ -11,7 +11,7 @@ class Xterm(AutotoolsPackage):
     provides DEC VT102 and Tektronix 4014 compatible terminals for programs
     that can't use the window system directly."""
 
-    homepage = "http://invisible-island.net/xterm/"
+    homepage = "https://invisible-island.net/xterm/"
     url      = "ftp://ftp.invisible-island.net/xterm/xterm-327.tgz"
 
     version('353', sha256='e521d3ee9def61f5d5c911afc74dd5c3a56ce147c7071c74023ea24cac9bb768')

@@ -7,7 +7,7 @@
 class PyGoogle(PythonPackage):
     """Python bindings to the Google search engine."""
 
-    homepage = "http://breakingcode.wordpress.com/"
+    homepage = "https://breakingcode.wordpress.com/"
     pypi = "google/google-3.0.0.tar.gz"
 
     version('3.0.0', sha256='143530122ee5130509ad5e989f0512f7cb218b2d4eddbafbad40fd10e8d8ccbe')

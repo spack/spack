@@ -4368,9 +4368,9 @@ The signature for ``cache_extra_test_sources`` is:
 
 where ``srcs`` is a string or a list of strings corresponding to
 the paths for the files and or subdirectories, relative to the staged
-source, that are to be copied to the corresponding path relative to
-``self.install_test_root``. All of the contents within each subdirectory
-will be also be copied.
+source, that are to be copied to the corresponding relative test path
+under the prefix. All of the contents within each subdirectory will
+also be copied.
 
 For example, a package method for copying everything in the ``tests``
 subdirectory plus the ``foo.c`` and ``bar.c`` files from ``examples``
@@ -4378,8 +4378,13 @@ can be implemented as shown below.
 
 .. note::
 
-   The ``run_after`` directive ensures associated files are copied
-   **after** the package is installed by the build process.
+   The method name ``copy_test_sources`` here is for illustration
+   purposes. You are free to use a name that is more suited to your
+   package.
+
+   The key to copying the files at build time for stand-alone testing
+   is use of the ``run_after`` directive, which ensures the associated
+   files are copied **after** the provided build stage.
 
 .. code-block:: python
 
@@ -4396,18 +4401,13 @@ can be implemented as shown below.
 In this case, the method copies the associated files from the build
 stage **after** the software is installed to the package's metadata
 directory. The result is the directory and files will be cached in
-paths under ``self.install_test_root`` as follows:
-
-* ``join_path(self.install_test_root, 'tests')`` along with its files
-  and subdirectories
-* ``join_path(self.install_test_root, 'examples', 'foo.c')``
-* ``join_path(self.install_test_root, 'examples', 'bar.c')``
+a special test subdirectory under the installation prefix.
 
 These paths are **automatically copied** to the test stage directory
-where they are available to the package's ``test`` method through the
-``self.test_suite.current_test_cache_dir`` property. In our example,
-the method can access the directory and files using the following
-paths:
+during stand-alone testing. The package's ``test`` method can access
+them using the ``self.test_suite.current_test_cache_dir`` property.
+In our example, the method would use the following paths to reference
+the copy of each entry listed in ``srcs``, respectively:
 
 * ``join_path(self.test_suite.current_test_cache_dir, 'tests')``
 * ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
@@ -4415,9 +4415,8 @@ paths:
 
 .. note::
 
-    Library developers will want to build the associated tests under
-    the ``self.test_suite.current_test_cache_dir`` and against their
-    **installed** libraries before running them.
+    Library developers will want to build the associated tests
+    against their **installed** libraries before running them.
 
 .. note::
 
@@ -4426,11 +4425,6 @@ paths:
     Only you, as the package writer or maintainer, know whether these
     would be appropriate for ensuring the installed software continues
     to work as the underlying system evolves.
-
-.. note::
-
-   You are free to use a method name that is more suitable for
-   your package.
 
 .. _cache_custom_files:
 
@@ -4510,7 +4504,8 @@ can retrieve the expected output from ``examples/foo.out`` using:
 
        def test(self):
            ..
-           filename = join_path(self.install_test_root, 'examples', 'foo.out')
+           filename = join_path(self.test_suite.current_test_cache_dir,
+                                'examples', 'foo.out')
            expected = get_escaped_text_output(filename)
            ..
 
@@ -4678,9 +4673,6 @@ directory paths are provided in the table below.
    * - Test Suite Stage Files
      - ``self.test_suite.stage``
      - ``join_path(self.test_suite.stage, 'results.txt')``
-   * - Cached Build-time Files
-     - ``self.install_test_root``
-     - ``join_path(self.install_test_root, 'examples', 'foo.c')``
    * - Staged Cached Build-time Files
      - ``self.test_suite.current_test_cache_dir``
      - ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``

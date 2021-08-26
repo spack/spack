@@ -129,10 +129,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         depends_on('isl@0.15:', when='@10:')
 
     depends_on('zlib', when='@6:')
-    # GCC only tries to link with -lzstd but it requires
-    # -pthread too when linking against libzstd.a, so
-    # disable multithreading by default
-    depends_on('zstd~multithread', when='@10:')
+    depends_on('zstd', when='@10:')
     depends_on('diffutils', type='build')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')

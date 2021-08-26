@@ -11,7 +11,7 @@ from spack import *
 class RedlandBindings(AutotoolsPackage):
     """Redland Language Bindings for language APIs to Redland"""
 
-    homepage = "http://librdf.org/"
+    homepage = "https://librdf.org/"
     url      = "http://download.librdf.org/source/redland-bindings-1.0.17.1.tar.gz"
 
     version('1.0.17.1', sha256='ff72b587ab55f09daf81799cb3f9d263708fad5df7a5458f0c28566a2563b7f5')

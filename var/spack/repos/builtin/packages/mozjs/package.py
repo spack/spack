@@ -11,7 +11,7 @@ class Mozjs(AutotoolsPackage):
     It is used in various Mozilla products, including Firefox, and is
     available under the MPL2."""
 
-    homepage = "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey"
+    homepage = "https://firefox-source-docs.mozilla.org/js/index.html"
 
     version('24.2.0', sha256='e62f3f331ddd90df1e238c09d61a505c516fe9fd8c5c95336611d191d18437d8',
             url="http://ftp.mozilla.org/pub/js/mozjs-24.2.0.tar.bz2")

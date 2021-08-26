@@ -22,3 +22,4 @@ class UniversalCtags(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('libiconv', type='link')
+    depends_on('pkg-config', type='build')

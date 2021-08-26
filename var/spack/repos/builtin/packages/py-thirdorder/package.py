@@ -9,7 +9,7 @@ from spack import *
 class PyThirdorder(PythonPackage):
     """It helps ShengBTE users create FORCE_CONSTANTS_3RD files efficiently"""
 
-    homepage = "http://www.shengbte.org"
+    homepage = "https://www.shengbte.org"
     url      = "http://www.shengbte.org/downloads/thirdorder-v1.1.1-8526f47.tar.bz2"
 
     version('1.1.1-8526f47', '5e1cc8d6ffa7efdb7325c397ca236863ea8a9c5bed1c558acca68b140f89167e')

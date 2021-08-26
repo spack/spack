@@ -7,12 +7,16 @@ from spack import *
 
 
 class Gconf(AutotoolsPackage):
-    """GConf is a system for storing application preferences."""
+    """GConf is a system for storing application preferences.
 
-    homepage = "https://projects.gnome.org/gconf/"
+    Note that this software is now deprecated in favor of moving to GSettings
+    and dconf with the GNOME 3 transition.
+    """
+
+    homepage = "https://en.wikipedia.org/wiki/GConf"
     url      = "http://ftp.gnome.org/pub/gnome/sources/GConf/3.2/GConf-3.2.6.tar.xz"
 
-    version('3.2.6', sha256='1912b91803ab09a5eed34d364bf09fe3a2a9c96751fde03a4e0cfa51a04d784c')
+    version('3.2.6', sha256='1912b91803ab09a5eed34d364bf09fe3a2a9c96751fde03a4e0cfa51a04d784c', deprecated=True)
 
     depends_on('pkgconfig', type='build')
     depends_on('glib@2.14.0:')

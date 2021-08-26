@@ -12,7 +12,7 @@ class Gatk(Package):
     Variant Discovery in High-Throughput Sequencing Data
     """
 
-    homepage = "https://software.broadinstitute.org/gatk/"
+    homepage = "https://gatk.broadinstitute.org/hc/en-us"
     url = "https://github.com/broadinstitute/gatk/releases/download/4.1.0.0/gatk-4.1.0.0.zip"
     list_url = "https://github.com/broadinstitute/gatk/releases"
 
