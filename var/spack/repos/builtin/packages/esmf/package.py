@@ -18,16 +18,13 @@ class Esmf(MakefilePackage):
     homepage = "https://www.earthsystemcog.org/projects/esmf/"
     url = 'https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz'
 
-    maintainers = ['t-brown']
-
     version('8.1.1',  sha256='58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75')
     version('8.0.1',  sha256='9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84')
     version('8.0.0',  sha256='051dca45f9803d7e415c0ea146df15ce487fb55f0fce18ca61d96d4dba0c8774')
     version('7.1.0r', sha256='ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889')
 
     variant('mpi',     default=True,  description='Build with MPI support')
-    variant('lapack',  default='lapack', values=('internal', 'lapack', 'mkl'),
-            description='Build with LAPACK support')
+    variant('external-lapack', default=False, description='Build with external LAPACK support')
     variant('netcdf',  default=True,  description='Build with NetCDF support')
     variant('pnetcdf', default=True,  description='Build with pNetCDF support')
     variant('xerces',  default=True,  description='Build with Xerces support')
@@ -40,8 +37,7 @@ class Esmf(MakefilePackage):
 
     # Optional dependencies
     depends_on('mpi', when='+mpi')
-    depends_on('lapack@3:', when='lapack=lapack')
-    depends_on('mkl', when='lapack=mkl')
+    depends_on('lapack@3:', when='+external-lapack')
     depends_on('netcdf-c@3.6:', when='+netcdf')
     depends_on('netcdf-fortran@3.6:', when='+netcdf')
     depends_on('parallel-netcdf@1.2.0:', when='+pnetcdf')
@@ -190,9 +186,7 @@ class Esmf(MakefilePackage):
         # LAPACK #
         ##########
 
-        if 'lapack=internal' in spec:
-            os.environ['ESMF_LAPACK'] = 'internal'
-        elif 'lapack=lapack' in spec:
+        if '+external-lapack' in spec:
             # A system-dependent external LAPACK/BLAS installation is used
             # to satisfy the external dependencies of the LAPACK-dependent
             # ESMF code.
@@ -205,12 +199,8 @@ class Esmf(MakefilePackage):
             # Specifies the linker directive needed to link the LAPACK library
             # to the application.
             os.environ['ESMF_LAPACK_LIBS'] = spec['lapack'].libs.link_flags  # noqa
-        elif 'lapack=mkl' in spec:
-            os.environ['ESMF_LAPACK'] = 'mkl'
-            os.environ['ESMF_LAPACK_LIBS'] = spec['lapack'].libs.link_flags
         else:
-            # Disables LAPACK-dependent code.
-            os.environ['ESMF_LAPACK'] = 'OFF'
+            os.environ['ESMF_LAPACK'] = 'internal'
 
         ##########
         # NetCDF #
