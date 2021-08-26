@@ -1602,7 +1602,22 @@ class Environment(object):
         # Dependency-only specs will have value None
         matches = {}
 
+        if not isinstance(spec, spack.spec.Spec):
+            spec = spack.spec.Spec(spec)
+
         for user_spec, concretized_user_spec in self.concretized_specs():
+            # Deal with concrete specs differently
+            if spec.concrete:
+                # Matching a concrete spec is more restrictive
+                # than just matching the dag hash
+                is_match = (
+                    spec in concretized_user_spec and
+                    concretized_user_spec[spec.name].build_hash() == spec.build_hash()
+                )
+                if is_match:
+                    matches[spec] = spec
+                continue
+
             if concretized_user_spec.satisfies(spec):
                 matches[concretized_user_spec] = user_spec
             for dep_spec in concretized_user_spec.traverse(root=False):
