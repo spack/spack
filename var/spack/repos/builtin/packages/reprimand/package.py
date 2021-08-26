@@ -35,14 +35,11 @@ class Reprimand(MesonPackage):
     depends_on('py-matplotlib', when='+python')
     depends_on('py-pybind11 @2.6.0:', when='+python')
 
-    # Should we add this?
-    # extends('python')
+    extends('python', when='+python')
 
     def setup_build_environment(self, env):
         env.set('CXXFLAGS', self.compiler.cxx11_flag)
         env.set('BOOST_ROOT', self.spec['boost'].prefix)
-        env.prepend_path('PKG_CONFIG_PATH', self.spec['gsl'].prefix)
-        env.prepend_path('PKG_CONFIG_PATH', self.spec['hdf5'].prefix)
 
     def meson_args(self):
         args = [
