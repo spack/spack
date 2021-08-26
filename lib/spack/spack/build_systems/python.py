@@ -128,7 +128,8 @@ class PythonPackage(PackageBase):
         """
         modules = []
         root = os.path.join(
-            self.prefix, self.spec['python'].package.config_vars['false']['false']
+            self.prefix,
+            self.spec['python'].package.config_vars['python_lib']['false']['false'],
         )
 
         # Some Python libraries are packages: collections of modules
