@@ -782,6 +782,7 @@ def setup_package(pkg, dirty, context='build'):
                       " includes and omit it when invoked with '--cflags'.")
     elif context == 'test':
         pkg.setup_run_environment(env)
+        pkg.setup_package_environment()
         env.prepend_path('PATH', '.')
 
     # Loading modules, in particular if they are meant to be used outside

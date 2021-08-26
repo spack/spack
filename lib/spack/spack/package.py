@@ -52,6 +52,7 @@ import spack.paths
 import spack.repo
 import spack.store
 import spack.url
+import spack.user_environment
 import spack.util.environment
 import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
@@ -2021,6 +2022,23 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if legacy_fn:
             _ = spack.util.environment.EnvironmentModifications()
             legacy_fn(env, _)
+
+    def setup_package_environment(self):
+        """Sets up the package environment for a package.
+
+        This method "loads" the package's environment, making it useful
+        for operations like stand-alone/smoke testing.
+        """
+        env_mod = spack.util.environment.EnvironmentModifications()
+        spec = self.spec
+        env_mod.extend(
+            spack.user_environment.environment_modifications_for_spec(spec)
+        )
+        env_mod.prepend_path(
+            spack.user_environment.spack_loaded_hashes_var,
+            spec.dag_hash()
+        )
+        env_mod.apply_modifications()
 
     def setup_run_environment(self, env):
         """Sets up the run environment for a package.
