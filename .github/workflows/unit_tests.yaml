@@ -321,7 +321,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.6, 3.8, 3.9]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -337,11 +337,15 @@ jobs:
       run: |
         brew install dash fish gcc gnupg2 kcov
     - name: Run unit tests
+      env:
+        SPACK_TEST_SOLVER: clingo
       run: |
         git --version
         . .github/workflows/setup_git.sh
         . share/spack/setup-env.sh
-        if [ "${{ needs.changes.outputs.with_coverage }}" == "true" ]
+        $(which spack) bootstrap untrust spack-install
+        $(which spack) solve zlib
+        if [ "${{ needs.changes.outputs.with_coverage }}" == "true" && "${{ matrix.python-version }}" == "3.8" ]
         then
           coverage run $(which spack) unit-test -x
           coverage combine
