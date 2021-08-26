@@ -320,10 +320,6 @@ class YamlDirectoryLayout(DirectoryLayout):
     def create_install_directory(self, spec):
         _check_concrete(spec)
 
-        prefix = self.check_installed(spec)
-        if prefix:
-            raise InstallDirectoryAlreadyExistsError(prefix)
-
         # Create install directory with properly configured permissions
         # Cannot import at top of file
         from spack.package_prefs import get_package_dir_permissions, get_package_group
