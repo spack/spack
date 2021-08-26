@@ -13,11 +13,11 @@ class Fpchecker(CMakePackage):
     """
 
     homepage = "https://fpchecker.org/"
-    url      = "https://github.com/LLNL/FPChecker/archive/refs/tags/v0.3.0.tar.gz"
+    url      = "https://github.com/LLNL/FPChecker/archive/refs/tags/v0.3.1.tar.gz"
 
     maintainers = ['ilagunap']
 
-    version('0.3.0', sha256='dc4f74b8104cbe0bd9f1a37c3dab1593d5d281658136ae880ec99668ec6b77e0')
+    version('0.3.1', sha256='5ff81f5743d453161c35402ea6f2b0edba062bb8c45f19153cb58cbae8d979ec')
 
     depends_on('llvm@12.0.1', type=('build', 'link'))
     depends_on('cmake@3.4:', type='build')
