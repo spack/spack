@@ -84,6 +84,15 @@ STATUS_DEQUEUED = 'dequeued'
 #: queue invariants).
 STATUS_REMOVED = 'removed'
 
+#: Don't perform an install
+ACTION_NONE = 0
+
+#: Do a standard install
+ACTION_INSTALL = 1
+
+#: Do an overwrite install
+ACTION_OVERWRITE_INSTALL = 2
+
 
 def _check_last_phase(pkg):
     """
@@ -1418,6 +1427,40 @@ class PackageInstaller(object):
                 for dependent_id in dependents.difference(task.dependents):
                     task.add_dependent(dependent_id)
 
+    def _install_action(self, task):
+        """
+        Returns what kind of installation this task should perform.
+
+        Returns:
+            int: either ACTION_INSTALL, ACTION_NONE, ACTION_OVERWRITE_INSTALL
+        """
+        # If we don't have to overwrite, do a normal install
+        if task.pkg.spec.dag_hash() not in task.request.overwrite:
+            return ACTION_INSTALL
+
+        # If it's not installed, do a normal install as well
+        rec, installed = self._check_db(task.pkg.spec)
+        if not installed:
+            return ACTION_INSTALL
+
+        # Ensure install_tree projections have not changed.
+        assert task.pkg.prefix == rec.path
+
+        # If another process has overwritten this, we shouldn't install at all
+        if rec.installation_time >= task.request.overwrite_time:
+            return ACTION_NONE
+
+        # If the install prefix is missing, warn about it, and proceed with
+        # normal install.
+        if not os.path.exists(task.pkg.prefix):
+            tty.debug("Missing installation to overwrite")
+            return ACTION_INSTALL
+
+        # Otherwise, do an actual overwrite install. We backup the original
+        # install directory, put the old prefix
+        # back on failure
+        return ACTION_OVERWRITE_INSTALL
+
     def install(self):
         """
         Install the requested package(s) and or associated dependencies.
@@ -1561,26 +1604,31 @@ class PackageInstaller(object):
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
             try:
-                if pkg.spec.dag_hash() in task.request.overwrite:
-                    rec, _ = self._check_db(pkg.spec)
-                    if rec and rec.installed:
-                        if rec.installation_time < task.request.overwrite_time:
-                            # If it's actually overwriting, do a fs transaction
-                            if os.path.exists(rec.path):
-                                with fs.replace_directory_transaction(
-                                        rec.path):
-                                    # fs transaction will put the old prefix
-                                    # back on failure, so make sure to keep it.
-                                    keep_prefix = True
-                                    self._install_task(task)
-                            else:
-                                tty.debug("Missing installation to overwrite")
-                                self._install_task(task)
-                    else:
-                        # overwriting nothing
-                        self._install_task(task)
-                else:
+                action = self._install_action(task)
+
+                print(action)
+
+                if action == ACTION_NONE:
+                    pass
+                elif action == ACTION_INSTALL:
                     self._install_task(task)
+                elif action == ACTION_OVERWRITE_INSTALL:
+                    try:
+                        with fs.replace_directory_transaction(pkg.prefix):
+                            keep_prefix = True
+                            self._install_task(task)
+                    except fs.CouldNotRestoreDirectoryBackup as e:
+                        # Failing 'overwrite' installations where the backup
+                        # could not be restored and the original spec
+                        # install is lost: there we must mark the spec as
+                        # uninstalled in the database.
+                        spack.store.db.remove(task.pkg.spec)
+                        tty.error('Installation of {0} failed and recovery of '
+                                  'original install directory was unsucessful. '
+                                  'The spec is now uninstalled.'.format(pkg.name))
+
+                        # Unwrap the actual installation exception.
+                        raise e.inner_exception
 
                 self._update_installed(task)
 

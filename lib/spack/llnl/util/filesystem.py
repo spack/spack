@@ -656,6 +656,11 @@ def working_dir(dirname, **kwargs):
         os.chdir(orig_dir)
 
 
+class CouldNotRestoreDirectoryBackup(RuntimeError):
+    def __init__(self, inner_exception):
+        self.inner_exception = inner_exception
+
+
 @contextmanager
 def replace_directory_transaction(directory_name, tmp_root=None):
     """Moves a directory to a temporary space. If the operations executed
@@ -693,13 +698,20 @@ def replace_directory_transaction(directory_name, tmp_root=None):
     try:
         yield tmp_dir
     except (Exception, KeyboardInterrupt, SystemExit):
-        # Delete what was there, before copying back the original content
-        if os.path.exists(directory_name):
-            shutil.rmtree(directory_name)
-        shutil.move(
-            src=os.path.join(tmp_dir, directory_basename),
-            dst=os.path.dirname(directory_name)
-        )
+        # Try to recover the original directory, if this fails, raise a
+        # composite exception.
+        try:
+            # Delete what was there, before copying back the original content
+            if os.path.exists(directory_name):
+                shutil.rmtree(directory_name)
+            shutil.move(
+                src=os.path.join(tmp_dir, directory_basename),
+                dst=os.path.dirname(directory_name)
+            )
+            raise OSError("whoopsie!")
+        except OSError as e:
+            raise CouldNotRestoreDirectoryBackup(e)
+
         tty.debug('DIRECTORY RECOVERED [{0}]'.format(directory_name))
         raise
     else:
