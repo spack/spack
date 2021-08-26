@@ -117,6 +117,9 @@ class Msvc(Compiler):
                 env.set_path('PATH', int_env['path'].split(';'))
             env.set_path('INCLUDE', int_env.get('include', '').split(';'))
             env.set_path('LIB', int_env.get('lib', '').split(';'))
+
+            env.set('CC', self.cc)
+            env.set('CXX', self.cxx)
         else:
             # Should not this be an exception?
             print("Cannot pull msvc compiler information in Python 2.6 or below")
