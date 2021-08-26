@@ -704,7 +704,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         raise
     else:
         # Otherwise delete the temporary directory
-        shutil.rmtree(tmp_dir)
+        shutil.rmtree(tmp_dir, ignore_errors=True)
         tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
 
 
