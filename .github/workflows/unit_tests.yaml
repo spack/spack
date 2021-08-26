@@ -345,7 +345,7 @@ jobs:
         . share/spack/setup-env.sh
         $(which spack) bootstrap untrust spack-install
         $(which spack) solve zlib
-        if [ "${{ needs.changes.outputs.with_coverage }}" == "true" && "${{ matrix.python-version }}" == "3.8" ]
+        if [ "${{ needs.changes.outputs.with_coverage }}" == "true" ] && [ "${{ matrix.python-version }}" == "3.8" ]
         then
           coverage run $(which spack) unit-test -x
           coverage combine
