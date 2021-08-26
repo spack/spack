@@ -209,6 +209,158 @@ Specific limitations include:
   then Spack will not add a new external entry (``spack config blame packages``
   can help locate all external entries).
 
+
+.. _manually-adding-external-packages:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Manually Adding External Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This section discusses how to add external packages to the ``packages.yaml``
+file when modules depend on other modules or when Spack is unable to compute
+the prefix. When using modules, Spack will attempt to parse the ``module show``
+output in order to determine all relevant settings and variables. Reasons why
+this may not work automatically are
+
+* missing module dependencies,
+* nonstandard paths, and
+* the use of metamodules, i.e., modules whose only purpose is to load other
+  modules.
+
+The case of missing dependencies will be discussed based on the real-world
+example of loading OpenMPI 4.0.2 with CUDA support. Shown below is the ``module
+show openmpi/4.0.2`` output.
+
+.. code-block:: console
+
+    $ module show openmpi/4.0.2-cuda
+    -------------------------------------------------------------------
+    /gpfslocalsup/pub/modules-idris-env4/modulefiles/linux-rhel8-skylake_avx512/openmpi/4.0.2-cuda:
+
+    module-whatis   {An open source Message Passing Interface implementation.}
+    prereq          intel-compilers/19.0.4 pgi/20.1 pgi/19.10 gcc/10.1.0 gcc/8.3.1
+    conflict        openmpi
+    conflict        intel-mpi
+
+    Available software environment(s):
+    - intel-compilers/19.0.4 cuda/10.2
+    - pgi/20.1 cuda/10.2
+    - pgi/19.10 cuda/10.2
+    - gcc/10.1.0 cuda/10.2
+    - gcc/8.3.1 cuda/10.2
+    - gcc/8.3.1 cuda/10.1.2
+    - gcc/8.3.1 cuda/10.1.1
+
+    If you want to use this module with another software environment,
+    please contact the support team.
+    -------------------------------------------------------------------
+
+There are two things of importance to note. First, there are multiple possible
+module combinations to satisfy the compiler and CUDA dependency; for this
+example will use ``gcc/8.3.1`` and ``cuda/10.1.2``. Second, the output does not
+contain any information about environment variables or flags that are needed.
+The situation changes as soon as the dependencies are satisfied.
+
+.. code-block:: console
+
+    $ module purge
+    $ module load gcc/8.3.1
+    $ module load cuda/10.1.2
+    $ module show openmpi/4.0.2-cuda
+    -------------------------------------------------------------------
+    /gpfslocalsup/pub/modules-idris-env4/modulefiles/linux-rhel8-skylake_avx512/openmpi/4.0.2-cuda:
+
+    module-whatis   {An open source Message Passing Interface implementation.}
+    prereq          intel-compilers/19.0.4 pgi/20.1 pgi/19.10 gcc/10.1.0 gcc/8.3.1
+    prereq          cuda/10.2 cuda/10.1.2 cuda/10.1.1
+    conflict        openmpi
+    conflict        intel-mpi
+    prepend-path    CPATH /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/include
+    prepend-path    LD_LIBRARY_PATH /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/lib
+    prepend-path    LIBRARY_PATH /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/lib
+    prepend-path    PATH /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/bin
+    [snip]
+
+This output can be parsed by Spack when building software. To obtain an entry
+for this external package in the ``package.yaml`` file, you could run ``spack
+external find openmpi`` after loading the dependencies to benefit from the
+automatic variant detection of the OpenMPI build. Afterwards, add the module
+and all of its dependencies in the ``packages.yaml`` file to arrive at the
+following OpenMPI entry:
+
+.. code-block:: yaml
+
+    packages:
+      openmpi:
+        externals:
+        - spec: openmpi@4.0.2+cuda+cxx+cxx_exceptions~java~memchecker+pmi~sqlite3+static~thread_multiple~wrapper-rpath
+            fabrics=psm2 schedulers=slurm
+          prefix: /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3
+          modules: [gcc/8.3.1, cuda-10.1.2, openmpi/4.0.2-cuda]
+
+Once all dependencies are satisfied or if there are no dependencies, then the
+prefix determined by Spack may not be correct in the presence of nonstandard
+paths. Consider the OpenMPI module on CentOS 7:
+
+.. code-block:: console
+
+    [john@c7 ~]# module show mpi
+    -------------------------------------------------------------------
+    /etc/modulefiles/mpi/openmpi-x86_64:
+
+    conflict	 mpi
+    prepend-path	 PATH /usr/lib64/openmpi/bin
+    prepend-path	 LD_LIBRARY_PATH /usr/lib64/openmpi/lib
+    prepend-path	 PYTHONPATH /usr/lib64/python2.7/site-packages/openmpi
+    prepend-path	 MANPATH /usr/share/man/openmpi-x86_64
+    [snip]
+
+Given this module output, ``spack external find`` will determine
+``/usr/lib64/openmpi`` as the prefix when it is actually ``/usr``. This
+incorrect prefix can cause the error message below when building packages::
+
+    ==> Error: AttributeError: Query of package 'openmpi' for 'headers' failed
+    	prefix : None
+    	spec : openmpi@1.10.7%gcc@4.8.5~cuda+cxx_exceptions fabrics=none ~java~legacylaunchers~memchecker~pmi schedulers=none ~sqlite3~thread_multiple+vt arch=linux-centos7-x86_64
+    	queried as : openmpi
+    	extra parameters : []
+
+The solution in this case is to manually edit the prefix in the
+``packages.yaml`` file (here for CentOS 7):
+
+.. code-block:: yaml
+
+    packages:
+      openmpi:
+        externals:
+        - spec: openmpi@1.10.7%gcc@4.8.5~cuda+cxx~cxx_exceptions~java~memchecker~pmi~sqlite3~static~thread_multiple~wrapper-rpath
+          prefix: /usr
+          modules: [mpi]
+
+At last, we consider the case of metamodules.
+
+.. code-block:: console
+
+    $ module show intel-all
+    -------------------------------------------------------------------
+    /gpfslocalsup/pub/module-rh/modulefiles/intel-all/2019.4:
+
+    conflict        intel-all
+    module          load intel-compilers/19.0.4
+    module          load intel-mkl/19.0.4
+    module          load intel-mpi/19.0.4
+    module          load intel-vtune/19.0.4
+    module          load intel-advisor/19.0.4
+    module          load intel-tbb/19.0.4
+    module          load intel-itac/19.0.4
+    -------------------------------------------------------------------
+
+The module ``intel-all`` is obviously a metamodule because it only loads other
+modules and its ``module show`` output cannot be used to derive the needed
+environment changes to use, e.g., Intel MPI. For this reason, metamodules
+*cannot* be used in ``packages.yaml`` files.
+
+
 .. _concretization-preferences:
 
 --------------------------
