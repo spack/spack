@@ -74,9 +74,9 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('camp', when='@5.0.0:')
     depends_on('camp@0.2.2', when='@6.0.0:')
     depends_on('camp@0.1.0', when='@5.0.0:5.0.1')
-    depends_on('camp+cuda', when='+cuda')
 
     with when('@5.0.0:'):
+        depends_on('camp+cuda', when='+cuda')
         for sm_ in CudaPackage.cuda_arch_values:
             depends_on('camp cuda_arch={0}'.format(sm_),
                        when='cuda_arch={0}'.format(sm_))
