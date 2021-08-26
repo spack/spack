@@ -9,8 +9,8 @@ from spack import *
 class PspValidation(PythonPackage):
     """PSP analysis tools"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/psp-validation"
-    git      = "ssh://bbpcode.epfl.ch/nse/psp-validation"
+    homepage = "https://bbpgitlab.epfl.ch/nse/psp-validation/"
+    git      = "git@bbpgitlab.epfl.ch:nse/psp-validation.git"
 
     version('develop', branch='master')
     version('0.4.0', tag='psp-validation-v0.4.0')

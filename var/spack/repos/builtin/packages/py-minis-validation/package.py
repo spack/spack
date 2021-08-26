@@ -9,8 +9,8 @@ from spack import *
 class PyMinisValidation(PythonPackage):
     """Pythonic Sonata circuit reduction API"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/minis-validation"
-    git      = "ssh://bbpcode.epfl.ch/nse/minis-validation"
+    homepage = "https://bbpgitlab.epfl.ch/nse/minis-validation/"
+    git      = "git@bbpgitlab.epfl.ch:nse/minis-validation.git"
 
     version('develop', branch='master')
     version('0.0.5', tag='minis-validation-v0.0.5')
