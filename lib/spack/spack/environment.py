@@ -1513,26 +1513,15 @@ class Environment(object):
         install_args['overwrite'] = install_args.get(
             'overwrite', []) + self._get_overwrite_specs()
 
-        installs = []
-        for spec in specs_to_install:
-            installs.append((spec.package, install_args))
+        installs = [(s.package, install_args) for s in specs_to_install]
 
         try:
             builder = PackageInstaller(installs)
             builder.install()
         finally:
-            # Ensure links are set appropriately
-            for spec in specs_to_install:
-                if spec.package.installed:
-                    self.new_installs.append(spec)
-                    try:
-                        self._install_log_links(spec)
-                    except OSError as e:
-                        tty.warn('Could not install log links for {0}: {1}'
-                                 .format(spec.name, str(e)))
-
-            with self.write_transaction():
-                self.regenerate_views()
+            new_installs = [s for s in specs_to_install if s.package.installed]
+            self.new_installs.extend(new_installs)
+            spack.hooks.runner('post_env_install', self, new_installs)
 
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""

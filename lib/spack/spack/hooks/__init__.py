@@ -22,6 +22,7 @@ Currently the following hooks are supported:
     * on_phase_error(pkg, phase_name, log_file)
     * on_phase_error(pkg, phase_name, log_file)
     * on_analyzer_save(pkg, result)
+    * post_env_install(env, new_installs)
     * post_env_write(env)
 
 This can be used to implement support for things like module
@@ -72,7 +73,9 @@ _default_runner = HookRunner([
     'permissions_setters',
     'monitor',
     'sbang',
-    'write_install_manifest'
+    'env_install_log_links',
+    'env_regenerate_view',
+    'write_install_manifest',
 ])
 
 
