@@ -708,7 +708,6 @@ def replace_directory_transaction(directory_name, tmp_root=None):
                 src=os.path.join(tmp_dir, directory_basename),
                 dst=os.path.dirname(directory_name)
             )
-            raise OSError("whoopsie!")
         except OSError as e:
             raise CouldNotRestoreDirectoryBackup(e)
 
