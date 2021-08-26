@@ -258,7 +258,7 @@ class PythonPackage(PackageBase):
             'python_lib']['false']['false']
         plat_site_packages_dir = spec['python'].package.config_vars[
             'python_lib']['true']['false']
-        inc_dir = spec['python'].package.config_vars['python_inc']
+        inc_dir = spec['python'].package.config_vars['python_inc']['true']
 
         args += ['--root=%s' % prefix,
                  '--install-purelib=%s' % pure_site_packages_dir,

@@ -63,7 +63,7 @@ class Migraphx(CMakePackage):
         """
         python_spec = self.spec['python']
         include_dir = join_path(
-            python_spec.prefix, python_spec.package.config_vars['python_inc'])
+            python_spec.prefix, python_spec.package.config_vars['python_inc']['false'])
         return [
             self.define('Python_INCLUDE_DIR', include_dir)
         ]

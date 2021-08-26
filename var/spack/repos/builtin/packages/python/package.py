@@ -713,10 +713,11 @@ from distutils.sysconfig import (
 config = get_config_vars()
 config['config_h_filename'] = get_config_h_filename()
 config['makefile_filename'] = get_makefile_filename()
-config['python_inc'] = get_python_inc(True, prefix='')
+config['python_inc'] = {}
 config['python_lib'] = {}
 
 for plat_specific in [True, False]:
+    config['python_inc'][plat_specific] = get_python_inc(plat_specific, prefix='')
     config['python_lib'][plat_specific] = {}
     for standard_lib in [True, False]:
         config['python_lib'][plat_specific][standard_lib] = get_python_lib(
@@ -841,7 +842,7 @@ for plat_specific in [True, False]:
             str: include files directory
         """
         if 'python_inc' in self.config_vars:
-            return self.config_vars['python_inc']
+            return self.config_vars['python_inc']['false']
         else:
             return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
 
