@@ -15,7 +15,7 @@ class RMaptools(RPackage):
     exchanging spatial objects with packages such as PBSmapping, spatstat,
     maps, RArcInfo, Stata tmap, WinBUGS, Mondrian, and others."""
 
-    homepage = "http://r-forge.r-project.org/projects/maptools/"
+    homepage = "https://r-forge.r-project.org/projects/maptools/"
     url      = "https://cloud.r-project.org/src/contrib/maptools_0.8-39.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/maptools"
 

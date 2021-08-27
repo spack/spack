@@ -8,7 +8,7 @@ from spack import *
 
 class Atop(Package):
     """Atop is an ASCII full-screen performance monitor for Linux"""
-    homepage = "http://www.atoptool.nl/index.php"
+    homepage = "https://www.atoptool.nl/index.php"
     url      = "http://www.atoptool.nl/download/atop-2.2-3.tar.gz"
 
     version('2.5.0', sha256='4b911057ce50463b6e8b3016c5963d48535c0cddeebc6eda817e292b22f93f33')

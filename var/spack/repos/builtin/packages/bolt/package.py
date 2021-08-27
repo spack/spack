@@ -19,7 +19,7 @@ class Bolt(CMakePackage):
     runtime in LLVM, and thus it can be used with LLVM/Clang, Intel
     OpenMP compiler, and GCC."""
 
-    homepage = "http://www.bolt-omp.org/"
+    homepage = "https://www.bolt-omp.org/"
     url      = "https://github.com/pmodels/bolt/releases/download/v1.0b1/bolt-1.0b1.tar.gz"
     git      = "https://github.com/pmodels/bolt.git"
     maintainers = ['shintaro-iwasaki']
