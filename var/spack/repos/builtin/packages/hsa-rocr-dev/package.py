@@ -69,8 +69,13 @@ class HsaRocrDev(CMakePackage):
             # device libs is bundled with llvm-amdgpu (default) or standalone
             if '^rocm-device-libs' in spec:
                 bitcode_dir = spec['rocm-device-libs'].prefix.amdgcn.bitcode
-            else:
+            elif self.spec.satisfies('@:4.2.0'):
                 bitcode_dir = spec['llvm-amdgpu'].prefix.amdgcn.bitcode
+            else:
+                bitcode_dir = spec['llvm-amdgpu'].prefix.llvm.amdgcn.bitcode
+                args.append(
+                    '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                    format(self.spec['llvm-amdgpu'].prefix))
 
             args.append(self.define('BITCODE_DIR', bitcode_dir))
 

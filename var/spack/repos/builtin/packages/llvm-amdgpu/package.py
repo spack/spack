@@ -96,6 +96,9 @@ class LlvmAmdgpu(CMakePackage):
 
         args = []
         if self.spec.satisfies('@4.3.0:'):
+            rpath = self.rpath
+            rpath.append(self.prefix.llvm.lib)
+            rpath = ';'.join(rpath)
             llvm_projects.append('libcxx')
             llvm_projects.append('libcxxabi')
 
@@ -108,6 +111,9 @@ class LlvmAmdgpu(CMakePackage):
                 self.define('LIBCXXABI_ENABLE_STATIC', 'ON'),
                 self.define('LIBCXXABI_INSTALL_STATIC_LIBRARY', 'OFF'),
             ]
+            args.append("-DCMAKE_INSTALL_PREFIX:PATH={0}".
+                        format(self.spec.prefix.llvm))
+            args.append('-DCMAKE_INSTALL_RPATH=' + rpath)
 
         if '+openmp' in self.spec:
             llvm_projects.append('openmp')
@@ -136,5 +142,17 @@ class LlvmAmdgpu(CMakePackage):
                     gcc_prefix = ancestor(gcc_prefix, 4)
                     break
             args.append(self.define('GCC_INSTALL_PREFIX', gcc_prefix))
-
         return args
+
+    @run_after('install')
+    def post_install(self):
+        if self.spec.satisfies('@4.3.0:'):
+            mkdirp(self.prefix.bin)
+            mkdirp(join_path(self.prefix, 'llvm-alt'))
+            files = [
+                'amdclang', 'amdclang++', 'amdclang-cl',
+                'amdclang-cpp', 'amdflang'
+            ]
+            with working_dir(self.prefix.bin):
+                for file in files:
+                    symlink(os.path.join('../llvm/bin', file), file)

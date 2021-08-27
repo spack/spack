@@ -112,8 +112,10 @@ class Hip(CMakePackage):
 
         if '@:3.8.0' in self.spec:
             paths['bitcode'] = paths['rocm-device-libs'].lib
-        else:
+        elif '@:4.2.0' in self.spec:
             paths['bitcode'] = paths['rocm-device-libs'].amdgcn.bitcode
+        else:
+            paths['bitcode'] = paths['rocm-device-libs'].llvm.amdgcn.bitcode
 
         return paths
 
@@ -137,7 +139,10 @@ class Hip(CMakePackage):
         env.set('HIP_COMPILER', 'clang')
 
         # bin directory where clang++ resides
-        env.set('HIP_CLANG_PATH', paths['llvm-amdgpu'].bin)
+        if self.spec.satisfies('@:4.2.0'):
+            env.set('HIP_CLANG_PATH', paths['llvm-amdgpu'].bin)
+        else:
+            env.set('HIP_CLANG_PATH', paths['llvm-amdgpu'].llvm.bin)
 
         # Path to hsa-rocr-dev prefix used by hipcc.
         env.set('HSA_PATH', paths['hsa-rocr-dev'])

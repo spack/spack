@@ -37,3 +37,11 @@ class RocmClangOcl(CMakePackage):
 
         # support both builtin and standalone device libs
         depends_on('rocm-device-libs@' + ver, when='@{0} ^llvm-amdgpu ~rocm-device-libs'.format(ver))
+
+    def cmake_args(self):
+        args = []
+        if '@4.3.0' in self.spec:
+            args.append(
+                '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                format(self.spec['llvm-amdgpu'].prefix))
+        return args

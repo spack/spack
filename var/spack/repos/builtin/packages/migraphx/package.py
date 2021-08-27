@@ -68,14 +68,16 @@ class Migraphx(CMakePackage):
         ]
 
     def cmake_args(self):
-        args = [
-            '-DCMAKE_CXX_COMPILER={0}/bin/clang++'
-            .format(self.spec['llvm-amdgpu'].prefix)
-        ]
+        args = []
         if '@3.9.0:' in self.spec:
             args.append('-DNLOHMANN_JSON_INCLUDE={0}'.format(
                 self.spec['nlohmann-json'].prefix.include))
-
+        if '@:4.2.0:' in self.spec:
+            args.append(self.define('-DCMAKE_CXX_COMPILER={0}/bin/clang++'
+                        .format(self.spec['llvm-amdgpu'].prefix)))
+        else:
+            args.append(self.define('-DCMAKE_CXX_COMPILER={0}/llvm/bin/clang++'
+                        .format(self.spec['llvm-amdgpu'].prefix)))
         if self.spec['cmake'].satisfies('@3.16.0:'):
             args += self.cmake_python_hints
         return args

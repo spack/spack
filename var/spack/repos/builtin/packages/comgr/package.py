@@ -53,3 +53,12 @@ class Comgr(CMakePackage):
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     root_cmakelists_dir = join_path('lib', 'comgr')
+
+    def cmake_args(self):
+        args = [
+        ]
+        if '@4.3.0' in self.spec:
+            args.append(
+                '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                format(self.spec['llvm-amdgpu'].prefix))
+        return args

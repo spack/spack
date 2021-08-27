@@ -37,7 +37,7 @@ class Mivisionx(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     def patch(self):
-        if '@4.2.0' in self.spec:
+        if '@4.2.0:' in self.spec:
             filter_file('${ROCM_PATH}/opencl',
                         self.spec['rocm-opencl'].prefix,
                         'amd_openvx/cmake/FindOpenCL.cmake',

@@ -49,18 +49,29 @@ class MiopenOpencl(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('MIOPEN_BACKEND', 'OpenCL'),
-            self.define(
-                'MIOPEN_HIP_COMPILER',
-                '{0}/bin/clang++'.format(self.spec['llvm-amdgpu'].prefix)
-            ),
-            self.define(
-                'HIP_CXX_COMPILER',
-                '{0}/bin/clang++'.format(self.spec['llvm-amdgpu'].prefix)
-            ),
-            self.define(
-                'MIOPEN_AMDGCN_ASSEMBLER',
-                '{0}/bin/clang'.format(self.spec['llvm-amdgpu'].prefix)
-            ),
             self.define('Boost_USE_STATIC_LIBS', 'Off')
         ]
+        if '@:4.2.0' in self.spec:
+            args.append(self.define(
+                'MIOPEN_HIP_COMPILER',
+                '{0}/bin/clang++'.format(self.spec['llvm-amdgpu'].prefix)))
+            args.append(self.define(
+                'HIP_CXX_COMPILER',
+                '{0}/bin/clang++'.format(self.spec['llvm-amdgpu'].prefix)))
+            args.append(self.define(
+                'MIOPEN_AMDGCN_ASSEMBLER',
+                '{0}/bin/clang'.format(self.spec['llvm-amdgpu'].prefix)))
+        elif '@4.3.0' in self.spec:
+            args.append(self.define(
+                'MIOPEN_HIP_COMPILER',
+                '{0}/llvm/bin/clang++'.format(self.spec['llvm-amdgpu'].prefix)))
+            args.append(self.define(
+                'HIP_CXX_COMPILER',
+                '{0}/llvm/bin/clang++'.format(self.spec['llvm-amdgpu'].prefix)))
+            args.append(self.define(
+                'MIOPEN_AMDGCN_ASSEMBLER',
+                '{0}/llvm/bin/clang'.format(self.spec['llvm-amdgpu'].prefix)))
+            args.append(
+                '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                format(self.spec['llvm-amdgpu'].prefix))
         return args
