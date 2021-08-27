@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.environment as ev
-import spack.spec
 from spack.main import SpackCommand
 
 undevelop = SpackCommand('undevelop')
@@ -14,52 +13,47 @@ concretize = SpackCommand('concretize')
 
 def test_undevelop(tmpdir, config, mock_packages, mutable_mock_env_path):
     # setup environment
-    envdir = tmpdir.mkdir('env')
-    with envdir.as_cwd():
-        with open('spack.yaml', 'w') as f:
-            f.write("""\
+    with open(str(tmpdir.join('spack.yaml')), 'w') as f:
+        f.write("""\
 env:
   specs:
-  - mpich
+  - mpich@1.0
 
   develop:
-  - spec: mpich@1.0
+  - spec: mpich
     path: /fake/path
 """)
 
-        env('create', 'test', './spack.yaml')
-        with ev.read('test'):
-            before = spack.spec.Spec('mpich').concretized()
-            undevelop('mpich')
-            after = spack.spec.Spec('mpich').concretized()
+    with ev.Environment(str(tmpdir)) as e:
+        e.concretize()
+        before = e.matching_spec('mpich')
+        undevelop('mpich')
+        e.concretize()
+        after = e.matching_spec('mpich')
 
-    # Removing dev spec from environment changes concretization
-    assert before.satisfies('dev_path=*')
-    assert not after.satisfies('dev_path=*')
+    assert 'dev_path' in before.variants
+    assert 'dev_path' not in after.variants
 
 
 def test_undevelop_nonexistent(tmpdir, config, mock_packages, mutable_mock_env_path):
     # setup environment
-    envdir = tmpdir.mkdir('env')
-    with envdir.as_cwd():
-        with open('spack.yaml', 'w') as f:
-            f.write("""\
+    with open(str(tmpdir.join('spack.yaml')), 'w') as f:
+        f.write("""\
 env:
   specs:
-  - mpich
+  - mpich@1.0
 
   develop:
-  - spec: mpich@1.0
+  - spec: mpich
     path: /fake/path
 """)
 
-        env('create', 'test', './spack.yaml')
-        with ev.read('test') as e:
-            concretize()
-            before = e.specs_by_hash
-            undevelop('package-not-in-develop')  # does nothing
-            concretize('-f')
-            after = e.specs_by_hash
+    with ev.Environment(str(tmpdir)) as e:
+        e.concretize()
+        before = e.specs_by_hash
+        undevelop('package-not-in-develop')  # does nothing
+        e.concretize(force=True)
+        after = e.specs_by_hash
 
     # nothing should have changed
     assert before == after
