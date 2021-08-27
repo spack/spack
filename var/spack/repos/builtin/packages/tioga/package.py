@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
+
 from spack import *
 
 
@@ -16,7 +18,7 @@ class Tioga(CMakePackage, CudaPackage):
     version('develop', branch='exawind')
     version('master', branch='master')
 
-    variant('shared', default=True,
+    variant('shared', default=sys.platform != 'darwin',
             description="Build shared libraries")
     variant('pic', default=True,
             description="Position independent code")
