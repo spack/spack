@@ -823,9 +823,12 @@ for plat_specific in [True, False]:
         else:
             headers = find_headers(
                 'pyconfig', self.prefix.include, recursive=True)
-            config_h = headers[0]
+            config_h = headers[0] if headers else None
 
-        headers.directories = [os.path.dirname(config_h)]
+        if config_h:
+            headers.directories = [os.path.dirname(config_h)]
+        else:
+            return self.prefix.include
         return headers
 
     @property
