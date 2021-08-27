@@ -10,7 +10,7 @@ class Cloverleaf(MakefilePackage):
        using an explicit, second-order accurate method.
     """
 
-    homepage = "http://uk-mac.github.io/CloverLeaf"
+    homepage = "https://uk-mac.github.io/CloverLeaf"
     url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/CloverLeaf/CloverLeaf-1.1.tar.gz"
     git      = "https://github.com/UK-MAC/CloverLeaf.git"
 

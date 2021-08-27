@@ -207,7 +207,7 @@ class Fftw(FftwBase):
        believe that FFTW, which is free software, should become the FFT
        library of choice for most applications."""
 
-    homepage = "http://www.fftw.org"
+    homepage = "https://www.fftw.org"
     url = "http://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "http://www.fftw.org/download.html"
 

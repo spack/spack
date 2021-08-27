@@ -19,7 +19,7 @@ class Texlive(AutotoolsPackage):
     and fonts that are free software, including support for many languages
     around the world."""
 
-    homepage = "http://www.tug.org/texlive"
+    homepage = "https://www.tug.org/texlive"
     url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2020/texlive-20200406-source.tar.xz'
     base_url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/{year}/texlive-{version}-{dist}.tar.xz'
     list_url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive'

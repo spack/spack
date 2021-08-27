@@ -9,7 +9,7 @@ from spack import *
 class PyBiopandas(PythonPackage):
     """Working with molecular structures in pandas DataFrames"""
 
-    homepage = "http://rasbt.github.io/biopandas"
+    homepage = "https://rasbt.github.io/biopandas"
     pypi = "biopandas/biopandas-0.2.5.tar.gz"
     git      = "https://github.com/rasbt/biopandas.git"
 

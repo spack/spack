@@ -12,7 +12,7 @@ class Portage(CMakePackage):
        to build a highly customized, hybrid parallel (MPI+X) conservative
        remapping library for transfer of field data between meshes.
     """
-    homepage = "http://portage.lanl.gov/"
+    homepage = "https://portage.lanl.gov/"
     git      = "https://github.com/laristra/portage.git"
     url      = "https://github.com/laristra/portage/releases/download/3.0.0/portage-3.0.0.tar.gz"
 

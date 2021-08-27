@@ -17,7 +17,7 @@ class Targetp(Package):
        For instructions on how to set up a mirror, see
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://www.cbs.dtu.dk/services/TargetP/"
+    homepage = "https://www.cbs.dtu.dk/services/TargetP/"
     url      = "file://{0}/targetp-1.1b.Linux.tar.gz".format(os.getcwd())
     manual_download = True
 

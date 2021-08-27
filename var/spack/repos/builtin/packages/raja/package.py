@@ -7,7 +7,7 @@
 class Raja(CMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
 
-    homepage = "http://software.llnl.gov/RAJA/"
+    homepage = "https://software.llnl.gov/RAJA/"
     git      = "https://github.com/LLNL/RAJA.git"
 
     version('develop', branch='develop', submodules='True')

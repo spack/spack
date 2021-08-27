@@ -19,7 +19,7 @@ class Pgi(Package):
     file to a mirror so that Spack can find it. For instructions on how to
     set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://www.pgroup.com/"
+    homepage = "https://www.pgroup.com/"
     manual_download = True
 
     version('20.4',  sha256='f3ecc2104b304cd5c8b20e3ffdb5da88f2b5f7cc148e8daf00561928a5cbbc2e')

@@ -9,7 +9,7 @@ from spack import *
 class JsonFortran(CMakePackage):
     """A Fortran 2008 JSON API"""
 
-    homepage = "http://jacobwilliams.github.io/json-fortran/"
+    homepage = "https://jacobwilliams.github.io/json-fortran/"
     url      = "https://github.com/jacobwilliams/json-fortran/archive/7.0.0.tar.gz"
 
     version('7.1.0', sha256='e7aa1f6e09b25ebacb17188147380c3f8c0a254754cd24869c001745fcecc9e6')

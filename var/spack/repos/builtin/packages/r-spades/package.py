@@ -13,7 +13,7 @@ class RSpades(RPackage):
     focus on spatially explicit models. These include raster-based,
     event-based, and agent-based models."""
 
-    homepage = "http://spades.predictiveecology.org/"
+    homepage = "https://spades.predictiveecology.org/"
     url      = "https://cloud.r-project.org/src/contrib/SpaDES_2.0.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/SpaDES"
 

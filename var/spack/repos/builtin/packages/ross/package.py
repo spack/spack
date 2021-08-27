@@ -9,7 +9,7 @@ from spack import *
 class Ross(CMakePackage):
     """Rensselaer Optimistic Simulation System"""
 
-    homepage = "http://ross-org.github.io"
+    homepage = "https://ross-org.github.io"
     git      = "https://github.com/ROSS-org/ROSS.git"
     url      = "https://github.com/ROSS-org/ROSS/archive/v7.0.0.tar.gz"
 

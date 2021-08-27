@@ -9,7 +9,7 @@ from spack import *
 class Chill(AutotoolsPackage):
     """A polyheadral compiler for autotuning"""
 
-    homepage = "http://github.com/CtopCsUtahEdu/chill"
+    homepage = "https://github.com/CtopCsUtahEdu/chill"
     url      = "https://github.com/CtopCsUtahEdu/chill/archive/v0.3.tar.gz"
     git      = "https://github.com/CtopCsUtahEdu/chill.git"
 

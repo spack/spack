@@ -9,7 +9,7 @@ from spack import *
 class RXlconnectjars(RPackage):
     """Provides external JAR dependencies for the XLConnect package."""
 
-    homepage = "http://miraisolutions.wordpress.com/"
+    homepage = "https://miraisolutions.wordpress.com/"
     url      = "https://cloud.r-project.org/src/contrib/XLConnectJars_0.2-9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/XLConnectJars"
 

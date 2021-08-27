@@ -17,7 +17,7 @@ class RMcmc(RPackage):
     <doi:10.1214/12-AOS1048>, function morph.metrop), which achieves geometric
     ergodicity by change of variable."""
 
-    homepage = "http://www.stat.umn.edu/geyer/mcmc/"
+    homepage = "https://www.stat.umn.edu/geyer/mcmc/"
     cran     = "mcmc"
 
     version('0.9-7', sha256='b7c4d3d5f9364c67a4a3cd49296a61c315ad9bd49324a22deccbacb314aa8260')

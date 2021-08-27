@@ -15,7 +15,7 @@ class Ndiff(Package):
 
     """
 
-    homepage = "http://ftp.math.utah.edu/pub/ndiff/"
+    homepage = "https://ftp.math.utah.edu/pub/ndiff/"
     url      = "http://ftp.math.utah.edu/pub/ndiff/ndiff-2.00.tar.gz"
 
     version('2.00', sha256='f2bbd9a2c8ada7f4161b5e76ac5ebf9a2862cab099933167fe604b88f000ec2c')

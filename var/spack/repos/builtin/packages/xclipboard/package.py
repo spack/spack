@@ -12,7 +12,7 @@ class Xclipboard(AutotoolsPackage, XorgPackage):
     CLIPBOARD selections for later use.  It stores each CLIPBOARD
     selection as a separate string, each of which can be selected."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xclipboard"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xclipboard"
     xorg_mirror_path = "app/xclipboard-1.1.3.tar.gz"
 
     version('1.1.3', sha256='a8c335cf166cbb27ff86569503db7e639f85741ad199bfb3ba45dd0cfda3da7f')

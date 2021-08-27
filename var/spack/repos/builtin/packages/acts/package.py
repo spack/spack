@@ -29,7 +29,7 @@ class Acts(CMakePackage, CudaPackage):
     propagation and fitting, basic seed finding algorithms.
     """
 
-    homepage = "http://acts.web.cern.ch/ACTS/"
+    homepage = "https://acts.web.cern.ch/ACTS/"
     git      = "https://github.com/acts-project/acts.git"
     maintainers = ['HadrienG2']
 

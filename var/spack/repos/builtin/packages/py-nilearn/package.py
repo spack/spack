@@ -9,7 +9,7 @@ from spack import *
 class PyNilearn(PythonPackage):
     """Statistical learning for neuroimaging in Python."""
 
-    homepage = "http://nilearn.github.io/"
+    homepage = "https://nilearn.github.io/"
     pypi     = "nilearn/nilearn-0.7.1.tar.gz"
 
     version('0.8.0', sha256='f2d3dc81005f829f3a183efa6c90d698ea6818c06264d2e3f03e805c4340febb')

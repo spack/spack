@@ -14,7 +14,7 @@ class Tmux(AutotoolsPackage):
     background) and reattach them to a different terminal. And do a lot more.
     """
 
-    homepage = "http://tmux.github.io"
+    homepage = "https://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
 
     version('3.1b', sha256='d93f351d50af05a75fe6681085670c786d9504a5da2608e481c47cf5e1486db9')

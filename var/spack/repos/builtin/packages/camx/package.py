@@ -12,7 +12,7 @@ from spack import *
 class Camx(MakefilePackage):
     '''Comprehensive Air Quality Model with Extensions.'''
 
-    homepage = 'http://www.camx.com'
+    homepage = 'https://www.camx.com'
     # Upstream obfuscates their download URL to get you to fill out their
     # registration form and accept their license agreement.
 

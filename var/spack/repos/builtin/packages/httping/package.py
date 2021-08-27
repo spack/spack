@@ -14,7 +14,7 @@ class Httping(AutotoolsPackage):
     the latency. of the webserver + network. It supports, of course,
     IPv6. httping was analyzed by Coverity Scan for software defects. """
 
-    homepage = "http://www.vanheusden.com/httping/"
+    homepage = "https://www.vanheusden.com/httping/"
     url      = "https://github.com/flok99/httping/archive/2.5.tar.gz"
 
     version('2.5',   sha256='2ad423097fa7a0d2d20a387050e34374326a703dddce897e152a8341e47ea500')

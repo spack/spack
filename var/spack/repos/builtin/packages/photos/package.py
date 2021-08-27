@@ -10,7 +10,7 @@ class Photos(AutotoolsPackage):
     """ Photos is a Monte Carlo program for bremsstrahlung in the decay
          of particles and resonances."""
 
-    homepage = "http://photospp.web.cern.ch/photospp/"
+    homepage = "https://photospp.web.cern.ch/photospp/"
     url      = "http://photospp.web.cern.ch/photospp/resources/PHOTOS.3.61/PHOTOS.3.61-LHC.tar.gz"
 
     tags = ['hep']

@@ -30,7 +30,7 @@ class Amdlibflame(LibflameBase):
     """
 
     _name = 'amdlibflame'
-    homepage = "http://developer.amd.com/amd-cpu-libraries/blas-library/#libflame"
+    homepage = "https://developer.amd.com/amd-cpu-libraries/blas-library/#libflame"
     url = "https://github.com/amd/libflame/archive/3.0.tar.gz"
     git = "https://github.com/amd/libflame.git"
 
