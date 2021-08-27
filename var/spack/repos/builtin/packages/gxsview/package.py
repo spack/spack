@@ -25,7 +25,7 @@ class Gxsview(QMakePackage):
     # centos7: spack install --keep-stage gxsview ^vtk@9.0.3+mpi ^hdf5+mpi ^mpich
     depends_on('fontconfig')
     depends_on('qt@5.14.0:+opengl+gui')
-    depends_on('vtk@8.0:+qt+opengl2') # +mpi+python are optional
+    depends_on('vtk@8.0:+qt+opengl2')  # +mpi+python are optional
     conflicts('%gcc@:7.2.0', msg='Requires C++17 compiler support')  # need C++17 standard
 
     # parallel = False
@@ -46,5 +46,4 @@ class Gxsview(QMakePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install(join_path('gui','gxsview'), prefix.bin)
-
+        install(join_path('gui', 'gxsview'), prefix.bin)
