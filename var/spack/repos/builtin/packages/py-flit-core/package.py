@@ -11,6 +11,7 @@ class PyFlitCore(Package):
 
     homepage = "https://github.com/takluyver/flit"
     url = "https://pypi.io/packages/py3/f/flit-core/flit_core-3.3.0-py3-none-any.whl"
+    maintainers = ['takluyver']
 
     version('3.3.0', sha256='9b247b3095cb3c43933a59a7433f92ddfdd7fc843e08ef0f4550d53a9cfbbef6', expand=False)
 
