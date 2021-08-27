@@ -9,6 +9,7 @@ import spack.dependency as dp
 
 hashes = []
 
+
 class SpecHashDescriptor(object):
     """This class defines how hashes are generated on Spec objects.
 
