@@ -316,7 +316,7 @@ def mock_fetch_cache(monkeypatch):
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def mock_binary_index(monkeypatch, tmpdir_factory):
     """Changes the directory for the binary index and creates binary index for
     every test. Clears its own index when it's done.

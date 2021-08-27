@@ -1548,7 +1548,7 @@ def test_ensure_only_one_temporary_storage():
 def test_ci_generate_temp_storage_url(tmpdir, mutable_mock_env_path,
                                       env_deactivate, install_mockery,
                                       mock_packages, monkeypatch,
-                                      project_dir_env):
+                                      project_dir_env, mock_binary_index):
     """Verify correct behavior when using temporary-storage-url-prefix"""
     project_dir_env(tmpdir.strpath)
     filename = str(tmpdir.join('spack.yaml'))
@@ -1660,7 +1660,7 @@ spack:
 
 def test_ci_reproduce(tmpdir, mutable_mock_env_path, env_deactivate,
                       install_mockery, mock_packages, monkeypatch,
-                      last_two_git_commits, project_dir_env):
+                      last_two_git_commits, project_dir_env, mock_binary_index):
     project_dir_env(tmpdir.strpath)
     working_dir = tmpdir.join('repro_dir')
     image_name = 'org/image:tag'
