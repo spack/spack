@@ -26,11 +26,11 @@ class Libarchive(AutotoolsPackage):
     variant('libs', default='static,shared', values=('static', 'shared'),
             multi=True, description='What libraries to build')
 
-    # TODO: BLAKE2 and zstd (can't just add this, because libarchive is a dependency of
-    # cmake, and zstd currently uses cmake as a build system)
-    variant('compression', default='bz2lib,lz4,lzo2,lzma,zlib', values=('bz2lib', 'lz4', 'lzo2', 'lzma', 'zlib'), multi=True, description='Supported compression')
+    # TODO: BLAKE2 is missing
+    variant('compression', default='bz2lib,lz4,lzo2,lzma,zlib,zstd', values=('bz2lib', 'lz4', 'lzo2', 'lzma', 'zlib', 'zstd'), multi=True, description='Supported compression')
     variant('xar', default='libxml2', values=('libxml2', 'expat'), description='What library to use for xar support')
     variant('crypto', default='mbedtls', values=('mbedtls', 'nettle', 'openssl'), description='What crypto library to use for mtree and xar hashes')
+    variant('programs', values=any_combination_of('bsdtar', 'bsdcpio', 'bsdcat'), description='What executables to build')
     variant('iconv', default=True, description='Support iconv')
 
     depends_on('bzip2', when='compression=bz2lib')
@@ -38,6 +38,7 @@ class Libarchive(AutotoolsPackage):
     depends_on('lzo', when='compression=lzo2')
     depends_on('xz', when='compression=lzma')
     depends_on('zlib', when='compression=zlib')
+    depends_on('zstd', when='compression=zstd')
 
     depends_on('nettle', when='crypto=nettle')
     depends_on('openssl', when='crypto=openssl')
@@ -54,13 +55,11 @@ class Libarchive(AutotoolsPackage):
     # The build test suite cannot be built with Intel
 
     def configure_args(self):
-        args = [
-            '--without-libb2',
-            '--without-zstd',
-        ]
+        args = ['--without-libb2']
         args += self.with_or_without('compression')
         args += self.with_or_without('crypto')
         args += self.with_or_without('iconv')
         args += self.with_or_without('xar')
+        args += self.enable_or_disable('programs')
 
         return args
