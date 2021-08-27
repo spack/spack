@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyFlameprof(PythonPackage):
-    """Flamegraph generator for python’s cProfile stats."""
+    """Flamegraph generator for python's cProfile stats."""
 
     homepage = "https://github.com/baverman/flameprof/"
     pypi     = "flameprof/flameprof-0.4.tar.gz"
