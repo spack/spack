@@ -154,7 +154,7 @@ def install_sbang():
     fs.set_install_permissions(sbang_bin_dir)
 
 
-def post_install(spec):
+def post_install(spec, timer=None):
     """This hook edits scripts so that they call /bin/bash
     $spack_prefix/bin/sbang instead of something longer than the
     shebang limit.

@@ -12,7 +12,7 @@ Hooks are not executed in any particular order.
 Currently the following hooks are supported:
 
     * pre_install(spec)
-    * post_install(spec)
+    * post_install(spec, timer=None)
     * pre_uninstall(spec)
     * post_uninstall(spec)
     * on_install_start(spec)
@@ -72,6 +72,7 @@ _default_runner = HookRunner([
     'permissions_setters',
     'monitor',
     'sbang',
+    'build_timers',
     'write_install_manifest'
 ])
 

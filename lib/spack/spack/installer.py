@@ -47,6 +47,7 @@ from llnl.util.tty.log import log_output
 
 import spack.binary_distribution as binary_distribution
 import spack.compilers
+import spack.config
 import spack.error
 import spack.hooks
 import spack.monitor
@@ -1680,7 +1681,7 @@ class PackageInstaller(object):
 class BuildProcessInstaller(object):
     """This class implements the part installation that happens in the child process."""
 
-    def __init__(self, pkg, install_args):
+    def __init__(self, pkg, install_args, timer=None):
         """Create a new BuildProcessInstaller.
 
         It is assumed that the lifecycle of this object is the same as the child
@@ -1712,7 +1713,7 @@ class BuildProcessInstaller(object):
         self.unmodified_env = install_args.get('unmodified_env', {})
 
         # timer for build phases
-        self.timer = Timer()
+        self.timer = timer or Timer()
 
         # If we are using a padded path, filter the output to compress padded paths
         # The real log still has full-length paths.
@@ -1760,13 +1761,11 @@ class BuildProcessInstaller(object):
 
                 self._real_install()
 
-            # Stop the timer and save results
+            # Stop the timer
             self.timer.stop()
-            with open(self.pkg.times_log_path, 'w') as timelog:
-                self.timer.write_json(timelog)
 
             # Run post install hooks before build stage is removed.
-            spack.hooks.runner('post_install', self.pkg.spec)
+            spack.hooks.runner('post_install', self.pkg.spec, self.timer)
 
         build_time = self.timer.total - self.pkg._fetch_time
         tty.msg('{0} Successfully installed {1}'.format(self.pre, self.pkg_id),

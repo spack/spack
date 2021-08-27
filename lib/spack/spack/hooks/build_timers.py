@@ -3,9 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.verify
-
-
 def post_install(spec, timer=None):
-    if not spec.external:
-        spack.verify.write_manifest(spec)
+    if not timer:
+        return
+    with open(spec.package.times_log_path, 'w') as timelog:
+        timer.write_json(timelog)

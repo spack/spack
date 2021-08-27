@@ -1221,3 +1221,61 @@ def test_install_skip_patch(install_mockery, mock_fetch):
 
     spec, install_args = const_arg[0]
     assert inst.package_id(spec.package) in installer.installed
+
+
+class MockTimer(object):
+    """Fake timer in which every phase takes 1s."""
+    def __init__(self):
+        self.phases = {}
+        self.end = None
+        self.last = 0
+
+    def phase(self, name):
+        self.phases[name] = 1
+        self.last += 1
+
+    @property
+    def total(self):
+        return self.end
+
+    def stop(self):
+        self.end = self.last
+
+    def write_json(self, out):
+        out.write("hello world")
+
+    def write_tty(self, out):
+        out.write("hello world")
+
+
+class HookCallCollector():
+    def __init__(self):
+        self.calls = {}
+
+    def __call__(self, hook_name, *args):
+        if hook_name not in self.calls:
+            self.calls[hook_name] = []
+
+        self.calls[hook_name].append(args)
+
+
+def test_timers(install_mockery, mock_fetch):
+    spec = spack.spec.Spec('dev-build-test-install-phases')
+    spec.concretize()
+
+    # TODO: this may belong in BuildProcessInstaller
+    inst.PackageInstaller()._setup_install_dir(spec.package)
+
+    # Run install and intercept hooks
+    hook_call = HookCallCollector()
+    with spack.hooks.use_hook_runner(hook_call):
+        inst.BuildProcessInstaller(spec.package, {}, MockTimer()).run()
+
+    hook_spec, hook_timer = hook_call.calls['post_install'][0]
+    assert hook_timer.phases == {
+        'one': 1,
+        'two': 1,
+        'three': 1,
+        'install': 1,
+    }
+    assert hook_timer.total == 4
