@@ -104,23 +104,11 @@ class GCSBlob:
         try:
             auth_request = requests.Request()
             data_bucket = self.storage_client.lookup_bucket(self.bucket_name)
-            signed_blob_path = data_bucket.blob(self.blob_path)
-
-            expires_at_ms = datetime.now() + timedelta(minutes=5)
-
-            if os.getenv('GCE_COMPUTE_ENGINE') == 'False':
-                signed_url = signed_blob_path.generate_signed_url(expires_at_ms,
-                                                                  version='v4')
-            else:
-                # Generate Compute Engine credentials
-                signing_credentials = compute_engine.IDTokenCredentials(auth_request,
-                                                                        "")
-                signed_url = signed_blob_path.generate_signed_url(
-                    expires_at_ms, credentials=signing_credentials, version="v4")
+            blob_path = data_bucket.blob(self.blob_path)
+            return blob_path.path()
 
         except Exception as ex:
-            tty.error("{}, Could not generate a signed URL for GCS blob storage"
+            tty.error("{}, Could not generate a URL for GCS blob storage"
                       .format(ex))
             sys.exit(1)
 
-        return signed_url
