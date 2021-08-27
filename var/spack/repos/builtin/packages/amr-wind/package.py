@@ -91,13 +91,6 @@ class AmrWind(CMakePackage, CudaPackage):
             self.define_from_variant('AMR_WIND_TEST_WITH_FCOMPARE', 'tests'),
         ]
 
-        if '+mpi' in self.spec:
-            args += [
-                '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
-                '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
-                '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
-            ]
-
         if '+cuda' in self.spec:
             amrex_arch = ['{0:.1f}'.format(float(i) / 10.0)
                           for i in self.spec.variants['cuda_arch'].value]
