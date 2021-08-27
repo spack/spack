@@ -321,7 +321,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.8, 3.9]
+        python-version: [3.8]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -345,7 +345,7 @@ jobs:
         . share/spack/setup-env.sh
         $(which spack) bootstrap untrust spack-install
         $(which spack) solve zlib
-        if [ "${{ needs.changes.outputs.with_coverage }}" == "true" ] && [ "${{ matrix.python-version }}" == "3.8" ]
+        if [ "${{ needs.changes.outputs.with_coverage }}" == "true" ]
         then
           coverage run $(which spack) unit-test -x
           coverage combine
