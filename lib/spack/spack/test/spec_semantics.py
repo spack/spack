@@ -1190,14 +1190,12 @@ def test_is_extension_after_round_trip_to_dict(config, spec_str):
 
 
 def test_malformed_spec_dict():
-    try:
+    with pytest.raises(SpecError, match='malformed'):
         Spec.from_dict({'spec': {'nodes': [{'dependencies': {'name': 'foo'}}]}})
-    except SpecError as e:
-        assert 'malformed' in str(e)
 
 
 def test_spec_dict_hashless_dep():
-    try:
+    with pytest.raises(SpecError, match="Couldn't parse"):
         Spec.from_dict(
             {
                 'spec': {
@@ -1215,5 +1213,3 @@ def test_spec_dict_hashless_dep():
                 }
             }
         )
-    except SpecError as e:
-        assert "Couldn't parse" in str(e)

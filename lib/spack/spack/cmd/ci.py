@@ -78,7 +78,7 @@ on the mirror""")
         default=False, help="""Spack always check specs against configured
 binary mirrors when generating the pipeline, regardless of whether or not
 DAG pruning is enabled.  This flag controls whether it might attempt to
-fetch remote spec descriptor files directly (ensuring no spec is rebuilt if it
+fetch remote spec files directly (ensuring no spec is rebuilt if it
 is present on the mirror), or whether it should reduce pipeline generation time
 by assuming all remote buildcache indices are up to date and only use those
 to determine whether a given spec is up to date on mirrors.  In the latter

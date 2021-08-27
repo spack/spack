@@ -345,32 +345,7 @@ spec:
     arch:
       platform: linux
       platform_os: rhel7
-      target:
-        name: broadwell
-        vendor: GenuineIntel
-        features:
-        - adx
-        - aes
-        - avx
-        - avx2
-        - bmi1
-        - bmi2
-        - f16c
-        - fma
-        - mmx
-        - movbe
-        - pclmulqdq
-        - popcnt
-        - rdrand
-        - rdseed
-        - sse
-        - sse2
-        - sse4_1
-        - sse4_2
-        - ssse3
-        generation: 0
-        parents:
-        - haswell
+      target: x86_64
     compiler:
       name: gcc
       version: 8.3.0
@@ -400,32 +375,7 @@ spec:
     arch:
       platform: linux
       platform_os: rhel7
-      target:
-        name: broadwell
-        vendor: GenuineIntel
-        features:
-        - adx
-        - aes
-        - avx
-        - avx2
-        - bmi1
-        - bmi2
-        - f16c
-        - fma
-        - mmx
-        - movbe
-        - pclmulqdq
-        - popcnt
-        - rdrand
-        - rdseed
-        - sse
-        - sse2
-        - sse4_1
-        - sse4_2
-        - ssse3
-        generation: 0
-        parents:
-        - haswell
+      target: x86_64
     compiler:
       name: gcc
       version: 8.3.0
@@ -444,3 +394,5 @@ spec:
     spec = Spec.from_yaml(yaml)
     spec.concretize()
     print(spec.to_yaml(hash=ht.build_hash))
+    # TODO: Check eq dag
+    # Change target to be x86_64 to get rid of all feature stuff

@@ -1678,7 +1678,7 @@ class Spec(object):
             deps_list = []
             for name, dspec in sorted(deps.items()):
                 name_tuple = ('name', name)
-                hash_tuple = (hash.attr[1:], dspec.spec._cached_hash(hash))
+                hash_tuple = (hash.name, dspec.spec._cached_hash(hash))
                 type_tuple = ('type', sorted(str(s) for s in dspec.deptypes))
                 deps_list.append(syaml.syaml_dict([name_tuple,
                                                    hash_tuple,
@@ -1689,7 +1689,7 @@ class Spec(object):
         if self._build_spec:
             d['build_spec'] = syaml.syaml_dict([
                 ('name', self.build_spec.name),
-                (hash.attr[1:], self.build_spec._cached_hash(hash))
+                (hash.name, self.build_spec._cached_hash(hash))
             ])
         return d
 
@@ -1780,14 +1780,14 @@ class Spec(object):
         node_list = []  # Using a list to preserve preorder traversal for hash.
         hash_set = set()
         for s in self.traverse(order='pre', deptype=hash.deptype):
-            spec_hash = s.node_dict_with_hashes(hash)[hash.attr[1:]]
+            spec_hash = s.node_dict_with_hashes(hash)[hash.name]
             if spec_hash not in hash_set:
                 node_list.append(s.node_dict_with_hashes(hash))
                 hash_set.add(spec_hash)
             if s.build_spec is not s:
                 build_spec_list = s.build_spec.to_dict(hash)['spec']['nodes']
                 for node in build_spec_list:
-                    node_hash = node[hash.attr[1:]]
+                    node_hash = node[hash.name]
                     if node_hash not in hash_set:
                         node_list.append(node)
                         hash_set.add(node_hash)
@@ -1801,7 +1801,7 @@ class Spec(object):
         spec is concrete, the full hash is added as well.  If 'build' is in
         the hash_type, the build hash is also added. """
         node = self.to_node_dict(hash)
-        node[ht.dag_hash.attr[1:]] = self.dag_hash()
+        node[ht.dag_hash.name] = self.dag_hash()
 
         # full_hash and build_hash are lazily computed -- but if we write
         # a spec out, we want them to be included. This is effectively
@@ -1824,9 +1824,9 @@ class Spec(object):
                 self._hashes_final and self._build_hash or  # cached and final
                 not self._hashes_final)                     # lazily compute
             if write_full_hash:
-                node[ht.full_hash.attr[1:]] = self.full_hash()
+                node[ht.full_hash.name] = self.full_hash()
             if write_build_hash:
-                node[ht.build_hash.attr[1:]] = self.build_hash()
+                node[ht.build_hash.name] = self.build_hash()
         else:
             node['concrete'] = False
 
@@ -1849,8 +1849,8 @@ class Spec(object):
             # Old format
             name = next(iter(node))
             node = node[name]
-        for hash_type in ht.SpecHashDescriptor.hash_types:
-            setattr(spec, hash_type, node.get(hash_type[1:], None))
+        for h in ht.hashes:
+            setattr(spec, h.attr, node.get(h.name, None))
 
         spec.name = name
         spec.namespace = node.get('namespace', None)
@@ -1922,7 +1922,7 @@ class Spec(object):
         return spec
 
     @staticmethod
-    def build_spec_from_node_dict(node, hash_type=ht.dag_hash.attr[1:]):
+    def build_spec_from_node_dict(node, hash_type=ht.dag_hash.name):
         build_spec_dict = node['build_spec']
         return build_spec_dict['name'], build_spec_dict[hash_type], hash_type
 
@@ -1940,7 +1940,7 @@ class Spec(object):
             yield t
 
     @staticmethod
-    def read_yaml_dep_specs(deps, hash_type=ht.dag_hash.attr[1:]):
+    def read_yaml_dep_specs(deps, hash_type=ht.dag_hash.name):
         """Read the DependencySpec portion of a YAML-formatted Spec.
 
         This needs to be backward-compatible with older spack spec
@@ -1961,9 +1961,9 @@ class Spec(object):
                 dep_hash, deptypes = elt
             elif isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
-                for key in (ht.full_hash.attr[1:],
-                            ht.build_hash.attr[1:],
-                            ht.dag_hash.attr[1:]):
+                for key in (ht.full_hash.name,
+                            ht.build_hash.name,
+                            ht.dag_hash.name):
                     if key in elt:
                         dep_hash, deptypes = elt[key], elt['type']
                         hash_type = key
@@ -2185,7 +2185,7 @@ class Spec(object):
                         break
 
         if not any_deps:  # If we never see a dependency...
-            hash_type = ht.dag_hash.attr[1:]  # use the full_hash provenance
+            hash_type = ht.dag_hash.name  # use the full_hash provenance
         elif not hash_type:  # Seen a dependency, still don't know hash_type
             raise spack.error.SpecError("Spec dictionary contains malformed "
                                         "dependencies. Old format?")
@@ -4447,8 +4447,8 @@ class Spec(object):
                 # Record whether hashes are already cached
                 # So we don't try to compute a hash from insufficient
                 # provenance later
-                has_build_hash = getattr(dep, ht.build_hash.attr[1:], None)
-                has_full_hash = getattr(dep, ht.full_hash.attr[1:], None)
+                has_build_hash = getattr(dep, ht.build_hash.name, None)
+                has_full_hash = getattr(dep, ht.full_hash.name, None)
 
                 # package hash cannot be affected by splice
                 dep.clear_cached_hashes(ignore=['package_hash'])
@@ -4468,10 +4468,10 @@ class Spec(object):
         """
         Clears all cached hashes in a Spec, while preserving other properties.
         """
-        for attr in ht.SpecHashDescriptor.hash_types:
-            if attr not in ignore:
-                if hasattr(self, attr):
-                    setattr(self, attr, None)
+        for h in ht.hashes:
+            if h.attr not in ignore:
+                if hasattr(self, h.attr):
+                    setattr(self, h.attr, None)
 
     def __hash__(self):
         # If the spec is concrete, we leverage the DAG hash and just use

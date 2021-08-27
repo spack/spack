@@ -380,7 +380,7 @@ def _createtarball(env, spec_file=None, packages=None, add_spec=True,
             specfile_contents = fd.read()
             tty.debug('createtarball read specfile contents:')
             tty.debug(specfile_contents)
-            if spec_file.endswith('json'):
+            if spec_file.endswith('.json'):
                 s = Spec.from_json(specfile_contents)
             else:
                 s = Spec.from_yaml(specfile_contents)

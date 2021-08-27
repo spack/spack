@@ -741,10 +741,10 @@ def generate_package_index(cache_prefix):
             _, _, spec_file = web_util.read_from_url(spec_url)
             spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
             # Need full spec.json name or this gets confused with index.json.
-            if spec_url.endswith('json'):
+            if spec_url.endswith('.json'):
                 spec_dict = sjson.load(spec_file_contents)
                 s = Spec.from_json(spec_file_contents)
-            elif spec_url.endswith('yaml'):
+            elif spec_url.endswith('.yaml'):
                 spec_dict = syaml.load(spec_file_contents)
                 s = Spec.from_yaml(spec_file_contents)
             all_mirror_specs[s.dag_hash()] = {
@@ -1025,9 +1025,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
 
     with open(spec_file, 'r') as inputfile:
         content = inputfile.read()
-        if spec_file.endswith('yaml'):
+        if spec_file.endswith('.yaml'):
             spec_dict = yaml.load(content)
-        elif spec_file.endswith('json'):
+        elif spec_file.endswith('.json'):
             spec_dict = sjson.load(content)
         else:
             raise ValueError(
@@ -1773,7 +1773,7 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
         cached_pkg_specs = [item[name] for item in nodes if name in item]
     elif nodes and spec_dict['spec']['_meta']['version'] == 2:
         cached_pkg_specs = [item for item in nodes
-                            if item[ht.dag_hash.attr[1:]] == spec.dag_hash()]
+                            if item[ht.dag_hash.name] == spec.dag_hash()]
     cached_target = cached_pkg_specs[0] if cached_pkg_specs else None
 
     # If either the full_hash didn't exist in the specfile, or it
@@ -1785,11 +1785,11 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
     if not cached_target:
         reason = 'did not find spec in specfile contents'
         rebuild = True
-    elif ht.full_hash.attr[1:] not in cached_target:
+    elif ht.full_hash.name not in cached_target:
         reason = 'full_hash was missing from remote specfile'
         rebuild = True
     else:
-        full_hash = cached_target[ht.full_hash.attr[1:]]
+        full_hash = cached_target[ht.full_hash.name]
         if full_hash != pkg_full_hash:
             reason = 'hash mismatch, remote = {0}, local = {1}'.format(
                 full_hash, pkg_full_hash)

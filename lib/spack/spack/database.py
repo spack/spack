@@ -662,7 +662,7 @@ class Database(object):
                 spec_dict[name]['hash'] = hash_key
         else:
             # new format, already a singleton
-            spec_dict[hash.attr[1:]] = hash_key
+            spec_dict[hash.name] = hash_key
 
         # Build spec from dict first.
         spec = spack.spec.Spec.from_node_dict(spec_dict)
