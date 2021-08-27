@@ -4386,7 +4386,7 @@ class Spec(object):
         return hash(lang.tuplify(self._cmp_iter))
 
     def __reduce__(self):
-        return Spec.from_dict, (self.to_dict(hash=ht.full_hash),)
+        return Spec.from_dict, (self.to_dict(hash=ht.build_hash),)
 
 
 class LazySpecCache(collections.defaultdict):
