@@ -4385,6 +4385,9 @@ class Spec(object):
         # so we hope it only runs on abstract specs, which are small.
         return hash(lang.tuplify(self._cmp_iter))
 
+    def __reduce__(self):
+        return Spec.from_dict, (self.to_dict(hash=ht.full_hash),)
+
 
 class LazySpecCache(collections.defaultdict):
     """Cache for Specs that uses a spec_like as key, and computes lazily
