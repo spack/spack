@@ -40,9 +40,6 @@ class Tioga(CMakePackage, CudaPackage):
         spec = self.spec
 
         args = [
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'),
             self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
