@@ -9,7 +9,7 @@ from spack.environment import Environment
 
 
 def test_environment_pickle(tmpdir):
-    env1 = Environment(tmpdir)
+    env1 = Environment(str(tmpdir))
     obj = pickle.dumps(env1)
     env2 = pickle.loads(obj)
     assert isinstance(env2, Environment)
