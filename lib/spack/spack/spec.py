@@ -2093,28 +2093,7 @@ class Spec(object):
         Parameters:
         data -- a nested dict/list data structure read from YAML or JSON.
         """
-        nodes = data['spec']
-
-        # Read nodes out of list.  Root spec is the first element;
-        # dependencies are the following elements.
-        dep_list = [Spec.from_node_dict(node) for node in nodes]
-        if not dep_list:
-            raise spack.error.SpecError("YAML spec contains no nodes.")
-        deps = dict((spec.name, spec) for spec in dep_list)
-        spec = dep_list[0]
-
-        for node in nodes:
-            # get dependency dict from the node.
-            name = next(iter(node))
-
-            if 'dependencies' not in node[name]:
-                continue
-
-            yaml_deps = node[name]['dependencies']
-            for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
-                deps[name]._add_dependency(deps[dname], dtypes)
-
-        return spec
+        return _spec_from_dict(data)
 
     @staticmethod
     def from_yaml(stream):
@@ -4384,6 +4363,43 @@ class Spec(object):
         # slow for large specs because it traverses the whole spec graph,
         # so we hope it only runs on abstract specs, which are small.
         return hash(lang.tuplify(self._cmp_iter))
+
+    def __reduce__(self):
+        return _spec_from_dict, (self.to_dict(hash=ht.build_hash),)
+
+
+# Note: This function has been refactored from being a static method
+# of Spec to be a function at the module level. This was needed to
+# support its use in __reduce__ to pickle a Spec object in Python 2.
+# It can be moved back safely after we drop support for Python 2.7
+def _spec_from_dict(data):
+    """Construct a spec from YAML.
+
+    Parameters:
+    data -- a nested dict/list data structure read from YAML or JSON.
+    """
+    nodes = data['spec']
+
+    # Read nodes out of list.  Root spec is the first element;
+    # dependencies are the following elements.
+    dep_list = [Spec.from_node_dict(node) for node in nodes]
+    if not dep_list:
+        raise spack.error.SpecError("YAML spec contains no nodes.")
+    deps = dict((spec.name, spec) for spec in dep_list)
+    spec = dep_list[0]
+
+    for node in nodes:
+        # get dependency dict from the node.
+        name = next(iter(node))
+
+        if 'dependencies' not in node[name]:
+            continue
+
+        yaml_deps = node[name]['dependencies']
+        for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
+            deps[name]._add_dependency(deps[dname], dtypes)
+
+    return spec
 
 
 class LazySpecCache(collections.defaultdict):
