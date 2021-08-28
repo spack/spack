@@ -9,7 +9,7 @@ from spack import *
 class PerlPerl6Slurp(PerlPackage):
     """Perl6::Slurp - Implements the Perl 6 'slurp' built-in"""
 
-    homepage = "http://search.cpan.org/~dconway/Perl6-Slurp-0.051005/lib/Perl6/Slurp.pm"
+    homepage = "https://metacpan.org/pod/Perl6::Slurp"
     url      = "http://search.cpan.org/CPAN/authors/id/D/DC/DCONWAY/Perl6-Slurp-0.051005.tar.gz"
 
     version('0.051005', sha256='0e0ceb30495ecf64dc6cacd12113d604871104c0cfe153487b8d68bc9393d78f')

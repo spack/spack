@@ -163,7 +163,7 @@ case "$command" in
         lang_flags=F
         debug_flags="-g"
         ;;
-    ld)
+    ld|ld.gold|ld.lld)
         mode=ld
         ;;
     *)

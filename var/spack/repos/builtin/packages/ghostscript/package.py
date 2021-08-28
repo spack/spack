@@ -12,7 +12,7 @@ from spack import *
 class Ghostscript(AutotoolsPackage):
     """An interpreter for the PostScript language and for PDF."""
 
-    homepage = "http://ghostscript.com/"
+    homepage = "https://ghostscript.com/"
     url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs926/ghostscript-9.26.tar.gz"
 
     executables = [r'^gs$']

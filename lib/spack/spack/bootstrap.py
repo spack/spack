@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from __future__ import print_function
+
 import contextlib
 import json
 import os
@@ -21,6 +23,7 @@ import llnl.util.tty as tty
 import spack.architecture
 import spack.binary_distribution
 import spack.config
+import spack.environment
 import spack.main
 import spack.paths
 import spack.repo
@@ -265,7 +268,7 @@ def spack_python_interpreter():
     which Spack is currently running as the only Python external spec
     available.
     """
-    python_prefix = os.path.dirname(os.path.dirname(sys.executable))
+    python_prefix = sys.exec_prefix
     external_python = spec_for_current_python()
 
     entry = {
@@ -419,15 +422,16 @@ def _bootstrap_config_scopes():
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
-    with spack.architecture.use_platform(spack.architecture.real_platform()):
-        with spack.repo.use_repositories(spack.paths.packages_path):
-            with spack.store.use_store(bootstrap_store_path):
-                # Default configuration scopes excluding command line
-                # and builtin but accounting for platform specific scopes
-                config_scopes = _bootstrap_config_scopes()
-                with spack.config.use_configuration(*config_scopes):
-                    with spack_python_interpreter():
-                        yield
+    with spack.environment.deactivate_environment():
+        with spack.architecture.use_platform(spack.architecture.real_platform()):
+            with spack.repo.use_repositories(spack.paths.packages_path):
+                with spack.store.use_store(bootstrap_store_path):
+                    # Default configuration scopes excluding command line
+                    # and builtin but accounting for platform specific scopes
+                    config_scopes = _bootstrap_config_scopes()
+                    with spack.config.use_configuration(*config_scopes):
+                        with spack_python_interpreter():
+                            yield
 
 
 def store_path():

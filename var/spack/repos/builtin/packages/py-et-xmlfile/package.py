@@ -9,7 +9,7 @@ from spack import *
 class PyEtXmlfile(PythonPackage):
     """An implementation of lxml.xmlfile for the standard library."""
 
-    homepage = "https://bitbucket.org/openpyxl/et_xmlfile"
+    homepage = "https://et-xmlfile.readthedocs.io/en/latest/"
     pypi = "et_xmlfile/et_xmlfile-1.0.1.tar.gz"
 
     version('1.0.1', sha256='614d9722d572f6246302c4491846d2c393c199cfa4edc9af593437691683335b')

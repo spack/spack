@@ -20,7 +20,7 @@ class RPbkrtest(RPackage):
     paper by Halehoh and Hojsgaard, (2012, <doi:10.18637/jss.v059.i09>).
     Please see 'citation("pbkrtest")' for citation details."""
 
-    homepage = "http://people.math.aau.dk/~sorenh/software/pbkrtest/"
+    homepage = "https://cran.r-project.org/web/packages/pbkrtest/index.html"
     url      = "https://cloud.r-project.org/src/contrib/pbkrtest_0.4-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pbkrtest"
 

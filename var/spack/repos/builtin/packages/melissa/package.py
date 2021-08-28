@@ -20,7 +20,8 @@ class Melissa(CMakePackage):
 
     version('master', branch='master')
     version('develop', branch='develop')
-    version('0.7.0', sha256='a801d0b512e31a0750f98cfca80f8338985e06abf9b26e96f7645a022864e41c')
+    version('0.7.1', sha256='c30584f15fecf6297712a88e4d28851bfd992f31209fd7bb8af2feebe73d539d')
+    version('0.7.0', sha256='a801d0b512e31a0750f98cfca80f8338985e06abf9b26e96f7645a022864e41c', deprecated=True)
 
     variant('no_mpi_api', default=False, description="Enable the deprecated no-MPI API")
     variant('shared', default=True, description="Build shared libraries")

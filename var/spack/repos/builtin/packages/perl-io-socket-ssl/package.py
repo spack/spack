@@ -11,7 +11,7 @@ from spack import *
 class PerlIoSocketSsl(PerlPackage):
     """SSL sockets with IO::Socket interface"""
 
-    homepage = "http://search.cpan.org/~sullr/IO-Socket-SSL-2.052/lib/IO/Socket/SSL.pod"
+    homepage = "https://metacpan.org/dist/IO-Socket-SSL/view/lib/IO/Socket/SSL.pod"
     url      = "http://search.cpan.org/CPAN/authors/id/S/SU/SULLR/IO-Socket-SSL-2.052.tar.gz"
 
     version('2.052', sha256='e4897a9b17cb18a3c44aa683980d52cef534cdfcb8063d6877c879bfa2f26673')

@@ -14,7 +14,7 @@ class RXts(RPackage):
     allowing for user level customization and extension, while simplifying
     cross-class interoperability."""
 
-    homepage = "http://r-forge.r-project.org/projects/xts/"
+    homepage = "https://r-forge.r-project.org/projects/xts/"
     url      = "https://cloud.r-project.org/src/contrib/xts_0.11-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/xts"
 

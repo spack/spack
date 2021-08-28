@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class PyGrpcio(PythonPackage):
     """HTTP/2-based RPC framework."""
@@ -46,6 +48,7 @@ class PyGrpcio(PythonPackage):
         env.set('GRPC_PYTHON_BUILD_SYSTEM_CARES', True)
         # https://github.com/grpc/grpc/pull/24449
         env.set('GRPC_BUILD_WITH_BORING_SSL_ASM', '')
+        env.set('GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS', str(make_jobs))
 
         for dep in self.spec.dependencies(deptype='link'):
             query = self.spec[dep.name]

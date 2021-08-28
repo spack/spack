@@ -14,7 +14,7 @@ class Exempi(AutotoolsPackage):
     a command line tool.
     """
 
-    homepage = "http://libopenraw.freedesktop.org/wiki/Exempi"
+    homepage = "https://libopenraw.freedesktop.org/wiki/Exempi"
     url      = "https://libopenraw.freedesktop.org/download/exempi-2.5.2.tar.bz2"
 
     version('2.5.2', sha256='52f54314aefd45945d47a6ecf4bd21f362e6467fa5d0538b0d45a06bc6eaaed5')
