@@ -9,7 +9,7 @@ from spack import *
 
 class G4pii(Package):
     """Geant4 data for shell ionisation cross-sections"""
-    homepage = "http://geant4.web.cern.ch"
+    homepage = "https://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4PII.1.3.tar.gz"
 
     tags = ['hep']

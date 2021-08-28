@@ -9,7 +9,7 @@ from spack import *
 class PerlDbdMysql(PerlPackage):
     """MySQL driver for the Perl5 Database Interface (DBI)"""
 
-    homepage = "http://search.cpan.org/~michielb/DBD-mysql-4.043/lib/DBD/mysql.pm"
+    homepage = "https://metacpan.org/pod/DBD::mysql"
     url      = "http://search.cpan.org/CPAN/authors/id/M/MI/MICHIELB/DBD-mysql-4.043.tar.gz"
 
     version('4.043', sha256='629f865e8317f52602b2f2efd2b688002903d2e4bbcba5427cb6188b043d6f99')

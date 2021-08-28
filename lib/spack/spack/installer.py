@@ -367,8 +367,13 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
 
     pkg_id = package_id(pkg)
     tty.msg('Extracting {0} from binary cache'.format(pkg_id))
-    binary_distribution.extract_tarball(binary_spec, tarball, allow_root=False,
-                                        unsigned=unsigned, force=False)
+
+    # don't print long padded paths while extracting/relocating binaries
+    with spack.util.path.filter_padding():
+        binary_distribution.extract_tarball(
+            binary_spec, tarball, allow_root=False, unsigned=unsigned, force=False
+        )
+
     pkg.installed_from_binary_cache = True
     spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
     return True
@@ -1564,6 +1569,9 @@ class PackageInstaller(object):
                             if os.path.exists(rec.path):
                                 with fs.replace_directory_transaction(
                                         rec.path):
+                                    # fs transaction will put the old prefix
+                                    # back on failure, so make sure to keep it.
+                                    keep_prefix = True
                                     self._install_task(task)
                             else:
                                 tty.debug("Missing installation to overwrite")

@@ -9,7 +9,7 @@ class PyPil(PythonPackage):
     to your Python interpreter. This library supports many file formats,
     and provides powerful image processing and graphics capabilities."""
 
-    homepage = "http://www.pythonware.com/products/pil/"
+    homepage = "https://pillow.readthedocs.io/en/stable/"
     url      = "http://effbot.org/media/downloads/Imaging-1.1.7.tar.gz"
 
     version('1.1.7', sha256='895bc7c2498c8e1f9b99938f1a40dc86b3f149741f105cf7c7bd2e0725405211')

@@ -13,7 +13,7 @@ class Oclint(Package):
        reducing defects by inspecting C, C++ and Objective-C code and
        looking for potential problems"""
 
-    homepage = "http://oclint.org/"
+    homepage = "https://oclint.org/"
     url      = "https://github.com/oclint/oclint/archive/v0.13.tar.gz"
 
     version('0.13', sha256='a0fd188673863e6357d6585b9bb9c3affe737df134b9383a1a5ed021d09ed848')

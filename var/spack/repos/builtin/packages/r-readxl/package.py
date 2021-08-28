@@ -13,7 +13,7 @@ class RReadxl(RPackage):
     <https://rapidxml.sourceforge.net>. Works on Windows, Mac and Linux
     without external dependencies."""
 
-    homepage = "http://readxl.tidyverse.org/"
+    homepage = "https://readxl.tidyverse.org/"
     url      = "https://cloud.r-project.org/src/contrib/readxl_1.1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/readxl"
 

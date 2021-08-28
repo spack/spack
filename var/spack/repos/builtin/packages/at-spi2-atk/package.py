@@ -10,7 +10,7 @@ class AtSpi2Atk(MesonPackage):
     """The At-Spi2 Atk package contains a library that bridges ATK to
        At-Spi2 D-Bus service."""
 
-    homepage = "http://www.linuxfromscratch.org/blfs/view/cvs/x/at-spi2-atk.html"
+    homepage = "https://www.linuxfromscratch.org/blfs/view/cvs/x/at-spi2-atk.html"
     url      = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-atk/2.26/at-spi2-atk-2.26.1.tar.xz"
     list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-atk"
     list_depth = 1

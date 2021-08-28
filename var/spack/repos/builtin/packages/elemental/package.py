@@ -13,7 +13,7 @@ class Elemental(CMakePackage):
     """Elemental: Distributed-memory dense and sparse-direct linear algebra
        and optimization library."""
 
-    homepage = "http://libelemental.org"
+    homepage = "https://libelemental.org"
     url      = "https://github.com/elemental/Elemental/archive/v0.87.7.tar.gz"
     git      = "https://github.com/elemental/Elemental.git"
 

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import contextlib
 import copy
 import os
 import re
@@ -1602,7 +1603,22 @@ class Environment(object):
         # Dependency-only specs will have value None
         matches = {}
 
+        if not isinstance(spec, spack.spec.Spec):
+            spec = spack.spec.Spec(spec)
+
         for user_spec, concretized_user_spec in self.concretized_specs():
+            # Deal with concrete specs differently
+            if spec.concrete:
+                # Matching a concrete spec is more restrictive
+                # than just matching the dag hash
+                is_match = (
+                    spec in concretized_user_spec and
+                    concretized_user_spec[spec.name].build_hash() == spec.build_hash()
+                )
+                if is_match:
+                    matches[spec] = spec
+                continue
+
             if concretized_user_spec.satisfies(spec):
                 matches[concretized_user_spec] = user_spec
             for dep_spec in concretized_user_spec.traverse(root=False):
@@ -2127,6 +2143,17 @@ def is_latest_format(manifest):
     top_level_key = _top_level_key(data)
     changed = spack.schema.env.update(data[top_level_key])
     return not changed
+
+
+@contextlib.contextmanager
+def deactivate_environment():
+    """Deactivate an active environment for the duration of the context."""
+    global _active_environment
+    current, _active_environment = _active_environment, None
+    try:
+        yield
+    finally:
+        _active_environment = current
 
 
 class SpackEnvironmentError(spack.error.SpackError):

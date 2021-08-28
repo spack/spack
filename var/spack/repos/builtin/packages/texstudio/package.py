@@ -10,7 +10,7 @@ class Texstudio(QMakePackage):
     """TeXstudio is a fully featured LaTeX editor, whose goal is to make
     writing LaTeX documents as easy and comfortable as possible."""
 
-    homepage = "http://www.texstudio.org"
+    homepage = "https://www.texstudio.org"
     url      = "https://github.com/texstudio-org/texstudio/archive/2.12.16.tar.gz"
     git      = "https://github.com/texstudio-org/texstudio.git"
 

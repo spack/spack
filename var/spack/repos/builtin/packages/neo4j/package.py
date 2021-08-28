@@ -13,7 +13,7 @@ class Neo4j(MavenPackage):
     enterprise-quality database. For many applications, Neo4j offers orders
     of magnitude performance benefits compared to relational DBs."""
 
-    homepage = "http://neo4j.com/"
+    homepage = "https://neo4j.com/"
     url      = "https://github.com/neo4j/neo4j/archive/4.0.3.tar.gz"
 
     version('4.0.3',  sha256='19d79052657665dd661bbe906b3552b88108bf379d39fa007b883fff718cabee')

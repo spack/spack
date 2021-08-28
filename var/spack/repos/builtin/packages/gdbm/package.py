@@ -13,7 +13,7 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     These routines are provided to a programmer needing to create and
     manipulate a hashed database."""
 
-    homepage = "http://www.gnu.org.ua/software/gdbm/gdbm.html"
+    homepage = "https://www.gnu.org.ua/software/gdbm/gdbm.html"
     gnu_mirror_path = "gdbm/gdbm-1.13.tar.gz"
 
     version('1.19',   sha256='37ed12214122b972e18a0d94995039e57748191939ef74115b1d41d8811364bc')

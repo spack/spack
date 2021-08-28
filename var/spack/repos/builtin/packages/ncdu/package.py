@@ -14,7 +14,7 @@ class Ncdu(Package):
     to run in any minimal POSIX-like environment with ncurses installed.
     """
 
-    homepage = "http://dev.yorhel.nl/ncdu"
+    homepage = "https://dev.yorhel.nl/ncdu"
     url      = "http://dev.yorhel.nl/download/ncdu-1.11.tar.gz"
 
     version('1.15.1', sha256='b02ddc4dbf1db139cc6fbbe2f54a282770380f0ca5c17089855eab52a9ea3fb0')

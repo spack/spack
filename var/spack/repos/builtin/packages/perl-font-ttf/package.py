@@ -9,7 +9,7 @@ from spack import *
 class PerlFontTtf(PerlPackage):
     """Perl module for TrueType Font hacking"""
 
-    homepage = "http://search.cpan.org/~bhallissy/Font-TTF-1.06/lib/Font/TTF.pm"
+    homepage = "https://metacpan.org/pod/Font::TTF"
     url      = "http://search.cpan.org/CPAN/authors/id/B/BH/BHALLISSY/Font-TTF-1.06.tar.gz"
 
     version('1.06', sha256='4b697d444259759ea02d2c442c9bffe5ffe14c9214084a01f743693a944cc293')

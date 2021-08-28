@@ -14,7 +14,7 @@ class Postgresql(AutotoolsPackage):
     that has earned it a strong reputation for reliability, data integrity, and
     correctness."""
 
-    homepage = "http://www.postgresql.org/"
+    homepage = "https://www.postgresql.org/"
     url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
     list_url = "http://ftp.postgresql.org/pub/source"
     list_depth = 1

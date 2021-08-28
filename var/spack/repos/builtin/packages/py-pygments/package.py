@@ -9,7 +9,7 @@ from spack import *
 class PyPygments(PythonPackage):
     """Pygments is a syntax highlighting package written in Python."""
 
-    homepage = "http://pygments.org/"
+    homepage = "https://pygments.org/"
     pypi = "Pygments/Pygments-2.4.2.tar.gz"
 
     version('2.10.0', sha256='f398865f7eb6874156579fdf36bc840a03cab64d1cde9e93d68f46a425ec52c6')

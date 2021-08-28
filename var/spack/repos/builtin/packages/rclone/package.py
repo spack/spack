@@ -10,7 +10,7 @@ class Rclone(Package):
     """Rclone is a command line program to sync files and directories
        to and from various cloud storage providers"""
 
-    homepage = "http://rclone.org"
+    homepage = "https://rclone.org"
     url      = "https://github.com/ncw/rclone/releases/download/v1.43/rclone-v1.43.tar.gz"
 
     maintainers = ['alecbcs']
