@@ -12,10 +12,12 @@ class Recorder(AutotoolsPackage):
 
     homepage = "https://github.com/uiuc-hpc/Recorder"
     url      = "https://github.com/uiuc-hpc/Recorder/archive/v2.1.4.tar.gz"
+    git      = "https://github.com/uiuc-hpc/Recorder.git"
 
     maintainers = ['wangvsa']
 
-    version('master', git='https://github.com/uiuc-hpc/Recorder.git')
+    version('master', branch='master')
+    version('pilgrim', branch='pilgrim')
     version('2.2.1', sha256='90634a580f075e9773cab4e46eb56459e917df1676b01655dec5f61e9d6b9bea')
     version('2.2.0', sha256='b47c208c18e615e0087486cc448f904d8ce7dbcc2535d06e185b5d28ad6e80f8')
     version('2.1.6', sha256='35985a0cb456d806952bf68f05127026f0dd8e26f70d725ae5cc37f109600889')
