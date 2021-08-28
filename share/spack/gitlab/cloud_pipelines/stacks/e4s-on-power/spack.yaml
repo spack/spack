@@ -273,22 +273,21 @@ spack:
     - slepc
     - stc
     - strumpack ~slate
-    # holding off on the specs until infrastructure is ready
-    # - sundials
-    # - superlu
-    # - superlu-dist
-    # - swig
-    # - swig@4.0.2-fortran
-    # - sz
-    # - tasmanian
-    # - tau
-    #- trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +boost +superlu-dist gotype=long
-    # - turbine
-    # - umap
-    # - unifyfs@0.9.1
-    # - upcxx
-    # - veloc
-    # - zfp
+    - sundials
+    - superlu
+    - superlu-dist
+    - swig
+    - swig@4.0.2-fortran
+    - sz
+    - tasmanian
+    - tau
+    - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +boost +superlu-dist gotype=long
+    - turbine
+    - umap
+    - unifyfs@0.9.1
+    - upcxx
+    - veloc
+    - zfp
 
     # build issues
     #- dealii
