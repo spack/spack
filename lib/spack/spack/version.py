@@ -1140,7 +1140,7 @@ class CommitLookup(object):
                 commit_to_version[commit.strip()] = spack_version
 
             # Get list of all commits, this is in reverse order
-            commits = self.fetcher.git("log", "--pretty=format:%H", output=str)
+            commits = self.fetcher.git("log", "--all", "--pretty=format:%H", output=str)
 
         # commits[0] is most recent, commits[-2] is first
         commits = [c for c in commits.split('\n') if c]
