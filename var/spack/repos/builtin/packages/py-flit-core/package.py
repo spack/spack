@@ -3,25 +3,30 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+import os
+import zipfile
+
 from spack import *
 
 
-class PyFlitCore(Package):
+class PyFlitCore(PythonPackage):
     """Distribution-building parts of Flit."""
 
     homepage = "https://github.com/takluyver/flit"
-    url = "https://pypi.io/packages/py3/f/flit-core/flit_core-3.3.0-py3-none-any.whl"
+    url = "https://github.com/takluyver/flit/archive/refs/tags/3.3.0.tar.gz"
     maintainers = ['takluyver']
 
-    version('3.3.0', sha256='9b247b3095cb3c43933a59a7433f92ddfdd7fc843e08ef0f4550d53a9cfbbef6', expand=False)
+    version('3.3.0', sha256='f5340b268563dd408bf8e2df6dbc8d4d08bc76cdff0d8c7f8a4be94e5f01f22f')
 
-    extends('python')
     depends_on('python@3.4:', type=('build', 'run'))
-    depends_on('py-pip', type='build')
     depends_on('py-toml', type=('build', 'run'))
 
+    def build(self, spec, prefix):
+        with working_dir('flit_core'):
+            python('build_dists.py')
+
     def install(self, spec, prefix):
-        # Install wheel instead of installing from source
-        # to prevent circular dependency on flit
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+        wheel = glob.glob(os.path.join('flit_core', 'dist', '*.whl'))[0]
+        with zipfile.ZipFile(wheel) as f:
+            f.extractall(site_packages_dir)
