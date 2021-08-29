@@ -23,4 +23,3 @@ class Flap(CMakePackage):
         elif name == 'fflags':
             flags.append('-cpp')
         return (flags, None, None)
-
