@@ -14,6 +14,7 @@ class PySalib(PythonPackage):
 
     maintainers = ['schmitts']
 
+    version('1.4.4', sha256='50a6459088700f55261a683752818530d14ede30cece2c324ac94d4b9e288b6d')
     version('1.4.0.1', sha256='dbf6e865af9f3be82a79cf64889ed66d6d3b6803f0c22a242a112876789d49e7')
 
     depends_on('py-setuptools@38.3:', type=('build', 'run'))
@@ -22,3 +23,6 @@ class PySalib(PythonPackage):
     depends_on('py-matplotlib@3.2.2:', type=('build', 'run'))
     depends_on('py-pandas@1.1.2:', type=('build', 'run'))
     depends_on('py-pathos@0.2.5:', type=('build', 'run'))
+    depends_on('py-importlib-metadata', type=('build', 'run'), when='@1.4.4: ^python@:3.7')
+    depends_on('py-setuptools-scm', type=('build', 'run'), when='@1.4.4:')
+    depends_on('py-wheel', type=('build', 'run'), when='@1.4.4:')
