@@ -46,6 +46,7 @@ class PyPythran(PythonPackage):
     depends_on('py-beniget', when='@:0.9.3', type=('build', 'run'))
     depends_on('llvm-openmp', when='%apple-clang', type=('build', 'run'))
 
+    # https://github.com/serge-sans-paille/pythran/pull/1856
     patch('omp.patch', when='@0.9.10:0.9.12')
 
     def patch(self):
