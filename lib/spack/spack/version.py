@@ -430,7 +430,7 @@ class Version(object):
         self_cmp = self._cmp(commit_info=commits)
         other_cmp = other._cmp(commit_info=commits)
 
-        if self_cmp[:-1] != other[:-1]:
+        if self_cmp[:-1] != other_cmp[:-1]:
             return False
 
         sl = self_cmp[-1]
