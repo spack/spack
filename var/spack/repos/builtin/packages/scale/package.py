@@ -1,10 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import subprocess
 
 from spack import *
 
@@ -58,16 +57,16 @@ class Scale(MakefilePackage):
         env['SCALE_SYS'] = scale_sys_str
 
         # set SCALE_NETCDF_INCLUDE
-        nc_str = subprocess.Popen(('nc-config', '--cflags', '--fflags'),
-                                  stdout=subprocess.PIPE).communicate()[0]
+        nc_config = which('nc-config')
+        nc_str = nc_config('--cflags', '--fflags', output=str)
         try:
             env['SCALE_NETCDF_INCLUDE'] = nc_str.replace('\n', ' ')
         except TypeError:  # for python3
             env['SCALE_NETCDF_INCLUDE'] = nc_str.decode().replace('\n', ' ')
 
         # set SCALE_NETCDF_LIBS
-        nc_str = subprocess.Popen(('nc-config', '--libs', '--flibs'),
-                                  stdout=subprocess.PIPE).communicate()[0]
+        nc_config = which('nc-config')
+        nc_str = nc_config('--libs', '--flibs', output=str)
         try:
             env['SCALE_NETCDF_LIBS'] = nc_str.replace('\n', ' ')
         except TypeError:  # for python3
