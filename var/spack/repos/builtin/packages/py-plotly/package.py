@@ -18,11 +18,11 @@ class PyPlotly(PythonPackage):
     depends_on('python@3.6:', when='@5.2.2:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-requests',   type=('build', 'run'))
     depends_on('py-six',        type=('build', 'run'))
 
     depends_on('py-pytz',             when='@:2.2.0', type=('build', 'run'))
     depends_on('py-decorator@4.0.6:', when='@:2.2.0', type=('build', 'run'))
     depends_on('py-nbformat@4.2.0:',  when='@:2.2.0', type=('build', 'run'))
+    depends_on('py-requests',         when='@:2.2.0', type=('build', 'run'))
 
     depends_on('py-tenacity@6.2.0:',  when='@5.2.2:', type=('build', 'run'))
