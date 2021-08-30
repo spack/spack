@@ -191,11 +191,11 @@ class Version(object):
     def _cmp(self, commit_info=None):
         if self.is_commit and commit_info:
             self_info = commit_info[self.string]
-            prev_version = Version(commit_info['prev_version'])
-            distance = commit_info['distance']
+            prev_version = Version(self_info['prev_version'])
+            distance = self_info['distance']
 
             # If the commit is exactly a known version, use that version
-            if distacne == 0:
+            if distance == 0:
                 return prev_version.version
             # Extend tuple with empty component and distance from known version
             return prev_version.version + (VersionStrComponent(''), distance)
@@ -1112,8 +1112,9 @@ class CommitLookup(object):
             for tag_commit in commit_to_version:
                 try:
                     self.fetcher.git('merge-base', '--is-ancestor', tag_commit, commit)
-                    distance = self.fetcher.git('rev-list', '%s..%s' % (tag_commit, commit), '--count',
-                                                output=str, error=str).strip()
+                    distance = self.fetcher.git(
+                        'rev-list', '%s..%s' % (tag_commit, commit), '--count',
+                        output=str, error=str).strip()
                     ancestor_commits.append((tag_commit, int(distance)))
                 except spack.util.executable.ProcessError:
                     # is-ancestor check will raise a ProcessError when False
