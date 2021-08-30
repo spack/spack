@@ -27,7 +27,6 @@ class Gxsview(QMakePackage):
     depends_on('vtk@8.0:+qt+opengl2')  # +mpi+python are optional
     conflicts('%gcc@:7.2.0', msg='Requires C++17 compiler support')  # need C++17 standard
 
-    # parallel = False
     build_directory = 'gui'
 
     def qmake_args(self):
