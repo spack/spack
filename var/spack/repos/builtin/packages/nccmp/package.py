@@ -15,7 +15,3 @@ class Nccmp(CMakePackage):
     version('1.8.2.0', sha256='7f5dad4e8670568a71f79d2bcebb08d95b875506d3d5faefafe1a8b3afa14f18')
 
     depends_on('netcdf-c')
-
-    def cmake_args(self):
-        args = []
-        return args
