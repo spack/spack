@@ -22,7 +22,6 @@ class Gxsview(QMakePackage):
 
     version('2021.07.01', '000f9b4721d4ee03b02730dbbfe83947f96a60a183342b127f0b6b63b03e8f9a')
 
-    # centos7: spack install --keep-stage gxsview ^vtk@9.0.3+mpi ^hdf5+mpi ^mpich
     depends_on('fontconfig')
     depends_on('qt@5.14.0:+opengl+gui')
     depends_on('vtk@8.0:+qt+opengl2')  # +mpi+python are optional
