@@ -38,7 +38,7 @@ class Hipace(CMakePackage):
     depends_on('cuda@9.2.88:', when='compute=cuda')
     depends_on('mpi', when='+mpi')
     with when('+openpmd'):
-        depends_on('openpmd-api@hipace')
+        depends_on('openpmd-api@0.14.2:')
         depends_on('openpmd-api ~mpi', when='~mpi')
         depends_on('openpmd-api +mpi', when='+mpi')
     with when('compute=omp'):
