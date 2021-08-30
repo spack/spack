@@ -26,7 +26,7 @@ class PyJupyterhub(PythonPackage):
     depends_on('py-tornado@5.0:', type=('build', 'run'))
     depends_on('py-traitlets@4.3.2:', type=('build', 'run'))
     depends_on('py-alembic', type=('build', 'run'))
-    depends_on('py-mako', type=('build', 'run'))
+    depends_on('py-mako', type=('build', 'run'), when='@:1.4.1')
     depends_on('py-async-generator@1.9:', type=('build', 'run'), when='@1.4.1:')
     depends_on('py-async-generator@1.8:', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
