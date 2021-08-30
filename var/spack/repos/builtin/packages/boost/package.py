@@ -291,6 +291,13 @@ class Boost(Package):
     # and https://github.com/boostorg/context/issues/177
     patch("context-macho-gcc.patch", when="@1.65:1.76 +context platform=darwin %gcc")
 
+    # Fix float128 support when building with CUDA and Cray compiler
+    # See https://github.com/boostorg/config/pull/378
+    patch("https://github.com/boostorg/config/commit/fee1ad07968386b6d547f089311b7a2c1bf7fa55.patch",
+          sha256="3b159d65a0d3d2df2a21c6bf56ffaba943fce92d2d41d628b2c4d2e924e0f421",
+          when="@:1.76%cce",
+          level=2)
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies('%nvhpc'):
