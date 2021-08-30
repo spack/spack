@@ -44,7 +44,6 @@ from spack.installer import PackageInstaller
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
-from spack.variant import UnknownVariantError
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
