@@ -2002,31 +2002,16 @@ def _concretize_from_constraints(spec_constraints, tests=False):
         raise InvalidSpecConstraintError(m)
     spec_constraints.remove(root_spec[0])
 
-    invalid_constraints = []
     while True:
-        # Attach all anonymous constraints to one named spec
         s = root_spec[0].copy()
         for c in spec_constraints:
-            if c not in invalid_constraints:
-                s.constrain(c)
+            s.constrain(c)
         try:
             return s.concretized(tests=tests)
-        except spack.spec.InvalidDependencyError as e:
-            invalid_deps_string = ['^' + d for d in e.invalid_deps]
-            invalid_deps = [c for c in spec_constraints
-                            if any(c.satisfies(invd, strict=True)
-                                   for invd in invalid_deps_string)]
-            if len(invalid_deps) != len(invalid_deps_string):
-                raise e
-            invalid_constraints.extend(invalid_deps)
-        except UnknownVariantError as e:
-            invalid_variants = e.unknown_variants
-            inv_variant_constraints = [c for c in spec_constraints
-                                       if any(name in c.variants
-                                              for name in invalid_variants)]
-            if len(inv_variant_constraints) != len(invalid_variants):
-                raise e
-            invalid_constraints.extend(inv_variant_constraints)
+        except spack.error.SpackError:
+            if not spec_constraints:
+                raise RuntimeError("cannot concretize {0}".format(root_spec[0]))
+            spec_constraints.pop()
 
 
 def make_repo_path(root):
