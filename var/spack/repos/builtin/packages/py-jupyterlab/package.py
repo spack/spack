@@ -11,6 +11,9 @@ class PyJupyterlab(PythonPackage):
     homepage = "https://github.com/jupyterlab/jupyterlab"
     pypi = "jupyterlab/jupyterlab-2.2.7.tar.gz"
 
+    # Skip 'jupyterlab.tests' packages
+    import_modules = ['jupyterlab', 'jupyterlab.handlers']
+
     version('3.0.16', sha256='7ad4fbe1f6d38255869410fd151a8b15692a663ca97c0a8146b3f5c40e275c23')
     version('2.2.7', sha256='a72ffd0d919cba03a5ef8422bc92c3332a957ff97b0490494209c83ad93826da')
     version('2.1.0', sha256='8c239aababf5baa0b3d36e375fddeb9fd96f3a9a24a8cda098d6a414f5bbdc81')
