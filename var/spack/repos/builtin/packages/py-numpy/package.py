@@ -130,7 +130,7 @@ class PyNumpy(PythonPackage):
     patch('check_executables4.patch', when='@1.14.0:1.15.4')
     patch('check_executables5.patch', when='@:1.13.3')
 
-    # version 1.21.0 runs into an infinit loop during printing
+    # version 1.21.0 runs into an infinite loop during printing
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
     conflicts('%gcc@11:', when='@1.21.0')
 

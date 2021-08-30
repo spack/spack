@@ -973,7 +973,7 @@ def _libs_default_handler(descriptor, spec, cls):
     name = spec.name.replace('-', '?')
 
     # Avoid double 'lib' for packages whose names already start with lib
-    if not name.startswith('lib'):
+    if not name.startswith('lib') and sys.platform != 'win32':
         name = 'lib' + name
 
     # If '+shared' search only for shared library; if '~shared' search only for
