@@ -165,7 +165,10 @@ class Hip(CMakePackage):
         # Used in comgr and seems necessary when using the JIT compiler, e.g.
         # hiprtcCreateProgram:
         # https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/blob/rocm-4.0.0/lib/comgr/src/comgr-env.cpp
-        env.set('LLVM_PATH', paths['llvm-amdgpu'])
+        if '@:4.2.0' in self.spec:
+            env.set('LLVM_PATH', paths['llvm-amdgpu'])
+        else:
+            env.set('LLVM_PATH', paths['llvm-amdgpu'].llvm)
 
         # Finally we have to set --rocm-path=<prefix> ourselves, which is not
         # the same as --hip-device-lib-path (set by hipcc). It's used to set
