@@ -22,6 +22,7 @@ class PyJupyterhub(PythonPackage):
     depends_on('py-entrypoints', when='@1.0.0:',  type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-jinja2@2.11.0:', type=('build', 'run'), when='@1.4.1:')
+    depends_on('py-jupyter-telemetry@0.1.0:', type=('build', 'run'), when='@1.4.1:')
     depends_on('py-mako', type=('build', 'run'), when='@:1.4.1')
     depends_on('py-notebook', type=('build', 'run'), when='@:1.4.1')
     depends_on('py-oauthlib@3.0:', when='@1.0.0:', type=('build', 'run'))
