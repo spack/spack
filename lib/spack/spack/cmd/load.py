@@ -53,6 +53,14 @@ alternatively one can decide to load only the package or only
 the dependencies"""
     )
 
+    subparser.add_argument(
+        '--runtimeonly',
+        action='store_true',
+        default=False,
+        dest='runtime_only',
+        help="only load the runtime dependencies"
+    )
+
 
 def load(parser, args):
     env = ev.active_environment()
@@ -75,9 +83,25 @@ def load(parser, args):
                      spec.traverse(root=include_roots, order='post')]
 
         env_mod = spack.util.environment.EnvironmentModifications()
-        for spec in specs:
-            env_mod.extend(uenv.environment_modifications_for_spec(spec))
-            env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+
+        if args.runtime_only:
+            # only do a simple/fast load of the runtime
+            # deps as needed for i.e., building a package
+            # externally that depends on the packages
+            # in specs
+            for spec in specs:
+                env = spack.util.environment.inspect_path(
+                    spec.prefix,
+                    uenv.prefix_inspections(spec.platform),
+                    exclude=spack.util.environment.is_system_path
+                )
+                spec.package.setup_run_environment(env)
+                env_mod.extend(env)
+        else:
+            for spec in specs:
+                env_mod.extend(uenv.environment_modifications_for_spec(spec))
+                env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+
         cmds = env_mod.shell_modifications(args.shell)
 
         sys.stdout.write(cmds)
