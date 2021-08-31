@@ -225,7 +225,7 @@ spack:
     - archer
     - argobots
     - ascent
-    - axom ^umpire@4.1.2
+    - axom
     - bolt
     - cabana
     - caliper
