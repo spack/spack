@@ -21,7 +21,7 @@ class Damask(BundlePackage):
 
     """
 
-    homepage = "https://www.damask3.mpie.de"
+    homepage = "https://damask3.mpie.de"
 
     maintainers = ['MarDieh']
 

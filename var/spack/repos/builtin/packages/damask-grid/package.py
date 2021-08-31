@@ -7,7 +7,7 @@
 class DamaskGrid(CMakePackage):
     """Grid solver for DAMASK"""
 
-    homepage = "https://www.damask3.mpie.de"
+    homepage = "https://damask3.mpie.de"
     url      = "https://damask3.mpie.de/download/damask-3.0.0.tar.xz"
 
     maintainers = ['MarDieh']
