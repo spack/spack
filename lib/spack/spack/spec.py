@@ -2134,37 +2134,6 @@ class Spec(object):
         return spec_builder(spec_dict)
 
     @staticmethod
-    def from_old_dict(data):
-        """Construct a spec from JSON/YAML using the format version 1.
-        Note: Version 1 format has no notion of a build_spec, and names are
-        guaranteed to be unique.
-
-        Parameters:
-        data -- a nested dict/list data structure read from YAML or JSON.
-        """
-        nodes = data['spec']
-
-        # Read nodes out of list.  Root spec is the first element;
-        # dependencies are the following elements.
-        dep_list = [Spec.from_node_dict(node) for node in nodes]
-        if not dep_list:
-            raise spack.error.SpecError("YAML spec contains no nodes.")
-        deps = dict((spec.name, spec) for spec in dep_list)
-        spec = dep_list[0]
-
-        for node in nodes:
-            # get dependency dict from the node.
-            name = next(iter(node))
-
-            if 'dependencies' not in node[name]:
-                continue
-
-            for dname, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
-                deps[name]._add_dependency(deps[dname], dtypes)
-
-        return spec
-
-    @staticmethod
     def from_dict(data):
         """Construct a spec from JSON/YAML.
 
@@ -2172,57 +2141,7 @@ class Spec(object):
         data -- a nested dict/list data structure read from YAML or JSON.
         """
 
-        if isinstance(data['spec'], list):  # Legacy specfile format
-            return Spec.from_old_dict(data)
-
-        # Current specfile format
-        nodes = data['spec']['nodes']
-        hash_type = None
-        any_deps = False
-
-        # Pass 0: Determine hash type
-        for node in nodes:
-            if 'dependencies' in node.keys():
-                any_deps = True
-                for _, _, _, dhash_type in Spec.dependencies_from_node_dict(node):
-                    if dhash_type:
-                        hash_type = dhash_type
-                        break
-
-        if not any_deps:  # If we never see a dependency...
-            hash_type = ht.dag_hash.name  # use the full_hash provenance
-        elif not hash_type:  # Seen a dependency, still don't know hash_type
-            raise spack.error.SpecError("Spec dictionary contains malformed "
-                                        "dependencies. Old format?")
-
-        hash_dict = {}
-        root_spec_hash = None
-
-        # Pass 1: Create a single lookup dictionary by hash
-        for i, node in enumerate(nodes):
-            if 'build_spec' in node.keys():
-                node_hash = node[hash_type]
-            else:
-                node_hash = node[hash_type]
-            node_spec = Spec.from_node_dict(node)
-            hash_dict[node_hash] = node
-            hash_dict[node_hash]['node_spec'] = node_spec
-            if i == 0:
-                root_spec_hash = node_hash
-        if not root_spec_hash:
-            raise spack.error.SpecError("Spec dictionary contains no nodes.")
-
-        # Pass 2: Finish construction of all DAG edges (including build specs)
-        for node_hash, node in hash_dict.items():
-            node_spec = node['node_spec']
-            for _, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
-                node_spec._add_dependency(hash_dict[dhash]['node_spec'], dtypes)
-            if 'build_spec' in node.keys():
-                _, bhash, _ = Spec.build_spec_from_node_dict(node,
-                                                             hash_type=hash_type)
-                node_spec._build_spec = hash_dict[bhash]['node_spec']
-
-        return hash_dict[root_spec_hash]['node_spec']
+        return _spec_from_dict(data)
 
     @staticmethod
     def from_yaml(stream):
@@ -4493,6 +4412,103 @@ class Spec(object):
         # slow for large specs because it traverses the whole spec graph,
         # so we hope it only runs on abstract specs, which are small.
         return hash(lang.tuplify(self._cmp_iter))
+
+    def __reduce__(self):
+        return _spec_from_dict, (self.to_dict(hash=ht.build_hash),)
+
+
+def _spec_from_old_dict(data):
+    """Construct a spec from JSON/YAML using the format version 1.
+    Note: Version 1 format has no notion of a build_spec, and names are
+    guaranteed to be unique.
+
+    Parameters:
+    data -- a nested dict/list data structure read from YAML or JSON.
+    """
+    nodes = data['spec']
+
+    # Read nodes out of list.  Root spec is the first element;
+    # dependencies are the following elements.
+    dep_list = [Spec.from_node_dict(node) for node in nodes]
+    if not dep_list:
+        raise spack.error.SpecError("YAML spec contains no nodes.")
+    deps = dict((spec.name, spec) for spec in dep_list)
+    spec = dep_list[0]
+
+    for node in nodes:
+        # get dependency dict from the node.
+        name = next(iter(node))
+
+        if 'dependencies' not in node[name]:
+            continue
+
+        for dname, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
+            deps[name]._add_dependency(deps[dname], dtypes)
+
+    return spec
+
+
+# Note: This function has been refactored from being a static method
+# of Spec to be a function at the module level. This was needed to
+# support its use in __reduce__ to pickle a Spec object in Python 2.
+# It can be moved back safely after we drop support for Python 2.7
+def _spec_from_dict(data):
+    """Construct a spec from YAML.
+
+    Parameters:
+    data -- a nested dict/list data structure read from YAML or JSON.
+    """
+    if isinstance(data['spec'], list):  # Legacy specfile format
+        return _spec_from_old_dict(data)
+
+    # Current specfile format
+    nodes = data['spec']['nodes']
+    hash_type = None
+    any_deps = False
+
+    # Pass 0: Determine hash type
+    for node in nodes:
+        if 'dependencies' in node.keys():
+            any_deps = True
+            for _, _, _, dhash_type in Spec.dependencies_from_node_dict(node):
+                if dhash_type:
+                    hash_type = dhash_type
+                    break
+
+    if not any_deps:  # If we never see a dependency...
+        hash_type = ht.dag_hash.name  # use the full_hash provenance
+    elif not hash_type:  # Seen a dependency, still don't know hash_type
+        raise spack.error.SpecError("Spec dictionary contains malformed "
+                                    "dependencies. Old format?")
+
+    hash_dict = {}
+    root_spec_hash = None
+
+    # Pass 1: Create a single lookup dictionary by hash
+    for i, node in enumerate(nodes):
+        if 'build_spec' in node.keys():
+            node_hash = node[hash_type]
+        else:
+            node_hash = node[hash_type]
+        node_spec = Spec.from_node_dict(node)
+        hash_dict[node_hash] = node
+        hash_dict[node_hash]['node_spec'] = node_spec
+        if i == 0:
+            root_spec_hash = node_hash
+    if not root_spec_hash:
+        raise spack.error.SpecError("Spec dictionary contains no nodes.")
+
+    # Pass 2: Finish construction of all DAG edges (including build specs)
+    for node_hash, node in hash_dict.items():
+        node_spec = node['node_spec']
+        for _, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
+            node_spec._add_dependency(hash_dict[dhash]['node_spec'], dtypes)
+        if 'build_spec' in node.keys():
+            _, bhash, _ = Spec.build_spec_from_node_dict(node,
+                                                         hash_type=hash_type)
+            node_spec._build_spec = hash_dict[bhash]['node_spec']
+
+    return hash_dict[root_spec_hash]['node_spec']
 
 
 class LazySpecCache(collections.defaultdict):
