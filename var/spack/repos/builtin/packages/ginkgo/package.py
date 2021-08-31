@@ -57,6 +57,10 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^hipsparse@4.1.0:", when="@:1.3.0")
     conflicts("^rocthrust@4.1.0:", when="@:1.3.0")
 
+    # Skip smoke tests if compatible hardware isn't found
+    patch('1.4.0_skip_invalid_smoke_tests.patch', when='@master')
+    patch('1.4.0_skip_invalid_smoke_tests.patch', when='@1.4.0')
+
     def cmake_args(self):
         # Check that the have the correct C++ standard is available
         if self.spec.satisfies('@:1.2.0'):
