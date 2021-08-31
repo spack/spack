@@ -11,8 +11,9 @@ from typing import Dict  # novm
 import pytest
 
 from llnl.util.filesystem import working_dir
+
 from spack.util import compression as scomp
-from spack.util.executable import which
+from spack.util.executable import CommandNotFoundError, which
 
 
 def compose_to_dict(pkg, ext, dict):
@@ -20,22 +21,22 @@ def compose_to_dict(pkg, ext, dict):
     return pkg
 
 
-ext_archive = {}
-fake_archives = [compose_to_dict('.'.join(['Foo', ext]),ext,ext_archive) for ext \
+ext_archive = {}  # type: Dict[str, str]
+fake_archives = [compose_to_dict('.'.join(['Foo', ext]), ext, ext_archive) for ext
                  in scomp.ALLOWED_ARCHIVE_TYPES]
 
 
 def build_temp_archive(extension, mode, archiver, compression, archive_file, ext_dir):
     if compression.lower() == ':z':
         pytest.skip('Extension %s unsupported for testing' % compression.strip(':'))
-    if compression in ['xz', 'txz']:
+    if compression.strip(':') in ['xz', 'txz']:
         try:
-            import lzma
+            import lzma  # noqa # novermin
         except ImportError:
             archiver = which('tar')
             archiver.add_default_arg('-cfFoo.%s' % extension)
             mode = 'system_tar'
-    out = os.path.join(ext_dir, 'Foo.%s'%extension)
+    out = os.path.join(ext_dir, 'Foo.%s' % extension)
     if mode == 'tarfile':
         archive = archiver.open(out, 'w%s' % compression)
         archive.add(archive_file)
@@ -63,12 +64,12 @@ def derive_compression_algo(ext, style):
 def is_on_system(util):
     try:
         which(util, required=True)
-    except:
+    except CommandNotFoundError:
         return False
     return True
 
 
-def module(ext,archiver = None):
+def module(ext, archiver=None):
     try:
         mod = __import__(ext)
         if archiver:
@@ -96,7 +97,7 @@ def archive_file(tmpdir_factory, request):
     decomp_ext = extension.split('.')
     if decomp_ext[1:]:
         compression = ':' + decomp_ext[-1]
-    elif re.match('t',extension) and not re.match('tar', extension):
+    elif re.match('t', extension) and not re.match('tar', extension):
         compression = ':' + extension[1:]
         if extension[1:] == 'bz':
             compression = compression + '2'
@@ -109,14 +110,15 @@ def archive_file(tmpdir_factory, request):
     test_file = test / "comp.txt"
     test_file.write("Spack Compression Test")
     build_temp_archive(extension, mod, archiver[0], compression, str(test), str(tmpdir))
-    return os.path.join(str(tmpdir),'Foo.%s'%extension)
+    return os.path.join(str(tmpdir), 'Foo.%s' % extension)
 
 
 @pytest.mark.parametrize('archive_file', scomp.ALLOWED_ARCHIVE_TYPES, indirect=True)
 def test_native_unpacking(tmpdir_factory, archive_file):
     extension = scomp.extension(archive_file)
     if not skip(extension, "native"):
-        pytest.skip("Extension %s does not have native python support on this system." % extension)
+        pytest.skip("Extension %s does not have native python\
+        support on this system." % extension)
     util = scomp.decompressor_for(archive_file, extension)
     tmpdir = tmpdir_factory.mktemp("comp_test")
     with working_dir(str(tmpdir)):

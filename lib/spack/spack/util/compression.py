@@ -28,9 +28,9 @@ def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
-def try_exec(exec):
+def try_exec(executor):
     try:
-        return which(exec, required=True)
+        return which(executor, required=True)
     except CommandNotFoundError:
         pass
     return None
@@ -80,6 +80,7 @@ def _untar(archive_file):
     """
     outfile = os.path.basename(archive_file)
     remnant = os.path.join(os.getcwd(), outfile)
+    _, ext = os.path.splitext(archive_file)
     try:
         import tarfile
         if ext in [".xz", ".txz"]:
@@ -135,7 +136,7 @@ def _gunzip(archive_file):
     destination_abspath = os.path.join(working_dir, decompressed_file)
     try:
         import gzip
-        f_in =  gzip.open(archive_file, "rb")
+        f_in = gzip.open(archive_file, "rb")
         with open(destination_abspath, "wb") as f_out:
             f_out.write(f_in.read())
     except ImportError:
@@ -180,7 +181,7 @@ def composer(funcA):
     argument.
 
     Args:
-        funcA (function): Function to be curried.
+        funcA : Function to be curried.
     """
     def b(funcB):
         def c(*args, **kwargs):
@@ -214,7 +215,7 @@ def decompressor_for(path, ext=None):
         ext_l = ext.split(".")
         # special case as there is no consistently
         # available native python tool for .Z files
-        if not ext_l[1:] or re.search(r'.Z|xz',ext):
+        if not ext_l[1:] or re.search(r'.Z|xz', ext):
             return select_decompressor_for(path, ext)
         else:
             return composer(
@@ -247,6 +248,7 @@ def select_decompressor_for(path, extension=None):
     if extension and not re.search(r'Z$', extension):
         return _untar
     return _system_fallback
+
 
 def strip_extension(path):
     """Get the part of a path that does not include its compressed

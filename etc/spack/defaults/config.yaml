@@ -149,7 +149,7 @@ config:
   # out of the box on some systems
   # Options are not limited to specific tools, but whatever is selected must
   # be available on the system or on PATH on windows.
-  # Option can be a string, or a lists of some combination of strings or lists
+  # Option can be a string, or a list of some combination of strings or lists
   # ex: fallback_decompression_strategy: tar
   # ex: fallback_decompression_strategy: [[tar, -oxf], 7z]
   fallback_decompression_strategy:
