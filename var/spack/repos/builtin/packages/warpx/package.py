@@ -135,3 +135,53 @@ class Warpx(CMakePackage):
             ['libwarpx.' + libsuffix[dims]], root=self.prefix, recursive=True,
             shared=True
         )
+
+    # WarpX has many examples to serve as a suitable smoke check. One
+    # that is typical was chosen here
+    examples_src_dir = 'Examples/Physics_applications/laser_acceleration/'
+
+    def _get_input_options(self, post_install):
+        examples_dir = join_path(
+            self.install_test_root if post_install else self.stage.source_path,
+            self.examples_src_dir)
+        dims = self.spec.variants['dims'].value
+        inputs_nD = {'2': 'inputs_2d', '3': 'inputs_3d', 'rz': 'inputs_2d_rz'}
+        inputs = join_path(examples_dir, inputs_nD[dims])
+
+        cli_args = [inputs, "max_step=50", "diag1.intervals=10"]
+        # test openPMD output if compiled in
+        if '+openpmd' in self.spec:
+            cli_args.append('diag1.format=openpmd')
+        return cli_args
+
+    def check(self):
+        """Checks after the build phase"""
+        if '+app' not in self.spec:
+            print("WarpX check skipped: requires variant +app")
+            return
+
+        with working_dir("spack-check", create=True):
+            cli_args = self._get_input_options(False)
+            warpx = Executable(join_path(self.build_directory, 'bin/warpx'))
+            warpx(*cli_args)
+
+    @run_after('install')
+    def copy_test_sources(self):
+        """Copy the example input files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([self.examples_src_dir])
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        if '+app' not in self.spec:
+            print("WarpX smoke tests skipped: requires variant +app")
+            return
+
+        # our executable names are a variant-dependent and naming evolves
+        exe = find(self.prefix.bin, 'warpx.*', recursive=False)[0]
+
+        cli_args = self._get_input_options(True)
+        self.run_test(exe,
+                      cli_args,
+                      [], installed=True, purpose='Smoke test for WarpX',
+                      skip_missing=False)

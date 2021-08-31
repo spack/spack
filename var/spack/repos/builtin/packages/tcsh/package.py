@@ -14,7 +14,7 @@ class Tcsh(AutotoolsPackage):
     correction, a history mechanism, job control and a C language like
     syntax."""
 
-    homepage = "http://www.tcsh.org/"
+    homepage = "https://www.tcsh.org/"
     url      = "http://ftp.funet.fi/pub/mirrors/ftp.astron.com/pub/tcsh/tcsh-6.20.00.tar.gz"
     list_url = "http://ftp.funet.fi/pub/mirrors/ftp.astron.com/pub/tcsh/old/"
 

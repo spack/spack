@@ -10,7 +10,7 @@ class PyPy2neo(PythonPackage):
     """Py2neo is a client library and toolkit for working with Neo4j from
     within Python applications and from the command line."""
 
-    homepage = "http://py2neo.org/"
+    homepage = "https://py2neo.org/"
     pypi = "py2neo/py2neo-2.0.8.tar.gz"
 
     version('4.3.0', sha256='a218ccb4b636e3850faa6b74ebad80f00600217172a57f745cf223d38a219222')

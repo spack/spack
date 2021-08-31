@@ -14,7 +14,7 @@ class RShiny(RPackage):
     pre-built widgets make it possible to build beautiful, responsive, and
     powerful applications with minimal effort."""
 
-    homepage = "http://shiny.rstudio.com/"
+    homepage = "https://shiny.rstudio.com/"
     url      = "https://cloud.r-project.org/src/contrib/shiny_1.0.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/shiny"
 

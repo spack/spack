@@ -12,7 +12,7 @@ class Keepalived(AutotoolsPackage):
     maintain and manage loadbalanced server pool according their health
     """
 
-    homepage = "http://www.keepalived.org"
+    homepage = "https://www.keepalived.org"
     url      = "http://www.keepalived.org/software/keepalived-1.2.0.tar.gz"
 
     version('2.0.19', sha256='0e2f8454765bc6a5fa26758bd9cec18aae42882843cdd24848aff0ae65ce4ca7')

@@ -11,6 +11,15 @@
 % Version semantics
 %-----------------------------------------------------------------------------
 
+% Versions are declared with a weight and an origin, which indicates where the
+% version was declared (e.g. "package_py" or "external").
+version_declared(Package, Version, Weight) :- version_declared(Package, Version, Weight, _).
+
+% We can't emit the same version **with the same weight** from two different sources
+:- version_declared(Package, Version, Weight, Origin1),
+   version_declared(Package, Version, Weight, Origin2),
+   Origin1 != Origin2.
+
 % versions are declared w/priority -- declared with priority implies declared
 version_declared(Package, Version) :- version_declared(Package, Version, _).
 
@@ -23,11 +32,8 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 deprecated(Package, Version) :- version(Package, Version), deprecated_version(Package, Version).
 
 possible_version_weight(Package, Weight)
- :- version(Package, Version), version_declared(Package, Version, Weight),
-    not preferred_version_declared(Package, Version, _).
-
-possible_version_weight(Package, Weight)
-  :- version(Package, Version), preferred_version_declared(Package, Version, Weight).
+ :- version(Package, Version),
+    version_declared(Package, Version, Weight).
 
 1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package).
 
@@ -38,7 +44,6 @@ possible_version_weight(Package, Weight)
 version_satisfies(Package, Constraint)
   :- version(Package, Version), version_satisfies(Package, Constraint, Version).
 
-#defined preferred_version_declared/3.
 #defined version_satisfies/3.
 #defined deprecated_version/2.
 
@@ -294,11 +299,13 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 % External semantics
 %-----------------------------------------------------------------------------
 
-% if an external version is declared, it is also declared globally
-version_declared(Package, Version, Weight) :- external_version_declared(Package, Version, Weight, _).
-
 % if a package is external its version must be one of the external versions
-1 { version(Package, Version): external_version_declared(Package, Version, _, _) } 1 :- external(Package).
+1 { external_version(Package, Version, Weight):
+    version_declared(Package, Version, Weight, "external") } 1
+    :- external(Package).
+
+version_weight(Package, Weight) :- external_version(Package, Version, Weight).
+version(Package, Version) :- external_version(Package, Version, Weight).
 
 % if a package is not buildable (external_only), only externals are allowed
 external(Package) :- external_only(Package), node(Package).
@@ -313,7 +320,7 @@ external(Package) :- external_spec_selected(Package, _).
 % corresponding external spec.
 :- version(Package, Version),
    version_weight(Package, Weight),
-   external_version_declared(Package, Version, Weight, ID),
+   version_declared(Package, Version, Weight, "external"),
    not external(Package).
 
 % determine if an external spec has been selected

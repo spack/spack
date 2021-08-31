@@ -93,27 +93,25 @@ class Ascent(Package, CudaPackage):
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14.99,3.18.2:", type='build')
     depends_on("conduit~python", when="~python")
-    depends_on("conduit+python", when="+python+shared")
-    depends_on("conduit~shared~python", when="~shared")
-    depends_on("conduit~python~mpi", when="~python~mpi")
-    depends_on("conduit+python~mpi", when="+python+shared~mpi")
-    depends_on("conduit~shared~python~mpi", when="~shared~mpi")
+    depends_on("conduit+python", when="+python")
+    depends_on("conduit+mpi", when="+mpi")
+    depends_on("conduit~mpi", when="~mpi")
 
     #######################
     # Python
     #######################
     # we need a shared version of python b/c linking with static python lib
     # causes duplicate state issues when running compiled python modules.
-    depends_on("python+shared", when="+python+shared")
-    extends("python", when="+python+shared")
-    depends_on("py-numpy", when="+python+shared", type=('build', 'run'))
-    depends_on("py-pip", when="+python+shared", type=('build', 'run'))
+    depends_on("python+shared", when="+python")
+    extends("python", when="+python")
+    depends_on("py-numpy", when="+python", type=('build', 'run'))
+    depends_on("py-pip", when="+python", type=('build', 'run'))
 
     #######################
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
-    depends_on("py-mpi4py", when="+mpi+python+shared")
+    depends_on("py-mpi4py", when="+mpi+python")
 
     #######################
     # BabelFlow
@@ -185,7 +183,11 @@ class Ascent(Package, CudaPackage):
         with working_dir('spack-build', create=True):
             py_site_pkgs_dir = None
             if "+python" in spec:
-                py_site_pkgs_dir = site_packages_dir
+                try:
+                    py_site_pkgs_dir = site_packages_dir
+                except NameError:
+                    # spack's site_packages_dir won't exist in a subclass
+                    pass
 
             host_cfg_fname = self.create_host_config(spec,
                                                      prefix,

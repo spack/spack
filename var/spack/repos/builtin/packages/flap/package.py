@@ -16,8 +16,6 @@ class Flap(CMakePackage):
     maintainers = ['fluidnumerics-joe']
 
     version('master', branch='master', submodules=True)
-    version('v1.1.8', tag='v1.1.8', submodules=True)
-    version('v1.0.6', tag='v1.0.6', submodules=True)
 
     def flag_handler(self, name, flags):
         if name in ['cflags', 'cxxflags', 'cppflags']:
@@ -25,4 +23,3 @@ class Flap(CMakePackage):
         elif name == 'fflags':
             flags.append('-cpp')
         return (flags, None, None)
-

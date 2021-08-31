@@ -14,7 +14,7 @@ class Libevent(AutotoolsPackage):
 
     """
 
-    homepage = "http://libevent.org"
+    homepage = "https://libevent.org"
     url      = "https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz"
     list_url = "http://libevent.org/old-releases.html"
 

@@ -9,7 +9,7 @@ from spack import *
 class PyAdios(PythonPackage):
     """NumPy bindings of ADIOS1"""
 
-    homepage = "https://www.olcf.ornl.gov/center-projects/adios/"
+    homepage = "https://csmd.ornl.gov/adios"
     url      = "https://github.com/ornladios/ADIOS/archive/v1.12.0.tar.gz"
     git      = "https://github.com/ornladios/ADIOS.git"
 

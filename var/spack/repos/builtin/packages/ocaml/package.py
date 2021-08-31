@@ -10,7 +10,7 @@ class Ocaml(Package):
     """OCaml is an industrial strength programming language supporting
        functional, imperative and object-oriented styles"""
 
-    homepage = "http://ocaml.org/"
+    homepage = "https://ocaml.org/"
     url      = "https://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz"
 
     maintainers = ['scemama']

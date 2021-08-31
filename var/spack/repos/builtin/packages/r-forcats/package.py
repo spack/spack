@@ -14,7 +14,7 @@ class RForcats(RPackage):
     and tools for modifying factor levels (including collapsing rare levels
     into other, 'anonymising', and manually 'recoding')."""
 
-    homepage = "http://forcats.tidyverse.org/"
+    homepage = "https://forcats.tidyverse.org/"
     url      = "https://cloud.r-project.org/src/contrib/forcats_0.2.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/forcats"
 

@@ -9,7 +9,7 @@ from spack import *
 class OpenpmdApi(CMakePackage):
     """C++ & Python API for Scientific I/O"""
 
-    homepage = "http://www.openPMD.org"
+    homepage = "https://www.openPMD.org"
     url      = "https://github.com/openPMD/openPMD-api/archive/0.13.3.tar.gz"
     git      = "https://github.com/openPMD/openPMD-api.git"
 
@@ -17,12 +17,12 @@ class OpenpmdApi(CMakePackage):
 
     # C++14 up until here
     version('develop', branch='dev')
+    version('0.14.2', sha256='25c6b4bcd0ae1ba668b633b8514e66c402da54901c26861fc754fca55717c836')
     version('0.14.1', sha256='172fd1d785627d01c77f1170adc5a18bd8a6302e804d0f271dc0d616a5156791')
     version('0.14.0', sha256='7bb561c1a6f54e9a6a1b56aaf1d4d098bbe290d204f84ebe5a6f11b3cab2be6e')
     #   temporary, pre 0.14.0 version for HiPACE++
     version('hipace', commit='ac083025ee662469b8cad1adf93eef48cde35f58')
-    version('0.13.4', preferred=True,
-            sha256='46c013be5cda670f21969675ce839315d4f5ada0406a6546a91ec3441402cf5e')
+    version('0.13.4', sha256='46c013be5cda670f21969675ce839315d4f5ada0406a6546a91ec3441402cf5e')
     version('0.13.3', sha256='4b8f84bd89cd540c73ffe8c21085970453cb7f0e4f125f11a4e288433f64b58c')
     version('0.13.2', sha256='2e5170d41bb7b2c0608ec833eee7f9adf8175b46734743f6e46dcce6f6685fb0')
     version('0.13.1', sha256='81ff79419982eb1b0865d1736f73f950f5d4c356d3c78200ceeab7f54dc07fd7')

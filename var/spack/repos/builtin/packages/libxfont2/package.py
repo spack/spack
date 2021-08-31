@@ -14,7 +14,7 @@ class Libxfont2(AutotoolsPackage, XorgPackage):
     but should not be used by normal X11 clients.  X11 clients access fonts
     via either the new API's in libXft, or the legacy API's in libX11."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXfont"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXfont"
     xorg_mirror_path = "lib/libXfont2-2.0.1.tar.gz"
 
     version('2.0.1', sha256='381b6b385a69343df48a082523c856aed9042fbbc8ee0a6342fb502e4321230a')

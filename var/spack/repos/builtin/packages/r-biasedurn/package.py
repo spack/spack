@@ -14,7 +14,7 @@ class RBiasedurn(RPackage):
        hypergeometric distribution). See vignette("UrnTheory") for
        explanation of these distributions."""
 
-    homepage = "http://www.agner.org/random/"
+    homepage = "https://www.agner.org/random/"
     url      = "https://cloud.r-project.org/src/contrib/BiasedUrn_1.07.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/BiasedUrn/"
 
