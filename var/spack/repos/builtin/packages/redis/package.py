@@ -6,7 +6,6 @@
 class Redis(MakefilePackage):
     """Redis is an open source (BSD licensed), in-memory data structure store,
     used as a database, cache and message broker.
-  
     It supports data structures such as strings, hashes, lists, sets, sorted
     sets with range queries, bitmaps, hyperloglogs, geospatial indexes with
     radius queries and streams. Redis has built-in replication, Lua scripting,
@@ -14,9 +13,8 @@ class Redis(MakefilePackage):
     and provides high availability via Redis Sentinel and automatic
     partitioning with Redis Cluster
     """
-  
     homepage = "https://redis.io"
-    url = "https://download.redis.io/releases/redis-6.2.5.tar.gz"    
+    url = "https://download.redis.io/releases/redis-6.2.5.tar.gz"
 
     version('6.2.5',   sha256='4b9a75709a1b74b3785e20a6c158cab94cf52298aa381eea947a678a60d551ae')
     version('6.2.4',   sha256='ba32c406a10fc2c09426e2be2787d74ff204eb3a2e496d87cff76a476b6ae16e')
@@ -33,7 +31,7 @@ class Redis(MakefilePackage):
     version('5.0.2',   sha256='937dde6164001c083e87316aa20dad2f8542af089dfcb1cbb64f9c8300cd00ed')
     version('4.0.13',  sha256='17d955227966dcd68590be6139e5fe7f2d19fc4fb7334248a904ea9cdd30c1d4')
     version('4.0.12',  sha256='6447259d2eed426a949c9c13f8fdb2d91fb66d9dc915dd50db13b87f46d93162')
-    
+
     @property
     def install_targets(self):
         return [
