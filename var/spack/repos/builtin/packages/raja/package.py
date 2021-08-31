@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class Raja(CMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
@@ -48,16 +50,19 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('camp@0.1.0', when='@0.12.0:0.13.0')
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
-    depends_on('camp+rocm', when='+rocm @0.12.0:')
-    for val in ROCmPackage.amdgpu_targets:
-        depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+    with when('+rocm'):
+        depends_on('camp+rocm', when='@0.12.0:')
+        for val in ROCmPackage.amdgpu_targets:
+            depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
-    depends_on('camp+cuda', when='+cuda @0.12.0:')
-    for sm_ in CudaPackage.cuda_arch_values:
-        depends_on('camp cuda_arch={0}'.format(sm_),
-                   when='cuda_arch={0}'.format(sm_))
+        conflicts('+openmp')
 
-    conflicts('+openmp', when='+rocm')
+    with when('+cuda'):
+        depends_on('camp+cuda', when='@0.12.0:')
+        for sm_ in CudaPackage.cuda_arch_values:
+            depends_on('camp cuda_arch={0}'.format(sm_),
+                    when='cuda_arch={0}'.format(sm_))
+
 
     def cmake_args(self):
         spec = self.spec
