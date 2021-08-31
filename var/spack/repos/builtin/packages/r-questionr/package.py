@@ -13,6 +13,7 @@ class RQuestionr(RPackage):
 
     homepage = "https://cloud.r-project.org/package=questionr"
     url      = "https://cloud.r-project.org/src/contrib/questionr_0.7.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/questionr"
 
     version('0.7.4', sha256='818ad87723aa7ebe466b3a639c9e86b7f77e6a341c8d9a933073925a21d4555c')
 
