@@ -454,7 +454,7 @@ def test_user_removed_spec():
 env:
   specs:
   - mpileaks
-  - hypre
+  - hypre ^openblas-with-lapack
   - libelf
 """)
 
@@ -488,7 +488,7 @@ def test_init_from_lockfile(tmpdir):
 env:
   specs:
   - mpileaks
-  - hypre
+  - hypre ^openblas-with-lapack
   - libelf
 """)
     e1 = ev.create('test', initial_yaml)
@@ -514,7 +514,7 @@ def test_init_from_yaml(tmpdir):
 env:
   specs:
   - mpileaks
-  - hypre
+  - hypre ^openblas-with-lapack
   - libelf
 """)
     e1 = ev.create('test', initial_yaml)

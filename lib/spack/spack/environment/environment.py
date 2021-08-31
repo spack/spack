@@ -1623,9 +1623,8 @@ class Environment(object):
             for s in spec.traverse():
                 build_hash = s.build_hash()
                 if build_hash not in concrete_specs:
-                    spec_dict = s.to_node_dict(hash=ht.build_hash)
-                    # Assumes no legacy formats, since this was just created.
-                    spec_dict[ht.dag_hash.name] = s.dag_hash()
+                    spec_dict = s.node_dict_with_hashes(
+                        hash=ht.full_hash, dep_hash=ht.build_hash)
                     concrete_specs[build_hash] = spec_dict
 
         hash_spec_list = zip(

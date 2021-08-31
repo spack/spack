@@ -1579,7 +1579,7 @@ class Spec(object):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
 
-    def to_node_dict(self, hash=ht.dag_hash):
+    def to_node_dict(self, hash=ht.dag_hash, dep_hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
 
         ``to_node_dict`` creates the content that is eventually hashed by
@@ -1673,7 +1673,14 @@ class Spec(object):
                 d['patches'] = variant._patches_in_order_of_appearance
 
         if hash.package_hash:
-            package_hash = self.package_hash()
+            # Guard against computing package_hash if this spec was read
+            # from disk.  If the serialized version did not have these
+            # hashes, it shouldn't hurt anything to just set them to the
+            # same value as the dag_hash.
+            if self._hashes_final and not getattr(self, ht.package_hash.attr, None):
+                package_hash = getattr(self, ht.dag_hash.attr, None)
+            else:
+                package_hash = self.package_hash()
 
             # Full hashes are in bytes
             if (not isinstance(package_hash, six.text_type)
@@ -1688,7 +1695,7 @@ class Spec(object):
             deps_list = []
             for name, dspec in sorted(deps.items()):
                 name_tuple = ('name', name)
-                hash_tuple = (hash.name, dspec.spec._cached_hash(hash))
+                hash_tuple = (dep_hash.name, dspec.spec._cached_hash(dep_hash))
                 type_tuple = ('type', sorted(str(s) for s in dspec.deptypes))
                 deps_list.append(syaml.syaml_dict([name_tuple,
                                                    hash_tuple,
@@ -1806,11 +1813,11 @@ class Spec(object):
         spec_dict = syaml.syaml_dict([('spec', inner_dict)])
         return spec_dict
 
-    def node_dict_with_hashes(self, hash=ht.dag_hash):
+    def node_dict_with_hashes(self, hash=ht.dag_hash, dep_hash=ht.dag_hash):
         """ Returns a node_dict of this spec with the dag hash added.  If this
         spec is concrete, the full hash is added as well.  If 'build' is in
         the hash_type, the build hash is also added. """
-        node = self.to_node_dict(hash)
+        node = self.to_node_dict(hash=hash, dep_hash=dep_hash)
         node[ht.dag_hash.name] = self.dag_hash()
 
         # full_hash and build_hash are lazily computed -- but if we write

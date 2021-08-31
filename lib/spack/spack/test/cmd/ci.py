@@ -793,8 +793,8 @@ spack:
 
         expected_repro_files = [
             'install.sh',
-            'root.yaml',
-            'archive-files.yaml',
+            'root.json',
+            'archive-files.json',
             'spack.yaml',
             'spack.lock'
         ]
@@ -821,7 +821,7 @@ spack:
         assert('--no-add' in install_parts)
         assert('-f' in install_parts)
         flag_index = install_parts.index('-f')
-        assert('archive-files.yaml' in install_parts[flag_index + 1])
+        assert('archive-files.json' in install_parts[flag_index + 1])
 
         broken_spec_file = os.path.join(broken_specs_path, job_spec_full_hash)
         with open(broken_spec_file) as fd:
@@ -957,7 +957,7 @@ spack:
             spec_map = ci.get_concrete_specs(
                 env, 'patchelf', 'patchelf', '', 'FIND_ANY')
             concrete_spec = spec_map['patchelf']
-            spec_json = concrete_spec.to_json(hash=ht.build_hash)
+            spec_json = concrete_spec.to_json(hash=ht.full_hash)
             json_path = str(tmpdir.join('spec.json'))
             with open(json_path, 'w') as ypfd:
                 ypfd.write(spec_json)
@@ -1308,7 +1308,7 @@ spack:
             spec_map = ci.get_concrete_specs(
                 env, 'callpath', 'callpath', '', 'FIND_ANY')
             concrete_spec = spec_map['callpath']
-            spec_yaml = concrete_spec.to_yaml(hash=ht.build_hash)
+            spec_yaml = concrete_spec.to_yaml(hash=ht.full_hash)
             yaml_path = str(tmpdir.join('spec.yaml'))
             with open(yaml_path, 'w') as ypfd:
                 ypfd.write(spec_yaml)
@@ -1703,12 +1703,12 @@ spack:
                     job_spec = s
 
             job_spec_yaml_path = os.path.join(
-                working_dir.strpath, 'archivefiles.yaml')
+                working_dir.strpath, 'archivefiles.json')
             with open(job_spec_yaml_path, 'w') as fd:
                 fd.write(job_spec.to_yaml(hash=ht.full_hash))
 
             root_spec_yaml_path = os.path.join(
-                working_dir.strpath, 'root.yaml')
+                working_dir.strpath, 'root.json')
             with open(root_spec_yaml_path, 'w') as fd:
                 fd.write(root_spec.to_yaml(hash=ht.full_hash))
 
@@ -1724,8 +1724,8 @@ spack:
             repro_file = os.path.join(working_dir.strpath, 'repro.json')
             repro_details = {
                 'job_name': job_name,
-                'job_spec_yaml': 'archivefiles.yaml',
-                'root_spec_yaml': 'root.yaml',
+                'job_spec_json': 'archivefiles.json',
+                'root_spec_json': 'root.json',
                 'ci_project_dir': working_dir.strpath
             }
             with open(repro_file, 'w') as fd:

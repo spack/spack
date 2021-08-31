@@ -794,10 +794,24 @@ def generate_package_index(cache_prefix):
 
                 if to_splice:
                     tty.debug('    needs the following deps spliced:')
+                    # Capture the path to the existing .spack file as splicing
+                    # could change the hash.
+                    old_spackfile_path = os.path.join(
+                        cache_prefix, tarball_path_name(s, '.spack'))
                     for true_dep in to_splice:
                         tty.debug('      {0}/{1}'.format(
                             true_dep.name, true_dep.dag_hash()[:7]))
                         s = s.splice(true_dep, True)
+
+                    # TODO: fix this as soon as possible.  See this PR for
+                    # details:
+                    #
+                    # https://github.com/spack/spack/pull/25708
+                    #
+                    # Getting rid of the build provenance like this is a
+                    # workaround to keep things working until the reusing
+                    # concretizer works.
+                    s.build_spec = None
 
                     # Push this spliced spec back to the mirror
                     spliced_spec_dict = s.to_dict(hash=ht.full_hash)
@@ -809,10 +823,35 @@ def generate_package_index(cache_prefix):
                         fd.write(sjson.dump(spliced_spec_dict))
 
                     spliced_spec_url = spec_record['spec_url']
+                    url_to_remove = None
+                    if dag_hash != s.dag_hash():
+                        # If the DAG hash changed for any reason (perhaps we
+                        # originally read the spec from the mirror as yaml,
+                        # and as a by-product of splicing we're converting it
+                        # to json), then in addition to writing the new
+                        # spec.json file, we also need to 1) remove the
+                        # original spec.yaml file, and 2) rename the .spack
+                        # file with the new hash.
+                        url_to_remove = spliced_spec_url
+                        new_spackfile_path = os.path.join(
+                            cache_prefix, tarball_path_name(s, '.spack'))
+                        spliced_spec_url = os.path.join(
+                            cache_prefix, tarball_name(s, '.spec.json'))
+
                     web_util.push_to_url(
                         temp_json_path, spliced_spec_url, keep_original=False)
                     tty.debug('    spliced and wrote {0}'.format(
                         spliced_spec_url))
+                    # Remove the previous spec file and "rename" the .spack file
+                    if url_to_remove:
+                        tty.debug('      now removing {0}'.format(url_to_remove))
+                        web_util.remove_url(url_to_remove)
+                        # TODO: implement renaming in util/web.py
+                        tty.debug('      and renaming')
+                        tty.debug('        {0}'.format(old_spackfile_path))
+                        tty.debug('      to')
+                        tty.debug('        {0}'.format(new_spackfile_path))
+
                     spec_record['spec'] = s
 
             db.add(s, None)
