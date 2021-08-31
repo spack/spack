@@ -3,11 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 class Redis(MakefilePackage):
     """Redis is an open source (BSD licensed), in-memory data structure store,
     used as a database, cache and message broker.
-
+  
     It supports data structures such as strings, hashes, lists, sets, sorted
     sets with range queries, bitmaps, hyperloglogs, geospatial indexes with
     radius queries and streams. Redis has built-in replication, Lua scripting,
@@ -15,9 +14,9 @@ class Redis(MakefilePackage):
     and provides high availability via Redis Sentinel and automatic
     partitioning with Redis Cluster
     """
-
+  
     homepage = "https://redis.io"
-    url = "http://download.redis.io/releases/redis-5.0.3.tar.gz"
+    url = "https://download.redis.io/releases/redis-6.2.5.tar.gz"    
 
     version('6.2.5',   sha256='4b9a75709a1b74b3785e20a6c158cab94cf52298aa381eea947a678a60d551ae')
     version('6.2.4',   sha256='ba32c406a10fc2c09426e2be2787d74ff204eb3a2e496d87cff76a476b6ae16e')
