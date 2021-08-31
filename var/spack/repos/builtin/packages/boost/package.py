@@ -446,7 +446,7 @@ class Boost(Package):
             '--layout=%s' % layout
         ])
 
-        if not spec.satisfies('%intel'):
+        if (not spec.satisfies('%intel')) or spec.satisfies('@1.76:'):
             options.extend([
                 'toolset=%s' % self.determine_toolset(spec)
             ])
