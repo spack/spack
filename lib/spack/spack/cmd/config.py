@@ -10,15 +10,16 @@ import shutil
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-import spack.config
+
 import spack.cmd.common.arguments
-import spack.schema.env
+import spack.config
 import spack.environment as ev
+import spack.repo
+import spack.schema.env
 import spack.schema.packages
+import spack.store
 import spack.util.spack_yaml as syaml
 from spack.util.editor import editor
-import spack.store
-import spack.repo
 
 description = "get and set configuration options"
 section = "config"
@@ -117,7 +118,7 @@ def _get_scope_and_section(args):
 
     # w/no args and an active environment, point to env manifest
     if not section:
-        env = ev.get_env(args, 'config edit')
+        env = ev.active_environment()
         if env:
             scope = env.env_file_config_scope_name()
 

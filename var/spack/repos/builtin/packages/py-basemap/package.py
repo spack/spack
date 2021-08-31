@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class PyBasemap(PythonPackage):
@@ -12,7 +13,7 @@ class PyBasemap(PythonPackage):
     2D data on maps in Python."""
 
     url = 'https://github.com/matplotlib/basemap/archive/v1.2.0rel.tar.gz'
-    homepage = "http://matplotlib.org/basemap/"
+    homepage = "https://matplotlib.org/basemap/"
 
     version('1.2.1', sha256='3fb30424f18cd4ffd505e30fd9c810ae81b999bb92f950c76553e1abc081faa7')
     version('1.2.0', sha256='bd5bf305918a2eb675939873b735238f9e3dfe6b5c290e37c41e5b082ff3639a')

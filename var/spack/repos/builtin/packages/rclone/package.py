@@ -10,9 +10,14 @@ class Rclone(Package):
     """Rclone is a command line program to sync files and directories
        to and from various cloud storage providers"""
 
-    homepage = "http://rclone.org"
+    homepage = "https://rclone.org"
     url      = "https://github.com/ncw/rclone/releases/download/v1.43/rclone-v1.43.tar.gz"
 
+    maintainers = ['alecbcs']
+
+    version('1.56.0', sha256='81d2eda23ebaad0a355aab6ff030712470a42505b94c01c9bb5a9ead9168cedb')
+    version('1.55.1', sha256='25da7fc5c9269b3897f27b0d946919df595c6dda1b127085fda0fe32aa59d29d')
+    version('1.55.0', sha256='75accdaedad3b82edc185dc8824a19a59c30dc6392de7074b6cd98d1dc2c9040')
     version('1.51.0', sha256='3eb5b7ffce17e56fadb29bf854666723a14c93fedc02046c7f34c792dbd227ee')
     version('1.50.2', sha256='6dd8998a72514d3820d241ae46dc609c0305b742aee3db6aaf6017b46c996091')
     version('1.50.1', sha256='48d6c80883427469682b4d97099d7631cf3b67aa85e652c254423bd1422ce216')

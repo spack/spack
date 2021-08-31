@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.tengine as tengine
-from . import writer, PathContext
+
+from . import PathContext, writer
 
 
 @writer('singularity')

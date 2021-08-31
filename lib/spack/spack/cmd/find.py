@@ -9,17 +9,18 @@ import copy
 import os
 import sys
 
+import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
-import llnl.util.lang
 
-import spack.environment as ev
-import spack.repo
+import spack.bootstrap
 import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.repo
 import spack.user_environment as uenv
-from spack.util.string import plural
 from spack.database import InstallStatuses
+from spack.util.string import plural
 
 description = "list and search installed packages"
 section = "basic"
@@ -204,23 +205,24 @@ def display_env(env, args, decorator):
 
 
 def find(parser, args):
-    q_args = query_arguments(args)
-    # Query the current store or the internal bootstrap store if required
     if args.bootstrap:
-        msg = 'Showing internal bootstrap store at "{0}"'
-        tty.msg(msg.format(spack.paths.user_bootstrap_store))
-        with spack.store.use_store(spack.paths.user_bootstrap_store):
-            results = args.specs(**q_args)
-    else:
-        results = args.specs(**q_args)
+        bootstrap_store_path = spack.bootstrap.store_path()
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            msg = 'Showing internal bootstrap store at "{0}"'
+            tty.msg(msg.format(bootstrap_store_path))
+            _find(parser, args)
+        return
+    _find(parser, args)
 
+
+def _find(parser, args):
+    q_args = query_arguments(args)
+    results = args.specs(**q_args)
+
+    env = ev.active_environment()
     decorator = lambda s, f: f
-    added = set()
-    removed = set()
-
-    env = ev.get_env(args, 'find')
     if env:
-        decorator, added, roots, removed = setup_env(env)
+        decorator, _, roots, _ = setup_env(env)
 
     # use groups by default except with format.
     if args.groups is None:
@@ -231,7 +233,7 @@ def find(parser, args):
         msg = "No package matches the query: {0}"
         msg = msg.format(' '.join(args.constraint))
         tty.msg(msg)
-        return 1
+        raise SystemExit(1)
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:

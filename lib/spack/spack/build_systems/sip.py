@@ -6,10 +6,11 @@
 import inspect
 import os
 
-from llnl.util.filesystem import find, working_dir, join_path
+import llnl.util.tty as tty
+from llnl.util.filesystem import find, join_path, working_dir
+
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
-import llnl.util.tty as tty
 
 
 class SIPPackage(PackageBase):
@@ -63,24 +64,25 @@ class SIPPackage(PackageBase):
             list: list of strings of module names
         """
         modules = []
+        root = os.path.join(
+            self.prefix,
+            self.spec['python'].package.config_vars['python_lib']['false']['false'],
+        )
 
-        # Python libraries may be installed in lib or lib64
-        # See issues #18520 and #17126
-        for lib in ['lib', 'lib64']:
-            root = os.path.join(self.prefix, lib, 'python{0}'.format(
-                self.spec['python'].version.up_to(2)), 'site-packages')
-            # Some Python libraries are packages: collections of modules
-            # distributed in directories containing __init__.py files
-            for path in find(root, '__init__.py', recursive=True):
-                modules.append(path.replace(root + os.sep, '', 1).replace(
-                    os.sep + '__init__.py', '').replace('/', '.'))
-            # Some Python libraries are modules: individual *.py files
-            # found in the site-packages directory
-            for path in find(root, '*.py', recursive=False):
-                modules.append(path.replace(root + os.sep, '', 1).replace(
-                    '.py', '').replace('/', '.'))
+        # Some Python libraries are packages: collections of modules
+        # distributed in directories containing __init__.py files
+        for path in find(root, '__init__.py', recursive=True):
+            modules.append(path.replace(root + os.sep, '', 1).replace(
+                os.sep + '__init__.py', '').replace('/', '.'))
+
+        # Some Python libraries are modules: individual *.py files
+        # found in the site-packages directory
+        for path in find(root, '*.py', recursive=False):
+            modules.append(path.replace(root + os.sep, '', 1).replace(
+                '.py', '').replace('/', '.'))
 
         tty.debug('Detected the following modules: {0}'.format(modules))
+
         return modules
 
     def python(self, *args, **kwargs):

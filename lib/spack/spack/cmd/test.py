@@ -4,22 +4,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
-import os
+
 import argparse
-import textwrap
-import inspect
 import fnmatch
+import inspect
+import os
 import re
 import shutil
 import sys
+import textwrap
 
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 
-import spack.install_test
-import spack.environment as ev
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.install_test
 import spack.package
 import spack.repo
 import spack.report
@@ -154,7 +155,7 @@ environment variables:
         spack.config.set('config:fail_fast', True, scope='command_line')
 
     # Get specs to test
-    env = ev.get_env(args, 'test')
+    env = ev.active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
@@ -220,7 +221,7 @@ def test_list(args):
 
     # TODO: This can be extended to have all of the output formatting options
     # from `spack find`.
-    env = ev.get_env(args, 'test')
+    env = ev.active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.store.db.query(hashes=hashes)

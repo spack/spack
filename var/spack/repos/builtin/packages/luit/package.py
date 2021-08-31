@@ -12,7 +12,7 @@ class Luit(AutotoolsPackage, XorgPackage):
     output from the locale's encoding into UTF-8, and convert terminal
     input from UTF-8 into the locale's encoding."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/luit"
+    homepage = "https://cgit.freedesktop.org/xorg/app/luit"
     xorg_mirror_path = "app/luit-1.1.1.tar.gz"
 
     version('1.1.1', sha256='87b0be0bd01f3b857a53e6625bdd31cef18418c95394b7f4387f8ecef78e45da')

@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Legion(CMakePackage):
@@ -21,7 +22,7 @@ class Legion(CMakePackage):
        that is orthogonal to correctness, thereby enabling easy porting and
        tuning of Legion applications to new architectures."""
 
-    homepage = "http://legion.stanford.edu/"
+    homepage = "https://legion.stanford.edu/"
     git = "https://github.com/StanfordLegion/legion.git"
 
     maintainers = ['pmccormick', 'streichler']

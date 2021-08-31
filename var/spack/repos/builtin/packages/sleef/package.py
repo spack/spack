@@ -36,3 +36,10 @@ class Sleef(CMakePackage):
     depends_on('ninja', type='build')
 
     generator = 'Ninja'
+
+    def cmake_args(self):
+        return [
+            self.define('DISABLE_FFTW', True),
+            self.define('DISABLE_MPFR', True),
+            self.define('DISABLE_SSL', True),
+        ]

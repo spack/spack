@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
+import datetime
 import errno
 import inspect
 import itertools
@@ -15,28 +16,18 @@ import shutil
 import tempfile
 import xml.etree.ElementTree
 
-try:
-    # CVS outputs dates in different formats on different systems. We are using
-    # the dateutil package to parse these dates. This package does not exist
-    # for Python <2.7. That means that we cannot test checkouts "by date" for
-    # CVS respositories. (We can still use CVS repos with all features, only
-    # our tests break.)
-    from dateutil.parser import parse as parse_date
-except ImportError:
-    def parse_date(string):  # type: ignore
-        pytest.skip("dateutil package not available")
-
 import py
 import pytest
 
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
+
 from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 
 import spack.architecture
+import spack.caches
 import spack.compilers
 import spack.config
-import spack.caches
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
@@ -47,14 +38,12 @@ import spack.platforms.test
 import spack.repo
 import spack.stage
 import spack.store
+import spack.subprocess_context
 import spack.util.executable
 import spack.util.gpg
-import spack.subprocess_context
 import spack.util.spack_yaml as syaml
-
+from spack.fetch_strategy import FetchError, FetchStrategyComposite, URLFetchStrategy
 from spack.util.pattern import Bunch
-from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
-from spack.fetch_strategy import FetchError
 
 
 #
@@ -767,7 +756,7 @@ class MockLayout(object):
         self.root = root
 
     def path_for_spec(self, spec):
-        return '/'.join([self.root, spec.name])
+        return '/'.join([self.root, spec.name + '-' + spec.dag_hash()])
 
     def check_installed(self, spec):
         return True
@@ -919,6 +908,19 @@ def mock_archive(request, tmpdir_factory):
         expanded_archive_basedir=spack.stage._source_path_subdir)
 
 
+def _parse_cvs_date(line):
+    """Turn a CVS log date into a datetime.datetime"""
+    # dates in CVS logs can have slashes or dashes and may omit the time zone:
+    # date: 2021-07-07 02:43:33 -0700;  ...
+    # date: 2021-07-07 02:43:33;  ...
+    # date: 2021/07/07 02:43:33;  ...
+    m = re.search(r'date:\s+(\d+)[/-](\d+)[/-](\d+)\s+(\d+):(\d+):(\d+)', line)
+    if not m:
+        return None
+    year, month, day, hour, minute, second = [int(g) for g in m.groups()]
+    return datetime.datetime(year, month, day, hour, minute, second)
+
+
 @pytest.fixture(scope='session')
 def mock_cvs_repository(tmpdir_factory):
     """Creates a very simple CVS repository with two commits and a branch."""
@@ -945,9 +947,8 @@ def mock_cvs_repository(tmpdir_factory):
         """Find the most recent CVS time stamp in a `cvs log` output"""
         latest_timestamp = None
         for line in output.splitlines():
-            m = re.search(r'date:\s+([^;]*);', line)
-            if m:
-                timestamp = parse_date(m.group(1))
+            timestamp = _parse_cvs_date(line)
+            if timestamp:
                 if latest_timestamp is None:
                     latest_timestamp = timestamp
                 else:
@@ -1266,11 +1267,11 @@ def mock_svn_repository(tmpdir_factory):
 @pytest.fixture()
 def mutable_mock_env_path(tmpdir_factory):
     """Fixture for mocking the internal spack environments directory."""
-    saved_path = spack.environment.env_path
+    saved_path = ev.env_path
     mock_path = tmpdir_factory.mktemp('mock-env-path')
-    spack.environment.env_path = str(mock_path)
+    ev.env_path = str(mock_path)
     yield mock_path
-    spack.environment.env_path = saved_path
+    ev.env_path = saved_path
 
 
 @pytest.fixture()

@@ -14,6 +14,7 @@ class Yoda(AutotoolsPackage):
 
     tags = ['hep']
 
+    version('1.9.0', sha256='9a55de12ffebbe41d1704459c5c9289eeaf0f0eb6a4d0104ea222d7ab889fdf4')
     version('1.8.5', sha256='4c2e6b8571fc176271515a309b45687a2981af1b07ff3f00d0b035a597aa32fd')
     version('1.8.4', sha256='9d24a41c9b7cc6eb14cab0a48f65d2fca7ec9d794afe0922ceb158d0153c150e')
     version('1.8.3', sha256='d9dd0ea5e0f630cdf4893c09a40c78bd44455777c2125385ecc26fa9a2acba8a')
@@ -68,7 +69,7 @@ class Yoda(AutotoolsPackage):
     depends_on('py-cython@0.23.5:', type='build', when='@1.6.5:1.8.0')
     depends_on('py-cython@0.24:', type='build', when='@1.8.0:')
     depends_on('py-matplotlib', when='@1.3.0:', type=('build', 'run'))
-    depends_on('root', type=('build', 'run'), when='+root')
+    depends_on('root', type=('build', 'link', 'run'), when='+root')
 
     patch('yoda-1.5.5.patch', level=0, when='@1.5.5')
     patch('yoda-1.5.9.patch', level=0, when='@1.5.9')
@@ -80,12 +81,15 @@ class Yoda(AutotoolsPackage):
     patch('yoda-1.6.6.patch', level=0, when='@1.6.6')
     patch('yoda-1.6.7.patch', level=0, when='@1.6.7')
 
+    conflicts("%gcc@10:", when="@:1.8.5",
+              msg="yoda up to 1.8.5 is missing a <limits> include in AnalysisObject.h."
+              "Use version 1.9.0 or later, or patch earlier versions if needed.")
+
     def configure_args(self):
         args = []
         if self.spec.satisfies('@:1.6.0'):
-            args += '--with-boost=' + self.spec['boost'].prefix
+            args.append('--with-boost=' + self.spec['boost'].prefix)
 
-        if '+root' in self.spec:
-            args += '--enable-root'
+        args.extend(self.enable_or_disable('root'))
 
         return args

@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import os
+
+from spack import *
 
 
 class Ncurses(AutotoolsPackage, GNUMirrorPackage):
@@ -15,7 +16,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     characters and function-key mapping, and has all the other
     SYSV-curses enhancements over BSD curses."""
 
-    homepage = "http://invisible-island.net/ncurses/ncurses.html"
+    homepage = "https://invisible-island.net/ncurses/ncurses.html"
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "ncurses/ncurses-6.1.tar.gz"
 

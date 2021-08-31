@@ -6,18 +6,19 @@
 from spack import *
 
 
-class Geos(AutotoolsPackage):
+class Geos(CMakePackage):
     """GEOS (Geometry Engine - Open Source) is a C++ port of the Java
        Topology Suite (JTS). As such, it aims to contain the complete
        functionality of JTS in C++. This includes all the OpenGIS
        Simple Features for SQL spatial predicate functions and spatial
        operators, as well as specific JTS enhanced topology functions."""
 
-    homepage = "http://trac.osgeo.org/geos/"
+    homepage = "https://trac.osgeo.org/geos/"
     url      = "https://download.osgeo.org/geos/geos-3.8.1.tar.bz2"
 
     maintainers = ['adamjstewart']
 
+    version('3.9.1', sha256='7e630507dcac9dc07565d249a26f06a15c9f5b0c52dd29129a0e3d381d7e382a')
     version('3.8.1', sha256='4258af4308deb9dbb5047379026b4cd9838513627cb943a44e16c40e42ae17f7')
     version('3.7.2', sha256='2166e65be6d612317115bfec07827c11b403c3f303e0a7420a2106bc999d7707')
     version('3.6.2', sha256='045a13df84d605a866602f6020fc6cbf8bf4c42fb50de237a08926e1d7d7652a')
@@ -37,44 +38,20 @@ class Geos(AutotoolsPackage):
     version('3.3.4', sha256='cd5400aa5f3fe32246dfed5d238c5017e1808162c865c016480b3e6c07271904')
     version('3.3.3', sha256='dfcf4bd70ab212a5b7bad21d01b84748f101a545092b56dafdc3882ef3bddec9')
 
-    # Ruby bindings are fully supported
-    variant('ruby',   default=False, description='Enable Ruby support')
+    depends_on('cmake@3.8:', type='build')
+    depends_on('ninja', type='build')
 
-    # Since version 3.0, the Python bindings are unsupported
-    variant('python', default=False, description='Enable Python support')
+    generator = 'Ninja'
 
-    extends('ruby', when='+ruby')
-    extends('python', when='+python')
+    patch('https://patch-diff.githubusercontent.com/raw/libgeos/geos/pull/461.patch',
+          sha256='58795ae79f168851f27aa488a589796f9a7563d368ffa32e1fe315eb71699877',
+          when='@3.7:')
 
-    # SWIG bindings dropped in 3.9, so no python/ruby bindings
-    conflicts('+python', when='@3.9:', msg='SWIG bindings dropped in 3.9')
-    conflicts('+ruby', when='@3.9:', msg='SWIG bindings dropped in 3.9')
-
-    # Python 3 is supposedly supported, but I couldn't get it to work
-    # https://trac.osgeo.org/geos/ticket/774
-    depends_on('python@:2', when='@:3.5')
-    # This patch should fix above issue.
-    # Only tested on 3.8.1, but patch at least applies on 3.5
-    patch('geos_python3_config.patch', when='+python @3.5:3.8.99')
-
-    depends_on('swig', type='build', when='+ruby')
-    depends_on('swig', type='build', when='+python')
-
-    # I wasn't able to get the ruby bindings working.
-    # It resulted in "Undefined symbols for architecture x86_64".
-
-    def configure_args(self):
-        spec = self.spec
+    def cmake_args(self):
         args = []
 
-        if '+ruby' in spec:
-            args.append('--enable-ruby')
-        else:
-            args.append('--disable-ruby')
-
-        if '+python' in spec:
-            args.append('--enable-python')
-        else:
-            args.append('--disable-python')
+        # https://github.com/libgeos/geos/issues/460
+        if '%intel' in self.spec:
+            args.append(self.define('BUILD_ASTYLE', False))
 
         return args

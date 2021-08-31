@@ -9,9 +9,11 @@ both in memory and in its file
 """
 import datetime
 import functools
-import os
-import pytest
 import json
+import os
+
+import pytest
+
 try:
     import uuid
     _use_uuid = True
@@ -24,15 +26,14 @@ from jsonschema import validate
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
 
-import spack.repo
-import spack.store
 import spack.database
 import spack.package
+import spack.repo
 import spack.spec
-from spack.util.mock_package import MockPackageMultiRepo
-from spack.util.executable import Executable
+import spack.store
 from spack.schema.database_index import schema
-
+from spack.util.executable import Executable
+from spack.util.mock_package import MockPackageMultiRepo
 
 pytestmark = pytest.mark.db
 

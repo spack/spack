@@ -3,29 +3,28 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import collections
 import getpass
+import os
 import tempfile
-from six import StringIO
-
-from llnl.util.filesystem import touch, mkdirp
 
 import pytest
+from six import StringIO
 
-import spack.paths
+from llnl.util.filesystem import mkdirp, touch
+
 import spack.config
+import spack.environment as ev
 import spack.main
-import spack.environment
+import spack.paths
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
-import spack.schema.packages
 import spack.schema.mirrors
+import spack.schema.packages
 import spack.schema.repos
-import spack.util.spack_yaml as syaml
 import spack.util.path as spack_path
-
+import spack.util.spack_yaml as syaml
 
 # sample config data
 config_low = {
@@ -361,8 +360,8 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
 
     # Fake an active environment and $env is replaced properly
     fake_env_path = '/quux/quuux'
-    monkeypatch.setattr(spack.environment, 'get_env',
-                        lambda x, y: MockEnv(fake_env_path))
+    monkeypatch.setattr(ev, 'active_environment',
+                        lambda: MockEnv(fake_env_path))
     assert spack_path.canonicalize_path(
         '$env/foo/bar/baz'
     ) == os.path.join(fake_env_path, 'foo/bar/baz')

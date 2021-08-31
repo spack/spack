@@ -74,6 +74,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
     depends_on('camp')
+    depends_on('camp@master', when='@develop')
     depends_on('camp+cuda', when='+cuda')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('camp cuda_arch={0}'.format(sm_),

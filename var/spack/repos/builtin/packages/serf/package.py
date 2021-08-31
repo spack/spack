@@ -19,49 +19,48 @@ class Serf(SConsPackage):
     variant('debug', default=False,
             description='Enable debugging info and strict compile warnings')
 
-    depends_on('scons@2.3.0:', type='build')
-
     depends_on('apr')
     depends_on('apr-util')
     depends_on('openssl')
+    depends_on('python+pythoncmd', type='build')
+    depends_on('scons@2.3.0:', type='build')
+    depends_on('uuid')
     depends_on('zlib')
 
     patch('py3syntax.patch')
 
     def build_args(self, spec, prefix):
-        args = [
-            'PREFIX={0}'.format(prefix),
-            'APR={0}'.format(spec['apr'].prefix),
-            'APU={0}'.format(spec['apr-util'].prefix),
-            'OPENSSL={0}'.format(spec['openssl'].prefix),
-            'ZLIB={0}'.format(spec['zlib'].prefix),
-        ]
-
-        # ZLIB variable is ignored on non-Windows platforms before and
-        # including the version 1.3.9:
-        # https://www.mail-archive.com/dev@serf.apache.org/msg01359.html
-        # The issue is fixed in the trunk. Hopefully, the next stable version
-        # will work properly.
-        if '@:1.3.9' in self.spec:
-            zlib_spec = self.spec['zlib']
-            link_flags = [zlib_spec.libs.search_flags]
-            link_flags.extend([self.compiler.cc_rpath_arg + d
-                               for d in zlib_spec.libs.directories])
-            args.append('LINKFLAGS=' + ' '.join(link_flags))
-            args.append('CPPFLAGS=' + zlib_spec.headers.cpp_flags)
-
-        if '+debug' in spec:
-            args.append('DEBUG=yes')
-        else:
-            args.append('DEBUG=no')
+        args = {
+            'PREFIX': prefix,
+            'APR': spec['apr'].prefix,
+            'APU': spec['apr-util'].prefix,
+            'OPENSSL': spec['openssl'].prefix,
+            'ZLIB': spec['zlib'].prefix,
+            'DEBUG': 'yes' if '+debug' in spec else 'no',
+        }
 
         # SCons doesn't pass Spack environment variables to the
         # execution environment. Therefore, we can't use Spack's compiler
         # wrappers. Use the actual compilers. SCons seems to RPATH things
         # on its own anyway.
-        args.append('CC={0}'.format(self.compiler.cc))
+        args['CC'] = self.compiler.cc
 
-        return args
+        # Old versions of serf ignore the ZLIB variable on non-Windows platforms.
+        # Also, there is no UUID variable to specify its installation location.
+        # Pass explicit link flags for both.
+        library_dirs = []
+        include_dirs = []
+        for dep in spec.dependencies(deptype='link'):
+            query = self.spec[dep.name]
+            library_dirs.extend(query.libs.directories)
+            include_dirs.extend(query.headers.directories)
+
+        rpath = self.compiler.cc_rpath_arg
+        args['LINKFLAGS'] = '-L' + ' -L'.join(library_dirs)
+        args['LINKFLAGS'] += ' ' + rpath + (' ' + rpath).join(library_dirs)
+        args['CPPFLAGS'] = '-I' + ' -I'.join(include_dirs)
+
+        return [key + '=' + value for key, value in args.items()]
 
     def build_test(self):
         # FIXME: Several test failures:

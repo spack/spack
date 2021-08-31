@@ -3,13 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from glob import glob
-from llnl.util.filesystem import LibraryList
 import os
-import re
 import platform
+import re
+from glob import glob
+
 import llnl.util.tty as tty
+from llnl.util.filesystem import LibraryList
+
+from spack import *
 
 # FIXME Remove hack for polymorphic versions
 # This package uses a ugly hack to be able to dispatch, given the same
@@ -23,6 +25,10 @@ import llnl.util.tty as tty
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '11.4.0': {
+        'Linux-aarch64': ('f0c8e80d98a601ddca031b6764459984366008c7d3847e7c7f99b36bd4438e3c', 'https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux_sbsa.run'),
+        'Linux-x86_64': ('d219db30f7415a115a4ea22bdbb5984b0a18f7f891cad6074c5da45d223aaa4b', 'https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux.run'),
+        'Linux-ppc64le': ('6eb2fd0d9d5bc39fb243b5e1789ff827f325d098cd1fbb828a0499552b9544cc', 'https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda_11.4.0_470.42.01_linux_ppc64le.run')},
     '11.3.1': {
         'Linux-aarch64': ('39990d3da88b21289ac20850bc183f0b66275f32e1f562b551c05843bf506e4c', 'https://developer.download.nvidia.com/compute/cuda/11.3.1/local_installers/cuda_11.3.1_465.19.01_linux_sbsa.run'),
         'Linux-x86_64': ('ad93ea98efced35855c58d3a0fc326377c60917cb3e8c017d3e6d88819bf2934', 'https://developer.download.nvidia.com/compute/cuda/11.3.1/local_installers/cuda_11.3.1_465.19.01_linux.run'),
@@ -133,6 +139,11 @@ class Cuda(Package):
         return match.group(1) if match else None
 
     def setup_build_environment(self, env):
+        if self.spec.satisfies('@:8.0.61'):
+            # Perl 5.26 removed current directory from module search path,
+            # CUDA 9 has a fix for this, but CUDA 8 and lower don't.
+            env.append_path('PERL5LIB', self.stage.source_path)
+
         if self.spec.satisfies('@10.1.243:'):
             libxml2_home = self.spec['libxml2'].prefix
             env.set('LIBXML2HOME', libxml2_home)
@@ -171,6 +182,18 @@ class Cuda(Package):
             os.makedirs(os.path.join(prefix, "src"))
             os.symlink(includedir, os.path.join(prefix, "include"))
 
+        install_shell = which('sh')
+
+        if self.spec.satisfies('@:8.0.61'):
+            # Perl 5.26 removed current directory from module search path.
+            # We are addressing this by exporting `PERL5LIB` earlier, but for some
+            # reason, it is not enough. One more file needs to be extracted before
+            # running the actual installer. This solution is one of the commonly
+            # found on the Internet, when people try to install CUDA <= 8 manually.
+            # For example: https://askubuntu.com/a/1087842
+            arguments = [runfile, '--tar', 'mxvf', './InstallUtils.pm']
+            install_shell(*arguments)
+
         # CUDA 10.1+ has different cmdline options for the installer
         arguments = [
             runfile,            # the install script
@@ -178,13 +201,15 @@ class Cuda(Package):
             '--override',       # override compiler version checks
             '--toolkit',        # install CUDA Toolkit
         ]
+
         if spec.satisfies('@10.1:'):
             arguments.append('--installpath=%s' % prefix)   # Where to install
         else:
             arguments.append('--verbose')                   # Verbose log file
             arguments.append('--toolkitpath=%s' % prefix)   # Where to install
-        install_shell = which('sh')
+
         install_shell(*arguments)
+
         try:
             os.remove('/tmp/cuda-installer.log')
         except OSError:

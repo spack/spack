@@ -10,7 +10,7 @@ class Busco(PythonPackage):
     """Assesses genome assembly and annotation completeness with Benchmarking
        Universal Single-Copy Orthologs"""
 
-    homepage = "http://busco.ezlab.org/"
+    homepage = "https://busco.ezlab.org/"
     url      = "https://gitlab.com/api/v4/projects/ezlab%2Fbusco/repository/archive.tar.gz?sha=2.0.1"
     git      = "https://gitlab.com/ezlab/busco.git"
 

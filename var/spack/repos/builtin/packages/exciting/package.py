@@ -15,8 +15,8 @@ class Exciting(MakefilePackage):
     particular focus are excited states within many-body perturbation theory.
     """
 
-    homepage = "http://exciting-code.org/"
-    url      = "http://exciting.wdfiles.com/local--files/nitrogen-14/exciting.nitrogen-14.tar.gz"
+    homepage = "https://exciting-code.org/"
+    url      = "https://exciting.wdfiles.com/local--files/nitrogen-14/exciting.nitrogen-14.tar.gz"
 
     version('14', sha256='a7feaffdc23881d6c0737d2f79f94d9bf073e85ea358a57196d7f7618a0a3eff')
 

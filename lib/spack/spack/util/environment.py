@@ -9,21 +9,20 @@ import contextlib
 import inspect
 import json
 import os
+import os.path
 import platform
 import re
 import socket
 import sys
-import os.path
 
 import six
+from six.moves import cPickle
+from six.moves import shlex_quote as cmd_quote
 
 import llnl.util.tty as tty
-import spack.util.executable as executable
-
 from llnl.util.lang import dedupe
 
-from six.moves import shlex_quote as cmd_quote
-from six.moves import cPickle
+import spack.util.executable as executable
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
@@ -159,8 +158,8 @@ def get_host_environment():
     """Return a dictionary (lookup) with host information (not including the
     os.environ).
     """
-    import spack.spec
     import spack.architecture as architecture
+    import spack.spec
     arch = architecture.Arch(
         architecture.platform(), 'default_os', 'default_target')
     arch_spec = spack.spec.Spec('arch=%s' % arch)
@@ -624,7 +623,7 @@ class EnvironmentModifications(object):
 
         Args:
             filename (str): the file to be sourced
-            *arguments (list of str): arguments to pass on the command line
+            *arguments (list): arguments to pass on the command line
 
         Keyword Args:
             shell (str): the shell to use (default: ``bash``)
@@ -868,7 +867,7 @@ def inspect_path(root, inspections, exclude=None):
             modifications are not performed immediately, but stored in a
             command object that is returned to client
 
-        exclude (callable): optional callable. If present it must accept an
+        exclude (typing.Callable): optional callable. If present it must accept an
             absolute path and return True if it should be excluded from the
             inspection
 
@@ -921,7 +920,7 @@ def preserve_environment(*variables):
     explicitly unset on exit.
 
     Args:
-        variables (list of str): list of environment variables to be preserved
+        variables (list): list of environment variables to be preserved
     """
     cache = {}
     for var in variables:
@@ -1032,9 +1031,9 @@ def sanitize(environment, blacklist, whitelist):
 
     Args:
         environment (dict): input dictionary
-        blacklist (list of str): literals or regex patterns to be
+        blacklist (list): literals or regex patterns to be
             blacklisted
-        whitelist (list of str): literals or regex patterns to be
+        whitelist (list): literals or regex patterns to be
             whitelisted
     """
 

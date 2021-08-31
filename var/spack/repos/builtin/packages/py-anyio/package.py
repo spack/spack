@@ -1,0 +1,25 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class PyAnyio(PythonPackage):
+    """High level compatibility layer for multiple asynchronous event loop
+       implementations."""
+
+    homepage = "https://github.com/agronholm/anyio"
+    pypi     = "anyio/anyio-3.2.1.tar.gz"
+
+    version('3.2.1', sha256='07968db9fa7c1ca5435a133dc62f988d84ef78e1d9b22814a59d1c62618afbc5')
+
+    depends_on('python@3.6.2:', type=('build', 'run'))
+    depends_on('py-setuptools@42:', type='build')
+    depends_on('py-setuptools-scm+toml@3.4:', type='build')
+    depends_on('py-async-generator', when='^python@:3.6.999', type=('build', 'run'))
+    depends_on('py-dataclasses', when='^python@:3.6.999', type=('build', 'run'))
+    depends_on('py-idna@2.8:', type=('build', 'run'))
+    depends_on('py-sniffio@1.1:', type=('build', 'run'))
+    depends_on('py-typing-extensions', when='^python@:3.7.999', type=('build', 'run'))

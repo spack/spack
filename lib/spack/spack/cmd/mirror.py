@@ -17,9 +17,8 @@ import spack.mirror
 import spack.repo
 import spack.util.url as url_util
 import spack.util.web as web_util
-
-from spack.spec import Spec
 from spack.error import SpackError
+from spack.spec import Spec
 from spack.util.spack_yaml import syaml_dict
 
 description = "manage mirrors (source and binary)"
@@ -254,7 +253,7 @@ def _determine_specs_to_mirror(args):
                         "To mirror all packages, use the '--all' option"
                         " (this will require significant time and space).")
 
-            env = ev.get_env(args, 'mirror')
+            env = ev.active_environment()
             if env:
                 env_specs = env.all_specs()
             else:

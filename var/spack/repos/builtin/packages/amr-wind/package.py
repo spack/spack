@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import itertools
+
+from spack import *
 
 
 def process_amrex_constraints():
@@ -25,9 +26,9 @@ class AmrWind(CMakePackage, CudaPackage):
     incompressible flow sover for wind turbine and wind farm simulations. """
 
     homepage = "https://github.com/Exawind/amr-wind"
-    git      = "https://github.com/exawind/amr-wind.git"
+    git      = "https://github.com/Exawind/amr-wind.git"
 
-    maintainers = ['sayerhs', 'jrood-nrel', 'michaeljbrazell']
+    maintainers = ['jrood-nrel', 'michaeljbrazell']
 
     tags = ['ecp', 'ecp-apps']
 
@@ -53,8 +54,6 @@ class AmrWind(CMakePackage, CudaPackage):
             description='Enable OpenFAST integration')
     variant('internal-amrex', default=True,
             description='Use AMRex submodule to build')
-    variant('fortran', default=False,
-            description='Build fortran interfaces')
 
     conflicts('+openmp', when='+cuda')
 
@@ -62,16 +61,14 @@ class AmrWind(CMakePackage, CudaPackage):
 
     for opt in process_amrex_constraints():
         dopt = '+particles' + opt
-        if '+hypre' in dopt:
-            dopt = "+fortran" + dopt
         depends_on('amrex@develop' + dopt, when='~internal-amrex' + opt)
 
-    depends_on('hypre+mpi+int64~cuda@2.20.0:', when='+mpi~cuda+hypre')
-    depends_on('hypre~mpi+int64~cuda@2.20.0:', when='~mpi~cuda+hypre')
+    depends_on('hypre+shared+mpi~int64~cuda@2.20.0:', when='+mpi~cuda+hypre')
+    depends_on('hypre+shared~mpi~int64~cuda@2.20.0:', when='~mpi~cuda+hypre')
     for arch in CudaPackage.cuda_arch_values:
-        depends_on('hypre+mpi~int64+cuda cuda_arch=%s @2.20.0:' % arch,
+        depends_on('hypre+shared+mpi~int64+cuda cuda_arch=%s @2.20.0:' % arch,
                    when='+mpi+cuda+hypre cuda_arch=%s' % arch)
-        depends_on('hypre~mpi~int64+cuda cuda_arch=%s @2.20.0:' % arch,
+        depends_on('hypre+shared~mpi~int64+cuda cuda_arch=%s @2.20.0:' % arch,
                    when='~mpi+cuda+hypre cuda_arch=%s' % arch)
     depends_on('netcdf-c', when='+netcdf')
     depends_on('masa', when='+masa')
@@ -81,7 +78,7 @@ class AmrWind(CMakePackage, CudaPackage):
         define = CMakePackage.define
 
         vs = ["mpi", "cuda", "openmp", "netcdf", "hypre", "masa",
-              "openfast", "tests", "fortran"]
+              "openfast", "tests"]
         args = [
             self.define_from_variant("AMR_WIND_ENABLE_%s" % v.upper(), v)
             for v in vs

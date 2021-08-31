@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import sys
 import os
+import sys
+
+from spack import *
 
 
 class Boost(Package):
@@ -17,7 +18,7 @@ class Boost(Package):
        across a broad spectrum of applications. The Boost license
        encourages both commercial and non-commercial use.
     """
-    homepage = "http://www.boost.org"
+    homepage = "https://www.boost.org"
     url      = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
     git      = "https://github.com/boostorg/boost.git"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
@@ -25,6 +26,7 @@ class Boost(Package):
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.77.0', sha256='fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854')
     version('1.76.0', sha256='f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41')
     version('1.75.0', sha256='953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb')
     version('1.74.0', sha256='83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1')
@@ -197,6 +199,14 @@ class Boost(Package):
     # Container's Extended Allocators were not added until 1.56.0
     conflicts('+container', when='@:1.55.99')
 
+    # Boost.System till 1.76 (included) was relying on mutex, which was not
+    # detected correctly on Darwin platform when using GCC
+    #
+    # More details here:
+    # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878889166
+    # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878913339
+    conflicts('%gcc', when='@:1.76 +system platform=darwin')
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
@@ -275,6 +285,18 @@ class Boost(Package):
     # See https://github.com/spack/spack/issues/20757
     # and https://github.com/spack/spack/pull/21408
     patch("bootstrap-toolset.patch", when="@1.75")
+
+    # Allow building context asm sources with GCC on Darwin
+    # See https://github.com/spack/spack/pull/24889
+    # and https://github.com/boostorg/context/issues/177
+    patch("context-macho-gcc.patch", when="@1.65:1.76 +context platform=darwin %gcc")
+
+    # Fix float128 support when building with CUDA and Cray compiler
+    # See https://github.com/boostorg/config/pull/378
+    patch("https://github.com/boostorg/config/commit/fee1ad07968386b6d547f089311b7a2c1bf7fa55.patch",
+          sha256="3b159d65a0d3d2df2a21c6bf56ffaba943fce92d2d41d628b2c4d2e924e0f421",
+          when="@:1.76%cce",
+          level=2)
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
@@ -549,6 +571,10 @@ class Boost(Package):
         ]
 
         threading_opts = self.determine_b2_options(spec, b2_options)
+
+        # Create headers if building from a git checkout
+        if '@develop' in spec:
+            b2('headers', *b2_options)
 
         b2('--clean', *b2_options)
 

@@ -7,29 +7,31 @@
 https://github.com/spack/spack-monitor/blob/main/script/spackmoncli.py
 """
 
-from datetime import datetime
-import hashlib
 import base64
+import hashlib
 import os
 import re
+from datetime import datetime
 
 try:
-    from urllib.request import Request, urlopen
     from urllib.error import URLError
+    from urllib.request import Request, urlopen
 except ImportError:
     from urllib2 import urlopen, Request, URLError  # type: ignore  # novm
+
+from copy import deepcopy
+from glob import glob
+
+import llnl.util.tty as tty
 
 import spack
 import spack.config
 import spack.hash_types as ht
 import spack.main
 import spack.store
+import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.path
-import llnl.util.tty as tty
-from copy import deepcopy
-from glob import glob
 
 # A global client to instantiate once
 cli = None
@@ -85,7 +87,7 @@ def get_monitor_group(subparser):
     monitor_group = subparser.add_argument_group()
     monitor_group.add_argument(
         '--monitor', action='store_true', dest='use_monitor', default=False,
-        help="interact with a montor server during builds.")
+        help="interact with a monitor server during builds.")
     monitor_group.add_argument(
         '--monitor-save-local', action='store_true', dest='monitor_save_local',
         default=False, help="save monitor results to .spack instead of server.")

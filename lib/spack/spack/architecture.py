@@ -60,20 +60,22 @@ import contextlib
 import functools
 import warnings
 
-import archspec.cpu
 import six
 
-import llnl.util.tty as tty
+import archspec.cpu
+
 import llnl.util.lang as lang
+import llnl.util.tty as tty
 
 import spack.compiler
 import spack.compilers
 import spack.config
-import spack.paths
 import spack.error as serr
+import spack.paths
+import spack.spec
+import spack.util.classes
 import spack.util.executable
 import spack.version
-import spack.util.classes
 from spack.util.spack_yaml import syaml_dict
 
 
@@ -192,11 +194,10 @@ class Target(object):
         the compiler passed as argument.
 
         Args:
-            compiler (CompilerSpec or Compiler): object that contains both the
-                name and the version of the compiler we want to use
+            compiler (spack.spec.CompilerSpec or spack.compiler.Compiler): object that
+                contains both the name and the version of the compiler we want to use
         """
         # Mixed toolchains are not supported yet
-        import spack.compilers
         if isinstance(compiler, spack.compiler.Compiler):
             if spack.compilers.is_mixed_toolchain(compiler):
                 msg = ('microarchitecture specific optimizations are not '
@@ -217,7 +218,6 @@ class Target(object):
             # of its name in compilers.yaml. Depending on where this function
             # is called we might get either a CompilerSpec or a fully fledged
             # compiler object.
-            import spack.spec
             if isinstance(compiler, spack.spec.CompilerSpec):
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()
             try:
@@ -592,17 +592,20 @@ def use_platform(new_platform):
     assert isinstance(new_platform, Platform), msg.format(new_platform)
 
     original_platform_fn, original_all_platforms_fn = platform, all_platforms
-    platform = _PickleableCallable(new_platform)
-    all_platforms = _PickleableCallable([type(new_platform)])
 
-    # Clear configuration and compiler caches
-    spack.config.config.clear_caches()
-    spack.compilers._cache_config_files = []
+    try:
+        platform = _PickleableCallable(new_platform)
+        all_platforms = _PickleableCallable([type(new_platform)])
 
-    yield new_platform
+        # Clear configuration and compiler caches
+        spack.config.config.clear_caches()
+        spack.compilers._cache_config_files = []
 
-    platform, all_platforms = original_platform_fn, original_all_platforms_fn
+        yield new_platform
 
-    # Clear configuration and compiler caches
-    spack.config.config.clear_caches()
-    spack.compilers._cache_config_files = []
+    finally:
+        platform, all_platforms = original_platform_fn, original_all_platforms_fn
+
+        # Clear configuration and compiler caches
+        spack.config.config.clear_caches()
+        spack.compilers._cache_config_files = []

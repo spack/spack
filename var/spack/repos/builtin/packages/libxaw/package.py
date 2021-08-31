@@ -10,7 +10,7 @@ class Libxaw(AutotoolsPackage, XorgPackage):
     """Xaw is the X Athena Widget Set.
     Xaw is a widget set based on the X Toolkit Intrinsics (Xt) Library."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXaw"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXaw"
     xorg_mirror_path = "lib/libXaw-1.0.13.tar.gz"
 
     version('1.0.13', sha256='7e74ac3e5f67def549722ff0333d6e6276b8becd9d89615cda011e71238ab694')

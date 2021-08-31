@@ -26,3 +26,7 @@ class Cppunit(AutotoolsPackage):
         cxxstdflag = '' if cxxstd == 'default' else \
                      getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
         env.append_flags('CXXFLAGS', cxxstdflag)
+
+    def configure_args(self):
+        args = ["--disable-doxygen"]
+        return args

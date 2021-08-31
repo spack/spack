@@ -37,14 +37,15 @@ import re
 from typing import Optional  # novm
 
 import llnl.util.filesystem
-from llnl.util.lang import dedupe
 import llnl.util.tty as tty
+from llnl.util.lang import dedupe
+
 import spack.build_environment as build_environment
 import spack.environment as ev
 import spack.error
 import spack.paths
-import spack.schema.environment
 import spack.projections as proj
+import spack.schema.environment
 import spack.tengine as tengine
 import spack.util.environment
 import spack.util.file_permissions as fp
@@ -697,7 +698,11 @@ class BaseContext(tengine.Context):
             if use_view is True:
                 use_view = ev.default_view_name
 
-            env = ev.get_env({}, 'post_env_write_hook', required=True)
+            env = ev.active_environment()
+            if not env:
+                raise ev.SpackEnvironmentViewError("Module generation with views "
+                                                   "requires active environment")
+
             view = env.views[use_view]
 
             spec.prefix = view.get_projection_for_spec(spec)

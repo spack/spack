@@ -29,21 +29,28 @@ import os.path
 import re
 import shutil
 import sys
-from typing import Optional, List  # novm
+from typing import List, Optional  # novm
 
-import llnl.util.tty as tty
 import six
 import six.moves.urllib.parse as urllib_parse
+
+import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    get_single_file,
+    mkdirp,
+    temp_cwd,
+    temp_rename,
+    working_dir,
+)
+
 import spack.config
 import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
-from llnl.util.filesystem import (
-    working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
 from spack.util.compression import decompressor_for, extension
-from spack.util.executable import which, CommandNotFoundError
+from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
 from spack.version import Version, ver
 
@@ -331,7 +338,7 @@ class URLFetchStrategy(FetchStrategy):
     def _existing_url(self, url):
         tty.debug('Checking existence of {0}'.format(url))
 
-        if spack.config.get('config:use_curl'):
+        if spack.config.get('config:url_fetch_method') == 'curl':
             curl = self.curl
             # Telling curl to fetch the first byte (-r 0-0) is supposed to be
             # portable.
@@ -350,7 +357,7 @@ class URLFetchStrategy(FetchStrategy):
             return (response.getcode() is None or response.getcode() == 200)
 
     def _fetch_from_url(self, url):
-        if spack.config.get('config:use_curl'):
+        if spack.config.get('config:url_fetch_method') == 'curl':
             return self._fetch_curl(url)
         else:
             return self._fetch_urllib(url)
@@ -382,12 +389,11 @@ class URLFetchStrategy(FetchStrategy):
                 os.remove(save_file)
             msg = 'urllib failed to fetch with error {0}'.format(e)
             raise FailedDownloadError(url, msg)
-        _data = response.read()
-        with open(save_file, 'wb') as _open_file:
-            _open_file.write(_data)
-        headers = _data.decode('utf-8', 'ignore')
 
-        self._check_headers(headers)
+        with open(save_file, 'wb') as _open_file:
+            shutil.copyfileobj(response, _open_file)
+
+        self._check_headers(str(headers))
         return None, save_file
 
     @_needs_stage
@@ -1248,8 +1254,9 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @property
     def hg(self):
-        """:returns: The hg executable
-        :rtype: Executable
+        """
+        Returns:
+            Executable: the hg executable
         """
         if not self._hg:
             self._hg = which('hg', required=True)
@@ -1399,7 +1406,7 @@ def from_kwargs(**kwargs):
             ``version()`` directive in a package.
 
     Returns:
-        fetch_strategy: The fetch strategy that matches the args, based
+        typing.Callable: The fetch strategy that matches the args, based
             on attribute names (e.g., ``git``, ``hg``, etc.)
 
     Raises:

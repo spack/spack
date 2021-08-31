@@ -3,12 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
-
-# to get system platform type
 import sys
+
+from spack import *
 
 
 def detect_scheduler():
@@ -24,7 +22,7 @@ class Scr(CMakePackage):
        Linux cluster to provide a fast, scalable checkpoint/restart
        capability for MPI codes"""
 
-    homepage = "http://computing.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
+    homepage = "https://computing.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
     url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
     git      = "https://github.com/llnl/scr.git"
 
@@ -42,13 +40,13 @@ class Scr(CMakePackage):
     depends_on('mpi')
 
     # Use the latest iteration of the components when installing scr@develop
-    depends_on('axl@master',      when="@develop")
-    depends_on('er@master',       when="@develop")
-    depends_on('kvtree@master',   when="@develop")
-    depends_on('rankstr@master',  when="@develop")
-    depends_on('redset@master',   when="@develop")
-    depends_on('shuffile@master', when="@develop")
-    depends_on('spath@master',    when="@develop")
+    depends_on('axl@main',      when="@develop")
+    depends_on('er@main',       when="@develop")
+    depends_on('kvtree@main',   when="@develop")
+    depends_on('rankstr@main',  when="@develop")
+    depends_on('redset@main',   when="@develop")
+    depends_on('shuffile@main', when="@develop")
+    depends_on('spath@main',    when="@develop")
 
     # SCR legacy is anything 2.x.x or earlier
     # SCR components is anything 3.x.x or later

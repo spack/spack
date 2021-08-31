@@ -4,19 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
 import sys
+
+from spack import *
 
 
 class Corge(Package):
     """A toy package to test dependencies"""
 
     homepage = "https://www.example.com"
-    url      = "https://github.com/gartung/corge/archive/v3.0.0.tar.gz"
-
-    version('3.0.0',
-            sha256='5058861c3b887511387c725971984cec665a8307d660158915a04d7786fed6bc')
+    has_code = False
+    version('3.0.0')
 
     depends_on('quux')
 

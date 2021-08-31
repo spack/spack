@@ -9,9 +9,10 @@
 a stack trace and drops the user into an interpreter.
 
 """
-import spack.util.spack_json as sjson
-import time
 import sys
+import time
+
+import spack.util.spack_json as sjson
 
 
 class Timer(object):

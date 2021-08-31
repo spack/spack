@@ -5,11 +5,11 @@
 
 from spack import *
 
-
 # Libiberty has two homes: binutils and gcc.  This package uses the
 # binutils tarfile but only builds the libiberty subdirectory.  This
 # is useful for other packages that want the demangling functions
 # without the rest of binutils.
+
 
 class Libiberty(AutotoolsPackage, GNUMirrorPackage):
     """The libiberty.a library from GNU binutils.  Libiberty provides

@@ -4,24 +4,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-import pytest
 import jinja2
+import pytest
 
 import archspec.cpu
 
 import llnl.util.lang
 
 import spack.architecture
+import spack.compilers
 import spack.concretize
 import spack.error
+import spack.platforms.test
 import spack.repo
-
 from spack.concretize import find_spec
 from spack.spec import Spec
-from spack.version import ver
 from spack.util.mock_package import MockPackageMultiRepo
-import spack.compilers
-import spack.platforms.test
+from spack.version import ver
 
 
 def check_spec(abstract, concrete):
@@ -1261,3 +1260,17 @@ class TestConcretize(object):
         s = spack.spec.Spec('unsat-virtual-dependency')
         with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
             s.concretize()
+
+    @pytest.mark.regression('23951')
+    def test_newer_dependency_adds_a_transitive_virtual(self):
+        # Ensure that a package doesn't concretize any of its transitive
+        # dependencies to an old version because newer versions pull in
+        # a new virtual dependency. The possible concretizations here are:
+        #
+        # root@1.0 <- middle@1.0 <- leaf@2.0 <- blas
+        # root@1.0 <- middle@1.0 <- leaf@1.0
+        #
+        # and "blas" is pulled in only by newer versions of "leaf"
+        s = spack.spec.Spec('root-adds-virtual').concretized()
+        assert s['leaf-adds-virtual'].satisfies('@2.0')
+        assert 'blas' in s

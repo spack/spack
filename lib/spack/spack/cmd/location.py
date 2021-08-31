@@ -6,12 +6,12 @@
 from __future__ import print_function
 
 import os
+
 import llnl.util.tty as tty
 
-import spack.environment as ev
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment
+import spack.environment as ev
 import spack.paths
 import spack.repo
 import spack.stage
@@ -72,7 +72,7 @@ def location(parser, args):
         return
 
     if args.location_env:
-        path = spack.environment.root(args.location_env)
+        path = ev.root(args.location_env)
         if not os.path.isdir(path):
             tty.die("no such environment: '%s'" % args.location_env)
         print(path)
@@ -96,7 +96,7 @@ def location(parser, args):
 
     # install_dir command matches against installed specs.
     if args.install_dir:
-        env = ev.get_env(args, 'location')
+        env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
         print(spec.prefix)
         return

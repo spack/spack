@@ -6,13 +6,19 @@ import inspect
 import os
 import shutil
 
+import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    filter_file,
+    find,
+    get_filetype,
+    path_contains_subdirectory,
+    same_path,
+    working_dir,
+)
+from llnl.util.lang import match_predicate
+
 from spack.directives import extends
 from spack.package import PackageBase, run_after
-
-from llnl.util.filesystem import (working_dir, get_filetype, filter_file,
-                                  path_contains_subdirectory, same_path, find)
-from llnl.util.lang import match_predicate
-import llnl.util.tty as tty
 
 
 class PythonPackage(PackageBase):
@@ -121,24 +127,25 @@ class PythonPackage(PackageBase):
             list: list of strings of module names
         """
         modules = []
+        root = os.path.join(
+            self.prefix,
+            self.spec['python'].package.config_vars['python_lib']['false']['false'],
+        )
 
-        # Python libraries may be installed in lib or lib64
-        # See issues #18520 and #17126
-        for lib in ['lib', 'lib64']:
-            root = os.path.join(self.prefix, lib, 'python{0}'.format(
-                self.spec['python'].version.up_to(2)), 'site-packages')
-            # Some Python libraries are packages: collections of modules
-            # distributed in directories containing __init__.py files
-            for path in find(root, '__init__.py', recursive=True):
-                modules.append(path.replace(root + os.sep, '', 1).replace(
-                    os.sep + '__init__.py', '').replace('/', '.'))
-            # Some Python libraries are modules: individual *.py files
-            # found in the site-packages directory
-            for path in find(root, '*.py', recursive=False):
-                modules.append(path.replace(root + os.sep, '', 1).replace(
-                    '.py', '').replace('/', '.'))
+        # Some Python libraries are packages: collections of modules
+        # distributed in directories containing __init__.py files
+        for path in find(root, '__init__.py', recursive=True):
+            modules.append(path.replace(root + os.sep, '', 1).replace(
+                os.sep + '__init__.py', '').replace('/', '.'))
+
+        # Some Python libraries are modules: individual *.py files
+        # found in the site-packages directory
+        for path in find(root, '*.py', recursive=False):
+            modules.append(path.replace(root + os.sep, '', 1).replace(
+                '.py', '').replace('/', '.'))
 
         tty.debug('Detected the following modules: {0}'.format(modules))
+
         return modules
 
     def setup_file(self):
@@ -248,15 +255,11 @@ class PythonPackage(PackageBase):
         # Get all relative paths since we set the root to `prefix`
         # We query the python with which these will be used for the lib and inc
         # directories. This ensures we use `lib`/`lib64` as expected by python.
-        python = spec['python'].package.command
-        command_start = 'print(distutils.sysconfig.'
-        commands = ';'.join([
-            'import distutils.sysconfig',
-            command_start + 'get_python_lib(plat_specific=False, prefix=""))',
-            command_start + 'get_python_lib(plat_specific=True, prefix=""))',
-            command_start + 'get_python_inc(plat_specific=True, prefix=""))'])
-        pure_site_packages_dir, plat_site_packages_dir, inc_dir = python(
-            '-c', commands, output=str, error=str).strip().split('\n')
+        pure_site_packages_dir = spec['python'].package.config_vars[
+            'python_lib']['false']['false']
+        plat_site_packages_dir = spec['python'].package.config_vars[
+            'python_lib']['true']['false']
+        inc_dir = spec['python'].package.config_vars['python_inc']['true']
 
         args += ['--root=%s' % prefix,
                  '--install-purelib=%s' % pure_site_packages_dir,

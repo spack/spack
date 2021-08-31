@@ -9,7 +9,7 @@ class Openpa(AutotoolsPackage):
     """An open source, highly-portable library that provides atomic primitives
     (and related constructs) for high performance, concurrent software"""
 
-    homepage = 'https://trac.mpich.org/projects/openpa'
+    homepage = 'https://github.com/pmodels/openpa'
     url      = 'https://github.com/pmodels/openpa/releases/download/v1.0.4/openpa-1.0.4.tar.gz'
 
     version('1.0.4', sha256='9e5904b3bbdcb24e8429c12d613422e716a3479f3e0aeefbd9ce546852899e3a')

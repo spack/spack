@@ -17,10 +17,11 @@ class Rocalution(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocALUTION"
     git      = "https://github.com/ROCmSoftwarePlatform/rocALUTION.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.0', sha256='f064b96f9f04cf22b89f95f72147fcfef28e2c56ecd764008c060f869c74c144')
     version('4.2.0', sha256='0424adf522ded41de5b77666e04464a25c73c92e34025762f30837f90a797445')
     version('4.1.0', sha256='3f61be18a02dff0c152a0ad7eb4779c43dd744b0ba172aa6a4267fc596d582e4')
     version('4.0.0', sha256='80a224a5c19dea290e6edc0e170c3dff2e726c2b3105d599ec6858cc66f076a9')
@@ -32,7 +33,7 @@ class Rocalution(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
@@ -41,13 +42,8 @@ class Rocalution(CMakePackage):
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
-    for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
+    for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0']:
         depends_on('rocrand@' + ver, when='@' + ver)
-
-    for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, when='@' + ver)
-
-    patch('0001-fix-hip-build-error.patch')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -63,8 +59,14 @@ class Rocalution(CMakePackage):
                 filter_file(match, substitute, *files, **kwargs)
 
     def cmake_args(self):
-        return [
+        args = [
+            self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('SUPPORT_HIP', 'ON'),
             self.define('SUPPORT_MPI', 'OFF'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
         ]
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
+        return args

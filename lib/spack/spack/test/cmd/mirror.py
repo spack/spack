@@ -3,12 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pytest
 import os
 
-from spack.main import SpackCommand, SpackCommandError
-import spack.environment as ev
+import pytest
+
 import spack.config
+import spack.environment as ev
+from spack.main import SpackCommand, SpackCommandError
 
 mirror = SpackCommand('mirror')
 env = SpackCommand('env')

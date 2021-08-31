@@ -2,6 +2,7 @@ packages:
   all:
     providers:
       mpi: [openmpi, mpich]
+      blas: [openblas]
   externaltool:
     buildable: False
     externals:
@@ -46,3 +47,5 @@ packages:
     externals:
       - spec: external-non-default-variant@3.8.7~foo~bar
         prefix: /usr
+  version-test-dependency-preferred:
+    version: ['5.2.5']

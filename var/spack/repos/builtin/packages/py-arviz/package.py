@@ -11,7 +11,7 @@ class PyArviz(PythonPackage):
     analysis of Bayesian models. Includes functions for posterior analysis,
     model checking, comparison and diagnostics."""
 
-    homepage = "http://github.com/arviz-devs/arviz"
+    homepage = "https://github.com/arviz-devs/arviz"
     pypi = "arviz/arviz-0.6.1.tar.gz"
 
     version('0.6.1', sha256='435edf8db49c41a8fa198f959e7581063006c49a4efdef4755bb778db6fd4f72')

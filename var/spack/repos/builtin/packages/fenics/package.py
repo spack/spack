@@ -14,7 +14,7 @@ class Fenics(CMakePackage):
     the code generation interface UFC, the form language UFL and a range of
     additional components."""
 
-    homepage = "http://fenicsproject.org/"
+    homepage = "https://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/dolfin.git"
     url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2019.1.0.post0.tar.gz"
 
@@ -72,6 +72,11 @@ class Fenics(CMakePackage):
     patch('hdf5~cxx-detection.patch', when='@:1.6.0')
 
     patch('header_fix.patch', when='@2019.1.0.post0')
+    # endian.hpp for byte order detection was removed with Boost 1.73,
+    # use __BYTE_ORDER__ instead
+    patch('https://bitbucket.org/fenics-project/dolfin/issues/attachments/1116/fenics-project/dolfin/1602778118.04/1116/0001-Use-__BYTE_ORDER__-instead-of-removed-Boost-endian.h.patch',
+          sha256='1cc69e612df18feb5ebdc78cd902cfefda5ffc077735f0b67a1dcb1bf82e63c9',
+          when='@2019.1.0.post0')
     patch('petsc_3_11.patch', when='@2018.1.0.post1')
 
     # enable extension support for fenics package
@@ -96,11 +101,8 @@ class Fenics(CMakePackage):
     depends_on('pkgconfig', type='build')
     depends_on('zlib', when='+zlib')
 
-    for ver in dolfin_versions:
-        if Version(ver) == Version('2019.1.0'):
-            depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
-        else:
-            depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono@1.68.0')
+    depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
+    depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono@1.68.0', when='@:2018.99')
 
     depends_on('mpi', when='+mpi')
     depends_on('hdf5+hl+fortran', when='+hdf5+petsc')
@@ -131,6 +133,7 @@ class Fenics(CMakePackage):
             self.define_from_variant('DOLFIN_ENABLE_OPENMP', 'openmp'),
             self.define_from_variant('DOLFIN_ENABLE_CHOLMOD', 'suite-sparse'),
             self.define_from_variant('DOLFIN_ENABLE_HDF5', 'hdf5'),
+            self.define_from_variant('HDF5_NO_FIND_PACKAGE_CONFIG_FILE', 'hdf5'),
             self.define_from_variant('DOLFIN_ENABLE_MPI', 'mpi'),
             self.define_from_variant('DOLFIN_ENABLE_PARMETIS', 'parmetis'),
             self.define_from_variant('DOLFIN_ENABLE_PETSC', 'petsc'),

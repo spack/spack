@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Rivet(AutotoolsPackage):
@@ -97,7 +98,7 @@ class Rivet(AutotoolsPackage):
     depends_on('yoda@1.8.0', when='@3.1.0')
     depends_on('yoda@1.8.2', when='@3.1.1')
     depends_on('yoda@1.8.3', when='@3.1.2')
-    depends_on('yoda@1.8.5', when='@3.1.3')
+    depends_on('yoda@1.8.5:', when='@3.1.3:')
 
     # The following versions were not a part of LCG stack
     # and thus the exact version of YODA is unknown

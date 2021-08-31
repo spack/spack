@@ -16,33 +16,32 @@ TODO: make this customizable and allow users to configure
 """
 from __future__ import print_function
 
-import platform
 import os.path
+import platform
 import tempfile
+from contextlib import contextmanager
+from itertools import chain
+
+from functools_backport import reverse_order
 
 import archspec.cpu
 
 import llnl.util.filesystem as fs
+import llnl.util.lang
 import llnl.util.tty as tty
 
-from itertools import chain
-from functools_backport import reverse_order
-from contextlib import contextmanager
-
-import llnl.util.lang
-
-import spack.repo
 import spack.abi
-import spack.spec
-import spack.compilers
 import spack.architecture
+import spack.compilers
+import spack.environment
 import spack.error
+import spack.repo
+import spack.spec
 import spack.tengine
 import spack.variant as vt
 from spack.config import config
-from spack.version import ver, Version, VersionList, VersionRange
-from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
-
+from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
+from spack.version import Version, VersionList, VersionRange, ver
 
 #: impements rudimentary logic for ABI compatibility
 _abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
@@ -68,7 +67,7 @@ class Concretizer(object):
         """
         Add ``dev_path=*`` variant to packages built from local source.
         """
-        env = spack.environment.get_env(None, None)
+        env = spack.environment.active_environment()
         dev_info = env.dev_specs.get(spec.name, {}) if env else {}
         if not dev_info:
             return False
