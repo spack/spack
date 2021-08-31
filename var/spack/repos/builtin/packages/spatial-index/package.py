@@ -13,11 +13,12 @@ class SpatialIndex(PythonPackage):
     url      = "git@bbpgitlab.epfl.ch:hpc/SpatialIndex.git"
 
     version('develop', branch='main', submodules=True)
+    version('0.3.0', tag='0.3.0', submodules=True)
     version('0.2.1', tag='0.2.1', submodules=True)
     version('0.1.0', tag='0.1.0', submodules=True)
 
     depends_on("py-setuptools")
-    depends_on("cmake")
+    depends_on("cmake@3.2:",     type="build")
     depends_on("boost@:1.70.0")
     depends_on("py-numpy",       type=("build", "run"))
     depends_on("py-morphio",     type="run")
