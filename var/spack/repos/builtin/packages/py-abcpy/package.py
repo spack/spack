@@ -31,3 +31,8 @@ class PyAbcpy(PythonPackage):
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
     depends_on('py-pot', type=('build', 'run'))
+
+    # Development dependencies are required in setup.py :(
+    depends_on('py-sphinx', type='build')
+    depends_on('py-sphinx-rtd-theme', type='build')
+    depends_on('py-coverage', type='build')
