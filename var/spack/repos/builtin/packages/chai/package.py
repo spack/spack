@@ -42,8 +42,8 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
 
-    depends_on('blt@0.4.1', type='build', when='@2.4.0:')
-    depends_on('blt@0.4.0', type='build', when='@2.3.0')
+    depends_on('blt@0.4.1:', type='build', when='@2.4.0:')
+    depends_on('blt@0.4.0:', type='build', when='@2.3.0')
     depends_on('blt@:0.3.6', type='build', when='@:2.2.2')
 
     depends_on('umpire')
