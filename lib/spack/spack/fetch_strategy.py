@@ -318,12 +318,6 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
-            if url[0:1] == 'gs':
-                import spack.util.gcs as gcs_util
-                parsed_url = urllib_parse.urlparse(url)
-                gcs = gcs_util.GCSBlob(parsed_url)
-                url = gcsblob.gcs_url()
-
             if not self._existing_url(url):
                 continue
 
@@ -1413,6 +1407,54 @@ class S3FetchStrategy(URLFetchStrategy):
             raise FailedDownloadError(self.url)
 
 
+@fetcher
+class GCSFetchStrategy(URLFetchStrategy):
+    """FetchStrategy that pulls from a GCS bucket."""
+    url_attr = 'gs'
+
+    def __init__(self, *args, **kwargs):
+        try:
+            super(GCSFetchStrategy, self).__init__(*args, **kwargs)
+        except ValueError:
+            if not kwargs.get('url'):
+                raise ValueError(
+                    "GCSFetchStrategy requires a url for fetching.")
+
+    @_needs_stage
+    def fetch(self):
+        if self.archive_file:
+            tty.debug('Already downloaded {0}'.format(self.archive_file))
+            return
+
+        parsed_url = url_util.parse(self.url)
+        if parsed_url.scheme != 'gs':
+            raise FetchError(
+                'GCSFetchStrategy can only fetch from gs:// urls.')
+
+        tty.debug('Fetching {0}'.format(self.url))
+
+        basename = os.path.basename(parsed_url.path)
+
+        with working_dir(self.stage.path):
+            _, headers, stream = web_util.read_from_url(self.url)
+
+            with open(basename, 'wb') as f:
+                shutil.copyfileobj(stream, f)
+
+            content_type = web_util.get_header(headers, 'Content-type')
+
+        if content_type == 'text/html':
+            warn_content_type_mismatch(self.archive_file or "the archive")
+
+        if self.stage.save_filename:
+            os.rename(
+                os.path.join(self.stage.path, basename),
+                self.stage.save_filename)
+
+        if not self.archive_file:
+            raise FailedDownloadError(self.url)
+
+
 def stable_target(fetcher):
     """Returns whether the fetcher target is expected to have a stable
        checksum. This is only true if the target is a preexisting archive
@@ -1596,7 +1638,6 @@ def from_url_scheme(url, *args, **kwargs):
             'https': 'url',
             'ftp': 'url',
             'ftps': 'url',
-            'gs':'url',
         })
 
     scheme = parsed_url.scheme
