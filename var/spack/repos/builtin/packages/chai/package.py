@@ -35,6 +35,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     variant('raja', default=False, description='Build plugin for RAJA')
     variant('benchmarks', default=False, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
+    variant('openmp', default=False, description='Build using OpenMP')
     # TODO: figure out gtest dependency and then set this default True
     # and remove the +tests conflict below.
     variant('tests', default=False, description='Build tests')
@@ -64,7 +65,8 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
                        when='amdgpu_target={0}'.format(arch))
 
     with when('+raja'):
-        depends_on('raja')
+        depends_on('raja~openmp', when='~openmp')
+        depends_on('raja+openmp', when='+openmp')
         depends_on('raja@0.14.0', when="@2.4.0")
         depends_on('raja@0.13.0', when="@2.3.0")
         depends_on('raja@0.12.0', when="@2.2.0:2.2.2")
