@@ -28,3 +28,10 @@ class DamaskMesh(CMakePackage):
 
         args = ['-DDAMASK_SOLVER:STRING=mesh']
         return args
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def execute(self):
+
+        damask_mesh = Executable('DAMASK_mesh')
+        damask_mesh('--help')
