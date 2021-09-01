@@ -294,7 +294,7 @@ class Ascent(CMakePackage, CudaPackage):
                 msg = 'failed to find CMake (and cmake variant is off)'
                 raise RuntimeError(msg)
             cmake_exe = cmake_exe.path
-        
+
         # get hostconfig name
         host_cfg_fname = self._get_host_config_path(spec)
 
