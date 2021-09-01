@@ -69,7 +69,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('blt@0.4.1:', type='build', when='@6.0.0:')
     depends_on('blt@0.4.0:', type='build', when='@4.1.3:5.0.1')
-    depends_on('blt@:0.3.6', type='build', when='@:4.1.2')
+    depends_on('blt@0.3.6:', type='build', when='@:4.1.2')
 
     depends_on('camp', when='@5.0.0:')
     depends_on('camp@0.2.2', when='@6.0.0:')
