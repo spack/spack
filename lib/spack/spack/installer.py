@@ -84,14 +84,14 @@ STATUS_DEQUEUED = 'dequeued'
 #: queue invariants).
 STATUS_REMOVED = 'removed'
 
-#: Don't perform an install
-ACTION_NONE = 0
 
-#: Do a standard install
-ACTION_INSTALL = 1
-
-#: Do an overwrite install
-ACTION_OVERWRITE_INSTALL = 2
+class InstallAction(object):
+    #: Don't perform an install
+    NONE = 0
+    #: Do a standard install
+    INSTALL = 1
+    #: Do an overwrite install
+    OVERWRITE = 2
 
 
 def _check_last_phase(pkg):
@@ -1429,37 +1429,39 @@ class PackageInstaller(object):
 
     def _install_action(self, task):
         """
-        Returns what kind of installation this task should perform.
+        Determine whether the installation should be overwritten (if it already
+        exists) or skipped (if has been handled by another process).
 
-        Returns:
-            int: either ACTION_INSTALL, ACTION_NONE, ACTION_OVERWRITE_INSTALL
+        If the package has not been installed yet, this will indicate that the
+        installation should proceed as normal (i.e. no need to transactionally
+        preserve the old prefix).
         """
         # If we don't have to overwrite, do a normal install
         if task.pkg.spec.dag_hash() not in task.request.overwrite:
-            return ACTION_INSTALL
+            return InstallAction.INSTALL
 
         # If it's not installed, do a normal install as well
         rec, installed = self._check_db(task.pkg.spec)
         if not installed:
-            return ACTION_INSTALL
+            return InstallAction.INSTALL
 
         # Ensure install_tree projections have not changed.
         assert task.pkg.prefix == rec.path
 
         # If another process has overwritten this, we shouldn't install at all
         if rec.installation_time >= task.request.overwrite_time:
-            return ACTION_NONE
+            return InstallAction.NONE
 
         # If the install prefix is missing, warn about it, and proceed with
         # normal install.
         if not os.path.exists(task.pkg.prefix):
             tty.debug("Missing installation to overwrite")
-            return ACTION_INSTALL
+            return InstallAction.INSTALL
 
         # Otherwise, do an actual overwrite install. We backup the original
         # install directory, put the old prefix
         # back on failure
-        return ACTION_OVERWRITE_INSTALL
+        return InstallAction.OVERWRITE
 
     def install(self):
         """
@@ -1606,13 +1608,9 @@ class PackageInstaller(object):
             try:
                 action = self._install_action(task)
 
-                print(action)
-
-                if action == ACTION_NONE:
-                    pass
-                elif action == ACTION_INSTALL:
+                if action == InstallAction.INSTALL:
                     self._install_task(task)
-                elif action == ACTION_OVERWRITE_INSTALL:
+                elif action == InstallAction.OVERWRITE:
                     try:
                         with fs.replace_directory_transaction(pkg.prefix):
                             keep_prefix = True
