@@ -806,7 +806,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                                        self.examples_data_dir])
 
     def test(self):
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        test_dir = join_path(
+            self.test_suite.current_test_cache_dir,
+            self.examples_src_dir
+       )
         with working_dir(test_dir, create=False):
             # MFEM has many examples to serve as a suitable smoke check. ex10
             # was chosen arbitrarily among the examples that work both with
@@ -817,7 +820,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             self.run_test('./{0}'.format(test_exe),
                           ['--mesh', '../{0}/beam-quad.mesh'.format(
                               self.examples_data_dir)],
-                          [], installed=True, purpose='Smoke test for mfem',
+                          [], installed=False,
+                          purpose='test: running {0}'.format(test_exe),
                           skip_missing=False, work_dir='.')
             make('clean')
 
