@@ -49,13 +49,18 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('umpire@6.0.0', when="@2.4.0")
     depends_on('umpire@4.1.2', when="@2.2.0:2.3.0")
     depends_on('umpire@main', when='@main')
-    depends_on('umpire+cuda', when="+cuda")
-    for sm_ in CudaPackage.cuda_arch_values:
-        depends_on('umpire+cuda cuda_arch={0}'.format(sm_),
-                   when='cuda_arch={0}'.format(sm_))
-    depends_on('umpire+rocm', when='+rocm')
-    for val in ROCmPackage.amdgpu_targets:
-        depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+
+    with when('+cuda'):
+        depends_on('umpire+cuda')
+        for sm_ in CudaPackage.cuda_arch_values:
+            depends_on('umpire+cuda cuda_arch={0}'.format(sm_),
+                       when='cuda_arch={0}'.format(sm_))
+
+    with when('+rocm'):
+        depends_on('umpire+rocm')
+        for arch in ROCmPackage.amdgpu_targets:
+            depends_on('umpire+rocm amdgpu_target={0}'.format(arch),
+                       when='amdgpu_target={0}'.format(arch))
 
     with when('+raja'):
         depends_on('raja')
@@ -63,6 +68,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('raja@0.13.0', when="@2.3.0")
         depends_on('raja@0.12.0', when="@2.2.0:2.2.2")
         depends_on('raja@main', when='@main')
+
         with when('+cuda'):
             depends_on('raja+cuda')
             for sm_ in CudaPackage.cuda_arch_values:
@@ -70,9 +76,9 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
                            when='cuda_arch={0}'.format(sm_))
         with when('+rocm'):
             depends_on('raja+rocm')
-            for val in ROCmPackage.amdgpu_targets:
-                depends_on('raja amdgpu_target=%s' % val,
-                           when='amdgpu_target=%s' % val)
+            for arch in ROCmPackage.amdgpu_targets:
+                depends_on('raja+rocm amdgpu_target={0}'.format(arch),
+                           when='amdgpu_target={0}'.format(arch))
 
     conflicts('+benchmarks', when='~tests')
 

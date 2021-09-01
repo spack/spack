@@ -48,20 +48,19 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('camp@0.2.2', when='@0.14.0:')
     depends_on('camp@0.1.0', when='@0.12.0:0.13.0')
-    # variants +rocm and amdgpu_targets are not automatically passed to
-    # dependencies, so do it manually.
-    with when('+rocm'):
-        depends_on('camp+rocm', when='@0.12.0:')
-        for val in ROCmPackage.amdgpu_targets:
-            depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
+    with when('+rocm @0.12.0:'):
+        depends_on('camp+rocm')
+        for arch in ROCmPackage.amdgpu_targets:
+            depends_on('camp+rocm amdgpu_target={0}'.format(arch),
+                       when='amdgpu_target={0}'.format(arch))
         conflicts('+openmp')
 
     with when('+cuda @0.12.0:'):
+        depends_on('camp+cuda')
         for sm_ in CudaPackage.cuda_arch_values:
             depends_on('camp +cuda cuda_arch={0}'.format(sm_),
-                    when='cuda_arch={0}'.format(sm_))
-
+                       when='cuda_arch={0}'.format(sm_))
 
     def cmake_args(self):
         spec = self.spec
