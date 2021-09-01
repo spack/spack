@@ -23,6 +23,7 @@ import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
 import spack.util.module_cmd
+import spack.compilers.rocmcc
 from spack.operating_systems.cray_frontend import CrayFrontend
 
 
@@ -368,6 +369,28 @@ def test_cray_frontend_compiler_detection(
 ])
 def test_aocc_version_detection(version_str, expected_version):
     version = spack.compilers.aocc.Aocc.extract_version_from_output(
+        version_str
+    )
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # This applies to C,C++ and FORTRAN compiler
+    ('clang version 13.0.0\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '13.0.0'
+     ),
+    ('clang version 12.0.0\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '12.0.0'
+     ),
+    ('clang version 11.0.0\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '11.0.0'
+     )
+])
+def test_rocmcc_version_detection(version_str, expected_version):
+    version = spack.compilers.rocmcc.Rocmcc.extract_version_from_output(
         version_str
     )
     assert version == expected_version

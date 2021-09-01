@@ -42,7 +42,8 @@ _compiler_cache = {}  # type: Dict[str, spack.compiler.Compiler]
 
 _compiler_to_pkg = {
     'clang': 'llvm+clang',
-    'oneapi': 'intel-oneapi-compilers'
+    'oneapi': 'intel-oneapi-compilers',
+    'rocmcc': 'llvm-amdgpu+rocm-device-libs+openmp'
 }
 
 
@@ -742,7 +743,7 @@ def is_mixed_toolchain(compiler):
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
-        if toolchains == set(['Clang', 'AppleClang', 'Aocc']):
+        if toolchains == set(['Clang', 'AppleClang', 'Aocc', 'Rocmcc']):
             return False
         tty.debug("[TOOLCHAINS] {0}".format(toolchains))
         return True

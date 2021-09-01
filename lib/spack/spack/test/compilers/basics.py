@@ -662,6 +662,29 @@ def test_xl_r_flags():
                         ['-O', '-O0', '-O1', '-O2', '-O3', '-O4', '-O5',
                          '-Ofast'],
                         'xl@1.0')
+def test_rocmcc_flags():
+    supported_flag_test("stdcxx_libs", ("-lstdc++",), "rocmcc@13.0.0")
+    supported_flag_test("openmp_flag", "-fopenmp", "rocmcc@13.0.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "rocmcc@13.0.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "rocmcc@13.0.0")
+    supported_flag_test("cxx17_flag", "-std=c++17", "rocmcc@13.0.0")
+    supported_flag_test("c99_flag", "-std=c99", "rocmcc@13.0.0")
+    supported_flag_test("c11_flag", "-std=c11", "rocmcc@13.0.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "rocmcc@13.0.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "rocmcc@13.0.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "rocmcc@13.0.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "rocmcc@13.0.0")
+    supported_flag_test("version_argument", "--version", "rocmcc@13.0.0")
+    supported_flag_test("debug_flags",
+                        ['-gcodeview', '-gdwarf-2', '-gdwarf-3',
+                         '-gdwarf-4', '-gdwarf-5', '-gline-tables-only',
+                         '-gmodules', '-gz', '-g'],
+                        'rocmcc@13.0.0')
+    supported_flag_test("opt_flags",
+                        ['-O0', '-O1', '-O2', '-O3', '-Ofast',
+                         '-Os', '-Oz', '-Og',
+                         '-O', '-O4'],
+                        'rocmcc@13.0.0')
 
 
 @pytest.mark.parametrize('compiler_spec,expected_result', [

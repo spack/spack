@@ -18,7 +18,7 @@ class LlvmAmdgpu(CMakePackage):
     url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-
+    family = 'compiler'
     version('master', branch='amd-stg-open')
     version('4.3.0', sha256='1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87')
     version('4.2.0', sha256='751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661')
