@@ -1739,7 +1739,7 @@ class Spec(object):
                     "dependencies": [
                     {
                         "name": "readline",
-                        "_build_hash": "4f47cggum7p4qmp3xna4hi547o66unva",
+                        "build_hash": "4f47cggum7p4qmp3xna4hi547o66unva",
                         "type": [
                         "build",
                         "link"
@@ -1747,16 +1747,16 @@ class Spec(object):
                     },
                     {
                         "name": "zlib",
-                        "_build_hash": "uvgh6p7rhll4kexqnr47bvqxb3t33jtq",
+                        "build_hash": "uvgh6p7rhll4kexqnr47bvqxb3t33jtq",
                         "type": [
                         "build",
                         "link"
                         ]
                     }
                     ],
-                    "_hash": "d2yzqp2highd7sn4nr5ndkw3ydcrlhtk",
-                    "_full_hash": "tve45xfqkfgmzwcyfetze2z6syrg7eaf",
-                    "_build_hash": "tsjnz7lgob7bu2wd4sqzzjenxewc2zha"
+                    "hash": "d2yzqp2highd7sn4nr5ndkw3ydcrlhtk",
+                    "full_hash": "tve45xfqkfgmzwcyfetze2z6syrg7eaf",
+                    "build_hash": "tsjnz7lgob7bu2wd4sqzzjenxewc2zha"
                 },
                     # ... more node dicts for readline and its dependencies ...
                 ]
@@ -1825,16 +1825,15 @@ class Spec(object):
             write_full_hash = (
                 self._hashes_final and self._full_hash or   # cached and final
                 not self._hashes_final)                     # lazily compute
-            write_build_hash = 'build' in hash.deptype and (
-                self._hashes_final and self._build_hash or  # cached and final
-                not self._hashes_final)                     # lazily compute
             if write_full_hash:
                 node[ht.full_hash.name] = self.full_hash()
-            if write_build_hash:
-                node[ht.build_hash.name] = self.build_hash()
         else:
             node['concrete'] = False
-
+        write_build_hash = 'build' in hash.deptype and (
+            self._hashes_final and self._build_hash or  # cached and final
+            not self._hashes_final)                     # lazily compute
+        if write_build_hash:
+            node[ht.build_hash.name] = self.build_hash()
         return node
 
     def to_yaml(self, stream=None, hash=ht.dag_hash):
