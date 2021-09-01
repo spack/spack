@@ -93,6 +93,8 @@ class OpenfoamOrg(Package):
 
     depends_on('mpi')
     depends_on('zlib')
+    # The flex restriction is ONLY to deal with a spec resolution clash
+    # introduced by the restriction within scotch!
     depends_on('flex@:2.6.1,2.6.4:')
     depends_on('cmake', type='build')
 
