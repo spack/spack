@@ -2133,17 +2133,6 @@ class Spec(object):
         return spec_builder(spec_dict)
 
     @staticmethod
-    def from_old_dict(data):
-        """Construct a spec from JSON/YAML using the format version 1.
-        Note: Version 1 format has no notion of a build_spec, and names are
-        guaranteed to be unique.
-
-        Parameters:
-        data -- a nested dict/list data structure read from YAML or JSON.
-        """
-        return _spec_from_dict(data)
-
-    @staticmethod
     def from_dict(data):
         """Construct a spec from JSON/YAML.
 
