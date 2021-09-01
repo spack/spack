@@ -18,4 +18,3 @@ class PyTerminaltables(PythonPackage):
     depends_on('py-colorama', type=('build', 'run'))
     depends_on('py-termcolor', type=('build', 'run'))
     depends_on('py-colorclass', type=('build', 'run'))
-
