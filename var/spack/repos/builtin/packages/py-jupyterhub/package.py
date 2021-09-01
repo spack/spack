@@ -15,6 +15,7 @@ class PyJupyterhub(PythonPackage):
     version('1.0.0',    sha256='33541a515a041b9a518ca057c1c4ab4215a7450fdddc206401713ee8137fa67f')
     version('0.9.4',    sha256='7848bbb299536641a59eb1977ec3c7c95d931bace4a2803d7e9b28b9256714da')
 
+    depends_on('py-alembic@1.4:', type=('build', 'run'), when='@1.4.1:')
     depends_on('py-alembic', type=('build', 'run'))
     depends_on('py-async-generator@1.9:', type=('build', 'run'), when='@1.4.1:')
     depends_on('py-async-generator@1.8:', type=('build', 'run'))
