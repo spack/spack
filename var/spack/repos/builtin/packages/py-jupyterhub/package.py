@@ -30,7 +30,7 @@ class PyJupyterhub(PythonPackage):
     depends_on('py-prometheus-client@0.4.0:', type=('build', 'run'), when='@1.4.1:')
     depends_on('py-prometheus-client@0.0.21:', type=('build', 'run'))
     depends_on('py-python-dateutil', type=('build', 'run'))
-    depends_on('py-python-oauth2@1.0:', when='@:9.4', type=('build', 'run'))
+    depends_on('py-python-oauth2@1.0:', when='@:0.9.4', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-sqlalchemy@1.1:', type=('build', 'run'))
