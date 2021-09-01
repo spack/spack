@@ -31,7 +31,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     version('1.0', tag='v1.0', submodules=True)
 
     variant('enable_pick', default=False, description='Enable pick method')
-    variant('shared', default=False, description='Build Shared Libs')
+    variant('shared', default=True, description='Build Shared Libs')
     variant('raja', default=False, description='Build plugin for RAJA')
     variant('benchmarks', default=False, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
