@@ -2047,12 +2047,16 @@ def is_latest_format(manifest):
 @contextlib.contextmanager
 def deactivate_environment():
     """Deactivate an active environment for the duration of the context."""
-    global _active_environment
-    current, _active_environment = _active_environment, None
+    env = active_environment()
+    if not env:
+        yield
+        return
     try:
+        deactivate()
         yield
     finally:
-        _active_environment = current
+        # TODO: we don't handle `use_env_repo` here.
+        activate(env)
 
 
 class SpackEnvironmentError(spack.error.SpackError):
