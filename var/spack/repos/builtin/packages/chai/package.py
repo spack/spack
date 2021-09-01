@@ -91,6 +91,8 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
         options = []
         options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
 
+        options.append(self.define_from_variant('ENABLE_OPENMP', 'openmp'))
+
         if '+cuda' in spec:
             options.extend([
                 '-DENABLE_CUDA=ON',
