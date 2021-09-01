@@ -57,10 +57,9 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
 
         conflicts('+openmp')
 
-    with when('+cuda'):
-        depends_on('camp+cuda', when='@0.12.0:')
+    with when('+cuda @0.12.0:'):
         for sm_ in CudaPackage.cuda_arch_values:
-            depends_on('camp cuda_arch={0}'.format(sm_),
+            depends_on('+cuda camp cuda_arch={0}'.format(sm_),
                     when='cuda_arch={0}'.format(sm_))
 
 
