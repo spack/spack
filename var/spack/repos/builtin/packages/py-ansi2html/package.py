@@ -18,4 +18,3 @@ class PyAnsi2html(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pip', type='build')
-
