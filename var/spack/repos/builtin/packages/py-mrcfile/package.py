@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyMrcfile(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Python implementation of the MRC2014 file format, which is used
+    in structural biology to store image and volume data."""
 
     homepage = "https://www.example.com"
     url      = "https://github.com/ccpem/mrcfile/archive/refs/tags/v1.3.0.tar.gz"
