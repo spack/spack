@@ -8,6 +8,7 @@ import subprocess
 import sys
 from typing import List  # novm
 
+from spack.error import SpackError
 import spack.operating_systems.windows_os
 import spack.util.executable
 from spack.compiler import Compiler
@@ -107,14 +108,9 @@ class Msvc(Compiler):
         if os.getenv("ONEAPI_ROOT"):
             try:
                 sps = spack.operating_systems.windows_os.WindowsOs.compiler_search_paths
-            except Exception:
-                print("sps not found.")
-                raise
-            try:
-                clp = spack.util.executable.which_string("cl", path=sps)
-            except Exception:
-                print("cl not found.")
-                raise
+            except AttributeError:
+                raise SpackError("Windows compiler search paths not established")
+            clp = spack.util.executable.which_string("cl", path=sps)
             ver = cls.default_version(clp)
             return ver
         else:
