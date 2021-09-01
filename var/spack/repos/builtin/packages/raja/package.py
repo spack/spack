@@ -37,6 +37,7 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
     # and remove the +tests conflict below.
     variant('tests', default=False, description='Build tests')
 
+    depends_on('blt', type='build')
     depends_on('blt@0.4.0:', type='build', when='@0.13.0:')
     depends_on('blt@:0.3.6', type='build', when='@:0.12.0')
 
