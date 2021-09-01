@@ -35,7 +35,7 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
     version('0.4.0', tag='v0.4.0', submodules="True")
 
     variant('openmp', default=True, description='Build OpenMP backend')
-    variant('shared', default=True, description='Build Shared Libs')
+    variant('shared', default=False, description='Build Shared Libs')
     variant('examples', default=True, description='Build examples.')
     variant('exercises', default=True, description='Build exercises.')
     # TODO: figure out gtest dependency and then set this default True

@@ -56,7 +56,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     variant('fortran', default=False, description='Build C/Fortran API')
     variant('c', default=True, description='Build C API')
     variant('numa', default=False, description='Enable NUMA support')
-    variant('shared', default=True, description='Enable Shared libs')
+    variant('shared', default=False, description='Enable Shared libs')
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('deviceconst', default=False,
             description='Enables support for constant device memory')
