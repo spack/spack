@@ -13,7 +13,7 @@ class RProj4(RPackage):
     the PROJ.4 cartographic projections library. It allows transformation of
     geographic coordinates from one projection and/or datum to another."""
 
-    homepage = "http://www.rforge.net/proj4/"
+    homepage = "https://www.rforge.net/proj4/"
     url      = "https://cloud.r-project.org/src/contrib/proj4_1.0-8.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/proj4"
 

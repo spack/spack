@@ -51,7 +51,7 @@ class RFf(RPackage):
     datasets and quickly  modify selection criteria.  Further high-performance
     enhancements can be made available upon request.x """
 
-    homepage = "http://ff.r-forge.r-project.org/"
+    homepage = "https://ff.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/ff_2.2-13.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ff"
 

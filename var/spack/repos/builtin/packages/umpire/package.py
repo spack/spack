@@ -7,6 +7,8 @@ import os
 
 import llnl.util.tty as tty
 
+from spack import *
+
 
 class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     """An application-focused API for memory management on NUMA & GPU
@@ -19,6 +21,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='develop', submodules=True)
     version('main', branch='main', submodules=True)
+    version('6.0.0', tag='v6.0.0', submodules=True)
     version('5.0.1', tag='v5.0.1', submodules=True)
     version('5.0.0', tag='v5.0.0', submodules=True)
     version('4.1.2', tag='v4.1.2', submodules=True)
@@ -64,21 +67,26 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
 
-    depends_on('blt@0.4.0:', type='build', when='@4.1.3:')
-    depends_on('blt@:0.3.6', type='build', when='@:4.1.2')
+    depends_on('blt@0.4.1:', type='build', when='@6.0.0:')
+    depends_on('blt@0.4.0:', type='build', when='@4.1.3:5.0.1')
+    depends_on('blt@0.3.6:', type='build', when='@:4.1.2')
 
-    # variants +rocm and amdgpu_targets are not automatically passed to
-    # dependencies, so do it manually.
-    depends_on('camp+rocm', when='+rocm')
-    for val in ROCmPackage.amdgpu_targets:
-        depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+    depends_on('camp', when='@5.0.0:')
+    depends_on('camp@0.2.2', when='@6.0.0:')
+    depends_on('camp@0.1.0', when='@5.0.0:5.0.1')
 
-    depends_on('camp')
-    depends_on('camp@master', when='@develop')
-    depends_on('camp+cuda', when='+cuda')
-    for sm_ in CudaPackage.cuda_arch_values:
-        depends_on('camp cuda_arch={0}'.format(sm_),
-                   when='cuda_arch={0}'.format(sm_))
+    with when('@5.0.0:'):
+        with when('+cuda'):
+            depends_on('camp+cuda')
+            for sm_ in CudaPackage.cuda_arch_values:
+                depends_on('camp+cuda cuda_arch={0}'.format(sm_),
+                           when='cuda_arch={0}'.format(sm_))
+
+        with when('+rocm'):
+            depends_on('camp+rocm')
+            for arch_ in ROCmPackage.amdgpu_targets:
+                depends_on('camp+rocm amdgpu_target={0}'.format(arch_),
+                           when='amdgpu_target={0}'.format(arch_))
 
     conflicts('+numa', when='@:0.3.2')
     conflicts('~c', when='+fortran', msg='Fortran API requires C API')
@@ -92,7 +100,8 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
 
         options = []
         options.append("-DBLT_SOURCE_DIR={0}".format(spec['blt'].prefix))
-        options.append("-Dcamp_DIR={0}".format(spec['camp'].prefix))
+        if spec.satisfies('@5.0.0:'):
+            options.append("-Dcamp_DIR={0}".format(spec['camp'].prefix))
 
         if '+cuda' in spec:
             options.extend([

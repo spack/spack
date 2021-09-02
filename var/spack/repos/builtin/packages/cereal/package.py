@@ -15,7 +15,7 @@ class Cereal(CMakePackage):
        with other code or used standalone.
 
     """
-    homepage = "http://uscilab.github.io/cereal/"
+    homepage = "https://uscilab.github.io/cereal/"
     url      = "https://github.com/USCiLab/cereal/archive/v1.1.2.tar.gz"
 
     version('1.3.0', sha256='329ea3e3130b026c03a4acc50e168e7daff4e6e661bc6a7dfec0d77b570851d5')

@@ -9,7 +9,7 @@ from spack import *
 class PyLlvmlite(PythonPackage):
     """A lightweight LLVM python binding for writing JIT compilers"""
 
-    homepage = "http://llvmlite.readthedocs.io/en/latest/index.html"
+    homepage = "https://llvmlite.readthedocs.io/en/latest/index.html"
     pypi = "llvmlite/llvmlite-0.23.0.tar.gz"
 
     version('0.34.0', sha256='f03ee0d19bca8f2fe922bb424a909d05c28411983b0c2bc58b020032a0d11f63')

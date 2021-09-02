@@ -11,7 +11,7 @@ class Zstd(MakefilePackage):
     algorithm, targeting real-time compression scenarios at zlib-level and
     better compression ratios."""
 
-    homepage = "http://facebook.github.io/zstd/"
+    homepage = "https://facebook.github.io/zstd/"
     url      = "https://github.com/facebook/zstd/archive/v1.4.3.tar.gz"
     git      = "https://github.com/facebook/zstd.git"
 

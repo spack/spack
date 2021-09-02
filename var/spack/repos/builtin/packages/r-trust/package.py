@@ -12,7 +12,7 @@ class RTrust(RPackage):
     Does local optimization using two derivatives and trust regions.
     Guaranteed to converge to local minimum of objective function."""
 
-    homepage = "http://www.stat.umn.edu/geyer/trust"
+    homepage = "https://www.stat.umn.edu/geyer/trust"
     url      = "https://cloud.r-project.org/src/contrib/trust_0.1-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/trust"
 

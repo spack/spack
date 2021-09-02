@@ -18,7 +18,7 @@ class Usearch(Package):
        For instructions on how to set up a mirror, see
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://www.drive5.com/usearch/"
+    homepage = "https://www.drive5.com/usearch/"
     manual_download = True
 
     version('10.0.240', '05192b6d5e291530c190a19a3cc82b53', expand=False)

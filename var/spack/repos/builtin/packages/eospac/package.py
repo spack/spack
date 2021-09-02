@@ -12,7 +12,7 @@ class Eospac(Package):
        library.
     """
 
-    homepage = "http://laws.lanl.gov/projects/data/eos.html"
+    homepage = "https://laws.lanl.gov/projects/data/eos.html"
     list_url = "http://laws.lanl.gov/projects/data/eos/eospacReleases.php"
     maintainers = ['KineticTheory']
 

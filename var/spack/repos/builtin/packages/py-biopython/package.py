@@ -12,7 +12,7 @@ class PyBiopython(PythonPackage):
        bioinformatics.
 
     """
-    homepage = "http://biopython.org/wiki/Main_Page"
+    homepage = "https://biopython.org/wiki/Main_Page"
     url      = "http://biopython.org/DIST/biopython-1.65.tar.gz"
 
     version('1.78', sha256='1ee0a0b6c2376680fea6642d5080baa419fd73df104a62d58a8baf7a8bbe4564')

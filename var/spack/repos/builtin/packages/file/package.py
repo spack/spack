@@ -12,7 +12,7 @@ class File(AutotoolsPackage):
     """The file command is "a file type guesser", that is, a command-line
     tool that tells you in words what kind of data a file contains"""
 
-    homepage = "http://www.darwinsys.com/file/"
+    homepage = "https://www.darwinsys.com/file/"
     url      = "https://astron.com/pub/file/file-5.37.tar.gz"
 
     version('5.40', sha256='167321f43c148a553f68a0ea7f579821ef3b11c27b8cbe158e4df897e4a5dd57')

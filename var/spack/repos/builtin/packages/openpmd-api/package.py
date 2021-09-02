@@ -9,7 +9,7 @@ from spack import *
 class OpenpmdApi(CMakePackage):
     """C++ & Python API for Scientific I/O"""
 
-    homepage = "http://www.openPMD.org"
+    homepage = "https://www.openPMD.org"
     url      = "https://github.com/openPMD/openPMD-api/archive/0.13.3.tar.gz"
     git      = "https://github.com/openPMD/openPMD-api.git"
 

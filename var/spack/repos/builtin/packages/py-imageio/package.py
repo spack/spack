@@ -12,7 +12,7 @@ class PyImageio(PythonPackage):
     images, video, volumetric data, and scientific formats. It is
     cross-platform, runs on Python 2.7 and 3.4+, and is easy to install."""
 
-    homepage = "http://imageio.github.io/"
+    homepage = "https://imageio.github.io/"
     pypi = "imageio/imageio-2.3.0.tar.gz"
 
     version('2.9.0', sha256='52ddbaeca2dccf53ba2d6dec5676ca7bc3b2403ef8b37f7da78b7654bb3e10f0')

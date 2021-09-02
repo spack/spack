@@ -14,7 +14,7 @@ class Lammps(CMakePackage, CudaPackage):
     See https://github.com/spack/spack/pull/5342 for a detailed
     discussion.
     """
-    homepage = "http://lammps.sandia.gov/"
+    homepage = "https://lammps.sandia.gov/"
     url      = "https://github.com/lammps/lammps/archive/patch_1Sep2017.tar.gz"
     git      = "https://github.com/lammps/lammps.git"
 

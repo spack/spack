@@ -13,7 +13,7 @@ class GtkorvoEnet(AutotoolsPackage):
     The original is at http://github.com/lsalzman/enet.
     """
 
-    homepage = "http://www.github.com/GTkorvo/enet"
+    homepage = "https://www.github.com/GTkorvo/enet"
     url = "https://github.com/GTkorvo/enet/archive/v1.3.13.tar.gz"
 
     version('1.3.14', sha256='d1fda051bdee46ad8cce7c3bb36fb6b7a7a443945f27a280ac104753c29465b0')

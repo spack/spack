@@ -9,7 +9,7 @@ from spack import *
 class Xfwp(AutotoolsPackage, XorgPackage):
     """xfwp proxies X11 protocol connections, such as through a firewall."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xfwp"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xfwp"
     xorg_mirror_path = "app/xfwp-1.0.3.tar.gz"
 
     version('1.0.3', sha256='6fe243bde0374637e271a3f038b5d6d79a04621fc18162727782392069c5c04d')

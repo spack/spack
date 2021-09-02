@@ -9,7 +9,7 @@ from spack import *
 class Aida(Package):
     """Abstract Interfaces for Data Analysis"""
 
-    homepage = "http://aida.freehep.org/"
+    homepage = "https://aida.freehep.org/"
     url      = "ftp://ftp.slac.stanford.edu/software/freehep/AIDA/v3.2.1/aida-3.2.1.tar.gz"
 
     tags = ['hep']

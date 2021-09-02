@@ -126,6 +126,31 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         pkg.remove_prefix = instance_rm_prefix
 
 
+@pytest.mark.disable_clean_stage_check
+def test_failing_overwrite_install_should_keep_previous_installation(
+    mock_fetch, install_mockery
+):
+    """
+    Make sure that whenever `spack install --overwrite` fails, spack restores
+    the original install prefix instead of cleaning it.
+    """
+    # Do a successful install
+    spec = Spec('canfail').concretized()
+    pkg = spack.repo.get(spec)
+    pkg.succeed = True
+
+    # Do a failing overwrite install
+    pkg.do_install()
+    pkg.succeed = False
+    kwargs = {'overwrite': [spec.dag_hash()]}
+
+    with pytest.raises(Exception):
+        pkg.do_install(**kwargs)
+
+    assert pkg.installed
+    assert os.path.exists(spec.prefix)
+
+
 def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
     dependency = Spec('dependency-install')
     dependency.concretize()

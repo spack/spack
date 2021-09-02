@@ -15,7 +15,7 @@ class Atompaw(Package):
 
     User's guide: ~/doc/atompaw-usersguide.pdf
     """
-    homepage = "http://users.wfu.edu/natalie/papers/pwpaw/man.html"
+    homepage = "https://users.wfu.edu/natalie/papers/pwpaw/man.html"
     url = "http://users.wfu.edu/natalie/papers/pwpaw/atompaw-4.0.0.13.tar.gz"
 
     version('4.1.1.0', sha256='b1ee2b53720066655d98523ef337e54850cb1e68b3a2da04ff5a1576d3893891')

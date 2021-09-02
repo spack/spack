@@ -18,7 +18,7 @@ class RBroom(RPackage):
     measures like AIC and BIC. augment() adds information about individual
     observations to a dataset, such as fitted values or influence measures."""
 
-    homepage = "http://github.com/tidyverse/broom"
+    homepage = "https://github.com/tidyverse/broom"
     url      = "https://cloud.r-project.org/src/contrib/broom_0.4.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/broom"
 

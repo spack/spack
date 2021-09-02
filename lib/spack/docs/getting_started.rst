@@ -460,6 +460,34 @@ then inject those flags into the compiler command. Compiler flags
 entered from the command line will be discussed in more detail in the
 following section.
 
+Some compilers also require additional environment configuration.
+Examples include Intels oneAPI and AMDs AOCC compiler suites,
+which have custom scripts for loading environment variables and setting paths.
+These variables should be specified in the ``environment`` section of the compiler
+specification. The operations available to modify the environment are ``set``, ``unset``,
+``prepend_path``, ``append_path``, and ``remove_path``. For example:
+
+.. code-block:: yaml
+
+   compilers:
+   - compiler:
+       modules: []
+       operating_system: centos6
+       paths:
+         cc: /opt/intel/oneapi/compiler/latest/linux/bin/icx
+         cxx: /opt/intel/oneapi/compiler/latest/linux/bin/icpx
+         f77: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
+         fc: /opt/intel/oneapi/compiler/latest/linux/bin/ifx
+       spec: oneapi@latest
+       environment:
+         set:
+           MKL_ROOT: "/path/to/mkl/root"
+         unset: # A list of environment variables to unset
+           - CC
+         prepend_path: # Similar for append|remove_path
+           LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
+
+
 ^^^^^^^^^^^^^^^^^^^^^^^
 Build Your Own Compiler
 ^^^^^^^^^^^^^^^^^^^^^^^

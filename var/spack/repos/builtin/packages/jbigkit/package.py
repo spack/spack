@@ -10,7 +10,7 @@ class Jbigkit(MakefilePackage):
     """JBIG-Kit is a software implementation of
     the JBIG1 data compression standard."""
 
-    homepage = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/"
+    homepage = "https://www.cl.cam.ac.uk/~mgk25/jbigkit/"
     url      = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz"
 
     version('2.1', sha256='de7106b6bfaf495d6865c7dd7ac6ca1381bd12e0d81405ea81e7f2167263d932')
