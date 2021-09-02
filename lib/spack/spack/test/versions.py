@@ -9,6 +9,8 @@ where it makes sense.
 """
 import pytest
 
+import spack.package
+import spack.spec
 from spack.version import Version, VersionList, ver
 
 
@@ -576,3 +578,16 @@ def test_invalid_versions(version_str):
     """Ensure invalid versions are rejected with a ValueError"""
     with pytest.raises(ValueError):
         Version(version_str)
+
+
+def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase, 'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    for commit in commits:
+        print(commit)
+        spec = spack.spec.Spec('git-test-commit@%s' % commit)
+        version = spec.version
+        print([str(v) for v in version._cmp(version.commits)])
+    assert False
