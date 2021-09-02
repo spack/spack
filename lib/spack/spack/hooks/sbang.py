@@ -198,6 +198,8 @@ def install_sbang():
 
     fs.install(spack.paths.sbang_script, sbang_path)
 
+    os.chmod(sbang_path, spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all")))
+
 
 def post_install(spec):
     """This hook edits scripts so that they call /bin/bash
