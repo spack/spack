@@ -19,7 +19,7 @@ class Fpchecker(CMakePackage):
 
     version('0.3.2', sha256='aa591962734a3027c97ec050e126166912aaecfc2743b2d739eff844ea7418db')
 
-    depends_on('llvm@12.0.1', type=('build', 'link'))
+    depends_on('llvm@12.0.1')
     depends_on('cmake@3.4:', type='build')
     depends_on('python@3:', type='run')
 
