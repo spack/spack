@@ -1833,7 +1833,8 @@ class Spec(object):
             self._hashes_final and self._build_hash or  # cached and final
             not self._hashes_final)                     # lazily compute
         if write_build_hash:
-            node[ht.build_hash.name] = self.build_hash()
+            pass
+        node[ht.build_hash.name] = self.build_hash()
         return node
 
     def to_yaml(self, stream=None, hash=ht.dag_hash):
@@ -4413,7 +4414,7 @@ class Spec(object):
         return hash(lang.tuplify(self._cmp_iter))
 
     def __reduce__(self):
-        return _spec_from_dict, (self.to_dict(),)
+        return _spec_from_dict, (self.to_dict(hash=ht.build_hash),)
 
 
 def _spec_from_old_dict(data):
