@@ -13,7 +13,7 @@ class Adios(AutotoolsPackage):
     read, or processed outside of the running simulation.
     """
 
-    homepage = "http://www.olcf.ornl.gov/center-projects/adios/"
+    homepage = "https://www.olcf.ornl.gov/center-projects/adios/"
     url      = "https://github.com/ornladios/ADIOS/archive/v1.12.0.tar.gz"
     git      = "https://github.com/ornladios/ADIOS.git"
 

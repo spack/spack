@@ -10,7 +10,7 @@ class Openimageio(CMakePackage):
     """OpenImageIO is a library for reading and writing images, and a bunch of
        related classes, utilities, and applications."""
 
-    homepage = "http://www.openimageio.org"
+    homepage = "https://www.openimageio.org"
     url      = "https://github.com/OpenImageIO/oiio/archive/Release-1.8.15.tar.gz"
 
     version('2.2.7.0', sha256='857ac83798d6d2bda5d4d11a90618ff19486da2e5a4c4ff022c5976b5746fe8c')

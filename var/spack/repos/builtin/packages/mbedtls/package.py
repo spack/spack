@@ -17,6 +17,7 @@ class Mbedtls(CMakePackage):
     url      = "https://github.com/ARMmbed/mbedtls/archive/mbedtls-2.2.1.tar.gz"
     maintainers = ['mwkrentel']
 
+    version('3.0.0', sha256='377d376919be19f07c7e7adeeded088a525be40353f6d938a78e4f986bce2ae0')
     version('2.16.9', sha256='b7ca99ee10551b5b13242b7effebefd2a5cc38c287e5f5be1267d51ee45effe3')
     version('2.16.7', sha256='4786b7d1676f5e4d248f3a7f2d28446876d64962634f060ff21b92c690cfbe86')
     version('2.16.1', sha256='daf0d40f3016c34eb42d1e4b3b52be047e976d566aba8668977723c829af72f3')
@@ -38,8 +39,9 @@ class Mbedtls(CMakePackage):
     variant('shared', default=False,
             description='Build shared libraries')
 
+    depends_on('cmake@3.10.2:', type='build', when='@3.0.0:')
     depends_on('cmake@3.1.0:', type='build', when='@2.8.0:')
-    depends_on('cmake@2.6:', type='build', when='@:2.7.99')
+    depends_on('cmake@2.6:', type='build')
     depends_on('perl', type='test')
 
     def cmake_args(self):

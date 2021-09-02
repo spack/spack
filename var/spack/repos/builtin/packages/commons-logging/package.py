@@ -18,7 +18,7 @@ class CommonsLogging(Package):
     support for a number of popular logging implementations, and writing
     adapters for others is a reasonably simple task."""
 
-    homepage = "http://commons.apache.org/proper/commons-logging/"
+    homepage = "https://commons.apache.org/proper/commons-logging/"
     url      = "http://archive.apache.org/dist/commons/logging/binaries/commons-logging-1.2-bin.tar.gz"
 
     version('1.2',   sha256='3f758805c7290d9c6d22d1451587c9f7232744aef4c984e88aa683cdea0587bd')

@@ -24,7 +24,7 @@ class Libdwarf(Package):
        respectively, not source) with every release of the SGI
        MIPS/IRIX C compiler."""
 
-    homepage = "http://www.prevanders.net/dwarf.html"
+    homepage = "https://www.prevanders.net/dwarf.html"
     url      = "http://www.prevanders.net/libdwarf-20160507.tar.gz"
     list_url = homepage
 

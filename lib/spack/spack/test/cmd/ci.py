@@ -23,6 +23,7 @@ import spack.paths as spack_paths
 import spack.repo as repo
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
+import spack.util.url as url_util
 from spack.schema.buildcache_spec import schema as spec_yaml_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
@@ -55,7 +56,7 @@ def project_dir_env():
 @pytest.fixture()
 def env_deactivate():
     yield
-    spack.environment._active_environment = None
+    ev._active_environment = None
     os.environ.pop('SPACK_ENV', None)
 
 
@@ -616,6 +617,8 @@ spack:
             os.environ['SPACK_PR_BRANCH'] = 'fake-test-branch'
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            monkeypatch.setattr(
+                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             try:
                 ci_cmd('generate', '--output-file', outputfile)
             finally:
@@ -667,6 +670,8 @@ spack:
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            monkeypatch.setattr(
+                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
@@ -689,8 +694,12 @@ def test_ci_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
     mirror_dir = working_dir.join('mirror')
     mirror_url = 'file://{0}'.format(mirror_dir.strpath)
 
-    broken_specs_url = 's3://some-bucket/naughty-list'
+    broken_specs_path = os.path.join(working_dir.strpath, 'naughty-list')
+    broken_specs_url = url_util.join('file://', broken_specs_path)
     temp_storage_url = 'file:///path/to/per/pipeline/storage'
+
+    ci_job_url = 'https://some.domain/group/project/-/jobs/42'
+    ci_pipeline_url = 'https://some.domain/group/project/-/pipelines/7'
 
     signing_key_dir = spack_paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, 'package-signing-key')
@@ -743,14 +752,17 @@ spack:
 
             root_spec_build_hash = None
             job_spec_dag_hash = None
+            job_spec_full_hash = None
 
             for h, s in env.specs_by_hash.items():
                 if s.name == 'archive-files':
                     root_spec_build_hash = h
                     job_spec_dag_hash = s.dag_hash()
+                    job_spec_full_hash = s.full_hash()
 
             assert root_spec_build_hash
             assert job_spec_dag_hash
+            assert job_spec_full_hash
 
     def fake_cdash_register(build_name, base_url, project, site, track):
         return ('fakebuildid', 'fakestamp')
@@ -760,6 +772,7 @@ spack:
     monkeypatch.setattr(spack.cmd.ci, 'CI_REBUILD_INSTALL_BASE_ARGS', [
         'notcommand'
     ])
+    monkeypatch.setattr(spack.cmd.ci, 'INSTALL_FAIL_CODE', 127)
 
     with env_dir.as_cwd():
         env_cmd('activate', '--without-view', '--sh', '-d', '.')
@@ -780,6 +793,8 @@ spack:
         set_env_var('SPACK_RELATED_BUILDS_CDASH', '')
         set_env_var('SPACK_REMOTE_MIRROR_URL', mirror_url)
         set_env_var('SPACK_PIPELINE_TYPE', 'spack_protected_branch')
+        set_env_var('CI_JOB_URL', ci_job_url)
+        set_env_var('CI_PIPELINE_URL', ci_pipeline_url)
 
         ci_cmd('rebuild', fail_on_error=False)
 
@@ -814,6 +829,12 @@ spack:
         assert('-f' in install_parts)
         flag_index = install_parts.index('-f')
         assert('archive-files.yaml' in install_parts[flag_index + 1])
+
+        broken_spec_file = os.path.join(broken_specs_path, job_spec_full_hash)
+        with open(broken_spec_file) as fd:
+            broken_spec_content = fd.read()
+            assert(ci_job_url in broken_spec_content)
+            assert(ci_pipeline_url) in broken_spec_content
 
         env_cmd('deactivate')
 
@@ -1136,6 +1157,8 @@ spack:
                 spack.main, 'get_version', lambda: '0.15.3-416-12ad69eb1')
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            monkeypatch.setattr(
+                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
@@ -1240,6 +1263,8 @@ spack:
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            monkeypatch.setattr(
+                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             ci_cmd('generate', '--output-file', outputfile, '--dependencies')
 
             with open(outputfile) as f:
@@ -1400,6 +1425,8 @@ spack:
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            monkeypatch.setattr(
+                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
 
             ci_cmd('generate', '--output-file', outputfile)
 
@@ -1551,6 +1578,8 @@ spack:
 
         monkeypatch.setattr(
             ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+        monkeypatch.setattr(
+            ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
 
         with ev.read('test'):
             ci_cmd('generate', '--output-file', outputfile)

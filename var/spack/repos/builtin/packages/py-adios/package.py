@@ -9,13 +9,14 @@ from spack import *
 class PyAdios(PythonPackage):
     """NumPy bindings of ADIOS1"""
 
-    homepage = "https://www.olcf.ornl.gov/center-projects/adios/"
+    homepage = "https://csmd.ornl.gov/adios"
     url      = "https://github.com/ornladios/ADIOS/archive/v1.12.0.tar.gz"
     git      = "https://github.com/ornladios/ADIOS.git"
 
     maintainers = ['ax3l']
 
     version('develop', branch='master')
+    version('1.13.1', sha256='b1c6949918f5e69f701cabfe5987c0b286793f1057d4690f04747852544e157b')
     version('1.13.0', sha256='7b5ee8ff7a5f7215f157c484b20adb277ec0250f87510513edcc25d2c4739f50')
     version('1.12.0', sha256='22bc22c157322abec2d1a0817a259efd9057f88c2113e67d918a9a5ebcb3d88d')
     version('1.11.1', sha256='9f5c10b9471a721ba57d1cf6e5a55a7ad139a6c12da87b4dc128539e9eef370e')
@@ -26,7 +27,7 @@ class PyAdios(PythonPackage):
     variant('mpi', default=True,
             description='Enable MPI support')
 
-    for v in ['1.9.0', '1.10.0', '1.11.0', '1.11.1', '1.12.0', '1.13.0',
+    for v in ['1.9.0', '1.10.0', '1.11.0', '1.11.1', '1.12.0', '1.13.0', '1.13.1',
               'develop']:
         depends_on('adios@{0} ~mpi'.format(v),
                    when='@{0} ~mpi'.format(v),

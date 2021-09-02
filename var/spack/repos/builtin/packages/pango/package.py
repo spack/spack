@@ -11,11 +11,18 @@ class Pango(AutotoolsPackage):
        an emphasis on internationalization. It can be used anywhere
        that text layout is needed, though most of the work on Pango so
        far has been done in the context of the GTK+ widget toolkit."""
-    homepage = "http://www.pango.org"
+    homepage = "https://www.pango.org"
     url      = "http://ftp.gnome.org/pub/GNOME/sources/pango/1.40/pango-1.40.3.tar.xz"
     list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
     list_depth = 1
 
+    version('1.48.0', sha256='391f26f3341c2d7053e0fb26a956bd42360dadd825efe7088b1e9340a65e74e6')
+    version('1.47.0', sha256='730db8652fc43188e03218c3374db9d152351f51fc7011b9acae6d0a6c92c367')
+    version('1.46.0', sha256='9a81572ebb946187fbdd69d5ffc57e2f7a1f768cd8d2fd89dbb03fb9002a99b5')
+    version('1.45.0', sha256='381347c6f7696e64d5a7e29c93867c804ae556092b45778310b368066e089015')
+    version('1.44.0', sha256='004fffebb2ab4f89b375f4720c54b285d569526969ba791dfa20757a7f2f1d1b')
+    version('1.43.0', sha256='d2c0c253a5328a0eccb00cdd66ce2c8713fabd2c9836000b6e22a8b06ba3ddd2')
+    version('1.42.0', sha256='9924d88a3dcedff753f0763814a1605307c5c9c931413b8b47ea7267d1b19446')
     version('1.41.0', sha256='1f76ef95953dc58ee5d6a53e5f1cb6db913f3e0eb489713ee9266695cae580ba')
     version('1.40.3', sha256='abba8b5ce728520c3a0f1535eab19eac3c14aeef7faa5aded90017ceac2711d3')
     version('1.40.1', sha256='e27af54172c72b3ac6be53c9a4c67053e16c905e02addcf3a603ceb2005c1a40')
@@ -33,6 +40,7 @@ class Pango(AutotoolsPackage):
     depends_on('gobject-introspection')
     depends_on('fontconfig')
     depends_on('freetype@2:')
+    depends_on('fribidi', when='@1.42:')
     depends_on('libffi')
 
     depends_on('harfbuzz@1.2.3:', when='@1.41.0')

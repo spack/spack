@@ -9,7 +9,7 @@ from spack import *
 class PyQtconsole(PythonPackage):
     """Jupyter Qt console"""
 
-    homepage = "http://ipython.org"
+    homepage = "https://ipython.org"
     pypi = "qtconsole/qtconsole-4.2.1.tar.gz"
 
     version('4.5.1', sha256='4af84facdd6f00a6b9b2927255f717bb23ae4b7a20ba1d9ef0a5a5a8dbe01ae2')

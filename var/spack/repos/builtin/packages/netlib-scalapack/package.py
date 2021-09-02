@@ -105,7 +105,7 @@ class NetlibScalapack(ScalapackBase):
     parallel distributed memory machines
     """
 
-    homepage = "http://www.netlib.org/scalapack/"
+    homepage = "https://www.netlib.org/scalapack/"
     url = "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz"
 
     version('2.1.0', sha256='61d9216cf81d246944720cfce96255878a3f85dec13b9351f1fa0fd6768220a6')

@@ -14,10 +14,11 @@ class Rocthrust(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocThrust"
     git      = "https://github.com/ROCmSoftwarePlatform/rocThrust.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.0', sha256='a50eb6500687b4ea9e0b3affb1daff8bbc56199d39fbed3ee61d2d5bfc1a0271')
     version('4.2.0', sha256='da2b6c831c26c26058218b0c5b7b2e43fd7f0dac3b2e3a8e39a839145592c727')
     version('4.1.0', sha256='e3d06c0387a2a6880776c7423b1acf0808fb8833bc822be75793da8c2f521efd')
     version('4.0.0', sha256='120c87316f44ce8e8975e57c9b9bf1246b1ffc00879d31d744289ba9438a976c')
@@ -34,23 +35,23 @@ class Rocthrust(CMakePackage):
     depends_on('numactl', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-
-    for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        spec = self.spec
-
-        return [
+        args = [
             self.define(
                 'CMAKE_MODULE_PATH',
-                '{0}/cmake'.format(spec['hip'].prefix)
+                '{0}/cmake'.format(self.spec['hip'].prefix)
             )
         ]
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
+        return args

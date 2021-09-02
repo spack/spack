@@ -9,7 +9,7 @@ from spack import *
 class PerlMoose(PerlPackage):
     """A postmodern object system for Perl 5"""
 
-    homepage = "http://search.cpan.org/~ether/Moose-2.2006/lib/Moose.pm"
+    homepage = "https://metacpan.org/pod/Moose"
     url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Moose-2.2006.tar.gz"
 
     version('2.2010', sha256='af0905b69f18c27de1177c9bc7778ee495d4ec91be1f223e8ca8333af4de08c5')

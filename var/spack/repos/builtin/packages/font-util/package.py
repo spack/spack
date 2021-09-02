@@ -9,7 +9,7 @@ from spack import *
 class FontUtil(AutotoolsPackage, XorgPackage):
     """X.Org font package creation/installation utilities and fonts."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/font/util"
+    homepage = "https://cgit.freedesktop.org/xorg/font/util"
     xorg_mirror_path = "font/font-util-1.3.1.tar.gz"
 
     version('1.3.2', sha256='f115a3735604de1e852a4bf669be0269d8ce8f21f8e0e74ec5934b31dadc1e76')

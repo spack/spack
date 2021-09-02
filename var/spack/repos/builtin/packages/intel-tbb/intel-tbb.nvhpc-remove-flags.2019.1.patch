@@ -1,0 +1,41 @@
+diff -Naur spack-src/build/linux.gcc.inc spack-src.patched/build/linux.gcc.inc
+--- spack-src/build/linux.gcc.inc	2019-03-21 11:28:21.000000000 -0400
++++ spack-src.patched/build/linux.gcc.inc	2021-07-28 16:02:11.714975264 -0400
+@@ -29,7 +29,9 @@
+ WARNING_KEY = -Wall
+ TEST_WARNING_KEY = -Wshadow -Wcast-qual -Woverloaded-virtual -Wnon-virtual-dtor
+ 
+-WARNING_SUPPRESS = -Wno-parentheses
++# Skip for nvhpc compilers
++#WARNING_SUPPRESS = -Wno-parentheses
++WARNING_SUPPRESS = 
+ DYLIB_KEY = -shared
+ EXPORT_KEY = -Wl,--version-script,
+ LIBDL = -ldl
+@@ -63,10 +65,11 @@
+ 
+ # gcc 6.0 and later have -flifetime-dse option that controls
+ # elimination of stores done outside the object lifetime
+-ifneq (,$(shell $(CONLY) -dumpversion | egrep  "^([6-9])"))
+-    # keep pre-contruction stores for zero initialization
+-    DSE_KEY = -flifetime-dse=1
+-endif
++# Skip for nvhpc compilers
++#ifneq (,$(shell $(CONLY) -dumpversion | egrep  "^([6-9])"))
++#    # keep pre-contruction stores for zero initialization
++#    DSE_KEY = -flifetime-dse=1
++#endif
+ 
+ ifeq ($(cfg), release)
+         CPLUS_FLAGS = $(ITT_NOTIFY) -g -O2 -DUSE_PTHREAD
+@@ -149,7 +152,9 @@
+ # Setting tbbmalloc data.
+ #------------------------------------------------------------------------------
+ 
+-M_CPLUS_FLAGS = $(CPLUS_FLAGS) -fno-rtti -fno-exceptions
++# Drop -fno-rtti flag for nvhpc compilers
++#M_CPLUS_FLAGS = $(CPLUS_FLAGS) -fno-rtti -fno-exceptions
++M_CPLUS_FLAGS = $(CPLUS_FLAGS) -fno-exceptions
+ 
+ #------------------------------------------------------------------------------
+ # End of setting tbbmalloc data.

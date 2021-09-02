@@ -11,22 +11,23 @@ from spack import *
 class Aml(AutotoolsPackage):
     """AML: Building Blocks for Memory Management."""
 
-    homepage = "https://xgitlab.cels.anl.gov/argo/aml"
+    homepage = "https://argo-aml.readthedocs.io/"
     url = "https://www.mcs.anl.gov/research/projects/argo/downloads/aml-0.1.0.tar.gz"
-    git = "https://xgitlab.cels.anl.gov/argo/aml.git"
+    git = "https://github.com/anlsys/aml.git"
+    maintainers = ['perarnau']
 
     test_requires_compiler = True
 
     version('0.1.0', sha256='cc89a8768693f1f11539378b21cdca9f0ce3fc5cb564f9b3e4154a051dcea69b')
-    version('develop', branch='staging', submodules=True)
     version('master', branch='master', submodules=True)
 
     depends_on('numactl')
 
-    depends_on('m4', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+    with when('@master'):
+        depends_on('m4', type='build')
+        depends_on('autoconf', type='build')
+        depends_on('automake', type='build')
+        depends_on('libtool', type='build')
 
     @run_after('install')
     def cache_test_sources(self):

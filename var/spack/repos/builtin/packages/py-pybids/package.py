@@ -9,7 +9,7 @@ from spack import *
 class PyPybids(PythonPackage):
     """bids: interface with datasets conforming to BIDS"""
 
-    homepage = "http://github.com/bids-standard/pybids"
+    homepage = "https://github.com/bids-standard/pybids"
     pypi     = "pybids/pybids-0.13.1.tar.gz"
 
     version('0.13.1', sha256='c920e1557e1dae8b671625d70cafbdc28437ba2822b2db9da4c2587a7625e3ba')

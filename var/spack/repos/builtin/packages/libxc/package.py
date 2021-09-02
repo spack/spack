@@ -79,8 +79,10 @@ class Libxc(AutotoolsPackage, CudaPackage):
         env.append_flags('CFLAGS',  optflags)
         env.append_flags('FCFLAGS', optflags)
 
-        if '%intel' in self.spec and which('xiar'):
-            env.set('AR', 'xiar')
+        if '%intel' in self.spec:
+            env.append_flags('CFLAGS', '-std=c99')
+            if which('xiar'):
+                env.set('AR', 'xiar')
 
         if '%aocc' in self.spec:
             env.append_flags('FCFLAGS', '-fPIC')

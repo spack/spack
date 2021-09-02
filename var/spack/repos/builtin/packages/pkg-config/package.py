@@ -10,7 +10,7 @@ class PkgConfig(AutotoolsPackage):
     """pkg-config is a helper tool used when compiling applications
     and libraries"""
 
-    homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
+    homepage = "https://www.freedesktop.org/wiki/Software/pkg-config/"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz"
 

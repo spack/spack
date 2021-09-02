@@ -24,6 +24,7 @@ class Warpx(CMakePackage):
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    version('21.08', sha256='6128a32cfd075bc63d08eebea6d4f62d33ce0570f4fd72330a71023ceacccc86')
     version('21.07', sha256='a8740316d813c365715f7471201499905798b50bd94950d33f1bd91478d49561')
     version('21.06', sha256='a26039dc4061da45e779dd5002467c67a533fc08d30841e01e7abb3a890fbe30')
     version('21.05', sha256='f835f0ae6c5702550d23191aa0bb0722f981abb1460410e3d8952bc3d945a9fc')
@@ -134,3 +135,53 @@ class Warpx(CMakePackage):
             ['libwarpx.' + libsuffix[dims]], root=self.prefix, recursive=True,
             shared=True
         )
+
+    # WarpX has many examples to serve as a suitable smoke check. One
+    # that is typical was chosen here
+    examples_src_dir = 'Examples/Physics_applications/laser_acceleration/'
+
+    def _get_input_options(self, post_install):
+        examples_dir = join_path(
+            self.install_test_root if post_install else self.stage.source_path,
+            self.examples_src_dir)
+        dims = self.spec.variants['dims'].value
+        inputs_nD = {'2': 'inputs_2d', '3': 'inputs_3d', 'rz': 'inputs_2d_rz'}
+        inputs = join_path(examples_dir, inputs_nD[dims])
+
+        cli_args = [inputs, "max_step=50", "diag1.intervals=10"]
+        # test openPMD output if compiled in
+        if '+openpmd' in self.spec:
+            cli_args.append('diag1.format=openpmd')
+        return cli_args
+
+    def check(self):
+        """Checks after the build phase"""
+        if '+app' not in self.spec:
+            print("WarpX check skipped: requires variant +app")
+            return
+
+        with working_dir("spack-check", create=True):
+            cli_args = self._get_input_options(False)
+            warpx = Executable(join_path(self.build_directory, 'bin/warpx'))
+            warpx(*cli_args)
+
+    @run_after('install')
+    def copy_test_sources(self):
+        """Copy the example input files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([self.examples_src_dir])
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        if '+app' not in self.spec:
+            print("WarpX smoke tests skipped: requires variant +app")
+            return
+
+        # our executable names are a variant-dependent and naming evolves
+        exe = find(self.prefix.bin, 'warpx.*', recursive=False)[0]
+
+        cli_args = self._get_input_options(True)
+        self.run_test(exe,
+                      cli_args,
+                      [], installed=True, purpose='Smoke test for WarpX',
+                      skip_missing=False)

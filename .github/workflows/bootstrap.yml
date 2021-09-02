@@ -1,0 +1,161 @@
+name: Bootstrapping
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - releases/**
+    paths-ignore:
+      # Don't run if we only modified packages in the
+      # built-in repository or documentation
+      - 'var/spack/repos/builtin/**'
+      - '!var/spack/repos/builtin/packages/clingo-bootstrap/**'
+      - '!var/spack/repos/builtin/packages/python/**'
+      - '!var/spack/repos/builtin/packages/re2c/**'
+      - 'lib/spack/docs/**'
+  schedule:
+    # nightly at 2:16 AM
+    - cron: '16 2 * * *'
+
+jobs:
+
+  fedora-sources:
+    runs-on: ubuntu-latest
+    container: "fedora:latest"
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf install -y \
+              bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
+              make patch unzip which xz python3 python3-devel tree \
+              cmake bison bison-devel libstdc++-static
+      - uses: actions/checkout@v2
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd spack-test
+          chown -R spack-test .
+      - name: Bootstrap clingo
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust github-actions
+          spack external find cmake bison
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
+
+  ubuntu-sources:
+    runs-on: ubuntu-latest
+    container: "ubuntu:latest"
+    steps:
+      - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -y && apt-get upgrade -y
+          apt-get install -y \
+              bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
+              make patch unzip xz-utils python3 python3-dev tree \
+              cmake bison
+      - uses: actions/checkout@v2
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd -m spack-test
+          chown -R spack-test .
+      - name: Bootstrap clingo
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust github-actions
+          spack external find cmake bison
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
+
+  opensuse-sources:
+    runs-on: ubuntu-latest
+    container: "opensuse/tumbleweed:latest"
+    steps:
+      - name: Install dependencies
+        run: |
+          zypper update -y
+          zypper install -y \
+              bzip2 curl file gcc-c++ gcc gcc-fortran tar git gpg2 gzip \
+              make patch unzip which xz python3 python3-devel tree \
+              cmake bison
+      - uses: actions/checkout@v2
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+      - name: Bootstrap clingo
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust github-actions
+          spack external find cmake bison
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
+
+  macos-sources:
+    runs-on: macos-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install cmake bison@2.7 tree
+      - uses: actions/checkout@v2
+      - name: Bootstrap clingo
+        run: |
+          source share/spack/setup-env.sh
+          export PATH=/usr/local/opt/bison@2.7/bin:$PATH
+          spack bootstrap untrust github-actions
+          spack external find --not-buildable cmake bison
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
+
+  macos-clingo-binaries:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: ['3.5', '3.6', '3.7', '3.8', '3.9']
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install tree
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Bootstrap clingo
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust spack-install
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
+
+
+  ubuntu-clingo-binaries:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9']
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+      - name: Bootstrap clingo
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust spack-install
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/

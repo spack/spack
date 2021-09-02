@@ -25,7 +25,7 @@ class RPsych(RPackage):
     research.  For more information, see the <http://personality-project.org/r>
     web page."""
 
-    homepage = "http://personality-project.org/r/psych"
+    homepage = "https://personality-project.org/r/psych"
     url      = "https://cloud.r-project.org/src/contrib/psych_1.7.8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/psych"
 

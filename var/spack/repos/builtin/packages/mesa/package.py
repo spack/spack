@@ -12,7 +12,7 @@ class Mesa(MesonPackage):
     """Mesa is an open-source implementation of the OpenGL specification
      - a system for rendering interactive 3D graphics."""
 
-    homepage = "http://www.mesa3d.org"
+    homepage = "https://www.mesa3d.org"
     maintainers = ['chuckatkins', 'v-dobrev']
 
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"

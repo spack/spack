@@ -8,7 +8,7 @@ class ZookeeperBenchmark(MavenPackage):
     """It is designed to measure the per-request latency of a ZooKeeper
     ensemble for a predetermined length of time"""
 
-    homepage = "http://zookeeper.apache.org"
+    homepage = "https://zookeeper.apache.org"
     git      = "https://github.com/brownsys/zookeeper-benchmark.git"
 
     version('master', branch='master')

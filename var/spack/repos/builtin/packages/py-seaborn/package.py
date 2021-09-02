@@ -14,7 +14,7 @@ class PySeaborn(PythonPackage):
     integrated with the PyData stack, including support for numpy and pandas
     data structures and statistical routines from scipy and statsmodels."""
 
-    homepage = "http://seaborn.pydata.org/"
+    homepage = "https://seaborn.pydata.org/"
     pypi = "seaborn/seaborn-0.7.1.tar.gz"
 
     version('0.11.1', sha256='44e78eaed937c5a87fc7a892c329a7cc091060b67ebd1d0d306b446a74ba01ad')

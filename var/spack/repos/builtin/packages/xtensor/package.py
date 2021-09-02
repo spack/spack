@@ -9,7 +9,7 @@ from spack import *
 class Xtensor(CMakePackage):
     """Multi-dimensional arrays with broadcasting and lazy computing"""
 
-    homepage = "http://quantstack.net/xtensor"
+    homepage = "https://github.com/xtensor-stack/xtensor-io"
     url      = "https://github.com/QuantStack/xtensor/archive/0.13.1.tar.gz"
     git      = "https://github.com/QuantStack/xtensor.git"
 

@@ -10,7 +10,7 @@ class Bcftools(AutotoolsPackage):
        commands work transparently with both VCFs and BCFs, both
        uncompressed and BGZF-compressed."""
 
-    homepage = "http://samtools.github.io/bcftools/"
+    homepage = "https://samtools.github.io/bcftools/"
     url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
 
     version('1.12', sha256='7a0e6532b1495b9254e38c6698d955e5176c1ee08b760dfea2235ee161a024f5')

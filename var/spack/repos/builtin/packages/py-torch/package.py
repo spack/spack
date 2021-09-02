@@ -24,6 +24,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
     version('master', branch='master', submodules=True)
     version('1.9.0', tag='v1.9.0', submodules=True)
+    version('1.8.2', tag='v1.8.2', submodules=True)
     version('1.8.1', tag='v1.8.1', submodules=True)
     version('1.8.0', tag='v1.8.0', submodules=True)
     version('1.7.1', tag='v1.7.1', submodules=True)

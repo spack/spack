@@ -20,7 +20,7 @@ class Gurobi(Package):
     # to set up a mirror, see
     # http://spack.readthedocs.io/en/latest/mirrors.html
 
-    homepage = "http://www.gurobi.com/index"
+    homepage = "https://www.gurobi.com/index"
     manual_download = True
 
     maintainers = ['glennpj']

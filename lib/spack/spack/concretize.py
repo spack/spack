@@ -33,6 +33,7 @@ import llnl.util.tty as tty
 import spack.abi
 import spack.architecture
 import spack.compilers
+import spack.environment
 import spack.error
 import spack.repo
 import spack.spec
@@ -66,7 +67,7 @@ class Concretizer(object):
         """
         Add ``dev_path=*`` variant to packages built from local source.
         """
-        env = spack.environment.get_env(None, None)
+        env = spack.environment.active_environment()
         dev_info = env.dev_specs.get(spec.name, {}) if env else {}
         if not dev_info:
             return False

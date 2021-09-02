@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import contextlib
 import copy
 import os
 import re
@@ -34,7 +35,12 @@ import spack.util.lock as lk
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.filesystem_view import YamlFilesystemView
+from spack.filesystem_view import (
+    YamlFilesystemView,
+    inverse_view_func_parser,
+    view_func_parser,
+)
+from spack.installer import PackageInstaller
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
@@ -259,100 +265,9 @@ def deactivate(shell='sh'):
     return cmds
 
 
-def find_environment(args):
-    """Find active environment from args, spack.yaml, or environment variable.
-
-    This is called in ``spack.main`` to figure out which environment to
-    activate.
-
-    Check for an environment in this order:
-        1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
-        2. as a spack.yaml file in the current directory, or
-        3. via a path in the SPACK_ENV environment variable.
-
-    If an environment is found, read it in.  If not, return None.
-
-    Arguments:
-        args (argparse.Namespace): argparse namespace wtih command arguments
-
-    Returns:
-        (Environment): a found environment, or ``None``
-    """
-    # try arguments
-    env = getattr(args, 'env', None)
-
-    # treat env as a name
-    if env:
-        if exists(env):
-            return read(env)
-
-    else:
-        # if env was specified, see if it is a dirctory otherwise, look
-        # at env_dir (env and env_dir are mutually exclusive)
-        env = getattr(args, 'env_dir', None)
-
-        # if no argument, look for the environment variable
-        if not env:
-            env = os.environ.get(spack_env_var)
-
-            # nothing was set; there's no active environment
-            if not env:
-                return None
-
-    # if we get here, env isn't the name of a spack environment; it has
-    # to be a path to an environment, or there is something wrong.
-    if is_env_dir(env):
-        return Environment(env)
-
-    raise SpackEnvironmentError('no environment in %s' % env)
-
-
-def get_env(args, cmd_name, required=False):
-    """Used by commands to get the active environment.
-
-    This first checks for an ``env`` argument, then looks at the
-    ``active`` environment.  We check args first because Spack's
-    subcommand arguments are parsed *after* the ``-e`` and ``-D``
-    arguments to ``spack``.  So there may be an ``env`` argument that is
-    *not* the active environment, and we give it precedence.
-
-    This is used by a number of commands for determining whether there is
-    an active environment.
-
-    If an environment is not found *and* is required, print an error
-    message that says the calling command *needs* an active environment.
-
-    Arguments:
-        args (argparse.Namespace): argparse namespace wtih command arguments
-        cmd_name (str): name of calling command
-        required (bool): if ``True``, raise an exception when no environment
-            is found; if ``False``, just return ``None``
-
-    Returns:
-        (Environment): if there is an arg or active environment
-    """
-    # try argument first
-    env = getattr(args, 'env', None)
-    if env:
-        if exists(env):
-            return read(env)
-        elif is_env_dir(env):
-            return Environment(env)
-        else:
-            raise SpackEnvironmentError('no environment in %s' % env)
-
-    # try the active environment. This is set by find_environment() (above)
-    if _active_environment:
-        return _active_environment
-    elif not required:
-        return None
-    else:
-        tty.die(
-            '`spack %s` requires an environment' % cmd_name,
-            'activate an environment first:',
-            '    spack env activate ENV',
-            'or use:',
-            '    spack -e ENV %s ...' % cmd_name)
+def active_environment():
+    """Returns the active environment when there is any"""
+    return _active_environment
 
 
 def _root(name):
@@ -456,12 +371,13 @@ def _eval_conditional(string):
 
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
-                 link=default_view_link):
+                 link=default_view_link, link_type='symlink'):
         self.base = base_path
         self.root = spack.util.path.canonicalize_path(root)
         self.projections = projections
         self.select = select
         self.exclude = exclude
+        self.link_type = view_func_parser(link_type)
         self.link = link
 
     def select_fn(self, spec):
@@ -475,7 +391,8 @@ class ViewDescriptor(object):
                     self.projections == other.projections,
                     self.select == other.select,
                     self.exclude == other.exclude,
-                    self.link == other.link])
+                    self.link == other.link,
+                    self.link_type == other.link_type])
 
     def to_dict(self):
         ret = syaml.syaml_dict([('root', self.root)])
@@ -490,6 +407,8 @@ class ViewDescriptor(object):
             ret['select'] = self.select
         if self.exclude:
             ret['exclude'] = self.exclude
+        if self.link_type:
+            ret['link_type'] = inverse_view_func_parser(self.link_type)
         if self.link != default_view_link:
             ret['link'] = self.link
         return ret
@@ -501,7 +420,8 @@ class ViewDescriptor(object):
                               d.get('projections', {}),
                               d.get('select', []),
                               d.get('exclude', []),
-                              d.get('link', default_view_link))
+                              d.get('link', default_view_link),
+                              d.get('link_type', 'symlink'))
 
     @property
     def _current_root(self):
@@ -565,7 +485,8 @@ class ViewDescriptor(object):
             raise SpackEnvironmentViewError(msg)
         return YamlFilesystemView(root, spack.store.layout,
                                   ignore_conflicts=True,
-                                  projections=self.projections)
+                                  projections=self.projections,
+                                  link=self.link_type)
 
     def __contains__(self, spec):
         """Is the spec described by the view descriptor
@@ -1180,6 +1101,10 @@ class Environment(object):
             return True
         return False
 
+    def is_develop(self, spec):
+        """Returns true when the spec is built from local sources"""
+        return spec.name in self.dev_specs
+
     def concretize(self, force=False, tests=False):
         """Concretize user_specs in this environment.
 
@@ -1546,21 +1471,18 @@ class Environment(object):
                     uninstalled_specs.append(spec)
         return uninstalled_specs
 
-    def install_all(self, args=None, **install_args):
+    def install_all(self, **install_args):
         """Install all concretized specs in an environment.
 
         Note: this does not regenerate the views for the environment;
         that needs to be done separately with a call to write().
 
         Args:
-            args (argparse.Namespace): argparse namespace with command arguments
             install_args (dict): keyword install arguments
         """
-        self.install_specs(None, args=args, **install_args)
+        self.install_specs(None, **install_args)
 
-    def install_specs(self, specs=None, args=None, **install_args):
-        from spack.installer import PackageInstaller
-
+    def install_specs(self, specs=None, **install_args):
         tty.debug('Assessing installation status of environment packages')
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
@@ -1594,15 +1516,7 @@ class Environment(object):
 
         installs = []
         for spec in specs_to_install:
-            # Parse cli arguments and construct a dictionary
-            # that will be passed to the package installer
-            kwargs = dict()
-            if install_args:
-                kwargs.update(install_args)
-            if args:
-                spack.cmd.install.update_kwargs_from_args(args, kwargs)
-
-            installs.append((spec.package, kwargs))
+            installs.append((spec.package, install_args))
 
         try:
             builder = PackageInstaller(installs)
@@ -1689,7 +1603,22 @@ class Environment(object):
         # Dependency-only specs will have value None
         matches = {}
 
+        if not isinstance(spec, spack.spec.Spec):
+            spec = spack.spec.Spec(spec)
+
         for user_spec, concretized_user_spec in self.concretized_specs():
+            # Deal with concrete specs differently
+            if spec.concrete:
+                # Matching a concrete spec is more restrictive
+                # than just matching the dag hash
+                is_match = (
+                    spec in concretized_user_spec and
+                    concretized_user_spec[spec.name].build_hash() == spec.build_hash()
+                )
+                if is_match:
+                    matches[spec] = spec
+                continue
+
             if concretized_user_spec.satisfies(spec):
                 matches[concretized_user_spec] = user_spec
             for dep_spec in concretized_user_spec.traverse(root=False):
@@ -2214,6 +2143,17 @@ def is_latest_format(manifest):
     top_level_key = _top_level_key(data)
     changed = spack.schema.env.update(data[top_level_key])
     return not changed
+
+
+@contextlib.contextmanager
+def deactivate_environment():
+    """Deactivate an active environment for the duration of the context."""
+    global _active_environment
+    current, _active_environment = _active_environment, None
+    try:
+        yield
+    finally:
+        _active_environment = current
 
 
 class SpackEnvironmentError(spack.error.SpackError):
