@@ -4413,7 +4413,7 @@ class Spec(object):
         return hash(lang.tuplify(self._cmp_iter))
 
     def __reduce__(self):
-        return _spec_from_dict, (self.to_dict(hash=ht.build_hash),)
+        return _spec_from_dict, (self.to_dict(),)
 
 
 def _spec_from_old_dict(data):
