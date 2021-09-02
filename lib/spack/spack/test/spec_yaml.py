@@ -337,7 +337,8 @@ def test_save_dependency_spec_jsons_subset(tmpdir, config):
 
 
 def test_legacy_yaml(tmpdir, install_mockery, mock_packages):
-    """Tests a simple legacy YAML with a dependency."""
+    """Tests a simple legacy YAML with a dependency and ensures spec survives
+    concretization."""
     yaml = """
 spec:
 - a:
@@ -392,7 +393,6 @@ spec:
     build_hash: iaapywazxgetn6gfv2cfba353qzzqvhy
 """
     spec = Spec.from_yaml(yaml)
+    non_concrete_spec = spec.copy()
     spec.concretize()
-    print(spec.to_yaml(hash=ht.build_hash))
-    # TODO: Check eq dag
-    # Change target to be x86_64 to get rid of all feature stuff
+    assert non_concrete_spec.eq_dag(spec)
