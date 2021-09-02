@@ -243,17 +243,21 @@ class NameValueModifier(object):
 
 class SetEnv(NameValueModifier):
 
+    def __str__(self):
+        return "SetEnv: {0}={1}".format(self.name, str(self.value))
+
     def execute(self, env):
-        tty.debug("SetEnv: {0}={1}".format(self.name, str(self.value)),
-                  level=3)
+        tty.debug(self, level=3)
         env[self.name] = str(self.value)
 
 
 class AppendFlagsEnv(NameValueModifier):
 
+    def __str__(self):
+        return "AppendFlagsEnv: {0}={1}".format(self.name, str(self.value))
+
     def execute(self, env):
-        tty.debug("AppendFlagsEnv: {0}={1}".format(self.name, str(self.value)),
-                  level=3)
+        tty.debug(self, level=3)
         if self.name in env and env[self.name]:
             env[self.name] += self.separator + str(self.value)
         else:
@@ -262,17 +266,22 @@ class AppendFlagsEnv(NameValueModifier):
 
 class UnsetEnv(NameModifier):
 
+    def __str__(self):
+        return "UnsetEnv: {0}".format(self.name)
+
     def execute(self, env):
-        tty.debug("UnsetEnv: {0}".format(self.name), level=3)
+        tty.debug(self, level=3)
         # Avoid throwing if the variable was not set
         env.pop(self.name, None)
 
 
 class RemoveFlagsEnv(NameValueModifier):
 
+    def __str__(self):
+        return "RemoveFlagsEnv: {0}-{1}".format(self.name, str(self.value))
+
     def execute(self, env):
-        tty.debug("RemoveFlagsEnv: {0}-{1}".format(self.name, str(self.value)),
-                  level=3)
+        tty.debug(self, level=3)
         environment_value = env.get(self.name, '')
         flags = environment_value.split(
             self.separator) if environment_value else []
@@ -282,17 +291,23 @@ class RemoveFlagsEnv(NameValueModifier):
 
 class SetPath(NameValueModifier):
 
-    def execute(self, env):
+    def __str__(self):
         string_path = concatenate_paths(self.value, separator=self.separator)
-        tty.debug("SetPath: {0}={1}".format(self.name, string_path), level=3)
+        return "SetPath: {0}={1}".format(self.name, string_path)
+
+    def execute(self, env):
+        tty.debug(self, level=3)
+        string_path = concatenate_paths(self.value, separator=self.separator)
         env[self.name] = string_path
 
 
 class AppendPath(NameValueModifier):
 
+    def __str__(self):
+        return "AppendPath: {0}+{1}".format(self.name, str(self.value))
+
     def execute(self, env):
-        tty.debug("AppendPath: {0}+{1}".format(self.name, str(self.value)),
-                  level=3)
+        tty.debug(self, level=3)
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -302,9 +317,11 @@ class AppendPath(NameValueModifier):
 
 class PrependPath(NameValueModifier):
 
+    def __str__(self):
+        return "PrependPath: {0}+{1}".format(self.name, str(self.value))
+
     def execute(self, env):
-        tty.debug("PrependPath: {0}+{1}".format(self.name, str(self.value)),
-                  level=3)
+        tty.debug(self, level=3)
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -314,9 +331,11 @@ class PrependPath(NameValueModifier):
 
 class RemovePath(NameValueModifier):
 
+    def __str__(self):
+        return "RemovePath: {0}-{1}".format(self.name, str(self.value))
+
     def execute(self, env):
-        tty.debug("RemovePath: {0}-{1}".format(self.name, str(self.value)),
-                  level=3)
+        tty.debug(self, level=3)
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -327,8 +346,11 @@ class RemovePath(NameValueModifier):
 
 class DeprioritizeSystemPaths(NameModifier):
 
+    def __str__(self):
+        return "DeprioritizeSystemPaths: {0}".format(self.name)
+
     def execute(self, env):
-        tty.debug("DeprioritizeSystemPaths: {0}".format(self.name), level=3)
+        tty.debug(self, level=3)
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -339,9 +361,11 @@ class DeprioritizeSystemPaths(NameModifier):
 
 class PruneDuplicatePaths(NameModifier):
 
+    def __str__(self):
+        return "PruneDuplicatePaths: {0}".format(self.name)
+
     def execute(self, env):
-        tty.debug("PruneDuplicatePaths: {0}".format(self.name),
-                  level=3)
+        tty.debug(self, level=3)
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
@@ -378,6 +402,13 @@ class EnvironmentModifications(object):
 
     def __len__(self):
         return len(self.env_modifications)
+
+    def __str__(self):
+        out = "EnvironmentModifications with {0} modifications:\n".format(
+            len(self.env_modifications))
+        for item in self.env_modifications:
+            out += "{0}\n".format(item)
+        return out
 
     def extend(self, other):
         self._check_other(other)
