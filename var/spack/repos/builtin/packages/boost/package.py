@@ -446,7 +446,11 @@ class Boost(Package):
             '--layout=%s' % layout
         ])
 
-        if (not spec.satisfies('%intel')) or spec.satisfies('@1.76:'):
+        if not spec.satisfies('@:1.75 %intel'):
+            # When building any version >= 1.76, the toolset must be specified.
+            # Some earlier versions could not specify Intel as the toolset
+            # (although it is not currently know if 1.76 is the earliest
+            # version that requires specifying the toolset for Intel)
             options.extend([
                 'toolset=%s' % self.determine_toolset(spec)
             ])
