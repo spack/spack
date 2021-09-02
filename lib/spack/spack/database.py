@@ -77,7 +77,8 @@ _skip_reindex = [
     # only difference is that v5 can contain "deprecated_for"
     # fields.  So, skip the reindex for this transition. The new
     # version is saved to disk the first time the DB is written.
-    (Version('0.9.3'), Version('5'))
+    (Version('0.9.3'), Version('5'),
+     (Version('5'), Version('6')))
 ]
 
 # Default timeout for spack database locks in seconds or None (no timeout).
