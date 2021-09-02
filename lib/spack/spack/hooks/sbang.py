@@ -192,10 +192,11 @@ def install_sbang():
     # make $install_tree/bin and copy in a new version of sbang if needed
     sbang_bin_dir = os.path.dirname(sbang_path)
     fs.mkdirp(sbang_bin_dir)
-    fs.install(spack.paths.sbang_script, sbang_path)
 
     # set to permissions for `all` in `packages.yaml`
     os.chmod(sbang_bin_dir, spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all")))
+
+    fs.install(spack.paths.sbang_script, sbang_path)
 
 
 def post_install(spec):
