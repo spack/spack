@@ -1827,14 +1827,15 @@ class Spec(object):
                 not self._hashes_final)                     # lazily compute
             if write_full_hash:
                 node[ht.full_hash.name] = self.full_hash()
+            write_build_hash = 'build' in hash.deptype and (
+                self._hashes_final and self._build_hash or  # cached and final
+                not self._hashes_final)                     # lazily compute
+            if write_build_hash:
+                node[ht.build_hash.name] = self.build_hash()
         else:
             node['concrete'] = False
-        write_build_hash = 'build' in hash.deptype and (
-            self._hashes_final and self._build_hash or  # cached and final
-            not self._hashes_final)                     # lazily compute
-        if write_build_hash:
-            pass
-        node[ht.build_hash.name] = self.build_hash()
+        if hash.name == 'build_hash':
+            node[hash.name] = self.build_hash()
         return node
 
     def to_yaml(self, stream=None, hash=ht.dag_hash):
