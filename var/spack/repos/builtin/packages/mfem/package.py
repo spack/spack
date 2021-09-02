@@ -809,7 +809,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         test_dir = join_path(
             self.test_suite.current_test_cache_dir,
             self.examples_src_dir
-       )
+        )
         with working_dir(test_dir, create=False):
             # MFEM has many examples to serve as a suitable smoke check. ex10
             # was chosen arbitrarily among the examples that work both with
