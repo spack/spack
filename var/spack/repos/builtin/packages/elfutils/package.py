@@ -54,8 +54,6 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     variant('debuginfod', default=False,
             description='Enable libdebuginfod support.')
 
-    patch('elfutils-0.185-static-inline.patch', when='@0.185')
-
     depends_on('bzip2', type='link', when='+bzip2')
     depends_on('xz',    type='link', when='+xz')
     depends_on('zlib',  type='link')
