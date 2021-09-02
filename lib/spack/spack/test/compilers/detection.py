@@ -20,10 +20,10 @@ import spack.compilers.nag
 import spack.compilers.nvhpc
 import spack.compilers.oneapi
 import spack.compilers.pgi
+import spack.compilers.rocmcc
 import spack.compilers.xl
 import spack.compilers.xl_r
 import spack.util.module_cmd
-import spack.compilers.rocmcc
 from spack.operating_systems.cray_frontend import CrayFrontend
 
 

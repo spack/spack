@@ -9,7 +9,6 @@ import sys
 import llnl.util.lang
 
 from spack.compiler import Compiler
-from spack.version import ver
 
 
 class Rocmcc(Compiler):
@@ -99,7 +98,6 @@ class Rocmcc(Compiler):
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
         ver = 'unknown'
-
         match = re.search(
             # clang compiler versions are displayed as clang version 13.0.0
             r'clang version ([^ )\n]+?)-[~.\w\d-]*|'
