@@ -28,7 +28,7 @@ class PyBluepyemodel(PythonPackage):
     depends_on('py-h5py@2.9:', type='run')
     depends_on('py-ipyparallel@6.3:', type='run')
     depends_on('py-matplotlib@2.2:', type='run')
-    depends_on('py-morph-tool@2.5.1:', type='run')
+    depends_on('py-morph-tool@2.5.1:2.8.99', type='run')
     depends_on('py-numpy@1.15.0:', type='run')
     depends_on('py-pandas@0.24:', type='run')
     depends_on('py-psycopg2', type='run')

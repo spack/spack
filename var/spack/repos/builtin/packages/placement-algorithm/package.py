@@ -13,27 +13,29 @@ class PlacementAlgorithm(PythonPackage):
     git      = "git@bbpgitlab.epfl.ch:nse/placement-algorithm.git"
 
     version('develop', branch='master')
-    version('2.1.2', tag='placement-algorithm-v2.1.2')
-    version('2.1.1', tag='placement-algorithm-v2.1.1')
-    version('2.1.0', tag='placement-algorithm-v2.1.0')
-    version('2.0.10', tag='placement-algorithm-v2.0.10')
-    version('2.0.8', tag='placement-algorithm-v2.0.8')
+    version('2.2.0', tag='placement-algorithm-v2.2.0')
+    version('2.1.4', tag='placement-algorithm-v2.1.4')
 
     build_directory = 'python'
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('py-lxml', type='run')
-    depends_on('py-numpy', type='run')
-    depends_on('py-pandas', type='run')
+    depends_on('py-lxml@4.0:', type='run')
+    depends_on('py-numpy@1.8:', type='run')
+    depends_on('py-pandas@0.19:', type='run')
     depends_on('py-six', type='run')
 
-    depends_on('py-morphio@2.0.5:', type='run')
-    depends_on('py-morph-tool@0.1.3:', type='run')
-    depends_on('py-mpi4py@2.0:', type='run')
+    depends_on('py-morphio@3.0:3.999', type='run')
+    depends_on('py-morph-tool@2.9.0:', type='run', when='@2.2.0:')
+    depends_on('py-morph-tool@0.1.3:2.8.99', type='run', when='@:2.1.99')
+    depends_on('py-neurom@3.0:3.999', type='run', when='@2.2.0:')
+    depends_on('py-neurom@2.0:2.99', type='run', when='@:2.1.99')
+    depends_on('py-neuroc@:0.2.7', type='run', when='@:2.1.99')
+    depends_on('py-neuroc@0.2.8:0.999', type='run', when='@2.2.0:')
+    depends_on('py-mpi4py@3.0.3:', type='run')
     depends_on('py-tqdm@4.0:', type='run')
     depends_on('py-voxcell@2.5:2.6.99', when='@:2.0.99', type='run')
-    depends_on('py-voxcell@2.7:', when='@2.1.0:', type='run')
-    depends_on('py-dask@2.15:', when='@2.0.12:', type='run')
+    depends_on('py-voxcell@2.7:3.99', when='@2.1.0:', type='run')
+    depends_on('py-dask+distributed+bag@2.15:', when='@2.0.12:', type='run')
 
-    depends_on('py-region-grower@0.1.5:', type='run')
+    depends_on('py-region-grower@0.1.5:0.1.99', type='run', when='@:2.1.99')
