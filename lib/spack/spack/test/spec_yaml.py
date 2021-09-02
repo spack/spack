@@ -393,6 +393,5 @@ spec:
     build_hash: iaapywazxgetn6gfv2cfba353qzzqvhy
 """
     spec = Spec.from_yaml(yaml)
-    non_concrete_spec = spec.copy()
-    spec.concretize()
-    assert non_concrete_spec.eq_dag(spec)
+    concrete_spec = spec.concretized()
+    assert concrete_spec.eq_dag(spec)
