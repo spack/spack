@@ -692,7 +692,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
 
     try:
         yield tmp_dir
-    except (Exception, KeyboardInterrupt, SystemExit) as e:
+    except (Exception, KeyboardInterrupt, SystemExit):
         # Delete what was there, before copying back the original content
         if os.path.exists(directory_name):
             shutil.rmtree(directory_name)
@@ -701,10 +701,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
             dst=os.path.dirname(directory_name)
         )
         tty.debug('DIRECTORY RECOVERED [{0}]'.format(directory_name))
-
-        msg = 'the transactional move of "{0}" failed.'
-        msg += '\n    ' + str(e)
-        raise RuntimeError(msg.format(directory_name))
+        raise
     else:
         # Otherwise delete the temporary directory
         shutil.rmtree(tmp_dir)
@@ -1102,14 +1099,14 @@ def find(root, files, recursive=True):
 
     Accepts any glob characters accepted by fnmatch:
 
-    =======  ====================================
-    Pattern  Meaning
-    =======  ====================================
-    *        matches everything
-    ?        matches any single character
-    [seq]    matches any character in ``seq``
-    [!seq]   matches any character not in ``seq``
-    =======  ====================================
+    ==========  ====================================
+    Pattern     Meaning
+    ==========  ====================================
+    ``*``       matches everything
+    ``?``       matches any single character
+    ``[seq]``   matches any character in ``seq``
+    ``[!seq]``  matches any character not in ``seq``
+    ==========  ====================================
 
     Parameters:
         root (str): The root directory to start searching from

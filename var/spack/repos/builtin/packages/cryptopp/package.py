@@ -13,7 +13,7 @@ class Cryptopp(MakefilePackage):
     public-key encryption (RSA, DSA), and a few obsolete/historical encryption
     algorithms (MD5, Panama)."""
 
-    homepage = "http://www.cryptopp.com"
+    homepage = "https://www.cryptopp.com"
     url      = "http://www.cryptopp.com/cryptopp700.zip"
 
     version('7.0.0', sha256='a4bc939910edd3d29fb819a6fc0dfdc293f686fa62326f61c56d72d0a366ceb0')

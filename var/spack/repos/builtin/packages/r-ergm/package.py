@@ -13,7 +13,7 @@ class RErgm(RPackage):
     exponential-family random graph models (ERGM). "ergm" is a part of the
     "statnet" suite of packages for network analysis."""
 
-    homepage = "http://statnet.org"
+    homepage = "https://statnet.org"
     url      = "https://cloud.r-project.org/src/contrib/ergm_3.7.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ergm"
 

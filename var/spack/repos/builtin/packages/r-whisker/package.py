@@ -11,7 +11,7 @@ class RWhisker(RPackage):
 
     Implements 'Mustache' logicless templating."""
 
-    homepage = "http://github.com/edwindj/whisker"
+    homepage = "https://github.com/edwindj/whisker"
     url      = "https://cloud.r-project.org/src/contrib/whisker_0.3-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/whisker"
 

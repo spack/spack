@@ -14,7 +14,7 @@ class NetlibLapack(CMakePackage):
     package that has found extensive use in the scientific community.
 
     """
-    homepage = "http://www.netlib.org/lapack/"
+    homepage = "https://www.netlib.org/lapack/"
     url = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
 
     version('3.9.1', sha256='d0085d2caf997ff39299c05d4bacb6f3d27001d25a4cc613d48c1f352b73e7e0',

@@ -312,7 +312,7 @@ def run_mypy(mypy_cmd, file_list, args):
 @tool("isort")
 def run_isort(isort_cmd, file_list, args):
     # always run with config from running spack prefix
-    isort_args = ("--settings-file", os.path.join(spack.paths.prefix, "pyproject.toml"))
+    isort_args = ("--settings-path", os.path.join(spack.paths.prefix, "pyproject.toml"))
     if not args.fix:
         isort_args += ("--check", "--diff")
 

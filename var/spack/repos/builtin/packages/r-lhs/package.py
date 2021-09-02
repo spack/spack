@@ -12,7 +12,7 @@ class RLhs(RPackage):
     Provides a number of methods for creating and augmenting Latin Hypercube
     Samples."""
 
-    homepage = "http://lhs.r-forge.r-project.org/"
+    homepage = "https://lhs.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/lhs_0.16.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/lhs"
 

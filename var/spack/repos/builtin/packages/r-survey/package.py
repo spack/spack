@@ -17,7 +17,7 @@ class RSurvey(RPackage):
     calibration, and raking. Two-phase subsampling designs. Graphics. PPS
     sampling without replacement. Principal components, factor analysis."""
 
-    homepage = "http://r-survey.r-forge.r-project.org/survey/"
+    homepage = "https://r-survey.r-forge.r-project.org/survey/"
     url      = "https://cloud.r-project.org/src/contrib/survey_3.30-3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/survey"
 

@@ -8,7 +8,7 @@ from spack import *
 class Nyancat(MakefilePackage):
     """Nyancat in your terminal, rendered through ANSI escape sequences."""
 
-    homepage = "http://nyancat.dakko.us/"
+    homepage = "https://nyancat.dakko.us/"
     url      = "https://github.com/klange/nyancat/archive/1.5.1.tar.gz"
 
     version('1.5.2', sha256='88cdcaa9c7134503dd0364a97fa860da3381a09cb555c3aae9918360827c2032')

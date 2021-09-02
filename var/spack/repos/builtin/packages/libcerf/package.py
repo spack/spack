@@ -13,7 +13,7 @@ class Libcerf(AutotoolsPackage, SourceforgePackage):
        integral and Voigt's convolution of a Gaussian and a Lorentzian
 
     """
-    homepage = "http://sourceforge.net/projects/libcerf"
+    homepage = "https://sourceforge.net/projects/libcerf"
     sourceforge_mirror_path = "libcerf/libcerf-1.3.tgz"
 
     version('1.3', sha256='d7059e923d3f370c89fb4d19ed4f827d381bc3f0e36da5595a04aeaaf3e6a859')

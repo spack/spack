@@ -14,7 +14,7 @@ class Xz(AutotoolsPackage, SourceforgePackage):
     but also work on some not-so-POSIX systems. XZ Utils are the successor
     to LZMA Utils."""
 
-    homepage = "http://tukaani.org/xz/"
+    homepage = "https://tukaani.org/xz/"
     sourceforge_mirror_path = "lzmautils/files/xz-5.2.5.tar.bz2"
     list_url = "http://tukaani.org/xz/old.html"
 

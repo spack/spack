@@ -9,7 +9,7 @@ from spack import *
 class Pacparser(MakefilePackage):
     """pacparser is a library to parse proxy auto-config (PAC) files."""
 
-    homepage = "http://pacparser.github.io/"
+    homepage = "https://pacparser.github.io/"
     url      = "https://github.com/manugarg/pacparser/releases/download/1.3.7/pacparser-1.3.7.tar.gz"
 
     version('1.3.7', sha256='eb48ec2fc202d12a4b882133048c7590329849f32c2285bc4dbe418f29aad249')

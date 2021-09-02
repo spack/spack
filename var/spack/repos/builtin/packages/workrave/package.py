@@ -13,7 +13,7 @@ class Workrave(AutotoolsPackage):
        The program runs on GNU/Linux and Microsoft Windows.
     """
 
-    homepage = "http://www.workrave.org/"
+    homepage = "https://www.workrave.org/"
     url      = "https://github.com/rcaelers/workrave/archive/v1_10_20.tar.gz"
 
     version('1_10_20', sha256='a89c6e82d5bbbaae5e171100b87c4efd8316ab8a18d82b83714035e1116983ec')

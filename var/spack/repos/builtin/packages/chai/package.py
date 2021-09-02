@@ -14,8 +14,11 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/CHAI"
     git      = "https://github.com/LLNL/CHAI.git"
 
+    maintainers = ['davidbeckingsale']
+
     version('develop', branch='develop', submodules=True)
-    version('master', branch='main', submodules=True)
+    version('main', branch='main', submodules=True)
+    version('2.4.0', tag='v2.4.0', submodules=True)
     version('2.3.0', tag='v2.3.0', submodules=True)
     version('2.2.2', tag='v2.2.2', submodules=True)
     version('2.2.1', tag='v2.2.1', submodules=True)
@@ -32,6 +35,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     variant('raja', default=False, description='Build plugin for RAJA')
     variant('benchmarks', default=False, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
+    variant('openmp', default=False, description='Build using OpenMP')
     # TODO: figure out gtest dependency and then set this default True
     # and remove the +tests conflict below.
     variant('tests', default=False, description='Build tests')
@@ -39,22 +43,45 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
 
-    depends_on('blt@0.4.0:', type='build', when='@2.3.1:')
-    depends_on('blt@:0.3.6', type='build', when='@:2.3.0')
+    depends_on('blt@0.4.1:', type='build', when='@2.4.0:')
+    depends_on('blt@0.4.0:', type='build', when='@2.3.0')
+    depends_on('blt@0.3.6:', type='build', when='@:2.2.2')
 
     depends_on('umpire')
-    depends_on('raja', when="+raja")
+    depends_on('umpire@6.0.0', when="@2.4.0")
+    depends_on('umpire@4.1.2', when="@2.2.0:2.3.0")
+    depends_on('umpire@main', when='@main')
 
-    depends_on('umpire+cuda', when="+cuda")
-    depends_on('raja+cuda', when="+raja+cuda")
+    with when('+cuda'):
+        depends_on('umpire+cuda')
+        for sm_ in CudaPackage.cuda_arch_values:
+            depends_on('umpire+cuda cuda_arch={0}'.format(sm_),
+                       when='cuda_arch={0}'.format(sm_))
 
-    # variants +rocm and amdgpu_targets are not automatically passed to
-    # dependencies, so do it manually.
-    depends_on('umpire+rocm', when='+rocm')
-    depends_on('raja+rocm', when="+raja+rocm")
-    for val in ROCmPackage.amdgpu_targets:
-        depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
-        depends_on('raja amdgpu_target=%s' % val, when='+raja amdgpu_target=%s' % val)
+    with when('+rocm'):
+        depends_on('umpire+rocm')
+        for arch in ROCmPackage.amdgpu_targets:
+            depends_on('umpire+rocm amdgpu_target={0}'.format(arch),
+                       when='amdgpu_target={0}'.format(arch))
+
+    with when('+raja'):
+        depends_on('raja~openmp', when='~openmp')
+        depends_on('raja+openmp', when='+openmp')
+        depends_on('raja@0.14.0', when="@2.4.0")
+        depends_on('raja@0.13.0', when="@2.3.0")
+        depends_on('raja@0.12.0', when="@2.2.0:2.2.2")
+        depends_on('raja@main', when='@main')
+
+        with when('+cuda'):
+            depends_on('raja+cuda')
+            for sm_ in CudaPackage.cuda_arch_values:
+                depends_on('raja+cuda cuda_arch={0}'.format(sm_),
+                           when='cuda_arch={0}'.format(sm_))
+        with when('+rocm'):
+            depends_on('raja+rocm')
+            for arch in ROCmPackage.amdgpu_targets:
+                depends_on('raja+rocm amdgpu_target={0}'.format(arch),
+                           when='amdgpu_target={0}'.format(arch))
 
     conflicts('+benchmarks', when='~tests')
 
@@ -64,9 +91,13 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
         options = []
         options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
 
+        options.append(self.define_from_variant('ENABLE_OPENMP', 'openmp'))
+
         if '+cuda' in spec:
             options.extend([
                 '-DENABLE_CUDA=ON',
+                '-DCMAKE_CUDA_SEPARABLE_COMPILATION=On',
+                '-DCUDA_SEPARABLE_COMPILATION=On',
                 '-DCUDA_TOOLKIT_ROOT_DIR=' + spec['cuda'].prefix])
 
             if not spec.satisfies('cuda_arch=none'):

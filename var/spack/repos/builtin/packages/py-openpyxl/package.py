@@ -9,7 +9,7 @@ from spack import *
 class PyOpenpyxl(PythonPackage):
     """A Python library to read/write Excel 2010 xlsx/xlsm files"""
 
-    homepage = "http://openpyxl.readthedocs.org/"
+    homepage = "https://openpyxl.readthedocs.org/"
     pypi = "openpyxl/openpyxl-3.0.3.tar.gz"
 
     version('3.0.3', sha256='547a9fc6aafcf44abe358b89ed4438d077e9d92e4f182c87e2dc294186dc4b64')

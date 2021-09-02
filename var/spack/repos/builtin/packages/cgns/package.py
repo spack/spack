@@ -13,7 +13,7 @@ class Cgns(CMakePackage):
     and extensible standard for the storage and retrieval of computational
     fluid dynamics (CFD) analysis data."""
 
-    homepage = "http://cgns.github.io/"
+    homepage = "https://cgns.github.io/"
     url      = "https://github.com/CGNS/CGNS/archive/v3.3.0.tar.gz"
     git      = "https://github.com/CGNS/CGNS"
 

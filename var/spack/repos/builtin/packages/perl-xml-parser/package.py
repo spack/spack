@@ -10,7 +10,7 @@ from spack import *
 class PerlXmlParser(PerlPackage):
     """XML::Parser - A perl module for parsing XML documents"""
 
-    homepage = "http://search.cpan.org/perldoc/XML::Parser"
+    homepage = "https://metacpan.org/pod/XML::Parser"
     url      = "http://search.cpan.org/CPAN/authors/id/T/TO/TODDR/XML-Parser-2.44.tar.gz"
 
     version('2.44', sha256='1ae9d07ee9c35326b3d9aad56eae71a6730a73a116b9fe9e8a4758b7cc033216')

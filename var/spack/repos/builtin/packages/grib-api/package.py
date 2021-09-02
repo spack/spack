@@ -9,18 +9,20 @@ from spack import *
 class GribApi(CMakePackage):
     """The ECMWF GRIB API is an application program interface accessible from
        C, FORTRAN and Python programs developed for encoding and decoding WMO
-       FM-92 GRIB edition 1 and edition 2 messages."""
+       FM-92 GRIB edition 1 and edition 2 messages. The API was deprecated
+       https://www.ecmwf.int/en/newsletter/152/news/end-road-grib-api in favor
+       of ecCodes."""
 
-    homepage = 'https://software.ecmwf.int/wiki/display/GRIB/Home'
+    homepage = 'https://www.ecmwf.int/en/newsletter/152/news/end-road-grib-api'
     url = 'https://software.ecmwf.int/wiki/download/attachments/3473437/grib_api-1.17.0-Source.tar.gz?api=v2'
     list_url = 'https://software.ecmwf.int/wiki/display/GRIB/Releases'
 
     maintainers = ['skosukhin']
 
-    version('1.24.0', sha256='6b0d443cb0802c5de652e5816c5b88734cb3ead454eb932c5ec12ef8d4f77bcd')
-    version('1.21.0', sha256='50c2b58303ab578c55735e6c21c72ffc24f82a5bf52565550f54d49cb60e8a90')
-    version('1.17.0', sha256='55cbb4fdcb4ee1be6a27cece9ae7e26070beb8ab6cb7e77773db3fb0d4272462')
-    version('1.16.0', sha256='0068ca4149a9f991d4c86a813ac73b4e2299c6a3fd53aba9e6ab276ef6f0ff9a')
+    version('1.24.0', sha256='6b0d443cb0802c5de652e5816c5b88734cb3ead454eb932c5ec12ef8d4f77bcd', deprecated=True)
+    version('1.21.0', sha256='50c2b58303ab578c55735e6c21c72ffc24f82a5bf52565550f54d49cb60e8a90', deprecated=True)
+    version('1.17.0', sha256='55cbb4fdcb4ee1be6a27cece9ae7e26070beb8ab6cb7e77773db3fb0d4272462', deprecated=True)
+    version('1.16.0', sha256='0068ca4149a9f991d4c86a813ac73b4e2299c6a3fd53aba9e6ab276ef6f0ff9a', deprecated=True)
 
     variant('netcdf', default=False,
             description='Enable netcdf encoding/decoding using netcdf library')

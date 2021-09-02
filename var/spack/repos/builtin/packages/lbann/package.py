@@ -15,7 +15,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     neural networks.
     """
 
-    homepage = "http://software.llnl.gov/lbann/"
+    homepage = "https://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
     git      = "https://github.com/LLNL/lbann.git"
 
@@ -135,8 +135,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('aluminum@0.5.0:', when='@:0.90,0.102: +al')
 
     # Add Aluminum variants
-    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
-    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
+    depends_on('aluminum +cuda +nccl +cuda_rma', when='+al +cuda')
+    depends_on('aluminum +rocm +rccl', when='+al +rocm')
 
     depends_on('dihydrogen@0.2.0:', when='@:0.90,0.102:')
     depends_on('dihydrogen +openmp', when='+dihydrogen')
@@ -249,6 +249,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         # Environment variables
         cppflags = []
         cppflags.append('-DLBANN_SET_EL_RNG')
+        cppflags.append('-std=c++17')
         args = []
         args.extend([
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),

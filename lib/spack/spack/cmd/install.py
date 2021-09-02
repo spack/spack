@@ -204,7 +204,7 @@ def install_specs(cli_args, kwargs, specs):
     """
 
     # handle active environment, if any
-    env = ev.get_env(cli_args, 'install')
+    env = ev.active_environment()
 
     try:
         if env:
@@ -219,7 +219,7 @@ def install_specs(cli_args, kwargs, specs):
 
                 # If there is any ambiguity in the above call to matching_spec
                 # (i.e. if more than one spec in the environment matches), then
-                # SpackEnvironmentError is rasied, with a message listing the
+                # SpackEnvironmentError is raised, with a message listing the
                 # the matches.  Getting to this point means there were either
                 # no matches or exactly one match.
 
@@ -243,7 +243,7 @@ def install_specs(cli_args, kwargs, specs):
 
                 if m_spec in env.roots() or cli_args.no_add:
                     # either the single match is a root spec (and --no-add is
-                    # the default for roots) or --no-add was stated explictly
+                    # the default for roots) or --no-add was stated explicitly
                     tty.debug('just install {0}'.format(m_spec.name))
                     specs_to_install.append(m_spec)
                 else:
@@ -324,10 +324,14 @@ environment variables:
         else:
             return False
 
+    # Parse cli arguments and construct a dictionary
+    # that will be passed to the package installer
+    update_kwargs_from_args(args, kwargs)
+
     if not args.spec and not args.specfiles:
         # if there are no args but an active environment
         # then install the packages from it.
-        env = ev.get_env(args, 'install')
+        env = ev.active_environment()
         if env:
             tests = get_tests(env.user_specs)
             kwargs['tests'] = tests
@@ -352,7 +356,7 @@ environment variables:
 
             tty.msg("Installing environment {0}".format(env.name))
             with reporter('build'):
-                env.install_all(args, **kwargs)
+                env.install_all(**kwargs)
 
             tty.debug("Regenerating environment views for {0}"
                       .format(env.name))
@@ -380,10 +384,6 @@ environment variables:
 
     if args.deprecated:
         spack.config.set('config:deprecated', True, scope='command_line')
-
-    # Parse cli arguments and construct a dictionary
-    # that will be passed to the package installer
-    update_kwargs_from_args(args, kwargs)
 
     # 1. Abstract specs from cli
     abstract_specs = spack.cmd.parse_specs(args.spec)

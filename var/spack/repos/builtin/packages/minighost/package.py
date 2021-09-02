@@ -15,7 +15,7 @@ class Minighost(MakefilePackage):
        across a homogenous three dimensional domain.
     """
 
-    homepage = "http://mantevo.org"
+    homepage = "https://mantevo.org"
     url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/MiniGhost/miniGhost_1.0.1.tar.gz"
 
     tags = ['proxy-app']

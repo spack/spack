@@ -1,0 +1,12 @@
+bootstrap:
+  sources:
+  - name: 'github-actions'
+    type: buildcache
+    description: |
+      Buildcache generated from a public workflow using Github Actions.
+      The sha256 checksum of binaries is checked before installation.
+    info:
+      url: file:///home/culpo/production/spack/mirrors/clingo
+      homepage: https://github.com/alalazo/spack-bootstrap-mirrors
+      releases: https://github.com/alalazo/spack-bootstrap-mirrors/releases
+  trusted: {}

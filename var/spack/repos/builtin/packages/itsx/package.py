@@ -11,7 +11,7 @@ class Itsx(Package):
        ribosomal ITS sequences of fungi and other eukaryotes for use in
        environmental sequencing"""
 
-    homepage = "http://microbiology.se/software/itsx/"
+    homepage = "https://microbiology.se/software/itsx/"
     url      = "http://microbiology.se/sw/ITSx_1.0.11.tar.gz"
 
     version('1.0.11', sha256='8f4f76fc9c43b61f4dd4cd8dc4e495e9687943e15515396583f7a757651d435e')

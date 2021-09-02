@@ -12,7 +12,6 @@ import time
 
 import pytest
 from six.moves import builtins
-from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fs
 
@@ -312,7 +311,7 @@ def test_install_invalid_spec(invalid_spec):
         install(invalid_spec)
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('spec,concretize,error_code', [
     (Spec('mpi'), False, 1),
     (Spec('mpi'), True, 0),
@@ -416,7 +415,7 @@ def test_junit_output_with_errors(
     assert 'error message="{0}"'.format(msg) in content
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('clispecs,filespecs', [
     [[],                  ['mpi']],
     [[],                  ['mpi', 'boost']],
@@ -491,7 +490,7 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with pytest.raises((HTTPError, URLError)):
+            with pytest.raises(SpackError):
                 install(
                     '--log-format=cdash',
                     '--log-file=cdash_reports',

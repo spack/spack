@@ -26,7 +26,7 @@ class RFpc(RPackage):
     Modality diagnosis for Gaussian mixtures. For an overview see
     package?fpc."""
 
-    homepage = "http://www.homepages.ucl.ac.uk/~ucakche"
+    homepage = "https://www.homepages.ucl.ac.uk/~ucakche"
     url      = "https://cloud.r-project.org/src/contrib/fpc_2.1-10.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/fpc"
 

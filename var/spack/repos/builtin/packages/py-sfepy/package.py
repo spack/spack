@@ -13,7 +13,7 @@ class PySfepy(PythonPackage):
     package which can be used for building custom applications.
     """
 
-    homepage = "http://sfepy.org"
+    homepage = "https://sfepy.org"
     url      = "https://github.com/sfepy/sfepy/archive/release_2017.3.tar.gz"
 
     version('2017.3', sha256='d13642b7abed63b83b7eaef4dfce6e84a5afc5798bc7ffa1c413e3e44b5e5996')

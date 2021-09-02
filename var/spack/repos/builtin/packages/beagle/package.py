@@ -12,7 +12,7 @@ class Beagle(Package):
     """Beagle is a software package for phasing genotypes and for imputing
        ungenotyped markers."""
 
-    homepage = "http://faculty.washington.edu/browning/beagle/beagle.html"
+    homepage = "https://faculty.washington.edu/browning/beagle/beagle.html"
 
     version('5.1', sha256='994f926a4ec0eac665631f37c4a961d3f75c966c71841079275364013c90996c',
             expand=False, url='http://faculty.washington.edu/browning/beagle/beagle.25Nov19.28d.jar')

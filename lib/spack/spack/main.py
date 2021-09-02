@@ -27,6 +27,7 @@ import archspec.cpu
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.tty.colify
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
@@ -173,14 +174,16 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
         usage = super(
             SpackHelpFormatter, self)._format_actions_usage(actions, groups)
 
+        # Eliminate any occurrence of two or more consecutive spaces
+        usage = re.sub(r'[ ]{2,}', ' ', usage)
+
         # compress single-character flags that are not mutually exclusive
         # at the beginning of the usage string
         chars = ''.join(re.findall(r'\[-(.)\]', usage))
         usage = re.sub(r'\[-.\] ?', '', usage)
         if chars:
-            return '[-%s] %s' % (chars, usage)
-        else:
-            return usage
+            usage = '[-%s] %s' % (chars, usage)
+        return usage.strip()
 
 
 class SpackArgumentParser(argparse.ArgumentParser):
@@ -293,7 +296,18 @@ class SpackArgumentParser(argparse.ArgumentParser):
     def add_subparsers(self, **kwargs):
         """Ensure that sensible defaults are propagated to subparsers"""
         kwargs.setdefault('metavar', 'SUBCOMMAND')
+
+        # From Python 3.7 we can require a subparser, earlier versions
+        # of argparse will error because required=True is unknown
+        if sys.version_info[:2] > (3, 6):
+            kwargs.setdefault('required', True)
+
         sp = super(SpackArgumentParser, self).add_subparsers(**kwargs)
+        # This monkey patching is needed for Python 3.5 and 3.6, which support
+        # having a required subparser but don't expose the API used above
+        if sys.version_info[:2] == (3, 5) or sys.version_info[:2] == (3, 6):
+            sp.required = True
+
         old_add_parser = sp.add_parser
 
         def add_parser(name, **kwargs):
@@ -335,6 +349,15 @@ class SpackArgumentParser(argparse.ArgumentParser):
         else:
             # in subparsers, self.prog is, e.g., 'spack install'
             return super(SpackArgumentParser, self).format_help()
+
+    def _check_value(self, action, value):
+        # converted value must be one of the choices (if specified)
+        if action.choices is not None and value not in action.choices:
+            cols = llnl.util.tty.colify.colified(
+                sorted(action.choices), indent=4, tty=True
+            )
+            msg = 'invalid choice: %r choose from:\n%s' % (value, cols)
+            raise argparse.ArgumentError(action, msg)
 
 
 def make_argument_parser(**kwargs):
@@ -720,7 +743,7 @@ def main(argv=None):
 
     # activate an environment if one was specified on the command line
     if not args.no_env:
-        env = ev.find_environment(args)
+        env = spack.cmd.find_environment(args)
         if env:
             ev.activate(env, args.use_env_repo, add_view=False)
 

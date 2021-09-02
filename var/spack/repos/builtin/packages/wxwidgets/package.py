@@ -18,7 +18,7 @@ class Wxwidgets(AutotoolsPackage):
        rather than emulating the GUI. It's also extensive, free,
        open-source and mature."""
 
-    homepage = "http://www.wxwidgets.org/"
+    homepage = "https://www.wxwidgets.org/"
     url      = "https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.0/wxWidgets-3.1.0.tar.bz2"
     git      = "https://github.com/wxWidgets/wxWidgets.git"
 

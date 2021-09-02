@@ -132,6 +132,7 @@ celerybeat.pid
 .env
 .venv
 env/
+!/lib/spack/env
 venv/
 ENV/
 env.bak/

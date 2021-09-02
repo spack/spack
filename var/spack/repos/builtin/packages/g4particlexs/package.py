@@ -10,7 +10,7 @@ from spack import *
 class G4particlexs(Package):
     """Geant4 data for evaluated particle cross-sections on
     natural composition of elements"""
-    homepage = "http://geant4.web.cern.ch"
+    homepage = "https://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4PARTICLEXS.2.1.tar.gz"
 
     tags = ['hep']

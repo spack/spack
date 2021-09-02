@@ -11,7 +11,7 @@ class GuacamoleServer(AutotoolsPackage):
     basis of the Guacamole stack. It consists of guacd, libguac, and
     several protocol support libraries."""
 
-    homepage = "http://guacamole.apache.org/"
+    homepage = "https://guacamole.apache.org/"
     url      = "https://github.com/apache/guacamole-server/archive/1.1.0.tar.gz"
 
     version('1.1.0',     sha256='d0f0c66ebfa7a4fd6689ae5240f21797b5177945a042388b691b15b8bd5c81a8')

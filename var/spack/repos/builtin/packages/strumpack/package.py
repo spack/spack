@@ -35,7 +35,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     version('3.2.0', sha256='34d93e1b2a3b8908ef89804b7e08c5a884cbbc0b2c9f139061627c0d2de282c1')
     version('3.1.1', sha256='c1c3446ee023f7b24baa97b24907735e89ce4ae9f5ef516645dfe390165d1778')
 
-    variant('shared', default=False, description='Build shared libraries')
+    variant('shared', default=True, description='Build shared libraries')
     variant('mpi', default=True, description='Use MPI')
     variant('openmp', default=True,
             description='Enable thread parallellism via tasking with OpenMP')
@@ -93,6 +93,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
               msg='STRUMPACK requires openblas with OpenMP threading support')
 
     patch('intel-19-compile.patch', when='@3.1.1')
+    patch('shared-rocm.patch', when='@5.1.1')
 
     def cmake_args(self):
         spec = self.spec
