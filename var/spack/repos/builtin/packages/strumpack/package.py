@@ -148,12 +148,29 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.
                             format(",".join(rocm_archs)))
 
-        if self.spec.satisfies('@:5.1.1'):
-            self.test_data_dir = 'examples/data'
-        else:
-            self.test_data_dir = 'examples/sparse/data'
-        self.test_src_dir = 'test'
         return args
+
+    test_src_dir = 'test'
+
+    @property
+    def test_data_dir(self):
+        """Return the stand-alone test data directory."""
+        add_sparse = not self.spec.satisfies('@:5.1.1')
+        return join_path('examples', 'sparse' if add_sparse else '', 'data')
+
+    # TODO: Replace this method and its 'get' use for cmake path with
+    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
+    #   tests can access build dependencies through self.spec['cmake'].
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path."""
+        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
+        if set:
+            with open(filepath, 'w') as out_file:
+                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                out_file.write('{0}\n'.format(cmake_bin))
+        else:
+            with open(filepath, 'r') as in_file:
+                return in_file.read().strip()
 
     @run_after('install')
     def cache_test_sources(self):
@@ -161,38 +178,48 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.test_data_dir, self.test_src_dir])
 
-    def _test_example(self, test_prog, test_dir, test_cmd, test_args):
-        tmpbld_dir = '{0}/_BUILD'.format(test_dir)
-        with working_dir(tmpbld_dir, create=True):
-            with open('{0}/CMakeLists.txt'.format(tmpbld_dir), 'w') as mkfile:
-                mkfile.write('cmake_minimum_required(VERSION 3.13)\n')
-                mkfile.write('project(StrumpackSmokeTest LANGUAGES CXX)\n')
-                mkfile.write('find_package(STRUMPACK REQUIRED)\n')
-                mkfile.write('add_executable({0} ../{0}.cpp)\n'.
-                             format(test_prog))
-                mkfile.write('target_link_libraries({0} '.format(test_prog) +
-                             'PRIVATE STRUMPACK::strumpack)\n')
+        # TODO: Remove once self.spec['cmake'] is available here
+        self.cmake_bin(set=True)
 
-            opts = self.std_cmake_args
-            opts += self.cmake_args()
-            opts += ['.']
-            self.run_test('cmake', opts, [], installed=False, work_dir='.')
-            self.run_test('make')
-            with set_env(OMP_NUM_THREADS='4'):
-                self.run_test(test_cmd, test_args, installed=False,
-                              purpose='test: strumpack smoke test',
-                              skip_missing=False, work_dir='.')
-        self.run_test('rm', ['-fR', tmpbld_dir])
+    def _test_example(self, test_prog, test_dir, test_cmd, test_args):
+        cmake_filename = join_path(test_dir, 'CMakeLists.txt')
+        with open(cmake_filename, 'w') as mkfile:
+            mkfile.write('cmake_minimum_required(VERSION 3.15)\n')
+            mkfile.write('project(StrumpackSmokeTest LANGUAGES CXX)\n')
+            mkfile.write('find_package(STRUMPACK REQUIRED)\n')
+            mkfile.write('add_executable({0} {0}.cpp)\n'.format(test_prog))
+            mkfile.write('target_link_libraries({0} '.format(test_prog) +
+                         'PRIVATE STRUMPACK::strumpack)\n')
+
+        # TODO: Remove/replace once self.spec['cmake'] is available here
+        cmake_bin = self.cmake_bin(set=False)
+
+        opts = self.std_cmake_args
+        opts += self.cmake_args()
+        opts += ['.']
+
+        self.run_test(cmake_bin, opts, [], installed=False,
+                      purpose='test: generating makefile', work_dir=test_dir)
+        self.run_test('make', test_prog,
+                      purpose='test: building {0}'.format(test_prog),
+                      work_dir=test_dir)
+        with set_env(OMP_NUM_THREADS='1'):
+            self.run_test(test_cmd, test_args, installed=False,
+                          purpose='test: running {0}'.format(test_prog),
+                          skip_missing=False, work_dir=test_dir)
 
     def test(self):
-        test_dir = join_path(self.install_test_root, self.test_src_dir)
+        """Run the stand-alone tests for the installed software."""
+        test_dir = join_path(
+            self.test_suite.current_test_cache_dir, self.test_src_dir
+        )
         test_exe = 'test_sparse_seq'
         test_exe_mpi = 'test_sparse_mpi'
-        exe_arg = [join_path('..', '..', self.test_data_dir, 'pde900.mtx')]
+        exe_arg = [join_path('..', self.test_data_dir, 'pde900.mtx')]
         if '+mpi' in self.spec:
-            test_args = ['-n', '4', test_exe_mpi]
+            test_args = ['-n', '1', test_exe_mpi]
             test_args.extend(exe_arg)
-            mpiexe_list = ['mpirun', 'mpiexec', 'srun']
+            mpiexe_list = ['srun', 'mpirun', 'mpiexec']
             for mpiexe in mpiexe_list:
                 if which(mpiexe) is not None:
                     self._test_example(test_exe_mpi, test_dir,
