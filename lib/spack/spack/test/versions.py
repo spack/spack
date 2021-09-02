@@ -586,8 +586,18 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
                         raising=False)
 
     for commit in commits:
-        print(commit)
         spec = spack.spec.Spec('git-test-commit@%s' % commit)
         version = spec.version
-        print([str(v) for v in version._cmp(version.commits)])
-    assert False
+        comparator = [str(v) if not isinstance(v, int) else v
+                      for v in version._cmp(version.commits)]
+
+        import os
+        from llnl.util.filesystem import working_dir
+        from spack.util.executable import which
+
+        with working_dir(repo_path):
+            which('git')('checkout', commit)
+        with open(os.path.join(repo_path, filename), 'r') as f:
+            expected = f.read()
+
+        assert str(comparator) == expected

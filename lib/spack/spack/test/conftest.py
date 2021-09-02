@@ -80,7 +80,7 @@ def mock_git_version_info(tmpdir, scope="function"):
         git('config', 'user.email', 'spack@spack.io')
 
         # Add two commits on main branch
-        write_file(filename, 'main 1')
+        write_file(filename, '[]')
         git('add', filename)
         git('commit', '-am', 'first commit')
 
@@ -88,32 +88,32 @@ def mock_git_version_info(tmpdir, scope="function"):
         main = git('rev-parse', '--abbrev-ref', 'HEAD', output=str, error=str).strip()
 
         # Tag second commit as v1.0
-        write_file(filename, 'main 2')
+        write_file(filename, "[1, 0]")
         git('commit', '-am', 'second commit')
         git('tag', 'v1.0')
 
         # Add two commits and a tag on 1.x branch
         git('checkout', '-b', '1.x')
-        write_file(filename, '1.x 1')
+        write_file(filename, "[1, 0, '', 1]")
         git('commit', '-am', 'first 1.x commit')
 
-        write_file(filename, '1.x 2')
+        write_file(filename, "[1, 1]")
         git('commit', '-am', 'second 1.x commit')
         git('tag', 'v1.1')
 
         # Add two commits and a tag on main branch
         git('checkout', main)
-        write_file(filename, 'main 3')
+        write_file(filename, "[1, 0, '', 1]")
         git('commit', '-am', 'third main commit')
-        write_file(filename, 'main 4')
+        write_file(filename, "[2, 0]")
         git('commit', '-am', 'fourth main commit')
         git('tag', 'v2.0')
 
         # Add two more commits on 1.x branch to ensure we aren't cheating by using time
         git('checkout', '1.x')
-        write_file(filename, '1.x 3')
+        write_file(filename, "[1, 1, '', 1]")
         git('commit', '-am', 'third 1.x commit')
-        write_file(filename, '1.x 4')
+        write_file(filename, "[1, 2]")
         git('commit', '-am', 'fourth 1.x commit')
         git('tag', '1.2') # test robust parsing to different syntax, no v
 

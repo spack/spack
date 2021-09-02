@@ -260,7 +260,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
     assert filename in installed
     with open(spec.prefix.bin.join(filename), 'r') as f:
         content = f.read().strip()
-    assert content == 'main 1'
+    assert content == '[]'  # contents are weird for another test
 
 
 def test_install_overwrite_multiple(
