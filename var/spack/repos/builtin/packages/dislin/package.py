@@ -11,7 +11,7 @@ class Dislin(Package):
        data as curves,  bar graphs,  pie charts,  3D-colour plots,  surfaces,
        contours and maps."""
 
-    homepage = "http://www.mps.mpg.de/dislin"
+    homepage = "https://www.mps.mpg.de/dislin"
     url      = "ftp://ftp.gwdg.de/pub/grafik/dislin/linux/i586_64/dislin-11.0.linux.i586_64.tar.gz"
 
     version('11.0', sha256='13d28188924e0b0b803d72aa4b48be4067e98e890701b0aa6f54a11c7d34dd10')

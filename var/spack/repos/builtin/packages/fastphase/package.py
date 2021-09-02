@@ -10,7 +10,7 @@ class Fastphase(Package):
     """Software for haplotype reconstruction, and estimating missing genotypes
        from population data."""
 
-    homepage = "http://stephenslab.uchicago.edu/software.html"
+    homepage = "https://stephenslab.uchicago.edu/software.html"
     url      = "http://scheet.org/code/Linuxfp.tar.gz"
 
     version('2016-03-30', sha256='f0762eaae38b276bccb567d1519fa19bf35fd4078e57cbf13c7d7054150c4f36')

@@ -8,7 +8,7 @@ from spack import *
 
 class Libedit(AutotoolsPackage):
     """An autotools compatible port of the NetBSD editline library"""
-    homepage = "http://thrysoee.dk/editline/"
+    homepage = "https://thrysoee.dk/editline/"
     url      = "http://thrysoee.dk/editline/libedit-20170329-3.1.tar.gz"
 
     version('3.1-20210216', sha256='2283f741d2aab935c8c52c04b57bf952d02c2c02e651172f8ac811f77b1fc77a')

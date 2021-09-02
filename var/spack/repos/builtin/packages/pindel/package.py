@@ -9,7 +9,7 @@ from spack import *
 class Pindel(MakefilePackage):
     """Pindel can detect breakpoints from next-gen sequence data."""
 
-    homepage = "http://gmt.genome.wustl.edu/packages/pindel/"
+    homepage = "https://gmt.genome.wustl.edu/packages/pindel/"
     url      = "https://github.com/genome/pindel/archive/v0.2.5.tar.gz"
 
     version('0.2.5b8', sha256='7f21fda0b751d420831724d96e60873ce332139cfd24396e81c7f1ae2f707a19')

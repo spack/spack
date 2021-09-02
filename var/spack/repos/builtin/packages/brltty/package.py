@@ -11,7 +11,7 @@ class Brltty(AutotoolsPackage):
     Linux/Unix console (when in text mode) for a blind person using
     a refreshable braille display."""
 
-    homepage = "http://brltty.app/"
+    homepage = "https://brltty.app/"
     url      = "https://github.com/brltty/brltty/archive/BRLTTY-6.0.tar.gz"
 
     version('6.0', sha256='acfea5274bdc9230b0ea1a87f8796e241615d4d2c1ba08d87601b9d116c7804c')

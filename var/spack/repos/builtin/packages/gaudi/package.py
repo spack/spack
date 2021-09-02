@@ -9,7 +9,7 @@ from spack import *
 class Gaudi(CMakePackage):
     """An experiment-independent HEP event data processing framework"""
 
-    homepage = "http://gaudi.web.cern.ch/gaudi/"
+    homepage = "https://gaudi.web.cern.ch/gaudi/"
     git      = "https://gitlab.cern.ch/gaudi/Gaudi.git"
     url      = "https://gitlab.cern.ch/gaudi/Gaudi/-/archive/v33r1/Gaudi-v33r1.tar.gz"
 

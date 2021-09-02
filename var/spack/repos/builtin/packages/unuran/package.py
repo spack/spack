@@ -9,7 +9,7 @@ from spack import *
 class Unuran(AutotoolsPackage):
     """Universal Non-Uniform Random number generator."""
 
-    homepage = "http://statmath.wu.ac.at/unuran"
+    homepage = "https://statmath.wu.ac.at/unuran"
     url      = "http://statmath.wu.ac.at/unuran/unuran-1.8.1.tar.gz"
 
     version('1.8.1', sha256='c270ae96857857dbac6450043df865e0517f52856ddbe5202fd35583b13c5193')

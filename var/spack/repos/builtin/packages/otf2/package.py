@@ -12,7 +12,7 @@ class Otf2(AutotoolsPackage):
        trace data format plus support library.
     """
 
-    homepage = "http://www.vi-hps.org/projects/score-p"
+    homepage = "https://www.vi-hps.org/projects/score-p"
     url      = "https://www.vi-hps.org/cms/upload/packages/otf2/otf2-2.1.1.tar.gz"
 
     version('2.3',   sha256='36957428d37c40d35b6b45208f050fb5cfe23c54e874189778a24b0e9219c7e3', url='https://perftools.pages.jsc.fz-juelich.de/cicd/otf2/tags/otf2-2.3/otf2-2.3.tar.gz')

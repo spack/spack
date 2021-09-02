@@ -15,7 +15,7 @@ class RExomecopy(RPackage):
     GC-content, to simultaneously normalize and segment the samples into
     regions of constant copy count."""
 
-    homepage = "http://www.bioconductor.org/packages/release/bioc/html/exomeCopy.html"
+    homepage = "https://www.bioconductor.org/packages/release/bioc/html/exomeCopy.html"
     git      = "https://git.bioconductor.org/packages/exomeCopy"
 
     version('1.36.0', commit='cbe3134acbbc9b7d5426ae2f142dc64cadb3fc26')

@@ -10,7 +10,7 @@ class Stacks(AutotoolsPackage):
     """Stacks is a software pipeline for building loci from short-read
        sequences, such as those generated on the Illumina platform."""
 
-    homepage = "http://catchenlab.life.illinois.edu/stacks/"
+    homepage = "https://catchenlab.life.illinois.edu/stacks/"
     url      = "http://catchenlab.life.illinois.edu/stacks/source/stacks-1.46.tar.gz"
 
     version('2.53', sha256='ee1efceaeeeb7a39f0c2e804ad7c0a003094db28c9101120c38ddb02846e90fd')

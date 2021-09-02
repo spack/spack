@@ -13,7 +13,7 @@ class Iozone(MakefilePackage):
     measures a variety of file operations. Iozone has been ported to many
     machines and runs under many operating systems."""
 
-    homepage = "http://www.iozone.org/"
+    homepage = "https://www.iozone.org/"
     url      = "http://www.iozone.org/src/current/iozone3_465.tar"
 
     version('3_491', sha256='2cc4842d382e46a585d1df9ae1e255695480dcc0fc05c3b1cb32ef3493d0ec9a')

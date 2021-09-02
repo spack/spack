@@ -13,7 +13,7 @@ class Cgal(CMakePackage):
     computation, such as geographic information systems, computer aided design,
     molecular biology, medical imaging, computer graphics, and robotics.
     """
-    homepage = 'http://www.cgal.org/'
+    homepage = 'https://www.cgal.org/'
     url      = "https://github.com/CGAL/cgal/releases/download/releases/CGAL-5.0.3/CGAL-5.0.3.tar.xz"
 
     version('5.0.3', sha256='e5a3672e35e5e92e3c1b4452cd3c1d554f3177dc512bd98b29edf21866a4288c')

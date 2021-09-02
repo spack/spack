@@ -12,7 +12,7 @@ class RNnet(RPackage):
     Software for feed-forward neural networks with a single hidden layer,
     and for multinomial log-linear models."""
 
-    homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
+    homepage = "https://www.stats.ox.ac.uk/pub/MASS4/"
     url      = "https://cloud.r-project.org/src/contrib/nnet_7.3-12.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/nnet"
 

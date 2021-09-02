@@ -9,7 +9,7 @@ from spack import *
 class PyQuantities(PythonPackage):
     """Support for physical quantities with units, based on numpy"""
 
-    homepage = "http://python-quantities.readthedocs.org"
+    homepage = "https://python-quantities.readthedocs.org"
     pypi = "quantities/quantities-0.12.1.tar.gz"
 
     version('0.12.1', sha256='0a03e8511db603c57ca80dee851c43f08d0457f4d592bcac2e154570756cb934')

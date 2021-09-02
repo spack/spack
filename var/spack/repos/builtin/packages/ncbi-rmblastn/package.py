@@ -9,7 +9,7 @@ from spack import *
 class NcbiRmblastn(AutotoolsPackage):
     """RMBlast search engine for NCBI"""
 
-    homepage = "http://www.repeatmasker.org/RMBlast.html"
+    homepage = "https://www.repeatmasker.org/RMBlast.html"
     url      = "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.9.0/ncbi-blast-2.9.0+-src.tar.gz"
 
     version('2.11.0', sha256='d88e1858ae7ce553545a795a2120e657a799a6d334f2a07ef0330cc3e74e1954')

@@ -18,7 +18,7 @@ class Signalp(Package):
        For instructions on how to set up a mirror, see
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://www.cbs.dtu.dk/services/SignalP/"
+    homepage = "https://www.cbs.dtu.dk/services/SignalP/"
     url      = "file://{0}/signalp-4.1f.Linux.tar.gz".format(os.getcwd())
     manual_download = True
 

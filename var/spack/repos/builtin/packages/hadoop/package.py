@@ -12,7 +12,7 @@ class Hadoop(Package):
     across clusters of computers using simple programming models.
     """
 
-    homepage = "http://hadoop.apache.org/"
+    homepage = "https://hadoop.apache.org/"
     url      = "https://www.apache.org/dist/hadoop/common/hadoop-3.2.1/hadoop-3.2.1.tar.gz"
 
     version('3.3.0',  sha256='ea1a0f0afcdfb9b6b9d261cdce5a99023d7e8f72d26409e87f69bda65c663688')
