@@ -226,7 +226,7 @@ def test_install_overwrite(
 
 
 def test_install_overwrite_not_installed(
-        mock_packages, mock_archive, mock_fetch, config, install_mockery
+        mock_packages, mock_archive, mock_fetch, config, install_mockery, monkeypatch
 ):
     # Try to install a spec and then to reinstall it.
     spec = Spec('libdwarf')
@@ -238,20 +238,29 @@ def test_install_overwrite_not_installed(
     assert os.path.exists(spec.prefix)
 
 
-def test_install_commit(mock_git_info, install_mockery, mock_packages, monkeypatch):
+def test_install_commit(mock_git_version_info, install_mockery, mock_packages, monkeypatch):
     """
     Test installing a git package from a commit.
-    """
-    repo_path, commit = mock_git_info
-    pkg = spack.spec.Spec('git-test-commit@%s' % commit).concretized().package
-    pkg.git = "file://%s" % repo_path
-    pkg.do_install()
 
-    # Ensure file1.txt was installed - only present at that commit!
-    package_root = os.path.dirname(os.path.dirname(pkg.install_env_path))
-    bindir = os.path.join(package_root, "bin")
-    installed = os.listdir(bindir)
-    assert "file1.txt" in installed
+    This ensures Spack appropriately associates commit versions with their
+    packages in time to do version lookups. Details of version lookup tested elsewhere
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase,
+                        'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    commit = commits[-1]
+    spec = spack.spec.Spec('git-test-commit@%s' % commit)
+    spec.concretize()
+    spec.package.do_install()
+
+    # Ensure first commit file contents were written
+    installed = os.listdir(spec.prefix.bin)
+    assert filename in installed
+    with open(spec.prefix.bin.join(filename), 'r') as f:
+        content = f.read().strip()
+    assert content == 'main 1'
 
 
 def test_install_overwrite_multiple(
