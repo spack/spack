@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class Raja(CMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
@@ -10,8 +12,11 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "http://software.llnl.gov/RAJA/"
     git      = "https://github.com/LLNL/RAJA.git"
 
+    maintainers = ['davidbeckingsale']
+
     version('develop', branch='develop', submodules='True')
     version('main',  branch='main',  submodules='True')
+    version('0.14.0', tag='v0.14.0', submodules='True')
     version('0.13.0', tag='v0.13.0', submodules='True')
     version('0.12.1', tag='v0.12.1', submodules="True")
     version('0.12.0', tag='v0.12.0', submodules="True")
@@ -37,23 +42,26 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
     # and remove the +tests conflict below.
     variant('tests', default=False, description='Build tests')
 
-    depends_on('blt@0.4.0:', type='build', when='@0.13.1:')
-    depends_on('blt@:0.3.6', type='build', when='@:0.13.0')
+    depends_on('blt')
+    depends_on('blt@0.4.1:', type='build', when='@0.14.0:')
+    depends_on('blt@0.4.0:', type='build', when='@0.13.0')
+    depends_on('blt@0.3.6:', type='build', when='@:0.12.0')
 
-    # variants +rocm and amdgpu_targets are not automatically passed to
-    # dependencies, so do it manually.
-    depends_on('camp+rocm', when='+rocm')
-    for val in ROCmPackage.amdgpu_targets:
-        depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+    depends_on('camp@0.2.2', when='@0.14.0:')
+    depends_on('camp@0.1.0', when='@0.12.0:0.13.0')
 
-    depends_on('camp')
-    depends_on('camp@master', when='@develop')
-    depends_on('camp+cuda', when='+cuda')
-    for sm_ in CudaPackage.cuda_arch_values:
-        depends_on('camp cuda_arch={0}'.format(sm_),
-                   when='cuda_arch={0}'.format(sm_))
+    with when('+rocm @0.12.0:'):
+        depends_on('camp+rocm')
+        for arch in ROCmPackage.amdgpu_targets:
+            depends_on('camp+rocm amdgpu_target={0}'.format(arch),
+                       when='amdgpu_target={0}'.format(arch))
+        conflicts('+openmp')
 
-    conflicts('+openmp', when='+rocm')
+    with when('+cuda @0.12.0:'):
+        depends_on('camp+cuda')
+        for sm_ in CudaPackage.cuda_arch_values:
+            depends_on('camp +cuda cuda_arch={0}'.format(sm_),
+                       when='cuda_arch={0}'.format(sm_))
 
     def cmake_args(self):
         spec = self.spec
