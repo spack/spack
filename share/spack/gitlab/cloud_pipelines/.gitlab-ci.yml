@@ -100,6 +100,12 @@ default:
 # E4S pipeline
 ########################################
 .e4s:
+  rules:
+    # Don't run e4s jobs if we paused them
+    - if: '${SPACK_PAUSE_e4s_STACK} == "ON"'
+      when: never
+    # Default is to run
+    - when: on_success
   variables:
     SPACK_CI_STACK_NAME: e4s
 
@@ -133,6 +139,12 @@ e4s-develop-build:
   tags: ["spack", "public", "medium", "ppc64le"]
 
 .e4s-on-power:
+  rules:
+    # Don't run e4s-on-power jobs if we paused them
+    - if: '${SPACK_PAUSE_e4s-on-power_STACK} == "ON"'
+      when: never
+    # Default is to run
+    - when: on_success
   variables:
     SPACK_CI_STACK_NAME: e4s-on-power
 
@@ -162,6 +174,12 @@ e4s-develop-build:
 # Build tests for different build-systems
 #########################################
 .build_systems:
+  rules:
+    # Don't run build_systems jobs if we paused them
+    - if: '${SPACK_PAUSE_build_systems_STACK} == "ON"'
+      when: never
+    # Default is to run
+    - when: on_success
   variables:
     SPACK_CI_STACK_NAME: build_systems
 
@@ -191,6 +209,12 @@ build_systems-develop-build:
 # RADIUSS
 #########################################
 .radiuss:
+  rules:
+    # Don't run radiuss jobs if we paused them
+    - if: '${SPACK_PAUSE_radiuss_STACK} == "ON"'
+      when: never
+    # Default is to run
+    - when: on_success
   variables:
     SPACK_CI_STACK_NAME: radiuss
 
