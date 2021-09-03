@@ -18,6 +18,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['WeiqunZhang', 'asalmgren']
 
     version('develop', branch='development')
+    version('21.09', sha256='983b41d93bf9417c032080fd2ec7c04d0d2b820e613a076bd07566aa5a8aa4bd')
     version('21.08', sha256='34fb6c72735c74820b27db1138e5bc9fe698ffbd8344aae10a5fbdace479b57f')
     version('21.07', sha256='9630b8c0c7ffbf3f5ea4d973a3fdb40b9b10fec0f8df33b9e24d76d2c1d15771')
     version('21.06', sha256='6982c22837d7c0bc4583065d9da55e0aebcf07b54386e4b90a779391fe73fd53')

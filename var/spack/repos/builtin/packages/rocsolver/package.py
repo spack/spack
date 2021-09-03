@@ -26,6 +26,7 @@ class Rocsolver(CMakePackage):
             size and compile time by adding specialized kernels \
             for small matrix sizes')
 
+    version('4.3.1', sha256='c6e7468d7041718ce6e1c7f50ec80a552439ac9cfed2dc3f753ae417dda5724f')
     version('4.3.0', sha256='63cc88dd285c0fe01ec2394321ec3b4e1e59bb98ce05b06e4b4d8fadcf1ff028')
     version('4.2.0', sha256='e9ef72d7c29e7c36bf02be63a64ca23b444e1ca71751749f7d66647873d9fdea')
     version('4.1.0', sha256='da5cc800dabf7367b02b73c93780b2967f112bb45232e4b06e5fd07b4d5b8d88')
@@ -40,11 +41,11 @@ class Rocsolver(CMakePackage):
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0']:
+                '4.3.0', '4.3.1']:
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0']:
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
