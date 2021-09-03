@@ -30,6 +30,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     variant('libunistring', default=False, description='Use libunistring')
 
     depends_on('iconv')
+    depends_on('automake', type='build', when='target=aarch64:')
     # Recommended dependencies
     depends_on('ncurses',  when='+curses')
     depends_on('libxml2',  when='+libxml2')
