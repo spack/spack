@@ -41,6 +41,9 @@ class Ccache(CMakePackage):
     depends_on('libxslt', when='@:3.99')
     depends_on('zlib', when='@:3.99')
 
+    conflicts('%gcc@:5', when='@4.4:')
+    conflicts('%clang@:4', when='@4.4:')
+
     # Before 4.0 this was an Autotools package
     @when('@:3.99')
     def cmake(self, spec, prefix):
