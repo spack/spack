@@ -11,7 +11,7 @@ from spack import *
 class Asio(AutotoolsPackage):
     """C++ library for network and low-level I/O programming."""
 
-    homepage = "http://think-async.com/Asio/"
+    homepage = "https://think-async.com/Asio/"
     url = "https://github.com/chriskohlhoff/asio/archive/1.18.2.tar.gz"
     git = "https://github.com/chriskohlhoff/asio.git"
     maintainers = ["msimberg"]

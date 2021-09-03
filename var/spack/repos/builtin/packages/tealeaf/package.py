@@ -15,7 +15,7 @@ class Tealeaf(MakefilePackage):
        regularly grid using a 5 point stencil with implicit solvers.
     """
 
-    homepage = "http://uk-mac.github.io/TeaLeaf/"
+    homepage = "https://uk-mac.github.io/TeaLeaf/"
     url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/TeaLeaf/TeaLeaf-1.0.tar.gz"
 
     tags = ['proxy-app']

@@ -14,7 +14,7 @@ class RLatticeextra(RPackage):
     as well as additional utilities such as panel and axis annotation
     functions."""
 
-    homepage = "http://latticeextra.r-forge.r-project.org/"
+    homepage = "https://latticeextra.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/latticeExtra_0.6-28.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/latticeExtra"
 

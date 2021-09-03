@@ -17,7 +17,7 @@ class IntelTbb(CMakePackage):
     C++ programs that take full advantage of multicore performance, that are
     portable and composable, and that have future-proof scalability.
     """
-    homepage = "http://www.threadingbuildingblocks.org/"
+    homepage = "https://www.threadingbuildingblocks.org/"
     url_prefix = 'https://github.com/oneapi-src/oneTBB/'
     url = url_prefix + 'archive/v2020.1.tar.gz'
 

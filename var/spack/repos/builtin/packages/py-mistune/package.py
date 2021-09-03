@@ -10,7 +10,7 @@ class PyMistune(PythonPackage):
     """
     Python markdown parser
     """
-    homepage = "http://mistune.readthedocs.org/en/latest/"
+    homepage = "https://mistune.readthedocs.org/en/latest/"
     url      = "https://github.com/lepture/mistune/archive/v0.7.1.tar.gz"
 
     version('0.8.4', sha256='a1443771ea9ed7268a0cb3cf31462604ae148938ba32070bd5c54545f8f36a5d')

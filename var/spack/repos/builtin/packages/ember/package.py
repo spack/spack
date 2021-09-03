@@ -16,7 +16,7 @@ class Ember(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "http://sst-simulator.org/SSTPages/SSTElementEmber/"
+    homepage = "https://sst-simulator.org/SSTPages/SSTElementEmber/"
     git      = "https://github.com/sstsimulator/ember.git"
     url      = "https://github.com/sstsimulator/ember/archive/v1.0.0.tar.gz"
 

@@ -14,7 +14,7 @@ class RRmutil(RPackage):
     'gnlm', 'stable', 'growth', 'repeated', and 'event'  (available at
     <http://www.commanster.eu/rcode.html>)."""
 
-    homepage = "http://www.commanster.eu/rcode.html"
+    homepage = "https://www.commanster.eu/rcode.html"
     url      = "https://cloud.r-project.org/src/contrib/rmutil_1.1.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rmutil"
 

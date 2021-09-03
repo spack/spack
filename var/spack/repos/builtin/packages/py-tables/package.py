@@ -10,7 +10,7 @@ class PyTables(PythonPackage):
     """PyTables is a package for managing hierarchical datasets and designed to
     efficiently and easily cope with extremely large amounts of data."""
 
-    homepage = "http://www.pytables.org/"
+    homepage = "https://www.pytables.org/"
     pypi = "tables/tables-3.6.1.tar.gz"
 
     version('3.6.1', sha256='49a972b8a7c27a8a173aeb05f67acb45fe608b64cd8e9fa667c0962a60b71b49')

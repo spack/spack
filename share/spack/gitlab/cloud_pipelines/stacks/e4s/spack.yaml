@@ -186,7 +186,7 @@ spack:
     - amrex +cuda cuda_arch=70
     # - axom +cuda cuda_arch=70 ^umpire@4.1.2 ~shared
     - caliper +cuda cuda_arch=70
-    - chai +cuda ~benchmarks ~tests cuda_arch=70 ^umpire@4.1.2 ~shared
+    - chai +cuda ~benchmarks ~tests cuda_arch=70 ^umpire~shared+cuda
     - ginkgo +cuda cuda_arch=70
     - hpx +cuda cuda_arch=70
     - kokkos +cuda +wrapper cuda_arch=70
@@ -225,11 +225,11 @@ spack:
     - archer
     - argobots
     - ascent
-    - axom ^umpire@4.1.2
+    - axom ^umpire@5.0.1 ^raja@0.13.0
     - bolt
     - cabana
     - caliper
-    - chai ~benchmarks ~tests ^umpire@4.1.2
+    - chai ~benchmarks ~tests
     - conduit
     - darshan-runtime
     - darshan-util

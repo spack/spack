@@ -12,7 +12,7 @@ class RMvtnorm(RPackage):
     Computes multivariate normal and t probabilities, quantiles, random
     deviates and densities."""
 
-    homepage = "http://mvtnorm.r-forge.r-project.org/"
+    homepage = "https://mvtnorm.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/mvtnorm_1.0-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/mvtnorm"
 

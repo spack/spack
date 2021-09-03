@@ -12,7 +12,7 @@ class Augustus(MakefilePackage):
     """AUGUSTUS is a program that predicts genes in eukaryotic
        genomic sequences"""
 
-    homepage = "http://bioinf.uni-greifswald.de/augustus/"
+    homepage = "https://bioinf.uni-greifswald.de/augustus/"
     url      = "https://github.com/Gaius-Augustus/Augustus/archive/v3.3.4.tar.gz"
 
     # Releases have moved to github

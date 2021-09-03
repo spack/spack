@@ -11,7 +11,7 @@ class Cloverleaf3d(MakefilePackage):
     using an explicit, second-order accurate method.
     """
 
-    homepage = "http://uk-mac.github.io/CloverLeaf3D/"
+    homepage = "https://uk-mac.github.io/CloverLeaf3D/"
     url = "http://downloads.mantevo.org/releaseTarballs/miniapps/CloverLeaf3D/CloverLeaf3D-1.0.tar.gz"
 
     tags = ["proxy-app"]

@@ -10,7 +10,7 @@ class Codes(AutotoolsPackage):
     """ CO-Design of multi-layer Exascale Storage (CODES) simulation framework
     """
 
-    homepage = "http://www.mcs.anl.gov/projects/codes"
+    homepage = "https://www.mcs.anl.gov/projects/codes"
     git      = "https://xgitlab.cels.anl.gov/codes/codes.git"
 
     version('develop', branch='master')

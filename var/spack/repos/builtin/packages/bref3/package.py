@@ -11,7 +11,7 @@ from spack import *
 class Bref3(Package):
     """Bref3: Converts from VCF format to bref3 format."""
 
-    homepage = "http://faculty.washington.edu/browning/beagle/beagle.html"
+    homepage = "https://faculty.washington.edu/browning/beagle/beagle.html"
 
     version('2019-11-25', sha256='969c0881050c4a48d19be9ea64bf49fa68c1403b69f9f739bbfd865dda639b2d',
             expand=False, url='http://faculty.washington.edu/browning/beagle/bref3.25Nov19.28d.jar')

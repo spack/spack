@@ -12,7 +12,7 @@ class Meme(AutotoolsPackage):
     collections of unaligned nucleotide or protein sequences, and to perform a
     wide variety of other motif-based analyses."""
 
-    homepage = "http://meme-suite.org"
+    homepage = "https://meme-suite.org"
     url      = "http://meme-suite.org/meme-software/5.1.1/meme-5.1.1.tar.gz"
 
     version('5.3.0', sha256='b2ddec9db972fcf77b29c7deb62df8b1dd8a6638c13c1aa06a5d563c4a7ff756')
