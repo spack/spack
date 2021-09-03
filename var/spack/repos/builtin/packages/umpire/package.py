@@ -101,7 +101,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     # currently only available for cuda.
     conflicts('+shared', when='+cuda')
 
-
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
         if "SYS_TYPE" in env:
@@ -129,7 +128,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         else:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
 
-        entries.append(cmake_cache_option("ENABLE_C", '+c' in spec)) 
+        entries.append(cmake_cache_option("ENABLE_C", '+c' in spec))
 
         return entries
 
@@ -142,22 +141,28 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
-                entries.append(cmake_cache_string("CUDA_ARCH", 'sm_{0}'.format(cuda_arch[0])))
-                entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES={0}".format(cuda_arch[0])))
+                entries.append(cmake_cache_string(
+                    "CUDA_ARCH", 'sm_{0}'.format(cuda_arch[0])))
+                entries.append(cmake_cache_string(
+                    "CMAKE_CUDA_ARCHITECTURES={0}".format(cuda_arch[0])))
                 flag = '-arch sm_{0}'.format(cuda_arch[0])
-                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", '{0}'.format(flag)))
+                entries.append(cmake_cache_string(
+                    "CMAKE_CUDA_FLAGS", '{0}'.format(flag)))
 
-            entries.append(cmake_cache_option("ENABLE_DEVICE_CONST", spec.satisfies('+deviceconst')))
+            entries.append(cmake_cache_option(
+                "ENABLE_DEVICE_CONST", spec.satisfies('+deviceconst')))
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
         if '+rocm' in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", '{0}'.format(spec['hip'].prefix)))
+            entries.append(cmake_cache_path(
+                "HIP_ROOT_DIR", '{0}'.format(spec['hip'].prefix)))
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
-                entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", '--amdgpu-target={0}'.format(arch_str)))
+                entries.append(cmake_cache_string(
+                    "HIP_HIPCC_FLAGS", '--amdgpu-target={0}'.format(arch_str)))
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
@@ -174,21 +179,19 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
         if spec.satisfies('@5.0.0:'):
-            entries.append(cmake_cache_path("camp_DIR" ,spec['camp'].prefix))
+            entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
         entries.append(cmake_cache_option("ENABLE_NUMA", '+numa' in spec))
         entries.append(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
-        entries.append(cmake_cache_option("ENABLE_BENCHMARKS", 'tests=benchmarks' in spec))
+        entries.append(cmake_cache_option(
+            "ENABLE_BENCHMARKS", 'tests=benchmarks' in spec))
         entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
-        entries.append(cmake_cache_option("ENABLE_TESTS", not 'tests=none' in spec))
+        entries.append(cmake_cache_option("ENABLE_TESTS", 'tests=none' not in spec))
 
         return entries
 
     def cmake_args(self):
-        spec = self.spec
-
         options = []
-
         return options
 
     def test(self):
