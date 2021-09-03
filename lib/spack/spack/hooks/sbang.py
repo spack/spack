@@ -190,20 +190,27 @@ def install_sbang():
             spack.paths.sbang_script, sbang_path):
         return
 
-    # make $install_tree/bin and copy in a new version of sbang if needed
+    # remove outdated sbang if it exists
+    if os.path.exists(sbang_path):
+        os.remove(sbang_path)
+
+    # make $install_tree/bin
     sbang_bin_dir = os.path.dirname(sbang_path)
     fs.mkdirp(sbang_bin_dir)
 
-    group_name = spack.package_prefs.get_package_group(spack.spec.Spec("all")
+    # get permissions for bin dir from configuration files
+    group_name = spack.package_prefs.get_package_group(spack.spec.Spec("all"))
+    config_mode = spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all"))
 
-    # set to permissions for `all` in `packages.yaml`
-    os.chmod(sbang_bin_dir, spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all")))
-    if group_name:
+    # set group on sbang_bin_dir if not already set (only if set in configuration)
+    if group_name and grp.getgrgid(os.stat(sbang_bin_dir).st_gid).gr_name != group_name:
         os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, grp.getgrnam(group_name).gr_gid)
 
-    fs.install(spack.paths.sbang_script, sbang_path)
+    # copy over the fresh copy of `sbang`
+    shutil.copy(spack.paths.sbang_script, sbang_path)
 
-    os.chmod(sbang_path, spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all")))
+    # set permissions on `sbang` (including group if set in configuration)
+    os.chmod(sbang_path, config_mode)
     if group_name:
         os.chown(sbang_path, os.stat(sbang_path).st_uid, grp.getgrnam(group_name).gr_gid)
 
