@@ -84,7 +84,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@19.08:20.11 +sundials')
     depends_on('sundials@5.7.0: +ARKODE +CVODE', when='@21.07: +sundials')
     for arch in CudaPackage.cuda_arch_values:
-        depends_on(f'sundials@5.7.0: +ARKODE +CVODE +cuda cuda_arch={arch}', when=f'@21.07: +sundials +cuda cuda_arch={arch}')
+        depends_on('sundials@5.7.0: +ARKODE +CVODE +cuda cuda_arch=%s' % arch, when='@21.07: +sundials +cuda cuda_arch=%s' % arch)
     depends_on('cuda@9.0.0:', when='+cuda')
     depends_on('python@2.7:', type='build', when='@:20.04')
     depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
