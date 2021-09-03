@@ -77,24 +77,28 @@ class Warpx(CMakePackage):
     #       automatically
     depends_on('ascent +cuda ~shared', when='+ascent compute=cuda')
     depends_on('ascent +mpi', when='+ascent +mpi')
-    depends_on('blaspp', when='+psatd dims=rz')
-    depends_on('blaspp +cuda', when='+psatd dims=rz compute=cuda')
     depends_on('boost@1.66.0: +math', when='+qedtablegen')
     depends_on('cmake@3.15.0:', type='build')
     depends_on('cuda@9.2.88:', when='compute=cuda')
-    depends_on('fftw@3: +openmp', when='+psatd compute=omp')
-    depends_on('fftw +mpi', when='+psatd +mpi compute=omp')
-    depends_on('lapackpp', when='+psatd dims=rz')
-    depends_on('mpi', when='+mpi')
-    depends_on('openpmd-api@0.13.1:', when='+openpmd')
-    depends_on('openpmd-api@0.14.2:', when='+openpmd @21.09:')
-    depends_on('openpmd-api ~mpi', when='+openpmd ~mpi')
-    depends_on('openpmd-api +mpi', when='+openpmd +mpi')
-    depends_on('pkgconfig', type='build', when='+psatd compute=omp')
-    depends_on('rocfft', when='+psatd compute=hip')
-    depends_on('rocprim', when='compute=hip')
-    depends_on('rocrand', when='compute=hip')
     depends_on('llvm-openmp', when='%apple-clang compute=omp')
+    depends_on('mpi', when='+mpi')
+    with when('+psatd dims=rz'):
+        depends_on('lapackpp')
+        depends_on('blaspp')
+        depends_on('blaspp +cuda', when='compute=cuda')
+    with when('+psatd compute=omp'):
+        depends_on('fftw@3: +openmp')
+        depends_on('fftw +mpi', when='+mpi')
+        depends_on('pkgconfig', type='build')
+    with when('+openpmd'):
+        depends_on('openpmd-api@0.13.1:')
+        depends_on('openpmd-api@0.14.2:', when='@21.09:')
+        depends_on('openpmd-api ~mpi', when='~mpi')
+        depends_on('openpmd-api +mpi', when='+mpi')
+    with when('compute=hip'):
+        depends_on('rocfft', when='+psatd')
+        depends_on('rocprim')
+        depends_on('rocrand')
 
     conflicts('~qed +qedtablegen',
               msg='WarpX PICSAR QED table generation needs +qed')
