@@ -30,13 +30,13 @@ class Apcomp(Package):
 
     homepage = 'https://github.com/Alpine-DAV/ap_compositor'
     git      = 'https://github.com/Alpine-DAV/ap_compositor.git'
-    url      = "https://github.com/Alpine-DAV/ap_compositor/archive/refs/tags/v0.0.3.tar.gz"
+    url      = "https://github.com/Alpine-DAV/ap_compositor/releases/download/v0.0.1/apcomp-v0.0.1.tar.gz"
 
     maintainers = ['mclarsen', 'cyrush']
 
     version('master', branch='master', submodules='True')
-    version('0.0.3', sha256="b11c0ac5cd50761cfe59e3a4f79227ea97e57a86ef1fc23de98d01a06d464b68")
-    version('0.0.2', sha256="a2fd19020b6c9ae5ebf3f4bb8a615ba117a2595fb0ede534914e140d481f6e03")
+    version('0.0.3', sha256="07e8c1d6a23205f4cc66d0a030e65a69e8344545f4d56213d968b67a410adc6e")
+    version('0.0.2', sha256="cb2e2c4524889408de2dd3d29665512c99763db13e6f5e35c3b55e52948c649c")
     version('0.0.1', sha256="cbf85fe58d5d5bc2f468d081386cc8b79861046b3bb7e966edfa3f8e95b998b2")
 
     variant('openmp', default=True, description='Build with openmp support')
