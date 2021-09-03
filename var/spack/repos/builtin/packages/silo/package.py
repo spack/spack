@@ -35,6 +35,7 @@ class Silo(AutotoolsPackage):
     variant('fpzip', default=True,
             description='Enable fpzip support')
 
+    depends_on('m4', type='build', when='+shared')
     depends_on('autoconf', type='build', when='+shared')
     depends_on('automake', type='build', when='+shared')
     depends_on('libtool', type='build', when='+shared')

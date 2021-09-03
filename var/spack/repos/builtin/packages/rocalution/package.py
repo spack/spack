@@ -21,6 +21,7 @@ class Rocalution(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.1', sha256='d3a7b9290f99bdc7382d1d5259c3f5e0e66a43aef4d05b7c2cd78b0e4a5c59bc')
     version('4.3.0', sha256='f064b96f9f04cf22b89f95f72147fcfef28e2c56ecd764008c060f869c74c144')
     version('4.2.0', sha256='0424adf522ded41de5b77666e04464a25c73c92e34025762f30837f90a797445')
     version('4.1.0', sha256='3f61be18a02dff0c152a0ad7eb4779c43dd744b0ba172aa6a4267fc596d582e4')
@@ -33,7 +34,7 @@ class Rocalution(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0']:
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
@@ -42,7 +43,7 @@ class Rocalution(CMakePackage):
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
-    for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0']:
+    for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1']:
         depends_on('rocrand@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):

@@ -442,7 +442,8 @@ class Configuration(object):
 
     @_config_mutator
     def remove_scope(self, scope_name):
-        return self.scopes.pop(scope_name)
+        """Remove scope by name; has no effect when ``scope_name`` does not exist"""
+        return self.scopes.pop(scope_name, None)
 
     @property
     def file_scopes(self):
