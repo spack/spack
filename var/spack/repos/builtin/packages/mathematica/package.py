@@ -22,6 +22,9 @@ class Mathematica(Package):
     url = 'file://{0}/Mathematica_12.0.0_LINUX.sh'.format(os.getcwd())
     manual_download = True
 
+    version('12.2.0',
+            sha256='3b6676a203c6adb7e9c418a5484b037974287b5be09c64e7dfea74ddc0e400d7',
+            expand=False)
     version('12.1.1',
             sha256='ad47b886be4a9864d70f523f792615a051d4ebc987d9a0f654b645b4eb43b30a',
             expand=False)
