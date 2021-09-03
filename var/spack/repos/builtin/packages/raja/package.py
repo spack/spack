@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import socket
+
 from spack import *
 
 
@@ -83,9 +85,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        entries = super(Umpire, self).initconfig_hardware_entries()
+        entries = super(Raja, self).initconfig_hardware_entries()
 
-        options.append(self.define_from_variant('ENABLE_OPENMP', 'openmp'))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
 
         if '+cuda' in spec:
             entries.append(cmake_cache_option("ENABLE_CUDA", True))
