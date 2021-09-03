@@ -36,7 +36,8 @@ class Rdc(CMakePackage):
     depends_on('protobuf', type=('build', 'link'))
     depends_on('libcap', type=('build', 'link'))
 
-    for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1']:
+    for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', 
+                '4.3.0', '4.3.1']:
         depends_on('rocm-smi-lib@' + ver, type=('build', 'link'), when='@' + ver)
 
     def patch(self):

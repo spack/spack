@@ -36,7 +36,8 @@ class Hipsparse(CMakePackage):
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocsparse@' + ver,                when='@' + ver)
 
-    for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1']:
+    for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', 
+                '4.3.0', '4.3.1']:
         depends_on('rocprim@' + ver, when='@' + ver)
 
     patch('e79985dccde22d826aceb3badfc643a3227979d2.patch', when='@3.5.0')
