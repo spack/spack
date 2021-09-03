@@ -9,8 +9,8 @@ from spack import *
 class PyBluepyConfigfile(PythonPackage):
     """Python library for accessing BlueConfig`s"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/bluepy-configfile"
-    git      = "ssh://bbpcode.epfl.ch/nse/bluepy-configfile"
+    homepage = "https://bbpgitlab.epfl.ch/nse/bluepy-configfile"
+    git      = "git@bbpgitlab.epfl.ch:nse/bluepy-configfile.git"
 
     version('develop', branch='master')
     version('0.1.17', tag='bluepy-configfile-v0.1.17')
