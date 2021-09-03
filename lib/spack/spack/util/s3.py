@@ -36,7 +36,7 @@ def create_s3_session(url):
 
     try:
         from botocore.exceptions import ClientError
-    except ImportError as e:
+    except ImportError:
         raise spack.error.SpackError('Accessing an S3 mirror requires botocore')
 
     session = Session()
