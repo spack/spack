@@ -5,6 +5,8 @@
 
 import re
 
+import spack.build_environment
+
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
@@ -278,6 +280,15 @@ class Cmake(Package):
             args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
 
         args.append('-DBUILD_CursesDialog=%s' % str('+ccmake' in spec))
+
+        # Make CMake find its own dependencies.
+        rpaths = spack.build_environment.get_rpaths(self)
+        prefixes = spack.build_environment.get_cmake_prefix_path(self)
+        args.extend([
+            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF',
+            '-DCMAKE_INSTALL_RPATH={0}'.format(";".join(str(v) for v in rpaths)),
+            '-DCMAKE_PREFIX_PATH={0}'.format(";".join(str(v) for v in prefixes))
+        ])
 
         return args
 
