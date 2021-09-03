@@ -1044,7 +1044,6 @@
         "avx512vbmi",
         "avx512ifma",
         "sha_ni",
-        "umip",
         "clwb",
         "rdpid",
         "gfni",
