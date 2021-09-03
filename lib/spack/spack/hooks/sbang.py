@@ -194,22 +194,18 @@ def install_sbang():
     sbang_bin_dir = os.path.dirname(sbang_path)
     fs.mkdirp(sbang_bin_dir)
 
+    group_name = spack.package_prefs.get_package_group(spack.spec.Spec("all")
+
     # set to permissions for `all` in `packages.yaml`
     os.chmod(sbang_bin_dir, spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all")))
-    os.chown(
-        sbang_bin_dir,
-        os.stat(sbang_bin_dir).st_uid,
-        grp.getgrnam(spack.package_prefs.get_package_group(spack.spec.Spec("all"))).gr_gid
-    )
+    if group_name:
+        os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, grp.getgrnam(group_name).gr_gid)
 
     fs.install(spack.paths.sbang_script, sbang_path)
 
     os.chmod(sbang_path, spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all")))
-    os.chown(
-        sbang_path,
-        os.stat(sbang_path).st_uid,
-        grp.getgrnam(spack.package_prefs.get_package_group(spack.spec.Spec("all"))).gr_gid
-    )
+    if group_name:
+        os.chown(sbang_path, os.stat(sbang_path).st_uid, grp.getgrnam(group_name).gr_gid)
 
 
 def post_install(spec):
