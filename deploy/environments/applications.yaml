@@ -26,6 +26,7 @@ spack:
     - connectome-tools
     - emsim
     - functionalizer@3.12.2
+    - gene-expression-volume
     - meshball ^brion@3.1.0
     - model-neocortex%intel
     - nest@2.18.0

@@ -12,6 +12,8 @@ class PyAtlalign(PythonPackage):
     homepage = "https://pypi.org/project/atlalign/"
     url = "https://files.pythonhosted.org/packages/74/b8/4382a758e4ccf5de26e35fb2b33863aea27b99e31e1ce9b4bc1e6bb593ef/atlalign-0.6.0.tar.gz"
 
+    # The first version below just serves to trigger a rebuild!
+    version('0.6.0.20210902', url=url, sha256='ecd74c89ecdca0a115252fa662e41b272dff2cdc3ea0d459daa5b7a672070b7c')
     version('0.6.0', sha256='ecd74c89ecdca0a115252fa662e41b272dff2cdc3ea0d459daa5b7a672070b7c')
 
     depends_on('python@3.6:', type=('build', 'run'))
@@ -32,3 +34,6 @@ class PyAtlalign(PythonPackage):
     depends_on('py-tensorflow-addons@0.12.1', type=('run'))
 
     patch('lpips.patch', when='@0.6.0')
+
+    def patch(self):
+        filter_file('"tensorflow>=[0-9.]+",', '', 'setup.py')

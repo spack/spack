@@ -12,6 +12,8 @@ class PyImgaug(PythonPackage):
     homepage = "https://pypi.org/project/imgaug/"
     url = "https://files.pythonhosted.org/packages/4f/96/c55f2985b464ea377238e61026dfb1da54d8edc1534c649e70077e94c642/imgaug-0.2.9.tar.gz"
 
+    # The first version below just serves to trigger a rebuild!
+    version('0.2.9.20210902', url=url, sha256='42b0c4c8cbe197d4f5dbd33960a1140f8a0d9c22c0a8851306ecbbc032092de8')
     version('0.2.9', sha256='42b0c4c8cbe197d4f5dbd33960a1140f8a0d9c22c0a8851306ecbbc032092de8')
 
     depends_on('python@3.6:', type=('build', 'run'))
@@ -26,3 +28,6 @@ class PyImgaug(PythonPackage):
     depends_on('opencv +python', type=('run'))
     depends_on('py-imageio', type=('run'))
     depends_on('py-shapely', type=('run'))
+
+    def patch(self):
+        filter_file(', "opencv-python"', '', 'setup.py')

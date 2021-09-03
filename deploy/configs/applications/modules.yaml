@@ -38,6 +38,7 @@ modules:
       - connectome-tools
       - emsim
       - functionalizer
+      - gene-expression-volume
       - meshball
       - model-neocortex
       - nest
