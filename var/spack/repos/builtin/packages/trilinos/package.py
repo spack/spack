@@ -546,7 +546,6 @@ class Trilinos(CMakePackage, CudaPackage):
             ('Matio', 'matio'),
             ('METIS', 'metis'),
             ('Netcdf', 'netcdf-c'),
-            ('Netcdf', 'netcdf-c'),
             ('SCALAPACK', 'scalapack'),
             ('SuperLU', 'superlu'),
             ('SuperLUDist', 'superlu-dist'),
