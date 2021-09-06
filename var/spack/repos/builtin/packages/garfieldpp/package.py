@@ -8,7 +8,7 @@ from spack import *
 
 
 class Garfieldpp(CMakePackage):
-    """Garfield++ is a toolkit for the detailed simulation of particle 
+    """Garfield++ is a toolkit for the detailed simulation of particle
        detectors based on ionisation measurement in gases and semiconductors. """
 
     homepage = "https://garfieldpp.web.cern.ch/garfieldpp/"
