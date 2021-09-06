@@ -49,22 +49,26 @@ class OpenpmdApi(CMakePackage):
     depends_on('catch2@2.6.1:', type='test')
     depends_on('catch2@2.13.4:', type='test', when='@0.14.0:')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
-    depends_on('hdf5@1.8.13:', when='+hdf5')
-    depends_on('hdf5@1.8.13: ~mpi', when='~mpi +hdf5')
-    depends_on('hdf5@1.8.13: +mpi', when='+mpi +hdf5')
-    depends_on('adios@1.13.1: ~sz', when='+adios1')
-    depends_on('adios@1.13.1: ~mpi ~sz', when='~mpi +adios1')
-    depends_on('adios@1.13.1: +mpi ~sz', when='+mpi +adios1')
-    depends_on('adios2@2.5.0:', when='+adios2')
-    depends_on('adios2@2.6.0:', when='+adios2 @0.12.0:')
-    depends_on('adios2@2.7.0:', when='+adios2 @0.14.0:')
-    depends_on('adios2@2.5.0: ~mpi', when='~mpi +adios2')
-    depends_on('adios2@2.5.0: +mpi', when='+mpi +adios2')
     depends_on('nlohmann-json@3.9.1:')
-    depends_on('py-pybind11@2.6.2:', when='+python', type='link')
-    depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
-    depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
-    depends_on('python@3.6:', when='+python', type=['link', 'test', 'run'])
+    with when('+hdf5'):
+        depends_on('hdf5@1.8.13:')
+        depends_on('hdf5@1.8.13: ~mpi', when='~mpi')
+        depends_on('hdf5@1.8.13: +mpi', when='+mpi')
+    with when('+adios1'):
+        depends_on('adios@1.13.1: ~sz')
+        depends_on('adios@1.13.1: ~mpi ~sz', when='~mpi')
+        depends_on('adios@1.13.1: +mpi ~sz', when='+mpi')
+    with when('+adios2'):
+        depends_on('adios2@2.5.0:')
+        depends_on('adios2@2.6.0:', when='@0.12.0:')
+        depends_on('adios2@2.7.0:', when='@0.14.0:')
+        depends_on('adios2@2.5.0: ~mpi', when='~mpi')
+        depends_on('adios2@2.5.0: +mpi', when='+mpi')
+    with when('+python'):
+        depends_on('py-pybind11@2.6.2:', type='link')
+        depends_on('py-numpy@1.15.1:', type=['test', 'run'])
+        depends_on('py-mpi4py@2.1.0:', when='+mpi', type=['test', 'run'])
+        depends_on('python@3.6:', type=['link', 'test', 'run'])
 
     conflicts('^hdf5 api=v16', msg='openPMD-api requires HDF5 APIs for 1.8+')
 
