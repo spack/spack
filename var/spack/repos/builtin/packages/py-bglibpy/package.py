@@ -15,17 +15,6 @@ class PyBglibpy(PythonPackage):
     version('develop', branch='master')
 
     version('4.4.36', commit='07fe9999a137c3741fd95713149a76a202cb7d7a')
-    version('4.4.20', commit='59cd13df919e60c272f1f90d178eea687206f13f')
-    version('4.4.18', commit='cbfb1c214d44eaab0a1cef3d3bbafa097469fe85')
-    version('4.4.10', commit='53db9eee6f0b4e025f19c271b3235831f86c866e')
-    version('4.4.6', commit='18e211153025535ebecb7e0a9868033b1462bec1')
-    version('4.4', commit='4597bf81374f4041f689a4e73e4319bf5c13947b')
-    version('4.3.19', commit='bce00a1ddedb605a5ed5225989192eb5f7e133ae')
-    version('4.3.15', commit='dccd717a2570d32776de824d864fba9dfdbf56f6')
-    version('4.3.12', commit='eb4accd2dc4ebcb01e65d6429bb8221af5aa14bf')
-    version('4.3', commit='61293ef3f64a18e7a336d7a5a959020c8237b207')
-    version('4.2.23', commit='4f88c9df716ca1c7b1c779ee934b28aa991a366b')
-    version('4.1.4', commit='e54d294460e5bdf6b9990bc10a4606b412b76d90')
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('neuron+python', type='run')
@@ -34,10 +23,7 @@ class PyBglibpy(PythonPackage):
     depends_on('py-cachetools', type='run')
     depends_on('py-h5py@2.3:', type='run')
 
-    # bluepy
-    depends_on('py-bluepy@:2.0', type='run', when='@:4.4.20')
-    depends_on('py-bluepy@2.1:', type='run', when='@4.4.36:')
-
+    depends_on('py-bluepy@2.1:2.999', type='run')
     depends_on('py-libsonata', type='run')
 
     # skip import test, because bglibpy needs HOC_LIBRARY_PATH
