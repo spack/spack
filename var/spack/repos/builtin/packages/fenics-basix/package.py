@@ -23,3 +23,6 @@ class FenicsBasix(CMakePackage):
     depends_on("xtl@0.7.2:")
     depends_on("xtensor@0.23.10:")
     depends_on("blas", type=("build", "run"))
+
+    with when("@main"):
+        root_cmakelists_dir = "cpp"
