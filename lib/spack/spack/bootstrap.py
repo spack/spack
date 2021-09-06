@@ -122,7 +122,8 @@ def _fix_ext_suffix(candidate_spec):
     _suffix_to_be_checked = {
         'ppc64le': {
             'glob': '*.cpython-*-powerpc64le-linux-gnu.so',
-            're': r'.cpython-[\w]*-powerpc64le-linux-gnu.so'
+            're': r'.cpython-[\w]*-powerpc64le-linux-gnu.so',
+            'fmt': r'{module}.cpython-{major}{minor}m-powerpc64le-linux-gnu.so'
         }
     }
 
@@ -143,15 +144,30 @@ def _fix_ext_suffix(candidate_spec):
 
     # If we are here it means the current interpreter expects different names
     # than pristine CPython. So:
-    # 1. Find what we have
-    # 2. Compute what we want
-    # 3. Create symbolic links if they're not there already
-    extensions_on_disk = fs.find(candidate_spec.prefix, expected['glob'])
-    link_names = [re.sub(expected['re'], ext_suffix,  s) for s in extensions_on_disk]
-    for file_name, link_name in zip(extensions_on_disk, link_names):
+    # 1. Find what we have installed
+    # 2. Create symbolic links for the other names, it they're not there already
+
+    # Check if standard names are installed and if we have to create
+    # link for this interpreter
+    standard_extensions = fs.find(candidate_spec.prefix, expected['glob'])
+    link_names = [re.sub(expected['re'], ext_suffix,  s) for s in standard_extensions]
+    for file_name, link_name in zip(standard_extensions, link_names):
         if os.path.exists(link_name):
             continue
         os.symlink(file_name, link_name)
+
+    # Check if this interpreter installed something and we have to create
+    # links for a standard CPython interpreter
+    non_standard_extensions = fs.find(candidate_spec.prefix, '*' + ext_suffix)
+    for abs_path in non_standard_extensions:
+        directory, filename = os.path.split(abs_path)
+        module = filename.split('.')[0]
+        link_name = os.path.join(directory, expected['fmt'].format(
+            module=module, major=sys.version_info[0], minor=sys.version_info[1])
+        )
+        if os.path.exists(link_name):
+            continue
+        os.symlink(abs_path, link_name)
 
 
 @_bootstrapper(type='buildcache')
