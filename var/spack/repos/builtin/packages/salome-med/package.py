@@ -23,8 +23,9 @@ class SalomeMed(CMakePackage):
     version('3.3.1', sha256='856e9c4bb75eb0cceac3d5a5c65b1ce52fb3c46b9182920e1c9f34ae69bd2d5f')
     version('3.2.0', sha256='d52e9a1bdd10f31aa154c34a5799b48d4266dc6b4a5ee05a9ceda525f2c6c138')
 
-    variant('mpi',    default=False, description='Enable MPI')
-    variant('static', default=False, description='Enable static library build')
+    variant('mpi',     default=False, description='Enable MPI')
+    variant('static',  default=False, description='Enable static library build')
+    variant('fortran', default=False, description='Enable Fortran')
 
     depends_on('mpi', when='+mpi')
 
@@ -65,11 +66,15 @@ class SalomeMed(CMakePackage):
                 '-DMEDFILE_BUILD_SHARED_LIBS=ON',
                 '-DMEDFILE_BUILD_STATIC_LIBS=OFF'])
 
+        if '+fortran' in spec:
+            options.extend(['-DCMAKE_Fortran_COMPILER=%s' % self.compiler.fc])
+        else:
+            options.extend(['-DCMAKE_Fortran_COMPILER='])
+
         options.extend([
             '-DMEDFILE_BUILD_PYTHON=OFF',
             '-DMEDFILE_INSTALL_DOC=OFF',
             '-DMEDFILE_BUILD_TESTS={0}'.format('ON' if self.run_tests else 'OFF'),
-            '-DCMAKE_Fortran_COMPILER=',
             '-DHDF5_ROOT_DIR=%s' % spec['hdf5'].prefix])
 
         return options
