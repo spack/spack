@@ -23,6 +23,3 @@ class Garfieldpp(CMakePackage):
 
     depends_on('root')
 
-    def cmake_args(self):
-        args = []
-        return args
