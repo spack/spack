@@ -21,10 +21,10 @@ class GeneExpressionVolume(PythonPackage):
     depends_on('py-click@7.0:', type=('build', 'run'))
     depends_on('py-nptyping@1.0.1:', type=('build', 'run'))
     depends_on('py-numpy@1.15.0:', type=('build', 'run'))
-    depends_on('py-scikit-image@0.017.2:', type=('build', 'run'))
+    depends_on('py-scikit-image@0.17.2:', type=('build', 'run'))
     depends_on('py-types-pyyaml@5.4.0:', type=('build', 'run'))
-    depends_on('py-voxcell@2.7.4', type=('run', 'build'))
-    depends_on('py-pyaml@5.3.1:', type=('build', 'run'))
+    depends_on('py-voxcell@2.7.4:2.999', type=('run', 'build'))
+    depends_on('py-pyyaml@5.3.1:', type=('build', 'run'))
     depends_on('py-pytest', type='test')
     depends_on('py-mock', type='test')
 
