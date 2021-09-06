@@ -14,7 +14,8 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     manipulate a hashed database."""
 
     homepage = "https://www.gnu.org.ua/software/gdbm/gdbm.html"
-    gnu_mirror_path = "gdbm/gdbm-1.13.tar.gz"
+    gnu_mirror_path = "gdbm/gdbm-1.21.tar.gz"
+    maintainers     = ['bernhardkaindl']
 
     version('1.21',   sha256='b0b7dbdefd798de7ddccdd8edf6693a30494f7789777838042991ef107339cc2')
     version('1.19',   sha256='37ed12214122b972e18a0d94995039e57748191939ef74115b1d41d8811364bc')
@@ -34,6 +35,10 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     patch('gdbm.patch', when='@:1.18 %aocc@2:')
     patch('gdbm.patch', when='@:1.18 %oneapi')
     patch('gdbm.patch', when='@:1.18 %arm@21:')
+
+    def setup_build_environment(self, env):
+        """Ensures via rpath that the tools used by make check use this libgdbm.so.6"""
+        env.append_path('LDFLAGS', '-Wl,-L,' + self.stage.source_path + 'src/.lib')
 
     def configure_args(self):
 
