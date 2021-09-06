@@ -14,6 +14,8 @@ class Garfieldpp(CMakePackage):
     url      = "https://gitlab.cern.ch/garfield/garfieldpp/-/archive/4.0/garfieldpp-4.0.tar.gz"
     git      = "https://gitlab.cern.ch/garfield/garfieldpp.git"
 
+    tags = ['hep']
+
     maintainers = ['mirguest']
 
     version('master', branch='master')
