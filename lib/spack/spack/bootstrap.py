@@ -25,6 +25,7 @@ import spack.binary_distribution
 import spack.config
 import spack.environment
 import spack.main
+import spack.modules
 import spack.paths
 import spack.repo
 import spack.spec
@@ -430,8 +431,9 @@ def ensure_bootstrap_configuration():
                     # and builtin but accounting for platform specific scopes
                     config_scopes = _bootstrap_config_scopes()
                     with spack.config.use_configuration(*config_scopes):
-                        with spack_python_interpreter():
-                            yield
+                        with spack.modules.disable_modules():
+                            with spack_python_interpreter():
+                                yield
 
 
 def store_path():
