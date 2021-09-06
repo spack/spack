@@ -10,7 +10,7 @@ from spack import *
 class Porta(Package):
     """PORTA is a collection of routines for analyzing polytopes and
     polyhedra"""
-    homepage = "http://porta.zib.de"
+    homepage = "https://porta.zib.de"
     url      = "http://porta.zib.de/porta-1.4.1.zip"
 
     version('1.4.1', sha256='21e3784f46f4f2154100a0c39cbd9211a26e513ffe0c9f70ab75a3bb2810b059')

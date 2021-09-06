@@ -18,7 +18,7 @@ class RDiversitree(RPackage):
        models of discrete and continuous trait evolution and constant
        rate 'speciation' and extinction."""
 
-    homepage = "http://www.zoology.ubc.ca/prog/diversitree"
+    homepage = "https://www.zoology.ubc.ca/prog/diversitree"
     url      = "https://cloud.r-project.org/src/contrib/diversitree_0.9-10.tar.gz"
     list_url = "https://cron.r-project.org/src/contrib/Archive/diversitree"
 

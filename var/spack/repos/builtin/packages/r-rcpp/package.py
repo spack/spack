@@ -21,7 +21,7 @@ class RRcpp(RPackage):
     (2018,; <doi:10.1080/00031305.2017.1375990>); see 'citation("Rcpp")' for
     details."""
 
-    homepage = "http://dirk.eddelbuettel.com/code/rcpp.html"
+    homepage = "https://dirk.eddelbuettel.com/code/rcpp.html"
     url      = "https://cloud.r-project.org/src/contrib/Rcpp_0.12.13.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Rcpp"
 

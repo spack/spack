@@ -311,7 +311,7 @@ def test_install_invalid_spec(invalid_spec):
         install(invalid_spec)
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('spec,concretize,error_code', [
     (Spec('mpi'), False, 1),
     (Spec('mpi'), True, 0),
@@ -415,7 +415,7 @@ def test_junit_output_with_errors(
     assert 'error message="{0}"'.format(msg) in content
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('clispecs,filespecs', [
     [[],                  ['mpi']],
     [[],                  ['mpi', 'boost']],

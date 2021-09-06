@@ -10,7 +10,7 @@ class Eztrace(AutotoolsPackage):
     """EZTrace is a tool to automatically generate execution traces
        of HPC applications."""
 
-    homepage = "http://eztrace.gforge.inria.fr"
+    homepage = "https://eztrace.gforge.inria.fr"
     url      = "https://gitlab.com/eztrace/eztrace/-/archive/eztrace-1.1-10/eztrace-eztrace-1.1-10.tar.gz"
     maintainers = ['trahay']
 

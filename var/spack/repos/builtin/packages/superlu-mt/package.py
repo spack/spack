@@ -14,7 +14,7 @@ class SuperluMt(Package):
     sparse, nonsymmetric systems of linear equations on high performance
     machines. SuperLU_MT is designed for shared memory parallel machines."""
 
-    homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu_mt"
+    homepage = "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu_mt"
     url      = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_mt_3.1.tar.gz"
 
     version('3.1', sha256='407b544b9a92b2ed536b1e713e80f986824cf3016657a4bfc2f3e7d2a76ecab6')

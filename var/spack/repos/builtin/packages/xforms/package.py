@@ -10,7 +10,7 @@ class Xforms(AutotoolsPackage):
     """This is the Free Software distribution of the XForms Library, a
     graphical user interface toolkit for X Window Systems."""
 
-    homepage = "http://www.nongnu.org/xforms/"
+    homepage = "https://www.nongnu.org/xforms/"
     url      = "http://download.savannah.gnu.org/releases/xforms/xforms-1.0.91.tar.gz"
 
     version('1.2.4',     sha256='78cc6b07071bbeaa1f906e0a22d5e9980e48f8913577bc082d661afe5cb75696')

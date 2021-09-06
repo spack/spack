@@ -15,7 +15,7 @@ class Xsdk(BundlePackage):
        packages
     """
 
-    homepage = "http://xsdk.info"
+    homepage = "https://xsdk.info"
 
     maintainers = ['balay', 'luszczek']
 

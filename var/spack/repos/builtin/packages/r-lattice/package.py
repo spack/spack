@@ -14,7 +14,7 @@ class RLattice(RPackage):
     sufficient for typical graphics needs, and is also flexible enough to
     handle most nonstandard requirements. See ?Lattice for an introduction."""
 
-    homepage = "http://lattice.r-forge.r-project.org/"
+    homepage = "https://lattice.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/lattice_0.20-35.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/lattice"
 

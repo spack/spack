@@ -22,7 +22,7 @@ class Amber(Package, CudaPackage):
        Only the latter version of ambertools for each amber version is supported.
        """
 
-    homepage = "http://ambermd.org/"
+    homepage = "https://ambermd.org/"
     url = "file://{0}/Amber18.tar.bz2".format(os.getcwd())
     manual_download = True
 

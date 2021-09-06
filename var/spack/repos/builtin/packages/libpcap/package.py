@@ -8,7 +8,7 @@ from spack import *
 
 class Libpcap(AutotoolsPackage):
     """libpcap is a portable library in C/C++ for packet capture."""
-    homepage = "http://www.tcpdump.org/"
+    homepage = "https://www.tcpdump.org/"
     list_url = "http://www.tcpdump.org/release/"
     url      = "http://www.tcpdump.org/release/libpcap-1.8.1.tar.gz"
 

@@ -14,7 +14,7 @@ class Hypre(Package, CudaPackage):
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
 
-    homepage = "http://computing.llnl.gov/project/linear_solvers/software.php"
+    homepage = "https://computing.llnl.gov/project/linear_solvers/software.php"
     url      = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
     git      = "https://github.com/hypre-space/hypre.git"
 
