@@ -22,4 +22,3 @@ class Garfieldpp(CMakePackage):
     version('3.0', sha256='c1282427a784658bc38b71c8e8cfc8c9f5202b185f0854d85f7c9c5a747c5406')
 
     depends_on('root')
-
