@@ -4,37 +4,37 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from packaging import version
 import subprocess
 import sys
-from typing import List, OrderedDict  # novm
+from distutils.version import StrictVersion
+from typing import Dict, List, Set  # novm
 
-from spack.error import SpackError
 import spack.operating_systems.windows_os
 import spack.util.executable
 from spack.compiler import Compiler
+from spack.error import SpackError
 
-
-
-avail_fc_version = set()
-fc_path = {}
+avail_fc_version = set()  # type: Set[str]
+fc_path = dict()  # type: Dict[str, str]
 
 fortran_mapping = {
-                '2021.3.0' : '19.29.30133',
-                '2021.2.1' : '19.28.29913',
-                '2021.2.0' : '19.28.29334',
-                '2021.1.0' : '19.28.29333',
-            }
+    '2021.3.0': '19.29.30133',
+    '2021.2.1': '19.28.29913',
+    '2021.2.0': '19.28.29334',
+    '2021.1.0': '19.28.29333',
+}
+
 
 def get_valid_fortran_pth(comp_ver):
     cl_ver = str(comp_ver).split('@')[1]
-    sort_fn = lambda fc_ver: version.parse(fc_ver)
+    sort_fn = lambda fc_ver: StrictVersion(fc_ver)
     sort_fc_ver = sorted(list(avail_fc_version), key=sort_fn)
     for ver in sort_fc_ver:
         if ver in fortran_mapping:
-            if version.parse(cl_ver) <= version.parse(fortran_mapping[ver]):
+            if StrictVersion(cl_ver) <= StrictVersion(fortran_mapping[ver]):
                 return fc_path[ver]
     return None
+
 
 class Msvc(Compiler):
     # Subclasses use possible names of C compiler
