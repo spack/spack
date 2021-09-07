@@ -164,48 +164,47 @@ class Python(Package):
             "(not PEP 394 compliant)")
 
     # Optional Python modules
-    variant('readline', default=not is_windows,  description='Build readline module')
+    variant('readline', default=(sys.platform!='win32'),  description='Build readline module')
     variant('ssl',      default=True,  description='Build ssl module')
     variant('sqlite3',  default=True,  description='Build sqlite3 module')
-    variant('dbm',      default=True,  description='Build dbm module')
+    variant('dbm',      default=(sys.platform!='win32'),  description='Build dbm module')
     variant('nis',      default=False, description='Build nis module')
     variant('zlib',     default=True,  description='Build zlib module')
     variant('bz2',      default=True,  description='Build bz2 module')
-    variant('lzma',     default=True,  description='Build lzma module')
-    variant('pyexpat',  default=True,  description='Build pyexpat module')
-    variant('ctypes',   default=True,  description='Build ctypes module')
+    variant('lzma',     default=(sys.platform!='win32'),  description='Build lzma module')
+    variant('pyexpat',  default=(sys.platform!='win32'),  description='Build pyexpat module')
+    variant('ctypes',   default=(sys.platform!='win32'),  description='Build ctypes module')
     variant('tkinter',  default=False, description='Build tkinter module')
-    variant('uuid',     default=True,  description='Build uuid module')
+    variant('uuid',     default=(sys.platform!='win32'),  description='Build uuid module')
     variant('tix',      default=False, description='Build Tix module')
 
-    if os.name != 'nt':
-        depends_on('pkgconfig@0.9.0:', type='build')
-        depends_on('gettext +libxml2', when='+libxml2')
-        depends_on('gettext ~libxml2', when='~libxml2')
+    depends_on('pkgconfig@0.9.0:', type='build')
+    depends_on('gettext +libxml2', when='+libxml2')
+    depends_on('gettext ~libxml2', when='~libxml2')
 
-        # Optional dependencies
-        # See detect_modules() in setup.py for details
-        depends_on('readline', when='+readline')
-        depends_on('ncurses', when='+readline')
-        depends_on('openssl', when='+ssl')
-        # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
-        # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
-        depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
-        depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
-        depends_on('openssl@1.1.1:', when='@3.10:+ssl')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
-        depends_on('sqlite@3.0.8:', when='@:3.9+sqlite3')
-        depends_on('sqlite@3.7.15:', when='@3.10:+sqlite3')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
-        depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
-        depends_on('libnsl', when='+nis')
-        depends_on('zlib@1.1.3:', when='+zlib')
-        depends_on('bzip2', when='+bz2')
-        depends_on('xz', when='@3.3:+lzma')
-        depends_on('expat', when='+pyexpat')
-        depends_on('libffi', when='+ctypes')
-        depends_on('tk', when='+tkinter')
-        depends_on('tcl', when='+tkinter')
-        depends_on('uuid', when='+uuid')
-        depends_on('tix', when='+tix')
+    # Optional dependencies
+    # See detect_modules() in setup.py for details
+    depends_on('readline', when='+readline')
+    depends_on('ncurses', when='+readline')
+    depends_on('openssl', when='+ssl')
+    # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
+    # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
+    depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
+    depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+    depends_on('openssl@1.1.1:', when='@3.10:+ssl')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+    depends_on('sqlite@3.0.8:', when='@:3.9+sqlite3')
+    depends_on('sqlite@3.7.15:', when='@3.10:+sqlite3')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+    depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
+    depends_on('libnsl', when='+nis')
+    depends_on('zlib@1.1.3:', when='+zlib')
+    # depends_on('bzip2', when='+bz2')
+    depends_on('xz', when='@3.3:+lzma')
+    depends_on('expat', when='+pyexpat')
+    depends_on('libffi', when='+ctypes')
+    depends_on('tk', when='+tkinter')
+    depends_on('tcl', when='+tkinter')
+    depends_on('uuid', when='+uuid')
+    depends_on('tix', when='+tix')
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
@@ -1344,6 +1343,21 @@ for plat_specific in [True, False]:
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
+
+    @property
+    def configure(self, spec, prefix):
+        if self.spec.satisfies(platform='windows'):
+            return
+        else:
+            super(Python, self).configure(spec, prefix)
+
+    @property
+    def build(self, spec, prefix):
+        if self.spec.satisfies(platform='windows'):
+            subprocess.run([os.path.join('PCbuild', 'build.bat'),
+                           "-e", "-d", "-p x64"])
+        else:
+            super(Python, self).build(spec, prefix)
 
     def test(self):
         # do not use self.command because we are also testing the run env

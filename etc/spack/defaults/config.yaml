@@ -58,9 +58,9 @@ config:
   # The build stage can be purged with `spack clean --stage` and
   # `spack clean -a`, so it is important that the specified directory uniquely
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
-  build_stage:
-    - $tempdir/$user/spack-stage
-    - $user_cache_path/stage
+
+  build_stage::
+    - 'C:\Users\.spack'
   # - $spack/var/spack/stage
 
   # Directory in which to run tests and store test results.
