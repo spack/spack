@@ -446,7 +446,13 @@ class Boost(Package):
             '--layout=%s' % layout
         ])
 
-        if not spec.satisfies('%intel'):
+        if not spec.satisfies('@:1.75 %intel'):
+            # When building any version >= 1.76, the toolset must be specified.
+            # Earlier versions could not specify Intel as the toolset
+            # as that was considered to be redundant/conflicting with
+            # --with-toolset in bootstrap.
+            # (although it is not currently known if 1.76 is the earliest
+            # version that requires specifying the toolset for Intel)
             options.extend([
                 'toolset=%s' % self.determine_toolset(spec)
             ])

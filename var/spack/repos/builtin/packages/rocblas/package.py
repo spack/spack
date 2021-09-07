@@ -82,6 +82,9 @@ class Rocblas(CMakePackage):
 
     def cmake_args(self):
         arch = self.spec.variants['tensile_architecture'].value
+        if self.spec.satisfies('@4.1.0:'):
+            if arch == 'gfx906' or arch == 'gfx908':
+                arch = arch + ':xnack-'
 
         tensile = join_path(self.stage.source_path, 'Tensile')
 
@@ -104,10 +107,11 @@ class Rocblas(CMakePackage):
         if '@3.7.0:' in self.spec:
             args.append(self.define('Tensile_LIBRARY_FORMAT', 'msgpack'))
 
-        if self.spec.satisfies('@4.1.0:'):
-            if arch == 'gfx906' or arch == 'gfx908':
-                arch = arch + ':xnack-'
-        args.append(self.define('Tensile_ARCHITECTURE', arch))
+        # See https://github.com/ROCmSoftwarePlatform/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
+        if self.spec.satisfies('@:4.2.0'):
+            args.append(self.define('Tensile_ARCHITECTURE', arch))
+        else:
+            args.append(self.define('AMDGPU_TARGETS', arch))
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
         if self.spec.satisfies('^cmake@3.21:'):
