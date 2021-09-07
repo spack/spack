@@ -11,13 +11,11 @@ class Systemc(CMakePackage):
     and more."""
 
     homepage = "https://www.accellera.org/downloads/standards/systemc"
-    url      = ("https://accellera.org/images/downloads/standards/systemc/"
-                "systemc-2.3.3.tar.gz")
+    url      = "https://accellera.org/images/downloads/standards/systemc/systemc-2.3.3.tar.gz"
 
     maintainers = ['nicmcd']
 
-    version('2.3.3', sha256=('5781b9a351e5afedabc37d145e5f7edec08f3fd5de00ffeb8'
-                             'fa1f3086b1f7b3f'))
+    version('2.3.3', sha256='5781b9a351e5afedabc37d145e5f7edec08f3fd5de00ffeb8fa1f3086b1f7b3f')
 
     variant('cxxstd', values=('11', '14', '17', '20'), default='11',
             description="C++ standard used during compilation")
