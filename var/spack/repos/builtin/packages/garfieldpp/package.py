@@ -17,7 +17,7 @@ class Garfieldpp(CMakePackage):
     tags = ['hep']
 
     maintainers = ['mirguest']
-    
+
     variant('examples', default=False, description="Build garfield examples")
 
     version('master', branch='master')
@@ -27,7 +27,7 @@ class Garfieldpp(CMakePackage):
     depends_on('root')
     depends_on('gsl')
     depends_on('geant4', when='+examples')
-    
+
     def cmake_args(self):
         args = [
             self.define_from_variant('WITH_EXAMPLES', 'examples')
