@@ -10,7 +10,7 @@ class Spot(AutotoolsPackage):
     """Spot is a C++11 library for omega-automata manipulation and model
        checking."""
     homepage = "https://spot.lrde.epita.fr/"
-    url      = "http://www.lrde.epita.fr/dload/spot/spot-1.99.3.tar.gz"
+    url      = "https://www.lrde.epita.fr/dload/spot/spot-1.99.3.tar.gz"
 
     version('2.9.4', sha256='e11208323baabe9b5f98098d4b9bb39803fb102a68abbbaf900f1fcd578f0f85')
     version('1.99.3', sha256='86964af559994af4451a8dca663a9e1db6e869ed60e747ab60ce72dddc31b61b')

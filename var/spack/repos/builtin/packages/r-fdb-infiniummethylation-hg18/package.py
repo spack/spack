@@ -13,7 +13,7 @@ class RFdbInfiniummethylationHg18(RPackage):
 
     # This is a bioconductor package but there is no available git repository
     homepage = "https://bioconductor.org/packages/release/data/annotation/html/FDb.InfiniumMethylation.hg18.html"
-    url      = "http://bioconductor.org/packages/release/data/annotation/src/contrib/FDb.InfiniumMethylation.hg18_2.2.0.tar.gz"
+    url      = "https://bioconductor.org/packages/release/data/annotation/src/contrib/FDb.InfiniumMethylation.hg18_2.2.0.tar.gz"
 
     version('2.2.0', sha256='4a9028ac03c11fffbab731ea750bc7f9b0884fc43c6a8dac6eb2c644e4c79f6f')
 

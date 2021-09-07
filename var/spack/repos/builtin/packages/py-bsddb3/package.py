@@ -21,4 +21,4 @@ class PyBsddb3(PythonPackage):
     depends_on('berkeley-db')
 
     # For testing... see here for an example that uses BerkeleyDB
-    # http://code.activestate.com/recipes/189060-using-berkeley-db-database/
+    # https://code.activestate.com/recipes/189060-using-berkeley-db-database/

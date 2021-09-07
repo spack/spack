@@ -11,7 +11,7 @@ class RCovr(RPackage):
 
     Track and report code coverage for your package and (optionally)
     upload the results to a coverage service like 'Codecov'
-    <http://codecov.io> or 'Coveralls' <http://coveralls.io>. Code
+    <http://codecov.io> or 'Coveralls' <https://coveralls.io/>. Code
     coverage is a measure of the amount of code being exercised by a
     set of tests. It is an indirect measure of test quality and
     completeness. This package is compatible with any testing methodology

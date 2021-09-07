@@ -30,7 +30,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     executables = [r'^perl(-?\d+.*)?$']
 
-    # see http://www.cpan.org/src/README.html for
+    # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)

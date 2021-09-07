@@ -34,7 +34,7 @@ class Hpcc(MakefilePackage):
            patterns; based on b_eff (effective bandwidth benchmark)."""
 
     homepage = "https://icl.cs.utk.edu/hpcc"
-    url = "http://icl.cs.utk.edu/projectsfiles/hpcc/download/hpcc-1.5.0.tar.gz"
+    url = "https://icl.cs.utk.edu/projectsfiles/hpcc/download/hpcc-1.5.0.tar.gz"
     git = "https://github.com/icl-utk-edu/hpcc.git"
 
     version('develop', branch='main')

@@ -11,7 +11,7 @@ class Snptest(Package):
        genome-wide studies."""
 
     homepage = "https://mathgen.stats.ox.ac.uk/genetics_software/snptest/snptest.html"
-    url = "http://www.well.ox.ac.uk/~gav/resources/snptest_v2.5.2_linux_x86_64_dynamic.tgz"
+    url = "https://www.well.ox.ac.uk/~gav/resources/snptest_v2.5.2_linux_x86_64_dynamic.tgz"
 
     version('2.5.2', sha256='1ffa3ebafa2c5db4866a38e01bb09f43df7973d053423ce67221cb3f8acb30f6')
 

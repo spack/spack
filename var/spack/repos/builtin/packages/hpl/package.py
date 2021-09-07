@@ -16,7 +16,7 @@ class Hpl(AutotoolsPackage):
     implementation of the High Performance Computing Linpack Benchmark."""
 
     homepage = "https://www.netlib.org/benchmark/hpl/"
-    url      = "http://www.netlib.org/benchmark/hpl/hpl-2.2.tar.gz"
+    url      = "https://www.netlib.org/benchmark/hpl/hpl-2.2.tar.gz"
 
     # Note: HPL uses autotools starting with 2.3
 
