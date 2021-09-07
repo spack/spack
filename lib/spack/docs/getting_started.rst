@@ -643,7 +643,16 @@ Fortran.
 
 #. There are different ways to get ``gfortran`` on macOS. For example, you can
    install GCC with Spack (``spack install gcc``) or with Homebrew
-   (``brew install gcc``).
+   (``brew install gcc``). To avoid compiling all of ``gcc``, users may obtain
+   a precompiled binary `prepared by the developers
+   <https://gcc.gnu.org/wiki/GFortranBinaries#MacOS>`_. For a given `release
+   installer <https://github.com/fxcoudert/gfortran-for-macOS/releases>`_,
+   download the ``.dmg`` binary, double click it, and once the dmg is mounted
+   right-click the ``gfortran.pkg`` file and select "open" (to bypass
+   codesigning requirements by Apple). It will install to the directory
+   ``/usr/local/gfortran/``, and produce a symbolic link of
+   ``/usr/local/bin/gfortran`` (but ``gcc`` and ``g++`` will **not** be linked
+   to ``/usr/local/bin``).
 
 #. The only thing left to do is to edit ``~/.spack/darwin/compilers.yaml`` to provide
    the path to ``gfortran``:
