@@ -18,7 +18,7 @@ class Garfieldpp(CMakePackage):
 
     maintainers = ['mirguest']
     
-    variants('examples', default=False, description="Build garfield examples")
+    variant('examples', default=False, description="Build garfield examples")
 
     version('master', branch='master')
     version('4.0', sha256='82bc1f0395213bd30a7cd854426e6757d0b4155e99ffd4405355c9648fa5ada3')
