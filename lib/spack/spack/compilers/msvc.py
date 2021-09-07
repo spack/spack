@@ -31,8 +31,9 @@ def get_valid_fortran_pth(comp_ver):
     sort_fn = lambda fc_ver: version.parse(fc_ver)
     sort_fc_ver = sorted(list(avail_fc_version), key=sort_fn)
     for ver in sort_fc_ver:
-        if version.parse(cl_ver) <= version.parse(fortran_mapping[ver]):
-            return fc_path[ver]
+        if ver in fortran_mapping:
+            if version.parse(cl_ver) <= version.parse(fortran_mapping[ver]):
+                return fc_path[ver]
     return None
 
 class Msvc(Compiler):
