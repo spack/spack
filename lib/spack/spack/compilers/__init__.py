@@ -235,7 +235,7 @@ def find_compilers(path_hints=None):
     def remove_errors(item):
         value, _ = item
         return value
-    tty.warn(detected_versions)
+
     return make_compiler_list(
         map(remove_errors, filter(valid_version, detected_versions))
     )
@@ -605,7 +605,6 @@ def detect_version(detect_version_args):
         containing an explanation on why the version couldn't be computed.
     """
     def _default(fn_args):
-        tty.warn(fn_args)
         compiler_id = fn_args.id
         language = fn_args.language
         compiler_cls = class_for_compiler_name(compiler_id.compiler_name)

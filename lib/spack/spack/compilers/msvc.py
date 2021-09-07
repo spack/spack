@@ -4,15 +4,36 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from packaging import version
 import subprocess
 import sys
-from typing import List  # novm
+from typing import List, OrderedDict  # novm
 
 from spack.error import SpackError
 import spack.operating_systems.windows_os
 import spack.util.executable
 from spack.compiler import Compiler
 
+
+
+avail_fc_version = set()
+fc_path = {}
+
+fortran_mapping = {
+                '2021.3.0' : '19.29.30133',
+                '2021.2.1' : '19.28.29913',
+                '2021.2.0' : '19.28.29334',
+                '2021.1.0' : '19.28.29333',
+            }
+
+def get_valid_fortran_pth(comp_ver):
+    cl_ver = str(comp_ver).split('@')[1]
+    sort_fn = lambda fc_ver: version.parse(fc_ver)
+    sort_fc_ver = sorted(list(avail_fc_version), key=sort_fn)
+    for ver in sort_fc_ver:
+        if version.parse(cl_ver) <= version.parse(fortran_mapping[ver]):
+            return fc_path[ver]
+    return None
 
 class Msvc(Compiler):
     # Subclasses use possible names of C compiler
@@ -47,6 +68,8 @@ class Msvc(Compiler):
     # file based on compiler executable path.
 
     def __init__(self, *args, **kwargs):
+        new_pth = [pth if pth else get_valid_fortran_pth(args[0]) for pth in args[3]]
+        args[3][:] = new_pth
         super(Msvc, self).__init__(*args, **kwargs)
         if os.getenv("ONEAPI_ROOT"):
             # If this found, it sets all the vars
@@ -97,14 +120,13 @@ class Msvc(Compiler):
             # Should not this be an exception?
             print("Cannot pull msvc compiler information in Python 2.6 or below")
 
-    # fc_version only loads the ifx compiler into the first MSVC stanza;
-    # if there are other versions of Microsoft VS installed and detected, they
-    # will only have cl.exe as the C/C++ compiler
-
     @classmethod
     def fc_version(cls, fc):
         # We're using intel for the Fortran compilers, which exist if
         # ONEAPI_ROOT is a meaningful variable
+        fc_ver = cls.default_version(fc)
+        avail_fc_version.add(fc_ver)
+        fc_path[fc_ver] = fc
         if os.getenv("ONEAPI_ROOT"):
             try:
                 sps = spack.operating_systems.windows_os.WindowsOs.compiler_search_paths
@@ -112,9 +134,9 @@ class Msvc(Compiler):
                 raise SpackError("Windows compiler search paths not established")
             clp = spack.util.executable.which_string("cl", path=sps)
             ver = cls.default_version(clp)
-            return ver
         else:
-            return cls.default_version(fc)
+            ver = fc_ver
+        return ver
 
     @classmethod
     def f77_version(cls, f77):
