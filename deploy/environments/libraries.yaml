@@ -1,6 +1,35 @@
 spack:
   view: false
   concretization: separately
+  modules:
+    tcl:
+      all:
+        environment:
+          set:
+            '${PACKAGE}_ROOT': '${PREFIX}'
+      whitelist:
+        - boost
+        - gmsh
+        - hdf5+mpi%gcc
+        - highfive+mpi%gcc
+        - neuron+mpi~debug%intel
+        - omega-h
+        - petsc+int64+mpi
+        - py-cgal-pybind
+        - py-dask-mpi
+        - py-flake8
+        - py-mpi4py%gcc
+        - python-dev
+        - py-h5py+mpi%gcc
+        - py-numpy%gcc
+        - py-poisson-recon-pybind
+        - py-rtree
+        - py-scikit-learn
+        - py-tensorflow
+        - py-virtualenv
+      projections:
+        all: '{name}/{version}'
+        'omega-h+gmsh': '{name}/{version}-gmsh'
   packages:
     trilinos:
       version: [xsdk-0.4.0-rc1]

@@ -481,18 +481,23 @@ populate_mirror() {
 copy_configuration() {
     what="$1"
 
-    log "copying configuration"
+    log "copying local configuration"
     log "...into ${HOME}"
     rm -rf "${HOME}/.spack"
     mkdir -p "${HOME}/.spack"
-    cp configs/*.yaml "${HOME}/.spack"
 
     if [[ ${spec_parentage[${what}]+_} ]]; then
         parent="${spec_parentage[$what]}"
         pdir="$(last_install_dir ${parent})"
         log "...using configuration output of ${parent}"
-        cp "${pdir}/data/packages.yaml" "${HOME}/.spack"
-        cp "${pdir}/data/compilers.yaml" "${HOME}/.spack"
+        if [[ -f "${pdir}/data/packages.yaml" ]]; then
+            log "      copying packages.yaml"
+            cp "${pdir}/data/packages.yaml" "${HOME}/.spack"
+        fi
+        if [[ -f "${pdir}/data/compilers.yaml" ]]; then
+            log "      copying compilers.yaml"
+            cp "${pdir}/data/compilers.yaml" "${HOME}/.spack"
+        fi
     fi
 
     if [[ -d "configs/${what}" ]]; then
@@ -742,7 +747,7 @@ EOF
 
     log "refreshing modules"
     shas="$(cut -d" " -f1 ${HOME}/specs.txt)"
-    spack module tcl refresh -y --delete-tree --upstream-modules ${shas}
+    spack -D "${HOME}/build_environment" module tcl refresh -y --delete-tree --upstream-modules ${shas}
 
     . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
 
@@ -752,8 +757,8 @@ EOF
 
     if [[ "${export_packages[${what}]}" = "yes" ]]; then
         log "augmenting packages.yaml"
-        spack export --scope=user --module tcl --explicit --exclude 'allinea|neuron|hdf5|intel-parallel-studio|pgi|nvhpc' ${shas} > "${HOME}/packages.yaml"
-    else
+        spack -D "${HOME}/build_environment" export --scope=user --module tcl --explicit --exclude 'allinea|neuron|hdf5|intel-parallel-studio|pgi|nvhpc' ${shas} > "${HOME}/packages.yaml"
+    elif [[ -f "${HOME}/.spack/packages.yaml" ]]; then
         log "copying packages.yaml"
         cp "${HOME}/.spack/packages.yaml" "${HOME}"
     fi

@@ -1,6 +1,77 @@
 spack:
   view: false
   concretization: separately
+  modules:
+    tcl:
+      all:
+        environment:
+          set:
+            '${PACKAGE}_ROOT': '${PREFIX}'
+      whitelist:
+        - asciitoh5
+        - brainbuilder
+        - brayns
+        - brayns-brainatlas
+        - brayns-topologyviewer
+        - brion+python
+        - circuit-build
+        - circuit-analysis
+        - connectome-tools
+        - emsim
+        - functionalizer
+        - gene-expression-volume
+        - meshball
+        - model-neocortex
+        - nest
+        - neurodamus-core
+        - neurodamus-hippocampus
+        - neurodamus-neocortex
+        - neurodamus-thalamus
+        - neurodamus-mousify
+        - parquet-converters
+        - placement-algorithm
+        - py-region-grower
+        - psp-validation
+        - py-atlalign
+        - py-atlas-building-tools
+        - py-basalt
+        - py-bbp-analysis-framework
+        - py-bbp-workflow
+        - py-bglibpy
+        - py-bluepy
+        - py-bluepyefe
+        - py-bluepymm
+        - py-bluepyopt
+        - py-bluepyemodel
+        - py-bluepyparallel
+        - py-bluepysnap
+        - py-currentscape
+        - py-efel
+        - py-entity-management
+        - py-notebook
+        - py-minis-validation
+        - py-morph-tool
+        - py-morphio
+        - py-morphology-repair-workflow
+        - 'py-mvdtool%gcc'
+        - 'py-neurodamus+all_deps'
+        - py-simwriter
+        - py-sonata-network-reduction
+        - py-pytouchreader
+        - py-visual-cortex-analysis
+        - regiodesics
+        - reportinglib
+        - spatial-index
+        - spykfunc
+        - 'synapsetool%gcc'
+        - steps
+        - touchdetector
+        - ultraliser
+        - unit-test-translator
+      projections:
+        all: '{name}/{version}'
+        ^coreneuron+knl: '{name}-knl/{version}'
+        +common: '{name}/{version}-commonmods'
   packages:
     all:
       compiler: [gcc@9.3.0, intel]

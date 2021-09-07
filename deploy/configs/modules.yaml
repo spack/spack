@@ -3,65 +3,9 @@ modules:
   enable::
     - tcl
 
-  prefix_inspections::
-    bin:
-      - PATH
-    bin64:
-      - PATH
-    share/man:
-      - MANPATH
-    man:
-      - MANPATH
-    lib:
-      - LD_LIBRARY_PATH
-    lib64:
-      - LD_LIBRARY_PATH
-    lib/pkgconfig:
-      - PKG_CONFIG_PATH
-    lib64/pkgconfig:
-      - PKG_CONFIG_PATH
-    '':
-      - CMAKE_PREFIX_PATH
-
   tcl:
     verbose: True
     hash_length: 0
-    whitelist:
-      - arm-forge
-      - bison
-      - blender
-      - ccache
-      - cli-tools
-      - cmake
-      - cuda
-      - cudnn
-      - darshan-runtime
-      - darshan-util
-      - doxygen
-      - emacs
-      - environment-modules
-      - flex
-      - ffmpeg
-      - gdb
-      - git
-      - graphviz
-      - hpctoolkit
-      - hpcviewer
-      - hpe-mpi
-      - intel-mpi
-      - ispc
-      - julia
-      - llvm
-      - mvapich2
-      - ninja
-      - nvhpc
-      - pgi
-      - python
-      - snakemake
-      - stat
-      - totalview
-      - valgrind
-      - virtualgl
     blacklist:
       - '%gcc'
       - '%intel'
@@ -73,9 +17,6 @@ modules:
     all:
       autoload: 'all'
       load_only_generated: true
-      environment:
-        set:
-          '${PACKAGE}_ROOT': '${PREFIX}'
     gcc:
       environment:
         set:

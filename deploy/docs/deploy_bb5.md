@@ -25,6 +25,12 @@ The above environment definition provides the end-user software that is
 developed by BlueBrain.
 Version specifications are only required if the deployed version should be
 static and not change with updates to the package file.
+Please ensure that:
+
+* If a module is required, the list `spack:modules:tcl:whitelist` contains
+  the name of the package (no version information required normally)
+* The package name is listed under `spack:specs` with required variants or
+  special dependencies.
 
 If there are dependencies used in a broader scope/by several software
 packages, consider adding them to one of the following steps in the
@@ -36,15 +42,7 @@ deployment chain (all found in `spack/deploy/environments`):
   the dependency graph may be truncated by Spack (e.g. Spark, Python) ­
   mainly dependencies for building
 
-Following this, the software package may have to be whitelisted
-in the module definition. I.e., for the `application` modules, the software
-package should be listed without version information in:
-
-    $ nvim spack/deploy/configs/applications/modules.yaml
-
-Under a key `whitelist`.
-
-Changes to either file should be committed and result in a pull request on
+Changes to any file should be committed and result in a pull request on
 Github.
 Jenkins will build the additional software required, with all output
 available in a separate directory:

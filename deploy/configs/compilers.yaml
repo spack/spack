@@ -1,0 +1,27 @@
+compilers:
+- compiler:
+    spec: clang@3.4.2
+    paths:
+      cc: /usr/bin/clang
+      cxx: /usr/bin/clang++
+      f77:
+      fc:
+    flags: {}
+    operating_system: rhel7
+    target: x86_64
+    environment: {}
+    extra_rpaths: []
+    modules: []
+- compiler:
+    spec: gcc@4.8.5
+    paths:
+      cc: /usr/bin/gcc
+      cxx: /usr/bin/g++
+      f77: /usr/bin/gfortran
+      fc: /usr/bin/gfortran
+    flags: {}
+    operating_system: rhel7
+    target: x86_64
+    environment: {}
+    extra_rpaths: []
+    modules: []

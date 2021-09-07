@@ -3,9 +3,10 @@
 require 'set'
 
 environ = Set[]
-Dir.glob('configs/**/modules.yaml').each do |fn|
+Dir.glob('environments/*.yaml').each do |fn|
   File.foreach(fn) do |line|
-    if line =~ /^\s*whitelist:\s*$/../^\s*blacklist:\s*$/
+    # Find lines between the `whitelist:` key and the next pure hash key
+    if line =~ /^\s*whitelist:\s*$/ .. line =~ /^\s*[^-w ].*:\s*$/
       if /^\s*-\s*(?<quote>['"]?)(?<pkg>.*)\k<quote>$/ =~ line
         environ.add(pkg)
       end
@@ -14,19 +15,15 @@ Dir.glob('configs/**/modules.yaml').each do |fn|
 end
 
 dumped = false
-File.foreach('configs/applications/modules.yaml') do |line|
-    if line =~ /^\s*whitelist:\s*$/../^\s*blacklist:\s*$/
-      if /^(?<prefix>\s*-\s*)(?<quote>['"]?)(?:.*)\k<quote>$/ =~ line
-        unless dumped
-          environ.sort.each do |pkg|
-            puts "#{prefix}#{pkg}"
-          end
-          dumped = true
-        end
-      else
-        puts line
+File.foreach('configs/modules.yaml') do |line|
+  if /^(?<prefix>\s*)blacklist:\s$/ =~ line
+    unless dumped
+      puts "#{prefix}whitelist:"
+      environ.sort.each do |pkg|
+        puts "#{prefix}  - #{pkg}"
       end
-    else
-      puts line
+      dumped = true
     end
+  end
+  puts line
 end

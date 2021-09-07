@@ -1,6 +1,48 @@
 spack:
   view: false
   concretization: separately
+  modules:
+    tcl:
+      all:
+        environment:
+          set:
+            '${PACKAGE}_ROOT': '${PREFIX}'
+      whitelist:
+        - arm-forge
+        - bison
+        - blender
+        - ccache
+        - cli-tools
+        - cmake
+        - cuda
+        - cudnn
+        - darshan-runtime
+        - darshan-util
+        - doxygen
+        - emacs
+        - environment-modules
+        - flex
+        - ffmpeg
+        - gdb
+        - git
+        - graphviz
+        - hpctoolkit
+        - hpcviewer
+        - hpe-mpi
+        - intel-mpi
+        - ispc
+        - julia
+        - llvm
+        - mvapich2
+        - ninja
+        - nvhpc
+        - pgi
+        - python
+        - snakemake
+        - stat
+        - totalview
+        - valgrind
+        - virtualgl
   packages:
     all:
       compiler: [gcc@9.3.0]
