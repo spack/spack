@@ -40,7 +40,6 @@ import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web
-
 from spack.util.crypto import bit_length, prefix_bits
 
 # The well-known stage source subdirectory name.
