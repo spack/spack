@@ -140,7 +140,7 @@ class Cmake(Package):
     variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
-    variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
+    variant('openssl', default=True,  description="Enable openssl for curl bootstrapped by CMake when using +ownlibs")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
     # Does not compile and is not covered in upstream CI (yet).
@@ -172,8 +172,8 @@ class Cmake(Package):
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx',      when='+doc', type='build')
-    depends_on('openssl', when='+openssl')
-    depends_on('openssl@:1.0.99', when='@:3.6.9+openssl')
+    depends_on('openssl', when='+openssl+ownlibs')
+    depends_on('openssl@:1.0.99', when='@:3.6.9+openssl+ownlibs')
     depends_on('ncurses',        when='+ncurses')
 
     # Cannot build with Intel, should be fixed in 3.6.2
