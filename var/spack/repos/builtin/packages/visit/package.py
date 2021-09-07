@@ -282,7 +282,8 @@ class Visit(CMakePackage):
         return args
 
     # https://spack.readthedocs.io/en/latest/packaging_guide.html?highlight=executables#making-a-package-discoverable-with-spack-external-find
-    # Here we are only able to determine the latest version despite VisIt may have multiple versions
+    # Here we are only able to determine the latest version
+    # despite VisIt may have multiple versions
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
