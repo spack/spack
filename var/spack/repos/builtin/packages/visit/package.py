@@ -280,3 +280,11 @@ class Visit(CMakePackage):
             args.append('-DVISIT_MPI_COMPILER={0}'.format(spec['mpi'].mpicxx))
 
         return args
+
+    # https://spack.readthedocs.io/en/latest/packaging_guide.html?highlight=executables#making-a-package-discoverable-with-spack-external-find
+    # Here we are only able to determine the latest version despite VisIt may have multiple versions
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'xml2cmake\s*([\d\.]+)', output)
+        return match.group(1) if match else None
