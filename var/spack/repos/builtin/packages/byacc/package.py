@@ -13,10 +13,11 @@ class Byacc(AutotoolsPackage):
     documentation. Specifications that take advantage of undocumented
     features of AT&T Yacc will probably be rejected."""
 
-    homepage = "https://github.com/grandseiken/byacc"
-    git      = "https://github.com/grandseiken/byacc.git"
+    homepage = "https://invisible-island.net/byacc/byacc.html"
+    url      = "https://invisible-island.net/datafiles/release/byacc-20210808.tar.gz"
 
-    version('master', branch='master')
+    # Check FTP directory ftp://ftp.invisible-island.net/byacc/ to find the latest version
+    version('20210808', sha256='cf13bfb6440fb692cf81d20019960303c7c715a1194a3dfd32285e3ed85faa2a')
 
     provides('yacc')
 
