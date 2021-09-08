@@ -247,7 +247,7 @@ export PATH=""
 for dir in "${env_path[@]}"; do
     addpath=true
     for env_dir in "${spack_env_dirs[@]}"; do
-        if [[ "$dir" == "$env_dir" ]]; then
+        if [[ "${dir%%/}" == "$env_dir" ]]; then
             addpath=false
             break
         fi
@@ -616,6 +616,9 @@ if [[ $SPACK_TEST_COMMAND == dump-args ]]; then
     IFS="
 " && echo "${full_command[*]}"
     exit
+elif [[ $SPACK_TEST_COMMAND =~ dump-env-* ]]; then
+    var=${SPACK_TEST_COMMAND#dump-env-}
+    echo "$0: $var: ${!var}"
 elif [[ -n $SPACK_TEST_COMMAND ]]; then
     die "ERROR: Unknown test command"
 fi

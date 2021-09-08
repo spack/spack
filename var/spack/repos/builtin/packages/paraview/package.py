@@ -285,7 +285,9 @@ class Paraview(CMakePackage, CudaPackage):
         if spec.satisfies('@5.10:'):
             cmake_args.extend([
                 '-DVTK_MODULE_USE_EXTERNAL_ParaView_vtkcatalyst:BOOL=OFF',
-                '-DVTK_MODULE_USE_EXTERNAL_VTK_ioss:BOOL=OFF'
+                '-DVTK_MODULE_USE_EXTERNAL_VTK_ioss:BOOL=OFF',
+                '-DVTK_MODULE_USE_EXTERNAL_VTK_exprtk:BOOL=OFF',
+                '-DVTK_MODULE_USE_EXTERNAL_VTK_fmt:BOOL=OFF'
             ])
 
         if spec.satisfies('@:5.7') and spec['cmake'].satisfies('@3.17:'):
