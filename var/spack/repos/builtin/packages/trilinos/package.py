@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 from spack import *
@@ -83,6 +84,7 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('superlu-dist', default=False, description='Compile with SuperluDist solvers')
     variant('superlu',      default=False, description='Compile with SuperLU solvers')
     variant('strumpack',    default=False, description='Compile with STRUMPACK solvers')
+    variant('x11',          default=False, description='Compile with X11 when +exodus')
     variant('zlib',         default=False, description='Compile with zlib')
 
     # Package options (alphabet order)
@@ -319,7 +321,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Variant requirements from packages
     depends_on('metis', when='+zoltan')
-    depends_on('libx11', when='+exodus')
+    depends_on('libx11', when='+x11')
     depends_on('matio', when='+exodus')
     depends_on('netcdf-c', when="+exodus")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+exodus+mpi@12.12.1:")
@@ -684,10 +686,12 @@ class Trilinos(CMakePackage, CudaPackage):
         if ('+fortran +mpi' in spec
                 and spec.compiler.name in ['gcc', 'clang', 'apple-clang']):
             mpifc = Executable(spec['mpi'].mpifc)
-            libgfortran = mpifc('--print-file-name', 'libgfortran.a', output=str)
+            libext = 'dylib' if sys.platform == 'darwin' else 'so'
+            libgfortran_dir = os.path.dirname(
+                mpifc('--print-file-name', 'libgfortran.%s' % libext, output=str))
             options.append(define(
                 'Trilinos_EXTRA_LINK_FLAGS',
-                '-L%s/ -lgfortran' % (libgfortran),
+                '-L%s/ -lgfortran' % (libgfortran_dir),
             ))
 
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
