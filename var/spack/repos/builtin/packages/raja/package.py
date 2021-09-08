@@ -102,7 +102,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
                 entries.append(cmake_cache_string(
                     "CUDA_ARCH", 'sm_{0}'.format(cuda_arch[0])))
                 entries.append(cmake_cache_string(
-                    "CMAKE_CUDA_ARCHITECTURES={0}".format(cuda_arch[0])))
+                    "CMAKE_CUDA_ARCHITECTURES", '{0}'.format(cuda_arch[0])))
         else:
             entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
