@@ -143,7 +143,7 @@ class Cmake(Package):
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
-    variant('ncurses', default=True, description='Enables the build of the ncurses gui')
+    variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
     # Does not compile and is not covered in upstream CI (yet).
     conflicts('%gcc platform=darwin',
