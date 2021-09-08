@@ -481,43 +481,20 @@ spack package at this time.''',
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(['test'])
+        self.cache_extra_test_sources(join_path('test', 'mpi'))
 
-    def run_finalized_test(self, test_dir, exe):
-        """Run stand alone test: finalized"""
+    def run_test(self, test_dir, exe):
+        """Run stand alone tests"""
 
-        if not os.path.isfile(join_path(test_dir, exe)):
-            print('Skipping finalized test')
+        exe_source = join_path(test_dir, '{0}.c'.format(exe))
+
+        if not os.path.isfile(exe_source):
+            print('Skipping {0} test'.format(exe))
             return
 
         self.run_test(self.prefix.bin.mpicc,
-                      options=['-Wall', '-g',
-                               join_path(test_dir, '{0}.c'.format(exe)),
-                               '-o', exe],
+                      options=[exe_source, '-Wall', '-g', '-o', exe],
                       purpose='test: generate {0} file'.format(exe),
-                      work_dir=test_dir)
-
-        self.run_test(exe,
-                      purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)
-
-    def run_sendrecv_test(self):
-        """Run stand alone test: sendrecv"""
-
-        test_dir = join_path(self.test_suite.current_test_cache_dir,
-                             'test', 'mpi')
-
-        if not os.path.exists(test_dir):
-            print('Skipping sendrecv test')
-            return
-
-        exe = 'sendrecv'
-
-        self.run_test(self.prefix.bin.mpicc,
-                      options=['-Wall', '-g',
-                               '{0}'.format(join_path(test_dir, 'basic', 'sendrecv.c')),
-                               '-o', exe],
-                      purpose='test: generate {0}.o file'.format(exe),
                       work_dir=test_dir)
 
         self.run_test(exe,
@@ -526,5 +503,6 @@ spack package at this time.''',
 
     def test(self):
         directory = join_path(self.test_suite.current_test_cache_dir,
-                             'test', 'mpi')
-        self.run_finalized_test(join_path(directory, 'init'), 'finalized')
+                              'test', 'mpi')
+        self.run_test(join_path(directory, 'init'), 'finalized')
+        self.run_test(join_path(directory, 'basic'), 'sendrecv')
