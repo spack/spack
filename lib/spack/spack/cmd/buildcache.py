@@ -108,7 +108,23 @@ def setup_parser(subparser):
     arguments.add_common_arguments(install, ['specs'])
     install.set_defaults(func=installtarball)
 
-    listcache = subparsers.add_parser('list', help=listspecs.__doc__)
+    findcache = subparsers.add_parser('find', help=find_from_cache.__doc__)
+    arguments.add_common_arguments(findcache, ['long', 'very_long'])
+    findcache.add_argument('-v', '--variants',
+                           action='store_true',
+                           dest='variants',
+                           help='show variants in output (can be long)')
+    findcache.add_argument('-a', '--allarch', action='store_true',
+                           help="list specs for all available architectures" +
+                                 " instead of default platform and OS")
+    findcache.add_argument('--json', action='store_true',
+                           help='output specs from cache as json')
+    arguments.add_common_arguments(findcache, ['specs'])
+    findcache.set_defaults(func=find_from_cache)
+
+    # The 'list' subcommand is deprecated in favor of 'find', but we are not
+    # removing 'list' just yet.
+    listcache = subparsers.add_parser('list', help=find_from_cache.__doc__)
     arguments.add_common_arguments(listcache, ['long', 'very_long'])
     listcache.add_argument('-v', '--variants',
                            action='store_true',
@@ -117,8 +133,10 @@ def setup_parser(subparser):
     listcache.add_argument('-a', '--allarch', action='store_true',
                            help="list specs for all available architectures" +
                                  " instead of default platform and OS")
+    listcache.add_argument('--json', action='store_true',
+                           help='output specs from cache as json')
     arguments.add_common_arguments(listcache, ['specs'])
-    listcache.set_defaults(func=listspecs)
+    listcache.set_defaults(func=find_from_cache)
 
     dlkeys = subparsers.add_parser('keys', help=getkeys.__doc__)
     dlkeys.add_argument(
@@ -558,7 +576,7 @@ def install_tarball(spec, args):
                     spec.format())
 
 
-def listspecs(args):
+def find_from_cache(args):
     """list binary packages available from mirrors"""
     specs = bindist.update_cache_and_get_specs()
     if not args.allarch:
@@ -574,7 +592,10 @@ def listspecs(args):
         if not builds and not args.allarch:
             tty.msg("You can query all available architectures with:",
                     "spack buildcache list --allarch")
-    display_specs(specs, args, all_headers=True)
+    if args.json:
+        display_specs_as_json(specs, deps=False)
+    else:
+        display_specs(specs, args, all_headers=True)
 
 
 def getkeys(args):
