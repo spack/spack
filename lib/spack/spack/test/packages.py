@@ -281,25 +281,28 @@ def test_git_url_top_level_url_versions(mock_packages, config):
 
     pkg = spack.repo.get('git-url-top-level')
 
+    # leading 62 zeros of sha256 hash
+    leading_zeros = '0' * 62
+
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.0')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://example.com/some/tarball-2.0.tar.gz'
-    assert fetcher.digest == 'abc20'
+    assert fetcher.digest == leading_zeros + '20'
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.1')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://example.com/some/tarball-2.1.tar.gz'
-    assert fetcher.digest == 'abc21'
+    assert fetcher.digest == leading_zeros + '21'
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.2')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://www.example.com/foo2.2.tar.gz'
-    assert fetcher.digest == 'abc22'
+    assert fetcher.digest == leading_zeros + '22'
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.3')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://www.example.com/foo2.3.tar.gz'
-    assert fetcher.digest == 'abc23'
+    assert fetcher.digest == leading_zeros + '23'
 
 
 def test_git_url_top_level_git_versions(mock_packages, config):
@@ -409,15 +412,15 @@ def test_fetch_options(mock_packages, config):
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == 'abc10'
+    assert fetcher.digest == '00000000000000000000000000000010'
     assert fetcher.extra_options == {'timeout': 42, 'cookie': 'foobar'}
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '1.1')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == 'abc11'
+    assert fetcher.digest == '00000000000000000000000000000011'
     assert fetcher.extra_options == {'timeout': 65}
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '1.2')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == 'abc12'
+    assert fetcher.digest == '00000000000000000000000000000012'
     assert fetcher.extra_options == {'cookie': 'baz'}

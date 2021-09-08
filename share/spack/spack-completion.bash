@@ -1798,7 +1798,7 @@ _spack_url_summary() {
 }
 
 _spack_url_stats() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help --show-issues"
 }
 
 _spack_verify() {
