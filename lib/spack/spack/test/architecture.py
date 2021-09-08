@@ -14,9 +14,7 @@ import pytest
 
 import spack.architecture
 import spack.concretize
-from spack.platforms.cray import Cray
-from spack.platforms.darwin import Darwin
-from spack.platforms.linux import Linux
+import spack.platforms
 from spack.spec import Spec
 
 
@@ -42,11 +40,11 @@ def test_dict_functions_for_architecture():
 def test_platform():
     output_platform_class = spack.architecture.real_platform()
     if os.path.exists('/opt/cray/pe'):
-        my_platform_class = Cray()
+        my_platform_class = spack.platforms.Cray()
     elif 'Linux' in py_platform.system():
-        my_platform_class = Linux()
+        my_platform_class = spack.platforms.Linux()
     elif 'Darwin' in py_platform.system():
-        my_platform_class = Darwin()
+        my_platform_class = spack.platforms.Darwin()
 
     assert str(output_platform_class) == str(my_platform_class)
 

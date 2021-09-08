@@ -15,7 +15,7 @@ import spack.architecture
 import spack.compilers
 import spack.concretize
 import spack.error
-import spack.platforms.test
+import spack.platforms
 import spack.repo
 from spack.concretize import find_spec
 from spack.spec import Spec
@@ -101,8 +101,8 @@ def current_host(request, monkeypatch):
     # this function is memoized, so clear its state for testing
     spack.architecture.get_platform.cache.clear()
 
-    monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
-    monkeypatch.setattr(spack.platforms.test.Test, 'front_end', cpu)
+    monkeypatch.setattr(spack.platforms.Test, 'default', cpu)
+    monkeypatch.setattr(spack.platforms.Test, 'front_end', cpu)
     if not is_preference:
         monkeypatch.setattr(archspec.cpu, 'host', lambda: target)
         yield target
