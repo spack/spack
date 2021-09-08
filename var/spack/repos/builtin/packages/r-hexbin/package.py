@@ -13,7 +13,7 @@ class RHexbin(RPackage):
     Binning and plotting functions for hexagonal bins. Now uses and relies
     on grid graphics and formal (S4) classes and methods."""
 
-    homepage = "http://github.com/edzer/hexbin"
+    homepage = "https://github.com/edzer/hexbin"
     url      = "https://cloud.r-project.org/src/contrib/hexbin_1.27.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/hexbin"
 

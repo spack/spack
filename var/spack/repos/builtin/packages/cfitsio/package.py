@@ -11,8 +11,8 @@ class Cfitsio(AutotoolsPackage):
     data files in FITS (Flexible Image Transport System) data format.
     """
 
-    homepage = 'http://heasarc.gsfc.nasa.gov/fitsio/'
-    url      = 'http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-3.49.tar.gz'
+    homepage = 'https://heasarc.gsfc.nasa.gov/fitsio/'
+    url      = 'https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-3.49.tar.gz'
 
     version('3.49', sha256='5b65a20d5c53494ec8f638267fca4a629836b7ac8dd0ef0266834eab270ed4b3')
     version('3.48', sha256='91b48ffef544eb8ea3908543052331072c99bf09ceb139cb3c6977fc3e47aac1')

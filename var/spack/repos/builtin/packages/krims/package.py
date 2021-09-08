@@ -9,7 +9,7 @@ from spack import *
 class Krims(CMakePackage):
     """The bucket of Krimskrams every C or C++ project needs"""
 
-    homepage = "http://lazyten.org/krims"
+    homepage = "https://lazyten.org/krims"
     url      = "https://github.com/lazyten/krims/archive/v0.2.1.tar.gz"
     git      = "https://github.com/lazyten/krims.git"
 

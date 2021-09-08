@@ -11,7 +11,7 @@ class Jchronoss(CMakePackage):
     """ JCHRONOSS aims to help HPC application testing process
      to scale as much as the application does. """
 
-    homepage = "http://jchronoss.hpcframework.com"
+    homepage = "https://jchronoss.hpcframework.com"
     url      = "http://fs.paratools.com/mpc/contrib/apps/jchronoss/JCHRONOSS-1.2.tar.gz"
 
     version('1.2',   sha256='52a565a28c0b83b433065060863d29f2b3e4b05f4f26b7a5893a21a2c66d6eba')

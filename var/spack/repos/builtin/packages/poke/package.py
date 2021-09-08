@@ -6,7 +6,7 @@
 
 class Poke(AutotoolsPackage, GNUMirrorPackage):
     """"The extensible editor for structured binary data"""
-    homepage = "http://www.jemarch.net/poke.html"
+    homepage = "https://www.jemarch.net/poke.html"
     gnu_mirror_path = 'poke/poke-1.0.tar.gz'
 
     maintainers = ['ChristianTackeGSI']

@@ -14,7 +14,7 @@ from spack.pkg.builtin.openfoam import add_extra_files
 class OfPrecice(Package):
     """preCICE adapter for OpenFOAM"""
 
-    homepage = 'https://www.precice.org'
+    homepage = 'https://precice.org/'
     git      = 'https://github.com/precice/openfoam-adapter.git'
 
     # Currently develop only

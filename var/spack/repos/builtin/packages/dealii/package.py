@@ -169,6 +169,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
     depends_on('ginkgo',           when='@9.1:+ginkgo')
+    depends_on('ginkgo@1.4.0:',    when='@9.4:+ginkgo')
     depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
     # TODO: next line fixes concretization with petsc

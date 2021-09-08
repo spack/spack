@@ -37,6 +37,7 @@ import spack.compilers
 import spack.config
 import spack.dependency
 import spack.directives
+import spack.environment as ev
 import spack.error
 import spack.package
 import spack.package_prefs
@@ -50,6 +51,26 @@ if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm
 else:
     from collections import Sequence
+
+
+#: Enumeration like object to mark version provenance
+version_provenance = collections.namedtuple(  # type: ignore
+    'VersionProvenance', ['external', 'packages_yaml', 'package_py', 'spec']
+)(spec=0, external=1, packages_yaml=2, package_py=3)
+
+#: String representation of version origins, to emit legible
+# facts for the ASP solver
+version_origin_str = {
+    0: 'spec',
+    1: 'external',
+    2: 'packages_yaml',
+    3: 'package_py'
+}
+
+#: Named tuple to contain information on declared versions
+DeclaredVersion = collections.namedtuple(
+    'DeclaredVersion', ['version', 'idx', 'origin']
+)
 
 
 def issequence(obj):
@@ -267,14 +288,8 @@ class PyclingoDriver(object):
         """
         global clingo
         if not clingo:
-            # TODO: Find a way to vendor the concrete spec
-            # in a cross-platform way
             with spack.bootstrap.ensure_bootstrap_configuration():
-                clingo_spec = spack.bootstrap.clingo_root_spec()
-                clingo_spec._old_concretize()
-                spack.bootstrap.make_module_available(
-                    'clingo', spec=clingo_spec, install=True
-                )
+                spack.bootstrap.ensure_clingo_importable_or_raise()
                 import clingo
         self.out = asp or llnl.util.lang.Devnull()
         self.cores = cores
@@ -422,10 +437,11 @@ class SpackSolverSetup(object):
 
     def __init__(self):
         self.gen = None  # set by setup()
+
+        self.declared_versions = {}
         self.possible_versions = {}
-        self.versions_in_package_py = {}
         self.deprecated_versions = {}
-        self.versions_from_externals = {}
+
         self.possible_virtuals = None
         self.possible_compilers = []
         self.variant_values_from_specs = set()
@@ -446,54 +462,23 @@ class SpackSolverSetup(object):
         This uses self.possible_versions so that we include any versions
         that arise from a spec.
         """
+        def key_fn(version):
+            # Origins are sorted by order of importance:
+            # 1. Spec from command line
+            # 2. Externals
+            # 3. Package preferences
+            # 4. Directives in package.py
+            return version.origin, version.idx
+
         pkg = packagize(pkg)
+        declared_versions = self.declared_versions[pkg.name]
+        most_to_least_preferred = sorted(declared_versions, key=key_fn)
 
-        config = spack.config.get("packages")
-        version_prefs = config.get(pkg.name, {}).get("version", {})
-        priority = dict((v, i) for i, v in enumerate(version_prefs))
-
-        # The keys below show the order of precedence of factors used
-        # to select a version when concretizing.  The item with
-        # the "largest" key will be selected.
-        #
-        # NOTE: When COMPARING VERSIONS, the '@develop' version is always
-        #       larger than other versions.  BUT when CONCRETIZING,
-        #       the largest NON-develop version is selected by default.
-        keyfn = lambda v: (
-            # ------- Special direction from the user
-            # Respect order listed in packages.yaml
-            -priority.get(v, 0),
-
-            # The preferred=True flag (packages or packages.yaml or both?)
-            pkg.versions.get(v, {}).get('preferred', False),
-
-            # ------- Regular case: use latest non-develop version by default.
-            # Avoid @develop version, which would otherwise be the "largest"
-            # in straight version comparisons
-            not v.isdevelop(),
-
-            # Compare the version itself
-            # This includes the logic:
-            #    a) develop > everything (disabled by "not v.isdevelop() above)
-            #    b) numeric > non-numeric
-            #    c) Numeric or string comparison
-            v)
-
-        # Compute which versions appear only in packages.yaml
-        from_externals = self.versions_from_externals[pkg.name]
-        from_package_py = self.versions_in_package_py[pkg.name]
-        only_from_externals = from_externals - from_package_py
-
-        # These versions don't need a default weight, as they are
-        # already weighted in a more favorable way when accounting
-        # for externals. Assigning them a default weight would be
-        # equivalent to state that they are also declared in
-        # the package.py file
-        considered = self.possible_versions[pkg.name] - only_from_externals
-        most_to_least_preferred = sorted(considered, key=keyfn, reverse=True)
-
-        for i, v in enumerate(most_to_least_preferred):
-            self.gen.fact(fn.version_declared(pkg.name, v, i))
+        for weight, declared_version in enumerate(most_to_least_preferred):
+            self.gen.fact(fn.version_declared(
+                pkg.name, declared_version.version, weight,
+                version_origin_str[declared_version.origin]
+            ))
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
@@ -806,20 +791,22 @@ class SpackSolverSetup(object):
             externals = data.get('externals', [])
             external_specs = [spack.spec.Spec(x['spec']) for x in externals]
 
-            # Compute versions with appropriate weights. This accounts for the
-            # fact that we should prefer more recent versions, but specs in
-            # packages.yaml may not be ordered in that sense.
+            # Order the external versions to prefer more recent versions
+            # even if specs in packages.yaml are not ordered that way
             external_versions = [
-                (x.version, local_idx)
-                for local_idx, x in enumerate(external_specs)
+                (x.version, external_id)
+                for external_id, x in enumerate(external_specs)
             ]
             external_versions = [
-                (v, -(w + 1), local_idx)
-                for w, (v, local_idx) in enumerate(sorted(external_versions))
+                (v, idx, external_id)
+                for idx, (v, external_id) in
+                enumerate(sorted(external_versions, reverse=True))
             ]
-            for version, weight, id in external_versions:
-                self.gen.fact(fn.external_version_declared(
-                    pkg_name, str(version), weight, id
+            for version, idx, external_id in external_versions:
+                self.declared_versions[pkg_name].append(DeclaredVersion(
+                    version=version,
+                    idx=idx,
+                    origin=version_provenance.external
                 ))
 
             # Declare external conditions with a local index into packages.yaml
@@ -828,7 +815,6 @@ class SpackSolverSetup(object):
                 self.gen.fact(
                     fn.possible_external(condition_id, pkg_name, local_idx)
                 )
-                self.versions_from_externals[spec.name].add(spec.version)
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
@@ -876,17 +862,6 @@ class SpackSolverSetup(object):
         self.gen.fact(fn.package_target_weight(
             str(preferred.architecture.target), pkg_name, -30
         ))
-
-    def preferred_versions(self, pkg_name):
-        packages_yaml = spack.config.get('packages')
-        versions = packages_yaml.get(pkg_name, {}).get('version', [])
-        if not versions:
-            return
-
-        for idx, version in enumerate(reversed(versions)):
-            self.gen.fact(
-                fn.preferred_version_declared(pkg_name, version, -(idx + 1))
-            )
 
     def flag_defaults(self):
         self.gen.h2("Compiler flag defaults")
@@ -1037,23 +1012,56 @@ class SpackSolverSetup(object):
 
     def build_version_dict(self, possible_pkgs, specs):
         """Declare any versions in specs not declared in packages."""
+        self.declared_versions = collections.defaultdict(list)
         self.possible_versions = collections.defaultdict(set)
-        self.versions_in_package_py = collections.defaultdict(set)
-        self.versions_from_externals = collections.defaultdict(set)
         self.deprecated_versions = collections.defaultdict(set)
 
+        packages_yaml = spack.config.get("packages")
+        packages_yaml = _normalize_packages_yaml(packages_yaml)
         for pkg_name in possible_pkgs:
             pkg = spack.repo.get(pkg_name)
-            for v, version_info in pkg.versions.items():
-                self.versions_in_package_py[pkg_name].add(v)
+
+            # All the versions from the corresponding package.py file. Since concepts
+            # like being a "develop" version or being preferred exist only at a
+            # package.py level, sort them in this partial list here
+            def key_fn(item):
+                version, info = item
+                # When COMPARING VERSIONS, the '@develop' version is always
+                # larger than other versions. BUT when CONCRETIZING, the largest
+                # NON-develop version is selected by default.
+                return info.get('preferred', False), not version.isdevelop(), version
+
+            for idx, item in enumerate(sorted(
+                    pkg.versions.items(), key=key_fn, reverse=True
+            )):
+                v, version_info = item
                 self.possible_versions[pkg_name].add(v)
+                self.declared_versions[pkg_name].append(DeclaredVersion(
+                    version=v, idx=idx, origin=version_provenance.package_py
+                ))
                 deprecated = version_info.get('deprecated', False)
                 if deprecated:
                     self.deprecated_versions[pkg_name].add(v)
 
+            # All the preferred version from packages.yaml, versions in external
+            # specs will be computed later
+            version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
+            for idx, v in enumerate(version_preferences):
+                self.declared_versions[pkg_name].append(DeclaredVersion(
+                    version=v, idx=idx, origin=version_provenance.packages_yaml
+                ))
+
         for spec in specs:
             for dep in spec.traverse():
                 if dep.versions.concrete:
+                    # Concrete versions used in abstract specs from cli. They
+                    # all have idx equal to 0, which is the best possible. In
+                    # any case they will be used due to being set from the cli.
+                    self.declared_versions[dep.name].append(DeclaredVersion(
+                        version=dep.version,
+                        idx=0,
+                        origin=version_provenance.spec
+                    ))
                     self.possible_versions[dep.name].add(dep.version)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
@@ -1349,7 +1357,6 @@ class SpackSolverSetup(object):
 
         Arguments:
             specs (list): list of Specs to solve
-
         """
         self._condition_id_counter = itertools.count()
 
@@ -1399,10 +1406,9 @@ class SpackSolverSetup(object):
             self.gen.h2('Package preferences: %s' % pkg)
             self.preferred_variants(pkg)
             self.preferred_targets(pkg)
-            self.preferred_versions(pkg)
 
         # Inject dev_path from environment
-        env = spack.environment.get_env(None, None)
+        env = ev.active_environment()
         if env:
             for spec in sorted(specs):
                 for dep in spec.traverse():
@@ -1631,9 +1637,8 @@ class SpecBuilder(object):
         for s in self._specs.values():
             spack.spec.Spec.ensure_external_path_if_external(s)
 
-        env = spack.environment.get_env(None, None)
         for s in self._specs.values():
-            _develop_specs_from_env(s, env)
+            _develop_specs_from_env(s, ev.active_environment())
 
         for s in self._specs.values():
             s._mark_concrete()

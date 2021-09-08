@@ -18,7 +18,7 @@ class CommonsLang(Package):
     dedicated to help with building methods, such as hashCode, toString and
     equals."""
 
-    homepage = "http://commons.apache.org/proper/commons-lang/"
+    homepage = "https://commons.apache.org/proper/commons-lang/"
     url      = "https://archive.apache.org/dist/commons/lang/binaries/commons-lang-2.6-bin.tar.gz"
 
     version('2.6', sha256='ff6a244bb71a9a1c859e81cb744d0ce698c20e04f13a7ef7dbffb99c8122752c')

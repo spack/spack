@@ -16,7 +16,7 @@ class Occa(Package):
        using run-time compilation for device kernels.
     """
 
-    homepage = "http://libocca.org"
+    homepage = "https://libocca.org"
     git      = 'https://github.com/libocca/occa.git'
 
     maintainers = ['v-dobrev', 'dmed256']

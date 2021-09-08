@@ -22,6 +22,7 @@ class Rdc(CMakePackage):
         url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('4.3.1', sha256='aae028aae61eb0f4dd30708c4bbb8c5c57a426f10dae9b967b81500fb106d981')
     version('4.3.0', sha256='d3dda2022ec1f8c7de4de64696009125a903fcb2f82c38b3ac07e4ab35bf9190')
     version('4.2.0', sha256='ea2c7c07d55f607968f58d7e30326cae5db5b48c1ba354caa5727394d5bad258')
     version('4.1.0', sha256='dc81ee9727c8913c05dcf20a00669ce611339ef6d6db8af34e57f42bcfa804ac')
@@ -35,7 +36,8 @@ class Rdc(CMakePackage):
     depends_on('protobuf', type=('build', 'link'))
     depends_on('libcap', type=('build', 'link'))
 
-    for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0']:
+    for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
+                '4.3.0', '4.3.1']:
         depends_on('rocm-smi-lib@' + ver, type=('build', 'link'), when='@' + ver)
 
     def patch(self):

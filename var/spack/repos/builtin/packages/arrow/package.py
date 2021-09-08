@@ -11,7 +11,7 @@ class Arrow(CMakePackage, CudaPackage):
     This package contains the C++ bindings.
     """
 
-    homepage = "http://arrow.apache.org"
+    homepage = "https://arrow.apache.org"
     url      = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
 
     version('4.0.1',  sha256='79d3e807df4a179cfab1e7a1ab5f79d95f7b72ac2c33aba030febd125d77eb3b')

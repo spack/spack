@@ -9,7 +9,7 @@ class Eigen(CMakePackage):
     vectors, numerical solvers, and related algorithms.
     """
 
-    homepage = 'http://eigen.tuxfamily.org/'
+    homepage = 'https://eigen.tuxfamily.org/'
     url = 'https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz'
     maintainers = ['HaoZeke']
 

@@ -33,7 +33,7 @@ class Conduit(CMakePackage):
     scientific data in C++, C, Fortran, and Python. It is used for data
     coupling between packages in-core, serialization, and I/O tasks."""
 
-    homepage = "http://software.llnl.gov/conduit"
+    homepage = "https://software.llnl.gov/conduit"
     url      = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
     git      = "https://github.com/LLNL/conduit.git"
 

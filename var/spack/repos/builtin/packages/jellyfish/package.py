@@ -10,7 +10,7 @@ class Jellyfish(AutotoolsPackage):
     """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in
        DNA."""
 
-    homepage = "http://www.cbcb.umd.edu/software/jellyfish/"
+    homepage = "https://www.cbcb.umd.edu/software/jellyfish/"
     url      = "https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz"
     list_url = "http://www.cbcb.umd.edu/software/jellyfish/"
 

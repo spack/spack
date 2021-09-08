@@ -10,7 +10,7 @@ class Libdaemon(AutotoolsPackage):
     """libdaemon is a lightweight C library which eases the writing of
     UNIX daemons."""
 
-    homepage = "http://0pointer.de/lennart/projects/libdaemon/"
+    homepage = "https://0pointer.de/lennart/projects/libdaemon/"
     url      = "http://0pointer.de/lennart/projects/libdaemon/libdaemon-0.14.tar.gz"
 
     version('0.14', sha256='fd23eb5f6f986dcc7e708307355ba3289abe03cc381fc47a80bca4a50aa6b834')

@@ -13,7 +13,7 @@ class Precice(CMakePackage):
     capable of simulating a subpart of the complete physics involved in
     a simulation."""
 
-    homepage = 'https://www.precice.org'
+    homepage = 'https://precice.org/'
     git      = 'https://github.com/precice/precice.git'
     url      = 'https://github.com/precice/precice/archive/v1.2.0.tar.gz'
     maintainers = ['fsimonis', 'MakisH']

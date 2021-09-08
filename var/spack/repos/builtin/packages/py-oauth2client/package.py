@@ -13,7 +13,7 @@ class PyOauth2client(PythonPackage):
     the libraries and the core team is turning down support. We recommend you
     use google-auth and oauthlib."""
 
-    homepage = "http://github.com/google/oauth2client/"
+    homepage = "https://github.com/google/oauth2client/"
     pypi = "oauth2client/oauth2client-4.1.3.tar.gz"
 
     version('4.1.3', sha256='d486741e451287f69568a4d26d70d9acd73a2bbfa275746c535b4209891cccc6')

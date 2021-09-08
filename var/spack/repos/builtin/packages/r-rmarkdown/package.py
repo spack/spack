@@ -12,7 +12,7 @@ class RRmarkdown(RPackage):
 
     Convert R Markdown documents into a variety of formats."""
 
-    homepage = "http://rmarkdown.rstudio.com/"
+    homepage = "https://rmarkdown.rstudio.com/"
     cran     = "rmarkdown"
 
     version('2.9', sha256='6ce5af8b9a7c282619f74d3999d27ec4de12d3f93cde8fd12cc4c19f02ea8668')

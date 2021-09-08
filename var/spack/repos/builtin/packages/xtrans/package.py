@@ -12,7 +12,7 @@ class Xtrans(AutotoolsPackage, XorgPackage):
     single place to add new transport types.  It is used by the X server,
     libX11, libICE, the X font server, and related components."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libxtrans"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libxtrans"
     xorg_mirror_path = "lib/xtrans-1.3.5.tar.gz"
 
     version('1.3.5', sha256='b7a577c1b6c75030145e53b4793db9c88f9359ac49e7d771d4385d21b3e5945d')

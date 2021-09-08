@@ -12,7 +12,7 @@ class RHaven(RPackage):
     Import foreign statistical formats into R via the embedded 'ReadStat' C
     library, <https://github.com/WizardMac/ReadStat>."""
 
-    homepage = "http://haven.tidyverse.org/"
+    homepage = "https://haven.tidyverse.org/"
     url      = "https://cloud.r-project.org/src/contrib/haven_1.1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/haven"
 

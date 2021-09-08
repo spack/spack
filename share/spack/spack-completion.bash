@@ -386,12 +386,21 @@ _spack_audit() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="configs packages list"
+        SPACK_COMPREPLY="configs packages-https packages list"
     fi
 }
 
 _spack_audit_configs() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_audit_packages_https() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --all"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_audit_packages() {
@@ -421,7 +430,7 @@ _spack_bootstrap() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="enable disable reset root"
+        SPACK_COMPREPLY="enable disable reset root list trust untrust"
     fi
 }
 
@@ -446,6 +455,28 @@ _spack_bootstrap_root() {
     fi
 }
 
+_spack_bootstrap_list() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_bootstrap_trust() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --scope"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_bootstrap_untrust() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --scope"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
 _spack_build_env() {
     if $list_options
     then
@@ -460,7 +491,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-yaml copy update-index"
+        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-yaml copy sync update-index"
     fi
 }
 
@@ -476,7 +507,7 @@ _spack_buildcache_create() {
 _spack_buildcache_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch"
+        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch --sha256"
     else
         _all_packages
     fi
@@ -522,6 +553,10 @@ _spack_buildcache_save_yaml() {
 
 _spack_buildcache_copy() {
     SPACK_COMPREPLY="-h --help --base-dir --spec-yaml --destination-url"
+}
+
+_spack_buildcache_sync() {
+    SPACK_COMPREPLY="-h --help --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
 }
 
 _spack_buildcache_update_index() {

@@ -12,7 +12,7 @@ class RTrimcluster(RPackage):
     Trimmed k-means clustering. The method is described in Cuesta-Albertos et
     al. (1997) <doi:10.1214/aos/1031833664>."""
 
-    homepage = "http://www.homepages.ucl.ac.uk/~ucakche"
+    homepage = "https://www.homepages.ucl.ac.uk/~ucakche"
     url      = "https://cloud.r-project.org/src/contrib/trimcluster_0.1-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/trimcluster"
 

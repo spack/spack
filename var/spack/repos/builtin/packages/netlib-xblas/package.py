@@ -20,7 +20,7 @@ class NetlibXblas(AutotoolsPackage):
        made to optimize performance; performance should be as good as
        straightforward but careful code written by hand."""
 
-    homepage = "http://www.netlib.org/xblas"
+    homepage = "https://www.netlib.org/xblas"
     url      = "http://www.netlib.org/xblas/xblas.tar.gz"
 
     version('1.0.248', sha256='b5fe7c71c2da1ed9bcdc5784a12c5fa9fb417577513fe8a38de5de0007f7aaa1')

@@ -10,7 +10,7 @@ class Libproxy(CMakePackage):
     """libproxy is a library that provides automatic proxy configuration
     management."""
 
-    homepage = "http://libproxy.github.io/libproxy/"
+    homepage = "https://libproxy.github.io/libproxy/"
     url      = "https://github.com/libproxy/libproxy/archive/0.4.15.tar.gz"
 
     version('0.4.17', sha256='88c624711412665515e2800a7e564aabb5b3ee781b9820eca9168035b0de60a9')

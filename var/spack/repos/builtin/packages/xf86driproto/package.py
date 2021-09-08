@@ -13,7 +13,7 @@ class Xf86driproto(AutotoolsPackage, XorgPackage):
     the video hardware without requiring data to be passed through the X
     server."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/proto/xf86driproto"
+    homepage = "https://cgit.freedesktop.org/xorg/proto/xf86driproto"
     xorg_mirror_path = "proto/xf86driproto-2.1.1.tar.gz"
 
     version('2.1.1', sha256='18ff8de129b89fa24a412a1ec1799f8687f96c186c655b44b1a714a3a5d15d6c')

@@ -20,7 +20,7 @@ class Ompss(Package):
        Nanos++ runtime system.
 
     """
-    homepage = "http://pm.bsc.es/"
+    homepage = "https://pm.bsc.es/"
     url      = "http://pm.bsc.es/sites/default/files/ftp/ompss/releases/ompss-14.10.tar.gz"
     list_url = 'http://pm.bsc.es/ompss-downloads'
 

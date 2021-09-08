@@ -9,7 +9,7 @@ from spack import *
 class PerlPegex(PerlPackage):
     """Acmeist PEG Parser Framework"""
 
-    homepage = "http://search.cpan.org/~ingy/Pegex-0.64/lib/Pegex.pod"
+    homepage = "https://metacpan.org/pod/Pegex"
     url      = "http://search.cpan.org/CPAN/authors/id/I/IN/INGY/Pegex-0.64.tar.gz"
 
     version('0.64', sha256='27e00264bdafb9c2109212b9654542032617fecf7b7814915d2bdac198f067cd')

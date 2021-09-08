@@ -11,7 +11,7 @@ class PyPygit2(PythonPackage):
     libgit2 implements the core of Git.
     """
 
-    homepage = "http://www.pygit2.org/"
+    homepage = "https://www.pygit2.org/"
     pypi = "pygit2/pygit2-0.24.1.tar.gz"
 
     version('1.6.0', sha256='7aacea4e57011777f4774421228e5d0ddb9a6ddb87ac4b542346d17ab12a4d62')

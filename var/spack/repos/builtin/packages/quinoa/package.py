@@ -14,7 +14,7 @@ class Quinoa(CMakePackage):
        systems.
     """
 
-    homepage = "http://quinoacomputing.org"
+    homepage = "https://quinoacomputing.org"
     git      = "https://github.com/quinoacomputing/quinoa.git"
 
     version('develop', branch='master')

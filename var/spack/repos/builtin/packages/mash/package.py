@@ -11,7 +11,7 @@ class Mash(AutotoolsPackage):
     Fast genome and metagenome distance estimation using MinHash.
     """
 
-    homepage = "http://mash.readthedocs.org/"
+    homepage = "https://mash.readthedocs.org/"
     url      = "https://github.com/marbl/Mash/archive/refs/tags/v2.3.tar.gz"
 
     maintainers = ['marcusboden']

@@ -11,7 +11,7 @@ class Muscle(MakefilePackage):
        according to published benchmark tests, with accuracy and speed
        that are consistently better than CLUSTALW."""
 
-    homepage = "http://drive5.com/muscle/"
+    homepage = "https://drive5.com/muscle/"
 
     version('3.8.31', sha256='43c5966a82133bd7da5921e8142f2f592c2b5f53d802f0527a2801783af809ad')
     version('3.8.1551', sha256='c70c552231cd3289f1bad51c9bd174804c18bb3adcf47f501afec7a68f9c482e')

@@ -16,7 +16,7 @@ class MariadbCClient(CMakePackage):
     Connector', which enables connections to MariaDB and MySQL servers.
     """
 
-    homepage = "http://mariadb.org/about/"
+    homepage = "https://mariadb.org/about/"
 
     url      = "https://downloads.mariadb.com/Connectors/c/connector-c-3.0.3/mariadb-connector-c-3.0.3-src.tar.gz"
     list_url = "https://downloads.mariadb.com/Connectors/c/"

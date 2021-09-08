@@ -15,7 +15,7 @@ class Hpl(AutotoolsPackage):
     It can thus be regarded as a portable as well as freely available
     implementation of the High Performance Computing Linpack Benchmark."""
 
-    homepage = "http://www.netlib.org/benchmark/hpl/"
+    homepage = "https://www.netlib.org/benchmark/hpl/"
     url      = "http://www.netlib.org/benchmark/hpl/hpl-2.2.tar.gz"
 
     # Note: HPL uses autotools starting with 2.3

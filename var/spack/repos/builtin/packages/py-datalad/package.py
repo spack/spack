@@ -17,7 +17,7 @@ class PyDatalad(PythonPackage):
     permission management, however, remains with the original data providers.
     """
 
-    homepage = "http://datalad.org/"
+    homepage = "https://datalad.org/"
     pypi     = "datalad/datalad-0.14.6.tar.gz"
 
     version('0.14.6', sha256='149b25a00da133a81be3cbdc041a1985418f0918fa5961ba979e23b5b3c08c63')

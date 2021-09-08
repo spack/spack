@@ -12,7 +12,7 @@ class Pflotran(AutotoolsPackage):
        subsurface flow and reactive transport code.
     """
 
-    homepage = "http://www.pflotran.org"
+    homepage = "https://www.pflotran.org"
     git      = "https://bitbucket.org/pflotran/pflotran.git"
 
     maintainers = ['ghammond86', 'balay']

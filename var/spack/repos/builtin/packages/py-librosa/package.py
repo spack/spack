@@ -9,7 +9,7 @@ from spack import *
 class PyLibrosa(PythonPackage):
     """A python package for music and audio analysis."""
 
-    homepage = "http://github.com/librosa/librosa"
+    homepage = "https://github.com/librosa/librosa"
     pypi = "librosa/librosa-0.7.2.tar.gz"
 
     version('0.7.2', sha256='656bbda80e98e6330db1ead79cd084b13a762284834d7603fcf7cf7c0dc65f3c')

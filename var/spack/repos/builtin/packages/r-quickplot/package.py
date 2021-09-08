@@ -14,7 +14,7 @@ class RQuickplot(RPackage):
     for quick visualizations when testing code, with the key benefit
     that visualizations are updated independently of one another."""
 
-    homepage = "http://quickplot.predictiveecology.org/"
+    homepage = "https://quickplot.predictiveecology.org/"
     url      = "https://cloud.r-project.org/src/contrib/quickPlot_0.1.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/quickPlot"
 
