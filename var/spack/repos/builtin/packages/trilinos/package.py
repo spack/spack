@@ -180,11 +180,6 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('+epetraextbtf')
         conflicts('+epetraextexperimental')
         conflicts('+epetraextgraphreorderings')
-    conflicts('+teko', when='~amesos')
-    conflicts('+teko', when='~anasazi')
-    conflicts('+teko', when='~aztec')
-    conflicts('+teko', when='~ifpack')
-    conflicts('+teko', when='~ml')
 
     # Tpetra packages
     with when('~kokkos'):
@@ -199,15 +194,23 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('+teko')
         conflicts('+zoltan2')
 
+    with when('+teko'):
+        conflicts('~amesos')
+        conflicts('~anasazi')
+        conflicts('~aztec')
+        conflicts('~ifpack')
+        conflicts('~ml')
+        conflicts('~stratimikos')
+        conflicts('@:12 gotype=long')
+
     conflicts('+basker', when='~amesos2')
     conflicts('+ifpack2', when='~belos')
     conflicts('+intrepid', when='~sacado')
     conflicts('+intrepid', when='~shards')
     conflicts('+intrepid2', when='~shards')
     conflicts('+isorropia', when='~zoltan')
+    conflicts('+muelu', when='~tpetra')
     conflicts('+phalanx', when='~sacado')
-    conflicts('+teko', when='~stratimikos')
-    conflicts('+teko', when='@:12 gotype=long')
     conflicts('+tempus', when='~nox')
     conflicts('+zoltan2', when='~zoltan')
 
