@@ -13,8 +13,8 @@ class PerlExtension(PerlPackage):
     homepage = "http://www.example.com"
     url      = "http://www.example.com/extension1-1.0.tar.gz"
 
-    version('1.0', 'hash-extension-1.0')
-    version('2.0', 'hash-extension-2.0')
+    version('1.0', '00000000000000000000000000000010')
+    version('2.0', '00000000000000000000000000000020')
 
     extends("perl")
 
