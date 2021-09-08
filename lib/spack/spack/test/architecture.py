@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import itertools
 import os
 import platform
 
@@ -36,6 +35,28 @@ def current_host_platform():
     elif 'Darwin' in platform.system():
         current_platform = spack.platforms.Darwin()
     return current_platform
+
+
+# Valid keywords for os=xxx or target=xxx
+valid_keywords = ["fe", "be", "frontend", "backend"]
+
+
+@pytest.fixture(
+    params=([x for x in spack.platforms.Test().targets]
+            + valid_keywords + ['default_target'])
+)
+def target_str(request):
+    """All the possible strings that can be used for targets"""
+    return str(request.param)
+
+
+@pytest.fixture(
+    params=([x for x in spack.platforms.Test().operating_sys]
+            + valid_keywords + ['default_os'])
+)
+def os_str(request):
+    """All the possible strings that can be used for operating systems"""
+    return str(request.param)
 
 
 def test_dict_round_trip(sample_arch):
@@ -73,44 +94,20 @@ def test_boolness(sample_arch, attribute_name, expected):
     assert bool(arch) is expected
 
 
-@pytest.mark.parametrize('os_str,target_str,spec_str', [
-    ('frontend', 'frontend', 'libelf os=frontend target=frontend'),
-    ('backend', 'backend', 'libelf os=backend target=backend'),
-    ('default_os', 'default_target', 'libelf')
-])
-def test_frontend_and_backend_in_specs(config, os_str, target_str, spec_str):
-    """Test when user inputs 'frontend' or 'backend' or use the defaults that
-    both the target and the operating system match.
+def test_user_input_combination(config, target_str, os_str):
+    """Test for all the valid user input combinations that both the target and
+    the operating system match.
     """
-    current_platform = spack.architecture.platform()
-    expected_os = str(current_platform.operating_system(os_str))
-    expected_target = current_platform.target(target_str)
-    concrete_spec = spack.spec.Spec(spec_str).concretized()
+    platform = spack.platforms.Test()
+    spec_str = "libelf"
+    if os_str != "default_os":
+        spec_str += " os={0}".format(os_str)
+    if target_str != "default_target":
+        spec_str += " target={0}".format(target_str)
+    spec = spack.spec.Spec(spec_str).concretized()
 
-    assert expected_os == concrete_spec.architecture.os
-    assert expected_target == concrete_spec.architecture.target
-
-
-def test_user_input_combination(config):
-    valid_keywords = ["fe", "be", "frontend", "backend"]
-
-    possible_targets = ([x for x in spack.architecture.platform().targets]
-                        + valid_keywords)
-
-    possible_os = ([x for x in spack.architecture.platform().operating_sys]
-                   + valid_keywords)
-
-    for target, operating_system in itertools.product(
-        possible_targets, possible_os
-    ):
-        platform = spack.architecture.platform()
-        spec_str = "libelf os={0} target={1}".format(operating_system, target)
-        spec = spack.spec.Spec(spec_str)
-        spec.concretize()
-        assert spec.architecture.os == str(
-            platform.operating_system(operating_system)
-        )
-        assert spec.architecture.target == platform.target(target)
+    assert spec.architecture.os == str(platform.operating_system(os_str))
+    assert spec.architecture.target == platform.target(target_str)
 
 
 def test_operating_system_conversion_to_dict():
