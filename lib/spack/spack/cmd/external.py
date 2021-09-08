@@ -52,6 +52,14 @@ def setup_parser(subparser):
         'list', help='list detectable packages, by repository and name'
     )
 
+    show_parser = sp.add_parser(
+        'show', help='show all external packages currently configured'
+    )
+    show_parser.add_argument(
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope('packages'),
+        help="configuration scope to show")
+
 
 def is_executable(path):
     return os.path.isfile(path) and os.access(path, os.X_OK)
@@ -188,6 +196,18 @@ def external_find(args):
         spack.cmd.display_specs(new_entries)
     else:
         tty.msg('No new external packages detected')
+
+
+def external_show(args):
+    predefined_external_specs = _get_predefined_externals()
+    path = spack.config.config.get_config_filename(args.scope, 'packages')
+    if predefined_external_specs:
+        msg = 'The following external specs are defined in {0}'
+        tty.msg(msg.format(path))
+        spack.cmd.display_specs(predefined_external_specs)
+    else:
+        msg = 'No predefined external specs found in {0}'
+        tty.msg(msg.format(path))
 
 
 def _group_by_prefix(paths):
@@ -358,5 +378,9 @@ def external_list(args):
 
 
 def external(parser, args):
-    action = {'find': external_find, 'list': external_list}
+    action = {
+        'find': external_find,
+        'list': external_list,
+        'show': external_show
+    }
     action[args.external_command](args)

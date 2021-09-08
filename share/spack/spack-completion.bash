@@ -1014,7 +1014,7 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find list"
+        SPACK_COMPREPLY="find list show"
     fi
 }
 
@@ -1029,6 +1029,10 @@ _spack_external_find() {
 
 _spack_external_list() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_external_show() {
+    SPACK_COMPREPLY="-h --help --scope"
 }
 
 _spack_fetch() {
