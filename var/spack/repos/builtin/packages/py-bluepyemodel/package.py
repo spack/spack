@@ -23,7 +23,7 @@ class PyBluepyemodel(PythonPackage):
     depends_on('py-bluepyparallel@0.0.3:', type='run')
     depends_on('py-click@7.0:', type='run')
     depends_on('py-efel@3.0.80:', type='run')
-    depends_on('py-fasteners@0.14:', type='run')
+    depends_on('py-fasteners@0.16.3:', type='run')
     depends_on('py-gitpython', type='run')
     depends_on('py-h5py@2.9:', type='run')
     depends_on('py-ipyparallel@6.3:', type='run')
