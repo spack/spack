@@ -60,7 +60,7 @@ class Mpip(AutotoolsPackage):
     depends_on('mpi')
 
     #  '+setjmp' adds '--disable-libunwind' to the confiure args
-    depends_on('libunwind', when='@3.5: +libunwind ~setjmp')
+    depends_on('unwind', when='@3.5: +libunwind ~setjmp')
 
     @when('@3.5:')
     def configure_args(self):
