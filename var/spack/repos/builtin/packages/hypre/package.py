@@ -126,75 +126,65 @@ class Hypre(AutotoolsPackage, CudaPackage):
             '--with-blas-lib-dirs=%s' % ' '.join(blas.directories)
         ]
 
-        if '+mpi' in self.spec:
+        if '+mpi' in spec:
             os.environ['CC'] = spec['mpi'].mpicc
             os.environ['CXX'] = spec['mpi'].mpicxx
-            if '+fortran' in self.spec:
+            if '+fortran' in spec:
                 os.environ['F77'] = spec['mpi'].mpif77
             configure_args.append('--with-MPI')
         else:
             configure_args.append('--without-MPI')
 
-        if '+openmp' in self.spec:
-            configure_args.append('--with-openmp')
-        else:
-            configure_args.append('--without-openmp')
+        configure_args.extend(self.with_or_without('openmp'))
 
-        if '+int64' in self.spec:
+        if '+int64' in spec:
             configure_args.append('--enable-bigint')
         else:
             configure_args.append('--disable-bigint')
 
-        if '+mixedint' in self.spec:
-            configure_args.append('--enable-mixedint')
-        else:
-            configure_args.append('--disable-mixedint')
+        configure_args.extend(self.enable_or_disable('mixedint'))
 
-        if '+complex' in self.spec:
-            configure_args.append('--enable-complex')
-        else:
-            configure_args.append('--disable-complex')
+        configure_args.extend(self.enable_or_disable('complex'))
 
-        if '+shared' in self.spec:
+        if '+shared' in spec:
             configure_args.append("--enable-shared")
 
-        if '~internal-superlu' in self.spec:
+        if '~internal-superlu' in spec:
             configure_args.append("--without-superlu")
             # MLI and FEI do not build without superlu on Linux
             configure_args.append("--without-mli")
             configure_args.append("--without-fei")
 
-        if '+superlu-dist' in self.spec:
+        if '+superlu-dist' in spec:
             configure_args.append('--with-dsuperlu-include=%s' %
                                   spec['superlu-dist'].prefix.include)
             configure_args.append('--with-dsuperlu-lib=%s' %
                                   spec['superlu-dist'].libs)
             configure_args.append('--with-dsuperlu')
 
-        if '+debug' in self.spec:
-            configure_args.append("--enable-debug")
-        else:
-            configure_args.append("--disable-debug")
+        configure_args.extend(self.enable_or_disable('debug'))
 
-        if '+cuda' in self.spec:
+        if '+cuda' in spec:
             configure_args.extend([
                 '--with-cuda',
                 '--enable-curand',
-                '--enable-cub'
             ])
             # New in 2.21.0: replaces --enable-cub
-            if '@2.21.0:' in self.spec:
+            if '@2.21.0:' in spec:
                 configure_args.append('--enable-device-memory-pool')
                 configure_args.append('--with-cuda-home={0}'.format(
-                    self.spec['cuda'].prefix))
+                    spec['cuda'].prefix))
+            else:
+                configure_args.append('--enable-cub')
         else:
             configure_args.extend([
                 '--without-cuda',
                 '--disable-curand',
-                '--disable-cub'
             ])
+            if '@:2.20.99' in spec:
+                configure_args.append('--disable-cub')
 
-        if '+unified-memory' in self.spec:
+        if '+unified-memory' in spec:
             configure_args.append('--enable-unified-memory')
 
         configure_args.extend(self.enable_or_disable('fortran'))
