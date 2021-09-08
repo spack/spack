@@ -10,7 +10,7 @@
       "bootstrap": {
         "template": "container/amazonlinux_2.dockerfile"
       },
-      "os_package_manager": "yum"
+      "os_package_manager": "yum_amazon"
     },
     "centos:8": {
       "bootstrap": {
@@ -88,6 +88,11 @@
     },
     "yum": {
       "update": "yum update -y && yum install -y epel-release && yum update -y",
+      "install": "yum install -y",
+      "clean": "rm -rf /var/cache/yum  && yum clean all"
+    },
+    "yum_amazon": {
+      "update": "yum update -y && amazon-linux-extras install epel -y",
       "install": "yum install -y",
       "clean": "rm -rf /var/cache/yum  && yum clean all"
     }
