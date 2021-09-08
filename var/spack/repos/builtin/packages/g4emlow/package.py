@@ -37,4 +37,4 @@ class G4emlow(Package):
 
     def url_for_version(self, version):
         """Handle version string."""
-        return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4EMLOW.%s.tar.gz" % version)
+        return ("https://geant4-data.web.cern.ch/geant4-data/datasets/G4EMLOW.%s.tar.gz" % version)
