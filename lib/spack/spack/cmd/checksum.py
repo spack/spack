@@ -65,10 +65,10 @@ def checksum(parser, args):
 
         # And ensure the specified version URLs take precedence, if available
         try:
-            explicit_dict = {
-                (v, pkg.url_for_version(v)) for v in pkg.versions
-                if not v.isdevelop()
-            }
+            explicit_dict = {}
+            for v in pkg.versions:
+                if not v.isdevelop():
+                    explicit_dict[v] = pkg.url_for_version(v)
             url_dict.update(explicit_dict)
         except spack.package.NoURLError:
             pass
