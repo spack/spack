@@ -91,7 +91,7 @@ class CudaPackage(PackageBase):
     # https://github.com/spack/spack/pull/25054#issuecomment-886531664
     # these conflicts are valid independently from the architecture
 
-    # minimum versions
+    # minimum supported versions
     conflicts('%gcc@:4', when='+cuda ^cuda@11.0:')
     conflicts('%gcc@:5', when='+cuda ^cuda@11.4:')
 
@@ -99,8 +99,8 @@ class CudaPackage(PackageBase):
     # NOTE:
     # in order to not constrain future cuda version to old gcc versions,
     # it has been decided to use an upper bound for the latest version.
-    # This implies that the latter one has to be updated at each release
-    # of a new cuda minor version.
+    # This implies that the last one in the list has to be updated at
+    # each release of a new cuda minor version.
     conflicts('%gcc@10:', when='+cuda ^cuda@:11.0')
     conflicts('%gcc@11:', when='+cuda ^cuda@:11.4')
 
