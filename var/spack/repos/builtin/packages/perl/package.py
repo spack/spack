@@ -63,7 +63,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     extendable = True
 
-    depends_on('gdbm')
+    # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
+    depends_on('gdbm@:1.19')
     # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
     depends_on('gdbm@:1.14.1', when='@:5.28.0')
     depends_on('berkeley-db')
