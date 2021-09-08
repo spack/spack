@@ -8,14 +8,14 @@
 """
 import itertools
 import os
-import platform as py_platform
+import platform
 
 import pytest
 
 import spack.architecture
 import spack.concretize
 import spack.platforms
-from spack.spec import Spec
+import spack.spec
 
 
 def test_dict_functions_for_architecture():
@@ -41,9 +41,9 @@ def test_platform():
     output_platform_class = spack.architecture.real_platform()
     if os.path.exists('/opt/cray/pe'):
         my_platform_class = spack.platforms.Cray()
-    elif 'Linux' in py_platform.system():
+    elif 'Linux' in platform.system():
         my_platform_class = spack.platforms.Linux()
-    elif 'Darwin' in py_platform.system():
+    elif 'Darwin' in platform.system():
         my_platform_class = spack.platforms.Darwin()
 
     assert str(output_platform_class) == str(my_platform_class)
@@ -81,7 +81,7 @@ def test_user_front_end_input(config):
     frontend_os = str(platform.operating_system('frontend'))
     frontend_target = platform.target('frontend')
 
-    frontend_spec = Spec('libelf os=frontend target=frontend')
+    frontend_spec = spack.spec.Spec('libelf os=frontend target=frontend')
     frontend_spec.concretize()
 
     assert frontend_os == frontend_spec.architecture.os
@@ -96,7 +96,7 @@ def test_user_back_end_input(config):
     backend_os = str(platform.operating_system("backend"))
     backend_target = platform.target("backend")
 
-    backend_spec = Spec("libelf os=backend target=backend")
+    backend_spec = spack.spec.Spec("libelf os=backend target=backend")
     backend_spec.concretize()
 
     assert backend_os == backend_spec.architecture.os
@@ -108,7 +108,7 @@ def test_user_defaults(config):
     default_os = str(platform.operating_system("default_os"))
     default_target = platform.target("default_target")
 
-    default_spec = Spec("libelf")  # default is no args
+    default_spec = spack.spec.Spec("libelf")  # default is no args
     default_spec.concretize()
 
     assert default_os == default_spec.architecture.os
@@ -129,7 +129,7 @@ def test_user_input_combination(config):
     ):
         platform = spack.architecture.platform()
         spec_str = "libelf os={0} target={1}".format(operating_system, target)
-        spec = Spec(spec_str)
+        spec = spack.spec.Spec(spec_str)
         spec.concretize()
         assert spec.architecture.os == str(
             platform.operating_system(operating_system)
@@ -249,8 +249,9 @@ def test_concretize_target_ranges(
 ):
     # use foobar=bar to make the problem simpler for the old concretizer
     # the new concretizer should not need that help
-    spec = Spec('a %%gcc@10 foobar=bar target=%s ^b target=%s' %
+    spec_str = ('a %%gcc@10 foobar=bar target=%s ^b target=%s' %
                 (root_target_range, dep_target_range))
+    spec = spack.spec.Spec(spec_str)
     with spack.concretize.disable_compiler_existence_check():
         spec.concretize()
 
