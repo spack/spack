@@ -20,8 +20,7 @@ class Catch2(CMakePackage):
 
     # Releases
     version('3.0.0-preview3', sha256='06a4f903858f21c553e988f8b76c9c6915d1f95f95512d6a58c421e02a2c4975')
-    version('3.0.0-preview3', sha256='06a4f903858f21c553e988f8b76c9c6915d1f95f95512d6a58c421e02a2c4975', preferred=True)
-    version('2.13.7',         sha256='3cdb4138a072e4c0290034fe22d9f0a80d3bcfb8d7a8a5c49ad75d3a5da24fae')
+    version('2.13.7',         sha256='3cdb4138a072e4c0290034fe22d9f0a80d3bcfb8d7a8a5c49ad75d3a5da24fae', preferred=True)
     version('2.13.6',         sha256='48dfbb77b9193653e4e72df9633d2e0383b9b625a47060759668480fdf24fbd4')
     version('2.13.5',         sha256='7fee7d643599d10680bfd482799709f14ed282a8b7db82f54ec75ec9af32fa76')
     version('2.13.4',         sha256='e7eb70b3d0ac2ed7dcf14563ad808740c29e628edde99e973adad373a2b5e4df')
