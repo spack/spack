@@ -104,6 +104,9 @@ class CudaPackage(PackageBase):
     conflicts('%gcc@10:', when='+cuda ^cuda@:11.0')
     conflicts('%gcc@11:', when='+cuda ^cuda@:11.4')
 
+    # https://gist.github.com/ax3l/9489132#gistcomment-3860114
+    conflicts('%gcc@10', when='+cuda ^cuda@:11.4.0')
+
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
     with when('~allow-unsupported-compilers'):
