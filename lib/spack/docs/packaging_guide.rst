@@ -5325,6 +5325,7 @@ variant names are:
   shared   True     Build shared libraries
   mpi      True     Use MPI
   python   False    Build Python extension
+  x        False    Use X11 visualization
   ======= ======== ========================
 
 If specified in this table, the corresponding default should be used
@@ -5335,6 +5336,11 @@ built `~shared`, the package guarantees that no shared libraries are
 built. When a package is built `+shared`, the package guarantees that
 shared libraries are built, but it makes no guarantee about whether
 static libraries are built.
+
+Variant names must be lowercase alphanumerics and, if necessary, an
+underscore ``_``. (Dashes must not be used because they are equivalent to ``~``
+in a spec.) Like variable names in python, variant names should be short but
+understandable.
 
 ^^^^^^^^^^^^^
 Version Lists
