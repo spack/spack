@@ -22,7 +22,7 @@ def check_blame(element, file_name, line=None):
     """Check that `config blame config` gets right file/line for an element.
 
     This runs `spack config blame config` and scrapes the output for a
-    particular YAML key. It thne checks that the requested file/line info
+    particular YAML key. It then checks that the requested file/line info
     is also on that line.
 
     Line is optional; if it is ``None`` we just check for the
