@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class Legion(CMakePackage, CudaPackage):
+class Legion(CMakePackage, CudaPackage, ROCMPacakge):
     """Legion is a data-centric parallel programming system for writing
        portable high performance programs targeted at distributed heterogeneous
        architectures. Legion presents abstractions which allow programmers to
@@ -44,6 +44,7 @@ class Legion(CMakePackage, CudaPackage):
     depends_on('cuda@10.0:11.9', when='+cuda_unsupported_compiler')
     depends_on('cuda@10.0:11.9', when='+cuda')
     # TODO: need to explore and update to use rocm support already in spack.
+    depends_on('rocm', when='+hip')
     depends_on('hip@4.1.0:', when='+hip')
     depends_on('hdf5', when='+hdf5')
     depends_on('hwloc@1.11', when='+hwloc')
@@ -52,7 +53,7 @@ class Legion(CMakePackage, CudaPackage):
     depends_on('zlib', when='+zlib')
 
     for nv_arch in CudaPackage.cuda_arch_values:
-        depends_on('kokkos cuda_arch=%s'% nv_arch, when='+kokkos +cuda cuda_arch=%s' % nv_arch)
+        depends_on('kokkos cuda_arch=%s' % nv_arch, when='+kokkos +cuda cuda_arch=%s' % nv_arch)
     depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
     depends_on("kokkos@3.3.01~hip", when='+kokkos~hip')
 
@@ -131,9 +132,9 @@ class Legion(CMakePackage, CudaPackage):
     variant('spy', default=False,
             description="Enable detailed logging for Legion Spy debugging.")
 
-    # note: we will be dependent upon spack's latest-and-greatest cuda version...
-    variant('cuda', default=False,
-            description="Enable CUDA support.")
+    # Note: +cuda variant now supported by CudaPackage.
+    # variant('cuda', default=False,
+    #        description="Enable CUDA support.")
     variant('cuda_hijack', default=False,
             description="Hijack application calls into the CUDA runtime (+cuda).")
     conflicts('+cuda_arch', when='~cuda')
@@ -145,11 +146,15 @@ class Legion(CMakePackage, CudaPackage):
             description="Enable built-in GPU Reduction.")
     conflicts('+gpu_reduction', when='~cuda')
 
+    # Note: +hip uses +rocm and 'amdgpu_target' variants added by the ROCmPackage
     variant('hip', default=False,
             description="Enable HIP support.")
     conflicts('+hip', when='+cuda')
     conflicts('+hip', when='+cuda_hijack')
-    # TODO: awaiting upstreamed code to land in legion for '+hip +kokkos'
+    for amd_arch in ROCmPackage.amdgpu_targets:
+        depends_on('+rocm amdgpu_target={0}'.format(amd_arch),
+                   when='+hip amdgpu_target={0}'.format(amd_arch))
+    # TODO: awaiting upstreamed code to land in legion for '+hip +kokkos' support.
     conflicts('+kokkos', when='+hip')
 
     variant('fortran', default=False,
@@ -254,9 +259,9 @@ class Legion(CMakePackage, CudaPackage):
                 options.append('-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler')
 
             if '-gpu_reduction' in spec:
-              options.append('-DLegion_GPU_REDUCTIONS=OFF')
+                options.append('-DLegion_GPU_REDUCTIONS=OFF')
             else:
-              options.append('-DLegion_GPU_REDUCTIONS=ON')
+                options.append('-DLegion_GPU_REDUCTIONS=ON')
 
         if '+hip' in spec:
             options.append('-DLegion_USE_HIP=ON')
