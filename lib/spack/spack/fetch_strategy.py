@@ -29,6 +29,7 @@ import os.path
 import re
 import shutil
 import sys
+import tempfile
 from typing import List, Optional  # novm
 
 import six
@@ -703,17 +704,27 @@ class VCSFetchStrategy(FetchStrategy):
             for p in patterns:
                 tar.add_default_arg('--exclude=%s' % p)
 
-        with working_dir(self.stage.path):
-            if self.stage.srcdir:
-                # Here we create an archive with the default repository name.
-                # The 'tar' command has options for changing the name of a
-                # directory that is included in the archive, but they differ
-                # based on OS, so we temporarily rename the repo
-                with temp_rename(self.stage.source_path, self.stage.srcdir):
-                    tar('-czf', destination, self.stage.srcdir)
-            else:
-                tar('-czf', destination,
-                    os.path.basename(self.stage.source_path))
+        tmpdir = tempfile.mkdtemp()
+        try:
+            tmp_destination = os.path.join(
+                tmpdir, os.path.basename(destination))
+            with working_dir(self.stage.path):
+                if self.stage.srcdir:
+                    # Here we create an archive with the default repository name.
+                    # The 'tar' command has options for changing the name of a
+                    # directory that is included in the archive, but they differ
+                    # based on OS, so we temporarily rename the repo
+                    with temp_rename(self.stage.source_path, self.stage.srcdir):
+                        tar('-czf', tmp_destination, self.stage.srcdir)
+                else:
+                    tar('-czf', tmp_destination,
+                        os.path.basename(self.stage.source_path))
+            web_util.push_to_url(
+                tmp_destination,
+                destination,
+                keep_original=True)
+        finally:
+            shutil.rmtree(tmpdir)
 
     def __str__(self):
         return "VCS: %s" % self.url
