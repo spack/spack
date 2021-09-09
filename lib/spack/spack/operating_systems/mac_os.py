@@ -5,9 +5,10 @@
 
 import platform as py_platform
 
-from spack.architecture import OperatingSystem
 from spack.util.executable import Executable
 from spack.version import Version
+
+from ._base_classes import OperatingSystem
 
 
 # FIXME: store versions inside OperatingSystem as a Version instead of string

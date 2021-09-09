@@ -37,6 +37,7 @@ import spack.environment
 import spack.error
 import spack.repo
 import spack.spec
+import spack.target
 import spack.tengine
 import spack.variant as vt
 from spack.config import config
@@ -633,7 +634,7 @@ class Concretizer(object):
             for ancestor in microarchitecture.ancestors:
                 candidate = None
                 try:
-                    candidate = spack.architecture.Target(ancestor)
+                    candidate = spack.target.Target(ancestor)
                     candidate.optimization_flags(spec.compiler)
                 except archspec.cpu.UnsupportedMicroarchitecture:
                     continue
