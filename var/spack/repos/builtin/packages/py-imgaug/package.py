@@ -13,7 +13,7 @@ class PyImgaug(PythonPackage):
     in a variety of different ways."""
 
     homepage = "https://github.com/aleju/imgaug"
-    url      = "https://files.pythonhosted.org/packages/c8/24/194d1d13aaa150abd7c4ffcc6bebe36f3993318eb814520465d271b505c7/imgaug-0.3.0.tar.gz"
+    pypi     = "imgaug/imgaug-0.3.0.tar.gz"
 
     version('0.3.0', sha256='e1354d41921f1b306b50c5141b4870f17e81b531cae2f5c3093da9dc4dcb3cf4')
 
