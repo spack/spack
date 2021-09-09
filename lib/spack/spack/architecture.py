@@ -163,15 +163,12 @@ def arch_for_spec(arch_spec):
     arch_plat = spack.platforms.by_name(arch_spec.platform)
     if not (arch_plat.operating_system(arch_spec.os) and
             arch_plat.target(arch_spec.target)):
-        raise ValueError(
-            "Can't recreate arch for spec %s on current arch %s; "
-            "spec architecture is too different" % (arch_spec, sys_type()))
+        sys_type = str(default_arch())
+        msg = ("Can't recreate arch for spec {0} on current arch {1}; "
+               "spec architecture is too different")
+        raise ValueError(msg.format(arch_spec, sys_type))
 
     return Arch(arch_plat, arch_spec.os, arch_spec.target)
-
-
-def _all_platforms():
-    return spack.platforms.platforms
 
 
 @lang.memoized
@@ -187,44 +184,23 @@ real_platform = _platform
 #: context manager.
 platform = _platform
 
-#: The list of all platform classes. May be swapped by the use_platform
-#: context manager.
-all_platforms = _all_platforms
-
 
 @lang.memoized
 def default_arch():
-    """Default ``Arch`` object for this machine.
-
-    See ``sys_type()``.
-    """
+    """Default ``Arch`` object for this machine"""
     return Arch(platform(), 'default_os', 'default_target')
-
-
-def sys_type():
-    """Print out the "default" platform-os-target tuple for this machine.
-
-    On machines with only one target OS/target, prints out the
-    platform-os-target for the frontend.  For machines with a frontend
-    and a backend, prints the default backend.
-
-    TODO: replace with use of more explicit methods to get *all* the
-    backends, as client code should really be aware of cross-compiled
-    architectures.
-
-    """
-    return str(default_arch())
 
 
 @lang.memoized
 def compatible_sys_types():
-    """Returns a list of all the systypes compatible with the current host."""
-    compatible_archs = []
+    """Return a list of all the platform-os-target tuples compatible
+    with the current host.
+    """
     current_host = archspec.cpu.host()
     compatible_targets = [current_host] + current_host.ancestors
-    for target in compatible_targets:
-        arch = Arch(platform(), 'default_os', target)
-        compatible_archs.append(str(arch))
+    compatible_archs = [
+        str(Arch(platform(), 'default_os', target)) for target in compatible_targets
+    ]
     return compatible_archs
 
 
@@ -242,16 +218,15 @@ class _PickleableCallable(object):
 
 @contextlib.contextmanager
 def use_platform(new_platform):
-    global platform, all_platforms
+    global platform
 
     msg = '"{0}" must be an instance of Platform'
     assert isinstance(new_platform, spack.platforms.Platform), msg.format(new_platform)
 
-    original_platform_fn, original_all_platforms_fn = platform, all_platforms
+    original_platform_fn = platform
 
     try:
         platform = _PickleableCallable(new_platform)
-        all_platforms = _PickleableCallable([type(new_platform)])
 
         # Clear configuration and compiler caches
         spack.config.config.clear_caches()
@@ -260,7 +235,7 @@ def use_platform(new_platform):
         yield new_platform
 
     finally:
-        platform, all_platforms = original_platform_fn, original_all_platforms_fn
+        platform = original_platform_fn
 
         # Clear configuration and compiler caches
         spack.config.config.clear_caches()

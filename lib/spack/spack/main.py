@@ -666,7 +666,7 @@ def print_setup_info(*info):
             tty.die('shell must be sh or csh')
 
     # print sys type
-    shell_set('_sp_sys_type', spack.architecture.sys_type())
+    shell_set('_sp_sys_type', str(spack.architecture.default_arch()))
     shell_set('_sp_compatible_sys_types',
               ':'.join(spack.architecture.compatible_sys_types()))
     # print roots for all module systems
