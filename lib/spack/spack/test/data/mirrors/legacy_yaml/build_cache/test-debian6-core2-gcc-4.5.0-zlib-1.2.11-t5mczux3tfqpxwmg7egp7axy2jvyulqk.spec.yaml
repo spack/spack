@@ -1,0 +1,41 @@
+spec:
+- zlib:
+    version: 1.2.11
+    arch:
+      platform: test
+      platform_os: debian6
+      target:
+        name: core2
+        vendor: GenuineIntel
+        features:
+        - mmx
+        - sse
+        - sse2
+        - ssse3
+        generation: 0
+        parents:
+        - nocona
+    compiler:
+      name: gcc
+      version: 4.5.0
+    namespace: builtin.mock
+    parameters:
+      optimize: true
+      pic: true
+      shared: true
+      cflags: []
+      cppflags: []
+      cxxflags: []
+      fflags: []
+      ldflags: []
+      ldlibs: []
+    package_hash: eukp6mqxxlfuxslsodbwbqtsznajielhh4avm2vgteo4ifdsjgjq====
+    hash: t5mczux3tfqpxwmg7egp7axy2jvyulqk
+    full_hash: 6j4as6r3qd4qhf77yu44reyn2u6ggbuq
+    build_hash: t5mczux3tfqpxwmg7egp7axy2jvyulqk
+binary_cache_checksum:
+  hash_algorithm: sha256
+  hash: a62b50aee38bb5d6d1cbf9cd2b0badaf3eaa282cd6db0472b4468ff968a5e7f2
+buildinfo:
+  relative_prefix: test-debian6-core2/gcc-4.5.0/zlib-1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk
+  relative_rpaths: false
