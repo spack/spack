@@ -395,7 +395,7 @@ def test_ci_workarounds():
                 'paths': [
                     'jobs_scratch_dir',
                     'cdash_report',
-                    name + '.spec.yaml',
+                    name + '.spec.json',
                     name + '.cdashid',
                     name
                 ],
