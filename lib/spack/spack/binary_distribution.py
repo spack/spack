@@ -7,6 +7,7 @@ import codecs
 import glob
 import hashlib
 import json
+import multiprocessing.pool
 import os
 import re
 import shutil
@@ -704,7 +705,7 @@ def sign_tarball(key, force, specfile_path):
     spack.util.gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
-def generate_package_index(cache_prefix):
+def generate_package_index(cache_prefix, concurrency=32):
     """Create the build cache index page.
 
     Creates (or replaces) the "index.json" page at the location given in
@@ -734,24 +735,32 @@ def generate_package_index(cache_prefix):
 
     all_mirror_specs = {}
 
-    for file_path in file_list:
+    def _fetch_and_store(url_to_fetch):
         try:
-            yaml_url = url_util.join(cache_prefix, file_path)
-            tty.debug('fetching {0}'.format(yaml_url))
-            _, _, yaml_file = web_util.read_from_url(yaml_url)
+            tty.debug('fetching {0}'.format(url_to_fetch))
+            _, _, yaml_file = web_util.read_from_url(url_to_fetch)
             yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
             spec_dict = syaml.load(yaml_contents)
             s = Spec.from_yaml(yaml_contents)
             all_mirror_specs[s.dag_hash()] = {
-                'yaml_url': yaml_url,
+                'yaml_url': url_to_fetch,
                 'spec': s,
                 'num_deps': len(list(s.traverse(root=False))),
                 'binary_cache_checksum': spec_dict['binary_cache_checksum'],
                 'buildinfo': spec_dict['buildinfo'],
             }
         except (URLError, web_util.SpackWebError) as url_err:
-            tty.error('Error reading spec.yaml: {0}'.format(file_path))
+            tty.error('Error reading spec.yaml: {0}'.format(url_to_fetch))
             tty.error(url_err)
+
+    fetch_list = [(url_util.join(cache_prefix, fp),) for fp in file_list]
+
+    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+    try:
+        tp.map(llnl.util.lang.star(_fetch_and_store), fetch_list)
+    finally:
+        tp.terminate()
+        tp.join()
 
     sorted_specs = sorted(all_mirror_specs.keys(),
                           key=lambda k: all_mirror_specs[k]['num_deps'])
