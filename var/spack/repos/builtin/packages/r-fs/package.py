@@ -12,7 +12,7 @@ class RFs(RPackage):
     A cross-platform interface to file system operations, built on top of
     the 'libuv' C library."""
 
-    homepage = "http://fs.r-lib.org/"
+    homepage = "https://ggplot2.tidyverse.org/"
     url      = "https://cloud.r-project.org/src/contrib/fs_1.3.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/fs"
 

@@ -21,7 +21,7 @@ class REuropepmc(RPackage):
     registration or API key is required. See the vignettes for usage
     examples."""
 
-    homepage = "http://github.com/ropensci/europepmc/"
+    homepage = "https://github.com/ropensci/europepmc/"
     url      = "https://cloud.r-project.org/src/contrib/europepmc_0.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/europepmc"
 

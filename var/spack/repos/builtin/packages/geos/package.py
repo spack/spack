@@ -13,7 +13,7 @@ class Geos(CMakePackage):
        Simple Features for SQL spatial predicate functions and spatial
        operators, as well as specific JTS enhanced topology functions."""
 
-    homepage = "http://trac.osgeo.org/geos/"
+    homepage = "https://trac.osgeo.org/geos/"
     url      = "https://download.osgeo.org/geos/geos-3.8.1.tar.bz2"
 
     maintainers = ['adamjstewart']

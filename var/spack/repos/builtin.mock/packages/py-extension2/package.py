@@ -20,7 +20,7 @@ class PyExtension2(PythonPackage):
     extends("python")
     depends_on('py-extension1', type=('build', 'run'))
 
-    version('1.0', 'hash-extension2-1.0')
+    version('1.0', '00000000000000000000000000000210')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

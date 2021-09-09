@@ -11,7 +11,7 @@ from spack import *
 class PyStatsmodels(PythonPackage):
     """Statistical computations and models for use with SciPy"""
 
-    homepage = "http://www.statsmodels.org"
+    homepage = "https://www.statsmodels.org"
     pypi = "statsmodels/statsmodels-0.8.0.tar.gz"
 
     version('0.12.2', sha256='8ad7a7ae7cdd929095684118e3b05836c0ccb08b6a01fe984159475d174a1b10')

@@ -11,7 +11,7 @@ from spack import *
 class Global(Package):
     """ The Gnu Global tagging system """
 
-    homepage = "http://www.gnu.org/software/global"
+    homepage = "https://www.gnu.org/software/global"
     url = "http://tamacom.com/global/global-6.5.tar.gz"
 
     maintainers = ['gaber']

@@ -12,7 +12,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     """Hydrogen: Distributed-memory dense and sparse-direct linear algebra
        and optimization library. Based on the Elemental library."""
 
-    homepage = "http://libelemental.org"
+    homepage = "https://libelemental.org"
     url      = "https://github.com/LLNL/Elemental/archive/v1.0.1.tar.gz"
     git      = "https://github.com/LLNL/Elemental.git"
 

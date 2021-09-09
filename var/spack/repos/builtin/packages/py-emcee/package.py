@@ -10,7 +10,7 @@ class PyEmcee(PythonPackage):
     """emcee is an MIT licensed pure-Python implementation of Goodman & Weare's
     Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler."""
 
-    homepage = "http://dan.iel.fm/emcee/current/"
+    homepage = "https://dan.iel.fm/emcee/current/"
     pypi = "emcee/emcee-2.2.1.tar.gz"
 
     version('2.2.1', sha256='b83551e342b37311897906b3b8acf32979f4c5542e0a25786ada862d26241172')

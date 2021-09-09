@@ -9,7 +9,7 @@ from spack import *
 class Glvis(MakefilePackage):
     """GLVis: an OpenGL tool for visualization of FEM meshes and functions"""
 
-    homepage = "http://glvis.org"
+    homepage = "https://glvis.org"
     git      = "https://github.com/glvis/glvis.git"
 
     maintainers = ['goxberry', 'v-dobrev', 'tzanio', 'tomstitt']

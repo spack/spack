@@ -14,7 +14,7 @@ class RWithr(RPackage):
     'devtools' package, this provides a simple package with limited
     dependencies to provide access to these functions."""
 
-    homepage = "http://github.com/jimhester/withr"
+    homepage = "https://github.com/jimhester/withr"
     url      = "https://cloud.r-project.org/src/contrib/withr_1.0.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/withr"
 

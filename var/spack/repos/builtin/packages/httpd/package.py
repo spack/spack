@@ -10,7 +10,7 @@ class Httpd(AutotoolsPackage):
     """The Apache HTTP Server is a powerful and flexible HTTP/1.1 compliant
     web server."""
 
-    homepage = "http://httpd.apache.org/"
+    homepage = "https://httpd.apache.org/"
     url      = "http://archive.apache.org/dist/httpd/httpd-2.4.43.tar.bz2"
 
     version('2.4.43', sha256='a497652ab3fc81318cdc2a203090a999150d86461acff97c1065dc910fe10f43')

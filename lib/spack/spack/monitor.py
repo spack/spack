@@ -87,7 +87,7 @@ def get_monitor_group(subparser):
     monitor_group = subparser.add_argument_group()
     monitor_group.add_argument(
         '--monitor', action='store_true', dest='use_monitor', default=False,
-        help="interact with a montor server during builds.")
+        help="interact with a monitor server during builds.")
     monitor_group.add_argument(
         '--monitor-save-local', action='store_true', dest='monitor_save_local',
         default=False, help="save monitor results to .spack instead of server.")
@@ -425,11 +425,15 @@ class SpackMonitorClient:
             data['tags'] = self.tags
 
         # If we allow the spec to not exist (meaning we create it) we need to
-        # include the full spec.yaml here
+        # include the full specfile here
         if not spec_exists:
             meta_dir = os.path.dirname(spec.package.install_log_path)
-            spec_file = os.path.join(meta_dir, "spec.yaml")
-            data['spec'] = syaml.load(read_file(spec_file))
+            spec_file = os.path.join(meta_dir, "spec.json")
+            if os.path.exists(spec_file):
+                data['spec'] = sjson.load(read_file(spec_file))
+            else:
+                spec_file = os.path.join(meta_dir, "spec.yaml")
+                data['spec'] = syaml.load(read_file(spec_file))
 
         if self.save_local:
             return self.get_local_build_id(data, full_hash, return_response)

@@ -10,7 +10,7 @@ class RDada2(RPackage):
     """Accurate sample inference from amplicon data with single nucleotide
        resolution"""
 
-    homepage = "http://benjjneb.github.io/dada2/"
+    homepage = "https://benjjneb.github.io/dada2/"
     url      = "https://github.com/benjjneb/dada2/archive/v1.14.tar.gz"
 
     version('1.14', sha256='19980b9d7b0a0e80e86010357cae11d1fc07c2d02067c4445169143cf1f99906')

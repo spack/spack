@@ -9,7 +9,7 @@ from spack import *
 class Cubew(AutotoolsPackage):
     """Component of CubeBundle: High performance C Writer library """
 
-    homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
+    homepage = "https://www.scalasca.org/software/cube-4.x/download.html"
     url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubew-4.4.tar.gz"
 
     version('4.6', sha256='99fe58ce7ab13061ebfbc360aedaecc28099a30636c5269a42c0cbaf57149aa8')

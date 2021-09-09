@@ -61,7 +61,7 @@ class OpenfoamOrg(Package):
     and owner of the OPENFOAM trademark.
     """
 
-    homepage = "http://www.openfoam.org/"
+    homepage = "https://www.openfoam.org/"
     baseurl  = "https://github.com/OpenFOAM"
     url      = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
     git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"

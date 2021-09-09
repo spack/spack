@@ -311,7 +311,7 @@ def test_install_invalid_spec(invalid_spec):
         install(invalid_spec)
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('spec,concretize,error_code', [
     (Spec('mpi'), False, 1),
     (Spec('mpi'), True, 0),
@@ -415,7 +415,7 @@ def test_junit_output_with_errors(
     assert 'error message="{0}"'.format(msg) in content
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('clispecs,filespecs', [
     [[],                  ['mpi']],
     [[],                  ['mpi', 'boost']],
@@ -962,11 +962,16 @@ def test_install_fails_no_args_suggests_env_activation(tmpdir):
     assert 'using the `spack.yaml` in this directory' in output
 
 
+default_full_hash = spack.spec.Spec.full_hash
+
+
 def fake_full_hash(spec):
     # Generate an arbitrary hash that is intended to be different than
     # whatever a Spec reported before (to test actions that trigger when
     # the hash changes)
-    return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+    if spec.name == 'libdwarf':
+        return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+    return default_full_hash(spec)
 
 
 def test_cache_install_full_hash_match(

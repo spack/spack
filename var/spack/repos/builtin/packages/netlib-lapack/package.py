@@ -14,7 +14,7 @@ class NetlibLapack(CMakePackage):
     package that has found extensive use in the scientific community.
 
     """
-    homepage = "http://www.netlib.org/lapack/"
+    homepage = "https://www.netlib.org/lapack/"
     url = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
 
     version('3.9.1', sha256='d0085d2caf997ff39299c05d4bacb6f3d27001d25a4cc613d48c1f352b73e7e0',
@@ -42,9 +42,12 @@ class NetlibLapack(CMakePackage):
     variant('xblas', default=False,
             description='Builds extended precision routines using XBLAS')
 
-    patch('ibm-xl.patch', when='@3.7: %xl')
-    patch('ibm-xl.patch', when='@3.7: %xl_r')
+    patch('ibm-xl.patch', when='@3.7:3.8 %xl')
+    patch('ibm-xl.patch', when='@3.7:3.8 %xl_r')
     patch('ibm-xl.patch', when='@3.7: %cce@9:')
+
+    patch('ibm-xl-3.9.1.patch', when='@3.9.1 %xl')
+    patch('ibm-xl-3.9.1.patch', when='@3.9.1 %xl_r')
 
     # https://github.com/Reference-LAPACK/lapack/issues/228
     patch('undefined_declarations.patch', when='@3.8.0:3.8.9999')

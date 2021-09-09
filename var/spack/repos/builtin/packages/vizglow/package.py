@@ -19,7 +19,7 @@ class Vizglow(Package):
     file to a mirror so that Spack can find it. For instructions on how to
     set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://esgeetech.com/products/vizglow-plasma-modeling/"
+    homepage = "https://esgeetech.com/products/vizglow-plasma-modeling/"
     manual_download = True
 
     version('2.2alpha20', '2bef890c66f3a44aaf96f7c96788c89e', expand=False,

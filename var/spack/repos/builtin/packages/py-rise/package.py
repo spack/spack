@@ -9,7 +9,7 @@ from spack import *
 class PyRise(PythonPackage):
     """Reveal.js - Jupyter/IPython Slideshow Extension"""
 
-    homepage = "http://rise.readthedocs.io/"
+    homepage = "https://rise.readthedocs.io/"
     pypi = "rise/rise-5.6.1.tar.gz"
 
     version('5.6.1', sha256='1343f068d01adc4dd0226d9b278ce93fc92f365d827431a57e8d5679eb39f4d6')

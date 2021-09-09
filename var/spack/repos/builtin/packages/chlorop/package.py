@@ -18,7 +18,7 @@ class Chlorop(Package):
     to the full path of the directory you want chlorop to use as
     a temporary directory."""
 
-    homepage = "http://www.cbs.dtu.dk/services/ChloroP/"
+    homepage = "https://www.cbs.dtu.dk/services/ChloroP/"
     url      = "file://{0}/chlorop-1.1.Linux.tar.gz".format(os.getcwd())
     manual_download = True
 

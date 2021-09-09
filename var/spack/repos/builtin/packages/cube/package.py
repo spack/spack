@@ -14,7 +14,7 @@ class Cube(AutotoolsPackage):
     - system resource
     """
 
-    homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
+    homepage = "https://www.scalasca.org/software/cube-4.x/download.html"
     url      = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubegui-4.4.2.tar.gz"
 
     version('4.6',   sha256='1871c6736121d94a22314cb5daa8f3cbb978b58bfe54f677c4c9c9693757d0c5')

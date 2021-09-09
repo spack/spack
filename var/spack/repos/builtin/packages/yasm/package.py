@@ -12,7 +12,7 @@ class Yasm(AutotoolsPackage):
        GAS assembler syntaxes and outputs binary, ELF32 and ELF64
        object formats."""
 
-    homepage = "http://yasm.tortall.net"
+    homepage = "https://yasm.tortall.net"
     url      = "http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz"
     git      = "https://github.com/yasm/yasm.git"
 

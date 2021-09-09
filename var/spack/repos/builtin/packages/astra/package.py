@@ -9,7 +9,7 @@ from spack import *
 class Astra(Package):
     """A Space Charge Tracking Algorithm."""
 
-    homepage = "http://www.desy.de/~mpyflo/"
+    homepage = "https://www.desy.de/~mpyflo/"
 
     version('2020-02-03',
             sha256='ca9ee7d3d369f9040fbd595f57f3153f712d789b66385fd2d2de88a69a774b83',

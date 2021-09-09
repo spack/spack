@@ -15,7 +15,7 @@ class RMultcomp(RPackage):
     reproducing analyzes presented in the book "Multiple Comparisons Using R"
     (Bretz, Hothorn, Westfall, 2010, CRC Press)."""
 
-    homepage = "http://multcomp.r-forge.r-project.org/"
+    homepage = "https://multcomp.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/multcomp_1.4-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/multcomp"
 

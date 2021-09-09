@@ -72,6 +72,7 @@ import spack.compilers
 import spack.config
 import spack.error as serr
 import spack.paths
+import spack.spec
 import spack.util.classes
 import spack.util.executable
 import spack.version
@@ -197,7 +198,6 @@ class Target(object):
                 contains both the name and the version of the compiler we want to use
         """
         # Mixed toolchains are not supported yet
-        import spack.compilers
         if isinstance(compiler, spack.compiler.Compiler):
             if spack.compilers.is_mixed_toolchain(compiler):
                 msg = ('microarchitecture specific optimizations are not '
@@ -218,7 +218,6 @@ class Target(object):
             # of its name in compilers.yaml. Depending on where this function
             # is called we might get either a CompilerSpec or a fully fledged
             # compiler object.
-            import spack.spec
             if isinstance(compiler, spack.spec.CompilerSpec):
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()
             try:

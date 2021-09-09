@@ -42,7 +42,7 @@ class Gtkplus(MesonPackage):
     depends_on('libxkbcommon')
     depends_on('librsvg')
     depends_on('xrandr')
-    depends_on('libepoxy', when='@3:')
+    depends_on('libepoxy+glx', when='@3:')
     depends_on('libxi', when='@3:')
     depends_on('inputproto', when='@3:')
     depends_on('fixesproto', when='@3:')

@@ -12,7 +12,7 @@ class Libspatialite(AutotoolsPackage):
     """SpatiaLite is an open source library intended to extend the
        SQLite core to support fully fledged Spatial SQL capabilities."""
 
-    homepage = "http://www.gaia-gis.it"
+    homepage = "https://www.gaia-gis.it"
     url      = "http://www.gaia-gis.it/gaia-sins/libspatialite-sources/libspatialite-4.3.0a.tar.gz"
     manual_download = True
 
