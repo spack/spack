@@ -47,16 +47,14 @@ class Legion(CMakePackage, CudaPackage):
     depends_on('hip@4.1.0:', when='+hip')
     depends_on('hdf5', when='+hdf5')
     depends_on('hwloc@1.11', when='+hwloc')
-
-    depends_on('kokkos@3.3.01+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(cuda_arch[0]), 
-                when='kokkos +cuda cuda_arch={0}'.format(cuda_arch[0]))
-    depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
-    depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
-    depends_on("kokkos@3.3.01~hip", when='+kokkos~hip')
     depends_on('python@3', when='+python')
-
     depends_on('papi', when='+papi')
     depends_on('zlib', when='+zlib')
+
+    for nv_arch in CudaPackage.cuda_arch_values:
+        depends_on('kokkos cuda_arch=%s'% nv_arch, when='+kokkos +cuda cuda_arch=%s' % nv_arch)
+    depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
+    depends_on("kokkos@3.3.01~hip", when='+kokkos~hip')
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
@@ -138,10 +136,6 @@ class Legion(CMakePackage, CudaPackage):
             description="Enable CUDA support.")
     variant('cuda_hijack', default=False,
             description="Hijack application calls into the CUDA runtime (+cuda).")
-    variant('cuda_arch', default='70',
-            values=cuda_arch_list,
-            description="GPU/CUDA architecture to build for.",
-            multi=False)
     conflicts('+cuda_arch', when='~cuda')
 
     variant('cuda_unsupported_compiler', default=False,
