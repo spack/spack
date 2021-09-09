@@ -66,7 +66,7 @@ _db_dirname = '.spack-db'
 # DB version.  This is stuck in the DB file to track changes in format.
 # Increment by one when the database format changes.
 # Versions before 5 were not integers.
-_db_version = Version('5')
+_db_version = Version('6')
 
 # For any version combinations here, skip reindex when upgrading.
 # Reindexing can take considerable time and is not always necessary.
