@@ -5,8 +5,11 @@
 from __future__ import print_function
 
 import contextlib
+import fnmatch
 import json
 import os
+import os.path
+import re
 import sys
 
 try:
@@ -25,7 +28,9 @@ import spack.binary_distribution
 import spack.config
 import spack.environment
 import spack.main
+import spack.modules
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
@@ -80,6 +85,7 @@ def _try_import_from_store(module, abstract_spec_str):
         sys.path.extend(module_paths)
 
         try:
+            _fix_ext_suffix(candidate_spec)
             if _python_import(module):
                 msg = ('[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
                        'provides the "{0}" Python module').format(
@@ -100,6 +106,71 @@ def _try_import_from_store(module, abstract_spec_str):
     return False
 
 
+def _fix_ext_suffix(candidate_spec):
+    """Fix the external suffixes of Python extensions on the fly for
+    platforms that may need it
+
+    Args:
+        candidate_spec (Spec): installed spec with a Python module
+            to be checked.
+    """
+    # Here we map target families to the patterns expected
+    # by pristine CPython. Only architectures with known issues
+    # are included. Known issues:
+    #
+    # [RHEL + ppc64le]: https://github.com/spack/spack/issues/25734
+    #
+    _suffix_to_be_checked = {
+        'ppc64le': {
+            'glob': '*.cpython-*-powerpc64le-linux-gnu.so',
+            're': r'.cpython-[\w]*-powerpc64le-linux-gnu.so',
+            'fmt': r'{module}.cpython-{major}{minor}m-powerpc64le-linux-gnu.so'
+        }
+    }
+
+    # If the current architecture is not problematic return
+    generic_target = archspec.cpu.host().family
+    if str(generic_target) not in _suffix_to_be_checked:
+        return
+
+    # If there's no EXT_SUFFIX (Python < 3.5) or the suffix matches
+    # the expectations, return since the package is surely good
+    ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
+    if ext_suffix is None:
+        return
+
+    expected = _suffix_to_be_checked[str(generic_target)]
+    if fnmatch.fnmatch(ext_suffix, expected['glob']):
+        return
+
+    # If we are here it means the current interpreter expects different names
+    # than pristine CPython. So:
+    # 1. Find what we have installed
+    # 2. Create symbolic links for the other names, it they're not there already
+
+    # Check if standard names are installed and if we have to create
+    # link for this interpreter
+    standard_extensions = fs.find(candidate_spec.prefix, expected['glob'])
+    link_names = [re.sub(expected['re'], ext_suffix,  s) for s in standard_extensions]
+    for file_name, link_name in zip(standard_extensions, link_names):
+        if os.path.exists(link_name):
+            continue
+        os.symlink(file_name, link_name)
+
+    # Check if this interpreter installed something and we have to create
+    # links for a standard CPython interpreter
+    non_standard_extensions = fs.find(candidate_spec.prefix, '*' + ext_suffix)
+    for abs_path in non_standard_extensions:
+        directory, filename = os.path.split(abs_path)
+        module = filename.split('.')[0]
+        link_name = os.path.join(directory, expected['fmt'].format(
+            module=module, major=sys.version_info[0], minor=sys.version_info[1])
+        )
+        if os.path.exists(link_name):
+            continue
+        os.symlink(abs_path, link_name)
+
+
 @_bootstrapper(type='buildcache')
 class _BuildcacheBootstrapper(object):
     """Install the software needed during bootstrapping from a buildcache."""
@@ -108,9 +179,6 @@ class _BuildcacheBootstrapper(object):
         self.url = conf['info']['url']
 
     def try_import(self, module, abstract_spec_str):
-        # This import is local since it is needed only on Cray
-        import spack.platforms.linux
-
         if _try_import_from_store(module, abstract_spec_str):
             return True
 
@@ -122,7 +190,7 @@ class _BuildcacheBootstrapper(object):
         # On Cray we want to use Linux binaries if available from mirrors
         bincache_platform = spack.architecture.real_platform()
         if str(bincache_platform) == 'cray':
-            bincache_platform = spack.platforms.linux.Linux()
+            bincache_platform = spack.platforms.Linux()
             with spack.architecture.use_platform(bincache_platform):
                 abstract_spec = spack.spec.Spec(
                     abstract_spec_str + ' ^' + spec_for_current_python()
@@ -430,8 +498,9 @@ def ensure_bootstrap_configuration():
                     # and builtin but accounting for platform specific scopes
                     config_scopes = _bootstrap_config_scopes()
                     with spack.config.use_configuration(*config_scopes):
-                        with spack_python_interpreter():
-                            yield
+                        with spack.modules.disable_modules():
+                            with spack_python_interpreter():
+                                yield
 
 
 def store_path():

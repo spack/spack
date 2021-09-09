@@ -25,6 +25,7 @@ import archspec.cpu.schema
 from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 
 import spack.architecture
+import spack.binary_distribution
 import spack.caches
 import spack.compilers
 import spack.config
@@ -34,7 +35,7 @@ import spack.environment as ev
 import spack.package
 import spack.package_prefs
 import spack.paths
-import spack.platforms.test
+import spack.platforms
 import spack.repo
 import spack.stage
 import spack.store
@@ -315,6 +316,18 @@ def mock_fetch_cache(monkeypatch):
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
+@pytest.fixture()
+def mock_binary_index(monkeypatch, tmpdir_factory):
+    """Changes the directory for the binary index and creates binary index for
+    every test. Clears its own index when it's done.
+    """
+    tmpdir = tmpdir_factory.mktemp('mock_binary_index')
+    index_path = tmpdir.join('binary_index').strpath
+    mock_index = spack.binary_distribution.BinaryCacheIndex(index_path)
+    monkeypatch.setattr(spack.binary_distribution, 'binary_index', mock_index)
+    yield
+
+
 @pytest.fixture(autouse=True)
 def _skip_if_missing_executables(request):
     """Permits to mark tests with 'require_executables' and skip the
@@ -332,7 +345,7 @@ def _skip_if_missing_executables(request):
 
 @pytest.fixture(scope='session')
 def test_platform():
-    return spack.platforms.test.Test()
+    return spack.platforms.Test()
 
 
 @pytest.fixture(autouse=True, scope='session')
