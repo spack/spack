@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 class Gmt(Package):
+    url = "http://www.example.com/"
+    url = "http://www.example.com/2.0.tar.gz"
 
-    version('2.0', 'abcdef')
-    version('1.0', 'abcdef')
+    version('2.0', 'abcdef1234567890abcdef1234567890')
+    version('1.0', 'abcdef1234567890abcdef1234567890')
 
     depends_on('mvdefaults', when='@1.0')

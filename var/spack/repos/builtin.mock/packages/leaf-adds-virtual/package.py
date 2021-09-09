@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 class LeafAddsVirtual(Package):
-    version('2.0', sha256='abcde')
-    version('1.0', sha256='abcde')
+    url = "http://www.example.com/"
+    url = "http://www.example.com/2.0.tar.gz"
+
+    version('2.0', 'abcdef1234567890abcdef1234567890')
+    version('1.0', 'abcdef1234567890abcdef1234567890')
 
     depends_on('blas', when='@2.0')

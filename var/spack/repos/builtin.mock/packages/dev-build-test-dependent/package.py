@@ -8,7 +8,7 @@ class DevBuildTestDependent(Package):
     homepage = "example.com"
     url = "fake.com"
 
-    version('0.0.0', sha256='0123456789abcdefgh')
+    version('0.0.0', sha256='0123456789abcdef0123456789abcdef')
 
     phases = ['edit', 'install']
 

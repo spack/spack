@@ -15,9 +15,9 @@ class Libdwarf(Package):
     list_url = homepage
 
     version(20130729, "64b42692e947d5180e162e46c689dfbf")
-    version(20130207, 'foobarbaz')
-    version(20111030, 'foobarbaz')
-    version(20070703, 'foobarbaz')
+    version(20130207, '0123456789abcdef0123456789abcdef')
+    version(20111030, '0123456789abcdef0123456789abcdef')
+    version(20070703, '0123456789abcdef0123456789abcdef')
 
     depends_on("libelf")
 

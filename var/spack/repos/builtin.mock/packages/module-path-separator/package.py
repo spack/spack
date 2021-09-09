@@ -10,7 +10,7 @@ class ModulePathSeparator(Package):
     homepage = "http://www.llnl.gov"
     url      = "http://www.llnl.gov/module-path-separator-1.0.tar.gz"
 
-    version(1.0, 'foobarbaz')
+    version(1.0, '0123456789abcdef0123456789abcdef')
 
     def setup_environment(self, senv, renv):
         renv.append_path("COLON", "foo")

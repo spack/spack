@@ -13,7 +13,7 @@ class FindExternals1(AutotoolsPackage):
 
     url = "http://www.example.com/find-externals-1.0.tar.gz"
 
-    version('1.0', 'hash-1.0')
+    version('1.0', 'abcdef1234567890abcdef1234567890')
 
     @classmethod
     def determine_spec_details(cls, prefix, exes_in_prefix):
