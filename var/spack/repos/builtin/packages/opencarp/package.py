@@ -22,7 +22,6 @@
 
 import os
 from datetime import datetime
-import importlib.util
 
 from spack import *
 
@@ -53,6 +52,7 @@ class Opencarp(CMakePackage):
     depends_on('pkgconfig')
     depends_on('python@2.7:2.8,3.6:3.8')
     depends_on('zlib')
+    depends_on('perl')
 
     depends_on('py-carputils')
     depends_on('meshtool')
@@ -71,9 +71,9 @@ class Opencarp(CMakePackage):
     @run_after('install')
     def post_install(self):
         # If carputils is installed, a new settings file with right executable paths is generated
+        # TODO: This settings file should better be generated in carputils installation directory
         if '+carputils' in self.spec:
-            # The settings file is created in carputils installation directory.
-            settings_prefix = os.path.dirname(os.path.dirname(importlib.util.find_spec('carputils').origin))
+            settings_prefix = os.path.expanduser('~/.config/carputils')
             settings_file = os.path.join(settings_prefix, 'settings.yaml')
             if os.path.exists(settings_file):
                 print('Backup the existing settings.yaml...')
