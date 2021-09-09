@@ -36,7 +36,7 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
     if os.name == 'nt':
         git = which_string('git', required=True)
         git_root = os.path.dirname(git).split('/')[:-1]
-        git_root.extend(['usr','bin'])
+        git_root.extend(['usr', 'bin'])
         git_utils_path = os.sep.join(git_root)
 
     patch = which("patch", required=True, path=git_utils_path)
