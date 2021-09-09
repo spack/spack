@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class Legion(CMakePackage):
+class Legion(CMakePackage, CudaPackage):
     """Legion is a data-centric parallel programming system for writing
        portable high performance programs targeted at distributed heterogeneous
        architectures. Legion presents abstractions which allow programmers to
@@ -43,24 +43,18 @@ class Legion(CMakePackage):
     depends_on('mpi', when='conduit=mpi')
     depends_on('cuda@10.0:11.9', when='+cuda_unsupported_compiler')
     depends_on('cuda@10.0:11.9', when='+cuda')
+    # TODO: need to explore and update to use rocm support already in spack.
     depends_on('hip@4.1.0:', when='+hip')
     depends_on('hdf5', when='+hdf5')
     depends_on('hwloc@1.11', when='+hwloc')
 
-    # cuda-centric
-    # reminder for arch numbers to names: 60=pascal, 70=volta, 75=turing, 80=ampere
-    # TODO: we could use a map here to clean up and use naming vs. numbers.
-    cuda_arch_list = ('60', '70', '75', '80')
-    for nvarch in cuda_arch_list:
-        depends_on('kokkos@3.3.01+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(nvarch),
-                   when='%gcc+kokkos+cuda cuda_arch={0}'.format(nvarch))
-        depends_on("kokkos@3.3.01+cuda+cuda_lambda~wrapper cuda_arch={0}".format(nvarch),
-                   when="%clang+kokkos+cuda cuda_arch={0}".format(nvarch))
-
+    depends_on('kokkos@3.3.01+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(cuda_arch[0]), 
+                when='kokkos +cuda cuda_arch={0}'.format(cuda_arch[0]))
     depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
     depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
     depends_on("kokkos@3.3.01~hip", when='+kokkos~hip')
     depends_on('python@3', when='+python')
+
     depends_on('papi', when='+papi')
     depends_on('zlib', when='+zlib')
 
@@ -149,6 +143,7 @@ class Legion(CMakePackage):
             description="GPU/CUDA architecture to build for.",
             multi=False)
     conflicts('+cuda_arch', when='~cuda')
+
     variant('cuda_unsupported_compiler', default=False,
             description="Disable nvcc version check (--allow-unsupported-compiler).")
     conflicts('+cuda_hijack', when='~cuda')
@@ -160,7 +155,6 @@ class Legion(CMakePackage):
             description="Enable HIP support.")
     conflicts('+hip', when='+cuda')
     conflicts('+hip', when='+cuda_hijack')
-    conflicts('+hip', when='+cuda_arch')
     # TODO: awaiting upstreamed code to land in legion for '+hip +kokkos'
     conflicts('+kokkos', when='+hip')
 
