@@ -6,6 +6,7 @@ import os
 
 import ordereddict_backport
 import pytest
+
 try:
     from botocore.exceptions import ClientError
     has_botocore = True
