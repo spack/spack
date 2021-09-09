@@ -31,6 +31,7 @@ class Legion(CMakePackage):
     version('stable', branch='stable')
     version('master', branch='master')
     version('cr', branch='control_replication')
+    version('flexflow', branch='flexflow')
 
     depends_on("cmake@3.16:", type='build')
     # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
@@ -151,6 +152,9 @@ class Legion(CMakePackage):
     variant('cuda_unsupported_compiler', default=False,
             description="Disable nvcc version check (--allow-unsupported-compiler).")
     conflicts('+cuda_hijack', when='~cuda')
+    variant('gpu_reduction', default=True,
+            description="Enable built-in GPU Reduction.")
+    conflicts('+gpu_reduction', when='~cuda')
 
     variant('hip', default=False,
             description="Enable HIP support.")
@@ -252,7 +256,6 @@ class Legion(CMakePackage):
         if '+cuda' in spec:
             cuda_arch = spec.variants['cuda_arch'].value
             options.append('-DLegion_USE_CUDA=ON')
-            options.append('-DLegion_GPU_REDUCTIONS=ON')
             options.append('-DLegion_CUDA_ARCH=%s' % cuda_arch)
             if '+cuda_hijack' in spec:
                 options.append('-DLegion_HIJACK_CUDART=ON')
@@ -261,6 +264,11 @@ class Legion(CMakePackage):
 
             if '+cuda_unsupported_compiler' in spec:
                 options.append('-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler')
+
+            if '-gpu_reduction' in spec:
+              options.append('-DLegion_GPU_REDUCTIONS=OFF')
+            else:
+              options.append('-DLegion_GPU_REDUCTIONS=ON')
 
         if '+hip' in spec:
             options.append('-DLegion_USE_HIP=ON')
