@@ -260,7 +260,7 @@ class MockFetcher(object):
         self.tmpdir = tmpdir
 
     def archive(self, dst):
-        filename = os.path.join(self.tmpdir, 'empty-file')
+        filename = os.path.join(str(self.tmpdir), 'empty-file')
         with open(filename, 'w'):
             pass
         spack.util.web.push_to_url(filename, dst, keep_original=False)
