@@ -6,6 +6,11 @@ import os
 
 import ordereddict_backport
 import pytest
+try:
+    from botocore.exceptions import ClientError
+    has_botocore = True
+except ImportError:
+    has_botocore = False
 
 import llnl.util.tty as tty
 
@@ -216,9 +221,10 @@ class MockPaginator(object):
         return MockPages()
 
 
-class MockClientError(Exception):
-    def __init__(self):
-        self.response = {'Error': {'Code': 'NoSuchKey'}}
+if has_botocore:
+    class MockClientError(ClientError):
+        def __init__(self):
+            self.response = {'Error': {'Code': 'NoSuchKey'}}
 
 
 class MockS3Client(object):
@@ -268,6 +274,10 @@ def test_remove_s3_url(monkeypatch, capfd):
     assert('Deleted keytwo' in err)
 
 
+@pytest.mark.skipif(
+    not has_botocore,
+    reason='botocore needed for test'
+)
 def test_s3_url_exists(monkeypatch, capfd):
     def mock_create_s3_session(url):
         return MockS3Client()
