@@ -53,7 +53,7 @@ spack:
     cairo:
       variants: +pdf+png
     graphviz:
-      variants: +pangocairo
+      variants: +pangocairo+expat
     mvapich2:
       variants: fabrics=mrail process_managers=slurm file_systems=gpfs
     pgi:
