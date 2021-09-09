@@ -71,7 +71,6 @@ class Opencarp(CMakePackage):
     @run_after('install')
     def post_install(self):
         # If carputils is installed, a new settings file with right executable paths is generated
-        # TODO: This settings file should better be generated in carputils installation directory
         if '+carputils' in self.spec:
             settings_prefix = os.path.expanduser('~/.config/carputils')
             settings_file = os.path.join(settings_prefix, 'settings.yaml')
