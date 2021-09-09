@@ -303,7 +303,7 @@ class ArchSpec(object):
                     "arch platform (%s) isn't the current platform (%s)" %
                     (value, self.platform, curr_platform))
 
-            spec_platform = spack.architecture.get_platform(self.platform)
+            spec_platform = spack.platforms.by_name(self.platform)
             value = str(spec_platform.operating_system(value))
 
         self._os = value
@@ -340,7 +340,7 @@ class ArchSpec(object):
                     "the arch platform (%s) isn't the current platform (%s)" %
                     (value, self.platform, curr_platform))
 
-            spec_platform = spack.architecture.get_platform(self.platform)
+            spec_platform = spack.platforms.by_name(self.platform)
             value = spec_platform.target(value)
 
         self._target = value

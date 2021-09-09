@@ -2,28 +2,24 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-"""
-This module contains all the elements that are required to create an
-architecture object. These include, the target processor, the operating system,
-and the architecture platform (i.e. cray, darwin, linux, etc) classes.
+"""Aggregate the target processor, the operating system and the target
+platform into an architecture object.
 
 On a multiple architecture machine, the architecture spec field can be set to
 build a package against any target and operating system that is present on the
 platform. On Cray platforms or any other architecture that has different front
 and back end environments, the operating system will determine the method of
-compiler
-detection.
+compiler detection.
 
 There are two different types of compiler detection:
+
     1. Through the $PATH env variable (front-end detection)
-    2. Through the tcl module system. (back-end detection)
+    2. Through the module system. (back-end detection)
 
 Depending on which operating system is specified, the compiler will be detected
 using one of those methods.
 
-For platforms such as linux and darwin, the operating system is autodetected
-and the target is set to be x86_64.
+For platforms such as linux and darwin, the operating system is autodetected.
 
 The command line syntax for specifying an architecture is as follows:
 
@@ -33,10 +29,8 @@ If the user wishes to use the defaults, either target or os can be left out of
 the command line and Spack will concretize using the default. These defaults
 are set in the 'platforms/' directory which contains the different subclasses
 for platforms. If the machine has multiple architectures, the user can
-also enter front-end, or fe or back-end or be. These settings will concretize
-to their respective front-end and back-end targets and operating systems.
-Additional platforms can be added by creating a subclass of Platform
-and adding it inside the platform directory.
+also enter frontend, or fe or backend or be. These settings will concretize
+to their respective frontend and backend targets and operating systems.
 
 Platforms are an abstract class that are extended by subclasses. If the user
 wants to add a new type of platform (such as cray_xe), they can create a
@@ -47,12 +41,12 @@ arbitrarily set and can be changed though often there isn't much need unless a
 new platform is added and the user wants that to be detected first.
 
 Targets are created inside the platform subclasses. Most architecture
-(like linux, and darwin) will have only one target (x86_64) but in the case of
+(like linux, and darwin) will have only one target family (x86_64) but in the case of
 Cray machines, there is both a frontend and backend processor. The user can
 specify which targets are present on front-end and back-end architecture
 
-Depending on the platform, operating systems are either auto-detected or are
-set. The user can set the front-end and back-end operating setting by the class
+Depending on the platform, operating systems are either autodetected or are
+set. The user can set the frontend and backend operating setting by the class
 attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
@@ -61,18 +55,14 @@ import contextlib
 import archspec.cpu
 
 import llnl.util.lang as lang
-import llnl.util.tty as tty
 
 import spack.compiler
 import spack.compilers
 import spack.config
 import spack.operating_systems
-import spack.paths
 import spack.platforms
 import spack.spec
 import spack.target
-import spack.util.classes
-import spack.util.executable
 import spack.util.spack_yaml as syaml
 import spack.version
 
@@ -165,33 +155,12 @@ class Arch(object):
         return arch_for_spec(spec)
 
 
-@lang.memoized
-def get_platform(platform_name):
-    """Returns a platform object that corresponds to the given name."""
-    platform_list = all_platforms()
-    for p in platform_list:
-        if platform_name.replace("_", "").lower() == p.__name__.lower():
-            return p()
-
-
-def verify_platform(platform_name):
-    """ Determines whether or not the platform with the given name is supported
-        in Spack.  For more information, see the 'spack.platforms' submodule.
-    """
-    platform_name = platform_name.replace("_", "").lower()
-    platform_names = [p.__name__.lower() for p in all_platforms()]
-
-    if platform_name not in platform_names:
-        tty.die("%s is not a supported platform; supported platforms are %s" %
-                (platform_name, platform_names))
-
-
 def arch_for_spec(arch_spec):
     """Transforms the given architecture spec into an architecture object."""
     arch_spec = spack.spec.ArchSpec(arch_spec)
     assert arch_spec.concrete
 
-    arch_plat = get_platform(arch_spec.platform)
+    arch_plat = spack.platforms.by_name(arch_spec.platform)
     if not (arch_plat.operating_system(arch_spec.os) and
             arch_plat.target(arch_spec.target)):
         raise ValueError(
@@ -207,20 +176,7 @@ def _all_platforms():
 
 @lang.memoized
 def _platform():
-    """Detects the platform for this machine.
-
-    Gather a list of all available subclasses of platforms.
-    Sorts the list according to their priority looking. Priority is
-    an arbitrarily set number. Detects platform either using uname or
-    a file path (/opt/cray...)
-    """
-    # Try to create a Platform object using the config file FIRST
-    platform_list = _all_platforms()
-    platform_list.sort(key=lambda a: a.priority)
-
-    for platform_cls in platform_list:
-        if platform_cls.detect():
-            return platform_cls()
+    return spack.platforms.host()
 
 
 #: The "real" platform of the host running Spack. This should not be changed
