@@ -1115,12 +1115,13 @@ class CommitLookup(object):
             for tag_commit in commit_to_version:
                 try:
                     with working_dir(dest):
-                        self.fetcher.git('merge-base', '--is-ancestor', tag_commit, commit)
+                        self.fetcher.git(
+                            'merge-base', '--is-ancestor', tag_commit, commit)
                         distance = self.fetcher.git(
                             'rev-list', '%s..%s' % (tag_commit, commit), '--count',
                             output=str, error=str).strip()
                     ancestor_commits.append((tag_commit, int(distance)))
-                except spack.util.executable.ProcessError as e:
+                except spack.util.executable.ProcessError:
                     # is-ancestor check will raise a ProcessError when False
                     pass
 

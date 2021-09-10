@@ -238,7 +238,8 @@ def test_install_overwrite_not_installed(
     assert os.path.exists(spec.prefix)
 
 
-def test_install_commit(mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+def test_install_commit(
+        mock_git_version_info, install_mockery, mock_packages, monkeypatch):
     """
     Test installing a git package from a commit.
 

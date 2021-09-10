@@ -22,7 +22,7 @@ import pytest
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
-from llnl.util.filesystem import mkdirp, remove_linked_tree, touch, working_dir
+from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 
 import spack.architecture
 import spack.caches
@@ -63,6 +63,7 @@ def last_two_git_commits(scope='session'):
 def write_file(filename, contents):
     with open(filename, 'w') as f:
         f.write(contents)
+
 
 @pytest.fixture
 def mock_git_version_info(tmpdir, scope="function"):
@@ -115,7 +116,7 @@ def mock_git_version_info(tmpdir, scope="function"):
         git('commit', '-am', 'third 1.x commit')
         write_file(filename, "[1, 2]")
         git('commit', '-am', 'fourth 1.x commit')
-        git('tag', '1.2') # test robust parsing to different syntax, no v
+        git('tag', '1.2')  # test robust parsing to different syntax, no v
 
         # Get the commits in topo order
         log = git('log', '--all', '--pretty=format:%H', '--topo-order',
