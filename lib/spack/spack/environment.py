@@ -85,7 +85,7 @@ spack:
 valid_environment_name_re = r'^\w[\w-]*$'
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 2
+lockfile_format_version = 3
 
 # Magic names
 # The name of the standalone spec list in the manifest yaml
@@ -1711,6 +1711,7 @@ class Environment(object):
             '_meta': {
                 'file-type': 'spack-lockfile',
                 'lockfile-version': lockfile_format_version,
+                'specfile-version': spack.spec.specfile_format_version
             },
 
             # users specs + hashes are the 'roots' of the environment
