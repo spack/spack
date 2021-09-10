@@ -37,11 +37,14 @@ class EcpDataVisSdk(BundlePackage):
     variant('zfp', default=False, description="Enable ZFP")
 
     # Outstanding concretization issues
-    # variant('cinema', default=True, description="Enable Cinema")
+    variant('cinema', default=False, description="Enable Cinema")
+    conflicts('+cinema')
 
     # Outstanding build issues
-    # variant('catalyst', default=False, description="Enable Catalyst")
-    # variant('visit', default=False, description="Enable VisIt")
+    variant('catalyst', default=False, description="Enable Catalyst")
+    conflicts('+catalyst')
+    variant('visit', default=False, description="Enable VisIt")
+    conflicts('+visit')
 
     ############################################################
     # This is a messy workaround until the clingo concretizer can be required.
