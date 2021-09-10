@@ -63,6 +63,7 @@ def view_copy(src, dst, view, spec=None):
     """
     shutil.copyfile(src, dst)
     if spec:
+        print('--------->',spec.name, src, dst)
         # Not metadata, we have to relocate it
 
         # Get information on where to relocate from/to
@@ -77,13 +78,13 @@ def view_copy(src, dst, view, spec=None):
         new_sbang = sbang.sbang_shebang_line()
 
         prefix_to_projection = OrderedDict({
-            spec.prefix: view.get_projection_for_spec(spec),
-            spack.paths.spack_root: view._root})
+            spec.prefix: view.get_projection_for_spec(spec)})
 
         for dep in spec.traverse():
             prefix_to_projection[dep.prefix] = \
                 view.get_projection_for_spec(dep)
-
+            print('*****', dep, '****',prefix_to_projection[dep.prefix])
+           
         if spack.relocate.is_binary(dst):
             spack.relocate.relocate_text_bin(
                 binaries=[dst],
