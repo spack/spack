@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import sys
 
 from spack import *
@@ -683,16 +682,16 @@ class Trilinos(CMakePackage, CudaPackage):
         # ################# System-specific ######################
 
         # Fortran lib (assumes clang is built with gfortran!)
-        if ('+fortran +mpi' in spec
-                and spec.compiler.name in ['gcc', 'clang', 'apple-clang']):
-            mpifc = Executable(spec['mpi'].mpifc)
-            libext = 'dylib' if sys.platform == 'darwin' else 'so'
-            libgfortran_dir = os.path.dirname(
-                mpifc('--print-file-name', 'libgfortran.%s' % libext, output=str))
-            options.append(define(
-                'Trilinos_EXTRA_LINK_FLAGS',
-                '-L%s/ -lgfortran' % (libgfortran_dir),
-            ))
+        if ('+fortran' in spec and spec.compiler.name in ['gcc', 'clang', 'apple-clang']):
+            fc = Executable(spec['mpi'].mpifc) if ('+mpi' in spec) else Executable(spack_fc)
+            sharedlibext = 'dylib' if sys.platform == 'darwin' else 'so'
+            libgfortran = fc('--print-file-name',
+                'libgfortran.%s' % sharedlibext, output=str).strip()
+            # if libgfortran is equal to "libgfortran.<libext>" then
+            # print-file-name failed, use static library instead
+            if (libgfortran == ('libgfortran.%s' %  sharedlibext)):
+                libgfortran = fc('--print-file-name', 'libgfortran.a', output=str).strip()
+            options.append(define('Trilinos_EXTRA_LINK_FLAGS', libgfortran))
 
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
