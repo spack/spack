@@ -687,7 +687,7 @@ class Trilinos(CMakePackage, CudaPackage):
             libgfortran = mpifc('--print-file-name', 'libgfortran.a', output=str)
             options.append(define(
                 'Trilinos_EXTRA_LINK_FLAGS',
-                '-L%s/ -lgfortran' % (libgfortran),
+                '%s' % (libgfortran.strip()),
             ))
 
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
