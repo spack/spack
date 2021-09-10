@@ -252,6 +252,11 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
         ]) - files_cached_in_mirror)
 
 
+def test_mirror_create_cant_create_dir():
+    with pytest.raises(spack.mirror.MirrorError):
+        spack.mirror.create('file:///dev/null', [])
+
+
 class MockFetcher(object):
     """Mock fetcher object which implements the necessary functionality for
        testing MirrorCache
