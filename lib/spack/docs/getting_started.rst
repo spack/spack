@@ -642,8 +642,9 @@ Fortran.
 #. Run ``spack compiler find`` to locate Clang.
 
 #. There are different ways to get ``gfortran`` on macOS. For example, you can
-   install GCC with Spack (``spack install gcc``) or with Homebrew
-   (``brew install gcc``).
+   install GCC with Spack (``spack install gcc``), with Homebrew (``brew install
+   gcc``), or from a `DMG installer
+   <https://github.com/fxcoudert/gfortran-for-macOS/releases>`_.
 
 #. The only thing left to do is to edit ``~/.spack/darwin/compilers.yaml`` to provide
    the path to ``gfortran``:
@@ -664,7 +665,8 @@ Fortran.
    If you used Spack to install GCC, you can get the installation prefix by
    ``spack location -i gcc`` (this will only work if you have a single version
    of GCC installed). Whereas for Homebrew, GCC is installed in
-   ``/usr/local/Cellar/gcc/x.y.z``.
+   ``/usr/local/Cellar/gcc/x.y.z``. With the DMG installer, the correct path
+   will be ``/usr/local/gfortran``.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
