@@ -174,7 +174,7 @@ class Paraview(CMakePackage, CudaPackage):
 
     # Include limits header wherever needed to fix compilation with GCC 11
     patch('paraview-gcc11-limits.patch', when='@5.9.1 %gcc@11.1.0:')
-   
+
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'
         """Handle ParaView version-based custom URLs."""
