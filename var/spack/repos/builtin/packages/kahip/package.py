@@ -46,6 +46,7 @@ class Kahip(CMakePackage):
     patch('fix-sconstruct-for-py3.patch', when='@2:2.11 ^python@3:')
     patch('fix-sconstruct-for-py3-v2.00.patch', when='@2.00 ^python@3:')
 
+    # 'when' decorators to override new CMake build approach (old build was SConstruct).
     @when("@:2.11")
     def patch(self):
         """Internal compile.sh scripts hardcode number of cores to build with.
