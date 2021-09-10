@@ -340,7 +340,6 @@ class Lock(object):
             self._ensure_parent_directory()
             self._file = file_tracker.get_fh(self.path)
 
-
         if op == self.LOCK_EX and self._file.mode == 'r':
             # Attempt to upgrade to write lock w/a read-only file.
             # If the file were writable, we'd have opened it 'r+'
@@ -579,7 +578,7 @@ class Lock(object):
         """
         timeout = timeout or self.default_timeout
 
-        if self._writes == 1 and self._reads == 0:
+        if self._writes == 1:
             self._log_downgrading()
             # can raise LockError.
             wait_time, nattempts = self._lock(self.LOCK_SH, timeout=timeout)
@@ -598,7 +597,7 @@ class Lock(object):
         """
         timeout = timeout or self.default_timeout
 
-        if self._reads == 1 and self._writes == 0:
+        if self._reads >= 1 and self._writes == 0:
             self._log_upgrading()
             # can raise LockError.
             wait_time, nattempts = self._lock(self.LOCK_EX, timeout=timeout)

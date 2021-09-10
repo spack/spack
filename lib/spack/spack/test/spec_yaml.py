@@ -324,6 +324,29 @@ def check_specs_equal(original_spec, spec_yaml_path):
 def test_save_dependency_spec_jsons_subset(tmpdir, config):
     output_path = str(tmpdir.mkdir('spec_jsons'))
 
+    default = ('build', 'link')
+
+    mock_repo = MockPackageMultiRepo()
+    g = mock_repo.add_package('g', [], [])
+    f = mock_repo.add_package('f', [], [])
+    e = mock_repo.add_package('e', [], [])
+    d = mock_repo.add_package('d', [f, g], [default, default])
+    c = mock_repo.add_package('c', [], [])
+    b = mock_repo.add_package('b', [d, e], [default, default])
+    mock_repo.add_package('a', [b, c], [default, default])
+
+    with repo.use_repositories(mock_repo):
+        spec_a = Spec('a')
+        spec_a.concretize()
+        b_spec = spec_a['b']
+        c_spec = spec_a['c']
+        spec_a_json = spec_a.to_json(hash=ht.build_hash)
+
+        save_dependency_specfiles(spec_a_json, output_path, ['b', 'c'])
+
+        assert check_specs_equal(b_spec, os.path.join(output_path, 'b.json'))
+        assert check_specs_equal(c_spec, os.path.join(output_path, 'c.json'))
+
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Not supported on Windows (yet)")
