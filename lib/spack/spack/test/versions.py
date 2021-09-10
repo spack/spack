@@ -8,6 +8,7 @@ We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
 import os
+
 import pytest
 
 from llnl.util.filesystem import working_dir
@@ -16,7 +17,6 @@ import spack.package
 import spack.spec
 from spack.util.executable import which
 from spack.version import Version, VersionList, ver
-
 
 
 def assert_ver_lt(a, b):
