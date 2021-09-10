@@ -139,9 +139,9 @@ def test_run(args):
     """
     if args.alias:
         suites = spack.install_test.get_named_test_suites(args.alias)
-        assert len(suites) == 0, \
-            'Test suite "{0}" already exists. Try another alias.' \
-            .format(args.alias)
+        if suites:
+            tty.die('Test suite "{0}" already exists. Try another alias.'
+                    .format(args.alias))
 
     # cdash help option
     if args.help_cdash:

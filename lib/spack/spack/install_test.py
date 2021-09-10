@@ -66,18 +66,29 @@ def get_all_test_suites():
 
 def get_named_test_suites(name):
     """Return a list of the names of any test suites with that name."""
-    assert name, "Cannot search for empty test name or 'None'"
+    if not name:
+        raise TestSuiteNameError('Test suite name is required.')
+
     test_suites = get_all_test_suites()
     return [ts for ts in test_suites if ts.name == name]
 
 
 def get_test_suite(name):
     names = get_named_test_suites(name)
-    assert len(names) < 2, "Too many suites with that name.  May shadow hash."
+    if len(names) > 1:
+        raise TestSuiteNameError(
+            'Too many suites named "{0}".  May shadow hash.'.format(name)
+        )
 
     if not names:
         return None
     return names[0]
+
+
+def write_test_suite_file(suite):
+    """Write the test suite to its lock file."""
+    with open(suite.stage.join(test_suite_filename), 'w') as f:
+        sjson.dump(suite.to_dict(), stream=f)
 
 
 class TestSuite(object):
@@ -242,8 +253,7 @@ class TestSuite(object):
                     except spack.repo.UnknownPackageError:
                         pass  # not all virtuals have package files
 
-        with open(self.stage.join(test_suite_filename), 'w') as f:
-            sjson.dump(self.to_dict(), stream=f)
+        write_test_suite_file(self)
 
     def to_dict(self):
         specs = [s.to_dict() for s in self.specs]
@@ -300,5 +310,5 @@ class TestSuiteFailure(spack.error.SpackError):
         super(TestSuiteFailure, self).__init__(msg)
 
 
-class TestSuiteSpecError(spack.error.SpackError):
-    """Raised when there is an issue associated with the spec being tested."""
+class TestSuiteNameError(spack.error.SpackError):
+    """Raised when there is an issue with the naming of the test suite."""

@@ -43,7 +43,7 @@ def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
                      install_mockery_mutable_config):
     """Ensure output printed from pkgs is captured by output redirection."""
     install('printing-package')
-    spack_test('run', 'printing-package')
+    spack_test('run', '--alias', 'printpkg', 'printing-package')
 
     stage_files = os.listdir(mock_test_stage)
     assert len(stage_files) == 1
