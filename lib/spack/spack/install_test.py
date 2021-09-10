@@ -8,9 +8,9 @@ import os
 import re
 import shutil
 import sys
-import tty
 
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 import spack.error
 import spack.util.prefix
@@ -130,10 +130,15 @@ class TestSuite(object):
                     dirty=dirty
                 )
 
-                # Clean up on success and log passed test
+                # Clean up on success
                 if remove_directory:
                     shutil.rmtree(test_dir)
-                self.write_test_result(spec, 'PASSED')
+
+                # Log test status based on whether any non-pass-only test
+                # functions were called
+                tested = os.path.exists(self.tested_file_for_spec(spec))
+                status = 'PASSED' if tested else 'NO-TESTS'
+                self.write_test_result(spec, status)
             except BaseException as exc:
                 if isinstance(exc, SyntaxError):
                     # Create the test log file and report the error.
@@ -184,6 +189,13 @@ class TestSuite(object):
 
     def test_dir_for_spec(self, spec):
         return self.stage.join(self.test_pkg_id(spec))
+
+    @classmethod
+    def tested_file_name(cls, spec):
+        return '%s-tested.txt' % cls.test_pkg_id(spec)
+
+    def tested_file_for_spec(self, spec):
+        return self.stage.join(self.tested_file_name(spec))
 
     @property
     def current_test_cache_dir(self):
