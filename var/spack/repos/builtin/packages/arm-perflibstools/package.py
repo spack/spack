@@ -28,9 +28,6 @@ class ArmPerflibstools(MakefilePackage):
         makefile.filter(r'\s*CC\s*=.*',  'CC = '  + spack_cc)
 
     def install(self, spec, prefix):
-        make()
-
-        # Install
         install_tree('lib', prefix.lib)
         install_tree('tools', prefix.bin)
 
