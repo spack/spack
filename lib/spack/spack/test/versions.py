@@ -7,11 +7,14 @@
 We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
+import os
 import pytest
 
+from llnl.util.filesystem import working_dir
 import spack.package
 import spack.spec
 from spack.version import Version, VersionList, ver
+from spack.util.executable import which
 
 
 def assert_ver_lt(a, b):
@@ -590,10 +593,6 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
         version = spec.version
         comparator = [str(v) if not isinstance(v, int) else v
                       for v in version._cmp(version.commits)]
-
-        import os
-        from llnl.util.filesystem import working_dir
-        from spack.util.executable import which
 
         with working_dir(repo_path):
             which('git')('checkout', commit)
