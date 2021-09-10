@@ -18,6 +18,8 @@ class ArmPerflibstools(MakefilePackage):
 
     version('master', branch='master')
 
+    extends('python')
+
     depends_on('python@3:')
 
     # Patch to remove xblas.h include and non gcc routines
@@ -31,5 +33,3 @@ class ArmPerflibstools(MakefilePackage):
         install_tree('lib', prefix.lib)
         install_tree('tools', prefix.bin)
 
-    def setup_run_environment(self, env):
-        env.prepend_path("PYTHONPATH", join_path(self.prefix, "bin"))
