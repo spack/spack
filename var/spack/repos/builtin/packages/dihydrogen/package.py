@@ -70,6 +70,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +cuda_rma', when='+al +cuda')
     depends_on('aluminum +rocm +rccl', when='+al +rocm')
+    depends_on('aluminum +ht', when='+al +distconv')
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
