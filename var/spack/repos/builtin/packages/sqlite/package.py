@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import architecture
 
 
@@ -13,6 +15,7 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
+    version('3.36.0', sha256='bd90c3eb96bee996206b83be7065c9ce19aef38c3f4fb53073ada0d0b69bbce3')
     version('3.35.5', sha256='f52b72a5c319c3e516ed7a92e123139a6e87af08a2dc43d7757724f6132e6db0')
     version('3.35.4', sha256='7771525dff0185bfe9638ccce23faa0e1451757ddbda5a6c853bb80b923a512d')
     version('3.35.3', sha256='ecbccdd440bdf32c0e1bb3611d635239e3b5af268248d130d0445a32daf0274b')
@@ -70,6 +73,18 @@ class Sqlite(AutotoolsPackage):
     # compiler is used.
     patch('remove_overflow_builtins.patch', when='@3.17.0:3.20%intel')
 
+    executables = ['^sqlite3$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        # `sqlite3 --version` prints only the version number, timestamp, commit
+        # hash(?) but not the program name. As a basic sanity check, the code
+        # calls re.match() and attempts to match the ISO 8601 date following the
+        # version number as well.
+        match = re.match(r'(\S+) \d{4}-\d{2}-\d{2}', output)
+        return match.group(1) if match else None
+
     def url_for_version(self, version):
         full_version = list(version.version) + [0 * (4 - len(version.version))]
         version_string\
@@ -118,8 +133,7 @@ class Sqlite(AutotoolsPackage):
             args.extend(['--disable-fts4', '--disable-fts5'])
 
         # Ref: https://sqlite.org/rtree.html
-        if '+rtree' in self.spec:
-            args.append('CPPFLAGS=-DSQLITE_ENABLE_RTREE=1')
+        args.extend(self.enable_or_disable('rtree'))
 
         # Ref: https://sqlite.org/compile.html
         if '+column_metadata' in self.spec:
