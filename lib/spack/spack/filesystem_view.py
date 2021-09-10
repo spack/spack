@@ -61,8 +61,8 @@ def view_copy(src, dst, view, spec=None):
 
     Use spec and view to generate relocations
     """
-    shutil.copyfile(src, dst)
-    if spec:
+    shutil.copy2(src, dst)
+    if spec and not spec.external:
         # Not metadata, we have to relocate it
 
         # Get information on where to relocate from/to
@@ -73,6 +73,8 @@ def view_copy(src, dst, view, spec=None):
         # will have the old sbang location in their shebangs.
         # TODO: Not sure which one to use...
         import spack.hooks.sbang as sbang
+        # import here to avoid circular import error
+        import spack.util.file_permissions as fp
         orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
         new_sbang = sbang.sbang_shebang_line()
 
@@ -91,7 +93,7 @@ def view_copy(src, dst, view, spec=None):
                 files=[dst],
                 prefixes=prefix_to_projection
             )
-
+        fp.set_permissions_by_spec(dst, spec)
 
 def view_func_parser(parsed_name):
     # What method are we using for this view
