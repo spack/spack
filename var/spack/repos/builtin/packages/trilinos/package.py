@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 from spack import *
@@ -696,7 +697,11 @@ class Trilinos(CMakePackage, CudaPackage):
                 libgfortran = fc('--print-file-name',
                                  'libgfortran.a',
                                  output=str).strip()
-            options.append(define('Trilinos_EXTRA_LINK_FLAGS', libgfortran))
+            # -L<libdir> -lgfortran required for OSX
+            # https://github.com/spack/spack/pull/25823#issuecomment-917231118
+            options.append(
+                define('Trilinos_EXTRA_LINK_FLAGS',
+                       '-L%s/ -lgfortran' % os.path.dirname(libgfortran)))
 
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
