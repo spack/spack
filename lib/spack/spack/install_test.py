@@ -64,12 +64,16 @@ def get_all_test_suites():
     return test_suites
 
 
-def get_test_suite(name):
+def get_named_test_suites(name):
+    """Return a list of the names of any test suites with that name."""
     assert name, "Cannot search for empty test name or 'None'"
     test_suites = get_all_test_suites()
-    names = [ts for ts in test_suites
-             if ts.name == name]
-    assert len(names) < 2, "alias shadows test suite hash"
+    return [ts for ts in test_suites if ts.name == name]
+
+
+def get_test_suite(name):
+    names = get_named_test_suites(name)
+    assert len(names) < 2, "Too many suites with that name.  May shadow hash."
 
     if not names:
         return None
