@@ -222,10 +222,18 @@ the prefix. When using modules, Spack will attempt to parse the ``module show``
 output in order to determine all relevant settings and variables. Reasons why
 this may not work automatically are
 
+* the wrong package name,
 * missing module dependencies,
 * nonstandard paths, and
 * the use of metamodules, i.e., modules whose only purpose is to load other
   modules.
+
+For certain libraries there exist multiple implementations (e.g., MPI). If you
+modify the ``packages.yaml`` file, then you must make sure to select the
+correct package name. For example, the package ``mpich`` can be used only for
+the vanilla MPICH implementation but not for Cray MPICH; Cray MPICH has its own
+package called ``cray-mpich``. If the wrong module name is picked, this can
+cause errors later, e.g., Spack may compute a wrong prefix.
 
 The case of missing dependencies will be discussed based on the real-world
 example of loading OpenMPI 4.0.2 with CUDA support. Shown below is the ``module
@@ -300,7 +308,11 @@ following OpenMPI entry:
 
 Once all dependencies are satisfied or if there are no dependencies, then the
 prefix determined by Spack may not be correct in the presence of nonstandard
-paths. Consider the OpenMPI module on CentOS 7:
+paths. This is rarely the case because Spack contains package-specific code to
+deal with these quirks. Before manually setting the prefix in the
+``packages.yaml`` file in addition to a list of modules, it is strongly
+suggested to check the package name and the module list again. Consider the
+OpenMPI module on CentOS 7:
 
 .. code-block:: console
 
