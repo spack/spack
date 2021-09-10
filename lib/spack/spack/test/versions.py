@@ -11,10 +11,12 @@ import os
 import pytest
 
 from llnl.util.filesystem import working_dir
+
 import spack.package
 import spack.spec
-from spack.version import Version, VersionList, ver
 from spack.util.executable import which
+from spack.version import Version, VersionList, ver
+
 
 
 def assert_ver_lt(a, b):
