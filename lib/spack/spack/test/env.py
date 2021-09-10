@@ -11,7 +11,8 @@ import spack.spec
 
 def test_hash_change_no_rehash_concrete(tmpdir, mock_packages):
     # create an environment
-    env = ev.Environment(tmpdir.mkdir('env_dir'))
+    env_path = tmpdir.mkdir('env_dir').strpath
+    env = ev.Environment(env_path)
     env.write()
 
     # add a spec with a rewritten build hash
@@ -29,9 +30,9 @@ def test_hash_change_no_rehash_concrete(tmpdir, mock_packages):
     env.write()
 
     # Read environment
-    read_in = ev.Environment(tmpdir.join('env_dir'))
+    read_in = ev.Environment(env_path)
 
-    # Ensure read hashes are used (new hash seen)
+    # Ensure read hashes are used (rewritten hash seen on read)
     assert read_in.concretized_order
     assert read_in.concretized_order[0] in read_in.specs_by_hash
     assert read_in.specs_by_hash[read_in.concretized_order[0]]._build_hash == new_hash
