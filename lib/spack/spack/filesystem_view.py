@@ -73,6 +73,7 @@ def view_copy(src, dst, view, spec=None):
         # will have the old sbang location in their shebangs.
         # TODO: Not sure which one to use...
         import spack.hooks.sbang as sbang
+
         # import here to avoid circular import error
         import spack.util.file_permissions as fp
         orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
@@ -80,6 +81,11 @@ def view_copy(src, dst, view, spec=None):
 
         prefix_to_projection = OrderedDict({
             spec.prefix: view.get_projection_for_spec(spec)})
+
+        for dep in spec.traverse():
+            if not dep.external:
+                prefix_to_projection[dep.prefix] = \
+                    view.get_projection_for_spec(dep)
 
         if spack.relocate.is_binary(dst):
             spack.relocate.relocate_text_bin(
@@ -94,6 +100,7 @@ def view_copy(src, dst, view, spec=None):
                 prefixes=prefix_to_projection
             )
         fp.set_permissions_by_spec(dst, spec)
+
 
 def view_func_parser(parsed_name):
     # What method are we using for this view
