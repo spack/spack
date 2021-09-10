@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 from tempfile import NamedTemporaryFile
 
@@ -98,8 +99,8 @@ class Sqlite(AutotoolsPackage):
                 e = Executable(exe)
                 e(fail_on_error=False,
                   input=sqlite_stdin.name,
-                  output='/dev/null',
-                  error='/dev/null')
+                  output=os.devnull,
+                  error=os.devnull)
             return e.returncode
 
         def get_variant(name, has_variant):
