@@ -339,7 +339,8 @@ class Database(object):
         self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
 
         # Set up layout of database files within the db dir
-        self._index_path = os.path.join(self._db_dir, 'index.json')
+        self._oldindex_path = os.path.join(self._db_dir, 'index.json')
+        self._index_path = os.path.join(self._db_dir, 'index-v6.json')
         self._verifier_path = os.path.join(self._db_dir, 'index_verifier')
         self._lock_path = os.path.join(self._db_dir, 'lock')
 
@@ -1016,6 +1017,11 @@ class Database(object):
                     new_verifier = str(uuid.uuid4())
                     f.write(new_verifier)
                     self.last_seen_verifier = new_verifier
+            # We just wrote a new-generation database, cleanup old-generation file
+            # to force old old-genernation spack to reindex in cases where we
+            # just removed packages which might be in the old-gen database.
+            if os.path.isfile(self._oldindex_path):
+                os.remove(self._oldindex_path)
         except BaseException as e:
             tty.debug(e)
             # Clean up temp file if something goes wrong.
@@ -1030,6 +1036,27 @@ class Database(object):
         try to regenerate a missing DB if local. This requires taking a
         write lock.
         """
+
+        # Support for friction-less transition between spack versions with older
+        # code: database code and the newer (currently verson 6) database code.
+
+        # Use a new filename for the v6 database and force reindexing by removing
+        # the old database filename) to support switching back and forth between
+        # previous database and current database versions.
+
+        # The old spack database code is forced to reindex when we write a update
+        # of the database in v6 format, see the _write method for that above.
+
+        if os.path.isfile(self._index_path) and os.path.isfile(self._oldindex_path):
+            # With the database lock held, check if the old database file is newer
+            with lk.WriteTransaction(self.lock):
+                if os.path.getctime(self._index_path) < \
+                   os.path.getctime(self._oldindex_path):
+                    # An old-generation spack was last to write a db last on that tree:
+                    # Since the old-generation database does not contain packages
+                    # built by new-generation spack, it's better to force a reindex:
+                    os.remove(self._index_path)
+
         if os.path.isfile(self._index_path):
             current_verifier = ''
             if _use_uuid:

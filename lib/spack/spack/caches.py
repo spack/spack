@@ -26,6 +26,12 @@ def misc_cache_location():
     path = spack.config.get('config:misc_cache')
     if not path:
         path = os.path.join(spack.paths.user_config_path, 'cache')
+    # The current format of the misc_cache isn't forwards-compatbile with
+    # the misc_cache of spack versions before the Version 6 database format.
+    # For a smooth transition period, don't replace the previous caches to
+    # avoid errors like this from the solver/provided_index when switching
+    # to pre-v6 commits: AttributeError: 'str' object has no attribute 'get'
+    path = os.path.join(path, 'v6')
     path = spack.util.path.canonicalize_path(path)
     return path
 
