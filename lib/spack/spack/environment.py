@@ -1695,12 +1695,12 @@ class Environment(object):
         concrete_specs = {}
         for spec in self.specs_by_hash.values():
             for s in spec.traverse():
-                dag_hash_all = s.build_hash()
-                if dag_hash_all not in concrete_specs:
+                build_hash = s.build_hash()
+                if build_hash not in concrete_specs:
                     spec_dict = s.to_node_dict(hash=ht.build_hash)
                     # Assumes no legacy formats, since this was just created.
                     spec_dict[ht.dag_hash.name] = s.dag_hash()
-                    concrete_specs[dag_hash_all] = spec_dict
+                    concrete_specs[build_hash] = spec_dict
 
         hash_spec_list = zip(
             self.concretized_order, self.concretized_user_specs)
@@ -1741,13 +1741,15 @@ class Environment(object):
         root_hashes = set(self.concretized_order)
 
         specs_by_hash = {}
-        for dag_hash, node_dict in json_specs_by_hash.items():
-            specs_by_hash[dag_hash] = Spec.from_node_dict(node_dict)
+        for build_hash, node_dict in json_specs_by_hash.items():
+            spec = Spec.from_node_dict(node_dict)
+            setattr(spec, ht.build_hash.attr, build_hash)
+            specs_by_hash[build_hash] = spec
 
-        for dag_hash, node_dict in json_specs_by_hash.items():
+        for build_hash, node_dict in json_specs_by_hash.items():
             for _, dep_hash, deptypes, _ in (
                     Spec.dependencies_from_node_dict(node_dict)):
-                specs_by_hash[dag_hash]._add_dependency(
+                specs_by_hash[build_hash]._add_dependency(
                     specs_by_hash[dep_hash], deptypes)
 
         # If we are reading an older lockfile format (which uses dag hashes
