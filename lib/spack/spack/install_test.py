@@ -8,9 +8,9 @@ import os
 import re
 import shutil
 import sys
-import tty
 
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 import spack.error
 import spack.util.prefix
