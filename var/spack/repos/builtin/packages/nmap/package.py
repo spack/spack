@@ -35,7 +35,7 @@ class Nmap(AutotoolsPackage):
     variant("ndiff", default=True, description="Enable ndiff")
     variant("nping", default=True, description="Enable nping")
     variant("zenmap", default=True, description="Enable zenmap")
-    variant("nmapupdate", default=False, description="Enable nmap-update")
+    variant("nmap-update", default=False, description="Enable nmap-update")
 
     depends_on("openssl@1.1:", when="@7.50:")
     depends_on("openssl@:1.0.9", when="@:7.49")
@@ -43,17 +43,11 @@ class Nmap(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        if '+liblua' not in self.spec:
-            args.append('--without-liblua')
-        if '+ncat' not in self.spec:
-            args.append('--without-ncat')
-        if '+ndiff' not in self.spec:
-            args.append('--without-ndiff')
-        if '+nping' not in self.spec:
-            args.append('--without-nping')
-        if '+zenmap' not in self.spec:
-            args.append('--without-zenmap')
-        if '+nmapupdate' not in self.spec:
-            args.append('--without-nmap-update')
+        args += self.with_or_without('liblua')
+        args += self.with_or_without('ncat')
+        args += self.with_or_without('ndiff')
+        args += self.with_or_without('nping')
+        args += self.with_or_without('zenmap')
+        args += self.with_or_without('nmap-update')
 
         return args
