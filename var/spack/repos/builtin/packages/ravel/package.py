@@ -14,6 +14,7 @@ class Ravel(CMakePackage):
     url = 'https://github.com/llnl/ravel/archive/v1.0.0.tar.gz'
 
     version('1.0.0', sha256='e1e1ac6d70c9aae915623d81a8f1258488fd26f880612fe21f2e032827aa93eb')
+    patch('qpainterpath.patch')
 
     depends_on('cmake@2.8.9:', type='build')
 
