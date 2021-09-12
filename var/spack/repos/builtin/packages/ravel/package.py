@@ -20,7 +20,7 @@ class Ravel(CMakePackage):
     depends_on('muster@1.0.1:')
     depends_on('otf')
     depends_on('otf2')
-    depends_on('qt@5:')
+    depends_on('qt@5:+opengl')
 
     def cmake_args(self):
         return ['-Wno-dev']
