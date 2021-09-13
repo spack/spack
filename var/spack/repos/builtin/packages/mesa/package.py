@@ -114,12 +114,16 @@ class Mesa(MesonPackage):
         depends_on("libllvm@6:")
         depends_on("libllvm@:11", when="@:20")
         depends_on("libllvm@:12", when="@:21")
+    depends_on("unwind", when="+libunwind")
     depends_on("libx11", when="+glx")
     depends_on("libxcb", when="+glx")
     depends_on("libxext", when="+glx")
     depends_on("libxt", when="+glx")
     depends_on("xrandr", when="+glx")
     depends_on("glproto@1.4.14:", when="+glx")
+
+    conflicts("target=arm:", when="+libunwind", msg="Libunwind is not supported on arm builds")
+    conflicts("target=aarch64:", when="+libunwind", msg="Libunwind is not supported on arm builds")
 
     # version specific issue
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96130
@@ -178,8 +182,8 @@ class Mesa(MesonPackage):
 
         opt_enable = lambda c, o: "-D%s=%sabled" % (o, "en" if c else "dis")
         opt_bool = lambda c, o: "-D%s=%s" % (o, str(c).lower())
-        if spec.target.family == "arm" or spec.target.family == "aarch64":
-            args.append("-Dlibunwind=disabled")
+        unwind_args = "enable" if "+libunwind" in spec else "disable"
+        args.append("-Dlibunwind={0}".format(unwind_args))
 
         num_frontends = 0
 
