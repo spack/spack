@@ -17,7 +17,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    maintainers = ['jjwilke', 'jciesko']
+    maintainers = ['DavidPoliakoff', 'jciesko']
 
     version('master',  branch='master')
     version('develop', branch='develop')
@@ -53,6 +53,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                                      'Aggressively vectorize loops'],
         'compiler_warnings': [False,
                               'Print all compiler warnings'],
+        'cuda_constexpr': [False,
+                           'Activate experimental constexpr features'],
         'cuda_lambda': [False,
                         'Activate experimental lambda features'],
         'cuda_ldg_intrinsic': [False,
@@ -193,12 +195,17 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos-nvcc-wrapper@master", when="@master+wrapper")
     conflicts("+wrapper", when="~cuda")
 
-    variant("std", default="14", values=["11", "14", "17", "20"], multi=False)
+    stds = ["11", "14", "17", "20"]
+    variant("std", default="14", values=stds, multi=False)
     variant("pic", default=False, description="Build position independent code")
 
     # nvcc does not currently work with C++17 or C++20
     conflicts("+cuda", when="std=17 ^cuda@:10.99.99")
     conflicts("+cuda", when="std=20")
+
+    # HPX should use the same C++ standard
+    for std in stds:
+        depends_on('hpx cxxstd={0}'.format(std), when='+hpx std={0}'.format(std))
 
     variant('shared', default=True, description='Build shared libraries')
 
@@ -229,7 +236,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
 
-        if spec.satisfies('~wrapper+cuda') and not spec.satisfies('%clang'):
+        if spec.satisfies("~wrapper+cuda") and not (
+            spec.satisfies("%clang") or spec.satisfies("%cce")
+        ):
             raise InstallError("Kokkos requires +wrapper when using +cuda"
                                "without clang")
 
