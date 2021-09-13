@@ -205,11 +205,12 @@ class Mvapich2Gdr(AutotoolsPackage):
         ]
 
     def configure_args(self):
-        args = [ '--with-ch3-rank-bits=32',
-                '--without-hydra-ckpointlib',
-                '--disable-static',
-                '--enable-shared',
-                '--disable-rdma-cm'
-                ]
+        args = [
+            '--with-ch3-rank-bits=32',
+            '--without-hydra-ckpointlib',
+            '--disable-static',
+            '--enable-shared',
+            '--disable-rdma-cm'
+        ]
         args.extend(self.process_manager_options)
         return args
