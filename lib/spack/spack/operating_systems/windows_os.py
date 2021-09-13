@@ -8,8 +8,9 @@ import os
 import subprocess
 import sys
 
-from ._operating_system import OperatingSystem
 from spack.version import Version
+
+from ._operating_system import OperatingSystem
 
 
 # FIXME: To get the actual Windows version, we need a python that runs
