@@ -21,7 +21,7 @@ __all__ = [
 ]
 
 #: List of all the platform classes known to Spack
-platforms = [Cray, Darwin, Linux, Test]
+platforms = [Cray, Darwin, Linux, Windows, Test]
 
 
 def host():
