@@ -9,6 +9,7 @@ import sys
 from spack import *
 from spack.operating_systems.mac_os import macos_version
 from spack.pkg.builtin.kokkos import Kokkos
+from spack.build_environment import dso_suffix
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -687,13 +688,12 @@ class Trilinos(CMakePackage, CudaPackage):
                 and spec.compiler.name in ['gcc', 'clang', 'apple-clang']):
             fc = Executable(spec['mpi'].mpifc) if (
                 '+mpi' in spec) else Executable(spack_fc)
-            sharedlibext = 'dylib' if sys.platform == 'darwin' else 'so'
             libgfortran = fc('--print-file-name',
-                             'libgfortran.%s' % sharedlibext,
+                             'libgfortran.' + dso_suffix,
                              output=str).strip()
-            # if libgfortran is equal to "libgfortran.<libext>" then
+            # if libgfortran is equal to "libgfortran.<dso_suffix>" then
             # print-file-name failed, use static library instead
-            if (libgfortran == ('libgfortran.%s' % sharedlibext)):
+            if libgfortran == 'libgfortran.' + dso_suffix:
                 libgfortran = fc('--print-file-name',
                                  'libgfortran.a',
                                  output=str).strip()
