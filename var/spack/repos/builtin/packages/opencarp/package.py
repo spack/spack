@@ -41,8 +41,8 @@ class Opencarp(CMakePackage):
     depends_on('meshtool')
     # Use specific versions of carputils and meshtool for releases
     for ver in ['7.0']:
-        depends_on('py-carputils@oc{}'.format(ver), when='@{} +carputils'.format(ver))
-        depends_on('meshtool@oc{}'.format(ver), when='@{} +meshtool'.format(ver))
+        depends_on('py-carputils@oc' + ver, when='@' + ver + ' +carputils')
+        depends_on('meshtool@oc' + ver, when='@' + ver + ' +meshtool')
 
     def cmake_args(self):
         args = [
@@ -59,5 +59,5 @@ class Opencarp(CMakePackage):
             settings_file = os.path.join(settings_prefix, 'settings.yaml')
             if os.path.exists(settings_file):
                 print('Backup the existing settings.yaml...')
-                os.rename(settings_file, os.path.join(settings_prefix, 'settings.yaml.{}'.format(datetime.today().strftime('%Y-%m-%d-%H:%M:%S'))))
-            os.system('cusettings {} --flavor petsc --software-root {}'.format(settings_file, self.prefix.bin))
+                os.rename(settings_file, os.path.join(settings_prefix, 'settings.yaml.' + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')))
+            os.system('cusettings ' + settings_file + ' --flavor petsc --software-root ' + self.prefix.bin)
