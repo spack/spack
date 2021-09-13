@@ -1259,10 +1259,6 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
         assert exp in ln
 
 
-
-
-
-
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Not supported on Windows (yet)")
 def test_install_skip_patch(install_mockery, mock_fetch):
