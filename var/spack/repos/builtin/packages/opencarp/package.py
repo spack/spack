@@ -10,7 +10,7 @@ from spack import *
 
 
 class Opencarp(CMakePackage):
-    """The openCARP simulation software, 
+    """The openCARP simulation software,
        an open cardiac electrophysiology simulator for in-silico experiments."""
 
     homepage = "https://www.opencarp.org"
@@ -47,9 +47,9 @@ class Opencarp(CMakePackage):
 
     def cmake_args(self):
         args = [
-        '-DDLOPEN:STRING=ON',
-        '-DSPACK_BUILD:STRING=ON'
-        ]
+            '-DDLOPEN:STRING=ON',
+            '-DSPACK_BUILD:STRING=ON'
+            ]
         return args
 
     @run_after('install')
@@ -61,10 +61,12 @@ class Opencarp(CMakePackage):
             settings_file = os.path.join(settings_prefix, 'settings.yaml')
             if os.path.exists(settings_file):
                 print('Backup the existing settings.yaml...')
-                os.rename(settings_file, 
-                    os.path.join(settings_prefix,
-                        'settings.yaml.' + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-                        )
-                    )
-            os.system('cusettings ' + settings_file + \
-                ' --flavor petsc --software-root ' + self.prefix.bin)
+                os.rename(settings_file,
+                          os.path.join(
+                              settings_prefix,
+                              'settings.yaml.' \
+                                + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+                              )
+                         )
+            os.system('cusettings ' + settings_file \
+                        + ' --flavor petsc --software-root ' + self.prefix.bin)
