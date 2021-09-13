@@ -33,7 +33,7 @@ class Opencarp(CMakePackage):
     depends_on('binutils')
     depends_on('gengetopt')
     depends_on('pkgconfig')
-    depends_on('python@2.7:2.8,3.6:3.8')
+    depends_on('python@:3.8')
     depends_on('zlib')
     depends_on('perl')
 
