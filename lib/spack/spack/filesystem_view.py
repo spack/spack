@@ -74,8 +74,6 @@ def view_copy(src, dst, view, spec=None):
         # TODO: Not sure which one to use...
         import spack.hooks.sbang as sbang
 
-        # import here to avoid circular import error
-        import spack.util.file_permissions as fp
         orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
         new_sbang = sbang.sbang_shebang_line()
 
