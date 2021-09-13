@@ -23,7 +23,7 @@
 from spack import *
 
 
-class Gh(Package):
+class GithubCli(Package):
     """gh is GitHub on the command line."""
 
     homepage = "https://cli.github.com"
@@ -35,8 +35,7 @@ class Gh(Package):
 
     version('2.0.0', sha256='5d93535395a6684dee1d9d1d3cde859addd76f56581e0111d95a9c685d582426')
 
-    depends_on('go','build')
-    depends_on('git','run')
+    depends_on('go',type='build')
 
     def install(self, spec, prefix):
         # FIXME: Unknown build system
