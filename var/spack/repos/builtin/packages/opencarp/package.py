@@ -46,10 +46,8 @@ class Opencarp(CMakePackage):
         depends_on('meshtool@oc' + ver, when='@' + ver + ' +meshtool')
 
     def cmake_args(self):
-        args = [
-            '-DDLOPEN:STRING=ON',
-            '-DSPACK_BUILD:STRING=ON'
-            ]
+        args = ['-DDLOPEN:STRING=ON',
+                '-DSPACK_BUILD:STRING=ON']
         return args
 
     @run_after('install')
@@ -64,9 +62,9 @@ class Opencarp(CMakePackage):
                 os.rename(settings_file,
                           os.path.join(
                               settings_prefix,
-                              'settings.yaml.' \
-                                + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+                              'settings.yaml.'
+                              + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
                               )
                          )
-            os.system('cusettings ' + settings_file \
-                        + ' --flavor petsc --software-root ' + self.prefix.bin)
+            os.system('cusettings ' + settings_file
+                      + ' --flavor petsc --software-root ' + self.prefix.bin)
