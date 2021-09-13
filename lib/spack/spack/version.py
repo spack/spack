@@ -976,6 +976,10 @@ class VersionChecksumError(VersionError):
     """Raised for version checksum errors."""
 
 
+class VersionLookupError(VersionError):
+    """Raised for errors looking up git commits as versions."""
+
+
 class CommitLookup(object):
 
     def __init__(self, pkg):
@@ -1033,9 +1037,18 @@ class CommitLookup(object):
         return self.data[commit]
 
     def lookup_commit(self, commit):
+        """Lookup the previous version and distance for a given commit.
+
+        We use git to compare the known versions from package to the git tags,
+        as well as any git tags that are SEMVER versions, and find the latest
+        known version prior to the commit, as well as the distance from that version
+        to the commit in the git repo. Those values are used to compare Version objects.
+        """
         # Were we given an already cloned path?
         already_cloned = os.path.exists(self.repository_uri)
         if already_cloned:
+            if not os.path.isdir(os.path.join(self.repository_uri, '.git')):
+                raise VersionLookupError('Repository path exists and is not a git repo')
             dest = self.repository_uri
 
         # Otherwise honor the namespace for the service and repository
