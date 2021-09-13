@@ -24,5 +24,8 @@ class FenicsBasix(CMakePackage):
     depends_on("xtensor@0.23.10:")
     depends_on("blas", type=("build", "run"))
 
-    with when("@main"):
-        root_cmakelists_dir = "cpp"
+    @property
+    def root_cmake_lists_dir(self):
+        if self.spec.satisfies("@main"):
+            return "cpp"
+        return None
