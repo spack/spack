@@ -99,7 +99,8 @@ def view_copy(src, dst, view, spec=None):
                 files=[dst],
                 prefixes=prefix_to_projection
             )
-        fp.set_permissions_by_spec(dst, spec)
+        stat = os.stat(src)
+        os.chown(dst, stat.st_uid, stat.st_gid)
 
 
 def view_func_parser(parsed_name):
