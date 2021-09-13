@@ -16,7 +16,7 @@ class SalmonTddft(CMakePackage):
     with norm-conserving pseudopotentials."""
 
     homepage = "https://salmon-tddft.jp"
-    url = "http://salmon-tddft.jp/download/SALMON-v.2.0.0.tar.gz"
+    url = "https://salmon-tddft.jp/download/SALMON-v.2.0.0.tar.gz"
 
     version('2.0.0', sha256='c3bb80bc5d338cba21cd8f345acbf2f2d81ef75af069a0a0ddbdc0acf358456c')
     version('1.2.1', sha256='a5045149e49abe9dd9edefe00cd1508a1323081bc3d034632176b728effdbaeb')

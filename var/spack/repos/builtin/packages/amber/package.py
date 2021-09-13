@@ -16,7 +16,7 @@ class Amber(Package, CudaPackage):
        A manual download is required for Ambers. Spack will search your current
        directory for the download files. Alternatively, add the files to a mirror
        so that Spack can find them. For instructions on how to set up a mirror, see
-       http://spack.readthedocs.io/en/latest/mirrors.html
+       https://spack.readthedocs.io/en/latest/mirrors.html
 
        Note: Only certain versions of ambertools are compatible with amber.
        Only the latter version of ambertools for each amber version is supported.

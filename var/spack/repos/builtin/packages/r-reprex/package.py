@@ -11,7 +11,7 @@ class RReprex(RPackage):
        snippets of code to target formats that include both code and output.
        The goal is to encourage the sharing of small, reproducible, and
        runnable examples on code-oriented websites, such as
-       <http://stackoverflow.com> and <https://github.com>, or in email.
+       <https://stackoverflow.com/> and <https://github.com>, or in email.
        'reprex' also extracts clean, runnable R code from various common
        formats, such as copy/paste from an R session."""
 

@@ -35,11 +35,11 @@ class Cgal(CMakePackage):
             description='Install in header only mode')
 
     # ---- See "7 CGAL Libraries" at:
-    # http://doc.cgal.org/latest/Manual/installation.html
+    # https://doc.cgal.org/latest/Manual/installation.html
 
     # The CORE library provides exact arithmetic for geometric computations.
-    # See: http://cs.nyu.edu/exact/core_pages/
-    #      http://cs.nyu.edu/exact/core_pages/svn-core.html
+    # See: https://cs.nyu.edu/exact/core_pages/
+    #      https://cs.nyu.edu/exact/core_pages/svn-core.html
     variant('core', default=False,
             description='Build the CORE library for algebraic numbers')
     variant('imageio', default=False,
@@ -91,7 +91,7 @@ class Cgal(CMakePackage):
 
     def cmake_args(self):
         # Installation instructions:
-        # http://doc.cgal.org/latest/Manual/installation.html
+        # https://doc.cgal.org/latest/Manual/installation.html
         spec = self.spec
         variant_bool = lambda feature: str(feature in spec)
         cmake_args = []

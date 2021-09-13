@@ -17,7 +17,7 @@ class SspaceStandard(Package):
        Spack will search your current directory for the download file.
        Alternatively, add this file to a mirror so that Spack can find it.
        For instructions on how to set up a mirror, see
-       http://spack.readthedocs.io/en/latest/mirrors.html"""
+       https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.baseclear.com/genomics/bioinformatics/basetools/SSPACE"
     url      = "file://{0}/41SSPACE-STANDARD-3.0_linux-x86_64.tar.gz".format(os.getcwd())

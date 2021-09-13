@@ -10,7 +10,7 @@ class Pxz(MakefilePackage):
     """Pxz is a parallel LZMA compressor using liblzma."""
 
     homepage = "https://jnovy.fedorapeople.org/pxz/pxz.html"
-    url      = "http://jnovy.fedorapeople.org/pxz/pxz-4.999.9beta.20091201git.tar.xz"
+    url      = "https://jnovy.fedorapeople.org/pxz/pxz-4.999.9beta.20091201git.tar.xz"
     git      = "https://github.com/jnovy/pxz.git"
 
     version('develop', branch='master')

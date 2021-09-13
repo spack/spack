@@ -26,7 +26,7 @@ class SstElements(AutotoolsPackage):
     version('develop',   branch='devel')
     version('master',  branch='master')
 
-    # Contact SST developers (http://github.com/sstsimulator)
+    # Contact SST developers (https://github.com/sstsimulator)
     # if your use case requires support for:
     #   - balar
     #   - OTF2
