@@ -19,5 +19,8 @@ class PyTfSlim(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-absl-py@0.2.2:', type='build')
-    depends_on('py-six', type=('build', 'run'))
-    #depends_on('py-tensorflow', type='run')
+    depends_on('py-six', type='run')
+    depends_on('py-wrapt', type='run')
+    depends_on('py-gast', type='run')
+    depends_on('py-termcolor', type='run')
+    depends_on('py-flatbuffers', type='run')
