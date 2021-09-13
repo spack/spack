@@ -14,7 +14,7 @@ class Byacc(AutotoolsPackage):
     features of AT&T Yacc will probably be rejected."""
 
     homepage = "https://invisible-island.net/byacc/byacc.html"
-    url      = "https://invisible-island.net/datafiles/release/byacc-20210808.tar.gz"
+    url      = "ftp://ftp.invisible-island.net/pub/byacc/byacc-20210808.tgz"
 
     # Check FTP directory ftp://ftp.invisible-island.net/byacc/ to find the latest version
     version('20210808', sha256='cf13bfb6440fb692cf81d20019960303c7c715a1194a3dfd32285e3ed85faa2a')
