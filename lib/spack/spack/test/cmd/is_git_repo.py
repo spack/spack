@@ -6,7 +6,6 @@
 from __future__ import print_function
 
 import os
-from ctypes import wintypes
 
 import pytest
 
