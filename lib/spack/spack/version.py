@@ -33,7 +33,7 @@ from functools import wraps
 from six import string_types
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
+from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.error
 import spack.paths
@@ -1050,7 +1050,7 @@ class CommitLookup(object):
         for path in [dest, self.repository_metadata_path]:
             parent = os.path.dirname(path)
             if not os.path.exists(parent):
-                os.makedirs(parent)
+                mkdirp(parent)
 
         # Only clone if we don't have it!
         if not os.path.exists(dest):
