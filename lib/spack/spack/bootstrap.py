@@ -30,6 +30,7 @@ import spack.environment
 import spack.main
 import spack.modules
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
@@ -178,9 +179,6 @@ class _BuildcacheBootstrapper(object):
         self.url = conf['info']['url']
 
     def try_import(self, module, abstract_spec_str):
-        # This import is local since it is needed only on Cray
-        import spack.platforms.linux
-
         if _try_import_from_store(module, abstract_spec_str):
             return True
 
@@ -192,7 +190,7 @@ class _BuildcacheBootstrapper(object):
         # On Cray we want to use Linux binaries if available from mirrors
         bincache_platform = spack.architecture.real_platform()
         if str(bincache_platform) == 'cray':
-            bincache_platform = spack.platforms.linux.Linux()
+            bincache_platform = spack.platforms.Linux()
             with spack.architecture.use_platform(bincache_platform):
                 abstract_spec = spack.spec.Spec(
                     abstract_spec_str + ' ^' + spec_for_current_python()
