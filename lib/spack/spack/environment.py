@@ -1744,9 +1744,10 @@ class Environment(object):
         specs_by_hash = {}
         for build_hash, node_dict in json_specs_by_hash.items():
             spec = Spec.from_node_dict(node_dict)
-            # Build hash is stored as a key, but not as part of the node dict
-            # To ensure build hashes are not recomputed, we reattach here
-            setattr(spec, ht.build_hash.attr, build_hash)
+            if d['_meta']['lockfile-version'] > 1:
+                # Build hash is stored as a key, but not as part of the node dict
+                # To ensure build hashes are not recomputed, we reattach here
+                setattr(spec, ht.build_hash.attr, build_hash)
             specs_by_hash[build_hash] = spec
 
         for build_hash, node_dict in json_specs_by_hash.items():
