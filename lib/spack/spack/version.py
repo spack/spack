@@ -1069,43 +1069,33 @@ class CommitLookup(object):
                 self.fetcher.git("fetch")
 
             # List tags (refs) by date, so last reference of a tag is newest
-            tags = self.fetcher.git("for-each-ref", "--sort=creatordate", "--format",
-                                    "%(refname)", "refs/tags", output=str).split('\n')
+            tag_info = self.fetcher.git(
+                "for-each-ref", "--sort=creatordate", "--format",
+                "%(objectname) %(refname)", "refs/tags", output=str).split('\n')
 
-        # Lookup of spack tags to git references
-        tag_lookup = {}
+            # Get list of all commits, this is in reverse order
+            commits = self.fetcher.git("log", "--all", "--pretty=format:%H", output=str)
 
         # Lookup of commits to spack versions
         commit_to_version = {}
 
-        # For each tag, try to match to a version.
-        versions = [str(v) for v in spack_versions]
-        for tag in tags:
+        for entry in tag_info:
+            if not entry:
+                continue
+            commit, tag = entry.split()
             tag = tag.replace('refs/tags/', '', 1)
-            for v in versions:
+
+            # For each tag, try to match to a version
+            for v in [v.string for v in spack_versions]:
                 if v in tag:
-                    tag_lookup[v] = tag
-
-        # Also prepare to parse versions that aren't in spack
-        for tag in tags:
-            tag = tag.replace('refs/tags/', '', 1)
-
-            # Try to derive a semantic version
-            match = SEMVER_REGEX.match(tag)
-            if match:
-                semver = match.groupdict()['semver']
-                if semver not in tag_lookup:
-                    tag_lookup[semver] = tag
-
-        # Now get commits for these versions
-        with working_dir(dest):
-            for spack_version, tag in tag_lookup.items():
-                command = ["rev-list", "-n", "1", "tags/%s" % tag]
-                commit = self.fetcher.git(*command, output=str)
-                commit_to_version[commit.strip()] = spack_version
-
-            # Get list of all commits, this is in reverse order
-            commits = self.fetcher.git("log", "--all", "--pretty=format:%H", output=str)
+                    commit_to_version[commit] = v
+                    break
+            else:
+                # try to parse tag to copare versions spack does not know
+                match = SEMVER_REGEX.match(tag)
+                if match:
+                    semver = match.gropudict()['semver']
+                    commit_to_version[commit] = semver
 
         # commits[0] is most recent, commits[-2] is first
         commits = [c for c in commits.split('\n') if c]
