@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 
-from spack.architecture import OperatingSystem
+from ._operating_system import OperatingSystem
 from spack.version import Version
 
 
