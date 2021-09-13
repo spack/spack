@@ -544,7 +544,7 @@ def arguments_to_detect_version_fn(operating_system, paths):
     function by providing a method called with the same name.
 
     Args:
-        operating_system (spack.architecture.OperatingSystem): the operating system
+        operating_system (spack.operating_systems.OperatingSystem): the operating system
             on which we are looking for compilers
         paths: paths to search for compilers
 
