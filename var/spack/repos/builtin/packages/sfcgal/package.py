@@ -19,7 +19,7 @@ class Sfcgal(CMakePackage):
 
     version('1.3.7', sha256='30ea1af26cb2f572c628aae08dd1953d80a69d15e1cac225390904d91fce031b')
 
-    # Ref: http://oslandia.github.io/SFCGAL/installation.html
+    # Ref: https://oslandia.github.io/SFCGAL/installation.html
     depends_on('cgal@4.3: +core')
     depends_on('boost@1.54.0:')
     depends_on('mpfr@2.2.1:')

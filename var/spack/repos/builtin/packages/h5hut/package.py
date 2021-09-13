@@ -12,7 +12,7 @@ class H5hut(AutotoolsPackage):
     High-Performance I/O Library for Particle-based Simulations."""
 
     homepage = "https://amas.psi.ch/H5hut/"
-    url      = "http://amas.web.psi.ch/Downloads/H5hut/H5hut-2.0.0rc3.tar.gz"
+    url      = "https://amas.web.psi.ch/Downloads/H5hut/H5hut-2.0.0rc3.tar.gz"
 
     version('2.0.0rc3', sha256='1ca9a9478a99e1811ecbca3c02cc49258050d339ffb1a170006eab4ab2a01790')
 

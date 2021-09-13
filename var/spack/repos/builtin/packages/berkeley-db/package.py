@@ -9,7 +9,7 @@ class BerkeleyDb(AutotoolsPackage):
 
     homepage = "https://www.oracle.com/database/technologies/related/berkeleydb.html"
     # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://download.oracle.com/berkeley-db/db-18.1.40.tar.gz"
+    url      = "https://download.oracle.com/berkeley-db/db-18.1.40.tar.gz"
 
     version("18.1.40", sha256="0cecb2ef0c67b166de93732769abdeba0555086d51de1090df325e18ee8da9c8")
     version('18.1.32', sha256='fa1fe7de9ba91ad472c25d026f931802597c29f28ae951960685cde487c8d654', deprecated=True)

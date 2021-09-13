@@ -28,7 +28,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.cmd import display_specs
 from spack.error import SpecError
-from spack.spec import Spec, save_dependency_spec_yamls
+from spack.spec import Spec, save_dependency_specfiles
 from spack.stage import Stage
 from spack.util.string import plural
 
@@ -75,8 +75,9 @@ def setup_parser(subparser):
     create.add_argument('--rebuild-index', action='store_true',
                         default=False, help="Regenerate buildcache index " +
                                             "after building package(s)")
-    create.add_argument('-y', '--spec-yaml', default=None,
-                        help='Create buildcache entry for spec from yaml file')
+    create.add_argument('--spec-file', default=None,
+                        help=('Create buildcache entry for spec from json or ' +
+                              'yaml file'))
     create.add_argument('--only', default='package,dependencies',
                         dest='things_to_install',
                         choices=['package', 'dependencies'],
@@ -163,8 +164,9 @@ def setup_parser(subparser):
         help='Check single spec instead of release specs file')
 
     check.add_argument(
-        '-y', '--spec-yaml', default=None,
-        help='Check single spec from yaml file instead of release specs file')
+        '--spec-file', default=None,
+        help=('Check single spec from json or yaml file instead of release ' +
+              'specs file'))
 
     check.add_argument(
         '--rebuild-on-error', default=False, action='store_true',
@@ -173,14 +175,15 @@ def setup_parser(subparser):
 
     check.set_defaults(func=check_binaries)
 
-    # Download tarball and spec.yaml
+    # Download tarball and specfile
     dltarball = subparsers.add_parser('download', help=get_tarball.__doc__)
     dltarball.add_argument(
         '-s', '--spec', default=None,
         help="Download built tarball for spec from mirror")
     dltarball.add_argument(
-        '-y', '--spec-yaml', default=None,
-        help="Download built tarball for spec (from yaml file) from mirror")
+        '--spec-file', default=None,
+        help=("Download built tarball for spec (from json or yaml file) " +
+              "from mirror"))
     dltarball.add_argument(
         '-p', '--path', default=None,
         help="Path to directory where tarball should be downloaded")
@@ -196,26 +199,27 @@ def setup_parser(subparser):
         '-s', '--spec', default=None,
         help='Spec string for which buildcache name is desired')
     getbuildcachename.add_argument(
-        '-y', '--spec-yaml', default=None,
-        help='Path to spec yaml file for which buildcache name is desired')
+        '--spec-file', default=None,
+        help=('Path to spec json or yaml file for which buildcache name is ' +
+              'desired'))
     getbuildcachename.set_defaults(func=get_buildcache_name)
 
     # Given the root spec, save the yaml of the dependent spec to a file
-    saveyaml = subparsers.add_parser('save-yaml',
-                                     help=save_spec_yamls.__doc__)
-    saveyaml.add_argument(
+    savespecfile = subparsers.add_parser('save-specfile',
+                                         help=save_specfiles.__doc__)
+    savespecfile.add_argument(
         '--root-spec', default=None,
         help='Root spec of dependent spec')
-    saveyaml.add_argument(
-        '--root-spec-yaml', default=None,
-        help='Path to yaml file containing root spec of dependent spec')
-    saveyaml.add_argument(
+    savespecfile.add_argument(
+        '--root-specfile', default=None,
+        help='Path to json or yaml file containing root spec of dependent spec')
+    savespecfile.add_argument(
         '-s', '--specs', default=None,
         help='List of dependent specs for which saved yaml is desired')
-    saveyaml.add_argument(
-        '-y', '--yaml-dir', default=None,
+    savespecfile.add_argument(
+        '--specfile-dir', default=None,
         help='Path to directory where spec yamls should be saved')
-    saveyaml.set_defaults(func=save_spec_yamls)
+    savespecfile.set_defaults(func=save_specfiles)
 
     # Copy buildcache from some directory to another mirror url
     copy = subparsers.add_parser('copy', help=buildcache_copy.__doc__)
@@ -223,8 +227,9 @@ def setup_parser(subparser):
         '--base-dir', default=None,
         help='Path to mirror directory (root of existing buildcache)')
     copy.add_argument(
-        '--spec-yaml', default=None,
-        help='Path to spec yaml file representing buildcache entry to copy')
+        '--spec-file', default=None,
+        help=('Path to spec json or yaml file representing buildcache entry to' +
+              ' copy'))
     copy.add_argument(
         '--destination-url', default=None,
         help='Destination mirror url')
@@ -366,16 +371,19 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     return specs_from_cli
 
 
-def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
+def _createtarball(env, spec_file=None, packages=None, add_spec=True,
                    add_deps=True, output_location=os.getcwd(),
                    signing_key=None, force=False, make_relative=False,
                    unsigned=False, allow_root=False, rebuild_index=False):
-    if spec_yaml:
-        with open(spec_yaml, 'r') as fd:
-            yaml_text = fd.read()
-            tty.debug('createtarball read spec yaml:')
-            tty.debug(yaml_text)
-            s = Spec.from_yaml(yaml_text)
+    if spec_file:
+        with open(spec_file, 'r') as fd:
+            specfile_contents = fd.read()
+            tty.debug('createtarball read specfile contents:')
+            tty.debug(specfile_contents)
+            if spec_file.endswith('.json'):
+                s = Spec.from_json(specfile_contents)
+            else:
+                s = Spec.from_yaml(specfile_contents)
             package = '/{0}'.format(s.dag_hash())
             matches = find_matching_specs(package, env=env)
 
@@ -388,7 +396,7 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
     else:
         tty.die("build cache file creation requires at least one" +
                 " installed package spec, an active environment," +
-                " or else a path to a yaml file containing a spec" +
+                " or else a path to a json or yaml file containing a spec" +
                 " to install")
     specs = set()
 
@@ -497,7 +505,7 @@ def createtarball(args):
     add_spec = ('package' in args.things_to_install)
     add_deps = ('dependencies' in args.things_to_install)
 
-    _createtarball(env, spec_yaml=args.spec_yaml, packages=args.specs,
+    _createtarball(env, spec_file=args.spec_file, packages=args.specs,
                    add_spec=add_spec, add_deps=add_deps,
                    output_location=output_location, signing_key=args.key,
                    force=args.force, make_relative=args.rel,
@@ -598,7 +606,7 @@ def check_binaries(args):
     its result, specifically, if the exit code is non-zero, then at least
     one of the indicated specs needs to be rebuilt.
     """
-    if args.spec or args.spec_yaml:
+    if args.spec or args.spec_file:
         specs = [get_concrete_spec(args)]
     else:
         env = spack.cmd.require_active_env(cmd_name='buildcache')
@@ -635,15 +643,16 @@ def download_buildcache_files(concrete_spec, local_dest, require_cdashid,
 
     files_to_fetch = [
         {
-            'url': tarball_path_name,
+            'url': [tarball_path_name],
             'path': local_tarball_path,
             'required': True,
         }, {
-            'url': bindist.tarball_name(concrete_spec, '.spec.yaml'),
+            'url': [bindist.tarball_name(concrete_spec, '.spec.json'),
+                    bindist.tarball_name(concrete_spec, '.spec.yaml')],
             'path': local_dest,
             'required': True,
         }, {
-            'url': bindist.tarball_name(concrete_spec, '.cdashid'),
+            'url': [bindist.tarball_name(concrete_spec, '.cdashid')],
             'path': local_dest,
             'required': require_cdashid,
         },
@@ -657,9 +666,9 @@ def get_tarball(args):
     command uses the process exit code to indicate its result, specifically,
     a non-zero exit code indicates that the command failed to download at
     least one of the required buildcache components.  Normally, just the
-    tarball and .spec.yaml files are required, but if the --require-cdashid
+    tarball and .spec.json files are required, but if the --require-cdashid
     argument was provided, then a .cdashid file is also required."""
-    if not args.spec and not args.spec_yaml:
+    if not args.spec and not args.spec_file:
         tty.msg('No specs provided, exiting.')
         sys.exit(0)
 
@@ -676,7 +685,7 @@ def get_tarball(args):
 
 def get_concrete_spec(args):
     spec_str = args.spec
-    spec_yaml_path = args.spec_yaml
+    spec_yaml_path = args.spec_file
 
     if not spec_str and not spec_yaml_path:
         tty.msg('Must provide either spec string or path to ' +
@@ -708,14 +717,14 @@ def get_buildcache_name(args):
     sys.exit(0)
 
 
-def save_spec_yamls(args):
+def save_specfiles(args):
     """Get full spec for dependencies, relative to root spec, and write them
     to files in the specified output directory.  Uses exit code to signal
     success or failure.  An exit code of zero means the command was likely
     successful.  If any errors or exceptions are encountered, or if expected
     command-line arguments are not provided, then the exit code will be
     non-zero."""
-    if not args.root_spec and not args.root_spec_yaml:
+    if not args.root_spec and not args.root_specfile:
         tty.msg('No root spec provided, exiting.')
         sys.exit(1)
 
@@ -723,20 +732,20 @@ def save_spec_yamls(args):
         tty.msg('No dependent specs provided, exiting.')
         sys.exit(1)
 
-    if not args.yaml_dir:
+    if not args.specfile_dir:
         tty.msg('No yaml directory provided, exiting.')
         sys.exit(1)
 
-    if args.root_spec_yaml:
-        with open(args.root_spec_yaml) as fd:
-            root_spec_as_yaml = fd.read()
+    if args.root_specfile:
+        with open(args.root_specfile) as fd:
+            root_spec_as_json = fd.read()
     else:
         root_spec = Spec(args.root_spec)
         root_spec.concretize()
-        root_spec_as_yaml = root_spec.to_yaml(hash=ht.build_hash)
-
-    save_dependency_spec_yamls(
-        root_spec_as_yaml, args.yaml_dir, args.specs.split())
+        root_spec_as_json = root_spec.to_json(hash=ht.build_hash)
+    spec_format = 'yaml' if args.root_specfile.endswith('yaml') else 'json'
+    save_dependency_specfiles(
+        root_spec_as_json, args.specfile_dir, args.specs.split(), spec_format)
 
     sys.exit(0)
 
@@ -745,10 +754,10 @@ def buildcache_copy(args):
     """Copy a buildcache entry and all its files from one mirror, given as
     '--base-dir', to some other mirror, specified as '--destination-url'.
     The specific buildcache entry to be copied from one location to the
-    other is identified using the '--spec-yaml' argument."""
+    other is identified using the '--spec-file' argument."""
     # TODO: This sub-command should go away once #11117 is merged
 
-    if not args.spec_yaml:
+    if not args.spec_file:
         tty.msg('No spec yaml provided, exiting.')
         sys.exit(1)
 
@@ -768,12 +777,12 @@ def buildcache_copy(args):
         sys.exit(1)
 
     try:
-        with open(args.spec_yaml, 'r') as fd:
+        with open(args.spec_file, 'r') as fd:
             spec = Spec.from_yaml(fd.read())
     except Exception as e:
         tty.debug(e)
         tty.error('Unable to concrectize spec from yaml {0}'.format(
-            args.spec_yaml))
+            args.spec_file))
         sys.exit(1)
 
     dest_root_path = dest_url
@@ -788,9 +797,14 @@ def buildcache_copy(args):
     tarball_dest_path = os.path.join(dest_root_path, tarball_rel_path)
 
     specfile_rel_path = os.path.join(
-        build_cache_dir, bindist.tarball_name(spec, '.spec.yaml'))
+        build_cache_dir, bindist.tarball_name(spec, '.spec.json'))
     specfile_src_path = os.path.join(args.base_dir, specfile_rel_path)
     specfile_dest_path = os.path.join(dest_root_path, specfile_rel_path)
+
+    specfile_rel_path_yaml = os.path.join(
+        build_cache_dir, bindist.tarball_name(spec, '.spec.yaml'))
+    specfile_src_path_yaml = os.path.join(args.base_dir, specfile_rel_path)
+    specfile_dest_path_yaml = os.path.join(dest_root_path, specfile_rel_path)
 
     cdashidfile_rel_path = os.path.join(
         build_cache_dir, bindist.tarball_name(spec, '.cdashid'))
@@ -806,6 +820,9 @@ def buildcache_copy(args):
 
     tty.msg('Copying {0}'.format(specfile_rel_path))
     shutil.copyfile(specfile_src_path, specfile_dest_path)
+
+    tty.msg('Copying {0}'.format(specfile_rel_path_yaml))
+    shutil.copyfile(specfile_src_path_yaml, specfile_dest_path_yaml)
 
     # Copy the cdashid file (if exists) to the destination mirror
     if os.path.exists(cdashid_src_path):
@@ -894,6 +911,8 @@ def buildcache_sync(args):
                 build_cache_dir, bindist.tarball_path_name(s, '.spack')),
             os.path.join(
                 build_cache_dir, bindist.tarball_name(s, '.spec.yaml')),
+            os.path.join(
+                build_cache_dir, bindist.tarball_name(s, '.spec.json')),
             os.path.join(
                 build_cache_dir, bindist.tarball_name(s, '.cdashid'))
         ])

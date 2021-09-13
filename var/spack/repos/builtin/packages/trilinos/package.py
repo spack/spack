@@ -203,6 +203,7 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('~stratimikos')
         conflicts('@:12 gotype=long')
 
+    conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
     conflicts('+ifpack2', when='~belos')
     conflicts('+intrepid', when='~sacado')
@@ -271,6 +272,9 @@ class Trilinos(CMakePackage, CudaPackage):
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
     conflicts('+stokhos', when='%xl_r')
+
+    # Fortran mangling fails on Apple M1 (see spack/spack#25900)
+    conflicts('@:13.0.1 +fortran', when='target=m1')
 
     # ###################### Dependencies ##########################
 
@@ -656,7 +660,7 @@ class Trilinos(CMakePackage, CudaPackage):
         # ################# Kokkos ######################
 
         if '+kokkos' in spec:
-            arch = Kokkos.spack_micro_arch_map.get(spec.target.name, None)
+            arch = Kokkos.get_microarch(spec.target)
             if arch:
                 options.append(define("Kokkos_ARCH_" + arch.upper(), True))
 

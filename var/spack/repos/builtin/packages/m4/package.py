@@ -98,7 +98,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         else:
             args.append('--without-libsigsegv-prefix')
 
-        # http://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
+        # https://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
         arch = spec.architecture
         if (arch.platform == 'darwin' and arch.os == 'sierra' and
                 '%gcc' in spec):

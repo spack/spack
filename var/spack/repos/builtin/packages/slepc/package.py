@@ -82,7 +82,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     conflicts('+blopex', when='^petsc+int64')
 
     resource(name='blopex',
-             url='http://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
+             url='https://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
              sha256='0081ee4c4242e635a8113b32f655910ada057c59043f29af4b613508a762f3ac',
              destination=join_path('installed-arch-' + sys.platform + '-c-opt',
                                    'externalpackages'),

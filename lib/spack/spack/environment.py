@@ -259,7 +259,7 @@ def deactivate(shell='sh'):
         tty.warn('Could not fully deactivate view due to missing package '
                  'or repo, shell environment may be corrupt.')
 
-    tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
+    tty.debug("Deactivated environment '%s'" % _active_environment.name)
     _active_environment = None
 
     return cmds
@@ -1698,7 +1698,8 @@ class Environment(object):
                 dag_hash_all = s.build_hash()
                 if dag_hash_all not in concrete_specs:
                     spec_dict = s.to_node_dict(hash=ht.build_hash)
-                    spec_dict[s.name]['hash'] = s.dag_hash()
+                    # Assumes no legacy formats, since this was just created.
+                    spec_dict[ht.dag_hash.name] = s.dag_hash()
                     concrete_specs[dag_hash_all] = spec_dict
 
         hash_spec_list = zip(
@@ -1744,7 +1745,7 @@ class Environment(object):
             specs_by_hash[dag_hash] = Spec.from_node_dict(node_dict)
 
         for dag_hash, node_dict in json_specs_by_hash.items():
-            for dep_name, dep_hash, deptypes in (
+            for _, dep_hash, deptypes, _ in (
                     Spec.dependencies_from_node_dict(node_dict)):
                 specs_by_hash[dag_hash]._add_dependency(
                     specs_by_hash[dep_hash], deptypes)

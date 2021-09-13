@@ -717,10 +717,12 @@ config['python_inc'] = {}
 config['python_lib'] = {}
 
 for plat_specific in [True, False]:
-    config['python_inc'][plat_specific] = get_python_inc(plat_specific, prefix='')
-    config['python_lib'][plat_specific] = {}
+    plat_key = str(plat_specific).lower()
+    config['python_inc'][plat_key] = get_python_inc(plat_specific, prefix='')
+    config['python_lib'][plat_key] = {}
     for standard_lib in [True, False]:
-        config['python_lib'][plat_specific][standard_lib] = get_python_lib(
+        lib_key = str(standard_lib).lower()
+        config['python_lib'][plat_key][lib_key] = get_python_lib(
             plat_specific, standard_lib, prefix=''
         )
 
@@ -841,9 +843,9 @@ for plat_specific in [True, False]:
         Returns:
             str: include files directory
         """
-        if 'python_inc' in self.config_vars:
+        try:
             return self.config_vars['python_inc']['false']
-        else:
+        except KeyError:
             return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
 
     @property
@@ -865,9 +867,9 @@ for plat_specific in [True, False]:
         Returns:
             str: standard library directory
         """
-        if 'python_lib' in self.config_vars:
+        try:
             return self.config_vars['python_lib']['false']['true']
-        else:
+        except KeyError:
             return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
 
     @property
@@ -889,9 +891,9 @@ for plat_specific in [True, False]:
         Returns:
             str: site-packages directory
         """
-        if 'python_lib' in self.config_vars:
+        try:
             return self.config_vars['python_lib']['false']['false']
-        else:
+        except KeyError:
             return self.default_site_packages_dir
 
     @property
