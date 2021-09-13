@@ -68,8 +68,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
     depends_on('gdbm@:1.14.1', when='@:5.28.0')
     depends_on('berkeley-db')
-    depends_on('bzip2+shared')
-    depends_on('zlib+shared')
+    depends_on('bzip2')
+    depends_on('zlib')
     # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
     depends_on('zlib@:1.2.8', when='@5.20.3:5.24.1')
 
@@ -101,6 +101,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     patch('nvhpc-5.32.patch', when='@5.32.0:5.32.99 %nvhpc')
     conflicts('@5.32.0:', when='%nvhpc@:20.11',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
+
+    # Make sure we don't get "recompile with -fPIC" linker errors when using static libs
+    conflicts('^zlib~shared~pic', msg='Needs position independent code when using static zlib')
+    conflicts('^bzip2~shared~pic', msg='Needs position independent code when using static bzip2')
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
