@@ -11,7 +11,6 @@ from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_version
 from spack.pkg.builtin.kokkos import Kokkos
 
-
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
 # https://github.com/hpcugent/easybuild-easyblocks/blob/master/easybuild/easyblocks/t/trilinos.py#L111
