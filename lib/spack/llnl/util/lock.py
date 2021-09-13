@@ -8,9 +8,8 @@ import os
 import socket
 import time
 from datetime import datetime
-from typing import Dict, Tuple  # novm
-
 from sys import platform as _platform
+from typing import Dict, Tuple  # novm
 
 import llnl.util.tty as tty
 
