@@ -14,6 +14,7 @@ activate = SpackCommand('activate')
 extensions = SpackCommand('extensions')
 install = SpackCommand('install')
 view = SpackCommand('view')
+location = SpackCommand('location')
 
 
 def create_projection_file(tmpdir, projection):
@@ -35,6 +36,27 @@ def test_view_link_type(
     view(cmd, viewpath, 'libdwarf')
     package_prefix = os.path.join(viewpath, 'libdwarf')
     assert os.path.exists(package_prefix)
+
+    # Check that we use symlinks for and only for the appropriate subcommands
+    is_link_cmd = cmd in ('symlink', 'add')
+    assert os.path.islink(package_prefix) == is_link_cmd
+
+
+@pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add',
+                                 'copy', 'relocate'])
+def test_view_link_path_lengths(
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
+        install_mockery, cmd):
+    install('libdwarf')
+    install_loc = location('-i', 'libdwarf')
+    print(install_loc, len(install_loc))
+    viewpath = str(tmpdir.mkdir('a' * len(install_loc), 'view_{0}'.format(cmd)))
+    view(cmd, viewpath, 'libdwarf')
+    package_prefix = os.path.join(viewpath, 'libdwarf')
+    assert os.path.exists(package_prefix)
+    # This is not failing even though it should for copy views so assert false
+    # for now
+    assert False
 
     # Check that we use symlinks for and only for the appropriate subcommands
     is_link_cmd = cmd in ('symlink', 'add')
