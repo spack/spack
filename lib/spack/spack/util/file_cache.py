@@ -10,7 +10,7 @@ from sys import platform as _platform
 from llnl.util.filesystem import mkdirp
 
 from spack.error import SpackError
-from spack.util.lock import LockFactory, ReadTransaction, WriteTransaction
+from spack.util.lock import Lock, ReadTransaction, WriteTransaction
 
 
 class FileCache(object):
@@ -66,8 +66,8 @@ class FileCache(object):
     def _get_lock(self, key):
         """Create a lock for a key, if necessary, and return a lock object."""
         if key not in self._locks:
-            self._locks[key] = LockFactory.lock(self._lock_path(key),
-                                                default_timeout=self.lock_timeout)
+            self._locks[key] = Lock(self._lock_path(key),
+                                    default_timeout=self.lock_timeout)
         return self._locks[key]
 
     def init_entry(self, key):

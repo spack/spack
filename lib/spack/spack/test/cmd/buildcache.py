@@ -183,6 +183,7 @@ def test_update_key_index(tmpdir, mutable_mock_env_path,
     assert 'index.json' in key_dir_list
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_buildcache_sync(mutable_mock_env_path, install_mockery_mutable_config,
                          mock_packages, mock_fetch, mock_stage, tmpdir):
     """
@@ -259,6 +260,7 @@ def test_buildcache_sync(mutable_mock_env_path, install_mockery_mutable_config,
         verify_mirror_contents()
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_buildcache_create_install(mutable_mock_env_path,
                                    install_mockery_mutable_config,
                                    mock_packages, mock_fetch, mock_stage,

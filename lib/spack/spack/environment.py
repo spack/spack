@@ -616,7 +616,7 @@ class Environment(object):
         """
         self.path = os.path.abspath(path)
 
-        self.txlock = lk.LockFactory.lock(self._transaction_lock_path)
+        self.txlock = lk.Lock(self._transaction_lock_path)
 
         # This attribute will be set properly from configuration
         # during concretization

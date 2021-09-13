@@ -183,8 +183,9 @@ def lock_checking(func):
             try:
                 suc = func(self, *args, **kwargs)
             except Exception as e:
-                if self.current_lock:
-                    self._lock(self.current_lock, timeout=kwargs['timeout'])
+                if self._current_lock:
+                    timeout = kwargs.get('timeout', None)
+                    self._lock(self._current_lock, timeout=timeout)
                 raise e
         else:
             suc = func(self, *args, **kwargs)
@@ -269,7 +270,7 @@ class Lock(object):
 
         # Mapping of supported locks to description
         self.lock_type = {self.LOCK_SH: 'read', self.LOCK_EX: 'write'}
-        self.current_lock = None
+        self._current_lock = None
 
     def __lock_fail_condition(self, e):
         if _platform == "win32":
@@ -309,7 +310,8 @@ class Lock(object):
         """Formal representation of the lock."""
         rep = '{0}('.format(self.__class__.__name__)
         for attr, value in self.__dict__.items():
-            rep += '{0}={1}, '.format(attr, value.__repr__())
+            if attr != "LOCK_CATCH":
+                rep += '{0}={1}, '.format(attr, value.__repr__())
         return '{0})'.format(rep.strip(', '))
 
     def __str__(self):
@@ -477,8 +479,6 @@ class Lock(object):
             fcntl.lockf(self._file, self.LOCK_UN,
                         self._length, self._start, os.SEEK_SET)
 
-        file_tracker.release_fh(self.path)
-
     def _unlock(self):
         """Releases a lock using POSIX locks (``fcntl.lockf``)
 
@@ -488,8 +488,8 @@ class Lock(object):
         Reset all lock attributes to initial states
         """
         self._partial_unlock()
+        file_tracker.release_fh(self.path)
 
-        self._file.close()
         self._file = None
         self._file_mode = ""
         self._reads = 0
@@ -512,7 +512,7 @@ class Lock(object):
             # can raise LockError.
             wait_time, nattempts = self._lock(self.LOCK_SH, timeout=timeout)
             self._reads += 1
-            self.current_lock = self.LOCK_SH
+            self._current_lock = self.LOCK_SH
             # Log if acquired, which includes counts when verbose
             self._log_acquired('READ LOCK', wait_time, nattempts)
             return True
@@ -538,7 +538,7 @@ class Lock(object):
             # can raise LockError.
             wait_time, nattempts = self._lock(self.LOCK_EX, timeout=timeout)
             self._writes += 1
-            self.current_lock = self.LOCK_EX
+            self._current_lock = self.LOCK_EX
             # Log if acquired, which includes counts when verbose
             self._log_acquired('WRITE LOCK', wait_time, nattempts)
 
