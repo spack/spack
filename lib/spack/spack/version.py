@@ -1087,7 +1087,7 @@ class CommitLookup(object):
 
             # For each tag, try to match to a version
             for v in [v.string for v in spack_versions]:
-                if v in tag:
+                if v == tag or 'v' + v == tag:
                     commit_to_version[commit] = v
                     break
             else:
