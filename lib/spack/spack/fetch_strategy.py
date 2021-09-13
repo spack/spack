@@ -1540,8 +1540,8 @@ def for_package_version(pkg, version):
     # if it's a commit, we must use a GitURLFetcher
     if version.is_commit and hasattr(pkg, "git"):
         # Populate the version with comparisons to other commits
+        version.generate_commit_lookup(pkg)
         repository = git_repo_for_package(pkg)
-        version.generate_commit_lookup(pkg, repository)
         fetcher = GitFetchStrategy(git=repository, commit=str(version))
         return fetcher
 

@@ -4531,11 +4531,7 @@ class SpecParser(spack.parse.Parser):
             if spec.name and spec.versions.concrete and spec.version.is_commit:
                 pkg = spec.package
                 if hasattr(pkg, 'git'):
-                    import spack.fetch_strategy as fetch
-                    tty.info("Generating commit lookup for %s" % pkg.name)
-                    spec.version.generate_commit_lookup(
-                        pkg, fetch.git_repo_for_package(pkg)
-                    )
+                    spec.version.generate_commit_lookup(pkg)
 
         return specs
 

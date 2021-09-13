@@ -166,7 +166,7 @@ class VersionStrComponent(object):
 
 class Version(object):
     """Class to represent versions"""
-    __slots__ = ['version', 'separators', 'string', 'commits']
+    __slots__ = ['version', 'separators', 'string', 'commit_lookup']
 
     def __init__(self, string):
         if not isinstance(string, str):
@@ -179,8 +179,8 @@ class Version(object):
         if not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
-        # A cache of known commits, if needed
-        self.commits = {}
+        # An object that can lookup git commits to compare them to versions
+        self.commit_lookup = None
 
         segments = SEGMENT_REGEX.findall(string)
         self.version = tuple(
@@ -188,19 +188,22 @@ class Version(object):
         )
         self.separators = tuple(m[2] for m in segments)
 
-    def _cmp(self, commit_info={}):
-        if self.is_commit and self.string in commit_info:
-            self_info = commit_info[self.string]
-            prev_version = self_info.get('prev_version', None)
-            distance = self_info['distance']
+    def _cmp(self, other_lookups=None):
+        commit_lookup = self.commit_lookup or other_lookups
 
-            # Extend previous version by empty component and distance
-            # If commit is exactly a known version, no distance suffix
-            prev_tuple = Version(prev_version).version if prev_version else ()
-            distance_suffix = (VersionStrComponent(''), distance) if distance else ()
-            return prev_tuple + distance_suffix
-        else:
-            return self.version
+        git_version = False
+        if self.is_commit and commit_lookup:
+            commit_info = commit_lookup.get(self.string)
+            if commit_info:
+                prev_version, distance = commit_info
+
+                # Extend previous version by empty component and distance
+                # If commit is exactly a known version, no distance suffix
+                prev_tuple = Version(prev_version).version if prev_version else ()
+                dist_suffix = (VersionStrComponent(''), distance) if distance else ()
+                return prev_tuple + dist_suffix
+
+        return self.version
 
     @property
     def is_commit(self):
@@ -316,9 +319,8 @@ class Version(object):
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler.
         """
-        commits = self.commits or other.commits
-        self_cmp = self._cmp(commit_info=commits)
-        other_cmp = other._cmp(commit_info=commits)
+        self_cmp = self._cmp(other.commit_lookup)
+        other_cmp = other._cmp(self.commit_lookup)
 
         # Do the final comparison
         nself = len(self_cmp)
@@ -375,13 +377,13 @@ class Version(object):
         if other is None:
             return False
 
-        commits = self.commits or other.commits
         # If either is a commit and we haven't indexed yet, can't compare
-        if other.is_commit or self.is_commit and not commits:
+        if (other.is_commit or self.is_commit) and not (self.commit_lookup or
+                                                        other.commit_lookup):
             return False
 
         # Use tuple comparison assisted by VersionStrComponent for performance
-        return self._cmp(commit_info=commits) < other._cmp(commit_info=commits)
+        return self._cmp(other.commit_lookup) < other._cmp(self.commit_lookup)
 
     @coerced
     def __eq__(self, other):
@@ -390,8 +392,7 @@ class Version(object):
         if other is None or type(other) != Version:
             return False
 
-        commits = self.commits or other.commits
-        return self._cmp(commit_info=commits) == other._cmp(commit_info=commits)
+        return self._cmp(other.commit_lookup) == other._cmp(self.commit_lookup)
 
     @coerced
     def __ne__(self, other):
@@ -417,18 +418,16 @@ class Version(object):
         if other is None:
             return False
 
-        commits = self.commits or other.commits
-        self_cmp = self._cmp(commit_info=commits)
-        return other._cmp(commit_info=commits)[:len(self_cmp)] == self_cmp
+        self_cmp = self._cmp(other.commit_lookup)
+        return other._cmp(self.commit_lookup)[:len(self_cmp)] == self_cmp
 
     def is_predecessor(self, other):
         """True if the other version is the immediate predecessor of this one.
            That is, NO non-commit versions v exist such that:
            (self < v < other and v not in self).
         """
-        commits = self.commits or other.commits
-        self_cmp = self._cmp(commit_info=commits)
-        other_cmp = other._cmp(commit_info=commits)
+        self_cmp = self._cmp(self.commit_lookup)
+        other_cmp = other._cmp(other.commit_lookup)
 
         if self_cmp[:-1] != other_cmp[:-1]:
             return False
@@ -462,7 +461,7 @@ class Version(object):
         else:
             return VersionList()
 
-    def generate_commit_lookup(self, pkg, repository):
+    def generate_commit_lookup(self, pkg):
         """
         Use the git fetcher to look up a version for a commit.
 
@@ -478,24 +477,17 @@ class Version(object):
             fetcher: the fetcher to use.
             versions: the known versions of the package
         """
-        if self.commits and self.string in self.commits:
+        if self.commit_lookup:
             return
 
         # Sanity check we have a commit
         if not self.is_commit:
             tty.die("%s is not a commit." % self)
 
-        # We require the full git repository history
-        from spack.fetch_strategy import GitFetchStrategy  # break cycle
-        fetcher = GitFetchStrategy(git=repository)
-        fetcher.get_full_repo = True
-
         # Generate a commit looker-upper
-        lookup = CommitLookup(fetcher)
-
-        # This shows a previous, and next spack version
-        self.commits = lookup.get_commit_lookup(self, pkg.versions)
-        lookup.save()
+        self.commit_lookup = CommitLookup(pkg)
+        self.commit_lookup.get(self.string)
+        self.commit_lookup.save()
 
 
 class VersionRange(object):
@@ -986,12 +978,25 @@ class VersionChecksumError(VersionError):
 
 class CommitLookup(object):
 
-    def __init__(self, fetcher):
+    def __init__(self, pkg):
+        self.pkg = pkg
+
+        # We require the full git repository history
+        import spack.fetch_strategy  # break cycle
+        repository = spack.fetch_strategy.git_repo_for_package(pkg)
+        fetcher = spack.fetch_strategy.GitFetchStrategy(git=repository)
+        fetcher.get_full_repo = True
+
         self.fetcher = fetcher
+
         self.data = {}
 
     @property
     def repository_uri(self):
+        """
+        Identifier for git repos used within the repo and metadata caches.
+
+        """
         # Case 1: It's a path on the filesystem
         if os.path.exists(self.fetcher.url) or self.fetcher.url.startswith("file://"):
             return re.sub("file://", "", self.fetcher.url)
@@ -1017,26 +1022,17 @@ class CommitLookup(object):
             with open(self.repository_metadata_path, 'r') as fd:
                 self.data = sjson.load(fd.read())
 
-    def get_commit_lookup(self, version, spack_versions):
-        """
-        Given a git handle, repository, and known spack versions, generate a lookup.
+    def get(self, commit):
+        if not self.data:
+            self.load_data()
 
-        We do this by listing all the tags for a repository path, in the order of
-        release (the assumption being that versioned releases/candidates that are
-        later are preferable to earlier) and then we match these versions to known
-        spack versions. We can then parse the entire git history, and generate
-        a lookup that describes the context of every commit to a known spack
-        version. In the case that commit is an exact match, exact_version will
-        be true. If a commit does not have a spack version before it, or does
-        not have a spack version after it, then the value will be None.
-        """
-        # lookup cache and return early here
-        self.load_data()
+        if commit not in self.data:
+            self.data[commit] = self.lookup_commit(commit)
+            self.save()
 
-        # Cut out early if we already have the version cached
-        if str(version) in self.data:
-            return self.data
+        return self.data[commit]
 
+    def lookup_commit(self, commit):
         # Were we given an already cloned path?
         already_cloned = os.path.exists(self.repository_uri)
         if already_cloned:
@@ -1056,60 +1052,61 @@ class CommitLookup(object):
         if not os.path.exists(dest):
             self.fetcher.clone(os.path.dirname(dest))
 
-        # Always pull and fetch
+        # Lookup commit info
         with working_dir(dest):
-
             # Don't do anything if already cloned - it might not have remote
             if not already_cloned:
                 self.fetcher.git("pull")
                 self.fetcher.git("fetch")
+
+            # Ensure commit is an object known to git
+            # Note the brackets are literals, the commit replaces the format string
+            # This will raise a ProcessError if the commit does not exist
+            # We may later design a custom error to re-raise
+            self.fetcher.git('cat-file', '-e', '%s^{commit}' % commit)
+
+            # Get list of all commits, this is in reverse order
+            # We use this to get the first commit if needed
+            commit_info = self.fetcher.git("log", "--all", "--pretty=format:%H",
+                                           output=str)
+            commits = [c for c in commit_info.split('\n') if c]
 
             # List tags (refs) by date, so last reference of a tag is newest
             tag_info = self.fetcher.git(
                 "for-each-ref", "--sort=creatordate", "--format",
                 "%(objectname) %(refname)", "refs/tags", output=str).split('\n')
 
-            # Get list of all commits, this is in reverse order
-            commits = self.fetcher.git("log", "--all", "--pretty=format:%H", output=str)
+            # Lookup of commits to spack versions
+            commit_to_version = {}
 
-        # Lookup of commits to spack versions
-        commit_to_version = {}
+            for entry in tag_info:
+                if not entry:
+                    continue
+                tag_commit, tag = entry.split()
+                tag = tag.replace('refs/tags/', '', 1)
 
-        for entry in tag_info:
-            if not entry:
-                continue
-            commit, tag = entry.split()
-            tag = tag.replace('refs/tags/', '', 1)
+                # For each tag, try to match to a version
+                for v in [v.string for v in self.pkg.versions]:
+                    if v == tag or 'v' + v == tag:
+                        commit_to_version[tag_commit] = v
+                        break
+                else:
+                    # try to parse tag to copare versions spack does not know
+                    match = SEMVER_REGEX.match(tag)
+                    if match:
+                        semver = match.groupdict()['semver']
+                        commit_to_version[tag_commit] = semver
 
-            # For each tag, try to match to a version
-            for v in [v.string for v in spack_versions]:
-                if v == tag or 'v' + v == tag:
-                    commit_to_version[commit] = v
-                    break
-            else:
-                # try to parse tag to copare versions spack does not know
-                match = SEMVER_REGEX.match(tag)
-                if match:
-                    semver = match.groupdict()['semver']
-                    commit_to_version[commit] = semver
-
-        # commits[0] is most recent, commits[-2] is first
-        commits = [c for c in commits.split('\n') if c]
-
-        for commit in commits:
-            # Get commits associated with tags that're ancestors of this commit
-            # Values are tuples of ancestor and distance in commits
             ancestor_commits = []
             for tag_commit in commit_to_version:
-                with working_dir(dest):
-                    self.fetcher.git(
-                        'merge-base', '--is-ancestor', tag_commit, commit,
-                        ignore_errors=[1])
-                    if self.fetcher.git.returncode == 0:
-                        distance = self.fetcher.git(
-                            'rev-list', '%s..%s' % (tag_commit, commit), '--count',
-                            output=str, error=str).strip()
-                        ancestor_commits.append((tag_commit, int(distance)))
+                self.fetcher.git(
+                    'merge-base', '--is-ancestor', tag_commit, commit,
+                    ignore_errors=[1])
+                if self.fetcher.git.returncode == 0:
+                    distance = self.fetcher.git(
+                        'rev-list', '%s..%s' % (tag_commit, commit), '--count',
+                        output=str, error=str).strip()
+                    ancestor_commits.append((tag_commit, int(distance)))
 
             # Get nearest ancestor that is a known version
             ancestor_commits.sort(key=lambda x: x[1])
@@ -1118,18 +1115,9 @@ class CommitLookup(object):
                 prev_version = commit_to_version[prev_version_commit]
             else:
                 prev_version = None
-                with working_dir(dest):
-                    distance = self.fetcher.git(
-                        'rev-list', '%s..%s' % (commits[-1], commit),
-                        output=str, error=str
-                    ).strip()
+                distance = self.fetcher.git(
+                    'rev-list', '%s..%s' % (commits[-1], commit),
+                    output=str, error=str
+                ).strip()
 
-            # Write out data for this commit
-            self.data[commit] = {
-                'prev_version': prev_version,
-                'distance': distance,
-            }
-
-        if str(version) not in self.data:
-            tty.die("%s is not in the history of %s" % (version, self.fetcher.url))
-        return self.data
+        return prev_version, distance
