@@ -37,7 +37,7 @@ class Libsecret(AutotoolsPackage):
         url = 'http://ftp.gnome.org/pub/gnome/sources/libsecret'
         return url + '/%s/libsecret-%s.tar.xz' % (version.up_to(2), version)
 
-    # http://www.linuxfromscratch.org/blfs/view/svn/gnome/libsecret.html
+    # https://www.linuxfromscratch.org/blfs/view/svn/gnome/libsecret.html
     def configure_args(self):
         args = []
         args.append('--disable-static')

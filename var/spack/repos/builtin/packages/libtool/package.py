@@ -25,7 +25,7 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
     depends_on('texinfo', type='build', when='@develop')
 
     # Fix parsing of compiler output when collecting predeps and postdeps
-    # http://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
+    # https://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
     patch('flag_space.patch', when='@develop')
 
     build_directory = 'spack-build'

@@ -11,7 +11,7 @@ class PyPetsc4py(PythonPackage):
     """
 
     homepage = "https://gitlab.com/petsc/petsc4py"
-    url      = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc4py-3.15.0.tar.gz"
+    url      = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc4py-3.15.0.tar.gz"
     git      = "https://gitlab.com/petsc/petsc.git"
 
     maintainers = ['balay']

@@ -13,7 +13,7 @@ class RFitModels(RPackage):
     summary, plot, etc.) were originally provided in the robust package to
     compare robustly and classically fitted model objects. See chapters 2, 3,
     and 5 in Insightful (2002) 'Robust Library User's Guide'
-    <http://robust.r-forge.r-project.org/Robust.pdf>). The aim of the
+    <https://robust.r-forge.r-project.org/Robust.pdf>). The aim of the
     fit.models package is to separate this fitted model object comparison
     functionality from the robust package and to extend it to support fitting
     methods (e.g., classical, robust, Bayesian, regularized, etc.) more

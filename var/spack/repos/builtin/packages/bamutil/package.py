@@ -13,7 +13,7 @@ class Bamutil(MakefilePackage):
     """
 
     homepage = "https://genome.sph.umich.edu/wiki/BamUtil"
-    url      = "http://genome.sph.umich.edu/w/images/7/70/BamUtilLibStatGen.1.0.13.tgz"
+    url      = "https://genome.sph.umich.edu/w/images/7/70/BamUtilLibStatGen.1.0.13.tgz"
 
     version('1.0.13', sha256='16c1d01c37d1f98b98c144f3dd0fda6068c1902f06bd0989f36ce425eb0c592b')
 

@@ -22,7 +22,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     homepage = 'https://gcc.gnu.org'
     gnu_mirror_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
     git      = 'git://gcc.gnu.org/git/gcc.git'
-    list_url = 'http://ftp.gnu.org/gnu/gcc/'
+    list_url = 'https://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
     maintainers = ['michaelkuhn', 'alalazo']

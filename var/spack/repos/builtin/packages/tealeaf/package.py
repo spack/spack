@@ -16,7 +16,7 @@ class Tealeaf(MakefilePackage):
     """
 
     homepage = "https://uk-mac.github.io/TeaLeaf/"
-    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/TeaLeaf/TeaLeaf-1.0.tar.gz"
+    url      = "https://downloads.mantevo.org/releaseTarballs/miniapps/TeaLeaf/TeaLeaf-1.0.tar.gz"
 
     tags = ['proxy-app']
 

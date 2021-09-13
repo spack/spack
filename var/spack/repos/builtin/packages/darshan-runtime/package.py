@@ -16,7 +16,7 @@ class DarshanRuntime(AutotoolsPackage):
     systems where you intend to instrument MPI applications."""
 
     homepage = "https://www.mcs.anl.gov/research/projects/darshan/"
-    url      = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    url      = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
     git      = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers = ['shanedsnyder', 'carns']
