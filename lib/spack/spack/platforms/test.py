@@ -7,7 +7,7 @@ import platform
 import spack.operating_systems
 import spack.target
 
-from ._base_classes import Platform
+from ._platform import Platform
 
 
 class Test(Platform):

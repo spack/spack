@@ -10,7 +10,7 @@ import archspec.cpu
 import spack.target
 from spack.operating_systems.mac_os import MacOs
 
-from ._base_classes import Platform
+from ._platform import Platform
 
 
 class Darwin(Platform):

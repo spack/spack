@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from ._base_classes import OperatingSystem
+from ._operating_system import OperatingSystem
 from .cray_backend import CrayBackend
 from .cray_frontend import CrayFrontend
 from .linux_distro import LinuxDistro

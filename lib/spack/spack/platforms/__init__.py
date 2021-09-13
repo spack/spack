@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import llnl.util.lang
 
-from ._base_classes import Platform
+from ._platform import Platform
 from .cray import Cray
 from .darwin import Darwin
 from .linux import Linux

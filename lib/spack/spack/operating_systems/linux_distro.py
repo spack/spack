@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
-from ._base_classes import OperatingSystem
+from ._operating_system import OperatingSystem
 
 
 class LinuxDistro(OperatingSystem):

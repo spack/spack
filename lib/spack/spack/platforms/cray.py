@@ -18,7 +18,7 @@ from spack.paths import build_env_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import module
 
-from ._base_classes import NoPlatformError, Platform
+from ._platform import NoPlatformError, Platform
 
 _craype_name_to_target_name = {
     'x86-cascadelake': 'cascadelake',
