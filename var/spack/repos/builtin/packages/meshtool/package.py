@@ -23,4 +23,3 @@ class Meshtool(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('meshtool', prefix.bin)
-

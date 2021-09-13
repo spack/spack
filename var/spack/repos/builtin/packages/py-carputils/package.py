@@ -19,7 +19,7 @@ class PyCarputils(PythonPackage):
     version('oc7.0', commit='4c04db61744f2fb7665594d7c810699c5c55c77c')
 
     depends_on('git')
-    
+
     depends_on('python@:3.8', type=('build', 'run'))
     depends_on('py-pip', type='build')
     depends_on('py-numpy@1.14.5:', type=('build', 'run'))
