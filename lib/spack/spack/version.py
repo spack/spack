@@ -1056,10 +1056,6 @@ class CommitLookup(object):
         if not os.path.exists(dest):
             self.fetcher.clone(os.path.dirname(dest))
 
-        # But if we get here and no repostiory, this is a fail
-        if not os.path.exists(dest):
-            tty.die("There was an issue cloning %s to %s" % (self.fetcher.url, dest))
-
         # Always pull and fetch
         with working_dir(dest):
 
@@ -1094,7 +1090,7 @@ class CommitLookup(object):
                 # try to parse tag to copare versions spack does not know
                 match = SEMVER_REGEX.match(tag)
                 if match:
-                    semver = match.gropudict()['semver']
+                    semver = match.groupdict()['semver']
                     commit_to_version[commit] = semver
 
         # commits[0] is most recent, commits[-2] is first
