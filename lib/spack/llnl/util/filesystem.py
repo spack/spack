@@ -657,8 +657,9 @@ def working_dir(dirname, **kwargs):
 
 
 class CouldNotRestoreDirectoryBackup(RuntimeError):
-    def __init__(self, inner_exception):
+    def __init__(self, inner_exception, outer_exception):
         self.inner_exception = inner_exception
+        self.outer_exception = outer_exception
 
 
 @contextmanager
@@ -688,16 +689,14 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         assert os.path.isabs(tmp_root)
 
     tmp_dir = tempfile.mkdtemp(dir=tmp_root)
-    tty.debug('TEMPORARY DIRECTORY CREATED [{0}]'.format(tmp_dir))
+    tty.debug('Temporary directory created [{0}]'.format(tmp_dir))
 
     shutil.move(src=directory_name, dst=tmp_dir)
-    tty.debug('DIRECTORY MOVED [src={0}, dest={1}]'.format(
-        directory_name, tmp_dir
-    ))
+    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, tmp_dir))
 
     try:
         yield tmp_dir
-    except (Exception, KeyboardInterrupt, SystemExit):
+    except (Exception, KeyboardInterrupt, SystemExit) as inner_exception:
         # Try to recover the original directory, if this fails, raise a
         # composite exception.
         try:
@@ -708,15 +707,15 @@ def replace_directory_transaction(directory_name, tmp_root=None):
                 src=os.path.join(tmp_dir, directory_basename),
                 dst=os.path.dirname(directory_name)
             )
-        except OSError as e:
-            raise CouldNotRestoreDirectoryBackup(e)
+        except Exception as outer_exception:
+            raise CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
-        tty.debug('DIRECTORY RECOVERED [{0}]'.format(directory_name))
+        tty.debug('Directory recovered [{0}]'.format(directory_name))
         raise
     else:
         # Otherwise delete the temporary directory
         shutil.rmtree(tmp_dir, ignore_errors=True)
-        tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
+        tty.debug('Temporary directory deleted [{0}]'.format(tmp_dir))
 
 
 def hash_directory(directory, ignore=[]):

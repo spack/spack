@@ -1611,22 +1611,7 @@ class PackageInstaller(object):
                 if action == InstallAction.INSTALL:
                     self._install_task(task)
                 elif action == InstallAction.OVERWRITE:
-                    try:
-                        with fs.replace_directory_transaction(pkg.prefix):
-                            keep_prefix = True
-                            self._install_task(task)
-                    except fs.CouldNotRestoreDirectoryBackup as e:
-                        # Failing 'overwrite' installations where the backup
-                        # could not be restored and the original spec
-                        # install is lost: there we must mark the spec as
-                        # uninstalled in the database.
-                        spack.store.db.remove(task.pkg.spec)
-                        tty.error('Installation of {0} failed and recovery of '
-                                  'original install directory was unsucessful. '
-                                  'The spec is now uninstalled.'.format(pkg.name))
-
-                        # Unwrap the actual installation exception.
-                        raise e.inner_exception
+                    OverwriteInstall(self, spack.store.db, task).install()
 
                 self._update_installed(task)
 
@@ -1677,7 +1662,7 @@ class PackageInstaller(object):
             finally:
                 # Remove the install prefix if anything went wrong during
                 # install.
-                if not keep_prefix:
+                if not keep_prefix and not action == InstallAction.OVERWRITE:
                     pkg.remove_prefix()
 
                 # The subprocess *may* have removed the build stage. Mark it
@@ -1927,6 +1912,35 @@ def build_process(pkg, install_args):
     # don't print long padded paths in executable debug output.
     with spack.util.path.filter_padding():
         return installer.run()
+
+
+class OverwriteInstall(object):
+    def __init__(self, installer, database, task, tmp_root=None):
+        self.installer = installer
+        self.database = database
+        self.task = task
+        self.tmp_root = tmp_root
+
+    def install(self):
+        """
+        Try to run the install task overwriting the package prefix.
+        If this fails, try to recover the original install prefix. If that fails
+        too, mark the spec as uninstalled. This function always the original
+        install error if installation fails.
+        """
+        try:
+            with fs.replace_directory_transaction(self.task.pkg.prefix, self.tmp_root):
+                self.installer._install_task(self.task)
+        except fs.CouldNotRestoreDirectoryBackup as e:
+            self.database.remove(self.task.pkg.spec)
+            tty.error('Recovery of install dir of {0} failed due to '
+                      '{1}: {2}. The spec is now uninstalled.'.format(
+                          self.task.pkg.name,
+                          e.outer_exception.__class__.__name__,
+                          str(e.outer_exception)))
+
+            # Unwrap the actual installation exception.
+            raise e.inner_exception
 
 
 class BuildTask(object):
