@@ -660,7 +660,7 @@ class Trilinos(CMakePackage, CudaPackage):
         # ################# Kokkos ######################
 
         if '+kokkos' in spec:
-            arch = Kokkos.spack_micro_arch_map.get(spec.target.name, None)
+            arch = Kokkos.get_microarch(spec.target)
             if arch:
                 options.append(define("Kokkos_ARCH_" + arch.upper(), True))
 
