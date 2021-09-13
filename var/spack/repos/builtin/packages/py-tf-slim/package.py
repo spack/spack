@@ -23,4 +23,4 @@ class PyTfSlim(PythonPackage):
     depends_on('py-wrapt', type='run')
     depends_on('py-gast', type='run')
     depends_on('py-termcolor', type='run')
-    depends_on('py-flatbuffers', type='run')
+    depends_on('flatbuffers', type='run')
