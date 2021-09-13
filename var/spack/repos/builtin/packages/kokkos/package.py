@@ -85,46 +85,22 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     }
 
     spack_micro_arch_map = {
-        "graviton": "",
-        "graviton2": "",
-        "aarch64": "",
-        "arm": "",
-        "ppc": "",
-        "ppc64": "",
-        "ppc64le": "",
-        "ppcle": "",
-        "sparc": None,
-        "sparc64": None,
-        "x86": "",
-        "x86_64": "",
         "thunderx2": "THUNDERX2",
-        "k10": None,
         "zen": "ZEN",
-        "bulldozer": "",
-        "piledriver": "",
         "zen2": "ZEN2",
         "steamroller": "KAVERI",
         "excavator": "CARIZO",
-        "a64fx": "",
         "power7": "POWER7",
         "power8": "POWER8",
         "power9": "POWER9",
         "power8le": "POWER8",
         "power9le": "POWER9",
-        "i686": None,
-        "pentium2": None,
-        "pentium3": None,
-        "pentium4": None,
-        "prescott": None,
-        "nocona": None,
-        "nehalem": None,
         "sandybridge": "SNB",
         "haswell": "HSW",
         "mic_knl": "KNL",
         "cannonlake": "SKX",
         "cascadelake": "SKX",
         "westmere": "WSM",
-        "core2": None,
         "ivybridge": "SNB",
         "broadwell": "BDW",
         # @AndrewGaspar: Kokkos does not have an arch for plain-skylake - only
@@ -209,6 +185,23 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     variant('shared', default=True, description='Build shared libraries')
 
+    @classmethod
+    def get_microarch(cls, target):
+        """Get the Kokkos microarch name for a Spack target (spec.target).
+        """
+        smam = cls.spack_micro_arch_map
+
+        # Find closest ancestor that has a known microarch optimization
+        if target.name not in smam:
+            for target in target.ancestors:
+                if target.name in smam:
+                    break
+            else:
+                # No known microarch optimizatinos
+                return None
+
+        return smam[target.name]
+
     def append_args(self, cmake_prefix, cmake_options, spack_options):
         variant_to_cmake_option = {'rocm': 'hip'}
         for variant_name in cmake_options:
@@ -259,7 +252,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                     kokkos_arch_name = self.spack_cuda_arch_map[cuda_arch]
                     spack_microarches.append(kokkos_arch_name)
 
-        kokkos_microarch_name = self.spack_micro_arch_map[spec.target.name]
+        kokkos_microarch_name = self.get_microarch(spec.target)
         if kokkos_microarch_name:
             spack_microarches.append(kokkos_microarch_name)
 
