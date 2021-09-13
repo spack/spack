@@ -19,6 +19,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers = ['robertu94']
 
+    version('11.1', sha256='cc2903474e965a43d09c3b263952d48ced39dd22ce2d01968f3aa181335fcb9c')
     version('10.2',   sha256='b33ad58d687487a821ec8d878daab0f716be60d0936f2e3ac5cf08419ce70350')
     version('10.1',   sha256='f12f388b99e1408c01308c3f753313fafa45517740c81ab7ed0d511b13e2cf55')
     version('9.2',    sha256='38ef247d41ba7cc3f6f93a612a78bab9484de9accecbe3b0150a3c0391a3faf0')
@@ -49,7 +50,8 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     # Resolves the undefined references to libintl_gettext while linking gdbserver
     # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
-    patch('gdb-libintl.patch', level=0, when='@10.1:')
+    patch('gdb-libintl-10.patch', level=0, when='@10.1:11.0')
+    patch('gdb-libintl-11.patch', level=0, when='@11.1:')
 
     # Silence warnings about imp being deprecated on new python versions
     # https://sourceware.org/pipermail/gdb-patches/2021-February/176622.html
