@@ -1115,17 +1115,15 @@ class CommitLookup(object):
             # Values are tuples of ancestor and distance in commits
             ancestor_commits = []
             for tag_commit in commit_to_version:
-                try:
-                    with working_dir(dest):
-                        self.fetcher.git(
-                            'merge-base', '--is-ancestor', tag_commit, commit)
+                with working_dir(dest):
+                    self.fetcher.git(
+                        'merge-base', '--is-ancestor', tag_commit, commit,
+                        ignore_errors=[1])
+                    if self.fetcher.git.returncode == 0:
                         distance = self.fetcher.git(
                             'rev-list', '%s..%s' % (tag_commit, commit), '--count',
                             output=str, error=str).strip()
-                    ancestor_commits.append((tag_commit, int(distance)))
-                except spack.util.executable.ProcessError:
-                    # is-ancestor check will raise a ProcessError when False
-                    pass
+                        ancestor_commits.append((tag_commit, int(distance)))
 
             # Get nearest ancestor that is a known version
             ancestor_commits.sort(key=lambda x: x[1])
