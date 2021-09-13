@@ -20,7 +20,7 @@ class PyCarputils(PythonPackage):
 
     depends_on('git')
     
-    depends_on('python@2.7:2.8,3.6:3.8', type=('build', 'run'))
+    depends_on('python@:3.8', type=('build', 'run'))
     depends_on('py-pip', type='build')
     depends_on('py-numpy@1.14.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
