@@ -186,6 +186,9 @@ default_format = '{name}{@version}'
 default_format += '{%compiler.name}{@compiler.version}{compiler_flags}'
 default_format += '{variants}{arch=architecture}'
 
+#: specfile format version. Must increase monotonically
+specfile_format_version = 2
+
 
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
@@ -1798,7 +1801,7 @@ class Spec(object):
                     if node_hash not in hash_set:
                         node_list.append(node)
                         hash_set.add(node_hash)
-        meta_dict = syaml.syaml_dict([('version', 2)])
+        meta_dict = syaml.syaml_dict([('version', specfile_format_version)])
         inner_dict = syaml.syaml_dict([('_meta', meta_dict), ('nodes', node_list)])
         spec_dict = syaml.syaml_dict([('spec', inner_dict)])
         return spec_dict
