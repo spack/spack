@@ -6,8 +6,9 @@
 from __future__ import print_function
 
 import os
-import pytest
 from ctypes import wintypes
+
+import pytest
 
 from llnl.util.filesystem import mkdirp
 
