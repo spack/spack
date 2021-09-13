@@ -462,7 +462,7 @@ class Version(object):
         else:
             return VersionList()
 
-    def generate_commit_lookup(self, fetcher, versions):
+    def generate_commit_lookup(self, pkg, repository):
         """
         Use the git fetcher to look up a version for a commit.
 
@@ -486,13 +486,15 @@ class Version(object):
             tty.die("%s is not a commit." % self)
 
         # We require the full git repository history
+        from spack.fetch_strategy import GitFetchStrategy  # break cycle
+        fetcher = GitFetchStrategy(git=repository)
         fetcher.get_full_repo = True
 
         # Generate a commit looker-upper
         lookup = CommitLookup(fetcher)
 
         # This shows a previous, and next spack version
-        self.commits = lookup.get_commit_lookup(self, versions)
+        self.commits = lookup.get_commit_lookup(self, pkg.versions)
         lookup.save()
 
 

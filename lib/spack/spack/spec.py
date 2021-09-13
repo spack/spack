@@ -4534,10 +4534,7 @@ class SpecParser(spack.parse.Parser):
                     import spack.fetch_strategy as fetch
                     tty.info("Generating commit lookup for %s" % pkg.name)
                     spec.version.generate_commit_lookup(
-                        fetch.GitFetchStrategy(
-                            git=fetch.git_repo_for_package(pkg)
-                        ),
-                        pkg.versions
+                        pkg, fetch.git_repo_for_package(pkg)
                     )
 
         return specs

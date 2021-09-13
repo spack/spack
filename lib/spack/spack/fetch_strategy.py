@@ -1541,8 +1541,7 @@ def for_package_version(pkg, version):
     if version.is_commit and hasattr(pkg, "git"):
         # Populate the version with comparisons to other commits
         repository = git_repo_for_package(pkg)
-        fetcher = GitFetchStrategy(git=repository)
-        version.generate_commit_lookup(fetcher, pkg.versions)
+        version.generate_commit_lookup(pkg, repository)
         fetcher = GitFetchStrategy(git=repository, commit=str(version))
         return fetcher
 
