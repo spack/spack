@@ -35,7 +35,7 @@ import spack.environment as ev
 import spack.package
 import spack.package_prefs
 import spack.paths
-import spack.platforms.test
+import spack.platforms
 import spack.repo
 import spack.stage
 import spack.store
@@ -345,7 +345,7 @@ def _skip_if_missing_executables(request):
 
 @pytest.fixture(scope='session')
 def test_platform():
-    return spack.platforms.test.Test()
+    return spack.platforms.Test()
 
 
 @pytest.fixture(autouse=True, scope='session')
