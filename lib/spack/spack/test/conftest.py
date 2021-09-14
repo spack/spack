@@ -65,6 +65,9 @@ def write_file(filename, contents):
         f.write(contents)
 
 
+commit_counter = 0
+
+
 @pytest.fixture
 def mock_git_version_info(tmpdir, scope="function"):
     git = spack.util.executable.which('git', required=True)
@@ -74,6 +77,12 @@ def mock_git_version_info(tmpdir, scope="function"):
     # 1. multiple branches
     # 2. version tags on multiple branches
     # 3. version order not equal to time order
+    def commit(message):
+        global commit_counter
+        git('commit', '--date', '2020-01-%02d 12:0:00 +0300' % commit_counter,
+            '-am', message)
+        commit_counter += 1
+
     with working_dir(repo_path):
         git("init")
 
@@ -83,39 +92,39 @@ def mock_git_version_info(tmpdir, scope="function"):
         # Add two commits on main branch
         write_file(filename, '[]')
         git('add', filename)
-        git('commit', '-am', 'first commit')
+        commit('first commit')
 
         # Get name of default branch (differs by git version)
         main = git('rev-parse', '--abbrev-ref', 'HEAD', output=str, error=str).strip()
 
         # Tag second commit as v1.0
         write_file(filename, "[1, 0]")
-        git('commit', '-am', 'second commit')
+        commit('second commit')
         git('tag', 'v1.0')
 
         # Add two commits and a tag on 1.x branch
         git('checkout', '-b', '1.x')
         write_file(filename, "[1, 0, '', 1]")
-        git('commit', '-am', 'first 1.x commit')
+        commit('first 1.x commit')
 
         write_file(filename, "[1, 1]")
-        git('commit', '-am', 'second 1.x commit')
+        commit('second 1.x commit')
         git('tag', 'v1.1')
 
         # Add two commits and a tag on main branch
         git('checkout', main)
         write_file(filename, "[1, 0, '', 1]")
-        git('commit', '-am', 'third main commit')
+        commit('third main commit')
         write_file(filename, "[2, 0]")
-        git('commit', '-am', 'fourth main commit')
+        commit('fourth main commit')
         git('tag', 'v2.0')
 
         # Add two more commits on 1.x branch to ensure we aren't cheating by using time
         git('checkout', '1.x')
         write_file(filename, "[1, 1, '', 1]")
-        git('commit', '-am', 'third 1.x commit')
+        commit('third 1.x commit')
         write_file(filename, "[1, 2]")
-        git('commit', '-am', 'fourth 1.x commit')
+        commit('fourth 1.x commit')
         git('tag', '1.2')  # test robust parsing to different syntax, no v
 
         # Get the commits in topo order
