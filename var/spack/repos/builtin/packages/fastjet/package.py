@@ -50,15 +50,16 @@ class Fastjet(AutotoolsPackage):
     version('2.3.0', sha256='e452fe4a9716627bcdb726cfb0917f46a7ac31f6006330a6ccc1abc43d9c2d53')
     # older version use .tar instead of .tar.gz extension, to be added
 
+    plugins_ = ("SISCone", "CDFCones", "PxCone", "D0RunIICone", "NestedDefs",
+                "TrackJet", "ATLASCone", "CMSIterativeCone", "EECambridge",
+                "Jade", "D0RunICone", "GridJet")
+
     variant('shared', default=True, description='Builds a shared version of the library')
     variant('auto-ptr', default=False, description='Use auto_ptr')
     variant('atlas', default=False, description='Patch to make random generator thread_local')
     variant('plugins',
-            values=disjoint_sets(
-                ("all", ), ("allcxx", ), ("SISCone", "CDFCones", "PxCone", "D0RunIICone",
-                           "NestedDefs", "TrackJet", "ATLASCone", "CMSIterativeCone",
-                           "EECambridge", "Jade", "D0RunICone", "GridJet")
-            ).prohibit_empty_set().with_default("all")
+            values=disjoint_sets(("all", ), ("allcxx", ), plugins_)
+            .prohibit_empty_set().with_default("all")
             )
 
     variant('python', default=False, description='Enable the python interface')
