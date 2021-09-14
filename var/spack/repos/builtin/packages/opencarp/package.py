@@ -16,8 +16,6 @@ class Opencarp(CMakePackage):
     homepage = "https://www.opencarp.org"
     git = "https://git.opencarp.org/openCARP/openCARP.git"
 
-    # Add a list of GitHub accounts to
-    # notify when the package is updated.
     maintainers = ['MarieHouillon']
 
     version('7.0', commit='78da9195', submodules=False, no_cache=True, preferred=True)
