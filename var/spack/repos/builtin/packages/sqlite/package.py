@@ -91,11 +91,9 @@ class Sqlite(AutotoolsPackage):
     def determine_variants(cls, exes, version_str):
         all_variants = []
 
-        def call(exe, feature, query):
-            prefix = 'spack-sqlite-{:s}-'.format(feature)
-            with NamedTemporaryFile(mode='w', prefix=prefix) as sqlite_stdin:
+        def call(exe, query):
+            with NamedTemporaryFile(mode='w', buffering=1) as sqlite_stdin:
                 sqlite_stdin.write(query + '\n')
-                sqlite_stdin.flush()
                 e = Executable(exe)
                 e(fail_on_error=False,
                   input=sqlite_stdin.name,
@@ -115,19 +113,19 @@ class Sqlite(AutotoolsPackage):
                 return 'CREATE VIRTUAL TABLE name ' \
                        'USING fts{:d}(sender, title, body);'.format(version)
 
-            rc_fts4 = call(exe, 'fts4', query_fts(4))
-            rc_fts5 = call(exe, 'fts5', query_fts(5))
+            rc_fts4 = call(exe, query_fts(4))
+            rc_fts5 = call(exe, query_fts(5))
             variants.append(get_variant('fts', rc_fts4 == 0 and rc_fts5 == 0))
 
             # check for functions
             # SQL query taken from extension-functions.c usage instructions
             query_functions = "SELECT load_extension('libsqlitefunctions');"
-            rc_functions = call(exe, 'functions', query_functions)
+            rc_functions = call(exe, query_functions)
             variants.append(get_variant('functions', rc_functions == 0))
 
             # check for rtree
             query_rtree = 'CREATE VIRTUAL TABLE name USING rtree(id, x, y);'
-            rc_rtree = call(exe, 'rtree', query_rtree)
+            rc_rtree = call(exe, query_rtree)
             variants.append(get_variant('rtree', rc_rtree == 0))
 
             # TODO: column_metadata
