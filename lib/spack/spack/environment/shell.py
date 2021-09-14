@@ -134,7 +134,7 @@ def activate(env, use_env_repo=False, add_view=True):
 
 def deactivate():
     """
-    Deactviate an environment and collect corresponding environment modifications
+    Deactivate an environment and collect corresponding environment modifications
 
     Returns:
         spack.util.environment.EnvironmentModifications: Environment variables
