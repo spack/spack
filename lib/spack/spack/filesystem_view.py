@@ -97,8 +97,11 @@ def view_copy(src, dst, view, spec=None):
                 files=[dst],
                 prefixes=prefix_to_projection
             )
-        stat = os.stat(src)
-        os.chown(dst, stat.st_uid, stat.st_gid)
+        try:
+            stat = os.stat(src)
+            os.chown(dst, stat.st_uid, stat.st_gid)
+        except OSError:
+            tty.debug('Can\'t change the group permissions for %s' % dst)
 
 
 def view_func_parser(parsed_name):
