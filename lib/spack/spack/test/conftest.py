@@ -72,20 +72,20 @@ commit_counter = 0
 def mock_git_version_info(tmpdir, scope="function"):
     """Create a mock git repo with known structure
 
-    The structure of commits in this repo is as follows:
+    The structure of commits in this repo is as follows::
 
-    | o fourth 1.x commit (1.2)
-    | o third 1.x commit
-    | |
-    o | fourth main commit (v2.0)
-    o | third main commit
-    | |
-    | o second 1.x commit (v1.1)
-    | o first 1.x commit
-    | /
-    |/
-    o second commit (v1.0)
-    o first commit
+       | o fourth 1.x commit (1.2)
+       | o third 1.x commit
+       | |
+       o | fourth main commit (v2.0)
+       o | third main commit
+       | |
+       | o second 1.x commit (v1.1)
+       | o first 1.x commit
+       | /
+       |/
+       o second commit (v1.0)
+       o first commit
 
     The repo consists of a single file, in which the Version._cmp representation
     of each commit is expressed as a string.
