@@ -1136,9 +1136,9 @@ class CommitLookup(object):
 
                 # No previous version and distance from first commit
                 prev_version = None
-                distance = self.fetcher.git(
+                distance = int(self.fetcher.git(
                     'rev-list', '%s..%s' % (commits[-1], commit), '--count',
                     output=str, error=str
-                ).strip()
+                ).strip())
 
         return prev_version, distance
