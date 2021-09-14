@@ -55,9 +55,9 @@ class Fastjet(AutotoolsPackage):
     variant('atlas', default=False, description='Patch to make random generator thread_local')
     variant('plugins',
             values=disjoint_sets(
-                ("all", ), ("allcxx", ), ("SISCone", "CDFCones", "PxCone", "D0RunIICone", "NestedDefs",
-                          "TrackJet", "ATLASCone", "CMSIterativeCone", "EECambridge",
-                          "Jade", "D0RunICone", "GridJet")
+                ("all", ), ("allcxx", ), ("SISCone", "CDFCones", "PxCone", "D0RunIICone",
+                           "NestedDefs", "TrackJet", "ATLASCone", "CMSIterativeCone",
+                           "EECambridge", "Jade", "D0RunICone", "GridJet")
             ).prohibit_empty_set().with_default("all")
             )
 
@@ -86,7 +86,7 @@ class Fastjet(AutotoolsPackage):
 
         if self.spec.satisfies('+python'):
             extra_args.append('--enable-pyext')
-            
+
         if self.spec.satisfies('thread-safety=no'):
             extra_args.append('--disable-limited-thread-safety')
             extra_args.append('--disable-thread-safety')
