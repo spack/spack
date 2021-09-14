@@ -58,7 +58,7 @@ class Fastjet(AutotoolsPackage):
                 ("all", ), ("allcxx", ), ("SISCone", "CDFCones", "PxCone", "D0RunIICone", "NestedDefs",
                           "TrackJet", "ATLASCone", "CMSIterativeCone", "EECambridge",
                           "Jade", "D0RunICone", "GridJet")
-            ).prohibit_empty_set().with_default("all").
+            ).prohibit_empty_set().with_default("all")
             )
 
     variant('python', default=False, description='Enable the python interface')
