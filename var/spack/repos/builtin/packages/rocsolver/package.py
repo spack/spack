@@ -40,16 +40,9 @@ class Rocsolver(CMakePackage):
     depends_on('cmake@3.8:', type='build', when='@4.1.0:')
     depends_on('cmake@3.5:', type='build', when='@:4.0.0')
 
-    depends_on('numactl', type='link', when='@3.7.0:')
-
-    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1']:
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
-
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
+        depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
