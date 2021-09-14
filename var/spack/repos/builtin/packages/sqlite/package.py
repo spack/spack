@@ -130,22 +130,7 @@ class Sqlite(AutotoolsPackage):
             rc_rtree = call(exe, 'rtree', query_rtree)
             variants.append(get_variant('rtree', rc_rtree == 0))
 
-            # The column metadata feature enables six additional functions in
-            # the C API, see SQLITE_ENABLE_COLUMN_METADATA at
-            # https://www.sqlite.org/compile.html. Usually one would have to
-            # check the SQLite library to determine if this feature is enabled.
-            # Spack only examines executables but due to a quirk of the SQLite
-            # setup, it can still be possible to extract this information:
-            # By default, the `sqlite` executable is linked _statically_
-            # against the SQLite library and by default, the GNU linker does
-            # not remove unused symbols from binaries. Thus, one could check
-            # for this feature by looking at the list of external defined
-            # symbols in the `sqlite` executable (e.g., with `nm`).
-            # The original author of the `determine_variants` function decided
-            # not to implement this because on CentOS 7, Centos 8, Devuan
-            # Beowulf, and Ubuntu 20.04, the `sqlite` executable has been
-            # stripped so the implementation will probably be useless most of
-            # the time.
+            # TODO: column_metadata
 
             all_variants.append(''.join(variants))
 
