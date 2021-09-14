@@ -49,10 +49,10 @@ import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
+import spack.version
 from spack.util.compression import decompressor_for, extension
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
-import spack.version
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
