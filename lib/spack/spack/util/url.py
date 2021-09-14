@@ -265,7 +265,7 @@ def parse_git_url(url):
     This parses URLs that look like:
 
     * ``https://host.com:443/path/to/repo.git``, or
-    * ``git@host.com:path/to/repo.git
+    * ``git@host.com:path/to/repo.git``
 
     Anything not matching those patterns is likely a local
     file or invalid.
