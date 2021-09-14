@@ -19,6 +19,8 @@ class Fastjet(AutotoolsPackage):
 
     maintainers = ['drbenmorgan', 'vvolkl']
 
+    version('3.4.0', sha256='ee07c8747c8ead86d88de4a9e4e8d1e9e7d7614973f5631ba8297f7a02478b91')
+    version('3.3.4', sha256='432b51401e1335697c9248519ce3737809808fc1f6d1644bfae948716dddfc03')
     version('3.3.3', sha256='30b0a0282ce5aeac9e45862314f5966f0be941ce118a83ee4805d39b827d732b')
     version('3.3.2', sha256='3f59af13bfc54182c6bb0b0a6a8541b409c6fda5d105f17e03c4cce8db9963c2')
     version('3.3.1', sha256='76bfed9b87e5efdb93bcd0f7779e27427fbe38e05fe908c2a2e80a9ca0876c53')
@@ -59,16 +61,21 @@ class Fastjet(AutotoolsPackage):
     variant('atlas', default=False, description='Patch to make random generator thread_local')
     variant('plugins',
             values=disjoint_sets(("all", ), ("allcxx", ), plugins_)
-            .prohibit_empty_set().with_default("all")
-            )
+            .prohibit_empty_set().with_default("all"),
+            description='List of plugins to build. allcxx is all minus PxCone.')
 
     variant('python', default=False, description='Enable the python interface')
     variant('monolithic', default=True, description='Build all the (compiled) plugins in a single lib')
-    variant('thread-safety', default='no', values=('yes', 'limited', 'no'))
+    variant('thread-safety', default='no', values=('full', 'limited', 'no'),
+            description='Enable thread safety. Full thread safety causes noticable ' +
+            'performance penalty.')
 
     patch('atlas.patch', when='+atlas', level=0)
 
     extends('python', when='+python')
+
+    conflicts('thread-safety=full', when='@:3.3.4', msg='Thread safety was added in 3.4.0')
+    conflicts('thread-safety=limited', when='@:3.3.4', msg='Thread safety was added in 3.4.0')
 
     def configure_args(self):
         extra_args = []
