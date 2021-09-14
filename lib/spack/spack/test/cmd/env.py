@@ -225,7 +225,8 @@ def test_activate_adds_transitive_run_deps_to_path(
     with e:
         install('depends-on-run-env')
 
-    env_variables = spack.environment.shell.activate(e).apply_modifications({})
+    env_variables = {}
+    spack.environment.shell.activate(e).apply_modifications(env_variables)
     assert env_variables['DEPENDENCY_ENV_VAR'] == '1'
 
 
@@ -571,7 +572,8 @@ packages:
 
         env_mod = spack.util.environment.EnvironmentModifications()
         e.add_default_view_to_env(env_mod)
-        env_variables = env_mod.apply_modifications({})
+        env_variables = {}
+        env_mod.apply_modifications(env_variables)
         assert str(fake_bin) in env_variables['PATH']
 
 
