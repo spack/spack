@@ -101,7 +101,7 @@ def view_copy(src, dst, view, spec=None):
             stat = os.stat(src)
             os.chown(dst, stat.st_uid, stat.st_gid)
         except OSError:
-            tty.debug('Can\'t change the group permissions for %s' % dst)
+            tty.debug('Can\'t change the permissions for %s' % dst)
 
 
 def view_func_parser(parsed_name):
