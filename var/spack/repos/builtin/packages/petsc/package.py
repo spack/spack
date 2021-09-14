@@ -390,6 +390,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         else:
             options.append('--with-clanguage=C')
 
+        # openmp is usually provided by the compiler and not a library dependency, so handle it directly
+        if spec.satisfies('+openmp'):
+            options.append('--with-openmp=1')
+
         # Activates library support if needed (i.e. direct dependency)
         jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
         scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
@@ -421,7 +425,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('netcdf-c', 'netcdf', True, True),
                 ('parallel-netcdf', 'pnetcdf', True, True),
                 ('moab', 'moab', False, False),
-                'openmp',
                 ('random123', 'random123', False, False),
                 'exodusii',
                 'cgns',
