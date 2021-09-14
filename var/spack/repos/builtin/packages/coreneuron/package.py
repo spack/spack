@@ -71,9 +71,6 @@ class Coreneuron(CMakePackage):
     # nmodl specific dependency
     depends_on('nmodl@0.3.0:', when='@1.0:+nmodl')
     depends_on('nmodl@0.3b', when='@:0.22+nmodl')
-    # TODO: 3.5 is not released but we are using BBP mirror
-    # which contains CUDA fixes from CERN
-    depends_on('eigen@3.5:', when='+nmodl')
     depends_on('ispc', when='+ispc')
 
     # Old versions. Required by previous neurodamus package.
@@ -165,8 +162,7 @@ class Coreneuron(CMakePackage):
         if spec.satisfies('+nmodl'):
             options.append('-DCORENRN_ENABLE_NMODL=ON')
             options.append('-DCORENRN_NMODL_DIR=%s' % spec['nmodl'].prefix)
-            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include,
-                                     spec['eigen'].prefix.include.eigen3)
+            flags += ' -I%s' % (spec['nmodl'].prefix.include)
 
         nmodl_options = 'codegen --force'
 
