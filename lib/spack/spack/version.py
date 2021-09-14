@@ -35,6 +35,7 @@ from six import string_types
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
 
+import spack.caches
 import spack.error
 import spack.paths
 import spack.util.executable
@@ -981,7 +982,13 @@ class VersionLookupError(VersionError):
 
 
 class CommitLookup(object):
+    """An object for cached lookups of git commits
 
+    CommitLookup objects delegate to the misc_cache for locking.
+    CommitLookup objects may be attached to a Version object for which
+    Version.is_commit returns True to allow for comparisons between git commits
+    and versions as represented by tags in the git repository.
+    """
     def __init__(self, pkg):
         self.pkg = pkg
 
@@ -990,10 +997,17 @@ class CommitLookup(object):
         repository = spack.fetch_strategy.git_repo_for_package(pkg)
         fetcher = spack.fetch_strategy.GitFetchStrategy(git=repository)
         fetcher.get_full_repo = True
-
         self.fetcher = fetcher
 
         self.data = {}
+
+        # Cache data in misc_cache
+        key_base = 'git_metadata'
+        if not self.repository_uri.startswith('/'):
+            key_base += '/'
+        self.cache_key = key_base + self.repository_uri
+        spack.caches.misc_cache.init_entry(self.cache_key)
+        self.cache_path = spack.caches.misc_cache.cache_path(self.cache_key)
 
     @property
     def repository_uri(self):
@@ -1006,25 +1020,20 @@ class CommitLookup(object):
             return re.sub("file://", "", self.fetcher.url)
         return re.sub("[.]git$", "", os.sep.join(self.fetcher.url.split(os.sep)[-3:]))
 
-    @property
-    def repository_metadata_path(self):
-        filename = "%s.json" % self.repository_uri.replace('/', '-')
-        return os.path.join(spack.paths.user_repos_metadata_path, filename)
-
     def save(self):
         """
         Save the data to file
         """
-        with open(self.repository_metadata_path, 'w') as fd:
-            sjson.dump(self.data, fd)
+        with spack.caches.misc_cache.write_transaction(self.cache_key) as (old, new):
+            sjson.dump(self.data, new)
 
     def load_data(self):
         """
         Load data if the path already exists.
         """
-        if os.path.exists(self.repository_metadata_path):
-            with open(self.repository_metadata_path, 'r') as fd:
-                self.data = sjson.load(fd.read())
+        if os.path.isfile(self.cache_path):
+            with spack.caches.misc_cache.read_transaction(self.cache_key) as cache_file:
+                self.data = sjson.load(cache_file)
 
     def get(self, commit):
         if not self.data:
@@ -1055,11 +1064,10 @@ class CommitLookup(object):
         else:
             dest = os.path.join(spack.paths.user_repos_cache_path, self.repository_uri)
 
-        # prepare a cache for the repository and metadata
-        for path in [dest, self.repository_metadata_path]:
-            parent = os.path.dirname(path)
-            if not os.path.exists(parent):
-                mkdirp(parent)
+        # prepare a cache for the repository
+        dest_parent = os.path.dirname(dest)
+        if not os.path.exists(dest_parent):
+            mkdirp(dest_parent)
 
         # Only clone if we don't have it!
         if not os.path.exists(dest):
@@ -1077,12 +1085,6 @@ class CommitLookup(object):
             # This will raise a ProcessError if the commit does not exist
             # We may later design a custom error to re-raise
             self.fetcher.git('cat-file', '-e', '%s^{commit}' % commit)
-
-            # Get list of all commits, this is in reverse order
-            # We use this to get the first commit if needed
-            commit_info = self.fetcher.git("log", "--all", "--pretty=format:%H",
-                                           output=str)
-            commits = [c for c in commit_info.split('\n') if c]
 
             # List tags (refs) by date, so last reference of a tag is newest
             tag_info = self.fetcher.git(
@@ -1127,9 +1129,16 @@ class CommitLookup(object):
                 prev_version_commit, distance = ancestor_commits[0]
                 prev_version = commit_to_version[prev_version_commit]
             else:
+                # Get list of all commits, this is in reverse order
+                # We use this to get the first commit below
+                commit_info = self.fetcher.git("log", "--all", "--pretty=format:%H",
+                                           output=str)
+                commits = [c for c in commit_info.split('\n') if c]
+
+                # No previous version and distance from first commit
                 prev_version = None
                 distance = self.fetcher.git(
-                    'rev-list', '%s..%s' % (commits[-1], commit),
+                    'rev-list', '%s..%s' % (commits[-1], commit), '--count',
                     output=str, error=str
                 ).strip()
 
