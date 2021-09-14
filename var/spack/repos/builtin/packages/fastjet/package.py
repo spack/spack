@@ -55,23 +55,32 @@ class Fastjet(AutotoolsPackage):
     variant('atlas', default=False, description='Patch to make random generator thread_local')
     variant('plugins',
             values=disjoint_sets(
-                ("all"), ("SISCone", "CDFCones", "PXCone", "D0RunIICone", "NestedDefs",
+                ("all"), ("SISCone", "CDFCones", "PxCone", "D0RunIICone", "NestedDefs",
                           "TrackJet", "ATLASCone", "CMSIterativeCone", "EECambridge",
                           "Jade", "D0RunICone", "GridJet")
-            ).prohibit_empty_set().with_default("all").with_non_feature_values("all")
+            ).prohibit_empty_set().with_default("all")
             )
 
+    variant('python', default=False, description='Enable the python interface')
+    variant('monolithic', default=True, description='Build all the (compiled) plugins in a single lib')
+
     patch('atlas.patch', when='+atlas', level=0)
+
+    extends('python', when='+python')
 
     def configure_args(self):
         extra_args = []
         extra_args += self.enable_or_disable('shared')
         extra_args += self.enable_or_disable('auto-ptr')
+        extra_args += self.enable_or_disable('monolithic')
 
         if self.spec.satisfies('plugins=all'):
             extra_args.append('--enable-allplugins')
         else:
             for plugin in self.spec.variants['plugins'].value:
                 extra_args.append('--enable-' + plugin.lower())
+
+        if self.spec.satisfies('+python'):
+            extra_args.append('--enable-pyext')
 
         return extra_args
