@@ -397,6 +397,12 @@ def test_sanitize_literals(env, blacklist, whitelist):
     ({'A_modquar': '1', 'b_modquar': '2', 'C_modshare': '3'},
      [r'(\w*)_mod(quar|share)'], [], [],
      ['A_modquar', 'b_modquar', 'C_modshare']),
+    # Check regex to blacklist Modules v5 related vars
+    ({'__MODULES_LMALTNAME': '1', '__MODULES_LMCONFLICT': '2'},
+     ['__MODULES_(.*)'], [], [], ['__MODULES_LMALTNAME', '__MODULES_LMCONFLICT']),
+    ({'__MODULES_QUAR_A': '1', '__MODULES_QUAR_b': '2', '__MODULES_SHARE_C': '3'},
+     [r'__MODULES_(QUAR|SHARE)_(\w*)'], [], [],
+     ['__MODULES_QUAR_A', '__MODULES_QUAR_b', '__MODULES_SHARE_C']),
 ])
 def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
 
