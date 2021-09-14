@@ -136,27 +136,27 @@ e4s-develop-build:
   variables:
     SPACK_CI_STACK_NAME: e4s-on-power
 
-# e4s-on-power-pr-generate:
-#   extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
+e4s-on-power-pr-generate:
+  extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
 
-# e4s-on-power-develop-generate:
-#   extends: [ ".e4s-on-power", ".develop-generate", ".power-e4s-generate-tags-and-image"]
+e4s-on-power-develop-generate:
+  extends: [ ".e4s-on-power", ".develop-generate", ".power-e4s-generate-tags-and-image"]
 
-# e4s-on-power-pr-build:
-#   extends: [ ".e4s-on-power", ".pr-build" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-on-power-pr-generate
-#     strategy: depend
+e4s-on-power-pr-build:
+  extends: [ ".e4s-on-power", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-on-power-pr-generate
+    strategy: depend
 
-# e4s-on-power-develop-build:
-#   extends: [ ".e4s-on-power", ".develop-build" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-on-power-develop-generate
-#     strategy: depend
+e4s-on-power-develop-build:
+  extends: [ ".e4s-on-power", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-on-power-develop-generate
+    strategy: depend
 
 #########################################
 # Build tests for different build-systems
