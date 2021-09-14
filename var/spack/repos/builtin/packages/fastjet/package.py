@@ -56,9 +56,9 @@ class Fastjet(AutotoolsPackage):
     variant('plugins',
             values=disjoint_sets(
                 ("all"), ("SISCone", "CDFCones", "PXCone", "D0RunIICone", "NestedDefs",
-                          "TrackJet", "ATLASCone", "CMSIterativeCone", "EECambridge", "Jade",
-                          "D0RunICone", "GridJet")
-                ).prohibit_empty_set().with_default("all").with_non_feature_values("all")
+                          "TrackJet", "ATLASCone", "CMSIterativeCone", "EECambridge",
+                          "Jade", "D0RunICone", "GridJet")
+            ).prohibit_empty_set().with_default("all").with_non_feature_values("all")
             )
 
     patch('atlas.patch', when='+atlas', level=0)
