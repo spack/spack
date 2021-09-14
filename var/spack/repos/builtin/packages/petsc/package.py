@@ -390,7 +390,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         else:
             options.append('--with-clanguage=C')
 
-        # openmp is usually provided by the compiler and not a library dependency, so handle it directly
+        # openmp is usually provided by the compiler and not a library dependency
         if spec.satisfies('+openmp'):
             options.append('--with-openmp=1')
 
