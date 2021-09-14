@@ -53,12 +53,25 @@ class Fastjet(AutotoolsPackage):
     variant('shared', default=True, description='Builds a shared version of the library')
     variant('auto-ptr', default=False, description='Use auto_ptr')
     variant('atlas', default=False, description='Patch to make random generator thread_local')
+    variant('plugins',
+            values=disjoint_sets(
+                ("all"), ("SISCone", "CDFCones", "PXCone", "D0RunIICone", "NestedDefs",
+                "TrackJet", "ATLASCone", "CMSIterativeCone", "EECambridge", "Jade",
+                "D0RunICone", "GridJet")
+            ).prohibit_empty_set().with_default("all").with_non_feature_values("all")
+        )
 
     patch('atlas.patch', when='+atlas', level=0)
 
     def configure_args(self):
-        extra_args = ["--enable-allplugins"]
+        extra_args = []
         extra_args += self.enable_or_disable('shared')
         extra_args += self.enable_or_disable('auto-ptr')
+
+        if self.spec.satisfies('plugins=all'):
+            extra_args.append('--enable-allplugins')
+        else:
+            for plugin in self.spec.variants['plugins'].value:
+                extra_args.append('--enable-' + plugin.lower())
 
         return extra_args
