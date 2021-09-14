@@ -80,7 +80,6 @@ class Concretizer(object):
             spec.variants.setdefault(
                 'dev_path', vt.SingleValuedVariant('dev_path', path))
             changed = True
-
         changed |= spec.constrain(dev_info['spec'])
         return changed
 

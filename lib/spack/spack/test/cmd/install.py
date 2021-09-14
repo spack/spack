@@ -31,9 +31,9 @@ install = SpackCommand('install')
 env = SpackCommand('env')
 add = SpackCommand('add')
 mirror = SpackCommand('mirror')
+uninstall = SpackCommand('uninstall')
 buildcache = SpackCommand('buildcache')
 find = SpackCommand('find')
-uninstall = SpackCommand('uninstall')
 
 
 @pytest.fixture()
@@ -226,7 +226,7 @@ def test_install_overwrite(
 
 
 def test_install_overwrite_not_installed(
-        mock_packages, mock_archive, mock_fetch, config, install_mockery, monkeypatch
+        mock_packages, mock_archive, mock_fetch, config, install_mockery,
 ):
     # Try to install a spec and then to reinstall it.
     spec = Spec('libdwarf')

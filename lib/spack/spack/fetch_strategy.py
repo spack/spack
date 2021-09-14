@@ -870,10 +870,6 @@ class GitFetchStrategy(VCSFetchStrategy):
     def source_id(self):
         return self.commit or self.tag
 
-    @property
-    def source_digest(self):
-        return self.commit or self.tag or self.branch
-
     def mirror_id(self):
         repo_ref = self.commit or self.tag or self.branch
         if repo_ref:
