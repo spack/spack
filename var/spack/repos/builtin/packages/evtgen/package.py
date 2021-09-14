@@ -54,11 +54,11 @@ class Evtgen(CMakePackage):
         args.append(self.define_from_variant('EVTGEN_HEPMC3', 'hepmc3'))
 
         return args
-        
+
     def patch(self):
         if not self.spec.satisfies("platform=darwin"):
             return
-        
+
         filter_file('-shared', '-dynamiclib -undefined dynamic_lookup', 'make.inc')
 
     # Taken from AutotoolsPackage
