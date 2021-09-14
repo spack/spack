@@ -54,13 +54,6 @@ def check_viewdir_removal(viewdir):
             os.listdir(str(viewdir.join('.spack'))) == ['projections.yaml'])
 
 
-@pytest.fixture()
-def env_deactivate():
-    yield
-    ev._active_environment = None
-    os.environ.pop('SPACK_ENV', None)
-
-
 def test_add():
     e = ev.create('test')
     e.add('mpileaks')
@@ -627,7 +620,7 @@ env:
                for x in e._get_environment_specs())
 
 
-def test_with_config_bad_include(env_deactivate, capfd):
+def test_with_config_bad_include(capfd):
     env_name = 'test_bad_include'
     test_config = """\
 spack:
@@ -1285,7 +1278,7 @@ def test_env_updates_view_force_remove(
 
 
 def test_env_activate_view_fails(
-        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate):
+        tmpdir, mock_stage, mock_fetch, install_mockery):
     """Sanity check on env activate to make sure it requires shell support"""
     out = env('activate', 'test')
     assert "To set up shell support" in out
@@ -2036,8 +2029,7 @@ env:
 
 
 def test_stack_view_activate_from_default(tmpdir, mock_fetch, mock_packages,
-                                          mock_archive, install_mockery,
-                                          env_deactivate):
+                                          mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2069,8 +2061,7 @@ env:
 
 def test_stack_view_no_activate_without_default(tmpdir, mock_fetch,
                                                 mock_packages, mock_archive,
-                                                install_mockery,
-                                                env_deactivate):
+                                                install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2099,8 +2090,7 @@ env:
 
 
 def test_stack_view_multiple_views(tmpdir, mock_fetch, mock_packages,
-                                   mock_archive, install_mockery,
-                                   env_deactivate):
+                                   mock_archive, install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
     default_viewdir = str(tmpdir.join('default-view'))
     combin_viewdir = str(tmpdir.join('combinatorial-view'))
@@ -2147,7 +2137,7 @@ env:
 
 
 def test_env_activate_sh_prints_shell_output(
-        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate
+        tmpdir, mock_stage, mock_fetch, install_mockery
 ):
     """Check the shell commands output by ``spack env activate --sh``.
 
@@ -2168,7 +2158,7 @@ def test_env_activate_sh_prints_shell_output(
 
 
 def test_env_activate_csh_prints_shell_output(
-        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate
+        tmpdir, mock_stage, mock_fetch, install_mockery
 ):
     """Check the shell commands output by ``spack env activate --csh``."""
     env('create', 'test', add_view=True)
@@ -2185,8 +2175,7 @@ def test_env_activate_csh_prints_shell_output(
 
 
 @pytest.mark.regression('12719')
-def test_env_activate_default_view_root_unconditional(env_deactivate,
-                                                      mutable_mock_env_path):
+def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     """Check that the root of the default view in the environment is added
     to the shell unconditionally."""
     env('create', 'test', add_view=True)
