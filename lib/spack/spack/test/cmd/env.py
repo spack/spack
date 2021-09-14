@@ -642,6 +642,7 @@ spack:
     assert 'missing include' in err
     assert '/no/such/directory' in err
     assert 'no/such/file.yaml' in err
+    assert ev.active_environment() is None
 
 
 def test_env_with_include_config_files_same_basename():
