@@ -9,7 +9,7 @@ from spack import *
 class PyPkgconfig(PythonPackage):
     """Interface Python with pkg-config."""
 
-    homepage = "http://github.com/matze/pkgconfig"
+    homepage = "https://github.com/matze/pkgconfig"
     pypi = "pkgconfig/pkgconfig-1.2.2.tar.gz"
 
     version('1.5.1', sha256='97bfe3d981bab675d5ea3ef259045d7919c93897db7d3b59d4e8593cba8d354f')

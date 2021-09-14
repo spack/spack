@@ -20,11 +20,12 @@ class Gromacs(CMakePackage):
     """
 
     homepage = 'http://www.gromacs.org'
-    url      = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
+    url      = 'https://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
     git      = 'https://github.com/gromacs/gromacs.git'
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('master', branch='master')
+    version('2021.3', sha256='e109856ec444768dfbde41f3059e3123abdb8fe56ca33b1a83f31ed4575a1cc6')
     version('2021.2', sha256='d940d865ea91e78318043e71f229ce80d32b0dc578d64ee5aa2b1a4be801aadb')
     version('2021.1', sha256='bc1d0a75c134e1fb003202262fe10d3d32c59bbb40d714bc3e5015c71effe1e5')
     version('2021', sha256='efa78ab8409b0f5bf0fbca174fb8fbcf012815326b5c71a9d7c385cde9a8f87b')
@@ -94,17 +95,53 @@ class Gromacs(CMakePackage):
             description='Enables cycle subcounters')
 
     depends_on('mpi', when='+mpi')
-    # define matching plumed versions
-    depends_on('plumed@2.6.0:2.6.9+mpi', when='@2020.2+plumed+mpi')
-    depends_on('plumed@2.6.0:2.6.9~mpi', when='@2020.2+plumed~mpi')
-    depends_on('plumed@2.6.0:2.6.9+mpi', when='@2019.6+plumed+mpi')
-    depends_on('plumed@2.6.0:2.6.9~mpi', when='@2019.6+plumed~mpi')
-    depends_on('plumed@2.5.0:2.5.9+mpi', when='@2019.4+plumed+mpi')
-    depends_on('plumed@2.5.0:2.5.9~mpi', when='@2019.4+plumed~mpi')
-    depends_on('plumed@2.5.0:2.5.9+mpi', when='@2018.6+plumed+mpi')
-    depends_on('plumed@2.5.0:2.5.9~mpi', when='@2018.6+plumed~mpi')
+
+    # Plumed 2.7.1 needs Gromacs 2021, 2020.5, 2019.6
+    # Plumed 2.7.0 needs Gromacs       2020.4, 2019.6
+    # Plumed 2.6.3 needs Gromacs       2020.4, 2019.6, 2018.8
+    # Plumed 2.6.2 needs Gromacs       2020.4, 2019.6, 2018.8
+    # Plumed 2.6.1 needs Gromacs       2020.2, 2019.6, 2018.8
+    # Plumed 2.6.0 needs Gromacs               2019.4, 2018.8
+    # Plumed 2.5.7 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.6 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.5 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.4 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.3 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.2 needs Gromacs               2019.2, 2018.6, 2016.6
+    # Plumed 2.5.1 needs Gromacs                       2018.6, 2016.6
+    # Plumed 2.5.0 needs Gromacs                       2018.4, 2016.5
+
+    # Above dependencies can be verified, and new versions added, by going to
+    # https://github.com/plumed/plumed2/tree/v2.7.1/patches
+    # and switching tags.
+
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
+    depends_on('plumed@2.7.1+mpi', when='@2021+plumed+mpi')
+    depends_on('plumed@2.7.1~mpi', when='@2021+plumed~mpi')
+    depends_on('plumed@2.7.1+mpi', when='@2020.5+plumed+mpi')
+    depends_on('plumed@2.7.1~mpi', when='@2020.5+plumed~mpi')
+    depends_on('plumed@2.6.2:2.7.0+mpi', when='@2020.4+plumed+mpi')
+    depends_on('plumed@2.6.2:2.7.0~mpi', when='@2020.4+plumed~mpi')
+    depends_on('plumed@2.6.1+mpi', when='@2020.2+plumed+mpi')
+    depends_on('plumed@2.6.1~mpi', when='@2020.2+plumed~mpi')
+    depends_on('plumed@2.6.1:2.7.1+mpi', when='@2019.6+plumed+mpi')
+    depends_on('plumed@2.6.1:2.7.1~mpi', when='@2019.6+plumed~mpi')
+    depends_on('plumed@2.5.3:2.6.0+mpi', when='@2019.4+plumed+mpi')
+    depends_on('plumed@2.5.3:2.6.0~mpi', when='@2019.4+plumed~mpi')
+    depends_on('plumed@2.5.2+mpi', when='@2019.2+plumed+mpi')
+    depends_on('plumed@2.5.2~mpi', when='@2019.2+plumed~mpi')
+    depends_on('plumed@2.5.3:2.6.99+mpi', when='@2018.8+plumed+mpi')
+    depends_on('plumed@2.5.3:2.6.99~mpi', when='@2018.8+plumed~mpi')
+    depends_on('plumed@2.5.1:2.5.2+mpi', when='@2018.6+plumed+mpi')
+    depends_on('plumed@2.5.1:2.5.2~mpi', when='@2018.6+plumed~mpi')
+    depends_on('plumed@2.5.0+mpi', when='@2018.4+plumed+mpi')
+    depends_on('plumed@2.5.0~mpi', when='@2018.4+plumed~mpi')
+    depends_on('plumed@2.5.1:2.5.99+mpi', when='@2016.6+plumed+mpi')
+    depends_on('plumed@2.5.1:2.5.99~mpi', when='@2016.6+plumed~mpi')
+    depends_on('plumed@2.5.0+mpi', when='@2016.5+plumed+mpi')
+    depends_on('plumed@2.5.0~mpi', when='@2016.5+plumed~mpi')
+
     depends_on('fftw-api@3')
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
@@ -353,4 +390,10 @@ class Gromacs(CMakePackage):
                 options.append('-DFFTWF_LIBRARIES={0}'.
                                format(self.spec['amdfftw'].libs.joined(';')))
 
+        # Ensure that the GROMACS log files report how the code was patched
+        # during the build, so that any problems are easier to diagnose.
+        if '+plumed' in self.spec:
+            options.append('-DGMX_VERSION_STRING_OF_FORK=PLUMED-spack')
+        else:
+            options.append('-DGMX_VERSION_STRING_OF_FORK=spack')
         return options

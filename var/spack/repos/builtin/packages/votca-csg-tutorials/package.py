@@ -15,13 +15,14 @@ class VotcaCsgTutorials(CMakePackage):
 
        This package contains the VOTCA coarse-graining tutorials.
     """
-    homepage = "http://www.votca.org"
+    homepage = "https://www.votca.org"
     url      = "https://github.com/votca/csg-tutorials/tarball/v1.4"
     git      = "https://github.com/votca/csg-tutorials.git"
     maintainers = ['junghans']
 
     version('master', branch='master')
     version('stable', branch='stable')
+    version('2021.1', sha256='5ea1e6ca370e6e7845f9195495f5fb8bbd72d601980e123ae7852f491f03949a')
     version('2021', sha256='2b85c69007bb7d773529020e55fd82fed65651ee21eedccca9a801ab248ece97')
     version('1.6.4', sha256='34ef40db6b178a7f513f8a6f43e7caff6ecb498d66d7bf8bc44900bc7aea31dc')
     version('1.6.3', sha256='709582b978d84f9de09ae6c3ba4ed28daec886d4e0431bc7d19c7246bd65f0b1')
@@ -34,6 +35,6 @@ class VotcaCsgTutorials(CMakePackage):
     version('1.4',     sha256='27d50acd68a9d8557fef18ec2b0c62841ae91c22275ab9afbd65c35e4dd5f719')
 
     for v in ["1.4", "1.4.1", "1.5", "1.5.1", "1.6", "1.6.1", "1.6.2",
-              "1.6.3", "1.6.4", "2021", "master", "stable"]:
+              "1.6.3", "1.6.4", "2021", "2021.1", "master", "stable"]:
         depends_on('votca-csg@%s' % v, when="@%s:%s.0" % (v, v))
     depends_on("boost")

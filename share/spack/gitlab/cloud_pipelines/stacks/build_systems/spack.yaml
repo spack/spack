@@ -1,0 +1,61 @@
+spack:
+  view: false
+  concretization: separately
+
+  config:
+    install_tree:
+      root: /home/software/spack
+      padded_length: 512
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  definitions:
+    - default_specs:
+      - lz4  # MakefilePackage
+      - mpich~fortran  # AutotoolsPackage
+      - tut  # WafPackage
+      - py-setuptools  # PythonPackage
+      - openjpeg  # CMakePackage
+      - r-rcpp  # RPackage
+      - ruby-rake  # RubyPackage
+    - arch:
+      - '%gcc@7.5.0 arch=linux-ubuntu18.04-x86_64'
+
+  specs:
+    - matrix:
+        - - $default_specs
+        - - $arch
+
+  mirrors: { "mirror": "s3://spack-binaries-develop/build_systems" }
+
+  gitlab-ci:
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - spack -d ci rebuild
+
+    mappings:
+      - match: [ 'os=ubuntu18.04' ]
+        runner-attributes:
+          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [ "" ] }
+          tags: [ "spack", "public", "large", "x86_64" ]
+
+    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
+    service-job-attributes:
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+        - cd share/spack/gitlab/cloud_pipelines/stacks/build_systems
+        - spack env activate --without-view .
+      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
+      tags: ["spack", "public", "medium", "x86_64"]
+
+  cdash:
+    build-group: Build tests for different build systems
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure

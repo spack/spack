@@ -10,6 +10,6 @@ class DirectMpich(Package):
     homepage = "http://www.example.com"
     url      = "http://www.example.com/direct_mpich-1.0.tar.gz"
 
-    version('1.0', 'foobarbaz')
+    version('1.0', '0123456789abcdef0123456789abcdef')
 
     depends_on('mpich')

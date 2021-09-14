@@ -9,8 +9,8 @@ from spack import *
 class Mrnet(AutotoolsPackage):
     """The MRNet Multi-Cast Reduction Network."""
 
-    homepage = "http://paradyn.org/mrnet"
-    url      = "http://ftp.cs.wisc.edu/pub/paradyn/mrnet/mrnet_5.0.1.tar.gz"
+    homepage = "https://paradyn.org/mrnet"
+    url      = "https://ftp.cs.wisc.edu/pub/paradyn/mrnet/mrnet_5.0.1.tar.gz"
     git      = "https://github.com/dyninst/mrnet.git"
     list_url = "http://ftp.cs.wisc.edu/paradyn/mrnet"
 

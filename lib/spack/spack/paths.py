@@ -11,10 +11,10 @@ dependencies.
 """
 import os
 
-from llnl.util.filesystem import ancestor
+import llnl.util.filesystem
 
 #: This file lives in $prefix/lib/spack/spack/__file__
-prefix = ancestor(__file__, 4)
+prefix = llnl.util.filesystem.ancestor(__file__, 4)
 
 #: synonym for prefix
 spack_root = prefix
@@ -53,7 +53,6 @@ mock_packages_path = os.path.join(repos_path, "builtin.mock")
 #: User configuration location
 user_config_path = os.path.expanduser('~/.spack')
 user_bootstrap_path = os.path.join(user_config_path, 'bootstrap')
-user_bootstrap_store = os.path.join(user_bootstrap_path, 'store')
 reports_path = os.path.join(user_config_path, "reports")
 monitor_path = os.path.join(reports_path, "monitor")
 

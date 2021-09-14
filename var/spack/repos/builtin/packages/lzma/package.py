@@ -16,7 +16,7 @@ class Lzma(AutotoolsPackage):
     tools of LZMA Utils. This should make transition from LZMA Utils to XZ
     Utils relatively easy."""
 
-    homepage = "http://tukaani.org/lzma/"
-    url      = "http://tukaani.org/lzma/lzma-4.32.7.tar.gz"
+    homepage = "https://tukaani.org/lzma/"
+    url      = "https://tukaani.org/lzma/lzma-4.32.7.tar.gz"
 
     version('4.32.7', sha256='9f337a8c51e5ded198d1032f5087ba3fe438f2a54e9df419e513a151775b032c')

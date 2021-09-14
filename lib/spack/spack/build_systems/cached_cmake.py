@@ -108,21 +108,6 @@ class CachedCMakePackage(CMakePackage):
         if fflags:
             entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
 
-        # Override XL compiler family
-        familymsg = ("Override to proper compiler family for XL")
-        if "xlf" in (self.compiler.fc or ''):  # noqa: F821
-            entries.append(cmake_cache_string(
-                "CMAKE_Fortran_COMPILER_ID", "XL",
-                familymsg))
-        if "xlc" in self.compiler.cc:  # noqa: F821
-            entries.append(cmake_cache_string(
-                "CMAKE_C_COMPILER_ID", "XL",
-                familymsg))
-        if "xlC" in self.compiler.cxx:  # noqa: F821
-            entries.append(cmake_cache_string(
-                "CMAKE_CXX_COMPILER_ID", "XL",
-                familymsg))
-
         return entries
 
     def initconfig_mpi_entries(self):

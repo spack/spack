@@ -12,7 +12,7 @@ class Cmor(AutotoolsPackage):
     they contain fulfill the requirements of many of the climate community's
     standard model experiments."""
 
-    homepage = "http://cmor.llnl.gov"
+    homepage = "https://cmor.llnl.gov"
     url = "https://github.com/PCMDI/cmor/archive/3.4.0.tar.gz"
 
     version('3.4.0', sha256='e700a6d50f435e6ffdedf23bf6832b7d37fe21dc78815e1372f218d1d52bd2cb')

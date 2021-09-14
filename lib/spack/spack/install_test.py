@@ -8,9 +8,9 @@ import os
 import re
 import shutil
 import sys
-import tty
 
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 import spack.error
 import spack.util.prefix
@@ -28,7 +28,7 @@ def get_escaped_text_output(filename):
         filename (str): path to the file
 
     Returns:
-        (list of str): escaped text lines read from the file
+        list: escaped text lines read from the file
     """
     with open(filename, 'r') as f:
         # Ensure special characters are escaped as needed

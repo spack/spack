@@ -15,7 +15,7 @@ from spack.util.executable import Executable
 class Bohrium(CMakePackage, CudaPackage):
     """Library for automatic acceleration of array operations"""
 
-    homepage = "http://bh107.org"
+    homepage = "https://github.com/bh107/bohrium"
     url      = "https://github.com/bh107/bohrium/archive/v0.9.0.tar.gz"
     git      = "https://github.com/bh107/bohrium.git"
 

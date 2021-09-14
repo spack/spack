@@ -95,7 +95,7 @@ class Ncl(Package):
     # triangle's features.
     resource(
         name='triangle',
-        url='http://www.netlib.org/voronoi/triangle.zip',
+        url='https://www.netlib.org/voronoi/triangle.zip',
         sha256='1766327add038495fa3499e9b7cc642179229750f7201b94f8e1b7bee76f8480',
         placement='triangle_src',
         when='+triangle')

@@ -14,7 +14,7 @@ class PyHollandBackup(PythonPackage):
     Because of its plugin structure, Holland can be used to backup anything
     you want by whatever means you want."""
 
-    homepage = "http://hollandbackup.org/"
+    homepage = "https://hollandbackup.org/"
     url      = "https://github.com/holland-backup/holland/archive/1.2.2.tar.gz"
 
     version('1.2.2', sha256='836337c243b2dff5ff6a3ce0b647f123ab24697a5de8ac8ae8b7839aa23dff68')

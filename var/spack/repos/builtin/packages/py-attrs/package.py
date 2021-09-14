@@ -9,7 +9,7 @@ from spack import *
 class PyAttrs(PythonPackage):
     """Classes Without Boilerplate"""
 
-    homepage = "http://attrs.org/"
+    homepage = "https://attrs.org/"
     pypi = "attrs/attrs-20.3.0.tar.gz"
 
     version('20.3.0', sha256='832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700')

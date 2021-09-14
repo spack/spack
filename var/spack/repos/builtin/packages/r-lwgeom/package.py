@@ -11,7 +11,7 @@ class RLwgeom(RPackage):
 
     Access to selected functions found in 'liblwgeom'
     <https://github.com/postgis/postgis/tree/master/liblwgeom>, the
-    light-weight geometry library used by 'PostGIS' <http://postgis.net/>."""
+    light-weight geometry library used by 'PostGIS' <https://postgis.net/>."""
 
     homepage = "https://github.com/r-spatial/lwgeom/"
     cran     = "lwgeom"

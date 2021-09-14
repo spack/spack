@@ -90,9 +90,7 @@ def test_multiple_env_match_raises_error(mock_packages, mutable_mock_env_path):
     e.add('a foobar=fee')
     e.concretize()
     with e:
-        with pytest.raises(
-                spack.environment.SpackEnvironmentError) as exc_info:
-
+        with pytest.raises(ev.SpackEnvironmentError) as exc_info:
             spack.cmd.matching_spec_from_env(spack.cmd.parse_specs(['a'])[0])
 
     assert 'matches multiple specs' in exc_info.value.message

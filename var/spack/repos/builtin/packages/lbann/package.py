@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from spack import *
 
@@ -14,7 +15,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     neural networks.
     """
 
-    homepage = "http://software.llnl.gov/lbann/"
+    homepage = "https://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
     git      = "https://github.com/LLNL/lbann.git"
 
@@ -111,7 +112,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hydrogen@1.5.0:', when='@:0.90,0.102:')
 
     # Add Hydrogen variants
-    depends_on('hydrogen +openmp +openmp_blas +shared +int64')
+    depends_on('hydrogen +openmp +shared +int64')
+    depends_on('hydrogen +openmp_blas', when=sys.platform != 'darwin')
     depends_on('hydrogen ~al', when='~al')
     depends_on('hydrogen +al', when='+al')
     depends_on('hydrogen ~cuda', when='~cuda')
@@ -133,11 +135,12 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('aluminum@0.5.0:', when='@:0.90,0.102: +al')
 
     # Add Aluminum variants
-    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
-    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
+    depends_on('aluminum +cuda +nccl +cuda_rma', when='+al +cuda')
+    depends_on('aluminum +rocm +rccl', when='+al +rocm')
 
     depends_on('dihydrogen@0.2.0:', when='@:0.90,0.102:')
     depends_on('dihydrogen +openmp', when='+dihydrogen')
+    depends_on('dihydrogen +openmp_blas', when=sys.platform != 'darwin')
     depends_on('dihydrogen ~cuda', when='+dihydrogen ~cuda')
     depends_on('dihydrogen +cuda', when='+dihydrogen +cuda')
     depends_on('dihydrogen ~al', when='+dihydrogen ~al')
@@ -222,6 +225,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
     depends_on('py-breathe', type='build', when='+docs')
+    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
     depends_on('doxygen', type='build', when='+docs')
     depends_on('py-m2r', type='build', when='+docs')
 
@@ -245,6 +249,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         # Environment variables
         cppflags = []
         cppflags.append('-DLBANN_SET_EL_RNG')
+        cppflags.append('-std=c++17')
         args = []
         args.extend([
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),
@@ -319,8 +324,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 args.append('-DCMAKE_CUDA_STANDARD=14')
             archs = spec.variants['cuda_arch'].value
             if archs != 'none':
-                arch_str = ",".join(archs)
-            args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+                arch_str = ";".join(archs)
+                args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.95:'):
             args.append(

@@ -11,7 +11,7 @@ class Samtools(Package):
        the SAM format, including sorting, merging, indexing and generating
        alignments in a per-position format"""
 
-    homepage = "http://www.htslib.org"
+    homepage = "https://www.htslib.org"
     url      = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
 
     version('1.12', sha256='6da3770563b1c545ca8bdf78cf535e6d1753d6383983c7929245d5dba2902dcb')
@@ -33,7 +33,9 @@ class Samtools(Package):
     depends_on('python', type='run')
 
     # htslib became standalone @1.3.1, must use corresponding version
+    depends_on('htslib@1.13', when='@1.13')
     depends_on('htslib@1.12', when='@1.12')
+    depends_on('htslib@1.11', when='@1.11')
     depends_on('htslib@1.10.2', when='@1.10')
     depends_on('htslib@1.9', when='@1.9')
     depends_on('htslib@1.8', when='@1.8')

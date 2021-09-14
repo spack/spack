@@ -13,7 +13,7 @@ class RTiff(RPackage):
     bitmap images stored in the TIFF format. It can read and write both files
     and in-memory raw vectors."""
 
-    homepage = "http://www.rforge.net/tiff/"
+    homepage = "https://www.rforge.net/tiff/"
     url      = "https://cloud.r-project.org/src/contrib/tiff_0.1-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tiff"
 

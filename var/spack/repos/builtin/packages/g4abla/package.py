@@ -9,8 +9,8 @@ from spack import *
 
 class G4abla(Package):
     """Geant4 data for nuclear shell effects in INCL/ABLA hadronic mode"""
-    homepage = "http://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4ABLA.3.0.tar.gz"
+    homepage = "https://geant4.web.cern.ch"
+    url = "https://geant4-data.web.cern.ch/geant4-data/datasets/G4ABLA.3.0.tar.gz"
 
     tags = ['hep']
 

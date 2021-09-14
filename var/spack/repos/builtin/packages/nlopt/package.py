@@ -17,8 +17,12 @@ class Nlopt(CMakePackage):
     git      = "https://github.com/stevengj/nlopt.git"
 
     version('master', branch='master')
-    version('2.6.1', sha256='66d63a505187fb6f98642703bd0ef006fedcae2f9a6d1efa4f362ea919a02650')
-    version('2.5.0', sha256='c6dd7a5701fff8ad5ebb45a3dc8e757e61d52658de3918e38bab233e7fd3b4ae')
+
+    version('2.7.0', 'b881cc2a5face5139f1c5a30caf26b7d3cb43d69d5e423c9d78392f99844499f')
+    version('2.6.2', 'cfa5981736dd60d0109c534984c4e13c615314d3584cf1c392a155bfe1a3b17e')
+    version('2.6.1', '66d63a505187fb6f98642703bd0ef006fedcae2f9a6d1efa4f362ea919a02650')
+    version('2.6.0', 'a13077cdf5f5f1127eaaac0bf1e06744bfe98d8a4a3430a15e0af50a69f451ab')
+    version('2.5.0', 'c6dd7a5701fff8ad5ebb45a3dc8e757e61d52658de3918e38bab233e7fd3b4ae')
 
     variant('shared', default=True, description='Enables the build of shared libraries')
     variant('python', default=True, description='Build python wrappers')

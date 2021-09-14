@@ -97,8 +97,8 @@ class Nwchem(Package):
             make(*args)
 
             #  need to install by hand. Follow Ubuntu:
-            #  http://packages.ubuntu.com/trusty/all/nwchem-data/filelist
-            #  http://packages.ubuntu.com/trusty/amd64/nwchem/filelist
+            #  https://packages.ubuntu.com/trusty/all/nwchem-data/filelist
+            #  https://packages.ubuntu.com/trusty/amd64/nwchem/filelist
             share_path = join_path(prefix, 'share', 'nwchem')
             mkdirp(prefix.bin)
 

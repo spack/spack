@@ -14,6 +14,10 @@ class PyMetpy(PythonPackage):
     pypi     = "MetPy/MetPy-1.0.1.tar.gz"
     maintainers = ['dopplershift']
 
+    # Importing 'metpy.io' results in downloads, so skip it.
+    # https://github.com/Unidata/MetPy/issues/1888
+    import_modules = ['metpy', 'metpy._vendor', 'metpy.calc', 'metpy.interpolate']
+
     version('1.0.1', sha256='16fa9806facc24f31f454b898741ec5639a72ba9d4ff8a19ad0e94629d93cb95')
     version('1.0', sha256='11b043aaa4e3d35db319e96bb9967eb9f73da653e155bca2d62f838108b100dc',
             deprecated=True)

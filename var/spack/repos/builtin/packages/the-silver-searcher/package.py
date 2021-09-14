@@ -9,8 +9,8 @@ from spack import *
 class TheSilverSearcher(AutotoolsPackage):
     """Fast recursive grep alternative"""
 
-    homepage = "http://geoff.greer.fm/ag/"
-    url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
+    homepage = "https://geoff.greer.fm/ag/"
+    url      = "https://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
 
     version('2.2.0', sha256='d9621a878542f3733b5c6e71c849b9d1a830ed77cb1a1f6c2ea441d4b0643170')
     version('2.1.0', sha256='d4652bd91c3a05e87a15809c5f3f14ad2e5e1f80185af510e3fa4ad2038c15d4')

@@ -25,6 +25,7 @@ import archspec.cpu.schema
 from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 
 import spack.architecture
+import spack.binary_distribution
 import spack.caches
 import spack.compilers
 import spack.config
@@ -34,7 +35,7 @@ import spack.environment as ev
 import spack.package
 import spack.package_prefs
 import spack.paths
-import spack.platforms.test
+import spack.platforms
 import spack.repo
 import spack.stage
 import spack.store
@@ -188,24 +189,24 @@ def no_path_access(monkeypatch):
 
 
 #
-# Disable any activate Spack environment BEFORE all tests
+# Disable any active Spack environment BEFORE all tests
 #
 @pytest.fixture(scope='session', autouse=True)
 def clean_user_environment():
-    env_var = ev.spack_env_var in os.environ
-    active = ev._active_environment
-
-    if env_var:
-        spack_env_value = os.environ.pop(ev.spack_env_var)
-    if active:
-        ev.deactivate()
-
-    yield
-
-    if env_var:
+    spack_env_value = os.environ.pop(ev.spack_env_var, None)
+    with ev.deactivate_environment():
+        yield
+    if spack_env_value:
         os.environ[ev.spack_env_var] = spack_env_value
-    if active:
-        ev.activate(active)
+
+
+#
+# Make sure global state of active env does not leak between tests.
+#
+@pytest.fixture(scope='function', autouse=True)
+def clean_test_environment():
+    yield
+    ev.deactivate()
 
 
 def _verify_executables_noop(*args):
@@ -411,6 +412,18 @@ def mock_fetch_cache(monkeypatch):
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
+@pytest.fixture()
+def mock_binary_index(monkeypatch, tmpdir_factory):
+    """Changes the directory for the binary index and creates binary index for
+    every test. Clears its own index when it's done.
+    """
+    tmpdir = tmpdir_factory.mktemp('mock_binary_index')
+    index_path = tmpdir.join('binary_index').strpath
+    mock_index = spack.binary_distribution.BinaryCacheIndex(index_path)
+    monkeypatch.setattr(spack.binary_distribution, 'binary_index', mock_index)
+    yield
+
+
 @pytest.fixture(autouse=True)
 def _skip_if_missing_executables(request):
     """Permits to mark tests with 'require_executables' and skip the
@@ -428,7 +441,7 @@ def _skip_if_missing_executables(request):
 
 @pytest.fixture(scope='session')
 def test_platform():
-    return spack.platforms.test.Test()
+    return spack.platforms.Test()
 
 
 @pytest.fixture(autouse=True, scope='session')
@@ -1363,11 +1376,11 @@ def mock_svn_repository(tmpdir_factory):
 @pytest.fixture()
 def mutable_mock_env_path(tmpdir_factory):
     """Fixture for mocking the internal spack environments directory."""
-    saved_path = spack.environment.env_path
+    saved_path = ev.env_path
     mock_path = tmpdir_factory.mktemp('mock-env-path')
-    spack.environment.env_path = str(mock_path)
+    ev.env_path = str(mock_path)
     yield mock_path
-    spack.environment.env_path = saved_path
+    ev.env_path = saved_path
 
 
 @pytest.fixture()

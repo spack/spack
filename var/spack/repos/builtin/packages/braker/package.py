@@ -17,7 +17,7 @@ class Braker(Package):
     version('2.1.6', sha256='eef3c4037364472988a010322cbd79b5171158f9c016f4383809adade4866c06')
     version('2.1.4', sha256='d48af5649cc879343046f9ddf180fe2c709b5810e0b78cf314bf298514d31d52')
     version('1.11', sha256='cb2d9abe1720ed58753d362eee4af3791007efc617754804882d31f9fe2eab00',
-            url='http://bioinf.uni-greifswald.de/augustus/binaries/old/BRAKER1_v1.11.tar.gz')
+            url='https://bioinf.uni-greifswald.de/augustus/binaries/old/BRAKER1_v1.11.tar.gz')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-scalar-util-numeric', type=('build', 'run'))

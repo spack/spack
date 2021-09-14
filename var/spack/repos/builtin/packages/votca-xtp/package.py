@@ -15,13 +15,14 @@ class VotcaXtp(CMakePackage):
 
        This package contains the VOTCA exciton transport engine.
     """
-    homepage = "http://www.votca.org"
+    homepage = "https://www.votca.org"
     url      = "https://github.com/votca/xtp/tarball/v1.4.1"
     git      = "https://github.com/votca/xtp.git"
     maintainers = ['junghans']
 
     version('master', branch='master')
     version('stable', branch='stable')
+    version('2021.1', sha256='8ce112fc40676690369133188848dfeb3875d57351286cad4c312057a4dd767b')
     version('2021', sha256='43bb5a52fec675738f4b5896f0833a1c1090bd7e74f97769697495abf4652e40')
     version('1.6.4', sha256='699a835954556cf6b2f20dac7942c1761c6dd6c6c3fbdde62c8bfcfd71ee075b')
     version('1.6.3', sha256='757b9a6a470b3c356f638d62269c5b72b8ace374f006658aef8bb6afd1ad1413')
@@ -34,7 +35,8 @@ class VotcaXtp(CMakePackage):
 
     depends_on("cmake@2.8:", type='build')
     for v in ["1.4.1", "1.5", "1.5.1", "1.6", "1.6.1", "1.6.2",
-              "1.6.3", "1.6.4", "2021", "master", "stable"]:
+              "1.6.3", "1.6.4", "2021", "2021.1", "master",
+              "stable"]:
         depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v, v))
         depends_on('votca-csg@%s' % v, when="@%s:%s.0" % (v, v))
     depends_on("libxc", when='@stable,1.5:')

@@ -19,3 +19,11 @@ class Apr(AutotoolsPackage):
     patch('missing_includes.patch', when='@1.7.0')
 
     depends_on('uuid', type='link')
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libapr-{0}'.format(self.version.up_to(1))],
+            root=self.prefix,
+            recursive=True,
+        )

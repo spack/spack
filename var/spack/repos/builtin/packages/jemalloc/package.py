@@ -9,7 +9,7 @@ from spack import *
 class Jemalloc(AutotoolsPackage):
     """jemalloc is a general purpose malloc(3) implementation that emphasizes
        fragmentation avoidance and scalable concurrency support."""
-    homepage = "http://www.canonware.com/jemalloc/"
+    homepage = "http://jemalloc.net/"
     url      = "https://github.com/jemalloc/jemalloc/releases/download/4.0.4/jemalloc-4.0.4.tar.bz2"
 
     version('5.2.1', sha256='34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6')

@@ -12,8 +12,8 @@ class ManDb(AutotoolsPackage):
     a Berkeley DB database in place of the traditional
     flat-text whatis databases."""
 
-    homepage = "http://www.nongnu.org/man-db/"
-    url      = "http://git.savannah.nongnu.org/cgit/man-db.git/snapshot/man-db-2.7.6.1.tar.gz"
+    homepage = "https://www.nongnu.org/man-db/"
+    url      = "https://git.savannah.nongnu.org/cgit/man-db.git/snapshot/man-db-2.7.6.1.tar.gz"
 
     version('2.7.6.1', sha256='dd913662e341fc01e6721878b6cbe1001886cc3bfa6632b095937bba3238c779')
 

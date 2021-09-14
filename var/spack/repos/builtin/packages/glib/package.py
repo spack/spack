@@ -23,6 +23,7 @@ class Glib(Package):
 
     maintainers = ['michaelkuhn']
 
+    version('2.68.4', sha256='62fd061d08a75492617e625a73e2c05e259f831acbb8e1f8b9c81f23f7993a3b')
     version('2.68.3', sha256='e7e1a3c20c026109c45c9ec4a31d8dcebc22e86c69486993e565817d64be3138')
     version('2.68.2', sha256='ecc7798a9cc034eabdfd7f246e6dd461cdbf1175fcc2e9867cc7da7b7309e0fb')
     version('2.66.8', sha256='97bc87dd91365589af5cbbfea2574833aea7a1b71840fd365ecd2852c76b9c8b')

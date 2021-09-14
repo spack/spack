@@ -11,7 +11,7 @@ class PyPythonEngineio(PythonPackage):
     cross-browser/cross-device bi-directional communication
     layer for Socket.IO."""
 
-    homepage = "http://python-engineio.readthedocs.io/en/latest/"
+    homepage = "https://python-engineio.readthedocs.io/en/latest/"
     url      = "https://github.com/miguelgrinberg/python-engineio/archive/v2.0.2.tar.gz"
 
     version('2.0.2', sha256='9fbe531108a95bc61518b61c4718e2661fc81d32b54fd6af34799bf10a367a6b')

@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Caffe(CMakePackage):
+class Caffe(CMakePackage, CudaPackage):
     """Caffe is a deep learning framework made with expression, speed, and
        modularity in mind. It is developed by the Berkeley Vision and Learning
        Center (BVLC) and by community contributors."""
 
-    homepage = "http://caffe.berkeleyvision.org"
+    homepage = "https://caffe.berkeleyvision.org"
     url      = "https://github.com/BVLC/caffe/archive/1.0.tar.gz"
 
     version('1.0', sha256='71d3c9eb8a183150f965a465824d01fe82826c22505f7aa314f700ace03fa77f')
@@ -43,7 +43,7 @@ class Caffe(CMakePackage):
     depends_on('hdf5 +hl +cxx')
 
     # Optional dependencies
-    depends_on('opencv@3.2.0+core+highgui+imgproc', when='+opencv')
+    depends_on('opencv@3.2.0:3.4.12+core+highgui+imgproc+imgcodecs', when='+opencv')
     depends_on('leveldb', when='+leveldb')
     depends_on('lmdb', when='+lmdb')
     depends_on('python@2.7:', when='+python')
@@ -86,5 +86,11 @@ class Caffe(CMakePackage):
                 '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
                 '-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx)
             ])
+
+        if '+cuda' in spec:
+            if spec.variants['cuda_arch'].value[0] != 'none':
+                cuda_arch = spec.variants['cuda_arch'].value
+                args.append(self.define('CUDA_ARCH_NAME', 'Manual'))
+                args.append(self.define('CUDA_ARCH_BIN', ' '.join(cuda_arch)))
 
         return args

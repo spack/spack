@@ -13,7 +13,7 @@ class Colm(AutotoolsPackage):
     by TXL. It is in the family of program transformation languages.
     """
 
-    homepage = "http://www.colm.net/open-source/colm"
-    url      = "http://www.colm.net/files/colm/colm-0.12.0.tar.gz"
+    homepage = "https://www.colm.net/open-source/colm"
+    url      = "https://www.colm.net/files/colm/colm-0.12.0.tar.gz"
 
     version('0.12.0', sha256='7b545d74bd139f5c622975d243c575310af1e4985059a1427b6fdbb1fb8d6e4d')

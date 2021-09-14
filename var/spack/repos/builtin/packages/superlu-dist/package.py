@@ -10,14 +10,13 @@ class SuperluDist(CMakePackage, CudaPackage):
     """A general purpose library for the direct solution of large, sparse,
     nonsymmetric systems of linear equations on high performance machines."""
 
-    homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
+    homepage = "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
     maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels']
 
     version('develop', branch='master')
-    version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('6.4.0', sha256='cb9c0b2ba4c28e5ed5817718ba19ae1dd63ccd30bc44c8b8252b54f5f04a44cc')
     version('6.3.1', sha256='3787c2755acd6aadbb4d9029138c293a7570a2ed228806676edcc7e1d3f5a1d3')
     version('6.3.0', sha256='daf3264706caccae2b8fd5a572e40275f1e128fa235cb7c21ee2f8051c11af95')

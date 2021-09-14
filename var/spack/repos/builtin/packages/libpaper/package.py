@@ -12,7 +12,7 @@ class Libpaper(AutotoolsPackage):
     user-specified paper size."""
 
     homepage = "https://packages.debian.org/unstable/source/libpaper"
-    url      = "http://deb.debian.org/debian/pool/main/libp/libpaper/libpaper_1.1.28.tar.gz"
+    url      = "https://deb.debian.org/debian/pool/main/libp/libpaper/libpaper_1.1.28.tar.gz"
 
     version('1.1.28', sha256='c8bb946ec93d3c2c72bbb1d7257e90172a22a44a07a07fb6b802a5bb2c95fddc')
 

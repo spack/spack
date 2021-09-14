@@ -14,7 +14,7 @@ class Cleverleaf(CMakePackage):
        hydrodynamics scheme used by CloverLeaf.
     """
 
-    homepage = "http://uk-mac.github.io/CleverLeaf/"
+    homepage = "https://uk-mac.github.io/CleverLeaf/"
     git      = "https://github.com/UK-MAC/CleverLeaf_ref.git"
 
     version('develop', branch='develop')

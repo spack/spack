@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 class Root(Package):
-    version('1.0', 'abcdef')
+    homepage = "http://www.example.com"
+    url = "http://www.example.com/root-1.0.tar.gz"
+
+    version('1.0', 'abcdef0123456789abcdef0123456789')
 
     depends_on('gmt')

@@ -61,7 +61,7 @@ spack:
       variants: +bzip2 ~nls +xz
     expat:
       version:
-      - 2.3.0
+      - 2.4.1
     findutils:
       version:
       - 4.8.0
@@ -143,7 +143,7 @@ spack:
       variants: threads=openmp
     openssl:
       version:
-        - 1.1.1k
+        - 1.1.1l
     perl:
       version:
       - 5.34.0 # 5.34.0
@@ -251,30 +251,29 @@ spack:
     - omega-h
     - openmpi
     - openpmd-api ^hdf5@1.12.0 +fortran +shared +hl api=default
-
+    - papi
+    - papyrus@1.0.1
+    - parallel-netcdf
+    - pdt
+    - petsc
+    - plasma
+    - precice
+    - pumi
+    - py-jupyterhub
+    - py-libensemble
+    - py-petsc4py
+    - py-warpx ^warpx dims=2 ^hdf5@1.12.0 +fortran +shared +hl api=default
+    - py-warpx ^warpx dims=3 ^hdf5@1.12.0 +fortran +shared +hl api=default
+    - py-warpx ^warpx dims=rz ^hdf5@1.12.0 +fortran +shared +hl api=default
+    - qthreads scheduler=distrib
+    - raja
+    - rempi
+    - scr
+    - slate ~cuda
+    - slepc
+    - stc
+    - strumpack ~slate
     # holding off on the specs until infrastructure is ready
-    # - papi
-    # - papyrus@1.0.1
-    # - parallel-netcdf
-    # - pdt
-    # - petsc
-    # - plasma
-    # - precice
-    # - pumi
-    # - py-jupyterhub
-    # - py-libensemble
-    # - py-petsc4py
-    # - py-warpx ^warpx dims=2 ^hdf5@1.12.0 +fortran +shared +hl api=default
-    # - py-warpx ^warpx dims=3 ^hdf5@1.12.0 +fortran +shared +hl api=default
-    # - py-warpx ^warpx dims=rz ^hdf5@1.12.0 +fortran +shared +hl api=default
-    # - qthreads scheduler=distrib
-    # - raja
-    # - rempi
-    # - scr
-    # - slate ~cuda
-    # - slepc
-    # - stc
-    # - strumpack ~slate
     # - sundials
     # - superlu
     # - superlu-dist
@@ -283,7 +282,7 @@ spack:
     # - sz
     # - tasmanian
     # - tau
-    # - trilinos
+    #- trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +boost +superlu-dist gotype=long
     # - turbine
     # - umap
     # - unifyfs@0.9.1

@@ -40,6 +40,14 @@ parameters=(
     SPACK_SYSTEM_DIRS
 )
 
+# Optional parameters that aren't required to be set
+
+# Boolean (true/false/custom) if we want to add debug flags
+# SPACK_ADD_DEBUG_FLAGS
+
+# If a custom flag is requested, it will be defined
+# SPACK_DEBUG_FLAGS
+
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
 # The default compiler flags are passed from these variables:
@@ -87,6 +95,25 @@ for param in "${parameters[@]}"; do
     fi
 done
 
+# Check if optional parameters are defined
+# If we aren't asking for debug flags, don't add them
+if [[ -z ${SPACK_ADD_DEBUG_FLAGS+x} ]]; then
+    SPACK_ADD_DEBUG_FLAGS="false"
+fi
+
+# SPACK_ADD_DEBUG_FLAGS must be true/false/custom
+is_valid="false"
+for param in "true" "false" "custom"; do
+  if [ "$param" == "$SPACK_ADD_DEBUG_FLAGS" ];  then
+      is_valid="true"
+  fi
+done
+
+# Exit with error if we are given an incorrect value
+if [ "$is_valid" == "false" ]; then
+    die "SPACK_ADD_DEBUG_FLAGS, if defined, must be one of 'true' 'false' or 'custom'"
+fi
+
 # Figure out the type of compiler, the language, and the mode so that
 # the compiler script knows what to do.
 #
@@ -106,32 +133,37 @@ comp="CC"
 case "$command" in
     cpp)
         mode=cpp
+        debug_flags="-g"
         ;;
     cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
+        debug_flags="-g"
         ;;
     c++|CC|g++|clang++|armclang++|icpc|icpx|pgc++|nvc++|xlc++|xlc++_r|FCC)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
+        debug_flags="-g"
         ;;
     ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
         lang_flags=F
+        debug_flags="-g"
         ;;
     f77|xlf|xlf_r|pgf77)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
         lang_flags=F
+        debug_flags="-g"
         ;;
-    ld)
+    ld|ld.gold|ld.lld)
         mode=ld
         ;;
     *)
@@ -215,7 +247,7 @@ export PATH=""
 for dir in "${env_path[@]}"; do
     addpath=true
     for env_dir in "${spack_env_dirs[@]}"; do
-        if [[ "$dir" == "$env_dir" ]]; then
+        if [[ "${dir%%/}" == "$env_dir" ]]; then
             addpath=false
             break
         fi
@@ -415,6 +447,16 @@ done
 #
 flags=()
 
+# Add debug flags
+if [ "${SPACK_ADD_DEBUG_FLAGS}" == "true" ]; then
+    flags=("${flags[@]}" "${debug_flags}")
+
+# If a custom flag is requested, derive from environment
+elif [ "$SPACK_ADD_DEBUG_FLAGS" == "custom" ]; then
+    IFS=' ' read -ra SPACK_DEBUG_FLAGS <<< "$SPACK_DEBUG_FLAGS"
+    flags=("${flags[@]}" "${SPACK_DEBUG_FLAGS[@]}")
+fi
+
 # Fortran flags come before CPPFLAGS
 case "$mode" in
     cc|ccld)
@@ -574,6 +616,9 @@ if [[ $SPACK_TEST_COMMAND == dump-args ]]; then
     IFS="
 " && echo "${full_command[*]}"
     exit
+elif [[ $SPACK_TEST_COMMAND =~ dump-env-* ]]; then
+    var=${SPACK_TEST_COMMAND#dump-env-}
+    echo "$0: $var: ${!var}"
 elif [[ -n $SPACK_TEST_COMMAND ]]; then
     die "ERROR: Unknown test command"
 fi

@@ -82,7 +82,7 @@ class Converge(Package):
     license_comment = '#'
     license_files = ['license/license.lic']
     license_vars = ['RLM_LICENSE']
-    license_url = 'http://www.reprisesoftware.com/RLM_License_Administration.pdf'
+    license_url = 'https://www.reprisesoftware.com/RLM_License_Administration.pdf'
 
     def url_for_version(self, version):
         url = "https://download.convergecfd.com/download/CONVERGE_{0}/Full_Solver_Packages/converge_install_{1}.tar.gz"

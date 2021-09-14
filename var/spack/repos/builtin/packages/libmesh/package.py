@@ -11,7 +11,7 @@ class Libmesh(AutotoolsPackage):
        partial differential equations using arbitrary unstructured
        discretizations on serial and parallel platforms."""
 
-    homepage = "http://libmesh.github.io/"
+    homepage = "https://libmesh.github.io/"
     url      = "https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2"
     git      = "https://github.com/libMesh/libmesh.git"
 

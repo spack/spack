@@ -30,6 +30,10 @@ class GtkDoc(AutotoolsPackage):
 
     depends_on('python@3.2:', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
+    depends_on('py-anytree',       type=('test'))
+    depends_on('py-lxml',          type=('test'))
+    depends_on('py-parameterized', type=('test'))
+    depends_on('py-six',           type=('test'))
     depends_on('libxslt')
     depends_on('libxml2')
     depends_on('docbook-xsl@1.78.1')
@@ -38,7 +42,26 @@ class GtkDoc(AutotoolsPackage):
 
     patch('build.patch')
 
+    def setup_build_environment(self, env):
+        """ If test/tools.sh does not find gtkdocize it starts a sh which blocks"""
+        env.prepend_path('PATH',
+                         join_path(self.stage.source_path, 'buildsystems', 'autotools'))
+
+    def install(self, spec, prefix):
+        make('install', 'V=1')
+        install(join_path('buildsystems', 'autotools', 'gtkdocize'), prefix.bin)
+
+    def installcheck(self):
+        """gtk-doc does not support installcheck properly, skip it"""
+        pass
+
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""
         url = 'https://gitlab.gnome.org/GNOME/gtk-doc/-/archive/GTK_DOC_{0}/gtk-doc-GTK_DOC_{0}.tar.gz'
         return url.format(version.underscored)
+
+    def configure_args(self):
+        args = [
+            '--with-xml-catalog={0}'.format(self.spec['docbook-xml'].package.catalog)
+        ]
+        return args

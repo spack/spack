@@ -9,7 +9,7 @@ from spack import *
 class Yajl(CMakePackage):
     """Yet Another JSON Library (YAJL)"""
 
-    homepage = "http://lloyd.github.io/yajl/"
+    homepage = "https://lloyd.github.io/yajl/"
     url      = "https://github.com/lloyd/yajl/archive/2.1.0.zip"
     git      = "https://github.com/lloyd/yajl.git"
 

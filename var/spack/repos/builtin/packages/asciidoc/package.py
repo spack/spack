@@ -10,7 +10,7 @@ class Asciidoc(AutotoolsPackage):
     """A presentable text document format for writing articles, UNIX man
     pages and other small to medium sized documents."""
 
-    homepage = "http://asciidoc.org"
+    homepage = "https://asciidoc.org/"
     # Always working URL but strangely with another checksum
     url      = "https://github.com/asciidoc-py/asciidoc-py/archive/8.6.10.tar.gz"
     git      = "https://github.com/asciidoc-py/asciidoc-py.git"

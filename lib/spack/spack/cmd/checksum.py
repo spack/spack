@@ -63,6 +63,16 @@ def checksum(parser, args):
         if not url_dict:
             tty.die("Could not find any versions for {0}".format(pkg.name))
 
+        # And ensure the specified version URLs take precedence, if available
+        try:
+            explicit_dict = {}
+            for v in pkg.versions:
+                if not v.isdevelop():
+                    explicit_dict[v] = pkg.url_for_version(v)
+            url_dict.update(explicit_dict)
+        except spack.package.NoURLError:
+            pass
+
     version_lines = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage,
         batch=(args.batch or len(args.versions) > 0 or len(url_dict) == 1),

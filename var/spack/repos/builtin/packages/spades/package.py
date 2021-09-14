@@ -10,7 +10,7 @@ class Spades(CMakePackage):
     """SPAdes - St. Petersburg genome assembler - is intended for both
        standard isolates and single-cell MDA bacteria assemblies."""
 
-    homepage = "http://cab.spbu.ru/software/spades/"
+    homepage = "https://cab.spbu.ru/software/spades/"
     url      = "https://github.com/ablab/spades/releases/download/v3.15.0/SPAdes-3.15.0.tar.gz"
 
     version('3.15.0', sha256='6719489fa4bed6dd96d78bdd4001a30806d5469170289085836711d1ffb8b28b')

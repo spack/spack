@@ -11,7 +11,7 @@ class PyClustershell(PythonPackage):
     node groups and execute commands on cluster nodes in parallel.
     """
 
-    homepage = "http://cea-hpc.github.io/clustershell/"
+    homepage = "https://cea-hpc.github.io/clustershell/"
     url      = "https://github.com/cea-hpc/clustershell/archive/v1.8.tar.gz"
 
     version('1.8', sha256='ad5a13e2d107b4095229810c35365e22ea94dfd2baf4fdcfcc68ce58ee37cee3')
