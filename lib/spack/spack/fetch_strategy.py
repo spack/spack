@@ -901,7 +901,15 @@ class GitFetchStrategy(VCSFetchStrategy):
         """
         Clone a repository to a path.
 
-        This is the fetch logic, but does not require a stage.
+        This method handles cloning from git, but does not require a stage.
+
+        Arguments:
+            dest (str or None): The path into which the code is cloned. If None,
+                requires a stage and uses the stage's source path.
+            commit (str or None): A commit to fetch from the remote. Only one of
+                commit, branch, and tag may be non-None.
+            branch (str or None): A branch to fetch from the remote.
+            tag (str or None): A tag to fetch from the remote.
         """
         # Default to spack source path
         dest = dest or self.stage.source_path
@@ -1503,7 +1511,13 @@ def _from_merged_attrs(fetcher, pkg, version):
 
 
 def git_repo_for_package(pkg):
-    assert hasattr(pkg, 'git'), "Version lookups only allowed on git fetchers"
+    """Get the git repo from which package source can be fetched
+
+    Returns a string in the appropriate format to be passed as an argument
+    to ``git clone``.
+    """
+    msg = "Version lookups only allowed on packages with a `git` attribute"
+    assert hasattr(pkg, 'git'), msg
 
     # Case 1: We have a file
     if os.path.exists(pkg.git) or pkg.git.startswith("file://"):
@@ -1533,7 +1547,7 @@ def for_package_version(pkg, version):
     if not isinstance(version, Version):
         version = Version(version)
 
-    # if it's a commit, we must use a GitURLFetcher
+    # if it's a commit, we must use a GitFetchStrategy
     if version.is_commit and hasattr(pkg, "git"):
         # Populate the version with comparisons to other commits
         version.generate_commit_lookup(pkg)
