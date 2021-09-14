@@ -1070,7 +1070,7 @@ class CommitLookup(object):
 
         # Lookup commit info
         with working_dir(dest):
-            self.fetcher.git("fetch")
+            self.fetcher.git("fetch", '--tags')
 
             # Ensure commit is an object known to git
             # Note the brackets are literals, the commit replaces the format string

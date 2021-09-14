@@ -58,7 +58,6 @@ monitor_path = os.path.join(reports_path, "monitor")
 
 # We cache repositories (git) in first, extracted metadata in second
 user_repos_cache_path = os.path.join(user_config_path, 'git_repos')
-user_repos_metadata_path = os.path.join(user_config_path, 'git_metadata')
 
 opt_path        = os.path.join(prefix, "opt")
 etc_path        = os.path.join(prefix, "etc")
