@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 from spack import *
+from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_version
 from spack.pkg.builtin.kokkos import Kokkos
 
@@ -83,6 +85,7 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('superlu-dist', default=False, description='Compile with SuperluDist solvers')
     variant('superlu',      default=False, description='Compile with SuperLU solvers')
     variant('strumpack',    default=False, description='Compile with STRUMPACK solvers')
+    variant('x11',          default=False, description='Compile with X11 when +exodus')
     variant('zlib',         default=False, description='Compile with zlib')
 
     # Package options (alphabet order)
@@ -323,7 +326,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Variant requirements from packages
     depends_on('metis', when='+zoltan')
-    depends_on('libx11', when='+exodus')
+    depends_on('libx11', when='+x11')
     depends_on('matio', when='+exodus')
     depends_on('netcdf-c', when="+exodus")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+exodus+mpi@12.12.1:")
@@ -685,14 +688,24 @@ class Trilinos(CMakePackage, CudaPackage):
         # ################# System-specific ######################
 
         # Fortran lib (assumes clang is built with gfortran!)
-        if ('+fortran +mpi' in spec
+        if ('+fortran' in spec
                 and spec.compiler.name in ['gcc', 'clang', 'apple-clang']):
-            mpifc = Executable(spec['mpi'].mpifc)
-            libgfortran = mpifc('--print-file-name', 'libgfortran.a', output=str)
-            options.append(define(
-                'Trilinos_EXTRA_LINK_FLAGS',
-                '-L%s/ -lgfortran' % (libgfortran),
-            ))
+            fc = Executable(spec['mpi'].mpifc) if (
+                '+mpi' in spec) else Executable(spack_fc)
+            libgfortran = fc('--print-file-name',
+                             'libgfortran.' + dso_suffix,
+                             output=str).strip()
+            # if libgfortran is equal to "libgfortran.<dso_suffix>" then
+            # print-file-name failed, use static library instead
+            if libgfortran == 'libgfortran.' + dso_suffix:
+                libgfortran = fc('--print-file-name',
+                                 'libgfortran.a',
+                                 output=str).strip()
+            # -L<libdir> -lgfortran required for OSX
+            # https://github.com/spack/spack/pull/25823#issuecomment-917231118
+            options.append(
+                define('Trilinos_EXTRA_LINK_FLAGS',
+                       '-L%s/ -lgfortran' % os.path.dirname(libgfortran)))
 
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
