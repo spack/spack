@@ -347,9 +347,12 @@ class Version(object):
                 string_arg.append(str(token))
                 string_arg.append(str(sep))
 
-            string_arg.pop()  # We don't need the last separator
-            string_arg = ''.join(string_arg)
-            return cls(string_arg)
+            if string_arg:
+                string_arg.pop()  # We don't need the last separator
+                string_arg = ''.join(string_arg)
+                return cls(string_arg)
+            else:
+                return None
 
         message = '{cls.__name__} indices must be integers'
         raise TypeError(message.format(cls=cls))
