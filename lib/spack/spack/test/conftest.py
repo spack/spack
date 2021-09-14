@@ -90,14 +90,15 @@ def mock_git_version_info(tmpdir, scope="function"):
 
     The repo consists of a single file, in which the Version._cmp representation
     of each commit is expressed as a string.
+
+    Important attributes of the repo for test coverage are: multiple branches,
+    version tags on multiple branches, and version order is not equal to time
+    order or topological order.
     """
     git = spack.util.executable.which('git', required=True)
     repo_path = str(tmpdir.mkdir('git_repo'))
     filename = 'file.txt'
-    # Create a git repo with
-    # 1. multiple branches
-    # 2. version tags on multiple branches
-    # 3. version order not equal to time order
+
     def commit(message):
         global commit_counter
         git('commit', '--date', '2020-01-%02d 12:0:00 +0300' % commit_counter,

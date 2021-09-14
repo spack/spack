@@ -52,7 +52,7 @@ import spack.util.web as web_util
 from spack.util.compression import decompressor_for, extension
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
-from spack.version import Version, ver
+import spack.version
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
@@ -750,7 +750,7 @@ class GoFetchStrategy(VCSFetchStrategy):
     @property
     def go_version(self):
         vstring = self.go('version', output=str).split(' ')[2]
-        return Version(vstring)
+        return spack.version.Version(vstring)
 
     @property
     def go(self):
@@ -843,7 +843,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         """
         version_output = git_exe('--version', output=str)
         m = re.search(GitFetchStrategy.git_version_re, version_output)
-        return Version(m.group(1))
+        return spack.version.Version(m.group(1))
 
     @property
     def git(self):
@@ -852,7 +852,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             # Disable advice for a quieter fetch
             # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt
-            if self.git_version >= Version('1.7.2'):
+            if self.git_version >= spack.version.Version('1.7.2'):
                 self._git.add_default_arg('-c')
                 self._git.add_default_arg('advice.detachedHead=false')
 
@@ -954,12 +954,12 @@ class GitFetchStrategy(VCSFetchStrategy):
             # If we want a particular branch ask for it.
             if branch:
                 args.extend(['--branch', branch])
-            elif tag and self.git_version >= ver('1.8.5.2'):
+            elif tag and self.git_version >= spack.version.ver('1.8.5.2'):
                 args.extend(['--branch', tag])
 
             # Try to be efficient if we're using a new enough git.
             # This checks out only one branch's history
-            if self.git_version >= ver('1.7.10'):
+            if self.git_version >= spack.version.ver('1.7.10'):
                 if self.get_full_repo:
                     args.append('--no-single-branch')
                 else:
@@ -969,7 +969,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 # Yet more efficiency: only download a 1-commit deep
                 # tree, if the in-use git and protocol permit it.
                 if (not self.get_full_repo) and \
-                   self.git_version >= ver('1.7.1') and \
+                   self.git_version >= spack.version.ver('1.7.1') and \
                    self.protocol_supports_shallow_clone():
                     args.extend(['--depth', '1'])
 
@@ -985,7 +985,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 # For tags, be conservative and check them out AFTER
                 # cloning.  Later git versions can do this with clone
                 # --branch, but older ones fail.
-                if tag and self.git_version < ver('1.8.5.2'):
+                if tag and self.git_version < spack.version.ver('1.8.5.2'):
                     # pull --tags returns a "special" error code of 1 in
                     # older versions that we have to ignore.
                     # see: https://github.com/git/git/commit/19d122b
@@ -1530,8 +1530,8 @@ def for_package_version(pkg, version):
 
     check_pkg_attributes(pkg)
 
-    if not isinstance(version, Version):
-        version = Version(version)
+    if not isinstance(version, spack.version.Version):
+        version = spack.version.Version(version)
 
     # if it's a commit, we must use a GitFetchStrategy
     if version.is_commit and hasattr(pkg, "git"):
