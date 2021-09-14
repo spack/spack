@@ -12,8 +12,6 @@ class Meshtool(MakefilePackage):
     homepage = "https://bitbucket.org/aneic/meshtool/"
     git      = "https://bitbucket.org/aneic/meshtool.git"
 
-    # Add a list of GitHub accounts to
-    # notify when the package is updated.
     maintainers = ['MarieHouillon']
 
     version('master', branch='master')
