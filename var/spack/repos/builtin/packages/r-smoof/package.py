@@ -15,7 +15,7 @@ class RSmoof(RPackage):
     convenient functions to generate, plot and work with objective
     functions."""
 
-    homepage = "http://github.com/jakobbossek/smoof"
+    homepage = "https://github.com/jakobbossek/smoof"
     url      = "https://cloud.r-project.org/src/contrib/smoof_1.5.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/smoof"
 

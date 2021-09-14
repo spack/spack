@@ -13,7 +13,7 @@ class Drill(Package):
     systems.
     """
 
-    homepage = "http://drill.apache.org/"
+    homepage = "https://drill.apache.org/"
     url      = "https://www-eu.apache.org/dist/drill/drill-1.17.0/apache-drill-1.17.0.tar.gz"
 
     version('1.17.0', sha256='a3d2d544bcc32b915fb53fced0f982670bd6fe2abd764423e566a5f6b54debf1')

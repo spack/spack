@@ -10,7 +10,7 @@ class PyNetworkx(PythonPackage):
     """NetworkX is a Python package for the creation, manipulation, and study
     of the structure, dynamics, and functions of complex networks."""
 
-    homepage = "http://networkx.github.io/"
+    homepage = "https://networkx.github.io/"
     pypi = "networkx/networkx-2.4.tar.gz"
 
     version('2.5.1', sha256='109cd585cac41297f71103c3c42ac6ef7379f29788eb54cb751be5a663bb235a')

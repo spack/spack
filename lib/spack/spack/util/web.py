@@ -113,13 +113,7 @@ def read_from_url(url, accept_content_type=None):
             if not __UNABLE_TO_VERIFY_SSL:
                 context = ssl._create_unverified_context()
 
-    if url.scheme == 'gs':
-        gcs = gcs_util.GCSBlob(url)
-        gcs_url = gcs.gcs_url()
-        tty.debug("(read_from_url) gcs_url = {}".format(gcs_url))
-        req = Request(gcs.gcs_url())
-    else:
-        req = Request(url_util.format(url))
+    req = Request(url_util.format(url))
 
     content_type = None
     is_web_url = url.scheme in ('http', 'https')
@@ -501,6 +495,9 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
+    tty.debug('URL Scheme: {}'.format(url_util.parse(url).scheme))
+
+    # We don't pass 'context' parameter because it was only introduced starting
     # Note: 'context' parameter was only introduced starting
     # with versions 2.7.9 and 3.4.3 of Python.
     if __UNABLE_TO_VERIFY_SSL:
@@ -510,6 +507,10 @@ def _urlopen(req, *args, **kwargs):
     if url_util.parse(url).scheme == 's3':
         import spack.s3_handler
         opener = spack.s3_handler.open
+
+    elif url_util.parse(url).scheme == 'gs':
+        import spack.gcs_handler
+        return spack.gcs_handler.gcs_open(req)
 
     try:
         return opener(req, *args, **kwargs)

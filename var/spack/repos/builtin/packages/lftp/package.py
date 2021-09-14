@@ -10,7 +10,7 @@ class Lftp(AutotoolsPackage):
     """LFTP is a sophisticated file transfer program supporting a number
        of network protocols (ftp, http, sftp, fish, torrent)."""
 
-    homepage = "http://lftp.yar.ru/"
+    homepage = "https://lftp.yar.ru/"
     url      = "http://lftp.yar.ru/ftp/lftp-4.7.7.tar.gz"
 
     version('4.8.1', sha256='6117866215cd889dab30ff73292cd1d35fe0e12a9af5cd76d093500d07ab65a3')

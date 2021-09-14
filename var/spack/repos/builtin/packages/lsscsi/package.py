@@ -12,7 +12,7 @@ class Lsscsi(AutotoolsPackage):
     'classic'option to mimic the output of 'cat /proc/scsi/scsi' that has
     been widely used prior to the lk 2.6 series."""
 
-    homepage = "http://sg.danny.cz/scsi/lsscsi.html"
+    homepage = "https://sg.danny.cz/scsi/lsscsi.html"
     url      = "http://sg.danny.cz/scsi/lsscsi-0.31.tgz"
 
     version('0.31',     sha256='12bf1973014803c6fd6d547e7594a4c049f0eef3bf5d22190d4be29d7c09f3ca')

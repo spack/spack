@@ -10,7 +10,7 @@ class Simgrid(CMakePackage):
     """To study the behavior of large-scale distributed systems such as Grids,
     Clouds, HPC or P2P systems."""
 
-    homepage = "http://simgrid.org/"
+    homepage = "https://simgrid.org/"
     url      = "https://github.com/simgrid/simgrid/releases/download/v3.27/simgrid-3.27.tar.gz"
     git      = 'https://framagit.org/simgrid/simgrid.git'
 

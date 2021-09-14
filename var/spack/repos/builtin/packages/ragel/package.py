@@ -15,7 +15,7 @@ class Ragel(AutotoolsPackage):
     recognition of a regular language. Code embedding is done using
     inline operators that do not disrupt the regular language syntax.
     """
-    homepage = "http://www.colm.net/open-source/ragel"
+    homepage = "https://www.colm.net/open-source/ragel"
     git      = "git://colm.net/ragel.git"
     url      = "http://www.colm.net/files/ragel/ragel-6.10.tar.gz"
 

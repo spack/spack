@@ -10,7 +10,7 @@ class Gl2ps(CMakePackage):
     """GL2PS is a C library providing high quality vector output for any
     OpenGL application."""
 
-    homepage = "http://www.geuz.org/gl2ps/"
+    homepage = "https://www.geuz.org/gl2ps/"
     url      = "http://geuz.org/gl2ps/src/gl2ps-1.3.9.tgz"
 
     version('1.4.0', sha256='03cb5e6dfcd87183f3b9ba3b22f04cd155096af81e52988cc37d8d8efe6cf1e2')

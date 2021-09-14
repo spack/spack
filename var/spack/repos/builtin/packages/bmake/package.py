@@ -9,7 +9,7 @@ from spack import *
 class Bmake(Package):
     """Portable version of NetBSD make(1)."""
 
-    homepage = "http://www.crufty.net/help/sjg/bmake.htm"
+    homepage = "https://www.crufty.net/help/sjg/bmake.htm"
     url      = "http://www.crufty.net/ftp/pub/sjg/bmake-20180512.tar.gz"
 
     version('20200710', sha256='6538fc4319ef79d178dca76d3b869f7aa93a9bb7b510df08a7d872c01a56b76c')

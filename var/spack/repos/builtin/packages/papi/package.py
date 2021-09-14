@@ -19,7 +19,7 @@ class Papi(AutotoolsPackage):
        addition Component PAPI provides access to a collection of
        components that expose performance measurement opportunities
        across the hardware and software stack."""
-    homepage = "http://icl.cs.utk.edu/papi/index.html"
+    homepage = "https://icl.cs.utk.edu/papi/index.html"
     maintainers = ['G-Ragghianti']
 
     url = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"

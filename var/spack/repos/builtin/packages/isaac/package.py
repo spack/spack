@@ -9,7 +9,7 @@ from spack import *
 class Isaac(CMakePackage):
     """In Situ Animation of Accelerated Computations: Header-Only Library"""
 
-    homepage = "http://computationalradiationphysics.github.io/isaac/"
+    homepage = "https://computationalradiationphysics.github.io/isaac/"
     url      = "https://github.com/ComputationalRadiationPhysics/isaac/archive/v1.3.0.tar.gz"
     git      = "https://github.com/ComputationalRadiationPhysics/isaac.git"
 

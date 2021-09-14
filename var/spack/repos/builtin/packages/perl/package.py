@@ -26,7 +26,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     homepage = "https://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
-    url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
+    url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
 
     executables = [r'^perl(-?\d+.*)?$']
 
@@ -64,14 +64,26 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     extendable = True
 
     depends_on('gdbm')
+    # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
+    depends_on('gdbm@:1.14.1', when='@:5.28.0')
     depends_on('berkeley-db')
     depends_on('bzip2+shared')
     depends_on('zlib+shared')
+    # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
+    depends_on('zlib@:1.2.8', when='@5.20.3:5.24.1')
 
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch('protect-quotes-in-ccflags.patch', when='@5.22.0')
+
+    # Fix the Time-Local testase http://blogs.perl.org/users/tom_wyant/2020/01/my-y2020-bug.html
+    patch('https://rt.cpan.org/Public/Ticket/Attachment/1776857/956088/0001-Fix-Time-Local-tests.patch',
+          when='@5.26.0:5.28.9',
+          sha256='8cf4302ca8b480c60ccdcaa29ec53d9d50a71d4baf469ac8c6fca00ca31e58a2')
+    patch('https://raw.githubusercontent.com/costabel/fink-distributions/master/10.9-libcxx/stable/main/finkinfo/languages/perl5162-timelocal-y2020.patch',
+          when='@:5.24.1',
+          sha256='3bbd7d6f9933d80b9571533867b444c6f8f5a1ba0575bfba1fba4db9d885a71a')
 
     # Fix build on Fedora 28
     # https://bugzilla.redhat.com/show_bug.cgi?id=1536752

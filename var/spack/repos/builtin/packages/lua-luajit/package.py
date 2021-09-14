@@ -11,7 +11,7 @@ from spack import *
 
 class LuaLuajit(MakefilePackage):
     """Flast flexible JITed lua"""
-    homepage = "http://www.luajit.org"
+    homepage = "https://www.luajit.org"
     url      = "http://luajit.org/download/LuaJIT-2.0.5.tar.gz"
 
     version('2.1.0-beta3', sha256='1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3')

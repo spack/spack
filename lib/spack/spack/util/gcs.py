@@ -13,7 +13,6 @@ import sys
 
 import llnl.util.tty as tty
 
-
 class GCSBlob:
     def __init__(self, url):
         from google.cloud import storage
@@ -35,9 +34,14 @@ class GCSBlob:
 
     def get_bucket_blob_path(self):
         blob_path = self.url.path
+        if blob_path[0] == '/':
+            blob_path = blob_path[1:]
         bucket_name = self.url.netloc
         tty.debug("bucket_name = {}, blob_path = {}".format(bucket_name, blob_path))
         return (bucket_name, blob_path)
+
+    def get_blob(self):
+        return self.storage_client.get_bucket(self.bucket_name).get_blob(self.blob_path)
 
     def is_https(self):
         return False
@@ -53,10 +57,8 @@ class GCSBlob:
     def gcs_blob_exists(self):
         from google.cloud import storage
         try:
-            bucket = self.storage_client.bucket(self.bucket_name)
-            blob_exists = storage.Blob(bucket=bucket,
-                                       blob=self.blob_path).exists(
-                self.storage_client)
+            blob = self.storage_client.bucket(self.bucket_name).blob(self.blob_path)
+            blob_exists = blob.exists()
         except Exception:
             return False
 
@@ -95,6 +97,20 @@ class GCSBlob:
             tty.error("{}, Could not get a list of gcs blobs".format(ex))
             sys.exit(1)
 
+    def get_blob_byte_stream(self):
+        return self.get_blob().open(mode='rb')
+
+    def get_blob_headers(self):
+        blob = self.get_blob()
+
+        headers = {}
+        headers['Content-type'] = blob.content_type
+        headers['Content-encoding'] = blob.content_encoding
+        headers['Content-language'] = blob.content_language
+        headers['MD5Hash'] = blob.md5_hash
+
+        return headers
+
     def gcs_url(self):
         import os
         from google.auth.transport import requests
@@ -104,23 +120,14 @@ class GCSBlob:
         try:
             auth_request = requests.Request()
             data_bucket = self.storage_client.lookup_bucket(self.bucket_name)
-            signed_blob_path = data_bucket.blob(self.blob_path)
+            blob = data_bucket.get_blob(self.blob_path)
 
-            expires_at_ms = datetime.now() + timedelta(minutes=5)
-
-            if os.getenv('GCE_COMPUTE_ENGINE') == 'False':
-                signed_url = signed_blob_path.generate_signed_url(expires_at_ms,
-                                                                  version='v4')
-            else:
-                # Generate Compute Engine credentials
-                signing_credentials = compute_engine.IDTokenCredentials(auth_request,
-                                                                        "")
-                signed_url = signed_blob_path.generate_signed_url(
-                    expires_at_ms, credentials=signing_credentials, version="v4")
+            if blob is not None:
+                return blob.path()
+            return None
 
         except Exception as ex:
-            tty.error("{}, Could not generate a signed URL for GCS blob storage"
+            tty.error("{}, Could not generate a URL for GCS blob storage"
                       .format(ex))
             sys.exit(1)
 
-        return signed_url

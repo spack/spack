@@ -16,7 +16,7 @@ class RImager(RPackage):
     The package wraps 'CImg', <http://cimg.eu>, a simple, modern C++ library
     for image processing."""
 
-    homepage = "http://dahtah.github.io/imager"
+    homepage = "https://dahtah.github.io/imager"
     url      = "https://cloud.r-project.org/src/contrib/imager_0.41.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/imager"
 

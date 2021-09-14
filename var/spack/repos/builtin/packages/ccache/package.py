@@ -15,6 +15,7 @@ class Ccache(CMakePackage):
 
     homepage = "https://ccache.dev/"
     url      = "https://github.com/ccache/ccache/releases/download/v4.2.1/ccache-4.2.1.tar.gz"
+    maintainers = ['haampie']
 
     executables = ['^ccache$']
 
@@ -40,6 +41,9 @@ class Ccache(CMakePackage):
     depends_on('hiredis@0.13.3:', when='@4.4:')
     depends_on('libxslt', when='@:3.99')
     depends_on('zlib', when='@:3.99')
+
+    conflicts('%gcc@:5', when='@4.4:')
+    conflicts('%clang@:4', when='@4.4:')
 
     # Before 4.0 this was an Autotools package
     @when('@:3.99')

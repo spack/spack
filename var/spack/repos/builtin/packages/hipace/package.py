@@ -36,17 +36,20 @@ class Hipace(CMakePackage):
 
     depends_on('cmake@3.15.0:', type='build')
     depends_on('cuda@9.2.88:', when='compute=cuda')
-    depends_on('fftw@3: +openmp', when='compute=omp')
-    depends_on('fftw +mpi', when='+mpi compute=omp')
     depends_on('mpi', when='+mpi')
-    depends_on('openpmd-api@hipace', when='+openpmd')
-    depends_on('openpmd-api ~mpi', when='+openpmd ~mpi')
-    depends_on('openpmd-api +mpi', when='+openpmd +mpi')
-    depends_on('pkgconfig', type='build', when='compute=omp')
-    depends_on('rocfft', when='compute=hip')
-    depends_on('rocprim', when='compute=hip')
-    depends_on('rocrand', when='compute=hip')
-    depends_on('llvm-openmp', when='%apple-clang compute=omp')
+    with when('+openpmd'):
+        depends_on('openpmd-api@hipace')
+        depends_on('openpmd-api ~mpi', when='~mpi')
+        depends_on('openpmd-api +mpi', when='+mpi')
+    with when('compute=omp'):
+        depends_on('fftw@3: +openmp')
+        depends_on('fftw +mpi', when='+mpi')
+        depends_on('pkgconfig', type='build')
+        depends_on('llvm-openmp', when='%apple-clang')
+    with when('compute=hip'):
+        depends_on('rocfft')
+        depends_on('rocprim')
+        depends_on('rocrand')
 
     def cmake_args(self):
         spec = self.spec

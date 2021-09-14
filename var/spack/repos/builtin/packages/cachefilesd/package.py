@@ -11,7 +11,7 @@ class Cachefilesd(MakefilePackage):
     are that are used by network file systems such a AFS and NFS to do
     persistent caching to the local disk."""
 
-    homepage = "http://people.redhat.com/~dhowells/fscache"
+    homepage = "https://people.redhat.com/~dhowells/fscache"
     url      = "http://people.redhat.com/~dhowells/fscache/cachefilesd-0.10.tar.bz2"
 
     version('0.10.10', sha256='0d0309851efabd02b7c849f73535b8ad3f831570e83e4f65e42354da18e11a02')

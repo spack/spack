@@ -12,7 +12,7 @@ class Scorep(AutotoolsPackage):
     of HPC applications.
     """
 
-    homepage = "http://www.vi-hps.org/projects/score-p"
+    homepage = "https://www.vi-hps.org/projects/score-p"
     url      = "https://www.vi-hps.org/cms/upload/packages/scorep/scorep-4.1.tar.gz"
 
     version('7.0',   sha256='68f24a68eb6f94eaecf500e17448f566031946deab74f2cba072ee8368af0996', url='https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.0/scorep-7.0.tar.gz')

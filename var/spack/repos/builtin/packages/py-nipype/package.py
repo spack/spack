@@ -9,7 +9,7 @@ from spack import *
 class PyNipype(PythonPackage):
     """Neuroimaging in Python: Pipelines and Interfaces."""
 
-    homepage = "http://nipy.org/nipype"
+    homepage = "https://nipy.org/nipype"
     pypi     = "nipype/nipype-1.6.0.tar.gz"
 
     version('1.6.1', sha256='8428cfc633d8e3b8c5650e241e9eedcf637b7969bcd40f3423334d4c6b0992b5')
