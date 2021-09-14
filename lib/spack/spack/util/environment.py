@@ -581,14 +581,7 @@ class EnvironmentModifications(object):
         return rev
 
     def apply_modifications(self, env=None):
-        """Applies the modifications and clears the list
-
-        Args:
-            env: a dict of environment variables, defaults to os.environ
-
-        Returns:
-            dict: the modified env
-        """
+        """Applies the modifications and clears the list."""
         # Use os.environ if not specified
         # Do not copy, we want to modify it in place
         if env is None:
@@ -596,11 +589,9 @@ class EnvironmentModifications(object):
 
         modifications = self.group_by_name()
         # Apply modifications one variable at a time
-        for _, actions in sorted(modifications.items()):
+        for name, actions in sorted(modifications.items()):
             for x in actions:
                 x.execute(env)
-
-        return env
 
     def shell_modifications(self, shell='sh'):
         """Return shell code to apply the modifications and clears the list."""
