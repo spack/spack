@@ -897,7 +897,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         self.clone(commit=self.commit, branch=self.branch, tag=self.tag)
 
-    def clone(self, dest=None, commit=None, branch=None, tag=None):
+    def clone(self, dest=None, commit=None, branch=None, tag=None, bare=False):
         """
         Clone a repository to a path.
 
@@ -910,17 +910,25 @@ class GitFetchStrategy(VCSFetchStrategy):
                 commit, branch, and tag may be non-None.
             branch (str or None): A branch to fetch from the remote.
             tag (str or None): A tag to fetch from the remote.
+            bare (bool): Execute a "bare" git clone (--bare option to git)
         """
         # Default to spack source path
         dest = dest or self.stage.source_path
         tty.debug('Cloning git repository: {0}'.format(self._repo_info()))
 
         git = self.git
-        if commit:
+        debug = spack.config.get('config:debug')
+
+        if bare:
+            # We don't need to worry about which commit/branch/tag is checked out
+            clone_args = ['clone', '--bare']
+            if not debug:
+                clone_args.append('--quiet')
+            clone_args.extend([self.url, dest])
+            git(*clone_args)
+        elif commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
-            debug = spack.config.get('config:debug')
-
             clone_args = ['clone', self.url]
             if not debug:
                 clone_args.insert(1, '--quiet')
@@ -940,7 +948,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         else:
             # Can be more efficient if not checking out a specific commit.
             args = ['clone']
-            if not spack.config.get('config:debug'):
+            if not debug:
                 args.append('--quiet')
 
             # If we want a particular branch ask for it.

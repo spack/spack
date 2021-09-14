@@ -1066,11 +1066,10 @@ class CommitLookup(object):
 
         # Only clone if we don't have it!
         if not os.path.exists(dest):
-            self.fetcher.clone(os.path.dirname(dest))
+            self.fetcher.clone(dest, bare=True)
 
         # Lookup commit info
         with working_dir(dest):
-            # Don't do anything if already cloned - it might not have remote
             self.fetcher.git("fetch")
 
             # Ensure commit is an object known to git
