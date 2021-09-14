@@ -192,7 +192,6 @@ class Version(object):
     def _cmp(self, other_lookups=None):
         commit_lookup = self.commit_lookup or other_lookups
 
-        git_version = False
         if self.is_commit and commit_lookup:
             commit_info = commit_lookup.get(self.string)
             if commit_info:
@@ -1132,7 +1131,7 @@ class CommitLookup(object):
                 # Get list of all commits, this is in reverse order
                 # We use this to get the first commit below
                 commit_info = self.fetcher.git("log", "--all", "--pretty=format:%H",
-                                           output=str)
+                                               output=str)
                 commits = [c for c in commit_info.split('\n') if c]
 
                 # No previous version and distance from first commit
