@@ -993,8 +993,7 @@ class CommitLookup(object):
 
         # We require the full git repository history
         import spack.fetch_strategy  # break cycle
-        repository = spack.fetch_strategy.git_repo_for_package(pkg)
-        fetcher = spack.fetch_strategy.GitFetchStrategy(git=repository)
+        fetcher = spack.fetch_strategy.GitFetchStrategy(git=pkg.git)
         fetcher.get_full_repo = True
         self.fetcher = fetcher
 
@@ -1014,10 +1013,14 @@ class CommitLookup(object):
         Identifier for git repos used within the repo and metadata caches.
 
         """
-        # Case 1: It's a path on the filesystem
-        if os.path.exists(self.fetcher.url) or self.fetcher.url.startswith("file://"):
-            return re.sub("file://", "", self.fetcher.url)
-        return re.sub("[.]git$", "", os.sep.join(self.fetcher.url.split(os.sep)[-3:]))
+        try:
+            components = [str(c).lstrip('/')
+                          for c in spack.util.url.parse_git_url(self.pkg.git)
+                          if c]
+            return os.path.join(*components)
+        except ValueError:
+            # If it's not a git url, it's a local path
+            return os.path.abspath(self.pkg.git)
 
     def save(self):
         """
@@ -1052,16 +1055,9 @@ class CommitLookup(object):
         known version prior to the commit, as well as the distance from that version
         to the commit in the git repo. Those values are used to compare Version objects.
         """
-        # Were we given an already cloned path?
-        already_cloned = os.path.exists(self.repository_uri)
-        if already_cloned:
-            if not os.path.isdir(os.path.join(self.repository_uri, '.git')):
-                raise VersionLookupError('Repository path exists and is not a git repo')
-            dest = self.repository_uri
-
-        # Otherwise honor the namespace for the service and repository
-        else:
-            dest = os.path.join(spack.paths.user_repos_cache_path, self.repository_uri)
+        dest = os.path.join(spack.paths.user_repos_cache_path, self.repository_uri)
+        if dest.endswith('.git'):
+            dest = dest[:-4]
 
         # prepare a cache for the repository
         dest_parent = os.path.dirname(dest)
@@ -1075,9 +1071,7 @@ class CommitLookup(object):
         # Lookup commit info
         with working_dir(dest):
             # Don't do anything if already cloned - it might not have remote
-            if not already_cloned:
-                self.fetcher.git("pull")
-                self.fetcher.git("fetch")
+            self.fetcher.git("fetch")
 
             # Ensure commit is an object known to git
             # Note the brackets are literals, the commit replaces the format string

@@ -1510,29 +1510,6 @@ def _from_merged_attrs(fetcher, pkg, version):
     return fetcher(**attrs)
 
 
-def git_repo_for_package(pkg):
-    """Get the git repo from which package source can be fetched
-
-    Returns a string in the appropriate format to be passed as an argument
-    to ``git clone``.
-    """
-    msg = "Version lookups only allowed on packages with a `git` attribute"
-    assert hasattr(pkg, 'git'), msg
-
-    # Case 1: We have a file
-    if os.path.exists(pkg.git) or pkg.git.startswith("file://"):
-        return re.sub("file://", "", pkg.git)
-
-    # Case 2: We have a git url
-    repo_regex = r'(\w+://)(.+@)*([\w\d\.]+)(:[\d]+){0,1}/*(.*)'
-    match = re.search(repo_regex, pkg.git)
-    if not match:
-        tty.die("Cannot derive repository from %s." % pkg.git)
-    service, _, repository, _, name = match.groups()
-    name = "/".join(name.split('/')[0:2])
-    return "%s%s/%s" % (service, repository, name)
-
-
 def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
@@ -1551,8 +1528,7 @@ def for_package_version(pkg, version):
     if version.is_commit and hasattr(pkg, "git"):
         # Populate the version with comparisons to other commits
         version.generate_commit_lookup(pkg)
-        repository = git_repo_for_package(pkg)
-        fetcher = GitFetchStrategy(git=repository, commit=str(version))
+        fetcher = GitFetchStrategy(git=pkg.git, commit=str(version))
         return fetcher
 
     # If it's not a known version, try to extrapolate one by URL
