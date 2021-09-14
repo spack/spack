@@ -36,7 +36,7 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack.error
 import spack.util.compression as comp
-from spack.version import Version
+import spack.version
 
 
 #
@@ -417,7 +417,7 @@ def parse_version_offset(path):
         path (str): The filename or URL for the package
 
     Returns:
-        tuple of (Version, int, int, int, str): A tuple containing:
+        tuple of (spack.version.Version, int, int, int, str): A tuple containing:
             version of the package,
             first index of version,
             length of version string,
@@ -621,7 +621,7 @@ def parse_version(path):
         UndetectableVersionError: If the URL does not match any regexes
     """
     version, start, length, i, regex = parse_version_offset(path)
-    return Version(version)
+    return spack.version.Version(version)
 
 
 def parse_name_offset(path, v=None):
@@ -774,7 +774,7 @@ def parse_name_and_version(path):
         path (str): The filename or URL for the package
 
     Returns:
-        tuple of (str, Version)A tuple containing:
+        tuple of (str, spack.version.Version)A tuple containing:
             The name of the package
             The version of the package
 
