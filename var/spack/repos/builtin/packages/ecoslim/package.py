@@ -21,9 +21,5 @@ class Ecoslim(CMakePackage):
 
     def cmake_args(self):
         """Populate cmake arguments for EcoSLIM."""
-        spec = self.spec
-
-        cmake_args = []
-
-        return cmake_args
+        return []
 
