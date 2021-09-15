@@ -298,6 +298,12 @@ class Boost(Package):
           when="@:1.76%cce",
           level=2)
 
+    # Fix building with Intel compilers
+    patch("https://github.com/bfgroup/b2/commit/23212066f0f20358db54568bb16b3fe1d76f88ce.patch",
+          sha256="93f4aad8f88d1437e50d95a2d066390ef3753b99ef5de24f7a46bc083bd6df06",
+          when="@1.77.0",
+          working_dir="tools/build")
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies('%nvhpc'):
