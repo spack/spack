@@ -12,7 +12,7 @@ class MesaDemos(AutotoolsPackage):
     """This package provides some demo applications for testing Mesa."""
 
     homepage = "https://www.mesa3d.org"
-    url      = "https://github.com/freedesktop/mesa-demos/archive/mesa-demos-8.3.0.tar.gz"  # Should this be from free desktop gitlab?
+    url      = "https://github.com/freedesktop/mesa-demos/archive/mesa-demos-8.3.0.tar.gz"
 
     version('8.3.0', sha256='9bc1b37f4fc7bfc3f818f2d3851ffde28e8167ef11dca87f4781e9ef6206901f')
     version('8.2.0', sha256='5a9f71b815d968d0c3b77edfcc3782d0211f8520b00da9e554ccfed80c8889f6')
@@ -31,10 +31,11 @@ class MesaDemos(AutotoolsPackage):
 
     depends_on('gl')
     depends_on('glx', when='+glx')
+    depends_on('libx11',  when='+glx')
+    depends_on('libxext', when='+glx')
     depends_on('osmesa', when='+osmesa')
 
     depends_on('mesa-glu')
-    depends_on('freetype')
     depends_on('freeglut')
     depends_on('glew@1.5.4:')
 
