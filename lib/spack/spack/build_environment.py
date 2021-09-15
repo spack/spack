@@ -781,7 +781,9 @@ def setup_package(pkg, dirty, context='build'):
         pkg.spec, context, custom_mods_only=False))
 
     # architecture specific setup
-    pkg.architecture.platform.setup_platform_environment(pkg, env)
+    platform = spack.platforms.by_name(pkg.spec.architecture.platform)
+    target = platform.target(pkg.spec.architecture.target)
+    platform.setup_platform_environment(pkg, env)
 
     if context == 'build':
         pkg.setup_build_environment(env)
@@ -814,8 +816,8 @@ def setup_package(pkg, dirty, context='build'):
     if on_cray:
         module('unload', 'cray-libsci')
 
-    if pkg.architecture.target.module_name:
-        load_module(pkg.architecture.target.module_name)
+    if target.module_name:
+        load_module(target.module_name)
 
     load_external_modules(pkg)
 
