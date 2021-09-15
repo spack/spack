@@ -12,7 +12,7 @@ class Ecoslim(CMakePackage):
 
     homepage = "https://github.com/reedmaxwell/EcoSLIM"
     url      = "https://github.com/reedmaxwell/EcoSLIM/archive/refs/tags/v1.3.tar.gz"
-    git      = "git@github.com:reedmaxwell/EcoSLIM.git"
+    git      = "https://github.com/reedmaxwell/EcoSLIM.git"
 
     maintainers = ['reedmaxwell', 'lecondon', 'smithsg84']
 
