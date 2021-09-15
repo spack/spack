@@ -516,10 +516,7 @@ def _bootstrap_config_scopes():
 
 def _add_compilers_if_missing():
     # Do not use spack.architecture.default_arch() since it memoize the result
-    arch = spack.architecture.Arch(
-        spack.architecture.real_platform(), 'default_os', 'default_target'
-    )
-    arch = spack.spec.ArchSpec(str(arch))  # The call below expects an ArchSpec object
+    arch = spack.spec.ArchSpec.default_arch()
     if not spack.compilers.compilers_for_arch(arch):
         new_compilers = spack.compilers.find_new_compilers()
         if new_compilers:

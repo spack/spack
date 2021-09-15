@@ -39,6 +39,7 @@ import spack.environment as ev
 import spack.modules
 import spack.paths
 import spack.repo
+import spack.spec
 import spack.store
 import spack.util.debug
 import spack.util.executable as exe
@@ -666,7 +667,7 @@ def print_setup_info(*info):
             tty.die('shell must be sh or csh')
 
     # print sys type
-    shell_set('_sp_sys_type', str(spack.architecture.default_arch()))
+    shell_set('_sp_sys_type', str(spack.spec.ArchSpec.default_arch()))
     shell_set('_sp_compatible_sys_types',
               ':'.join(spack.architecture.compatible_sys_types()))
     # print roots for all module systems

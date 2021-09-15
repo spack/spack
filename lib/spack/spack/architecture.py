@@ -163,7 +163,7 @@ def arch_for_spec(arch_spec):
     arch_plat = spack.platforms.by_name(arch_spec.platform)
     if not (arch_plat.operating_system(arch_spec.os) and
             arch_plat.target(arch_spec.target)):
-        sys_type = str(default_arch())
+        sys_type = spack.spec.ArchSpec.default_arch()
         msg = ("Can't recreate arch for spec {0} on current arch {1}; "
                "spec architecture is too different")
         raise ValueError(msg.format(arch_spec, sys_type))
@@ -183,12 +183,6 @@ real_platform = _platform
 #: The current platform used by Spack. May be swapped by the use_platform
 #: context manager.
 platform = _platform
-
-
-@lang.memoized
-def default_arch():
-    """Default ``Arch`` object for this machine"""
-    return Arch(platform(), 'default_os', 'default_target')
 
 
 @lang.memoized

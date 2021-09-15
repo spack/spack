@@ -213,6 +213,15 @@ def colorize_spec(spec):
 
 @lang.lazy_lexicographic_ordering
 class ArchSpec(object):
+    @staticmethod
+    def default_arch():
+        """Return the default architecture"""
+        platform = spack.architecture.platform()
+        default_os = platform.operating_system('default_os')
+        default_target = platform.target('default_target')
+        arch_tuple = str(platform), str(default_os), str(default_target)
+        return ArchSpec(arch_tuple)
+
     def __init__(self, spec_or_platform_tuple=(None, None, None)):
         """ Architecture specification a package should be built with.
 
@@ -1019,6 +1028,13 @@ class Spec(object):
 
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
+
+    @staticmethod
+    def default_arch():
+        """Return an anonymous spec for the default architecture"""
+        s = Spec()
+        s.architecture = ArchSpec.default_arch()
+        return s
 
     def __init__(self, spec_like=None, normal=False,
                  concrete=False, external_path=None, external_modules=None):
