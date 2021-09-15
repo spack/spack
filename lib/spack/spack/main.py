@@ -26,6 +26,7 @@ from six import StringIO
 import archspec.cpu
 
 import llnl.util.filesystem as fs
+import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
@@ -645,6 +646,23 @@ def _profile_wrapper(command, parser, args, unknown_args):
         stats.print_stats(nlines)
 
 
+@llnl.util.lang.memoized
+def _compatible_sys_types():
+    """Return a list of all the platform-os-target tuples compatible
+    with the current host.
+    """
+    host_platform = spack.architecture.platform()
+    host_os = str(host_platform.operating_system('default_os'))
+    host_target = archspec.cpu.host()
+    compatible_targets = [host_target] + host_target.ancestors
+
+    compatible_archs = [
+        str(spack.spec.ArchSpec((str(host_platform), host_os, str(target))))
+        for target in compatible_targets
+    ]
+    return compatible_archs
+
+
 def print_setup_info(*info):
     """Print basic information needed by setup-env.[c]sh.
 
@@ -654,7 +672,6 @@ def print_setup_info(*info):
 
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
-
     """
     shell = 'csh' if 'csh' in info else 'sh'
 
@@ -668,8 +685,7 @@ def print_setup_info(*info):
 
     # print sys type
     shell_set('_sp_sys_type', str(spack.spec.ArchSpec.default_arch()))
-    shell_set('_sp_compatible_sys_types',
-              ':'.join(spack.architecture.compatible_sys_types()))
+    shell_set('_sp_compatible_sys_types', ':'.join(_compatible_sys_types()))
     # print roots for all module systems
     module_to_roots = {
         'tcl': list(),

@@ -52,8 +52,6 @@ will be responsible for compiler detection.
 """
 import contextlib
 
-import archspec.cpu
-
 import llnl.util.lang as lang
 
 import spack.compiler
@@ -183,19 +181,6 @@ real_platform = _platform
 #: The current platform used by Spack. May be swapped by the use_platform
 #: context manager.
 platform = _platform
-
-
-@lang.memoized
-def compatible_sys_types():
-    """Return a list of all the platform-os-target tuples compatible
-    with the current host.
-    """
-    current_host = archspec.cpu.host()
-    compatible_targets = [current_host] + current_host.ancestors
-    compatible_archs = [
-        str(Arch(platform(), 'default_os', target)) for target in compatible_targets
-    ]
-    return compatible_archs
 
 
 class _PickleableCallable(object):
