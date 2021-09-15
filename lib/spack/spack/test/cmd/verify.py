@@ -5,12 +5,12 @@
 
 """Tests for the `spack verify` command"""
 import os
-import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.platforms
 import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
@@ -21,7 +21,8 @@ verify = SpackCommand('verify')
 install = SpackCommand('install')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_single_file_verify_cmd(tmpdir):
     # Test the verify command interface to verifying a single file.
     filedir = os.path.join(str(tmpdir), 'a', 'b', 'c', 'd')
@@ -68,7 +69,8 @@ def test_single_file_verify_cmd(tmpdir):
     assert sorted(errors) == sorted(expected)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_single_spec_verify_cmd(tmpdir, mock_packages, mock_archive,
                                 mock_fetch, config, install_mockery):
     # Test the verify command interface to verify a single spec

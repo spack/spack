@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
+import spack.platforms
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
@@ -31,12 +30,12 @@ class Intel(Compiler):
     PrgEnv = 'PrgEnv-intel'
     PrgEnv_compiler = 'intel'
 
-    if sys.platform == 'win32':
+    if str(spack.platforms.host()) == 'windows':
         version_argument = '/QV'
     else:
         version_argument = '--version'
 
-    if sys.platform == 'win32':
+    if str(spack.platforms.host()) == 'windows':
         version_regex = r'([1-9][0-9]*\.[0-9]*\.[0-9]*)'
     else:
         version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'

@@ -2129,7 +2129,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 query the dependent's state.  Note that *this*
                 package's spec is available as ``self.spec``.
         """
-        pass
 
     flag_handler = inject_flags
     # The flag handler method is called for each of the allowed compiler flags.

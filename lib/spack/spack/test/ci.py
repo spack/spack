@@ -7,7 +7,6 @@ import collections
 import itertools as it
 import json
 import os
-import sys
 
 import pytest
 
@@ -21,6 +20,7 @@ import spack.environment as ev
 import spack.error
 import spack.main as spack_main
 import spack.paths as spack_paths
+import spack.platforms
 import spack.spec as spec
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
@@ -58,7 +58,7 @@ def test_urlencode_string():
     assert(s_enc == 'Spack+Test+Project')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
@@ -93,7 +93,7 @@ def test_configure_compilers(mutable_config):
     assert_present(last_config)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_get_concrete_specs(config, mutable_mock_env_path, mock_packages):
     e = ev.create('test1')
@@ -184,7 +184,7 @@ def test_register_cdash_build(monkeypatch):
     assert(build_id == 42)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_relate_cdash_builds(config, mutable_mock_env_path, mock_packages,
                              monkeypatch, capfd):
@@ -250,7 +250,7 @@ def test_relate_cdash_builds(config, mutable_mock_env_path, mock_packages,
                                [cdashids_mirror_url])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_read_write_cdash_ids(config, tmp_scope, tmpdir, mock_packages):
     working_dir = tmpdir.join('working_dir')

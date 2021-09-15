@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
@@ -11,6 +10,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.cmd
 import spack.paths
+import spack.platforms
 import spack.util.spack_json as sjson
 from spack.main import SpackCommand
 from spack.util.executable import which
@@ -38,7 +38,7 @@ def test_blame_by_percent(mock_packages):
     assert 'EMAIL' in out
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_blame_file(mock_packages):
     """Sanity check the blame command to make sure it works."""
@@ -72,7 +72,7 @@ def test_blame_json(mock_packages):
         assert key in loaded['authors'][0]
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="git hangs")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows', reason="git hangs")
 def test_blame_by_git(mock_packages, capfd):
     """Sanity check the blame command to make sure it works."""
     with capfd.disabled():

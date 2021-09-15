@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
 import os
-import sys
 
 import pytest
 
@@ -14,6 +13,7 @@ import spack.config
 import spack.database
 import spack.environment as ev
 import spack.main
+import spack.platforms
 import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
@@ -58,12 +58,14 @@ def config_yaml_v015(mutable_config):
     return functools.partial(_create_config, data=old_data, section='config')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_get_config_scope(mock_low_high_config):
     assert config('get', 'compilers').strip() == 'compilers: {}'
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_get_config_scope_merged(mock_low_high_config):
     low_path = mock_low_high_config.scopes['low'].path
     high_path = mock_low_high_config.scopes['high'].path
@@ -90,7 +92,8 @@ repos:
 - repo3'''
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_edit():
     """Ensure `spack config edit` edits the right paths."""
 
@@ -105,7 +108,8 @@ def test_config_edit():
     assert config('edit', '--print-file', 'repos').strip() == repos_path
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_get_gets_spack_yaml(mutable_mock_env_path):
     env = ev.create('test')
 
@@ -126,33 +130,38 @@ def test_config_get_gets_spack_yaml(mutable_mock_env_path):
         assert 'mpileaks' in config('get')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_edit_edits_spack_yaml(mutable_mock_env_path):
     env = ev.create('test')
     with env:
         assert config('edit', '--print-file').strip() == env.manifest_path
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config('edit', '--print-file', fail_on_error=False)
     assert "requires a section argument or an active environment" in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_get_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config('get', fail_on_error=False)
     assert "requires a section argument or an active environment" in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_list():
     output = config('list')
     assert 'compilers' in output
     assert 'packages' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add(mutable_empty_config):
     config('add', 'config:dirty:true')
     output = config('get', 'config')
@@ -162,7 +171,8 @@ def test_config_add(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_list(mutable_empty_config):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
@@ -177,7 +187,8 @@ def test_config_add_list(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_override(mutable_empty_config):
     config('--scope', 'site', 'add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
@@ -198,7 +209,8 @@ def test_config_add_override(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_override_leaf(mutable_empty_config):
     config('--scope', 'site', 'add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
@@ -219,7 +231,8 @@ def test_config_add_override_leaf(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_update_dict(mutable_empty_config):
     config('add', 'packages:all:version:[1.0.0]')
     output = config('get', 'packages')
@@ -228,7 +241,8 @@ def test_config_add_update_dict(mutable_empty_config):
     assert output == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_with_c_argument(mutable_empty_config):
 
     # I don't know how to add a spack argument to a Spack Command, so we test this way
@@ -243,7 +257,8 @@ def test_config_with_c_argument(mutable_empty_config):
     assert "config:\n  install_root:\n  - root: /path/to/config.yaml" in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_ordered_dict(mutable_empty_config):
     config('add', 'mirrors:first:/path/to/first')
     config('add', 'mirrors:second:/path/to/second')
@@ -255,7 +270,8 @@ def test_config_add_ordered_dict(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_invalid_fails(mutable_empty_config):
     config('add', 'packages:all:variants:+debug')
     with pytest.raises(
@@ -264,7 +280,8 @@ def test_config_add_invalid_fails(mutable_empty_config):
         config('add', 'packages:all:True')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_from_file(mutable_empty_config, tmpdir):
     contents = """spack:
   config:
@@ -282,7 +299,8 @@ def test_config_add_from_file(mutable_empty_config, tmpdir):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_from_file_multiple(mutable_empty_config, tmpdir):
     contents = """spack:
   config:
@@ -302,7 +320,8 @@ def test_config_add_from_file_multiple(mutable_empty_config, tmpdir):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_override_from_file(mutable_empty_config, tmpdir):
     config('--scope', 'site', 'add', 'config:template_dirs:test1')
     contents = """spack:
@@ -321,7 +340,8 @@ def test_config_add_override_from_file(mutable_empty_config, tmpdir):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
     config('--scope', 'site', 'add', 'config:template_dirs:test1')
     contents = """spack:
@@ -340,7 +360,8 @@ def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     config('add', 'packages:all:compiler:[gcc]')
 
@@ -372,7 +393,8 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     assert expected == output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_invalid_file_fails(tmpdir):
     # contents to add to file
     # invalid because version requires a list
@@ -393,7 +415,8 @@ def test_config_add_invalid_file_fails(tmpdir):
         config('add', '-f', file)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_remove_value(mutable_empty_config):
     config('add', 'config:dirty:true')
     config('remove', 'config:dirty:true')
@@ -403,7 +426,8 @@ def test_config_remove_value(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_remove_alias_rm(mutable_empty_config):
     config('add', 'config:dirty:true')
     config('rm', 'config:dirty:true')
@@ -413,7 +437,8 @@ def test_config_remove_alias_rm(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_remove_dict(mutable_empty_config):
     config('add', 'config:dirty:true')
     config('rm', 'config:dirty')
@@ -423,7 +448,8 @@ def test_config_remove_dict(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_remove_from_list(mutable_empty_config):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
@@ -438,7 +464,8 @@ def test_remove_from_list(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_remove_list(mutable_empty_config):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
@@ -453,7 +480,8 @@ def test_remove_list(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
     ev.create('test')
     with ev.read('test'):
@@ -467,7 +495,8 @@ def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
     assert expected in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_add_to_env_preserve_comments(mutable_empty_config,
                                              mutable_mock_env_path,
                                              tmpdir):
@@ -500,7 +529,8 @@ spack:  # comment
     assert output == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     env('create', 'test')
 
@@ -518,7 +548,8 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     assert output == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_update_packages(packages_yaml_v015):
     """Test Spack updating old packages.yaml format for externals
     to new format. Ensure that data is preserved and converted
@@ -532,7 +563,8 @@ def test_config_update_packages(packages_yaml_v015):
     check_packages_updated(data)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_update_config(config_yaml_v015):
     config_yaml_v015()
     config('update', '-y', 'config')
@@ -542,7 +574,8 @@ def test_config_update_config(config_yaml_v015):
     check_config_updated(data)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_update_not_needed(mutable_config):
     data_before = spack.config.get('repos')
     config('update', '-y', 'repos')
@@ -550,7 +583,8 @@ def test_config_update_not_needed(mutable_config):
     assert data_before == data_after
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_update_fail_on_permission_issue(
         packages_yaml_v015, monkeypatch
 ):
@@ -564,7 +598,8 @@ def test_config_update_fail_on_permission_issue(
         config('update', '-y', 'packages')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_revert(packages_yaml_v015):
     cfg_file = packages_yaml_v015()
     bkp_file = cfg_file + '.bkp'
@@ -584,7 +619,8 @@ def test_config_revert(packages_yaml_v015):
     assert md5bkp == fs.md5sum(cfg_file)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_revert_raise_if_cant_write(packages_yaml_v015, monkeypatch):
     packages_yaml_v015()
     config('update', '-y', 'packages')
@@ -599,7 +635,8 @@ def test_config_revert_raise_if_cant_write(packages_yaml_v015, monkeypatch):
         config('revert', '-y', 'packages')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_updating_config_implicitly_raises(packages_yaml_v015):
     # Trying to write implicitly to a scope with a configuration file
     # in the old format raises an exception
@@ -608,7 +645,8 @@ def test_updating_config_implicitly_raises(packages_yaml_v015):
         config('add', 'packages:cmake:buildable:false')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_updating_multiple_scopes_at_once(packages_yaml_v015):
     # Create 2 config files in the old format
     packages_yaml_v015(scope='user')
@@ -622,7 +660,8 @@ def test_updating_multiple_scopes_at_once(packages_yaml_v015):
         check_packages_updated(data)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 @pytest.mark.regression('18031')
 def test_config_update_can_handle_comments(mutable_config):
     # Create an outdated config file with comments
@@ -659,7 +698,8 @@ packages:
     assert '# Another comment after the outdated section' in text
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 @pytest.mark.regression('18050')
 def test_config_update_works_for_empty_paths(mutable_config):
     # Create an outdated config file with empty "paths" and "modules"
@@ -701,7 +741,8 @@ def check_config_updated(data):
     assert data['install_tree']['projections'] == {'all': '{name}-{version}'}
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_config_prefer_upstream(tmpdir_factory, install_mockery, mock_fetch,
                                 mutable_config, gen_mock_layout, monkeypatch):
     """Check that when a dependency package is recorded as installed in

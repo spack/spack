@@ -30,13 +30,6 @@ from typing import Dict  # novm
 
 import six
 
-try:
-    import uuid
-    _use_uuid = True
-except ImportError:
-    _use_uuid = False
-    pass
-
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
@@ -51,6 +44,12 @@ from spack.error import SpackError
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
 from spack.version import Version
+
+try:
+    import uuid
+    _use_uuid = True
+except ImportError:
+    _use_uuid = False
 
 
 @contextlib.contextmanager

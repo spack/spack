@@ -59,7 +59,7 @@ class Hpx(CMakePackage, CudaPackage):
     )
 
     default_generic_coroutines = True
-    if sys.platform.startswith('linux') or sys.platform == 'win32':
+    if sys.platform.startswith('linux') or str(spack.platforms.host()) == 'windows':
         default_generic_coroutines = False
     variant(
         "generic_coroutines", default=default_generic_coroutines,

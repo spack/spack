@@ -6,7 +6,6 @@
 import collections
 import filecmp
 import os
-import sys
 
 import pytest
 
@@ -14,6 +13,7 @@ from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.patch
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.util.compression
 from spack.spec import Spec
@@ -45,7 +45,7 @@ def mock_patch_stage(tmpdir_factory, monkeypatch):
 data_path = os.path.join(spack.paths.test_path, 'data', 'patch')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('filename, sha256, archive_sha256', [
     # compressed patch -- needs sha256 and archive_256
@@ -92,7 +92,7 @@ third line
             assert filecmp.cmp('foo.txt', 'foo-expected.txt')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_patch_in_spec(mock_packages, config):
     """Test whether patches in a package appear in the spec."""
@@ -112,7 +112,7 @@ def test_patch_in_spec(mock_packages, config):
             tuple(spec.variants['patches']._patches_in_order_of_appearance))
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_patch_mixed_versions_subset_constraint(mock_packages, config):
     """If we have a package with mixed x.y and x.y.z versions, make sure that
@@ -128,7 +128,7 @@ def test_patch_mixed_versions_subset_constraint(mock_packages, config):
     assert biz_sha256 not in spec2.variants['patches'].value
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_patch_order(mock_packages, config):
     spec = Spec('dep-diamond-patch-top')
@@ -177,7 +177,7 @@ def test_nested_directives(mock_packages):
     assert len(fake_dep.patches[Spec()]) == 2
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_patched_dependency(
         mock_packages, config, install_mockery, mock_fetch):
@@ -206,7 +206,7 @@ def test_patched_dependency(
                 assert 'Patched!' in mf.read()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_multiple_patched_dependencies(mock_packages, config):
     """Test whether multiple patched dependencies work."""
@@ -226,7 +226,7 @@ def test_multiple_patched_dependencies(mock_packages, config):
         (url2_sha256, url1_sha256) == spec['fake'].variants['patches'].value)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_conditional_patched_dependencies(mock_packages, config):
     """Test whether conditional patched dependencies work."""
@@ -309,7 +309,7 @@ def check_multi_dependency_patch_specs(
     assert url2_patch.archive_sha256 == url2_archive_sha256
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_conditional_patched_deps_with_conditions(mock_packages, config):
     """Test whether conditional patched dependencies with conditions work."""
@@ -326,7 +326,7 @@ def test_conditional_patched_deps_with_conditions(mock_packages, config):
         spec.package.package_dir)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
     """Test whether patched dependencies are still correct after writing and

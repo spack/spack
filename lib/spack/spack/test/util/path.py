@@ -3,13 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
 import llnl.util.tty as tty
 
 import spack.config
+import spack.platforms
 import spack.util.path as sup
 
 #: Some lines with lots of placeholders
@@ -28,7 +28,7 @@ fixed_lines = [
 ]
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("padded,fixed", zip(padded_lines, fixed_lines))
 def test_padding_substitution(padded, fixed):
@@ -36,7 +36,7 @@ def test_padding_substitution(padded, fixed):
     assert fixed == sup.padding_filter(padded)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_no_substitution():
     """Ensure that a line not containing one full path placeholder is not modified."""
@@ -44,7 +44,7 @@ def test_no_substitution():
     assert sup.padding_filter(partial) == partial
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_short_substitution():
     """Ensure that a single placeholder path component is replaced"""
@@ -53,7 +53,7 @@ def test_short_substitution():
     assert short_subst == sup.padding_filter(short)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_partial_substitution():
     """Ensure that a single placeholder path component is replaced"""
@@ -72,7 +72,7 @@ def test_longest_prefix_re():
     )
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_output_filtering(capfd, install_mockery, mutable_config):
     """Test filtering padding out of tty messages."""

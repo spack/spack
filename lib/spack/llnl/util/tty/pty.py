@@ -316,7 +316,6 @@ class PseudoShell(object):
         # wait for subprocess to be running and connected.
         while not ready.value:
             time.sleep(1e-5)
-            pass
 
         if kwargs.get("debug"):
             sys.stderr.write("pid:        %d\n" % os.getpid())

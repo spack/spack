@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
 import spack.environment as ev
+import spack.platforms
 from spack.main import SpackCommand
 
 # everything here uses the mock_env_path
@@ -19,7 +19,8 @@ add        = SpackCommand('add')
 concretize = SpackCommand('concretize')
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.parametrize('concretization', ['separately', 'together'])
 def test_concretize_all_test_dependencies(concretization):
     """Check all test dependencies are concretized."""
@@ -32,7 +33,8 @@ def test_concretize_all_test_dependencies(concretization):
         assert e.matching_spec('test-dependency')
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.parametrize('concretization', ['separately', 'together'])
 def test_concretize_root_test_dependencies_not_recursive(concretization):
     """Check that test dependencies are not concretized recursively."""
@@ -45,7 +47,8 @@ def test_concretize_root_test_dependencies_not_recursive(concretization):
         assert e.matching_spec('test-dependency') is None
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.parametrize('concretization', ['separately', 'together'])
 def test_concretize_root_test_dependencies_are_concretized(concretization):
     """Check that root test dependencies are concretized."""

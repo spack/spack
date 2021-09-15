@@ -20,14 +20,8 @@ import traceback
 import types
 from typing import Dict  # novm
 
-import six
-
-if sys.version_info >= (3, 5):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
-
 import ruamel.yaml as yaml
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
@@ -37,12 +31,19 @@ import spack.caches
 import spack.config
 import spack.error
 import spack.patch
+import spack.platforms
 import spack.provider_index
 import spack.spec
 import spack.util.imp as simp
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_json as sjson
+
+if sys.version_info >= (3, 5):
+    from collections.abc import Mapping  # novm
+else:
+    from collections import Mapping
+
 
 #: Super-namespace for all packages.
 #: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
@@ -143,7 +144,7 @@ class FastPackageChecker(Mapping):
     def __init__(self, packages_path):
         # The path of the repository managed by this instance
         self.packages_path = packages_path
-        if sys.platform == 'win32':
+        if str(spack.platforms.host()) == 'windows':
             self.packages_path = self.packages_path.replace("\\", "/")
 
         # If the cache we need is not there yet, then build it appropriately
@@ -385,7 +386,7 @@ class RepoIndex(object):
     def __init__(self, package_checker, namespace):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
-        if sys.platform == 'win32':
+        if str(spack.platforms.host()) == 'windows':
             self.packages_path = self.packages_path.replace("\\", "/")
         self.namespace = namespace
 
@@ -752,7 +753,7 @@ class Repo(object):
         # Root directory, containing _repo.yaml and package dirs
         # Allow roots to by spack-relative by starting with '$spack'
         self.root = spack.util.path.canonicalize_path(root)
-        if sys.platform == 'win32':
+        if str(spack.platforms.host()) == 'windows':
             self.root = self.root.replace("\\", "/")
 
         # check and raise BadRepoError on fail.

@@ -5,17 +5,17 @@
 
 import os
 import os.path
-import sys
 
 import pytest
 
 import spack.binary_distribution
+import spack.platforms
 import spack.spec
 
 install = spack.main.SpackCommand('install')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_build_tarball_overwrite(
         install_mockery, mock_fetch, monkeypatch, tmpdir):

@@ -12,7 +12,6 @@ import platform
 import re
 import shutil
 import stat
-import sys
 
 import pytest
 
@@ -21,6 +20,7 @@ from llnl.util.symlink import symlink
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.platforms
 import spack.repo
 import spack.store
 import spack.util.gpg
@@ -47,7 +47,7 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
@@ -191,7 +191,7 @@ echo $PATH"""
     bindist._cached_specs = set()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('install_mockery')
 def test_relocate_text(tmpdir):
@@ -216,7 +216,7 @@ def test_relocate_text(tmpdir):
     bindist._cached_specs = set()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_relocate_links(tmpdir):
     with tmpdir.as_cwd():
@@ -259,7 +259,7 @@ def test_needs_relocation():
     assert needs_binary_relocation('application', 'x-mach-binary')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_replace_paths(tmpdir):
     with tmpdir.as_cwd():
@@ -470,7 +470,7 @@ def test_replace_paths(tmpdir):
                             }
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_macho_make_paths():
     out = macho_make_paths_relative('/Users/Shared/spack/pkgC/lib/libC.dylib',

@@ -13,6 +13,7 @@ from six import string_types, text_type
 
 import llnl.util.tty as tty
 
+import spack
 import spack.error
 
 __all__ = ['Executable', 'which', 'ProcessError']
@@ -22,7 +23,7 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        if sys.platform == 'win32':
+        if str(spack.platforms.host()) == 'windows':
             name = name.replace('\\', '/')
         self.exe = shlex.split(str(name))
         self.default_env = {}
@@ -207,7 +208,7 @@ class Executable(object):
             if output in (str, str.split) or error in (str, str.split):
                 result = ''
                 if output in (str, str.split):
-                    if sys.platform == 'win32':
+                    if str(spack.platforms.host()) == 'windows':
                         outstr = text_type(out.decode('ISO-8859-1'))
                     else:
                         outstr = text_type(out.decode('utf-8'))
@@ -215,7 +216,7 @@ class Executable(object):
                     if output is str.split:
                         sys.stdout.write(outstr)
                 if error in (str, str.split):
-                    if sys.platform == 'win32':
+                    if str(spack.platforms.host()) == 'windows':
                         errstr = text_type(err.decode('ISO-8859-1'))
                     else:
                         errstr = text_type(err.decode('utf-8'))

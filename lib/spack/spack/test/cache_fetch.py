@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
 from llnl.util.filesystem import mkdirp, touch
 
 import spack.config
+import spack.platforms
 from spack.fetch_strategy import CacheURLFetchStrategy, NoCacheError
 from spack.stage import Stage
 
@@ -26,7 +26,7 @@ def test_fetch_missing_cache(tmpdir, _fetch_method):
                 fetcher.fetch()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
 def test_fetch(tmpdir, _fetch_method):

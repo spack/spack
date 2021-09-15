@@ -497,14 +497,12 @@ class NoVerifyException(spack.error.SpackError):
     """
     Raised if file fails signature verification.
     """
-    pass
 
 
 class NoChecksumException(spack.error.SpackError):
     """
     Raised if file fails checksum verification.
     """
-    pass
 
 
 class NewLayoutException(spack.error.SpackError):

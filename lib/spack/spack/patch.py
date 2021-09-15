@@ -14,6 +14,7 @@ import llnl.util.lang
 import spack
 import spack.error
 import spack.fetch_strategy as fs
+import spack.platforms
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
@@ -33,7 +34,7 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
             (default '.')
     """
     git_utils_path = os.environ.get('PATH', '')
-    if os.name == 'nt':
+    if str(spack.platforms.host()) == 'windows':
         git = which_string('git', required=True)
         git_root = os.path.dirname(git).split('/')[:-1]
         git_root.extend(['usr', 'bin'])

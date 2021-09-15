@@ -11,17 +11,8 @@ import datetime
 import functools
 import json
 import os
-import sys
 
 import pytest
-
-try:
-    import uuid
-    _use_uuid = True
-except ImportError:
-    _use_uuid = False
-    pass
-
 from jsonschema import validate
 
 import llnl.util.lock as lk
@@ -29,12 +20,20 @@ from llnl.util.tty.colify import colify
 
 import spack.database
 import spack.package
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
 from spack.schema.database_index import schema
 from spack.util.executable import Executable
 from spack.util.mock_package import MockPackageMultiRepo
+
+try:
+    import uuid
+    _use_uuid = True
+except ImportError:
+    _use_uuid = False
+
 
 pytestmark = pytest.mark.db
 
@@ -61,7 +60,7 @@ def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
         downstream_db, downstream_layout
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 def test_installed_upstream(upstream_and_downstream_db):
@@ -106,7 +105,7 @@ def test_installed_upstream(upstream_and_downstream_db):
         downstream_db._check_ref_counts()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 def test_removed_upstream_dep(upstream_and_downstream_db):
@@ -139,7 +138,7 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
             new_downstream._read()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
@@ -178,7 +177,7 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
             spack.store.db = orig_db
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config', 'temporary_store')
 def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
@@ -205,7 +204,7 @@ def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
             upstream_dbs[0].add(spec, layouts[1])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config', 'temporary_store')
 def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
@@ -381,7 +380,7 @@ def _mock_remove(spec):
     spec.package.do_uninstall(spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_default_queries(database):
     # Testing a package whose name *doesn't* start with 'lib'
@@ -423,7 +422,7 @@ def test_default_queries(database):
     assert os.path.exists(command.path)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_005_db_exists(database):
     """Make sure db cache file exists after creating."""
@@ -437,7 +436,7 @@ def test_005_db_exists(database):
         validate(index_object, schema)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_010_all_install_sanity(database):
     """Ensure that the install layout reflects what we think it does."""
@@ -474,7 +473,7 @@ def test_010_all_install_sanity(database):
     ) == 1
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_015_write_and_read(mutable_database):
     # write and read DB
@@ -490,7 +489,7 @@ def test_015_write_and_read(mutable_database):
         assert new_rec.installed == rec.installed
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
     monkeypatch.setattr(spack.database, '_use_uuid', False)
@@ -507,14 +506,14 @@ def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
         assert new_rec.installed == rec.installed
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_020_db_sanity(database):
     """Make sure query() returns what's actually in the db."""
     _check_db_sanity(database)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_025_reindex(mutable_database):
     """Make sure reindex works and ref counts are valid."""
@@ -522,7 +521,7 @@ def test_025_reindex(mutable_database):
     _check_db_sanity(mutable_database)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_026_reindex_after_deprecate(mutable_database):
     """Make sure reindex works and ref counts are valid after deprecation."""
@@ -545,7 +544,7 @@ class ReadModify(object):
             _mock_remove('mpileaks ^zmpi')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_030_db_sanity_from_another_process(mutable_database):
     spack_process = spack.subprocess_context.SpackTestProcess(ReadModify())
@@ -558,14 +557,14 @@ def test_030_db_sanity_from_another_process(mutable_database):
         assert len(mutable_database.query('mpileaks ^zmpi')) == 0
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_040_ref_counts(database):
     """Ensure that we got ref counts right when we read the DB."""
     database._check_ref_counts()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_041_ref_counts_deprecate(mutable_database):
     """Ensure that we have appropriate ref counts after deprecating"""
@@ -576,7 +575,7 @@ def test_041_ref_counts_deprecate(mutable_database):
     mutable_database._check_ref_counts()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
@@ -614,19 +613,19 @@ def test_050_basic_query(database):
     assert len(database.query(end_date=datetime.datetime.max)) == total_specs
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_060_remove_and_add_root_package(mutable_database):
     _check_remove_and_add_package(mutable_database, 'mpileaks ^mpich')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_070_remove_and_add_dependency_package(mutable_database):
     _check_remove_and_add_package(mutable_database, 'dyninst')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_080_root_ref_counts(mutable_database):
     rec = mutable_database.get_record('mpileaks ^mpich')
@@ -652,7 +651,7 @@ def test_080_root_ref_counts(mutable_database):
     assert mutable_database.get_record('mpich').ref_count == 2
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_090_non_root_ref_counts(mutable_database):
     mutable_database.get_record('mpileaks ^mpich')
@@ -683,7 +682,7 @@ def test_090_non_root_ref_counts(mutable_database):
     assert mpich_rec.ref_count == 0
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_100_no_write_with_exception_on_remove(database):
     def fail_while_writing():
@@ -702,7 +701,7 @@ def test_100_no_write_with_exception_on_remove(database):
         assert len(database.query('mpileaks ^zmpi', installed=any)) == 1
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_110_no_write_with_exception_on_install(database):
     def fail_while_writing():
@@ -721,7 +720,7 @@ def test_110_no_write_with_exception_on_install(database):
         assert database.query('cmake', installed=any) == []
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_115_reindex_with_packages_not_in_repo(mutable_database):
     # Dont add any package definitions to this repository, the idea is that
@@ -732,7 +731,7 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database):
         _check_db_sanity(mutable_database)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_external_entries_in_db(mutable_database):
     rec = mutable_database.get_record('mpileaks ^zmpi')
@@ -751,7 +750,7 @@ def test_external_entries_in_db(mutable_database):
     assert rec.explicit is True
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.regression('8036')
 def test_regression_issue_8036(mutable_database, usr_folder_exists):
@@ -768,7 +767,7 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
     assert s.package.installed
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.regression('11118')
 def test_old_external_entries_prefix(mutable_database):
@@ -795,7 +794,7 @@ def test_old_external_entries_prefix(mutable_database):
     assert record.spec.prefix == record.spec.external_path
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_uninstall_by_spec(mutable_database):
     with mutable_database.write_transaction():
@@ -807,7 +806,7 @@ def test_uninstall_by_spec(mutable_database):
     assert len(mutable_database.query()) == 0
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_query_unused_specs(mutable_database):
     # This spec installs a fake cmake as a build only dependency
@@ -820,7 +819,7 @@ def test_query_unused_specs(mutable_database):
     assert unused[0].name == 'cmake'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.regression('10019')
 def test_query_spec_with_conditional_dependency(mutable_database):
@@ -834,7 +833,7 @@ def test_query_spec_with_conditional_dependency(mutable_database):
     assert not results
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.regression('10019')
 def test_query_spec_with_non_conditional_virtual_dependency(database):
@@ -844,7 +843,7 @@ def test_query_spec_with_non_conditional_virtual_dependency(database):
     assert len(results) == 1
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_failed_spec_path_error(database):
     """Ensure spec not concrete check is covered."""
@@ -853,7 +852,7 @@ def test_failed_spec_path_error(database):
         spack.store.db._failed_spec_path(s)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.db
 def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
@@ -870,7 +869,7 @@ def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
     assert 'Retaining failure marking' in out
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.db
 def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
@@ -890,7 +889,7 @@ def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
     assert 'Unable to remove failure marking' in out
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.db
 def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
@@ -913,7 +912,7 @@ def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
         del spack.store.db._prefix_failures[s.prefix]
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.db
 def test_prefix_failed(mutable_database, monkeypatch):
@@ -939,7 +938,7 @@ def test_prefix_failed(mutable_database, monkeypatch):
     assert spack.store.db.prefix_failed(s)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_prefix_read_lock_error(mutable_database, monkeypatch):
     """Cover the prefix read lock exception."""
@@ -956,7 +955,7 @@ def test_prefix_read_lock_error(mutable_database, monkeypatch):
             assert False
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_prefix_write_lock_error(mutable_database, monkeypatch):
     """Cover the prefix write lock exception."""

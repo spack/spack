@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
+import spack.platforms
 from spack.spec import Spec
 
 
@@ -98,7 +98,7 @@ def test_normalize(spec_and_expected, config, mock_packages):
     assert spec.eq_dag(expected, deptypes=False)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_default_variant(config, mock_packages):
     spec = Spec('optional-dep-test-3')

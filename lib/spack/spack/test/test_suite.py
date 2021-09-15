@@ -3,17 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import sys
 
 import pytest
 
 import llnl.util.filesystem as fs
 
 import spack.install_test
+import spack.platforms
 import spack.spec
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_test_log_pathname(mock_packages, config):
     """Ensure test log path is reasonable."""
@@ -28,7 +28,7 @@ def test_test_log_pathname(mock_packages, config):
     assert test_suite.test_log_name(spec) in logfile
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_test_ensure_stage(mock_test_stage):
     """Make sure test stage directory is properly set up."""
@@ -43,7 +43,7 @@ def test_test_ensure_stage(mock_test_stage):
     assert mock_test_stage in test_suite.stage
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_write_test_result(mock_packages, mock_test_stage):
     """Ensure test results written to a results file."""
@@ -65,7 +65,7 @@ def test_write_test_result(mock_packages, mock_test_stage):
         assert spec.name in msg
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_do_test(mock_packages, mock_test_stage, install_mockery):
     """Perform a stand-alone test with files to copy."""

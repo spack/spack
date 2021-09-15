@@ -65,7 +65,6 @@ class SConsPackage(PackageBase):
         By default, does nothing. Override this if you want to
         add package-specific tests.
         """
-        pass
 
     run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 

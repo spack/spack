@@ -10,7 +10,6 @@ import filecmp
 import os
 import shutil
 import stat
-import sys
 import tempfile
 
 import pytest
@@ -19,6 +18,7 @@ import llnl.util.filesystem as fs
 
 import spack.hooks.sbang as sbang
 import spack.paths
+import spack.platforms
 import spack.store
 from spack.util.executable import which
 
@@ -132,7 +132,7 @@ def script_dir(sbang_line):
     sdir.destroy()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_shebang_handling(script_dir, sbang_line):
     assert sbang.shebang_too_long(script_dir.lua_shebang)
@@ -180,7 +180,7 @@ def test_shebang_handling(script_dir, sbang_line):
         assert f.readline() == last_line
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_shebang_handles_non_writable_files(script_dir, sbang_line):
     # make a file non-writable
@@ -209,7 +209,7 @@ def check_sbang_installation():
     assert (status.st_mode & 0o777) == 0o755
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_install_sbang(install_mockery):
     sbang_path = sbang.sbang_install_path()

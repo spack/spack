@@ -21,6 +21,7 @@ import spack.cmd
 import spack.cmd.common.arguments
 import spack.error
 import spack.operating_systems.windows_os as winOs
+import spack.platforms
 import spack.util.environment
 import spack.util.spack_yaml as syaml
 
@@ -72,7 +73,7 @@ def _get_system_executables():
     # installationPath using windows_os.py logic, construct paths to CMake and Ninja,
     # add to PATH
     path_hints = spack.util.environment.get_path('PATH')
-    if sys.platform == 'win32':
+    if str(spack.platforms.host()) == 'windows':
         msvc_paths = winOs.WindowsOs.vs_install_paths
         msvc_cmake_paths = [
             os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft",
@@ -285,7 +286,7 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
     for pkg in packages_to_check:
         if hasattr(pkg, 'executables'):
             for exe in pkg.executables:
-                if sys.platform == 'win32':
+                if str(spack.platforms.host()) == 'windows':
                     exe = exe.replace('$', r'\.exe$')
                 exe_pattern_to_pkgs[exe].append(pkg)
 

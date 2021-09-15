@@ -2,10 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 
 import pytest
 
+import spack.platforms
 from spack.main import SpackCommand
 
 resource = SpackCommand('resource')
@@ -25,7 +25,8 @@ mock_hashes = [
 ]
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Hashes do not match")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Hashes do not match")
 def test_resource_list(mock_packages, capfd):
     with capfd.disabled():
         out = resource('list')
@@ -43,7 +44,8 @@ def test_resource_list(mock_packages, capfd):
     assert 'patched by: builtin.mock.patch-a-dependency' in out
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Hashes do not match")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Hashes do not match")
 def test_resource_list_only_hashes(mock_packages, capfd):
     with capfd.disabled():
         out = resource('list', '--only-hashes')
@@ -52,7 +54,8 @@ def test_resource_list_only_hashes(mock_packages, capfd):
         assert h in out
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Hashes do not match")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Hashes do not match")
 def test_resource_show(mock_packages, capfd):
     with capfd.disabled():
         out = resource('show', 'c45c1564f70def3fc1a6e22139f62cb21cd190cc3a7dbe6f4120fa59ce33dcb8')

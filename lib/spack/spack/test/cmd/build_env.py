@@ -3,17 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 from six.moves import cPickle
 
+import spack.platforms
 from spack.main import SpackCommand
 
 build_env = SpackCommand('build-env')
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.parametrize('pkg', [
     ('zlib',),
     ('zlib', '--')
@@ -23,14 +24,16 @@ def test_it_just_runs(pkg):
     build_env(*pkg)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.usefixtures('config')
 def test_error_when_multiple_specs_are_given():
     output = build_env('libelf libdwarf', fail_on_error=False)
     assert 'only takes one spec' in output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.parametrize('args', [
     ('--', '/bin/bash', '-c', 'echo test'),
     ('--',),
@@ -45,7 +48,8 @@ def test_build_env_requires_a_spec(args):
 _out_file = 'env.out'
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.usefixtures('config')
 def test_dump(tmpdir):
     with tmpdir.as_cwd():
@@ -54,7 +58,8 @@ def test_dump(tmpdir):
             assert(any(line.startswith('PATH=') for line in f.readlines()))
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.usefixtures('config')
 def test_pickle(tmpdir):
     with tmpdir.as_cwd():

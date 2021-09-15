@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import re
 import shutil
-import sys
 
 import pytest
 
@@ -15,6 +14,7 @@ from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.cmd.pkg
 import spack.main
+import spack.platforms
 from spack.util.executable import which
 
 pytestmark = pytest.mark.skipif(not which('git'),
@@ -105,7 +105,8 @@ def split(output):
 pkg = spack.main.SpackCommand('pkg')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_packages_path():
     assert (spack.cmd.pkg.packages_path() ==
             spack.repo.path.get_repo('builtin').packages_path)
@@ -192,7 +193,8 @@ def test_pkg_removed(mock_pkg_git_repo):
     assert out == ['pkg-c']
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_pkg_changed(mock_pkg_git_repo):
     out = split(pkg('changed', 'HEAD^^', 'HEAD^'))
     assert out == []

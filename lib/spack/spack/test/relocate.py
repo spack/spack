@@ -8,7 +8,6 @@ import os.path
 import platform
 import re
 import shutil
-import sys
 
 import pytest
 
@@ -17,6 +16,7 @@ import llnl.util.filesystem
 import spack.architecture
 import spack.concretize
 import spack.paths
+import spack.platforms
 import spack.relocate
 import spack.spec
 import spack.store
@@ -211,7 +211,7 @@ def test_search_patchelf(expected_patchelf_path):
     assert current == expected_patchelf_path
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('patchelf_behavior,expected', [
     ('echo ', []),
@@ -255,7 +255,7 @@ def test_normalize_relative_paths(start_path, relative_paths, expected):
     assert normalized == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_set_elf_rpaths(mock_patchelf):
     # Try to relocate a mock version of patchelf and check
@@ -270,7 +270,7 @@ def test_set_elf_rpaths(mock_patchelf):
     assert patchelf in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_set_elf_rpaths_warning(mock_patchelf):
     # Mock a failing patchelf command and ensure it warns users

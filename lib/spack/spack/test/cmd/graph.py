@@ -3,16 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
+import spack.platforms
 from spack.main import SpackCommand, SpackCommandError
 
 graph = SpackCommand('graph')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_ascii():
@@ -20,7 +21,8 @@ def test_graph_ascii():
     graph('--ascii', 'dt-diamond')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_dot():
@@ -28,7 +30,8 @@ def test_graph_dot():
     graph('--dot', 'dt-diamond')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_static():
@@ -36,7 +39,8 @@ def test_graph_static():
     graph('--static', 'dt-diamond')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_installed():
@@ -48,7 +52,8 @@ def test_graph_installed():
         graph('--installed', 'dt-diamond')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_deptype():
@@ -56,7 +61,8 @@ def test_graph_deptype():
     graph('--deptype', 'all', 'dt-diamond')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Install hangs on windows")
 def test_graph_no_specs():
     """Tests spack graph with no arguments"""
 

@@ -53,7 +53,7 @@ class Ninja(Package):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         name = 'ninja'
-        if sys.platform == 'win32':
+        if str(spack.platforms.host()) == 'windows':
             name = name + '.exe'
         install(name, prefix.bin)
         install_tree('misc', prefix.misc)
