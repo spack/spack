@@ -113,8 +113,11 @@ class TestSuite(object):
 
         for spec in self.specs:
             try:
-                msg = "A package object cannot run in two test suites at once"
-                assert not spec.package.test_suite, msg
+                if spec.package.test_suite:
+                    raise TestSuiteSpecError(
+                        "Package {0} cannot be run in two test suites at once"
+                        .format(spec.package.name)
+                    )
 
                 # Set up the test suite to know which test is running
                 spec.package.test_suite = self
@@ -138,7 +141,7 @@ class TestSuite(object):
                 self.write_test_result(spec, 'PASSED')
             except BaseException as exc:
                 self.fails += 1
-                if isinstance(exc, SyntaxError):
+                if isinstance(exc, (SyntaxError, TestSuiteSpecError)):
                     # Create the test log file and report the error.
                     self.ensure_stage()
                     msg = 'Testing package {0}\n{1}'\
@@ -193,14 +196,22 @@ class TestSuite(object):
 
     @property
     def current_test_cache_dir(self):
-        assert self.current_test_spec and self.current_base_spec
+        if not (self.current_test_spec and self.current_base_spec):
+            raise TestSuiteSpecError(
+                "Unknown test cache directory: no specs being tested"
+            )
+
         test_spec = self.current_test_spec
         base_spec = self.current_base_spec
         return self.test_dir_for_spec(base_spec).cache.join(test_spec.name)
 
     @property
     def current_test_data_dir(self):
-        assert self.current_test_spec and self.current_base_spec
+        if not (self.current_test_spec and self.current_base_spec):
+            raise TestSuiteSpecError(
+                "Unknown test data directory: no specs being tested"
+            )
+
         test_spec = self.current_test_spec
         base_spec = self.current_base_spec
         return self.test_dir_for_spec(base_spec).data.join(test_spec.name)
@@ -283,3 +294,7 @@ class TestSuiteFailure(spack.error.SpackError):
         msg = "%d test(s) in the suite failed.\n" % num_failures
 
         super(TestSuiteFailure, self).__init__(msg)
+
+
+class TestSuiteSpecError(spack.error.SpackError):
+    """Raised when there is an issue associated with the spec being tested."""
