@@ -150,12 +150,13 @@ def test_log_subproc_and_echo_output_capfd(capfd, tmpdir):
 #
 def simple_logger(**kwargs):
     """Mock logger (minion) process for testing log.keyboard_input."""
+    running = [True]
+
     def handler(signum, frame):
         running[0] = False
     signal.signal(signal.SIGUSR1, handler)
 
     log_path = kwargs["log_path"]
-    running = [True]
     with log_output(log_path):
         while running[0]:
             print("line")
@@ -343,6 +344,8 @@ def synchronized_logger(**kwargs):
     toggle output.  It is used in ``test_foreground_background_output`` below.
 
     """
+    running = [True]
+
     def handler(signum, frame):
         running[0] = False
     signal.signal(signal.SIGUSR1, handler)
@@ -351,7 +354,6 @@ def synchronized_logger(**kwargs):
     write_lock = kwargs["write_lock"]
     v_lock = kwargs["v_lock"]
 
-    running = [True]
     sys.stderr.write(os.getcwd() + "\n")
     with log_output(log_path) as logger:
         with logger.force_echo():
