@@ -12,7 +12,7 @@ class Libquo(AutotoolsPackage):
     single- and multi-threaded libraries."""
 
     homepage = "https://github.com/lanl/libquo"
-    url      = "http://lanl.github.io/libquo/dists/libquo-1.3.1.tar.gz"
+    url      = "https://lanl.github.io/libquo/dists/libquo-1.3.1.tar.gz"
     git      = "https://github.com/lanl/libquo.git"
 
     maintainers = ['samuelkgutierrez']

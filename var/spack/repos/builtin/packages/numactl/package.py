@@ -28,6 +28,10 @@ class Numactl(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
+    # Numactl has hardcoded minimum versions for libtool,
+    # libtool@develop returns UNKOWN as a version tag and fails
+    conflicts('libtool@develop')
+
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')

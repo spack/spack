@@ -39,7 +39,7 @@ class Libxml2(AutotoolsPackage):
             '(lib/xml2.*$)|(lib/cmake.*$)')
 
     # XML Conformance Test Suites
-    # See http://www.w3.org/XML/Test/ for information
+    # See https://www.w3.org/XML/Test/ for information
     resource(name='xmlts', url='https://www.w3.org/XML/Test/xmlts20080827.tar.gz',
              sha256='96151685cec997e1f9f3387e3626d61e6284d4d6e66e0e440c209286c03e9cc7')
 

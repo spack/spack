@@ -56,6 +56,9 @@ user_bootstrap_path = os.path.join(user_config_path, 'bootstrap')
 reports_path = os.path.join(user_config_path, "reports")
 monitor_path = os.path.join(reports_path, "monitor")
 
+# We cache repositories (git) in first, extracted metadata in second
+user_repos_cache_path = os.path.join(user_config_path, 'git_repos')
+
 opt_path        = os.path.join(prefix, "opt")
 etc_path        = os.path.join(prefix, "etc")
 system_etc_path = '/etc'

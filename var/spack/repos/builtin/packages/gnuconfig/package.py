@@ -14,10 +14,12 @@ class Gnuconfig(Package):
     """
 
     homepage = "https://www.gnu.org/software/config/"
+    git      = "https://github.com/haampie/config.git"
     url      = "https://github.com/haampie/config/archive/refs/tags/2021-08-14.tar.gz"
 
     maintainers = ['haampie']
 
+    version('master', branch='master')
     version('2021-08-14', sha256='1d1134f2f9d5f1342693793a536643c9aa11eaf672d1bf453ce2a415fdb8ebcc')
 
     def install(self, spec, prefix):

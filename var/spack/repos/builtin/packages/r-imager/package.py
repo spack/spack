@@ -13,7 +13,7 @@ class RImager(RPackage):
     dimensions, one time/depth dimension, one colour dimension). Provides most
     traditional image processing tools (filtering, morphology, transformations,
     etc.) as well as various functions for easily analysing image data using R.
-    The package wraps 'CImg', <http://cimg.eu>, a simple, modern C++ library
+    The package wraps 'CImg', <https://cimg.eu/>, a simple, modern C++ library
     for image processing."""
 
     homepage = "https://dahtah.github.io/imager"

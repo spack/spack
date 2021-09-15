@@ -13,7 +13,7 @@ class Libspatialite(AutotoolsPackage):
        SQLite core to support fully fledged Spatial SQL capabilities."""
 
     homepage = "https://www.gaia-gis.it"
-    url      = "http://www.gaia-gis.it/gaia-sins/libspatialite-sources/libspatialite-4.3.0a.tar.gz"
+    url      = "https://www.gaia-gis.it/gaia-sins/libspatialite-sources/libspatialite-4.3.0a.tar.gz"
     manual_download = True
 
     version('5.0.0', preferred=True, sha256='7b7fd70243f5a0b175696d87c46dde0ace030eacc27f39241c24bac5dfac6dac')

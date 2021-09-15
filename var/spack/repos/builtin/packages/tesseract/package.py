@@ -40,7 +40,7 @@ class Tesseract(AutotoolsPackage):
     )
     resource(
         name=jars[2],
-        url='http://search.maven.org/remotecontent?filepath=javax/xml/bind/jaxb-api/2.3.1/jaxb-api-2.3.1.jar',
+        url='https://search.maven.org/remotecontent?filepath=javax/xml/bind/jaxb-api/2.3.1/jaxb-api-2.3.1.jar',
         sha256='88b955a0df57880a26a74708bc34f74dcaf8ebf4e78843a28b50eae945732b06',
         placement=jars[2],
         expand=False,

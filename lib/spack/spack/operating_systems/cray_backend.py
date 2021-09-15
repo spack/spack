@@ -10,8 +10,9 @@ import llnl.util.tty as tty
 
 import spack.error
 import spack.version
-from spack.operating_systems.linux_distro import LinuxDistro
 from spack.util.module_cmd import module
+
+from .linux_distro import LinuxDistro
 
 #: Possible locations of the Cray CLE release file,
 #: which we look at to get the CNL OS version.

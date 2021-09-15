@@ -110,6 +110,7 @@ class Reframe(Package):
         install_tree(self.stage.source_path, self.prefix)
 
     def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix)
         if self.spec.version >= Version('3.0'):
             if '+docs' in self.spec:
                 env.prepend_path('MANPATH',  self.prefix.docs.man)

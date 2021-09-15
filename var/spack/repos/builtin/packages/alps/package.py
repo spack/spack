@@ -13,12 +13,12 @@ class Alps(CMakePackage):
     """
 
     homepage = "https://alps.comp-phys.org"
-    url      = "http://alps.comp-phys.org/static/software/releases/alps-2.3.0-src.tar.gz"
+    url      = "https://alps.comp-phys.org/static/software/releases/alps-2.3.0-src.tar.gz"
 
     version('2.3.0', sha256='e64208d1e5acdd6f569277413c4867e1fa366cf4a224570eacbf1e9939fca2d2')
 
     # Refs for building from source and recipes
-    # http://alps.comp-phys.org/mediawiki/index.php/Building_ALPS_from_source
+    # https://alps.comp-phys.org/mediawiki/index.php/Building_ALPS_from_source
     # https://github.com/easybuilders/easybuild-easyconfigs/tree/master/easybuild/easyconfigs/a/ALPS
     # https://github.com/conda-forge/alps-feedstock/tree/master/recipe
 

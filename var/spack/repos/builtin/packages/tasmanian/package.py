@@ -27,7 +27,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     version('5.1', sha256='b0c1be505ce5f8041984c63edca9100d81df655733681858f5cc10e8c0c72711')
 
     version('5.0', sha256='2540bb63dea987ab205f7b375aff41f320b1de9bd7f1d1064ef96b22eeda1251',
-            url='http://tasmanian.ornl.gov/documents/Tasmanian_v5.0.zip')
+            url='https://tasmanian.ornl.gov/documents/Tasmanian_v5.0.zip')
 
     variant('xsdkflags', default=False,
             description='enable XSDK defaults for Tasmanian')

@@ -11,10 +11,10 @@ class PlanckLikelihood(Package):
     """2015 Cosmic Microwave Background (CMB) spectra and likelihood code"""
 
     homepage = "https://wiki.cosmos.esa.int/planckpla2015/index.php/CMB_spectrum_%26_Likelihood_Code"
-    url      = "http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Code-v2.0.R2.00.tar.bz2"
+    url      = "https://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Code-v2.0.R2.00.tar.bz2"
 
     version('2.00', sha256='c1efa208175b2751e75b2ad1c026dae744a7dd279eb74baa5db3098bc9c971bb',
-            url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Code-v2.0.R2.00.tar.bz2")
+            url="https://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Code-v2.0.R2.00.tar.bz2")
 
     variant('lensing-ext', default=False,
             description="Provide lensing-ext data")
@@ -31,30 +31,30 @@ class PlanckLikelihood(Package):
 
     resource(
         name='baseline',
-        url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-baseline_R2.00.tar.gz",
+        url="https://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-baseline_R2.00.tar.gz",
         sha256='7c62c5afc105bff28c2da3eddb870b8180536d30e31c4d419b307ad3996e17ab',
         destination='.')
     resource(
         name='lensing-ext',
-        url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-lensing-ext.R2.00.tar.gz",
+        url="https://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-lensing-ext.R2.00.tar.gz",
         sha256='0c017984bfd12315b94958f48f8e61e625361a84066838976f676fb5c2e76dbc',
         destination='.',
         when='+lensing-ext')
     resource(
         name='plik-DS',
-        url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-DS.R2.00.tar.gz",
+        url="https://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-DS.R2.00.tar.gz",
         sha256='f6b5ec6b284ea71008f071503faf8319dac48c3ea7fb13f5e5cbd23fff3efd84',
         destination='.',
         when='+plik-DS')
     resource(
         name='plik-HM-ext',
-        url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-HM-ext.R2.00.tar.gz",
+        url="https://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-HM-ext.R2.00.tar.gz",
         sha256='b5b8ead297b31f9b2e4913b54b1d3bbe272075f85ce2ca9bf5d99dbbe1559f77',
         destination='.',
         when='+plik-HM-ext')
     resource(
         name='plik-unbinned',
-        url="http://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-unbinned.R2.00.tar.gz",
+        url="https://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Data-extra-plik-unbinned.R2.00.tar.gz",
         sha256='69cdfee40d63a8b60b1f715d4e276d76693ec1a6f1b2658abac2b8d7dff4fa44',
         destination='.',
         when='+plik-unbinned')

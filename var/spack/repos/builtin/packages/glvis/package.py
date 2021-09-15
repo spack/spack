@@ -24,7 +24,7 @@ class Glvis(MakefilePackage):
     # 1. Verify that no checksums on old versions have changed.
     #
     # 2. Verify that the shortened URL for the new version is listed at:
-    #    http://glvis.org/download/
+    #    https://glvis.org/download/
     #
     # 3. Use http://getlinkinfo.com or similar to verify that the
     #    underling download link for the latest version comes has the

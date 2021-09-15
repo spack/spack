@@ -489,6 +489,16 @@ def _bootstrap_config_scopes():
 
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
+    # We may need to compile code from sources, so ensure we have compilers
+    # for the current platform before switching parts.
+    arch = spack.architecture.default_arch()
+    arch = spack.spec.ArchSpec(str(arch))  # The call below expects an ArchSpec object
+    if not spack.compilers.compilers_for_arch(arch):
+        compiler_cmd = spack.main.SpackCommand('compiler')
+        compiler_cmd(
+            'find', output=os.devnull, error=os.devnull, fail_on_error=False
+        )
+
     bootstrap_store_path = store_path()
     with spack.environment.deactivate_environment():
         with spack.architecture.use_platform(spack.architecture.real_platform()):
