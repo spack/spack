@@ -61,6 +61,103 @@ def last_two_git_commits(scope='session'):
     yield regex.findall(git_log_out)
 
 
+def write_file(filename, contents):
+    with open(filename, 'w') as f:
+        f.write(contents)
+
+
+commit_counter = 0
+
+
+@pytest.fixture
+def mock_git_version_info(tmpdir, scope="function"):
+    """Create a mock git repo with known structure
+
+    The structure of commits in this repo is as follows::
+
+       | o fourth 1.x commit (1.2)
+       | o third 1.x commit
+       | |
+       o | fourth main commit (v2.0)
+       o | third main commit
+       | |
+       | o second 1.x commit (v1.1)
+       | o first 1.x commit
+       | /
+       |/
+       o second commit (v1.0)
+       o first commit
+
+    The repo consists of a single file, in which the Version._cmp representation
+    of each commit is expressed as a string.
+
+    Important attributes of the repo for test coverage are: multiple branches,
+    version tags on multiple branches, and version order is not equal to time
+    order or topological order.
+    """
+    git = spack.util.executable.which('git', required=True)
+    repo_path = str(tmpdir.mkdir('git_repo'))
+    filename = 'file.txt'
+
+    def commit(message):
+        global commit_counter
+        git('commit', '--date', '2020-01-%02d 12:0:00 +0300' % commit_counter,
+            '-am', message)
+        commit_counter += 1
+
+    with working_dir(repo_path):
+        git("init")
+
+        git('config', 'user.name', 'Spack')
+        git('config', 'user.email', 'spack@spack.io')
+
+        # Add two commits on main branch
+        write_file(filename, '[]')
+        git('add', filename)
+        commit('first commit')
+
+        # Get name of default branch (differs by git version)
+        main = git('rev-parse', '--abbrev-ref', 'HEAD', output=str, error=str).strip()
+
+        # Tag second commit as v1.0
+        write_file(filename, "[1, 0]")
+        commit('second commit')
+        git('tag', 'v1.0')
+
+        # Add two commits and a tag on 1.x branch
+        git('checkout', '-b', '1.x')
+        write_file(filename, "[1, 0, '', 1]")
+        commit('first 1.x commit')
+
+        write_file(filename, "[1, 1]")
+        commit('second 1.x commit')
+        git('tag', 'v1.1')
+
+        # Add two commits and a tag on main branch
+        git('checkout', main)
+        write_file(filename, "[1, 0, '', 1]")
+        commit('third main commit')
+        write_file(filename, "[2, 0]")
+        commit('fourth main commit')
+        git('tag', 'v2.0')
+
+        # Add two more commits on 1.x branch to ensure we aren't cheating by using time
+        git('checkout', '1.x')
+        write_file(filename, "[1, 1, '', 1]")
+        commit('third 1.x commit')
+        write_file(filename, "[1, 2]")
+        commit('fourth 1.x commit')
+        git('tag', '1.2')  # test robust parsing to different syntax, no v
+
+        # Get the commits in topo order
+        log = git('log', '--all', '--pretty=format:%H', '--topo-order',
+                  output=str, error=str)
+        commits = [c for c in log.split('\n') if c]
+
+    # Return the git directory to install, the filename used, and the commits
+    yield repo_path, filename, commits
+
+
 @pytest.fixture(autouse=True)
 def clear_recorded_monkeypatches():
     yield

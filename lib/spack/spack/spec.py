@@ -4699,6 +4699,15 @@ class SpecParser(spack.parse.Parser):
         except spack.parse.ParseError as e:
             raise SpecParseError(e)
 
+        # Generate lookups for git-commit-based versions
+        for spec in specs:
+            # Cannot do lookups for versions in anonymous specs
+            # Only allow concrete versions using git for now
+            if spec.name and spec.versions.concrete and spec.version.is_commit:
+                pkg = spec.package
+                if hasattr(pkg, 'git'):
+                    spec.version.generate_commit_lookup(pkg)
+
         return specs
 
     def spec_from_file(self):
