@@ -581,6 +581,10 @@ class ViewDescriptor(object):
                     tty.warn(msg)
 
 
+def _create_environment(*args, **kwargs):
+    return Environment(*args, **kwargs)
+
+
 class Environment(object):
     def __init__(self, path, init_file=None, with_view=None, keep_relative=False):
         """Create a new environment.
@@ -601,6 +605,9 @@ class Environment(object):
                 directory.
         """
         self.path = os.path.abspath(path)
+        self.init_file = init_file
+        self.with_view = with_view
+        self.keep_relative = keep_relative
 
         self.txlock = lk.Lock(self._transaction_lock_path)
 
@@ -642,6 +649,11 @@ class Environment(object):
                                                             with_view)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
+
+    def __reduce__(self):
+        return _create_environment, (
+            self.path, self.init_file, self.with_view, self.keep_relative
+        )
 
     def _rewrite_relative_paths_on_relocation(self, init_file_dir):
         """When initializing the environment from a manifest file and we plan
