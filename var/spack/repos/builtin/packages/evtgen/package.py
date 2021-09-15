@@ -56,6 +56,10 @@ class Evtgen(CMakePackage):
         return args
 
     def patch(self):
+        # gcc on MacOS doesn't recognize `-shared`, should use `-dynamiclib`; 
+        # the `-undefined dynamic_lookup` flag enables weak linking on Mac
+        # Patch taken from CMS recipe:
+        # https://github.com/cms-sw/cmsdist/blob/IB/CMSSW_12_1_X/master/evtgen.spec#L48
         if not self.spec.satisfies("platform=darwin"):
             return
 
