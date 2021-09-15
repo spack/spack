@@ -28,4 +28,4 @@ class PyCarputils(PythonPackage):
     depends_on('py-pandas@:1.1.4', type='run')
     depends_on('py-tables@3.6.1', type='run')
     depends_on('py-six@:1.14.0', type='run')
-    depends_on('py-ruamel-yaml@0.17.4:', type='run')
+    depends_on('py-ruamel-yaml', type='run')
