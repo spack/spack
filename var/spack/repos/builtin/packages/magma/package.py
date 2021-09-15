@@ -15,7 +15,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://icl.cs.utk.edu/magma/"
     git = 'https://bitbucket.org/icl/magma'
-    url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
+    url = "https://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers = ['stomov', 'luszczek', 'G-Ragghianti']
 
     test_requires_compiler = True

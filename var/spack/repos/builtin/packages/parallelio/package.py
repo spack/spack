@@ -12,10 +12,11 @@ class Parallelio(CMakePackage):
     large numbers of processors on a HPC system."""
 
     homepage = "https://ncar.github.io/ParallelIO/"
-    url      = "https://github.com/NCAR/ParallelIO/archive/pio2_5_2.tar.gz"
+    url      = "https://github.com/NCAR/ParallelIO/archive/pio2_5_4.tar.gz"
 
     maintainers = ['tkameyama']
 
+    version('2_5_4', sha256='e51dc71683da808a714deddc1a80c2650ce847110383e42f1710f3ba567e7a65')
     version('2_5_2', sha256='935bc120ef3bf4fe09fb8bfdf788d05fb201a125d7346bf6b09e27ac3b5f345c')
 
     variant('pnetcdf', default=False, description='enable pnetcdf')

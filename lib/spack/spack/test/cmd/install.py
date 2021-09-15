@@ -21,6 +21,7 @@ import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.package
+import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.spec import CompilerSpec, Spec
@@ -224,7 +225,7 @@ def test_install_overwrite(
 
 
 def test_install_overwrite_not_installed(
-        mock_packages, mock_archive, mock_fetch, config, install_mockery
+        mock_packages, mock_archive, mock_fetch, config, install_mockery,
 ):
     # Try to install a spec and then to reinstall it.
     spec = Spec('libdwarf')
@@ -234,6 +235,32 @@ def test_install_overwrite_not_installed(
 
     install('--overwrite', '-y', 'libdwarf')
     assert os.path.exists(spec.prefix)
+
+
+def test_install_commit(
+        mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+    """
+    Test installing a git package from a commit.
+
+    This ensures Spack appropriately associates commit versions with their
+    packages in time to do version lookups. Details of version lookup tested elsewhere
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase,
+                        'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    commit = commits[-1]
+    spec = spack.spec.Spec('git-test-commit@%s' % commit)
+    spec.concretize()
+    spec.package.do_install()
+
+    # Ensure first commit file contents were written
+    installed = os.listdir(spec.prefix.bin)
+    assert filename in installed
+    with open(spec.prefix.bin.join(filename), 'r') as f:
+        content = f.read().strip()
+    assert content == '[]'  # contents are weird for another test
 
 
 def test_install_overwrite_multiple(

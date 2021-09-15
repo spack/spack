@@ -264,7 +264,7 @@ class Ascent(Package, CudaPackage):
         all of the options used to configure and build ascent.
 
         For more details about 'host-config' files see:
-            http://ascent.readthedocs.io/en/latest/BuildingAscent.html
+            https://ascent.readthedocs.io/en/latest/BuildingAscent.html
 
         Note:
           The `py_site_pkgs_dir` arg exists to allow a package that

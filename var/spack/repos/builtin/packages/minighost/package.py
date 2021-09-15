@@ -16,7 +16,7 @@ class Minighost(MakefilePackage):
     """
 
     homepage = "https://mantevo.org"
-    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/MiniGhost/miniGhost_1.0.1.tar.gz"
+    url      = "https://downloads.mantevo.org/releaseTarballs/miniapps/MiniGhost/miniGhost_1.0.1.tar.gz"
 
     tags = ['proxy-app']
 

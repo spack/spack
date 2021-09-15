@@ -34,7 +34,7 @@ class Oclint(Package):
 
     def install(self, spec, prefix):
         # Build from source via directions from
-        # http://docs.oclint.org/en/stable/intro/build.html,
+        # https://docs.oclint.org/en/stable/intro/build.html,
         cd('oclint-scripts')
 
         # ...but instead of using oclint-scripts/make, execute the

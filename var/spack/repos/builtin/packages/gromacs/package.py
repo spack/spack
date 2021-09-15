@@ -20,7 +20,7 @@ class Gromacs(CMakePackage):
     """
 
     homepage = 'http://www.gromacs.org'
-    url      = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
+    url      = 'https://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
     git      = 'https://github.com/gromacs/gromacs.git'
     maintainers = ['junghans', 'marvinbernhardt']
 

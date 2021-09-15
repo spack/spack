@@ -208,8 +208,8 @@ class Fftw(FftwBase):
        library of choice for most applications."""
 
     homepage = "https://www.fftw.org"
-    url = "http://www.fftw.org/fftw-3.3.4.tar.gz"
-    list_url = "http://www.fftw.org/download.html"
+    url = "https://www.fftw.org/fftw-3.3.4.tar.gz"
+    list_url = "https://www.fftw.org/download.html"
 
     version('3.3.9', sha256='bf2c7ce40b04ae811af714deb512510cc2c17b9ab9d6ddcf49fe4487eea7af3d')
     version('3.3.8', sha256='6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303')

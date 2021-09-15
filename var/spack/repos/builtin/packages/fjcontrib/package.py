@@ -12,7 +12,7 @@ class Fjcontrib(AutotoolsPackage):
     """3rd party extensions of FastJet"""
 
     homepage = "https://fastjet.hepforge.org/contrib/"
-    url      = "http://fastjet.hepforge.org/contrib/downloads/fjcontrib-1.044.tar.gz"
+    url      = "https://fastjet.hepforge.org/contrib/downloads/fjcontrib-1.044.tar.gz"
 
     tags = ['hep']
 
