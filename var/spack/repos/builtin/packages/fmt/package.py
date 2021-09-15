@@ -64,7 +64,7 @@ class Fmt(CMakePackage):
         args = []
 
         if self.spec.satisfies('+shared'):
-            args.append('BUILD_SHARED_LIBS=ON")
+            args.append('BUILD_SHARED_LIBS=ON')
 
         args.append('-DCMAKE_CXX_STANDARD={0}'.format(
                     spec.variants['cxxstd'].value))
