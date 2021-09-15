@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import re
 import shutil
 import sys
 import tempfile
-import re
 
 import spack.util.environment
 
