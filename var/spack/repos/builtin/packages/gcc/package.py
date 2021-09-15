@@ -290,6 +290,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
     patch('zstd.patch', when='@10')
 
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100102
+    patch('tsubst_function_decl.patch', when='@10.3,11.1')
+
     build_directory = 'spack-build'
 
     @property
