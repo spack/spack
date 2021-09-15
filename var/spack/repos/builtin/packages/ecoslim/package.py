@@ -13,17 +13,13 @@ class Ecoslim(CMakePackage):
     ParFlow-CLM."""
 
     homepage = "https://github.com/reedmaxwell/EcoSLIM"
-    url      = "https://github.com/reedmaxwell/EcoSLIM/archive/refs/tags/1.3.tar.gz"
+    url      = "https://github.com/reedmaxwell/EcoSLIM/archive/refs/tags/v1.3.tar.gz"
     git      = "git@github.com:reedmaxwell/EcoSLIM.git"
 
     maintainers = ['smithsg84']
 
-    #    version('develop', branch='master')
+    version('1.3', sha256='b532e570b4767e4fa84123d8773732150679e8e3d7fecd5c6e99fb1d4dc57b84')
     version('develop', branch='develop')
-    version('1.3.0', sha256='b532e570b4767e4fa84123d8773732150679e8e3d7fecd5c6e99fb1d4dc57b84')
-
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     def cmake_args(self):
         """Populate cmake arguments for EcoSLIM."""
