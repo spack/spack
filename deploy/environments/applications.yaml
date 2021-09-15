@@ -57,6 +57,7 @@ spack:
         - 'py-neurodamus+all_deps'
         - py-simwriter
         - py-sonata-network-reduction
+        - py-token-fetch
         - py-pytouchreader
         - py-visual-cortex-analysis
         - regiodesics
@@ -143,6 +144,7 @@ spack:
     - py-region-grower@0.2.4
     - py-simwriter
     - py-sonata-network-reduction%gcc ^neuron%intel^py-ipython%gcc
+    - py-token-fetch
     - py-visual-cortex-analysis ^py-h5py~mpi
     - regiodesics
     - reportinglib%intel
