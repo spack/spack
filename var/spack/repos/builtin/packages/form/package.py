@@ -22,7 +22,7 @@ class Form(AutotoolsPackage):
     depends_on('gmp',      type='link', when='+zlib')
     depends_on('zlib',     type='link', when='+gmp')
     depends_on('mpi',      type='link', when='+parform')
-    
+
     variant('gmp', default=False, description='Use GMP for long integer arithmetic')
     variant('zlib', default=False, description='Use zlib for compression')
     variant('scalar', default=True, description='Build scalar version (form)')
