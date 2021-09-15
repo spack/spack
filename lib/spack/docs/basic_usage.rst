@@ -1060,14 +1060,19 @@ set of arbitrary versions, such as ``@1.0,1.5,1.7`` (``1.0``, ``1.5``,
 or ``1.7``).  When you supply such a specifier to ``spack install``,
 it constrains the set of versions that Spack will install.
 
+For packages with a ``git`` attribute, a 40-character git commit sha
+may be specified instead of a numerical version. Spack will inspect
+the tags in the git repo to determine the nearest previous version
+known to Spack, and use that as the basis for comparison. Details
+about how versions are compared and how Spack determines if one
+version is less than another are discussed in the developer guide.
+
 If the version spec is not provided, then Spack will choose one
 according to policies set for the particular spack installation.  If
 the spec is ambiguous, i.e. it could match multiple versions, Spack
 will choose a version within the spec's constraints according to
 policies set for the particular Spack installation.
 
-Details about how versions are compared and how Spack determines if
-one version is less than another are discussed in the developer guide.
 
 ^^^^^^^^^^^^^^^^^^
 Compiler specifier

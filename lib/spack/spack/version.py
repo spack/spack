@@ -166,7 +166,73 @@ class VersionStrComponent(object):
 
 
 class Version(object):
-    """Class to represent versions"""
+    """Class to represent versions
+
+    Versions are compared by converting to a tuple and comparing
+    lexicographically.
+
+    The most common Versions are numeric, and are parsed from strings
+    such as ``2.3.0`` or ``1.2-5``. These Versions are represented by
+    the tuples ``(2, 3, 0)`` and ``(1, 2, 5)`` respectively.
+
+    Some Spack versions involve slight extensions of numeric syntax;
+    for example, ``0.1.3a``. Versions are split on ``.``, ``-``, and
+    ``_`` characters, as well as any point at which they switch from
+    numeric to alphabetical or vice-versa. For example, the version
+    ``0.1.3a`` is represented by the tuple ``(0, 1, 3, 'a') and the
+    version ``a-5b`` is represented by the tuple ``('a', 5, 'b')``.
+
+    Spack versions may also be arbitrary non-numeric strings or git
+    commit SHAs. The following are the full rules for comparing
+    versions.
+
+    1. If the version represents a git commit, see the note below.
+
+    2. The version is split into fields based on the delimiters ``.``,
+    ``-``, and ``_``, as well as alphabetic-numeric boundaries.
+
+    3. The following develop-like strings are greater (newer) than all
+    numbers and are ordered as ``develop > main > master > head >
+    trunk``.
+
+    4. All other non-numeric versions are less than numeric versions,
+    and are sorted alphabetically.
+
+    These rules can be summarized as follows:
+
+    ``develop > main > master > head > trunk > 999 > 0 > 'zzz' > 'a' >
+    ''``
+
+    A note on git commit versions:
+
+    Git commit versions are handled separately from all other version
+    comparisons. When Spack identifies a git commit version, it
+    associates a ``CommitLookup`` object with the version. This object
+    handles caching of information from the git repo. When executing
+    comparisons with a git commit version, Spack queries the
+    ``CommitLookup`` for the most recent version previous to this
+    commit, as well as the distance between them expressed as a number
+    of commits. If the previous version is ``X.Y.Z`` and the distance
+    is ``D``, the git commit version is represented by the tuple ``(X,
+    Y, Z, '', D)``. The component ``''`` cannot be parsed as part of
+    any valid version, but is a valid component. This allows a git
+    commit version to be less than (older than) every Version newer
+    than its previous version, but still newer than its previous
+    version.
+
+    To find the previous version from a git commit version, Spack
+    queries the git repo for its tags. Any tag that matches a version
+    known to Spack is associated with that version, as is any tag that
+    is a known version prepended with the character ``v`` (i.e., a tag
+    ``v1.0`` is associated with the known version
+    ``1.0``). Additionally, any tag that represents a semver version
+    (X.Y.Z with X, Y, Z all integers) is associated with the version
+    it represents, even if that version is not known to Spack. Each
+    tag is then queried in git to see whether it is an ancestor of the
+    commit in question, and if so the distance between the two. The
+    previous version is the version that is an ancestor with the least
+    distance from the commit in question.
+    """
     __slots__ = ['version', 'separators', 'string', 'commit_lookup']
 
     def __init__(self, string):

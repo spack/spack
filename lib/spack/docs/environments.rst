@@ -368,6 +368,34 @@ from being added again.  At the same time, a spec that already exists in the
 environment, but only as a dependency, will be added to the environment as a
 root spec without the ``--no-add`` option.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Developing Packages in a Spack Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack develop`` command allows one to develop Spack packages in
+an environment. It requires a spec containing a concrete version, and
+will configure Spack to install the package from local source. By
+default, it will also clone the package to a subdirectory in the
+environment. This package will have a special variant ``develop_path``
+set, and Spack will ensure the package and its dependents are rebuilt
+any time the environment is installed if the package's local source
+code has been modified. Spack ensures that all instances of a
+developed package in the environment are concretized to match the
+version (and other constraints) passed as the spec argument to the
+``spack develop`` command.
+
+For packages with ``git`` attributes, 40-character commit hashes are
+also valid versions. This means that for a package ``foo`` whose
+latest commit is ``abcdef1234abcdef1234abcdef1234abcdef1234``, ``spack
+develop foo@abcdef1234abcdef1234abcdef1234abcdef1234`` will clone the
+latest version of the package, and ``spack install`` will install from
+that source if ``foo`` is in the environment. Further development on
+``foo`` can be tested by reinstalling the environment, and eventually
+committed and pushed to the upstream git repo.
+
+Further information on git commits as versions can be found in the
+API documentation for the ``Version`` class.
+
 ^^^^^^^
 Loading
 ^^^^^^^
