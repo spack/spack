@@ -34,6 +34,7 @@ spack:
         - psp-validation
         - py-atlalign
         - py-atlas-building-tools
+        - py-atldld
         - py-basalt
         - py-bbp-analysis-framework
         - py-bbp-workflow
@@ -118,6 +119,7 @@ spack:
     - psp-validation%gcc ^neuron%intel
     - py-atlalign ^py-six@1.15.0
     - py-atlas-building-tools
+    - py-atldld
     - py-basalt@0.2.9
     - py-bbp-analysis-framework
     - py-bbp-workflow ^py-h5py~mpi
