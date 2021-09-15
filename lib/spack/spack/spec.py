@@ -82,6 +82,7 @@ import operator
 import os
 import re
 import sys
+import warnings
 
 import ruamel.yaml as yaml
 import six
@@ -2398,6 +2399,13 @@ class Spec(object):
         normalize() for more details on this.
         """
         import spack.concretize
+
+        # Add a warning message to inform users that the original concretizer
+        # will be removed in v0.18.0
+        msg = ('the original concretizer is currently being used.\n\tUpgrade to '
+               '"clingo" at your earliest convenience. The original concretizer '
+               'will be removed from Spack starting at v0.18.0')
+        warnings.warn(msg)
 
         if not self.name:
             raise spack.error.SpecError(
