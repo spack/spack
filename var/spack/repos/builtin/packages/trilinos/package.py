@@ -39,6 +39,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
     version('master', branch='master')
     version('develop', branch='develop')
+    version('13.2.0', branch='trilinos-release-13-2-branch')
     version('13.0.1', commit='4796b92fb0644ba8c531dd9953e7a4878b05c62d')  # tag trilinos-release-13-0-1
     version('13.0.0', commit='9fec35276d846a667bc668ff4cbdfd8be0dfea08')  # tag trilinos-release-13-0-0
     version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1

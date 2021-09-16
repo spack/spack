@@ -19,6 +19,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('develop', branch='master')
+    version('2.1.1', branch='master')
     version('2.1.0', sha256='527a3e21115231715a0342afdfaf6a8878d2dd0f02f03c92b53692340fd940b9')
     version('2.0.0', sha256='12f2b49a1a36c416eac174cf0cc50e729d56d68a9f68886d8c34bd45a0be26b6')
     version('1.0', sha256='0902479fb5b1bad01438ca0a72efd577a3529c3d8bad0028f3c18d3a4935ca74')
