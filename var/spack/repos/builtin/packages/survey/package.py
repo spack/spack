@@ -167,8 +167,7 @@ class Survey(CMakePackage):
         if self.spec.satisfies('+openmpi'):
             env.set('SURVEY_MPI_IMPLEMENTATION', "openmpi")
 
-        mpath = '/share/man'
-        env.prepend_path('MANPATH', self.spec.prefix + mpath)
+        env.prepend_path('MANPATH', self.spec.prefix.share.man)
 
         env.prepend_path('PATH', self.spec['python'].prefix.bin)
         env.prepend_path('PYTHONPATH',
