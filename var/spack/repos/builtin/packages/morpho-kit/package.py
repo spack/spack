@@ -18,7 +18,7 @@ class MorphoKit(CMakePackage):
 
     depends_on('cmake@3.2:', type='build')
     depends_on('morphio@2.3.9:')
-    depends_on('boost')
+    depends_on('boost', when='@0.2.0')
 
     def cmake_args(self):
         return [
