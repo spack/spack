@@ -48,6 +48,7 @@ spack:
         - py-bluepyparallel
         - py-bluepysnap
         - py-currentscape
+        - py-data-integrity-check
         - py-efel
         - py-entity-management
         - py-notebook
@@ -134,6 +135,7 @@ spack:
     - py-bluepyparallel
     - py-bluepysnap
     - py-currentscape
+    - py-data-integrity-check
     - py-efel
     - py-entity-management
     - py-minis-validation%gcc ^neuron%intel
@@ -159,4 +161,3 @@ spack:
     - touchdetector
     - ultraliser
     - unit-test-translator
-    # - zee
