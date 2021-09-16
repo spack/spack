@@ -9,8 +9,8 @@ from spack import *
 class PyEntityManagement(PythonPackage):
     '''Pythonic Blue Brain Nexus access library.'''
 
-    homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/nse/entity-management'
-    git      = 'ssh://bbpcode.epfl.ch/nse/entity-management'
+    homepage = 'https://bbpgitlab.epfl.ch/nse/entity-management'
+    git      = 'git@bbpgitlab.epfl.ch:nse/entity-management.git'
 
     version('1.2.10', tag='entity-management-v1.2.10')
 

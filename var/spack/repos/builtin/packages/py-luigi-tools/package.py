@@ -9,10 +9,10 @@ from spack import *
 class PyLuigiTools(PythonPackage):
     '''Tools to work with luigi.'''
 
-    homepage = 'https://bbpgitlab.epfl.ch/neuromath/luigi-tools'
-    git      = 'https://:@bbpgitlab.epfl.ch:8443/neuromath/luigi-tools.git'
+    homepage = 'https://github.com/BlueBrain/luigi-tools'
+    url      = 'https://pypi.io/packages/source/l/luigi-tools/luigi-tools-0.0.12.tar.gz'
 
-    version('0.0.11', tag='luigi-tools-v0.0.11')
+    version('0.0.12', sha256='761c8b7cbee56d3a6e133f769f064f8b700cd08da829c313f9bea5046b1dcdc3')
 
     depends_on('py-setuptools', type=('build'))
 

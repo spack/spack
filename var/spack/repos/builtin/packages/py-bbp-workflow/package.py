@@ -9,10 +9,10 @@ from spack import *
 class PyBbpWorkflow(PythonPackage):
     '''Blue Brain Workflow.'''
 
-    homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/nse/bbp-workflow'
-    git      = 'ssh://bbpcode.epfl.ch/nse/bbp-workflow'
+    homepage = 'https://bbpgitlab.epfl.ch/nse/bbp-workflow'
+    git      = 'git@bbpgitlab.epfl.ch:nse/bbp-workflow.git'
 
-    version('2.1.20', tag='bbp-workflow-v2.1.20')
+    version('2.1.26', tag='bbp-workflow-v2.1.26')
 
     depends_on('py-setuptools', type=('build'))
 
