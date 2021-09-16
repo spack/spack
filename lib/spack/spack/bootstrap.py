@@ -182,6 +182,8 @@ class _BuildcacheBootstrapper(object):
         if _try_import_from_store(module, abstract_spec_str):
             return True
 
+        tty.info("Bootstrapping {0} from pre-built binaries".format(module))
+
         # Try to install from an unsigned binary cache
         abstract_spec = spack.spec.Spec(
             abstract_spec_str + ' ^' + spec_for_current_python()
@@ -289,6 +291,7 @@ class _SourceBootstrapper(object):
 
         msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from sources"
         tty.debug(msg.format(module, abstract_spec_str))
+        tty.info("Bootstrapping {0} from sources".format(module))
 
         # Install the spec that should make the module importable
         concrete_spec.package.do_install()
