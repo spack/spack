@@ -3,13 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import sys
 
+from spack import *
+
 
 class Roms(MakefilePackage):
-    """ROMS is a free-surface, terrain-following, primitive equations ocean model widely used by 
+    """ROMS is a free-surface, terrain-following,
+    primitive equations ocean model widely used by
     the scientific community for a diverse range of applications"""
 
     homepage = "https://www.myroms.org/"
@@ -19,7 +21,8 @@ class Roms(MakefilePackage):
     # TODO: ROMS v3.8 (svn version 986) require credentials to download and use
     # Spack recipe expects ROMS source code in .tar.gz format
     # checksum may differ from what is provided here.
-    # user can skip checksum verification by placing "--no-checksum" next to "spack install"
+    # user can skip checksum verification by placing "--no-checksum"
+    # next to "spack install"
     version('3.8', sha256='5da7a61b69bd3e1f84f33f894a9f418971f3ba61cf9f5ef0a806a722161e2c9a')
 
     variant("openmp", default=False, description="Turn on shared-memory parallelization in ROMS")
@@ -70,7 +73,7 @@ class Roms(MakefilePackage):
         """
         fflags = ['-fveclib=AMDLIBM', '-O3', '-ffast-math']
         make_aocc = join_path('Compilers',
-                                 '{0}-{1}.mk'.format(self.arch, lib))
+                              '{0}-{1}.mk'.format(self.arch, lib))
 
         filter_file(r'\sFC := gfortran*$', 'FC := {0}'.format(lib), make_aocc)
         filter_file(r'\sFFLAGS\s:=.*$',
@@ -81,7 +84,7 @@ class Roms(MakefilePackage):
                     make_aocc)
         filter_file(r'\sFREEFLAGS\s:=.*',
                     'FREEFLAGS := -ffree-form',
-                     make_aocc)
+                    make_aocc)
 
     def edit(self, spec, prefix):
 
@@ -122,7 +125,6 @@ class Roms(MakefilePackage):
 
         spec = self.spec
 
-        hdf5_libs  = spec["hdf5:fortran, hl"].libs + spec['zlib'].libs
         netcdf_include = spec['netcdf-fortran'].prefix.include
         nf_config = join_path(spec['netcdf-fortran'].prefix.bin, 'nf-config')
 
