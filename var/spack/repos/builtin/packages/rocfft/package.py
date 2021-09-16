@@ -62,7 +62,7 @@ class Rocfft(CMakePackage):
         # From version 3.9 and above we have AMDGPU_TARGETS_SRAM_ECC
         tgt_sram = self.spec.variants['amdgpu_target_sram_ecc'].value
 
-        if tgt_sram[0] != 'none' and '@3.9.0:' in self.spec:
+        if tgt_sram[0] != 'none' and self.spec.satisfies('@3.9.0:4.0.0'):
             args.append(self.define('AMDGPU_TARGETS_SRAM_ECC', ";".join(tgt_sram)))
 
         # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322

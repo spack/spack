@@ -38,6 +38,7 @@ class RocmValidationSuite(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     depends_on('zlib', type='link')
+    depends_on('yaml-cpp', type='build')
 
     def setup_build_environment(self, build_env):
         spec = self.spec
