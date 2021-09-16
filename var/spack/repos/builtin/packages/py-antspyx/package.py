@@ -13,6 +13,7 @@ class PyAntspyx(PythonPackage):
     url = "https://github.com/ANTsX/ANTsPy/archive/refs/tags/v0.2.7.tar.gz"
 
     version('0.2.7', sha256='495868dcb975486203cd1ce901c803e4b5d71fad5ad5c2525612de8e030f6a34')
+    version('0.2.4', sha256='357d9f93fdac8ca76f660d23f97239a5949284664866f8ba254b912afa953e55')
 
     depends_on('python@3.6:', type=('build', 'run'))
 

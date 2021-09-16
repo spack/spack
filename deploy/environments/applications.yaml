@@ -33,6 +33,7 @@ spack:
         - py-region-grower
         - psp-validation
         - py-atlalign
+        - py-atlannot
         - py-atlas-building-tools
         - py-atldld
         - py-basalt
@@ -118,6 +119,7 @@ spack:
     - placement-algorithm@2.1.4
     - psp-validation%gcc ^neuron%intel
     - py-atlalign ^py-six@1.15.0
+    - py-atlannot
     - py-atlas-building-tools
     - py-atldld
     - py-basalt@0.2.9
