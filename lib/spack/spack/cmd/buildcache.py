@@ -10,7 +10,6 @@ import tempfile
 
 import llnl.util.tty as tty
 
-import spack.architecture
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments

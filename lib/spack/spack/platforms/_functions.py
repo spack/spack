@@ -13,7 +13,7 @@ from .test import Test
 platforms = [Cray, Darwin, Linux, Test]
 
 
-def host():
+def _host():
     """Detect and return the platform for this machine or None if detection fails."""
     for platform_cls in sorted(platforms, key=lambda plt: plt.priority):
         if platform_cls.detect():

@@ -20,11 +20,11 @@ import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 
-import spack.architecture
 import spack.compiler
 import spack.config
 import spack.error
 import spack.paths
+import spack.platforms
 import spack.spec
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
@@ -519,7 +519,7 @@ def all_os_classes():
     """
     classes = []
 
-    platform = spack.architecture.platform()
+    platform = spack.platforms.host()
     for os_class in platform.operating_sys.values():
         classes.append(os_class)
 

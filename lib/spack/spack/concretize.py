@@ -31,10 +31,10 @@ import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.abi
-import spack.architecture
 import spack.compilers
 import spack.environment
 import spack.error
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.target
@@ -269,7 +269,7 @@ class Concretizer(object):
                 new_plat = spack.platforms.by_name(platform_spec.architecture.platform)
             else:
                 # If no platform anywhere in this spec, grab the default
-                new_plat = spack.architecture.platform()
+                new_plat = spack.platforms.host()
 
         # Get nearest spec with relevant platform and an os
         # Generally, same algorithm as finding platform, except we only

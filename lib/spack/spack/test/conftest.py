@@ -24,7 +24,6 @@ import archspec.cpu.schema
 
 from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 
-import spack.architecture
 import spack.binary_distribution
 import spack.caches
 import spack.compilers
@@ -450,7 +449,7 @@ def _use_test_platform(test_platform):
     # This is the only context manager used at session scope (see note
     # below for more insight) since we want to use the test platform as
     # a default during tests.
-    with spack.architecture.use_platform(test_platform):
+    with spack.platforms.use_platform(test_platform):
         yield
 
 #
@@ -515,10 +514,9 @@ def linux_os():
     """Returns a named tuple with attributes 'name' and 'version'
     representing the OS.
     """
-    platform = spack.architecture.platform()
+    platform = spack.platforms.host()
     name, version = 'debian', '6'
     if platform.name == 'linux':
-        platform = spack.architecture.platform()
         current_os = platform.operating_system('default_os')
         name, version = current_os.name, current_os.version
     LinuxOS = collections.namedtuple('LinuxOS', ['name', 'version'])

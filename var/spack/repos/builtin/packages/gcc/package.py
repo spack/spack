@@ -10,7 +10,7 @@ import sys
 
 import llnl.util.tty as tty
 
-import spack.architecture
+import spack.platforms
 import spack.util.executable
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 
@@ -324,7 +324,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 continue
             # Filter out links in favor of real executables on
             # all systems but Cray
-            host_platform = str(spack.architecture.platform())
+            host_platform = str(spack.platforms.host())
             if os.path.islink(exe) and host_platform != 'cray':
                 continue
 

@@ -92,7 +92,6 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 
-import spack.architecture
 import spack.compiler
 import spack.compilers
 import spack.config
@@ -216,7 +215,7 @@ class ArchSpec(object):
     @staticmethod
     def default_arch():
         """Return the default architecture"""
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         default_os = platform.operating_system('default_os')
         default_target = platform.target('default_target')
         arch_tuple = str(platform), str(default_os), str(default_target)
@@ -303,7 +302,7 @@ class ArchSpec(object):
         value = str(value) if value is not None else None
 
         if value in spack.platforms.Platform.reserved_oss:
-            curr_platform = str(spack.architecture.platform())
+            curr_platform = str(spack.platforms.host())
             self.platform = self.platform or curr_platform
 
             if self.platform != curr_platform:
@@ -340,7 +339,7 @@ class ArchSpec(object):
         value = target_or_none(value)
 
         if str(value) in spack.platforms.Platform.reserved_targets:
-            curr_platform = str(spack.architecture.platform())
+            curr_platform = str(spack.platforms.host())
             self.platform = self.platform or curr_platform
 
             if self.platform != curr_platform:
@@ -1258,7 +1257,7 @@ class Spec(object):
         """
         arch = self.architecture
         if arch and not arch.platform and (arch.os or arch.target):
-            self._set_architecture(platform=spack.architecture.platform().name)
+            self._set_architecture(platform=spack.platforms.host().name)
 
     #
     # Public interface

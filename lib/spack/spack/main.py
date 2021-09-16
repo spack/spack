@@ -33,12 +33,12 @@ import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
 import spack
-import spack.architecture
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.modules
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
@@ -651,7 +651,7 @@ def _compatible_sys_types():
     """Return a list of all the platform-os-target tuples compatible
     with the current host.
     """
-    host_platform = spack.architecture.platform()
+    host_platform = spack.platforms.host()
     host_os = str(host_platform.operating_system('default_os'))
     host_target = archspec.cpu.host()
     compatible_targets = [host_target] + host_target.ancestors

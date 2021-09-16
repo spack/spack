@@ -11,7 +11,6 @@ import archspec.cpu
 
 import llnl.util.lang
 
-import spack.architecture
 import spack.compilers
 import spack.concretize
 import spack.error
@@ -428,7 +427,7 @@ class TestConcretize(object):
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
         # TODO: improved way to check for this.
-        platform = spack.architecture.real_platform().name
+        platform = spack.platforms.real_host().name
         if platform == 'darwin' or platform == 'linux':
             return
 

@@ -7,7 +7,6 @@ import platform
 
 import pytest
 
-import spack.architecture
 import spack.concretize
 import spack.operating_systems
 import spack.platforms
@@ -53,7 +52,7 @@ def os_str(request):
 
 def test_platform(current_host_platform):
     """Check that current host detection return the correct platform"""
-    detected_platform = spack.architecture.real_platform()
+    detected_platform = spack.platforms.real_host()
     assert str(detected_platform) == str(current_host_platform)
 
 
