@@ -20,25 +20,26 @@
 #      -Wl,-rpath         arguments for dependency /lib directories.
 #
 
-# This is an array of environment variables that need to be set before
-# the script runs. They are set by routines in spack.build_environment
-# as part of the package installation process.
-parameters=(
-    SPACK_ENV_PATH
-    SPACK_DEBUG_LOG_DIR
-    SPACK_DEBUG_LOG_ID
-    SPACK_COMPILER_SPEC
-    SPACK_CC_RPATH_ARG
-    SPACK_CXX_RPATH_ARG
-    SPACK_F77_RPATH_ARG
-    SPACK_FC_RPATH_ARG
-    SPACK_TARGET_ARGS
-    SPACK_DTAGS_TO_ADD
-    SPACK_DTAGS_TO_STRIP
-    SPACK_LINKER_ARG
-    SPACK_SHORT_SPEC
-    SPACK_SYSTEM_DIRS
-)
+set -u
+
+# This is a newline-delimited string of environment variable names that need to
+# be set before the script runs. They are set by routines in
+# spack.build_environment as part of the package installation process.
+readonly parameters="\
+SPACK_ENV_PATH
+SPACK_DEBUG_LOG_DIR
+SPACK_DEBUG_LOG_ID
+SPACK_COMPILER_SPEC
+SPACK_CC_RPATH_ARG
+SPACK_CXX_RPATH_ARG
+SPACK_F77_RPATH_ARG
+SPACK_FC_RPATH_ARG
+SPACK_TARGET_ARGS
+SPACK_DTAGS_TO_ADD
+SPACK_DTAGS_TO_STRIP
+SPACK_LINKER_ARG
+SPACK_SHORT_SPEC
+SPACK_SYSTEM_DIRS"
 
 # Optional parameters that aren't required to be set
 
@@ -58,60 +59,183 @@ parameters=(
 # Test command is used to unit test the compiler script.
 #   SPACK_TEST_COMMAND
 
-# die()
-# Prints a message and exits with error 1.
+# Print a message to stderr and exit with status 1.
 die() {
-    echo "$@"
+    echo "$@" >&2
     exit 1
 }
 
-# read input parameters into proper bash arrays.
-# SYSTEM_DIRS is delimited by :
-IFS=':' read -ra SPACK_SYSTEM_DIRS <<< "${SPACK_SYSTEM_DIRS}"
+check_IFS() {
+    readonly should_be="$1"
+    if [ "$IFS" != "$should_be" ]; then
+        die "\$IFS must be '$should_be', but was '$IFS'."
+    fi
+}
 
-# SPACK_<LANG>FLAGS and SPACK_LDLIBS are split by ' '
-IFS=' ' read -ra SPACK_FFLAGS   <<< "$SPACK_FFLAGS"
-IFS=' ' read -ra SPACK_CPPFLAGS <<< "$SPACK_CPPFLAGS"
-IFS=' ' read -ra SPACK_CFLAGS   <<< "$SPACK_CFLAGS"
-IFS=' ' read -ra SPACK_CXXFLAGS <<< "$SPACK_CXXFLAGS"
-IFS=' ' read -ra SPACK_LDFLAGS  <<< "$SPACK_LDFLAGS"
-IFS=' ' read -ra SPACK_LDLIBS   <<< "$SPACK_LDLIBS"
+# Perform the function of `readlink -e` from gnu coreutils in
+# a POSIX-compatible way.
+#
+# $1: An existing path, which may be a symlink or some other type of
+#     filesystem entity.
+# $2: A string to append to the output after the resolved path.
+#     Defaults to '\n'.
+#
+# Ripped from the rreadlink() function in this fantastic stackoverflow answer:
+# https://stackoverflow.com/a/29835459/2518889.
+# - Extraneous quotes have been added in several places to match the style in
+#   the rest of this file, since the places where shells strictly *need* quotes
+#   in expansions is entirely non-obvious to the casual reader.
+# - Comments that are repeated or unclear have been removed.
+#
+# The function is executed within a subshell to localize variables and the
+# effect of `cd`.
+posix_readlink() (
+    target="$1"
+    readonly output_separator="${2:-\n}"
+    fname=
+    unset CDPATH
 
-# test whether a path is a system directory
-system_dir() {
-    path="$1"
-    for sd in "${SPACK_SYSTEM_DIRS[@]}"; do
-        if [ "${path}" = "${sd}" ] || [ "${path}" = "${sd}/" ]; then
-            # success if path starts with a system prefix
+    # - `command` bypasses aliases and shell functions and also finds builtins in
+    #   bash, dash, and ksh. In zsh, option POSIX_BUILTINS must be turned on for
+    #   that to happen.
+    # - All commands below are invoked via `command`, so we must make sure that
+    #   `command` itself is not redefined as an alias or shell function.
+    { \unalias command; \unset -f command; } >/dev/null 2>&1
+    [ -n "${ZSH_VERSION:-}" ] && options[POSIX_BUILTINS]='on'
+
+    # Resolve potential symlinks until the ultimate target is found.
+    while :; do
+        if [ ! \( -L "$target" -o -e "$target" \) ]; then
+            command printf '%s\n' "ERROR: '$target' does not exist." >&2
+            return 1
+        fi
+        # Change to the target directory. This is necessary for correct
+        # resolution of the target path.
+        command cd "$(command dirname -- "$target")"
+        # Extract the filename.
+        fname="$(command basename -- "$target")"
+        # Note: Curiously, `basename /` returns '/'
+        if [ "$fname" = '/' ]; then
+            fname=''
+        fi
+        # If "$fname" points to a symbolic link, follow it down one level.
+        if [ -L "$fname" ]; then
+            # Extract the next target path, which may be defined *relative* to
+            # the symlink's own directory.
+            # Note: Parsing `ls -l` output is the only POSIX-compliant way to
+            #       find the symlink target.
+            target=$(command ls -l "$fname")
+            target=${target#* -> }
+            # Resolve the next symlink target.
+            continue
+        fi
+        # The ultimate symlink target has been reached.
+        break
+    done
+    # Get the canonical directory path.
+    readonly targetDir="$(command pwd -P)"
+    # Output the ultimate target's canonical path.
+    # Note that we manually resolve paths ending in /. and /.. to make sure we
+    # have a normalized path.
+    if [ "$fname" = '.' ]; then
+        command printf "%s${output_separator}" "${targetDir%/}"
+    elif  [ "$fname" = '..' ]; then
+        # Caveat: something like /var/.. will resolve to /private (assuming
+        # /var@ -> /private/var), i.e. the '..' is applied
+        # AFTER canonicalization.
+        command printf \
+                "%s${output_separator}" "$(command dirname -- "${targetDir}")"
+    else
+        command printf "%s${output_separator}" "${targetDir%/}/$fname"
+    fi
+)
+
+# Perform several types of path normalization on the first argument, which is
+# then split by $IFS (which must be set to the value ':'):
+# - remove trailing directory slashes,
+# - resolve symlinks,
+# - remove empty strings,
+# - remove repeated paths (including paths which resolve via any symlinks to the
+#   same path).
+canonicalize_paths() {
+    # $1 is split according to $IFS, which is expected to be ':'.
+    check_IFS ':'
+    for dir in $1; do
+        # Remove trailing slashes and resolve symlinks.
+        posix_readlink "$dir" '\0' 2>/dev/null
+        # Remove repeated lines, without reordering the lines.
+    done | awk 'BEGIN { RS = "\0"; ORS = ":" }; !seen[$0]++'
+}
+
+# Read input parameters into ???.
+# SPACK_SYSTEM_DIRS is delimited by :
+readonly SPACK_SYSTEM_DIRS="$(IFS=':' canonicalize_paths "$SPACK_SYSTEM_DIRS")"
+
+# # SPACK_<LANG>FLAGS and SPACK_LDLIBS are split by ' '
+# IFS=' ' read -ra SPACK_FFLAGS   <<< "$SPACK_FFLAGS"
+# IFS=' ' read -ra SPACK_CPPFLAGS <<< "$SPACK_CPPFLAGS"
+# IFS=' ' read -ra SPACK_CFLAGS   <<< "$SPACK_CFLAGS"
+# IFS=' ' read -ra SPACK_CXXFLAGS <<< "$SPACK_CXXFLAGS"
+# IFS=' ' read -ra SPACK_LDFLAGS  <<< "$SPACK_LDFLAGS"
+# IFS=' ' read -ra SPACK_LDLIBS   <<< "$SPACK_LDLIBS"
+
+# Test whether a path $1 is recursively contained in any entry of $2.
+path_contained_in_recursively() {
+    readonly path_to_check="$(posix_readlink "$1")"
+    # $2/$directory_list are split according to $IFS, which may be arbitrary but
+    # is likely ':'.
+    readonly directory_list="$2"
+    for dir_to_test in $directory_list; do
+        # Remove the smallest prefix of $dir_to_test matching the pattern
+        # *$path_to_check and check if the resulting string is changed, which is
+        # equivalent to testing substring containment.
+        if [ "${dir_to_test#*$path_to_check}" != "$dir_to_test" ]; then
             return 0
         fi
     done
-    return 1  # fail if path starts no system prefix
+    return 1
 }
 
-for param in "${parameters[@]}"; do
-    if [ -z ${!param+x} ]; then
-        die "Spack compiler must be run from Spack! Input '$param' is missing."
-    fi
+# Test whether a path $1 is contained in any entry of $SPACK_SYSTEM_DIRS.
+is_system_dir() {
+    readonly path="$(posix_readlink "$1")"
+    IFS=':' path_contained_in_recursively "$path" "$SPACK_SYSTEM_DIRS"
+}
+
+# Exit with error if the parameter given by the name in $1 is unset or empty.
+check_param_set() {
+    readonly param_name="$1"
+    eval ">/dev/null echo \${${param_name}:?Spack compiler must be run from Spack! Input '$param_name' is missing.}"
+}
+
+## Ensure all required parameters are set.
+for param in $parameters; do
+    check_param_set "$param"
 done
 
-# Check if optional parameters are defined
-# If we aren't asking for debug flags, don't add them
-if [ -z ${SPACK_ADD_DEBUG_FLAGS+x} ]; then
-    SPACK_ADD_DEBUG_FLAGS="false"
-fi
+## Check if optional parameters are defined.
 
-# SPACK_ADD_DEBUG_FLAGS must be true/false/custom
-is_valid="false"
-for param in "true" "false" "custom"; do
-  if [ "$param" = "$SPACK_ADD_DEBUG_FLAGS" ];  then
-      is_valid="true"
-  fi
-done
+# Define true/false/custom variables we can use in parameter expansions.
+True='true'
+False='false'
+Custom='custom'
 
-# Exit with error if we are given an incorrect value
-if [ "$is_valid" = "false" ]; then
-    die "SPACK_ADD_DEBUG_FLAGS, if defined, must be one of 'true' 'false' or 'custom'"
+# Determine whether $1 is equal to $True, $False, or $Custom.
+is_valid_tribool() {
+    readonly value="$1"
+    [ "$value" = "$True" -o "$value" = "$False" -o "$value" = "$Custom" ]
+}
+
+# Ignore the arguments, do nothing, and return successfully.
+_() {
+    return 0
+}
+
+# If we aren't asking for debug flags, don't add them.
+_ ${SPACK_ADD_DEBUG_FLAGS:=$False}
+
+if ! is_valid_tribool "$SPACK_ADD_DEBUG_FLAGS"; then
+    die "\$SPACK_ADD_DEBUG_FLAGS, if defined, must be one of '$True' '$False', or '$Custom'."
 fi
 
 # Figure out the type of compiler, the language, and the mode so that
@@ -129,76 +253,83 @@ fi
 #    ccld    compile & link
 
 command="${0##*/}"
-comp="CC"
 case "$command" in
     cpp)
         mode=cpp
-        debug_flags="-g"
+        debug_flags='-g'
         ;;
     cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc)
         command="$SPACK_CC"
-        language="C"
-        comp="CC"
-        lang_flags=C
-        debug_flags="-g"
+        language='C'
+        comp='CC'
+        lang_flags='C'
+        debug_flags='-g'
         ;;
     c++|CC|g++|clang++|armclang++|icpc|icpx|pgc++|nvc++|xlc++|xlc++_r|FCC)
         command="$SPACK_CXX"
-        language="C++"
-        comp="CXX"
-        lang_flags=CXX
-        debug_flags="-g"
+        language='C++'
+        comp='CXX'
+        lang_flags='CXX'
+        debug_flags='-g'
         ;;
     ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt)
         command="$SPACK_FC"
-        language="Fortran 90"
-        comp="FC"
-        lang_flags=F
-        debug_flags="-g"
+        language='Fortran 90'
+        comp='FC'
+        lang_flags='F'
+        debug_flags='-g'
         ;;
     f77|xlf|xlf_r|pgf77)
         command="$SPACK_F77"
-        language="Fortran 77"
-        comp="F77"
-        lang_flags=F
-        debug_flags="-g"
+        language='Fortran 77'
+        comp='F77'
+        lang_flags='F'
+        debug_flags='-g'
         ;;
     ld|ld.gold|ld.lld)
-        mode=ld
+        mode='ld'
         ;;
     *)
         die "Unknown compiler: $command"
         ;;
 esac
+# If not set explicitly above, the value of $CC is set to the string 'CC'.
+_ ${CC:='CC'}
 
 # If any of the arguments below are present, then the mode is vcheck.
 # In vcheck mode, nothing is added in terms of extra search paths or
 # libraries.
-if [ -z "$mode" ] || [ "$mode" = ld ]; then
-    for arg in "$@"; do
+case "${mode:-}" in
+    ''|ld)
+        for arg; do
+            case "$arg" in
+                -v|-V|--version|-dumpversion)
+                    mode='vcheck'
+                    break
+                    ;;
+            esac
+        done
+        ;;
+esac
+
+# Finish setting up the mode.
+if [ -z "${mode:-}" ]; then
+    mode='ccld'
+    for arg; do
         case "$arg" in
-            -v|-V|--version|-dumpversion)
-                mode=vcheck
+            -E)
+                mode='cpp'
+                break
+                ;;
+            -S)
+                mode='as'
+                break
+                ;;
+            -c)
+                mode='cc'
                 break
                 ;;
         esac
-    done
-fi
-
-# Finish setting up the mode.
-if [ -z "$mode" ]; then
-    mode=ccld
-    for arg in "$@"; do
-        if [ "$arg" = -E ]; then
-            mode=cpp
-            break
-        elif [ "$arg" = -S ]; then
-            mode=as
-            break
-        elif [ "$arg" = -c ]; then
-            mode=cc
-            break
-        fi
     done
 fi
 
@@ -331,7 +462,7 @@ while [ $# -ne 0 ]; do
             arg="${1#-isystem}"
             isystem_was_used=true
             if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
+            if is_system_dir "$arg"; then
                 isystem_system_includes+=("$arg")
             else
                 isystem_includes+=("$arg")
@@ -340,7 +471,7 @@ while [ $# -ne 0 ]; do
         -I*)
             arg="${1#-I}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
+            if is_system_dir "$arg"; then
                 system_includes+=("$arg")
             else
                 includes+=("$arg")
@@ -349,7 +480,7 @@ while [ $# -ne 0 ]; do
         -L*)
             arg="${1#-L}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
+            if is_system_dir "$arg"; then
                 system_libdirs+=("$arg")
             else
                 libdirs+=("$arg")
@@ -447,7 +578,7 @@ while [ $# -ne 0 ]; do
 
     # test rpaths against system directories in one place.
     if [ -n "$rp" ]; then
-        if system_dir "$rp"; then
+        if is_system_dir "$rp"; then
             system_rpaths+=("$rp")
         else
             rpaths+=("$rp")
