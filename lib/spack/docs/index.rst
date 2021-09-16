@@ -39,7 +39,7 @@ package:
 
 .. code-block:: console
 
-   $ git clone https://github.com/spack/spack.git
+   $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
    $ cd spack/bin
    $ ./spack install libelf
 
