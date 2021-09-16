@@ -12,11 +12,11 @@ class PyGosam(PythonPackage):
        quantum field theories."""
 
     homepage = "https://github.com/gudrunhe/gosam"
-    url      = "https://github.com/gudrunhe/gosam/archive/refs/tags/2.1.1.tar.gz"
+    git      = "https://github.com/gudrunhe/gosam.git"
 
     tags = ['hep']
 
-    version('2.1.1', sha256='dd562675085123bef0c145fd5532c23eecd59f0176afc56fb5c832ca1b4233a6')
+    version('2.1.1', tag='2.1.1')
     version('2.0.4', sha256='faf621c70f66d9dffc16ac5cce66258067f39f686d722a4867eeb759fcde4f44',
             url='https://gosam.hepforge.org/downloads/?f=gosam-2.0.4-6d9f1cba.tar.gz')
 
