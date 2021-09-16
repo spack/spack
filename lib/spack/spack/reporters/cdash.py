@@ -8,6 +8,7 @@ import codecs
 import hashlib
 import os.path
 import platform
+import posixpath
 import re
 import socket
 import time
@@ -64,7 +65,7 @@ class CDash(Reporter):
         Reporter.__init__(self, args)
         tty.set_verbose(args.verbose)
         self.success = True
-        self.template_dir = os.path.join('reports', 'cdash')
+        self.template_dir = posixpath.sep.join('reports', 'cdash')
         self.cdash_upload_url = args.cdash_upload_url
 
         if self.cdash_upload_url:
@@ -222,11 +223,11 @@ class CDash(Reporter):
                 if phase != 'update':
                     # Update.xml stores site information differently
                     # than the rest of the CTest XML files.
-                    site_template = os.path.join(self.template_dir, 'Site.xml')
+                    site_template = posixpath.sep.join(self.template_dir, 'Site.xml')
                     t = env.get_template(site_template)
                     f.write(t.render(report_data))
 
-                phase_template = os.path.join(self.template_dir, report_name)
+                phase_template = posixpath.sep.join(self.template_dir, report_name)
                 t = env.get_template(phase_template)
                 f.write(t.render(report_data))
             self.upload(phase_report)
@@ -349,11 +350,11 @@ class CDash(Reporter):
                 if phase != 'update':
                     # Update.xml stores site information differently
                     # than the rest of the CTest XML files.
-                    site_template = os.path.join(self.template_dir, 'Site.xml')
+                    site_template = posixpath.sep.join(self.template_dir, 'Site.xml')
                     t = env.get_template(site_template)
                     f.write(t.render(report_data))
 
-                phase_template = os.path.join(self.template_dir, report_name)
+                phase_template = posixpath.sep.join(self.template_dir, report_name)
                 t = env.get_template(phase_template)
                 f.write(t.render(report_data))
             self.upload(phase_report)
@@ -379,7 +380,7 @@ class CDash(Reporter):
         report_data['update']['log'] = msg
 
         env = spack.tengine.make_environment()
-        update_template = os.path.join(self.template_dir, 'Update.xml')
+        update_template = posixpath.sep.join(self.template_dir, 'Update.xml')
         t = env.get_template(update_template)
         output_filename = os.path.join(directory_name, 'Update.xml')
         with open(output_filename, 'w') as f:
