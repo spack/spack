@@ -212,6 +212,9 @@ def colorize_spec(spec):
 
 @lang.lazy_lexicographic_ordering
 class ArchSpec(object):
+    """Aggregate the target platform, the operating system and the target
+    microarchitecture into an architecture spec..
+    """
     @staticmethod
     def default_arch():
         """Return the default architecture"""
