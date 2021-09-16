@@ -16,14 +16,15 @@ class PyGosam(PythonPackage):
 
     tags = ['hep']
 
-    version('2.1.1', tag='2.1.1')
+    version('2.1.1', tag='2.1.1', commit='4b98559')
     version('2.0.4', sha256='faf621c70f66d9dffc16ac5cce66258067f39f686d722a4867eeb759fcde4f44',
             url='https://gosam.hepforge.org/downloads/?f=gosam-2.0.4-6d9f1cba.tar.gz')
+    version('2.0.3', tag='v2.0.3', commit='4146ab2')
 
     depends_on('form', type='run')
     depends_on('qgraf', type='run')
     depends_on('gosam-contrib', type='link')
-    depends_on('python@2.7:2.7.99', type=('build', 'run'), when='@2.0.4')
+    depends_on('python@2.7:2.7.99', type=('build', 'run'), when='@:2.0.4')
     depends_on('python@3:', type=('build', 'run'), when='@2.1.1:')
 
     def setup_run_environment(self, env):
