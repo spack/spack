@@ -18,7 +18,7 @@ class MesaDemos(AutotoolsPackage):
     version('8.2.0', sha256='5a9f71b815d968d0c3b77edfcc3782d0211f8520b00da9e554ccfed80c8889f6')
     version('8.1.0', sha256='cc5826105355830208c90047fc38c5b09fa3ab0045366e7e859104935b00b76d')
 
-    variant('osmesa', default=True, description="Enable the OSMesa frontend.")
+    variant('osmesa', default=False, description="Enable the OSMesa frontend.")
 
     is_linux = sys.platform.startswith('linux')
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
