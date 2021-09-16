@@ -128,7 +128,7 @@ fi
 #    ld      link
 #    ccld    compile & link
 
-command=$(basename "$0")
+command="${0##*/}"
 comp="CC"
 case "$command" in
     cpp)
