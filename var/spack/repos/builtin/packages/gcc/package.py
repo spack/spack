@@ -291,7 +291,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('zstd.patch', when='@10')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100102
-    patch('tsubst_function_decl.patch', when='@10.3,11.1')
+    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=fc930b3010bd0de899a3da3209eab20664ddb703', when='@10.3,11.1')
 
     build_directory = 'spack-build'
 
