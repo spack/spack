@@ -26,7 +26,7 @@ class Asio(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
 
-    stds = ("11", "14", "17")
+    stds = ("11", "14", "17", "2a")
     variant(
         "cxxstd",
         default="11",
