@@ -3,10 +3,6 @@ spack:
   concretization: separately
   modules:
     tcl:
-      all:
-        environment:
-          set:
-            '${PACKAGE}_ROOT': '${PREFIX}'
       whitelist:
         - boost
         - gmsh

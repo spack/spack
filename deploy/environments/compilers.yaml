@@ -4,6 +4,8 @@ spack:
   modules:
     tcl:
       all:
+        environment:
+          set:: {}
         filter:
           environment_blacklist: ['CPATH', 'LIBRARY_PATH']
       whitelist:

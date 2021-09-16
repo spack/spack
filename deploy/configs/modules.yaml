@@ -17,6 +17,9 @@ modules:
     all:
       autoload: 'all'
       load_only_generated: true
+      environment:
+        set:
+          '${PACKAGE}_ROOT': '${PREFIX}'
     gcc:
       environment:
         set:
