@@ -18,7 +18,7 @@ class JUnit(Reporter):
 
     def __init__(self, args):
         Reporter.__init__(self, args)
-        self.template_file = posixpath.sep.join('reports', 'junit.xml')
+        self.template_file = posixpath.sep.join(['reports', 'junit.xml'])
 
     def build_report(self, filename, report_data):
         # Write the report
