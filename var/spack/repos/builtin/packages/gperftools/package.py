@@ -28,7 +28,7 @@ class Gperftools(AutotoolsPackage):
     variant('libunwind', default=True, description="Enable libunwind linking")
 
     depends_on("unwind", when="+libunwind")
-    
+
     def configure_args(self):
         args = []
         args.append(self.enable_or_disable("sized-delete"))
