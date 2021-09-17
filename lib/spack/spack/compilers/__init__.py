@@ -192,15 +192,12 @@ def all_compiler_specs(scope=None, init_config=True):
 
 
 def find_compilers(path_hints=None):
-    """Returns the list of compilers found in the paths given as arguments.
+    """Return the list of compilers found in the paths given as arguments.
 
     Args:
         path_hints (list or None): list of path hints where to look for.
             A sensible default based on the ``PATH`` environment variable
             will be used if the value is None
-
-    Returns:
-        List of compilers found
     """
     if path_hints is None:
         path_hints = get_path('PATH')
@@ -240,6 +237,30 @@ def find_compilers(path_hints=None):
     return make_compiler_list(
         map(remove_errors, filter(valid_version, detected_versions))
     )
+
+
+def find_new_compilers(path_hints=None, scope=None):
+    """Same as ``find_compilers`` but return only the compilers that are not
+    already in compilers.yaml.
+
+    Args:
+        path_hints (list or None): list of path hints where to look for.
+            A sensible default based on the ``PATH`` environment variable
+            will be used if the value is None
+        scope (str): scope to look for a compiler. If None consider the
+            merged configuration.
+    """
+    compilers = find_compilers(path_hints)
+    compilers_not_in_config = []
+    for c in compilers:
+        arch_spec = spack.spec.ArchSpec((None, c.operating_system, c.target))
+        same_specs = compilers_for_spec(
+            c.spec, arch_spec, scope=scope, init_config=False
+        )
+        if not same_specs:
+            compilers_not_in_config.append(c)
+
+    return compilers_not_in_config
 
 
 def supported_compilers():
@@ -289,8 +310,9 @@ def all_compilers(scope=None):
 
 
 @_auto_compiler_spec
-def compilers_for_spec(compiler_spec, arch_spec=None, scope=None,
-                       use_cache=True, init_config=True):
+def compilers_for_spec(
+        compiler_spec, arch_spec=None, scope=None, use_cache=True, init_config=True
+):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
