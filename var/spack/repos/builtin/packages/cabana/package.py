@@ -66,12 +66,10 @@ class Cabana(CMakePackage):
                         'openmp': 'OpenMP',
                         'cuda': 'Cuda'}
             for backend in backends:
-                options.append('-DCabana_ENABLE_%s=%s' %
-                               (backends[backend],
-                                'On' if '+' + backend in self.spec else 'Off'))
+                cbn_option = 'Cabana_ENABLE_' + backends[backend]
+                options.append(self.define_from_variant(cbn_option, backend))
 
         if self.spec.satisfies('@:0.3.0'):
-            options.append('-DCabana_ENABLE_MPI=%s' %
-                           ('On' if '+mpi' in self.spec else 'Off'))
+            options.append(self.define_from_variant('Cabana_ENABLE_MPI', 'mpi'))
 
         return options
