@@ -53,7 +53,7 @@ def build_environment(working_env):
     os.environ['SPACK_DTAGS_TO_ADD'] = '--disable-new-dtags'
     os.environ['SPACK_DTAGS_TO_STRIP'] = '--enable-new-dtags'
     os.environ['SPACK_SYSTEM_DIRS'] = '/usr/include /usr/lib'
-    os.environ['SPACK_TARGET_ARGS'] = ''
+    os.environ['SPACK_TARGET_ARGS'] = '\n'
 
     if 'SPACK_DEPENDENCIES' in os.environ:
         del os.environ['SPACK_DEPENDENCIES']
