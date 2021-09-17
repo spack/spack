@@ -43,8 +43,14 @@ class Cabana(CMakePackage):
     for _version in _versions:
         _kk_version = _versions[_version]
         for _backend in _kokkos_backends:
-            depends_on('kokkos{0}+{1}'.format(_kk_version, _backend),
-                       when='@{0}+{1}'.format(_version, _backend))
+            if (_kk_version == "-legacy" and _backend == 'pthread'):
+                _kk_spec = 'kokkos-legacy+pthreads'
+            elif (_kk_version == "-legacy" and
+                  _backend not in ['serial', 'openmp', 'cuda']):
+                continue
+            else:
+                _kk_spec = 'kokkos{0}+{1}'.format(_kk_version, _backend)
+            depends_on(_kk_spec, when='@{0}+{1}'.format(_version, _backend))
     depends_on("arborx", when="@0.3.0:+arborx")
     depends_on("heffte@2.0:", when="@0.4.0:+heffte")
     depends_on("hypre-cmake@2.22.0:", when="@0.4.0:+hypre")
