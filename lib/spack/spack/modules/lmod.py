@@ -139,7 +139,7 @@ class LmodConfiguration(BaseConfiguration):
         if not_virtual:
             msg = "Non-virtual specs in 'hierarchy' list for lmod: {0}\n"
             msg += "Please check the 'modules.yaml' configuration files"
-            msg.format(', '.join(not_virtual))
+            msg = msg.format(', '.join(not_virtual))
             raise NonVirtualInHierarchyError(msg)
 
         # Append 'compiler' which is always implied
