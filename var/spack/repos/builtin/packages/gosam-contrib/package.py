@@ -21,9 +21,6 @@ class GosamContrib(AutotoolsPackage):
             multi=True, description='Build shared libs, static libs or both')
     variant('pic', default=False, description='Build position-independent code')
 
-    conflicts('~shared', when='~static', msg='Please enable at least one of shared or static')
-    conflicts('~static', when='~shared', msg='Please enable at least one of shared or static')
-
     def configure_args(self):
         args = []
         args += self.enable_or_disable('libs')
