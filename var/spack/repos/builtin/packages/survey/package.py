@@ -167,43 +167,5 @@ class Survey(CMakePackage):
         if self.spec.satisfies('+openmpi'):
             env.set('SURVEY_MPI_IMPLEMENTATION', "openmpi")
 
-        env.prepend_path('MANPATH', self.spec.prefix.share.man)
-
-        env.prepend_path('PATH', self.spec['python'].prefix.bin)
         env.prepend_path('PYTHONPATH',
                          join_path(self.prefix, self.site_packages_dir))
-        # These are external packages whose site-packages directories are needed
-        # in order to load survey with one module load command.  If these statements
-        # are not present.  The corresponding module files will need to be loaded
-        # These are explicit depends_on packages
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['python'].prefix, self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-pandas'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-python-dateutil'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-setuptools'].prefix,
-                                   self.site_packages_dir))
-        # These are not-explicit depends_on packages
-        # but they must be known in the spec for survey, so it works.
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-numpy'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-pytz'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-six'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-psutil'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-sqlalchemy'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-pbr'].prefix,
-                                   self.site_packages_dir))
