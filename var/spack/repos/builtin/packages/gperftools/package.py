@@ -27,7 +27,7 @@ class Gperftools(AutotoolsPackage):
     variant('debugalloc', default=True, description="Build versions of libs with debugalloc")
     variant('libunwind', default=True, description="Enable libunwind linking")
 
-    depends_on("unwind", when="+libunwind)
+    depends_on("unwind", when="+libunwind")
     
     def configure_args(self):
         args = []
