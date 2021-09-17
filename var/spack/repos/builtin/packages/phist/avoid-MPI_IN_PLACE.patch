@@ -1,0 +1,41 @@
+From 5a9893cfa86930ef948d89c96520fc3260a2bbd0 Mon Sep 17 00:00:00 2001
+From: Jonas Thies
+Date: Fri, 17 Sep 2021 09:30:50 +0200
+Subject: [PATCH] avoid MPI_IN_PLACE in Allreduce because it gives some
+ compiler/MPI combinations a headache
+
+---
+ src/kernels/builtin/map_module.F90 | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/kernels/builtin/map_module.F90 b/src/kernels/builtin/map_module.F90
+index 5f461456..556acd9d 100644
+--- a/src/kernels/builtin/map_module.F90
++++ b/src/kernels/builtin/map_module.F90
+@@ -328,7 +328,7 @@ end if
+     type(Map_t), pointer :: map1,map2
+     !------------------------------------------------------------
+     
+-    integer :: i, mpi_ierr
++    integer :: i, mpi_ierr, my_ierr, global_ierr
+     logical :: map1_permuted, map2_permuted
+ 
+     ! check if the two pointers refer to the same memory location
+@@ -386,11 +386,13 @@ end if
+           exit
+         end if
+       end do
+-      call MPI_Allreduce(MPI_IN_PLACE,ierr,1,MPI_INTEGER,MPI_MAX,map1%comm,mpi_ierr)
++      my_ierr=ierr
++      call MPI_Allreduce(my_ierr,global_ierr,1,MPI_INTEGER,MPI_MAX,map1%comm,mpi_ierr)
+       if (mpi_ierr/=MPI_SUCCESS) then
+         ierr=PHIST_MPI_ERROR
+         return
+       end if
++      ierr=global_ierr
+       if (ierr/=0) then
+         ! we don't support this type of construction (both maps permuted with different orderings)
+         ierr=-1
+-- 
+2.25.1
+
