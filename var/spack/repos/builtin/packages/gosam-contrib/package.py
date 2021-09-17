@@ -21,17 +21,22 @@ class GosamContrib(AutotoolsPackage):
             multi=True, description='Build shared libs, static libs or both')
     variant('pic', default=False, description='Build position-independent code')
 
+    def flag_handler(self, name, flags):
+        if name in ['cflags', 'cxxflags', 'cppflags']:
+            if '+pic' in self.spec:
+                flags.append(self.compiler.cc_pic_flag)
+
+        if name == 'fflags':
+            if 'gfortran' in self.compiler.fc:
+                flags.append('-std=legacy')
+
+            if '+pic' in self.spec:
+                flags.append(self.compiler.fc_pic_flag)
+
+        return (None, flags, None)
+
     def configure_args(self):
         args = []
         args += self.enable_or_disable('libs')
-
-        if '+pic' in spec:
-            args.extend([
-                'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
-                'CXXFLAGS={0}'.format(self.compiler.cxx_pic_flag),
-                'FFLAGS={0} -std=legacy'.format(self.compiler.f77_pic_flag)
-            ])
-        else:
-            args += "FFLAGS=-std=legacy"
 
         return args
