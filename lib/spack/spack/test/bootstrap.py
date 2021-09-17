@@ -5,6 +5,7 @@
 import pytest
 
 import spack.bootstrap
+import spack.compilers
 import spack.environment
 import spack.store
 import spack.util.path
@@ -78,3 +79,23 @@ def test_bootstrap_disables_modulefile_generation(mutable_config):
         assert 'lmod' not in spack.config.get('modules:enable')
     assert 'tcl' in spack.config.get('modules:enable')
     assert 'lmod' in spack.config.get('modules:enable')
+
+
+@pytest.mark.regression('25992')
+@pytest.mark.requires_executables('gcc')
+def test_bootstrap_search_for_compilers_with_no_environment(no_compilers_yaml):
+    assert not spack.compilers.all_compiler_specs(init_config=False)
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.compilers.all_compiler_specs(init_config=False)
+    assert not spack.compilers.all_compiler_specs(init_config=False)
+
+
+@pytest.mark.regression('25992')
+@pytest.mark.requires_executables('gcc')
+def test_bootstrap_search_for_compilers_with_environment_active(
+        no_compilers_yaml, active_mock_environment
+):
+    assert not spack.compilers.all_compiler_specs(init_config=False)
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.compilers.all_compiler_specs(init_config=False)
+    assert not spack.compilers.all_compiler_specs(init_config=False)

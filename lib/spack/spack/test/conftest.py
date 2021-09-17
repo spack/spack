@@ -652,6 +652,15 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
         yield cfg
 
 
+@pytest.fixture
+def no_compilers_yaml(mutable_config):
+    """Creates a temporary configuration without compilers.yaml"""
+    for scope, local_config in mutable_config.scopes.items():
+        compilers_yaml = os.path.join(local_config.path, 'compilers.yaml')
+        if os.path.exists(compilers_yaml):
+            os.remove(compilers_yaml)
+
+
 @pytest.fixture()
 def mock_low_high_config(tmpdir):
     """Mocks two configuration scopes: 'low' and 'high'."""
