@@ -146,7 +146,10 @@ class Cmake(Package):
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
-    conflicts('%gcc platform=darwin', when='@:3.17')
+    conflicts('%gcc platform=darwin', when='@:3.17',
+              msg='CMake <3.18 does not compile with GCC on macOS, '
+                  'please use %apple-clang or a newer CMake release. '
+                  'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
     conflicts('%nvhpc')
 
     # Really this should conflict since it's enabling or disabling openssl for
