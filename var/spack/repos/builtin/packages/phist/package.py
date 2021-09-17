@@ -101,7 +101,7 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
-    patch('void-MPI_IN_PLACE.patch', when='@:1.9.5')
+    patch('avoid-MPI_IN_PLACE.patch', when='@:1.9.5')
     patch('update_tpetra_gotypes.patch', when='@:1.8.99')
     patch('sbang.patch', when='+fortran')
 
