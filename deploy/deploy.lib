@@ -728,8 +728,14 @@ EOF
     cp "${SPACK_ROOT}/deploy/environments/${what}.yaml" "${HOME}/build_environment/spack.yaml"
     log "concretizing environment"
     spack -D "${HOME}/build_environment" concretize -f
-    log "installing environment"
-    srun -N${BUILD_NODES:-1} --ntasks-per-node 4 -c12 -t24:0:0 -Aproj16 -Ccpu -pprod -J"spack!" slurmspack "${HOME}/build_environment"
+    if [[ -n "$(installed-hashes -m -e "${HOME}/build_environment")" ]]; then
+        log "pre-fetching environment"
+        spack -D "${HOME}/build_environment" fetch -m
+        log "installing environment"
+        srun -N${BUILD_NODES:-1} --ntasks-per-node 4 -c12 -t24:0:0 -Aproj16 -Ccpu -pprod -J"spack!" slurmspack "${HOME}/build_environment"
+    else
+        log "did not find any missing specs in the environment"
+    fi
 
     cat > "${HOME}/stack.xml" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>

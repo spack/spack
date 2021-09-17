@@ -19,24 +19,33 @@ def run():
     parser = ArgumentParser()
     parser.add_argument('-e', '--env', required=True,
                         help='environment to use')
+    parser.add_argument('-m', '--missing', default=False, action='store_true',
+                        help='list uninstalled specs')
     args = parser.parse_args()
 
     native = []
     staged = []
+    missing = []
 
     env = ev.get_env(args, 'deploy', required=True)
     for requested, spec in env.concretized_specs():
+        stringified = "/{0} {1}".format(spec.dag_hash(8), requested)
         if spec.package.installed:
-            stringified = "/{0} {1}".format(spec.dag_hash(8), requested)
             if "%" in str(requested):
                 staged.append(stringified)
             else:
                 native.append(stringified)
+        else:
+            missing.append(stringified)
 
-    for l in native:
-        print(l)
-    for l in staged:
-        print(l)
+    if args.missing:
+        for l in missing:
+            print(l)
+    else:
+        for l in native:
+            print(l)
+        for l in staged:
+            print(l)
 
 if __name__ == "__main__":
     run()
