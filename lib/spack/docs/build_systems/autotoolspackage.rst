@@ -159,6 +159,46 @@ create a new patch that directly modifies ``configure``. That way,
 Spack can use the secondary patch and additional build system
 dependencies aren't necessary.
 
+""""""""""""""""""""""""""""
+Old Autotools helper scripts
+""""""""""""""""""""""""""""
+
+Autotools based tarballs come with helper scripts such as ``config.sub`` and
+``config.guess``. It is the responsibility of the developers to keep these files
+up to date so that they run on every platform, but for very old software
+releases this is impossible. In these cases Spack can help to replace these
+files with newer ones, without having to add the heavy dependency on
+``automake``.
+
+Automatic helper script replacement is currently enabled by default on
+``ppc64le`` and ``aarch64``, as these are the known cases where old scripts fail.
+On these targets, ``AutotoolsPackage`` adds a build dependency on ``gnuconfig``,
+which is a very light-weight package with newer versions of the helper files.
+Spack then tries to run all the helper scripts it can find in the release, and
+replaces them on failure with the helper scripts from ``gnuconfig``.
+
+To opt out of this feature, use the following setting:
+
+.. code-block:: python
+
+   patch_config_files = False
+
+.. note::
+
+    On some exotic architectures it is necessary to use system provided
+    ``config.sub`` and ``config.guess`` files. In this case, the most
+    transparent solution is to mark the ``gnuconfig`` package as external and
+    non-buildable, with a prefix set to the directory containing the files:
+
+   .. code-block:: yaml
+
+       gnuconfig:
+         buildable: false
+         externals:
+         - spec: gnuconfig@master
+           prefix: /usr/share/configure_files/
+
+
 """"""""""""""""
 force_autoreconf
 """"""""""""""""
