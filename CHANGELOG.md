@@ -1,3 +1,15 @@
+# v0.16.3 (2021-09-21)
+
+* clang/llvm: fix version detection (#19978)
+* Fix use of quotes in Python build system (#22279)
+* Cray: fix extracting paths from module files (#23472)
+* Use AWS CloudFront for source mirror (#23978)
+* Ensure all roots of an installed environment are marked explicit in db (#24277)
+* Fix fetching for Python 3.8 and 3.9 (#24686)
+* locks: only open lockfiles once instead of for every lock held (#24794)
+* Remove the EOL centos:6 docker image
+
+
 # v0.16.2 (2021-05-22)
 
 * Major performance improvement for `spack load` and other commands. (#23661)
