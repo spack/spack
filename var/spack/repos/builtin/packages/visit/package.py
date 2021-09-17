@@ -288,6 +288,6 @@ class Visit(CMakePackage):
     # despite VisIt may have multiple versions
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('--version', output=str, error=str)
-        match = re.search(r'xml2cmake\s*([\d\.]+)', output)
+        output = Executable(exe)('-version', output=str, error=str)
+        match = re.search(r'\s*(\d[\d\.]+)\.', output)
         return match.group(1) if match else None
