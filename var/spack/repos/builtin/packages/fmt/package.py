@@ -35,7 +35,8 @@ class Fmt(CMakePackage):
             values=('98', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building')
-    variant('pic', default=True, description='Enable generation of position-independent code')
+    variant('shared', default=False, description='Build shared library')
+    variant('pic', default=True, description='Build position-independent code')
 
     depends_on('cmake@3.1.0:', type='build')
 
@@ -62,6 +63,9 @@ class Fmt(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
+
+        if self.spec.satisfies('+shared'):
+            args.append('-DBUILD_SHARED_LIBS=ON')
 
         if '+pic' in spec:
             args.extend([
