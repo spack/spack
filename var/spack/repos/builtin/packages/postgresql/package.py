@@ -113,13 +113,3 @@ class Postgresql(AutotoolsPackage):
             env.prepend_path('TCLLIBPATH', self.prefix.lib)
         if '+python' in spec:
             env.prepend_path('PYTHONPATH', self.prefix.lib)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        spec = self.spec
-
-        if '+perl' in spec:
-            env.prepend_path('PERL5LIB', self.prefix.lib)
-        if '+tcl' in spec:
-            env.prepend_path('TCLLIBPATH', self.prefix.lib)
-        if '+python' in spec:
-            env.prepend_path('PYTHONPATH', self.prefix.lib)

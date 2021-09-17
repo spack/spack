@@ -2067,33 +2067,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             _ = spack.util.environment.EnvironmentModifications()
             legacy_fn(env, _, dependent_spec)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        """Sets up the run environment of packages that depend on this one.
-
-        This is similar to ``setup_run_environment``, but it is used to
-        modify the run environments of packages that *depend* on this one.
-
-        This gives packages like Python and others that follow the extension
-        model a way to implement common environment or run-time settings
-        for dependencies.
-
-        Args:
-            env (spack.util.environment.EnvironmentModifications): environment
-                modifications to be applied when the dependent package is run.
-                Package authors can call methods on it to alter the build environment.
-
-            dependent_spec (spack.spec.Spec): The spec of the dependent package
-                about to be run. This allows the extendee (self) to query
-                the dependent's state. Note that *this* package's spec is
-                available as ``self.spec``
-        """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env, dependent_spec)
-
     def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.
 

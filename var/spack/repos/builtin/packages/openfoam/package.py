@@ -473,14 +473,6 @@ class Openfoam(Package):
         self.setup_run_environment(env)
         env.set('FOAM_PROJECT_DIR', self.projectdir)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        """Use full OpenFOAM environment when running.
-        Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
-        masking the normal OpenFOAM cleanup of previous versions.
-        """
-        self.setup_run_environment(env)
-        env.set('FOAM_PROJECT_DIR', self.projectdir)
-
     @property
     def projectdir(self):
         """Absolute location of project directory: WM_PROJECT_DIR/"""

@@ -168,14 +168,6 @@ class OpenfoamOrg(Package):
         """
         env.set('FOAM_PROJECT_DIR', self.projectdir)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        """Location of the OpenFOAM project directory.
-        This is identical to the WM_PROJECT_DIR value, but we avoid that
-        variable since it would mask the normal OpenFOAM cleanup of
-        previous versions.
-        """
-        env.set('FOAM_PROJECT_DIR', self.projectdir)
-
     @property
     def projectdir(self):
         """Absolute location of project directory: WM_PROJECT_DIR/"""

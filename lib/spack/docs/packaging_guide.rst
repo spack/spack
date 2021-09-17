@@ -2276,11 +2276,9 @@ Influence how dependents are built or run
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Spack provides a mechanism for dependencies to influence the
-environment of their dependents by overriding  the
-:meth:`setup_dependent_run_environment <spack.package.PackageBase.setup_dependent_run_environment>`
-or the
+environment of their dependents by overriding the
 :meth:`setup_dependent_build_environment <spack.package.PackageBase.setup_dependent_build_environment>`
-methods.
+method.
 The Qt package, for instance, uses this call:
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
@@ -2315,14 +2313,6 @@ like the following:
 
    def install(self, spec, prefix):
        setup_py('install', '--prefix={0}'.format(prefix))
-
-Finally the Python package takes also care of the modifications to ``PYTHONPATH``
-to allow dependencies to run correctly:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-    :pyobject: Python.setup_dependent_run_environment
-    :linenos:
-
 
 .. _packaging_conflicts:
 

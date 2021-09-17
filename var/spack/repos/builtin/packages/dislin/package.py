@@ -49,9 +49,6 @@ class Dislin(Package):
         env.prepend_path('LD_LIBRARY_PATH', self.spec['motif'].prefix.lib)
         env.prepend_path('LD_LIBRARY_PATH', self.spec['mesa'].prefix.lib)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        env.prepend_path('LD_LIBRARY_PATH', self.prefix)
-
     def install(self, spec, prefix):
         install = Executable('./INSTALL')
         install()

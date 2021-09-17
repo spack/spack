@@ -191,6 +191,3 @@ Done.
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)

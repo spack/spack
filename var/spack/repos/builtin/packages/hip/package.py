@@ -191,9 +191,6 @@ class Hip(CMakePackage):
             if arch != 'none':
                 env.set('HCC_AMDGPU_TARGET', ','.join(arch))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_dependent_build_environment(env, dependent_spec)
-
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.hipcc = join_path(self.prefix.bin, 'hipcc')
 

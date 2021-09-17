@@ -66,15 +66,11 @@ class GobjectIntrospection(Package):
         return url.format(version.up_to(2), version)
 
     def setup_run_environment(self, env):
-        env.prepend_path("GI_TYPELIB_PATH",
-                         join_path(self.prefix.lib, 'girepository-1.0'))
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH",
                          join_path(self.prefix.lib, 'girepository-1.0'))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH",
                          join_path(self.prefix.lib, 'girepository-1.0'))

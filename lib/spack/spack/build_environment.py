@@ -954,8 +954,6 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
             dpkg.setup_dependent_package(spec.package.module, spec)
             if context == 'build':
                 dpkg.setup_dependent_build_environment(env, spec)
-            else:
-                dpkg.setup_dependent_run_environment(env, spec)
 
     # Note that we want to perform environment modifications in a fixed order.
     # The Spec.traverse method provides this: i.e. in addition to

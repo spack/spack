@@ -143,19 +143,3 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
                     tcllibpath = join_path(d.prefix, lib)
                     if os.path.exists(tcllibpath):
                         env.prepend_path('TCLLIBPATH', tcllibpath, separator=' ')
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        """Set TCLLIBPATH to include the tcl-shipped directory for
-        extensions and any other tcl extension it depends on.
-
-        For further info see:
-
-        * https://wiki.tcl-lang.org/page/TCLLIBPATH
-        """
-        for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
-            if d.package.extends(self.spec):
-                # Tcl libraries may be installed in lib or lib64, see #19546
-                for lib in ['lib', 'lib64']:
-                    tcllibpath = join_path(d.prefix, lib)
-                    if os.path.exists(tcllibpath):
-                        env.prepend_path('TCLLIBPATH', tcllibpath, separator=' ')

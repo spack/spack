@@ -48,10 +48,6 @@ class AtSpi2Core(MesonPackage):
         env.prepend_path("GI_TYPELIB_PATH",
                          join_path(self.prefix.lib, 'girepository-1.0'))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        env.prepend_path("GI_TYPELIB_PATH",
-                         join_path(self.prefix.lib, 'girepository-1.0'))
-
     def setup_build_environment(self, env):
         # this avoids an "import site" error in the build
         env.unset('PYTHONHOME')

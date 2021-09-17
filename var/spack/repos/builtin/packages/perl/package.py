@@ -264,9 +264,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         self._setup_dependent_env(env, dependent_spec,
                                   deptypes=('build', 'run'))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptypes=('run',))
-
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
            In most cases, extensions will only need to have one line:

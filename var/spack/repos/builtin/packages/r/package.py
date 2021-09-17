@@ -212,13 +212,6 @@ class R(AutotoolsPackage):
         # determine how many jobs can actually be started.
         env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        # For run time environment set only the path for dependent_spec and
-        # prepend it to R_LIBS
-        if dependent_spec.package.extends(self.spec):
-            env.prepend_path('R_LIBS', join_path(
-                dependent_spec.prefix, self.r_lib_dir))
-
     def setup_run_environment(self, env):
         env.prepend_path('LD_LIBRARY_PATH',
                          join_path(self.prefix, 'rlib', 'R', 'lib'))

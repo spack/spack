@@ -34,5 +34,5 @@ class XkeyboardConfig(AutotoolsPackage, XorgPackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path('XKB_CONFIG_ROOT', self.prefix.share.X11.xkb)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_run_environment(self, env, dependent_spec):
         env.prepend_path('XKB_CONFIG_ROOT', self.prefix.share.X11.xkb)

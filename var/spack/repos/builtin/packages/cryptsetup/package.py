@@ -61,6 +61,6 @@ class Cryptsetup(AutotoolsPackage):
         """Prepend the sbin directory to PATH."""
         env.prepend_path('PATH', self.prefix.sbin)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_run_environment(self, env):
         """Prepend the sbin directory to PATH."""
         env.prepend_path('PATH', self.prefix.sbin)

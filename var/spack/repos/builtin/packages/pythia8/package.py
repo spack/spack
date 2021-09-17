@@ -71,6 +71,6 @@ class Pythia8(AutotoolsPackage):
 
         return args
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_run_environment(self, env, dependent_spec):
         env.set('PYTHIA8', self.prefix)
         env.set('PYTHIA8DATA', self.prefix.share.Pythia8.xmldoc)
