@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import sys
 
 from spack import *
@@ -49,11 +50,13 @@ class Mesa(MesonPackage):
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
 
     is_linux = sys.platform.startswith('linux')
+    variant('glvnd', default=is_linux,
+        description="Expose Graphics APIs through libglvnd")
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
     # TODO: effectively deal with EGL.  The implications of this have not been
     # worked through yet
-    # variant('egl', default=False, description="Enable the EGL frontend.")
+    variant('egl', default=False, description="Enable the EGL frontend.")
 
     # TODO: Effectively deal with hardware drivers
     # The implication of this is enabling DRI, among other things, and
@@ -64,10 +67,14 @@ class Mesa(MesonPackage):
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@4.5',  when='+opengl')
-    provides('glx@1.4', when='+glx')
-    # provides('egl@1.5', when='+egl')
-    provides('osmesa', when='+osmesa')
+    provides('gl@4.5',  when='+opengl ~glvnd')
+    provides('glx@1.4', when='+glx ~glvnd')
+    # provides('egl@1.5', when='+egl ~glvnd')
+
+    provides('libglvnd-be-gl', when='+opengl +glvnd')
+    provides('libglvnd-be-glx', when='+opengl +glvnd +glx')
+    # provides('libglvnd-be-egl', when='+opengl +glvnd +egl')
+    provides('osmesa', when='+osmesa +glvnd')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')
@@ -77,6 +84,25 @@ class Mesa(MesonPackage):
     depends_on('libxt',  when='+glx')
     depends_on('xrandr', when='+glx')
     depends_on('glproto@1.4.14:', when='+glx')
+
+    depends_on('libglvnd', when='+glvnd')
+
+    # Add the necessary dri dependencies
+    for dependency, constraint in itertools.product(
+            ('damageproto@1.1:',
+             'dri2proto@2.8:',
+             'fixesproto',
+             'glproto@1.4.13:',
+             'libdrm@2.4.75:',
+             'libx11',
+             'libxext',
+             'libxcb@1.8.1:',
+             'libxdamage@1.1:',
+             'libxfixes',
+             'libxshmfence',
+             'libxxf86vm',
+             'xf86vidmodeproto'), ('+egl', '+glvnd')):
+        depends_on(dependency, when=constraint)
 
     # version specific issue
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96130
@@ -128,6 +154,15 @@ class Mesa(MesonPackage):
 
         num_frontends = 0
 
+
+        use_dri = ('+egl' in spec) or ('+glvnd' in spec)
+        args.append('--enable-dri' if use_dri else '--disable-dri')
+
+        if '+glvnd' in spec:
+            args.append('--enable-libglvnd')
+        else:
+            args.append('--disable-libglvnd')
+
         if spec.satisfies('@:20.3'):
             osmesa_enable, osmesa_disable = ('gallium', 'none')
         else:
@@ -141,27 +176,27 @@ class Mesa(MesonPackage):
 
         if '+glx' in spec:
             num_frontends += 1
-            if '+egl' in spec:
-                args.append('-Dglx=dri')
-            else:
-                args.append('-Dglx=gallium-xlib')
+
+            args.append('-Dglx=dri'
+                        if use_dri else
+                        '-Dglx=gallium-xlib')
             args_platforms.append('x11')
         else:
             args.append('-Dglx=disabled')
 
         if '+egl' in spec:
             num_frontends += 1
-            args.extend(['-Degl=enabled', '-Dgbm=enabled', '-Ddri3=enabled'])
+            args.extend(['-Degl=enabled', '-Dgbm=enabled'])
             args_platforms.append('surfaceless')
         else:
             args.extend(
-                ['-Degl=disabled', '-Dgbm=disabled', '-Ddri3=disabled'])
+                ['-Degl=disabled', '-Dgbm=disabled'])
 
         args.append(opt_bool('+opengl' in spec, 'opengl'))
         args.append(opt_enable('+opengles' in spec, 'gles1'))
         args.append(opt_enable('+opengles' in spec, 'gles2'))
 
-        args.append(opt_enable(num_frontends > 1, 'shared-glapi'))
+        args.append(opt_enable(num_frontends > 1 or ('+glvnd' in spec), 'shared-glapi'))
 
         if '+llvm' in spec:
             args.append('-Dllvm=enabled')
@@ -204,44 +239,60 @@ class Mesa(MesonPackage):
 
         return args
 
+    # NOTE: Each of the following *libs properties return empty lists if
+    # +glvnd, because there are no mesa libraries to be linked against.  When
+    # acting as a glvnd dispatch target, libglvnd will find mesa's shared
+    # objects via environment variables, dynamically load them, and dispatch
+    # calls to them at run time.
+
     @property
     def libs(self):
         spec = self.spec
         libs_to_seek = set()
 
-        if '+osmesa' in spec:
-            libs_to_seek.add('libOSMesa')
+        if '~glvnd' in spec:
+            if '+osmesa' in spec:
+                libs_to_seek.add('libOSMesa')
 
-        if '+glx' in spec:
-            libs_to_seek.add('libGL')
+            if '+glx' in spec:
+                libs_to_seek.add('libGL')
 
-        if '+opengl' in spec:
-            libs_to_seek.add('libGL')
+            if '+opengl' in spec:
+                libs_to_seek.add('libGL')
 
-        if '+opengles' in spec:
-            libs_to_seek.add('libGLES')
-            libs_to_seek.add('libGLES2')
+            if '+opengles' in spec:
+                libs_to_seek.add('libGLES')
+                libs_to_seek.add('libGLES2')
 
-        if libs_to_seek:
-            return find_libraries(list(libs_to_seek),
-                                  root=self.spec.prefix,
-                                  recursive=True)
-        return LibraryList()
+            if libs_to_seek:
+                return find_libraries(list(libs_to_seek),
+                                      root=self.spec.prefix,
+                                      recursive=True)
+        return LibraryList(())
 
     @property
     def osmesa_libs(self):
+        if '+glvnd' in self.spec:
+            return LibraryList(())
+
         return find_libraries('libOSMesa',
                               root=self.spec.prefix,
                               recursive=True)
 
     @property
     def glx_libs(self):
+        if '+glvnd' in self.spec:
+            return LibraryList(())
+
         return find_libraries('libGL',
                               root=self.spec.prefix,
                               recursive=True)
 
     @property
     def gl_libs(self):
+        if '+glvnd' in self.spec:
+            return LibraryList(())
+
         return find_libraries('libGL',
                               root=self.spec.prefix,
                               recursive=True)
