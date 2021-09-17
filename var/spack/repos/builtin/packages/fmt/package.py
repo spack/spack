@@ -36,6 +36,7 @@ class Fmt(CMakePackage):
             multi=False,
             description='Use the specified C++ standard when building')
     variant('shared', default=False, description='Build shared library')
+    variant('pic', default=True, description='Build position-independent code')
 
     depends_on('cmake@3.1.0:', type='build')
 
@@ -64,7 +65,13 @@ class Fmt(CMakePackage):
         args = []
 
         if self.spec.satisfies('+shared'):
-            args.append('BUILD_SHARED_LIBS=ON')
+            args.append('-DBUILD_SHARED_LIBS=ON')
+
+        if '+pic' in spec:
+            args.extend([
+                '-DCMAKE_C_FLAGS={0}'.format(self.compiler.cc_pic_flag),
+                '-DCMAKE_CXX_FLAGS={0}'.format(self.compiler.cxx_pic_flag)
+            ])
 
         args.append('-DCMAKE_CXX_STANDARD={0}'.format(
                     spec.variants['cxxstd'].value))
