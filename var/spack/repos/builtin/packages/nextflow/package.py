@@ -12,6 +12,8 @@ class Nextflow(Package):
     homepage = "https://www.nextflow.io"
     url      = "https://github.com/nextflow-io/nextflow/releases/download/v21.04.3/nextflow-21.04.3-all"
 
+    maintainers = ['dialvarezs']
+
     version('21.04.3', sha256='6eed23699055af60a85dd017b0351b7151982c6440b1ec5c273c1d4d07567572', expand=False)
     version('20.10.0', sha256='ef6e229307f04a6abd27f06f7e999dc77e064ab94d0202243801f8b69bb3641c', expand=False)
     version('20.07.1', sha256='97f393248260c71bfc4e18b4e41005a4ca48b32ccc20f76c8d7e9a6d6dc43a33', expand=False)
