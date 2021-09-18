@@ -87,7 +87,7 @@ class FftwBase(AutotoolsPackage):
         return self.spec.variants['precision'].value
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies('%apple-clang'):
+        if self.spec.satisfies('%apple-clang +openmp'):
             env.append_flags(
                 'CPPFLAGS', self.compiler.openmp_flag)
             env.append_flags(
