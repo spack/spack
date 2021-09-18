@@ -22,8 +22,12 @@ class Nextflow(Package):
     version('19.10.0', sha256='6f14a35222791836b01f1be8e46925ce2d739618705cf81faf83d66faeb41778', expand=False)
     version('19.07.0', sha256='6f7069b43f395c5d902321745d37988fed7ef84d2006ea00be0df19de97c1986', expand=False)
     version('19.04.1', sha256='219e67098fc20dcd8144c1a6fad58c9b23677f833d71b7a2187d4d30c82517c4', expand=False)
-    version('0.25.6', sha256='4a396544c603a2fba2cce6bf0be7ea21d32bff80ae8d727442b5ad98e4be861f', expand=False)
-    version('0.24.1', sha256='91ed989cf4241acac3eecfe025bc24db7c913468b86ce1a105d5468d6adfb5cf', expand=False)
+    version('0.25.6', sha256='4a396544c603a2fba2cce6bf0be7ea21d32bff80ae8d727442b5ad98e4be861f', expand=False, deprecated=True)
+    version('0.24.1', sha256='91ed989cf4241acac3eecfe025bc24db7c913468b86ce1a105d5468d6adfb5cf', expand=False, deprecated=True)
+    version('0.23.3', sha256='74687406246162cb55edee459a9bac16d3ba9cebfd2ec3fa22bd109d6f0a4b06', expand=False, deprecated=True)
+    version('0.21.0', sha256='4ad10c772c19a91ac0a707272bf76679ec89da7ec441c72d42d2e4ee73adea47', expand=False, deprecated=True)
+    version('0.20.1', sha256='4f4bba43019395c7fc9425b8fab9ccb933dad0040e39b760279a4ea86e72829d', expand=False, deprecated=True)
+    version('0.17.3', sha256='dac4bf2c7522620745d48ec61e68a22a3e668e51cff2f1582df90dadc4be9550', expand=False, deprecated=True)
 
     depends_on('java')
 
