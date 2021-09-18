@@ -7,23 +7,25 @@ from spack import *
 
 
 class Nextflow(Package):
-    """Data-driven computational pipelines"""
+    """Data-driven computational pipelines."""
 
     homepage = "https://www.nextflow.io"
-    url = "https://github.com/nextflow-io/nextflow/releases/download/v0.24.1/nextflow"
+    url      = "https://github.com/nextflow-io/nextflow/releases/download/v21.04.3/nextflow-21.04.3-all"
 
-    version('20.10.0', sha256='54f76c83cbabe8ec68d6a878dcf921e647284499f4ae917356e594d873cb78dd', expand=False)
-    version('20.07.1', sha256='de4db5747a801af645d9b021c7b36f4a25c3ce1a8fda7705a5f37e8f9357443a', expand=False)
-    version('0.25.6', sha256='9498806596c96ba87396194fa6f1d7d1cdb739990f83e7e89d1d055366c5a943', expand=False)
-    version('0.24.1', sha256='0bfde5335b385e3cff99bf4aab619e583de5dc0849767240f675037a2e7c1d83', expand=False)
-    version('0.23.3', sha256='ffe1c314962ff97ebf47b0567883e152522acfbf6fd5800200b1a7a0ca2896d2', expand=False)
-    version('0.21.0', sha256='076089079479da0d91fe1ad7aad06816164ecbcf17f73c55e795b1db8462b28d', expand=False)
-    version('0.20.1', sha256='02635f3371f76a10e12f7366508c90bacf532ab7c23ae03c895317a150a39bd4', expand=False)
-    version('0.17.3', sha256='05563ee1474fbef22f65fa3080792dcb08d218dd1b1561c517ebff4346559dbe', expand=False)
+    version('21.04.3', sha256='6eed23699055af60a85dd017b0351b7151982c6440b1ec5c273c1d4d07567572', expand=False)
+    version('20.10.0', sha256='ef6e229307f04a6abd27f06f7e999dc77e064ab94d0202243801f8b69bb3641c', expand=False)
+    version('20.07.1', sha256='97f393248260c71bfc4e18b4e41005a4ca48b32ccc20f76c8d7e9a6d6dc43a33', expand=False)
+    version('20.04.1', sha256='851f20884e50b0d0593a82786b8ded038c2e3b8c759275d01a5e98645abff640', expand=False)
+    version('20.01.0', sha256='6b212d9e4206855165da4d96b23940a4979fa96dcd4e0cbe29633bd8e4f2ff5b', expand=False)
+    version('19.10.0', sha256='6f14a35222791836b01f1be8e46925ce2d739618705cf81faf83d66faeb41778', expand=False)
+    version('19.07.0', sha256='6f7069b43f395c5d902321745d37988fed7ef84d2006ea00be0df19de97c1986', expand=False)
+    version('19.04.1', sha256='219e67098fc20dcd8144c1a6fad58c9b23677f833d71b7a2187d4d30c82517c4', expand=False)
+    version('0.25.6', sha256='4a396544c603a2fba2cce6bf0be7ea21d32bff80ae8d727442b5ad98e4be861f', expand=False)
+    version('0.24.1', sha256='91ed989cf4241acac3eecfe025bc24db7c913468b86ce1a105d5468d6adfb5cf', expand=False)
 
     depends_on('java')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install("nextflow", join_path(prefix.bin, "nextflow"))
+        install(self.stage.archive_file, join_path(prefix.bin, "nextflow"))
         set_executable(join_path(prefix.bin, "nextflow"))
