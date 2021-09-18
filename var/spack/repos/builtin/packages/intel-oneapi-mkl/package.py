@@ -30,6 +30,9 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 sha256='818b6bd9a6c116f4578cda3151da0612ec9c3ce8b2c8a64730d625ce5b13cc0c',
                 expand=False)
 
+    variant('ilp64', default=False,
+            description='Build with ILP64 support')
+
     depends_on('intel-oneapi-tbb')
 
     provides('fftw-api@3')
@@ -42,10 +45,20 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     def component_dir(self):
         return 'mkl'
 
+    def xlp64_lib(self, lib):
+        return lib + ('_ilp64'
+                      if '+ilp64' in self.spec
+                      else '_lp64')
+
+    @property
+    def headers(self):
+        include_path = join_path(self.component_path, 'include')
+        return find_headers('*', include_path)
+
     @property
     def libs(self):
-        lib_path = join_path(self.component_path, 'lib', 'intel64')
-        mkl_libs = ['libmkl_intel_lp64', 'libmkl_sequential', 'libmkl_core']
-        libs = find_libraries(mkl_libs, root=lib_path, shared=True, recursive=False)
-        libs += find_system_libraries(['libpthread', 'libm', 'libdl'], shared=True)
+        mkl_libs = [self.xlp64_lib('libmkl_intel'), 'libmkl_sequential', 'libmkl_core']
+        libs = find_libraries(mkl_libs,
+                              join_path(self.component_path, 'lib', 'intel64'))
+        libs += find_system_libraries(['libpthread', 'libm', 'libdl'])
         return libs
