@@ -38,7 +38,7 @@ class Rocsolver(CMakePackage):
     version('3.5.0', sha256='d655e8c762fb9e123b9fd7200b4258512ceef69973de4d0588c815bc666cb358')
 
     depends_on('cmake@3.8:', type='build', when='@4.1.0:')
-    depends_on('cmake@3.5:', type='build', when='@:4.0.0')
+    depends_on('cmake@3.5:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1']:
