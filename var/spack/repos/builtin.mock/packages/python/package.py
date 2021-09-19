@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -19,3 +21,9 @@ class Python(Package):
     version('2.7.10', 'd7547558fd673bd9d38e2108c6b42521')
     version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
     version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
+
+    @property
+    def site_packages_dir(self):
+        """Directory where third-party extensions should be installed."""
+        python_dir = 'python{0}'.format(self.version.up_to(2))
+        return os.path.join('lib', python_dir, 'site-packages')
