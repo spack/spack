@@ -169,7 +169,7 @@ class TestAutotoolsPackage(object):
         options = pkg.with_or_without('bvv')
         assert '--with-bvv' in options
 
-        options = pkg.with_or_without('lorem_ipsum', variant_name='lorem-ipsum')
+        options = pkg.with_or_without('lorem-ipsum', variant_name='lorem_ipsum')
         assert '--without-lorem-ipsum' in options
 
     def test_none_is_allowed(self):
