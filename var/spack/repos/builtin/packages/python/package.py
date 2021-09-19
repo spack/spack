@@ -923,6 +923,8 @@ for plat_specific in [True, False]:
         if not is_system_path(path):
             env.prepend_path('PATH', path)
 
+        # TODO: this should be dropped, the build environment should take care
+        # of dependencies.
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test'), root=True):
             if d.package.extends(self.spec):
                 env.prepend_path('PYTHONPATH', join_path(
