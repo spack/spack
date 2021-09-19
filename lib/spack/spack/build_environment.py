@@ -948,14 +948,14 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
         # we do to help the build, namely for PATH, CMAKE_PREFIX_PATH, and
         # PKG_CONFIG_PATH)
         if dep in custom_mod_deps:
-            dpkg = dep.package
-            set_module_variables_for_package(dpkg)
             # Allow dependencies to modify the module
-            dpkg.setup_dependent_package(spec.package.module, spec)
             if context == 'build':
-                dpkg.setup_dependent_build_environment(env, spec)
+                set_module_variables_for_package(dep.package)
+                dep.package.setup_dependent_package(spec.package.module, spec)
+                dep.package.setup_dependent_build_environment(env, spec)
+
             if dep in exe_deps:
-                dpkg.setup_run_environment(env)
+                dep.package.setup_run_environment(env)
 
     # Note that we want to perform environment modifications in a fixed order.
     # The Spec.traverse method provides this: i.e. in addition to
