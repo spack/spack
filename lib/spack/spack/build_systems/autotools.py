@@ -393,7 +393,8 @@ class AutotoolsPackage(PackageBase):
 
                 The special value 'prefix' can also be assigned and will return
                 ``spec[name].prefix`` as activation parameter.
-            variant_name (str): name of the variant that is being processed (if differs from option name)
+            variant_name (str): name of the variant that is being processed
+                                (if different from option name)
 
         Examples:
 
@@ -464,7 +465,9 @@ class AutotoolsPackage(PackageBase):
             ) or self.variants[variant_name].values
 
             options = [
-                (value, condition.format(variant_name=variant_name, value=value) in spec)
+                (value,
+                 condition.format(variant_name=variant_name,
+                                  value=value) in spec)
                 for value in feature_values
             ]
 
