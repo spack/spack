@@ -211,7 +211,7 @@ Spec-related modules
      yet.
 
 :mod:`spack.architecture`
-  :func:`architecture.sys_type <spack.architecture.sys_type>` is used
+  :func:`architecture.default_arch <spack.architecture.default_arch>` is used
   to determine the host architecture while building.
 
   .. warning::

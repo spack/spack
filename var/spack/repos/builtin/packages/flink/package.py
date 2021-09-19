@@ -13,7 +13,7 @@ class Flink(Package):
     """
 
     homepage = "https://flink.apache.org/"
-    url      = "http://archive.apache.org/dist/flink/flink-1.9.1/flink-1.9.1-bin-scala_2.11.tgz"
+    url      = "https://archive.apache.org/dist/flink/flink-1.9.1/flink-1.9.1-bin-scala_2.11.tgz"
 
     version('1.9.1', sha256='f69de344cd593e92f8261e19ae8a47b3910e9a70a7cd1ccfb1ecd1ff000b93ea')
     version('1.9.0', sha256='a2245f68309e94ed54d86a680232a518aed9c5ea030bcc0b298bc8f27165eeb7')

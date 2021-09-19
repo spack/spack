@@ -750,10 +750,11 @@ def override(path_or_scope, value=None):
         config.push_scope(overrides)
         config.set(path_or_scope, value, scope=scope_name)
 
-    yield config
-
-    scope = config.remove_scope(overrides.name)
-    assert scope is overrides
+    try:
+        yield config
+    finally:
+        scope = config.remove_scope(overrides.name)
+        assert scope is overrides
 
 
 #: configuration scopes added on the command line

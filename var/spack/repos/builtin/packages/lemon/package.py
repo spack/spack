@@ -13,6 +13,6 @@ class Lemon(CMakePackage):
     optimization tasks connected mainly with graphs and networks."""
 
     homepage = "https://lemon.cs.elte.hu/trac/lemon"
-    url      = "http://lemon.cs.elte.hu/pub/sources/lemon-1.3.1.tar.gz"
+    url      = "https://lemon.cs.elte.hu/pub/sources/lemon-1.3.1.tar.gz"
 
     version('1.3.1', sha256='71b7c725f4c0b4a8ccb92eb87b208701586cf7a96156ebd821ca3ed855bad3c8')

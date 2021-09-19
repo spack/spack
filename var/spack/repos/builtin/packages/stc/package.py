@@ -11,7 +11,7 @@ class Stc(AutotoolsPackage):
     """STC: The Swift-Turbine Compiler"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/stc-0.9.0.tar.gz'
+    url      = 'https://swift-lang.github.io/swift-t-downloads/spack/stc-0.9.0.tar.gz'
     git      = "https://github.com/swift-lang/swift-t.git"
 
     version('master', branch='master')

@@ -21,27 +21,30 @@ class EcpDataVisSdk(BundlePackage):
     ############################################################
 
     # I/O
-    variant('adios2', default=True, description="Enable ADIOS2")
-    variant('darshan', default=True, description="Enable Darshan")
+    variant('adios2', default=False, description="Enable ADIOS2")
+    variant('darshan', default=False, description="Enable Darshan")
     variant('faodel', default=False, description="Enable FAODEL")
-    variant('hdf5', default=True, description="Enable HDF5")
-    variant('pnetcdf', default=True, description="Enable PNetCDF")
-    variant('unifyfs', default=True, description="Enable UnifyFS")
-    variant('veloc', default=True, description="Enable VeloC")
+    variant('hdf5', default=False, description="Enable HDF5")
+    variant('pnetcdf', default=False, description="Enable PNetCDF")
+    variant('unifyfs', default=False, description="Enable UnifyFS")
+    variant('veloc', default=False, description="Enable VeloC")
 
     # Vis
     variant('ascent', default=False, description="Enable Ascent")
     variant('paraview', default=False, description="Enable ParaView")
-    variant('sz', default=True, description="Enable SZ")
+    variant('sz', default=False, description="Enable SZ")
     variant('vtkm', default=False, description="Enable VTK-m")
-    variant('zfp', default=True, description="Enable ZFP")
+    variant('zfp', default=False, description="Enable ZFP")
 
     # Outstanding concretization issues
-    # variant('cinema', default=True, description="Enable Cinema")
+    variant('cinema', default=False, description="Enable Cinema")
+    conflicts('+cinema')
 
     # Outstanding build issues
-    # variant('catalyst', default=False, description="Enable Catalyst")
-    # variant('visit', default=False, description="Enable VisIt")
+    variant('catalyst', default=False, description="Enable Catalyst")
+    conflicts('+catalyst')
+    variant('visit', default=False, description="Enable VisIt")
+    conflicts('+visit')
 
     ############################################################
     # This is a messy workaround until the clingo concretizer can be required.

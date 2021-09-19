@@ -11,7 +11,7 @@ class Structure(MakefilePackage):
        data to investigate population structure."""
 
     homepage = "https://web.stanford.edu/group/pritchardlab/structure.html"
-    url      = "http://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/structure_kernel_source.tar.gz"
+    url      = "https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/structure_kernel_source.tar.gz"
 
     version('2.3.4', sha256='f2b72b9189a514f53e921bbdc1aa3dbaca7ac34a8467af1f972c7e4fc9c0bb37')
 

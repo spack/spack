@@ -10,7 +10,7 @@ class Flint(Package):
     """FLINT (Fast Library for Number Theory)."""
 
     homepage = "https://www.flintlib.org"
-    url      = "http://mirrors.mit.edu/sage/spkg/upstream/flint/flint-2.5.2.tar.gz"
+    url      = "https://mirrors.mit.edu/sage/spkg/upstream/flint/flint-2.5.2.tar.gz"
     git      = "https://github.com/wbhart/flint2.git"
 
     version('develop', branch='trunk')

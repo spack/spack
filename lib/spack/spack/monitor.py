@@ -385,7 +385,9 @@ class SpackMonitorClient:
             # Not sure if this is needed here, but I see it elsewhere
             if spec.name in spack.repo.path or spec.virtual:
                 spec.concretize()
-            as_dict = {"spec": spec.to_dict(hash=ht.full_hash),
+
+            # Remove extra level of nesting
+            as_dict = {"spec": spec.to_dict(hash=ht.full_hash)['spec'],
                        "spack_version": self.spack_version}
 
             if self.save_local:
@@ -425,11 +427,15 @@ class SpackMonitorClient:
             data['tags'] = self.tags
 
         # If we allow the spec to not exist (meaning we create it) we need to
-        # include the full spec.yaml here
+        # include the full specfile here
         if not spec_exists:
             meta_dir = os.path.dirname(spec.package.install_log_path)
-            spec_file = os.path.join(meta_dir, "spec.yaml")
-            data['spec'] = syaml.load(read_file(spec_file))
+            spec_file = os.path.join(meta_dir, "spec.json")
+            if os.path.exists(spec_file):
+                data['spec'] = sjson.load(read_file(spec_file))
+            else:
+                spec_file = os.path.join(meta_dir, "spec.yaml")
+                data['spec'] = syaml.load(read_file(spec_file))
 
         if self.save_local:
             return self.get_local_build_id(data, full_hash, return_response)

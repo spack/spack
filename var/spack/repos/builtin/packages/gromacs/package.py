@@ -20,7 +20,7 @@ class Gromacs(CMakePackage):
     """
 
     homepage = 'http://www.gromacs.org'
-    url      = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
+    url      = 'https://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
     git      = 'https://github.com/gromacs/gromacs.git'
     maintainers = ['junghans', 'marvinbernhardt']
 
@@ -390,4 +390,10 @@ class Gromacs(CMakePackage):
                 options.append('-DFFTWF_LIBRARIES={0}'.
                                format(self.spec['amdfftw'].libs.joined(';')))
 
+        # Ensure that the GROMACS log files report how the code was patched
+        # during the build, so that any problems are easier to diagnose.
+        if '+plumed' in self.spec:
+            options.append('-DGMX_VERSION_STRING_OF_FORK=PLUMED-spack')
+        else:
+            options.append('-DGMX_VERSION_STRING_OF_FORK=spack')
         return options

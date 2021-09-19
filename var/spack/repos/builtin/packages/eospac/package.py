@@ -13,7 +13,7 @@ class Eospac(Package):
     """
 
     homepage = "https://laws.lanl.gov/projects/data/eos.html"
-    list_url = "http://laws.lanl.gov/projects/data/eos/eospacReleases.php"
+    list_url = "https://laws.lanl.gov/projects/data/eos/eospacReleases.php"
     maintainers = ['KineticTheory']
 
     # An EOSPAC release labeled "beta" doesn't always imply that the

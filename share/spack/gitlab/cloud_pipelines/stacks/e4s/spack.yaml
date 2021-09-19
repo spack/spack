@@ -348,6 +348,7 @@ spack:
         - cuda
         - dyninst
         - hpx
+        - kokkos-kernels
         - llvm
         - llvm-amdgpu
         - precice

@@ -9,7 +9,7 @@ class Slider(MavenPackage):
     long-running data access applications in Hadoop."""
 
     homepage = "https://www.cloudera.com/products/open-source/apache-hadoop/apache-slider.html"
-    url      = "http://archive.apache.org/dist/incubator/slider/0.92.0-incubating/apache-slider-0.92.0-incubating-source-release.tar.gz"
+    url      = "https://archive.apache.org/dist/incubator/slider/0.92.0-incubating/apache-slider-0.92.0-incubating-source-release.tar.gz"
     list_url = "http://archive.apache.org/dist/incubator/slider"
     list_depth = 1
 
