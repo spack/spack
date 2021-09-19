@@ -12,10 +12,14 @@ class FeqParse(CMakePackage):
        provided as strings."""
 
     homepage = "https://github.com/FluidNumerics/feq-parse"
-    url      = "https://github.com/FluidNumerics/feq-parse/archive/v1.0.0.tar.gz"
+    url      = "https://github.com/FluidNumerics/feq-parse"
+    baseurl  = "https://github.com/FluidNumerics/feq-parse"
+    git      = "https://github.com/FluidNumerics/feq-parse.git"
 
-    maintainers = ['schoonovernumerics']
+    maintainers = ['fluidnumerics-joe']
 
-    version('1.0.2', sha256='1cd1db7562908ea16fc65dc5268b654405d0b3d9dcfe11f409949c431b48a3e8')
+    version('v1.1.0', tag='v1.1.0')
+    version('v1.0.2', tag='v1.0.2')
+    version('master', branch='master')
 
     depends_on('cmake@3.0.2:', type='build')
