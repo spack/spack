@@ -142,7 +142,7 @@ def dependencies(spec, request='all'):
         return []
 
     if request == 'direct':
-        return spec.dependencies(deptype=('run',))
+        return spec.dependencies(deptype=('link', 'run'))
 
     # FIXME : during module file creation nodes seem to be visited multiple
     # FIXME : times even if cover='nodes' is given. This work around permits
@@ -153,7 +153,7 @@ def dependencies(spec, request='all'):
     deps = sorted(
         spec.traverse(order='post',
                       cover='nodes',
-                      deptype=('run',),
+                      deptype=('link', 'run'),
                       root=False),
         reverse=True)
     return [d for d in deps if not (d in seen or seen_add(d))]
