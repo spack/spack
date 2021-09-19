@@ -67,7 +67,7 @@ die() {
 }
 
 check_IFS() {
-    must_be=$1
+    must_be="$1"
     if [ "$IFS" != "$must_be" ]; then
         die "\$IFS must be '$must_be', but was '$IFS'."
     fi
@@ -92,10 +92,10 @@ canonicalize_paths() {
 
 # Test whether a path $1 is equal to any entry of $2.
 path_contained_in_nonrecursive() {
-    path_to_check=$1
+    path_to_check="$1"
     # $2/$directory_list are split according to $IFS, which may be arbitrary but
     # is likely ':'.
-    directory_list=$2
+    directory_list="$2"
     for dir_to_test in $directory_list; do
         # We strip any trailing slashes from either argument.
         if [ "${path_to_check%/}" -ef "${dir_to_test%/}" ]; then
@@ -107,7 +107,7 @@ path_contained_in_nonrecursive() {
 
 # Exit with error if the parameter given by the name in $1 is unset or empty.
 check_param_is_set() {
-    param_name=$1
+    param_name="$1"
     eval ": \${${param_name}:?Spack compiler must be run from Spack! Input '\$${param_name}' is missing.}"
 }
 
@@ -117,7 +117,7 @@ for param in $parameters; do
 done
 
 # SPACK_SYSTEM_DIRS is delimited by :
-readonly SPACK_SYSTEM_DIRS=$(IFS=':' canonicalize_paths "$SPACK_SYSTEM_DIRS")
+readonly SPACK_SYSTEM_DIRS="$(IFS=':' canonicalize_paths "$SPACK_SYSTEM_DIRS")"
 
 # Test whether a path is contained within $SPACK_SYSTEM_DIRS.
 is_system_dir() {
@@ -126,8 +126,8 @@ is_system_dir() {
 
 # Remove entries of $1 which are contained in $2.
 filter_out_paths_from_another_set_of_paths() {
-    candidate_paths=$1
-    paths_to_avoid=$2
+    candidate_paths="$1"
+    paths_to_avoid="$2"
     # We output paths using the ':' separator, so we want to assume the same for
     # our input arguments to make it easier to follow.
     check_IFS ':'
@@ -147,17 +147,17 @@ readonly Custom='custom'
 
 # Determine whether $1 is equal to $True, $False, or $Custom.
 is_valid_tribool() {
-    value=$1
+    value="$1"
     [ "$value" = "$True" -o "$value" = "$False" -o "$value" = "$Custom" ]
 }
 
 is_valid_bool() {
-    value=$1
+    value="$1"
     [ "$value" = "$True" -o "$value" = "$False" ]
 }
 
 # If we aren't asking for debug flags, don't add them.
-: ${SPACK_ADD_DEBUG_FLAGS:=$False}
+: ${SPACK_ADD_DEBUG_FLAGS:="$False"}
 
 if ! is_valid_tribool "$SPACK_ADD_DEBUG_FLAGS"; then
     die "\$SPACK_ADD_DEBUG_FLAGS, if defined, must be one of '$True' '$False', or '$Custom' (was: $SPACK_ADD_DEBUG_FLAGS)."
@@ -177,35 +177,35 @@ fi
 #    ld      link
 #    ccld    compile & link
 
-command=${0##*/}
+command="${0##*/}"
 case "$command" in
     cpp)
         mode=cpp
         debug_flags='-g'
         ;;
     cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc)
-        command=$SPACK_CC
+        command="$SPACK_CC"
         language='C'
         comp='CC'
         lang_flags='C'
         debug_flags='-g'
         ;;
     c++|CC|g++|clang++|armclang++|icpc|icpx|pgc++|nvc++|xlc++|xlc++_r|FCC)
-        command=$SPACK_CXX
+        command="$SPACK_CXX"
         language='C++'
         comp='CXX'
         lang_flags='CXX'
         debug_flags='-g'
         ;;
     ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt)
-        command=$SPACK_FC
+        command="$SPACK_FC"
         language='Fortran 90'
         comp='FC'
         lang_flags='F'
         debug_flags='-g'
         ;;
     f77|xlf|xlf_r|pgf77)
-        command=$SPACK_F77
+        command="$SPACK_F77"
         language='Fortran 77'
         comp='F77'
         lang_flags='F'
@@ -276,9 +276,9 @@ fi
 #
 # https://sourceware.org/ml/binutils/2013-01/msg00307.html
 #
-readonly dtags_to_add=$SPACK_DTAGS_TO_ADD
-readonly dtags_to_strip=$SPACK_DTAGS_TO_STRIP
-readonly linker_arg=$SPACK_LINKER_ARG
+readonly dtags_to_add="$SPACK_DTAGS_TO_ADD"
+readonly dtags_to_strip="$SPACK_DTAGS_TO_STRIP"
+readonly linker_arg="$SPACK_LINKER_ARG"
 
 # Set up rpath variable according to language.
 eval "readonly rpath=\$SPACK_${comp}_RPATH_ARG"
@@ -292,11 +292,11 @@ fi
 
 # Filter '.' and Spack environment directories out of $PATH so that this script
 # doesn't just call itself.
-readonly env_path=$(IFS=':' canonicalize_paths "$PATH")
-readonly spack_env_path=$(IFS=':' canonicalize_paths "$SPACK_ENV_PATH")
-readonly filtered_path=$(IFS=':' filter_out_paths_from_another_set_of_paths "$env_path" "$spack_env_path")
+readonly env_path="$(IFS=':' canonicalize_paths "$PATH")"
+readonly spack_env_path="$(IFS=':' canonicalize_paths "$SPACK_ENV_PATH")"
+readonly filtered_path="$(IFS=':' filter_out_paths_from_another_set_of_paths "$env_path" "$spack_env_path")"
 # Remove the trailing ':' before putting it back in $PATH.
-PATH=${filtered_path%:}
+PATH="${filtered_path%:}"
 
 if [ "$mode" = 'vcheck' ]; then
     exec "$command" "$@"
@@ -311,7 +311,7 @@ case "$mode" in
                 for arg; do
                     case "${arg}~${mode}" in
                         -r~ld|-r~ccld|-Wl,-r~ccld)
-                            add_rpaths=$False
+                            add_rpaths="$False"
                             break
                             ;;
                     esac
@@ -320,7 +320,7 @@ case "$mode" in
         esac
         ;;
 esac
-: ${add_rpaths:=$True}
+: ${add_rpaths:="$True"}
 
 # This check allows us to safely perform checks with `!=` later.
 if ! is_valid_bool "$add_rpaths"; then
@@ -362,7 +362,7 @@ alarm_bell() {
 # methods below. Our technique of delimiting arrays via alarm bells may become
 # cumbersome if we constantly need to process extraneous bells out of strings.
 #
-# To invert the result of this method, set IFS=$(alarm_bell).
+# To invert the result of this method, set IFS="$(alarm_bell)."
 bell_delimited() {
     printf '%s\007' "$@"
 }
@@ -374,9 +374,9 @@ bell_delimited() {
 # to produce the command line to exec -- we instead set $IFS to the alarm bell
 # and exec our args array directly.
 join_array_elements() {
-    array=$1
-    joiner=$2
-    IFS=$(alarm_bell)
+    array="$1"
+    joiner="$2"
+    IFS="$(alarm_bell)"
     printf '%s' "$array" | tr '\007' "$joiner"
 }
 
@@ -401,9 +401,9 @@ generate_array_from_expansion() {
 # $1 is allowed to be empty, along with $2->$#. This method will then produce
 # the empty string, which is interpreted as an empty array.
 append() {
-    base=$1
+    base="$1"
     shift
-    IFS=$(alarm_bell)
+    IFS="$(alarm_bell)"
     generate_array_from_expansion $base
     generate_array_from_expansion "$@"
 }
@@ -412,13 +412,13 @@ append() {
 #
 # $1 must be a non-empty string, but $2 is allowed to be an empty array.
 prepend() {
-    new_element=$1
-    base=$2
+    new_element="$1"
+    base="$2"
     if is_empty_or_whitespace "$new_element"; then
         die "Expected initial element to be non-empty (base was: $base)"
     fi
     bell_delimited "$new_element"
-    IFS=$(alarm_bell)
+    IFS="$(alarm_bell)"
     generate_array_from_expansion $base
 }
 
@@ -426,9 +426,9 @@ prepend() {
 #
 # Both $1 and $2 are allowed to be empty.
 concatenate() {
-    left=$1
-    right=$2
-    IFS=$(alarm_bell)
+    left="$1"
+    right="$2"
+    IFS="$(alarm_bell)"
     generate_array_from_expansion $left
     generate_array_from_expansion $right
 }
@@ -437,12 +437,12 @@ concatenate() {
 #
 # $1 may be an empty array, but $2 must be a non-empty string.
 prefix_array_elements() {
-    inputs=$1
-    prefix=$2
+    inputs="$1"
+    prefix="$2"
     if is_empty_or_whitespace "$prefix"; then
         die "Expected prefix string to be non-empty (inputs were: $inputs)"
     fi
-    IFS=$(alarm_bell)
+    IFS="$(alarm_bell)"
     for element in $inputs; do
         if is_empty_or_whitespace "$element"; then
             continue
@@ -455,21 +455,21 @@ prefix_array_elements() {
 # Produce command line arguments to include each element of $1 as a directory
 # for the C preprocessor to search for header files in.
 include_dir_prefix_elements() {
-    inputs=$1
+    inputs="$1"
     prefix_array_elements "$inputs" '-I'
 }
 
 # Produce command line arguments to include each element of $1 as a directory
 # for the linker to search for libraries in.
 lib_dir_prefix_elements() {
-    inputs=$1
+    inputs="$1"
     prefix_array_elements "$inputs" '-L'
 }
 
 # Produce command line arguments to include each element of $1 as the name of
 # a library to link against.
 lib_name_prefix_elements() {
-    inputs=$1
+    inputs="$1"
     prefix_array_elements "$inputs" '-l'
 }
 
@@ -478,12 +478,12 @@ lib_name_prefix_elements() {
 #
 # $1 may be an empty array, but $2 must be a non-empty string.
 prefix_discrete_arg_array_elements() {
-    inputs=$1
-    prefix_discrete_arg=$2
+    inputs="$1"
+    prefix_discrete_arg="$2"
     if is_empty_or_whitespace "$prefix_discrete_arg"; then
         die "Expected discrete prefix to be non-empty (inputs were: $inputs)"
     fi
-    IFS=$(alarm_bell)
+    IFS="$(alarm_bell)"
     for element in $inputs; do
         if is_empty_or_whitespace "$element"; then
             continue
@@ -496,7 +496,7 @@ prefix_discrete_arg_array_elements() {
 # Produce command line arguments to include each element of $1 as the name of
 # a system include directory.
 system_include_dir_prefix_elements() {
-    inputs=$1
+    inputs="$1"
     prefix_discrete_arg_array_elements "$inputs" '-isystem'
 }
 
@@ -505,12 +505,12 @@ system_include_dir_prefix_elements() {
 # $1 may be an empty array, but $2 must be a non-empty string. This method also
 # errors if any element of $1 does *not* begin with the string $2.
 remove_prefix_from_array_elements() {
-    inputs=$1
-    prefix=$2
+    inputs="$1"
+    prefix="$2"
     if is_empty_or_whitespace "$prefix"; then
         die "Expected prefix to remove to be non-empty (inputs were: $inputs)"
     fi
-    IFS=$(alarm_bell)
+    IFS="$(alarm_bell)"
     for element in $inputs; do
         if is_empty_or_whitespace "$element"; then
             continue
@@ -565,31 +565,31 @@ while [ $# -ne 0 ]; do
 
     case "$1" in
         -isystem*)
-            arg=${1#-isystem}
-            isystem_was_used=$True
-            if [ -z "$arg" ]; then shift; arg=$1; fi
+            arg="${1#-isystem}"
+            isystem_was_used="$True"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
             if is_system_dir "$arg"; then
-                isystem_system_includes=$(append "$isystem_system_includes" "$arg")
+                isystem_system_includes="$(append "$isystem_system_includes" "$arg")"
             else
-                isystem_includes=$(append "$isystem_includes" "$arg")
+                isystem_includes="$(append "$isystem_includes" "$arg")"
             fi
             ;;
         -I*)
-            arg=${1#-I}
-            if [ -z "$arg" ]; then shift; arg=$1; fi
+            arg="${1#-I}"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
             if is_system_dir "$arg"; then
-                system_includes=$(append "$system_includes" "$arg")
+                system_includes="$(append "$system_includes" "$arg")"
             else
-                includes=$(append "$includes" "$arg")
+                includes="$(append "$includes" "$arg")"
             fi
             ;;
         -L*)
-            arg=${1#-L}
-            if [ -z "$arg" ]; then shift; arg=$1; fi
+            arg="${1#-L}"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
             if is_system_dir "$arg"; then
-                system_libdirs=$(append "$system_libdirs" "$arg")
+                system_libdirs="$(append "$system_libdirs" "$arg")"
             else
-                libdirs=$(append "$libdirs" "$arg")
+                libdirs="$(append "$libdirs" "$arg")"
             fi
             ;;
         -l*)
@@ -603,31 +603,31 @@ while [ $# -ne 0 ]; do
                 shift
                 continue
             fi
-            arg=${1#-l}
-            if [ -z "$arg" ]; then shift; arg=$1; fi
-            other_args=$(append "$other_args" "-l$arg")
+            arg="${1#-l}"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            other_args="$(append "$other_args" "-l$arg")"
             ;;
         -Wl,*)
-            arg=${1#-Wl,}
-            if [ -z "$arg" ]; then shift; arg=$1; fi
+            arg="${1#-Wl,}"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
             case "$arg" in
                 -rpath=*)
-                    rp=${arg#-rpath=}
+                    rp="${arg#-rpath=}"
                     ;;
                 --rpath=*)
-                    rp=${arg#--rpath=}
+                    rp="${arg#--rpath=}"
                     ;;
                 -rpath,*)
-                    rp=${arg#-rpath,}
+                    rp="${arg#-rpath,}"
                     ;;
                 --rpath,*)
-                    rp=${arg#--rpath,}
+                    rp="${arg#--rpath,}"
                     ;;
                 -rpath|--rpath)
-                    shift; arg=$1
+                    shift; arg="$1"
                     case "$arg" in
                         -Wl,*)
-                            rp=${arg#-Wl,}
+                            rp="${arg#-Wl,}"
                             ;;
                         *)
                             die "-Wl,-rpath was not followed by -Wl,* (was: $arg)"
@@ -638,25 +638,25 @@ while [ $# -ne 0 ]; do
                     :  # We want to explicitly remove this flag.
                     ;;
                 *)
-                    other_args=$(append "$other_args" "-Wl,$arg")
+                    other_args="$(append "$other_args" "-Wl,$arg")"
                     ;;
             esac
             ;;
         -Xlinker,*)
-            arg=${1#-Xlinker,}
-            if [ -z "$arg" ]; then shift; arg=$1; fi
+            arg="${1#-Xlinker,}"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
             case "$arg" in
                 -rpath=*)
-                    rp=${arg#-rpath=}
+                    rp="${arg#-rpath=}"
                     ;;
                 --rpath=*)
-                    rp=${arg#--rpath=}
+                    rp="${arg#--rpath=}"
                     ;;
                 -rpath|--rpath)
-                    shift; arg=$1
+                    shift; arg="$1"
                     case "$arg" in
                         -Xlinker,*)
-                            rp=${arg#-Xlinker,}
+                            rp="${arg#-Xlinker,}"
                             ;;
                         *)
                             die "-Xlinker,-rpath was not followed by -Xlinker,* (was: $arg)"
@@ -664,7 +664,7 @@ while [ $# -ne 0 ]; do
                     esac
                     ;;
                 *)
-                    other_args=$(append "$other_args" "-Xlinker,$arg")
+                    other_args="$(append "$other_args" "-Xlinker,$arg")"
                     ;;
             esac
             ;;
@@ -674,21 +674,21 @@ while [ $# -ne 0 ]; do
                     die "'-Xlinker -rpath' was not followed by -Xlinker (was: $3)"
                 fi
                 shift 3;
-                rp=$1
+                rp="$1"
             elif [ "$2" = "$dtags_to_strip" ]; then
                 # We want to explicitly remove this flag. This 'shift' unshifts
                 # '-Xlinker', while the 'shift' at the bottom of the loop will
                 # unshift the second argument we want to strip.
                 shift
             else
-                other_args=$(append "$other_args" "$1")
+                other_args="$(append "$other_args" "$1")"
             fi
             ;;
         *)
             if [ "$1" = "$dtags_to_strip" ]; then
                 :  # We want to explicitly remove this flag.
             else
-                other_args=$(append "$other_args" "$1")
+                other_args="$(append "$other_args" "$1")"
             fi
             ;;
     esac
@@ -696,14 +696,14 @@ while [ $# -ne 0 ]; do
     # Test rpaths against system directories in one place.
     if [ -n "$rp" ]; then
         if is_system_dir "$rp"; then
-            system_rpaths=$(append "$system_rpaths" "$rp")
+            system_rpaths="$(append "$system_rpaths" "$rp")"
         else
-            rpaths=$(append "$rpaths" "$rp")
+            rpaths="$(append "$rpaths" "$rp")"
         fi
     fi
     shift
 done
-: ${isystem_was_used=$False}
+: ${isystem_was_used="$False"}
 
 # Return whether any -isystem args were provided to the original command line.
 was_isystem_used() {
@@ -721,12 +721,12 @@ flags=''
 # Add debug flags.
 if [ "$SPACK_ADD_DEBUG_FLAGS" = "$True" ]; then
     if [ -n "$debug_flags" ]; then
-        flags=$(append "$flags" "$debug_flags")
+        flags="$(append "$flags" "$debug_flags")"
     fi
 elif [ "$SPACK_ADD_DEBUG_FLAGS" = "$Custom" ]; then
     # If a custom flag is requested, derive from the environment.
-    spack_debug_flags=$(IFS=' '; generate_array_from_expansion $SPACK_DEBUG_FLAGS)
-    flags=$(concatenate "$flags" "$spack_debug_flags")
+    spack_debug_flags="$(IFS=' '; generate_array_from_expansion $SPACK_DEBUG_FLAGS)"
+    flags="$(concatenate "$flags" "$spack_debug_flags")"
 fi
 
 # Fortran flags come before CPPFLAGS.
@@ -734,7 +734,7 @@ case "$mode" in
     cc|ccld)
         case "$lang_flags" in
             F)
-                flags=$(IFS=' '; append "$flags" ${SPACK_FFLAGS:-})
+                flags="$(IFS=' '; append "$flags" ${SPACK_FFLAGS:-})"
                 ;;
         esac
         ;;
@@ -743,7 +743,7 @@ esac
 # C preprocessor flags come before any C/CXX flags.
 case "$mode" in
     cpp|as|cc|ccld)
-        flags=$(IFS=' '; append "$flags" ${SPACK_CPPFLAGS:-})
+        flags="$(IFS=' '; append "$flags" ${SPACK_CPPFLAGS:-})"
         ;;
 esac
 
@@ -752,10 +752,10 @@ case "$mode" in
     cc|ccld)
         case "$lang_flags" in
             C)
-                flags=$(IFS=' '; append "$flags" ${SPACK_CFLAGS:-})
+                flags="$(IFS=' '; append "$flags" ${SPACK_CFLAGS:-})"
                 ;;
             CXX)
-                flags=$(IFS=' '; append "$flags" ${SPACK_CXXFLAGS:-})
+                flags="$(IFS=' '; append "$flags" ${SPACK_CXXFLAGS:-})"
                 ;;
         esac
         # We set $SPACK_TARGET_ARGS to a newline in testing to differentiate it
@@ -763,8 +763,8 @@ case "$mode" in
         # string comparison is the only way to correctly check against
         # a newline.
         if [ "$(printf '%s' "$SPACK_TARGET_ARGS")" != "$(printf '\n')" ]; then
-            spack_target_args=$(IFS=' '; generate_array_from_expansion $SPACK_TARGET_ARGS)
-            flags=$(concatenate "$spack_target_args" "$flags")
+            spack_target_args="$(IFS=' '; generate_array_from_expansion $SPACK_TARGET_ARGS)"
+            flags="$(concatenate "$spack_target_args" "$flags")"
         fi
         ;;
 esac
@@ -772,49 +772,49 @@ esac
 # Add linker flags.
 case "$mode" in
     ld|ccld)
-        flags=$(IFS=' '; append "$flags" ${SPACK_LDFLAGS:-})
+        flags="$(IFS=' '; append "$flags" ${SPACK_LDFLAGS:-})"
 
         # On macOS insert headerpad_max_install_names linker flag.
         case "$SPACK_SHORT_SPEC" in
             *darwin*)
                 case "$mode" in
                     ld)
-                        flags=$(append "$flags" '-headerpad_max_install_names')
+                        flags="$(append "$flags" '-headerpad_max_install_names')"
                         ;;
                     ccld)
-                        flags=$(append "$flags" '-Wl,-headerpad_max_install_names')
+                        flags="$(append "$flags" '-Wl,-headerpad_max_install_names')"
                         ;;
                 esac
                 ;;
         esac
 
-        rpath_dirs=$(IFS=':'; generate_array_from_expansion $SPACK_RPATH_DIRS)
+        rpath_dirs="$(IFS=':'; generate_array_from_expansion $SPACK_RPATH_DIRS)"
         if should_add_rpaths; then
             # Append RPATH directories. Note that in the case of the top-level
             # package these directories may not exist yet. For dependencies it
             # is assumed that paths have already been confirmed.
-            rpaths=$(concatenate "$rpaths" "$rpath_dirs")
+            rpaths="$(concatenate "$rpaths" "$rpath_dirs")"
         fi
 
-        link_dirs=$(IFS=':'; generate_array_from_expansion $SPACK_LINK_DIRS)
-        libdirs=$(concatenate "$libdirs" "$link_dirs")
+        link_dirs="$(IFS=':'; generate_array_from_expansion $SPACK_LINK_DIRS)"
+        libdirs="$(concatenate "$libdirs" "$link_dirs")"
 
         # Set extra RPATHs.
-        extra_rpaths=$(IFS=':'; generate_array_from_expansion ${SPACK_COMPILER_EXTRA_RPATHS:-})
-        libdirs=$(concatenate "$libdirs" "$extra_rpaths")
+        extra_rpaths="$(IFS=':'; generate_array_from_expansion ${SPACK_COMPILER_EXTRA_RPATHS:-})"
+        libdirs="$(concatenate "$libdirs" "$extra_rpaths")"
         if should_add_rpaths; then
-            rpaths=$(concatenate "$rpaths" "$extra_rpaths")
+            rpaths="$(concatenate "$rpaths" "$extra_rpaths")"
         fi
 
         # Set implicit RPATHs.
-        implicit_rpaths=$(IFS=':'; generate_array_from_expansion ${SPACK_COMPILER_IMPLICIT_RPATHS:-})
+        implicit_rpaths="$(IFS=':'; generate_array_from_expansion ${SPACK_COMPILER_IMPLICIT_RPATHS:-})"
         if should_add_rpaths; then
-            rpaths=$(concatenate "$rpaths" "$implicit_rpaths")
+            rpaths="$(concatenate "$rpaths" "$implicit_rpaths")"
         fi
 
         # Add SPACK_LDLIBS to args.
-        spack_ldlibs=$(IFS=' '; generate_array_from_expansion ${SPACK_LDLIBS:-})
-        libs=$(concatenate "$libs" "$(remove_prefix_from_array_elements "$spack_ldlibs" '-l')")
+        spack_ldlibs="$(IFS=' '; generate_array_from_expansion ${SPACK_LDLIBS:-})"
+        libs="$(concatenate "$libs" "$(remove_prefix_from_array_elements "$spack_ldlibs" '-l')")"
         ;;
 esac
 
@@ -823,63 +823,63 @@ esac
 #
 
 # These are the in-order flags assembled earlier.
-args=$flags
+args="$flags"
 
 # Includes and system includes first. Insert include directories just prior to
 # any system include directories.
 
-args=$(concatenate "$args" "$(include_dir_prefix_elements "$includes")")
-args=$(concatenate "$args" "$(system_include_dir_prefix_elements "$isystem_includes")")
+args="$(concatenate "$args" "$(include_dir_prefix_elements "$includes")")"
+args="$(concatenate "$args" "$(system_include_dir_prefix_elements "$isystem_includes")")"
 
-spack_include_dirs=$(IFS=':'; generate_array_from_expansion $SPACK_INCLUDE_DIRS)
+spack_include_dirs="$(IFS=':'; generate_array_from_expansion $SPACK_INCLUDE_DIRS)"
 case "$mode" in
     cpp|cc|as|ccld)
         if was_isystem_used; then
-            args=$(concatenate "$args" "$(system_include_dir_prefix_elements "$spack_include_dirs")")
+            args="$(concatenate "$args" "$(system_include_dir_prefix_elements "$spack_include_dirs")")"
         else
-            args=$(concatenate "$args" "$(include_dir_prefix_elements "$spack_include_dirs")")
+            args="$(concatenate "$args" "$(include_dir_prefix_elements "$spack_include_dirs")")"
         fi
         ;;
 esac
 
-args=$(concatenate "$args" "$(include_dir_prefix_elements "$system_includes")")
-args=$(concatenate "$args" "$(system_include_dir_prefix_elements "$isystem_system_includes")")
+args="$(concatenate "$args" "$(include_dir_prefix_elements "$system_includes")")"
+args="$(concatenate "$args" "$(system_include_dir_prefix_elements "$isystem_system_includes")")"
 
 # Add library search paths.
-args=$(concatenate "$args" "$(lib_dir_prefix_elements "$libdirs")")
-args=$(concatenate "$args" "$(lib_dir_prefix_elements "$system_libdirs")")
+args="$(concatenate "$args" "$(lib_dir_prefix_elements "$libdirs")")"
+args="$(concatenate "$args" "$(lib_dir_prefix_elements "$system_libdirs")")"
 
 # Add RPATH arguments.
 case "$mode" in
     ccld)
         if [ -n "$dtags_to_add" ] ; then
-            args=$(append "$args" "$linker_arg$dtags_to_add")
+            args="$(append "$args" "$linker_arg$dtags_to_add")"
         fi
-        args=$(concatenate "$args" "$(prefix_array_elements "$rpaths" "$rpath")")
-        args=$(concatenate "$args" "$(prefix_array_elements "$system_rpaths" "$rpath")")
+        args="$(concatenate "$args" "$(prefix_array_elements "$rpaths" "$rpath")")"
+        args="$(concatenate "$args" "$(prefix_array_elements "$system_rpaths" "$rpath")")"
         ;;
     ld)
         if [ -n "$dtags_to_add" ] ; then
-            args=$(append "$args" "$dtags_to_add")
+            args="$(append "$args" "$dtags_to_add")"
         fi
-        args=$(concatenate "$args" "$(prefix_discrete_arg_array_elements "$rpaths" '-rpath')")
-        args=$(concatenate "$args" "$(prefix_discrete_arg_array_elements "$system_rpaths" '-rpath')")
+        args="$(concatenate "$args" "$(prefix_discrete_arg_array_elements "$rpaths" '-rpath')")"
+        args="$(concatenate "$args" "$(prefix_discrete_arg_array_elements "$system_rpaths" '-rpath')")"
         ;;
 esac
 
 # Add any other arguments from the input command.
-args=$(concatenate "$args" "$other_args")
+args="$(concatenate "$args" "$other_args")"
 
 # Inject SPACK_LDLIBS, if supplied.
-args=$(concatenate "$args" "$(lib_name_prefix_elements "$libs")")
+args="$(concatenate "$args" "$(lib_name_prefix_elements "$libs")")"
 
-full_command=$(prepend "$command" "$args")
+full_command="$(prepend "$command" "$args")"
 
 # Prepend the ccache binary if we're using ccache.
 if [ -n "${SPACK_CCACHE_BINARY:-}" ]; then
     case "$lang_flags" in
         C|CXX)  # ccache only supports C languages.
-            full_command=$(prepend "$SPACK_CCACHE_BINARY" "$full_command")
+            full_command="$(prepend "$SPACK_CCACHE_BINARY" "$full_command")"
             # This is a workaround for the stage dir being a temp folder.
             # See #3761#issuecomment-294352232.
             export CCACHE_NOHASHDIR=yes
@@ -890,7 +890,7 @@ fi
 # Dump the full command and exit if the caller supplies
 # $SPACK_TEST_COMMAND='dump-args'.
 if [ "$SPACK_TEST_COMMAND" = 'dump-args' ]; then
-    readonly newline_command_string=$(join_array_elements "$full_command" '\n')
+    readonly newline_command_string="$(join_array_elements "$full_command" '\n')"
     printf '%s\n' "$newline_command_string"
     exit
 elif [ "${SPACK_TEST_COMMAND#dump-env-}" != "$SPACK_TEST_COMMAND" ]; then
@@ -907,12 +907,12 @@ if [ "${SPACK_DEBUG:-}" = 'TRUE' ]; then
     input_log="${SPACK_DEBUG_LOG_DIR}/spack-cc-$SPACK_DEBUG_LOG_ID.in.log"
     output_log="${SPACK_DEBUG_LOG_DIR}/spack-cc-$SPACK_DEBUG_LOG_ID.out.log"
     printf '%s\n' "[${mode}] ${command} ${input_command}" >> "$input_log"
-    readonly spaced_command_string=$(join_array_elements "$full_command" ' ')
+    readonly spaced_command_string="$(join_array_elements "$full_command" ' ')"
     printf '%s\n' "[${mode}] ${spaced_command_string}" >> "$output_log"
 fi
 
 # Our "array" is just a string split by the alarm bell character, and we can
 # avoid any quoting issues by using strictly the alarm bell to split the array
 # before execing it.
-IFS=$(alarm_bell)
+IFS="$(alarm_bell)"
 exec $full_command
