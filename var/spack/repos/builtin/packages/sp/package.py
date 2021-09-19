@@ -9,9 +9,7 @@ from spack import *
 class Sp(CMakePackage):
     """The spectral transform library splib contains FORTRAN subprograms
     to be used for a variety of spectral transform functions. This is
-    part of the NCEPLIBS project.
-
-    """
+    part of the NCEPLIBS project."""
 
     homepage = "https://noaa-emc.github.io/NCEPLIBS-sp"
     url      = "https://github.com/NOAA-EMC/NCEPLIBS-sp/archive/refs/tags/v2.3.3.tar.gz"
