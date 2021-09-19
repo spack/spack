@@ -22,8 +22,8 @@ class Gperftools(AutotoolsPackage):
     version('2.4', sha256='982a37226eb42f40714e26b8076815d5ea677a422fb52ff8bfca3704d9c30a2d')
     version('2.3', sha256='093452ad45d639093c144b4ec732a3417e8ee1f3744f2b0f8d45c996223385ce')
 
-    variant('sized-delete', default=False, description="Build sized delete operator")
-    variant('dynamic-sized-delete-support', default=False, description="Try to build run-time switch for sized delete operator")
+    variant('sized_delete', default=False, description="Build sized delete operator")
+    variant('dynamic_sized_delete_support', default=False, description="Try to build run-time switch for sized delete operator")
     variant('debugalloc', default=True, description="Build versions of libs with debugalloc")
     variant('libunwind', default=True, description="Enable libunwind linking")
 
@@ -31,9 +31,13 @@ class Gperftools(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        args.append(self.enable_or_disable("sized-delete"))
-        args.append(self.enable_or_disable("dynamic-sized-delete-support"))
-        args.append(self.enable_or_disable("debugalloc"))
-        args.append(self.enable_or_disable("libunwind"))
+        for opt in ('sized_delete', 'dynamic_sized_delete_support'):
+            if '+{0}'.format(opt) in self.spec:
+                args.append('--enable-{0}'.format(opt.replace('_', '-')))
+            else:
+                args.append('--disable-{0}'.format(opt.replace('_', '-')))
+
+        args += self.enable_or_disable("debugalloc")
+        args += self.enable_or_disable("libunwind")
 
         return args
