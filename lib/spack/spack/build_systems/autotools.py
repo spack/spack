@@ -521,7 +521,7 @@ class AutotoolsPackage(PackageBase):
         Returns:
             list of arguments to configure
         """
-        return self._activate_or_not(name, 'with', 'without', activation_value, 
+        return self._activate_or_not(name, 'with', 'without', activation_value,
                                      variant_name)
 
     def enable_or_disable(self, name, activation_value=None, variant_name=None):
