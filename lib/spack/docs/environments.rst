@@ -376,7 +376,7 @@ The ``spack develop`` command allows one to develop Spack packages in
 an environment. It requires a spec containing a concrete version, and
 will configure Spack to install the package from local source. By
 default, it will also clone the package to a subdirectory in the
-environment. This package will have a special variant ``develop_path``
+environment. This package will have a special variant ``dev_path``
 set, and Spack will ensure the package and its dependents are rebuilt
 any time the environment is installed if the package's local source
 code has been modified. Spack ensures that all instances of a
