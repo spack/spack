@@ -35,7 +35,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     variant('ilp64', default=False,
             description='Build with ILP64 support')
 
-    provides('mpi@:3')
+    provides('mpi@:3.1')
 
     depends_on('patchelf', type='build')
 
