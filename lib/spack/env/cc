@@ -736,11 +736,16 @@ while [ $# -ne 0 ]; do
 done
 : ${isystem_was_used="$False"}
 
+if ! is_valid_bool "$isystem_was_used"; then
+    die "\$isystem_was_used must be '$True' or '$False', but was '$isystem_was_used'."
+fi
+
 # Return whether any -isystem args were provided to the original command line.
 was_isystem_used() {
     [ "$isystem_was_used" = "$True" ]
 }
 
+#
 # Add flags from Spack's cppflags, cflags, cxxflags, fcflags, fflags, and
 # ldflags. We stick to the order that gmake puts the flags in by default.
 #
