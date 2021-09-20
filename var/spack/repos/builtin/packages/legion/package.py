@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class Legion(CMakePackage, CudaPackage, ROCMPacakge):
+class Legion(CMakePackage, CudaPackage, ROCmPackage):
     """Legion is a data-centric parallel programming system for writing
        portable high performance programs targeted at distributed heterogeneous
        architectures. Legion presents abstractions which allow programmers to
@@ -44,7 +44,6 @@ class Legion(CMakePackage, CudaPackage, ROCMPacakge):
     depends_on('cuda@10.0:11.9', when='+cuda_unsupported_compiler')
     depends_on('cuda@10.0:11.9', when='+cuda')
     # TODO: need to explore and update to use rocm support already in spack.
-    depends_on('rocm', when='+hip')
     depends_on('hip@4.1.0:', when='+hip')
     depends_on('hdf5', when='+hdf5')
     depends_on('hwloc@1.11', when='+hwloc')
@@ -52,10 +51,11 @@ class Legion(CMakePackage, CudaPackage, ROCMPacakge):
     depends_on('papi', when='+papi')
     depends_on('zlib', when='+zlib')
 
+    depends_on('kokkos-nvcc-wrapper', when='+kokkos +cuda')
     for nv_arch in CudaPackage.cuda_arch_values:
         depends_on('kokkos cuda_arch=%s' % nv_arch, when='+kokkos +cuda cuda_arch=%s' % nv_arch)
     depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
-    depends_on("kokkos@3.3.01~hip", when='+kokkos~hip')
+    #depends_on("kokkos@3.3.01~hip", when='+kokkos~hip')
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
@@ -142,7 +142,7 @@ class Legion(CMakePackage, CudaPackage, ROCMPacakge):
     variant('cuda_unsupported_compiler', default=False,
             description="Disable nvcc version check (--allow-unsupported-compiler).")
     conflicts('+cuda_hijack', when='~cuda')
-    variant('gpu_reduction', default=True,
+    variant('gpu_reduction', default=False,
             description="Enable built-in GPU Reduction.")
     conflicts('+gpu_reduction', when='~cuda')
 
@@ -154,7 +154,7 @@ class Legion(CMakePackage, CudaPackage, ROCMPacakge):
     for amd_arch in ROCmPackage.amdgpu_targets:
         depends_on('+rocm amdgpu_target={0}'.format(amd_arch),
                    when='+hip amdgpu_target={0}'.format(amd_arch))
-    # TODO: awaiting upstreamed code to land in legion for '+hip +kokkos' support.
+    # TODO: awaiting support for '+hip +kokkos' in legion. 
     conflicts('+kokkos', when='+hip')
 
     variant('fortran', default=False,
@@ -266,6 +266,9 @@ class Legion(CMakePackage, CudaPackage, ROCMPacakge):
         if '+hip' in spec:
             options.append('-DLegion_USE_HIP=ON')
             options.append('-DLegion_HIP_TARGET=ROCM')
+            if 'amdgpu_arch' in spec:
+                amdgpu_arch = spec.variants['amdgpu_arch'].value
+                options.append('-DLegion_HIP_ARCH=%s' % amdgpu_arch)
 
         if '+fortran' in spec:
             # default is off.
