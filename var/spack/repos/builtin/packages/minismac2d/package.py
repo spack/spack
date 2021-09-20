@@ -14,7 +14,7 @@ class Minismac2d(MakefilePackage):
     """
 
     homepage = "https://mantevo.org"
-    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/MiniSMAC2D/miniSMAC2D-2.0.tgz"
+    url      = "https://downloads.mantevo.org/releaseTarballs/miniapps/MiniSMAC2D/miniSMAC2D-2.0.tgz"
 
     tags = ['proxy-app']
 

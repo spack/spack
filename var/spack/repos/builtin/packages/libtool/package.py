@@ -15,18 +15,25 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
     version('develop', git='https://git.savannah.gnu.org/git/libtool.git',
             branch='master', submodules=True)
     version('2.4.6', sha256='e3bd4d5d3d025a36c21dd6af7ea818a2afcd4dfc1ea5a17b39d7854bcd0c06e3')
-    version('2.4.2', sha256='b38de44862a987293cd3d8dfae1c409d514b6c4e794ebc93648febf9afc38918')
+    # Version released in 2011
+    version('2.4.2', sha256='b38de44862a987293cd3d8dfae1c409d514b6c4e794ebc93648febf9afc38918', deprecated=True)
 
     depends_on('m4@1.4.6:', type='build')
-    depends_on('autoconf', type='build', when='@2.4.2,develop')
-    depends_on('automake', type='build', when='@2.4.2,develop')
-    depends_on('help2man', type='build', when='@2.4.2,develop')
-    depends_on('xz', type='build', when='@develop')
-    depends_on('texinfo', type='build', when='@develop')
 
-    # Fix parsing of compiler output when collecting predeps and postdeps
-    # http://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
-    patch('flag_space.patch', when='@develop')
+    with when('@2.4.2'):
+        depends_on('autoconf', type='build')
+        depends_on('automake', type='build')
+        depends_on('help2man', type='build')
+
+    with when('@develop'):
+        depends_on('autoconf', type='build')
+        depends_on('automake', type='build')
+        depends_on('help2man', type='build')
+        depends_on('xz', type='build')
+        depends_on('texinfo', type='build')
+        # Fix parsing of compiler output when collecting predeps and postdeps
+        # https://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
+        patch('flag_space.patch')
 
     build_directory = 'spack-build'
 

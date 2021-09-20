@@ -59,3 +59,9 @@ class GtkDoc(AutotoolsPackage):
         """Handle gnome's version-based custom URLs."""
         url = 'https://gitlab.gnome.org/GNOME/gtk-doc/-/archive/GTK_DOC_{0}/gtk-doc-GTK_DOC_{0}.tar.gz'
         return url.format(version.underscored)
+
+    def configure_args(self):
+        args = [
+            '--with-xml-catalog={0}'.format(self.spec['docbook-xml'].package.catalog)
+        ]
+        return args

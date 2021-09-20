@@ -10,7 +10,7 @@ from spack import *
 class G4ndl(Package):
     """Geant4 Neutron data files with thermal cross sections """
     homepage = "https://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4NDL.4.5.tar.gz"
+    url = "https://geant4-data.web.cern.ch/geant4-data/datasets/G4NDL.4.5.tar.gz"
 
     tags = ['hep']
 

@@ -9,8 +9,10 @@ import pytest
 
 import spack.architecture
 import spack.concretize
+import spack.operating_systems
 import spack.platforms
 import spack.spec
+import spack.target
 
 
 @pytest.fixture
@@ -66,9 +68,9 @@ def test_dict_round_trip(sample_arch):
     assert sample_arch == sample_arch_copy
     for current_arch in (sample_arch, sample_arch_copy):
         assert isinstance(current_arch, spack.architecture.Arch)
-        assert isinstance(current_arch.platform, spack.architecture.Platform)
-        assert isinstance(current_arch.os, spack.architecture.OperatingSystem)
-        assert isinstance(current_arch.target, spack.architecture.Target)
+        assert isinstance(current_arch.platform, spack.platforms.Platform)
+        assert isinstance(current_arch.os, spack.operating_systems.OperatingSystem)
+        assert isinstance(current_arch.target, spack.target.Target)
 
 
 def test_platform(current_host_platform):
@@ -111,7 +113,7 @@ def test_user_input_combination(config, target_str, os_str):
 
 
 def test_operating_system_conversion_to_dict():
-    operating_system = spack.architecture.OperatingSystem('os', '1.0')
+    operating_system = spack.operating_systems.OperatingSystem('os', '1.0')
     assert operating_system.to_dict() == {
         'name': 'os', 'version': '1.0'
     }
@@ -129,7 +131,7 @@ def test_operating_system_conversion_to_dict():
     ('avx512', 'icelake'),
 ])
 def test_target_container_semantic(cpu_flag, target_name):
-    target = spack.architecture.Target(target_name)
+    target = spack.target.Target(target_name)
     assert cpu_flag in target
 
 
@@ -159,7 +161,7 @@ def test_arch_spec_container_semantic(item, architecture_str):
 def test_optimization_flags(
         compiler_spec, target_name, expected_flags, config
 ):
-    target = spack.architecture.Target(target_name)
+    target = spack.target.Target(target_name)
     compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
@@ -182,7 +184,7 @@ def test_optimization_flags(
 def test_optimization_flags_with_custom_versions(
         compiler, real_version, target_str, expected_flags, monkeypatch, config
 ):
-    target = spack.architecture.Target(target_str)
+    target = spack.target.Target(target_str)
     if real_version:
         monkeypatch.setattr(
             spack.compiler.Compiler, 'get_real_version',

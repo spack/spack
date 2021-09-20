@@ -12,12 +12,13 @@ class Hipace(CMakePackage):
     """
 
     homepage = "https://hipace.readthedocs.io"
-    # url      = "https://github.com/Hi-PACE/hipace/archive/refs/tags/21.06.tar.gz"
+    url      = "https://github.com/Hi-PACE/hipace/archive/refs/tags/v21.09.tar.gz"
     git      = "https://github.com/Hi-PACE/hipace.git"
 
     maintainers = ['ax3l', 'MaxThevenet', 'SeverinDiederichs']
 
     version('develop', branch='development')
+    version('21.09', sha256='5d27824fe6aac47ce26ca69759140ab4d7844f9042e436c343c03ea4852825f1')
 
     variant('compute',
             default='noacc',
@@ -38,7 +39,7 @@ class Hipace(CMakePackage):
     depends_on('cuda@9.2.88:', when='compute=cuda')
     depends_on('mpi', when='+mpi')
     with when('+openpmd'):
-        depends_on('openpmd-api@hipace')
+        depends_on('openpmd-api@0.14.2:')
         depends_on('openpmd-api ~mpi', when='~mpi')
         depends_on('openpmd-api +mpi', when='+mpi')
     with when('compute=omp'):

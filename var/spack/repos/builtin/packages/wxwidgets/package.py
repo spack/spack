@@ -43,7 +43,7 @@ class Wxwidgets(AutotoolsPackage):
             '--disable-precomp-headers'
         ]
 
-        # see http://trac.wxwidgets.org/ticket/17639
+        # see https://trac.wxwidgets.org/ticket/17639
         if spec.satisfies('@:3.1.0') and sys.platform == 'darwin':
             options.extend([
                 '--disable-qtkit',

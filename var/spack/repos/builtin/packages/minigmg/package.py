@@ -20,7 +20,7 @@ class Minigmg(Package):
     Note, miniGMG code has been supersceded by HPGMG. """
 
     homepage = "http://crd.lbl.gov/departments/computer-science/PAR/research/previous-projects/miniGMG/"
-    url      = "http://crd.lbl.gov/assets/Uploads/FTG/Projects/miniGMG/miniGMG.tar.gz"
+    url      = "https://crd.lbl.gov/assets/Uploads/FTG/Projects/miniGMG/miniGMG.tar.gz"
 
     version('master', sha256='1c2d27496a881f655f5e849d6a7a132625e535739f82575991c511cc2cf899ac')
 

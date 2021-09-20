@@ -217,10 +217,6 @@ class DirectoryLayout(object):
     def create_install_directory(self, spec):
         _check_concrete(spec)
 
-        prefix = self.check_installed(spec)
-        if prefix:
-            raise InstallDirectoryAlreadyExistsError(prefix)
-
         # Create install directory with properly configured permissions
         # Cannot import at top of file
         from spack.package_prefs import get_package_dir_permissions, get_package_group
@@ -595,14 +591,6 @@ class InconsistentInstallDirectoryError(DirectoryLayoutError):
     def __init__(self, message, long_msg=None):
         super(InconsistentInstallDirectoryError, self).__init__(
             message, long_msg)
-
-
-class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
-    """Raised when create_install_directory is called unnecessarily."""
-
-    def __init__(self, path):
-        super(InstallDirectoryAlreadyExistsError, self).__init__(
-            "Install path %s already exists!" % path)
 
 
 class SpecReadError(DirectoryLayoutError):

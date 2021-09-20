@@ -22,7 +22,7 @@ class PyPygit2(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     # Version must match with libgit2
-    # See: http://www.pygit2.org/install.html
+    # See: https://www.pygit2.org/install.html
     depends_on('libgit2@1.1:1.1.99', when='@1.4:')
     depends_on('libgit2@1.0:1.0.99', when='@1.2:1.3.99')
     depends_on('libgit2@0.99:1.0.99', when='@1.1:1.1.99')
@@ -39,6 +39,6 @@ class PyPygit2(PythonPackage):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        # http://www.pygit2.org/install.html
+        # https://www.pygit2.org/install.html
         env.set('LIBGIT2', spec['libgit2'].prefix)
         env.set('LIBGIT2_LIB', spec['libgit2'].prefix.lib)

@@ -18,7 +18,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['trws']
 
-    version('master', branch='master', submodules='True')
+    version('main', branch='main', submodules='True')
     version('0.2.2', sha256='194d38b57e50e3494482a7f94940b27f37a2bee8291f2574d64db342b981d819')
     version('0.1.0', sha256='fd4f0f2a60b82a12a1d9f943f8893dc6fe770db493f8fae5ef6f7d0c439bebcc')
 

@@ -31,6 +31,7 @@ import spack.fetch_strategy as fs
 import spack.hash_types as ht
 import spack.hooks.sbang
 import spack.mirror
+import spack.platforms
 import spack.relocate as relocate
 import spack.util.file_cache as file_cache
 import spack.util.gpg
@@ -1156,7 +1157,7 @@ def make_package_relative(workdir, spec, allow_root):
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
 
-    platform = spack.architecture.get_platform(spec.platform)
+    platform = spack.platforms.by_name(spec.platform)
     if 'macho' in platform.binary_formats:
         relocate.make_macho_binaries_relative(
             cur_path_names, orig_path_names, old_layout_root)
@@ -1267,7 +1268,7 @@ def relocate_package(spec, allow_root):
                              ]
         # If the buildcache was not created with relativized rpaths
         # do the relocation of path in binaries
-        platform = spack.architecture.get_platform(spec.platform)
+        platform = spack.platforms.by_name(spec.platform)
         if 'macho' in platform.binary_formats:
             relocate.relocate_macho_binaries(files_to_relocate,
                                              old_layout_root,

@@ -11,7 +11,7 @@ class Ffmpeg(AutotoolsPackage):
     convert and stream audio and video."""
 
     homepage = "https://ffmpeg.org"
-    url      = "http://ffmpeg.org/releases/ffmpeg-4.1.1.tar.bz2"
+    url      = "https://ffmpeg.org/releases/ffmpeg-4.1.1.tar.bz2"
 
     maintainers = ['xjrc']
 

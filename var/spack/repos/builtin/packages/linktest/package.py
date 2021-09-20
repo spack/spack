@@ -9,7 +9,7 @@ class Linktest(MakefilePackage):
     parallel ping-pong benchmark"""
 
     homepage = "https://www.fz-juelich.de/ias/jsc/EN/Expertise/Support/Software/LinkTest/_node.html"
-    url      = "http://apps.fz-juelich.de/jsc/linktest/download.php?version=1.2p1"
+    url      = "https://apps.fz-juelich.de/jsc/linktest/download.php?version=1.2p1"
 
     maintainers = ['pramodk']
 

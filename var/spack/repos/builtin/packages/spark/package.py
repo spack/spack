@@ -14,7 +14,7 @@ class Spark(Package):
     """
 
     homepage = "https://spark.apache.org"
-    url = "http://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
+    url = "https://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
 
     variant('hadoop', default=False,
             description='Build with Hadoop')

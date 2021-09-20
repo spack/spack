@@ -63,7 +63,7 @@ class Ghostscript(AutotoolsPackage):
         we have to remove these vendored dependencies.
 
         Note that this approach is also recommended by Linux from Scratch:
-        http://www.linuxfromscratch.org/blfs/view/svn/pst/gs.html
+        https://www.linuxfromscratch.org/blfs/view/svn/pst/gs.html
         """
         directories = ['freetype', 'jpeg', 'libpng', 'zlib']
         if self.spec.satisfies('@:9.21'):

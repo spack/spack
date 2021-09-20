@@ -176,7 +176,9 @@ class Esmf(MakefilePackage):
                 os.environ['ESMF_CXXLINKLIBS'] = '-lmpifort'
             elif '^openmpi' in spec:
                 os.environ['ESMF_COMM'] = 'openmpi'
-            elif '^intel-parallel-studio+mpi' in spec or '^intel-mpi' in spec:
+            elif '^intel-parallel-studio+mpi' in spec or \
+                 '^intel-mpi' in spec or \
+                 '^intel-oneapi-mpi' in spec:
                 os.environ['ESMF_COMM'] = 'intelmpi'
         else:
             # Force use of the single-processor MPI-bypass library.

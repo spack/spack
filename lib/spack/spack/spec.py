@@ -82,6 +82,7 @@ import operator
 import os
 import re
 import sys
+import warnings
 
 import ruamel.yaml as yaml
 import six
@@ -100,10 +101,12 @@ import spack.error
 import spack.hash_types as ht
 import spack.parse
 import spack.paths
+import spack.platforms
 import spack.provider_index
 import spack.repo
 import spack.solver
 import spack.store
+import spack.target
 import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
@@ -183,6 +186,9 @@ _any_version = vn.VersionList([':'])
 default_format = '{name}{@version}'
 default_format += '{%compiler.name}{@compiler.version}{compiler_flags}'
 default_format += '{variants}{arch=architecture}'
+
+#: specfile format version. Must increase monotonically
+specfile_format_version = 2
 
 
 def colorize_spec(spec):
@@ -291,7 +297,7 @@ class ArchSpec(object):
         # will assumed to be the host machine's platform.
         value = str(value) if value is not None else None
 
-        if value in spack.architecture.Platform.reserved_oss:
+        if value in spack.platforms.Platform.reserved_oss:
             curr_platform = str(spack.architecture.platform())
             self.platform = self.platform or curr_platform
 
@@ -301,7 +307,7 @@ class ArchSpec(object):
                     "arch platform (%s) isn't the current platform (%s)" %
                     (value, self.platform, curr_platform))
 
-            spec_platform = spack.architecture.get_platform(self.platform)
+            spec_platform = spack.platforms.by_name(self.platform)
             value = str(spec_platform.operating_system(value))
 
         self._os = value
@@ -320,15 +326,15 @@ class ArchSpec(object):
         # will assumed to be the host machine's platform.
 
         def target_or_none(t):
-            if isinstance(t, spack.architecture.Target):
+            if isinstance(t, spack.target.Target):
                 return t
             if t and t != 'None':
-                return spack.architecture.Target(t)
+                return spack.target.Target(t)
             return None
 
         value = target_or_none(value)
 
-        if str(value) in spack.architecture.Platform.reserved_targets:
+        if str(value) in spack.platforms.Platform.reserved_targets:
             curr_platform = str(spack.architecture.platform())
             self.platform = self.platform or curr_platform
 
@@ -338,7 +344,7 @@ class ArchSpec(object):
                     "the arch platform (%s) isn't the current platform (%s)" %
                     (value, self.platform, curr_platform))
 
-            spec_platform = spack.architecture.get_platform(self.platform)
+            spec_platform = spack.platforms.by_name(self.platform)
             value = spec_platform.target(value)
 
         self._target = value
@@ -416,7 +422,7 @@ class ArchSpec(object):
                     # s_target_range is a concrete target
                     # get a microarchitecture reference for at least one side
                     # of each comparison so we can use archspec comparators
-                    s_comp = spack.architecture.Target(s_min).microarchitecture
+                    s_comp = spack.target.Target(s_min).microarchitecture
                     if not o_sep:
                         if s_min == o_min:
                             results.append(s_min)
@@ -425,22 +431,22 @@ class ArchSpec(object):
                         results.append(s_min)
                 elif not o_sep:
                     # "cast" to microarchitecture
-                    o_comp = spack.architecture.Target(o_min).microarchitecture
+                    o_comp = spack.target.Target(o_min).microarchitecture
                     if (not s_min or o_comp >= s_min) and (
                             not s_max or o_comp <= s_max):
                         results.append(o_min)
                 else:
                     # Take intersection of two ranges
                     # Lots of comparisons needed
-                    _s_min = spack.architecture.Target(s_min).microarchitecture
-                    _s_max = spack.architecture.Target(s_max).microarchitecture
-                    _o_min = spack.architecture.Target(o_min).microarchitecture
-                    _o_max = spack.architecture.Target(o_max).microarchitecture
+                    _s_min = spack.target.Target(s_min).microarchitecture
+                    _s_max = spack.target.Target(s_max).microarchitecture
+                    _o_min = spack.target.Target(o_min).microarchitecture
+                    _o_max = spack.target.Target(o_max).microarchitecture
 
                     n_min = s_min if _s_min >= _o_min else o_min
                     n_max = s_max if _s_max <= _o_max else o_max
-                    _n_min = spack.architecture.Target(n_min).microarchitecture
-                    _n_max = spack.architecture.Target(n_max).microarchitecture
+                    _n_min = spack.target.Target(n_min).microarchitecture
+                    _n_max = spack.target.Target(n_max).microarchitecture
                     if _n_min == _n_max:
                         results.append(n_min)
                     elif not n_min or not n_max or _n_min < _n_max:
@@ -521,7 +527,7 @@ class ArchSpec(object):
         d = d['arch']
 
         operating_system = d.get('platform_os', None) or d['os']
-        target = spack.architecture.Target.from_dict_or_value(d['target'])
+        target = spack.target.Target.from_dict_or_value(d['target'])
 
         return ArchSpec((d['platform'], operating_system, target))
 
@@ -1796,7 +1802,7 @@ class Spec(object):
                     if node_hash not in hash_set:
                         node_list.append(node)
                         hash_set.add(node_hash)
-        meta_dict = syaml.syaml_dict([('version', 2)])
+        meta_dict = syaml.syaml_dict([('version', specfile_format_version)])
         inner_dict = syaml.syaml_dict([('_meta', meta_dict), ('nodes', node_list)])
         spec_dict = syaml.syaml_dict([('spec', inner_dict)])
         return spec_dict
@@ -2393,6 +2399,13 @@ class Spec(object):
         normalize() for more details on this.
         """
         import spack.concretize
+
+        # Add a warning message to inform users that the original concretizer
+        # will be removed in v0.18.0
+        msg = ('the original concretizer is currently being used.\n\tUpgrade to '
+               '"clingo" at your earliest convenience. The original concretizer '
+               'will be removed from Spack starting at v0.18.0')
+        warnings.warn(msg)
 
         if not self.name:
             raise spack.error.SpecError(
@@ -4693,6 +4706,15 @@ class SpecParser(spack.parse.Parser):
 
         except spack.parse.ParseError as e:
             raise SpecParseError(e)
+
+        # Generate lookups for git-commit-based versions
+        for spec in specs:
+            # Cannot do lookups for versions in anonymous specs
+            # Only allow concrete versions using git for now
+            if spec.name and spec.versions.concrete and spec.version.is_commit:
+                pkg = spec.package
+                if hasattr(pkg, 'git'):
+                    spec.version.generate_commit_lookup(pkg)
 
         return specs
 

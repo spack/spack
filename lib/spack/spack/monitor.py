@@ -385,7 +385,9 @@ class SpackMonitorClient:
             # Not sure if this is needed here, but I see it elsewhere
             if spec.name in spack.repo.path or spec.virtual:
                 spec.concretize()
-            as_dict = {"spec": spec.to_dict(hash=ht.full_hash),
+
+            # Remove extra level of nesting
+            as_dict = {"spec": spec.to_dict(hash=ht.full_hash)['spec'],
                        "spack_version": self.spack_version}
 
             if self.save_local:

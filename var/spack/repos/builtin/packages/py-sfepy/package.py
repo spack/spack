@@ -7,7 +7,7 @@ from spack import *
 
 
 class PySfepy(PythonPackage):
-    """SfePy (http://sfepy.org) is a software for solving systems of coupled
+    """SfePy (https://sfepy.org/) is a software for solving systems of coupled
     partial differential equations (PDEs) by the finite element method in 1D,
     2D and 3D. It can be viewed both as black-box PDE solver, and as a Python
     package which can be used for building custom applications.

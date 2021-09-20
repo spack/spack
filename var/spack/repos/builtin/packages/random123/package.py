@@ -13,7 +13,7 @@ class Random123(Package):
     conventional approach of using N iterations of a stateful
     transformation."""
     homepage = "https://www.deshawresearch.com/resources_random123.html"
-    url      = "http://www.deshawresearch.com/downloads/download_random123.cgi/Random123-1.09.tar.gz"
+    url      = "https://www.deshawresearch.com/downloads/download_random123.cgi/Random123-1.09.tar.gz"
 
     version('1.13.2', sha256='74a1c6bb66b2684f03d3b1008642a2e9141909103cd09f428d2c60bcaa51cb40')
     version('1.10', sha256='4afdfba4b941e33e23b5de9b7907b7e3ac326cb4d34b5fa8225edd00b5fe053b')
