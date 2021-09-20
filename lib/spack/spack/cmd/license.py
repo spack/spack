@@ -23,7 +23,7 @@ level = "long"
 git = which('git')
 
 #: SPDX license id must appear in the first <license_lines> lines of a file
-license_lines = 7
+license_lines = 10
 
 #: Spack's license identifier
 apache2_mit_spdx = "(Apache-2.0 OR MIT)"
