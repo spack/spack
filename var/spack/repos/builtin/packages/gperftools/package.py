@@ -32,7 +32,8 @@ class Gperftools(AutotoolsPackage):
     def configure_args(self):
         args = []
         args += self.enable_or_disable("sized-delete", variant_name='sized_delete')
-        args += self.enable_or_disable("dynamic-sized-delete-support", variant_name='dynamic_sized_delete_support')
+        args += self.enable_or_disable("dynamic-sized-delete-support", 
+                                       variant_name='dynamic_sized_delete_support')
         args += self.enable_or_disable("debugalloc")
         args += self.enable_or_disable("libunwind")
 
