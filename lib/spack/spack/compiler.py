@@ -28,12 +28,13 @@ from spack.util.environment import filter_system_paths
 __all__ = ['Compiler', 'UNSET_CC_ENVIRONMENT_VARIABLE']
 
 
-# Our `cc` wrapper at lib/spack/env/cc is written for any POSIX-compliant `sh`, and POSIX does not
-# define any method to differentiate whether an environment variable is unset or set to the empty
-# string. Accordingly, in order to ensure the required parameters to `cc` are well-formed, we
-# enforce that any "unset" variable is instead set to a string with a single newline. This variable
-# should be used instead of typing out a newline directly in order to clarify where we intend to
-# pass an empty variable to the script.
+# Our `cc` wrapper at lib/spack/env/cc is written for any POSIX-compliant `sh`, and
+# POSIX does not define any method to differentiate whether an environment variable is
+# unset or set to the empty string. Accordingly, in order to ensure the required
+# parameters to `cc` are well-formed, we enforce that any "unset" variable is instead
+# set to a string with a single newline. This variable should be used instead of typing
+# out a newline directly in order to clarify where we intend to pass an empty variable
+# to the script.
 UNSET_CC_ENVIRONMENT_VARIABLE = '\n'
 
 

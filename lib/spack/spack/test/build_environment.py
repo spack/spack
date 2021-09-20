@@ -362,10 +362,12 @@ def test_parallel_false_is_not_propagating(config, mock_packages):
 
 
 @pytest.mark.parametrize('config_setting,expected_flag', [
-    ('runpath', UNSET_CC_ENVIRONMENT_VARIABLE if platform.system() == 'Darwin'
-                else '--enable-new-dtags'),
-    ('rpath', UNSET_CC_ENVIRONMENT_VARIABLE if platform.system() == 'Darwin'
-                else '--disable-new-dtags'),
+    ('runpath',
+     UNSET_CC_ENVIRONMENT_VARIABLE if platform.system() == 'Darwin'
+     else '--enable-new-dtags'),
+    ('rpath',
+     UNSET_CC_ENVIRONMENT_VARIABLE if platform.system() == 'Darwin'
+     else '--disable-new-dtags'),
 ])
 def test_setting_dtags_based_on_config(
         config_setting, expected_flag, config, mock_packages
