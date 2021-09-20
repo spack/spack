@@ -1,6 +1,5 @@
 #!/bin/sh
 # shellcheck disable=SC2086
-# shellcheck disable=SC2166
 # shellcheck disable=SC2223
 #
 # Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
@@ -33,11 +32,6 @@ set -u
 #   and we always explicitly set IFS before doing so. See the functions
 #   alarm_bell() and generate_array_from_expansion() for documentation of our
 #   hacky implementation of arrays.
-# - SC2166 (prefer [ p ] || [ q ] over [ p -o q ]): POSIX-only shells such as
-#   dash call out to /usr/bin/[ to evaluate logical expressions, and we would
-#   like to minimize the number of external process calls. shellcheck is wrong
-#   that this is "not well-defined"--the order of evaluation goes left-to-right
-#   according to POSIX, and the parse is unambiguous.
 # - SC2223 (quote default variable assignments): we only ever perform default
 #   variable assignments with ${xxx:=yyy} on the right-hand side of an
 #   invocation of the ':' function, which ignores its arguments.
@@ -130,7 +124,12 @@ readonly input_command="$*"
 # special interpretation of the single newline in our python code.
 is_arg_intentionally_unset() {
     arg="$1"
-    [ "$(printf '%s' "$arg")" = "$(printf '\n')" ]
+    case "$(printf '%s' "$arg")" in
+        "$(printf '\n')")
+            return 0
+            ;;
+    esac
+    return 1
 }
 
 # Test whether a path $1 is equal to any entry of $2->$#.
@@ -138,9 +137,11 @@ path_contained_in_nonrecursive() {
     path_to_check="$1"
     shift
     for dir_to_test; do
-        if [ "${path_to_check%/}" = "${dir_to_test%/}" ]; then
-            return 0
-        fi
+        case "${dir_to_test%/}" in
+            "${path_to_check%/}")
+                return 0
+                ;;
+        esac
     done
     return 1
 }
@@ -162,12 +163,16 @@ filter_out_paths_from_another_set_of_paths() {
     shift
     IFS=':'
     for candidate; do
-        if [ -z "$candidate" ]; then
-            continue
-        fi
-        if ! path_contained_in_nonrecursive "$candidate" $paths_to_avoid; then
-            printf '%s:' "$candidate"
-        fi
+        case "$candidate" in
+            '')
+                continue
+                ;;
+            *)
+                if ! path_contained_in_nonrecursive "$candidate" $paths_to_avoid; then
+                    printf '%s:' "$candidate"
+                fi
+                ;;
+        esac
     done
 }
 
@@ -353,9 +358,11 @@ remove_prefix_from_array_elements() {
             continue
         fi
         stripped="${element#$prefix}"
-        if [ "$stripped" = "$element" ]; then
-            die "Expected element to begin with '$prefix', but was $element"
-        fi
+        case "$stripped" in
+            "$element")
+                die "Expected element to begin with '$prefix', but was $element"
+                ;;
+        esac
         bell_delimited "$stripped"
     done
 }
@@ -371,13 +378,23 @@ readonly Custom='custom'
 # Determine whether $1 is equal to $True, $False, or $Custom.
 is_valid_tribool() {
     value="$1"
-    [ "$value" = "$True" -o "$value" = "$False" -o "$value" = "$Custom" ]
+    case "$value" in
+        "$True"|"$False"|"$Custom")
+            return 0
+            ;;
+    esac
+    return 1
 }
 
 # Determine whether $1 is equal to $True or $False.
 is_valid_bool() {
     value="$1"
-    [ "$value" = "$True" -o "$value" = "$False" ]
+    case "$value" in
+        "$True"|"$False")
+            return 0
+            ;;
+    esac
+    return 1
 }
 
 # If we aren't asking for debug flags, don't add them.
@@ -466,25 +483,27 @@ case "${mode:-}" in
 esac
 
 # Finish setting up the mode.
-if [ -z "${mode:-}" ]; then
-    mode='ccld'
-    for arg; do
-        case "$arg" in
-            -E)
-                mode='cpp'
-                break
-                ;;
-            -S)
-                mode='as'
-                break
-                ;;
-            -c)
-                mode='cc'
-                break
-                ;;
-        esac
-    done
-fi
+case "${mode:-}" in
+    '')
+        mode='ccld'
+        for arg; do
+            case "$arg" in
+                -E)
+                    mode='cpp'
+                    break
+                    ;;
+                -S)
+                    mode='as'
+                    break
+                    ;;
+                -c)
+                    mode='cc'
+                    break
+                    ;;
+            esac
+        done
+        ;;
+esac
 readonly mode
 
 # These variables are needed to ensure we set RPATH instead of RUNPATH
@@ -515,10 +534,12 @@ readonly rpath="$(eval "printf '%s' \"\$SPACK_${comp}_RPATH_ARG\"")"
 : ${SPACK_TEST_COMMAND:=''}
 readonly SPACK_TEST_COMMAND
 # Dump the mode and exit if the command is dump-mode.
-if [ "$SPACK_TEST_COMMAND" = 'dump-mode' ]; then
-    printf '%s\n' "$mode"
-    exit
-fi
+case "$SPACK_TEST_COMMAND" in
+    dump-mode)
+        printf '%s\n' "$mode"
+        exit
+        ;;
+esac
 
 # Filter '.' and Spack environment directories out of $PATH so that this script
 # doesn't just call itself.
@@ -526,9 +547,11 @@ readonly filtered_path="$(IFS=':'; filter_out_paths_from_another_set_of_paths "$
 # Remove the trailing ':' before putting it back in $PATH.
 readonly PATH="${filtered_path%:}"
 
-if [ "$mode" = 'vcheck' ]; then
-    exec "$command" "$@"
-fi
+case "$mode" in
+    vcheck)
+        exec "$command" "$@"
+        ;;
+esac
 
 # Darwin's linker has a -r argument that merges object files together.
 # It doesn't work with -rpath, so $add_rpaths controls whether they are added.
@@ -558,7 +581,12 @@ fi
 
 # Return whether the $add_rpaths variable was *not* set to $False.
 should_add_rpaths() {
-    [ "$add_rpaths" != "$False" ]
+    case "$add_rpaths" in
+        "$False")
+            return 1
+            ;;
+    esac
+    return 0
 }
 
 # Parse the command line arguments.
@@ -596,16 +624,18 @@ while [ $# -ne 0 ]; do
 
     # Multiple consecutive spaces in the command line can result in
     # blank arguments, so we remove those here.
-    if [ -z "$1" ]; then
-        shift
-        continue
-    fi
+    case "$1" in
+        '')
+            shift
+            continue
+            ;;
+    esac
 
     case "$1" in
         -isystem*)
             arg="${1#-isystem}"
             isystem_was_used="$True"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            case "$arg" in '') shift; arg="$1";; esac
             if is_system_dir "$arg"; then
                 isystem_system_includes="$(append "$isystem_system_includes" "$arg")"
             else
@@ -614,7 +644,7 @@ while [ $# -ne 0 ]; do
             ;;
         -I*)
             arg="${1#-I}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            case "$arg" in '') shift; arg="$1";; esac
             if is_system_dir "$arg"; then
                 system_includes="$(append "$system_includes" "$arg")"
             else
@@ -623,7 +653,7 @@ while [ $# -ne 0 ]; do
             ;;
         -L*)
             arg="${1#-L}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            case "$arg" in '') shift; arg="$1";; esac
             if is_system_dir "$arg"; then
                 system_libdirs="$(append "$system_libdirs" "$arg")"
             else
@@ -636,18 +666,25 @@ while [ $# -ne 0 ]; do
             # library. Filter it out.
             # TODO: generalize filtering of args with an env var, so that
             # TODO: we do not have to special case this here.
-            if { [ "$mode" = "ccld" ] || [ $mode = "ld" ]; } \
-                && [ "$1" != "${1#-loopopt}" ]; then
-                shift
-                continue
-            fi
+            case "$mode" in
+                ld|ccld)
+                    case "${1#-loopopt}" in
+                        "$1")
+                        ;;
+                        *)
+                            shift
+                            continue
+                            ;;
+                    esac
+                    ;;
+            esac
             arg="${1#-l}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            case "$arg" in '') shift; arg="$1";; esac
             other_args="$(append "$other_args" "-l$arg")"
             ;;
         -Wl,*)
             arg="${1#-Wl,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            case "$arg" in '') shift; arg="$1";; esac
             case "$arg" in
                 -rpath=*)
                     rp="${arg#-rpath=}"
@@ -682,7 +719,7 @@ while [ $# -ne 0 ]; do
             ;;
         -Xlinker,*)
             arg="${1#-Xlinker,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            case "$arg" in '') shift; arg="$1";; esac
             case "$arg" in
                 -rpath=*)
                     rp="${arg#-rpath=}"
@@ -707,38 +744,54 @@ while [ $# -ne 0 ]; do
             esac
             ;;
         -Xlinker)
-            if [ "$2" = "-rpath" ]; then
-                if [ "$3" != "-Xlinker" ]; then
-                    die "'-Xlinker -rpath' was not followed by -Xlinker (was: $3)"
-                fi
-                shift 3;
-                rp="$1"
-            elif [ "$2" = "$SPACK_DTAGS_TO_STRIP" ]; then
-                # We want to explicitly remove this flag. This 'shift' unshifts
-                # '-Xlinker', while the 'shift' at the bottom of the loop will
-                # unshift the second argument we want to strip.
-                shift
-            else
-                other_args="$(append "$other_args" "$1")"
-            fi
+            case "$2" in
+                -rpath)
+                    case "$3" in
+                        -Xlinker)
+                        ;;
+                        *)
+                            die "'-Xlinker -rpath' was not followed by -Xlinker (was: $3)"
+                            ;;
+                    esac
+                    shift 3;
+                    rp="$1"
+                    ;;
+                "$SPACK_DTAGS_TO_STRIP")
+                    # We want to explicitly remove this flag. This 'shift'
+                    # unshifts '-Xlinker', while the 'shift' at the bottom of
+                    # the loop will unshift the second argument we want
+                    # to strip.
+                    shift
+                    ;;
+                *)
+                    other_args="$(append "$other_args" "$1")"
+                    ;;
+            esac
             ;;
         *)
-            if [ "$1" = "$SPACK_DTAGS_TO_STRIP" ]; then
-                :  # We want to explicitly remove this flag.
-            else
-                other_args="$(append "$other_args" "$1")"
-            fi
+            case "$1" in
+                "$SPACK_DTAGS_TO_STRIP")
+                # We want to explicitly remove this flag.
+                ;;
+                *)
+                    other_args="$(append "$other_args" "$1")"
+                    ;;
+            esac
             ;;
     esac
 
     # Test rpaths against system directories in one place.
-    if [ -n "$rp" ]; then
-        if is_system_dir "$rp"; then
-            system_rpaths="$(append "$system_rpaths" "$rp")"
-        else
-            rpaths="$(append "$rpaths" "$rp")"
-        fi
-    fi
+    case "$rp" in
+        '')
+        ;;
+        *)
+            if is_system_dir "$rp"; then
+                system_rpaths="$(append "$system_rpaths" "$rp")"
+            else
+                rpaths="$(append "$rpaths" "$rp")"
+            fi
+            ;;
+    esac
     shift
 done
 readonly isystem_system_includes
@@ -757,7 +810,12 @@ fi
 
 # Return whether any -isystem args were provided to the original command line.
 was_isystem_used() {
-    [ "$isystem_was_used" = "$True" ]
+    case "$isystem_was_used" in
+        "$True")
+            return 0
+            ;;
+    esac
+    return 1
 }
 
 #
@@ -770,16 +828,23 @@ was_isystem_used() {
 flags=''
 
 # Add debug flags.
-if [ "$SPACK_ADD_DEBUG_FLAGS" = "$True" ]; then
-    if [ -n "$debug_flags" ]; then
-        flags="$(append "$flags" "$debug_flags")"
-    fi
-elif [ "$SPACK_ADD_DEBUG_FLAGS" = "$Custom" ]; then
-    # If a custom flag is requested, derive from the environment.
-    # shellcheck disable=SC2153
-    readonly spack_debug_flags="$(IFS=' '; generate_array_from_expansion $SPACK_DEBUG_FLAGS)"
-    flags="$(concatenate "$flags" "$spack_debug_flags")"
-fi
+case "$SPACK_ADD_DEBUG_FLAGS" in
+    "$True")
+        case "$debug_flags" in
+            '')
+            ;;
+            *)
+                flags="$(append "$flags" "$debug_flags")"
+                ;;
+        esac
+        ;;
+    "$Custom")
+        # If a custom flag is requested, derive from the environment.
+        # shellcheck disable=SC2153
+        readonly spack_debug_flags="$(IFS=' '; generate_array_from_expansion $SPACK_DEBUG_FLAGS)"
+        flags="$(concatenate "$flags" "$spack_debug_flags")"
+        ;;
+esac
 
 # Fortran flags come before CPPFLAGS.
 case "$mode" in
@@ -931,41 +996,53 @@ readonly args
 full_command="$(prepend "$command" "$args")"
 
 # Prepend the ccache binary if we're using ccache.
-if [ -n "${SPACK_CCACHE_BINARY:-}" ]; then
-    case "$lang_flags" in
-        C|CXX)  # ccache only supports C languages.
-            full_command="$(prepend "$SPACK_CCACHE_BINARY" "$full_command")"
-            # This is a workaround for the stage dir being a temp folder.
-            # See #3761#issuecomment-294352232.
-            export CCACHE_NOHASHDIR=yes
-            ;;
-    esac
-fi
+case "${SPACK_CCACHE_BINARY:-}" in
+    '')
+    ;;
+    *)
+        case "$lang_flags" in
+            C|CXX)  # ccache only supports C languages.
+                full_command="$(prepend "$SPACK_CCACHE_BINARY" "$full_command")"
+                # This is a workaround for the stage dir being a temp folder.
+                # See #3761#issuecomment-294352232.
+                export CCACHE_NOHASHDIR=yes
+                ;;
+        esac
+        ;;
+esac
 readonly full_command
 
 # Dump the full command and exit if the caller supplies
 # $SPACK_TEST_COMMAND='dump-args'.
-if [ "$SPACK_TEST_COMMAND" = 'dump-args' ]; then
-    readonly newline_command_string="$(join_array_elements "$full_command" '\n')"
-    printf '%s\n' "$newline_command_string"
-    exit
-elif [ "${SPACK_TEST_COMMAND#dump-env-}" != "$SPACK_TEST_COMMAND" ]; then
-    readonly varname="${SPACK_TEST_COMMAND#dump-env-}"
-    eval "printf '%s\n' \"\$0: \$varname: \$$varname\""
-elif [ -n "$SPACK_TEST_COMMAND" ]; then
-    die "Unknown test command: '$SPACK_TEST_COMMAND'."
-fi
+case "$SPACK_TEST_COMMAND" in
+    dump-args)
+        readonly newline_command_string="$(join_array_elements "$full_command" '\n')"
+        printf '%s\n' "$newline_command_string"
+        exit
+        ;;
+    dump-env-*)
+        readonly varname="${SPACK_TEST_COMMAND#dump-env-}"
+        eval "printf '%s\n' \"\$0: \$varname: \$$varname\""
+        ;;
+    '')
+        ;;
+    *)
+        die "Unknown test command: '$SPACK_TEST_COMMAND'."
+        ;;
+esac
 
 #
 # Write the input and output commands to debug logs if it's asked for.
 #
-if [ "${SPACK_DEBUG:-}" = 'TRUE' ]; then
-    readonly input_log="${SPACK_DEBUG_LOG_DIR}/spack-cc-$SPACK_DEBUG_LOG_ID.in.log"
-    readonly output_log="${SPACK_DEBUG_LOG_DIR}/spack-cc-$SPACK_DEBUG_LOG_ID.out.log"
-    printf '%s\n' "[${mode}] ${command} ${input_command}" >> "$input_log"
-    readonly spaced_command_string="$(join_array_elements "$full_command" ' ')"
-    printf '%s\n' "[${mode}] ${spaced_command_string}" >> "$output_log"
-fi
+case "${SPACK_DEBUG:-}" in
+    TRUE)
+        readonly input_log="${SPACK_DEBUG_LOG_DIR}/spack-cc-$SPACK_DEBUG_LOG_ID.in.log"
+        readonly output_log="${SPACK_DEBUG_LOG_DIR}/spack-cc-$SPACK_DEBUG_LOG_ID.out.log"
+        printf '%s\n' "[${mode}] ${command} ${input_command}" >> "$input_log"
+        readonly spaced_command_string="$(join_array_elements "$full_command" ' ')"
+        printf '%s\n' "[${mode}] ${spaced_command_string}" >> "$output_log"
+        ;;
+esac
 
 # Our "array" is just a string split by the alarm bell character, and we can
 # avoid any quoting issues by using strictly the alarm bell to split the array
