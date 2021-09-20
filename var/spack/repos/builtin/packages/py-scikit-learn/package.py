@@ -82,7 +82,7 @@ class PyScikitLearn(PythonPackage):
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
 
     def install_args(self, spec, prefix):
-        return (super(PyScikitLearn,self).install_args(spec,prefix)
+        return (super(PyScikitLearn,self).install_args(spec, prefix)
                 + ['--skip-build'])
 
     def build(self, spec, prefix):
