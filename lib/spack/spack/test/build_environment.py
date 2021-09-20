@@ -19,6 +19,7 @@ from spack.build_environment import (
     determine_number_of_jobs,
     dso_suffix,
 )
+from spack.compiler import UNSET_CC_ENVIRONMENT_VARIABLE
 from spack.paths import build_env_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
@@ -53,7 +54,7 @@ def build_environment(working_env):
     os.environ['SPACK_DTAGS_TO_ADD'] = '--disable-new-dtags'
     os.environ['SPACK_DTAGS_TO_STRIP'] = '--enable-new-dtags'
     os.environ['SPACK_SYSTEM_DIRS'] = '/usr/include /usr/lib'
-    os.environ['SPACK_TARGET_ARGS'] = '\n'
+    os.environ['SPACK_TARGET_ARGS'] = UNSET_CC_ENVIRONMENT_VARIABLE
 
     if 'SPACK_DEPENDENCIES' in os.environ:
         del os.environ['SPACK_DEPENDENCIES']

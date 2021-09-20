@@ -62,6 +62,11 @@ SPACK_SYSTEM_DIRS"
 
 # Print a message to stderr and exit with status 1.
 die() {
+    # NOTE! `printf` is the only way to portably write arbitrary strings, since
+    # the behavior of `echo -n` is explicitly undefined by POSIX. We therefore
+    # avoid the use of `echo` entirely in this script to avoid this pitfall. See
+    # "Printing the value of a variable" in
+    # https://www.etalabs.net/sh_tricks.html.
     printf '%s\n' "ERROR: $1" >&2
     exit 1
 }
@@ -106,17 +111,40 @@ path_contained_in_nonrecursive() {
 }
 
 # Exit with error if the parameter given by the name in $1 is unset or empty.
-check_param_is_set() {
+check_param_is_empty_or_unset() {
     param_name="$1"
     eval ": \${${param_name}:?Spack compiler must be run from Spack! Input '\$${param_name}' is missing.}"
 }
 
+# Determine whether a parameter is equal to a newline.
+#
+# There are two facets of POSIX sh that force us to perform this incredibly
+# verbose check:
+# - It is not possible to differentiate whether a parameter is unset or set to
+#   the empty string.
+# - POSIX sh does not encode '\n' into a newline except when provided as the
+#   *initial* argument to `printf`.
+# Therefore, to allow us to meaningfully check whether required environment
+# variables have been provided, we set them to a single newline instead of empty
+# where we invoke this script in spack (currently, these environment variable
+# strings are mostly generated in compiler.py, and set in build_environment.py),
+# and then compare that string against the result of `printf '\n'`.
+#
+# Note that python will automatically encode '\n' into a newline, so we don't
+# need to do anything special there, although we should take care to note the
+# special interpretation of the single newline in our python code.
+is_arg_intentionally_unset() {
+    arg="$1"
+    [ "$(printf '%s' "$arg")" = "$(printf '\n')" ]
+}
+
 # Ensure all required parameters are set.
 for param in $parameters; do
-    check_param_is_set "$param"
+    check_param_is_empty_or_unset "$param"
 done
 
-# SPACK_SYSTEM_DIRS is delimited by :
+# Determine which directories are considered "system" directories so we can
+# correctly classify include directories into -I and -isystem arguments later.
 readonly SPACK_SYSTEM_DIRS="$(IFS=':' canonicalize_paths "$SPACK_SYSTEM_DIRS")"
 
 # Test whether a path is contained within $SPACK_SYSTEM_DIRS.
@@ -261,26 +289,29 @@ if [ -z "${mode:-}" ]; then
     done
 fi
 
-# This is needed to ensure we set RPATH instead of RUNPATH
+# These variables are needed to ensure we set RPATH instead of RUNPATH
 # (or the opposite, depending on the configuration in config.yaml)
 #
 # Documentation on this mechanism is lacking at best. A few sources
 # of information are (note that some of them take explicitly the
 # opposite stance that Spack does):
+# - http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
+# - https://wiki.debian.org/RpathIssue
 #
-# http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
-# https://wiki.debian.org/RpathIssue
-#
-# The only discussion I could find on enabling new dynamic tags by
+# The only discussion that seems to exist on enabling new dynamic tags by
 # default on ld is the following:
+# - https://sourceware.org/ml/binutils/2013-01/msg00307.html
 #
-# https://sourceware.org/ml/binutils/2013-01/msg00307.html
+# The relevant variables are:
+# - $SPACK_DTAGS_TO_ADD
+# - $SPACK_DTAGS_TO_STRIP
+# - $SPACK_LINKER_ARG
 #
-readonly dtags_to_add="$SPACK_DTAGS_TO_ADD"
-readonly dtags_to_strip="$SPACK_DTAGS_TO_STRIP"
-readonly linker_arg="$SPACK_LINKER_ARG"
+# If any of these variables are intentionally unset by Spack, they will be set
+# to the value of a single newline, as per the documentation of
+# the function is_arg_intentionally_unset().
 
-# Set up rpath variable according to language.
+# Set up $rpath variable according to the language's compiler name.
 eval "readonly rpath=\$SPACK_${comp}_RPATH_ARG"
 
 : ${SPACK_TEST_COMMAND:=''}
@@ -634,7 +665,7 @@ while [ $# -ne 0 ]; do
                             ;;
                     esac
                     ;;
-                "$dtags_to_strip")
+                "$SPACK_DTAGS_TO_STRIP")
                     :  # We want to explicitly remove this flag.
                     ;;
                 *)
@@ -675,7 +706,7 @@ while [ $# -ne 0 ]; do
                 fi
                 shift 3;
                 rp="$1"
-            elif [ "$2" = "$dtags_to_strip" ]; then
+            elif [ "$2" = "$SPACK_DTAGS_TO_STRIP" ]; then
                 # We want to explicitly remove this flag. This 'shift' unshifts
                 # '-Xlinker', while the 'shift' at the bottom of the loop will
                 # unshift the second argument we want to strip.
@@ -685,7 +716,7 @@ while [ $# -ne 0 ]; do
             fi
             ;;
         *)
-            if [ "$1" = "$dtags_to_strip" ]; then
+            if [ "$1" = "$SPACK_DTAGS_TO_STRIP" ]; then
                 :  # We want to explicitly remove this flag.
             else
                 other_args="$(append "$other_args" "$1")"
@@ -758,11 +789,7 @@ case "$mode" in
                 flags="$(IFS=' '; append "$flags" ${SPACK_CXXFLAGS:-})"
                 ;;
         esac
-        # We set $SPACK_TARGET_ARGS to a newline in testing to differentiate it
-        # from being unset entirely. For some reason this incredibly verbose
-        # string comparison is the only way to correctly check against
-        # a newline.
-        if [ "$(printf '%s' "$SPACK_TARGET_ARGS")" != "$(printf '\n')" ]; then
+        if ! is_arg_intentionally_unset "$SPACK_TARGET_ARGS"; then
             spack_target_args="$(IFS=' '; generate_array_from_expansion $SPACK_TARGET_ARGS)"
             flags="$(concatenate "$spack_target_args" "$flags")"
         fi
@@ -852,15 +879,15 @@ args="$(concatenate "$args" "$(lib_dir_prefix_elements "$system_libdirs")")"
 # Add RPATH arguments.
 case "$mode" in
     ccld)
-        if [ -n "$dtags_to_add" ] ; then
-            args="$(append "$args" "$linker_arg$dtags_to_add")"
+        if ! is_arg_intentionally_unset "$SPACK_DTAGS_TO_ADD"; then
+            args="$(append "$args" "${SPACK_LINKER_ARG}${SPACK_DTAGS_TO_ADD}")"
         fi
         args="$(concatenate "$args" "$(prefix_array_elements "$rpaths" "$rpath")")"
         args="$(concatenate "$args" "$(prefix_array_elements "$system_rpaths" "$rpath")")"
         ;;
     ld)
-        if [ -n "$dtags_to_add" ] ; then
-            args="$(append "$args" "$dtags_to_add")"
+        if ! is_arg_intentionally_unset "$SPACK_DTAGS_TO_ADD"; then
+            args="$(append "$args" "$SPACK_DTAGS_TO_ADD")"
         fi
         args="$(concatenate "$args" "$(prefix_discrete_arg_array_elements "$rpaths" '-rpath')")"
         args="$(concatenate "$args" "$(prefix_discrete_arg_array_elements "$system_rpaths" '-rpath')")"

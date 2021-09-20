@@ -11,6 +11,7 @@ import os
 
 import pytest
 
+from spack.compiler import UNSET_CC_ENVIRONMENT_VARIABLE
 from spack.paths import build_env_path
 from spack.util.environment import set_env, system_dirs
 from spack.util.executable import Executable
@@ -107,7 +108,7 @@ def wrapper_environment():
             SPACK_LINK_DIRS=None,
             SPACK_INCLUDE_DIRS=None,
             SPACK_RPATH_DIRS=None,
-            SPACK_TARGET_ARGS='\n',
+            SPACK_TARGET_ARGS=UNSET_CC_ENVIRONMENT_VARIABLE,
             SPACK_LINKER_ARG='-Wl,',
             SPACK_DTAGS_TO_ADD='--disable-new-dtags',
             SPACK_DTAGS_TO_STRIP='--enable-new-dtags'):
