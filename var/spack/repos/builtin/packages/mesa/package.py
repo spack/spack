@@ -141,8 +141,7 @@ class Mesa(MesonPackage):
             '-Dgallium-xa=disabled',
             '-Dgallium-nine=false',
             '-Dgallium-opencl=disabled',
-            '-Dbuild-tests=false',
-            '-Dglvnd=false']
+            '-Dbuild-tests=false',]
         args_platforms = []
         args_gallium_drivers = ['swrast']
         args_dri_drivers = []
@@ -156,12 +155,12 @@ class Mesa(MesonPackage):
 
 
         use_dri = ('+egl' in spec) or ('+glvnd' in spec)
-        args.append('--enable-dri' if use_dri else '--disable-dri')
+        args.append('-Ddri=true' if use_dri else '-Ddri=false')
 
         if '+glvnd' in spec:
-            args.append('--enable-libglvnd')
+            args.append('-Dglvnd=true')
         else:
-            args.append('--disable-libglvnd')
+            args.append('-Dglvnd=false')
 
         if spec.satisfies('@:20.3'):
             osmesa_enable, osmesa_disable = ('gallium', 'none')
