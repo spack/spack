@@ -216,13 +216,22 @@ class ArchSpec(object):
     microarchitecture into an architecture spec..
     """
     @staticmethod
-    def default_arch():
-        """Return the default architecture"""
+    def _return_arch(os_tag, target_tag):
         platform = spack.platforms.host()
-        default_os = platform.operating_system('default_os')
-        default_target = platform.target('default_target')
+        default_os = platform.operating_system(os_tag)
+        default_target = platform.target(target_tag)
         arch_tuple = str(platform), str(default_os), str(default_target)
         return ArchSpec(arch_tuple)
+
+    @staticmethod
+    def default_arch():
+        """Return the default architecture"""
+        return ArchSpec._return_arch('default_os', 'default_target')
+
+    @staticmethod
+    def frontend_arch():
+        """Return the frontend architecture"""
+        return ArchSpec._return_arch('frontend', 'frontend')
 
     def __init__(self, spec_or_platform_tuple=(None, None, None)):
         """ Architecture specification a package should be built with.
