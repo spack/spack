@@ -22,6 +22,7 @@ import spack.config
 import spack.error
 import spack.hash_types as ht
 import spack.hooks
+import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.spec
@@ -119,16 +120,20 @@ def activate(env, use_env_repo=False):
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
     """
+    if env is None:
+        return
+
     global _active_environment
 
-    _active_environment = env
-
-    prepare_config_scope(_active_environment)
+    prepare_config_scope(env)
 
     if use_env_repo:
-        spack.repo.path.put_first(_active_environment.repo)
+        spack.repo.path.put_first(env.repo)
 
-    tty.debug("Using environment '%s'" % _active_environment.name)
+    tty.debug("Using environment '%s'" % env.name)
+
+    # Do this last, because setting up the config must succeed first.
+    _active_environment = env
 
 
 def deactivate():
@@ -2045,12 +2050,9 @@ def is_latest_format(manifest):
 
 
 @contextlib.contextmanager
-def deactivate_environment():
+def environment_deactivated():
     """Deactivate an active environment for the duration of the context."""
     env = active_environment()
-    if not env:
-        yield
-        return
     try:
         deactivate()
         yield
