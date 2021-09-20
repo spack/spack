@@ -1,4 +1,7 @@
 #!/bin/sh
+# shellcheck disable=SC2086
+# shellcheck disable=SC2166
+# shellcheck disable=SC2223
 #
 # Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
@@ -23,6 +26,38 @@
 # Error and exit if any undefined variable is dereferenced.
 set -u
 
+# Justification for the shellcheck ignores declared at the top of this file:
+# - SC2086 (double quote variable dereferences to avoid word splitting): we
+#   intentionally perform word splitting due to the lack of arrays in POSIX sh,
+#   and we always explicitly set IFS before doing so. See the functions
+#   alarm_bell() and generate_array_from_expansion() for documentation of our
+#   hacky implementation of arrays.
+# - SC2166 (prefer [ p ] || [ q ] over [ p -o q ]): POSIX-only shells such as
+#   dash call out to /usr/bin/[ to evaluate logical expressions, and we would
+#   like to minimize the number of external process calls. shellcheck is wrong
+#   that this is "not well-defined"--the order of evaluation goes left-to-right
+#   according to POSIX, and the parse is unambiguous.
+# - SC2223 (quote default variable assignments): we only ever perform default
+#   variable assignments with ${xxx:=yyy} on the right-hand side of an
+#   invocation of the ':' function, which ignores its arguments.
+
+# Print a message to stderr and exit with status 1.
+die() {
+    printf '%s\n' "ERROR: $1" >&2
+    exit 1
+}
+
+# Override `echo` with this facsimile to avoid strange errors across shells.
+#
+# `printf` is the only way to portably write arbitrary strings, since the
+# behavior of `echo -n` is explicitly undefined by POSIX (see "Printing the
+# value of a variable" in https://www.etalabs.net/sh_tricks.html). Since there
+# is no shellcheck rule to disable `echo`, we redefine it here to immediately
+# error out in case it is added to this script later by accident.
+echo() {
+    die "'echo' is not portable across shells; use \"printf '%s\n'\" instead!"
+}
+
 # This is a newline-delimited string of environment variable names that need to
 # be set before the script runs. They are set by routines in
 # spack.build_environment as part of the package installation process.
@@ -42,52 +77,35 @@ SPACK_LINKER_ARG
 SPACK_SHORT_SPEC
 SPACK_SYSTEM_DIRS"
 
-# Optional parameters that aren't required to be set
-
-# Boolean (true/false/custom) if we want to add debug flags
-# SPACK_ADD_DEBUG_FLAGS
-
-# If a custom flag is requested, it will be defined
-# SPACK_DEBUG_FLAGS
-
-# The compiler input variables are checked for sanity later:
-#   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
+#
+# Optional parameters that aren't required to be set:
+#
+# Boolean (true/false/custom) if we want to add debug flags:
+# - SPACK_ADD_DEBUG_FLAGS
+# If a custom debugging flag is requested, it will be defined here:
+# - SPACK_DEBUG_FLAGS
+# These compiler input variables are checked for sanity later:
+# - SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
 # The default compiler flags are passed from these variables:
-#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FFLAGS,
-#   SPACK_LDFLAGS, SPACK_LDLIBS
+# - SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FFLAGS, SPACK_LDFLAGS, SPACK_LDLIBS
 # Debug env var is optional; set to "TRUE" for debug logging:
-#   SPACK_DEBUG
-# Test command is used to unit test the compiler script.
-#   SPACK_TEST_COMMAND
-
-# Print a message to stderr and exit with status 1.
-die() {
-    # NOTE! `printf` is the only way to portably write arbitrary strings, since
-    # the behavior of `echo -n` is explicitly undefined by POSIX. We therefore
-    # avoid the use of `echo` entirely in this script to avoid this pitfall. See
-    # "Printing the value of a variable" in
-    # https://www.etalabs.net/sh_tricks.html.
-    printf '%s\n' "ERROR: $1" >&2
-    exit 1
-}
-
-# Test whether a path $1 is equal to any entry of $2->$#.
-path_contained_in_nonrecursive() {
-    path_to_check="$1"
-    shift
-    for dir_to_test; do
-        if [ "${path_to_check%/}" = "${dir_to_test%/}" ]; then
-            return 0
-        fi
-    done
-    return 1
-}
+# - SPACK_DEBUG
+# This variable is set when unit testing the compiler script:
+# - SPACK_TEST_COMMAND
 
 # Exit with error if the parameter given by the name in $1 is unset or empty.
 check_param_is_empty_or_unset() {
     param_name="$1"
     eval ": \${${param_name}:?Spack compiler must be run from Spack! Input '\$${param_name}' is missing.}"
 }
+
+# Ensure all required parameters are set before doing anything else.
+for param in $parameters; do
+    check_param_is_empty_or_unset "$param"
+done
+
+# Save original command for debug logging.
+readonly input_command="$*"
 
 # Determine whether a parameter is equal to a newline.
 #
@@ -111,15 +129,23 @@ is_arg_intentionally_unset() {
     [ "$(printf '%s' "$arg")" = "$(printf '\n')" ]
 }
 
-# Ensure all required parameters are set.
-for param in $parameters; do
-    check_param_is_empty_or_unset "$param"
-done
+# Test whether a path $1 is equal to any entry of $2->$#.
+path_contained_in_nonrecursive() {
+    path_to_check="$1"
+    shift
+    for dir_to_test; do
+        if [ "${path_to_check%/}" = "${dir_to_test%/}" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
 
 # Test whether a path $1 is contained within $SPACK_SYSTEM_DIRS.
 #
-# This test determines which directories are considered "system" directories so we can
-# correctly classify include directories into -I and -isystem arguments later.
+# This test determines which directories are considered "system" directories so
+# we can correctly classify include directories into -I and -isystem
+# arguments later.
 is_system_dir() {
     path_to_check="$1"
     IFS=':'
@@ -140,203 +166,6 @@ filter_out_paths_from_another_set_of_paths() {
         fi
     done
 }
-
-# Check if optional parameters are defined.
-
-# Define true/false/custom variables we can use in parameter expansions.
-readonly True='true'
-readonly False='false'
-readonly Custom='custom'
-
-# Determine whether $1 is equal to $True, $False, or $Custom.
-is_valid_tribool() {
-    value="$1"
-    [ "$value" = "$True" -o "$value" = "$False" -o "$value" = "$Custom" ]
-}
-
-is_valid_bool() {
-    value="$1"
-    [ "$value" = "$True" -o "$value" = "$False" ]
-}
-
-# If we aren't asking for debug flags, don't add them.
-: ${SPACK_ADD_DEBUG_FLAGS:="$False"}
-
-if ! is_valid_tribool "$SPACK_ADD_DEBUG_FLAGS"; then
-    die "\$SPACK_ADD_DEBUG_FLAGS, if defined, must be one of '$True' '$False', or '$Custom' (was: $SPACK_ADD_DEBUG_FLAGS)."
-fi
-
-# Figure out the type of compiler, the language, and the mode so that
-# the compiler script knows what to do.
-#
-# Possible languages are C, C++, Fortran 77, and Fortran 90.
-# 'command' is set based on the input command to $SPACK_[CC|CXX|F77|F90]
-#
-# 'mode' is set to one of:
-#    vcheck  version check
-#    cpp     preprocess
-#    cc      compile
-#    as      assemble
-#    ld      link
-#    ccld    compile & link
-
-command="${0##*/}"
-case "$command" in
-    cpp)
-        mode=cpp
-        debug_flags='-g'
-        ;;
-    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc)
-        command="$SPACK_CC"
-        language='C'
-        comp='CC'
-        lang_flags='C'
-        debug_flags='-g'
-        ;;
-    c++|CC|g++|clang++|armclang++|icpc|icpx|pgc++|nvc++|xlc++|xlc++_r|FCC)
-        command="$SPACK_CXX"
-        language='C++'
-        comp='CXX'
-        lang_flags='CXX'
-        debug_flags='-g'
-        ;;
-    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt)
-        command="$SPACK_FC"
-        language='Fortran 90'
-        comp='FC'
-        lang_flags='F'
-        debug_flags='-g'
-        ;;
-    f77|xlf|xlf_r|pgf77)
-        command="$SPACK_F77"
-        language='Fortran 77'
-        comp='F77'
-        lang_flags='F'
-        debug_flags='-g'
-        ;;
-    ld|ld.gold|ld.lld)
-        mode='ld'
-        ;;
-    *)
-        # Check that at least one of the known commands was actually selected,
-        # otherwise we don't know what to execute.
-        die "Unknown command '$command' selected. Compiler was: $SPACK_COMPILER_SPEC."
-        ;;
-esac
-: ${comp:='CC'}
-: ${lang_flags:=''}
-: ${debug_flags:=''}
-
-# If any of the arguments below are present, then the mode is vcheck.
-# In vcheck mode, nothing is added in terms of extra search paths or
-# libraries.
-case "${mode:-}" in
-    ''|ld)
-        for arg; do
-            case "$arg" in
-                -v|-V|--version|-dumpversion)
-                    mode='vcheck'
-                    break
-                    ;;
-            esac
-        done
-        ;;
-esac
-
-# Finish setting up the mode.
-if [ -z "${mode:-}" ]; then
-    mode='ccld'
-    for arg; do
-        case "$arg" in
-            -E)
-                mode='cpp'
-                break
-                ;;
-            -S)
-                mode='as'
-                break
-                ;;
-            -c)
-                mode='cc'
-                break
-                ;;
-        esac
-    done
-fi
-
-# These variables are needed to ensure we set RPATH instead of RUNPATH
-# (or the opposite, depending on the configuration in config.yaml)
-#
-# Documentation on this mechanism is lacking at best. A few sources
-# of information are (note that some of them take explicitly the
-# opposite stance that Spack does):
-# - http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
-# - https://wiki.debian.org/RpathIssue
-#
-# The only discussion that seems to exist on enabling new dynamic tags by
-# default on ld is the following:
-# - https://sourceware.org/ml/binutils/2013-01/msg00307.html
-#
-# The relevant variables are:
-# - $SPACK_DTAGS_TO_ADD
-# - $SPACK_DTAGS_TO_STRIP
-# - $SPACK_LINKER_ARG
-#
-# If any of these variables are intentionally unset by Spack, they will be set
-# to the value of a single newline, as per the documentation of
-# the function is_arg_intentionally_unset().
-
-# Set up $rpath variable according to the language's compiler name.
-eval "readonly rpath=\$SPACK_${comp}_RPATH_ARG"
-
-: ${SPACK_TEST_COMMAND:=''}
-# Dump the mode and exit if the command is dump-mode.
-if [ "$SPACK_TEST_COMMAND" = 'dump-mode' ]; then
-    printf '%s\n' "$mode"
-    exit
-fi
-
-# Filter '.' and Spack environment directories out of $PATH so that this script
-# doesn't just call itself.
-readonly filtered_path="$(IFS=':'; filter_out_paths_from_another_set_of_paths "$SPACK_ENV_PATH" $PATH)"
-# Remove the trailing ':' before putting it back in $PATH.
-PATH="${filtered_path%:}"
-
-if [ "$mode" = 'vcheck' ]; then
-    exec "$command" "$@"
-fi
-
-# Darwin's linker has a -r argument that merges object files together.
-# It doesn't work with -rpath, so $add_rpaths controls whether they are added.
-case "$mode" in
-    ld|ccld)
-        case "$SPACK_SHORT_SPEC" in
-            *darwin*)
-                for arg; do
-                    case "${arg}~${mode}" in
-                        -r~ld|-r~ccld|-Wl,-r~ccld)
-                            add_rpaths="$False"
-                            break
-                            ;;
-                    esac
-                done
-                ;;
-        esac
-        ;;
-esac
-: ${add_rpaths:="$True"}
-
-# This check allows us to safely perform checks with `!=` later.
-if ! is_valid_bool "$add_rpaths"; then
-    die "\$add_rpaths must be '$True' or '$False', but was '$add_rpaths'."
-fi
-
-should_add_rpaths() {
-    [ "$add_rpaths" != "$False" ]
-}
-
-# Save original command for debug logging
-readonly input_command="$*"
 
 # Since our "arrays" are going to be stored as strings, we need to scrub each
 # element to avoid errors parsing them out later. This method *should* be
@@ -388,9 +217,9 @@ join_array_elements() {
 # alarm bell.
 #
 # Filtering out blank arguments covers up any mistakes we may make in setting or
-# parsing environment variables, and enables initializing arrays as the
-# empty string. We can then avoid e.g. adding a blank '-l' argument to the final
-# command line if no libraries were provided to the linker.
+# parsing environment variables, and enables initializing arrays as the empty
+# string. This makes it easier to avoid e.g. adding a blank '-l' argument to the
+# final command line by accident if no libraries were provided to the linker.
 generate_array_from_expansion() {
     for element; do
         if is_empty_or_whitespace "$element"; then
@@ -525,6 +354,199 @@ remove_prefix_from_array_elements() {
         fi
         bell_delimited "$stripped"
     done
+}
+
+#
+# Check if optional parameters are defined.
+
+# Define true/false/custom variables we can use in parameter expansions.
+readonly True='true'
+readonly False='false'
+readonly Custom='custom'
+
+# Determine whether $1 is equal to $True, $False, or $Custom.
+is_valid_tribool() {
+    value="$1"
+    [ "$value" = "$True" -o "$value" = "$False" -o "$value" = "$Custom" ]
+}
+
+# Determine whether $1 is equal to $True or $False.
+is_valid_bool() {
+    value="$1"
+    [ "$value" = "$True" -o "$value" = "$False" ]
+}
+
+# If we aren't asking for debug flags, don't add them.
+: ${SPACK_ADD_DEBUG_FLAGS:="$False"}
+
+if ! is_valid_tribool "$SPACK_ADD_DEBUG_FLAGS"; then
+    die "\$SPACK_ADD_DEBUG_FLAGS, if defined, must be one of '$True' '$False', or '$Custom' (was: $SPACK_ADD_DEBUG_FLAGS)."
+fi
+
+# Figure out the type of compiler, the language, and the mode so that
+# the compiler script knows what to do.
+#
+# Possible languages are C, C++, Fortran 77, and Fortran 90.
+# 'command' is set based on the input command to $SPACK_[CC|CXX|F77|F90]
+#
+# 'mode' is set to one of:
+#    vcheck  version check
+#    cpp     preprocess
+#    cc      compile
+#    as      assemble
+#    ld      link
+#    ccld    compile & link
+
+command="${0##*/}"
+case "$command" in
+    cpp)
+        mode=cpp
+        debug_flags='-g'
+        ;;
+    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc)
+        command="$SPACK_CC"
+        comp='CC'
+        lang_flags='C'
+        debug_flags='-g'
+        ;;
+    c++|CC|g++|clang++|armclang++|icpc|icpx|pgc++|nvc++|xlc++|xlc++_r|FCC)
+        command="$SPACK_CXX"
+        comp='CXX'
+        lang_flags='CXX'
+        debug_flags='-g'
+        ;;
+    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt)
+        command="$SPACK_FC"
+        comp='FC'
+        lang_flags='F'
+        debug_flags='-g'
+        ;;
+    f77|xlf|xlf_r|pgf77)
+        command="$SPACK_F77"
+        comp='F77'
+        lang_flags='F'
+        debug_flags='-g'
+        ;;
+    ld|ld.gold|ld.lld)
+        mode='ld'
+        ;;
+    *)
+        # Check that at least one of the known commands was actually selected,
+        # otherwise we don't know what to execute.
+        die "Unknown command '$command' selected. Compiler was: $SPACK_COMPILER_SPEC."
+        ;;
+esac
+: ${comp:='CC'}
+: ${lang_flags:=''}
+: ${debug_flags:=''}
+
+# If any of the arguments below are present, then the mode is vcheck.
+# In vcheck mode, nothing is added in terms of extra search paths or
+# libraries.
+case "${mode:-}" in
+    ''|ld)
+        for arg; do
+            case "$arg" in
+                -v|-V|--version|-dumpversion)
+                    mode='vcheck'
+                    break
+                    ;;
+            esac
+        done
+        ;;
+esac
+
+# Finish setting up the mode.
+if [ -z "${mode:-}" ]; then
+    mode='ccld'
+    for arg; do
+        case "$arg" in
+            -E)
+                mode='cpp'
+                break
+                ;;
+            -S)
+                mode='as'
+                break
+                ;;
+            -c)
+                mode='cc'
+                break
+                ;;
+        esac
+    done
+fi
+
+# These variables are needed to ensure we set RPATH instead of RUNPATH
+# (or the opposite, depending on the configuration in config.yaml)
+#
+# Documentation on this mechanism is lacking at best. A few sources
+# of information are (note that some of them take explicitly the
+# opposite stance that Spack does):
+# - http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
+# - https://wiki.debian.org/RpathIssue
+#
+# The only discussion that seems to exist on enabling new dynamic tags by
+# default on ld is the following:
+# - https://sourceware.org/ml/binutils/2013-01/msg00307.html
+#
+# The relevant variables are:
+# - $SPACK_DTAGS_TO_ADD
+# - $SPACK_DTAGS_TO_STRIP
+# - $SPACK_LINKER_ARG
+#
+# If any of these variables are intentionally unset by Spack, they will be set
+# to the value of a single newline, as per the documentation of
+# the function is_arg_intentionally_unset().
+
+# Set up $rpath variable according to the compiler name.
+readonly rpath="$(eval "printf '%s' \"\$SPACK_${comp}_RPATH_ARG\"")"
+
+: ${SPACK_TEST_COMMAND:=''}
+# Dump the mode and exit if the command is dump-mode.
+if [ "$SPACK_TEST_COMMAND" = 'dump-mode' ]; then
+    printf '%s\n' "$mode"
+    exit
+fi
+
+# Filter '.' and Spack environment directories out of $PATH so that this script
+# doesn't just call itself.
+readonly filtered_path="$(IFS=':'; filter_out_paths_from_another_set_of_paths "$SPACK_ENV_PATH" $PATH)"
+# Remove the trailing ':' before putting it back in $PATH.
+PATH="${filtered_path%:}"
+
+if [ "$mode" = 'vcheck' ]; then
+    exec "$command" "$@"
+fi
+
+# Darwin's linker has a -r argument that merges object files together.
+# It doesn't work with -rpath, so $add_rpaths controls whether they are added.
+case "$mode" in
+    ld|ccld)
+        case "$SPACK_SHORT_SPEC" in
+            *darwin*)
+                for arg; do
+                    case "${arg}~${mode}" in
+                        -r~ld|-r~ccld|-Wl,-r~ccld)
+                            add_rpaths="$False"
+                            break
+                            ;;
+                    esac
+                done
+                ;;
+        esac
+        ;;
+esac
+: ${add_rpaths:="$True"}
+
+# This check allows us to safely perform checks with `!=` later.
+if ! is_valid_bool "$add_rpaths"; then
+    die "\$add_rpaths must be '$True' or '$False', but was '$add_rpaths'."
+fi
+
+# Return whether the $add_rpaths variable was *not* set to $False.
+should_add_rpaths() {
+    [ "$add_rpaths" != "$False" ]
 }
 
 # Parse the command line arguments.
@@ -734,6 +756,7 @@ if [ "$SPACK_ADD_DEBUG_FLAGS" = "$True" ]; then
     fi
 elif [ "$SPACK_ADD_DEBUG_FLAGS" = "$Custom" ]; then
     # If a custom flag is requested, derive from the environment.
+    # shellcheck disable=SC2153
     spack_debug_flags="$(IFS=' '; generate_array_from_expansion $SPACK_DEBUG_FLAGS)"
     flags="$(concatenate "$flags" "$spack_debug_flags")"
 fi
@@ -767,6 +790,7 @@ case "$mode" in
                 flags="$(IFS=' '; append "$flags" ${SPACK_CXXFLAGS:-})"
                 ;;
         esac
+        # shellcheck disable=SC2153
         if ! is_arg_intentionally_unset "$SPACK_TARGET_ARGS"; then
             spack_target_args="$(IFS=' '; generate_array_from_expansion $SPACK_TARGET_ARGS)"
             flags="$(concatenate "$spack_target_args" "$flags")"
@@ -836,6 +860,7 @@ args="$flags"
 args="$(concatenate "$args" "$(include_dir_prefix_elements "$includes")")"
 args="$(concatenate "$args" "$(system_include_dir_prefix_elements "$isystem_includes")")"
 
+# shellcheck disable=SC2153
 spack_include_dirs="$(IFS=':'; generate_array_from_expansion $SPACK_INCLUDE_DIRS)"
 case "$mode" in
     cpp|cc|as|ccld)
