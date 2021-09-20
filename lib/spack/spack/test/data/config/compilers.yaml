@@ -186,3 +186,13 @@ compilers:
       fc: /path/to/gfortran
     modules: 'None'
     target: x86_64
+- compiler:
+    spec: rocmcc@13.0.0
+    operating_system: elcapitan
+    paths:
+      cc: /path/to/amdclang
+      cxx: /path/to/amdclang++
+      f77: None
+      fc: None
+    modules: 'None'
+    target: x86_64

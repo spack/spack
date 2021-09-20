@@ -712,7 +712,8 @@ def test_rocmcc_flags():
 
 
 @pytest.mark.parametrize('compiler_spec,expected_result', [
-    ('gcc@4.7.2', False), ('clang@3.3', False), ('clang@8.0.0', True)
+    ('gcc@4.7.2', False), ('clang@3.3', True), ('clang@8.0.0', True),
+    ('rocmcc@13.0.0', False)
 ])
 def test_detecting_mixed_toolchains(compiler_spec, expected_result, config):
     compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
