@@ -281,17 +281,22 @@ def which_string(*args, **kwargs):
         path = path.split(os.pathsep)
 
     for name in args:
-        if sys.platform == "win32" and not name.endswith(".exe"):
-            name += '.exe'
-        if os.path.sep in name:
-            exe = os.path.abspath(name)
-            if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                return exe.replace('\\', '/')
-        else:
-            for directory in path:
-                exe = os.path.join(directory, name)
+        win_candidates = []
+        if sys.platform == "win32" and (not name.endswith(".exe")
+           and not name.endswith(".bat")):
+            win_candidates = [name + ext for ext in ['.exe', '.bat']]
+        candidate_names = [name] if not win_candidates else win_candidates
+
+        for candidate_name in candidate_names:
+            if os.path.sep in candidate_name:
+                exe = os.path.abspath(candidate_name)
                 if os.path.isfile(exe) and os.access(exe, os.X_OK):
                     return exe.replace('\\', '/')
+            else:
+                for directory in path:
+                    exe = os.path.join(directory, candidate_name)
+                    if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                        return exe.replace('\\', '/')
 
     if required:
         raise CommandNotFoundError(
