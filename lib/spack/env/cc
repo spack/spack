@@ -71,12 +71,12 @@ die() {
     exit 1
 }
 
-# Test whether a path $1 points to the same place as any entry of $2->$#.
+# Test whether a path $1 is equal to any entry of $2->$#.
 path_contained_in_nonrecursive() {
     path_to_check="$1"
     shift
     for dir_to_test; do
-        if [ "$path_to_check" -ef "$dir_to_test" ]; then
+        if [ "${path_to_check%/}" = "${dir_to_test%/}" ]; then
             return 0
         fi
     done
@@ -116,10 +116,10 @@ for param in $parameters; do
     check_param_is_empty_or_unset "$param"
 done
 
-# Determine which directories are considered "system" directories so we can
-# correctly classify include directories into -I and -isystem arguments later.
-
 # Test whether a path $1 is contained within $SPACK_SYSTEM_DIRS.
+#
+# This test determines which directories are considered "system" directories so we can
+# correctly classify include directories into -I and -isystem arguments later.
 is_system_dir() {
     path_to_check="$1"
     IFS=':'
@@ -132,6 +132,9 @@ filter_out_paths_from_another_set_of_paths() {
     shift
     IFS=':'
     for candidate; do
+        if [ -z "$candidate" ]; then
+            continue
+        fi
         if ! path_contained_in_nonrecursive "$candidate" $paths_to_avoid; then
             printf '%s:' "$candidate"
         fi
