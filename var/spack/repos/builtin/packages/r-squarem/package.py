@@ -17,7 +17,7 @@ class RSquarem(RPackage):
     vignette("SQUAREM"). Refer to the J Stat Software article:
     <doi:10.18637/jss.v092.i07>."""
 
-    homepage = "http://www.jhsph.edu/agingandhealth/People/Faculty_personal_pages/Varadhan.html"
+    homepage = "https://www.jhsph.edu/agingandhealth/People/Faculty_personal_pages/Varadhan.html"
     url      = "https://cloud.r-project.org/src/contrib/SQUAREM_2017.10-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/SQUAREM"
 

@@ -10,7 +10,7 @@ class Gotcha(CMakePackage):
     """C software library for shared library function wrapping,
     enables tools to intercept calls into shared libraries"""
 
-    homepage = "http://github.com/LLNL/gotcha"
+    homepage = "https://github.com/LLNL/gotcha"
     git      = "https://github.com/LLNL/gotcha.git"
 
     version('develop', branch='develop')

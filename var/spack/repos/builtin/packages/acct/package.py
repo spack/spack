@@ -9,7 +9,7 @@ from spack import *
 class Acct(AutotoolsPackage):
     """Utilities for monitoring process activities."""
 
-    homepage = "http://www.gnu.org/software/acct"
+    homepage = "https://www.gnu.org/software/acct"
     url      = "https://ftp.gnu.org/gnu/acct/acct-6.6.4.tar.gz"
 
     version('6.6.4', sha256='4c15bf2b58b16378bcc83f70e77d4d40ab0b194acf2ebeefdb507f151faa663f')

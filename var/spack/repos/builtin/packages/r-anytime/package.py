@@ -14,7 +14,7 @@ class RAnytime(RPackage):
     using one of a number of predefined formats, and relying on
     Boost facilities for date and time parsing."""
 
-    homepage = "http://dirk.eddelbuettel.com/code/anytime.html"
+    homepage = "https://dirk.eddelbuettel.com/code/anytime.html"
     url      = "https://cloud.r-project.org/src/contrib/anytime_0.3.9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/anytime"
 

@@ -7,7 +7,7 @@
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
-    homepage = "http://www.gnu.org/software/binutils/"
+    homepage = "https://www.gnu.org/software/binutils/"
     gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
     maintainers = ['alalazo']

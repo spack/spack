@@ -11,7 +11,7 @@ class Exmcutils(AutotoolsPackage):
     """ExM C-Utils: Generic C utility library for ADLB/X and Swift/T"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/exmcutils-0.6.0.tar.gz'
+    url      = 'https://swift-lang.github.io/swift-t-downloads/spack/exmcutils-0.6.0.tar.gz'
     git      = "https://github.com/swift-lang/swift-t.git"
 
     version('master', branch='master')

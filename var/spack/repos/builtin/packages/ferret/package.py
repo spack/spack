@@ -13,7 +13,7 @@ class Ferret(Package):
     """Ferret is an interactive computer visualization and analysis environment
        designed to meet the needs of oceanographers and meteorologists
        analyzing large and complex gridded data sets."""
-    homepage = "http://ferret.pmel.noaa.gov/Ferret/home"
+    homepage = "https://ferret.pmel.noaa.gov/Ferret/home"
     url      = "https://github.com/NOAA-PMEL/Ferret/archive/v7.6.0.tar.gz"
 
     maintainers = ['RemiLacroix-IDRIS']

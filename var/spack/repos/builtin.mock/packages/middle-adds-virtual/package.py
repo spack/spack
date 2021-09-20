@@ -3,5 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 class MiddleAddsVirtual(Package):
-    version('1.0', sha256='abcde')
+    url = "http://www.example.com/"
+    url = "http://www.example.com/2.0.tar.gz"
+
+    version('1.0', 'abcdef1234567890abcdef1234567890')
+
     depends_on('leaf-adds-virtual')

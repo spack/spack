@@ -12,7 +12,7 @@ class Stripack(MakefilePackage):
     https://people.sc.fsu.edu/~jburkardt/f_src/stripack/stripack.html
 
     The original Fortran 77 package STRIPACK is available from netlib as algorithm number 772 at
-    http://www.netlib.org/toms/772.gz
+    https://www.netlib.org/toms/772.gz
     Dr. Renka's articles were published in the ACM Transactions on Mathematical Software, Vol. 23, No 3, September 1997
     https://dl.acm.org/doi/10.1145/275323.275329
     """

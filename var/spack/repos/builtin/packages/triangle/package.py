@@ -13,8 +13,8 @@ class Triangle(Package):
        triangulations, Voronoi diagrams, and high-quality triangular
        meshes."""
 
-    homepage = "http://www.cs.cmu.edu/~quake/triangle.html"
-    url      = "http://www.netlib.org/voronoi/triangle.zip"
+    homepage = "https://www.cs.cmu.edu/~quake/triangle.html"
+    url      = "https://www.netlib.org/voronoi/triangle.zip"
 
     version('1.6', sha256='1766327add038495fa3499e9b7cc642179229750f7201b94f8e1b7bee76f8480')
 

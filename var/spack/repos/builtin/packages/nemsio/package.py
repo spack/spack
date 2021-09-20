@@ -21,3 +21,6 @@ class Nemsio(CMakePackage):
     depends_on('bacio')
     depends_on('mpi')
     depends_on('w3nco')
+
+    def cmake_args(self):
+        return ['-DMPI_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc]

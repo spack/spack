@@ -35,5 +35,9 @@ class UfsUtils(CMakePackage):
     depends_on('wgrib2')
     depends_on('zlib')
 
+    def cmake_args(self):
+        return ['-DMPI_C_COMPILER=%s' % self.spec['mpi'].mpicc,
+                '-DMPI_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc]
+
     def setup_build_environment(self, env):
         env.set('ESMFMKFILE', join_path(self.spec['esmf'].prefix.lib, 'esmf.mk'))

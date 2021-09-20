@@ -14,7 +14,7 @@ class Libffs(CMakePackage):
     and providing complex run-time flexibility.
     """
 
-    homepage = "http://www.cc.gatech.edu/systems/projects/FFS"
+    homepage = "https://www.cc.gatech.edu/systems/projects/FFS"
     url      = "https://github.com/GTkorvo/ffs/archive/v1.1.tar.gz"
     git      = "https://github.com/GTkorvo/ffs.git"
 

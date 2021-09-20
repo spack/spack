@@ -12,7 +12,7 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
     script that has to be run for each of the lines in the input.
     """
 
-    homepage = "http://www.gnu.org/software/parallel/"
+    homepage = "https://www.gnu.org/software/parallel/"
     gnu_mirror_path = "parallel/parallel-20170122.tar.bz2"
 
     version('20200822', sha256='9654226a808392c365b1e7b8dea91bf4870bc4f306228d853eb700679e21be09')

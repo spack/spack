@@ -13,7 +13,7 @@ class PyPy6s(PythonPackage):
     an easily processable form.
     """
 
-    homepage = "http://py6s.rtwilson.com/"
+    homepage = "https://py6s.rtwilson.com/"
     pypi = "py6s/Py6S-1.8.0.tar.gz"
 
     version('1.8.0', sha256='256162d2f1f558e601d4f79022c037a0051838ba307b9f4d1f5fcf0b46a0c277')

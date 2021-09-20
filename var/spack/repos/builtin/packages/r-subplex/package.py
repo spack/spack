@@ -10,7 +10,7 @@ class RSubplex(RPackage):
     """Unconstrained Optimization using the Subplex Algorithm
 
     The subplex algorithm for unconstrained optimization, developed by Tom
-    Rowan <http://www.netlib.org/opt/subplex.tgz>."""
+    Rowan <https://www.netlib.org/opt/subplex.tgz>."""
 
     homepage = "https://cloud.r-project.org/package=subplex"
     url      = "https://cloud.r-project.org/src/contrib/subplex_1.4-1.tar.gz"

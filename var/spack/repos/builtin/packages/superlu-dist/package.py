@@ -10,7 +10,7 @@ class SuperluDist(CMakePackage, CudaPackage):
     """A general purpose library for the direct solution of large, sparse,
     nonsymmetric systems of linear equations on high performance machines."""
 
-    homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
+    homepage = "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 

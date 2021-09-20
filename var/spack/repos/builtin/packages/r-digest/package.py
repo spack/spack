@@ -26,7 +26,7 @@ class RDigest(RPackage):
     comprehensive (and widely tested) libraries such as OpenSSL should be
     used."""
 
-    homepage = "http://dirk.eddelbuettel.com/code/digest.html"
+    homepage = "https://dirk.eddelbuettel.com/code/digest.html"
     url      = "https://cloud.r-project.org/src/contrib/digest_0.6.12.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/digest"
 

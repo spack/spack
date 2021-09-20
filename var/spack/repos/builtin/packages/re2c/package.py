@@ -10,7 +10,7 @@ from spack import *
 class Re2c(AutotoolsPackage):
     """re2c: a free and open-source lexer generator for C and C++"""
 
-    homepage = "http://re2c.org/index.html"
+    homepage = "https://re2c.org/index.html"
     url      = "https://github.com/skvadrik/re2c/releases/download/1.2.1/re2c-1.2.1.tar.xz"
 
     version('2.2',   sha256='0fc45e4130a8a555d68e230d1795de0216dfe99096b61b28e67c86dfd7d86bda')

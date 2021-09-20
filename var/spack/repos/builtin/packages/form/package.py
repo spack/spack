@@ -19,10 +19,22 @@ class Form(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
-    depends_on('gmp', type='link')
-    depends_on('zlib', type='link')
+    depends_on('gmp',      type='link', when='+zlib')
+    depends_on('zlib',     type='link', when='+gmp')
+    depends_on('mpi',      type='link', when='+parform')
+
+    variant('gmp', default=False, description='Use GMP for long integer arithmetic')
+    variant('zlib', default=False, description='Use zlib for compression')
+    variant('scalar', default=True, description='Build scalar version (form)')
+    variant('threaded', default=True, description='Build threaded version (tform)')
+    variant('parform', default=False, description='Build parallel version using MPI (parform)')
 
     def configure_args(self):
-        args = ['--with-gmp=' + self.spec['gmp'].prefix,
-                '--with-zlib=' + self.spec['zlib'].prefix]
+        args = []
+        args += self.with_or_without('gmp', self.spec['gmp'].prefix)
+        args += self.with_or_without('zlib', self.spec['zlib'].prefix)
+        args += self.enable_or_disable('scalar')
+        args += self.enable_or_disable('threaded')
+        args += self.enable_or_disable('parform')
+
         return args

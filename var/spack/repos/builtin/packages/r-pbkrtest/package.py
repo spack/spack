@@ -33,7 +33,7 @@ class RPbkrtest(RPackage):
     depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.2.3:', when='@0.4-6:', type=('build', 'run'))
     depends_on('r@3.5.0:', when='@0.5-0.1:', type=('build', 'run'))
-    depends_on('r-lme4@1.1.10:', type=('build', 'run'))
+    depends_on('r-lme4@1.1-10:', type=('build', 'run'))
     depends_on('r-broom', when='@0.5-0.1:', type=('build', 'run'))
     depends_on('r-dplyr', when='@0.5-0.1:', type=('build', 'run'))
     depends_on('r-magrittr', when='@0.5-0.1:', type=('build', 'run'))
