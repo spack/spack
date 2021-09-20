@@ -96,10 +96,11 @@ class PyScipy(PythonPackage):
         if platform.mac_ver()[0][0:2] == '11':
             env.set('MACOSX_DEPLOYMENT_TARGET', '10.15')
 
+    def flag_handler(self, name, flags):
+        return self.spec['py-numpy'].package.flag_handler(name, flags)
+
     def build_args(self, spec, prefix):
         args = []
-        if spec.satisfies('%fj'):
-            args.extend(['config_fc', '--fcompiler=fujitsu'])
 
         # Build in parallel
         # Known problems with Python 3.5+
@@ -109,6 +110,22 @@ class PyScipy(PythonPackage):
             args.extend(['-j', str(make_jobs)])
 
         return args
+
+    def build(self, spec, prefix):
+        """Install everything from build directory."""
+        args = (spec['py-numpy'].package.fortran_args(spec, prefix)
+                + ['build']
+                + self.build_args(spec, prefix))
+
+        self.setup_py(*args)
+
+    def install(self, spec, prefix):
+        """Install everything from build directory."""
+        args = (spec['py-numpy'].package.fortran_args(spec, prefix)
+                + ['install']
+                + self.install_args(spec, prefix))
+
+        self.setup_py(*args)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

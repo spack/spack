@@ -1,0 +1,61 @@
+--- a/numpy/distutils/fcompiler/ibm.py    2016-06-18 10:15:36.000000000 -0700
++++ b/numpy/distutils/fcompiler/ibm.py    2021-03-24 15:31:35.615819000 -0700
+@@ -14,15 +14,15 @@
+ class IBMFCompiler(FCompiler):
+     compiler_type = 'ibm'
+     description = 'IBM XL Fortran Compiler'
+-    version_pattern =  r'(xlf\(1\)\s*|)IBM XL Fortran ((Advanced Edition |)Version |Enterprise Edition V|for AIX, V)(?P<version>[^\s*]*)'
++    version_pattern =  r'(xlf\(1\)\s*|)IBM XL Fortran ((Advanced Edition |)Version |Enterprise Edition V|for (AIX|Linux), V)(?P<version>[^\s*]*)'
+     #IBM XL Fortran Enterprise Edition V10.1 for AIX \nVersion: 10.01.0000.0004
+
+     executables = {
+         'version_cmd'  : ["<F77>", "-qversion"],
+-        'compiler_f77' : ["xlf"],
+-        'compiler_fix' : ["xlf90", "-qfixed"],
+-        'compiler_f90' : ["xlf90"],
+-        'linker_so'    : ["xlf95"],
++        'compiler_f77' : ["<F77>"],
++        'compiler_fix' : ["<F90>", "-qfixed"],
++        'compiler_f90' : ["<F90>"],
++        'linker_so'    : ["<F90>"],
+         'archiver'     : ["ar", "-cr"],
+         'ranlib'       : ["ranlib"]
+         }
+@@ -54,7 +54,7 @@
+         return version
+
+     def get_flags(self):
+-        return ['-qextname']
++        return []
+
+     def get_flags_debug(self):
+         return ['-g']
+@@ -64,13 +64,15 @@
+         if sys.platform=='darwin':
+             opt.append('-Wl,-bundle,-flat_namespace,-undefined,suppress')
+         else:
+-            opt.append('-bshared')
++            opt.append('-qmkshrobj')
+         version = self.get_version(ok_status=[0, 40])
+         if version is not None:
+-            if sys.platform.startswith('aix'):
+-                xlf_cfg = '/etc/xlf.cfg'
++            s, o = exec_command(["xlf_r", "-qversion", "-v"])
++            m = re.search('XL_CONFIG=(.*?):',o)
++            if m:
++                xlf_cfg = m.group(1)
+             else:
+-                xlf_cfg = '/etc/opt/ibmcmp/xlf/%s/xlf.cfg' % version
++                xlf_cfg = None
+             fo, new_cfg = make_temp_file(suffix='_xlf.cfg')
+             log.info('Creating '+new_cfg)
+             fi = open(xlf_cfg, 'r')
+@@ -86,6 +88,9 @@
+             opt.append('-F'+new_cfg)
+         return opt
+
++    def runtime_library_dir_option(self, dir):
++        return '-R%s' % dir
++
+     def get_flags_opt(self):
+         return ['-O3']

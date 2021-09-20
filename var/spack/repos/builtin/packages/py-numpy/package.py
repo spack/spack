@@ -5,6 +5,7 @@
 
 import platform
 import subprocess
+import os
 
 from spack import *
 
@@ -120,6 +121,9 @@ class PyNumpy(PythonPackage):
     patch('check_executables3.patch', when='@1.16.0:1.18.5')
     patch('check_executables4.patch', when='@1.14.0:1.15.4')
     patch('check_executables5.patch', when='@:1.13.3')
+
+    patch('fix_blas_detection.patch', when='@:1.16.99')
+    patch('ibm_fortran.patch')
 
     # version 1.21.0 runs into an infinit loop during printing
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
@@ -256,16 +260,43 @@ class PyNumpy(PythonPackage):
             if '^netlib-lapack' in spec:
                 # netlib requires blas and lapack listed
                 # separately so that scipy can find them
+                extraLinkItems = ''
+                rpath = ''
+                if '^netlib-lapack~shared' in spec:
+                    if "xlf" in env['SPACK_F77']:
+                        bin_index = env['SPACK_F77'].find("/bin")
+                        compilerHome = env['SPACK_F77'][:bin_index]
+                        extraLinkItems += (
+                            '{0}/alllibs/libxlf90_r.a {0}/alllibs/libxl.a '
+                            + '{0}/alllibs/libxlopt.a -lrt '
+                        ).format(compilerHome)
+                    if "gfortran" in env['SPACK_F77']:
+                        bin_index = env['SPACK_F77'].find("/bin")
+                        compilerHome = env['SPACK_F77'][:bin_index]
+                        found_gfortran = False
+                        for mydir, _, filenames in os.walk(compilerHome):
+                            for filename in filenames:
+                                if filename == 'libgfortran.so':
+                                    extraLinkItems += os.path.join(mydir,
+                                                                   filename)
+                                    found_gfortran = True
+                                    break
+                            if found_gfortran:
+                                break
                 if spec.satisfies('+blas'):
                     f.write('[blas]\n')
                     f.write('libraries = {0}\n'.format(blas_lib_names))
                     write_library_dirs(f, blas_lib_dirs)
                     f.write('include_dirs = {0}\n'.format(blas_header_dirs))
+                    if extraLinkItems:
+                        f.write("extra_link_args = {0}\n".format(extraLinkItems))
                 if spec.satisfies('+lapack'):
                     f.write('[lapack]\n')
                     f.write('libraries = {0}\n'.format(lapack_lib_names))
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
+                    if extraLinkItems:
+                        f.write("extra_link_args = {0}\n".format(extraLinkItems))
 
             if '^fujitsu-ssl2' in spec:
                 if spec.satisfies('+blas'):
@@ -289,11 +320,27 @@ class PyNumpy(PythonPackage):
                         )
                     )
 
+    def setup_dependent_build_environment(self, env, depspec):
+        self.setup_build_environment(env)
+
     def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
         spec = self.spec
+
+        if spec['blas'].name != 'intel-mkl' and \
+                spec['blas'].name != 'intel-parallel-studio':
+            env.set('MKLROOT', 'None')
+        if spec['blas'].name != 'blis':
+            env.set('BLIS', 'None')
+        if spec['blas'].name != 'openblas':
+            env.set('OPENBLAS', 'None')
+        if spec['blas'].name != 'atlas':
+            env.set('ATLAS', 'None')
+            env.set('PTATLAS', 'None')
+        if spec['blas'].name != 'veclibfort':
+            env.set('ACCELERATE', 'None')
 
         # https://numpy.org/devdocs/user/building.html#blas
         if 'blas' not in spec:
@@ -332,6 +379,34 @@ class PyNumpy(PythonPackage):
             lapack = 'lapack'
 
         env.set('NPY_LAPACK_ORDER', lapack)
+        # https://github.com/scipy/scipy/issues/9080
+        env.set('F90', spack_fc)
+
+    def fortran_args(self, spec, prefix):
+        args = []
+        if spec.satisfies('%fj'):
+            args.extend(['config_fc', '--fcompiler=fj'])
+        elif (spec.satisfies('platform=linux') and
+              spec.target.family == 'ppc64le' and
+              "xlf" in env['SPACK_F77']):
+            args.extend(['config_fc', '--fcompiler=ibm'])
+        return args
+
+    def build(self, spec, prefix):
+        """Install everything from build directory."""
+        args = (self.fortran_args(spec, prefix)
+                + ['build']
+                + self.build_args(spec, prefix))
+
+        self.setup_py(*args)
+
+    def install(self, spec, prefix):
+        """Install everything from build directory."""
+        args = (self.fortran_args(spec, prefix)
+                + ['install']
+                + self.install_args(spec, prefix))
+
+        self.setup_py(*args)
 
     def build_args(self, spec, prefix):
         args = []
@@ -343,7 +418,7 @@ class PyNumpy(PythonPackage):
             # https://github.com/spack/spack/issues/7927
             # https://github.com/scipy/scipy/issues/7112
             if spec['python'].version < Version('3.5'):
-                args = ['-j', str(make_jobs)]
+                args.extend(['-j', str(make_jobs)])
 
         return args
 
