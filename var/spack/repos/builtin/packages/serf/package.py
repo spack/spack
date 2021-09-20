@@ -28,6 +28,7 @@ class Serf(SConsPackage):
     depends_on('zlib')
 
     patch('py3syntax.patch')
+    patch('py3-hashbang.patch')
 
     def build_args(self, spec, prefix):
         args = {
