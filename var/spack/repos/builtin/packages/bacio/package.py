@@ -30,4 +30,3 @@ class Bacio(CMakePackage):
         env.set('BACIO_INCd', join_path(self.prefix, 'include_8'))
         env.set('BACIO_INC8', join_path(self.prefix, 'include_8'))
         env.set('BACIO_DIR', self.prefix)
-
