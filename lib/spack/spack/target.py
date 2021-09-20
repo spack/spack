@@ -135,7 +135,7 @@ class Target(object):
                        'supported yet on mixed compiler toolchains [check'
                        ' {0.name}@{0.version} for further details]')
                 warnings.warn(msg.format(compiler))
-                return ''
+                return spack.compiler.UNSET_CC_ENVIRONMENT_VARIABLE
 
         # Try to check if the current compiler comes with a version number or
         # has an unexpected suffix. If so, treat it as a compiler with a
@@ -159,4 +159,4 @@ class Target(object):
 
         return self.microarchitecture.optimization_flags(
             compiler.name, str(compiler_version)
-        )
+        ) or spack.compiler.UNSET_CC_ENVIRONMENT_VARIABLE
