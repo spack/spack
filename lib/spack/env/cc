@@ -71,39 +71,12 @@ die() {
     exit 1
 }
 
-check_IFS() {
-    must_be="$1"
-    if [ "$IFS" != "$must_be" ]; then
-        die "\$IFS must be '$must_be', but was '$IFS'."
-    fi
-}
-
-# Perform several types of path normalization on the first argument, which is
-# split by $IFS (which must be set to the value ':'):
-# - remove trailing directory slashes,
-# - remove empty strings.
-canonicalize_paths() {
-    # $1 is split according to $IFS, which is expected to be ':'.
-    check_IFS ':'
-    for dir in $1; do
-        # Ignore empty directory paths.
-        if [ -z "$dir" ]; then
-            continue
-        fi
-        # Remove any trailing slash.
-        printf '%s:' "${dir%/}"
-    done
-}
-
-# Test whether a path $1 is equal to any entry of $2.
+# Test whether a path $1 points to the same place as any entry of $2->$#.
 path_contained_in_nonrecursive() {
     path_to_check="$1"
-    # $2/$directory_list are split according to $IFS, which may be arbitrary but
-    # is likely ':'.
-    directory_list="$2"
-    for dir_to_test in $directory_list; do
-        # We strip any trailing slashes from either argument.
-        if [ "${path_to_check%/}" -ef "${dir_to_test%/}" ]; then
+    shift
+    for dir_to_test; do
+        if [ "$path_to_check" -ef "$dir_to_test" ]; then
             return 0
         fi
     done
@@ -145,22 +118,21 @@ done
 
 # Determine which directories are considered "system" directories so we can
 # correctly classify include directories into -I and -isystem arguments later.
-readonly SPACK_SYSTEM_DIRS="$(IFS=':' canonicalize_paths "$SPACK_SYSTEM_DIRS")"
 
-# Test whether a path is contained within $SPACK_SYSTEM_DIRS.
+# Test whether a path $1 is contained within $SPACK_SYSTEM_DIRS.
 is_system_dir() {
-    IFS=':' path_contained_in_nonrecursive "${1%/}" "$SPACK_SYSTEM_DIRS"
+    path_to_check="$1"
+    IFS=':'
+    path_contained_in_nonrecursive "$path_to_check" $SPACK_SYSTEM_DIRS
 }
 
-# Remove entries of $1 which are contained in $2.
+# Remove any entries of $2->$# which are contained in $1.
 filter_out_paths_from_another_set_of_paths() {
-    candidate_paths="$1"
-    paths_to_avoid="$2"
-    # We output paths using the ':' separator, so we want to assume the same for
-    # our input arguments to make it easier to follow.
-    check_IFS ':'
-    for candidate in $candidate_paths; do
-        if ! path_contained_in_nonrecursive "$candidate" "$paths_to_avoid"; then
+    paths_to_avoid="$1"
+    shift
+    IFS=':'
+    for candidate; do
+        if ! path_contained_in_nonrecursive "$candidate" $paths_to_avoid; then
             printf '%s:' "$candidate"
         fi
     done
@@ -323,9 +295,7 @@ fi
 
 # Filter '.' and Spack environment directories out of $PATH so that this script
 # doesn't just call itself.
-readonly env_path="$(IFS=':' canonicalize_paths "$PATH")"
-readonly spack_env_path="$(IFS=':' canonicalize_paths "$SPACK_ENV_PATH")"
-readonly filtered_path="$(IFS=':' filter_out_paths_from_another_set_of_paths "$env_path" "$spack_env_path")"
+readonly filtered_path="$(IFS=':'; filter_out_paths_from_another_set_of_paths "$SPACK_ENV_PATH" $PATH)"
 # Remove the trailing ':' before putting it back in $PATH.
 PATH="${filtered_path%:}"
 
