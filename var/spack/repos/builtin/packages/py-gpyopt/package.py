@@ -18,7 +18,6 @@ class PyGpyopt(PythonPackage):
 
     version('1.2.6', sha256='e714daa035bb529a6db23c53665a762a4ab3456b9329c19ad3b03983f94c9b2a')
 
-    depends_on('python@2.7:,3.0:',      type=('build', 'run'))
     depends_on('py-setuptools',         type='build')
     depends_on('py-numpy@1.7:',         type=('build', 'run'))
     depends_on('py-scipy@0.16:',        type=('build', 'run'))
