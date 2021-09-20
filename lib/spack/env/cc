@@ -25,6 +25,7 @@
 
 # Error and exit if any undefined variable is dereferenced.
 set -u
+# We also declare each variable as readonly after the final time it is modified.
 
 # Justification for the shellcheck ignores declared at the top of this file:
 # - SC2086 (double quote variable dereferences to avoid word splitting): we
@@ -94,9 +95,12 @@ SPACK_SYSTEM_DIRS"
 # - SPACK_TEST_COMMAND
 
 # Exit with error if the parameter given by the name in $1 is unset or empty.
+#
+# Also declare the parameter as readonly.
 check_param_is_empty_or_unset() {
     param_name="$1"
     eval ": \${${param_name}:?Spack compiler must be run from Spack! Input '\$${param_name}' is missing.}"
+    eval "readonly $param_name"
 }
 
 # Ensure all required parameters are set before doing anything else.
@@ -378,6 +382,7 @@ is_valid_bool() {
 
 # If we aren't asking for debug flags, don't add them.
 : ${SPACK_ADD_DEBUG_FLAGS:="$False"}
+readonly SPACK_ADD_DEBUG_FLAGS
 
 if ! is_valid_tribool "$SPACK_ADD_DEBUG_FLAGS"; then
     die "\$SPACK_ADD_DEBUG_FLAGS, if defined, must be one of '$True' '$False', or '$Custom' (was: $SPACK_ADD_DEBUG_FLAGS)."
@@ -436,9 +441,13 @@ case "$command" in
         die "Unknown command '$command' selected. Compiler was: $SPACK_COMPILER_SPEC."
         ;;
 esac
+readonly command
 : ${comp:='CC'}
+readonly comp
 : ${lang_flags:=''}
+readonly lang_flags
 : ${debug_flags:=''}
+readonly debug_flags
 
 # If any of the arguments below are present, then the mode is vcheck.
 # In vcheck mode, nothing is added in terms of extra search paths or
@@ -476,6 +485,7 @@ if [ -z "${mode:-}" ]; then
         esac
     done
 fi
+readonly mode
 
 # These variables are needed to ensure we set RPATH instead of RUNPATH
 # (or the opposite, depending on the configuration in config.yaml)
@@ -503,6 +513,7 @@ fi
 readonly rpath="$(eval "printf '%s' \"\$SPACK_${comp}_RPATH_ARG\"")"
 
 : ${SPACK_TEST_COMMAND:=''}
+readonly SPACK_TEST_COMMAND
 # Dump the mode and exit if the command is dump-mode.
 if [ "$SPACK_TEST_COMMAND" = 'dump-mode' ]; then
     printf '%s\n' "$mode"
@@ -513,7 +524,7 @@ fi
 # doesn't just call itself.
 readonly filtered_path="$(IFS=':'; filter_out_paths_from_another_set_of_paths "$SPACK_ENV_PATH" $PATH)"
 # Remove the trailing ':' before putting it back in $PATH.
-PATH="${filtered_path%:}"
+readonly PATH="${filtered_path%:}"
 
 if [ "$mode" = 'vcheck' ]; then
     exec "$command" "$@"
@@ -538,6 +549,7 @@ case "$mode" in
         ;;
 esac
 : ${add_rpaths:="$True"}
+readonly add_rpaths
 
 # This check allows us to safely perform checks with `!=` later.
 if ! is_valid_bool "$add_rpaths"; then
@@ -729,7 +741,15 @@ while [ $# -ne 0 ]; do
     fi
     shift
 done
+readonly isystem_system_includes
+readonly isystem_includes
+readonly system_includes
+readonly includes
+readonly system_libdirs
+readonly other_args
+readonly system_rpaths
 : ${isystem_was_used="$False"}
+readonly isystem_was_used
 
 if ! is_valid_bool "$isystem_was_used"; then
     die "\$isystem_was_used must be '$True' or '$False', but was '$isystem_was_used'."
@@ -757,7 +777,7 @@ if [ "$SPACK_ADD_DEBUG_FLAGS" = "$True" ]; then
 elif [ "$SPACK_ADD_DEBUG_FLAGS" = "$Custom" ]; then
     # If a custom flag is requested, derive from the environment.
     # shellcheck disable=SC2153
-    spack_debug_flags="$(IFS=' '; generate_array_from_expansion $SPACK_DEBUG_FLAGS)"
+    readonly spack_debug_flags="$(IFS=' '; generate_array_from_expansion $SPACK_DEBUG_FLAGS)"
     flags="$(concatenate "$flags" "$spack_debug_flags")"
 fi
 
@@ -792,7 +812,7 @@ case "$mode" in
         esac
         # shellcheck disable=SC2153
         if ! is_arg_intentionally_unset "$SPACK_TARGET_ARGS"; then
-            spack_target_args="$(IFS=' '; generate_array_from_expansion $SPACK_TARGET_ARGS)"
+            readonly spack_target_args="$(IFS=' '; generate_array_from_expansion $SPACK_TARGET_ARGS)"
             flags="$(concatenate "$spack_target_args" "$flags")"
         fi
         ;;
@@ -817,7 +837,7 @@ case "$mode" in
                 ;;
         esac
 
-        rpath_dirs="$(IFS=':'; generate_array_from_expansion $SPACK_RPATH_DIRS)"
+        readonly rpath_dirs="$(IFS=':'; generate_array_from_expansion $SPACK_RPATH_DIRS)"
         if should_add_rpaths; then
             # Append RPATH directories. Note that in the case of the top-level
             # package these directories may not exist yet. For dependencies it
@@ -825,27 +845,31 @@ case "$mode" in
             rpaths="$(concatenate "$rpaths" "$rpath_dirs")"
         fi
 
-        link_dirs="$(IFS=':'; generate_array_from_expansion $SPACK_LINK_DIRS)"
+        readonly link_dirs="$(IFS=':'; generate_array_from_expansion $SPACK_LINK_DIRS)"
         libdirs="$(concatenate "$libdirs" "$link_dirs")"
 
         # Set extra RPATHs.
-        extra_rpaths="$(IFS=':'; generate_array_from_expansion ${SPACK_COMPILER_EXTRA_RPATHS:-})"
+        readonly extra_rpaths="$(IFS=':'; generate_array_from_expansion ${SPACK_COMPILER_EXTRA_RPATHS:-})"
         libdirs="$(concatenate "$libdirs" "$extra_rpaths")"
         if should_add_rpaths; then
             rpaths="$(concatenate "$rpaths" "$extra_rpaths")"
         fi
 
         # Set implicit RPATHs.
-        implicit_rpaths="$(IFS=':'; generate_array_from_expansion ${SPACK_COMPILER_IMPLICIT_RPATHS:-})"
+        readonly implicit_rpaths="$(IFS=':'; generate_array_from_expansion ${SPACK_COMPILER_IMPLICIT_RPATHS:-})"
         if should_add_rpaths; then
             rpaths="$(concatenate "$rpaths" "$implicit_rpaths")"
         fi
 
         # Add SPACK_LDLIBS to args.
-        spack_ldlibs="$(IFS=' '; generate_array_from_expansion ${SPACK_LDLIBS:-})"
+        readonly spack_ldlibs="$(IFS=' '; generate_array_from_expansion ${SPACK_LDLIBS:-})"
         libs="$(concatenate "$libs" "$(remove_prefix_from_array_elements "$spack_ldlibs" '-l')")"
         ;;
 esac
+readonly libdirs
+readonly rpaths
+readonly libs
+readonly flags
 
 #
 # Finally, reassemble the command line.
@@ -861,7 +885,7 @@ args="$(concatenate "$args" "$(include_dir_prefix_elements "$includes")")"
 args="$(concatenate "$args" "$(system_include_dir_prefix_elements "$isystem_includes")")"
 
 # shellcheck disable=SC2153
-spack_include_dirs="$(IFS=':'; generate_array_from_expansion $SPACK_INCLUDE_DIRS)"
+readonly spack_include_dirs="$(IFS=':'; generate_array_from_expansion $SPACK_INCLUDE_DIRS)"
 case "$mode" in
     cpp|cc|as|ccld)
         if was_isystem_used; then
@@ -902,6 +926,7 @@ args="$(concatenate "$args" "$other_args")"
 
 # Inject SPACK_LDLIBS, if supplied.
 args="$(concatenate "$args" "$(lib_name_prefix_elements "$libs")")"
+readonly args
 
 full_command="$(prepend "$command" "$args")"
 
@@ -916,6 +941,7 @@ if [ -n "${SPACK_CCACHE_BINARY:-}" ]; then
             ;;
     esac
 fi
+readonly full_command
 
 # Dump the full command and exit if the caller supplies
 # $SPACK_TEST_COMMAND='dump-args'.
@@ -934,8 +960,8 @@ fi
 # Write the input and output commands to debug logs if it's asked for.
 #
 if [ "${SPACK_DEBUG:-}" = 'TRUE' ]; then
-    input_log="${SPACK_DEBUG_LOG_DIR}/spack-cc-$SPACK_DEBUG_LOG_ID.in.log"
-    output_log="${SPACK_DEBUG_LOG_DIR}/spack-cc-$SPACK_DEBUG_LOG_ID.out.log"
+    readonly input_log="${SPACK_DEBUG_LOG_DIR}/spack-cc-$SPACK_DEBUG_LOG_ID.in.log"
+    readonly output_log="${SPACK_DEBUG_LOG_DIR}/spack-cc-$SPACK_DEBUG_LOG_ID.out.log"
     printf '%s\n' "[${mode}] ${command} ${input_command}" >> "$input_log"
     readonly spaced_command_string="$(join_array_elements "$full_command" ' ')"
     printf '%s\n' "[${mode}] ${spaced_command_string}" >> "$output_log"
