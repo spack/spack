@@ -118,6 +118,3 @@ class Proj(AutotoolsPackage):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)

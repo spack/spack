@@ -401,3 +401,7 @@ class PythonPackage(PackageBase):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
+
+    def setup_run_environment(self, env):
+        dir = self.spec['python'].package.site_packages_dir
+        env.prepend_path('PYTHONPATH', os.path.join(self.prefix, dir))

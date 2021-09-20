@@ -923,6 +923,8 @@ for plat_specific in [True, False]:
         if not is_system_path(path):
             env.prepend_path('PATH', path)
 
+        # TODO: this should be dropped, the build environment should take care
+        # of dependencies.
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test'), root=True):
             if d.package.extends(self.spec):
                 env.prepend_path('PYTHONPATH', join_path(
@@ -982,15 +984,6 @@ for plat_specific in [True, False]:
             # from the sysconfigdata file:
             if config_link != new_link:
                 env.set(link_var, new_link)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        """Set PYTHONPATH to include the site-packages directory for the
-        extension and any other python extensions it depends on.
-        """
-        for d in dependent_spec.traverse(deptype=('run'), root=True):
-            if d.package.extends(self.spec):
-                env.prepend_path('PYTHONPATH', join_path(
-                    d.prefix, self.site_packages_dir))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods."""

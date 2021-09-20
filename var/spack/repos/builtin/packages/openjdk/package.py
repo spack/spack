@@ -143,18 +143,6 @@ class Openjdk(Package):
         classpath = os.pathsep.join(class_paths)
         env.set('CLASSPATH', classpath)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        """Set CLASSPATH.
-
-        CLASSPATH contains the installation prefix for the extension and any
-        other Java extensions it depends on."""
-        # For runtime environment set only the path for
-        # dependent_spec and prepend it to CLASSPATH
-        if dependent_spec.package.extends(self.spec):
-            class_paths = find(dependent_spec.prefix, '*.jar')
-            classpath = os.pathsep.join(class_paths)
-            env.prepend_path('CLASSPATH', classpath)
-
     def setup_dependent_package(self, module, dependent_spec):
         """Allows spec['java'].home to work."""
 

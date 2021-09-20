@@ -42,5 +42,5 @@ and add an entry like so:
 
         raise InstallError(msg)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_run_environment(self, env, dependent_spec):
         env.set('FUSE_LIBRARY_PATH', self.prefix.macFUSE)

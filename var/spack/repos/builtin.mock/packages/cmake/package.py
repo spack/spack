@@ -22,16 +22,16 @@ class Cmake(Package):
     version('3.4.3',    '4cb3ff35b2472aae70f542116d616e63',
             url='https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_cc    # Ensure spack module-scope variable is avaiable
+    def setup_build_environment(self, spack_env):
+        spack_cc    # Ensure spack module-scope variable is available
         spack_env.set('for_install', 'for_install')
 
-    def setup_dependent_environment(self, spack_env, run_env, dspec):
-        spack_cc    # Ensure spack module-scope variable is avaiable
+    def setup_dependent_build_environment(self, spack_env, dspec):
+        spack_cc    # Ensure spack module-scope variable is available
         spack_env.set('from_cmake', 'from_cmake')
 
     def setup_dependent_package(self, module, dspec):
-        spack_cc    # Ensure spack module-scope variable is avaiable
+        spack_cc    # Ensure spack module-scope variable is available
 
         self.spec.from_cmake = "from_cmake"
         module.from_cmake = "from_cmake"

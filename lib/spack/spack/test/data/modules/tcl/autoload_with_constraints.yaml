@@ -6,3 +6,6 @@ tcl:
 
   ^python:
     autoload: 'direct'
+
+  all:
+    autoload: 'none'

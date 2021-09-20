@@ -143,18 +143,6 @@ class Lua(Package):
         if '+shared' in self.spec:
             env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        # For run time environment set only the path for dependent_spec and
-        # prepend it to LUAPATH
-        lua_patterns, lua_cpatterns = self._setup_dependent_env_helper(
-            env, dependent_spec)
-
-        if dependent_spec.package.extends(self.spec):
-            env.prepend_path('LUA_PATH', ';'.join(lua_patterns), separator=';')
-            if '+shared' in self.spec:
-                env.prepend_path('LUA_CPATH', ';'.join(lua_cpatterns),
-                                 separator=';')
-
     def setup_run_environment(self, env):
         env.prepend_path(
             'LUA_PATH',

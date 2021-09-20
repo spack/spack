@@ -30,7 +30,7 @@ class G4photonevaporation(Package):
                                  .format(self.version))
         install_tree(self.stage.source_path, install_path)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_run_environment(self, env):
         install_path = join_path(self.prefix.share, 'data',
                                  'PhotonEvaporation{0}'
                                  .format(self.version))

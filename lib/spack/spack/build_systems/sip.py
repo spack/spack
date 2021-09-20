@@ -100,6 +100,10 @@ class SIPPackage(PackageBase):
         args = self.configure_args()
 
         python_include_dir = 'python' + str(spec['python'].version.up_to(2))
+        python_packges_dir = os.path.join(
+            prefix,
+            self.spec['python'].package.site_packages_dir
+        )
 
         args.extend([
             '--verbose',
@@ -109,7 +113,7 @@ class SIPPackage(PackageBase):
             '--sip-incdir', join_path(spec['py-sip'].prefix.include,
                                       python_include_dir),
             '--bindir', prefix.bin,
-            '--destdir', inspect.getmodule(self).site_packages_dir,
+            '--destdir', python_packges_dir,
         ])
 
         self.python(configure, *args)
