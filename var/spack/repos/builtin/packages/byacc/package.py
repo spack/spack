@@ -17,7 +17,7 @@ class Byacc(AutotoolsPackage):
     url      = "ftp://ftp.invisible-island.net/pub/byacc/byacc-20210808.tgz"
 
     # Check FTP directory ftp://ftp.invisible-island.net/byacc/ to find the latest version
-    version('20210808', sha256='cf13bfb6440fb692cf81d20019960303c7c715a1194a3dfd32285e3ed85faa2a')
+    version('20210808', sha256='f158529be9d0594263c7f11a87616a49ea23e55ac63691252a2304fbbc7d3a83')
 
     provides('yacc')
 
