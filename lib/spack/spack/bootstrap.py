@@ -492,7 +492,11 @@ def _bootstrap_config_scopes():
     config_scopes = [
         spack.config.InternalConfigScope('_builtin', spack.config.config_defaults)
     ]
-    for name, path in spack.config.configuration_paths:
+    configuration_paths = (
+        spack.config.configuration_defaults_path,
+        ('bootstrap', _config_path())
+    )
+    for name, path in configuration_paths:
         platform = spack.architecture.platform().name
         platform_scope = spack.config.ConfigScope(
             '/'.join([name, platform]), os.path.join(path, platform)
@@ -544,13 +548,28 @@ def store_path():
                'Use "spack bootstrap enable" to enable it')
         raise RuntimeError(msg)
 
-    bootstrap_root_path = spack.config.get(
+    return _store_path()
+
+
+def _root_path():
+    """Root of all the bootstrap related folders"""
+    return spack.config.get(
         'bootstrap:root', spack.paths.user_bootstrap_path
     )
-    bootstrap_store_path = spack.util.path.canonicalize_path(
+
+
+def _store_path():
+    bootstrap_root_path = _root_path()
+    return spack.util.path.canonicalize_path(
         os.path.join(bootstrap_root_path, 'store')
     )
-    return bootstrap_store_path
+
+
+def _config_path():
+    bootstrap_root_path = _root_path()
+    return spack.util.path.canonicalize_path(
+        os.path.join(bootstrap_root_path, 'config')
+    )
 
 
 def clingo_root_spec():
