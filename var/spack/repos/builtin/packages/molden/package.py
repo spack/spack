@@ -63,5 +63,14 @@ class Molden(MakefilePackage):
             makefile.filter(r'AFLAG=*', r'AFLAG=')
             makefile.filter(r'rm -f src/', r'rm -f ')
 
+    def flag_handler(self, name, flags):
+        if name == 'fflags':
+            if self.spec.satisfies('%gcc@10:'):
+                if flags is None:
+                    flags = []
+                flags.append('-fallow-argument-mismatch')
+        return (flags, None, None)
+                
+                
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
