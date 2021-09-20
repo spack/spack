@@ -248,7 +248,10 @@ class TestSuite(object):
         try:
             with open(filename, 'r') as f:
                 data = sjson.load(f)
-                return TestSuite.from_dict(data)
+                test_suite = TestSuite.from_dict(data)
+                content_hash = filename.split(os.sep)[-2]
+                test_suite._hash = content_hash
+                return test_suite
         except Exception as e:
             tty.debug(e)
             tty.debug('while attempting to read', filename)
