@@ -13,9 +13,9 @@ class Mvapich2(AutotoolsPackage):
     networks (InfiniBand, Omni-Path, Ethernet/iWARP, and RoCE) and computing
     platforms (x86 (Intel and AMD), ARM and OpenPOWER)"""
 
-    homepage = "http://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
-    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.6.tar.gz"
-    list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
+    homepage = "https://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
+    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.6.tar.gz"
+    list_url = "https://mvapich.cse.ohio-state.edu/downloads/"
 
     maintainers = ['natshineman', 'harisubramoni', 'ndcontini']
 

@@ -10,7 +10,7 @@ class Imagemagick(AutotoolsPackage):
     """ImageMagick is a software suite to create, edit, compose,
     or convert bitmap images."""
 
-    homepage = "http://www.imagemagick.org"
+    homepage = "https://www.imagemagick.org"
     url = "https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz"
 
     version('7.0.8-7', sha256='fadb36b59f310e9eee5249ecb2326b323a64da6cc716dd6d08ece8ea2c780b81')

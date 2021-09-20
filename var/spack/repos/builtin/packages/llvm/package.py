@@ -19,9 +19,9 @@ class Llvm(CMakePackage, CudaPackage):
        is not an acronym; it is the full name of the project.
     """
 
-    homepage = "http://llvm.org/"
+    homepage = "https://llvm.org/"
     url = "https://github.com/llvm/llvm-project/archive/llvmorg-7.1.0.tar.gz"
-    list_url = "http://releases.llvm.org/download.html"
+    list_url = "https://releases.llvm.org/download.html"
     git = "https://github.com/llvm/llvm-project"
     maintainers = ['trws', 'naromero77']
 

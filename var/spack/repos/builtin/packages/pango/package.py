@@ -11,7 +11,7 @@ class Pango(AutotoolsPackage):
        an emphasis on internationalization. It can be used anywhere
        that text layout is needed, though most of the work on Pango so
        far has been done in the context of the GTK+ widget toolkit."""
-    homepage = "http://www.pango.org"
+    homepage = "https://www.pango.org"
     url      = "http://ftp.gnome.org/pub/GNOME/sources/pango/1.40/pango-1.40.3.tar.xz"
     list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
     list_depth = 1

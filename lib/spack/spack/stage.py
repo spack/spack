@@ -18,6 +18,7 @@ from typing import Dict  # novm
 
 from six import iteritems, string_types
 
+import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     can_access,
@@ -29,7 +30,6 @@ from llnl.util.filesystem import (
 )
 
 import spack.caches
-import spack.cmd
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
@@ -857,7 +857,7 @@ def get_checksums_for_versions(
     tty.msg('Found {0} version{1} of {2}:'.format(
             num_ver, '' if num_ver == 1 else 's', name),
             '',
-            *spack.cmd.elide_list(
+            *llnl.util.lang.elide_list(
                 ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
                  for v in sorted_versions]))
     print()

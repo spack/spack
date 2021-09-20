@@ -14,7 +14,7 @@ class Extendee(Package):
 
     extendable = True
 
-    version('1.0', 'hash-extendee-1.0')
+    version('1.0', '0123456789abcdef0123456789abcdef')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

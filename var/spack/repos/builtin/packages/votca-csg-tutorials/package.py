@@ -15,7 +15,7 @@ class VotcaCsgTutorials(CMakePackage):
 
        This package contains the VOTCA coarse-graining tutorials.
     """
-    homepage = "http://www.votca.org"
+    homepage = "https://www.votca.org"
     url      = "https://github.com/votca/csg-tutorials/tarball/v1.4"
     git      = "https://github.com/votca/csg-tutorials.git"
     maintainers = ['junghans']

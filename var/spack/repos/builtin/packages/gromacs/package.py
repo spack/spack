@@ -20,11 +20,12 @@ class Gromacs(CMakePackage):
     """
 
     homepage = 'http://www.gromacs.org'
-    url      = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
+    url      = 'https://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
     git      = 'https://github.com/gromacs/gromacs.git'
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('master', branch='master')
+    version('2021.3', sha256='e109856ec444768dfbde41f3059e3123abdb8fe56ca33b1a83f31ed4575a1cc6')
     version('2021.2', sha256='d940d865ea91e78318043e71f229ce80d32b0dc578d64ee5aa2b1a4be801aadb')
     version('2021.1', sha256='bc1d0a75c134e1fb003202262fe10d3d32c59bbb40d714bc3e5015c71effe1e5')
     version('2021', sha256='efa78ab8409b0f5bf0fbca174fb8fbcf012815326b5c71a9d7c385cde9a8f87b')
@@ -389,4 +390,10 @@ class Gromacs(CMakePackage):
                 options.append('-DFFTWF_LIBRARIES={0}'.
                                format(self.spec['amdfftw'].libs.joined(';')))
 
+        # Ensure that the GROMACS log files report how the code was patched
+        # during the build, so that any problems are easier to diagnose.
+        if '+plumed' in self.spec:
+            options.append('-DGMX_VERSION_STRING_OF_FORK=PLUMED-spack')
+        else:
+            options.append('-DGMX_VERSION_STRING_OF_FORK=spack')
         return options

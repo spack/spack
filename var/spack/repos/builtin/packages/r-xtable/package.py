@@ -9,7 +9,7 @@ from spack import *
 class RXtable(RPackage):
     """Coerce data to LaTeX and HTML tables."""
 
-    homepage = "http://xtable.r-forge.r-project.org/"
+    homepage = "https://xtable.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/xtable_1.8-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/xtable"
 

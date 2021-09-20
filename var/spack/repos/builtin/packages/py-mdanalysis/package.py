@@ -13,7 +13,7 @@ class PyMdanalysis(PythonPackage):
     Gromacs. (See the lists of supported trajectory formats and
     topology formats.)"""
 
-    homepage = "http://www.mdanalysis.org"
+    homepage = "https://www.mdanalysis.org"
     pypi = "MDAnalysis/MDAnalysis-0.19.2.tar.gz"
 
     version('1.0.0',  sha256='f45a024aca45e390ff1c45ca90beb2180b78881be377e2a1aa9cd6c109bcfa81')

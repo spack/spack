@@ -14,7 +14,6 @@ import llnl.util.tty as tty
 
 import spack.binary_distribution
 import spack.compilers
-import spack.directory_layout as dl
 import spack.installer as inst
 import spack.package_prefs as prefs
 import spack.repo
@@ -1165,47 +1164,6 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
     expected = ['write->read locked', 'preparing', 'requeued']
     for exp, ln in zip(expected, out.split('\n')):
         assert exp in ln
-
-
-def test_install_dir_exists(install_mockery, monkeypatch):
-    """Cover capture of install directory exists error."""
-    def _install(installer, task):
-        raise dl.InstallDirectoryAlreadyExistsError(task.pkg.prefix)
-
-    # Ensure raise the desired exception
-    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install)
-
-    const_arg = installer_args(['b'], {})
-    installer = create_installer(const_arg)
-
-    err = 'already exists'
-    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, match=err):
-        installer.install()
-
-    b, _ = const_arg[0]
-    assert inst.package_id(b.package) in installer.installed
-
-
-def test_install_dir_exists_multi(install_mockery, monkeypatch, capfd):
-    """Cover capture of install directory exists error for multiple specs."""
-    def _install(installer, task):
-        raise dl.InstallDirectoryAlreadyExistsError(task.pkg.prefix)
-
-    # Skip the actual installation though should never reach it
-    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install)
-
-    # Use two packages to ensure multiple specs
-    const_arg = installer_args(['b', 'c'], {})
-    installer = create_installer(const_arg)
-
-    with pytest.raises(inst.InstallError, match='Installation request failed'):
-        installer.install()
-
-    err = capfd.readouterr()[1]
-    assert 'already exists' in err
-    for spec, install_args in const_arg:
-        pkg_id = inst.package_id(spec.package)
-        assert pkg_id in installer.installed
 
 
 def test_install_skip_patch(install_mockery, mock_fetch):

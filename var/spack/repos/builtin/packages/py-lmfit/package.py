@@ -9,7 +9,7 @@ from spack import *
 class PyLmfit(PythonPackage):
     """Least-Squares Minimization with Bounds and Constraints"""
 
-    homepage = "http://lmfit.github.io/lmfit-py/"
+    homepage = "https://lmfit.github.io/lmfit-py/"
     pypi = "lmfit/lmfit-0.9.5.tar.gz"
 
     version('1.0.2',  sha256='67090ce56685cf7f92bd7358a1e7d4ad862b3758988109ec440e9825e5184b45')

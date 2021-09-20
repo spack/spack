@@ -11,7 +11,7 @@ class RIntervals(RPackage):
 
     Tools for working with and comparing sets of points and intervals."""
 
-    homepage = "http://github.com/edzer/intervals"
+    homepage = "https://github.com/edzer/intervals"
     url      = "https://cloud.r-project.org/src/contrib/intervals_0.15.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/intervals"
 

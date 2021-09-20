@@ -10,7 +10,7 @@ class Pigz(MakefilePackage):
     """A parallel implementation of gzip for modern multi-processor,
        multi-core machines."""
 
-    homepage = "http://zlib.net/pigz/"
+    homepage = "https://zlib.net/pigz/"
     url      = "https://github.com/madler/pigz/archive/v2.3.4.tar.gz"
 
     version('2.4', sha256='e228e7d18b34c4ece8d596eb6eee97bde533c6beedbb728d07d3abe90b4b1b52')

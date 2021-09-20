@@ -24,6 +24,7 @@ class PyNumpy(PythonPackage):
 
     version('main', branch='main')
     version('master', branch='main', deprecated=True)
+    version('1.21.2', sha256='423216d8afc5923b15df86037c6053bf030d15cc9e3224206ef868c2d63dd6dc')
     version('1.21.1', sha256='dff4af63638afcc57a3dfb9e4b26d434a7a602d225b42d746ea7fe2edf1342fd')
     version('1.21.0', sha256='e80fe25cba41c124d04c662f33f6364909b985f2eb5998aaa5ae4b9587242cce')
     version('1.20.3', sha256='e55185e51b18d788e49fe8305fd73ef4470596b33fc2c1ceb304566b99c71a69')
@@ -85,16 +86,18 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'link', 'run'))
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'), when='@1.16:')
-    depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.17:')
-    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@1.19:')
-    depends_on('python@3.7:', type=('build', 'link', 'run'), when='@1.20:')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'link', 'run'), when='@:1.15')
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'), when='@1.16')
+    depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.17:1.18')
+    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@1.19')
+    depends_on('python@3.7:', type=('build', 'link', 'run'), when='@1.20:1.21.1')
+    depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.21.2:')
     depends_on('py-setuptools', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
     depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
     depends_on('py-cython@0.29.14:', when='@1.18.1:', type='build')
     depends_on('py-cython@0.29.21:', when='@1.19.1:', type='build')
+    depends_on('py-cython@0.29.24:', when='@1.21.2:', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 

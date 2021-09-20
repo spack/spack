@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import contextlib
 import copy
 import os
 import re
@@ -39,6 +40,7 @@ from spack.filesystem_view import (
     inverse_view_func_parser,
     view_func_parser,
 )
+from spack.installer import PackageInstaller
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
@@ -83,7 +85,7 @@ spack:
 valid_environment_name_re = r'^\w[\w-]*$'
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 2
+lockfile_format_version = 3
 
 # Magic names
 # The name of the standalone spec list in the manifest yaml
@@ -257,106 +259,15 @@ def deactivate(shell='sh'):
         tty.warn('Could not fully deactivate view due to missing package '
                  'or repo, shell environment may be corrupt.')
 
-    tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
+    tty.debug("Deactivated environment '%s'" % _active_environment.name)
     _active_environment = None
 
     return cmds
 
 
-def find_environment(args):
-    """Find active environment from args, spack.yaml, or environment variable.
-
-    This is called in ``spack.main`` to figure out which environment to
-    activate.
-
-    Check for an environment in this order:
-        1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
-        2. as a spack.yaml file in the current directory, or
-        3. via a path in the SPACK_ENV environment variable.
-
-    If an environment is found, read it in.  If not, return None.
-
-    Arguments:
-        args (argparse.Namespace): argparse namespace wtih command arguments
-
-    Returns:
-        (Environment): a found environment, or ``None``
-    """
-    # try arguments
-    env = getattr(args, 'env', None)
-
-    # treat env as a name
-    if env:
-        if exists(env):
-            return read(env)
-
-    else:
-        # if env was specified, see if it is a dirctory otherwise, look
-        # at env_dir (env and env_dir are mutually exclusive)
-        env = getattr(args, 'env_dir', None)
-
-        # if no argument, look for the environment variable
-        if not env:
-            env = os.environ.get(spack_env_var)
-
-            # nothing was set; there's no active environment
-            if not env:
-                return None
-
-    # if we get here, env isn't the name of a spack environment; it has
-    # to be a path to an environment, or there is something wrong.
-    if is_env_dir(env):
-        return Environment(env)
-
-    raise SpackEnvironmentError('no environment in %s' % env)
-
-
-def get_env(args, cmd_name, required=False):
-    """Used by commands to get the active environment.
-
-    This first checks for an ``env`` argument, then looks at the
-    ``active`` environment.  We check args first because Spack's
-    subcommand arguments are parsed *after* the ``-e`` and ``-D``
-    arguments to ``spack``.  So there may be an ``env`` argument that is
-    *not* the active environment, and we give it precedence.
-
-    This is used by a number of commands for determining whether there is
-    an active environment.
-
-    If an environment is not found *and* is required, print an error
-    message that says the calling command *needs* an active environment.
-
-    Arguments:
-        args (argparse.Namespace): argparse namespace wtih command arguments
-        cmd_name (str): name of calling command
-        required (bool): if ``True``, raise an exception when no environment
-            is found; if ``False``, just return ``None``
-
-    Returns:
-        (Environment): if there is an arg or active environment
-    """
-    # try argument first
-    env = getattr(args, 'env', None)
-    if env:
-        if exists(env):
-            return read(env)
-        elif is_env_dir(env):
-            return Environment(env)
-        else:
-            raise SpackEnvironmentError('no environment in %s' % env)
-
-    # try the active environment. This is set by find_environment() (above)
-    if _active_environment:
-        return _active_environment
-    elif not required:
-        return None
-    else:
-        tty.die(
-            '`spack %s` requires an environment' % cmd_name,
-            'activate an environment first:',
-            '    spack env activate ENV',
-            'or use:',
-            '    spack -e ENV %s ...' % cmd_name)
+def active_environment():
+    """Returns the active environment when there is any"""
+    return _active_environment
 
 
 def _root(name):
@@ -670,6 +581,10 @@ class ViewDescriptor(object):
                     tty.warn(msg)
 
 
+def _create_environment(*args, **kwargs):
+    return Environment(*args, **kwargs)
+
+
 class Environment(object):
     def __init__(self, path, init_file=None, with_view=None, keep_relative=False):
         """Create a new environment.
@@ -690,6 +605,9 @@ class Environment(object):
                 directory.
         """
         self.path = os.path.abspath(path)
+        self.init_file = init_file
+        self.with_view = with_view
+        self.keep_relative = keep_relative
 
         self.txlock = lk.Lock(self._transaction_lock_path)
 
@@ -731,6 +649,11 @@ class Environment(object):
                                                             with_view)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
+
+    def __reduce__(self):
+        return _create_environment, (
+            self.path, self.init_file, self.with_view, self.keep_relative
+        )
 
     def _rewrite_relative_paths_on_relocation(self, init_file_dir):
         """When initializing the environment from a manifest file and we plan
@@ -1560,21 +1483,18 @@ class Environment(object):
                     uninstalled_specs.append(spec)
         return uninstalled_specs
 
-    def install_all(self, args=None, **install_args):
+    def install_all(self, **install_args):
         """Install all concretized specs in an environment.
 
         Note: this does not regenerate the views for the environment;
         that needs to be done separately with a call to write().
 
         Args:
-            args (argparse.Namespace): argparse namespace with command arguments
             install_args (dict): keyword install arguments
         """
-        self.install_specs(None, args=args, **install_args)
+        self.install_specs(None, **install_args)
 
-    def install_specs(self, specs=None, args=None, **install_args):
-        from spack.installer import PackageInstaller
-
+    def install_specs(self, specs=None, **install_args):
         tty.debug('Assessing installation status of environment packages')
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
@@ -1608,15 +1528,7 @@ class Environment(object):
 
         installs = []
         for spec in specs_to_install:
-            # Parse cli arguments and construct a dictionary
-            # that will be passed to the package installer
-            kwargs = dict()
-            if install_args:
-                kwargs.update(install_args)
-            if args:
-                spack.cmd.install.update_kwargs_from_args(args, kwargs)
-
-            installs.append((spec.package, kwargs))
+            installs.append((spec.package, install_args))
 
         try:
             builder = PackageInstaller(installs)
@@ -1703,7 +1615,22 @@ class Environment(object):
         # Dependency-only specs will have value None
         matches = {}
 
+        if not isinstance(spec, spack.spec.Spec):
+            spec = spack.spec.Spec(spec)
+
         for user_spec, concretized_user_spec in self.concretized_specs():
+            # Deal with concrete specs differently
+            if spec.concrete:
+                # Matching a concrete spec is more restrictive
+                # than just matching the dag hash
+                is_match = (
+                    spec in concretized_user_spec and
+                    concretized_user_spec[spec.name].build_hash() == spec.build_hash()
+                )
+                if is_match:
+                    matches[spec] = spec
+                continue
+
             if concretized_user_spec.satisfies(spec):
                 matches[concretized_user_spec] = user_spec
             for dep_spec in concretized_user_spec.traverse(root=False):
@@ -1780,11 +1707,12 @@ class Environment(object):
         concrete_specs = {}
         for spec in self.specs_by_hash.values():
             for s in spec.traverse():
-                dag_hash_all = s.build_hash()
-                if dag_hash_all not in concrete_specs:
+                build_hash = s.build_hash()
+                if build_hash not in concrete_specs:
                     spec_dict = s.to_node_dict(hash=ht.build_hash)
-                    spec_dict[s.name]['hash'] = s.dag_hash()
-                    concrete_specs[dag_hash_all] = spec_dict
+                    # Assumes no legacy formats, since this was just created.
+                    spec_dict[ht.dag_hash.name] = s.dag_hash()
+                    concrete_specs[build_hash] = spec_dict
 
         hash_spec_list = zip(
             self.concretized_order, self.concretized_user_specs)
@@ -1795,6 +1723,7 @@ class Environment(object):
             '_meta': {
                 'file-type': 'spack-lockfile',
                 'lockfile-version': lockfile_format_version,
+                'specfile-version': spack.spec.specfile_format_version
             },
 
             # users specs + hashes are the 'roots' of the environment
@@ -1825,13 +1754,18 @@ class Environment(object):
         root_hashes = set(self.concretized_order)
 
         specs_by_hash = {}
-        for dag_hash, node_dict in json_specs_by_hash.items():
-            specs_by_hash[dag_hash] = Spec.from_node_dict(node_dict)
+        for build_hash, node_dict in json_specs_by_hash.items():
+            spec = Spec.from_node_dict(node_dict)
+            if d['_meta']['lockfile-version'] > 1:
+                # Build hash is stored as a key, but not as part of the node dict
+                # To ensure build hashes are not recomputed, we reattach here
+                setattr(spec, ht.build_hash.attr, build_hash)
+            specs_by_hash[build_hash] = spec
 
-        for dag_hash, node_dict in json_specs_by_hash.items():
-            for dep_name, dep_hash, deptypes in (
+        for build_hash, node_dict in json_specs_by_hash.items():
+            for _, dep_hash, deptypes, _ in (
                     Spec.dependencies_from_node_dict(node_dict)):
-                specs_by_hash[dag_hash]._add_dependency(
+                specs_by_hash[build_hash]._add_dependency(
                     specs_by_hash[dep_hash], deptypes)
 
         # If we are reading an older lockfile format (which uses dag hashes
@@ -2228,6 +2162,17 @@ def is_latest_format(manifest):
     top_level_key = _top_level_key(data)
     changed = spack.schema.env.update(data[top_level_key])
     return not changed
+
+
+@contextlib.contextmanager
+def deactivate_environment():
+    """Deactivate an active environment for the duration of the context."""
+    global _active_environment
+    current, _active_environment = _active_environment, None
+    try:
+        yield
+    finally:
+        _active_environment = current
 
 
 class SpackEnvironmentError(spack.error.SpackError):

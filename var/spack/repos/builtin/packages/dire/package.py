@@ -11,10 +11,10 @@ class Dire(Package):
     radiative corrections to scattering processes in high-energy particle
     collisions."""
 
-    homepage = "http://dire.gitlab.io/"
-    url      = "http://dire.gitlab.io/Downloads/DIRE-2.004.tar.gz"
-    git      = "http://gitlab.com/dire/direforpythia"
-    list_url = "http://dire.gitlab.io/Downloads.html"
+    homepage = "https://dire.gitlab.io/"
+    url      = "https://dire.gitlab.io/Downloads/DIRE-2.004.tar.gz"
+    git      = "https://gitlab.com/dire/direforpythia"
+    list_url = "https://dire.gitlab.io/Downloads.html"
 
     tags = ['hep']
 

@@ -386,12 +386,21 @@ _spack_audit() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="configs packages list"
+        SPACK_COMPREPLY="configs packages-https packages list"
     fi
 }
 
 _spack_audit_configs() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_audit_packages_https() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --all"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_audit_packages() {
@@ -421,7 +430,7 @@ _spack_bootstrap() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="enable disable reset root"
+        SPACK_COMPREPLY="enable disable reset root list trust untrust"
     fi
 }
 
@@ -446,6 +455,28 @@ _spack_bootstrap_root() {
     fi
 }
 
+_spack_bootstrap_list() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_bootstrap_trust() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --scope"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_bootstrap_untrust() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --scope"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
 _spack_build_env() {
     if $list_options
     then
@@ -460,14 +491,14 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-yaml copy update-index"
+        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-specfile copy sync update-index"
     fi
 }
 
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --rebuild-index -y --spec-yaml --only"
+        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --rebuild-index --spec-file --only"
     else
         _all_packages
     fi
@@ -476,7 +507,7 @@ _spack_buildcache_create() {
 _spack_buildcache_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch"
+        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch --sha256"
     else
         _all_packages
     fi
@@ -505,23 +536,27 @@ _spack_buildcache_preview() {
 }
 
 _spack_buildcache_check() {
-    SPACK_COMPREPLY="-h --help -m --mirror-url -o --output-file --scope -s --spec -y --spec-yaml --rebuild-on-error"
+    SPACK_COMPREPLY="-h --help -m --mirror-url -o --output-file --scope -s --spec --spec-file --rebuild-on-error"
 }
 
 _spack_buildcache_download() {
-    SPACK_COMPREPLY="-h --help -s --spec -y --spec-yaml -p --path -c --require-cdashid"
+    SPACK_COMPREPLY="-h --help -s --spec --spec-file -p --path -c --require-cdashid"
 }
 
 _spack_buildcache_get_buildcache_name() {
-    SPACK_COMPREPLY="-h --help -s --spec -y --spec-yaml"
+    SPACK_COMPREPLY="-h --help -s --spec --spec-file"
 }
 
-_spack_buildcache_save_yaml() {
-    SPACK_COMPREPLY="-h --help --root-spec --root-spec-yaml -s --specs -y --yaml-dir"
+_spack_buildcache_save_specfile() {
+    SPACK_COMPREPLY="-h --help --root-spec --root-specfile -s --specs --specfile-dir"
 }
 
 _spack_buildcache_copy() {
-    SPACK_COMPREPLY="-h --help --base-dir --spec-yaml --destination-url"
+    SPACK_COMPREPLY="-h --help --base-dir --spec-file --destination-url"
+}
+
+_spack_buildcache_sync() {
+    SPACK_COMPREPLY="-h --help --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
 }
 
 _spack_buildcache_update_index() {
@@ -1763,7 +1798,7 @@ _spack_url_summary() {
 }
 
 _spack_url_stats() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help --show-issues"
 }
 
 _spack_verify() {

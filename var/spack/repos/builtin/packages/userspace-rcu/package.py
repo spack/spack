@@ -11,7 +11,7 @@ class UserspaceRcu(AutotoolsPackage):
     data synchronization library provides read-side access which scales
     linearly with the number of cores."""
 
-    homepage = "http://liburcu.org/"
+    homepage = "https://liburcu.org/"
     url      = "https://github.com/urcu/userspace-rcu/archive/v0.11.1.tar.gz"
 
     version('0.11.1', sha256='a0ed8995edfbeac5f5eb2f152a8f3654040ecfc99a746bfe3da3bccf435b7d5d')

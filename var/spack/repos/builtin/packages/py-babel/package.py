@@ -11,7 +11,7 @@ class PyBabel(PythonPackage):
     internationalizing and localizing Python applications, with an
     emphasis on web-based applications."""
 
-    homepage = "http://babel.pocoo.org/en/latest/"
+    homepage = "https://babel.pocoo.org/en/latest/"
     pypi = "Babel/Babel-2.7.0.tar.gz"
 
     version('2.7.0', sha256='e86135ae101e31e2c8ec20a4e0c5220f4eed12487d5cf3f78be7e98d3a57fc28')

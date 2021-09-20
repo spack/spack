@@ -9,7 +9,7 @@ import sys
 from spack import *
 
 
-class Slepc(Package):
+class Slepc(Package, CudaPackage, ROCmPackage):
     """Scalable Library for Eigenvalue Problem Computations."""
 
     homepage = "https://slepc.upv.es"
@@ -70,6 +70,8 @@ class Slepc(Package):
     depends_on('petsc@3.8:3.8.99', when='@3.8:3.8.99')
     depends_on('petsc@3.7:3.7.7', when='@3.7.1:3.7.4')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
+    depends_on('petsc+cuda', when='+cuda')
+    depends_on('petsc+rocm', when='+rocm')
     depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi~int64')
     depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi~int64')
 
@@ -80,7 +82,7 @@ class Slepc(Package):
     conflicts('+blopex', when='^petsc+int64')
 
     resource(name='blopex',
-             url='http://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
+             url='https://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
              sha256='0081ee4c4242e635a8113b32f655910ada057c59043f29af4b613508a762f3ac',
              destination=join_path('installed-arch-' + sys.platform + '-c-opt',
                                    'externalpackages'),

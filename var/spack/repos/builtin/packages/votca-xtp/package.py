@@ -15,7 +15,7 @@ class VotcaXtp(CMakePackage):
 
        This package contains the VOTCA exciton transport engine.
     """
-    homepage = "http://www.votca.org"
+    homepage = "https://www.votca.org"
     url      = "https://github.com/votca/xtp/tarball/v1.4.1"
     git      = "https://github.com/votca/xtp.git"
     maintainers = ['junghans']

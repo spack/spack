@@ -36,7 +36,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # 1. Verify that no checksums on old versions have changed.
     #
     # 2. Verify that the shortened URL for the new version is listed at:
-    #    http://mfem.org/download/
+    #    https://mfem.org/download/
     #
     # 3. Use http://getlinkinfo.com or similar to verify that the
     #    underling download link for the latest version comes has the
@@ -200,7 +200,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+mpi')
     depends_on('hypre@2.10.0:2.13.99', when='@:3.3.99+mpi')
     depends_on('hypre@:2.20.0', when='@3.4:4.2.99+mpi')
-    depends_on('hypre', when='@4.3.0:+mpi')
+    depends_on('hypre@:2.22.0', when='@4.3.0+mpi')
+    depends_on('hypre', when='+mpi')
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
@@ -806,20 +807,39 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                                        self.examples_data_dir])
 
     def test(self):
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
-        with working_dir(test_dir, create=False):
-            # MFEM has many examples to serve as a suitable smoke check. ex10
-            # was chosen arbitrarily among the examples that work both with
-            # MPI and without it
-            test_exe = 'ex10p' if ('+mpi' in self.spec) else 'ex10'
-            make('CONFIG_MK={0}/share/mfem/config.mk'.format(self.prefix),
-                 test_exe, parallel=False)
-            self.run_test('./{0}'.format(test_exe),
-                          ['--mesh', '../{0}/beam-quad.mesh'.format(
-                              self.examples_data_dir)],
-                          [], installed=True, purpose='Smoke test for mfem',
-                          skip_missing=False, work_dir='.')
-            make('clean')
+        test_dir = join_path(
+            self.test_suite.current_test_cache_dir,
+            self.examples_src_dir
+        )
+
+        # MFEM has many examples to serve as a suitable smoke check. ex10
+        # was chosen arbitrarily among the examples that work both with
+        # MPI and without it
+        test_exe = 'ex10p' if ('+mpi' in self.spec) else 'ex10'
+        self.run_test(
+            'make',
+            [
+                'CONFIG_MK={0}/share/mfem/config.mk'.format(self.prefix),
+                test_exe,
+                'parallel=False'
+            ],
+            purpose='test: building {0}'.format(test_exe),
+            skip_missing=False,
+            work_dir=test_dir,
+        )
+
+        self.run_test(
+            './{0}'.format(test_exe),
+            [
+                '--mesh',
+                '../{0}/beam-quad.mesh'.format(self.examples_data_dir)
+            ],
+            [],
+            installed=False,
+            purpose='test: running {0}'.format(test_exe),
+            skip_missing=False,
+            work_dir=test_dir,
+        )
 
     # this patch is only needed for mfem 4.1, where a few
     # released files include byte order marks

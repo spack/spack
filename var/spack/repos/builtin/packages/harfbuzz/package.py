@@ -9,7 +9,7 @@ from spack import *
 class Harfbuzz(AutotoolsPackage):
     """The Harfbuzz package contains an OpenType text shaping engine."""
     homepage = "https://github.com/harfbuzz/harfbuzz"
-    url      = "http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-0.9.37.tar.bz2"
+    url      = "https://www.freedesktop.org/software/harfbuzz/release/harfbuzz-0.9.37.tar.bz2"
     git      = "https://github.com/harfbuzz/harfbuzz.git"
 
     version('2.6.8', sha256='6648a571a27f186e47094121f0095e1b809e918b3037c630c7f38ffad86e3035')

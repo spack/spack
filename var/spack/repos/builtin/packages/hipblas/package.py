@@ -14,6 +14,9 @@ class Hipblas(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-4.3.0.tar.gz"
 
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+
+    version('4.3.1', sha256='7b1f774774de5fa3d2b777e3a262328559d56165c32aa91b002505694362e7b2')
     version('4.3.0', sha256='0631e21c588794ea1c8413ef8ff293606bcf7a52c0c3ff88da824f103395a76a')
     version('4.2.0', sha256='c7ce7f69c7596b5a54e666fb1373ef41d1f896dd29260a691e2eadfa863e2b1a')
     version('4.1.0', sha256='876efe80a4109ad53d290d2921b3fb425b4cb857b32920819f10dcd4deee4ef8')
@@ -24,10 +27,8 @@ class Hipblas(CMakePackage):
     version('3.7.0', sha256='9840a493ab4838c86696ceb33ce07c34b5f59f62db4f88cb3af62b69d84f8729')
     version('3.5.0', sha256='d451da80beb048767da71a090afceed2e111d01b3e95a7044deada5054d6e7b1')
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0']:
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)

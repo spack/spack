@@ -12,7 +12,7 @@ class Pmdk(Package):
     for persistent memory
     """
 
-    homepage = "http://pmem.io/pmdk/"
+    homepage = "https://pmem.io/pmdk/"
     url      = "https://github.com/pmem/pmdk/archive/1.5.tar.gz"
     git      = "https://github.com/pmem/pmdk.git"
 

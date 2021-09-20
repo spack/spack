@@ -202,6 +202,12 @@ class Hdf5(CMakePackage):
             if self.spec.satisfies('@:1.8.12+cxx~shared'):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
         elif name == "fflags":
+            if self.spec.satisfies('%cce+fortran'):
+                # Cray compiler generates module files with uppercase names by
+                # default, which is not handled by the CMake scripts. The
+                # following flag forces the compiler to produce module files
+                # with lowercase names.
+                cmake_flags.append('-ef')
             if self.spec.satisfies('@:1.8.12+fortran~shared'):
                 cmake_flags.append(self.compiler.fc_pic_flag)
         elif name == "ldlibs":

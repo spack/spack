@@ -10,7 +10,7 @@ class Xkbprint(AutotoolsPackage, XorgPackage):
     """xkbprint generates a printable or encapsulated PostScript description
     of an XKB keyboard description."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xkbprint"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xkbprint"
     xorg_mirror_path = "app/xkbprint-1.0.4.tar.gz"
 
     version('1.0.4', sha256='169ebbf57fc8b7685c577c73a435998a38c27e0d135ce0a55fccc64cbebec768')

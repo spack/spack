@@ -5,6 +5,8 @@
 
 import re
 
+import spack.build_environment
+
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
@@ -12,12 +14,15 @@ class Cmake(Package):
     """
     homepage = 'https://www.cmake.org'
     url = 'https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0.tar.gz'
+    git = 'https://gitlab.kitware.com/cmake/cmake.git'
     maintainers = ['chuckatkins']
 
     tags = ['build-tools']
 
     executables = ['^cmake$']
 
+    version('master',  branch='master')
+    version('3.21.2',   sha256='94275e0b61c84bb42710f5320a23c6dcb2c6ee032ae7d2a616f53f68b3d21659')
     version('3.21.1',   sha256='fac3915171d4dff25913975d712f76e69aef44bf738ba7b976793a458b4cfed4')
     version('3.21.0',   sha256='4a42d56449a51f4d3809ab4d3b61fd4a96a469e56266e896ce1009b5768bd2ab')
     version('3.20.5',   sha256='12c8040ef5c6f1bc5b8868cede16bb7926c18980f59779e299ab52cbc6f15bb0')
@@ -137,15 +142,14 @@ class Cmake(Package):
     variant('ownlibs', default=True,  description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
-    variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
+    variant('openssl', default=True,  description="Enable openssl for curl bootstrapped by CMake when using +ownlibs")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
-    # Does not compile and is not covered in upstream CI (yet).
-    conflicts('%gcc platform=darwin',
-              msg='CMake does not compile with GCC on macOS yet, '
-                  'please use %apple-clang. '
+    # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
+    conflicts('%gcc platform=darwin', when='@:3.17',
+              msg='CMake <3.18 does not compile with GCC on macOS, '
+                  'please use %apple-clang or a newer CMake release. '
                   'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
-
     conflicts('%nvhpc')
 
     # Really this should conflict since it's enabling or disabling openssl for
@@ -169,8 +173,8 @@ class Cmake(Package):
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx',      when='+doc', type='build')
-    depends_on('openssl', when='+openssl')
-    depends_on('openssl@:1.0.99', when='@:3.6.9+openssl')
+    depends_on('openssl', when='+openssl+ownlibs')
+    depends_on('openssl@:1.0.99', when='@:3.6.9+openssl+ownlibs')
     depends_on('ncurses',        when='+ncurses')
 
     # Cannot build with Intel, should be fixed in 3.6.2
@@ -273,6 +277,17 @@ class Cmake(Package):
         # enable / disable oepnssl
         if '+ownlibs' in spec:
             args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
+
+        args.append('-DBUILD_CursesDialog=%s' % str('+ncurses' in spec))
+
+        # Make CMake find its own dependencies.
+        rpaths = spack.build_environment.get_rpaths(self)
+        prefixes = spack.build_environment.get_cmake_prefix_path(self)
+        args.extend([
+            '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF',
+            '-DCMAKE_INSTALL_RPATH={0}'.format(";".join(str(v) for v in rpaths)),
+            '-DCMAKE_PREFIX_PATH={0}'.format(";".join(str(v) for v in prefixes))
+        ])
 
         return args
 

@@ -12,7 +12,7 @@ class Mrtrix3(Package):
        probabilistic tractography, track-density imaging, and apparent fibre
        density."""
 
-    homepage = "http://www.mrtrix.org/"
+    homepage = "https://www.mrtrix.org/"
     git      = "https://github.com/MRtrix3/mrtrix3.git"
 
     version('2017-09-25', commit='72aca89e3d38c9d9e0c47104d0fb5bd2cbdb536d')

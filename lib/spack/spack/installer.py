@@ -367,8 +367,13 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned,
 
     pkg_id = package_id(pkg)
     tty.msg('Extracting {0} from binary cache'.format(pkg_id))
-    binary_distribution.extract_tarball(binary_spec, tarball, allow_root=False,
-                                        unsigned=unsigned, force=False)
+
+    # don't print long padded paths while extracting/relocating binaries
+    with spack.util.path.filter_padding():
+        binary_distribution.extract_tarball(
+            binary_spec, tarball, allow_root=False, unsigned=unsigned, force=False
+        )
+
     pkg.installed_from_binary_cache = True
     spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
     return True
@@ -1163,7 +1168,7 @@ class PackageInstaller(object):
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
-            pid = '{0}: '.format(pkg.pid) if tty.show_pid() else ''
+            pid = '{0}: '.format(self.pid) if tty.show_pid() else ''
             tty.debug('{0}{1}'.format(pid, str(e)))
             tty.debug('Package stage directory: {0}' .format(pkg.stage.source_path))
 
@@ -1564,6 +1569,9 @@ class PackageInstaller(object):
                             if os.path.exists(rec.path):
                                 with fs.replace_directory_transaction(
                                         rec.path):
+                                    # fs transaction will put the old prefix
+                                    # back on failure, so make sure to keep it.
+                                    keep_prefix = True
                                     self._install_task(task)
                             else:
                                 tty.debug("Missing installation to overwrite")
@@ -1581,21 +1589,6 @@ class PackageInstaller(object):
                 last_phase = getattr(pkg, 'last_phase', None)
                 keep_prefix = keep_prefix or \
                     (stop_before_phase is None and last_phase is None)
-
-            except spack.directory_layout.InstallDirectoryAlreadyExistsError \
-                    as exc:
-                tty.debug('Install prefix for {0} exists, keeping {1} in '
-                          'place.'.format(pkg.name, pkg.prefix))
-                self._update_installed(task)
-
-                # Only terminate at this point if a single build request was
-                # made.
-                if task.explicit and single_explicit_spec:
-                    spack.hooks.on_install_failure(task.request.pkg.spec)
-                    raise
-
-                if task.explicit:
-                    exists_errors.append((pkg_id, str(exc)))
 
             except KeyboardInterrupt as exc:
                 # The build has been terminated with a Ctrl-C so terminate
@@ -1715,7 +1708,7 @@ class BuildProcessInstaller(object):
         self.filter_fn = spack.util.path.padding_filter if filter_padding else None
 
         # info/debug information
-        pid = '{0}: '.format(pkg.pid) if tty.show_pid() else ''
+        pid = '{0}: '.format(os.getpid()) if tty.show_pid() else ''
         self.pre = '{0}{1}:'.format(pid, pkg.name)
         self.pkg_id = package_id(pkg)
 

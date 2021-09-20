@@ -61,6 +61,7 @@ import spack.repo
 import spack.schema.environment
 import spack.store
 import spack.subprocess_context
+import spack.user_environment
 import spack.util.path
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.util.cpus import cpus_available
@@ -69,6 +70,7 @@ from spack.util.environment import (
     env_flag,
     filter_system_paths,
     get_path,
+    inspect_path,
     is_system_path,
     preserve_environment,
     system_dirs,
@@ -781,6 +783,13 @@ def setup_package(pkg, dirty, context='build'):
                       "config to assume that the package is part of the system"
                       " includes and omit it when invoked with '--cflags'.")
     elif context == 'test':
+        env.extend(
+            inspect_path(
+                pkg.spec.prefix,
+                spack.user_environment.prefix_inspections(pkg.spec.platform),
+                exclude=is_system_path
+            )
+        )
         pkg.setup_run_environment(env)
         env.prepend_path('PATH', '.')
 

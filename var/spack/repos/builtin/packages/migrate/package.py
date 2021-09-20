@@ -11,8 +11,8 @@ class Migrate(AutotoolsPackage):
        between n population assuming a migration matrix model with asymmetric
        migration rates and different subpopulation sizes"""
 
-    homepage = "http://popgen.sc.fsu.edu/"
-    url      = "http://popgen.sc.fsu.edu/currentversions/migrate-3.6.11.src.tar.gz"
+    homepage = "https://popgen.sc.fsu.edu/"
+    url      = "https://popgen.sc.fsu.edu/currentversions/migrate-3.6.11.src.tar.gz"
 
     version('3.6.11', sha256='a9ba06a4e995a45b8d04037f5f2da23e1fe64a2f3565189bdd50c62c6fe01fb8')
 

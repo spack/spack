@@ -24,7 +24,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack.cmd
 import spack.config
 import spack.error
 import spack.url
@@ -508,9 +507,9 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
-    # We don't pass 'context' parameter because it was only introduced starting
+    # Note: 'context' parameter was only introduced starting
     # with versions 2.7.9 and 3.4.3 of Python.
-    if 'context' in kwargs:
+    if __UNABLE_TO_VERIFY_SSL:
         del kwargs['context']
 
     opener = urlopen
@@ -518,7 +517,13 @@ def _urlopen(req, *args, **kwargs):
         import spack.s3_handler
         opener = spack.s3_handler.open
 
-    return opener(req, *args, **kwargs)
+    try:
+        return opener(req, *args, **kwargs)
+    except TypeError as err:
+        # If the above fails because of 'context', call without 'context'.
+        if 'context' in kwargs and 'context' in str(err):
+            del kwargs['context']
+        return opener(req, *args, **kwargs)
 
 
 def find_versions_of_archive(

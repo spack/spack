@@ -13,7 +13,7 @@ class Antlr(AutotoolsPackage):
     frameworks. From a grammar, ANTLR generates a parser that can build and
     walk parse trees."""
 
-    homepage = "http://www.antlr2.org/"
+    homepage = "https://www.antlr2.org/"
     url      = "http://www.antlr2.org/download/antlr-2.7.7.tar.gz"
 
     version('2.7.7', sha256='853aeb021aef7586bda29e74a6b03006bcb565a755c86b66032d8ec31b67dbb9')

@@ -13,7 +13,7 @@ class Qmcpack(CMakePackage, CudaPackage):
        Carlo (QMC) simulation code."""
 
     # Package information
-    homepage = "http://www.qmcpack.org/"
+    homepage = "https://www.qmcpack.org/"
     git      = "https://github.com/QMCPACK/qmcpack.git"
     maintainers = ['naromero77']
     tags = ['ecp', 'ecp-apps']

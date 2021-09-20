@@ -24,7 +24,7 @@ class RRinside(RPackage):
     automatically). Doxygen-generated documentation of the C++ classes is
     available at the 'RInside' website as well."""
 
-    homepage = "http://dirk.eddelbuettel.com/code/rinside.html"
+    homepage = "https://dirk.eddelbuettel.com/code/rinside.html"
     url      = "https://cloud.r-project.org/src/contrib/RInside_0.2.15.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RInside"
 

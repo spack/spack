@@ -70,7 +70,7 @@ class Nvhpc(Package):
     and debugging tools simplify porting and optimization of HPC
     applications."""
 
-    homepage = "http://developer.nvidia.com/hpc-sdk"
+    homepage = "https://developer.nvidia.com/hpc-sdk"
 
     maintainers = ['samcmill']
 

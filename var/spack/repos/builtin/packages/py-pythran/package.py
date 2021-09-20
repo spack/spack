@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack import *
 
 
@@ -42,3 +44,32 @@ class PyPythran(PythonPackage):
     depends_on('py-beniget@0.2.1:0.2.999', when='@0.9.6', type=('build', 'run'))
     depends_on('py-beniget@0.2.0:', when='@0.9.4:0.9.5', type=('build', 'run'))
     depends_on('py-beniget', when='@:0.9.3', type=('build', 'run'))
+    depends_on('llvm-openmp', when='%apple-clang', type=('build', 'run'))
+
+    # https://github.com/serge-sans-paille/pythran/pull/1856
+    patch('omp.patch', when='@0.9.10:0.9.12')
+
+    def patch(self):
+        # Compiler is used at run-time to determine name of OpenMP library to search for
+        cfg_file = join_path('pythran', 'pythran-{0}.cfg'.format(sys.platform))
+        filter_file('CXX=', 'CXX=' + self.compiler.cxx, cfg_file)
+
+    def setup_build_environment(self, env):
+        # Needed for `spack install --test=root py-pythran`
+        if self.spec.satisfies('%apple-clang'):
+            env.prepend_path(
+                'DYLD_FALLBACK_LIBRARY_PATH',
+                self.spec['llvm-openmp'].libs.directories[0]
+            )
+
+    def setup_run_environment(self, env):
+        # Needed for `spack test run py-pythran`
+        self.setup_build_environment(env)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # Needed for `spack install py-scipy`
+        self.setup_build_environment(env)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        # Probably needed for something?
+        self.setup_build_environment(env)

@@ -9,7 +9,7 @@ from spack import *
 class PySphinx(PythonPackage):
     """Sphinx Documentation Generator."""
 
-    homepage = "https://sphinx-doc.org/"
+    homepage = "https://www.sphinx-doc.org/en/master/"
     pypi = "Sphinx/Sphinx-3.2.0.tar.gz"
 
     version('4.1.2', sha256='3092d929cd807926d846018f2ace47ba2f3b671b309c7a89cd3306e80c826b13')

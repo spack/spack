@@ -14,7 +14,7 @@ class Fenics(CMakePackage):
     the code generation interface UFC, the form language UFL and a range of
     additional components."""
 
-    homepage = "http://fenicsproject.org/"
+    homepage = "https://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/dolfin.git"
     url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2019.1.0.post0.tar.gz"
 

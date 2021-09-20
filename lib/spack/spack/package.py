@@ -41,6 +41,7 @@ import spack.config
 import spack.dependency
 import spack.directives
 import spack.directory_layout
+import spack.environment
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -1251,18 +1252,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Returns:
             True if the package has been installed, False otherwise.
         """
-        has_prefix = os.path.isdir(self.prefix)
         try:
             # If the spec is in the DB, check the installed
             # attribute of the record
-            rec = spack.store.db.get_record(self.spec)
-            db_says_installed = rec.installed
+            return spack.store.db.get_record(self.spec).installed
         except KeyError:
             # If the spec is not in the DB, the method
             #  above raises a Key error
-            db_says_installed = False
-
-        return has_prefix and db_says_installed
+            return False
 
     @property
     def prefix(self):
@@ -1537,7 +1534,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # should this attempt to download the source and set one? This
             # probably only happens for source repositories which are
             # referenced by branch name rather than tag or commit ID.
-            env = spack.environment.get_env(None, None)
+            env = spack.environment.active_environment()
             from_local_sources = env and env.is_develop(self.spec)
             if not self.spec.external and not from_local_sources:
                 message = 'Missing a source id for {s.name}@{s.version}'

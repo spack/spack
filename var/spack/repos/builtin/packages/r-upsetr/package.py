@@ -10,7 +10,7 @@ class RUpsetr(RPackage):
     """UpSetR: A More Scalable Alternative to Venn and Euler Diagrams
        forVisualizing Intersecting Sets"""
 
-    homepage = "http://github.com/hms-dbmi/UpSetR"
+    homepage = "https://github.com/hms-dbmi/UpSetR"
     url      = "https://cloud.r-project.org/src/contrib/UpSetR_1.4.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/UpSetR"
 

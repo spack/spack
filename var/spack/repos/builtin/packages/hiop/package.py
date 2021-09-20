@@ -15,8 +15,11 @@ class Hiop(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/LLNL/hiop"
     git = "https://github.com/LLNL/hiop.git"
+    maintainers = ['ashermancinelli', 'CameronRutherford']
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version('0.4.6', commit='b72d163d52c9225c3196ceb2baebdc7cf09a69de')
+    version('0.4.5', commit='c353580456c4776c50811b97cf8ff802dc27b90c')
     version('0.4.4', commit='e858eefa6b914f5c87c3717bbce811931ea69386')
     version('0.4.3', commit='c0394af4d84ebb84b7d2b95283ad65ffd84e0d45')
     version('0.4.2', commit='3fcb788d223eec24c0241680070c4a9a5ec71ef3')
@@ -60,7 +63,8 @@ class Hiop(CMakePackage, CudaPackage):
     depends_on('mpi', when='+mpi')
 
     depends_on('magma', when='+cuda')
-    depends_on('magma@2.5.4', when='@0.3.99.1:+cuda')
+    depends_on('magma@2.5.4:', when='@0.3.99.1:+cuda')
+    depends_on('magma@2.6.1:', when='@0.4.6:+cuda')
 
     depends_on('raja', when='+raja')
     depends_on('umpire', when='+raja')

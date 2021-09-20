@@ -9,7 +9,7 @@ from spack import *
 class PerlHttpDaemon(PerlPackage):
     """A simple http server class"""
 
-    homepage = "http://search.cpan.org/~gaas/HTTP-Daemon-6.01/lib/HTTP/Daemon.pm"
+    homepage = "https://metacpan.org/pod/HTTP::Daemon"
     url      = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/HTTP-Daemon-6.01.tar.gz"
 
     version('6.01', sha256='43fd867742701a3f9fcc7bd59838ab72c6490c0ebaf66901068ec6997514adc2')

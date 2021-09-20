@@ -11,13 +11,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     differential equations.
     """
 
-    homepage = "http://www.mcs.anl.gov/petsc/index.html"
-    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
+    homepage = "https://www.mcs.anl.gov/petsc/index.html"
+    url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
     version('main', branch='main')
 
+    version('3.15.4', sha256='1e62fb0859a12891022765d1e24660cfcd704291c58667082d81a0618d6b0047')
     version('3.15.3', sha256='483028088020001e6f8d57b78a7fc880ed52d6693f57d627779c428f55cff73d')
     version('3.15.2', sha256='3b10c19c69fc42e01a38132668724a01f1da56f5c353105cd28f1120cc9041d8')
     version('3.15.1', sha256='c0ac6566e69d1d70b431e07e7598e9de95e84891c2452db1367c846b75109deb')
@@ -91,6 +92,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             description='Activates support for HDF5 (only parallel)')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
+    variant('hpddm',   default=False,
+            description='Activates support for HPDDM (only parallel)')
+    variant('mmg',   default=False,
+            description='Activates support for MMG')
+    variant('parmmg',   default=False,
+            description='Activates support for ParMMG (only parallel)')
+    variant('tetgen',   default=False,
+            description='Activates support for Tetgen')
     # Mumps is disabled by default, because it depends on Scalapack
     # which is not portable to all HPC systems
     variant('mumps',   default=False,
@@ -161,6 +170,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     conflicts('+fftw', when='~mpi', msg=mpi_msg)
     conflicts('+hdf5', when='~mpi', msg=mpi_msg)
     conflicts('+hypre', when='~mpi', msg=mpi_msg)
+    conflicts('+hpddm', when='~mpi', msg=mpi_msg)
+    conflicts('+parmmg', when='~mpi', msg=mpi_msg)
     conflicts('+moab', when='~mpi', msg=mpi_msg)
     conflicts('+mumps', when='~mpi', msg=mpi_msg)
     conflicts('+p4est', when='~mpi', msg=mpi_msg)
@@ -229,6 +240,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('parmetis+int64', when='+metis+mpi+int64')
     depends_on('parmetis~int64', when='+metis+mpi~int64')
     depends_on('valgrind', when='+valgrind')
+    depends_on('mmg', when='+mmg')
+    depends_on('parmmg', when='+parmmg')
+    depends_on('tetgen+pic', when='+tetgen')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
@@ -237,8 +251,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hypre@:2.13.99+mpi~internal-superlu+int64', when='@:3.8.99+hypre+mpi~complex+int64')
     depends_on('hypre@2.14:2.18.2+mpi~internal-superlu~int64', when='@3.9:3.13.99+hypre+mpi~complex~int64')
     depends_on('hypre@2.14:2.18.2+mpi~internal-superlu+int64', when='@3.9:3.13.99+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.14:+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.14:+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu~int64', when='@3.14:3.15.99+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu+int64', when='@3.14:3.15.99+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.16:+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.16:+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
     depends_on('hypre@develop+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64')
@@ -417,6 +433,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 (jpeg_sp, 'libjpeg', True, True),
                 (scalapack_sp, 'scalapack', False, True),
                 'strumpack',
+                'mmg',
+                'parmmg',
+                ('tetgen', 'tetgen', False, False),
         ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
@@ -471,6 +490,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             options.append(
                 '--with-mkl_pardiso-dir=%s' % spec['mkl'].prefix
             )
+
+        # For the moment, HPDDM does not work as a dependency
+        # using download instead
+        if '+hpddm' in spec:
+            options.append('--download-hpddm')
 
         python('configure', '--prefix=%s' % prefix, *options)
 

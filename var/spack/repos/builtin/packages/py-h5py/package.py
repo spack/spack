@@ -10,7 +10,7 @@ class PyH5py(PythonPackage):
     """The h5py package provides both a high- and low-level interface to the
     HDF5 library from Python."""
 
-    homepage = "http://www.h5py.org/"
+    homepage = "https://www.h5py.org/"
     pypi     = "h5py/h5py-3.3.0.tar.gz"
     git      = "https://github.com/h5py/h5py.git"
     maintainers = ['bryanherman', 'takluyver']
