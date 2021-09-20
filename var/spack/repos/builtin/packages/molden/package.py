@@ -29,7 +29,6 @@ class Molden(MakefilePackage):
     build_targets = ['clean', 'all']
 
     patch('for_aarch64.patch', when='target=aarch64:')
-    patch('ambor_gcc10.patch', when='%gcc@10:')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('makefile')
