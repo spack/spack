@@ -11,9 +11,7 @@ class Bacio(CMakePackage):
     processing unformatted byte-addressable data records, and
     transforming the little endian files and big endian files.
 
-    This is part of the NCEPLIBS project.
-
-    """
+    This is part of the NCEPLIBS project."""
 
     homepage = "https://noaa-emc.github.io/NCEPLIBS-bacio"
     url      = "https://github.com/NOAA-EMC/NCEPLIBS-bacio/archive/refs/tags/v2.4.1.tar.gz"
