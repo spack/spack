@@ -329,15 +329,20 @@ pipeline {
                     }
                 }
 
-                stage('Build Docker') {
-                    agent {
-                        label 'docker19'
-                    }
+                // Docker pulled a Travis and went commercial.  MVDTool was
+                // the only thing using this, and it stopped running on
+                // Travis.
+                //
+                // Thus fully disable docker builds.
+                // stage('Build Docker') {
+                //     agent {
+                //         label 'docker19'
+                //     }
 
-                    steps {
-                        build_and_deploy_docker()
-                    }
-                }
+                //     steps {
+                //         build_and_deploy_docker()
+                //     }
+                // }
             }
         }
     }
