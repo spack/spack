@@ -86,6 +86,17 @@ class FftwBase(AutotoolsPackage):
         """Precisions that have been selected in this build"""
         return self.spec.variants['precision'].value
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%apple-clang +openmp'):
+            env.append_flags(
+                'CPPFLAGS', self.compiler.openmp_flag)
+            env.append_flags(
+                'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
+
     def configure(self, spec, prefix):
         # Base options
         options = [

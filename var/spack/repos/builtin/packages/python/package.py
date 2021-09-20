@@ -892,7 +892,7 @@ for plat_specific in [True, False]:
             str: site-packages directory
         """
         try:
-            return self.config_vars['python_lib']['false']['false']
+            return self.config_vars['python_lib']['true']['false']
         except KeyError:
             return self.default_site_packages_dir
 
