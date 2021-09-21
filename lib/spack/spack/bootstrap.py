@@ -26,6 +26,7 @@ import llnl.util.tty as tty
 import spack.architecture
 import spack.binary_distribution
 import spack.config
+import spack.detection
 import spack.environment
 import spack.main
 import spack.modules
@@ -218,7 +219,7 @@ class _BuildcacheBootstrapper(object):
             index = spack.binary_distribution.update_cache_and_get_specs()
 
             if not index:
-                raise RuntimeError("Could not populate the binary index")
+                raise RuntimeError("could not populate the binary index")
 
             for item in data['verified']:
                 candidate_spec = item['spec']
@@ -278,6 +279,10 @@ class _SourceBootstrapper(object):
             return True
 
         tty.info("Bootstrapping {0} from sources".format(module))
+
+        # If we compile code from sources detecting a few build tools
+        # might reduce compilation time by a fair amount
+        _add_externals_if_missing()
 
         # Try to build and install from sources
         with spack_python_interpreter():
@@ -521,6 +526,15 @@ def _add_compilers_if_missing():
             spack.compilers.add_compilers_to_config(new_compilers, init_config=False)
 
 
+def _add_externals_if_missing():
+    search_list = [
+        spack.repo.path.get('cmake'),
+        spack.repo.path.get('bison')
+    ]
+    detected_packages = spack.detection.by_executable(search_list)
+    spack.detection.update_configuration(detected_packages, scope='bootstrap')
+
+
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
@@ -531,10 +545,12 @@ def ensure_bootstrap_configuration():
                     # Default configuration scopes excluding command line
                     # and builtin but accounting for platform specific scopes
                     config_scopes = _bootstrap_config_scopes()
+                    bootstrap_yaml = spack.config.get('bootstrap')
                     with spack.config.use_configuration(*config_scopes):
                         # We may need to compile code from sources, so ensure we have
                         # compilers for the current platform before switching parts.
                         _add_compilers_if_missing()
+                        spack.config.set('bootstrap', bootstrap_yaml)
                         with spack.modules.disable_modules():
                             with spack_python_interpreter():
                                 yield
