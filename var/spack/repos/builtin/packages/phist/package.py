@@ -103,8 +103,9 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
+    patch('ppc64_sse.patch', when='@1.7.4:1.9.4')
     patch('update_tpetra_gotypes.patch', when='@:1.8')
-
+>>>>>>> add a patch for the case +host arch=ppc64le (fixes #22758)
     patch('sbang.patch', when='+fortran')
 
     # ###################### Dependencies ##########################
