@@ -26,7 +26,7 @@ class HypreCmake(CMakePackage, CudaPackage):
 
     variant('shared', default=(sys.platform != 'darwin'),
             description="Build shared library (disables static library)")
-    variant('superlu-dist', default=False,
+    variant('superlu_dist', default=False,
             description='Activates support for SuperLU_Dist library')
     variant('int64', default=False,
             description="Use 64bit integers")
@@ -37,15 +37,15 @@ class HypreCmake(CMakePackage, CudaPackage):
     variant('openmp', default=False, description='Enable OpenMP support')
     variant('debug', default=False,
             description='Build debug instead of optimized version')
-    variant('unified-memory', default=False, description='Use unified memory')
+    variant('unified_memory', default=False, description='Use unified memory')
 
     depends_on("mpi", when='+mpi')
     depends_on("blas")
     depends_on("lapack")
-    depends_on('superlu-dist', when='+superlu-dist+mpi')
+    depends_on('superlu_dist', when='+superlu_dist+mpi')
 
     conflicts('+cuda', when='+int64')
-    conflicts('+unified-memory', when='~cuda')
+    conflicts('+unified_memory', when='~cuda')
 
     def url_for_version(self, version):
         if version >= Version('2.12.0'):
@@ -58,50 +58,18 @@ class HypreCmake(CMakePackage, CudaPackage):
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
-        args = []
-
-        if '+mpi' in self.spec:
-            args.append('-DHYPRE_WITH_MPI=ON')
-        else:
-            args.append('-DHYPRE_WITH_MPI=OFF')
-
-        if '+openmp' in self.spec:
-            args.append('-DHYPRE_WITH_OPENMP=ON')
-        else:
-            args.append('-DHYPRE_WITH_OPENMP=OFF')
-
-        if '+int64' in self.spec:
-            args.append('-DHYPRE_ENABLE_BIGINT=ON')
-        else:
-            args.append('-DHYPRE_ENABLE_BIGINT=OFF')
-
-        if '+mixedint' in self.spec:
-            args.append('-DHYPRE_ENABLE_MIXEDINT=ON')
-        else:
-            args.append('-DHYPRE_ENABLE_MIXEDINT=OFF')
-
-        if '+complex' in self.spec:
-            args.append('-DHYPRE_ENABLE_COMPLEX=ON')
-        else:
-            args.append('-DHYPRE_ENABLE_COMPLEX=OFF')
-
-        if '+shared' in self.spec:
-            args.append('-DBUILD_SHARED_LIBS=ON')
-        else:
-            args.append('-DBUILD_SHARED_LIBS=OFF')
-
-        if '+superlu-dist' in self.spec:
-            args.append('-DHYPRE_WITH_DSUPERLU=ON')
-
-        if '+cuda' in self.spec:
-            args.append('-DHYPRE_WITH_CUDA=ON')
-        else:
-            args.append('-DHYPRE_WITH_CUDA=OFF')
-
-        if '+unified-memory' in self.spec:
-            args.append('-DHYPRE_ENABLE_UNIFIED_MEMORY=ON')
-        else:
-            args.append('-DHYPRE_ENABLE_UNIFIED_MEMORY=OFF')
+        from_variant = self.define_from_variant
+        args = [
+            from_variant('HYPRE_WITH_MPI', 'mpi'),
+            from_variant('HYPRE_WITH_OPENMP', 'openmp'),
+            from_variant('HYPRE_WITH_BIGINT', 'int64'),
+            from_variant('HYPRE_WITH_MIXEDINT', 'mixedint'),
+            from_variant('HYPRE_WITH_COMPLEX', 'complex'),
+            from_variant('BUILD_SHARED_LIBS', 'shared'),
+            from_variant('HYPRE_WITH_DSUPERLU', 'superlu_dist'),
+            from_variant('HYPRE_WITH_CUDA', 'cuda'),
+            from_variant('HYPRE_ENABLE_UNIFIED_MEMORY', 'unified_memory'),
+        ]
 
         return args
 
