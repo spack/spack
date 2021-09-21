@@ -36,6 +36,8 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
     patch('http://mirrors.mit.edu/gentoo-portage/sys-devel/autoconf/files/autoconf-2.69-perl-5.26-2.patch',
           sha256='a49dd5bac3b62daa0ff688ab4d508d71dbd2f4f8d7e2a02321926346161bf3ee',
           when='@2.62:2.69 ^perl@5.17:')
+    # Fix config.guess on ppc
+    patch('autoconf_ppc_build.patch', when='@2.61:2.69')
 
     # Note: m4 is not a pure build-time dependency of autoconf. m4 is
     # needed when autoconf runs, not only when autoconf is built.
