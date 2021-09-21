@@ -21,13 +21,6 @@
       "build_tags": {
         "develop": "latest"
       }
-    },
-    "centos:6": {
-      "os_package_manager": "yum",
-      "build": "spack/centos6",
-      "build_tags": {
-        "develop": "latest"
-      }
     }
   },
   "os_package_managers": {
