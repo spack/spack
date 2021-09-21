@@ -21,7 +21,7 @@ class PyNumpy(PythonPackage):
     pypi = "numpy/numpy-1.19.4.zip"
     git      = "https://github.com/numpy/numpy.git"
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'rblake-llnl']
 
     version('main', branch='main')
     version('master', branch='main', deprecated=True)
