@@ -260,24 +260,24 @@ class PyNumpy(PythonPackage):
             if '^netlib-lapack' in spec:
                 # netlib requires blas and lapack listed
                 # separately so that scipy can find them
-                extraLinkItems = ''
+                extra_link_args = ''
                 rpath = ''
                 if '^netlib-lapack~shared' in spec:
                     if "xlf" in env['SPACK_F77']:
                         bin_index = env['SPACK_F77'].find("/bin")
-                        compilerHome = env['SPACK_F77'][:bin_index]
-                        extraLinkItems += (
+                        compiler_home = env['SPACK_F77'][:bin_index]
+                        extra_link_args += (
                             '{0}/alllibs/libxlf90_r.a {0}/alllibs/libxl.a '
                             + '{0}/alllibs/libxlopt.a -lrt '
-                        ).format(compilerHome)
+                        ).format(compiler_home)
                     if "gfortran" in env['SPACK_F77']:
                         bin_index = env['SPACK_F77'].find("/bin")
-                        compilerHome = env['SPACK_F77'][:bin_index]
+                        compiler_home = env['SPACK_F77'][:bin_index]
                         found_gfortran = False
-                        for mydir, _, filenames in os.walk(compilerHome):
+                        for mydir, _, filenames in os.walk(compiler_home):
                             for filename in filenames:
                                 if filename == 'libgfortran.so':
-                                    extraLinkItems += os.path.join(mydir,
+                                    extra_link_args += os.path.join(mydir,
                                                                    filename)
                                     found_gfortran = True
                                     break
@@ -288,15 +288,15 @@ class PyNumpy(PythonPackage):
                     f.write('libraries = {0}\n'.format(blas_lib_names))
                     write_library_dirs(f, blas_lib_dirs)
                     f.write('include_dirs = {0}\n'.format(blas_header_dirs))
-                    if extraLinkItems:
-                        f.write("extra_link_args = {0}\n".format(extraLinkItems))
+                    if extra_link_args:
+                        f.write("extra_link_args = {0}\n".format(extra_link_args))
                 if spec.satisfies('+lapack'):
                     f.write('[lapack]\n')
                     f.write('libraries = {0}\n'.format(lapack_lib_names))
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
-                    if extraLinkItems:
-                        f.write("extra_link_args = {0}\n".format(extraLinkItems))
+                    if extra_link_args:
+                        f.write("extra_link_args = {0}\n".format(extra_link_args))
 
             if '^fujitsu-ssl2' in spec:
                 if spec.satisfies('+blas'):
