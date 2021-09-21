@@ -61,6 +61,7 @@ class Sz(CMakePackage):
     depends_on('hdf5', when="+hdf5")
     depends_on('netcdf-c', when="+netcdf")
     depends_on('cmake@3.13:', type='build')
+    depends_on('cunit', type="test")
 
     patch('ctags-only-if-requested.patch', when='@2.1.8.1:2.1.8.3')
 
@@ -91,6 +92,7 @@ class Sz(CMakePackage):
 
         if "+python" in self.spec:
             args.append("-DBUILD_PYTHON_WRAPPER=ON")
+            args.append("-DSZ_PYTHON_SITELIB={0}".format(site_packages_dir))
         else:
             args.append("-DBUILD_PYTHON_WRAPPER=OFF")
 
@@ -133,4 +135,16 @@ class Sz(CMakePackage):
             args.append("-DBUILD_STATS=ON")
         else:
             args.append("-DBUILD_STATS=OFF")
+
+        if self.run_tests:
+            args.append("-DBUILD_TESTS=ON")
+            args.append("-DINTEGRATION_TESTS=ON")
+        else:
+            args.append("-DBUILD_TESTS=OFF")
+            args.append("-DINTEGRATION_TESTS=OFF")
         return args
+
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        make('test')
