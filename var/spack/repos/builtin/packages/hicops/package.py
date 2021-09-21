@@ -7,9 +7,10 @@ from spack import *
 
 
 class Hicops(Package):
-    """HiCOPS is a software framework for accelerating database peptide search workflows on supercomputers.
-    HiCOPS provided algorithm-independent parallelizations and optimizations can be extended into new HPC
-    database search algorithms or scalably accelerate the existing ones.
+    """HiCOPS is a software framework for accelerating database peptide search
+    workflows on supercomputers. HiCOPS provided algorithm-independent
+    parallelizations and optimizations can be extended into new HPC database search
+    algorithms or scalably accelerate the existing ones.
     """
 
     homepage = "https://hicops.github.io/index"
@@ -24,13 +25,16 @@ class Hicops(Package):
             description='CMake Option: Enable MPI support.',
             values=('ON', 'OFF'))
     variant('USE_TIMEMORY', default='OFF',
-            description='CMake Option: Enable timemory interface. Requires timemory installation.',
+            description='CMake Option: Enable timemory interface. Requires timemory '
+                        'installation.',
             values=('ON', 'OFF'))
     variant('USE_MPIP_LIBRARY', default='OFF',
-            description='CMake Option: Enables the MPIP data_tracker via Timemory. Requires timemory installation.',
+            description='CMake Option: Enables the MPIP data_tracker via Timemory. '
+                        'Requires timemory installation.',
             values=('ON', 'OFF'))
     variant('TAILFIT', default='ON',
-            description='CMake Option: Use the tailfit method instead of Gumbelfit for e-value computation.',
+            description='CMake Option: Use the tailfit method instead of Gumbelfit '
+                        'for e-value computation.',
             values=('ON', 'OFF'))
     variant('PROGRESS', default='ON',
             description='CMake Option: Display HiCOPS progress marks.',
@@ -38,9 +42,11 @@ class Hicops(Package):
     variant('MAX_SEQ_LEN', default='60',
             description='CMake Option: Allowed maximum peptide sequence length.')
     variant('QALEN', default='100',
-            description='CMake Option: Maximum number of top K peaks to keep when spectrum preprocess.')
+            description='CMake Option: Maximum number of top K peaks to keep when '
+                        'spectrum preprocess.')
     variant('QCHUNK', default='10000',
-            description='CMake Option: Max size of each batch extracted from the dataset.')
+            description='CMake Option: Max size of each batch extracted from the '
+                        'dataset.')
     variant('MAX_HYPERSCORE', default='100',
             description='CMake Option: Maximum allowed hyperscore computed.')
 
@@ -80,7 +86,6 @@ class Hicops(Package):
 
     conflicts('%gcc@:7.2')
 
-
     def setup_run_environment(self, env):
         env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
         env.prepend_path('PATH', self.prefix.bin)
@@ -88,8 +93,6 @@ class Hicops(Package):
         env.prepend_path('PATH', self.prefix.bin.tools)
         env.set('HICOPS_INSTALL', self.prefix)
         env.prepend_path("INCLUDE", self.prefix.include)
-
-
 
     def install(self, spec, prefix):
         spec = self.spec
