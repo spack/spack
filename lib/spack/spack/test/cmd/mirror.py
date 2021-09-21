@@ -155,7 +155,7 @@ def test_mirror_crud(tmp_scope, capsys):
         # no-op
         output = mirror('set-url', '--scope', tmp_scope,
                         'mirror', 'http://spack.io')
-        assert 'Url already set' in output
+        assert 'No changes made' in output
 
         output = mirror('set-url', '--scope', tmp_scope,
                         '--push', 'mirror', 's3://spack-public')
@@ -164,7 +164,7 @@ def test_mirror_crud(tmp_scope, capsys):
         # no-op
         output = mirror('set-url', '--scope', tmp_scope,
                         '--push', 'mirror', 's3://spack-public')
-        assert 'Url already set' in output
+        assert 'No changes made' in output
 
         output = mirror('remove', '--scope', tmp_scope, 'mirror')
         assert 'Removed mirror' in output

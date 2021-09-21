@@ -41,6 +41,10 @@ from spack.util.spack_yaml import syaml_dict
 from spack.version import VersionList
 
 
+def _is_string(url):
+    return isinstance(url, six.string_types)
+
+
 def _display_mirror_entry(size, name, url, type_=None):
     if type_:
         type_ = "".join((" (", type_, ")"))
@@ -60,12 +64,10 @@ class Mirror(object):
     """
 
     def __init__(self, fetch_url, push_url=None,
-                 name=None, access_pair=(None, None), access_token=None):
+                 name=None):
         self._fetch_url = fetch_url
         self._push_url = push_url
         self._name = name
-        self._access_pair = access_pair
-        self._access_token = access_token
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(), stream)
@@ -99,8 +101,7 @@ class Mirror(object):
         if isinstance(d, six.string_types):
             return Mirror(d, name=name)
         else:
-            return Mirror(d['fetch'], d['push'], name,
-                          (d["id"], d["secret"]), d["token"])
+            return Mirror(d['fetch'], d['push'], name=name)
 
     def display(self, max_len=0):
         if self._push_url is None:
@@ -141,40 +142,83 @@ class Mirror(object):
     def name(self):
         return self._name or "<unnamed>"
 
-    @property
-    def access_pair(self):
-        return self._access_pair
+    def get_profile(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url['access_profile']
+            return self._fetch_url['access_profile']
+        else:
+            return None
 
-    @access_pair.setter
-    def access_pair(self, connection_tuple):
-        self._access_pair = connection_tuple
+    def set_profile(self, url_type, profile):
+        if url_type == "push":
+            self._push_url["access_profile"] = profile
+        else:
+            self._fetch_url["access_profile"] = profile
 
-    @property
-    def access_token(self):
-        return self._access_token
+    def get_access_pair(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url['access_pair']
+            return self._fetch_url['access_pair']
+        else:
+            return None
 
-    @access_token.setter
-    def access_token(self, connection_token):
-        self._access_token = connection_token
+    def set_access_pair(self, url_type, connection_tuple):
+        if url_type == "push":
+            self._push_url["access_pair"] = connection_tuple
+        else:
+            self._fetch_url["access_pair"] = connection_tuple
+
+    def get_endpoint_url(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url['endpoint_url']
+            return self._fetch_url['endpoint_url']
+        else:
+            return None
+
+    def set_endpoint_url(self, url_type, url):
+        if url_type == "push":
+            self._push_url["endpoint_url"] = url
+        else:
+            self._fetch_url["endpoint_url"] = url
+
+    def get_access_token(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url['access_token']
+            return self._fetch_url['access_token']
+        else:
+            return None
+
+    def set_access_token(self, url_type, connection_token):
+        if url_type == "push":
+            self._push_url["access_token"] = connection_token
+        else:
+            self._fetch_url["access_token"] = connection_token
 
     @property
     def fetch_url(self):
-        return self._fetch_url
+        return self._fetch_url if _is_string(self._fetch_url) \
+            else self._fetch_url["url"]
 
     @fetch_url.setter
     def fetch_url(self, url):
-        self._fetch_url = url
+        self._fetch_url["url"] = url
         self._normalize()
 
     @property
     def push_url(self):
         if self._push_url is None:
-            return self._fetch_url
-        return self._push_url
+            return self._fetch_url if _is_string(self._fetch_url) \
+                else self._fetch_url["url"]
+        return self._push_url if _is_string(self._push_url) \
+            else self._push_url["url"]
 
     @push_url.setter
     def push_url(self, url):
-        self._push_url = url
+        self._push_url["url"] = url
         self._normalize()
 
     def _normalize(self):
@@ -484,13 +528,15 @@ def add(name, url, scope, args={}):
 
     items = [(n, u) for n, u in mirrors.items()]
     mirror_data = url
-    key_values = ["s3_access_key_id", "s3_access_token"]
+    key_values = ["s3_access_key_id", "s3_access_token", "s3_access_profile"]
+    # On creation, assume connection data is set for both
     if any(value for value in key_values if value in args):
-        mirror_data = {"fetch": url, "push": url,
-                       "id": args.s3_access_key_id,
-                       "secret": args.s3_access_key_secret,
-                       "token": args.s3_access_token,
-                       "endpoint_url": args.s3_endpoint_url}
+        url_dict = {"url": url,
+                    "access_pair": (args.s3_access_key_id, args.s3_access_key_secret),
+                    "access_token": args.s3_access_token,
+                    "access_profile": args.s3_access_profile,
+                    "endpoint_url": args.s3_endpoint_url}
+        mirror_data = {"fetch": url_dict, "push": url_dict}
 
     items.insert(0, (name, mirror_data))
     mirrors = syaml_dict(items)

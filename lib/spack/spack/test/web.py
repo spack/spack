@@ -249,7 +249,7 @@ class MockS3Client(object):
 def test_remove_s3_url(monkeypatch, capfd):
     fake_s3_url = 's3://my-bucket/subdirectory/mirror'
 
-    def mock_create_s3_session(url):
+    def mock_create_s3_session(url, connection={}):
         return MockS3Client()
 
     monkeypatch.setattr(
@@ -269,7 +269,7 @@ def test_remove_s3_url(monkeypatch, capfd):
 
 
 def test_s3_url_exists(monkeypatch, capfd):
-    def mock_create_s3_session(url):
+    def mock_create_s3_session(url, connection={}):
         return MockS3Client()
     monkeypatch.setattr(
         spack.util.s3, 'create_s3_session', mock_create_s3_session)

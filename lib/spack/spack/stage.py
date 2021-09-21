@@ -442,9 +442,15 @@ class Stage(object):
                 for rel_path in self.mirror_paths:
                     mirror_url = url_util.join(mirror.fetch_url, rel_path)
                     mirror_urls[mirror_url] = {}
-                    if mirror.access_pair or mirror.access_token:
-                        mirror_urls[mirror_url] = {"token": mirror.access_token,
-                                                   "pair": mirror.access_pair}
+                    if mirror.get_access_pair("fetch") or \
+                       mirror.get_access_token("fetch") or \
+                       mirror.get_profile("fetch"):
+                        mirror_urls[mirror_url] = {
+                            "access_token": mirror.get_access_token("fetch"),
+                            "access_pair": mirror.get_access_pair("fetch"),
+                            "access_profile": mirror.get_profile("fetch"),
+                            "endpoint_url": mirror.get_endpoint_url("fetch")
+                        }
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
