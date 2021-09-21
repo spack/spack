@@ -18,6 +18,8 @@ class LibglvndFe(BundlePackage):
 
     homepage = "https://gitlab.freedesktop.org/glvnd/libglvnd"
 
+    version('1.3.4')
+    version('1.3.3')
     version('1.3.2')
     version('1.3.1')
     version('1.3.0')
@@ -38,28 +40,6 @@ class LibglvndFe(BundlePackage):
     # https://github.com/NVIDIA/libglvnd/blob/a4c332e3269ec5b1175f5fb63af99b070093adac/src/generate/genCommon.py#L39-L44
     
     provides('gl')
-    # provides('gl@1.0:1.5', when='@1.0:1.5') # Uncommenting this line creates a version conflict
-    provides('gl@2.0:2.1', when='@2.0:2.1')
-    provides('gl@3.0:3.3', when='@3.0:3.3')
-    provides('gl@4.0:4.5', when='@4.0:4.5')
-
-    # provides('gl@:4.5', when='@4.5:')
-    # provides('gl@:4.4', when='@4.4')
-    # provides('gl@:4.3', when='@4.3')
-    # provides('gl@:4.2', when='@4.2')
-    # provides('gl@:4.1', when='@4.1')
-    # provides('gl@:3.3', when='@3.3')
-    # provides('gl@:3.2', when='@3.2')
-    # provides('gl@:3.1', when='@3.1')
-    # provides('gl@:3.0', when='@3.0')
-    # provides('gl@:2.1', when='@2.1')
-    # provides('gl@:2.0', when='@2.0')
-    # provides('gl@:1.5', when='@1.5')
-    # provides('gl@:1.4', when='@1.4')
-    # provides('gl@:1.3', when='@1.3')
-    # provides('gl@:1.2', when='@1.2')
-    # provides('gl@:1.1', when='@1.1')
-    # provides('gl@:1.0', when='@1.0')
 
     provides('glx@1.4', when='+glx')
     provides('egl', when='+egl')

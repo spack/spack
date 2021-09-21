@@ -22,6 +22,8 @@ class Libglvnd(AutotoolsPackage):
 
     version('master', branch='master')
 
+    version('1.3.4', sha256='daa5de961aaaec7c1883c09db7748a7f221116a942d1397b35655db92ad4efb0')
+    version('1.3.3', sha256='a7a39fe02a1dc514a9295c2bc44c15e311289f4aef140aa985abe17d5bd29016')
     version('1.3.2', sha256='8eb697a879245c6246ffabf2c1ed72a5ae335769f0772f55cbe4fee3e50223fe')
     version('1.3.1', sha256='d1c2f6bfd619c64594e5c7473acc9b8c373133a10412b69b26ccf35c80ca78e8')
     version('1.3.0', sha256='aad56b39a718abc65516485cc358e39348288fcd0b4f13ecb430486ab6d07630')
@@ -36,6 +38,7 @@ class Libglvnd(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('m4', type='build')
     depends_on('libtool', type='build')
+    depends_on('pkgconfig', type='build')
 
     depends_on('libxext')
     depends_on('libx11')
@@ -48,7 +51,7 @@ class Libglvnd(AutotoolsPackage):
 
     def configure_args(self):
         return [
-            '--enable-egl',
-            '--enable-gles',
+            '--disable-egl',
+            '--disable-gles',
             '--enable-glx'
         ]
