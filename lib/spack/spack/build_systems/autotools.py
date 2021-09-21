@@ -258,8 +258,9 @@ class AutotoolsPackage(PackageBase):
         if os.path.exists(self.configure_abs_path):
             return
         # Else try to regenerate it
-        autotools = ['m4', 'autoconf', 'automake', 'libtool']
-        missing = [x for x in autotools if x not in spec]
+        needed_dependencies = ['autoconf', 'automake', 'libtool']
+        build_deps = [d.name for d in spec.dependencies(deptype='build')]
+        missing = [x for x in needed_dependencies if x not in build_deps]
         if missing:
             msg = 'Cannot generate configure: missing dependencies {0}'
             raise RuntimeError(msg.format(missing))
