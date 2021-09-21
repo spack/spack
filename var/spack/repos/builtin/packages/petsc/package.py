@@ -356,6 +356,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
+            '--with-openmp=%s' % ('1' if '+openmp' in spec else '0'),
             '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
         if '+debug' not in spec:
@@ -421,7 +422,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('netcdf-c', 'netcdf', True, True),
                 ('parallel-netcdf', 'pnetcdf', True, True),
                 ('moab', 'moab', False, False),
-                'openmp',
                 ('random123', 'random123', False, False),
                 'exodusii',
                 'cgns',
