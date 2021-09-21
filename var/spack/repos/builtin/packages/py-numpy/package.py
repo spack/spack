@@ -263,9 +263,8 @@ class PyNumpy(PythonPackage):
                 extra_link_args = ''
                 rpath = ''
                 if '^netlib-lapack~shared' in spec:
-                    if "xlf" in env['SPACK_F77']:
-                        bin_index = env['SPACK_F77'].find("/bin")
-                        compiler_home = env['SPACK_F77'][:bin_index]
+                    if "xlf" in self.compiler.f77:
+                        compiler_home = os.path.dirname(os.path.dirname(self.compiler.f77))
                         extra_link_args += (
                             '{0}/alllibs/libxlf90_r.a {0}/alllibs/libxl.a '
                             + '{0}/alllibs/libxlopt.a -lrt '
