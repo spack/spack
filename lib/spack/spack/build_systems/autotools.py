@@ -275,6 +275,15 @@ class AutotoolsPackage(PackageBase):
         build_deps = [d.name for d in spec.dependencies(deptype='build')]
         missing = [x for x in needed_dependencies if x not in build_deps]
         if missing:
+            tty.warn('*********************************************************')
+            package_file = spec.name + '/package.py:'
+            vers         = spec.version
+            print('*** Please add these lines to the depends of ' + package_file)
+            print("    depends_on('autoconf', type='build', when='@{0}')".format(vers))
+            print("    depends_on('automake', type='build', when='@{0}')".format(vers))
+            print("    depends_on('libtool',  type='build', when='@{0}')".format(vers))
+            print("*** and tweak the version in when='@...' as needed.")
+            tty.warn('*********************************************************')
             msg = 'Cannot generate configure: missing dependencies {0}'
             raise RuntimeError(msg.format(missing))
         tty.msg('Configure script not found: trying to generate it')
