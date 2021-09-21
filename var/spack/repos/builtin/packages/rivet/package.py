@@ -12,10 +12,11 @@ class Rivet(AutotoolsPackage):
     """Rivet - the particle-physics MC analysis toolkit"""
 
     homepage = "https://rivet.hepforge.org/"
-    url      = "https://rivet.hepforge.org/downloads/?f=Rivet-3.1.2.tar.bz2"
+    url      = "https://rivet.hepforge.org/downloads/?f=Rivet-3.1.4.tar.bz2"
 
     tags = ['hep']
 
+    version('3.1.4',  sha256='37edc80a2968ce1031589e43ba6b492877ca7901bea38f8bb7536a5c8cf8100d')
     version('3.1.3',  sha256='53ddce41705b9c22b2eaa90603f6659aa9bf46c466d8772ca9dbe4430972e021')
     version('3.1.2',  sha256='c041d09644f4eae7c212d82237033267fbc1583dfbb4e3e67377f86cece9577a')
     version('3.1.1',  sha256='7c98b26af5f859bc65200499d15765e4b056b4cf233b34176f27a7e6bc4cf9b1')
@@ -105,8 +106,8 @@ class Rivet(AutotoolsPackage):
     depends_on('yoda@1.7.0:1.7.999', when='@2.6.0,2.7.0,2.7.1,3.0.0,3.0.2')
     depends_on('yoda@1.5.0:1.5.999', when='@2.4.1')
 
-    depends_on('hepmc',  type=('build', 'run'), when='hepmc=2')
-    depends_on('hepmc3', type=('build', 'run'), when='hepmc=3')
+    depends_on('hepmc',  type=('build', 'link', 'run'), when='hepmc=2')
+    depends_on('hepmc3', type=('build', 'link', 'run'), when='hepmc=3')
     depends_on('boost', when='@:2.5.0', type=('build', 'run'))
     depends_on('fastjet', type=('build', 'run'))
     depends_on('fjcontrib', type=('build', 'run'), when='@3.0.0:')
