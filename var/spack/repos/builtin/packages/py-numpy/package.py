@@ -329,35 +329,48 @@ class PyNumpy(PythonPackage):
         # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
         spec = self.spec
 
-        if spec['blas'].name != 'intel-mkl' and \
-                spec['blas'].name != 'intel-parallel-studio':
-            env.set('MKLROOT', 'None')
-        if spec['blas'].name != 'blis':
-            env.set('BLIS', 'None')
-        if spec['blas'].name != 'openblas':
-            env.set('OPENBLAS', 'None')
-        if spec['blas'].name != 'atlas':
-            env.set('ATLAS', 'None')
-            env.set('PTATLAS', 'None')
-        if spec['blas'].name != 'veclibfort':
-            env.set('ACCELERATE', 'None')
-
         # https://numpy.org/devdocs/user/building.html#blas
-        if 'blas' not in spec:
-            blas = ''
-        elif spec['blas'].name == 'intel-mkl' or \
-                spec['blas'].name == 'intel-parallel-studio':
-            blas = 'mkl'
-        elif spec['blas'].name == 'blis':
-            blas = 'blis'
-        elif spec['blas'].name == 'openblas':
-            blas = 'openblas'
-        elif spec['blas'].name == 'atlas':
-            blas = 'atlas'
-        elif spec['blas'].name == 'veclibfort':
-            blas = 'accelerate'
-        else:
-            blas = 'blas'
+        # Also from https://github.com/numpy/numpy/blob/main/numpy/distutils/system_info.py:
+        # The order of finding the locations of resources is the following:
+        #  1. environment variable
+        #  2. section in site.cfg
+        #  3. DEFAULT section in site.cfg
+        #  4. System default search paths (see ``default_*`` variables below).
+        # Only the first complete match is returned.
+        #
+        # The way the detection works, it performs the above scan FOR
+        # EACH different type of lapack. That means that if ATLAS is
+        # installed in a default location, py-numpy will always prefer
+        # it since atlas appears higher in distutils search
+        # order. Adding these environment variables short circuits
+        # this search and gives you the correct behavior.
+        blas = ''
+        if 'blas' in spec:
+            if spec['blas'].name == 'intel-mkl' or \
+                   spec['blas'].name == 'intel-parallel-studio' or \
+                   spec['blas'].name == 'intel-oneapi-mkl':
+                blas = 'mkl'
+            else:
+                env.set('MKLROOT', 'None')
+            if spec['blas'].name == 'blis':
+                blas = 'blis'
+            else:
+                env.set('BLIS', 'None')
+            if spec['blas'].name == 'openblas':
+                blas = 'openblas'
+            else:
+                env.set('OPENBLAS', 'None')
+            if spec['blas'].name == 'atlas':
+                blas = 'atlas'
+            else:
+                env.set('ATLAS', 'None')
+                env.set('PTATLAS', 'None')
+            if spec['blas'].name == 'veclibfort':
+                blas = 'accelerate'
+            else:
+                env.set('ACCELERATE', 'None')
+            if not blas:
+                blas = 'blas'
 
         env.set('NPY_BLAS_ORDER', blas)
 
@@ -365,7 +378,8 @@ class PyNumpy(PythonPackage):
         if 'lapack' not in spec:
             lapack = ''
         elif spec['lapack'].name == 'intel-mkl' or \
-                spec['lapack'].name == 'intel-parallel-studio':
+                spec['lapack'].name == 'intel-parallel-studio' or \
+                spec['lapack'].name == 'intel-oneapi-mkl':
             lapack = 'mkl'
         elif spec['lapack'].name == 'openblas':
             lapack = 'openblas'
