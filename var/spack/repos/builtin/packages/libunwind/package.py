@@ -38,7 +38,7 @@ class Libunwind(AutotoolsPackage):
     variant('libs', default='shared,static', values=('shared', 'static'),
             multi=True, description='Build shared libs, static libs or both')
 
-    variant('components', default='none',
+    variant('components',
             values=any_combination_of('coredump', 'ptrace', 'setjump'),
             description='Build specified libunwind libraries')
 
