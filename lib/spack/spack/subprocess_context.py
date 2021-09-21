@@ -22,8 +22,9 @@ from types import ModuleType
 
 import spack.architecture
 import spack.config
-import spack.environment as ev
+import spack.environment
 import spack.main
+import spack.repo
 import spack.store
 
 _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
@@ -68,10 +69,10 @@ class PackageInstallContext(object):
     def __init__(self, pkg):
         if _serialize:
             self.serialized_pkg = serialize(pkg)
-            self.serialized_env = serialize(ev.active_environment())
+            self.serialized_env = serialize(spack.environment.active_environment())
         else:
             self.pkg = pkg
-            self.env = ev.active_environment()
+            self.env = spack.environment.active_environment()
         self.spack_working_dir = spack.main.spack_working_dir
         self.test_state = TestState()
 
@@ -81,7 +82,7 @@ class PackageInstallContext(object):
         env = pickle.load(self.serialized_env) if _serialize else self.env
         pkg = pickle.load(self.serialized_pkg) if _serialize else self.pkg
         if env:
-            ev.activate(env)
+            spack.environment.activate(env)
         return pkg
 
 
