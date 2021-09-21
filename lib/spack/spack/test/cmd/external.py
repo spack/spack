@@ -9,17 +9,28 @@ import pytest
 
 import spack
 import spack.detection
+import spack.detection.path
 from spack.main import SpackCommand
 from spack.spec import Spec
 
 
-def test_find_external_single_package(mock_executable):
+@pytest.fixture
+def executables_found(monkeypatch):
+    def _factory(result):
+        def _mock_search(path_hints=None):
+            return result
+
+        monkeypatch.setattr(spack.detection.path, 'executables_in_path', _mock_search)
+    return _factory
+
+
+def test_find_external_single_package(mock_executable, executables_found):
     pkgs_to_check = [spack.repo.get('cmake')]
+    executables_found({
+        mock_executable("cmake", output='echo "cmake version 1.foo"'): 'cmake'
+    })
 
-    cmake_path = mock_executable("cmake", output='echo "cmake version 1.foo"')
-    system_path_to_exe = {cmake_path: 'cmake'}
-
-    pkg_to_entries = spack.detection.by_path(pkgs_to_check, system_path_to_exe)
+    pkg_to_entries = spack.detection.by_path(pkgs_to_check)
 
     pkg, entries = next(iter(pkg_to_entries.items()))
     single_entry = next(iter(entries))
@@ -27,7 +38,7 @@ def test_find_external_single_package(mock_executable):
     assert single_entry.spec == Spec('cmake@1.foo')
 
 
-def test_find_external_two_instances_same_package(mock_executable):
+def test_find_external_two_instances_same_package(mock_executable, executables_found):
     pkgs_to_check = [spack.repo.get('cmake')]
 
     # Each of these cmake instances is created in a different prefix
@@ -37,11 +48,12 @@ def test_find_external_two_instances_same_package(mock_executable):
     cmake_path2 = mock_executable(
         "cmake", output='echo "cmake version 3.17.2"', subdir=('base2', 'bin')
     )
-    system_path_to_exe = {
+    executables_found({
         cmake_path1: 'cmake',
-        cmake_path2: 'cmake'}
+        cmake_path2: 'cmake'
+    })
 
-    pkg_to_entries = spack.detection.by_path(pkgs_to_check, system_path_to_exe)
+    pkg_to_entries = spack.detection.by_path(pkgs_to_check)
 
     pkg, entries = next(iter(pkg_to_entries.items()))
     spec_to_path = dict((e.spec, e.prefix) for e in entries)

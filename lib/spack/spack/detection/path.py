@@ -21,7 +21,7 @@ from ._common import (
 )
 
 
-def executables_in_path():
+def executables_in_path(path_hints=None):
     """Get the paths of all executables available from the current PATH.
 
     For convenience, this is constructed as a dictionary where the keys are
@@ -30,8 +30,12 @@ def executables_in_path():
 
     There may be multiple paths with the same basename. In this case it is
     assumed there are two different instances of the executable.
+
+    Args:
+        path_hints (list): list of paths to be searched. If None the list will be
+            constructed based on the PATH environment variable.
     """
-    path_hints = spack.util.environment.get_path('PATH')
+    path_hints = path_hints or spack.util.environment.get_path('PATH')
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
 
     path_to_exe = {}
@@ -52,10 +56,16 @@ def _group_by_prefix(paths):
     return groups.items()
 
 
-def by_path(packages_to_check, system_path_to_exe=None):
-    if not system_path_to_exe:
-        system_path_to_exe = executables_in_path()
+def by_path(packages_to_check, path_hints=None):
+    """Return the list of packages that have been detected on the system,
+    searching by path.
 
+    Args:
+        packages_to_check (list): list of packages to be detected
+        path_hints (list): list of paths to be searched. If None the list will be
+            constructed based on the PATH environment variable.
+    """
+    path_to_exe_name = executables_in_path(path_hints=path_hints)
     exe_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
         if hasattr(pkg, 'executables'):
@@ -65,7 +75,7 @@ def by_path(packages_to_check, system_path_to_exe=None):
     pkg_to_found_exes = collections.defaultdict(set)
     for exe_pattern, pkgs in exe_pattern_to_pkgs.items():
         compiled_re = re.compile(exe_pattern)
-        for path, exe in system_path_to_exe.items():
+        for path, exe in path_to_exe_name.items():
             if compiled_re.search(exe):
                 for pkg in pkgs:
                     pkg_to_found_exes[pkg].add(path)
@@ -81,17 +91,7 @@ def by_path(packages_to_check, system_path_to_exe=None):
                 " of the package.".format(pkg.name))
             continue
 
-        # TODO: iterate through this in a predetermined order (e.g. by package
-        # name) to get repeatable results when there are conflicts. Note that
-        # if we take the prefixes returned by _group_by_prefix, then consider
-        # them in the order that they appear in PATH, this should be sufficient
-        # to get repeatable results.
-        for prefix, exes_in_prefix in _group_by_prefix(exes):
-            # TODO: multiple instances of a package can live in the same
-            # prefix, and a package implementation can return multiple specs
-            # for one prefix, but without additional details (e.g. about the
-            # naming scheme which differentiates them), the spec won't be
-            # usable.
+        for prefix, exes_in_prefix in sorted(_group_by_prefix(exes)):
             specs = _convert_to_iterable(
                 pkg.determine_spec_details(prefix, exes_in_prefix)
             )
