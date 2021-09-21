@@ -506,5 +506,5 @@ spack package at this time.''',
     def test(self):
         self.run_mpich_test(join_path('test', 'mpi', 'init'), 'finalized')
         self.run_mpich_test(join_path('test', 'mpi', 'basic'), 'sendrecv')
+        self.run_mpich_test(join_path('test', 'mpi', 'perf'), 'manyrma')
         self.run_mpich_test('examples', 'cpi')
-        self.run_mpich_test('examples', 'ircpi')
