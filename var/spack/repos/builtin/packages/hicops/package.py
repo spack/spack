@@ -6,7 +6,7 @@
 from spack import *
 
 
-class hicops(Package):
+class Hicops(Package):
     """HiCOPS is a software framework for accelerating database peptide search workflows on supercomputers.
     HiCOPS provided algorithm-independent parallelizations and optimizations can be extended into new HPC
     database search algorithms or scalably accelerate the existing ones.
