@@ -11,7 +11,7 @@ class Ip2(CMakePackage):
     90 subprograms to be used for interpolating between nearly all
     grids used at NCEP. This library is deprecated; all functionality
     has been moved to the ip library.
-    
+
     This is part of the NCEPLIBS project."""
 
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS-ip2"
