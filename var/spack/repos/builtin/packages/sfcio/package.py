@@ -8,7 +8,9 @@ from spack import *
 
 class Sfcio(CMakePackage):
     """The SFCIO library provides an API to read the NCEP Spectral model surface
-    files."""
+    files.
+
+    This is part of the NCEPLIBS project."""
 
     homepage = "https://noaa-emc.github.io/NCEPLIBS-sfcio"
     url      = "https://github.com/NOAA-EMC/NCEPLIBS-sfcio/archive/refs/tags/v1.4.1.tar.gz"
