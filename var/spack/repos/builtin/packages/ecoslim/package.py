@@ -23,4 +23,3 @@ class Ecoslim(CMakePackage):
     def cmake_args(self):
         """Populate cmake arguments for EcoSLIM."""
         return []
-
