@@ -15,7 +15,3 @@ class LibsignalProtocolC(CMakePackage):
     maintainers = ['pwablito']
 
     version('2.3.3', sha256='c22e7690546e24d46210ca92dd808f17c3102e1344cd2f9a370136a96d22319d')
-
-    def cmake_args(self):
-        args = []
-        return args
