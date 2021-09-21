@@ -160,6 +160,10 @@ class PythonPackage(PackageBase):
     def python(self, *args, **kwargs):
         inspect.getmodule(self).python(*args, **kwargs)
 
+    def setup_args(self, spec, prefix):
+        """Arguments to pass before invoking setup's subcommand"""
+        return []
+
     def setup_py(self, *args, **kwargs):
         setup = self.setup_file()
         used_args = self.setup_args(self.spec, self.prefix) + args
