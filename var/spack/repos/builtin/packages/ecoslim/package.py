@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Ecoslim(CMakePackage):
     """EcoSLIM is a Lagrangian, particle-tracking code that simulates
     advective and diffusive movement of water parcels.  EcoSLIM
