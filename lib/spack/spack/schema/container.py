@@ -12,8 +12,7 @@ _stages_from_dockerhub = {
             'type': 'string',
             'enum': ['ubuntu:18.04',
                      'ubuntu:16.04',
-                     'centos:7',
-                     'centos:6']
+                     'centos:7']
         },
         'spack': {
             'type': 'string',
