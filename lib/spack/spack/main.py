@@ -744,7 +744,8 @@ def main(argv=None):
     # activate an environment if one was specified on the command line
     if not args.no_env:
         env = spack.cmd.find_environment(args)
-        ev.activate(env, args.use_env_repo)
+        if env:
+            ev.activate(env, args.use_env_repo)
 
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(','))

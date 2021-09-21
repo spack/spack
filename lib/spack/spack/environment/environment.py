@@ -120,10 +120,11 @@ def activate(env, use_env_repo=False):
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
     """
-    if env is None:
-        return
-
     global _active_environment
+
+    # Fail early to avoid ending in an invalid state
+    if not isinstance(env, Environment):
+        raise TypeError("`env` should be of type {0}".format(Environment.__name__))
 
     prepare_config_scope(env)
 
@@ -2058,7 +2059,8 @@ def environment_deactivated():
         yield
     finally:
         # TODO: we don't handle `use_env_repo` here.
-        activate(env)
+        if env:
+            activate(env)
 
 
 class SpackEnvironmentError(spack.error.SpackError):
