@@ -269,9 +269,8 @@ class PyNumpy(PythonPackage):
                             '{0}/alllibs/libxlf90_r.a {0}/alllibs/libxl.a '
                             + '{0}/alllibs/libxlopt.a -lrt '
                         ).format(compiler_home)
-                    if "gfortran" in env['SPACK_F77']:
-                        bin_index = env['SPACK_F77'].find("/bin")
-                        compiler_home = env['SPACK_F77'][:bin_index]
+                    if "gfortran" in self.compiler.f77:
+                        compiler_home = os.path.dirname(os.path.dirname(self.compiler.f77))
                         found_gfortran = False
                         for mydir, _, filenames in os.walk(compiler_home):
                             for filename in filenames:
@@ -399,9 +398,7 @@ class PyNumpy(PythonPackage):
         args = []
         if spec.satisfies('%fj'):
             args.extend(['config_fc', '--fcompiler=fj'])
-        elif (spec.satisfies('platform=linux') and
-              spec.target.family == 'ppc64le' and
-              "xlf" in env['SPACK_F77']):
+        elif "xlf" in self.compiler.f77:
             args.extend(['config_fc', '--fcompiler=ibm'])
         return args
 
