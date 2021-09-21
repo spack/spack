@@ -328,8 +328,26 @@ class PyNumpy(PythonPackage):
         spec = self.spec
 
         # https://numpy.org/devdocs/user/building.html#blas
-        #
-        # Also from https://github.com/numpy/numpy/blob/main/numpy/distutils/system_info.py:
+        if 'blas' not in spec:
+            blas = ''
+        elif spec['blas'].name == 'intel-mkl' or \
+                spec['blas'].name == 'intel-parallel-studio' or \
+                spec['blas'].name == 'intel-oneapi-mkl':
+            blas = 'mkl'
+        elif spec['blas'].name == 'blis':
+            blas = 'blis'
+        elif spec['blas'].name == 'openblas':
+            blas = 'openblas'
+        elif spec['blas'].name == 'atlas':
+            blas = 'atlas'
+        elif spec['blas'].name == 'veclibfort':
+            blas = 'accelerate'
+        else:
+            blas = 'blas'
+
+        env.set('NPY_BLAS_ORDER', blas)
+
+        # From https://github.com/numpy/numpy/blob/main/numpy/distutils/system_info.py:
         # Before 1.17 the order of finding the locations of resources was the following:
         #  1. environment variable
         #  2. section in site.cfg
@@ -345,35 +363,20 @@ class PyNumpy(PythonPackage):
         # this search and gives you the correct behavior for older versions.
         #
         # For 1.17 onwards, you can use NPY_BLAS_ORDER and this is a no-op.
-        blas = ''
-        if 'blas' in spec:
-            if spec['blas'].name == 'intel-mkl' or \
-                   spec['blas'].name == 'intel-parallel-studio' or \
-                   spec['blas'].name == 'intel-oneapi-mkl':
-                blas = 'mkl'
-            else:
-                env.set('MKLROOT', 'None')
-            if spec['blas'].name == 'blis':
-                blas = 'blis'
-            else:
-                env.set('BLIS', 'None')
-            if spec['blas'].name == 'openblas':
-                blas = 'openblas'
-            else:
-                env.set('OPENBLAS', 'None')
-            if spec['blas'].name == 'atlas':
-                blas = 'atlas'
-            else:
-                env.set('ATLAS', 'None')
-                env.set('PTATLAS', 'None')
-            if spec['blas'].name == 'veclibfort':
-                blas = 'accelerate'
-            else:
-                env.set('ACCELERATE', 'None')
-            if not blas:
-                blas = 'blas'
+        if spec['blas'].name != 'intel-mkl' and \
+                spec['blas'].name != 'intel-parallel-studio' and \
+                spec['blas'].name != 'intel-oneapi-mkl':
+            env.set('MKLROOT', 'None')
+        if spec['blas'].name != 'blis':
+            env.set('BLIS', 'None')
+        if spec['blas'].name != 'openblas':
+            env.set('OPENBLAS', 'None')
+        if spec['blas'].name != 'atlas':
+            env.set('ATLAS', 'None')
+            env.set('PTATLAS', 'None')
+        if spec['blas'].name != 'veclibfort':
+            env.set('ACCELERATE', 'None')
 
-        env.set('NPY_BLAS_ORDER', blas)
 
         # https://numpy.org/devdocs/user/building.html#lapack
         if 'lapack' not in spec:
