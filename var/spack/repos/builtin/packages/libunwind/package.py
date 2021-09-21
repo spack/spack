@@ -74,7 +74,7 @@ class Libunwind(AutotoolsPackage):
               msg='Non-GNU libunwind needs ELF libraries Darwin does not have')
 
     provides('unwind')
-    
+
     patch('libunwind-fix-comma.patch', when='@1.5.0:')
 
     def flag_handler(self, name, flags):
