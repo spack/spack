@@ -85,21 +85,8 @@ class PyScikitLearn(PythonPackage):
         return (super(PyScikitLearn,self).install_args(spec, prefix)
                 + ['--skip-build'])
 
-    def build(self, spec, prefix):
-        """Install everything from build directory."""
-        args = (spec['py-numpy'].package.fortran_args(spec, prefix)
-                + ['build']
-                + self.build_args(spec, prefix))
-
-        self.setup_py(*args)
-
-    def install(self, spec, prefix):
-        """Install everything from build directory."""
-        args = (spec['py-numpy'].package.fortran_args(spec, prefix)
-                + ['install']
-                + self.install_args(spec, prefix))
-
-        self.setup_py(*args)
+    def setup_args(self, spec, prefix):
+        return spec['py-numpy'].package.setup_args(spec, prefix)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

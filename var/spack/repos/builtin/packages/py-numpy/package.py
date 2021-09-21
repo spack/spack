@@ -395,7 +395,7 @@ class PyNumpy(PythonPackage):
         # https://github.com/scipy/scipy/issues/9080
         env.set('F90', spack_fc)
 
-    def fortran_args(self, spec, prefix):
+    def setup_args(self, spec, prefix):
         args = []
         if spec.satisfies('%fj'):
             args.extend(['config_fc', '--fcompiler=fj'])
@@ -404,22 +404,6 @@ class PyNumpy(PythonPackage):
               "xlf" in env['SPACK_F77']):
             args.extend(['config_fc', '--fcompiler=ibm'])
         return args
-
-    def build(self, spec, prefix):
-        """Install everything from build directory."""
-        args = (self.fortran_args(spec, prefix)
-                + ['build']
-                + self.build_args(spec, prefix))
-
-        self.setup_py(*args)
-
-    def install(self, spec, prefix):
-        """Install everything from build directory."""
-        args = (self.fortran_args(spec, prefix)
-                + ['install']
-                + self.install_args(spec, prefix))
-
-        self.setup_py(*args)
 
     def build_args(self, spec, prefix):
         args = []

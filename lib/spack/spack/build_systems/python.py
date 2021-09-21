@@ -171,11 +171,17 @@ class PythonPackage(PackageBase):
 
     # Standard commands
 
+    def setup_args(self, spec, prefix):
+        '''Arguments to pass to build before the target command'''
+        return []
+
     def build(self, spec, prefix):
         """Build everything needed to install."""
-        args = self.build_args(spec, prefix)
+        args = (self.setup_args(spec, prefix),
+                + ['build']
+                + self.build_args(spec, prefix))
 
-        self.setup_py('build', *args)
+        self.setup_py(*args)
 
     def build_args(self, spec, prefix):
         """Arguments to pass to build."""
@@ -183,9 +189,11 @@ class PythonPackage(PackageBase):
 
     def build_py(self, spec, prefix):
         '''"Build" pure Python modules (copy to build directory).'''
-        args = self.build_py_args(spec, prefix)
+        args = (self.setup_args(spec, prefix),
+                + ['build_py']
+                + self.build_py_args(spec, prefix))
 
-        self.setup_py('build_py', *args)
+        self.setup_py(*args)
 
     def build_py_args(self, spec, prefix):
         """Arguments to pass to build_py."""
@@ -193,9 +201,11 @@ class PythonPackage(PackageBase):
 
     def build_ext(self, spec, prefix):
         """Build C/C++ extensions (compile/link to build directory)."""
-        args = self.build_ext_args(spec, prefix)
+        args = (self.setup_args(spec, prefix),
+                + ['build_ext']
+                + self.build_ext_args(spec, prefix))
 
-        self.setup_py('build_ext', *args)
+        self.setup_py(*args)
 
     def build_ext_args(self, spec, prefix):
         """Arguments to pass to build_ext."""
@@ -203,9 +213,11 @@ class PythonPackage(PackageBase):
 
     def build_clib(self, spec, prefix):
         """Build C/C++ libraries used by Python extensions."""
-        args = self.build_clib_args(spec, prefix)
+        args = (self.setup_args(spec, prefix),
+                + ['build_clib']
+                + self.build_clib_args(spec, prefix))
 
-        self.setup_py('build_clib', *args)
+        self.setup_py(*args)
 
     def build_clib_args(self, spec, prefix):
         """Arguments to pass to build_clib."""
@@ -213,9 +225,11 @@ class PythonPackage(PackageBase):
 
     def build_scripts(self, spec, prefix):
         '''"Build" scripts (copy and fixup #! line).'''
-        args = self.build_scripts_args(spec, prefix)
+        args = (self.setup_args(spec, prefix),
+                + ['build_scripts']
+                + self.build_scripts_args(spec, prefix))
 
-        self.setup_py('build_scripts', *args)
+        self.setup_py(*args)
 
     def build_scripts_args(self, spec, prefix):
         """Arguments to pass to build_scripts."""
@@ -223,9 +237,11 @@ class PythonPackage(PackageBase):
 
     def install(self, spec, prefix):
         """Install everything from build directory."""
-        args = self.install_args(spec, prefix)
+        args = (self.setup_args(spec, prefix),
+                + ['install']
+                + self.install_args(spec, prefix))
 
-        self.setup_py('install', *args)
+        self.setup_py(*args)
 
     def install_args(self, spec, prefix):
         """Arguments to pass to install."""

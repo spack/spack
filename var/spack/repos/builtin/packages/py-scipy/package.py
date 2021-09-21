@@ -99,6 +99,9 @@ class PyScipy(PythonPackage):
     def flag_handler(self, name, flags):
         return self.spec['py-numpy'].package.flag_handler(name, flags)
 
+    def setup_args(self, spec, prefix):
+        return spec['py-numpy'].package.setup_args(spec, prefix)
+
     def build_args(self, spec, prefix):
         args = []
 
@@ -110,22 +113,6 @@ class PyScipy(PythonPackage):
             args.extend(['-j', str(make_jobs)])
 
         return args
-
-    def build(self, spec, prefix):
-        """Install everything from build directory."""
-        args = (spec['py-numpy'].package.fortran_args(spec, prefix)
-                + ['build']
-                + self.build_args(spec, prefix))
-
-        self.setup_py(*args)
-
-    def install(self, spec, prefix):
-        """Install everything from build directory."""
-        args = (spec['py-numpy'].package.fortran_args(spec, prefix)
-                + ['install']
-                + self.install_args(spec, prefix))
-
-        self.setup_py(*args)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
