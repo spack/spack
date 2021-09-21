@@ -374,7 +374,7 @@ class AutotoolsPackage(PackageBase):
             activation_word,
             deactivation_word,
             activation_value=None,
-            variant_name=None
+            variant=None
     ):
         """This function contains the current implementation details of
         :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without` and
@@ -393,8 +393,8 @@ class AutotoolsPackage(PackageBase):
 
                 The special value 'prefix' can also be assigned and will return
                 ``spec[name].prefix`` as activation parameter.
-            variant_name (str): name of the variant that is being processed
-                                (if different from option name)
+            variant (str): name of the variant that is being processed
+                           (if different from option name)
 
         Examples:
 
@@ -414,7 +414,7 @@ class AutotoolsPackage(PackageBase):
                     'foo', 'with', 'without', activation_value='prefix'
                 )
                 _activate_or_not('bar', 'with', 'without')
-                _activate_or_not('ba-z', 'with', 'without', variant_name='ba_z')
+                _activate_or_not('ba-z', 'with', 'without', variant='ba_z')
 
             will generate the following configuration options:
 
@@ -437,36 +437,35 @@ class AutotoolsPackage(PackageBase):
         if activation_value == 'prefix':
             activation_value = lambda x: spec[x].prefix
 
-        if variant_name is None:
-            variant_name = name
+        variant = variant or name
 
         # Defensively look that the name passed as argument is among
         # variants
-        if variant_name not in self.variants:
+        if variant not in self.variants:
             msg = '"{0}" is not a variant of "{1}"'
-            raise KeyError(msg.format(variant_name, self.name))
+            raise KeyError(msg.format(variant, self.name))
 
         # Create a list of pairs. Each pair includes a configuration
         # option and whether or not that option is activated
-        if set(self.variants[variant_name].values) == set((True, False)):
+        if set(self.variants[variant].values) == set((True, False)):
             # BoolValuedVariant carry information about a single option.
             # Nonetheless, for uniformity of treatment we'll package them
             # in an iterable of one element.
-            condition = '+{name}'.format(name=variant_name)
+            condition = '+{name}'.format(name=variant)
             options = [(name, condition in spec)]
         else:
-            condition = '{variant_name}={value}'
+            condition = '{variant}={value}'
             # "feature_values" is used to track values which correspond to
             # features which can be enabled or disabled as understood by the
             # package's build system. It excludes values which have special
             # meanings and do not correspond to features (e.g. "none")
             feature_values = getattr(
-                self.variants[variant_name].values, 'feature_values', None
-            ) or self.variants[variant_name].values
+                self.variants[variant].values, 'feature_values', None
+            ) or self.variants[variant].values
 
             options = [
                 (value,
-                 condition.format(variant_name=variant_name,
+                 condition.format(variant=variant,
                                   value=value) in spec)
                 for value in feature_values
             ]
@@ -495,7 +494,7 @@ class AutotoolsPackage(PackageBase):
             args.append(line_generator(activated))
         return args
 
-    def with_or_without(self, name, activation_value=None, variant_name=None):
+    def with_or_without(self, name, activation_value=None, variant=None):
         """Inspects a variant and returns the arguments that activate
         or deactivate the selected feature(s) for the configure options.
 
@@ -522,9 +521,9 @@ class AutotoolsPackage(PackageBase):
             list of arguments to configure
         """
         return self._activate_or_not(name, 'with', 'without', activation_value,
-                                     variant_name)
+                                     variant)
 
-    def enable_or_disable(self, name, activation_value=None, variant_name=None):
+    def enable_or_disable(self, name, activation_value=None, variant=None):
         """Same as
         :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without`
         but substitute ``with`` with ``enable`` and ``without`` with ``disable``.
@@ -542,7 +541,7 @@ class AutotoolsPackage(PackageBase):
             list of arguments to configure
         """
         return self._activate_or_not(
-            name, 'enable', 'disable', activation_value, variant_name
+            name, 'enable', 'disable', activation_value, variant
         )
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
