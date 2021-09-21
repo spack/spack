@@ -33,6 +33,33 @@ class Libunwind(AutotoolsPackage):
             description='Support zlib compressed symbol tables '
             '(1.5 and later).')
 
+    variant('docs', default=True, description='Build man page')
+    variant('tests', default=True, description='Build tests')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+
+    variant('components', default='none',
+            values=any_combination_of('coredump', 'ptrace', 'setjump'),
+            description='Build specified libunwind libraries')
+
+    variant('weak_backtrace', default=True,
+            description="Provide the weak 'backtrace' symbol")
+
+    variant('debug', default=False,
+            description='Turn on debug support (slows down execution)')
+
+    variant('cxx_exceptions', default=False,
+            description='Use libunwind to handle C++ exceptions')
+
+    variant('debug_frame', default=False,
+            description='Load the ".debug_frame" section if available')
+
+    variant('block_signals', default=False,
+            description='Block signals before performing mutex operations')
+
+    variant('conservative_checks', default=False,
+            description='Validate all memory addresses before use')
+
     # The libunwind releases contain the autotools generated files,
     # but the git repo snapshots do not.
     depends_on('autoconf', type='build', when='@master,1.5-head')
@@ -47,6 +74,8 @@ class Libunwind(AutotoolsPackage):
               msg='Non-GNU libunwind needs ELF libraries Darwin does not have')
 
     provides('unwind')
+    
+    patch('libunwind-fix-comma.patch', when='@1.5.0:')
 
     def flag_handler(self, name, flags):
         wrapper_flags = []
@@ -67,16 +96,20 @@ class Libunwind(AutotoolsPackage):
         spec = self.spec
         args = []
 
-        if '+xz' in spec:
-            args.append('--enable-minidebuginfo')
-        else:
-            args.append('--disable-minidebuginfo')
+        args += self.enable_or_disable('mindebuginfo', variant='xz')
 
         # zlib support is available in 1.5.x and later
         if spec.satisfies('@1.5:'):
-            if '+zlib' in spec:
-                args.append('--enable-zlibdebuginfo')
-            else:
-                args.append('--disable-zlibdebuginfo')
+            args += self.enable_or_disable('zlibdebuginfo', variant='zlib')
 
+        args += self.enable_or_disable('documentation', variant='docs')
+        args += self.enable_or_disable('tests')
+        args += self.enable_or_disable('libs')
+        args += self.enable_or_disable('weak-backtrace', variant='weak_backtrace')
+        args += self.enable_or_disable('debug')
+        args += self.enable_or_disable('cxx-exceptions', variant='cxx_exceptions')
+        args += self.enable_or_disable('debug-frame', variant='debug_frame')
+        args += self.enable_or_disable('block-signals', variant='block_signals')
+        args += self.enable_or_disable('conservative-checks',
+                                       variant='conservative_checks')
         return args
