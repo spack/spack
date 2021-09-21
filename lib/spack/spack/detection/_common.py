@@ -124,11 +124,16 @@ def executable_prefix(executable_dir):
     Args:
         executable_dir: directory where an executable is found
     """
-    # Assume that prefix ends with /bin/, strip off the 'bin' directory
-    # to get a Spack-compatible prefix
+    # Given a prefix where an executable is found, assuming that prefix
+    # contains /bin/, strip off the 'bin' directory to get a Spack-compatible
+    # prefix
     assert os.path.isdir(executable_dir)
-    if os.path.basename(executable_dir) == 'bin':
-        return os.path.dirname(executable_dir)
+
+    components = executable_dir.split(os.sep)
+    if 'bin' not in components:
+        return None
+    idx = components.index('bin')
+    return os.sep.join(components[:idx])
 
 
 def update_configuration(detected_packages, scope=None, buildable=True):
