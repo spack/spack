@@ -356,6 +356,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
+            '--with-openmp=%s' % ('1' if '+openmp' in spec else '0'),
             '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
         if '+debug' not in spec:
@@ -389,10 +390,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             options.append('--with-clanguage=C++')
         else:
             options.append('--with-clanguage=C')
-
-        # openmp is usually provided by the compiler and not a library dependency
-        if spec.satisfies('+openmp'):
-            options.append('--with-openmp=1')
 
         # Activates library support if needed (i.e. direct dependency)
         jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
