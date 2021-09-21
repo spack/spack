@@ -14,7 +14,7 @@ class SourceHighlight(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/src-highlite/"
     gnu_mirror_path = "src-highlite/source-highlight-3.1.8.tar.gz"
-    git = "https://git.savannah.gnu.org/git/src-highlite.git"
+    git = "https://git.savannah.gnu.org/cgit/src-highlite.git"
 
     version('master',  branch='master')
     version('3.1.9', sha256='3a7fd28378cb5416f8de2c9e77196ec915145d44e30ff4e0ee8beb3fe6211c91')
