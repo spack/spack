@@ -2051,8 +2051,9 @@ def is_latest_format(manifest):
 
 
 @contextlib.contextmanager
-def environment_deactivated():
-    """Deactivate an active environment for the duration of the context."""
+def no_active_environment():
+    """Deactivate the active environment for the duration of the context. Has no
+       effect when there is no active environment."""
     env = active_environment()
     try:
         deactivate()

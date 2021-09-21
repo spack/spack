@@ -195,7 +195,7 @@ def no_path_access(monkeypatch):
 @pytest.fixture(scope='session', autouse=True)
 def clean_user_environment():
     spack_env_value = os.environ.pop(ev.spack_env_var, None)
-    with ev.environment_deactivated():
+    with ev.no_active_environment():
         yield
     if spack_env_value:
         os.environ[ev.spack_env_var] = spack_env_value
