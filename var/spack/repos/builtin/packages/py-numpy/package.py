@@ -328,20 +328,23 @@ class PyNumpy(PythonPackage):
         spec = self.spec
 
         # https://numpy.org/devdocs/user/building.html#blas
+        #
         # Also from https://github.com/numpy/numpy/blob/main/numpy/distutils/system_info.py:
-        # The order of finding the locations of resources is the following:
+        # Before 1.17 the order of finding the locations of resources was the following:
         #  1. environment variable
         #  2. section in site.cfg
         #  3. DEFAULT section in site.cfg
         #  4. System default search paths (see ``default_*`` variables below).
         # Only the first complete match is returned.
         #
-        # The way the detection works, it performs the above scan FOR
-        # EACH different type of lapack. That means that if ATLAS is
-        # installed in a default location, py-numpy will always prefer
-        # it since atlas appears higher in distutils search
+        # The way the detection worked, it performed the above scan FOR
+        # EACH different type of lapack. That meant that if ATLAS was
+        # installed in a default location, py-numpy always prefered
+        # it since atlas appeared higher in distutils search
         # order. Adding these environment variables short circuits
-        # this search and gives you the correct behavior.
+        # this search and gives you the correct behavior for older versions.
+        #
+        # For 1.17 onwards, you can use NPY_BLAS_ORDER and this is a no-op.
         blas = ''
         if 'blas' in spec:
             if spec['blas'].name == 'intel-mkl' or \
