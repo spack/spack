@@ -481,13 +481,13 @@ spack package at this time.''',
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(join_path('test', 'mpi'))
+        self.cache_extra_test_sources(['examples', join_path('test', 'mpi')])
 
-    def run_mpi_test(self, mpi_dir, exe):
+    def run_mpich_test(self, example_dir, exe):
         """Run stand alone tests"""
 
         test_dir = join_path(self.test_suite.current_test_cache_dir,
-                             'test', 'mpi', mpi_dir)
+                             example_dir)
         exe_source = join_path(test_dir, '{0}.c'.format(exe))
 
         if not os.path.isfile(exe_source):
@@ -504,6 +504,7 @@ spack package at this time.''',
                       work_dir=test_dir)
 
     def test(self):
-        self.run_mpi_test('init', 'finalized')
-        self.run_mpi_test('basic', 'sendrecv')
-        self.run_mpi_test('ft', 'bcast')
+        self.run_mpich_test(join_path('test', 'mpi', 'init'), 'finalized')
+        self.run_mpich_test(join_path('test', 'mpi', 'basic'), 'sendrecv')
+        self.run_mpich_test('examples', 'cpi')
+        self.run_mpich_test('examples', 'ircpi')
