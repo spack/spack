@@ -42,7 +42,7 @@ class HypreCmake(CMakePackage, CudaPackage):
     depends_on("mpi", when='+mpi')
     depends_on("blas")
     depends_on("lapack")
-    depends_on('superlu_dist', when='+superlu_dist+mpi')
+    depends_on('superlu-dist', when='+superlu_dist+mpi')
 
     conflicts('+cuda', when='+int64')
     conflicts('+unified_memory', when='~cuda')
