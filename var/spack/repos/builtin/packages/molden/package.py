@@ -52,9 +52,6 @@ class Molden(MakefilePackage):
         cflags = '-O2 -funroll-loops'
         fflags = cflags
 
-        if '%gcc@10:' in self.spec:
-            fflags += '-fallow-argument-mismatch'
-
         makefile.filter(r'CFLAGS = (.*)', r'CFLAGS = {0} \1'.format(cflags))
         makefile.filter(r'FFLAGS = (.*)', r'FFLAGS = {0} \1'.format(fflags))
 
