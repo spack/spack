@@ -183,6 +183,17 @@ To opt out of this feature, use the following setting:
 
    patch_config_files = False
 
+To enable it conditionally on different architectures, define a property and
+make the package depend on ``gnuconfig`` as a build dependency:
+
+.. code-block
+
+   depends_on('gnuconfig', when='@1.0:')
+
+   @property
+   def patch_config_files(self):
+      return self.spec.satisfies("@1.0:")
+
 .. note::
 
     On some exotic architectures it is necessary to use system provided

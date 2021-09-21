@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -18,5 +20,16 @@ class Gnuconfig(Package):
     version('2021-08-14')
 
     def install(self, spec, prefix):
-        touch(join_path(prefix, 'config.sub'))
-        touch(join_path(prefix, 'config.guess'))
+        config_sub = join_path(prefix, 'config.sub')
+        config_guess = join_path(prefix, 'config.guess')
+
+        # Create files
+        with open(config_sub, 'w') as f:
+            f.write("#!/bin/sh\necho gnuconfig version of config.sub")
+
+        with open(config_guess, 'w') as f:
+            f.write("#!/bin/sh\necho gnuconfig version of config.guess")
+
+        # Make executable
+        os.chmod(config_sub, 0o775)
+        os.chmod(config_guess, 0o775)

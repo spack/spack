@@ -55,15 +55,22 @@ class AutotoolsPackage(PackageBase):
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'AutotoolsPackage'
-    #: Whether or not to update old ``config.guess`` and ``config.sub`` files
-    #: distributed with the tarball. This currently only applies to ``ppc64le:``
-    #: and ``aarch64:`` target architectures. The substitutes are taken from the
-    #: ``gnuconfig`` package, which is automatically added as a build dependency
-    #: for these architectures. In case system versions of these config files are
-    #: required, the ``gnuconfig`` package can be marked external with a prefix
-    #: pointing to the directory containing the system ``config.guess`` and
-    #: ``config.sub`` files.
-    patch_config_files = True
+
+    @property
+    def patch_config_files(self):
+        """
+        Whether or not to update old ``config.guess`` and ``config.sub`` files
+        distributed with the tarball. This currently only applies to ``ppc64le:``
+        and ``aarch64:`` target architectures. The substitutes are taken from the
+        ``gnuconfig`` package, which is automatically added as a build dependency
+        for these architectures. In case system versions of these config files are
+        required, the ``gnuconfig`` package can be marked external with a prefix
+        pointing to the directory containing the system ``config.guess`` and
+        ``config.sub`` files.
+        """
+        return (self.spec.satisfies('target=ppc64le:')
+                or self.spec.satisfies('target=aarch64:'))
+
     #: Whether or not to update ``libtool``
     #: (currently only for Arm/Clang/Fujitsu compilers)
     patch_libtool = True
@@ -116,18 +123,15 @@ class AutotoolsPackage(PackageBase):
         In particular, config.guess fails for PPC64LE for version prior
         to a 2013-06-10 build date (automake 1.13.4) and for ARM (aarch64).
         """
-        is_ppc64le = self.spec.satisfies('target=ppc64le:')
-        is_aarch64 = self.spec.satisfies('target=aarch64:')
-
-        if not self.patch_config_files or (not is_ppc64le and not is_aarch64):
+        if not self.patch_config_files:
             return
 
         # TODO: Expand this to select the 'config.sub'-compatible architecture
         # for each platform (e.g. 'config.sub' doesn't accept 'power9le', but
         # does accept 'ppc64le').
-        if is_ppc64le:
+        if self.spec.satisfies('target=ppc64le:'):
             config_arch = 'ppc64le'
-        elif is_aarch64:
+        elif self.spec.satisfies('target=aarch64:'):
             config_arch = 'aarch64'
         else:
             config_arch = 'local'
@@ -156,6 +160,12 @@ class AutotoolsPackage(PackageBase):
         if not to_be_patched:
             return
 
+        # Otherwise, require `gnuconfig` to be a build dependency
+        self._require_build_deps(
+            pkgs=['gnuconfig'],
+            spec=self.spec,
+            err="Cannot patch config files")
+
         # Get the config files we need to patch (config.sub / config.guess).
         to_be_found = list(set(os.path.basename(f) for f in to_be_patched))
         gnuconfig = self.spec['gnuconfig']
@@ -173,18 +183,12 @@ class AutotoolsPackage(PackageBase):
         # For external packages the user may have specified an incorrect prefix.
         # otherwise the installation is just corrupt.
         if not candidates:
+            msg = ("Spack could not find `config.guess` and `config.sub` "
+                   "files in the `gnuconfig` prefix `{0}`. This means the "
+                   "`gnuconfig` package is broken").format(gnuconfig_dir)
             if gnuconfig.external:
-                msg = ("Spack could not find `config.guess` and `config.sub` "
-                       "files in the `gnuconfig` prefix `{0}`. This means you "
-                       "have set an incorrect prefix path for the external "
-                       "`gnuconfig` package. Make sure the prefix is correct, or "
-                       "remove `gnuconfig` as an external "
-                       "package.").format(gnuconfig_dir)
-            else:
-                msg = ("Spack could not find `config.guess` and `config.sub` "
-                       "files in the `gnuconfig` prefix `{0}`. This means the "
-                       "`gnuconfig` package is corrupt. Please file an "
-                       "issue.").format(gnuconfig_dir)
+                msg += (" or the `gnuconfig` package prefix is misconfigured as"
+                        " an external package")
             raise InstallError(msg)
 
         # Filter working substitutes
@@ -292,30 +296,40 @@ To resolve this problem, please try the following:
         if self.force_autoreconf:
             force_remove(self.configure_abs_path)
 
-    def _autoreconf_warning(self, spec, missing):
-        msg = ("Cannot generate configure: missing dependencies {0}.\n\nPlease add "
-               "the following lines to the package:\n\n".format(", ".join(missing)))
+    def _require_build_deps(self, pkgs, spec, err):
+        """Require `pkgs` to be direct build dependencies of `spec`. Raises a
+        RuntimeError with a helpful error messages when any dep is missing."""
 
-        for dep in missing:
+        build_deps = [d.name for d in spec.dependencies(deptype='build')]
+        missing_deps = [x for x in pkgs if x not in build_deps]
+
+        if not missing_deps:
+            return
+
+        # Raise an exception on missing deps.
+        msg = ("{0}: missing dependencies: {1}.\n\nPlease add "
+               "the following lines to the package:\n\n"
+               .format(err, ", ".join(missing_deps)))
+
+        for dep in missing_deps:
             msg += ("    depends_on('{0}', type='build', when='@{1}')\n"
                     .format(dep, spec.version))
 
         msg += "\nUpdate the version (when='@{0}') as needed.".format(spec.version)
-
-        return msg
+        raise RuntimeError(msg)
 
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
+
         # If configure exists nothing needs to be done
         if os.path.exists(self.configure_abs_path):
             return
-        # Else try to regenerate it
-        needed_dependencies = ['autoconf', 'automake', 'libtool']
-        build_deps = [d.name for d in spec.dependencies(deptype='build')]
-        missing = [x for x in needed_dependencies if x not in build_deps]
 
-        if missing:
-            raise RuntimeError(self._autoreconf_warning(spec, missing))
+        # Else try to regenerate it, which reuquires a few build dependencies
+        self._require_build_deps(
+            pkgs=['autoconf', 'automake', 'libtool'],
+            spec=spec,
+            err="Cannot generate configure")
 
         tty.msg('Configure script not found: trying to generate it')
         tty.warn('*********************************************************')
