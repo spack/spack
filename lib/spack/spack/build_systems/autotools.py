@@ -14,6 +14,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.filesystem import force_remove, working_dir
 
+from spack.directives import depends_on
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 
@@ -82,6 +83,18 @@ class AutotoolsPackage(PackageBase):
     #: If False deletes all the .la files in the prefix folder
     #: after the installation. If True instead it installs them.
     install_libtool_archives = False
+
+    #: autoreconf depends on autoconf, automake and libtool:
+    autoreconf_depends = ['autoconf', 'automake', 'libtool']
+
+    #: Is it possible to override this from a subclass? Even moving this into a
+    #: function didn't change it as on class scope, we don't have 'self' to call
+    #: the overridden method of a subclass.
+    #: It is not a big problem though because unless the master,develop branches
+    #: also provide the configure script itself, autoreconf will check that the
+    #: autotools packages are installed before calling autoreconf automatically
+    depends_on(autoreconf_depends, type='build', when='@master,develop',
+               skip=autoreconf_depends)
 
     @property
     def _removed_la_files_log(self):

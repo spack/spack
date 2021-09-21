@@ -413,16 +413,20 @@ def conflicts(conflict_spec, when=None, msg=None):
 
 
 @directive(('dependencies'))
-def depends_on(spec, when=None, type=default_deptype, patches=None):
+def depends_on(specs, when=None, type=default_deptype, patches=None, skip=None):
     """Creates a dict of deps with specs defining when they apply.
 
     Args:
-        spec (spack.spec.Spec or str): the package and constraints depended on
+        spec (spack.spec.Spec, str or list): the packages and constraints depended on
         when (spack.spec.Spec or str): when the dependent satisfies this, it has
             the dependency represented by ``spec``
         type (str or tuple): str or tuple of legal Spack deptypes
         patches (typing.Callable or list): single result of ``patch()`` directive, a
             ``str`` to be passed to ``patch``, or a list of these
+        skip (list): packages for which this depends_on call shall do nothing. This
+            is helpful when a base class of other packages like AutotoolsPackage wishes
+            to define dependencies for all subclasses, except for these packages.
+            Example: Add autotools packages for develop builds, but not on themselfes.
 
     This directive is to be used inside a Package definition to declare
     that the package requires other packages to be built first.
@@ -430,7 +434,17 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
     """
     def _execute_depends_on(pkg):
-        _depends_on(pkg, spec, when=when, type=type, patches=patches)
+
+        if skip:
+            if pkg.name in skip:
+                return
+
+        if isinstance(specs, list):
+            for spec in specs:
+                _depends_on(pkg, spec, when=when, type=type, patches=patches)
+        else:
+            _depends_on(pkg, specs, when=when, type=type, patches=patches)
+
     return _execute_depends_on
 
 
