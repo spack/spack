@@ -39,6 +39,7 @@ class Edm4hep(CMakePackage):
         # C++ Standard
         args.append(self.define('CMAKE_CXX_STANDARD',
                     self.spec.variants['cxxstd'].value))
+        args.append("-DBUILD_TESTING=%s" % self.run_tests)
         return args
 
     def url_for_version(self, version):
