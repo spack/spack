@@ -31,8 +31,8 @@ class Form(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        args += self.with_or_without('gmp', self.spec['gmp'].prefix)
-        args += self.with_or_without('zlib', self.spec['zlib'].prefix)
+        args += self.with_or_without('gmp', 'prefix')
+        args += self.with_or_without('zlib', 'prefix')
         args += self.enable_or_disable('scalar')
         args += self.enable_or_disable('threaded')
         args += self.enable_or_disable('parform')
