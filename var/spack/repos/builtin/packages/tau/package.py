@@ -74,6 +74,7 @@ class Tau(Package):
     variant('rocm', default=False, description='Activates ROCm support')
     variant('level_zero', default=False, description='Activates Intel OneAPI Level Zero support')
     variant('rocprofiler', default=False, description='Activates ROCm rocprofiler support')
+    variant('roctracer', default=False, description='Activates ROCm roctracer support')
     variant('opencl', default=False, description='Activates OpenCL support')
     variant('fortran', default=darwin_default, description='Activates Fortran support')
     variant('io', default=True, description='Activates POSIX I/O support')
@@ -107,6 +108,7 @@ class Tau(Package):
     depends_on('sqlite', when='+sqlite')
     depends_on('hwloc')
     depends_on('rocprofiler-dev', when='+rocprofiler')
+    depends_on('roctracer-dev', when='+roctracer'
     depends_on('hsa-rocr-dev', when='+rocm')
 
     # Elf only required from 2.28.1 on
@@ -264,6 +266,9 @@ class Tau(Package):
 
         if '+rocprofiler' in spec:
             options.append("-rocprofiler=%s" % spec['rocprofiler-dev'].prefix)
+
+        if '+roctracer' in spec:
+            options.append("-roctracer=%s" % spec['roctracer-dev'].prefix)
 
         if '+adios2' in spec:
             options.append("-adios=%s" % spec['adios2'].prefix)
