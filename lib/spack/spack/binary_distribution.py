@@ -1397,19 +1397,12 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     extracted_dir = os.path.join(spack.store.layout.root,
                                  old_relative_prefix.split(os.path.sep)[-1])
 
-    try:
-        shutil.unpack_archive(tarfile_path, spack.store.layout.root)
-    except Exception as e:
-        shutil.rmtree(extracted_dir)
-        raise e
-    try:
-        shutil.move(extracted_dir, spec.prefix)
-    except Exception as e:
-        shutil.rmtree(extracted_dir)
-        raise e
-    finally:
-        os.remove(tarfile_path)
-        os.remove(specfile_path)
+    with closing(tarfile.open(tarfile_path, 'r')) as tar:
+        tar.extractall(path=spack.store.layout.root)
+    shutil.move(extracted_dir, spec.prefix)
+
+    os.remove(tarfile_path)
+    os.remove(specfile_path)
 
     try:
         relocate_package(spec, allow_root)
