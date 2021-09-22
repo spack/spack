@@ -281,17 +281,32 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # ###################### Dependencies ##########################
 
-    # Explicit dependency variants
     depends_on('adios2', when='+adios2')
     depends_on('blas')
     depends_on('boost', when='+boost')
     depends_on('cgns', when='+exodus')
     depends_on('hdf5+hl', when='+hdf5')
-    depends_on('hdf5~mpi', when='+hdf5~mpi')
-    depends_on('hdf5+mpi', when="+hdf5+mpi")
+    depends_on('hypre~internal-superlu~int64', when='+hypre')
+    depends_on('kokkos-nvcc-wrapper', when='+wrapper')
     depends_on('lapack')
+    depends_on('libx11', when='+x11')
+    depends_on('matio', when='+exodus')
+    depends_on('metis', when='+zoltan')
     depends_on('mpi', when='+mpi')
+    depends_on('netcdf-c', when="+exodus")
+    depends_on('parallel-netcdf', when='+exodus+mpi')
+    depends_on('parmetis', when='+mpi +zoltan')
+    depends_on('parmetis', when='+scorec')
+    depends_on('py-mpi4py', when='+mpi+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('python', when='+python')
+    depends_on('scalapack', when='+mumps')
+    depends_on('scalapack', when='+strumpack+mpi')
+    depends_on('strumpack+shared', when='+strumpack')
     depends_on('suite-sparse', when='+suite-sparse')
+    depends_on('superlu-dist', when='+superlu-dist')
+    depends_on('superlu@4.3 +pic', when='+superlu')
+    depends_on('swig', when='+python')
     depends_on('zlib', when="+zlib")
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
@@ -301,38 +316,22 @@ class Trilinos(CMakePackage, CudaPackage):
     # (or alike) and adding results to -DTrilinos_EXTRA_LINK_FLAGS together
     # with Blas and Lapack and ScaLAPACK and Blacs and -lgfortran and it may
     # work at the end. But let's avoid all this by simply using shared libs
-    depends_on('mumps@5.0:+mpi+shared+openmp', when='+mumps+openmp')
-    depends_on('mumps@5.0:+mpi+shared~openmp', when='+mumps~openmp')
-    depends_on('scalapack', when='+mumps')
-    depends_on('superlu-dist', when='+superlu-dist')
+    depends_on('mumps@5.0:+shared', when='+mumps')
+    for _flag in ('~mpi', '+mpi'):
+        depends_on('hdf5' + _flag, when='+hdf5' + _flag)
+        depends_on('mumps' + _flag, when='+mumps' + _flag)
+    for _flag in ('~openmp', '+openmp'):
+        depends_on('mumps' + _flag, when='+mumps' + _flag)
+
     depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
     depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
     depends_on('superlu-dist@5.4:6.2.0', when='@12.12.2:13.0.0+superlu-dist')
     depends_on('superlu-dist@6.3.0:', when='@13.0.1:99 +superlu-dist')
     depends_on('superlu-dist@develop', when='@master: +superlu-dist')
-    depends_on('superlu+pic@4.3', when='+superlu')
-    depends_on('strumpack+shared', when='+strumpack')
-    depends_on('scalapack', when='+strumpack+mpi')
-    # Trilinos can not be built against 64bit int hypre
-    depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@develop', when='@master: +hypre')
-    depends_on('python', when='+python')
-    depends_on('py-mpi4py', when='+mpi +python', type=('build', 'run'))
-    depends_on('py-numpy', when='+python', type=('build', 'run'))
-    depends_on('swig', when='+python')
-    depends_on('kokkos-nvcc-wrapper', when='+wrapper')
     depends_on('hwloc', when='@13: +kokkos')
     depends_on('hwloc+cuda', when='@13: +kokkos+cuda')
-
-    # Variant requirements from packages
-    depends_on('metis', when='+zoltan')
-    depends_on('libx11', when='+x11')
-    depends_on('matio', when='+exodus')
-    depends_on('netcdf-c', when="+exodus")
     depends_on('netcdf-c+mpi+parallel-netcdf', when="+exodus+mpi@12.12.1:")
-    depends_on('parallel-netcdf', when='+exodus+mpi')
-    depends_on('parmetis', when='+mpi +zoltan')
-    depends_on('parmetis', when='+scorec')
 
     # ###################### Patches ##########################
 
