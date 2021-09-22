@@ -611,7 +611,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             mkf.write(fflags('LIBS', libs))
 
             if '%intel' in spec:
-                mkf.write(fflags('LDFLAGS_C', ldflags + ['-nofor_main']))
+                mkf.write(fflags('LDFLAGS_C', ldflags + ['-nofor-main']))
 
             mkf.write('# CP2K-specific flags\n\n')
             mkf.write('GPUVER = {0}\n'.format(gpuver))
