@@ -40,7 +40,6 @@ class Onnx(CMakePackage):
     generator = 'Ninja'
 
     def cmake_args(self):
-        spec = self.spec
         # Try to get ONNX to use the same version of python as the spec is using
         args = ['-DPY_VERSION={}'.format(self.spec['python'].version.up_to(2))]
         return args
