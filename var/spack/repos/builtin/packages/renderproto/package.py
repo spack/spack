@@ -12,7 +12,7 @@ class Renderproto(AutotoolsPackage, XorgPackage):
     This extension defines the protcol for a digital image composition as
     the foundation of a new rendering model within the X Window System."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/proto/renderproto"
+    homepage = "https://cgit.freedesktop.org/xorg/proto/renderproto"
     xorg_mirror_path = "proto/renderproto-0.11.1.tar.gz"
 
     version('0.11.1', sha256='a0a4be3cad9381ae28279ba5582e679491fc2bec9aab8a65993108bf8dbce5fe')

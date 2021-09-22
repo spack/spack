@@ -133,17 +133,30 @@ def _parse_secret_keys_output(output):
 
 
 def _parse_public_keys_output(output):
+    """
+    Returns a list of public keys with their fingerprints
+    """
     keys = []
     found_pub = False
+    current_pub_key = ''
     for line in output.split('\n'):
         if found_pub:
             if line.startswith('fpr'):
-                keys.append(line.split(':')[9])
+                keys.append((current_pub_key, line.split(':')[9]))
                 found_pub = False
             elif line.startswith('ssb'):
                 found_pub = False
         elif line.startswith('pub'):
+            current_pub_key = line.split(':')[4]
             found_pub = True
+    return keys
+
+
+def _get_unimported_public_keys(output):
+    keys = []
+    for line in output.split('\n'):
+        if line.startswith('pub'):
+            keys.append(line.split(':')[4])
     return keys
 
 
@@ -182,13 +195,20 @@ def signing_keys(*args):
 
 
 @_autoinit
-def public_keys(*args):
+def public_keys_to_fingerprint(*args):
     """Return the keys that can be used to verify binaries."""
     output = GPG(
         '--list-public-keys', '--with-colons', '--fingerprint',
         *args, output=str
     )
     return _parse_public_keys_output(output)
+
+
+@_autoinit
+def public_keys(*args):
+    """Return a list of fingerprints"""
+    keys_and_fpr = public_keys_to_fingerprint(*args)
+    return [key_and_fpr[1] for key_and_fpr in keys_and_fpr]
 
 
 @_autoinit
@@ -208,12 +228,31 @@ def export_keys(location, keys, secret=False):
 
 @_autoinit
 def trust(keyfile):
-    """Import a public key from a file.
+    """Import a public key from a file and trust it.
 
     Args:
         keyfile (str): file with the public key
     """
+    # Get the public keys we are about to import
+    output = GPG('--with-colons', keyfile, output=str, error=str)
+    keys = _get_unimported_public_keys(output)
+
+    # Import them
     GPG('--import', keyfile)
+
+    # Set trust to ultimate
+    key_to_fpr = dict(public_keys_to_fingerprint())
+    for key in keys:
+        # Skip over keys we cannot find a fingerprint for.
+        if key not in key_to_fpr:
+            continue
+
+        fpr = key_to_fpr[key]
+        r, w = os.pipe()
+        with contextlib.closing(os.fdopen(r, 'r')) as r:
+            with contextlib.closing(os.fdopen(w, 'w')) as w:
+                w.write("{0}:6:\n".format(fpr))
+            GPG('--import-ownertrust', input=r)
 
 
 @_autoinit

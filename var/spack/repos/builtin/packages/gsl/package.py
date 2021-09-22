@@ -14,7 +14,7 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     number generators, special functions and least-squares fitting. There are
     over 1000 functions in total with an extensive test suite."""
 
-    homepage = "http://www.gnu.org/software/gsl"
+    homepage = "https://www.gnu.org/software/gsl"
     gnu_mirror_path = "gsl/gsl-2.3.tar.gz"
 
     version('2.7', sha256='efbbf3785da0e53038be7907500628b466152dbc3c173a87de1b5eba2e23602b')

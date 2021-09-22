@@ -58,7 +58,7 @@ class Grass(AutotoolsPackage):
     variant('geos',      default=False, description='Enable GEOS support')
     variant('x',         default=False, description='Use the X Window System')
 
-    # http://htmlpreview.github.io/?https://github.com/OSGeo/grass/blob/master/REQUIREMENTS.html
+    # https://htmlpreview.github.io/?https://github.com/OSGeo/grass/blob/master/REQUIREMENTS.html
     # General requirements
     depends_on('gmake@3.81:', type='build')
     depends_on('iconv')

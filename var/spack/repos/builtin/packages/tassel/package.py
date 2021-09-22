@@ -10,7 +10,7 @@ class Tassel(Package):
     """TASSEL is a software package to evaluate traits associations,
        evolutionary patterns, and linkage disequilibrium."""
 
-    homepage = "http://www.maizegenetics.net/tassel"
+    homepage = "https://www.maizegenetics.net/tassel"
     git      = "https://bitbucket.org/tasseladmin/tassel-5-standalone.git"
 
     version('2017-07-22', commit='ae96ae75c3c9a9e8026140b6c775fa4685bdf531')

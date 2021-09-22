@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
+from argparse import Namespace
 
 import pytest
 from six import StringIO
@@ -11,6 +12,7 @@ from six import StringIO
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
 
+import spack.cmd.env
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.modules
@@ -53,7 +55,7 @@ def check_viewdir_removal(viewdir):
 @pytest.fixture()
 def env_deactivate():
     yield
-    spack.environment._active_environment = None
+    ev._active_environment = None
     os.environ.pop('SPACK_ENV', None)
 
 
@@ -228,7 +230,7 @@ def test_activate_adds_transitive_run_deps_to_path(
     with e:
         install('depends-on-run-env')
 
-    cmds = spack.environment.activate(e)
+    cmds = ev.activate(e)
     assert 'DEPENDENCY_ENV_VAR=1' in cmds
 
 
@@ -1143,7 +1145,7 @@ def test_env_without_view_install(
     env('create', '--without-view', 'test')
 
     test_env = ev.read('test')
-    with pytest.raises(spack.environment.SpackEnvironmentError):
+    with pytest.raises(ev.SpackEnvironmentError):
         test_env.default_view
 
     view_dir = tmpdir.join('view')
@@ -1948,6 +1950,35 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
+@pytest.mark.parametrize('link_type', ['hardlink', 'copy', 'symlink'])
+def test_view_link_type(link_type, tmpdir, mock_fetch, mock_packages, mock_archive,
+                        install_mockery):
+    filename = str(tmpdir.join('spack.yaml'))
+    viewdir = str(tmpdir.join('view'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  specs:
+    - mpileaks
+  view:
+    default:
+      root: %s
+      link_type: %s""" % (viewdir, link_type))
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            install()
+
+        test = ev.read('test')
+
+        for spec in test.roots():
+            file_path = test.default_view.view()._root
+            file_to_test = os.path.join(
+                file_path, spec.name)
+            assert os.path.isfile(file_to_test)
+            assert os.path.islink(file_to_test)  == (link_type == 'symlink')
+
+
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,
                        install_mockery):
     filename = str(tmpdir.join('spack.yaml'))
@@ -2591,3 +2622,36 @@ def test_virtual_spec_concretize_together(tmpdir):
     e.concretize()
 
     assert any(s.package.provides('mpi') for _, s in e.concretized_specs())
+
+
+def test_query_develop_specs():
+    """Test whether a spec is develop'ed or not"""
+    env('create', 'test')
+    with ev.read('test') as e:
+        e.add('mpich')
+        e.add('mpileaks')
+        e.develop(Spec('mpich@1'), 'here', clone=False)
+
+        assert e.is_develop(Spec('mpich'))
+        assert not e.is_develop(Spec('mpileaks'))
+
+
+@pytest.mark.parametrize('method', [
+    spack.cmd.env.env_activate,
+    spack.cmd.env.env_deactivate
+])
+@pytest.mark.parametrize(
+    'env,no_env,env_dir',
+    [
+        ('b', False, None),
+        (None, True, None),
+        (None, False, 'path/'),
+    ])
+def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
+    """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
+    args = Namespace(shell='sh', activate_env='a',
+                     env=env, no_env=no_env, env_dir=env_dir)
+    with pytest.raises(SystemExit):
+        method(args)
+    _, err = capsys.readouterr()
+    assert 'is ambiguous' in err

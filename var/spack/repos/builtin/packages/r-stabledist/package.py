@@ -11,7 +11,7 @@ class RStabledist(RPackage):
     generation for (skew) stable distributions, using the parametrizations of
     Nolan."""
 
-    homepage = "http://www.rmetrics.org/"
+    homepage = "https://www.rmetrics.org/"
     url      = "https://cloud.r-project.org/src/contrib/stabledist_0.7-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/stabledist"
 

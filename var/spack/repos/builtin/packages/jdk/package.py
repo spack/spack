@@ -16,7 +16,7 @@ class Jdk(Package):
     form of a binary product aimed at Java developers. Includes a complete JRE
     plus tools for developing, debugging, and monitoring Java applications."""
 
-    homepage = "http://www.oracle.com/technetwork/java/javase/downloads/index.html"
+    homepage = "https://www.oracle.com/technetwork/java/javase/downloads/index.html"
 
     maintainers = ['justintoo']
 

@@ -17,8 +17,8 @@ configuration system behaves.  The scopes are:
 And corresponding :ref:`per-platform scopes <platform-scopes>`. Important
 functions in this module are:
 
-* :py:func:`get_config`
-* :py:func:`update_config`
+* :func:`~spack.config.Configuration.get_config`
+* :func:`~spack.config.Configuration.update_config`
 
 ``get_config`` reads in YAML data for a particular scope and returns
 it. Callers can then modify the data and write it back with
@@ -442,7 +442,8 @@ class Configuration(object):
 
     @_config_mutator
     def remove_scope(self, scope_name):
-        return self.scopes.pop(scope_name)
+        """Remove scope by name; has no effect when ``scope_name`` does not exist"""
+        return self.scopes.pop(scope_name, None)
 
     @property
     def file_scopes(self):
@@ -536,7 +537,7 @@ class Configuration(object):
             msg = ('The "{0}" section of the configuration needs to be written'
                    ' to disk, but is currently using a deprecated format. '
                    'Please update it using:\n\n'
-                   '\tspack config [--scope=<scope] update {0}\n\n'
+                   '\tspack config [--scope=<scope>] update {0}\n\n'
                    'Note that previous versions of Spack will not be able to '
                    'use the updated configuration.')
             msg = msg.format(section)
@@ -722,7 +723,7 @@ def override(path_or_scope, value=None):
 
     Arguments:
         path_or_scope (ConfigScope or str): scope or single option to override
-        value (object, optional): value for the single option
+        value (object or None): value for the single option
 
     Temporarily push a scope on the current configuration, then remove it
     after the context completes. If a single option is provided, create
@@ -749,10 +750,11 @@ def override(path_or_scope, value=None):
         config.push_scope(overrides)
         config.set(path_or_scope, value, scope=scope_name)
 
-    yield config
-
-    scope = config.remove_scope(overrides.name)
-    assert scope is overrides
+    try:
+        yield config
+    finally:
+        scope = config.remove_scope(overrides.name)
+        assert scope is overrides
 
 
 #: configuration scopes added on the command line
@@ -1163,7 +1165,7 @@ def default_modify_scope(section='config'):
     priority scope.
 
     Arguments:
-        section (boolean): Section for which to get the default scope.
+        section (bool): Section for which to get the default scope.
             If this is not 'compilers', a general (non-platform) scope is used.
     """
     if section == 'compilers':
@@ -1238,11 +1240,12 @@ def use_configuration(*scopes_or_paths):
 
     saved_config, config = config, configuration
 
-    yield configuration
-
-    # Restore previous config files
-    spack.compilers._cache_config_file = saved_compiler_cache
-    config = saved_config
+    try:
+        yield configuration
+    finally:
+        # Restore previous config files
+        spack.compilers._cache_config_file = saved_compiler_cache
+        config = saved_config
 
 
 @llnl.util.lang.memoized

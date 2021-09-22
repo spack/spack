@@ -12,7 +12,7 @@ class Quartz(MavenPackage):
     application - from the smallest stand-alone application
     to the largest e-commerce system."""
 
-    homepage = "http://www.quartz-scheduler.org/"
+    homepage = "https://www.quartz-scheduler.org/"
     url      = "https://github.com/quartz-scheduler/quartz/archive/v2.3.2.tar.gz"
 
     version('2.3.2', sha256='058c64777956aeaad3e79e2307f0f512c66d29acf026ea8373ad359050f6856c')

@@ -18,7 +18,7 @@ def prefix_inspections(platform):
     """Get list of prefix inspections for platform
 
     Arguments:
-        platform (string): the name of the platform to consider. The platform
+        platform (str): the name of the platform to consider. The platform
             determines what environment variables Spack will use for some
             inspections.
 

@@ -45,6 +45,8 @@ JOB_RETRY_CONDITIONS = [
 ]
 
 SPACK_PR_MIRRORS_ROOT_URL = 's3://spack-binaries-prs'
+SPACK_SHARED_PR_MIRROR_URL = url_util.join(SPACK_PR_MIRRORS_ROOT_URL,
+                                           'shared_pr_mirror')
 TEMP_STORAGE_MIRROR_NAME = 'ci_temporary_mirror'
 
 spack_gpg = spack.main.SpackCommand('gpg')
@@ -612,11 +614,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         'strip-compilers': False,
     })
 
-    # Add this mirror if it's enabled, as some specs might be up to date
-    # here and thus not need to be rebuilt.
+    # Add per-PR mirror (and shared PR mirror) if enabled, as some specs might
+    # be up to date in one of those and thus not need to be rebuilt.
     if pr_mirror_url:
         spack.mirror.add(
             'ci_pr_mirror', pr_mirror_url, cfg.default_modify_scope())
+        spack.mirror.add('ci_shared_pr_mirror',
+                         SPACK_SHARED_PR_MIRROR_URL,
+                         cfg.default_modify_scope())
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
@@ -871,6 +876,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             tty.debug(debug_msg)
 
                 if prune_dag and not rebuild_spec:
+                    tty.debug('Pruning spec that does not need to be rebuilt.')
                     continue
 
                 # Check if this spec is in our list of known failures, now that
@@ -917,7 +923,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     bc_root = os.path.join(
                         local_mirror_dir, 'build_cache')
                     artifact_paths.extend([os.path.join(bc_root, p) for p in [
-                        bindist.tarball_name(release_spec, '.spec.yaml'),
+                        bindist.tarball_name(release_spec, '.spec.json'),
                         bindist.tarball_name(release_spec, '.cdashid'),
                         bindist.tarball_directory_name(release_spec),
                     ]])
@@ -1316,17 +1322,20 @@ def relate_cdash_builds(spec_map, cdash_base_url, job_build_id, cdash_project,
 
         request = Request(cdash_api_url, data=enc_data, headers=headers)
 
-        response = opener.open(request)
-        response_code = response.getcode()
+        try:
+            response = opener.open(request)
+            response_code = response.getcode()
 
-        if response_code != 200 and response_code != 201:
-            msg = 'Relate builds ({0} -> {1}) failed (resp code = {2})'.format(
-                job_build_id, dep_build_id, response_code)
-            tty.warn(msg)
-            return
+            if response_code != 200 and response_code != 201:
+                msg = 'Relate builds ({0} -> {1}) failed (resp code = {2})'.format(
+                    job_build_id, dep_build_id, response_code)
+                tty.warn(msg)
+                return
 
-        response_text = response.read()
-        tty.debug('Relate builds response: {0}'.format(response_text))
+            response_text = response.read()
+            tty.debug('Relate builds response: {0}'.format(response_text))
+        except Exception as e:
+            print("Relating builds in CDash failed: {0}".format(e))
 
 
 def write_cdashid_to_mirror(cdashid, spec, mirror_url):
@@ -1373,13 +1382,13 @@ def read_cdashid_from_mirror(spec, mirror_url):
     return int(contents)
 
 
-def push_mirror_contents(env, spec, yaml_path, mirror_url, sign_binaries):
+def push_mirror_contents(env, spec, specfile_path, mirror_url, sign_binaries):
     try:
         unsigned = not sign_binaries
         tty.debug('Creating buildcache ({0})'.format(
             'unsigned' if unsigned else 'signed'))
         spack.cmd.buildcache._createtarball(
-            env, spec_yaml=yaml_path, add_deps=False,
+            env, spec_file=specfile_path, add_deps=False,
             output_location=mirror_url, force=True, allow_root=True,
             unsigned=unsigned)
     except Exception as inst:

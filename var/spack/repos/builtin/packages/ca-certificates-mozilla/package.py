@@ -14,6 +14,8 @@ class CaCertificatesMozilla(Package):
 
     maintainers = ['haampie']
 
+    version('2021-07-05', sha256='a3b534269c6974631db35f952e8d7c7dbf3d81ab329a232df575c2661de1214a', expand=False)
+    version('2021-05-25', sha256='3a32ad57e7f5556e36ede625b854057ac51f996d59e0952c207040077cbe48a9', expand=False)
     version('2021-04-13', sha256='533610ad2b004c1622a40622f86ced5e89762e1c0e4b3ae08b31b240d863e91f', expand=False)
     version('2021-01-19', sha256='e010c0c071a2c79a76aa3c289dc7e4ac4ed38492bfda06d766a80b707ebd2f29', expand=False)
     version('2020-12-08', sha256='313d562594ebd07846ad6b840dd18993f22e0f8b3f275d9aacfae118f4f00fb7', expand=False)

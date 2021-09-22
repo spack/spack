@@ -10,7 +10,7 @@ class Iegenlib(CMakePackage):
     """Inspector/Executor Generation Library for manipulating sets
        and relations with uninterpreted function symbols. """
 
-    homepage = "http://github.com/CompOpt4Apps/IEGenLib"
+    homepage = "https://github.com/CompOpt4Apps/IEGenLib"
     git      = "https://github.com/CompOpt4Apps/IEGenLib.git"
     url      = "https://github.com/CompOpt4Apps/IEGenLib/archive/fc479ee6ff01dba26beffc1dc6bacdba03262138.zip"
 

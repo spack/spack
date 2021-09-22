@@ -13,7 +13,7 @@ class Oclint(Package):
        reducing defects by inspecting C, C++ and Objective-C code and
        looking for potential problems"""
 
-    homepage = "http://oclint.org/"
+    homepage = "https://oclint.org/"
     url      = "https://github.com/oclint/oclint/archive/v0.13.tar.gz"
 
     version('0.13', sha256='a0fd188673863e6357d6585b9bb9c3affe737df134b9383a1a5ed021d09ed848')
@@ -34,7 +34,7 @@ class Oclint(Package):
 
     def install(self, spec, prefix):
         # Build from source via directions from
-        # http://docs.oclint.org/en/stable/intro/build.html,
+        # https://docs.oclint.org/en/stable/intro/build.html,
         cd('oclint-scripts')
 
         # ...but instead of using oclint-scripts/make, execute the

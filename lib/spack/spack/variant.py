@@ -94,8 +94,8 @@ class Variant(object):
         exception if any error is found.
 
         Args:
-            vspec (VariantSpec): instance to be validated
-            pkg (Package): the package that required the validation,
+            vspec (Variant): instance to be validated
+            pkg (spack.package.Package): the package that required the validation,
                 if available
 
         Raises:
@@ -254,7 +254,7 @@ class AbstractVariant(object):
         the variant.
 
         Returns:
-            tuple of str: values stored in the variant
+            tuple: values stored in the variant
         """
         return self._value
 
@@ -296,7 +296,7 @@ class AbstractVariant(object):
         """Returns an instance of a variant equivalent to self
 
         Returns:
-            any variant type: a copy of self
+            AbstractVariant: a copy of self
 
         >>> a = MultiValuedVariant('foo', True)
         >>> b = a.copy()
@@ -667,7 +667,7 @@ class DisjointSetsOfValues(Sequence):
     and therefore no other set can contain the item ``'none'``.
 
     Args:
-        *sets (list of tuples): mutually exclusive sets of values
+        *sets (list): mutually exclusive sets of values
     """
 
     _empty_set = set(('none',))

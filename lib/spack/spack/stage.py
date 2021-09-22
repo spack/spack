@@ -18,6 +18,7 @@ from typing import Dict  # novm
 
 from six import iteritems, string_types
 
+import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     can_access,
@@ -29,7 +30,6 @@ from llnl.util.filesystem import (
 )
 
 import spack.caches
-import spack.cmd
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
@@ -565,8 +565,9 @@ class Stage(object):
         """Perform a fetch if the resource is not already cached
 
         Arguments:
-            mirror (MirrorCache): the mirror to cache this Stage's resource in
-            stats (MirrorStats): this is updated depending on whether the
+            mirror (spack.caches.MirrorCache): the mirror to cache this Stage's
+                resource in
+            stats (spack.mirror.MirrorStats): this is updated depending on whether the
                 caching operation succeeded or failed
         """
         if isinstance(self.default_fetcher, fs.BundleFetchStrategy):
@@ -835,7 +836,7 @@ def get_checksums_for_versions(
     Args:
         url_dict (dict): A dictionary of the form: version -> URL
         name (str): The name of the package
-        first_stage_function (callable): function that takes a Stage and a URL;
+        first_stage_function (typing.Callable): function that takes a Stage and a URL;
             this is run on the stage of the first URL downloaded
         keep_stage (bool): whether to keep staging area when command completes
         batch (bool): whether to ask user how many versions to fetch (false)
@@ -856,7 +857,7 @@ def get_checksums_for_versions(
     tty.msg('Found {0} version{1} of {2}:'.format(
             num_ver, '' if num_ver == 1 else 's', name),
             '',
-            *spack.cmd.elide_list(
+            *llnl.util.lang.elide_list(
                 ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
                  for v in sorted_versions]))
     print()

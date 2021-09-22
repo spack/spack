@@ -636,7 +636,7 @@ def get_name(args):
     provided, extract the name from that. Otherwise, use a default.
 
     Args:
-        args (param argparse.Namespace): The arguments given to
+        args (argparse.Namespace): The arguments given to
             ``spack create``
 
     Returns:
@@ -709,8 +709,7 @@ def get_versions(args, name):
         name (str): The name of the package
 
     Returns:
-        str and BuildSystemGuesser: Versions and hashes, and a
-            BuildSystemGuesser object
+        tuple: versions and hashes, and a BuildSystemGuesser object
     """
 
     # Default version with hash
@@ -794,7 +793,8 @@ def get_repository(args, name):
         name (str): The name of the package to create
 
     Returns:
-        Repo: A Repo object capable of determining the path to the package file
+        spack.repo.Repo: A Repo object capable of determining the path to the
+            package file
     """
     spec = Spec(name)
     # Figure out namespace for spec

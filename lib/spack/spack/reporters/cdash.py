@@ -425,18 +425,21 @@ class CDash(Reporter):
             if self.authtoken:
                 request.add_header('Authorization',
                                    'Bearer {0}'.format(self.authtoken))
-            # By default, urllib2 only support GET and POST.
-            # CDash needs expects this file to be uploaded via PUT.
-            request.get_method = lambda: 'PUT'
-            response = opener.open(request)
-            if self.current_package_name not in self.buildIds:
-                resp_value = response.read()
-                if isinstance(resp_value, bytes):
-                    resp_value = resp_value.decode('utf-8')
-                match = self.buildid_regexp.search(resp_value)
-                if match:
-                    buildid = match.group(1)
-                    self.buildIds[self.current_package_name] = buildid
+            try:
+                # By default, urllib2 only support GET and POST.
+                # CDash needs expects this file to be uploaded via PUT.
+                request.get_method = lambda: 'PUT'
+                response = opener.open(request)
+                if self.current_package_name not in self.buildIds:
+                    resp_value = response.read()
+                    if isinstance(resp_value, bytes):
+                        resp_value = resp_value.decode('utf-8')
+                    match = self.buildid_regexp.search(resp_value)
+                    if match:
+                        buildid = match.group(1)
+                        self.buildIds[self.current_package_name] = buildid
+            except Exception as e:
+                print("Upload to CDash failed: {0}".format(e))
 
     def finalize_report(self):
         if self.buildIds:

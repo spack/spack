@@ -18,7 +18,12 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
     patch('gnulib-pgi.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')
+    # The NVIDIA compilers do not currently support some GNU builtins.
+    # Detect this case and use the fallback path.
     patch('nvhpc.patch', when='@1.4.18 %nvhpc')
+    patch('nvhpc-1.4.19.patch', when='@1.4.19 %nvhpc')
+    # Workaround bug where __LONG_WIDTH__ is not defined
+    patch('nvhpc-long-width.patch', when='@1.4.19 %nvhpc')
     patch('oneapi.patch', when='@1.4.18 %oneapi')
     # from: https://github.com/Homebrew/homebrew-core/blob/master/Formula/m4.rb
     # Patch credit to Jeremy Huddleston Sequoia <jeremyhu@apple.com>
@@ -28,6 +33,12 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     patch('secure_snprintf.patch', when='@:1.4.18 os=bigsur')
     # https://bugzilla.redhat.com/show_bug.cgi?id=1573342
     patch('https://src.fedoraproject.org/rpms/m4/raw/5d147168d4b93f38a4833f5dd1d650ad88af5a8a/f/m4-1.4.18-glibc-change-work-around.patch', sha256='fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8', when='@1.4.18')
+    # from: https://www.mail-archive.com/m4-patches@gnu.org/msg01208.html
+    # tests: Fix failing test checks/198.sysval with upstream patch for doc/m4.texi
+    patch('http://git.savannah.gnu.org/cgit/m4.git/patch/?id=a1354086',
+          sha256='bfdffa7c2eb01021d5849b36972c069693654ad826c1a20b53534009a4ec7a89', when='@1.4.19')
+    patch('http://git.savannah.gnu.org/cgit/m4.git/patch/?id=cd7f4d15',
+          sha256='9dc5fbd0d5cb1037ab1e6d0ecc74a30df218d0a94bdd5a02759a97f62daca573', when='@1.4.19')
 
     variant('sigsegv', default=True,
             description="Build the libsigsegv dependency")
@@ -39,6 +50,12 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     tags = ['build-tools']
 
     executables = ['^g?m4$']
+
+    @when('@1.4.19')
+    def patch(self):
+        """ skip texinfo of m4.info for patched m4.texi (patched only a test in it) """
+        touch('doc/m4.info')
+        touch('doc/stamp-vti')
 
     @classmethod
     def determine_version(cls, exe):
@@ -81,7 +98,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         else:
             args.append('--without-libsigsegv-prefix')
 
-        # http://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
+        # https://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
         arch = spec.architecture
         if (arch.platform == 'darwin' and arch.os == 'sierra' and
                 '%gcc' in spec):

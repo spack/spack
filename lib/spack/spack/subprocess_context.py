@@ -139,16 +139,15 @@ def store_patches():
     class_patches = list()
     if not patches:
         return TestPatches(list(), list())
-    for patch in patches:
-        for target, name, _ in patches:
-            if isinstance(target, ModuleType):
-                new_val = getattr(target, name)
-                module_name = target.__name__
-                module_patches.append((module_name, name, new_val))
-            elif isinstance(target, type):
-                new_val = getattr(target, name)
-                class_fqn = '.'.join([target.__module__, target.__name__])
-                class_patches.append((class_fqn, name, new_val))
+    for target, name, _ in patches:
+        if isinstance(target, ModuleType):
+            new_val = getattr(target, name)
+            module_name = target.__name__
+            module_patches.append((module_name, name, new_val))
+        elif isinstance(target, type):
+            new_val = getattr(target, name)
+            class_fqn = '.'.join([target.__module__, target.__name__])
+            class_patches.append((class_fqn, name, new_val))
 
     return TestPatches(module_patches, class_patches)
 

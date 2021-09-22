@@ -12,8 +12,8 @@ class NetcdfCxx(AutotoolsPackage):
     maintained by Unidata.  Developers should migrate to current
     NetCDF C++ bindings, in Spack package netcdf-cxx4."""
 
-    homepage = "http://www.unidata.ucar.edu/software/netcdf"
-    url      = "http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-cxx-4.2.tar.gz"
+    homepage = "https://www.unidata.ucar.edu/software/netcdf"
+    url      = "https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-cxx-4.2.tar.gz"
 
     version('4.2', sha256='95ed6ab49a0ee001255eac4e44aacb5ca4ea96ba850c08337a3e4c9a0872ccd1')
 

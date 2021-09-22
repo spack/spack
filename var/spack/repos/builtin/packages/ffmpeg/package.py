@@ -11,11 +11,11 @@ class Ffmpeg(AutotoolsPackage):
     convert and stream audio and video."""
 
     homepage = "https://ffmpeg.org"
-    url      = "http://ffmpeg.org/releases/ffmpeg-4.1.1.tar.bz2"
+    url      = "https://ffmpeg.org/releases/ffmpeg-4.1.1.tar.bz2"
 
     maintainers = ['xjrc']
 
-    version('4.3.2', sha256='ab3a6d6a70358ba0a5f67f37f91f6656b7302b02e98e5b8c846c16763c99913a')
+    version('4.3.2',  sha256='ab3a6d6a70358ba0a5f67f37f91f6656b7302b02e98e5b8c846c16763c99913a')
     version('4.2.2',  sha256='b620d187c26f76ca19e74210a0336c3b8380b97730df5cdf45f3e69e89000e5c')
     version('4.1.1',  sha256='0cb40e3b8acaccd0ecb38aa863f66f0c6e02406246556c2992f67bf650fab058')
     version('4.1',    sha256='b684fb43244a5c4caae652af9022ed5d85ce15210835bce054a33fb26033a1a5')
@@ -52,6 +52,7 @@ class Ffmpeg(AutotoolsPackage):
     variant('libspeex', default=False, description='Speex de/encoding')
     variant('libssh', default=False, description='SFTP protocol')
     variant('libvorbis', default=False, description='Vorbis en/decoding')
+    variant('libvpx', default=False, description='VP9 en/decoding')
     variant('libwebp', default=False, description='WebP encoding via libwebp')
     # TODO: There is an issue with the spack headers property in the libxml2
     # package recipe. Comment out the libxml2 variant until that is resolved.
@@ -77,6 +78,7 @@ class Ffmpeg(AutotoolsPackage):
     depends_on('lame', when='+libmp3lame')
     depends_on('libssh', when='+libssh')
     depends_on('libvorbis', when='+libvorbis')
+    depends_on('libvpx', when='+libvpx')
     depends_on('libwebp', when='+libwebp')
     # TODO: enable libxml2 when libxml2 header issue is resolved
     # depends_on('libxml2', when='+libxml2')
@@ -164,6 +166,7 @@ class Ffmpeg(AutotoolsPackage):
             'libopus',
             'libspeex',
             'libvorbis',
+            'libvpx',
             'avresample',
             'openssl',
             'shared',

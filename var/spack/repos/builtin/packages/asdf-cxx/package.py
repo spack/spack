@@ -45,5 +45,6 @@ class AsdfCxx(CMakePackage):
     # An error in the cmake script requires swig all the time, not only when
     # Python bindings are used
     depends_on('swig @3.0.0:3.999.999', type='build')
-    depends_on('yaml-cpp')
+    # Neither earlier nor later versions of yaml-cpp work
+    depends_on('yaml-cpp @0.6.3')
     depends_on('zlib')

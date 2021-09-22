@@ -29,6 +29,7 @@ Each of the four classes needs to be sub-classed when implementing a new
 module type.
 """
 import collections
+import contextlib
 import copy
 import datetime
 import inspect
@@ -41,6 +42,7 @@ import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
 import spack.build_environment as build_environment
+import spack.config
 import spack.environment as ev
 import spack.error
 import spack.paths
@@ -698,7 +700,11 @@ class BaseContext(tengine.Context):
             if use_view is True:
                 use_view = ev.default_view_name
 
-            env = ev.get_env({}, 'post_env_write_hook', required=True)
+            env = ev.active_environment()
+            if not env:
+                raise ev.SpackEnvironmentViewError("Module generation with views "
+                                                   "requires active environment")
+
             view = env.views[use_view]
 
             spec.prefix = view.get_projection_for_spec(spec)
@@ -899,6 +905,19 @@ class BaseModuleFileWriter(object):
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
+
+
+@contextlib.contextmanager
+def disable_modules():
+    """Disable the generation of modulefiles within the context manager."""
+    data = {
+        'modules:': {
+            'enable': []
+        }
+    }
+    disable_scope = spack.config.InternalConfigScope('disable_modules', data=data)
+    with spack.config.override(disable_scope):
+        yield
 
 
 class ModulesError(spack.error.SpackError):

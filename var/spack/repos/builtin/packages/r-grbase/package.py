@@ -24,7 +24,7 @@ class RGrbase(RPackage):
     and 'RBGL' are installed from 'bioconductor'; for installation instructions
     please refer to the web page given below."""
 
-    homepage = "http://people.math.aau.dk/~sorenh/software/gR/"
+    homepage = "https://people.math.aau.dk/~sorenh/software/gR/"
     url      = "https://cloud.r-project.org/src/contrib/gRbase_1.8-3.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gRbase"
 

@@ -28,7 +28,7 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
     Args:
         stage (spack.stage.Stage): stage with code that will be patched
         patch_path (str): filesystem location for the patch to apply
-        level (int, optional): patch level (default 1)
+        level (int or None): patch level (default 1)
         working_dir (str): relative path *within* the stage to change to
             (default '.')
     """

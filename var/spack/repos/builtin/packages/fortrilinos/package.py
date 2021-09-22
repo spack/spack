@@ -55,7 +55,7 @@ class Fortrilinos(CMakePackage):
     depends_on('trilinos@12.17.1', when='@2.0.dev1')
 
     # Baseline trilinos dependencies
-    depends_on('trilinos+teuchos gotype=long_long')
+    depends_on('trilinos gotype=long_long')
     # Full trilinos dependencies
     depends_on('trilinos+amesos2+anasazi+belos+kokkos+ifpack2+muelu+nox+tpetra'
                '+stratimikos', when='+hl')

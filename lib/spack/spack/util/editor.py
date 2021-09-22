@@ -64,7 +64,7 @@ def editor(*args, **kwargs):
     searching the full list above, we'll raise an error.
 
     Arguments:
-        args (list of str): args to pass to editor
+        args (list): args to pass to editor
 
     Optional Arguments:
         _exec_func (function): invoke this function instead of ``os.execv()``

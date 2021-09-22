@@ -279,3 +279,8 @@ def test_s3_url_exists(monkeypatch, capfd):
 
     fake_s3_url_does_not_exist = 's3://my-bucket/subdirectory/my-notfound-file'
     assert(not spack.util.web.url_exists(fake_s3_url_does_not_exist))
+
+
+def test_s3_url_parsing():
+    assert(spack.util.s3._parse_s3_endpoint_url("example.com") == 'https://example.com')
+    assert(spack.util.s3._parse_s3_endpoint_url("http://example.com") == 'http://example.com')

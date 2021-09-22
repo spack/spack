@@ -155,7 +155,7 @@ environment variables:
         spack.config.set('config:fail_fast', True, scope='command_line')
 
     # Get specs to test
-    env = ev.get_env(args, 'test')
+    env = ev.active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
@@ -221,7 +221,7 @@ def test_list(args):
 
     # TODO: This can be extended to have all of the output formatting options
     # from `spack find`.
-    env = ev.get_env(args, 'test')
+    env = ev.active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.store.db.query(hashes=hashes)

@@ -9,7 +9,7 @@ from spack import *
 class PerlSubExporter(PerlPackage):
     """A sophisticated exporter for custom-built routines"""
 
-    homepage = "http://search.cpan.org/~rjbs/Sub-Exporter-0.987/lib/Sub/Exporter.pm"
+    homepage = "https://metacpan.org/pod/Sub::Exporter"
     url      = "http://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Sub-Exporter-0.987.tar.gz"
 
     version('0.987', sha256='543cb2e803ab913d44272c7da6a70bb62c19e467f3b12aaac4c9523259b083d6')

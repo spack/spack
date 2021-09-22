@@ -27,6 +27,7 @@ class Phist(CMakePackage):
 
     version('develop', branch='devel')
     version('master', branch='master')
+    version('1.9.5', sha256='24faa3373003f185c82a658c510e36cba9acc4110eb60cbfded9de370ae9ea32')
     version('1.9.4', sha256='9dde3ca0480358fa0877ec8424aaee4011c5defc929219a5930388a7cdb4c8a6')
     version('1.9.3', sha256='3ab7157e9f535a4c8537846cb11b516271ef13f82d0f8ebb7f96626fb9ab86cf')
     version('1.9.2', sha256='289678fa7172708f5d32d6bd924c8fdfe72b413bba5bbb8ce6373c85c5ec5ae5')
@@ -124,7 +125,7 @@ class Phist(CMakePackage):
     depends_on('eigen', when='kernel_lib=eigen')
     depends_on('ghost', when='kernel_lib=ghost')
 
-    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
+    depends_on('trilinos+anasazi+belos', when='+trilinos')
     depends_on('parmetis+int64', when='+parmetis+int64')
     depends_on('parmetis~int64', when='+parmetis~int64')
 

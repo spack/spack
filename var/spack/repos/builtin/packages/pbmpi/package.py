@@ -10,7 +10,7 @@ class Pbmpi(MakefilePackage):
     """A Bayesian software for phylogenetic reconstruction using mixture models
     """
 
-    homepage = "http://megasun.bch.umontreal.ca/People/lartillot/www/index.htm"
+    homepage = "https://megasun.bch.umontreal.ca/People/lartillot/www/index.htm"
     git      = "https://github.com/bayesiancook/pbmpi.git"
 
     version('partition', branch='partition')

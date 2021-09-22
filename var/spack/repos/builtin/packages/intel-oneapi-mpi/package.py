@@ -13,7 +13,7 @@ from spack import *
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
     """Intel oneAPI MPI."""
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2', ]
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 

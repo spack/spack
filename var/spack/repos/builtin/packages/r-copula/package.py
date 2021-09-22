@@ -22,7 +22,7 @@ class RCopula(RPackage):
     copula, smoothed versions, and non-parametric estimators of the Pickands
     dependence function."""
 
-    homepage = "http://copula.r-forge.r-project.org/"
+    homepage = "https://copula.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/copula_0.999-20.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/copula"
 

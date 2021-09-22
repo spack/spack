@@ -21,6 +21,7 @@ class Vtk(CMakePackage):
 
     maintainers = ['chuckatkins', 'danlipsa']
 
+    version('9.0.3', sha256='bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a')
     version('9.0.1', sha256='1b39a5e191c282861e7af4101eaa8585969a2de05f5646c9199a161213a622c7')
     version('9.0.0', sha256='15def4e6f84d72f82386617fe595ec124dda3cbd13ea19a0dcd91583197d8715')
     version('8.2.0', sha256='34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb')
@@ -43,6 +44,11 @@ class Vtk(CMakePackage):
     variant('mpi', default=True, description='Enable MPI support')
 
     patch('gcc.patch', when='@6.1.0')
+    # patch to fix some missing stl includes
+    # which lead to build errors on newer compilers
+    # version range to be updated once the linked patch is released
+    patch('https://gitlab.kitware.com/vtk/vtk/-/commit/e066c3f4fbbfe7470c6207db0fc3f3952db633c.diff',
+          when="@9:", sha256='0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d')
 
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change

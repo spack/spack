@@ -6,16 +6,14 @@
 from spack import *
 
 
-class Zstd(CMakePackage):
+class Zstd(MakefilePackage):
     """Zstandard, or zstd as short version, is a fast lossless compression
     algorithm, targeting real-time compression scenarios at zlib-level and
     better compression ratios."""
 
-    homepage = "http://facebook.github.io/zstd/"
+    homepage = "https://facebook.github.io/zstd/"
     url      = "https://github.com/facebook/zstd/archive/v1.4.3.tar.gz"
     git      = "https://github.com/facebook/zstd.git"
-
-    root_cmakelists_dir = 'build/cmake'
 
     maintainers = ['haampie']
 
@@ -33,28 +31,18 @@ class Zstd(CMakePackage):
     version('1.3.0', sha256='0fdba643b438b7cbce700dcc0e7b3e3da6d829088c63757a5984930e2f70b348')
     version('1.1.2', sha256='980b8febb0118e22f6ed70d23b5b3e600995dbf7489c1f6d6122c1411cdda8d8')
 
-    variant('shared', default=True, description='Build shared libraries')
-    variant('static', default=True, description='Build static libraries')
-    variant('programs', default=True, description='Build executables')
-    variant('legacy', default=False, description='Enable legacy support')
-    variant('zlib', default=False, description='Build programs with zlib support')
-    variant('lzma', default=False, description='Build programs with lzma support')
-    variant('lz4', default=False, description='Build programs with zlib support')
-    variant('multithread', default=True, description='Build with pthread support')
+    variant('programs', default=False, description='Build executables')
 
-    conflicts('+zlib', when='~programs', msg="zlib requires programs to be built")
-    conflicts('+lzma', when='~programs', msg="lzma requires programs to be built")
-    conflicts('+lz4', when='~programs', msg="lz4 requires programs to be built")
+    depends_on('zlib', when='+programs')
+    depends_on('lzma', when='+programs')
+    depends_on('lz4', when='+programs')
 
-    depends_on('zlib', when='+zlib')
-    depends_on('lzma', when='+lzma')
-    depends_on('lz4', when='+lz4')
+    def build(self, spec, prefix):
+        make('-C', 'lib')
+        if spec.variants['programs'].value:
+            make('-C', 'programs')
 
-    def cmake_args(self):
-        return [
-            self.define_from_variant('ZSTD_BUILD_PROGRAMS', 'programs'),
-            self.define_from_variant('ZSTD_BUILD_STATIC', 'static'),
-            self.define_from_variant('ZSTD_BUILD_SHARED', 'shared'),
-            self.define_from_variant('ZSTD_LEGACY_SUPPORT', 'legacy'),
-            self.define_from_variant('ZSTD_MULTITHREAD_SUPPORT', 'multithread')
-        ]
+    def install(self, spec, prefix):
+        make('-C', 'lib', 'install', 'PREFIX={0}'.format(prefix))
+        if spec.variants['programs'].value:
+            make('-C', 'programs', 'install', 'PREFIX={0}'.format(prefix))

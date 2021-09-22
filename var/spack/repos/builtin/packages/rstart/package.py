@@ -14,7 +14,7 @@ class Rstart(AutotoolsPackage, XorgPackage):
     This software has been deprecated in favor of the X11 forwarding
     provided in common ssh implementations."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/rstart"
+    homepage = "https://cgit.freedesktop.org/xorg/app/rstart"
     xorg_mirror_path = "app/rstart-1.0.5.tar.gz"
 
     version('1.0.5', sha256='5271c0c2675b4ad09aace7edddfdd137af10fc754afa6260d8eb5d0bba7098c7')

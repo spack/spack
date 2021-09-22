@@ -533,13 +533,15 @@ class log_output(object):
         # Sets a daemon that writes to file what it reads from a pipe
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
+            input_multiprocess_fd = None
             try:
-                input_multiprocess_fd = MultiProcessFd(
-                    os.dup(sys.stdin.fileno())
-                )
+                if sys.stdin.isatty():
+                    input_multiprocess_fd = MultiProcessFd(
+                        os.dup(sys.stdin.fileno())
+                    )
             except BaseException:
                 # just don't forward input if this fails
-                input_multiprocess_fd = None
+                pass
 
             with replace_environment(self.env):
                 self.process = multiprocessing.Process(

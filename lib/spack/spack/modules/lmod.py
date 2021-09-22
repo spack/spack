@@ -30,7 +30,7 @@ def configuration(module_set_name):
     return config
 
 
-#: Caches the configuration {spec_hash: configuration}
+# Caches the configuration {spec_hash: configuration}
 configuration_registry = {}  # type: Dict[str, Any]
 
 

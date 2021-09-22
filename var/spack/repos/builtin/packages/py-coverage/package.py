@@ -9,7 +9,7 @@ from spack import *
 class PyCoverage(PythonPackage):
     """ Testing coverage checker for python """
 
-    homepage = "http://nedbatchelder.com/code/coverage/"
+    homepage = "https://nedbatchelder.com/code/coverage/"
     pypi = "coverage/coverage-4.5.4.tar.gz"
 
     version('5.3', sha256='280baa8ec489c4f542f8940f9c4c2181f0306a8ee1a54eceba071a449fb870a0')

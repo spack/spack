@@ -11,7 +11,7 @@ class PyTomopy(PythonPackage):
     """TomoPy is an open-source Python package for tomographic data
        processing and image reconstruction."""
 
-    homepage = "http://tomopy.readthedocs.io/en/latest/index.html"
+    homepage = "https://tomopy.readthedocs.io/en/latest/index.html"
     url      = "https://github.com/tomopy/tomopy/archive/1.0.0.tar.gz"
 
     version('1.0.0', sha256='ee45f7a062e5a66d6f18a904d2e204e48d85a1ce1464156f9e2f6353057dfe4c')

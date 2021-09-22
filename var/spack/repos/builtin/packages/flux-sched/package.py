@@ -36,6 +36,7 @@ class FluxSched(AutotoolsPackage):
 
     depends_on("boost+graph@1.53.0,1.59.0:")
     depends_on("py-pyyaml")
+    depends_on("libedit")
     depends_on("libxml2@2.9.1:")
     depends_on("yaml-cpp")
     depends_on("uuid")

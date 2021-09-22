@@ -21,6 +21,7 @@ class Neuron(CMakePackage):
     maintainers = ['pramodk', 'nrnhines', 'iomaganaris', 'alexsavulescu']
 
     version('develop', branch='master', submodules='True')
+    version("8.0.0", tag="8.0.0", submodules='True')
     version("7.8.2", tag="7.8.2", submodules='True')
     version("7.8.1", tag="7.8.1", submodules='True')
 
@@ -43,6 +44,7 @@ class Neuron(CMakePackage):
     depends_on("ncurses")
     depends_on("python@2.7:", when="+python")
     depends_on("py-pytest",   when="+python+tests")
+    depends_on("py-mpi4py",   when="+mpi+python+tests")
     depends_on("readline")
     depends_on("caliper",     when="+caliper")
     depends_on("py-numpy",    type='run')

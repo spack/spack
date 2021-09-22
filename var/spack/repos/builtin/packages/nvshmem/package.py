@@ -41,44 +41,30 @@ class Nvshmem(MakefilePackage, CudaPackage):
     depends_on('nccl', when='+nccl')
 
     def setup_build_environment(self, env):
-        env.append_flags(
-            'CUDA_HOME', self.spec['cuda'].prefix)
-        env.append_flags(
-            'NVSHMEM_PREFIX', self.prefix)
+        env.set('CUDA_HOME', self.spec['cuda'].prefix)
+        env.set('NVSHMEM_PREFIX', self.prefix)
 
         if '+ucx' in self.spec:
-            env.append_flags(
-                'NVSHMEM_UCX_SUPPORT', '1')
-            env.append_flags(
-                'UCX_HOME', self.spec['ucx'].prefix)
+            env.set('NVSHMEM_UCX_SUPPORT', '1')
+            env.set('UCX_HOME', self.spec['ucx'].prefix)
 
         if '+gdrcopy' in self.spec:
-            env.append_flags(
-                'NVSHMEM_USE_GDRCOPY', '1')
-            env.append_flags(
-                'GDRCOPY_HOME', self.spec['gdrcopy'].prefix)
+            env.set('NVSHMEM_USE_GDRCOPY', '1')
+            env.set('GDRCOPY_HOME', self.spec['gdrcopy'].prefix)
 
         if '+nccl' in self.spec:
-            env.append_flags(
-                'NVSHMEM_USE_NCCL', '1')
-            env.append_flags(
-                'NCCL_HOME', self.spec['nccl'].prefix)
+            env.set('NVSHMEM_USE_NCCL', '1')
+            env.set('NCCL_HOME', self.spec['nccl'].prefix)
 
         if '+mpi' in self.spec:
-            env.append_flags(
-                'NVSHMEM_MPI_SUPPORT', '1')
-            env.append_flags(
-                'MPI_HOME', self.spec['mpi'].prefix)
+            env.set('NVSHMEM_MPI_SUPPORT', '1')
+            env.set('MPI_HOME', self.spec['mpi'].prefix)
 
             if self.spec.satisfies('^spectrum-mpi') or self.spec.satisfies('^openmpi'):
-                env.append_flags(
-                    'NVSHMEM_MPI_IS_OMPI', '1')
+                env.set('NVSHMEM_MPI_IS_OMPI', '1')
             else:
-                env.append_flags(
-                    'NVSHMEM_MPI_IS_OMPI', '0')
+                env.set('NVSHMEM_MPI_IS_OMPI', '0')
 
         if '+shmem' in self.spec:
-            env.append_flags(
-                'NVSHMEM_SHMEM_SUPPORT', '1')
-            env.append_flags(
-                'SHMEM_HOME', self.spec['mpi'].prefix)
+            env.set('NVSHMEM_SHMEM_SUPPORT', '1')
+            env.set('SHMEM_HOME', self.spec['mpi'].prefix)

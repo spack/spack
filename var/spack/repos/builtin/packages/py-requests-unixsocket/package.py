@@ -15,5 +15,6 @@ class PyRequestsUnixsocket(PythonPackage):
     version('0.2.0', sha256='9e5c1a20afc3cf786197ae59c79bcdb0e7565f218f27df5f891307ee8817c1ea')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-pbr', type='build')
     depends_on('py-requests@1.1:', type=('build', 'run'))
     depends_on('py-urllib3@1.8:', type=('build', 'run'))

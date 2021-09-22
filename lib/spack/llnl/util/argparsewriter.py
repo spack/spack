@@ -326,7 +326,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         """Returns the syntax needed to end a function definition.
 
         Parameters:
-            prog (str, optional): the command name
+            prog (str or None): the command name
 
         Returns:
             str: the function definition ending

@@ -12,7 +12,7 @@ from spack import *
 class IntelOneapiMkl(IntelOneApiLibraryPackage):
     """Intel oneAPI MKL."""
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html'
 

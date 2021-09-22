@@ -11,7 +11,7 @@ class NetcdfC(AutotoolsPackage):
     machine-independent data formats that support the creation, access, and
     sharing of array-oriented scientific data. This is the C distribution."""
 
-    homepage = "http://www.unidata.ucar.edu/software/netcdf"
+    homepage = "https://www.unidata.ucar.edu/software/netcdf"
     git      = "https://github.com/Unidata/netcdf-c.git"
     url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-c-4.7.3.tar.gz"
 

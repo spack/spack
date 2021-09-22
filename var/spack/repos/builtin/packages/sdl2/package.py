@@ -14,6 +14,7 @@ class Sdl2(CMakePackage):
     homepage = "https://wiki.libsdl.org/FrontPage"
     url      = "https://libsdl.org/release/SDL2-2.0.5.tar.gz"
 
+    version('2.0.14', sha256='d8215b571a581be1332d2106f8036fcb03d12a70bae01e20f424976d275432bc')
     version('2.0.5', sha256='442038cf55965969f2ff06d976031813de643af9c9edc9e331bd761c242e8785')
 
     depends_on('cmake@2.8.5:', type='build')

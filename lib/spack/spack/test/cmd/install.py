@@ -12,7 +12,6 @@ import time
 
 import pytest
 from six.moves import builtins
-from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fs
 
@@ -22,6 +21,7 @@ import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.package
+import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.spec import CompilerSpec, Spec
@@ -225,7 +225,7 @@ def test_install_overwrite(
 
 
 def test_install_overwrite_not_installed(
-        mock_packages, mock_archive, mock_fetch, config, install_mockery
+        mock_packages, mock_archive, mock_fetch, config, install_mockery,
 ):
     # Try to install a spec and then to reinstall it.
     spec = Spec('libdwarf')
@@ -235,6 +235,32 @@ def test_install_overwrite_not_installed(
 
     install('--overwrite', '-y', 'libdwarf')
     assert os.path.exists(spec.prefix)
+
+
+def test_install_commit(
+        mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+    """
+    Test installing a git package from a commit.
+
+    This ensures Spack appropriately associates commit versions with their
+    packages in time to do version lookups. Details of version lookup tested elsewhere
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase,
+                        'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    commit = commits[-1]
+    spec = spack.spec.Spec('git-test-commit@%s' % commit)
+    spec.concretize()
+    spec.package.do_install()
+
+    # Ensure first commit file contents were written
+    installed = os.listdir(spec.prefix.bin)
+    assert filename in installed
+    with open(spec.prefix.bin.join(filename), 'r') as f:
+        content = f.read().strip()
+    assert content == '[]'  # contents are weird for another test
 
 
 def test_install_overwrite_multiple(
@@ -312,7 +338,7 @@ def test_install_invalid_spec(invalid_spec):
         install(invalid_spec)
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('spec,concretize,error_code', [
     (Spec('mpi'), False, 1),
     (Spec('mpi'), True, 0),
@@ -416,7 +442,7 @@ def test_junit_output_with_errors(
     assert 'error message="{0}"'.format(msg) in content
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('clispecs,filespecs', [
     [[],                  ['mpi']],
     [[],                  ['mpi', 'boost']],
@@ -491,7 +517,7 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with pytest.raises((HTTPError, URLError)):
+            with pytest.raises(SpackError):
                 install(
                     '--log-format=cdash',
                     '--log-file=cdash_reports',
@@ -963,11 +989,16 @@ def test_install_fails_no_args_suggests_env_activation(tmpdir):
     assert 'using the `spack.yaml` in this directory' in output
 
 
+default_full_hash = spack.spec.Spec.full_hash
+
+
 def fake_full_hash(spec):
     # Generate an arbitrary hash that is intended to be different than
     # whatever a Spec reported before (to test actions that trigger when
     # the hash changes)
-    return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+    if spec.name == 'libdwarf':
+        return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+    return default_full_hash(spec)
 
 
 def test_cache_install_full_hash_match(

@@ -84,6 +84,10 @@ class CrayLibsci(Package):
     def scalapack_libs(self):
         return self.blas_libs
 
+    @property
+    def libs(self):
+        return self.blas_libs
+
     def install(self, spec, prefix):
         raise InstallError(
             self.spec.format('{name} is not installable, you need to specify '

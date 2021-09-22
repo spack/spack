@@ -9,7 +9,7 @@ from spack import *
 class PyPymumps(PythonPackage):
     """Python bindings for MUMPS, a parallel sparse direct solver"""
 
-    homepage = "http://github.com/pymumps/pymumps"
+    homepage = "https://github.com/pymumps/pymumps"
     pypi = "PyMUMPS/PyMUMPS-0.3.2.tar.gz"
     git = "https://github.com/PyMumps/pymumps.git"
 

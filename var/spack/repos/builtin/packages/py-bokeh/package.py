@@ -9,7 +9,7 @@ from spack import *
 class PyBokeh(PythonPackage):
     """Statistical and novel interactive HTML plots for Python"""
 
-    homepage = "http://github.com/bokeh/bokeh"
+    homepage = "https://github.com/bokeh/bokeh"
     pypi = "bokeh/bokeh-0.12.2.tar.gz"
 
     version('1.3.4', sha256='e2d97bed5b199a10686486001fed5c854e4c04ebe28859923f27c52b93904754')

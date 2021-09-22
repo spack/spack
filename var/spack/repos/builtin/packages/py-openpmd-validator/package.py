@@ -11,7 +11,7 @@ class PyOpenpmdValidator(PythonPackage):
 
     openPMD is an open standard for particle-mesh data files."""
 
-    homepage = "http://www.openPMD.org"
+    homepage = "https://www.openPMD.org"
     url      = "https://github.com/openPMD/openPMD-validator/archive/1.0.0.2.tar.gz"
     maintainers = ['ax3l']
 

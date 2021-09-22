@@ -19,7 +19,8 @@ else:
 import llnl.util.filesystem
 
 __all__ = [
-    'filter_compiler_wrappers'
+    'filter_compiler_wrappers',
+    'PackageMixinsMeta',
 ]
 
 

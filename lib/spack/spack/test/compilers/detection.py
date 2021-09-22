@@ -345,6 +345,11 @@ def test_cray_frontend_compiler_detection(
 
 @pytest.mark.parametrize('version_str,expected_version', [
     # This applies to C,C++ and FORTRAN compiler
+    ('AMD clang version 12.0.0 (CLANG: AOCC_3_1_0-Build#126 2021_06_07)'
+     '(based on LLVM Mirror.Version.12.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '3.1.0'
+     ),
     ('AMD clang version 12.0.0 (CLANG: AOCC_3.0.0-Build#78 2020_12_10)'
      '(based on LLVM Mirror.Version.12.0.0)\n'
      'Target: x86_64-unknown-linux-gnu\n'

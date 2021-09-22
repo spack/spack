@@ -17,10 +17,14 @@ class PyCinemasci(PythonPackage):
 
     version('1.3', sha256='c024ca9791de9d78e5dad3fd11e8f87d8bc1afa5830f2697d7ec4116a5d23c20')
 
-    depends_on('hdf5~mpi')
+    variant('mpi', default=False, description='Enable MPI')
+
+    depends_on('hdf5 ~mpi', when='~mpi')
+    depends_on('hdf5 +mpi', when='+mpi')
     depends_on('pil', type=('build', 'run'))
     depends_on('python@3:', type=('build', 'run'))
-    depends_on('py-h5py~mpi', type=('build', 'run'))
+    depends_on('py-h5py~mpi', when='~mpi', type=('build', 'run'))
+    depends_on('py-h5py+mpi', when='+mpi', type=('build', 'run'))
     depends_on('py-ipywidgets', type=('build', 'run'))
     depends_on('py-jupyterlab', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
