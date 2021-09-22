@@ -35,6 +35,8 @@ class Jemalloc(AutotoolsPackage):
     variant('libs', default='shared,static', values=('shared', 'static'),
             multi=True, description='Build shared libs, static libs or both')
     variant('documentation', default=False, description='Build documentation')
+    variant('debug', default=False, description='Build debugging code')
+    variant('fill', default=True, description='Enable or disable support for junk/zero filling')
 
     def configure_args(self):
         spec = self.spec
@@ -51,4 +53,6 @@ class Jemalloc(AutotoolsPackage):
 
         args += self.enable_or_disable('libs')
         args += self.enable_or_disable('documentation')
+        args += self.enable_or_disable('debug')
+        args += self.enable_or_disable('fill')
         return args
