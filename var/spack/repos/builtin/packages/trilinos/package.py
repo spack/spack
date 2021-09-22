@@ -228,6 +228,9 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+dtk', when='~intrepid2')
     conflicts('+dtk', when='@:12.12,13:')
 
+    # Installed FindTrilinos are broken in SEACAS if Fortran is disabled
+    # see https://github.com/trilinos/Trilinos/issues/3346
+    conflicts('+exodus', when='~fortran')
     # Only allow Mesquite with Trilinos 12.12 and up, and master
     conflicts('+mesquite', when='@:12.10.99,master')
     # Strumpack is only available as of mid-2021
@@ -447,7 +450,7 @@ class Trilinos(CMakePackage, CudaPackage):
             define_trilinos_enable('Epetra'),
             define_trilinos_enable('EpetraExt'),
             define_trilinos_enable('FEI', False),
-            define_trilinos_enable('Gtest', False),
+            define_trilinos_enable('Gtest', self.run_tests),
             define_trilinos_enable('Ifpack'),
             define_trilinos_enable('Ifpack2'),
             define_trilinos_enable('Intrepid'),
