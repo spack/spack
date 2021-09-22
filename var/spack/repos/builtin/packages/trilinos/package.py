@@ -193,6 +193,7 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('+amesos2')
         conflicts('+dtk')
         conflicts('+ifpack2')
+        conflicts('+muelu')
         conflicts('+teko')
         conflicts('+zoltan2')
 
@@ -205,15 +206,20 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('~stratimikos')
         conflicts('@:12 gotype=long')
 
+    # Known requirements from tribits dependencies
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
+    conflicts('+minitensor', when='~boost')
     conflicts('+ifpack2', when='~belos')
     conflicts('+intrepid', when='~sacado')
     conflicts('+intrepid', when='~shards')
     conflicts('+intrepid2', when='~shards')
     conflicts('+isorropia', when='~zoltan')
-    conflicts('+muelu', when='~tpetra')
     conflicts('+phalanx', when='~sacado')
+    conflicts('+scorec', when='~mpi')
+    conflicts('+scorec', when='~shards')
+    conflicts('+scorec', when='~stk')
+    conflicts('+scorec', when='~zoltan')
     conflicts('+tempus', when='~nox')
     conflicts('+zoltan2', when='~zoltan')
 
@@ -224,6 +230,8 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Only allow Mesquite with Trilinos 12.12 and up, and master
     conflicts('+mesquite', when='@:12.10.99,master')
+    # Strumpack is only available as of mid-2021
+    conflicts('+strumpack', when='@:13.0.99')
     # Can only use one type of SuperLU
     conflicts('+superlu-dist', when='+superlu')
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
@@ -232,34 +240,19 @@ class Trilinos(CMakePackage, CudaPackage):
     # see https://github.com/trilinos/Trilinos/issues/3566
     conflicts('+superlu-dist', when='+float+amesos2+explicit_template_instantiation^superlu-dist@5.3.0:')
     # Amesos, conflicting types of double and complex SLU_D
-    # see
-    # https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
-    # and
-    # https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
+    # see https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
+    # and https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
     conflicts('+superlu-dist', when='+complex+amesos2')
-    conflicts('+strumpack', when='@:13.0.99')
     # https://github.com/trilinos/Trilinos/issues/2994
     conflicts(
         '+shared', when='+stk platform=darwin',
         msg='Cannot build Trilinos with STK as a shared library on Darwin.'
     )
     conflicts('+adios2', when='@:12.14.1')
-    conflicts('+cuda_rdc', when='~cuda')
-    conflicts('+wrapper', when='~cuda')
-    conflicts('+wrapper', when='%clang')
     conflicts('cxxstd=11', when='@master:')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
-
-    # Boost requires minitensor
-    conflicts('~boost', when='+minitensor')
-
-    # SCOREC requires shards, stk, and zoltan
-    conflicts('+scorec', when='~mpi')
-    conflicts('+scorec', when='~shards')
-    conflicts('+scorec', when='~stk')
-    conflicts('+scorec', when='~zoltan')
 
     # Multi-value gotype only applies to trilinos through 12.14
     conflicts('gotype=all', when='@12.15:')
@@ -270,6 +263,9 @@ class Trilinos(CMakePackage, CudaPackage):
             conflicts('+cuda', when='~wrapper %' + _compiler,
                       msg='trilinos~wrapper+cuda can only be built with the '
                       'Clang compiler')
+    conflicts('+cuda_rdc', when='~cuda')
+    conflicts('+wrapper', when='~cuda')
+    conflicts('+wrapper', when='%clang')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
