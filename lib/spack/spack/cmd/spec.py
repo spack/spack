@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 
-import argparse
 import contextlib
 import sys
 
@@ -50,10 +49,7 @@ for further documentation regarding the spec syntax, see:
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER,
-        help=('one or more package specs. when an environment is active and no '
-              'specs are provided, the environment root specs are used instead.'))
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 @contextlib.contextmanager
