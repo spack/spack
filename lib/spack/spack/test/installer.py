@@ -1189,7 +1189,7 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
     # Where to store the backups
     backup = str(tmpdir.mkdir("backup"))
 
-    # Get a build task (TODO: can this be done without calling internal methods?)
+    # Get a build task. TODO: refactor this to avoid calling internal methods
     const_arg = installer_args(["b"])
     installer = create_installer(const_arg)
     installer._init_queue()
@@ -1249,7 +1249,7 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
         def remove(self, spec):
             self.called = True
 
-    # Get a build task (TODO: can this be done without calling internal methods?)
+    # Get a build task. TODO: refactor this to avoid calling internal methods
     const_arg = installer_args(["b"])
     installer = create_installer(const_arg)
     installer._init_queue()
