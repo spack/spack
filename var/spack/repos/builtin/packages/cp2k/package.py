@@ -194,6 +194,11 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     conflicts('+cuda', when='cuda_arch=none', msg=cuda_msg)
 
+    # Fix 2- and 3-center integral calls to libint
+    patch("https://github.com/cp2k/cp2k/commit/5eaf864ed2bd21fb1b05a9173bb77a815ad4deda.patch",
+          sha256="18e58ba8fdde5c507bece48ec064f7f2b80e59d1b7cfe6b7a639e5f64f84d43f",
+          when="@8.2")
+
     @property
     def makefile_architecture(self):
         return '{0.architecture}-{0.compiler.name}'.format(self.spec)
