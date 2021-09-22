@@ -108,7 +108,7 @@ class Tau(Package):
     depends_on('sqlite', when='+sqlite')
     depends_on('hwloc')
     depends_on('rocprofiler-dev', when='+rocprofiler')
-    depends_on('roctracer-dev', when='+roctracer'
+    depends_on('roctracer-dev', when='+roctracer')
     depends_on('hsa-rocr-dev', when='+rocm')
 
     # Elf only required from 2.28.1 on
