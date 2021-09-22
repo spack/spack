@@ -62,13 +62,6 @@ class Enzo(MakefilePackage):
             filter_file('^LOCAL_HYPRE_INSTALL.*',
                         'LOCAL_HYPRE_INSTALL =',
                         'Make.mach.spack')
-            if spec.satisfies('%gcc@10.2.0:'):
-                filter_file(r'^MACH_FFLAGS\s*=\s*',
-                            'MACH_FFLAGS   = -fallow-argument-mismatch ',
-                            'Make.mach.spack')
-                filter_file(r'^MACH_F90FLAGS\s*=\s*',
-                            'MACH_F90FLAGS = -fallow-argument-mismatch ',
-                            'Make.mach.spack')
 
     def build(self, spec, prefix):
         with working_dir('src/enzo'):
@@ -86,5 +79,4 @@ class Enzo(MakefilePackage):
         install_tree('doc', prefix.doc)
         install_tree('input', prefix.input)
         install_tree('run', prefix.run)
-        with working_dir(join_path('src', 'ring')):
-            install('ring.exe', join_path(prefix.bin, 'ring'))
+        install(join_path('src', 'ring', 'ring.exe'), join_path(prefix.bin, 'ring'))
