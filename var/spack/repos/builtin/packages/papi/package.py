@@ -43,6 +43,8 @@ class Papi(AutotoolsPackage):
     variant('lmsensors', default=False, description='Enable lm_sensors support')
     variant('sde', default=False, description='Enable software defined events')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('rocm', default=False, description='Enable ROCM support')
+    variant('rocm-smi', default=False, description='Enable ROCM SMI support')
     variant('nvml', default=False, description='Enable NVML support')
 
     variant('shared', default=True, description='Build shared libraries')
@@ -54,6 +56,7 @@ class Papi(AutotoolsPackage):
     depends_on('lm-sensors', when='+lmsensors')
     depends_on('cuda', when='+cuda')
     depends_on('cuda', when='+nvml')
+    depends_on('rocm-smi-lib', when='+rocm+rocm-smi')
 
     conflicts('%gcc@8:', when='@5.3.0', msg='Requires GCC version less than 8.0')
     conflicts('+sde', when='@:5', msg='Software defined events (SDE) added in 6.0.0')
@@ -88,7 +91,7 @@ class Papi(AutotoolsPackage):
         components = filter(
             lambda x: spec.variants[x].value,
             ['example', 'infiniband', 'powercap', 'rapl', 'lmsensors', 'sde',
-             'cuda', 'nvml'])
+             'cuda', 'nvml', 'rocm'])
         if components:
             options.append('--with-components=' + ' '.join(components))
 
@@ -97,6 +100,8 @@ class Papi(AutotoolsPackage):
 
         if '+static_tools' in spec:
             options.append('--with-static-tools')
+        if '+rocm-smi' in spec:
+            options.append('--with-components=rocm rocm_smi')
 
         return options
 
