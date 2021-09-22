@@ -233,6 +233,9 @@ class Cp2k(MakefilePackage, CudaPackage):
         elif '^intel-mkl' in spec:
             fftw = spec['intel-mkl']
             fftw_header_dir = fftw.headers.directories[0] + '/fftw'
+        elif '^intel-oneapi-mkl' in spec:
+            fftw = spec['intel-oneapi-mkl']
+            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
         elif '^intel-parallel-studio+mkl' in spec:
             fftw = spec['intel-parallel-studio']
             fftw_header_dir = '<NOTFOUND>'
@@ -362,7 +365,9 @@ class Cp2k(MakefilePackage, CudaPackage):
         ldflags.append((lapack + blas).search_flags)
         libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
 
-        if '^intel-mkl' in spec or '^intel-parallel-studio+mkl' in spec:
+        if any(p in spec for p in ('^intel-mkl',
+                                   '^intel-parallel-studio+mkl',
+                                   '^intel-oneapi-mkl')):
             cppflags += ['-D__MKL']
         elif '^accelerate' in spec:
             cppflags += ['-D__ACCELERATE']
@@ -380,11 +385,32 @@ class Cp2k(MakefilePackage, CudaPackage):
                 '-D__SCALAPACK'
             ])
 
-            scalapack = spec['scalapack'].libs
-            ldflags.append(scalapack.search_flags)
+            if '^intel-oneapi-mpi' in spec:
+                mpi = [join_path(
+                       spec['intel-oneapi-mpi'].libs.directories[0],
+                       'libmpi.so')]
+            else:
+                mpi = spec['mpi:cxx'].libs
+
+            # while intel-mkl has a mpi variant and adds the scalapack
+            # libs to its libs, intel-oneapi-mkl does not.
+            if '^intel-oneapi-mkl' in spec:
+                mpi_impl = 'openmpi' if '^openmpi' in spec else 'intelmpi'
+                scalapack = [
+                    join_path(
+                        spec['intel-oneapi-mkl'].libs.directories[0],
+                        'libmkl_scalapack_lp64.so'),
+                    join_path(
+                        spec['intel-oneapi-mkl'].libs.directories[0],
+                        'libmkl_blacs_{0}_lp64.so'.format(mpi_impl)
+                    )
+                ]
+            else:
+                scalapack = spec['scalapack'].libs
+                ldflags.append(scalapack.search_flags)
 
             libs.extend(scalapack)
-            libs.extend(spec['mpi:cxx'].libs)
+            libs.extend(mpi)
             libs.extend(self.compiler.stdcxx_libs)
 
             if 'wannier90' in spec:
