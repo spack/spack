@@ -28,7 +28,7 @@ level = "long"
 class AllClean(argparse.Action):
     """Activates flags -s -d -f -m and -p simultaneously"""
     def __call__(self, parser, namespace, values, option_string=None):
-        parser.parse_args(['-sdfmpb'], namespace=namespace)
+        parser.parse_args(['-sdfmp'], namespace=namespace)
 
 
 def setup_parser(subparser):
@@ -51,7 +51,7 @@ def setup_parser(subparser):
         '-b', '--bootstrap', action='store_true',
         help="remove software and configuration needed to bootstrap Spack")
     subparser.add_argument(
-        '-a', '--all', action=AllClean, help="equivalent to -sdfmpb", nargs=0
+        '-a', '--all', action=AllClean, help="equivalent to -sdfmp", nargs=0
     )
     arguments.add_common_arguments(subparser, ['specs'])
 
