@@ -86,7 +86,6 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('superlu',      default=False, description='Compile with SuperLU solvers')
     variant('strumpack',    default=False, description='Compile with STRUMPACK solvers')
     variant('x11',          default=False, description='Compile with X11 when +exodus')
-    variant('zlib',         default=False, description='Compile with zlib')
 
     # Package options (alphabet order)
     variant('amesos',       default=True, description='Compile with Amesos')
@@ -307,7 +306,7 @@ class Trilinos(CMakePackage, CudaPackage):
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('superlu@4.3 +pic', when='+superlu')
     depends_on('swig', when='+python')
-    depends_on('zlib', when="+zlib")
+    depends_on('zlib', when='+zoltan')
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
@@ -317,21 +316,22 @@ class Trilinos(CMakePackage, CudaPackage):
     # with Blas and Lapack and ScaLAPACK and Blacs and -lgfortran and it may
     # work at the end. But let's avoid all this by simply using shared libs
     depends_on('mumps@5.0:+shared', when='+mumps')
+
     for _flag in ('~mpi', '+mpi'):
         depends_on('hdf5' + _flag, when='+hdf5' + _flag)
         depends_on('mumps' + _flag, when='+mumps' + _flag)
     for _flag in ('~openmp', '+openmp'):
         depends_on('mumps' + _flag, when='+mumps' + _flag)
 
-    depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
+    depends_on('hwloc', when='@13: +kokkos')
+    depends_on('hwloc+cuda', when='@13: +kokkos+cuda')
+    depends_on('hypre@develop', when='@master: +hypre')
+    depends_on('netcdf-c+mpi+parallel-netcdf', when="+exodus+mpi@12.12.1:")
     depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
     depends_on('superlu-dist@5.4:6.2.0', when='@12.12.2:13.0.0+superlu-dist')
     depends_on('superlu-dist@6.3.0:', when='@13.0.1:99 +superlu-dist')
+    depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
     depends_on('superlu-dist@develop', when='@master: +superlu-dist')
-    depends_on('hypre@develop', when='@master: +hypre')
-    depends_on('hwloc', when='@13: +kokkos')
-    depends_on('hwloc+cuda', when='@13: +kokkos+cuda')
-    depends_on('netcdf-c+mpi+parallel-netcdf', when="+exodus+mpi@12.12.1:")
 
     # ###################### Patches ##########################
 
