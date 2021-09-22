@@ -30,9 +30,11 @@ from .environment import (
 )
 
 __all__ = [
+    'Environment',
+    'SpackEnvironmentError',
     'activate',
-    'active_environment',
     'active',
+    'active_environment',
     'all_environment_names',
     'all_environments',
     'config_dict',
@@ -41,17 +43,15 @@ __all__ = [
     'default_manifest_yaml',
     'default_view_name',
     'display_specs',
-    'no_active_environment',
-    'Environment',
     'exists',
     'is_env_dir',
     'is_latest_format',
     'lockfile_name',
     'manifest_file',
     'manifest_name',
+    'no_active_environment',
     'read',
     'root',
     'spack_env_var',
-    'SpackEnvironmentError',
     'update_yaml',
 ]

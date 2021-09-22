@@ -40,7 +40,7 @@ def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     assert read_in.specs_by_hash[read_in.concretized_order[0]]._build_hash == new_hash
 
 
-def test_activate_should_require_and_env():
+def test_activate_should_require_an_env():
     with pytest.raises(TypeError):
         ev.activate(env='name')
 
