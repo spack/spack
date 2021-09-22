@@ -1324,6 +1324,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.has_code:
             tty.debug('No fetch required for {0}: package has no code.'
                       .format(self.name))
+            return
 
         checksum = spack.config.get('config:checksum')
         fetch = self.stage.managed_by_spack
