@@ -578,6 +578,7 @@ class Boost(Package):
 
         if self.spec.satisfies('platform=windows'):
             bootstrap = Executable('./bootstrap.bat')
+            print(bootstrap_options)
             bootstrap(*bootstrap_options)
         else:
             bootstrap = Executable('./bootstrap.sh')
