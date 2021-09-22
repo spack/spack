@@ -33,25 +33,9 @@ class Survey(CMakePackage):
     version('develop', branch='master')
     version('1.0.0', branch='1.0.0')
 
-    # MPI variants
-    variant('openmpi', default=False,
-            description="Build mpi collector for openmpi \
-                         MPI when variant is enabled.")
-    variant('mpt', default=False,
-            description="Build mpi collector for SGI \
-                         MPT MPI when variant is enabled.")
-    variant('mvapich2', default=False,
-            description="Build mpi collector for mvapich2\
-                         MPI when variant is enabled.")
-    variant('mvapich', default=False,
-            description="Build mpi collector for mvapich\
-                         MPI when variant is enabled.")
-    variant('mpich2', default=False,
-            description="Build mpi collector for mpich2\
-                         MPI when variant is enabled.")
-    variant('mpich', default=False,
-            description="Build mpi collector for mpich\
-                         MPI when variant is enabled.")
+    variant('mpi', default=False,
+            description="Enable mpi, build MPI data collector")
+
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -66,13 +50,8 @@ class Survey(CMakePackage):
     depends_on("gotcha@master", type=('build', 'link', 'run'))
     depends_on("llvm-openmp@9.0.0", type=('build', 'link', 'run'))
 
-    # MPI Installations
-    depends_on("openmpi", when='+openmpi')
-    depends_on("mpich@:", when='+mpich')
-    depends_on("mpich@2:", when='+mpich2')
-    depends_on("mvapich2@2:", when='+mvapich2')
-    depends_on("mvapich2@:1", when='+mvapich')
-    depends_on("mpt", when='+mpt')
+    # MPI Installation
+    depends_on("mpi", when="+mpi")
 
     depends_on("python@3:", type=('build', 'link', 'run'))
     depends_on("py-setuptools", type=('build', 'link', 'run'))
@@ -90,28 +69,7 @@ class Survey(CMakePackage):
     def set_mpi_cmake_options(self, spec, cmake_options):
         # Appends to cmake_options the options that will enable the appropriate
         # MPI implementations
-
-        mpi_options = []
-
-        # openmpi
-        if spec.satisfies('+openmpi'):
-            mpi_options.append('-DOPENMPI_DIR=%s' % spec['openmpi'].prefix)
-        # mpich
-        if spec.satisfies('+mpich'):
-            mpi_options.append('-DMPICH_DIR=%s' % spec['mpich'].prefix)
-        # mpich2
-        if spec.satisfies('+mpich2'):
-            mpi_options.append('-DMPICH2_DIR=%s' % spec['mpich2'].prefix)
-        # mvapich
-        if spec.satisfies('+mvapich'):
-            mpi_options.append('-DMVAPICH_DIR=%s' % spec['mvapich'].prefix)
-        # mvapich2
-        if spec.satisfies('+mvapich2'):
-            mpi_options.append('-DMVAPICH2_DIR=%s' % spec['mvapich2'].prefix)
-        # mpt
-        if spec.satisfies('+mpt'):
-            mpi_options.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
-
+        mpi_options = ['-D%s_DIR=%s' % (spec['mpi'].name.upper(), spec['mpi'].prefix)]
         cmake_options.extend(mpi_options)
 
     def cmake_args(self):
@@ -147,63 +105,8 @@ class Survey(CMakePackage):
         """Set up the compile and runtime environments for a package."""
 
         # Set SURVEY_MPI_IMPLEMENTATON to the appropriate mpi implementation
-        # This is needed by survey to deploy the correct
-        # mpi runtimes.
-        # Users may have to set the SURVEY_MPI_IMPLEMENTATION variable
-        # manually or create separate module files, if multiple mpi's
-        # are specified in the build
-        if self.spec.satisfies('+mpich'):
-            env.set('SURVEY_MPI_IMPLEMENTATION', "mpich")
-
-        if self.spec.satisfies('+mvapich'):
-            env.set('SURVEY_MPI_IMPLEMENTATION', "mvapich")
-
-        if self.spec.satisfies('+mvapich2'):
-            env.set('SURVEY_MPI_IMPLEMENTATION', "mvapich2")
-
-        if self.spec.satisfies('+mpt'):
-            env.set('SURVEY_MPI_IMPLEMENTATION', "mpt")
-
-        if self.spec.satisfies('+openmpi'):
-            env.set('SURVEY_MPI_IMPLEMENTATION', "openmpi")
-
-        env.prepend_path('MANPATH', self.spec.prefix.share.man)
-
+        # This is needed by survey to deploy the correct mpi runtimes.
+        env.set('SURVEY_MPI_IMPLEMENTATION', self.spec['mpi'].name.lower())
         env.prepend_path('PATH', self.spec['python'].prefix.bin)
         env.prepend_path('PYTHONPATH',
                          join_path(self.prefix, self.site_packages_dir))
-        # These are external packages whose site-packages directories are needed
-        # in order to load survey with one module load command.  If these statements
-        # are not present.  The corresponding module files will need to be loaded
-        # These are explicit depends_on packages
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['python'].prefix, self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-pandas'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-python-dateutil'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-setuptools'].prefix,
-                                   self.site_packages_dir))
-        # These are not-explicit depends_on packages
-        # but they must be known in the spec for survey, so it works.
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-numpy'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-pytz'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-six'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-psutil'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-sqlalchemy'].prefix,
-                                   self.site_packages_dir))
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.spec['py-pbr'].prefix,
-                                   self.site_packages_dir))
