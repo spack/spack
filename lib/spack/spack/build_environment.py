@@ -171,6 +171,13 @@ def clean_environment():
 
     env.unset('CMAKE_PREFIX_PATH')
 
+    # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
+    env.unset('MAKEFLAGS')
+    # Could make testsuites attempt to color their output
+    env.unset('TERM')
+    # Tests of GUI widget libraries might try to connect to an X server
+    env.unset('DISPLAY')
+
     # Avoid that libraries of build dependencies get hijacked.
     env.unset('LD_PRELOAD')
     env.unset('DYLD_INSERT_LIBRARIES')

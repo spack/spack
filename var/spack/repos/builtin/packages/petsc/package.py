@@ -251,8 +251,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hypre@:2.13.99+mpi~internal-superlu+int64', when='@:3.8.99+hypre+mpi~complex+int64')
     depends_on('hypre@2.14:2.18.2+mpi~internal-superlu~int64', when='@3.9:3.13.99+hypre+mpi~complex~int64')
     depends_on('hypre@2.14:2.18.2+mpi~internal-superlu+int64', when='@3.9:3.13.99+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.14:+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.14:+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu~int64', when='@3.14:3.15.99+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu+int64', when='@3.14:3.15.99+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.16:+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.16:+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
     depends_on('hypre@develop+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64')
@@ -354,6 +356,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
+            '--with-openmp=%s' % ('1' if '+openmp' in spec else '0'),
             '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
         if '+debug' not in spec:
@@ -419,7 +422,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('netcdf-c', 'netcdf', True, True),
                 ('parallel-netcdf', 'pnetcdf', True, True),
                 ('moab', 'moab', False, False),
-                'openmp',
                 ('random123', 'random123', False, False),
                 'exodusii',
                 'cgns',
