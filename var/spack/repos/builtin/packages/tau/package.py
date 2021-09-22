@@ -109,7 +109,6 @@ class Tau(Package):
     depends_on('rocprofiler-dev', when='+rocprofiler')
     depends_on('hsa-rocr-dev', when='+rocm')
 
-
     # Elf only required from 2.28.1 on
     conflicts('+elf', when='@:2.28.0')
     conflicts('+libdwarf', when='@:2.28.0')
