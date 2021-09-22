@@ -112,6 +112,7 @@ class Mvapich2(AutotoolsPackage):
 
     depends_on('findutils', type='build')
     depends_on('bison', type='build')
+    depends_on('flex', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('zlib')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
