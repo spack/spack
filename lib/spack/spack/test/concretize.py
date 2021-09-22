@@ -1268,3 +1268,39 @@ class TestConcretize(object):
         s = spack.spec.Spec('root-adds-virtual').concretized()
         assert s['leaf-adds-virtual'].satisfies('@2.0')
         assert 'blas' in s
+
+    @pytest.mark.parametrize('type,expected_ver', [
+        ('depends_on_3.0', ver('3.0.4')),
+        ('conflicts_with_3.0', ver('1.0')),
+        ('depends_on_3.0:3.0.0', ver('3.0')),
+        ('conflicts_with_3.0:3.0.0', ver('3.0.4')),
+    ])
+    def test_depends_and_conflics_for_minor_without_patch_type_versionining(
+        self, type, expected_ver
+    ):
+        """
+        Tests behavior of concretization for packages like mpich that do not
+        have a patch version number for their minor releases, i.e. they version
+        as follows: 1.0, 3.0, 3.0.1, 3.0.2, 3.0.3, 3.0.4. There's ambiguity with
+        a conflict of the form ^mpich@3.0, as it could mean 3.0 exactly, or rather
+        the range [3.0, 3.1). We choose the latter, because the bulk of the
+        packges follow standard versioning (3.0.0, 3.0.1), and for a given
+        package pkg that does this, it is useful to have a conflict with
+        pkg@3.0.0 include the spec pkg@3.0.0-identifier, in particular when
+        the suffix was added by the user to annotate an external package.
+        """
+        s = Spec('depends-and-conflicts-with-exact-versions type={0}'.format(type))
+        s.concretize()
+        assert s['mpich'].version == expected_ver
+
+    def test_conflict_exact_version_and_suffix(self):
+        """
+        See the test above for context. This time with a conflict on ^mpich@3.0
+        we test whether we can constrain to ^mpich@3.0-suffix, which should not
+        be possible, as the conflict applies to [3.0, 3.1).
+        """
+        s = Spec('depends-and-conflicts-with-exact-versions '
+                 'type=conflicts_with_3.0 ^mpich@3.0-suffix')
+
+        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+            s.concretize()
