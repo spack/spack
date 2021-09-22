@@ -29,6 +29,7 @@ RUN yum update -y \
         Lmod \
         make \
         patch \
+        patchelf \
         python \
         python-pip \
         python-setuptools \
@@ -37,6 +38,12 @@ RUN yum update -y \
         which \
  && rm -rf /var/cache/yum \
  && yum clean all
+
+# The OS + Python is old enough to have issues fetching the buildcache from
+# cloudfront via https. Download it locally to work around that.
+RUN mkdir /root/mirrors && cd /root/mirrors && \
+    curl -L https://github.com/alalazo/spack-bootstrap-mirrors/releases/download/v0.1-rc.2/bootstrap-buildcache.tar.gz > buildcache.tar.gz && \
+    tar xzvf buildcache.tar.gz && rm buildcache.tar.gz
 
 COPY bin   $SPACK_ROOT/bin
 COPY etc   $SPACK_ROOT/etc
@@ -67,7 +74,8 @@ RUN [ -f ~/.profile ]                                               \
 WORKDIR /root
 SHELL ["docker-shell"]
 
-# TODO: add a command to Spack that (re)creates the package cache
+RUN sed -i 's\https://mirror.spack.io/bootstrap/github-actions/v0.1\file:///root/mirrors/bootstrap-buildcache\g' $SPACK_ROOT/etc/spack/defaults/bootstrap.yaml
+
 RUN spack spec hdf5+mpi
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]
