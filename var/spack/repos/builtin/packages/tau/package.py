@@ -106,6 +106,9 @@ class Tau(Package):
     depends_on('adios2', when='+adios2')
     depends_on('sqlite', when='+sqlite')
     depends_on('hwloc')
+    depends_on('rocprofiler-dev', when='+rocprofiler')
+    depends_on('hsa-rocr-dev', when='+rocm')
+
 
     # Elf only required from 2.28.1 on
     conflicts('+elf', when='@:2.28.0')
@@ -258,10 +261,10 @@ class Tau(Package):
             options.append("-opencl")
 
         if '+rocm' in spec:
-            options.append("-rocm")
+            options.append("-rocm=%s" % spec['hsa-rocr-dev'].prefix)
 
         if '+rocprofiler' in spec:
-            options.append("-rocprofiler=%s" % spec['rocprofiler'].prefix)
+            options.append("-rocprofiler=%s" % spec['rocprofiler-dev'].prefix)
 
         if '+adios2' in spec:
             options.append("-adios=%s" % spec['adios2'].prefix)
