@@ -41,5 +41,5 @@ class Onnx(CMakePackage):
 
     def cmake_args(self):
         # Try to get ONNX to use the same version of python as the spec is using
-        args = ['-DPY_VERSION={}'.format(self.spec['python'].version.up_to(2))]
+        args = ['-DPY_VERSION={0}'.format(self.spec['python'].version.up_to(2))]
         return args
