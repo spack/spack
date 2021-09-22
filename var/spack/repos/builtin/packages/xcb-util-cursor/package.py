@@ -23,4 +23,5 @@ class XcbUtilCursor(AutotoolsPackage):
     depends_on('xcb-util-renderutil')
     depends_on('xcb-util-image')
 
+    depends_on('m4',        type='build')
     depends_on('pkgconfig', type='build')
