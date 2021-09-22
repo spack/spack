@@ -30,6 +30,9 @@ class Jemalloc(AutotoolsPackage):
         values=None,
         multi=False
     )
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+    variant('documentation', default=False, description='Build documentation')
 
     def configure_args(self):
         spec = self.spec
@@ -44,4 +47,6 @@ class Jemalloc(AutotoolsPackage):
         if je_prefix != 'none':
             args.append('--with-jemalloc-prefix={0}'.format(je_prefix))
 
+        args += self.enable_or_disable('libs')
+        args += self.enable_or_disable('documentation')
         return args
