@@ -11,6 +11,7 @@ class Form(AutotoolsPackage):
 
     homepage = "https://www.nikhef.nl/~form/"
     url      = "https://github.com/vermaseren/form/archive/v4.2.1.tar.gz"
+    maintainers = ['iarspider']
 
     version('4.2.1', sha256='6f32c7470d00e8ab6934dc352f5a78e29290146a00e5775f8cd5fef7810bbbb8')
     version('4.1-20131025', sha256='caece2c6e605ccf32eb3612c4ed5c9257a7a62824ad219c5e46b6d00066f1ba6')
@@ -31,8 +32,8 @@ class Form(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        args += self.with_or_without('gmp', self.spec['gmp'].prefix)
-        args += self.with_or_without('zlib', self.spec['zlib'].prefix)
+        args += self.with_or_without('gmp', 'prefix')
+        args += self.with_or_without('zlib', 'prefix')
         args += self.enable_or_disable('scalar')
         args += self.enable_or_disable('threaded')
         args += self.enable_or_disable('parform')

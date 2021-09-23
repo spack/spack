@@ -78,7 +78,7 @@ jobs:
 
   opensuse-sources:
     runs-on: ubuntu-latest
-    container: "opensuse/tumbleweed:latest"
+    container: "opensuse/tumbleweed:latest@sha256:aeb62bae53022901b5da5d78d8de6ca07f5b3992e147e4c9723e0378ac0463ca"
     steps:
       - name: Install dependencies
         run: |
