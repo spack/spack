@@ -60,7 +60,7 @@ class Armpl(Package):
     url = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
     has_code = False
 
-    maintainers = ['OliverPerks', 'srinathv']
+    maintainers = ['OliverPerks', 'annwon']
 
     conflicts('target=x86:', msg='Only available on Aarch64')
     conflicts('target=ppc64:', msg='Only available on Aarch64')
