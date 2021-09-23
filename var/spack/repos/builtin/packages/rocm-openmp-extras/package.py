@@ -97,8 +97,7 @@ class RocmOpenmpExtras(Package):
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type=('build'), when='@'
-                   + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@{0} ~openmp'.format(ver),
                    when='@' + ver)
 
@@ -275,6 +274,7 @@ class RocmOpenmpExtras(Package):
         lib_dir = '{0}/lib'.format(llvm_prefix)
         flang_warning = '-Wno-incompatible-pointer-types-discards-qualifiers'
         libpgmath = '/rocm-openmp-extras/flang/runtime/libpgmath/lib/common'
+        elfutils_inc = spec['elfutils'].prefix.include
 
         # flang1 and flang2 symlink needed for build of flang-runtime
         # libdevice symlink to rocm-openmp-extras for runtime
@@ -311,6 +311,11 @@ class RocmOpenmpExtras(Package):
         ]
 
         # Shared cmake configuration for openmp, openmp-debug
+        # Due to hsa-rocr-dev using libelf instead of elfutils
+        # the build of openmp fails because the include path
+        # for libelf is placed before elfutils in SPACK_INCLUDE_DIRS.
+        # Passing the elfutils include path via cmake options is a
+        # workaround until hsa-rocr-dev switches to elfutils.
         openmp_common_args = [
             '-DROCM_DIR={0}'.format(hsa_prefix),
             '-DDEVICE_LIBS_DIR={0}/amdgcn/bitcode'.format(devlibs_prefix),
@@ -328,7 +333,9 @@ class RocmOpenmpExtras(Package):
             '-DOPENMP_ENABLE_LIBOMPTARGET=1',
             '-DOPENMP_ENABLE_LIBOMPTARGET_HSA=1',
             '-DLLVM_MAIN_INCLUDE_DIR={0}{1}'.format(src, llvm_inc),
-            '-DLLVM_INSTALL_PREFIX={0}'.format(llvm_prefix)
+            '-DLLVM_INSTALL_PREFIX={0}'.format(llvm_prefix),
+            '-DCMAKE_C_FLAGS=-isystem{0}'.format(elfutils_inc),
+            '-DCMAKE_CXX_FLAGS=-isystem{0}'.format(elfutils_inc)
         ]
 
         if self.spec.version < Version('4.1.0'):
