@@ -56,7 +56,7 @@ class Legion(CMakePackage):
                    when="%clang+kokkos+cuda cuda_arch={0}".format(nvarch))
 
     depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
-    depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
+    depends_on("kokkos@3.3.01~cuda+openmp", when='+kokkos+openmp')
 
     depends_on('python@3', when='+python')
     depends_on('papi', when='+papi')
