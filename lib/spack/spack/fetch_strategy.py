@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,7 @@ import os.path
 import re
 import shutil
 import sys
+from typing import List, Optional  # novm
 
 import six
 import six.moves.urllib.parse as urllib_parse
@@ -99,11 +100,12 @@ class FetchStrategy(object):
     #: The URL attribute must be specified either at the package class
     #: level, or as a keyword argument to ``version()``.  It is used to
     #: distinguish fetchers for different versions in the package DSL.
-    url_attr = None
+    url_attr = None  # type: Optional[str]
 
     #: Optional attributes can be used to distinguish fetchers when :
     #: classes have multiple ``url_attrs`` at the top-level.
-    optional_attrs = []  # optional attributes in version() args.
+    # optional attributes in version() args.
+    optional_attrs = []  # type: List[str]
 
     def __init__(self, **kwargs):
         # The stage is initialized late, so that fetch strategies can be
@@ -297,7 +299,15 @@ class URLFetchStrategy(FetchStrategy):
 
     @property
     def candidate_urls(self):
-        return [self.url] + (self.mirrors or [])
+        urls = []
+
+        for url in [self.url] + (self.mirrors or []):
+            if url.startswith('file://'):
+                path = urllib_parse.quote(url[len('file://'):])
+                url = 'file://' + path
+            urls.append(url)
+
+        return urls
 
     @_needs_stage
     def fetch(self):
@@ -308,7 +318,6 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
-
             if not self._existing_url(url):
                 continue
 
@@ -328,6 +337,7 @@ class URLFetchStrategy(FetchStrategy):
 
     def _existing_url(self, url):
         tty.debug('Checking existence of {0}'.format(url))
+
         if spack.config.get('config:url_fetch_method') == 'curl':
             curl = self.curl
             # Telling curl to fetch the first byte (-r 0-0) is supposed to be
@@ -474,7 +484,7 @@ class URLFetchStrategy(FetchStrategy):
         self._check_headers(headers)
         return partial_file, save_file
 
-    @property
+    @property  # type: ignore # decorated properties unsupported in mypy
     @_needs_stage
     def archive_file(self):
         """Path to the source archive within this stage directory."""
@@ -517,6 +527,8 @@ class URLFetchStrategy(FetchStrategy):
         tarball_container = os.path.join(self.stage.path,
                                          "spack-expanded-archive")
 
+        # Below we assume that the command to decompress expand the
+        # archive in the current working directory
         mkdirp(tarball_container)
         with working_dir(tarball_container):
             decompress(self.archive_file)
@@ -1393,7 +1405,6 @@ class S3FetchStrategy(URLFetchStrategy):
 
         if not self.archive_file:
             raise FailedDownloadError(self.url)
-
 
 @fetcher
 class GCSFetchStrategy(URLFetchStrategy):
