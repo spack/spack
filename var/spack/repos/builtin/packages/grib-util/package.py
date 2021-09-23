@@ -7,7 +7,7 @@ from spack import *
 
 
 class GribUtil(CMakePackage):
-    """This is a collection of NCEP GRIB related utilities. 
+    """This is a collection of NCEP GRIB related utilities.
 
     This is related to NOAA's NCEPLIBS project."""
 
