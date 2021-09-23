@@ -90,6 +90,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
               msg='gdrcopy currently requires cuda support')
     depends_on('xpmem', when='+xpmem')
     depends_on('knem', when='+knem')
+    depends_on('binutils+ld', when='%aocc', type='build')
 
     configure_abs_path = 'contrib/configure-release'
 
@@ -144,5 +145,9 @@ class Ucx(AutotoolsPackage, CudaPackage):
                                                 activation_value='prefix'))
         config_args.extend(self.with_or_without('xpmem',
                                                 activation_value='prefix'))
+
+        # lld doesn't support '-dynamic-list-data'
+        if '%aocc' in spec:
+            config_args.append('LDFLAGS=-fuse-ld=bfd')
 
         return config_args
