@@ -75,10 +75,10 @@ class Hicops(CMakePackage):
     depends_on('py-pandas')
     depends_on('py-openpyxl')
     depends_on('python@3.7:3.9')
+    # TODO: Add timemory and mpip depends_on()
 
-    #TODO: Add timemory and mpip depends_on(),
-    #Build failing when added. Creating a conflict as a workaround
     conflicts('+timemory')
+    # Build failing when added. Creating a conflict as a workaround
     conflicts('%gcc@:7.2.0')
     conflicts('+mpip -timemory')
     conflicts('+mpip -mpi')
@@ -92,8 +92,7 @@ class Hicops(CMakePackage):
         env.prepend_path("INCLUDE", self.prefix.include)
 
     def install(self, spec, prefix):
-        spec = self.spec
-        args = [ 
+        args = [
             self.define('USE_MPI', True),
             self.define('CMAKE_INSTALL_PREFIX', self.prefix),
             self.define_from_variant('USE_TIMEMORY', 'timemory'),
@@ -107,7 +106,6 @@ class Hicops(CMakePackage):
             self.define_from_variant('MAX_SHDPEAKS', 'shdpeaks'),
             self.define_from_variant('CMAKE_CXX_STANDARD', 'cxx_std')
         ]
-
 
         cmake(*args)
         make()
