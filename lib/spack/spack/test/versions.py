@@ -16,7 +16,7 @@ from llnl.util.filesystem import working_dir
 import spack.package
 import spack.spec
 from spack.util.executable import which
-from spack.version import Version, VersionList, ver
+from spack.version import Version, VersionList, VersionRange, ver
 
 
 def assert_ver_lt(a, b):
@@ -602,3 +602,19 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
             expected = f.read()
 
         assert str(comparator) == expected
+
+
+def test_range_is_not_concrete_when_start_is_end():
+    r = VersionRange('3', '3')
+    assert Version('3.2.1').satisfies(r)
+    assert ver('3:3') == r
+    assert not r.concrete
+
+
+def test_range_is_generally_not_concrete():
+    assert not VersionRange('3', '4').concrete
+
+
+def test_range_throws_when_start_is_after_end():
+    with pytest.raises(ValueError):
+        VersionRange('3', '2')

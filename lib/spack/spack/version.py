@@ -550,7 +550,7 @@ class VersionRange(object):
 
     @property
     def concrete(self):
-        return self.start if self.start == self.end else None
+        return None
 
     @coerced
     def __contains__(self, other):
