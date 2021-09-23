@@ -192,9 +192,11 @@ class Python(AutotoolsPackage):
     # https://github.com/spack/spack/pull/16856
     patch('python-2.7.8-distutils-C++.patch', when='@2.7.8:2.7.16')
     patch('python-2.7.17+-distutils-C++.patch', when='@2.7.17:2.7.18')
+    patch('python-2.7.17+-distutils-C++-fixup.patch', when='@2.7.17:2.7.18')
     patch('python-3.6.8-distutils-C++.patch', when='@3.6.8,3.7.2')
     patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
     patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:')
+    patch('python-3.7.4+-distutils-C++-testsuite.patch', when='@3.7.4:')
 
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
 
