@@ -9,10 +9,10 @@ from spack import *
 class CircuitBuild(PythonPackage):
     """Command Line API for building circuits"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/common/circuit-build"
-    git      = "ssh://bbpcode.epfl.ch/common/circuit-build"
+    homepage = "https://bbpgitlab.epfl.ch/nse/circuit-build"
+    git      = "git@bbpgitlab.epfl.ch:nse/circuit-build.git"
 
-    version('develop', branch='master')
+    version('develop', branch='main')
     version('3.1.1', tag='circuit-build-v3.1.1')
     version('3.1.3', tag='circuit-build-v3.1.3')
 

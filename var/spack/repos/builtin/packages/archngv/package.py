@@ -12,8 +12,8 @@ class Archngv(PythonPackage):
     # This package is not deployed anymore but is
     # still pip installable instead
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/molecularsystems/ArchNGV"
-    git      = "ssh://bbpcode.epfl.ch/molecularsystems/ArchNGV"
+    homepage = "https://bbpgitlab.epfl.ch/molsys/ArchNGV"
+    git      = "git@bbpgitlab.epfl.ch:molsys/ArchNGV.git"
 
     # version('develop', branch='master')
     # version('0.0.0', tag='archngv-v0.0.0', preferred=True)

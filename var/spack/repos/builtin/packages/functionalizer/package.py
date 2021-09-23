@@ -9,10 +9,10 @@ from spack import *
 class Functionalizer(CMakePackage):
     """Apply several steps of filtering on touches
     """
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/Functionalizer"
-    git      = "ssh://bbpcode.epfl.ch/building/Functionalizer"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/archive/functionalizer"
+    git      = "git@bbpgitlab.epfl.ch:hpc/archive/functionalizer.git"
 
-    version('develop', submodules=True)
+    version('develop', branch='master', submodules=True)
     version('3.12.2', tag='v3.12.2', submodules=True)
     version('3.12.1', tag='v3.12.1', submodules=True)
     version('3.12.0', tag='v3.12.0', submodules=True)

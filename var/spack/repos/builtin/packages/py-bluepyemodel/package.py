@@ -9,8 +9,8 @@ from spack import *
 class PyBluepyemodel(PythonPackage):
     """Python library to optimize and evaluate electrical models."""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/cells/BluePyEModel"
-    git      = "ssh://bbpcode.epfl.ch/cells/BluePyEModel"
+    homepage = "https://bbpgitlab.epfl.ch/cells/bluepyemodel"
+    git      = "git@bbpgitlab.epfl.ch:cells/bluepyemodel.git"
 
     version('0.0.5', tag='BluePyEModel-v0.0.5')
 

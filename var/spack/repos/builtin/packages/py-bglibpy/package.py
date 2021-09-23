@@ -8,11 +8,10 @@ from spack import *
 
 class PyBglibpy(PythonPackage):
     """Pythonic Blue Brain simulator access"""
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/sim/BGLibPy"
-    url = "ssh://bbpcode.epfl.ch/sim/BGLibPy"
-    git = "ssh://bbpcode.epfl.ch/sim/BGLibPy"
+    homepage = "https://bbpgitlab.epfl.ch/cells/bglibpy"
+    git = "git@bbpgitlab.epfl.ch:cells/bglibpy.git"
 
-    version('develop', branch='master')
+    version('develop', branch='main')
 
     version('4.4.36', commit='07fe9999a137c3741fd95713149a76a202cb7d7a')
 

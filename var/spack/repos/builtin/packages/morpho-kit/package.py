@@ -9,11 +9,10 @@ from spack import *
 class MorphoKit(CMakePackage):
     """Higher-level library for reading / writing morphology files"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/projects/nse/morpho-kit,dashboards/default"
-    url      = "https://bbpcode.epfl.ch/code/a/nse/morpho-kit"
-    git      = "ssh://bbpcode.epfl.ch/nse/morpho-kit"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/morpho-kit"
+    git      = "git@bbpgitlab.epfl.ch:hpc/morpho-kit.git"
 
-    version('develop', branch='master', submodules=True, get_full_repo=True)
+    version('develop', branch='main', submodules=True, get_full_repo=True)
     version('0.2.0', tag='v0.2.0', submodules=True, get_full_repo=True)
 
     depends_on('cmake@3.2:', type='build')
