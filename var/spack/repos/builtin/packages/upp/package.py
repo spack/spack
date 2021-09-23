@@ -13,14 +13,12 @@ class Upp(CMakePackage):
     output.
     """
 
-    homepage = "https://github.com/NOAA-EMC/EMC_post"
-    url      = "https://github.com/NOAA-EMC/EMC_post/archive/refs/tags/upp_v10.0.8.tar.gz"
+    homepage = "https://github.com/NOAA-EMC/UPP"
+    git = "https://github.com/NOAA-EMC/UPP.git"
 
     maintainers = ['kgerheiser', 'edwardhartnett', 'Hang-Lei-NOAA']
 
-    git = "https://github.com/NOAA-EMC/EMC_post.git"
-
-    version('10.0.9', sha256='b3d536663dcf1af9a8e3f8118760d3baa06197960ec763c4b613251bc11e2fa6')
+    version('10.0.9', branch='upp_v10.0.9', submodules=True)
 
     variant('openmp', default=True)
     variant('postexec', default=True)
