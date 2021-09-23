@@ -94,6 +94,11 @@ def by_executable(packages_to_check, path_hints=None):
             continue
 
         for prefix, exes_in_prefix in sorted(_group_by_prefix(exes)):
+            # TODO: multiple instances of a package can live in the same
+            # prefix, and a package implementation can return multiple specs
+            # for one prefix, but without additional details (e.g. about the
+            # naming scheme which differentiates them), the spec won't be
+            # usable.
             specs = _convert_to_iterable(
                 pkg.determine_spec_details(prefix, exes_in_prefix)
             )
