@@ -125,6 +125,7 @@ class Acts(CMakePackage, CudaPackage):
     # FIXME: Cannot build ONNX plugin as Spack doesn't have an ONNX runtime
     # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
     variant('tgeo', default=False, description='Build the TGeo plugin')
+    variant('alignment', default=False, description='Build the alignment package')
 
     # Variants that only affect Acts examples for now
     variant('geant4', default=False, description='Build the Geant4-based examples')
@@ -167,6 +168,7 @@ class Acts(CMakePackage, CudaPackage):
     conflicts('+pythia8', when='@:0.22')
     conflicts('+pythia8', when='-examples')
     conflicts('+tgeo', when='-identification')
+    conflicts('+alignment', when='@:12')
     conflicts('%gcc@:7', when='@0.23:')
 
     def cmake_args(self):
@@ -216,7 +218,8 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("JSON", "json"),
             cmake_variant(unit_tests_label, "unit_tests"),
             cmake_variant(legacy_plugin_label, "legacy"),
-            plugin_cmake_variant("TGEO", "tgeo")
+            plugin_cmake_variant("TGEO", "tgeo"),
+            cmake_variant("ALIGNMENT", "alignment")
         ]
 
         log_failure_threshold = spec.variants['log_failure_threshold'].value
