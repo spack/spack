@@ -1406,6 +1406,7 @@ class S3FetchStrategy(URLFetchStrategy):
         if not self.archive_file:
             raise FailedDownloadError(self.url)
 
+
 @fetcher
 class GCSFetchStrategy(URLFetchStrategy):
     """FetchStrategy that pulls from a GCS bucket."""
