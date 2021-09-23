@@ -61,6 +61,7 @@ class Survey(CMakePackage):
     depends_on("py-psutil", type=('build', 'link', 'run'))
     depends_on("py-sqlalchemy", type=('build', 'link', 'run'))
     depends_on("py-pbr", type=('build', 'link', 'run'))
+    depends_on("py-pyyaml", type=('build', 'link', 'run'))
 
     extends('python')
 
