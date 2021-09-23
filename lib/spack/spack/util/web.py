@@ -494,7 +494,7 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
-    tty.debug('URL Scheme: {}'.format(url_util.parse(url).scheme))
+    tty.debug('URL Scheme: {0}'.format(url_util.parse(url).scheme))
 
     # We don't pass 'context' parameter because it was only introduced starting
     # Note: 'context' parameter was only introduced starting

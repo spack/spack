@@ -29,7 +29,7 @@ class GCSBlob:
         self.storage_client = storage.Client(self.storage_project,
                                              self.storage_credentials)
         if not self.gcs_bucket_exists():
-            tty.warn("The bucket {} does not exist, it will be created"
+            tty.warn("The bucket {0} does not exist, it will be created"
                      .format(self.bucket_name))
             self.storage_client.create_bucket(self.bucket_name)
 
@@ -38,7 +38,7 @@ class GCSBlob:
         if blob_path[0] == '/':
             blob_path = blob_path[1:]
         bucket_name = self.url.netloc
-        tty.debug("bucket_name = {}, blob_path = {}".format(bucket_name, blob_path))
+        tty.debug("bucket_name = {0}, blob_path = {1}".format(bucket_name, blob_path))
         return (bucket_name, blob_path)
 
     def get_blob(self):
@@ -51,7 +51,7 @@ class GCSBlob:
         try:
             bucket = self.storage_client.bucket(self.bucket_name)
         except Exception as ex:
-            tty.error("{}, Failed check for bucket existence".format(ex))
+            tty.error("{0}, Failed check for bucket existence".format(ex))
             sys.exit(1)
         return (bucket is not None)
 
@@ -70,7 +70,7 @@ class GCSBlob:
             blob = bucket.blob(self.blob_path)
             blob.delete()
         except Exception as ex:
-            tty.error("{}, Could not delete gcs blob {}".format(ex, self.blob_path))
+            tty.error("{0}, Could not delete gcs blob {1}".format(ex, self.blob_path))
 
     def gcs_upload_to_blob(self, local_file_path):
         try:
@@ -78,7 +78,7 @@ class GCSBlob:
             blob = bucket.blob(self.blob_path.lstrip("/"))
             blob.upload_from_filename(local_file_path)
         except Exception as ex:
-            tty.error("{}, Could not upload {} to gcs blob storage"
+            tty.error("{0}, Could not upload {1} to gcs blob storage"
                       .format(ex, local_file_path))
             sys.exit(1)
 
@@ -94,7 +94,7 @@ class GCSBlob:
             return blob_list
 
         except Exception as ex:
-            tty.error("{}, Could not get a list of gcs blobs".format(ex))
+            tty.error("{0}, Could not get a list of gcs blobs".format(ex))
             sys.exit(1)
 
     def get_blob_byte_stream(self):
@@ -123,6 +123,6 @@ class GCSBlob:
             return None
 
         except Exception as ex:
-            tty.error("{}, Could not generate a URL for GCS blob storage"
+            tty.error("{0}, Could not generate a URL for GCS blob storage"
                       .format(ex))
             sys.exit(1)

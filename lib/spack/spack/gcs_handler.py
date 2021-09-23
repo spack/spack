@@ -17,7 +17,7 @@ def gcs_open(req, *args, **kwargs):
     gcsblob = gcs_util.GCSBlob(url)
 
     if not gcsblob.gcs_blob_exists():
-        raise web_util.SpackWebError('GCS blob {} does not exist'.format(
+        raise web_util.SpackWebError('GCS blob {0} does not exist'.format(
             gcsblob.blob_path))
     stream = gcsblob.get_blob_byte_stream()
     headers = gcsblob.get_blob_headers()
