@@ -34,6 +34,7 @@ spack:
         - py-atldld
         - py-basalt
         - py-bba-datafetch
+        - py-bba-webexporter
         - py-bbp-analysis-framework
         - py-bbp-workflow
         - py-bglibpy
@@ -124,6 +125,7 @@ spack:
     - py-atldld
     - py-basalt@0.2.9
     - py-bba-datafetch
+    - py-bba-webexporter
     - py-bbp-analysis-framework
     - py-bbp-workflow ^py-h5py~mpi
     - py-bglibpy%gcc ^neuron%intel
