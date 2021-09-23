@@ -2,7 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""PATH based detection of software installed in the system"""
+"""Detection of software installed in the system based on paths inspections
+and running executables.
+"""
 import collections
 import os
 import os.path
