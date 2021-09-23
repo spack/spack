@@ -26,7 +26,3 @@ class G2c(CMakePackage):
     depends_on('libpng', when='+png')
     depends_on('jasper', when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
-
-    def cmake_args(self):
-        args = []
-        return args
