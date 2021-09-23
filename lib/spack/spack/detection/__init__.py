@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from ._common import DetectedPackage, executable_prefix, update_configuration
-from .path import by_path, executables_in_path
+from .path import by_executable, executables_in_path
 
 __all__ = [
     'DetectedPackage',
-    'by_path',
+    'by_executable',
     'executables_in_path',
     'executable_prefix',
     'update_configuration'

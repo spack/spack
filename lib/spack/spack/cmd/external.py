@@ -72,7 +72,7 @@ def external_find(args):
     if not args.tags and not packages_to_check:
         packages_to_check = spack.repo.path.all_packages()
 
-    detected_packages = spack.detection.by_path(packages_to_check)
+    detected_packages = spack.detection.by_executable(packages_to_check)
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
     )

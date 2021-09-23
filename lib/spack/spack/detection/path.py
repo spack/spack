@@ -58,7 +58,7 @@ def _group_by_prefix(paths):
     return groups.items()
 
 
-def by_path(packages_to_check, path_hints=None):
+def by_executable(packages_to_check, path_hints=None):
     """Return the list of packages that have been detected on the system,
     searching by path.
 
