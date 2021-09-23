@@ -459,7 +459,10 @@ def createtarball(args):
     # restrict matching to current environment if one is active
     env = ev.active_environment()
 
-    mirror = spack.mirror.Mirror.from_args(args)
+    mirror = spack.mirror.Mirror.from_args(
+            directory=args.directory,
+            mirror_name=args.mirror_name,
+            mirror_url=args.mirror_url)
 
     add_spec = ('package' in args.things_to_install)
     add_deps = ('dependencies' in args.things_to_install)

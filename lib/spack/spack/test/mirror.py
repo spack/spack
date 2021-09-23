@@ -110,56 +110,50 @@ def test_url_mirror(mock_archive):
 
 
 def test_bad_mirror_args():
-    mirror_from_args = (
-        lambda directory=None, mirror_name=None, mirror_url=None:
-            spack.mirror.Mirror.from_args(type('', (), {
-                'directory': directory,
-                'mirror_name': mirror_name,
-                'mirror_url': mirror_url
-            })))
-
     # Must provide no more than one of either directory, mirror_name, or
     # mirror_url arguments
     with pytest.raises(ValueError):
-        mirror_from_args(
+        spack.mirror.Mirror.from_args(
             directory='some-directory',
             mirror_name='some-mirror-name',
             mirror_url='some-mirror-url')
 
     with pytest.raises(ValueError):
-        mirror_from_args(
+        spack.mirror.Mirror.from_args(
             directory='some-directory',
             mirror_name='some-mirror-name')
 
     with pytest.raises(ValueError):
-        mirror_from_args(
+        spack.mirror.Mirror.from_args(
             directory='some-directory',
             mirror_url='some-mirror-url')
 
     with pytest.raises(ValueError):
-        mirror_from_args(
+        spack.mirror.Mirror.from_args(
             mirror_name='some-mirror-name',
             mirror_url='some-mirror-url')
 
     # No arguments: return default mirror, which should be source_cache
     cache = spack.config.get('config:source_cache')
-    default_mirror = mirror_from_args()
+    default_mirror = spack.mirror.Mirror.from_args()
 
     assert default_mirror.fetch_url == cache
     assert default_mirror.push_url == cache
 
     # BAD: callsite passes something other than a directory via "directory"
     with pytest.raises(ValueError):
-        mirror_from_args(directory='https://spack.io/example')
+        spack.mirror.Mirror.from_args(directory='https://spack.io/example')
 
     # BAD: callsite passes a mirror_name that doesn't map to a pre-configured
     #      mirror.
     with pytest.raises(ValueError):
-        mirror_from_args(mirror_name='-[@&%-not-a-valid-"-mirror-name-%&@]-')
+        spack.mirror.Mirror.from_args(
+                mirror_name='-[@&%-not-a-valid-"-mirror-name-%&@]-')
 
     # BAD: callsite passes a mirror_url that is not a URL
     with pytest.raises(ValueError):
-        mirror_from_args(mirror_url='/user/forgot/to/prepend/file://')
+        spack.mirror.Mirror.from_args(
+                mirror_url='/user/forgot/to/prepend/file://')
 
 
 @pytest.mark.skipif(

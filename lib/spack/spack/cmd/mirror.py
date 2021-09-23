@@ -324,7 +324,10 @@ def mirror_create(args):
        package archives."""
     mirror_specs = _determine_specs_to_mirror(args)
 
-    mirror = spack.mirror.Mirror.from_args(args)
+    mirror = spack.mirror.Mirror.from_args(
+            directory=args.directory,
+            mirror_name=args.mirror_name,
+            mirror_url=args.mirror_url)
     directory = url_util.format(mirror.push_url)
     existed = web_util.url_exists(directory)
 
