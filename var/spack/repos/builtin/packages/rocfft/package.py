@@ -66,7 +66,7 @@ class Rocfft(CMakePackage):
             args.append(self.define('AMDGPU_TARGETS_SRAM_ECC', ";".join(tgt_sram)))
 
         # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args
