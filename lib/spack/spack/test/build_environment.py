@@ -82,8 +82,6 @@ def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
     return _ensure
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_static_to_shared_library(build_environment):
     os.environ['SPACK_TEST_COMMAND'] = 'dump-args'
 

@@ -334,8 +334,6 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
     buildcache_cmd('install', '-auf', cspec.name)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
 
@@ -373,8 +371,6 @@ def test_push_and_fetch_keys(mock_gnupghome):
         assert new_keys[0] == fpr
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.requires_executables(*args)
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -422,8 +418,6 @@ def fake_full_hash(spec):
     return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures(
     'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
     'test_mirror'
@@ -524,8 +518,6 @@ def test_generate_indices_key_error(monkeypatch, capfd):
     assert 'Warning: No packages at {0}'.format(test_url) in err
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_generate_indices_exception(monkeypatch, capfd):
 
     def mock_list_url(url, recursive=False):
