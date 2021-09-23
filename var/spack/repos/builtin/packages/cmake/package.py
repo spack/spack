@@ -153,7 +153,7 @@ class Cmake(Package):
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enable openssl for curl bootstrapped by CMake when using +ownlibs")
-    variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
+    variant('ncurses', default=os.name != 'nt',  description='Enables the build of the ncurses gui')
 
     # Does not compile and is not covered in upstream CI (yet).
     conflicts('%gcc platform=darwin',
@@ -246,6 +246,12 @@ class Cmake(Package):
                 flags.append(self.compiler.cxx11_flag)
         return (flags, None, None)
 
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+openssl+ownlibs' in spec:
+            print(spec['openssl'].prefix)
+            env.set('OPENSSL_ROOT_DIR', spec['openssl'].prefix)
+
     def bootstrap_args(self):
         spec = self.spec
         args = []
@@ -292,7 +298,7 @@ class Cmake(Package):
 
         # When building our own private copy of curl then we need to properly
         # enable / disable oepnssl
-        if '+openssl' in spec and '+ownlibs' not in spec:
+        if '+ownlibs' in spec:
             args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
 
         args.append('-DBUILD_CursesDialog=%s' % str('+ncurses' in spec))
