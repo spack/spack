@@ -26,9 +26,9 @@ class Nemsio(CMakePackage):
 
     # nemsio 2.5.2 and earlier depend on w3nco.
     depends_on('w3nco', when='@:2.5.2')
-    
+
     # nemsio 2.5.3 and later depend on w3emc-2.9.0 or later.
     depends_on('w3emc@2.9.0:', when='@2.5.3:')
-    
+
     def cmake_args(self):
         return ['-DMPI_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc]
