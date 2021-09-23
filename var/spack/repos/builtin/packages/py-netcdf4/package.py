@@ -29,10 +29,10 @@ class PyNetcdf4(PythonPackage):
     depends_on('py-numpy@1.7:', type=('build', 'run'))
     depends_on('py-cftime', type=('build', 'run'))
     depends_on('py-mpi4py', when='+parallel')
-    
+
     depends_on('netcdf-c', when='-parallel')
     depends_on('netcdf-c+mpi', when='+parallel')
-    
+
     depends_on('hdf5@1.8.0:+hl', when='-parallel')
     depends_on('hdf5@1.8.0:+hl+mpi', when='+parallel')
 
