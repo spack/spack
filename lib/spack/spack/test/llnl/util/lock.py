@@ -874,7 +874,6 @@ class ComplexAcquireAndRelease(object):
 # enforced by barriers throughout -- steps are shown with numbers.
 #
 
-@pytest.mark.skipif(_platform == 'win32', reason='TODO: Fails on windows')
 def test_complex_acquire_and_release_chain(lock_path):
     test_chain = ComplexAcquireAndRelease(lock_path)
     multiproc_test(test_chain.p1,
@@ -1141,8 +1140,6 @@ def test_transaction_with_context_manager(lock_path, transaction, type):
     assert_only_ctx_exception(raises=False)
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='not supported on windows')
 def test_nested_write_transaction(lock_path):
     """Ensure that the outermost write transaction writes."""
 
@@ -1194,8 +1191,6 @@ def test_nested_write_transaction(lock_path):
         assert vals['wrote']
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='not supported on windows')
 def test_nested_reads(lock_path):
     """Ensure that write transactions won't re-read data."""
 
@@ -1426,8 +1421,6 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
                     lock._poll_lock(fcntl.LOCK_EX)
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='not supported on windows')
 def test_upgrade_read_okay(tmpdir):
     """Test the lock read-to-write upgrade operation."""
     with tmpdir.as_cwd():
