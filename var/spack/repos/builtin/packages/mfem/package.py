@@ -13,7 +13,7 @@ from spack import *
 class Mfem(Package, CudaPackage, ROCmPackage):
     """Free, lightweight, scalable C++ library for finite element methods."""
 
-    tags = ['FEM', 'finite elements', 'high-order', 'AMR', 'HPC']
+    tags = ['fem', 'finite-elements', 'high-order', 'amr', 'hpc', 'radiuss']
 
     homepage = 'http://www.mfem.org'
     git      = 'https://github.com/mfem/mfem.git'

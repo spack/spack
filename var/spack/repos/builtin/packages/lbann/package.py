@@ -18,6 +18,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
     git      = "https://github.com/LLNL/lbann.git"
+    tags     = ['radiuss']
 
     maintainers = ['bvanessen']
 
