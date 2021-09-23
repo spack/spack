@@ -108,9 +108,8 @@ def by_path(packages_to_check, path_hints=None):
                 pkg_prefix = executable_prefix(prefix)
 
                 if not pkg_prefix:
-                    llnl.util.tty.debug(
-                        "{0} does not end with a 'bin/' directory: it"
-                        " cannot be added as a Spack package".format(prefix))
+                    msg = "no bin/ dir found in {0}. Cannot add it as a Spack package"
+                    llnl.util.tty.debug(msg.format(prefix))
                     continue
 
                 if spec in resolved_specs:
