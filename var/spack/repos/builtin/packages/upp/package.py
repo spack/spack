@@ -18,7 +18,7 @@ class Upp(CMakePackage):
 
     maintainers = ['kgerheiser', 'edwardhartnett', 'Hang-Lei-NOAA']
 
-    version('10.0.9', branch='upp_v10.0.9', submodules=True)
+    version('10.0.9', tag='upp_v10.0.9', submodules=True)
 
     variant('openmp', default=True)
     variant('postexec', default=True)
