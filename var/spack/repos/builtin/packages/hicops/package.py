@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Hicops(Package):
+class Hicops(CMakePackage):
     """HiCOPS is a software framework for accelerating database peptide search
     workflows on supercomputers. HiCOPS provided algorithm-independent
     parallelizations and optimizations can be extended into new HPC database search
@@ -21,41 +21,33 @@ class Hicops(Package):
     version('develop', branch='develop')
 
     # Build Options
-    variant('USE_MPI', default='ON',
-            description='CMake Option: Enable MPI support.',
-            values=('ON', 'OFF'))
-    variant('USE_TIMEMORY', default='OFF',
-            description='CMake Option: Enable timemory interface. Requires timemory '
-                        'installation.',
-            values=('ON', 'OFF'))
-    variant('USE_MPIP_LIBRARY', default='OFF',
-            description='CMake Option: Enables the MPIP data_tracker via Timemory. '
-                        'Requires timemory installation.',
-            values=('ON', 'OFF'))
-    variant('TAILFIT', default='ON',
-            description='CMake Option: Use the tailfit method instead of Gumbelfit '
-                        'for e-value computation.',
-            values=('ON', 'OFF'))
-    variant('PROGRESS', default='ON',
-            description='CMake Option: Display HiCOPS progress marks.',
-            values=('ON', 'OFF'))
-    variant('MAX_SEQ_LEN', default='60',
-            description='CMake Option: Allowed maximum peptide sequence length.')
-    variant('QALEN', default='100',
-            description='CMake Option: Maximum number of top K peaks to keep when '
+    variant('mpi', default=True,
+            description='Enable MPI support.')
+    variant('timemory', default=False,
+            description='Enable timemory interface. Requires timemory '
+                        'installation.')
+    variant('mpip', default=False,
+            description='Enables the MPIP data_tracker via Timemory. '
+                        'Requires timemory installation.')
+    variant('tailfit', default=True,
+            description='Use the tailfit method instead of Gumbelfit '
+                        'for e-value computation.')
+    variant('progress', default=True,
+            description='Display HiCOPS progress marks.')
+    variant('seqlen', default='60',
+            description='Allowed maximum peptide sequence length.')
+    variant('qalen', default='100',
+            description='Maximum number of top K peaks to keep when '
                         'spectrum preprocess.')
-    variant('QCHUNK', default='10000',
-            description='CMake Option: Max size of each batch extracted from the '
+    variant('qchunk', default='10000',
+            description='Max size of each batch extracted from the '
                         'dataset.')
-    variant('MAX_HYPERSCORE', default='100',
-            description='CMake Option: Maximum allowed hyperscore computed.')
-
-    # Build Controls
-    variant('CMAKE_BUILD_TYPE', default='RelWithDebInfo',
-            description='CMake Build Control: Build type.',
-            values=('Release', 'Debug', 'MinSizeRel', 'RelWithDebInfo'))
-    variant('CMAKE_CXX_STANDARD', default='14',
-            description='CMake Build Control: C++ standard.')
+    variant('hyperscore', default='100',
+            description='Maximum allowed hyperscore computed.')
+    variant('shdpeaks', default='80',
+            description='Maximum shared b- or y-ions allowed.')
+    variant('cxx_std', default='14',
+            description='C++ standard.')
 
     depends_on('git', type='build', when='@release')
     depends_on('git', type='build', when='@develop')
@@ -67,9 +59,9 @@ class Hicops(Package):
     depends_on('py-pyparsing')
     depends_on('py-subprocess32')
     depends_on('py-six')
-    depends_on('cmake@3.11:3.21.2')
+    depends_on('cmake@3.11:3.21.2', type='build')
     depends_on('py-setuptools-scm')
-    depends_on('pkgconf')
+    depends_on('pkgconf', type='build')
     depends_on('py-et-xmlfile')
     depends_on('py-argparse')
     depends_on('py-cython')
@@ -84,7 +76,12 @@ class Hicops(Package):
     depends_on('py-openpyxl')
     depends_on('python@3.7:3.9')
 
-    conflicts('%gcc@:7.2')
+    #TODO: Add timemory and mpip depends_on(),
+    #Build failing when added. Creating a conflict as a workaround
+    conflicts('+timemory')
+    conflicts('%gcc@:7.2.0')
+    conflicts('+mpip -timemory')
+    conflicts('+mpip -mpi')
 
     def setup_run_environment(self, env):
         env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
@@ -96,22 +93,22 @@ class Hicops(Package):
 
     def install(self, spec, prefix):
         spec = self.spec
-        options = []
+        args = [ 
+            self.define('USE_MPI', True),
+            self.define('CMAKE_INSTALL_PREFIX', self.prefix),
+            self.define_from_variant('USE_TIMEMORY', 'timemory'),
+            self.define_from_variant('USE_MPIP_LIBRARY', 'mpip'),
+            self.define_from_variant('TAILFIT', 'tailfit'),
+            self.define_from_variant('PROGRESS', 'progress'),
+            self.define_from_variant('MAX_SEQ_LEN', 'seqlen'),
+            self.define_from_variant('QALEN', 'qalen'),
+            self.define_from_variant('QCHUNK', 'qchunk'),
+            self.define_from_variant('MAX_HYPERSCORE', 'hyperscore'),
+            self.define_from_variant('MAX_SHDPEAKS', 'shdpeaks'),
+            self.define_from_variant('CMAKE_CXX_STANDARD', 'cxx_std')
+        ]
 
-        options.extend([
-            '-DUSE_MPI=ON',  # known issue: forced variant
-            '-DUSE_TIMEMORY=%s' % str(spec.variants['USE_TIMEMORY'].value),
-            '-DUSE_MPIP_LIBRARY=%s' % str(spec.variants['USE_MPIP_LIBRARY'].value),
-            '-DTAILFIT=%s' % str(spec.variants['TAILFIT'].value),
-            '-DPROGRESS=%s' % str(spec.variants['PROGRESS'].value),
-            '-DMAX_SEQ_LEN=%i' % int(spec.variants['MAX_SEQ_LEN'].value),
-            '-DQALEN=%i' % int(spec.variants['QALEN'].value),
-            '-DQCHUNK=%i' % int(spec.variants['QCHUNK'].value),
-            '-DMAX_HYPERSCORE=%i' % int(spec.variants['MAX_HYPERSCORE'].value),
-            '-DCMAKE_BUILD_TYPE=%s' % str(spec.variants['CMAKE_BUILD_TYPE'].value),
-            '-DCMAKE_CXX_STANDARD=%i' % int(spec.variants['CMAKE_CXX_STANDARD'].value),
-            '-DCMAKE_INSTALL_PREFIX=%s' % str(self.prefix)
-        ])
-        cmake(*options)
+
+        cmake(*args)
         make()
         make('install')
