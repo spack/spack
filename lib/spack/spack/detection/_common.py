@@ -2,7 +2,17 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Common functions and data structures used by other subpackages"""
+"""Define a common data structure to represent external packages and a
+function to update packages.yaml given a list of detected packages.
+
+Ideally, each detection method should be placed in a specific subpackage
+and implement at least a function that returns a list of DetectedPackage
+objects. The update in packages.yaml can then be done using the function
+provided here.
+
+The module also contains other functions that might be useful across different
+detection mechanisms.
+"""
 import collections
 import os
 import os.path
