@@ -13,6 +13,7 @@ import sys
 
 import llnl.util.tty as tty
 
+
 class GCSBlob:
     def __init__(self, url):
         from google.cloud import storage
@@ -55,7 +56,6 @@ class GCSBlob:
         return (bucket is not None)
 
     def gcs_blob_exists(self):
-        from google.cloud import storage
         try:
             blob = self.storage_client.bucket(self.bucket_name).blob(self.blob_path)
             blob_exists = blob.exists()
@@ -112,13 +112,9 @@ class GCSBlob:
         return headers
 
     def gcs_url(self):
-        import os
         from google.auth.transport import requests
-        from google.auth import compute_engine
-        from datetime import datetime, timedelta
 
         try:
-            auth_request = requests.Request()
             data_bucket = self.storage_client.lookup_bucket(self.bucket_name)
             blob = data_bucket.get_blob(self.blob_path)
 
@@ -130,4 +126,3 @@ class GCSBlob:
             tty.error("{}, Could not generate a URL for GCS blob storage"
                       .format(ex))
             sys.exit(1)
-

@@ -29,7 +29,6 @@ import os.path
 import re
 import shutil
 import sys
-from typing import List, Optional  # novm
 
 import six
 import six.moves.urllib.parse as urllib_parse
@@ -1395,6 +1394,7 @@ class S3FetchStrategy(URLFetchStrategy):
         if not self.archive_file:
             raise FailedDownloadError(self.url)
 
+
 @fetcher
 class GCSFetchStrategy(URLFetchStrategy):
     """FetchStrategy that pulls from a GCS bucket."""
@@ -1441,6 +1441,7 @@ class GCSFetchStrategy(URLFetchStrategy):
 
         if not self.archive_file:
             raise FailedDownloadError(self.url)
+
 
 def stable_target(fetcher):
     """Returns whether the fetcher target is expected to have a stable
