@@ -8,8 +8,9 @@ from spack import *
 
 class Nemsiogfs(CMakePackage):
     """
-    Performs I/O for the NEMS-GFS model. This is part of the NCEPLIBS project.
-    """
+    Performs I/O for the NEMS-GFS model. 
+
+    This is part of NOAA's NCEPLIBS project."""
 
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS-nemsiogfs"
     url      = "https://github.com/NOAA-EMC/NCEPLIBS-nemsiogfs/archive/refs/tags/v2.5.3.tar.gz"
