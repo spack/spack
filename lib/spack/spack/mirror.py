@@ -476,21 +476,19 @@ def create(url, specs, skip_unstable_versions=False):
     in the specs list, it is downloaded and added to the mirror.
     """
     parsed = url_util.parse(url)
-    mirror_root = url_util.local_file_path(parsed)
+    local_mirror_root = url_util.local_file_path(parsed)
 
     # automatically spec-ify anything in the specs array.
     specs = [
         s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s)
         for s in specs]
 
-    if mirror_root:
-        # Get the absolute path of the root before we start jumping around.
-        if not os.path.isdir(mirror_root):
-            try:
-                mkdirp(mirror_root)
-            except OSError as e:
-                raise MirrorError(
-                    "Cannot create directory '%s':" % mirror_root, str(e))
+    if local_mirror_root and not os.path.isdir(local_mirror_root):
+        try:
+            mkdirp(local_mirror_root)
+        except OSError as e:
+            raise MirrorError(
+                "Cannot create directory '%s':" % local_mirror_root, str(e))
 
     mirror_cache = spack.caches.MirrorCache(
         parsed, skip_unstable_versions=skip_unstable_versions)
