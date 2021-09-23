@@ -19,16 +19,17 @@ import traceback
 import six
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import Request, urlopen
-from llnl.util.filesystem import mkdirp
+
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.error
 import spack.url
 import spack.util.crypto
-import spack.util.s3 as s3_util
 import spack.util.gcs as gcs_util
+import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 

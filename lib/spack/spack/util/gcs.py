@@ -16,8 +16,8 @@ import llnl.util.tty as tty
 
 class GCSBlob:
     def __init__(self, url):
-        from google.cloud import storage
         import google.auth
+        from google.cloud import storage
 
         self.url = url
         (self.bucket_name, self.blob_path) = self.get_bucket_blob_path()
@@ -112,7 +112,6 @@ class GCSBlob:
         return headers
 
     def gcs_url(self):
-        from google.auth.transport import requests
 
         try:
             data_bucket = self.storage_client.lookup_bucket(self.bucket_name)

@@ -12,7 +12,6 @@ import spack.util.web as web_util
 def gcs_open(req, *args, **kwargs):
     import spack.util.gcs as gcs_util
 
-
     url = url_util.parse(req.get_full_url())
     gcsblob = gcs_util.GCSBlob(url)
 
