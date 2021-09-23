@@ -6,7 +6,7 @@
 from spack import *
 
 
-class NceplibsG2c(CMakePackage):
+class G2c(CMakePackage):
     """This library contains C decoder/encoder routines for GRIB edition 2.
 
     This is part of NOAA's NCEPLIBS project."""
