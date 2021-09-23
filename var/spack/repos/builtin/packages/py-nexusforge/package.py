@@ -28,11 +28,9 @@ class PyNexusforge(PythonPackage):
     - Search and download data and metadata from a knowledge graph.
     """
     homepage = "https://github.com/BlueBrain/nexus-forge"
-    url = "https://pypi.io/packages/source/n/nexusforge/nexusforge-0.6.2.tar.gz"
+    url = "https://pypi.io/packages/source/n/nexusforge/nexusforge-0.6.3.tar.gz"
 
-    version('0.6.2', sha256='3ef1ffd4f1b72c335c9109934f0fd2395691635e575d51043160d7e672315eda')
-    version('0.6.1', sha256='d9eae463c49708413f8b3db9e22ddff901a9df4d90de3c75b850ce58453127c7')
-    version('0.6.0', sha256='2cfd1b0b5a86b62a865ed3f2e54808e00f37d6069ca2bdd84fecc963f7312a15')
+    version('0.6.3', sha256='ac97247509cf0e12ad4200511e0bd16d4789c0fa39450951ab54dea8c1aa9aa7')
 
     depends_on('py-setuptools', type='build')
     depends_on('python@3.5:', type=('build', 'run'))
@@ -44,8 +42,9 @@ class PyNexusforge(PythonPackage):
     depends_on('py-nest-asyncio@1.5.1:', type=('build', 'run'))
     depends_on('py-pyld', type=('build', 'run'))
     depends_on('py-pyshacl@0.11.6.post1', type=('build', 'run'))
-    depends_on('py-rdflib-jsonld', type=('build', 'run'))
-    depends_on('py-nest-asyncio@1.5.1:', when='@0.6.2:', type=('build', 'run'))
+    depends_on('py-rdflib-jsonld@:0.6.099', type=('build', 'run'))
+    depends_on('py-rdflib@:5.999', type=('build', 'run'))
+    depends_on('py-nest-asyncio@1.5.1:', type=('build', 'run'))
     depends_on('py-scikit-learn', type='run')
     depends_on('py-pytest', type='test')
     depends_on('py-pytest-cov', type='test')
