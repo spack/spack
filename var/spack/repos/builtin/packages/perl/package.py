@@ -129,6 +129,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     phases = ['configure', 'build', 'install']
 
+    def patch(self):
+        # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
+        os.chmod('lib/perlbug.t', 0o644)
+        filter_file('!/$B/', '! (/(?:$B|PATH)/)', 'lib/perlbug.t')
+
     @classmethod
     def determine_version(cls, exe):
         perl = spack.util.executable.Executable(exe)
