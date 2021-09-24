@@ -252,17 +252,31 @@ class AutotoolsPackage(PackageBase):
         if self.force_autoreconf:
             force_remove(self.configure_abs_path)
 
+    def _autoreconf_warning(self, spec, missing):
+        msg = ("Cannot generate configure: missing dependencies {0}.\n\nPlease add "
+               "the following lines to the package:\n\n".format(", ".join(missing)))
+
+        for dep in missing:
+            msg += ("    depends_on('{0}', type='build', when='@{1}')\n"
+                    .format(dep, spec.version))
+
+        msg += "\nUpdate the version (when='@{0}') as needed.".format(spec.version)
+
+        return msg
+
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
         if os.path.exists(self.configure_abs_path):
             return
         # Else try to regenerate it
-        autotools = ['m4', 'autoconf', 'automake', 'libtool']
-        missing = [x for x in autotools if x not in spec]
+        needed_dependencies = ['autoconf', 'automake', 'libtool']
+        build_deps = [d.name for d in spec.dependencies(deptype='build')]
+        missing = [x for x in needed_dependencies if x not in build_deps]
+
         if missing:
-            msg = 'Cannot generate configure: missing dependencies {0}'
-            raise RuntimeError(msg.format(missing))
+            raise RuntimeError(self._autoreconf_warning(spec, missing))
+
         tty.msg('Configure script not found: trying to generate it')
         tty.warn('*********************************************************')
         tty.warn('* If the default procedure fails, consider implementing *')
