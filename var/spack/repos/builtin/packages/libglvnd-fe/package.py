@@ -37,8 +37,6 @@ class LibglvndFe(BundlePackage):
     depends_on('libglvnd-be-glx', when='+glx')
     depends_on('libglvnd-be-egl', when='+egl')
 
-    # https://github.com/NVIDIA/libglvnd/blob/a4c332e3269ec5b1175f5fb63af99b070093adac/src/generate/genCommon.py#L39-L44
-    
     provides('gl')
 
     provides('glx@1.4', when='+glx')
@@ -47,9 +45,9 @@ class LibglvndFe(BundlePackage):
     @property
     def gl_libs(self):
         result = find_libraries('libOpenGL',
-                              root=self.spec['libglvnd'].prefix,
-                              shared=True,
-                              recursive=True)
+                                root=self.spec['libglvnd'].prefix,
+                                shared=True,
+                                recursive=True)
         print('\nexporting GL LIBS:\n')
         print('\n')
         print(result)
@@ -59,9 +57,9 @@ class LibglvndFe(BundlePackage):
     @property
     def glx_libs(self):
         result = find_libraries('libGLX',
-                              root=self.spec['libglvnd'].prefix,
-                              shared=True,
-                              recursive=True)
+                                root=self.spec['libglvnd'].prefix,
+                                shared=True,
+                                recursive=True)
         print('\nexporting GLX LIBS:\n')
         print('\n')
         print(result)
@@ -71,9 +69,9 @@ class LibglvndFe(BundlePackage):
     @property
     def egl_libs(self):
         result = find_libraries('libEGL',
-                              root=self.spec['libglvnd'].prefix,
-                              shared=True,
-                              recursive=True)
+                                root=self.spec['libglvnd'].prefix,
+                                shared=True,
+                                recursive=True)
         print('\nexporting EGL LIBS:\n')
         print('\n')
         print(result)

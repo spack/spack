@@ -51,7 +51,7 @@ class Mesa(MesonPackage):
 
     is_linux = sys.platform.startswith('linux')
     variant('glvnd', default=is_linux,
-        description="Expose Graphics APIs through libglvnd")
+            description="Expose Graphics APIs through libglvnd")
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
     # TODO: effectively deal with EGL.  The implications of this have not been
@@ -132,16 +132,15 @@ class Mesa(MesonPackage):
 
     def meson_args(self):
         spec = self.spec
-        args = [
-            '-Dvulkan-drivers=',
-            '-Dgallium-vdpau=disabled',
-            '-Dgallium-xvmc=disabled',
-            '-Dgallium-omx=disabled',
-            '-Dgallium-va=disabled',
-            '-Dgallium-xa=disabled',
-            '-Dgallium-nine=false',
-            '-Dgallium-opencl=disabled',
-            '-Dbuild-tests=false',]
+        args = ['-Dvulkan-drivers=',
+                '-Dgallium-vdpau=disabled',
+                '-Dgallium-xvmc=disabled',
+                '-Dgallium-omx=disabled',
+                '-Dgallium-va=disabled',
+                '-Dgallium-xa=disabled',
+                '-Dgallium-nine=false',
+                '-Dgallium-opencl=disabled',
+                '-Dbuild-tests=false']
         args_platforms = []
         args_gallium_drivers = ['swrast']
         args_dri_drivers = []
@@ -152,7 +151,6 @@ class Mesa(MesonPackage):
             args.append('-Dlibunwind=disabled')
 
         num_frontends = 0
-
 
         use_dri = ('+egl' in spec) or ('+glvnd' in spec)
         args.append('-Ddri=true' if use_dri else '-Ddri=false')

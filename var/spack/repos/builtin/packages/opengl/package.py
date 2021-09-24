@@ -104,7 +104,7 @@ class Opengl(Package):
             if libs:
                 result.extend(libs)
                 break
-        
+
         if '+egl' in self.spec:
             for dir in ['lib64', 'lib']:
                 libs = find_libraries('libEGL', join_path(self.prefix, dir),
