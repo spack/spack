@@ -81,16 +81,20 @@ class Papi(AutotoolsPackage, ROCmPackage):
             env.set('PAPI_CUDA_ROOT', spec['cuda'].prefix)
         if '+rocm' in spec:
             env.set('PAPI_ROCM_ROOT', spec['hsa-rocr-dev'].prefix)
-            env.append_flags('CFLAGS', '-I%s/rocprofiler/include' % spec['rocprofiler-dev'].prefix)
-            env.set('ROCP_METRICS', '%s/rocprofiler/lib/metrics.xml' % spec['rocprofiler-dev'].prefix)
+            env.append_flags('CFLAGS',
+                             '-I%s/rocprofiler/include'
+                             % spec['rocprofiler-dev'].prefix)
+            env.set('ROCP_METRICS',
+                    '%s/rocprofiler/lib/metrics.xml' % spec['rocprofiler-dev'].prefix)
             env.set('ROCPROFILER_LOG', '1')
             env.set('HSA_VEN_AMD_AQLPROFILE_LOG', '1')
             env.set('AQLPROFILE_READ_API', '1')
-            # If HSA_TOOLS_LIB is set to "librocprofiler64.so" (as recommended) this doesn't work
-            # due to a conflict between the version installed by spack and the system version.
+            # Setting HSA_TOOLS_LIB=librocprofiler64.so (as recommended) doesn't work
+            # due to a conflict between the spack and system-installed versions.
             env.set('HSA_TOOLS_LIB', 'unset')
         if '+rocm_smi' in spec:
-            env.append_flags('CFLAGS', '-I%s/rocm_smi' % spec['rocm-smi-lib'].prefix.include)
+            env.append_flags('CFLAGS',
+                             '-I%s/rocm_smi' % spec['rocm-smi-lib'].prefix.include)
 
     setup_run_environment = setup_build_environment
 
