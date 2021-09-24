@@ -14,7 +14,8 @@ class PyTorchvision(PythonPackage):
 
     maintainers = ['adamjstewart']
 
-    version('master', branch='master')
+    version('main', branch='main')
+    version('master', branch='main', deprecated=True)
     version('0.10.0', sha256='82bb2c2b03d8a65f4ea74bb0ee5566b0876a1992aceefb1e11475c7b5d2e857b')
     version('0.9.1', sha256='79964773729880e0eee0e6af13f336041121d4cc8491a3e2c0e5f184cac8a718')
     version('0.9.0', sha256='9351ed92aded632f8c7f59dfadac13c191a834babe682f5785ea47e6fcf6b472')
