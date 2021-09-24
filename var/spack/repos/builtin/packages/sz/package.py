@@ -14,7 +14,6 @@ class Sz(CMakePackage):
     git      = "https://github.com/szcompressor/sz"
     maintainers = ['disheng222', 'robertu94']
 
-<<<<<<< HEAD
     tags = ['ecp', 'e4s']
 
     def url_for_version(self, version):
@@ -23,8 +22,6 @@ class Sz(CMakePackage):
         url = "https://github.com/szcompressor/SZ/releases/download/v{0}/SZ-{0}.tar.gz"
         return url.format(version)
 
-=======
->>>>>>> develop
     version('master', branch='master')
     version('2.1.12', sha256='3712b2cd7170d1511569e48a208f02dfb72ecd7ad053c321e2880b9083e150de')
     version('2.1.11.1', sha256='e6fa5c969b012782b1e5e9fbd1cd7d1c0ace908d9ec982e78b2910ec5c2161ac')
