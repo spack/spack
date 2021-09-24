@@ -2,19 +2,20 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import multiprocessing.pool
 import os
 import platform
 import re
 import shutil
-import multiprocessing.pool
+
+import macholib.mach_o
+import macholib.MachO
 from ordereddict_backport import OrderedDict
 
 import llnl.util.lang
 import llnl.util.tty as tty
-import macholib.MachO
-import macholib.mach_o
+
 import spack.architecture
-import spack.cmd
 import spack.repo
 import spack.spec
 import spack.util.executable as executable
@@ -86,7 +87,8 @@ def _patchelf():
         return patchelf.path
 
     # Check if patchelf spec is installed
-    spec = spack.spec.Spec('patchelf').concretized()
+    spec = spack.spec.Spec('patchelf')
+    spec._old_concretize()
     exe_path = os.path.join(spec.prefix.bin, "patchelf")
     if spec.package.installed and os.path.exists(exe_path):
         return exe_path
@@ -867,7 +869,7 @@ def is_relocatable(spec):
     """Returns True if an installed spec is relocatable.
 
     Args:
-        spec (Spec): spec to be analyzed
+        spec (spack.spec.Spec): spec to be analyzed
 
     Returns:
         True if the binaries of an installed spec

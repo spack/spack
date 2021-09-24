@@ -22,8 +22,9 @@ class Xyce(CMakePackage):
     url      = 'https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz'
     maintainers = ['kuberry']
 
-    version('master',  branch='master')
-    version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5', preferred=True)
+    version('github.master',  branch='master', preferred=True)
+    version('7.3.0', '43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446')
+    version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5')
 
     depends_on('cmake@3.13:', type='build')
     depends_on('flex')
@@ -43,19 +44,16 @@ class Xyce(CMakePackage):
 
     # Xyce is built against an older version of Trilinos unlikely to be
     # used for any other purpose.
-    depends_on('trilinos@12.12.1 +amesos+amesos2+anasazi+aztec+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+teuchos+trilinoscouplings+zoltan+stokhos+amesos2basker+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=all')
+    depends_on('trilinos@12.12.1 +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=all')
 
-    # MPI options must be consistent with Trilinos
-    depends_on('trilinos~mpi', when='~mpi')
-    depends_on('trilinos+mpi', when='+mpi')
+    # Propagate variants to trilinos:
+    for _variant in ('mpi',):
+        depends_on('trilinos~' + _variant, when='~' + _variant)
+        depends_on('trilinos+' + _variant, when='+' + _variant)
 
     # The default settings for various Trilinos variants would require the
     # installation of many more packages than are needed for Xyce.
-    # The default variants in Trilinos have been set for several
-    # applications, namely xSDK, deal.ii, and DTK. Future changes to the
-    # Trilinos recipe will disable all packages by default. At that
-    # point, these ~variants can be removed from the following recipes.
-    depends_on('trilinos~adios2~alloptpkgs~boost~cgns~chaco~cuda~cuda_rdc~debug~dtk~exodus~float~glm~gtest~hwloc~hypre~ifpack2~intrepid~intrepid2~ipo~matio~mesquite~metis~minitensor~ml~muelu~mumps~netcdf~openmp~phalanx~piro~pnetcdf~python~rol~rythmos~shards~shared~shylu~stk~stratimikos~strumpack~superlu~superlu-dist~teko~tempus~wrapper~x11~xsdkflags~zlib~zoltan2')
+    depends_on('trilinos~float~ifpack2~ml~muelu~zoltan2')
 
     def cmake_args(self):
         spec = self.spec

@@ -120,7 +120,8 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on('elpa~openmp', when='~openmp')
         depends_on('elpa@2011.12:2016.13', when='@:5.999')
         depends_on('elpa@2011.12:2017.11', when='@6.0:6.999')
-        depends_on('elpa@2018.05:', when='@7.0:')
+        depends_on('elpa@2018.05:2020.11.001', when='@7.0:8.2')
+        depends_on('elpa@2021.05:', when='@8.3:')
 
     with when('+plumed'):
         depends_on('plumed+shared')
@@ -138,11 +139,12 @@ class Cp2k(MakefilePackage, CudaPackage):
     # like ELPA, SCALAPACK are independent and Spack will ensure that
     # a consistent/compatible combination is pulled into the dependency graph.
     with when('+sirius'):
-        depends_on('sirius+fortran+vdwxc+shared')
+        depends_on('sirius+fortran+shared')
         depends_on('sirius+openmp', when='+openmp')
         depends_on('sirius~openmp', when='~openmp')
         depends_on('sirius@:6.999', when='@:7.999')
-        depends_on('sirius@7:', when='@8:')
+        depends_on('sirius@7:7.0.999', when='@8:8.2')
+        depends_on('sirius@7.2:', when='@8.3:')
         conflicts('~mpi')
         # sirius support was introduced in 7+
         conflicts('@:6.999')
@@ -298,6 +300,9 @@ class Cp2k(MakefilePackage, CudaPackage):
         elif '%xl' in spec:
             fcflags += ['-qpreprocess', '-qstrict', '-q64']
             ldflags += ['-Wl,--allow-multiple-definition']
+
+        if '%gcc@10: +mpi' in spec and spec['mpi'].name in ['mpich', 'cray-mpich']:
+            fcflags += ['-fallow-argument-mismatch']  # https://github.com/pmodels/mpich/issues/4300
 
         if '+openmp' in spec:
             cflags.append(self.compiler.openmp_flag)

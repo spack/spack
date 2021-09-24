@@ -12,7 +12,7 @@ class Minivite(MakefilePackage):
     """
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "http://hpc.pnl.gov/people/hala/grappolo.html"
+    homepage = "https://hpc.pnl.gov/people/hala/grappolo.html"
     git      = "https://github.com/Exa-Graph/miniVite.git"
 
     version('develop', branch='master')

@@ -12,7 +12,7 @@ class Sumo(CMakePackage):
     networks. It allows for intermodal simulation including pedestrians and
     comes with a large set of tools for scenario creation."""
 
-    homepage = "http://projects.eclipse.org/projects/technology.sumo"
+    homepage = "https://projects.eclipse.org/projects/technology.sumo"
     url      = "https://github.com/eclipse/sumo/archive/v1_5_0.tar.gz"
 
     version('1.5.0', sha256='be6ba0361b487a5e71c81e60b4c07a67826d5e170500c10c37374c1086ac2cb6')

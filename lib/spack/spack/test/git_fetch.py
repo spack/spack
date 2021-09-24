@@ -9,15 +9,15 @@ import shutil
 
 import pytest
 
-from llnl.util.filesystem import working_dir, touch, mkdirp
+from llnl.util.filesystem import mkdirp, touch, working_dir
 
-import spack.repo
 import spack.config
+import spack.repo
+from spack.fetch_strategy import GitFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.version import ver
-from spack.fetch_strategy import GitFetchStrategy
 from spack.util.executable import which
+from spack.version import ver
 
 pytestmark = pytest.mark.skipif(
     not which('git'), reason='requires git to be installed')
@@ -212,7 +212,7 @@ def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
                 ncommits = len(commits)
 
         if get_full_repo:
-            assert(nbranches == 5)
+            assert(nbranches >= 5)
             assert(ncommits == 2)
         else:
             assert(nbranches == 2)

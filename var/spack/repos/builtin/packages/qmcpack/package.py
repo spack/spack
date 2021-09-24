@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import llnl.util.tty as tty
+
+from spack import *
 
 
 class Qmcpack(CMakePackage, CudaPackage):
@@ -12,7 +13,7 @@ class Qmcpack(CMakePackage, CudaPackage):
        Carlo (QMC) simulation code."""
 
     # Package information
-    homepage = "http://www.qmcpack.org/"
+    homepage = "https://www.qmcpack.org/"
     git      = "https://github.com/QMCPACK/qmcpack.git"
     maintainers = ['naromero77']
     tags = ['ecp', 'ecp-apps']

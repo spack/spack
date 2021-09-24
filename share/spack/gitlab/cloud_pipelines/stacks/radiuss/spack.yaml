@@ -1,0 +1,96 @@
+spack:
+  concretization: separately
+  view: false
+
+  config:
+    concretizer: clingo
+    install_tree:
+      root: /home/software/radiuss
+      padded_length: 512
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  packages:
+    all:
+      target: [x86_64]
+
+      providers:
+        mpi: [mvapich2]
+
+  definitions:
+    #- compilers: ['%gcc@8.3.1', '%clang@10.0.0']
+    - compilers: ['%gcc@7.5.0']
+    
+    # Note skipping spot since no spack package for it
+    - radiuss:
+      - ascent  # ^conduit@0.6.0
+      - axom ^umpire@5.0.1 ^raja@0.13.0
+      - blt
+      - caliper
+      #- care  ## ~benchmarks ~examples ~tests
+      #- chai  ## ~benchmarks ~examples ~tests
+      - conduit  # ^hdf5+shared
+      - flux-core
+      #- flux-sched
+      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm  # same issue w/chai
+      - hypre
+      - lbann
+      - lvarray ~tests  # per Spack issue #23192  # ~examples
+      - mfem
+      - py-hatchet
+      - py-maestrowf
+      - py-merlin
+      - py-shroud
+      - raja # ~examples  # ~tests
+      - samrai
+      - scr
+      - sundials
+      - umpire # ~openmp
+      #- visit   # ^mesa-glu@9.0.0
+      - xbraid
+      - zfp
+
+  mirrors:
+    mirror: "s3://spack-binaries-develop/radiuss"
+
+  specs:
+  - matrix:
+    - [$radiuss]
+    - [$compilers]
+
+  gitlab-ci:
+    image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - spack -d ci rebuild
+    mappings:
+      - match: [ascent, axom, sundials, umpire, vtk-h, vtk-m]
+        runner-attributes:
+          tags: ["spack", "public", "xlarge", "x86_64"]
+      - match: ['os=ubuntu18.04']
+        runner-attributes:
+          tags: ["spack", "public", "large", "x86_64"]
+    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    service-job-attributes:
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+        - cd share/spack/gitlab/cloud_pipelines/stacks/radiuss
+        - spack env activate --without-view .
+      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
+      #before_script:
+      #  - . "./share/spack/setup-env.sh"
+      #  - spack --version
+      #  - cd share/spack/gitlab/cloud_pipelines/stacks/radiuss
+      #  - spack env activate --without-view .
+      tags: ["spack", "public", "medium", "x86_64"]
+
+  cdash:
+    build-group: RADIUSS
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 from spack import *
 from spack.operating_systems.mac_os import macos_version
 
@@ -19,7 +20,7 @@ class Seacas(CMakePackage):
      translate exodus databases.  Default is to build the exodus and
      IOSS libraries and the io_shell, io_info, struc_to_unstruc apps.
     """
-    homepage = "http://gsjaardema.github.io/seacas/"
+    homepage = "https://gsjaardema.github.io/seacas/"
     git      = "https://github.com/gsjaardema/seacas.git"
     url      = "https://github.com/gsjaardema/seacas/archive/v2019-08-20.tar.gz"
     maintainers = ['gsjaardema']
@@ -96,6 +97,9 @@ class Seacas(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     depends_on('cmake@3.1:', type='build')
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.lib)
 
     def cmake_args(self):
         spec = self.spec

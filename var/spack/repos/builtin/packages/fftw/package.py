@@ -5,7 +5,9 @@
 
 import os
 import os.path
+
 import llnl.util.lang
+
 from spack import *
 
 
@@ -83,6 +85,17 @@ class FftwBase(AutotoolsPackage):
     def selected_precisions(self):
         """Precisions that have been selected in this build"""
         return self.spec.variants['precision'].value
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%apple-clang +openmp'):
+            env.append_flags(
+                'CPPFLAGS', self.compiler.openmp_flag)
+            env.append_flags(
+                'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
 
     def configure(self, spec, prefix):
         # Base options
@@ -205,9 +218,9 @@ class Fftw(FftwBase):
        believe that FFTW, which is free software, should become the FFT
        library of choice for most applications."""
 
-    homepage = "http://www.fftw.org"
-    url = "http://www.fftw.org/fftw-3.3.4.tar.gz"
-    list_url = "http://www.fftw.org/download.html"
+    homepage = "https://www.fftw.org"
+    url = "https://www.fftw.org/fftw-3.3.4.tar.gz"
+    list_url = "https://www.fftw.org/download.html"
 
     version('3.3.9', sha256='bf2c7ce40b04ae811af714deb512510cc2c17b9ab9d6ddcf49fe4487eea7af3d')
     version('3.3.8', sha256='6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303')

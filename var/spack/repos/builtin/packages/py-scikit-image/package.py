@@ -10,7 +10,7 @@ class PyScikitImage(PythonPackage):
     """Image processing algorithms for SciPy, including IO, morphology,
     filtering, warping, color manipulation, object detection, etc."""
 
-    homepage = "http://scikit-image.org/"
+    homepage = "https://scikit-image.org/"
     pypi = "scikit-image/scikit-image-0.17.2.tar.gz"
 
     version('0.18.1', sha256='fbb618ca911867bce45574c1639618cdfb5d94e207432b19bc19563d80d2f171')

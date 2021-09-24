@@ -9,7 +9,7 @@ from spack import *
 class Med(CMakePackage):
     """The MED file format is a specialization of the HDF5 standard."""
 
-    homepage = "http://docs.salome-platform.org/latest/dev/MEDCoupling/med-file.html"
+    homepage = "https://docs.salome-platform.org/latest/dev/MEDCoupling/med-file.html"
     url = "https://files.salome-platform.org/Salome/other/med-3.2.0.tar.gz"
 
     maintainers = ['likask']

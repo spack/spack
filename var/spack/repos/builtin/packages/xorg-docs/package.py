@@ -12,7 +12,7 @@ class XorgDocs(AutotoolsPackage, XorgPackage):
 
     The preferred documentation format for these documents is DocBook XML."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/doc/xorg-docs"
+    homepage = "https://cgit.freedesktop.org/xorg/doc/xorg-docs"
     xorg_mirror_path = "doc/xorg-docs-1.7.1.tar.gz"
 
     version('1.7.1', sha256='360707db2ba48f6deeb53d570deca9fa98218af48ead4a726a67f63e3ef63816')

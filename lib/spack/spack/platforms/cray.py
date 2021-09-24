@@ -4,19 +4,21 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import os.path
-import re
 import platform
+import re
 
 import archspec.cpu
 
 import llnl.util.tty as tty
+
+import spack.target
+from spack.operating_systems.cray_backend import CrayBackend
+from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.paths import build_env_path
 from spack.util.executable import Executable
-from spack.architecture import Platform, Target, NoPlatformError
-from spack.operating_systems.cray_frontend import CrayFrontend
-from spack.operating_systems.cray_backend import CrayBackend
 from spack.util.module_cmd import module
 
+from ._platform import NoPlatformError, Platform
 
 _craype_name_to_target_name = {
     'x86-cascadelake': 'cascadelake',
@@ -51,7 +53,7 @@ class Cray(Platform):
         # Make all craype targets available.
         for target in self._avail_targets():
             name = _target_name_from_craype_target_name(target)
-            self.add_target(name, Target(name, 'craype-%s' % target))
+            self.add_target(name, spack.target.Target(name, 'craype-%s' % target))
 
         self.back_end = os.environ.get('SPACK_BACK_END',
                                        self._default_target_from_env())
@@ -63,12 +65,12 @@ class Cray(Platform):
         # Setup frontend targets
         for name in archspec.cpu.TARGETS:
             if name not in self.targets:
-                self.add_target(name, Target(name))
+                self.add_target(name, spack.target.Target(name))
         self.front_end = os.environ.get(
             'SPACK_FRONT_END', archspec.cpu.host().name
         )
         if self.front_end not in self.targets:
-            self.add_target(self.front_end, Target(self.front_end))
+            self.add_target(self.front_end, spack.target.Target(self.front_end))
 
         front_distro = CrayFrontend()
         back_distro = CrayBackend()

@@ -18,7 +18,7 @@ class PyEspresso(CMakePackage):
        Boltzmann solver for hydrodynamic interactions, and allows several
        particle couplings to the LB fluid.
     """
-    homepage = "http://espressomd.org/"
+    homepage = "https://espressomd.org/"
     git      = "https://github.com/espressomd/espresso.git"
     url      = "https://github.com/espressomd/espresso/releases/download/4.0.0/espresso-4.0.0.tar.gz"
 

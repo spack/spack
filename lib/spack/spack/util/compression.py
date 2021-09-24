@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
 import os
+import re
 from itertools import product
+
 from spack.util.executable import which
 
 # Supported archive extensions.

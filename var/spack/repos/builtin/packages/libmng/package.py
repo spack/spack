@@ -10,7 +10,7 @@ class Libmng(CMakePackage):
     """THE reference library for reading, displaying, writing
        and examining Multiple-Image Network Graphics.  MNG is the animation
        extension to the popular PNG image format."""
-    homepage = "http://sourceforge.net/projects/libmng/"
+    homepage = "https://sourceforge.net/projects/libmng/"
     url      = "http://downloads.sourceforge.net/project/libmng/libmng-devel/2.0.3/libmng-2.0.3.tar.gz"
 
     version('2.0.3', sha256='cf112a1fb02f5b1c0fce5cab11ea8243852c139e669c44014125874b14b7dfaa')

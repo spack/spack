@@ -5,14 +5,15 @@
 
 import glob
 import os
+
 import pytest
 
 import llnl.util.filesystem as fs
+
 import spack.repo
 from spack.build_environment import get_std_cmake_args, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
-
 
 DATA_PATH = os.path.join(spack.paths.test_path, 'data')
 
@@ -167,6 +168,9 @@ class TestAutotoolsPackage(object):
 
         options = pkg.with_or_without('bvv')
         assert '--with-bvv' in options
+
+        options = pkg.with_or_without('lorem-ipsum', variant='lorem_ipsum')
+        assert '--without-lorem-ipsum' in options
 
     def test_none_is_allowed(self):
         s = Spec('a foo=none')

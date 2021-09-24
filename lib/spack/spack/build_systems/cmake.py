@@ -10,10 +10,11 @@ import platform
 import re
 from typing import List  # novm
 
-import spack.build_environment
 from llnl.util.filesystem import working_dir
-from spack.directives import depends_on, variant, conflicts
-from spack.package import PackageBase, InstallError, run_after
+
+import spack.build_environment
+from spack.directives import conflicts, depends_on, variant
+from spack.package import InstallError, PackageBase, run_after
 
 # Regex to extract the primary generator from the CMake generator
 # string.
@@ -235,7 +236,7 @@ class CMakePackage(PackageBase):
         of ``cmake_var``.
 
         This utility function is similar to
-        :py:meth:`~.AutotoolsPackage.with_or_without`.
+        :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without`.
 
         Examples:
 
@@ -253,9 +254,9 @@ class CMakePackage(PackageBase):
 
             .. code-block:: python
 
-                [define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-                 define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
-                 define_from_variant('SWR')]
+                [self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+                 self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
+                 self.define_from_variant('SWR')]
 
             will generate the following configuration options:
 

@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import re
+
 import llnl.util.tty as tty
 
 from spack import *
-
-import os
-import re
 
 
 class Openssl(Package):   # Uses Fake Autotools, should subclass Package
@@ -16,18 +16,19 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
        commercial-grade, and full-featured toolkit for the Transport
        Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
        It is also a general-purpose cryptography library."""
-    homepage = "http://www.openssl.org"
+    homepage = "https://www.openssl.org"
 
     # URL must remain http:// so Spack can bootstrap curl
-    url = "http://www.openssl.org/source/openssl-1.1.1d.tar.gz"
-    list_url = "http://www.openssl.org/source/old/"
+    url = "https://www.openssl.org/source/openssl-1.1.1d.tar.gz"
+    list_url = "https://www.openssl.org/source/old/"
     list_depth = 1
 
     executables = ['openssl']
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
-    version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5')
+    version('1.1.1l', sha256='0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1')
+    version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5', deprecated=True)
     version('1.1.1j', sha256='aaf2fcb575cdf6491b98ab4829abf78a3dec8402b8b81efc8f23c00d443981bf', deprecated=True)
     version('1.1.1i', sha256='e8be6a35fe41d10603c3cc635e93289ed00bf34b79671a3a4de64fcee00d5242', deprecated=True)
     version('1.1.1h', sha256='5c9ca8774bd7b03e5784f26ae9e9e6d749c9da2438545077e6b3d755a06595d9', deprecated=True)
@@ -162,6 +163,12 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         mkdirp(pkg_dir)
 
         for directory in system_dirs:
+            # Link configuration file
+            sys_conf = join_path(directory, 'openssl.cnf')
+            pkg_conf = join_path(pkg_dir, 'openssl.cnf')
+            if os.path.exists(sys_conf) and not os.path.exists(pkg_conf):
+                os.symlink(sys_conf, pkg_conf)
+
             sys_cert = join_path(directory, 'cert.pem')
             pkg_cert = join_path(pkg_dir, 'cert.pem')
             # If a bundle exists, use it. This is the preferred way on Fedora,

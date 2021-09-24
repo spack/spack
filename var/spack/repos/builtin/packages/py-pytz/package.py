@@ -9,7 +9,7 @@ from spack import *
 class PyPytz(PythonPackage):
     """World timezone definitions, modern and historical."""
 
-    homepage = "http://pythonhosted.org/pytz"
+    homepage = "https://pythonhosted.org/pytz"
     pypi = "pytz/pytz-2019.3.tar.gz"
 
     version('2020.1', sha256='c35965d010ce31b23eeb663ed3cc8c906275d6be1a34393a1d73a41febf4a048')

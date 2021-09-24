@@ -5,9 +5,10 @@
 
 
 import itertools
-import re
 import os
+import re
 import sys
+
 import llnl.util.tty as tty
 
 
@@ -177,7 +178,7 @@ class Openmpi(AutotoolsPackage):
     patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
     patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10.999%nag')
 
-    patch('nvhpc-libtool.patch', when='@develop %nvhpc')
+    patch('nvhpc-libtool.patch', when='@master %nvhpc')
     patch('nvhpc-configure.patch', when='%nvhpc')
 
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
@@ -267,10 +268,11 @@ class Openmpi(AutotoolsPackage):
     if sys.platform != 'darwin':
         depends_on('numactl')
 
-    depends_on('autoconf', type='build', when='@develop')
-    depends_on('automake', type='build', when='@develop')
-    depends_on('libtool',  type='build', when='@develop')
-    depends_on('m4',       type='build', when='@develop')
+    depends_on('autoconf', type='build', when='@master')
+    depends_on('automake', type='build', when='@master')
+    depends_on('libtool',  type='build', when='@master')
+    depends_on('m4',       type='build', when='@master')
+    depends_on('pandoc', type='build', when='@master')
 
     depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
@@ -285,6 +287,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc@:1.999', when='@:3.999.999 ~internal-hwloc')
 
     depends_on('hwloc +cuda', when='+cuda ~internal-hwloc')
+    depends_on('cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('zlib', when='@3.0.0:')
@@ -307,7 +310,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('knem', when='fabrics=knem')
 
     depends_on('lsf', when='schedulers=lsf')
-    depends_on('openpbs', when='schedulers=tm')
+    depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
 
     depends_on('openssh', type='run')
@@ -588,7 +591,7 @@ class Openmpi(AutotoolsPackage):
     def with_or_without_tm(self, activated):
         if not activated:
             return '--without-tm'
-        return '--with-tm={0}'.format(self.spec['openpbs'].prefix)
+        return '--with-tm={0}'.format(self.spec['pbs'].prefix)
 
     @run_before('autoreconf')
     def die_without_fortran(self):

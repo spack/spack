@@ -12,7 +12,8 @@ class PyLibensemble(PythonPackage):
 
     homepage = "https://libensemble.readthedocs.io"
     pypi = "libensemble/libensemble-0.7.2.tar.gz"
-    git      = "https://github.com/Libensemble/libensemble.git"
+    git = "https://github.com/Libensemble/libensemble.git"
+    maintainers = ['shuds13']
 
     tags = ['e4s']
 
@@ -36,6 +37,7 @@ class PyLibensemble(PythonPackage):
     variant('nlopt',  default=False, description='Install with nlopt')
     variant('mpmath',  default=False, description='Install with mpmath')
     variant('deap',  default=False, description='Install with DEAP')
+    variant('tasmanian',  default=False, description='Install with tasmanian')
 
     # depends_on('python@2.7:2.8,3.3:', when='@:0.4.1')
     # depends_on('python@3.5:', when='@0.5.0:')
@@ -53,4 +55,5 @@ class PyLibensemble(PythonPackage):
     depends_on('nlopt', type=('build', 'run'), when='+nlopt')
     depends_on('py-mpmath', type=('build', 'run'), when='+mpmath')
     depends_on('py-deap', type=('build', 'run'), when='+deap')
+    depends_on('tasmanian+python', type=('build', 'run'), when='+tasmanian')
     conflicts('~mpi', when='@:0.4.1')

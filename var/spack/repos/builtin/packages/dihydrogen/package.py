@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 
 
@@ -52,8 +53,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             description='Use OpenMP for threading in the BLAS library')
     variant('int64_blas', default=False,
             description='Use 64bit integers for BLAS.')
-    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl'),
-            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL')
+    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl', 'libsci'),
+            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL/LibSci')
 
     conflicts('~cuda', when='+nvshmem')
 
@@ -67,8 +68,9 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('aluminum@0.7.0:', when='@:0.0,0.2.1: +al')
 
     # Add Aluminum variants
-    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
-    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
+    depends_on('aluminum +cuda +nccl +cuda_rma', when='+al +cuda')
+    depends_on('aluminum +rocm +rccl', when='+al +rocm')
+    depends_on('aluminum +ht', when='+al +distconv')
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
@@ -99,6 +101,9 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('essl +ilp64', when='blas=essl +int64_blas')
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
     depends_on('netlib-lapack +external-blas', when='blas=essl')
+
+    depends_on('cray-libsci', when='blas=libsci')
+    depends_on('cray-libsci +openmp', when='blas=libsci +openmp_blas')
 
     # Distconv builds require cuda
     conflicts('~cuda', when='+distconv')
@@ -158,8 +163,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 args.append('-DCMAKE_CUDA_STANDARD=14')
             archs = spec.variants['cuda_arch'].value
             if archs != 'none':
-                arch_str = ",".join(archs)
-            args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+                arch_str = ";".join(archs)
+                args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
 
         if '+cuda' in spec or '+distconv' in spec:
             args.append('-DcuDNN_DIR={0}'.format(
@@ -183,6 +188,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         if '+rocm' in spec:
             args.extend([
+                '-DCMAKE_CXX_FLAGS=-std=c++17',
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
                 '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)])
             archs = self.spec.variants['amdgpu_target'].value
@@ -190,7 +196,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 arch_str = ",".join(archs)
                 args.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
-                    ' -g -fsized-deallocation -fPIC'.format(arch_str)
+                    ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
                 )
 
         return args

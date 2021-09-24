@@ -7,6 +7,7 @@ import os
 import sys
 
 import llnl.util.tty as tty
+
 from spack import *
 from spack.operating_systems.mac_os import macos_version
 
@@ -20,7 +21,7 @@ class Qt(Package):
     # Supported releases: 'https://download.qt.io/official_releases/qt/'
     # Older archives: 'https://download.qt.io/new_archive/qt/'
     url      = 'https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz'
-    list_url = 'http://download.qt.io/archive/qt/'
+    list_url = 'https://download.qt.io/archive/qt/'
     list_depth = 3
     maintainers = ['sethrj']
 
@@ -460,7 +461,7 @@ class Qt(Package):
         spec = self.spec
         version = self.version
 
-        # incomplete list is here http://doc.qt.io/qt-5/configure-options.html
+        # incomplete list is here https://doc.qt.io/qt-5/configure-options.html
         config_args = [
             '-prefix', self.prefix,
             '-v',

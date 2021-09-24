@@ -6,8 +6,8 @@
 import argparse
 
 import pytest
-import spack.cmd.info
 
+import spack.cmd.info
 from spack.main import SpackCommand
 
 info = SpackCommand('info')

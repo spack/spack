@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import fnmatch
 import os
+
+from spack import *
 
 
 class Cosmomc(Package):
@@ -16,7 +17,7 @@ class Cosmomc(Package):
        importance sampling (plus a suite of scripts for building grids
        of runs, plotting and presenting results)."""
 
-    homepage = "http://cosmologist.info/cosmomc/"
+    homepage = "https://cosmologist.info/cosmomc/"
     url      = "https://github.com/cmbant/CosmoMC/archive/Nov2016.tar.gz"
 
     version('2016.11', sha256='b83edbf043ff83a4dde9bc14c56a09737dbc41ffe247a8e9c9a26892ed8745ba')

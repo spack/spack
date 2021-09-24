@@ -9,7 +9,7 @@ from spack import *
 class RPurrr(RPackage):
     """A complete and consistent functional programming toolkit for R."""
 
-    homepage = "http://purrr.tidyverse.org/"
+    homepage = "https://purrr.tidyverse.org/"
     url      = "https://cloud.r-project.org/src/contrib/purrr_0.2.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/purrr"
 

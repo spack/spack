@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from os import path
 import json
+from os import path
+
 from llnl.util import filesystem
+
+from spack import *
 
 
 class Hipsycl(CMakePackage):

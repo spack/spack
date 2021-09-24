@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 
 
@@ -16,8 +17,9 @@ class Pdt(AutotoolsPackage):
        through a class library supporting common PDB operations.
 
     """
+    maintainers = ['wspear', 'eugeneswalker', 'khuck', 'sameershende']
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
-    url      = "http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.25.1.tar.gz"
+    url      = "https://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.25.1.tar.gz"
 
     tags = ['ecp', 'e4s']
 
@@ -46,7 +48,7 @@ class Pdt(AutotoolsPackage):
         options = ['-prefix=%s' % prefix]
         if self.compiler.name == 'xl':
             options.append('-XLC')
-        elif self.compiler.name == 'intel':
+        elif self.compiler.name == 'intel' or self.compiler.name == 'oneapi':
             options.append('-icpc')
         elif self.compiler.name == 'pgi':
             options.append('-pgCC')

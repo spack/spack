@@ -3,15 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
+
+from spack import *
 
 
 class Autofact(Package):
     """An Automatic Functional Annotation and Classification Tool"""
 
-    homepage = "http://megasun.bch.umontreal.ca/Software/AutoFACT.htm"
-    url      = "http://megasun.bch.umontreal.ca/Software/AutoFACT_v3_4.tar"
+    homepage = "https://megasun.bch.umontreal.ca/Software/AutoFACT.htm"
+    url      = "https://megasun.bch.umontreal.ca/Software/AutoFACT_v3_4.tar"
 
     version('3_4', sha256='1465d263b19adb42f01f6e636ac40ef1c2e3dbd63461f977b89da9493fe9c6f4')
 

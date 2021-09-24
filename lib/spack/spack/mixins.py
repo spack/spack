@@ -10,6 +10,7 @@ import collections
 import os
 import sys
 from typing import Callable, DefaultDict, Dict, List  # novm
+
 if sys.version_info >= (3, 5):
     CallbackDict = DefaultDict[str, List[Callable]]
 else:
@@ -18,7 +19,8 @@ else:
 import llnl.util.filesystem
 
 __all__ = [
-    'filter_compiler_wrappers'
+    'filter_compiler_wrappers',
+    'PackageMixinsMeta',
 ]
 
 

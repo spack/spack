@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
 import socket
 
 import llnl.util.tty as tty
+
+from spack import *
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -127,7 +127,7 @@ class Dray(Package, CudaPackage):
         all of the options used to configure and build ascent.
 
         For more details about 'host-config' files see:
-            http://ascent.readthedocs.io/en/latest/BuildingAscent.html
+            https://ascent.readthedocs.io/en/latest/BuildingAscent.html
         """
 
         #######################

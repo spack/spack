@@ -12,7 +12,7 @@ class Bigreqsproto(AutotoolsPackage, XorgPackage):
     This extension defines a protocol to enable the use of requests
     that exceed 262140 bytes in length."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/proto/bigreqsproto"
+    homepage = "https://cgit.freedesktop.org/xorg/proto/bigreqsproto"
     xorg_mirror_path = "proto/bigreqsproto-1.1.2.tar.gz"
 
     version('1.1.2', sha256='de68a1a9dd1a1219ad73531bff9f662bc62fcd777387549c43cd282399f4a6ea')

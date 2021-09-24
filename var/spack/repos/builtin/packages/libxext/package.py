@@ -9,7 +9,7 @@ from spack import *
 class Libxext(AutotoolsPackage, XorgPackage):
     """libXext - library for common extensions to the X11 protocol."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXext"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXext"
     xorg_mirror_path = "lib/libXext-1.3.3.tar.gz"
 
     version('1.3.3', sha256='eb0b88050491fef4716da4b06a4d92b4fc9e76f880d6310b2157df604342cfe5')

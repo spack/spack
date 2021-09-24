@@ -9,7 +9,7 @@ from spack import *
 class PerlUri(PerlPackage):
     """Uniform Resource Identifiers (absolute and relative)"""
 
-    homepage = "http://search.cpan.org/~ether/URI-1.72/lib/URI.pm"
+    homepage = "https://metacpan.org/pod/URI"
     url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/URI-1.72.tar.gz"
 
     version('1.72', sha256='35f14431d4b300de4be1163b0b5332de2d7fbda4f05ff1ed198a8e9330d40a32')

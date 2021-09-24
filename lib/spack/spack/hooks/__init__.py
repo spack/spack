@@ -29,6 +29,7 @@ systems (e.g. modules, lmod, etc.) or to add other custom
 features.
 """
 import llnl.util.lang
+
 import spack.paths
 
 

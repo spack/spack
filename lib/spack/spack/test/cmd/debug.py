@@ -3,12 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import os.path
 import platform
 
 import pytest
-
-import os
-import os.path
 
 import spack.architecture as architecture
 import spack.config
@@ -37,13 +36,13 @@ def test_create_db_tarball(tmpdir, database):
         # DB file is included
         assert 'index.json' in contents
 
-        # spec.yamls from all installs are included
+        # specfiles from all installs are included
         for spec in database.query():
-            # externals won't have a spec.yaml
+            # externals won't have a specfile
             if spec.external:
                 continue
 
-            spec_suffix = '%s/.spack/spec.yaml' % spec.dag_hash()
+            spec_suffix = '%s/.spack/spec.json' % spec.dag_hash()
             assert spec_suffix in contents
 
 

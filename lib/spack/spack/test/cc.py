@@ -8,10 +8,11 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
+
 import pytest
 
 from spack.paths import build_env_path
-from spack.util.environment import system_dirs, set_env
+from spack.util.environment import set_env, system_dirs
 from spack.util.executable import Executable
 
 #
@@ -138,6 +139,17 @@ def check_args(cc, args, expected):
     with set_env(SPACK_TEST_COMMAND='dump-args'):
         cc_modified_args = cc(*args, output=str).strip().split('\n')
         assert expected == cc_modified_args
+
+
+def check_env_var(executable, var, expected):
+    """Check environment variables updated by the passed compiler wrapper
+
+    This assumes that cc will print debug output when it's environment
+    contains SPACK_TEST_COMMAND=dump-env-<variable-to-debug>
+    """
+    with set_env(SPACK_TEST_COMMAND='dump-env-' + var):
+        output = executable(*test_args, output=str).strip()
+        assert output == executable.path + ': ' + var + ': ' + expected
 
 
 def dump_mode(cc, args):
@@ -271,6 +283,26 @@ def test_dep_include():
             ['-Wl,--disable-new-dtags'] +
             test_wl_rpaths +
             test_args_without_paths)
+
+
+def test_system_path_cleanup():
+    """Ensure SPACK_ENV_PATH is removed from PATH, even with trailing /
+
+    The compiler wrapper has to ensure that it is not called nested
+    like it would happen when gcc's collect2 looks in PATH for ld.
+
+    To prevent nested calls, the compiler wrapper removes the elements
+    of SPACK_ENV_PATH from PATH. Autotest's generated testsuite appends
+    a / to each element of PATH when adding AUTOTEST_PATH.
+    Thus, ensure that PATH cleanup works even with trailing /.
+    """
+    system_path = '/bin:/usr/bin:/usr/local/bin'
+    cc_dir = os.path.dirname(cc.path)
+    with set_env(SPACK_ENV_PATH=cc_dir, SPACK_CC='true'):
+        with set_env(PATH=cc_dir + ':' + system_path):
+            check_env_var(cc, 'PATH', system_path)
+        with set_env(PATH=cc_dir + '/:' + system_path):
+            check_env_var(cc, 'PATH', system_path)
 
 
 def test_dep_lib():

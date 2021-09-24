@@ -8,9 +8,9 @@ import sys
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
-import spack.util.environment
-import spack.user_environment as uenv
 import spack.store
+import spack.user_environment as uenv
+import spack.util.environment
 
 description = "add package to the user environment"
 section = "user environment"
@@ -55,7 +55,7 @@ the dependencies"""
 
 
 def load(parser, args):
-    env = ev.get_env(args, 'load')
+    env = ev.active_environment()
     specs = [spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
              for spec in spack.cmd.parse_specs(args.specs)]
 

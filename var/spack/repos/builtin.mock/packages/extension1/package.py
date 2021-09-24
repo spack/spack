@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os.path
+
+from spack import *
 
 
 class Extension1(Package):
@@ -15,8 +16,8 @@ class Extension1(Package):
 
     extends('extendee')
 
-    version('1.0', 'hash-extension1-1.0')
-    version('2.0', 'hash-extension1-2.0')
+    version('1.0', '0123456789abcdef0123456789abcdef')
+    version('2.0', 'abcdef0123456789abcdef0123456789')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

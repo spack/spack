@@ -14,7 +14,7 @@ class Globalarrays(AutotoolsPackage):
     non-blocking primtives, and supports location consistency.
     """
 
-    homepage = "http://hpc.pnl.gov/globalarrays/"
+    homepage = "https://hpc.pnl.gov/globalarrays/"
     url = "https://github.com/GlobalArrays/ga/releases/download/v5.7/ga-5.7.tar.gz"
 
     tags = ['e4s']

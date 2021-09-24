@@ -9,7 +9,7 @@ from spack import *
 class PyPyspark(PythonPackage):
     """Python bindings for Apache Spark"""
 
-    homepage = "http://spark.apache.org"
+    homepage = "https://spark.apache.org"
     pypi = "pyspark/pyspark-3.0.1.tar.gz"
 
     version('3.0.1', sha256='38b485d3634a86c9a2923c39c8f08f003fdd0e0a3d7f07114b2fb4392ce60479')

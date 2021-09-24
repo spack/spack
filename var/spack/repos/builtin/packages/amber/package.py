@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import shutil
+
+from spack import *
 
 
 class Amber(Package, CudaPackage):
@@ -15,13 +16,13 @@ class Amber(Package, CudaPackage):
        A manual download is required for Ambers. Spack will search your current
        directory for the download files. Alternatively, add the files to a mirror
        so that Spack can find them. For instructions on how to set up a mirror, see
-       http://spack.readthedocs.io/en/latest/mirrors.html
+       https://spack.readthedocs.io/en/latest/mirrors.html
 
        Note: Only certain versions of ambertools are compatible with amber.
        Only the latter version of ambertools for each amber version is supported.
        """
 
-    homepage = "http://ambermd.org/"
+    homepage = "https://ambermd.org/"
     url = "file://{0}/Amber18.tar.bz2".format(os.getcwd())
     manual_download = True
 

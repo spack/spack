@@ -10,10 +10,12 @@ import re
 import sys
 from collections import defaultdict, namedtuple
 
+import six
+
 import llnl.util.filesystem
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
-import six
+
 import spack
 import spack.cmd
 import spack.cmd.common.arguments

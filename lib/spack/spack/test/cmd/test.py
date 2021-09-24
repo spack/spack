@@ -8,10 +8,9 @@ import os
 
 import pytest
 
+import spack.cmd.install
 import spack.config
 import spack.package
-import spack.cmd.install
-
 from spack.cmd.test import has_test_method
 from spack.main import SpackCommand
 

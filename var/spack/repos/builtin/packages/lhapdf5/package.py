@@ -10,8 +10,8 @@ class Lhapdf5(AutotoolsPackage):
     """LHAPDF is a general purpose Fortran 77/90 interpolator,
     used for evaluating PDFs from discretised data files."""
 
-    homepage = "http://lhapdf.hepforge.org/lhapdf5/"
-    url      = "http://lhapdf.hepforge.org/downloads?f=old/lhapdf-5.9.1.tar.gz"
+    homepage = "https://lhapdf.hepforge.org/lhapdf5/"
+    url      = "https://lhapdf.hepforge.org/downloads?f=old/lhapdf-5.9.1.tar.gz"
 
     version('5.9.1', sha256='86b9b046d7f25627ce2aab6847ef1c5534972f4bae18de98225080cf5086919c')
     version('5.9.0', sha256='64b9018ce6102ae7b6a92c990ca6afa841fb992d87b1abf5756c3d04c4d46b9c')

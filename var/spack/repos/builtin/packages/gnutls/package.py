@@ -14,7 +14,7 @@ class Gnutls(AutotoolsPackage):
     #12, OpenPGP and other required structures. It is aimed to be portable
     and efficient with focus on security and interoperability."""
 
-    homepage = "http://www.gnutls.org"
+    homepage = "https://www.gnutls.org"
     url      = "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.5/gnutls-3.5.19.tar.xz"
 
     version('3.6.15', sha256='0ea8c3283de8d8335d7ae338ef27c53a916f15f382753b174c18b45ffd481558')

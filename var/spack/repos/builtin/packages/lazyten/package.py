@@ -3,14 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Lazyten(CMakePackage):
     """Lightweight linear algebra library based on lazy matrices"""
 
-    homepage = "http://lazyten.org"
+    homepage = "https://lazyten.org"
     url      = "https://github.com/lazyten/lazyten/archive/v0.4.1.tar.gz"
     git      = "https://github.com/lazyten/lazyten.git"
 

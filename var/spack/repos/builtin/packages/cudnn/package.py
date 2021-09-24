@@ -4,15 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from spack import *
 import platform
+
+from spack import *
 
 _versions = {
     # cuDNN 8.2.0
     '8.2.0.53-11.3': {
         'Linux-x86_64': '7a195dc93a7cda2bdd4d9b73958d259c784be422cd941a9a625aab75309f19dc',
         'Linux-ppc64le': 'cfe06735671a41a5e25fc7542d740177ac8eab1ab146bd30f19e0fa836895611',
-        'Linux-aarch64sbsa': '0f44af94eef7826dc7b41f92aade3d5210891cdb10858bc0a28ba7167909ab7c'},
+        'Linux-aarch64': '0f44af94eef7826dc7b41f92aade3d5210891cdb10858bc0a28ba7167909ab7c'},
     '8.2.0.53-10.2': {
         'Linux-x86_64': '6ecbc98b3795e940ce0831ffb7cd2c0781830fdd6b1911f950bcaf6d569f807c'},
 
@@ -20,7 +21,7 @@ _versions = {
     '8.1.1.33-11.2': {
         'Linux-x86_64': '98a8784e92862f20018d20c281b30d4a0cd951f93694f6433ccf4ae9c502ba6a',
         'Linux-ppc64le': 'c3e535a5d633ad8f4d50be0b6f8efd084c6c6ed3525c07cbd89fc508b1d76c7a',
-        'Linux-aarch64sbsa': '4f7e4f5698539659d51f28dff0da11e5445a5ae58439af1d8a8e9f2d93535245'},
+        'Linux-aarch64': '4f7e4f5698539659d51f28dff0da11e5445a5ae58439af1d8a8e9f2d93535245'},
     '8.1.1.33-10.2': {
         'Linux-x86_64': '2a4a7b99a6e9bfa690eb19bb41e49553f2a7a491a5b3abfcae900e166c5b6ebd'},
 
@@ -28,14 +29,14 @@ _versions = {
     '8.1.0.77-11.2': {
         'Linux-x86_64': 'dbe82faf071d91ba9bcf00480146ad33f462482dfee56caf4479c1b8dabe3ecb',
         'Linux-ppc64le': '0d3f8fa21959e9f94889841cc8445aecf41d2f3c557091b447313afb43034037',
-        'Linux-aarch64sbsa': 'ba16ff486b68a8b50b69b32702612634954de529f39cfff68c12b8bfc1958499'},
+        'Linux-aarch64': 'ba16ff486b68a8b50b69b32702612634954de529f39cfff68c12b8bfc1958499'},
     '8.1.0.77-10.2': {
         'Linux-x86_64': 'c5bc617d89198b0fbe485156446be15a08aee37f7aff41c797b120912f2b14b4'},
 
     # cuDNN 8.0.5
     '8.0.5.39-11.1': {
         'Linux-x86_64': '1d046bfa79399dabcc6f6cb1507918754439442ea0ca9e0fbecdd446f9b00cce',
-        'Linux-aarch64sbsa': '0c3542c51b42131247cd9f839d0ebefe4e02bb46d1716be1682cb2919278085a'},
+        'Linux-aarch64': '0c3542c51b42131247cd9f839d0ebefe4e02bb46d1716be1682cb2919278085a'},
     '8.0.5.39-11.0': {
         'Linux-x86_64': '4e16ee7895deb4a8b1c194b812ba49586ef7d26902051401d3717511898a9b73',
         'Linux-ppc64le': '05207a02c0b4f22464dbb0ee646693df4a70ae557640ba576ba8678c26393004'},
@@ -188,7 +189,6 @@ class Cudnn(Package):
     #     https://developer.nvidia.com/rdp/cudnn-archive
     # Note that download links don't work from command line,
     # need to use modified URLs like in url_for_version.
-
     maintainers = ['adamjstewart', 'bvanessen']
 
     for ver, packages in _versions.items():
@@ -208,7 +208,8 @@ class Cudnn(Package):
         # Get the system and machine arch for building the file path
         sys = "{0}-{1}".format(platform.system(), platform.machine())
         # Munge it to match Nvidia's naming scheme
-        sys_key = sys.lower().replace('x86_64', 'x64').replace('darwin', 'osx')
+        sys_key = sys.lower().replace('x86_64', 'x64').replace('darwin', 'osx') \
+                             .replace('aarch64', 'aarch64sbsa')
 
         if version >= Version('7.2'):
             directory = version[:3]

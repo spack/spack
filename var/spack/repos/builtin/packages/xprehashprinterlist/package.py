@@ -9,7 +9,7 @@ from spack import *
 class Xprehashprinterlist(AutotoolsPackage, XorgPackage):
     """Rehash list of Xprint printers."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xprehashprinterlist"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xprehashprinterlist"
     xorg_mirror_path = "app/xprehashprinterlist-1.0.1.tar.gz"
 
     version('1.0.1', sha256='396986da064b584138cfcff79a8aed12590a9dab24f1cd2d80b08bc1cb896a43')

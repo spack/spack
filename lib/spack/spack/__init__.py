@@ -3,9 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 #: major, minor, patch version for Spack, in a tuple
-spack_version_info = (0, 16, 1)
+spack_version_info = (0, 16, 2)
 
 #: String containing Spack version joined with .'s
 spack_version = '.'.join(str(v) for v in spack_version_info)

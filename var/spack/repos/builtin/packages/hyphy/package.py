@@ -9,7 +9,7 @@ from spack import *
 class Hyphy(CMakePackage):
     """HyPhy: Hypothesis testing using Phylogenies"""
 
-    homepage = "http://www.hyphy.org/"
+    homepage = "https://www.hyphy.org/"
     url      = "https://github.com/veg/hyphy/archive/2.3.14.tar.gz"
 
     version('2.3.14', sha256='9e6c817cb649986e3fe944bcaf88be3533e7e62968b9a486c719e951e5ed1cf6')

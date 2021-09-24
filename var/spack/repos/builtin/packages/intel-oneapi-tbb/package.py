@@ -12,7 +12,7 @@ from spack import *
 class IntelOneapiTbb(IntelOneApiLibraryPackage):
     """Intel oneAPI TBB."""
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onetbb.html'
 

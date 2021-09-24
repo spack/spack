@@ -13,8 +13,8 @@ class Ack(Package):
        source code, ack is written purely in portable Perl 5 and takes
        advantage of the power of Perl's regular expressions."""
 
-    homepage = "http://beyondgrep.com/"
-    url      = "http://beyondgrep.com/ack-2.14-single-file"
+    homepage = "https://beyondgrep.com/"
+    url      = "https://beyondgrep.com/ack-2.14-single-file"
 
     version('2.22', sha256='fd0617585b88517a3d41d3d206c1dc38058c57b90dfd88c278049a41aeb5be38', expand=False)
     version('2.18', sha256='6e41057c8f50f661d800099471f769209480efa53b8a886969d7ec6db60a2208', expand=False)

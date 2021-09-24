@@ -4,20 +4,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import spack
-import spack.error
-import spack.bootstrap
-import spack.hooks
-import spack.monitor
-import spack.binary_distribution
-import spack.package
-import spack.repo
+import os
 
 import llnl.util.tty as tty
 
-from .analyzer_base import AnalyzerBase
+import spack
+import spack.binary_distribution
+import spack.bootstrap
+import spack.error
+import spack.hooks
+import spack.monitor
+import spack.package
+import spack.repo
 
-import os
+from .analyzer_base import AnalyzerBase
 
 
 class Libabigail(AnalyzerBase):

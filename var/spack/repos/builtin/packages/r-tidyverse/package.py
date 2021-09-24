@@ -15,7 +15,7 @@ class RTidyverse(RPackage):
     in a single step. Learn more about the 'tidyverse' at
     <https://tidyverse.org>."""
 
-    homepage = "http://tidyverse.tidyverse.org/"
+    homepage = "https://tidyverse.tidyverse.org/"
     url      = "https://cloud.r-project.org/src/contrib/tidyverse_1.2.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tidyverse"
 

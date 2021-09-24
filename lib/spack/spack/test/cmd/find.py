@@ -8,14 +8,14 @@ import json
 import os
 
 import pytest
+
 import spack.cmd as cmd
 import spack.cmd.find
+import spack.environment as ev
 import spack.user_environment as uenv
 from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.util.pattern import Bunch
-import spack.environment as ev
-
 
 find = SpackCommand('find')
 env = SpackCommand('env')
@@ -130,9 +130,9 @@ def _check_json_output(spec_list):
     assert all(spec["name"] == "mpileaks" for spec in spec_list)
 
     deps = [spec["dependencies"] for spec in spec_list]
-    assert sum(["zmpi" in d for d in deps]) == 1
-    assert sum(["mpich" in d for d in deps]) == 1
-    assert sum(["mpich2" in d for d in deps]) == 1
+    assert sum(["zmpi" in [node["name"] for d in deps for node in d]]) == 1
+    assert sum(["mpich" in [node["name"] for d in deps for node in d]]) == 1
+    assert sum(["mpich2" in [node["name"] for d in deps for node in d]]) == 1
 
 
 def _check_json_output_deps(spec_list):

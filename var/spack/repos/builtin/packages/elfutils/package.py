@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import os.path
+
+from spack import *
 
 
 class Elfutils(AutotoolsPackage, SourcewarePackage):
@@ -52,6 +53,11 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # NB: For 0.181 and newer, this enables _both_ the client and server
     variant('debuginfod', default=False,
             description='Enable libdebuginfod support.')
+
+    # elfutils-0.185-static-inline.patch
+    # elflint.c (buffer_left): Mark as 'inline' to avoid external linkage failure.
+    patch('https://794601.bugs.gentoo.org/attachment.cgi?id=714030', when='@0.185',
+          sha256='d786d49c28d7f0c8fc27bab39ca8714e5f4d128c7f09bb18533a8ec99b38dbf8')
 
     depends_on('bzip2', type='link', when='+bzip2')
     depends_on('xz',    type='link', when='+xz')

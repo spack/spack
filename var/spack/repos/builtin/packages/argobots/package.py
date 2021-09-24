@@ -15,7 +15,7 @@ class Argobots(AutotoolsPackage):
     mapping, and data placement strategies. It consists of an
     execution model and a memory model."""
 
-    homepage = "http://www.argobots.org/"
+    homepage = "https://www.argobots.org/"
     url      = "https://github.com/pmodels/argobots/releases/download/v1.0b1/argobots-1.0b1.tar.gz"
     git      = "https://github.com/pmodels/argobots.git"
     maintainers = ['shintaro-iwasaki']

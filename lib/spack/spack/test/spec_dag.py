@@ -6,14 +6,14 @@
 These tests check Spec DAG operations using dummy packages.
 """
 import pytest
+
 import spack.architecture
 import spack.error
 import spack.package
-
-from spack.spec import Spec
-from spack.dependency import all_deptypes, Dependency, canonical_deptype
-from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.hash as hashutil
+from spack.dependency import Dependency, all_deptypes, canonical_deptype
+from spack.spec import Spec
+from spack.util.mock_package import MockPackageMultiRepo
 
 
 def check_links(spec_to_check):

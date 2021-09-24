@@ -27,9 +27,10 @@ so package authors should use their judgement.
 import functools
 import inspect
 
+from llnl.util.lang import caller_locals
+
 import spack.directives
 import spack.error
-from llnl.util.lang import caller_locals
 from spack.spec import Spec
 
 

@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import subprocess
+
+from spack import *
 
 
 class Matlab(Package):
@@ -20,7 +21,7 @@ class Matlab(Package):
     the MathWorks homepage and download MATLAB yourself. Spack will search your
     current directory for the download file. Alternatively, add this file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    mirror, see https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.mathworks.com/products/matlab.html"
     manual_download = True

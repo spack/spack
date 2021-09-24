@@ -5,14 +5,14 @@
 
 from __future__ import division
 
-import multiprocessing
-import os
-import re
 import functools
 import inspect
-from datetime import datetime, timedelta
-from six import string_types
+import os
+import re
 import sys
+from datetime import datetime, timedelta
+
+from six import string_types
 
 if sys.version_info < (3, 0):
     from itertools import izip_longest  # novm
@@ -28,23 +28,6 @@ else:
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
-
-
-# On macOS, Python 3.8 multiprocessing now defaults to the 'spawn' start
-# method. Spack cannot currently handle this, so force the process to start
-# using the 'fork' start method.
-#
-# TODO: This solution is not ideal, as the 'fork' start method can lead to
-# crashes of the subprocess. Figure out how to make 'spawn' work.
-#
-# See:
-# * https://github.com/spack/spack/pull/18124
-# * https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods  # noqa: E501
-# * https://bugs.python.org/issue33725
-if sys.version_info >= (3,):  # novm
-    fork_context = multiprocessing.get_context('fork')
-else:
-    fork_context = multiprocessing
 
 
 def index_by(objects, *funcs):
@@ -255,6 +238,47 @@ def decorator_with_or_without_args(decorator):
             return lambda realf: decorator(realf, *args, **kwargs)
 
     return new_dec
+
+
+def key_ordering(cls):
+    """Decorates a class with extra methods that implement rich comparison
+       operations and ``__hash__``.  The decorator assumes that the class
+       implements a function called ``_cmp_key()``.  The rich comparison
+       operations will compare objects using this key, and the ``__hash__``
+       function will return the hash of this key.
+
+       If a class already has ``__eq__``, ``__ne__``, ``__lt__``, ``__le__``,
+       ``__gt__``, or ``__ge__`` defined, this decorator will overwrite them.
+
+       Raises:
+           TypeError: If the class does not have a ``_cmp_key`` method
+    """
+    def setter(name, value):
+        value.__name__ = name
+        setattr(cls, name, value)
+
+    if not has_method(cls, '_cmp_key'):
+        raise TypeError("'%s' doesn't define _cmp_key()." % cls.__name__)
+
+    setter('__eq__',
+           lambda s, o:
+           (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
+    setter('__lt__',
+           lambda s, o: o is not None and s._cmp_key() < o._cmp_key())
+    setter('__le__',
+           lambda s, o: o is not None and s._cmp_key() <= o._cmp_key())
+
+    setter('__ne__',
+           lambda s, o:
+           (s is not o) and (o is None or s._cmp_key() != o._cmp_key()))
+    setter('__gt__',
+           lambda s, o: o is None or s._cmp_key() > o._cmp_key())
+    setter('__ge__',
+           lambda s, o: o is None or s._cmp_key() >= o._cmp_key())
+
+    setter('__hash__', lambda self: hash(self._cmp_key()))
+
+    return cls
 
 
 #: sentinel for testing that iterators are done in lazy_lexicographic_ordering
@@ -572,8 +596,8 @@ def pretty_date(time, now=None):
     """Convert a datetime or timestamp to a pretty, relative date.
 
     Args:
-        time (datetime or int): date to print prettily
-        now (datetime): dateimte for 'now', i.e. the date the pretty date
+        time (datetime.datetime or int): date to print prettily
+        now (datetime.datetime): datetime for 'now', i.e. the date the pretty date
             is relative to (default is datetime.now())
 
     Returns:
@@ -647,7 +671,7 @@ def pretty_string_to_date(date_str, now=None):
             or be a *pretty date* (like ``yesterday`` or ``two months ago``)
 
     Returns:
-        (datetime): datetime object corresponding to ``date_str``
+        (datetime.datetime): datetime object corresponding to ``date_str``
     """
 
     pattern = {}
@@ -891,3 +915,19 @@ class Devnull(object):
     """
     def write(self, *_):
         pass
+
+
+def elide_list(line_list, max_num=10):
+    """Takes a long list and limits it to a smaller number of elements,
+       replacing intervening elements with '...'.  For example::
+
+           elide_list([1,2,3,4,5,6], 4)
+
+       gives::
+
+           [1, 2, 3, '...', 6]
+    """
+    if len(line_list) > max_num:
+        return line_list[:max_num - 1] + ['...'] + line_list[-1:]
+    else:
+        return line_list

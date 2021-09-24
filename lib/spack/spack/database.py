@@ -39,6 +39,8 @@ except ImportError:
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+
+import spack.hash_types as ht
 import spack.repo
 import spack.spec
 import spack.store
@@ -65,7 +67,7 @@ _db_dirname = '.spack-db'
 # DB version.  This is stuck in the DB file to track changes in format.
 # Increment by one when the database format changes.
 # Versions before 5 were not integers.
-_db_version = Version('5')
+_db_version = Version('6')
 
 # For any version combinations here, skip reindex when upgrading.
 # Reindexing can take considerable time and is not always necessary.
@@ -76,6 +78,7 @@ _skip_reindex = [
     # fields.  So, skip the reindex for this transition. The new
     # version is saved to disk the first time the DB is written.
     (Version('0.9.3'), Version('5')),
+    (Version('5'), Version('6'))
 ]
 
 # Default timeout for spack database locks in seconds or None (no timeout).
@@ -170,13 +173,13 @@ class InstallRecord(object):
     dependents left.
 
     Args:
-        spec (Spec): spec tracked by the install record
+        spec (spack.spec.Spec): spec tracked by the install record
         path (str): path where the spec has been installed
         installed (bool): whether or not the spec is currently installed
         ref_count (int): number of specs that depend on this one
-        explicit (bool, optional): whether or not this spec was explicitly
+        explicit (bool or None): whether or not this spec was explicitly
             installed, or pulled-in as a dependency of something else
-        installation_time (time, optional): time of the installation
+        installation_time (datetime.datetime or None): time of the installation
     """
 
     def __init__(
@@ -255,36 +258,36 @@ _query_docstring = """
                 database.  If it is a spec, we'll evaluate
                 ``spec.satisfies(query_spec)``
 
-            known (bool or any, optional): Specs that are "known" are those
+            known (bool or None): Specs that are "known" are those
                 for which Spack can locate a ``package.py`` file -- i.e.,
                 Spack "knows" how to install them.  Specs that are unknown may
                 represent packages that existed in a previous version of
                 Spack, but have since either changed their name or
                 been removed
 
-            installed (bool or any, or InstallStatus or iterable of
-                InstallStatus, optional): if ``True``, includes only installed
+            installed (bool or InstallStatus or typing.Iterable or None):
+                if ``True``, includes only installed
                 specs in the search; if ``False`` only missing specs, and if
                 ``any``, all specs in database. If an InstallStatus or iterable
                 of InstallStatus, returns specs whose install status
                 (installed, deprecated, or missing) matches (one of) the
                 InstallStatus. (default: True)
 
-            explicit (bool or any, optional): A spec that was installed
+            explicit (bool or None): A spec that was installed
                 following a specific user request is marked as explicit. If
                 instead it was pulled-in as a dependency of a user requested
                 spec it's considered implicit.
 
-            start_date (datetime, optional): filters the query discarding
-                specs that have been installed before ``start_date``.
+            start_date (datetime.datetime or None): filters the query
+                discarding specs that have been installed before ``start_date``.
 
-            end_date (datetime, optional): filters the query discarding
+            end_date (datetime.datetime or None): filters the query discarding
                 specs that have been installed after ``end_date``.
 
-            hashes (container): list or set of hashes that we can use to
+            hashes (typing.Container): list or set of hashes that we can use to
                 restrict the search
 
-            in_buildcache (bool or any, optional): Specs that are marked in
+            in_buildcache (bool or None): Specs that are marked in
                 this database as part of an associated binary cache are
                 ``in_buildcache``. All other specs are not. This field is used
                 for querying mirror indices. Default is ``any``.
@@ -448,7 +451,7 @@ class Database(object):
         see `mark_failed()`.
 
         Args:
-            spec (Spec): the spec whose failure indicators are being removed
+            spec (spack.spec.Spec): the spec whose failure indicators are being removed
             force (bool): True if the failure information should be cleared
                 when a prefix failure lock exists for the file or False if
                 the failure should not be cleared (e.g., it may be
@@ -644,7 +647,7 @@ class Database(object):
         except (TypeError, ValueError) as e:
             raise sjson.SpackJSONError("error writing JSON database:", str(e))
 
-    def _read_spec_from_dict(self, hash_key, installs):
+    def _read_spec_from_dict(self, hash_key, installs, hash=ht.dag_hash):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
@@ -653,8 +656,13 @@ class Database(object):
 
         # Install records don't include hash with spec, so we add it in here
         # to ensure it is read properly.
-        for name in spec_dict:
-            spec_dict[name]['hash'] = hash_key
+        if 'name' not in spec_dict.keys():
+            # old format, can't update format here
+            for name in spec_dict:
+                spec_dict[name]['hash'] = hash_key
+        else:
+            # new format, already a singleton
+            spec_dict[hash.name] = hash_key
 
         # Build spec from dict first.
         spec = spack.spec.Spec.from_node_dict(spec_dict)
@@ -685,10 +693,13 @@ class Database(object):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         spec = data[hash_key].spec
-        spec_dict = installs[hash_key]['spec']
-        if 'dependencies' in spec_dict[spec.name]:
-            yaml_deps = spec_dict[spec.name]['dependencies']
-            for dname, dhash, dtypes in spack.spec.Spec.read_yaml_dep_specs(
+        spec_node_dict = installs[hash_key]['spec']
+        if 'name' not in spec_node_dict:
+            # old format
+            spec_node_dict = spec_node_dict[spec.name]
+        if 'dependencies' in spec_node_dict:
+            yaml_deps = spec_node_dict['dependencies']
+            for dname, dhash, dtypes, _ in spack.spec.Spec.read_yaml_dep_specs(
                     yaml_deps):
                 # It is important that we always check upstream installations
                 # in the same order, and that we always check the local
@@ -1390,10 +1401,10 @@ class Database(object):
 
         Arguments:
             dag_hash (str): hash (or hash prefix) to look up
-            default (object, optional): default value to return if dag_hash is
+            default (object or None): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, or InstallStatus or iterable of
-                InstallStatus, optional): if ``True``, includes only installed
+            installed (bool or InstallStatus or typing.Iterable or None):
+                if ``True``, includes only installed
                 specs in the search; if ``False`` only missing specs, and if
                 ``any``, all specs in database. If an InstallStatus or iterable
                 of InstallStatus, returns specs whose install status
@@ -1416,14 +1427,13 @@ class Database(object):
 
         Arguments:
             dag_hash (str): hash (or hash prefix) to look up
-            default (object, optional): default value to return if dag_hash is
+            default (object or None): default value to return if dag_hash is
                 not in the DB (default: None)
-            installed (bool or any, or InstallStatus or iterable of
-                InstallStatus, optional): if ``True``, includes only installed
-                specs in the search; if ``False`` only missing specs, and if
-                ``any``, all specs in database. If an InstallStatus or iterable
-                of InstallStatus, returns specs whose install status
-                (installed, deprecated, or missing) matches (one of) the
+            installed (bool or InstallStatus or typing.Iterable or None):
+                if ``True``, includes only installed specs in the search; if ``False``
+                only missing specs, and if ``any``, all specs in database. If an
+                InstallStatus or iterable of InstallStatus, returns specs whose install
+                status (installed, deprecated, or missing) matches (one of) the
                 InstallStatus. (default: any)
 
         ``installed`` defaults to ``any`` so that we can refer to any
@@ -1595,7 +1605,7 @@ class Database(object):
         Update the spec's explicit state in the database.
 
         Args:
-            spec (Spec): the spec whose install record is being updated
+            spec (spack.spec.Spec): the spec whose install record is being updated
             explicit (bool): ``True`` if the package was requested explicitly
                 by the user, ``False`` if it was pulled in as a dependency of
                 an explicit package.

@@ -45,9 +45,9 @@ import os
 import re
 
 import llnl.util.tty as tty
+
 from spack import *
 from spack.util.environment import EnvironmentModifications
-
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [
@@ -257,7 +257,7 @@ class Openfoam(Package):
     """
 
     maintainers = ['olesenm']
-    homepage = "http://www.openfoam.com/"
+    homepage = "https://www.openfoam.com/"
     url      = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
     git      = "https://develop.openfoam.com/Development/openfoam.git"
     list_url = "https://sourceforge.net/projects/openfoam/files/"

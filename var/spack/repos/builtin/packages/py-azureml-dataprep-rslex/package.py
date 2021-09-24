@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 import archspec
 
 from spack import *
@@ -13,7 +14,7 @@ class PyAzuremlDataprepRslex(Package):
     """Azure Machine Learning Data Prep RsLex is a Rust implementation of Data Prep's
     capabilities to load, transform, and write data for machine learning workflows."""
 
-    homepage = "http://aka.ms/data-prep-sdk"
+    homepage = "https://docs.microsoft.com/en-us/python/api/overview/azure/ml/?view=azure-ml-py"
 
     if sys.platform == 'darwin':
         version('1.9.0-py3.9', sha256='9bdaa31d129dac19ee20d5a3aad1726397e90d8d741b4f6de4554040800fefe8', expand=False,

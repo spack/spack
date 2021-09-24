@@ -5,14 +5,15 @@
 
 import os
 import sys
+
 from spack import *
 
 
-class Slepc(Package):
+class Slepc(Package, CudaPackage, ROCmPackage):
     """Scalable Library for Eigenvalue Problem Computations."""
 
     homepage = "https://slepc.upv.es"
-    url      = "https://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
+    url      = "https://slepc.upv.es/download/distrib/slepc-3.15.2.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
@@ -21,6 +22,7 @@ class Slepc(Package):
     test_requires_compiler = True
 
     version('main', branch='main')
+    version('3.15.2', sha256='15fd317c4dd07bb41a994ad4c27271a6675af5f2abe40b82a64a27eaae2e632a')
     version('3.15.1', sha256='9c7c3a45f0d9df51decf357abe090ef05114c38a69b7836386a19a96fb203aea')
     version('3.15.0', sha256='e53783ae13acadce274ea65c67186b5ab12332cf17125a694e21d598aa6b5f00')
     version('3.14.2', sha256='3e54578dda1f4c54d35ac27d02f70a43f6837906cb7604dbcec0e033cfb264c8')
@@ -70,6 +72,8 @@ class Slepc(Package):
     depends_on('petsc@3.8:3.8.99', when='@3.8:3.8.99')
     depends_on('petsc@3.7:3.7.7', when='@3.7.1:3.7.4')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
+    depends_on('petsc+cuda', when='+cuda')
+    depends_on('petsc+rocm', when='+rocm')
     depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi~int64')
     depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi~int64')
 
@@ -80,7 +84,7 @@ class Slepc(Package):
     conflicts('+blopex', when='^petsc+int64')
 
     resource(name='blopex',
-             url='http://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
+             url='https://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
              sha256='0081ee4c4242e635a8113b32f655910ada057c59043f29af4b613508a762f3ac',
              destination=join_path('installed-arch-' + sys.platform + '-c-opt',
                                    'externalpackages'),

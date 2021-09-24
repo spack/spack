@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import sys
+
+from spack import *
 
 
 class Hypre(Package, CudaPackage):
@@ -13,9 +14,10 @@ class Hypre(Package, CudaPackage):
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
 
-    homepage = "http://computing.llnl.gov/project/linear_solvers/software.php"
+    homepage = "https://computing.llnl.gov/project/linear_solvers/software.php"
     url      = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
     git      = "https://github.com/hypre-space/hypre.git"
+    tags     = ['radiuss']
 
     maintainers = ['ulrikeyang', 'osborn9', 'balay']
 
@@ -24,6 +26,8 @@ class Hypre(Package, CudaPackage):
     test_requires_compiler = True
 
     version('develop', branch='master')
+    version('2.22.0', sha256='2c786eb5d3e722d8d7b40254f138bef4565b2d4724041e56a8fa073bda5cfbb5')
+    version('2.21.0', sha256='e380f914fe7efe22afc44cdf553255410dc8a02a15b2e5ebd279ba88817feaf5')
     version('2.20.0', sha256='5be77b28ddf945c92cde4b52a272d16fb5e9a7dc05e714fc5765948cba802c01')
     version('2.19.0', sha256='466b19d8a86c69989a237f6f03f20d35c0c63a818776d2cd071b0a084cffeba5')
     version('2.18.2', sha256='28007b5b584eaf9397f933032d8367788707a2d356d78e47b99e551ab10cc76a')
@@ -40,7 +44,6 @@ class Hypre(Package, CudaPackage):
     version('2.11.1', sha256='6bb2ff565ff694596d0e94d0a75f0c3a2cd6715b8b7652bc71feb8698554db93')
     version('2.10.1', sha256='a4a9df645ebdc11e86221b794b276d1e17974887ead161d5050aaf0b43bb183a')
     version('2.10.0b', sha256='b55dbdc692afe5a00490d1ea1c38dd908dae244f7bdd7faaf711680059824c11')
-    version('xsdk-0.2.0', tag='xsdk-0.2.0', git='https://github.com/LLNL/hypre.git')
 
     # Versions 2.13.0 and later can be patched to build shared
     # libraries on Darwin; the patch for this capability does not

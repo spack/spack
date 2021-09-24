@@ -15,7 +15,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     """Intel OneAPI compilers
 
     Provides Classic and Beta compilers for: Fortran, C, C++"""
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 

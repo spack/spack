@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
+
 from six import iteritems
 
 
@@ -458,6 +461,14 @@ class Rust(Package):
                         target=rust_arch['target']
                     )
                 )
+
+    executables = ['^rustc$']
+
+    @classmethod
+    def determine_version(csl, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.match(r'rustc (\S+)', output)
+        return match.group(1) if match else None
 
     # This routine returns the target architecture we intend to build for.
     def get_rust_target(self):

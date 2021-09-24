@@ -20,6 +20,9 @@ class Libtirpc(AutotoolsPackage):
 
     provides('rpc')
 
+    # Remove -pipe flag to compiler in Makefiles when using nvhpc
+    patch('libtirpc-remove-pipe-flag-for-nvhpc.patch', when='%nvhpc')
+
     # FIXME: build error on macOS
     # auth_none.c:81:9: error: unknown type name 'mutex_t'
     conflicts('platform=darwin', msg='Does not build on macOS')

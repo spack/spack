@@ -4,25 +4,32 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import os
-import pytest
 import shlex
+
+import pytest
 
 import llnl.util.filesystem as fs
 
 import spack.hash_types as ht
 import spack.repo
-import spack.store
 import spack.spec as sp
+import spack.store
 from spack.parse import Token
-from spack.spec import Spec
-from spack.spec import SpecParseError, RedundantSpecError
-from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
-from spack.spec import DuplicateArchitectureError
-from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
-from spack.spec import SpecFilenameError, NoSuchSpecFileError
-from spack.spec import MultipleVersionError
+from spack.spec import (
+    AmbiguousHashError,
+    DuplicateArchitectureError,
+    DuplicateCompilerSpecError,
+    DuplicateDependencyError,
+    InvalidHashError,
+    MultipleVersionError,
+    NoSuchHashError,
+    NoSuchSpecFileError,
+    RedundantSpecError,
+    Spec,
+    SpecFilenameError,
+    SpecParseError,
+)
 from spack.variant import DuplicateVariantError
-
 
 # Sample output for a complex lexing.
 complex_lex = [Token(sp.ID, 'mvapich_foo'),

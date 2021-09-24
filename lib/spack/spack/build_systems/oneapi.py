@@ -8,15 +8,15 @@
 """
 
 import getpass
-import shutil
 import platform
+import shutil
 from os.path import basename, dirname, isdir
+
+from llnl.util.filesystem import find_headers, find_libraries, join_path
 
 from spack.package import Package
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
-
-from llnl.util.filesystem import find_headers, find_libraries, join_path
 
 
 class IntelOneApiPackage(Package):
@@ -69,6 +69,9 @@ class IntelOneApiPackage(Package):
 
             # Installer writes files in ~/intel set HOME so it goes to prefix
             bash.add_default_env('HOME', prefix)
+            # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
+            bash.add_default_env('XDG_RUNTIME_DIR',
+                                 join_path(self.stage.path, 'runtime'))
 
             bash(installer_path,
                  '-s', '-a', '-s', '--action', 'install',

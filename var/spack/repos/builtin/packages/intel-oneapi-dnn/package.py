@@ -12,7 +12,7 @@ from spack import *
 class IntelOneapiDnn(IntelOneApiLibraryPackage):
     """Intel oneAPI DNN."""
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onednn.html'
 

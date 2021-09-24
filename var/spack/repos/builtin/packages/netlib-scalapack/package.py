@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class ScalapackBase(CMakePackage):
@@ -104,8 +105,8 @@ class NetlibScalapack(ScalapackBase):
     parallel distributed memory machines
     """
 
-    homepage = "http://www.netlib.org/scalapack/"
-    url = "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz"
+    homepage = "https://www.netlib.org/scalapack/"
+    url = "https://www.netlib.org/scalapack/scalapack-2.0.2.tgz"
 
     version('2.1.0', sha256='61d9216cf81d246944720cfce96255878a3f85dec13b9351f1fa0fd6768220a6')
     version('2.0.2', sha256='0c74aeae690fe5ee4db7926f49c5d0bb69ce09eea75beb915e00bba07530395c')

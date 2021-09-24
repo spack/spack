@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from llnl.util import tty
+
+from spack import *
 
 
 class Mercurial(PythonPackage):
@@ -30,8 +31,8 @@ class Mercurial(PythonPackage):
     version('3.8.2', sha256='cb78b16956140625266a8a6d1fadc7c868969d994086e1ec60279a66bf20bffd')
     version('3.8.1', sha256='face1f058de5530b56b0dfd3b4d0b23d89590c588605c06f3d18b79e8c30d594')
 
-    depends_on('python@2.6:2.8', when='@:4.2.99', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.5.3:3.5.999,3.6.2:', when='@4.3:', type=('build', 'run'))
+    depends_on('python+bz2+ssl+zlib@2.6:2.8', when='@:4.2.99', type=('build', 'run'))
+    depends_on('python+bz2+ssl+zlib@2.7:2.8,3.5.3:3.5.999,3.6.2:', when='@4.3:', type=('build', 'run'))
     depends_on('py-setuptools', when='@3.6:', type='build')
     depends_on('py-docutils', type='build')
     depends_on('py-pygments', type=('build', 'run'))

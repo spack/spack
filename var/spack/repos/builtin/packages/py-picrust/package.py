@@ -10,7 +10,7 @@ class PyPicrust(PythonPackage):
     """bioinformatics software package designed to predict metagenome
         functional content from marker gene surveys and full genomes."""
 
-    homepage = "http://picrust.github.io/picrust/index.html"
+    homepage = "https://picrust.github.io/picrust/index.html"
     url      = "https://github.com/picrust/picrust/releases/download/v1.1.3/picrust-1.1.3.tar.gz"
 
     version('1.1.3', sha256='7538c8544899b8855deb73a2d7a4ccac4808ff294e161530a8c8762d472d8906')

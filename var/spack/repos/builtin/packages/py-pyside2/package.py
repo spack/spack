@@ -14,7 +14,7 @@ class PyPyside2(PythonPackage):
 
     # More recent versions of PySide2 (for Qt5) have been taken under
     # the offical Qt umbrella.  For more information, see:
-    # http://wiki.qt.io/Qt_for_Python_Development_Getting_Started
+    # https://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
     version('develop', tag='dev')
     version('5.14.2.1', tag='v5.14.2.1', submodules=True)

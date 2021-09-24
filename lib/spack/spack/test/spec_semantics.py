@@ -4,18 +4,25 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-import pytest
 
-from spack.error import SpecError, UnsatisfiableSpecError
-from spack.spec import UnconstrainableDependencySpecError
-from spack.spec import Spec, SpecFormatSigilError, SpecFormatStringError
-from spack.variant import InvalidVariantValueError, UnknownVariantError
-from spack.variant import MultipleValuesInExclusiveVariantError
-from spack.variant import substitute_abstract_variants
+import pytest
 
 import spack.architecture
 import spack.directives
 import spack.error
+from spack.error import SpecError, UnsatisfiableSpecError
+from spack.spec import (
+    Spec,
+    SpecFormatSigilError,
+    SpecFormatStringError,
+    UnconstrainableDependencySpecError,
+)
+from spack.variant import (
+    InvalidVariantValueError,
+    MultipleValuesInExclusiveVariantError,
+    UnknownVariantError,
+    substitute_abstract_variants,
+)
 
 
 def make_spec(spec_like, concrete):
@@ -1021,6 +1028,36 @@ class TestSpecSematics(object):
         assert out.spliced
 
     @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_with_cached_hashes(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+
+        # monkeypatch hashes so we can test that they are cached
+        spec._full_hash = 'aaaaaa'
+        spec._build_hash = 'aaaaaa'
+        dep._full_hash = 'bbbbbb'
+        dep._build_hash = 'bbbbbb'
+        spec['splice-h']._full_hash = 'cccccc'
+        spec['splice-h']._build_hash = 'cccccc'
+        spec['splice-z']._full_hash = 'dddddd'
+        spec['splice-z']._build_hash = 'dddddd'
+        dep['splice-z']._full_hash = 'eeeeee'
+        dep['splice-z']._build_hash = 'eeeeee'
+
+        out = spec.splice(dep, transitive=transitive)
+        out_z_expected = (dep if transitive else spec)['splice-z']
+
+        assert out.full_hash() != spec.full_hash()
+        assert (out['splice-h'].full_hash() == dep.full_hash()) == transitive
+        assert out['splice-z'].full_hash() == out_z_expected.full_hash()
+
+        assert out.build_hash() != spec.build_hash()
+        assert (out['splice-h'].build_hash() == dep.build_hash()) == transitive
+        assert out['splice-z'].build_hash() == out_z_expected.build_hash()
+
+    @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_input_unchanged(self, transitive):
         spec = Spec('splice-t').concretized()
         dep = Spec('splice-h+foo').concretized()
@@ -1052,6 +1089,58 @@ class TestSpecSematics(object):
         assert (out2['splice-t'].build_spec.full_hash() ==
                 spec['splice-t'].full_hash())
         assert out2.spliced
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_dict(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
+
+        # Sanity check all hashes are unique...
+        assert spec.full_hash() != dep.full_hash()
+        assert out.full_hash() != dep.full_hash()
+        assert out.full_hash() != spec.full_hash()
+        node_list = out.to_dict()['spec']['nodes']
+        root_nodes = [n for n in node_list if n['full_hash'] == out.full_hash()]
+        build_spec_nodes = [n for n in node_list if n['full_hash'] == spec.full_hash()]
+        assert spec.full_hash() == out.build_spec.full_hash()
+        assert len(root_nodes) == 1
+        assert len(build_spec_nodes) == 1
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_dict_roundtrip(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
+
+        # Sanity check all hashes are unique...
+        assert spec.full_hash() != dep.full_hash()
+        assert out.full_hash() != dep.full_hash()
+        assert out.full_hash() != spec.full_hash()
+        out_rt_spec = Spec.from_dict(out.to_dict())  # rt is "round trip"
+        assert out_rt_spec.full_hash() == out.full_hash()
+        out_rt_spec_bld_hash = out_rt_spec.build_spec.full_hash()
+        out_rt_spec_h_bld_hash = out_rt_spec['splice-h'].build_spec.full_hash()
+        out_rt_spec_z_bld_hash = out_rt_spec['splice-z'].build_spec.full_hash()
+
+        # In any case, the build spec for splice-t (root) should point to the
+        # original spec, preserving build provenance.
+        assert spec.full_hash() == out_rt_spec_bld_hash
+        assert out_rt_spec.full_hash() != out_rt_spec_bld_hash
+
+        # The build spec for splice-h should always point to the introduced
+        # spec, since that is the spec spliced in.
+        assert dep['splice-h'].full_hash() == out_rt_spec_h_bld_hash
+
+        # The build spec for splice-z will depend on whether or not the splice
+        # was transitive.
+        expected_z_bld_hash = (dep['splice-z'].full_hash() if transitive else
+                               spec['splice-z'].full_hash())
+        assert expected_z_bld_hash == out_rt_spec_z_bld_hash
 
     @pytest.mark.parametrize('spec,constraint,expected_result', [
         ('libelf target=haswell', 'target=broadwell', False),
@@ -1098,3 +1187,29 @@ def test_is_extension_after_round_trip_to_dict(config, spec_str):
     # Using 'y' since the round-trip make us lose build dependencies
     for d in y.traverse():
         assert x[d.name].package.is_extension == y[d.name].package.is_extension
+
+
+def test_malformed_spec_dict():
+    with pytest.raises(SpecError, match='malformed'):
+        Spec.from_dict({'spec': {'nodes': [{'dependencies': {'name': 'foo'}}]}})
+
+
+def test_spec_dict_hashless_dep():
+    with pytest.raises(SpecError, match="Couldn't parse"):
+        Spec.from_dict(
+            {
+                'spec': {
+                    'nodes': [
+                        {
+                            'name': 'foo',
+                            'hash': 'thehash',
+                            'dependencies': [
+                                {
+                                    'name': 'bar'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        )

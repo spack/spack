@@ -11,8 +11,10 @@ class PySetuptools(PythonPackage):
        upgrading, installing, and uninstalling Python packages."""
 
     homepage = "https://github.com/pypa/setuptools"
-    pypi = "setuptools/setuptools-49.2.0.zip"
+    pypi = "setuptools/setuptools-57.4.0.tar.gz"
 
+    version('57.4.0', sha256='6bac238ffdf24e8806c61440e755192470352850f3419a52f26ffe0a1a64f465')
+    version('51.0.0', sha256='029c49fd713e9230f6a41c0298e6e1f5839f2cde7104c0ad5e053a37777e7688')
     version('50.3.2', sha256='ed0519d27a243843b05d82a5e9d01b0b083d9934eaa3d02779a23da18077bd3c')
     version('50.1.0', sha256='4a7708dafd2d360ce5e2ac7577374da9fb65fc867bc4cdaf461f9f834dfa6ac3')
     version('49.6.0', sha256='46bd862894ed22c2edff033c758c2dc026324788d758e96788e8f7c11f4e9707')
@@ -36,17 +38,17 @@ class PySetuptools(PythonPackage):
     version('16.0',   sha256='aa86255dee2c4a0056509750008007667c29306b7a6c13801468515b2c672845')
     version('11.3.1', sha256='bd25f17de4ecf00116a9f7368b614a54ca1612d7945d2eafe5d97bc08c138bc5')
 
-    depends_on('python@3.5:', type=('build', 'run'), when='@45.0.0:')
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@44.0.0:44.99.99')
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@:43.99.99')
+    depends_on('python@3.6:', type=('build', 'run'), when='@51:')
+    depends_on('python@3.5:', type=('build', 'run'), when='@45:50')
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@44')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@:43')
 
     def url_for_version(self, version):
-        url = 'https://pypi.io/packages/source/s/setuptools/setuptools-{0}'
-        url = url.format(version)
+        url = 'https://pypi.io/packages/source/s/setuptools/setuptools-{0}.{1}'
 
-        if version > Version('32.1.2'):
-            url += '.zip'
+        if Version('32.1.2') <= version <= Version('51.0.0'):
+            ext = 'zip'
         else:
-            url += '.tar.gz'
+            ext = 'tar.gz'
 
-        return url
+        return url.format(version, ext)

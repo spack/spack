@@ -35,6 +35,7 @@ class Hdf5(CMakePackage):
     version('develop-1.10', branch='hdf5_1_10')
     version('develop-1.8', branch='hdf5_1_8')
 
+    version('1.12.1', sha256='79c66ff67e666665369396e9c90b32e238e501f345afd2234186bfb8331081ca')
     version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a')
     # HDF5 1.12 broke API compatibility, so we currently prefer the latest
     # 1.10 release.  packages that want later versions of HDF5 should specify,
@@ -189,10 +190,12 @@ class Hdf5(CMakePackage):
         cmake_flags = []
 
         if name == "cflags":
-            if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
+            if self.spec.satisfies('%gcc') \
+                    or self.spec.satisfies('%clang'):
                 # Quiet warnings/errors about implicit declaration of functions
                 # in C99:
                 cmake_flags.append("-Wno-implicit-function-declaration")
+                # Note that this flag will cause an error if building %nvhpc.
             if self.spec.satisfies('@:1.8.12~shared'):
                 # More recent versions set CMAKE_POSITION_INDEPENDENT_CODE to
                 # True and build with PIC flags.
@@ -201,6 +204,12 @@ class Hdf5(CMakePackage):
             if self.spec.satisfies('@:1.8.12+cxx~shared'):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
         elif name == "fflags":
+            if self.spec.satisfies('%cce+fortran'):
+                # Cray compiler generates module files with uppercase names by
+                # default, which is not handled by the CMake scripts. The
+                # following flag forces the compiler to produce module files
+                # with lowercase names.
+                cmake_flags.append('-ef')
             if self.spec.satisfies('@:1.8.12+fortran~shared'):
                 cmake_flags.append(self.compiler.fc_pic_flag)
         elif name == "ldlibs":

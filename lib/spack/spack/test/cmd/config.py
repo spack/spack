@@ -4,16 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
 import os
+
 import pytest
 
 import llnl.util.filesystem as fs
+
 import spack.config
+import spack.database
 import spack.environment as ev
 import spack.main
-import spack.util.spack_yaml as syaml
 import spack.spec
-import spack.database
 import spack.store
+import spack.util.spack_yaml as syaml
 
 config = spack.main.SpackCommand('config')
 env = spack.main.SpackCommand('env')

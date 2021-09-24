@@ -1,0 +1,94 @@
+[tool.isort]
+profile = "black"
+sections = [
+  "FUTURE",
+  "STDLIB",
+  "THIRDPARTY",
+  "ARCHSPEC", "LLNL", "FIRSTPARTY",
+  "LOCALFOLDER",
+]
+known_first_party = "spack"
+known_archspec = "archspec"
+known_llnl = "llnl"
+src_paths = "lib"
+honor_noqa = true
+
+[tool.mypy]
+python_version = 3.7
+files = ['lib/spack/llnl/**/*.py', 'lib/spack/spack/**/*.py']
+mypy_path = ['bin', 'lib/spack', 'lib/spack/external', 'var/spack/repos/builtin']
+
+# This and a generated import file allows supporting packages
+namespace_packages = true
+
+# To avoid re-factoring all the externals, ignore errors and missing imports
+# globally, then turn back on in spack and spack submodules
+ignore_errors = true
+ignore_missing_imports = true
+
+  [[tool.mypy.overrides]]
+  module = 'spack.*'
+  ignore_errors = false
+  ignore_missing_imports = false
+
+  [[tool.mypy.overrides]]
+  module = 'packages.*'
+  ignore_errors = false
+  ignore_missing_imports = false
+
+  [[tool.mypy.overrides]]
+  module = 'llnl.*'
+  ignore_errors = false
+  ignore_missing_imports = false
+
+  [[tool.mypy.overrides]]
+  module = 'spack.test.packages'
+  ignore_errors = true
+
+  # ignore errors in fake import path for packages
+  [[tool.mypy.overrides]]
+  module = 'spack.pkg.*'
+  ignore_errors = true
+  ignore_missing_imports = true
+
+  # jinja has syntax in it that requires python3 and causes a parse error
+  # skip importing it
+  [[tool.mypy.overrides]]
+  module = 'jinja2'
+  follow_imports = 'skip'
+
+[tool.coverage.run]
+parallel = true
+concurrency = ["multiprocessing"]
+branch = true
+source = ["bin", "lib"]
+omit = [
+    'lib/spack/spack/test/*',
+    'lib/spack/docs/*',
+    'lib/spack/external/*',
+    'share/spack/qa/*',
+]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    'pragma: no cover',
+
+    # Don't complain about missing debug-only code:
+    'def __repr__',
+    'if self\.debug',
+
+    # Don't complain if tests don't hit defensive assertion code:
+    'raise AssertionError',
+    'raise NotImplementedError',
+
+    # Don't complain if non-runnable code isn't run:
+    'if 0:',
+    'if False:',
+    'if __name__ == .__main__.:',
+]
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "htmlcov"

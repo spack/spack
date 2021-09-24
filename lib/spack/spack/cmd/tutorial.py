@@ -18,7 +18,6 @@ import spack.util.gpg
 from spack.util.executable import which
 from spack.util.spack_yaml import syaml_dict
 
-
 description = "set up spack for our tutorial (WARNING: modifies config!)"
 section = "config"
 level = "long"

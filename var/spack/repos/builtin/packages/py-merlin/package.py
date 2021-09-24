@@ -12,6 +12,7 @@ class PyMerlin(PythonPackage):
     homepage = "https://github.com/LLNL/merlin"
     pypi = "merlin/merlin-1.4.1.tar.gz"
     git      = "https://github.com/LLNL/merlin.git"
+    tags     = ['radiuss']
 
     version('1.7.5', sha256='1994c1770ec7fc9da216f9d0ca8214684dcc0daa5fd55337b96e308b2e68daaa')
     version('1.7.4', sha256='9a6f8a84a1b52d0bfb0dc7bdbd7e15677e4a1041bd25a49a2d965efe503a6c20')

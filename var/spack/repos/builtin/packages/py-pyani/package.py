@@ -13,7 +13,7 @@ class PyPyani(PythonPackage):
     available, it takes advantage of multicore systems, and can integrate
     with SGE/OGE-type job schedulers for the sequence comparisons."""
 
-    homepage = "http://widdowquinn.github.io/pyani"
+    homepage = "https://widdowquinn.github.io/pyani"
     pypi = "pyani/pyani-0.2.7.tar.gz"
 
     version('0.2.7', sha256='dbc6c71c46fbbfeced3f8237b84474221268b51170caf044bec8559987a7deb9')
