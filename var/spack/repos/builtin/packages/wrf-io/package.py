@@ -22,6 +22,7 @@ class WrfIo(CMakePackage):
 
     variant('openmp', default=False, description='Enable multithreading with OpenMP')
 
+    depends_on('netcdf-c')
     depends_on('netcdf-fortran')
 
     def cmake_args(self):
