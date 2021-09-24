@@ -191,6 +191,9 @@ def print_text_info(pkg):
         color.cprint('')
         color.cprint(section_title('Safe versions:  '))
         color.cprint(version('    None'))
+        color.cprint('')
+        color.cprint(section_title('Deprecated versions:  '))
+        color.cprint(version('    None'))
     else:
         pad = padder(pkg.versions, 4)
 
@@ -207,13 +210,25 @@ def print_text_info(pkg):
 
         line = version('    {0}'.format(pad(preferred))) + color.cescape(url)
         color.cprint(line)
-        color.cprint('')
-        color.cprint(section_title('Safe versions:  '))
 
+        safe = []
+        deprecated = []
         for v in reversed(sorted(pkg.versions)):
-            if not pkg.versions[v].get('deprecated', False):
-                if pkg.has_code:
-                    url = fs.for_package_version(pkg, v)
+            if pkg.has_code:
+                url = fs.for_package_version(pkg, v)
+            if pkg.versions[v].get('deprecated', False):
+                deprecated.append((v, url))
+            else:
+                safe.append((v, url))
+
+        for title, vers in [('Safe', safe), ('Deprecated', deprecated)]:
+            color.cprint('')
+            color.cprint(section_title('{0} versions:  '.format(title)))
+            if not vers:
+                color.cprint(version('    None'))
+                continue
+
+            for v, url in vers:
                 line = version('    {0}'.format(pad(v))) + color.cescape(url)
                 color.cprint(line)
 

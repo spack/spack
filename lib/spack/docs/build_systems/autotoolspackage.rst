@@ -324,8 +324,29 @@ options:
 
    --with-libfabric=</path/to/libfabric>
 
+"""""""""""""""""""""""
+The ``variant`` keyword
+"""""""""""""""""""""""
+
+When Spack variants and configure flags do not correspond one-to-one, the
+``variant`` keyword can be passed to ``with_or_without`` and
+``enable_or_disable``. For example:
+
+.. code-block:: python
+
+   variant('debug_tools', default=False)
+   config_args += self.enable_or_disable('debug-tools', variant='debug_tools')
+
+Or when one variant controls multiple flags:
+
+.. code-block:: python
+
+   variant('debug_tools', default=False)
+   config_args += self.with_or_without('memchecker', variant='debug_tools')
+   config_args += self.with_or_without('profiler', variant='debug_tools')
+
 """"""""""""""""""""
-activation overrides
+Activation overrides
 """"""""""""""""""""
 
 Finally, the behavior of either ``with_or_without`` or

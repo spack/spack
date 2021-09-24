@@ -128,35 +128,35 @@ e4s-develop-build:
 ########################################
 # E4S on Power
 ########################################
-.power-e4s-generate-tags-and-image:
-  image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
-  tags: ["spack", "public", "medium", "ppc64le"]
+# .power-e4s-generate-tags-and-image:
+#   image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
+#   tags: ["spack", "public", "medium", "ppc64le"]
 
-.e4s-on-power:
-  variables:
-    SPACK_CI_STACK_NAME: e4s-on-power
+# .e4s-on-power:
+#   variables:
+#     SPACK_CI_STACK_NAME: e4s-on-power
 
-e4s-on-power-pr-generate:
-  extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
+# e4s-on-power-pr-generate:
+#   extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
 
-e4s-on-power-develop-generate:
-  extends: [ ".e4s-on-power", ".develop-generate", ".power-e4s-generate-tags-and-image"]
+# e4s-on-power-develop-generate:
+#   extends: [ ".e4s-on-power", ".develop-generate", ".power-e4s-generate-tags-and-image"]
 
-e4s-on-power-pr-build:
-  extends: [ ".e4s-on-power", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-on-power-pr-generate
-    strategy: depend
+# e4s-on-power-pr-build:
+#   extends: [ ".e4s-on-power", ".pr-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: e4s-on-power-pr-generate
+#     strategy: depend
 
-e4s-on-power-develop-build:
-  extends: [ ".e4s-on-power", ".develop-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-on-power-develop-generate
-    strategy: depend
+# e4s-on-power-develop-build:
+#   extends: [ ".e4s-on-power", ".develop-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: e4s-on-power-develop-generate
+#     strategy: depend
 
 #########################################
 # Build tests for different build-systems
