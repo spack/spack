@@ -16,7 +16,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('main', branch='main')
 

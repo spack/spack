@@ -18,7 +18,7 @@ class Adios2(CMakePackage):
 
     maintainers = ['ax3l', 'chuckatkins', 'williamfgc']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('master', branch='master')
     version('2.7.1', sha256='c8e237fd51f49d8a62a0660db12b72ea5067512aa7970f3fcf80b70e3f87ca3e')

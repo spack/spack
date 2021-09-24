@@ -13,7 +13,7 @@ class Cabana(CMakePackage):
     git      = "https://github.com/ECP-copa/Cabana.git"
     url      = "https://github.com/ECP-copa/Cabana/archive/0.1.0.tar.gz"
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('master', branch='master')
     version('0.3.0', sha256='fb67ab9aaf254b103ae0eb5cc913ddae3bf3cd0cf6010e9686e577a2981ca84f')

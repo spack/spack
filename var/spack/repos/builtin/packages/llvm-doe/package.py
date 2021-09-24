@@ -20,6 +20,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
     url = "https://github.com/llvm-doe-org/llvm-project/archive/llvmorg-10.0.0.zip"
     git = "https://github.com/llvm-doe-org/llvm-project"
     maintainers = ['shintaro-iwasaki']
+    tags = ['e4s']
 
     version('doe', branch='doe', preferred=True)
     version('upstream', branch='llvm.org/main')

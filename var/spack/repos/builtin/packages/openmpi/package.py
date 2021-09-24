@@ -34,7 +34,7 @@ class Openmpi(AutotoolsPackage):
 
     executables = ['^ompi_info$']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('master', branch='master', submodules=True)
 

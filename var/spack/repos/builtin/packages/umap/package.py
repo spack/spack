@@ -15,7 +15,7 @@ class Umap(CMakePackage):
     url      = "https://github.com/LLNL/umap/archive/v2.1.0.tar.gz"
     git      = "https://github.com/LLNL/umap.git"
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('develop', branch='develop')
     version('2.1.0', sha256='dfdc5b717aecdbfbb0da22e8567b9f2ffbc3607000a31122bf7c5ab3b85cecd9')

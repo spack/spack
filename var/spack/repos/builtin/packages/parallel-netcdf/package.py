@@ -21,7 +21,7 @@ class ParallelNetcdf(AutotoolsPackage):
 
     maintainers = ['skosukhin']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     test_requires_compiler = True
 

@@ -24,6 +24,7 @@ class Phist(CMakePackage):
     git      = "https://bitbucket.org/essex/phist.git"
 
     maintainers = ['jthies']
+    tags = ['e4s']
 
     version('develop', branch='devel')
     version('master', branch='master')

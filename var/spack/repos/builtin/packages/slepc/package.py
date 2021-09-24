@@ -18,7 +18,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
     maintainers = ['joseeroman', 'balay']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
     test_requires_compiler = True
 
     version('main', branch='main')

@@ -17,8 +17,6 @@ class Variorum(CMakePackage):
 
     maintainers = ["slabasan", "rountree"]
 
-    tags = ['ecp', 'e4s']
-
     version('0.4.1', sha256='be7407b856bc2239ecaa27d3df80aee2f541bb721fbfa183612bd9c0ce061f28')
     version('0.4.0', sha256='70ff1c5a3ae15d0bd07d409ab6f3c128e69528703a829cb18ecb4a50adeaea34')
     version('0.3.0', sha256='f79563f09b8fe796283c879b05f7730c36d79ca0346c12995b7bccc823653f42')

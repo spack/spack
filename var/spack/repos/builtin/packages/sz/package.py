@@ -14,7 +14,7 @@ class Sz(CMakePackage):
     git      = "https://github.com/szcompressor/sz"
     maintainers = ['disheng222', 'robertu94']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     def url_for_version(self, version):
         """provide url to ensure that download counting via github releases

@@ -23,7 +23,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     url      = "https://github.com/pghysels/STRUMPACK/archive/v5.1.0.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     maintainers = ['pghysels']
 

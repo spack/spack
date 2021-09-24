@@ -15,7 +15,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     url      = 'https://github.com/ORNL/TASMANIAN/archive/v7.5.tar.gz'
     git      = 'https://github.com/ORNL/TASMANIAN.git'
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
     maintainers = ['mkstoyanov']
 
     version('develop', branch='master')

@@ -25,8 +25,6 @@ class Qt(Package):
     list_depth = 3
     maintainers = ['sethrj']
 
-    tags = ['e4s']
-
     phases = ['configure', 'build', 'install']
 
     version('5.15.2', sha256='3a530d1b243b5dec00bc54937455471aaa3e56849d2593edb8ded07228202240')

@@ -26,7 +26,7 @@ class Upcxx(Package):
     maintainers = ['bonachea']
     git = 'https://bitbucket.org/berkeleylab/upcxx.git'
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('develop', branch='develop')
     version('master',  branch='master')

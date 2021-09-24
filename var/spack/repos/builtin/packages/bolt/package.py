@@ -24,7 +24,7 @@ class Bolt(CMakePackage):
     git      = "https://github.com/pmodels/bolt.git"
     maintainers = ['shintaro-iwasaki']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version("main", branch="main")
     version("2.0", sha256="f84b6a525953edbaa5d28748ef3ab172a3b6f6899b07092065ba7d1ccc6eb5ac")

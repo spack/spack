@@ -17,7 +17,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['tcojean', 'hartwiganzt']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('develop', branch='develop')
     version('master', branch='master')

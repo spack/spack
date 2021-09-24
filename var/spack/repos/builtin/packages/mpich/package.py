@@ -19,9 +19,9 @@ class Mpich(AutotoolsPackage):
     git      = "https://github.com/pmodels/mpich.git"
     list_url = "https://www.mpich.org/static/downloads/"
     list_depth = 1
-
+    
     maintainers = ['raffenet', 'yfguo']
-
+    tags = ['e4s']
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)

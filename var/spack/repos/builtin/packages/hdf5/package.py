@@ -24,7 +24,7 @@ class Hdf5(CMakePackage):
     maintainers = ['lrknox', 'brtnfld', 'byrnHDF', 'ChristopherHogan', 'epourmal',
                    'gheber', 'hyoklee', 'lkurz', 'soumagne']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     test_requires_compiler = True
 

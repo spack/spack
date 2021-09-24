@@ -19,7 +19,7 @@ class Unifyfs(AutotoolsPackage):
     url      = "https://github.com/LLNL/UnifyFS/releases/download/v0.9.2/unifyfs-0.9.2.tar.gz"
     maintainers = ['CamStan']
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     version('develop', branch='dev')
     version('0.9.2', sha256='7046625dc0677535f5d960187cb2e2d58a6f8cfb4dc6a3604f825257eb0891aa')

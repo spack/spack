@@ -20,7 +20,7 @@ class Geopm(AutotoolsPackage):
     url      = "https://github.com/geopm/geopm/releases/download/v1.0.0/geopm-1.0.0.tar.gz"
     git      = "https://github.com/geopm/geopm.git"
 
-    tags = ['ecp', 'e4s']
+    tags = ['e4s']
 
     # Add additional proper versions and checksums here. "spack checksum geopm"
     version('develop', branch='dev')

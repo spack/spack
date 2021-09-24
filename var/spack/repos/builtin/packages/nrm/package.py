@@ -13,8 +13,6 @@ class Nrm(PythonPackage):
     url = "https://www.mcs.anl.gov/research/projects/argo/downloads/nrm-0.1.0.tar.gz"
     version('0.1.0', sha256='911a848042fa50ed216c818e0667bcd3e4219687eb5a35476b7313abe12106dc')
 
-    tags = ['ecp', 'e4s']
-
     depends_on('py-setuptools', type=('build'))
 
     depends_on('py-six', type=('build', 'run'))
