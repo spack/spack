@@ -89,7 +89,7 @@ class Hicops(CMakePackage):
         env.prepend_path('PATH', self.prefix.tools)
         env.prepend_path('PATH', self.prefix.bin.tools)
         env.set('HICOPS_INSTALL', self.prefix)
-        env.prepend_path("INCLUDE", self.prefix.include)
+        env.prepend_path('INCLUDE', self.prefix.include)
 
     def install(self, spec, prefix):
         args = [
