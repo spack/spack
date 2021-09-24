@@ -15,6 +15,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/CHAI"
     git      = "https://github.com/LLNL/CHAI.git"
+    tags     = ['radiuss']
 
     maintainers = ['davidbeckingsale']
 

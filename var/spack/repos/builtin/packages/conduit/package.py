@@ -36,6 +36,7 @@ class Conduit(CMakePackage):
     homepage = "https://software.llnl.gov/conduit"
     url      = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
     git      = "https://github.com/LLNL/conduit.git"
+    tags     = ['radiuss']
 
     version('develop', branch='develop', submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry

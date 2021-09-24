@@ -17,6 +17,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     homepage = 'https://github.com/LLNL/Umpire'
     git      = 'https://github.com/LLNL/Umpire.git'
+    tags     = ['radiuss']
 
     maintainers = ['davidbeckingsale']
 
