@@ -23,6 +23,7 @@ class Exempi(AutotoolsPackage):
     depends_on('iconv')
     depends_on('boost@1.48.0:')
     depends_on('pkgconfig')
+    depends_on('expat')
 
     conflicts('%gcc@:4.5')
 
