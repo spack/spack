@@ -10,29 +10,8 @@ import six
 
 import llnl.util.tty.colify as colify
 
-import spack.environment as ev
 import spack.repo
-
-description = "list package tags"
-section = "basic"
-level = "long"
-
-
-def get_installed_packages():
-    env = ev.active_environment()
-    hashes = env.all_hashes() if env else None
-    return [spec.name for spec in spack.store.db.query(hashes=hashes)]
-
-
-def get_tag_packages(tags, installed, skip_empty):
-    tag_pkgs = collections.defaultdict(lambda: list)
-    spec_names = get_installed_packages() if installed else []
-    for tag in tags:
-        packages = [name for name in spack.repo.path.tag_index[tag] if \
-            not installed or name in spec_names]
-        if packages or not skip_empty:
-            tag_pkgs[tag] = packages
-    return tag_pkgs
+import spack.tag
 
 
 def report_tags(category, tags):
@@ -73,13 +52,15 @@ def tags(parser, args):
         print("There are no known tagged packages")
         return
 
-    # Only report relevant tags if none are to be shown
-    if not args.tag and not args.show_packages:
+    # Always show packages when tags are provided
+    show_packages = args.tag or args.show_packages
+
+    # Only report relevant, available tags if no packages are to be shown
+    if not show_packages:
         if not args.installed:
             report_tags("Available", available_tags)
         else:
-            tag_pkgs = get_tag_packages(available_tags, True, True)
-            #tags = list(tag_pkgs.keys()) if tag_pkgs else []
+            tag_pkgs = spack.tag.get_tag_packages(available_tags, True, True)
             tags = tag_pkgs.keys() if tag_pkgs else []
             report_tags("Installed", tags)
         return
@@ -89,17 +70,18 @@ def tags(parser, args):
     isatty = sys.stdout.isatty()
 
     tags = args.tag if args.tag else available_tags
-    tag_pkgs = get_tag_packages(tags, args.installed, False)
+    tag_pkgs = spack.tag.get_tag_packages(tags, args.installed, False)
     missing = "No installed packages" if args.installed else "None"
     for tag in sorted(tag_pkgs):
-        packages = tag_pkgs[tag]
-        if packages or not args.installed:
-            if isatty:
-                buffer.write("{0}:\n".format(tag))
+        # TODO: Remove the sorting once we're sure noone has an old
+        # TODO: tag cache since it can accumulate duplicates.
+        packages = sorted(list(set(tag_pkgs[tag])))
+        if isatty:
+            buffer.write("{0}:\n".format(tag))
 
-            if packages:
-                colify.colify(packages, output=buffer, tty=isatty, indent=4)
-            else:
-                buffer.write("    {0}\n".format(missing))
-            buffer.write("\n")
+        if packages:
+            colify.colify(packages, output=buffer, tty=isatty, indent=4)
+        else:
+            buffer.write("    {0}\n".format(missing))
+        buffer.write("\n")
     print(buffer.getvalue())

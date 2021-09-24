@@ -3,27 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import pytest
 
-import spack.cmd.install
+import spack.repo
 
 from spack.main import SpackCommand
+from spack.spec import Spec
 
-install = SpackCommand('install')
 tags = SpackCommand('tags')
 
 
-def test_tag_available(mock_packages, capfd):
-    with capfd.disabled():
-        out = tags()
-        for tag in ['tag1', 'tag2', 'tag3']:
-            assert tag in out
-
-
-def test_tag_installed(mock_packages, capfd):
-    with capfd.disabled():
-        out = tags('-i')
-        assert 'None' in out
+def test_tags_no_installed(install_mockery, mock_fetch):
+    out = tags('-i')
+    assert 'None' in out
 
 
 @pytest.mark.parametrize('args,packages', [
@@ -34,17 +27,35 @@ def test_tag_installed(mock_packages, capfd):
     (('-s',), ['mpich2']),               # show available packages
     (('-i', 'tag2',), ['No installed'])  #
 ])
-def test_tag_packages(args, packages, mock_packages):
-    output = tags(*args)
+def test_tags_packages(install_mockery, mock_fetch, args, packages):
+    out = tags(*args)
     for pkg in packages:
-        assert pkg in output
+        assert pkg in out
 
 
-def test_tag_install_prob(
-    mock_packages, mock_archive, mock_fetch, install_mockery, capfd
+@pytest.mark.parametrize('package,options,outputs', [
+    # Process available tags, so packages if showing or tags if not
+    ('mpich', [], ['tag1', 'tag2']),                 # relevant tags
+    ('mpich2', [], ['tag1', 'tag3']),                # relevant tags
+    ('mpich', ['-s'], ['mpich', 'No installed']),    # installed or No installed
+
+    # Process provided tags, so show installed package or No installed
+    ('mpich', ['tag1', 'tag2'], ['mpich']) ,
+    ('mpich', ['tag3'], ['No installed']),
+    ('mpich2', ['tag1', 'tag3'], ['mpich2']) ,
+    ('mpich2', ['tag2'], ['No installed']),
+])
+def test_tags_installed(
+    install_mockery, mock_fetch, package, options, outputs
 ):
-    install('mpich')
-    with capfd.disabled():
-        out = tags('', fail_on_error=False)
+    spec = Spec(package).concretized()
+    pkg = spack.repo.get(spec)
+    pkg.do_install()
 
-    assert 'See test log' in out
+    args = ['-i'] + options
+    out = tags(*args)
+    for item in outputs:
+        assert item in out
+
+    if package == outputs[-1]:
+        assert 'No installed' not in outputs

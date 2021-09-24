@@ -37,7 +37,7 @@ import spack.error
 import spack.patch
 import spack.provider_index
 import spack.spec
-import spack.tag_index
+import spack.tag
 import spack.util.imp as simp
 import spack.util.naming as nm
 import spack.util.path
@@ -261,10 +261,10 @@ class Indexer(object):
 class TagIndexer(Indexer):
     """Lifecycle methods for a TagIndex on a Repo."""
     def _create(self):
-        return spack.tag_index.TagIndex()
+        return spack.tag.TagIndex()
 
     def read(self, stream):
-        self.index = spack.tag_index.TagIndex.from_json(stream)
+        self.index = spack.tag.TagIndex.from_json(stream)
 
     def update(self, pkg_fullname):
         self.index.update_package(pkg_fullname)
@@ -533,7 +533,7 @@ class RepoPath(object):
     def tag_index(self):
         """Merged TagIndex from all Repos in the RepoPath."""
         if self._tag_index is None:
-            self._tag_index = spack.tag_index.TagIndex()
+            self._tag_index = spack.tag.TagIndex()
             for repo in reversed(self.repos):
                 self._tag_index.merge(repo.tag_index)
 

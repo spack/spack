@@ -13,8 +13,38 @@ else:
     from collections import Mapping
 
 import spack.error
-import spack.repo
 import spack.util.spack_json as sjson
+
+
+def get_installed_packages():
+    """Returns names of packages installed in the active environment."""
+    env = spack.environment.active_environment()
+    hashes = env.all_hashes() if env else None
+    return [spec.name for spec in spack.store.db.query(hashes=hashes)]
+
+
+def get_tag_packages(tags, installed, skip_empty):
+    """
+    Returns a dict, indexed by tag, containing lists of names of packages
+    containing the tag or, if no tags, for all available tags.
+
+    Arguments:
+        tags (list or None): list of tags of interest or None for all
+        installed (bool): True if want names of packages that are installed;
+            otherwise, False if want all packages with the tag
+        skip_empty (bool): True if exclude tags with no associated packages;
+            otherwise, False if want entries for all tags even when no such
+            tagged packages
+    """
+    tag_pkgs = collections.defaultdict(lambda: list)
+    spec_names = get_installed_packages() if installed else []
+    keys = tags or spack.repo.path.tag_index
+    for tag in keys:
+        packages = [name for name in spack.repo.path.tag_index[tag] if
+                    not installed or name in spec_names]
+        if packages or not skip_empty:
+            tag_pkgs[tag] = packages
+    return tag_pkgs
 
 
 class TagIndex(Mapping):
