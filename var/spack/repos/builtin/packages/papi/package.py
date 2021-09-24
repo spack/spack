@@ -43,7 +43,6 @@ class Papi(AutotoolsPackage, ROCmPackage):
     variant('sde', default=False, description='Enable software defined events')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('nvml', default=False, description='Enable NVML support')
-    #variant('rocm', default=False, description='Enable ROCm support')
     variant('rocm_smi', default=False, description='Enable ROCm SMI support')
 
     variant('shared', default=True, description='Build shared libraries')
@@ -87,7 +86,9 @@ class Papi(AutotoolsPackage, ROCmPackage):
             env.set('ROCPROFILER_LOG', '1')
             env.set('HSA_VEN_AMD_AQLPROFILE_LOG', '1')
             env.set('AQLPROFILE_READ_API', '1')
-            env.set('HSA_TOOLS_LIB', 'librocprofiler64.sot')
+            # If HSA_TOOLS_LIB is set to "librocprofiler64.so" (as recommended) this doesn't work
+            # due to a conflict between the version installed by spack and the system version.
+            env.set('HSA_TOOLS_LIB', 'unset')
         if '+rocm_smi' in spec:
             env.append_flags('CFLAGS', '-I%s/rocm_smi' % spec['rocm-smi-lib'].prefix.include)
 
