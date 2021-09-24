@@ -1,4 +1,4 @@
-name: linux tests
+name: Unit tests
 
 on:
   push:
@@ -319,7 +319,7 @@ jobs:
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
-  build:
+  macOS:
     needs: [ validate, style, documentation, changes ]
     runs-on: macos-latest
     strategy:
