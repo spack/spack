@@ -131,9 +131,8 @@ check out a commit from the ``master`` branch, you would want to add:
    depends_on('automake', type='build', when='@master')
    depends_on('libtool',  type='build', when='@master')
 
-When the package has ``autoconf`` as dependenency, and ``m4`` is only used
-as the script interpreter of ``autoconf`` and not for other purposes, it
-does not have to be listed explicitly and can be removedd as it is not needed.
+It is typically redundant to list the ``m4`` macro processor package as a
+dependency, since ``autoconf`` already depends on it.
 
 """""""""""""""""""""""""""""""
 Using a custom autoreconf phase
