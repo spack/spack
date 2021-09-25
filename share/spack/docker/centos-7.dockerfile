@@ -27,13 +27,13 @@ RUN yum update -y \
         make \
         patch \
         patchelf \
-        python \
-        python-pip \
-        python-setuptools \
+        python3 \
+        python3-pip \
+        python3-setuptools \
         tcl \
         unzip \
         which \
- && pip install boto3 \
+ && pip3 install boto3 \
  && rm -rf /var/cache/yum \
  && yum clean all
 
