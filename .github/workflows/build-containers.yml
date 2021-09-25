@@ -54,6 +54,12 @@ jobs:
               exit 1;
           fi
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v1
         with:
@@ -61,11 +67,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+      - name: Log in to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[1] }}
         uses: docker/build-push-action@v2
@@ -74,5 +80,7 @@ jobs:
           platforms: ${{ matrix.dockerfile[2] }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
+            spack/${{ env.container }}
+            spack/${{ env.versioned }}
             ghcr.io/spack/${{ env.container }}
             ghcr.io/spack/${{ env.versioned }}
