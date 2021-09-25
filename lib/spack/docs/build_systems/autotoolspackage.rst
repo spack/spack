@@ -112,20 +112,44 @@ phase runs:
 
 .. code-block:: console
 
-   $ libtoolize
-   $ aclocal
-   $ autoreconf --install --verbose --force
+   $ autoreconf --install --verbose --force -I <aclocal-prefix>/share/aclocal
 
-All you need to do is add a few Autotools dependencies to the package.
-Most stable releases will come with a ``configure`` script, but if you
-check out a commit from the ``develop`` branch, you would want to add:
+In case you need to add more arguments, override ``autoreconf_extra_args``
+in your ``package.py`` on class scope like this:
 
 .. code-block:: python
 
-   depends_on('autoconf', type='build', when='@develop')
-   depends_on('automake', type='build', when='@develop')
-   depends_on('libtool',  type='build', when='@develop')
-   depends_on('m4',       type='build', when='@develop')
+   autoreconf_extra_args = ["-Im4"]
+
+All you need to do is add a few Autotools dependencies to the package.
+Most stable releases will come with a ``configure`` script, but if you
+check out a commit from the ``master`` branch, you would want to add:
+
+.. code-block:: python
+
+   depends_on('autoconf', type='build', when='@master')
+   depends_on('automake', type='build', when='@master')
+   depends_on('libtool',  type='build', when='@master')
+
+It is typically redundant to list the ``m4`` macro processor package as a
+dependency, since ``autoconf`` already depends on it.
+
+"""""""""""""""""""""""""""""""
+Using a custom autoreconf phase
+"""""""""""""""""""""""""""""""
+
+In some cases, it might be needed to replace the default implementation
+of the autoreconf phase with one running a script interpreter. In this
+example, the ``bash`` shell is used to run the ``autogen.sh`` script.
+
+.. code-block:: python
+
+   def autoreconf(self, spec, prefix):
+       which('bash')('autogen.sh')
+
+"""""""""""""""""""""""""""""""""""""""
+patching configure or Makefile.in files
+"""""""""""""""""""""""""""""""""""""""
 
 In some cases, developers might need to distribute a patch that modifies
 one of the files used to generate ``configure`` or ``Makefile.in``.
