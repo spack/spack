@@ -21,9 +21,7 @@ RUN apt-get -yqq update \
         git \
         gnupg2 \
         iproute2 \
-        lmod \
         locales \
-        lua-posix \
         make \
         python3 \
         python3-pip \

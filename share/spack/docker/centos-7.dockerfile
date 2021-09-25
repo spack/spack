@@ -23,7 +23,6 @@ RUN yum update -y \
         gnupg2 \
         hostname \
         iproute \
-        Lmod \
         make \
         patch \
         patchelf \
