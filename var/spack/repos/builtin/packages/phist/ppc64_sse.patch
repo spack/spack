@@ -6,7 +6,7 @@
  endforeach()
 +
 +if(PHIST_HOST_OPTIMIZE)
-+  if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "ppc64le")
++  if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
 +    add_definitions(-DNO_WARN_X86_INTRINSICS)
 +  endif()
 +endif()
