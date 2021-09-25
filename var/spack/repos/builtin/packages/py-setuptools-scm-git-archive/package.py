@@ -22,3 +22,6 @@ class PySetuptoolsScmGitArchive(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
+    depends_on('py-wheel',          type='build')
+    depends_on('py-tomli')
+    depends_on('py-packaging')
