@@ -19,7 +19,6 @@ from spack.build_environment import (
     determine_number_of_jobs,
     dso_suffix,
 )
-from spack.compiler import UNSET_CC_ENVIRONMENT_VARIABLE
 from spack.paths import build_env_path
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
@@ -54,7 +53,7 @@ def build_environment(working_env):
     os.environ['SPACK_DTAGS_TO_ADD'] = '--disable-new-dtags'
     os.environ['SPACK_DTAGS_TO_STRIP'] = '--enable-new-dtags'
     os.environ['SPACK_SYSTEM_DIRS'] = '/usr/include /usr/lib'
-    os.environ['SPACK_TARGET_ARGS'] = UNSET_CC_ENVIRONMENT_VARIABLE
+    os.environ['SPACK_TARGET_ARGS'] = ''
 
     if 'SPACK_DEPENDENCIES' in os.environ:
         del os.environ['SPACK_DEPENDENCIES']
@@ -362,12 +361,8 @@ def test_parallel_false_is_not_propagating(config, mock_packages):
 
 
 @pytest.mark.parametrize('config_setting,expected_flag', [
-    ('runpath',
-     UNSET_CC_ENVIRONMENT_VARIABLE if platform.system() == 'Darwin'
-     else '--enable-new-dtags'),
-    ('rpath',
-     UNSET_CC_ENVIRONMENT_VARIABLE if platform.system() == 'Darwin'
-     else '--disable-new-dtags'),
+    ('runpath', '' if platform.system() == 'Darwin' else '--enable-new-dtags'),
+    ('rpath', '' if platform.system() == 'Darwin' else '--disable-new-dtags'),
 ])
 def test_setting_dtags_based_on_config(
         config_setting, expected_flag, config, mock_packages

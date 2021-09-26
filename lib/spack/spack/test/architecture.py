@@ -8,7 +8,6 @@ import platform
 import pytest
 
 import spack.architecture
-import spack.compiler
 import spack.concretize
 import spack.operating_systems
 import spack.platforms
@@ -153,7 +152,7 @@ def test_arch_spec_container_semantic(item, architecture_str):
     # Check compilers with version numbers from a single toolchain
     ('gcc@4.7.2', 'ivybridge', '-march=core-avx-i -mtune=core-avx-i'),
     # Check mixed toolchains
-    ('clang@8.0.0', 'broadwell', spack.compiler.UNSET_CC_ENVIRONMENT_VARIABLE),
+    ('clang@8.0.0', 'broadwell', ''),
     ('clang@3.5', 'x86_64', '-march=x86-64 -mtune=generic'),
     # Check Apple's Clang compilers
     ('apple-clang@9.1.0', 'x86_64', '-march=x86-64')

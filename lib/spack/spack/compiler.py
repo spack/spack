@@ -25,17 +25,7 @@ import spack.util.module_cmd
 import spack.version
 from spack.util.environment import filter_system_paths
 
-__all__ = ['Compiler', 'UNSET_CC_ENVIRONMENT_VARIABLE']
-
-
-# Our `cc` wrapper at lib/spack/env/cc is written for any POSIX-compliant `sh`, and
-# POSIX does not define any method to differentiate whether an environment variable is
-# unset or set to the empty string. Accordingly, in order to ensure the required
-# parameters to `cc` are well-formed, we enforce that any "unset" variable is instead
-# set to a string with a single newline. This variable should be used instead of typing
-# out a newline directly in order to clarify where we intend to pass an empty variable
-# to the script.
-UNSET_CC_ENVIRONMENT_VARIABLE = '\n'
+__all__ = ['Compiler']
 
 
 @llnl.util.lang.memoized
@@ -252,19 +242,19 @@ class Compiler(object):
 
     @property
     def linker_arg(self):
-        """Flag prefix that needs to be used to pass an argument to the linker."""
+        """Flag that need to be used to pass an argument to the linker."""
         return '-Wl,'
 
     @property
     def disable_new_dtags(self):
         if platform.system() == 'Darwin':
-            return UNSET_CC_ENVIRONMENT_VARIABLE
+            return ''
         return '--disable-new-dtags'
 
     @property
     def enable_new_dtags(self):
         if platform.system() == 'Darwin':
-            return UNSET_CC_ENVIRONMENT_VARIABLE
+            return ''
         return '--enable-new-dtags'
 
     @property
@@ -417,6 +407,7 @@ class Compiler(object):
                 for flag in self.flags.get(flag_type, []):
                     compiler_exe.add_default_arg(flag)
 
+            output = ''
             with self._compiler_environment():
                 output = str(compiler_exe(
                     self.verbose_flag, fin, '-o', fout,
@@ -580,9 +571,8 @@ class Compiler(object):
     def search_regexps(cls, language):
         # Compile all the regular expressions used for files beforehand.
         # This searches for any combination of <prefix><name><suffix>
-        # defined for the compiler.
+        # defined for the compiler
         compiler_names = getattr(cls, '{0}_names'.format(language))
-        # TODO: What is the significance of the empty string here?
         prefixes = [''] + cls.prefixes
         suffixes = [''] + cls.suffixes
         regexp_fmt = r'^({0}){1}({2})$'

@@ -11,7 +11,6 @@ import os
 
 import pytest
 
-from spack.compiler import UNSET_CC_ENVIRONMENT_VARIABLE
 from spack.paths import build_env_path
 from spack.util.environment import set_env, system_dirs
 from spack.util.executable import Executable
@@ -108,7 +107,7 @@ def wrapper_environment():
             SPACK_LINK_DIRS=None,
             SPACK_INCLUDE_DIRS=None,
             SPACK_RPATH_DIRS=None,
-            SPACK_TARGET_ARGS=UNSET_CC_ENVIRONMENT_VARIABLE,
+            SPACK_TARGET_ARGS='',
             SPACK_LINKER_ARG='-Wl,',
             SPACK_DTAGS_TO_ADD='--disable-new-dtags',
             SPACK_DTAGS_TO_STRIP='--enable-new-dtags'):
@@ -350,7 +349,7 @@ def test_dep_lib_no_lib():
             test_args_without_paths)
 
 
-def test_ccld_dirs():
+def test_ccld_deps():
     """Ensure all flags are added in ccld mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
@@ -374,7 +373,7 @@ def test_ccld_dirs():
             test_args_without_paths)
 
 
-def test_ccld_dirs_isystem():
+def test_ccld_deps_isystem():
     """Ensure all flags are added in ccld mode.
        When a build uses -isystem, Spack should inject it's
        include paths using -isystem. Spack will insert these
@@ -404,7 +403,7 @@ def test_ccld_dirs_isystem():
             test_args_without_paths)
 
 
-def test_cc_dirs():
+def test_cc_deps():
     """Ensure -L and RPATHs are not added in cc mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
@@ -494,7 +493,7 @@ def test_ccld_with_system_dirs_isystem():
             test_args_without_paths)
 
 
-def test_ld_dirs():
+def test_ld_deps():
     """Ensure no (extra) -I args or -Wl, are passed in ld mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
@@ -515,8 +514,8 @@ def test_ld_dirs():
             test_args_without_paths)
 
 
-def test_ld_dirs_no_rpath():
-    """Ensure SPACK_LINK_DIRS controls -L for ld."""
+def test_ld_deps_no_rpath():
+    """Ensure SPACK_LINK_DEPS controls -L for ld."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_LINK_DIRS='xlib:ylib:zlib'):
         check_args(
@@ -532,8 +531,8 @@ def test_ld_dirs_no_rpath():
             test_args_without_paths)
 
 
-def test_ld_dirs_no_link():
-    """Ensure SPACK_RPATH_DIRS controls -rpath for ld."""
+def test_ld_deps_no_link():
+    """Ensure SPACK_RPATH_DEPS controls -rpath for ld."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib'):
         check_args(
@@ -549,7 +548,7 @@ def test_ld_dirs_no_link():
             test_args_without_paths)
 
 
-def test_ld_dirs_partial():
+def test_ld_deps_partial():
     """Make sure ld -r (partial link) is handled correctly on OS's where it
        doesn't accept rpaths.
     """

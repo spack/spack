@@ -65,8 +65,6 @@ SPACK_CC_RPATH_ARG
 SPACK_CXX_RPATH_ARG
 SPACK_F77_RPATH_ARG
 SPACK_FC_RPATH_ARG
-SPACK_TARGET_ARGS
-SPACK_DTAGS_TO_ADD
 SPACK_DTAGS_TO_STRIP
 SPACK_LINKER_ARG
 SPACK_SHORT_SPEC
@@ -87,6 +85,11 @@ SPACK_SYSTEM_DIRS"
 # - SPACK_DEBUG
 # This variable is set when unit testing the compiler script:
 # - SPACK_TEST_COMMAND
+# This is set when we want to add uarch target args:
+# - SPACK_TARGET_ARGS
+# This is set when we want to add DTAG arguments:
+# - SPACK_DTAGS_TO_ADD
+
 
 # Exit with error if the parameter given by the name in $1 is unset or empty.
 #
@@ -104,33 +107,6 @@ done
 
 # Save original command for debug logging.
 readonly input_command="$*"
-
-# Determine whether a parameter is equal to a newline.
-#
-# There are two facets of POSIX sh that force us to perform this incredibly
-# verbose check:
-# - It is not possible to differentiate whether a parameter is unset or set to
-#   the empty string.
-# - POSIX sh does not encode '\n' into a newline except when provided as the
-#   *initial* argument to `printf`.
-# Therefore, to allow us to meaningfully check whether required environment
-# variables have been provided, we set them to a single newline instead of empty
-# where we invoke this script in spack (currently, these environment variable
-# strings are mostly generated in compiler.py, and set in build_environment.py),
-# and then compare that string against the result of `printf '\n'`.
-#
-# Note that python will automatically encode '\n' into a newline, so we don't
-# need to do anything special there, although we should take care to note the
-# special interpretation of the single newline in our python code.
-is_arg_intentionally_unset() {
-    arg="$1"
-    case "$(printf '%s' "$arg")" in
-        "$(printf '\n')")
-            return 0
-            ;;
-    esac
-    return 1
-}
 
 # Test whether a path $1 is equal to any entry of $2->$#.
 path_contained_in_nonrecursive() {
@@ -524,9 +500,6 @@ readonly mode
 # - $SPACK_DTAGS_TO_STRIP
 # - $SPACK_LINKER_ARG
 #
-# If any of these variables are intentionally unset by Spack, they will be set
-# to the value of a single newline, as per the documentation of
-# the function is_arg_intentionally_unset().
 
 # Set up $rpath variable according to the compiler name.
 readonly rpath="$(eval "printf '%s' \"\$SPACK_${comp}_RPATH_ARG\"")"
@@ -875,8 +848,7 @@ case "$mode" in
                 flags="$(IFS=' '; append "$flags" ${SPACK_CXXFLAGS:-})"
                 ;;
         esac
-        # shellcheck disable=SC2153
-        if ! is_arg_intentionally_unset "$SPACK_TARGET_ARGS"; then
+        if [ ! -z "$SPACK_TARGET_ARGS" ]; then
             readonly spack_target_args="$(IFS=' '; generate_array_from_expansion $SPACK_TARGET_ARGS)"
             flags="$(concatenate "$spack_target_args" "$flags")"
         fi
@@ -971,14 +943,14 @@ args="$(concatenate "$args" "$(lib_dir_prefix_elements "$system_libdirs")")"
 # Add RPATH arguments.
 case "$mode" in
     ccld)
-        if ! is_arg_intentionally_unset "$SPACK_DTAGS_TO_ADD"; then
+        if [ ! -z "$SPACK_DTAGS_TO_ADD" ]; then
             args="$(append "$args" "${SPACK_LINKER_ARG}${SPACK_DTAGS_TO_ADD}")"
         fi
         args="$(concatenate "$args" "$(prefix_array_elements "$rpaths" "$rpath")")"
         args="$(concatenate "$args" "$(prefix_array_elements "$system_rpaths" "$rpath")")"
         ;;
     ld)
-        if ! is_arg_intentionally_unset "$SPACK_DTAGS_TO_ADD"; then
+        if [ ! -z "$SPACK_DTAGS_TO_ADD" ]; then
             args="$(append "$args" "$SPACK_DTAGS_TO_ADD")"
         fi
         args="$(concatenate "$args" "$(prefix_discrete_arg_array_elements "$rpaths" '-rpath')")"
