@@ -13,12 +13,13 @@ class Pythia8(AutotoolsPackage):
     final state."""
 
     homepage = "http://home.thep.lu.se/Pythia/"
-    url      = "http://home.thep.lu.se/~torbjorn/pythia8/pythia8244.tgz"
+    url      = "https://pythia.org/download/pythia83/pythia8306.tgz"
 
     tags = ['hep']
 
     maintainers = ['ChristianTackeGSI']
 
+    version('8306', sha256='734803b722b1c1b53c8cf2f0d3c30747c80fc2dde5e0ba141bc9397dad37a8f6')
     version('8304', sha256='d3897018fb6d545eaf93bf43f32580c984a9bff49259d9dd29dff6edfbe9d9a1')
     version('8303', sha256='cd7c2b102670dae74aa37053657b4f068396988ef7da58fd3c318c84dc37913e')
     version('8302', sha256='7372e4cc6f48a074e6b7bc426b040f218ec4a64b0a55e89da6af56933b5f5085')
@@ -72,5 +73,9 @@ class Pythia8(AutotoolsPackage):
         return args
 
     def setup_dependent_run_environment(self, env, dependent_spec):
+        env.set('PYTHIA8', self.prefix)
+        env.set('PYTHIA8DATA', self.prefix.share.Pythia8.xmldoc)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('PYTHIA8', self.prefix)
         env.set('PYTHIA8DATA', self.prefix.share.Pythia8.xmldoc)
