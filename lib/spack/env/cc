@@ -42,17 +42,6 @@ die() {
     exit 1
 }
 
-# Override `echo` with this facsimile to avoid strange errors across shells.
-#
-# `printf` is the only way to portably write arbitrary strings, since the
-# behavior of `echo -n` is explicitly undefined by POSIX (see "Printing the
-# value of a variable" in https://www.etalabs.net/sh_tricks.html). Since there
-# is no shellcheck rule to disable `echo`, we redefine it here to immediately
-# error out in case it is added to this script later by accident.
-echo() {
-    die "'echo' is not portable across shells; use \"printf '%s\n'\" instead!"
-}
-
 # This is a newline-delimited string of environment variable names that need to
 # be set before the script runs. They are set by routines in
 # spack.build_environment as part of the package installation process.
