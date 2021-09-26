@@ -68,6 +68,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             description='Builds with support for image processing data with OpenCV')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('onednn', default=False, description='Support for OneDNN')
+    variant('onnx', default=False, description='Support for exporting models into ONNX format')
     variant('nvshmem', default=False, description='Support for NVSHMEM')
     variant('python', default=True, description='Support for Python extensions (e.g. Data Reader)')
     variant('pfe', default=True, description='Python Frontend for generating and launching models')
@@ -237,6 +238,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('llvm-openmp', when='%apple-clang')
 
     depends_on('onednn cpu_runtime=omp gpu_runtime=none', when='+onednn')
+    depends_on('onnx', when='+onnx')
     depends_on('nvshmem', when='+nvshmem')
 
     depends_on('zstr')
@@ -307,6 +309,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '-DLBANN_WITH_NVSHMEM:BOOL=%s' % ('+nvshmem' in spec),
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
             '-DLBANN_WITH_ONEDNN:BOOL=%s' % ('+onednn' in spec),
+            '-DLBANN_WITH_ONNX:BOOL=%s' % ('+onnx' in spec),
             '-DLBANN_WITH_EMBEDDED_PYTHON:BOOL=%s' % ('+python' in spec),
             '-DLBANN_WITH_PYTHON_FRONTEND:BOOL=%s' % ('+pfe' in spec),
             '-DLBANN_WITH_TBINF=OFF',
