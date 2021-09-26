@@ -24,11 +24,11 @@ class Pythia8(AutotoolsPackage):
     version('8303', sha256='cd7c2b102670dae74aa37053657b4f068396988ef7da58fd3c318c84dc37913e')
     version('8302', sha256='7372e4cc6f48a074e6b7bc426b040f218ec4a64b0a55e89da6af56933b5f5085')
     version('8301', sha256='51382768eb9aafb97870dca1909516422297b64ef6a6b94659259b3e4afa7f06')
-    version('8244', sha256='e34880f999daf19cdd893a187123927ba77d1bf851e30f6ea9ec89591f4c92ca')
-    version('8240', sha256='d27495d8ca7707d846f8c026ab695123c7c78c7860f04e2c002e483080418d8d')
-    version('8235', sha256='e82f0d6165a8250a92e6aa62fb53201044d8d853add2fdad6d3719b28f7e8e9d')
-    version('8230', sha256='332fad0ed4f12e6e0cb5755df0ae175329bc16bfaa2ae472d00994ecc99cd78d')
-    version('8212', sha256='f8fb4341c7e8a8be3347eb26b00329a388ccf925313cfbdba655a08d7fd5a70e')
+    version('8244', sha256='e34880f999daf19cdd893a187123927ba77d1bf851e30f6ea9ec89591f4c92ca', deprecated=True)
+    version('8240', sha256='d27495d8ca7707d846f8c026ab695123c7c78c7860f04e2c002e483080418d8d', deprecated=True)
+    version('8235', sha256='e82f0d6165a8250a92e6aa62fb53201044d8d853add2fdad6d3719b28f7e8e9d', deprecated=True)
+    version('8230', sha256='332fad0ed4f12e6e0cb5755df0ae175329bc16bfaa2ae472d00994ecc99cd78d', deprecated=True)
+    version('8212', sha256='f8fb4341c7e8a8be3347eb26b00329a388ccf925313cfbdba655a08d7fd5a70e', deprecated=True)
 
     variant('shared', default=True, description='Build shared library')
     variant('hepmc', default=True, description='Build HepMC2 extensions')
@@ -71,6 +71,12 @@ class Pythia8(AutotoolsPackage):
             args.append('--without-root')
 
         return args
+
+    def url_for_version(self, version):
+        url, dirname, fname = self.url.rsplit('/', 2)
+        dirname = 'pythia' + str(version)[:2]
+
+        return url + '/' + dirname + '/' + fname
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.set('PYTHIA8', self.prefix)
