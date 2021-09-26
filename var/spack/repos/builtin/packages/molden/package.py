@@ -66,5 +66,6 @@ class Molden(MakefilePackage):
                     flags = []
                 flags.append('-fallow-argument-mismatch')
         return (flags, None, None)
+    
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
