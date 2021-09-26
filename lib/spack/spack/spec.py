@@ -4854,30 +4854,39 @@ class SpecParser(spack.parse.Parser):
             return self.token.value
 
     def version(self):
-        start = None
-        end = None
-        if self.accept(ID):
-            start = self.token.value
+        # Concrete version (@=3.4.5)
+        if self.accept(EQ):
+            if self.accept(VAL):
+                exact_version = self.token.value
+            else:
+                self.next_token_error("Exact version required")
+            return vn.Version(exact_version)
 
-        if self.accept(COLON):
-            if self.accept(ID):
-                if self.next and self.next.type is EQ:
-                    # This is a start: range followed by a key=value pair
-                    self.push_tokens([self.token])
-                else:
-                    end = self.token.value
-        elif start:
-            # No colon, but there was a version.
-            return vn.Version(start)
+        # Version range (@3, @3:5, @3:, @:5)
         else:
-            # No colon and no id: invalid version.
-            self.next_token_error("Invalid version specifier")
+            start = None
+            end = None
+            if self.accept(ID):
+                start = self.token.value
 
-        if start:
-            start = vn.Version(start)
-        if end:
-            end = vn.Version(end)
-        return vn.VersionRange(start, end)
+            if self.accept(COLON):
+                if self.accept(ID):
+                    if self.next and self.next.type is EQ:
+                        # This is a start: range followed by a key=value pair
+                        self.push_tokens([self.token])
+                    else:
+                        end = self.token.value
+            elif start:
+                # No colon, but there was a version.
+                return vn.Version(start)
+            else:
+                # No colon and no id: invalid version.
+                self.next_token_error("Invalid version specifier")
+
+            if start:
+                start = vn.Version(start)
+            end = vn.Version(end) if end else vn.Version(start)
+            return vn.VersionRange(start, end)
 
     def version_list(self):
         vlist = []
