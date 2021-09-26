@@ -1348,31 +1348,31 @@ def test_ci_generate_bootstrap_prune_dag(
     mirror_url = 'file://{0}'.format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install_cmd('gcc@10.1.0%gcc@4.5.0')
+    install_cmd('gcc@2.0%gcc@4.5.0')
 
     # Put installed compiler in the buildcache
     buildcache_cmd('create', '-u', '-a', '-f', '-d', mirror_dir.strpath,
-                   'gcc@10.1.0%gcc@4.5.0')
+                   'gcc@2.0%gcc@4.5.0')
 
     # Now uninstall the compiler
-    uninstall_cmd('-y', 'gcc@10.1.0%gcc@4.5.0')
+    uninstall_cmd('-y', 'gcc@2.0%gcc@4.5.0')
 
     monkeypatch.setattr(spack.concretize.Concretizer,
                         'check_for_compiler_existence', False)
     spack.config.set('config:install_missing_compilers', True)
-    assert CompilerSpec('gcc@10.1.0') not in compilers.all_compiler_specs()
+    assert CompilerSpec('gcc@2.0') not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror_cmd('add', 'test-mirror', mirror_url)
 
-    install_cmd('--no-check-signature', 'a%gcc@10.1.0')
+    install_cmd('--no-check-signature', 'a%gcc@2.0')
 
     # Put spec built with installed compiler in the buildcache
     buildcache_cmd('create', '-u', '-a', '-f', '-d', mirror_dir.strpath,
-                   'a%gcc@10.1.0')
+                   'a%gcc@2.0')
 
     # Now uninstall the spec
-    uninstall_cmd('-y', 'a%gcc@10.1.0')
+    uninstall_cmd('-y', 'a%gcc@2.0')
 
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1380,9 +1380,9 @@ def test_ci_generate_bootstrap_prune_dag(
 spack:
   definitions:
     - bootstrap:
-      - gcc@10.1.0%gcc@4.5.0
+      - gcc@2.0%gcc@4.5.0
   specs:
-    - a%gcc@10.1.0
+    - a%gcc@2.0
   mirrors:
     atestm: {0}
   gitlab-ci:
