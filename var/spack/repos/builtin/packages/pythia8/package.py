@@ -7,13 +7,13 @@ from spack import *
 
 
 class Pythia8(AutotoolsPackage):
-    '''The Pythia program is a standard tool for the generation of events in
+    """The Pythia program is a standard tool for the generation of events in
     high-energy collisions, comprising a coherent set of physics models for
     the evolution from a few-body hard process to a complex multiparticle
-    final state.'''
+    final state."""
 
-    homepage = 'http://home.thep.lu.se/Pythia/'
-    url      = 'https://pythia.org/download/pythia83/pythia8306.tgz'
+    homepage = "http://home.thep.lu.se/Pythia/"
+    url      = "https://pythia.org/download/pythia83/pythia8306.tgz"
 
     tags = ['hep']
 
@@ -114,9 +114,9 @@ class Pythia8(AutotoolsPackage):
         return args
 
     def url_for_version(self, version):
-        url, dirname, fname = self.url.rsplit('/', 2)
-        dirname = 'pythia' + str(version)[:2]
-        fname = 'pythia' + str(version) + '.tgz'
+        url = self.url.rsplit('/', 2)[0]
+        dirname = 'pythia' + str(version.joined)[:2]
+        fname = 'pythia' + str(version.joined) + '.tgz'
 
         return url + '/' + dirname + '/' + fname
 
