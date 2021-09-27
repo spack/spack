@@ -7,13 +7,13 @@ from spack import *
 
 
 class Pythia8(AutotoolsPackage):
-    """The Pythia program is a standard tool for the generation of events in
+    '''The Pythia program is a standard tool for the generation of events in
     high-energy collisions, comprising a coherent set of physics models for
     the evolution from a few-body hard process to a complex multiparticle
-    final state."""
+    final state.'''
 
-    homepage = "http://home.thep.lu.se/Pythia/"
-    url      = "https://pythia.org/download/pythia83/pythia8306.tgz"
+    homepage = 'http://home.thep.lu.se/Pythia/'
+    url      = 'https://pythia.org/download/pythia83/pythia8306.tgz'
 
     tags = ['hep']
 
@@ -31,50 +31,89 @@ class Pythia8(AutotoolsPackage):
     version('8.212', sha256='f8fb4341c7e8a8be3347eb26b00329a388ccf925313cfbdba655a08d7fd5a70e', deprecated=True)
 
     variant('shared', default=True, description='Build shared library')
-    variant('hepmc', default=True, description='Build HepMC2 extensions')
-    variant('evtgen', default=False, description='Build EvtGen extensions')
-    variant('root', default=False, description='Build ROOT extensions')
-    variant('fastjet', default=False, description='Build fastjet extensions')
+    variant('hepmc', default=True, description='Export PYTHIA events to the HEPMC format, version 2')
+    variant('hepmc3', default=True, description='Export PYTHIA events to the HEPMC format, version 3')
+    variant('evtgen', default=False, description='Particle decays with the EvtGen decay package')
+    variant('root', default=False, description='Use ROOT trees and histograms with PYTHIA')
+    variant('fastjet', default=False, description='Building of jets using the FastJet package, version 3')
+    variant('lhapdf', default=False, description='Support the use of external PDF sets via LHAPDF')
+    variant('rivet', default=False, description='Support use of RIVET through direct interface')
+    variant('python', default=False, description='Interface to use PYTHIA in Python')
+    variant('madgraph5amc', default=False, description='MadGraph matrix element plugins for parton showers')
+    variant('openmpi', default=False, description='Multi-threading support via OpenMP')
+    variant('mpich', default=False, description='Multi-threading support via MPICH')
+    variant('hdf5', default=False, description='Support the use of HDF5 format')
 
     depends_on('rsync', type='build')
-    depends_on('hepmc@:2.99.99', when="+hepmc")
-    depends_on('root', when="+root")
-    depends_on('evtgen', when="+evtgen")
-    depends_on("fastjet@3.0.0:", when="+fastjet")
+    depends_on('hepmc@:2.99.99', when='+hepmc')
+    depends_on('hepmc@3:', when='+hepmc3')
+    depends_on('root', when='+root')
+    depends_on('evtgen', when='+evtgen')
+    depends_on('fastjet@3.0.0:', when='+fastjet')
+    depends_on('lhapdf@6.2:', when='+lhapdf')
+    depends_on('boost', when='+lhapdf @:8.213')
+    depends_on('rivet', when='+rivet')
+    depends_on('python', when='+python')
+    depends_on('madgraph5amc', when='+madgraph5amc')
+    depends_on('openmpi', when='+openmpi')
+    depends_on('mpich', when='+mpich')
+    depends_on('hdf5', when='+hdf5')
+    depends_on('highfive@2.2', when='+hdf5')
+    
+    extends('python', when='+python')
 
-    conflicts("^evtgen+pythia8", when="+evtgen",
-              msg="Building pythia with evtgen bindings and "
-              "evtgen with pythia bindings results in a circular dependency "
-              "that cannot be resolved at the moment! "
-              "Use pythia8+evtgen^evtgen~pythia8")
+    conflicts('^evtgen+pythia8', when='+evtgen',
+              msg='Building pythia with evtgen bindings and '
+              'evtgen with pythia bindings results in a circular dependency '
+              'that cannot be resolved at the moment! '
+              'Use pythia8+evtgen^evtgen~pythia8')
+              
+    conflicts('+evtgen', when='~hepmc2', msg='+evtgen requires +hepmc2')
+    conflicts('+mpich', when='@:8.304', msg='MPICH support was added in 8.304')
+    conflicts('+hdf5', when='@:8.304', msg='HDF5 support was added in 8.304')
+    conflicts('+hdf5', when='~mpich', msg='MPICH is required for reading HDF5 files')    
 
     def configure_args(self):
         args = []
 
-        if '+shared' in self.spec:
+        if self.spec.satisfies('@:8.301 +shared'):
+            # Removed in 8.301
             args.append('--enable-shared')
+        
         if '+hepmc' in self.spec:
-            args.append('--with-hepmc=%s' % self.spec["hepmc"].prefix)
+            args.append('--with-hepmc2=%s' % self.spec['hepmc'].prefix)
         else:
-            args.append('--without-hepmc')
-        if '+fastjet' in self.spec:
-            args.append('--with-fastjet3=%s' % self.spec["fastjet"].prefix)
-        else:
-            args.append('--without-fastjet3')
-        if '+evtgen' in self.spec:
-            args.append('--with-evtgen=%s' % self.spec["evtgen"].prefix)
-        else:
-            args.append('--without-evtgen')
-        if '+root' in self.spec:
-            args.append('--with-root=%s' % self.spec["root"].prefix)
-        else:
-            args.append('--without-root')
+            args.append('--without-hepmc2')
+
+        if '+lhapdf' in self.spec:
+            args.append('--with-lhapdf6=%s' % self.spec['lhapdf'].prefix)
+            if self.spec.satisfies('@:8.213'):
+                args.append('--with-lhapdf6-plugin=LHAPDF6.h')
+                args.append('--with-boost=' + self.spec['boost'].prefix)
+
+        args += self.with_or_without('hepmc3', activation_value='prefix')
+        args += self.with_or_without('fastjet3', activation_value='prefix', variant='fastjet')
+        args += self.with_or_without('evtgen', activation_value='prefix')
+        args += self.with_or_without('root', activation_value='prefix')
+        args += self.with_or_without('rivet', activation_value='prefix')
+        if self.spec.satisfies('+rivet'):
+            args.append('--with-yoda=' + self.spec['yoda'].prefix)
+        
+        args += self.with_or_without('python', activation_value='prefix')
+        args += self.with_or_without('mg5mes', activation_value='prefix', variant='madgraph5amc')
+        args += self.with_or_without('openmp', activation_value='prefix', variant='openmpi')
+        args += self.with_or_without('mpich', activation_value='prefix')
+        args += self.with_or_without('hdf5', activation_value='prefix')
+        
+        if self.spec.satisfies('+hdf5'):
+            args.append('--with-highfive=' + self.spec['highfive'].prefix)
 
         return args
 
     def url_for_version(self, version):
         url, dirname, fname = self.url.rsplit('/', 2)
         dirname = 'pythia' + str(version)[:2]
+        fname = 'pythia' + str(version) + '.tgz'
 
         return url + '/' + dirname + '/' + fname
 
