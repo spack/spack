@@ -44,9 +44,10 @@ class Opencarp(CMakePackage):
         depends_on('meshtool@oc' + ver, when='@' + ver + ' +meshtool')
 
     def cmake_args(self):
-        args = ['-DDLOPEN:STRING=ON',
-                '-DSPACK_BUILD:STRING=ON']
-        return args
+        return [
+            self.define('DLOPEN', True),
+            self.define('SPACK_BUILD', True)
+        ]
 
     @run_after('install')
     def post_install(self):
