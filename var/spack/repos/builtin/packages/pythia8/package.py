@@ -59,7 +59,7 @@ class Pythia8(AutotoolsPackage):
     depends_on('mpich', when='+mpich')
     depends_on('hdf5', when='+hdf5')
     depends_on('highfive@2.2', when='+hdf5')
-    
+
     extends('python', when='+python')
 
     conflicts('^evtgen+pythia8', when='+evtgen',
@@ -67,11 +67,11 @@ class Pythia8(AutotoolsPackage):
               'evtgen with pythia bindings results in a circular dependency '
               'that cannot be resolved at the moment! '
               'Use pythia8+evtgen^evtgen~pythia8')
-              
+
     conflicts('+evtgen', when='~hepmc2', msg='+evtgen requires +hepmc2')
     conflicts('+mpich', when='@:8.304', msg='MPICH support was added in 8.304')
     conflicts('+hdf5', when='@:8.304', msg='HDF5 support was added in 8.304')
-    conflicts('+hdf5', when='~mpich', msg='MPICH is required for reading HDF5 files')    
+    conflicts('+hdf5', when='~mpich', msg='MPICH is required for reading HDF5 files')
 
     def configure_args(self):
         args = []
@@ -79,7 +79,7 @@ class Pythia8(AutotoolsPackage):
         if self.spec.satisfies('@:8.301 +shared'):
             # Removed in 8.301
             args.append('--enable-shared')
-        
+
         if '+hepmc' in self.spec:
             args.append('--with-hepmc2=%s' % self.spec['hepmc'].prefix)
         else:
@@ -98,13 +98,13 @@ class Pythia8(AutotoolsPackage):
         args += self.with_or_without('rivet', activation_value='prefix')
         if self.spec.satisfies('+rivet'):
             args.append('--with-yoda=' + self.spec['yoda'].prefix)
-        
+
         args += self.with_or_without('python', activation_value='prefix')
         args += self.with_or_without('mg5mes', activation_value='prefix', variant='madgraph5amc')
         args += self.with_or_without('openmp', activation_value='prefix', variant='openmpi')
         args += self.with_or_without('mpich', activation_value='prefix')
         args += self.with_or_without('hdf5', activation_value='prefix')
-        
+
         if self.spec.satisfies('+hdf5'):
             args.append('--with-highfive=' + self.spec['highfive'].prefix)
 
