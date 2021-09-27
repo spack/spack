@@ -92,7 +92,8 @@ class Pythia8(AutotoolsPackage):
                 args.append('--with-boost=' + self.spec['boost'].prefix)
 
         args += self.with_or_without('hepmc3', activation_value='prefix')
-        args += self.with_or_without('fastjet3', activation_value='prefix', variant='fastjet')
+        args += self.with_or_without('fastjet3', activation_value='prefix',
+                                     variant='fastjet')
         args += self.with_or_without('evtgen', activation_value='prefix')
         args += self.with_or_without('root', activation_value='prefix')
         args += self.with_or_without('rivet', activation_value='prefix')
@@ -100,8 +101,10 @@ class Pythia8(AutotoolsPackage):
             args.append('--with-yoda=' + self.spec['yoda'].prefix)
 
         args += self.with_or_without('python', activation_value='prefix')
-        args += self.with_or_without('mg5mes', activation_value='prefix', variant='madgraph5amc')
-        args += self.with_or_without('openmp', activation_value='prefix', variant='openmpi')
+        args += self.with_or_without('mg5mes', activation_value='prefix',
+                                     variant='madgraph5amc')
+        args += self.with_or_without('openmp', activation_value='prefix',
+                                     variant='openmpi')
         args += self.with_or_without('mpich', activation_value='prefix')
         args += self.with_or_without('hdf5', activation_value='prefix')
 
