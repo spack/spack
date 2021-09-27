@@ -20,7 +20,7 @@ class Seacas(CMakePackage):
      translate exodus databases.  Default is to build the exodus and
      IOSS libraries and the io_shell, io_info, struc_to_unstruc apps.
     """
-    homepage = "http://gsjaardema.github.io/seacas/"
+    homepage = "https://gsjaardema.github.io/seacas/"
     git      = "https://github.com/gsjaardema/seacas.git"
     url      = "https://github.com/gsjaardema/seacas/archive/v2019-08-20.tar.gz"
     maintainers = ['gsjaardema']

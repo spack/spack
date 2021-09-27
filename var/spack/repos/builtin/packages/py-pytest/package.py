@@ -9,7 +9,7 @@ from spack import *
 class PyPytest(PythonPackage):
     """pytest: simple powerful testing with Python."""
 
-    homepage = "http://pytest.org/"
+    homepage = "https://pytest.org/"
     pypi      = "pytest/pytest-5.2.1.tar.gz"
 
     version('6.2.4', sha256='50bcad0a0b9c5a72c8e4e7c9855a3ad496ca6a881a3641b4260605450772c54b')

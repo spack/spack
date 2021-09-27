@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import contextlib
 import copy
 import os
 import re
@@ -84,7 +85,7 @@ spack:
 valid_environment_name_re = r'^\w[\w-]*$'
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 2
+lockfile_format_version = 3
 
 # Magic names
 # The name of the standalone spec list in the manifest yaml
@@ -258,7 +259,7 @@ def deactivate(shell='sh'):
         tty.warn('Could not fully deactivate view due to missing package '
                  'or repo, shell environment may be corrupt.')
 
-    tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
+    tty.debug("Deactivated environment '%s'" % _active_environment.name)
     _active_environment = None
 
     return cmds
@@ -580,6 +581,10 @@ class ViewDescriptor(object):
                     tty.warn(msg)
 
 
+def _create_environment(*args, **kwargs):
+    return Environment(*args, **kwargs)
+
+
 class Environment(object):
     def __init__(self, path, init_file=None, with_view=None, keep_relative=False):
         """Create a new environment.
@@ -600,6 +605,9 @@ class Environment(object):
                 directory.
         """
         self.path = os.path.abspath(path)
+        self.init_file = init_file
+        self.with_view = with_view
+        self.keep_relative = keep_relative
 
         self.txlock = lk.Lock(self._transaction_lock_path)
 
@@ -641,6 +649,11 @@ class Environment(object):
                                                             with_view)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
+
+    def __reduce__(self):
+        return _create_environment, (
+            self.path, self.init_file, self.with_view, self.keep_relative
+        )
 
     def _rewrite_relative_paths_on_relocation(self, init_file_dir):
         """When initializing the environment from a manifest file and we plan
@@ -1694,11 +1707,12 @@ class Environment(object):
         concrete_specs = {}
         for spec in self.specs_by_hash.values():
             for s in spec.traverse():
-                dag_hash_all = s.build_hash()
-                if dag_hash_all not in concrete_specs:
+                build_hash = s.build_hash()
+                if build_hash not in concrete_specs:
                     spec_dict = s.to_node_dict(hash=ht.build_hash)
-                    spec_dict[s.name]['hash'] = s.dag_hash()
-                    concrete_specs[dag_hash_all] = spec_dict
+                    # Assumes no legacy formats, since this was just created.
+                    spec_dict[ht.dag_hash.name] = s.dag_hash()
+                    concrete_specs[build_hash] = spec_dict
 
         hash_spec_list = zip(
             self.concretized_order, self.concretized_user_specs)
@@ -1709,6 +1723,7 @@ class Environment(object):
             '_meta': {
                 'file-type': 'spack-lockfile',
                 'lockfile-version': lockfile_format_version,
+                'specfile-version': spack.spec.specfile_format_version
             },
 
             # users specs + hashes are the 'roots' of the environment
@@ -1739,13 +1754,18 @@ class Environment(object):
         root_hashes = set(self.concretized_order)
 
         specs_by_hash = {}
-        for dag_hash, node_dict in json_specs_by_hash.items():
-            specs_by_hash[dag_hash] = Spec.from_node_dict(node_dict)
+        for build_hash, node_dict in json_specs_by_hash.items():
+            spec = Spec.from_node_dict(node_dict)
+            if d['_meta']['lockfile-version'] > 1:
+                # Build hash is stored as a key, but not as part of the node dict
+                # To ensure build hashes are not recomputed, we reattach here
+                setattr(spec, ht.build_hash.attr, build_hash)
+            specs_by_hash[build_hash] = spec
 
-        for dag_hash, node_dict in json_specs_by_hash.items():
-            for dep_name, dep_hash, deptypes in (
+        for build_hash, node_dict in json_specs_by_hash.items():
+            for _, dep_hash, deptypes, _ in (
                     Spec.dependencies_from_node_dict(node_dict)):
-                specs_by_hash[dag_hash]._add_dependency(
+                specs_by_hash[build_hash]._add_dependency(
                     specs_by_hash[dep_hash], deptypes)
 
         # If we are reading an older lockfile format (which uses dag hashes
@@ -2142,6 +2162,17 @@ def is_latest_format(manifest):
     top_level_key = _top_level_key(data)
     changed = spack.schema.env.update(data[top_level_key])
     return not changed
+
+
+@contextlib.contextmanager
+def deactivate_environment():
+    """Deactivate an active environment for the duration of the context."""
+    global _active_environment
+    current, _active_environment = _active_environment, None
+    try:
+        yield
+    finally:
+        _active_environment = current
 
 
 class SpackEnvironmentError(spack.error.SpackError):

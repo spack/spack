@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
+from argparse import Namespace
 
 import pytest
 from six import StringIO
@@ -11,6 +12,7 @@ from six import StringIO
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
 
+import spack.cmd.env
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.modules
@@ -2632,3 +2634,24 @@ def test_query_develop_specs():
 
         assert e.is_develop(Spec('mpich'))
         assert not e.is_develop(Spec('mpileaks'))
+
+
+@pytest.mark.parametrize('method', [
+    spack.cmd.env.env_activate,
+    spack.cmd.env.env_deactivate
+])
+@pytest.mark.parametrize(
+    'env,no_env,env_dir',
+    [
+        ('b', False, None),
+        (None, True, None),
+        (None, False, 'path/'),
+    ])
+def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
+    """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
+    args = Namespace(shell='sh', activate_env='a',
+                     env=env, no_env=no_env, env_dir=env_dir)
+    with pytest.raises(SystemExit):
+        method(args)
+    _, err = capsys.readouterr()
+    assert 'is ambiguous' in err

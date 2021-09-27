@@ -12,7 +12,7 @@ from spack import *
 class Julia(Package):
     """The Julia Language: A fresh approach to technical computing"""
 
-    homepage = "http://julialang.org"
+    homepage = "https://julialang.org"
     url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
     git      = "https://github.com/JuliaLang/julia.git"
 

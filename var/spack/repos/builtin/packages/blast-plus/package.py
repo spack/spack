@@ -20,7 +20,7 @@ from spack import *
 class BlastPlus(AutotoolsPackage):
     """Basic Local Alignment Search Tool."""
 
-    homepage = "http://blast.ncbi.nlm.nih.gov/"
+    homepage = "https://blast.ncbi.nlm.nih.gov/"
     url      = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-src.tar.gz"
 
     maintainers = ['weijianwen']

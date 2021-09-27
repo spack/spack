@@ -9,9 +9,9 @@ from spack import *
 class QtCreator(QMakePackage):
     """The Qt Creator IDE."""
     homepage = 'https://www.qt.io/ide/'
-    url      = 'http://download.qt.io/official_releases/qtcreator/4.8/4.8.0/qt-creator-opensource-src-4.8.0.tar.gz'
+    url      = 'https://download.qt.io/official_releases/qtcreator/4.8/4.8.0/qt-creator-opensource-src-4.8.0.tar.gz'
 
-    list_url = 'http://download.qt.io/official_releases/qtcreator/'
+    list_url = 'https://download.qt.io/official_releases/qtcreator/'
     list_depth = 2
 
     version('4.8.0', sha256='4c4813454637141a45aa8f18be5733e4ba993335d95940aadf12fda66cf6f849')
@@ -29,7 +29,7 @@ class QtCreator(QMakePackage):
     conflicts('%gcc@:4.8', when='@4.3.0:')
 
     def url_for_version(self, version):
-        url = 'http://download.qt.io/official_releases/qtcreator/{0}/{1}/qt-creator-opensource-src-{1}.tar.gz'
+        url = 'https://download.qt.io/official_releases/qtcreator/{0}/{1}/qt-creator-opensource-src-{1}.tar.gz'
         return url.format(version.up_to(2), version)
 
     def setup_build_environment(self, env):

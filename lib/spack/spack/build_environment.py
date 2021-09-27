@@ -61,6 +61,7 @@ import spack.repo
 import spack.schema.environment
 import spack.store
 import spack.subprocess_context
+import spack.user_environment
 import spack.util.path
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.util.cpus import cpus_available
@@ -69,6 +70,7 @@ from spack.util.environment import (
     env_flag,
     filter_system_paths,
     get_path,
+    inspect_path,
     is_system_path,
     preserve_environment,
     system_dirs,
@@ -168,6 +170,13 @@ def clean_environment():
     env.unset('OBJC_INCLUDE_PATH')
 
     env.unset('CMAKE_PREFIX_PATH')
+
+    # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
+    env.unset('MAKEFLAGS')
+    # Could make testsuites attempt to color their output
+    env.unset('TERM')
+    # Tests of GUI widget libraries might try to connect to an X server
+    env.unset('DISPLAY')
 
     # Avoid that libraries of build dependencies get hijacked.
     env.unset('LD_PRELOAD')
@@ -781,6 +790,13 @@ def setup_package(pkg, dirty, context='build'):
                       "config to assume that the package is part of the system"
                       " includes and omit it when invoked with '--cflags'.")
     elif context == 'test':
+        env.extend(
+            inspect_path(
+                pkg.spec.prefix,
+                spack.user_environment.prefix_inspections(pkg.spec.platform),
+                exclude=is_system_path
+            )
+        )
         pkg.setup_run_environment(env)
         env.prepend_path('PATH', '.')
 

@@ -12,7 +12,7 @@ class Nest(CMakePackage):
     It focuses on the dynamics, size and structure of neural systems rather
     than on the exact morphology of individual neurons."""
 
-    homepage = "http://www.nest-simulator.org"
+    homepage = "https://www.nest-simulator.org"
     url      = "https://github.com/nest/nest-simulator/archive/refs/tags/v3.0.tar.gz"
     git      = "https://github.com/nest/nest-simulator.git"
 

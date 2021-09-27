@@ -11,7 +11,7 @@ class Chombo(MakefilePackage):
        logically rectangular (i.e. Cartesian) grids."""
 
     homepage = "https://commons.lbl.gov/display/chombo"
-    git      = "http://bitbucket.org/drhansj/chombo-xsdk.git"
+    git      = "https://bitbucket.org/drhansj/chombo-xsdk.git"
 
     tags = ['ecp', 'ecp-apps']
 

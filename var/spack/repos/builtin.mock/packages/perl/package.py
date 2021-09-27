@@ -12,4 +12,4 @@ class Perl(Package):
 
     extendable = True
 
-    version('0.0.0', 'hash')
+    version('0.0.0', 'abcdef1234567890abcdef1234567890')

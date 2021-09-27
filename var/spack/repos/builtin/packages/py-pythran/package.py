@@ -46,9 +46,8 @@ class PyPythran(PythonPackage):
     depends_on('py-beniget', when='@:0.9.3', type=('build', 'run'))
     depends_on('llvm-openmp', when='%apple-clang', type=('build', 'run'))
 
-    patch('https://patch-diff.githubusercontent.com/raw/serge-sans-paille/pythran/pull/1856.patch',
-          sha256='18f5e8985d636ad9c73b2f96b601aae299e0c315aa4c0dbee7b2599a63177218',
-          when='@0.9.10:0.9.12')
+    # https://github.com/serge-sans-paille/pythran/pull/1856
+    patch('omp.patch', when='@0.9.10:0.9.12')
 
     def patch(self):
         # Compiler is used at run-time to determine name of OpenMP library to search for

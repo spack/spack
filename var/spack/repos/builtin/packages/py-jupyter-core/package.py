@@ -9,7 +9,7 @@ from spack import *
 class PyJupyterCore(PythonPackage):
     """Core Jupyter functionality"""
 
-    homepage = "http://jupyter-core.readthedocs.io/"
+    homepage = "https://jupyter-core.readthedocs.io/"
     pypi = "jupyter-core/jupyter_core-4.6.0.tar.gz"
 
     version('4.7.1', sha256='79025cb3225efcd36847d0840f3fc672c0abd7afd0de83ba8a1d3837619122b4')

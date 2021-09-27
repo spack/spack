@@ -9,7 +9,7 @@ from spack import *
 class Stat(AutotoolsPackage):
     """Library to create, manipulate, and export graphs Graphlib."""
 
-    homepage = "http://paradyn.org/STAT/STAT.html"
+    homepage = "https://paradyn.org/STAT/STAT.html"
     url      = "https://github.com/LLNL/STAT/archive/v2.0.0.tar.gz"
     git      = "https://github.com/llnl/stat.git"
     maintainers = ['lee218llnl']

@@ -11,7 +11,7 @@ class Arrayfire(CMakePackage, CudaPackage):
     with an easy-to-use API. Its array based function set makes parallel
     programming more accessible."""
 
-    homepage = "http://arrayfire.org/docs/index.htm"
+    homepage = "https://arrayfire.org/docs/index.htm"
     git      = "https://github.com/arrayfire/arrayfire.git"
 
     version('master', submodules=True)

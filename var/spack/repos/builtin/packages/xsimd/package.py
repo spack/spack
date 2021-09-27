@@ -9,7 +9,7 @@ from spack import *
 class Xsimd(CMakePackage):
     """C++ wrappers for SIMD intrinsics"""
 
-    homepage = "http://quantstack.net/xsimd"
+    homepage = "https://quantstack.net/xsimd"
     url      = "https://github.com/QuantStack/xsimd/archive/3.1.0.tar.gz"
     git      = "https://github.com/QuantStack/xsimd.git"
 

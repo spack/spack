@@ -15,7 +15,7 @@ class PyYt(PythonPackage):
        simulations, radio telescopes, and a burgeoning
        interdisciplinary community.
     """
-    homepage = "http://yt-project.org"
+    homepage = "https://yt-project.org"
     url      = "https://github.com/yt-project/yt/archive/yt-3.5.0.tar.gz"
     git      = "https://github.com/yt-project/yt.git"
 

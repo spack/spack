@@ -1252,18 +1252,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Returns:
             True if the package has been installed, False otherwise.
         """
-        has_prefix = os.path.isdir(self.prefix)
         try:
             # If the spec is in the DB, check the installed
             # attribute of the record
-            rec = spack.store.db.get_record(self.spec)
-            db_says_installed = rec.installed
+            return spack.store.db.get_record(self.spec).installed
         except KeyError:
             # If the spec is not in the DB, the method
             #  above raises a Key error
-            db_says_installed = False
-
-        return has_prefix and db_says_installed
+            return False
 
     @property
     def prefix(self):

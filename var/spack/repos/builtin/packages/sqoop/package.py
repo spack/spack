@@ -9,7 +9,7 @@ class Sqoop(MavenPackage):
     data between Apache Hadoop and structured datastores such as relational
     databases."""
 
-    homepage = "http://sqoop.apache.org/"
+    homepage = "https://sqoop.apache.org/"
     url      = "https://downloads.apache.org/sqoop/1.99.7/sqoop-1.99.7.tar.gz"
     list_url = "https://downloads.apache.org/sqoop/"
     list_depth = 1

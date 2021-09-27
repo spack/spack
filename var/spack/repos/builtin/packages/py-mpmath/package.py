@@ -8,7 +8,7 @@ from spack import *
 
 class PyMpmath(PythonPackage):
     """A Python library for arbitrary-precision floating-point arithmetic."""
-    homepage = "http://mpmath.org"
+    homepage = "https://mpmath.org"
     pypi = "mpmath/mpmath-1.0.0.tar.gz"
 
     version('1.1.0', sha256='fc17abe05fbab3382b61a123c398508183406fa132e0223874578e20946499f6')

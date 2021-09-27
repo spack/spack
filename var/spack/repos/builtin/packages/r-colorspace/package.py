@@ -21,7 +21,7 @@ class RColorspace(RPackage):
     include: desaturation, lightening/darkening, mixing, and simulation of
     color vision deficiencies (deutanomaly, protanomaly, tritanomaly). Details
     can be found on the project web page at
-    <http://colorspace.R-Forge.R-project.org/> and in the accompanying
+    <https://colorspace.R-Forge.R-project.org/> and in the accompanying
     scientific paper: Zeileis et al. (2020, Journal of Statistical Software,
     <doi:10.18637/jss.v096.i01>)."""
 

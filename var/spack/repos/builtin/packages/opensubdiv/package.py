@@ -14,7 +14,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
     This code path is optimized for drawing deforming surfaces
     with static topology at interactive framerates."""
 
-    homepage = "http://graphics.pixar.com/opensubdiv/docs/intro.html"
+    homepage = "https://graphics.pixar.com/opensubdiv/docs/intro.html"
     url      = "https://github.com/PixarAnimationStudios/OpenSubdiv/archive/v3_4_0.tar.gz"
     git      = "https://github.com/PixarAnimationStudios/OpenSubdiv"
 

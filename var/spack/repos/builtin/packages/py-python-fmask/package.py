@@ -10,7 +10,7 @@ class PyPythonFmask(PythonPackage):
     """A set of command line utilities and Python modules that implement
        the FMASK algorithm for Landsat and Sentinel-2"""
 
-    homepage = "http://pythonfmask.org"
+    homepage = "https://www.pythonfmask.org/en/latest/"
     url      = "https://github.com/ubarsc/python-fmask/archive/pythonfmask-0.5.4.tar.gz"
 
     version('0.5.4', sha256='a216aa3108de837fec182602b2b4708442746be31fc1585906802437784a63fe')

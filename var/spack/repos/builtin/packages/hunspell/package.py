@@ -9,7 +9,7 @@ from spack import *
 class Hunspell(AutotoolsPackage):
     """The most popular spellchecking library (sez the author...)."""
 
-    homepage = "http://hunspell.github.io/"
+    homepage = "https://hunspell.github.io/"
     url      = "https://github.com/hunspell/hunspell/archive/v1.6.0.tar.gz"
 
     version('1.7.0', sha256='bb27b86eb910a8285407cf3ca33b62643a02798cf2eef468c0a74f6c3ee6bc8a')

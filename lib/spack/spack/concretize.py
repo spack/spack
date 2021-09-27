@@ -37,6 +37,7 @@ import spack.environment
 import spack.error
 import spack.repo
 import spack.spec
+import spack.target
 import spack.tengine
 import spack.variant as vt
 from spack.config import config
@@ -256,8 +257,7 @@ class Concretizer(object):
         # Get platform of nearest spec with a platform, including spec
         # If spec has a platform, easy
         if spec.architecture.platform:
-            new_plat = spack.architecture.get_platform(
-                spec.architecture.platform)
+            new_plat = spack.platforms.by_name(spec.architecture.platform)
         else:
             # Else if anyone else has a platform, take the closest one
             # Search up, then down, along build/link deps first
@@ -266,8 +266,7 @@ class Concretizer(object):
                 spec, lambda x: x.architecture and x.architecture.platform
             )
             if platform_spec:
-                new_plat = spack.architecture.get_platform(
-                    platform_spec.architecture.platform)
+                new_plat = spack.platforms.by_name(platform_spec.architecture.platform)
             else:
                 # If no platform anywhere in this spec, grab the default
                 new_plat = spack.architecture.platform()
@@ -612,9 +611,7 @@ class Concretizer(object):
         # Try to adjust the target only if it is the default
         # target for this platform
         current_target = spec.architecture.target
-        current_platform = spack.architecture.get_platform(
-            spec.architecture.platform
-        )
+        current_platform = spack.platforms.by_name(spec.architecture.platform)
 
         default_target = current_platform.target('default_target')
         if PackagePrefs.has_preferred_targets(spec.name):
@@ -633,7 +630,7 @@ class Concretizer(object):
             for ancestor in microarchitecture.ancestors:
                 candidate = None
                 try:
-                    candidate = spack.architecture.Target(ancestor)
+                    candidate = spack.target.Target(ancestor)
                     candidate.optimization_flags(spec.compiler)
                 except archspec.cpu.UnsupportedMicroarchitecture:
                     continue

@@ -10,7 +10,7 @@ class RMatrixmodels(RPackage):
     """Modelling with sparse and dense 'Matrix' matrices, using modular
     prediction and response module classes."""
 
-    homepage = "http://matrix.r-forge.r-project.org/"
+    homepage = "https://matrix.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/MatrixModels_0.4-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/MatrixModels"
 

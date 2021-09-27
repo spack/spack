@@ -12,7 +12,7 @@ class Cantera(SConsPackage):
     """Cantera is a suite of object-oriented software tools for problems
     involving chemical kinetics, thermodynamics, and/or transport processes."""
 
-    homepage = "http://www.cantera.org/docs/sphinx/html/index.html"
+    homepage = "https://www.cantera.org/docs/sphinx/html/index.html"
     url      = "https://github.com/Cantera/cantera/archive/v2.5.1.tar.gz"
 
     version('2.5.1', sha256='59f673cec686bc9b1eeccc1b1c9158a3978a3abe7491d00e8b355908c1c3be0a')

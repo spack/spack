@@ -10,7 +10,7 @@ class Icet(CMakePackage):
     """The Image Composition Engine for Tiles (IceT) is a high-performance
        sort-last parallel rendering library."""
 
-    homepage = "http://icet.sandia.gov"
+    homepage = "https://icet.sandia.gov"
     url      = "https://gitlab.kitware.com/api/v4/projects/icet%2Ficet/repository/archive.tar.bz2?sha=IceT-2.1.1"
     git      = "https://gitlab.kitware.com/icet/icet.git"
 

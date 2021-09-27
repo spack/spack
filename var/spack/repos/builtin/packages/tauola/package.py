@@ -18,7 +18,7 @@ class Tauola(AutotoolsPackage):
 
     variant('hepmc', default=True, description="Enable hepmc 2.x support")
     variant('hepmc3', default=False, description="Enable hepmc3 support")
-    variant('lhapdf', default=False, description="Enable lhapdf support")
+    variant('lhapdf', default=True, description="Enable lhapdf support")
     variant('cxxstd',
             default='11',
             values=('11', '14', '17', '20'),

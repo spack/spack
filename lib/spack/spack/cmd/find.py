@@ -205,24 +205,24 @@ def display_env(env, args, decorator):
 
 
 def find(parser, args):
-    q_args = query_arguments(args)
-    # Query the current store or the internal bootstrap store if required
     if args.bootstrap:
         bootstrap_store_path = spack.bootstrap.store_path()
-        msg = 'Showing internal bootstrap store at "{0}"'
-        tty.msg(msg.format(bootstrap_store_path))
-        with spack.store.use_store(bootstrap_store_path):
-            results = args.specs(**q_args)
-    else:
-        results = args.specs(**q_args)
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            msg = 'Showing internal bootstrap store at "{0}"'
+            tty.msg(msg.format(bootstrap_store_path))
+            _find(parser, args)
+        return
+    _find(parser, args)
 
-    decorator = lambda s, f: f
-    added = set()
-    removed = set()
+
+def _find(parser, args):
+    q_args = query_arguments(args)
+    results = args.specs(**q_args)
 
     env = ev.active_environment()
+    decorator = lambda s, f: f
     if env:
-        decorator, added, roots, removed = setup_env(env)
+        decorator, _, roots, _ = setup_env(env)
 
     # use groups by default except with format.
     if args.groups is None:
@@ -233,7 +233,7 @@ def find(parser, args):
         msg = "No package matches the query: {0}"
         msg = msg.format(' '.join(args.constraint))
         tty.msg(msg)
-        return 1
+        raise SystemExit(1)
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:

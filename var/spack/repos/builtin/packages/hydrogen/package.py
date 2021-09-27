@@ -12,7 +12,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     """Hydrogen: Distributed-memory dense and sparse-direct linear algebra
        and optimization library. Based on the Elemental library."""
 
-    homepage = "http://libelemental.org"
+    homepage = "https://libelemental.org"
     url      = "https://github.com/LLNL/Elemental/archive/v1.0.1.tar.gz"
     git      = "https://github.com/LLNL/Elemental.git"
 
@@ -146,6 +146,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         args = [
             '-DCMAKE_CXX_STANDARD=14',
+            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+openmp' in spec),

@@ -20,6 +20,6 @@ class PyNbmake(PythonPackage):
     depends_on('py-ipykernel@5.4.0:5.999', type=('build', 'run'))
     depends_on('py-nbclient@0.3:0.999', type=('build', 'run'))
     depends_on('py-nbformat@5.0.8:5.999', type=('build', 'run'))
-    depends_on('py-pathlib@1.0.1:1.999', type=('build', 'run'))
+    depends_on('py-pathlib@1.0.1:1.999', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-pydantic@1.7.2:1.999', type=('build', 'run'))
     depends_on('py-pytest@6.1.2:6.999', type=('build', 'run'))
