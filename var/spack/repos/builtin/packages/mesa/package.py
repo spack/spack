@@ -293,3 +293,7 @@ class Mesa(MesonPackage):
         return find_libraries('libGL',
                               root=self.spec.prefix,
                               recursive=True)
+
+    def setup_run_environment(self, env):
+        if '+glx +glvnd' in self.spec:
+            env.set('__GLX_VENDOR_LIBRARY_NAME', 'mesa')
