@@ -46,3 +46,10 @@ class NlohmannJson(CMakePackage):
             self.define_from_variant('JSON_MultipleHeaders', 'multiple_headers'),
             self.define('JSON_BuildTests', self.run_tests),
         ]
+
+    @when('@3.1.1:')
+    def check(self):
+        # cmake_fetch_content_configure relies on git to fetch a file, fails from tar:
+        # https://github.com/nlohmann/json/discussions/2596
+        with working_dir(self.build_directory):
+            ctest('--output-on-failure', '-LE', 'not_reproducible|git_required')
