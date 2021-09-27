@@ -102,6 +102,7 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('intrepid',     default=False, description='Enable Intrepid')
     variant('intrepid2',    default=False, description='Enable Intrepid2')
     variant('isorropia',    default=False, description='Compile with Isorropia')
+    variant('gtest',        default=False, description='Build vendored Googletest')
     variant('kokkos',       default=True, description='Compile with Kokkos')
     variant('ml',           default=True, description='Compile with ML')
     variant('minitensor',   default=False, description='Compile with MiniTensor')
@@ -450,7 +451,7 @@ class Trilinos(CMakePackage, CudaPackage):
             define_trilinos_enable('Epetra'),
             define_trilinos_enable('EpetraExt'),
             define_trilinos_enable('FEI', False),
-            define_trilinos_enable('Gtest', self.run_tests),
+            define_trilinos_enable('Gtest'),
             define_trilinos_enable('Ifpack'),
             define_trilinos_enable('Ifpack2'),
             define_trilinos_enable('Intrepid'),
