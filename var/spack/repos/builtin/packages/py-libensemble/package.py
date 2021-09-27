@@ -5,7 +5,7 @@
 
 
 from spack import *
-
+import os
 
 class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
@@ -16,6 +16,7 @@ class PyLibensemble(PythonPackage):
     maintainers = ['shuds13']
 
     tags = ['e4s']
+    # test_requires_compiler = True
 
     version('develop', branch='develop')
     version('0.7.2', sha256='69b64304d1ecce4d57687ea6062f89bd813ae93b2a290bb1f595c5626ab6f197')
@@ -56,10 +57,30 @@ class PyLibensemble(PythonPackage):
     depends_on('py-mpmath', type=('build', 'run'), when='+mpmath')
     depends_on('py-deap', type=('build', 'run'), when='+deap')
     depends_on('tasmanian+python', type=('build', 'run'), when='+tasmanian')
+    # TODO: Take run off when test is fixed
+    depends_on('py-matplotlib', type=('run', 'test'))
     conflicts('~mpi', when='@:0.4.1')
 
     @run_after('install')
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources('examples')
+        self.cache_extra_test_sources(join_path('examples', 'tutorials'))
+
+    def run_tutorial_tests(self, exe):
+        """Run tutorials stand alone test"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'examples', 'tutorials')
+
+        if not os.path.exists(test_dir):
+            print('Skipping {0} test'.format(exe))
+            return
+
+        self.run_test(self.spec['python'].command.path,
+                      options=[exe, '--comms', 'local', '--nworkers', '2'],
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_tutorial_tests('tutorial_calling.py')
