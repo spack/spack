@@ -76,7 +76,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.0.1h', sha256='9d1c8a9836aa63e2c6adb684186cbd4371c9e9dcc01d6e3bb447abf2d4d3d093', deprecated=True)
     version('1.0.1e', sha256='f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3', deprecated=True)
 
-    variant('certs', default='mozilla',
+    variant('certs', default='system',
             values=('mozilla', 'system', 'none'), multi=False,
             description=('Use certificates from the ca-certificates-mozilla '
                          'package, symlink system certificates, or none'))
