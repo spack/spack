@@ -115,5 +115,5 @@ class PyDatalad(PythonPackage):
     install_time_test_callbacks = ['test', 'installtest']
 
     def installtest(self):
-        datalad = Executable('{0}/datalad'.format(self.prefix.bin))
+        datalad = Executable(self.prefix.bin.datalad)
         datalad('wtf')
