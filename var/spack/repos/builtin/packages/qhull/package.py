@@ -19,6 +19,7 @@ class Qhull(CMakePackage):
     homepage = "http://www.qhull.org"
     url = "https://github.com/qhull/qhull/archive/refs/tags/2020.2.tar.gz"
 
+    version('2020.2', sha256='59356b229b768e6e2b09a701448bfa222c37b797a84f87f864f97462d8dbc7c5')
     version('2020.1', sha256='0258bbf5de447e3d6b3968c5a7b51c08ca5d98f11f94f86621ed3e7c98365b8d')
     version('2019.1', sha256='cf7235b76244595a86b9407b906e3259502b744528318f2178155e5899d6cf9f')
     version('2015.2', sha256='8b6dd67ff77ce1ee814da84f4134ef4bdce1f1031e570b8d83019ccef58b1c00')
