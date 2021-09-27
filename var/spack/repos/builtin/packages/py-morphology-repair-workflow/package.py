@@ -10,8 +10,9 @@ from spack import *
 class PyMorphologyRepairWorkflow(PythonPackage):
     """Python library neuron morphology analysis"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/morphology-repair-workflow"
-    git      = "ssh://bbpcode.epfl.ch/nse/morphology-repair-workflow"
+    homepage = "https://bbpgitlab.epfl.ch/nse/morphology-repair-workflow"
+    git      = "git@bbpgitlab.epfl.ch:nse/morphology-repair-workflow.git"
+
     version('develop', branch='master')
     version('2.0.3', tag='morphology-repair-workflow-v2.0.3')
     version('2.0.2', tag='morphology-repair-workflow-v2.0.2')
