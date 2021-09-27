@@ -58,7 +58,7 @@ class Opencarp(CMakePackage):
             if os.path.exists(settings_file):
                 print('Backup the existing settings.yaml...')
                 os.rename(settings_file,
-                          os.path.join(
+                          join_path(
                               settings_prefix,
                               'settings.yaml.'
                               + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')))
