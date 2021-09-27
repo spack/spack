@@ -35,6 +35,6 @@ class Highfive(CMakePackage):
         args = [
             '-DUSE_BOOST:Bool={0}'.format('+boost' in self.spec),
             '-DHIGHFIVE_PARALLEL_HDF5:Bool={0}'.format('+mpi' in self.spec),
-            '-DUNIT_TESTS:Bool=false',
+            '-DHIGHFIVE_UNIT_TESTS:Bool=false',
             '-DHIGHFIVE_EXAMPLES:Bool=false']
         return args
