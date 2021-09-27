@@ -44,12 +44,14 @@ class Podio(CMakePackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-jinja2@2.10.1:', type=('build', 'run'), when='@0.12.0:')
     depends_on('sio', type=('build', 'link'), when='+sio')
+    depends_on('catch2@3.0.1:', type=('test'), when="@0.13:")
 
     conflicts('+sio', when='@:0.12', msg='sio support requires at least podio@0.13')
 
     def cmake_args(self):
         args = [
-            self.define_from_variant('ENABLE_SIO', 'sio')
+            self.define_from_variant('ENABLE_SIO', 'sio'),
+            self.define("BUILD_TESTING", self.run_tests),
         ]
         return args
 

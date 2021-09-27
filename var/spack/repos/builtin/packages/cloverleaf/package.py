@@ -36,6 +36,12 @@ class Cloverleaf(MakefilePackage):
     conflicts('build=serial', when='%aocc', msg="Currently AOCC supports only ref variant")
     conflicts('@1.1', when='%aocc', msg="AOCC support is provided from version v.1.3 and above")
 
+    @run_before('build')
+    def patch_for_reference_module(self):
+        if self.spec.satisfies("@master %aocc"):
+            fp = join_path(self.package_dir, "aocc_support.patch")
+            which('patch')('-s', '-p0', '-i', '{0}'.format(fp), '-d', '.')
+
     @property
     def type_of_build(self):
         build = 'ref'

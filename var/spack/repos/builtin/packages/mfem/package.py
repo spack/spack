@@ -13,7 +13,7 @@ from spack import *
 class Mfem(Package, CudaPackage, ROCmPackage):
     """Free, lightweight, scalable C++ library for finite element methods."""
 
-    tags = ['FEM', 'finite elements', 'high-order', 'AMR', 'HPC']
+    tags = ['fem', 'finite-elements', 'high-order', 'amr', 'hpc', 'radiuss']
 
     homepage = 'http://www.mfem.org'
     git      = 'https://github.com/mfem/mfem.git'
@@ -200,7 +200,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+mpi')
     depends_on('hypre@2.10.0:2.13.99', when='@:3.3.99+mpi')
     depends_on('hypre@:2.20.0', when='@3.4:4.2.99+mpi')
-    depends_on('hypre', when='@4.3.0:+mpi')
+    depends_on('hypre@:2.22.0', when='@4.3.0+mpi')
+    depends_on('hypre', when='+mpi')
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')

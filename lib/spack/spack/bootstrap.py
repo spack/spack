@@ -490,18 +490,20 @@ def _bootstrap_config_scopes():
     return config_scopes
 
 
-@contextlib.contextmanager
-def ensure_bootstrap_configuration():
-    # We may need to compile code from sources, so ensure we have compilers
-    # for the current platform before switching parts.
-    arch = spack.architecture.default_arch()
+def _add_compilers_if_missing():
+    # Do not use spack.architecture.default_arch() since it memoize the result
+    arch = spack.architecture.Arch(
+        spack.architecture.real_platform(), 'default_os', 'default_target'
+    )
     arch = spack.spec.ArchSpec(str(arch))  # The call below expects an ArchSpec object
     if not spack.compilers.compilers_for_arch(arch):
-        compiler_cmd = spack.main.SpackCommand('compiler')
-        compiler_cmd(
-            'find', output=os.devnull, error=os.devnull, fail_on_error=False
-        )
+        new_compilers = spack.compilers.find_new_compilers()
+        if new_compilers:
+            spack.compilers.add_compilers_to_config(new_compilers, init_config=False)
 
+
+@contextlib.contextmanager
+def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
     with spack.environment.deactivate_environment():
         with spack.architecture.use_platform(spack.architecture.real_platform()):
@@ -511,6 +513,9 @@ def ensure_bootstrap_configuration():
                     # and builtin but accounting for platform specific scopes
                     config_scopes = _bootstrap_config_scopes()
                     with spack.config.use_configuration(*config_scopes):
+                        # We may need to compile code from sources, so ensure we have
+                        # compilers for the current platform before switching parts.
+                        _add_compilers_if_missing()
                         with spack.modules.disable_modules():
                             with spack_python_interpreter():
                                 yield

@@ -11,6 +11,7 @@ class PyShroud(PythonPackage):
 
     homepage = "https://github.com/LLNL/shroud"
     git      = "https://github.com/LLNL/shroud.git"
+    tags     = ['radiuss']
 
     version('develop', branch='develop')
     version('master',  branch='master')

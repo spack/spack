@@ -61,8 +61,8 @@ def view_copy(src, dst, view, spec=None):
 
     Use spec and view to generate relocations
     """
-    shutil.copyfile(src, dst)
-    if spec:
+    shutil.copy2(src, dst)
+    if spec and not spec.external:
         # Not metadata, we have to relocate it
 
         # Get information on where to relocate from/to
@@ -73,16 +73,17 @@ def view_copy(src, dst, view, spec=None):
         # will have the old sbang location in their shebangs.
         # TODO: Not sure which one to use...
         import spack.hooks.sbang as sbang
+
         orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
         new_sbang = sbang.sbang_shebang_line()
 
         prefix_to_projection = OrderedDict({
-            spec.prefix: view.get_projection_for_spec(spec),
-            spack.paths.spack_root: view._root})
+            spec.prefix: view.get_projection_for_spec(spec)})
 
         for dep in spec.traverse():
-            prefix_to_projection[dep.prefix] = \
-                view.get_projection_for_spec(dep)
+            if not dep.external:
+                prefix_to_projection[dep.prefix] = \
+                    view.get_projection_for_spec(dep)
 
         if spack.relocate.is_binary(dst):
             spack.relocate.relocate_text_bin(
@@ -96,6 +97,11 @@ def view_copy(src, dst, view, spec=None):
                 files=[dst],
                 prefixes=prefix_to_projection
             )
+        try:
+            stat = os.stat(src)
+            os.chown(dst, stat.st_uid, stat.st_gid)
+        except OSError:
+            tty.debug('Can\'t change the permissions for %s' % dst)
 
 
 def view_func_parser(parsed_name):

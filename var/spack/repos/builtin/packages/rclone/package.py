@@ -11,10 +11,11 @@ class Rclone(Package):
        to and from various cloud storage providers"""
 
     homepage = "https://rclone.org"
-    url      = "https://github.com/ncw/rclone/releases/download/v1.43/rclone-v1.43.tar.gz"
+    url      = "https://github.com/ncw/rclone/releases/download/v1.56.1/rclone-v1.56.1.tar.gz"
 
     maintainers = ['alecbcs']
 
+    version('1.56.1', sha256='090b4b082caa554812f341ae26ea6758b40338836122595d6283c60c39eb5a97')
     version('1.56.0', sha256='81d2eda23ebaad0a355aab6ff030712470a42505b94c01c9bb5a9ead9168cedb')
     version('1.55.1', sha256='25da7fc5c9269b3897f27b0d946919df595c6dda1b127085fda0fe32aa59d29d')
     version('1.55.0', sha256='75accdaedad3b82edc185dc8824a19a59c30dc6392de7074b6cd98d1dc2c9040')

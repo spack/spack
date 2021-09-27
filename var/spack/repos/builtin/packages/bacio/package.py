@@ -14,6 +14,6 @@ class Bacio(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-bacio"
     url      = "https://github.com/NOAA-EMC/NCEPLIBS-bacio/archive/refs/tags/v2.4.1.tar.gz"
 
-    maintainers = ['t-brown']
+    maintainers = ['t-brown', 'edwardhartnett', 'kgerheiser', 'Hang-Lei-NOAA']
 
     version('2.4.1', sha256='7b9b6ba0a288f438bfba6a08b6e47f8133f7dba472a74ac56a5454e2260a7200')

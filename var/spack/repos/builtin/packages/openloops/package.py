@@ -114,6 +114,16 @@ class Openloops(Package):
         elif self.spec.satisfies('@2.1.2:2.99.99 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft3.coll'), 'lcg.coll')
 
+    def setup_build_environment(self, env):
+        # Make sure that calling openloops picks up the scons that is shipped
+        # instead of falling back to a potentially unsuitable system version
+        env.set('OLPYTHON', self.spec['python'].prefix.bin.python)
+
+    def setup_run_environment(self, env):
+        # Make sure that calling openloops picks up the scons that is shipped
+        # instead of falling back to a potentially unsuitable system version
+        env.set('OLPYTHON', self.spec['python'].prefix.bin.python)
+
     def build(self, spec, prefix):
         scons = Executable('./scons')
         scons('generator=1', 'compile=2')
