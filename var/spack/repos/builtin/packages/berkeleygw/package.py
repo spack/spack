@@ -63,8 +63,9 @@ class Berkeleygw(MakefilePackage):
         msg='elpa is a parallel library and needs MPI support'
     )
 
-    # the concretizer is selecting non threaded versions of fftw and openblas even though +openmp is set...
-    # as a workaround, the conflicts below force the user to spec ^fftw+openmp ^openblas threads=openmp
+    # the concretizer is selecting non threaded versions of fftw and openblas
+    # even though +openmp is set... as a workaround, the conflicts below force
+    # the user to spec ^fftw+openmp ^openblas threads=openmp
     # but this may also happen for other providers of fftw and blas...
     conflicts('^fftw~openmp', when='+openmp')
     conflicts('^openblas threads=none', when='+openmp')
@@ -180,7 +181,8 @@ class Berkeleygw(MakefilePackage):
             buildopts.append('FCPP=cpp -C -nostdinc')
             buildopts.append('C_COMP=%s %s' % (spec['mpi'].mpicc, c_flags))
             buildopts.append('CC_COMP=%s %s' % (spec['mpi'].mpicxx, cxx_flags))
-            buildopts.append('FOPTS=-Kfast -Knotemparraystack %s' % ' '.join(spec.compiler_flags['fflags']))
+            buildopts.append('FOPTS=-Kfast -Knotemparraystack %s' %
+                             ' '.join(spec.compiler_flags['fflags']))
         else:
             raise InstallError("Spack does not yet have support for building "
                                "BerkeleyGW with compiler %s" % spec.compiler)
