@@ -15,6 +15,7 @@ class Bedops(MakefilePackage):
     homepage = "https://bedops.readthedocs.io"
     url      = "https://github.com/bedops/bedops/archive/v2.4.39.tar.gz"
 
+    maintainers = ['jacorvar']
     version('2.4.40', sha256='8c01db76669dc58c595e2e1b9bdb6d462f3363fc569b15c460a63a63b8b6bf30')
     version('2.4.39', sha256='f8bae10c6e1ccfb873be13446c67fc3a54658515fb5071663883f788fc0e4912')
     version('2.4.35', sha256='da0265cf55ef5094834318f1ea4763d7a3ce52a6900e74f532dd7d3088c191fa')
