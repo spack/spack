@@ -57,3 +57,9 @@ class PyLibensemble(PythonPackage):
     depends_on('py-deap', type=('build', 'run'), when='+deap')
     depends_on('tasmanian+python', type=('build', 'run'), when='+tasmanian')
     conflicts('~mpi', when='@:0.4.1')
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources('examples')
