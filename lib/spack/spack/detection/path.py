@@ -15,7 +15,7 @@ import llnl.util.tty
 
 import spack.util.environment
 
-from ._common import (
+from .common import (
     DetectedPackage,
     _convert_to_iterable,
     executable_prefix,
