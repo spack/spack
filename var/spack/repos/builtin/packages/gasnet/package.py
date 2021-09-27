@@ -17,6 +17,7 @@ class Gasnet(Package):
        primarily intended as a compilation target and for use by runtime library
        writers (as opposed to end users), and the primary goals are high
        performance, interface portability, and expressiveness.
+
        ***NOTICE***: The GASNet library built by this Spack package is ONLY intended for
        unit-testing purposes, and is generally UNSUITABLE FOR PRODUCTION USE.
        The RECOMMENDED way to build GASNet is as an embedded library as configured

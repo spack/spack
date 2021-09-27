@@ -22,7 +22,6 @@ class Papi(AutotoolsPackage):
     homepage = "https://icl.cs.utk.edu/papi/index.html"
     maintainers = ['G-Ragghianti']
 
-
     tags = ['e4s']
 
     url = "https://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"

@@ -14,7 +14,7 @@ class Archer(CMakePackage):
 
     homepage = "https://github.com/PRUNERS/ARCHER"
     url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
-    
+
     tags = ['e4s']
 
     test_requires_compiler = True
