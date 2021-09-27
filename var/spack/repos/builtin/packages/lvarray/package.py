@@ -36,6 +36,7 @@ class Lvarray(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/GEOSX/lvarray"
     git      = "https://github.com/GEOSX/LvArray.git"
+    tags     = ['radiuss']
 
     maintainers = ['corbett5']
 

@@ -146,6 +146,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         args = [
             '-DCMAKE_CXX_STANDARD=14',
+            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+openmp' in spec),

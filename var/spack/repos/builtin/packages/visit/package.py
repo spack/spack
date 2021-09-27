@@ -58,6 +58,8 @@ class Visit(CMakePackage):
     git      = "https://github.com/visit-dav/visit.git"
     url = "https://github.com/visit-dav/visit/releases/download/v3.1.1/visit3.1.1.tar.gz"
 
+    tags = ['radiuss']
+
     maintainers = ['cyrush']
 
     extendable = True

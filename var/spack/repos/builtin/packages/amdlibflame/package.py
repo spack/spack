@@ -44,6 +44,8 @@ class Amdlibflame(LibflameBase):
 
     provides('flame@5.2', when='@2:')
 
+    depends_on('python+pythoncmd', type='build')
+
     @property
     def lapack_libs(self):
         """find lapack_libs function"""

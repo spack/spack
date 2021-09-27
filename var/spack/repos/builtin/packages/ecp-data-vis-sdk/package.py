@@ -36,9 +36,8 @@ class EcpDataVisSdk(BundlePackage):
     variant('vtkm', default=False, description="Enable VTK-m")
     variant('zfp', default=False, description="Enable ZFP")
 
-    # Outstanding concretization issues
+    # Cinema
     variant('cinema', default=False, description="Enable Cinema")
-    conflicts('+cinema')
 
     # Outstanding build issues
     variant('catalyst', default=False, description="Enable Catalyst")
@@ -102,7 +101,6 @@ class EcpDataVisSdk(BundlePackage):
     depends_on('ascent+shared+mpi+fortran+openmp+python+vtkh+dray', when='+ascent')
     depends_on('catalyst', when='+catalyst')
 
-    depends_on('py-cinema-lib', when='+cinema')
     depends_on('py-cinemasci', when='+cinema')
 
     variants2deps('paraview+shared+mpi+python3+kits', '+paraview', ['hdf5'])

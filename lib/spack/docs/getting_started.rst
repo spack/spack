@@ -35,7 +35,7 @@ Getting Spack is easy.  You can clone it from the `github repository
 
 .. code-block:: console
 
-   $ git clone https://github.com/spack/spack.git
+   $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
 
 This will create a directory called ``spack``.
 
@@ -88,74 +88,71 @@ the environment.
 Bootstrapping clingo
 ^^^^^^^^^^^^^^^^^^^^
 
-Spack supports using ``clingo`` as an external solver to compute which software
-needs to be installed. The default configuration allows Spack to install
-``clingo`` from a public buildcache, created by a Github Action workflow. In this
-case the bootstrapping procedure is transparent to the user, except for a
-slightly long waiting time on the first concretization of a spec:
+Spack uses ``clingo`` under the hood to resolve optimal versions and variants of
+dependencies when installing a package. Since ``clingo`` itself is a binary,
+Spack has to install it on initial use, which is called bootstrapping.
+
+Spack provides two ways of bootstrapping ``clingo``: from pre-built binaries
+(default), or from sources. The fastest way to get started is to bootstrap from
+pre-built binaries.
+
+.. note::
+
+   When bootstrapping from pre-built binaries, Spack currently requires 
+   ``patchelf`` on Linux and ``otool`` on macOS. If ``patchelf`` is not in the
+   ``PATH``, Spack will build it from sources, and a C++ compiler is required.
+
+The first time you concretize a spec, Spack will bootstrap in the background:
 
 .. code-block:: console
 
-   $ spack find -b
-   ==> Showing internal bootstrap store at "/home/spack/.spack/bootstrap/store"
-   ==> 0 installed packages
+   $ time spack spec zlib
+   Input spec
+   --------------------------------
+   zlib
 
-   $ time spack solve zlib
-   ==> Best of 2 considered solutions.
-   ==> Optimization Criteria:
-     Priority  Criterion                                 Value
-     1         deprecated versions used                      0
-     2         version weight                                0
-     3         number of non-default variants (roots)        0
-     4         multi-valued variants                         0
-     5         preferred providers for roots                 0
-     6         number of non-default variants (non-roots)    0
-     7         preferred providers (non-roots)               0
-     8         compiler mismatches                           0
-     9         version badness                               0
-     10        count of non-root multi-valued variants       0
-     11        non-preferred compilers                       0
-     12        target mismatches                             0
-     13        non-preferred targets                         0
+   Concretized
+   --------------------------------
+   zlib@1.2.11%gcc@7.5.0+optimize+pic+shared arch=linux-ubuntu18.04-zen
 
-   zlib@1.2.11%gcc@11.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
-
-   real	0m30,618s
-   user	0m27,278s
-   sys	0m1,549s
+   real	0m20.023s
+   user	0m18.351s
+   sys	0m0.784s
 
 After this command you'll see that ``clingo`` has been installed for Spack's own use:
 
 .. code-block:: console
 
    $ spack find -b
-   ==> Showing internal bootstrap store at "/home/spack/.spack/bootstrap/store"
-   ==> 2 installed packages
+   ==> Showing internal bootstrap store at "/root/.spack/bootstrap/store"
+   ==> 3 installed packages
    -- linux-rhel5-x86_64 / gcc@9.3.0 -------------------------------
    clingo-bootstrap@spack  python@3.6
+
+   -- linux-ubuntu18.04-zen / gcc@7.5.0 ----------------------------
+   patchelf@0.13
 
 Subsequent calls to the concretizer will then be much faster:
 
 .. code-block:: console
 
-   $ time spack solve zlib
+   $ time spack spec zlib
    [ ... ]
-   real	0m1,222s
-   user	0m1,146s
-   sys	0m0,059s
+   real	0m0.490s
+   user	0m0.431s
+   sys	0m0.041s
 
-If for security or for other reasons you don't want to or can't install precompiled
-binaries, Spack can fall-back to bootstrap ``clingo`` from source files. To forbid
-Spack from retrieving binaries from the bootstrapping buildcache, the following
-command must be given:
+
+If for security concerns you cannot bootstrap ``clingo`` from pre-built
+binaries, you have to mark this bootstrapping method as untrusted. This makes
+Spack fall back to bootstrapping from sources:
 
 .. code-block:: console
 
    $ spack bootstrap untrust github-actions
    ==> "github-actions" is now untrusted and will not be used for bootstrapping
 
-since an "untrusted" way of bootstrapping software will not be considered
-by Spack. You can verify the new settings are effective with:
+You can verify that the new settings are effective with:
 
 .. code-block:: console
 
@@ -181,20 +178,23 @@ by Spack. You can verify the new settings are effective with:
      Description:
        Specs built from sources by Spack. May take a long time.
 
-When bootstrapping from sources, Spack requires a compiler with support
-for C++14 (GCC on ``linux``, Apple Clang on ``darwin``) and static C++
-standard libraries on ``linux``. Spack will build the required software
-on the first request to concretize a spec:
+.. note::
+
+   When bootstrapping from sources, Spack requires a full install of Python
+   including header files (e.g. ``python3-dev`` on Debian), and a compiler
+   with support for C++14 (GCC on Linux, Apple Clang on macOS) and static C++
+   standard libraries on Linux.
+
+Spack will build the required software on the first request to concretize a spec:
 
 .. code-block:: console
 
-   $ spack solve zlib
+   $ spack spec zlib
    [+] /usr (external bison-3.0.4-wu5pgjchxzemk5ya2l3ddqug2d7jv6eb)
    [+] /usr (external cmake-3.19.4-a4kmcfzxxy45mzku4ipmj5kdiiz5a57b)
    [+] /usr (external python-3.6.9-x4fou4iqqlh5ydwddx3pvfcwznfrqztv)
    ==> Installing re2c-1.2.1-e3x6nxtk3ahgd63ykgy44mpuva6jhtdt
    [ ... ]
-   ==> Optimization: [0, 0, 0, 0, 0, 1, 0, 0, 0]
    zlib@1.2.11%gcc@10.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
 
 .. tip::

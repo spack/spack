@@ -98,7 +98,7 @@ class Vtk(CMakePackage):
     depends_on('expat')
     # See <https://gitlab.kitware.com/vtk/vtk/-/issues/18033> for why vtk doesn't
     # work yet with freetype 2.10.3 (including possible patches)
-    depends_on('freetype @:2.10.2')
+    depends_on('freetype @:2.10.2', when='@:9.0.1')
     depends_on('freetype')
     depends_on('glew')
     # set hl variant explicitly, similar to issue #7145
@@ -124,7 +124,7 @@ class Vtk(CMakePackage):
     # See https://gitlab.kitware.com/vtk/vtk/-/issues/18033
     patch('https://gitlab.kitware.com/vtk/vtk/uploads/c6fa799a1a028b8f8a728a40d26d3fec/vtk-freetype-2.10.3-replace-FT_CALLBACK_DEF.patch',
           sha256='eefda851f844e8a1dfb4ebd8a9ff92d2b78efc57f205774052c5f4c049cc886a',
-          when='^freetype@2.10.3:')
+          when='@:9.0.1 ^freetype@2.10.3:')
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"

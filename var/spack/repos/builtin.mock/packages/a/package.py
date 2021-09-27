@@ -28,6 +28,8 @@ class A(AutotoolsPackage):
         multi=False
     )
 
+    variant('lorem_ipsum', description='', default=False)
+
     variant('bvv', default=True, description='The good old BV variant')
 
     depends_on('b', when='foobar=bar')

@@ -26,7 +26,7 @@ for examples and highlights.
 To install spack and your first package, make sure you have Python.
 Then:
 
-    $ git clone https://github.com/spack/spack.git
+    $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
     $ cd spack/bin
     $ ./spack install zlib
 

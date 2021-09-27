@@ -158,7 +158,10 @@ class Gdal(AutotoolsPackage):
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java@4:8', type=('build', 'link', 'run'), when='+java')
+    depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
+    depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')
+    depends_on('java@5:', type=('build', 'link', 'run'), when='@2.1:+java')
+    depends_on('java@4:', type=('build', 'link', 'run'), when='@:2.0+java')
     depends_on('ant', type='build', when='+java')
     depends_on('swig', type='build', when='+java')
     depends_on('jackcess@1.2.0:1.2.999', type='run', when='+mdb')
@@ -562,7 +565,6 @@ class Gdal(AutotoolsPackage):
         if spec.satisfies('@2.1:'):
             args.extend([
                 '--with-mongocxx=no',
-                '--with-gnm=no',
                 '--with-pdfium=no',
             ])
 

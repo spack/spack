@@ -23,6 +23,7 @@ class Fontconfig(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('font-util')
     depends_on('uuid', when='@2.13.1:')
+    depends_on('python@3:', type='build', when='@2.13.93:')
 
     # Resolve known issue with tarballs 2.12.3 - 2.13.0 plus
     # https://gitlab.freedesktop.org/fontconfig/fontconfig/-/issues/10
