@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import shutil
-
 from spack import *
 
 
@@ -18,10 +16,8 @@ class PyAnuga(PythonPackage):
     git      = 'https://github.com/GeoscienceAustralia/anuga_core.git'
 
     # The git main branch of the repo is now python3-only
-    version('master', branch='main')
+    version('main', branch='main')
     version('2.1', sha256='0e56c4a7d55570d7b2c36fa9b53ee4e7b85f62be0b4c03ad8ab5f51464321d2f')
-
-    variant('mpi', default=True, description='Install anuga_parallel')
 
     # Non-versioned dependencies for Anuga main and future versions based on python@3.5:
     depends_on('python@3.5:',            type=('build', 'run'), when='@2.2:')
@@ -31,11 +27,7 @@ class PyAnuga(PythonPackage):
     depends_on('py-numpy',               type=('build', 'run'), when='@2.2:')
     depends_on('py-setuptools',          type=('build'),        when='@2.2:')
     # Replaces pyar in python3 anuga:
-    depends_on('py-mpi4py',              type=('build', 'run'), when='@2.2:+mpi')
-    depends_on('py-dill',                type=('test'))
-    depends_on('py-nose',                type=('test'))
-    depends_on('py-scipy',               type=('test'))
-    depends_on('py-triangle',            type=('test'))
+    depends_on('py-mpi4py',              type=('build', 'run'), when='@2.2:')
 
     # Version-restricted dependencies for anuga@:2.1, converted to use when='@:2.1':
     depends_on('python@2.6:2.7.18',      type=('build', 'run'), when='@:2.1')
@@ -46,22 +38,23 @@ class PyAnuga(PythonPackage):
     # Workaround for problem in the original concretizer selecting 3.6, wanting python3:
     depends_on('py-setuptools-scm@:3.5', type=('build'),        when='@:2.1')
     # pypar is not updated for python3, for python3, py-mpi4py is unsed instead:
-    depends_on('py-pypar',               type=('build', 'run'), when='@:2.1+mpi')
+    depends_on('py-pypar',               type=('build', 'run'), when='@:2.1')
 
     # Unversioned dependencies of the python2 and python3-based versions
     depends_on('py-cython',              type=('build'))
-    depends_on('py-netcdf4', type=('build', 'run'))
+    depends_on('py-netcdf4',             type=('build', 'run'))
+    depends_on('py-dill',                type=('build', 'test'))
+    depends_on('py-nose',                type=('build', 'test'))
+    depends_on('py-scipy',               type=('build', 'test'))
+    depends_on('py-triangle',            type=('build', 'test'))
+    depends_on('mpi',                    type=('test',  'run'))
 
     # https://github.com/GeoscienceAustralia/anuga_core/issues/247
     conflicts('%apple-clang@12:')
 
-    def patch(self):
-        # MPI tests can only be activated when=+mpi and mpiexec is added to the PATH
-        shutil.rmtree('anuga/parallel/tests')
-        # AttributeError: 'NoneType' object has no attribute 'Intersection'
-        shutil.rmtree('anuga/utilities/tests')
-        # These use csv files from anuga/utilities/tests/data
-        shutil.rmtree('anuga/geometry/tests')
+    def setup_run_environment(self, env):
+        if self.run_tests:
+            env.prepend_path('PATH', self.spec['mpi'].prefix.bin)
 
     install_time_test_callbacks = ['test', 'installtest']
 

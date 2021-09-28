@@ -10,9 +10,9 @@ class PyTriangle(PythonPackage):
     """Python bindings to the triangle library"""
 
     homepage = 'https://github.com/drufat/triangle'
-    url      = 'https://github.com/drufat/triangle/archive/refs/tags/v20200424.tar.gz'
+    pypi     = 'triangle/triangle-20200424.tar.gz'
 
-    version('20200424', sha256='fe3e889aa27c0d9fb859881e70a1a1171b1a22e506b71899218052055416f616')
+    version('20200424', sha256='fc207641f8f39986f7d2bee1b91688a588cd235d2e67777422f94e61fece27e9')
 
     depends_on('triangle',  type=('build', 'run'))
     depends_on('py-numpy',  type=('build', 'run'))
