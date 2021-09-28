@@ -26,7 +26,7 @@ class Dire(Package):
     depends_on('boost')
     depends_on('lhapdf')
     depends_on('hepmc')
-    depends_on('pythia8@8226:8244')
+    depends_on('pythia8@8.226:8.244')
 
     def install(self, spec, prefix):
         configure_args = ['--prefix={0}'.format(prefix)]
