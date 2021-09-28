@@ -39,10 +39,9 @@ class Qhull(CMakePackage):
     def libs(self):
         # in 2020.2 the libqhull.so library was deprecated in favor of
         # libqhull_r.so
-        if self.spec.satifies('@2020.2:'):
+        if self.spec.satisfies('@2020.2:'):
             return find_libraries('libqhull_r', self.prefix,
                                   shared=True, recursive=True)
         else:
             return find_libraries('libqhull', self.prefix,
                                   shared=True, recursive=True)
-
