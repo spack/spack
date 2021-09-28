@@ -116,6 +116,9 @@ e4s-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: e4s-pr-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-pr-generate
 
 e4s-develop-build:
   extends: [ ".e4s", ".develop-build" ]
@@ -124,6 +127,9 @@ e4s-develop-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: e4s-develop-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-develop-generate
 
 ########################################
 # E4S on Power
@@ -149,6 +155,9 @@ e4s-develop-build:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
 #         job: e4s-on-power-pr-generate
 #     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: e4s-on-power-pr-generate
 
 # e4s-on-power-develop-build:
 #   extends: [ ".e4s-on-power", ".develop-build" ]
@@ -157,6 +166,9 @@ e4s-develop-build:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
 #         job: e4s-on-power-develop-generate
 #     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: e4s-on-power-develop-generate
 
 #########################################
 # Build tests for different build-systems
@@ -178,6 +190,9 @@ build_systems-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: build_systems-pr-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: build_systems-pr-generate
 
 build_systems-develop-build:
   extends: [ ".build_systems", ".develop-build" ]
@@ -186,6 +201,9 @@ build_systems-develop-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: build_systems-develop-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: build_systems-develop-generate
 
 #########################################
 # RADIUSS
@@ -205,6 +223,9 @@ radiuss-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: radiuss-pr-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-pr-generate
 
 # ---------  Develop ---------
 radiuss-develop-generate:
@@ -217,6 +238,9 @@ radiuss-develop-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: radiuss-develop-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-develop-generate
 
 ########################################
 # ECP Data & Vis SDK
@@ -238,6 +262,9 @@ data-vis-sdk-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: data-vis-sdk-pr-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: data-vis-sdk-pr-generate
 
 data-vis-sdk-develop-build:
   extends: [ ".data-vis-sdk", ".develop-build" ]
@@ -246,3 +273,6 @@ data-vis-sdk-develop-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: data-vis-sdk-develop-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: data-vis-sdk-develop-generate
