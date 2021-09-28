@@ -9,7 +9,7 @@ from spack import *
 class Pangomm(AutotoolsPackage):
     """Pangomm is a C++ interface to Pango."""
 
-    homepage = "http://www.pango.org/"
+    homepage = "https://www.pango.org/"
     url      = "https://ftp.gnome.org/pub/GNOME/sources/pangomm/2.14/pangomm-2.14.1.tar.gz"
 
     version('2.43.1', sha256='00483967b4ed0869da09dc0617de45625b9ab846c7b07aa25dfc940a4fc540a4')

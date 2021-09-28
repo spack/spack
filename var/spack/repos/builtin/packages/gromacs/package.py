@@ -20,11 +20,14 @@ class Gromacs(CMakePackage):
     """
 
     homepage = 'http://www.gromacs.org'
-    url      = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
+    url      = 'https://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
     git      = 'https://github.com/gromacs/gromacs.git'
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('master', branch='master')
+    version('2021.3', sha256='e109856ec444768dfbde41f3059e3123abdb8fe56ca33b1a83f31ed4575a1cc6')
+    version('2021.2', sha256='d940d865ea91e78318043e71f229ce80d32b0dc578d64ee5aa2b1a4be801aadb')
+    version('2021.1', sha256='bc1d0a75c134e1fb003202262fe10d3d32c59bbb40d714bc3e5015c71effe1e5')
     version('2021', sha256='efa78ab8409b0f5bf0fbca174fb8fbcf012815326b5c71a9d7c385cde9a8f87b')
     version('2020.5', sha256='7b6aff647f7c8ee1bf12204d02cef7c55f44402a73195bd5f42cf11850616478')
     version('2020.4', sha256='5519690321b5500c7951aaf53ff624042c3edd1a5f5d6dd1f2d802a3ecdbf4e6')
@@ -53,9 +56,10 @@ class Gromacs(CMakePackage):
     version('5.1.5',  sha256='c25266abf07690ecad16ed3996899b1d489cbb1ef733a1befb3b5c75c91a703e')
     version('5.1.4',  sha256='0f3793d8f1f0be747cf9ebb0b588fb2b2b5dc5acc32c3046a7bee2d2c03437bc')
     version('5.1.2',  sha256='39d6f1d7ae8ba38cea6089da40676bfa4049a49903d21551abc030992a58f304')
+    version('4.6.7', sha256='6afb1837e363192043de34b188ca3cf83db6bd189601f2001a1fc5b0b2a214d9')
     version('4.5.5', sha256='e0605e4810b0d552a8761fef5540c545beeaf85893f4a6e21df9905a33f871ba')
 
-    variant('mpi', default=True, description='Activate MPI support')
+    variant('mpi', default=True, description='Activate MPI support (disable for Thread-MPI support)')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
     variant(
@@ -91,17 +95,53 @@ class Gromacs(CMakePackage):
             description='Enables cycle subcounters')
 
     depends_on('mpi', when='+mpi')
-    # define matching plumed versions
-    depends_on('plumed@2.6.0:2.6.9+mpi', when='@2020.2+plumed+mpi')
-    depends_on('plumed@2.6.0:2.6.9~mpi', when='@2020.2+plumed~mpi')
-    depends_on('plumed@2.6.0:2.6.9+mpi', when='@2019.6+plumed+mpi')
-    depends_on('plumed@2.6.0:2.6.9~mpi', when='@2019.6+plumed~mpi')
-    depends_on('plumed@2.5.0:2.5.9+mpi', when='@2019.4+plumed+mpi')
-    depends_on('plumed@2.5.0:2.5.9~mpi', when='@2019.4+plumed~mpi')
-    depends_on('plumed@2.5.0:2.5.9+mpi', when='@2018.6+plumed+mpi')
-    depends_on('plumed@2.5.0:2.5.9~mpi', when='@2018.6+plumed~mpi')
+
+    # Plumed 2.7.1 needs Gromacs 2021, 2020.5, 2019.6
+    # Plumed 2.7.0 needs Gromacs       2020.4, 2019.6
+    # Plumed 2.6.3 needs Gromacs       2020.4, 2019.6, 2018.8
+    # Plumed 2.6.2 needs Gromacs       2020.4, 2019.6, 2018.8
+    # Plumed 2.6.1 needs Gromacs       2020.2, 2019.6, 2018.8
+    # Plumed 2.6.0 needs Gromacs               2019.4, 2018.8
+    # Plumed 2.5.7 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.6 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.5 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.4 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.3 needs Gromacs               2019.4, 2018.8, 2016.6
+    # Plumed 2.5.2 needs Gromacs               2019.2, 2018.6, 2016.6
+    # Plumed 2.5.1 needs Gromacs                       2018.6, 2016.6
+    # Plumed 2.5.0 needs Gromacs                       2018.4, 2016.5
+
+    # Above dependencies can be verified, and new versions added, by going to
+    # https://github.com/plumed/plumed2/tree/v2.7.1/patches
+    # and switching tags.
+
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
+    depends_on('plumed@2.7.1+mpi', when='@2021+plumed+mpi')
+    depends_on('plumed@2.7.1~mpi', when='@2021+plumed~mpi')
+    depends_on('plumed@2.7.1+mpi', when='@2020.5+plumed+mpi')
+    depends_on('plumed@2.7.1~mpi', when='@2020.5+plumed~mpi')
+    depends_on('plumed@2.6.2:2.7.0+mpi', when='@2020.4+plumed+mpi')
+    depends_on('plumed@2.6.2:2.7.0~mpi', when='@2020.4+plumed~mpi')
+    depends_on('plumed@2.6.1+mpi', when='@2020.2+plumed+mpi')
+    depends_on('plumed@2.6.1~mpi', when='@2020.2+plumed~mpi')
+    depends_on('plumed@2.6.1:2.7.1+mpi', when='@2019.6+plumed+mpi')
+    depends_on('plumed@2.6.1:2.7.1~mpi', when='@2019.6+plumed~mpi')
+    depends_on('plumed@2.5.3:2.6.0+mpi', when='@2019.4+plumed+mpi')
+    depends_on('plumed@2.5.3:2.6.0~mpi', when='@2019.4+plumed~mpi')
+    depends_on('plumed@2.5.2+mpi', when='@2019.2+plumed+mpi')
+    depends_on('plumed@2.5.2~mpi', when='@2019.2+plumed~mpi')
+    depends_on('plumed@2.5.3:2.6.99+mpi', when='@2018.8+plumed+mpi')
+    depends_on('plumed@2.5.3:2.6.99~mpi', when='@2018.8+plumed~mpi')
+    depends_on('plumed@2.5.1:2.5.2+mpi', when='@2018.6+plumed+mpi')
+    depends_on('plumed@2.5.1:2.5.2~mpi', when='@2018.6+plumed~mpi')
+    depends_on('plumed@2.5.0+mpi', when='@2018.4+plumed+mpi')
+    depends_on('plumed@2.5.0~mpi', when='@2018.4+plumed~mpi')
+    depends_on('plumed@2.5.1:2.5.99+mpi', when='@2016.6+plumed+mpi')
+    depends_on('plumed@2.5.1:2.5.99~mpi', when='@2016.6+plumed~mpi')
+    depends_on('plumed@2.5.0+mpi', when='@2016.5+plumed+mpi')
+    depends_on('plumed@2.5.0~mpi', when='@2016.5+plumed~mpi')
+
     depends_on('fftw-api@3')
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
@@ -114,10 +154,11 @@ class Gromacs(CMakePackage):
     depends_on('lapack', when='+lapack')
     depends_on('blas', when='+blas')
 
-    depends_on('hwloc', when='+hwloc')
+    depends_on('hwloc@1:1.999', when='+hwloc@2016:2018.999')
+    depends_on('hwloc', when='+hwloc@2019:')
 
     patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
-    patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
+    patch('gmxDetectSimd-cmake-3.14.patch', when='@5.0:2017.99^cmake@3.14.0:')
 
     filter_compiler_wrappers(
         '*.cmake',
@@ -133,6 +174,33 @@ class Gromacs(CMakePackage):
         if self.spec.satisfies('%nvhpc'):
             # Disable obsolete workaround
             filter_file('ifdef __PGI', 'if 0', 'src/gromacs/fileio/xdrf.h')
+
+        if '+cuda' in self.spec:
+            # Upstream supports building of last two major versions of Gromacs.
+            # Older versions of Gromacs need to be patched to build with more recent
+            # versions of CUDA library.
+
+            # Hardware version 3.0 is supported up to CUDA 10.2 (Gromacs 4.6-2020.3
+            # needs to be patched, 2020.4 is handling it correctly)
+
+            if self.spec.satisfies('@4.6:2020.3^cuda@11:'):
+                filter_file(r'-gencode;arch=compute_30,code=sm_30;?', '',
+                            'cmake/gmxManageNvccConfig.cmake')
+                filter_file(r'-gencode;arch=compute_30,code=compute_30;?', '',
+                            'cmake/gmxManageNvccConfig.cmake')
+
+            # Hardware version 2.0 is supported up to CUDA 8 (Gromacs 4.6-2016.3
+            # needs to be patched, 2016.4 is handling it correctly, removed in 2019)
+
+            if self.spec.satisfies('@4.6:2016.3^cuda@9:'):
+                filter_file(r'-gencode;arch=compute_20,code=sm_20;?', '',
+                            'cmake/gmxManageNvccConfig.cmake')
+                filter_file(r'-gencode;arch=compute_20,code=compute_20;?', '',
+                            'cmake/gmxManageNvccConfig.cmake')
+
+            if self.spec.satisfies('@4.6:5.0.999^cuda@9:'):
+                filter_file(r'-gencode;arch=compute_20,code=sm_21;?', '',
+                            'cmake/gmxManageNvccConfig.cmake')
 
     def cmake_args(self):
 
@@ -165,7 +233,8 @@ class Gromacs(CMakePackage):
             options.extend([
                 '-DCMAKE_C_COMPILER=%s' % spack_cc,
                 '-DCMAKE_CXX_COMPILER=%s' % spack_cxx,
-                '-DGMX_MPI:BOOL=OFF'])
+                '-DGMX_MPI:BOOL=OFF',
+                '-DGMX_THREAD_MPI:BOOL=ON'])
 
         if self.spec.satisfies('@2020:'):
             options.append('-DGMX_INSTALL_LEGACY_API=ON')
@@ -236,7 +305,10 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_SIMD=AVX_128_FMA')
         elif 'vsx' in target:
             # IBM Power 7 and beyond
-            options.append('-DGMX_SIMD=IBM_VSX')
+            if self.spec.satisfies('%nvhpc'):
+                options.append('-DGMX_SIMD=None')
+            else:
+                options.append('-DGMX_SIMD=IBM_VSX')
         elif target.family == 'aarch64':
             # ARMv8
             if self.spec.satisfies('%nvhpc'):
@@ -318,4 +390,10 @@ class Gromacs(CMakePackage):
                 options.append('-DFFTWF_LIBRARIES={0}'.
                                format(self.spec['amdfftw'].libs.joined(';')))
 
+        # Ensure that the GROMACS log files report how the code was patched
+        # during the build, so that any problems are easier to diagnose.
+        if '+plumed' in self.spec:
+            options.append('-DGMX_VERSION_STRING_OF_FORK=PLUMED-spack')
+        else:
+            options.append('-DGMX_VERSION_STRING_OF_FORK=spack')
         return options

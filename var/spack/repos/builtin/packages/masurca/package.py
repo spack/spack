@@ -14,6 +14,7 @@ class Masurca(Package):
     homepage = "http://www.genome.umd.edu/masurca.html"
     url = "https://github.com/alekseyzimin/masurca/releases/download/v3.3.1/MaSuRCA-3.3.1.tar.gz"
 
+    version('4.0.5', sha256='db525c26f2b09d6b359a2830fcbd4a3fdc65068e9a116c91076240fd1f5924ed')
     version('4.0.1', sha256='68628acaf3681d09288b48a35fec7909b347b84494fb26c84051942256299870')
     version('3.3.1', sha256='587d0ee2c6b9fbd3436ca2a9001e19f251b677757fe5e88e7f94a0664231e020')
     version('3.2.9', sha256='795ad4bd42e15cf3ef2e5329aa7e4f2cdeb7e186ce2e350a45127e319db2904b')

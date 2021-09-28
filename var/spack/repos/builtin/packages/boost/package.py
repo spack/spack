@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import sys
 import os
+import sys
+
+from spack import *
 
 
 class Boost(Package):
@@ -17,14 +18,16 @@ class Boost(Package):
        across a broad spectrum of applications. The Boost license
        encourages both commercial and non-commercial use.
     """
-    homepage = "http://www.boost.org"
+    homepage = "https://www.boost.org"
     url      = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
     git      = "https://github.com/boostorg/boost.git"
-    list_url = "http://sourceforge.net/projects/boost/files/boost/"
+    list_url = "https://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.77.0', sha256='fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854')
+    version('1.76.0', sha256='f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41')
     version('1.75.0', sha256='953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb')
     version('1.74.0', sha256='83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1')
     version('1.73.0', sha256='4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402')
@@ -196,6 +199,14 @@ class Boost(Package):
     # Container's Extended Allocators were not added until 1.56.0
     conflicts('+container', when='@:1.55.99')
 
+    # Boost.System till 1.76 (included) was relying on mutex, which was not
+    # detected correctly on Darwin platform when using GCC
+    #
+    # More details here:
+    # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878889166
+    # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878913339
+    conflicts('%gcc', when='@:1.76 +system platform=darwin')
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
@@ -216,7 +227,11 @@ class Boost(Package):
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
     # Patch to override the PGI toolset when using the NVIDIA compilers
-    patch('nvhpc.patch', when='%nvhpc')
+    patch('nvhpc-1.74.patch', when='@1.74.0:1.75.9999%nvhpc')
+    patch('nvhpc-1.76.patch', when='@1.76.0:1.76.9999%nvhpc')
+
+    # Patch to workaround compiler bug
+    patch('nvhpc-find_address.patch', when='@1.75.0:1.76.999%nvhpc')
 
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440
@@ -233,7 +248,7 @@ class Boost(Package):
     patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
 
     # Patch fix for warnings from commits 2d37749, af1dc84, c705bab, and
-    # 0134441 on http://github.com/boostorg/system.
+    # 0134441 on https://github.com/boostorg/system.
     patch('system-non-virtual-dtor-include.patch', when='@1.69.0',
           level=2)
     patch('system-non-virtual-dtor-test.patch', when='@1.69.0',
@@ -269,7 +284,25 @@ class Boost(Package):
     # Fix B2 bootstrap toolset during installation
     # See https://github.com/spack/spack/issues/20757
     # and https://github.com/spack/spack/pull/21408
-    patch("bootstrap-toolset.patch", when="@1.75:")
+    patch("bootstrap-toolset.patch", when="@1.75")
+
+    # Allow building context asm sources with GCC on Darwin
+    # See https://github.com/spack/spack/pull/24889
+    # and https://github.com/boostorg/context/issues/177
+    patch("context-macho-gcc.patch", when="@1.65:1.76 +context platform=darwin %gcc")
+
+    # Fix float128 support when building with CUDA and Cray compiler
+    # See https://github.com/boostorg/config/pull/378
+    patch("https://github.com/boostorg/config/commit/fee1ad07968386b6d547f089311b7a2c1bf7fa55.patch",
+          sha256="3b159d65a0d3d2df2a21c6bf56ffaba943fce92d2d41d628b2c4d2e924e0f421",
+          when="@:1.76%cce",
+          level=2)
+
+    # Fix building with Intel compilers
+    patch("https://github.com/bfgroup/b2/commit/23212066f0f20358db54568bb16b3fe1d76f88ce.patch",
+          sha256="93f4aad8f88d1437e50d95a2d066390ef3753b99ef5de24f7a46bc083bd6df06",
+          when="@1.77.0",
+          working_dir="tools/build")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
@@ -286,7 +319,7 @@ class Boost(Package):
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
-            url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"
+            url = "https://boostorg.jfrog.io/artifactory/main/release/{0}/source/boost_{1}.tar.bz2"
         else:
             url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
 
@@ -419,7 +452,13 @@ class Boost(Package):
             '--layout=%s' % layout
         ])
 
-        if not spec.satisfies('%intel'):
+        if not spec.satisfies('@:1.75 %intel'):
+            # When building any version >= 1.76, the toolset must be specified.
+            # Earlier versions could not specify Intel as the toolset
+            # as that was considered to be redundant/conflicting with
+            # --with-toolset in bootstrap.
+            # (although it is not currently known if 1.76 is the earliest
+            # version that requires specifying the toolset for Intel)
             options.extend([
                 'toolset=%s' % self.determine_toolset(spec)
             ])
@@ -441,7 +480,7 @@ class Boost(Package):
 
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build
-        #   http://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
+        #   https://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
         #   https://svn.boost.org/trac/boost/ticket/12496
         if (spec.satisfies('%apple-clang') or
                 spec.satisfies('%clang') or
@@ -544,6 +583,10 @@ class Boost(Package):
         ]
 
         threading_opts = self.determine_b2_options(spec, b2_options)
+
+        # Create headers if building from a git checkout
+        if '@develop' in spec:
+            b2('headers', *b2_options)
 
         b2('--clean', *b2_options)
 

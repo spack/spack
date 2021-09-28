@@ -6,10 +6,10 @@
 
 import inspect
 
+from llnl.util.filesystem import working_dir
+
 from spack.directives import depends_on
 from spack.package import PackageBase, run_after
-
-from llnl.util.filesystem import working_dir
 
 
 class WafPackage(PackageBase):

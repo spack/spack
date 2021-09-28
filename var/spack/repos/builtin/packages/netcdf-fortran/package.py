@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import os
 import glob
-from shutil import copyfile, Error
+import os
+from shutil import Error, copyfile
+
+from spack import *
 
 
 class NetcdfFortran(AutotoolsPackage):
@@ -140,10 +141,49 @@ class NetcdfFortran(AutotoolsPackage):
     def patch_libtool(self):
         """AOCC support for NETCDF-F"""
         if '%aocc' in self.spec:
+            # Libtool does not fully support the compiler toolchain, therefore
+            # we have to patch the script. The C compiler normally gets
+            # configured correctly, the variables of interest in the
+            # 'BEGIN LIBTOOL CONFIG' section are set to non-empty values and,
+            # therefore, are not affected by the replacements below. A more
+            # robust solution would be to extend the filter_file function with
+            # an additional argument start_at and perform the replacements
+            # between the '# ### BEGIN LIBTOOL TAG CONFIG: FC' and
+            # '# ### END LIBTOOL TAG CONFIG: FC' markers for the Fortran
+            # compiler, and between the '# ### BEGIN LIBTOOL TAG CONFIG: F77'
+            # and '# ### END LIBTOOL TAG CONFIG: F77' markers for the Fortran 77
+            # compiler.
+
+            # How to pass a linker flag through the compiler:
+            filter_file(r'^wl=""$',
+                        'wl="{0}"'.format(self.compiler.linker_arg),
+                        'libtool')
+
+            # Additional compiler flags for building library objects (we need
+            # this to enable shared libraries when building with ~pic). Note
+            # that the following will set fc_pic_flag for both FC and F77, which
+            # in the case of AOCC, should not be a problem. If it is, the
+            # aforementioned modification of the filter_file function could be
+            # a solution.
+            filter_file(r'^pic_flag=""$',
+                        'pic_flag=" {0}"'.format(self.compiler.fc_pic_flag),
+                        'libtool')
+
+            # The following is supposed to tell the compiler to use the GNU
+            # linker. However, the replacement does not happen (at least for
+            # NetCDF-Fortran 4.5.3) because the replaced substring (i.e. the
+            # first argument passed to the filter_file function) is not present
+            # in the file. The flag should probably be added to 'ldflags' in the
+            # flag_handler method above (another option is to add the flag to
+            # 'ldflags' in compilers.yaml automatically as it was done for other
+            # flags in https://github.com/spack/spack/pull/22219).
             filter_file(
                 r'\${wl}-soname \$wl\$soname',
                 r'-fuse-ld=ld -Wl,-soname,\$soname',
                 'libtool', string=True)
+
+        # TODO: resolve the NAG-related issues in a similar way: remove the
+        #  respective patch files and tune the generated libtool script instead.
 
     @when('@:4.4.5')
     def check(self):

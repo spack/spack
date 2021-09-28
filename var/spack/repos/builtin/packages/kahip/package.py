@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
 import re
+
+from spack import *
 
 
 class Kahip(SConsPackage):
@@ -23,7 +23,7 @@ class Kahip(SConsPackage):
     """
 
     homepage  = 'http://algo2.iti.kit.edu/documents/kahip/index.html'
-    url       = 'http://algo2.iti.kit.edu/schulz/software_releases/KaHIP_2.00.tar.gz'
+    url       = 'https://algo2.iti.kit.edu/schulz/software_releases/KaHIP_2.00.tar.gz'
     git       = 'https://github.com/schulzchristian/KaHIP.git'
 
     version('develop', branch='master')

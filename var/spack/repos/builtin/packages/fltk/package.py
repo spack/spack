@@ -18,8 +18,8 @@ class Fltk(Package):
        applications in minutes.
 
     """
-    homepage = 'http://www.fltk.org/'
-    url = 'http://fltk.org/pub/fltk/1.3.3/fltk-1.3.3-source.tar.gz'
+    homepage = 'https://www.fltk.org/'
+    url = 'https://fltk.org/pub/fltk/1.3.3/fltk-1.3.3-source.tar.gz'
 
     version('1.3.3', sha256='f8398d98d7221d40e77bc7b19e761adaf2f1ef8bb0c30eceb7beb4f2273d0d97')
 
@@ -38,6 +38,12 @@ class Fltk(Package):
     variant('shared', default=True,
             description='Enables the build of shared libraries')
 
+    variant('gl', default=True,
+            description='Enables opengl support')
+
+    # variant dependencies
+    depends_on('gl', when='+gl')
+
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix,
                    '--enable-localjpeg',
@@ -46,6 +52,9 @@ class Fltk(Package):
 
         if '+shared' in spec:
             options.append('--enable-shared')
+
+        if '~gl' in spec:
+            options.append('--disable-gl')
 
         # FLTK needs to be built in-source
         configure(*options)

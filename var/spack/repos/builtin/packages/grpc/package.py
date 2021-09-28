@@ -11,8 +11,18 @@ class Grpc(CMakePackage):
     maintainers = ['nazavode']
 
     homepage = "https://grpc.io"
-    url      = "https://github.com/grpc/grpc/archive/v1.30.0.tar.gz"
+    url      = "https://github.com/grpc/grpc/archive/v1.39.0.tar.gz"
 
+    version('1.39.0', sha256='b16992aa1c949c10d5d5ce2a62f9d99fa7de77da2943e643fb66dcaf075826d6')
+    version('1.38.1', sha256='f60e5b112913bf776a22c16a3053cc02cf55e60bf27a959fd54d7aaf8e2da6e8')
+    version('1.38.0', sha256='abd9e52c69000f2c051761cfa1f12d52d8b7647b6c66828a91d462e796f2aede')
+    version('1.37.1', sha256='acf247ec3a52edaee5dee28644a4e485c5e5badf46bdb24a80ca1d76cb8f1174')
+    version('1.37.0', sha256='c2dc8e876ea12052d6dd16704492fd8921df8c6d38c70c4708da332cf116df22')
+    version('1.36.4', sha256='8eb9d86649c4d4a7df790226df28f081b97a62bf12c5c5fe9b5d31a29cd6541a')
+    version('1.36.3', sha256='bb6de0544adddd54662ba1c314eff974e84c955c39204a4a2b733ccd990354b7')
+    version('1.33.1', sha256='58eaee5c0f1bd0b92ebe1fa0606ec8f14798500620e7444726afcaf65041cb63')
+    version('1.32.0', sha256='f880ebeb2ccf0e47721526c10dd97469200e40b5f101a0d9774eb69efa0bd07a')
+    version('1.31.0', sha256='1236514199d3deb111a6dd7f6092f67617cd2b147f7eda7adbafccea95de7381')
     version('1.30.0', sha256='419dba362eaf8f1d36849ceee17c3e2ff8ff12ac666b42d3ff02a164ebe090e9')
     version('1.29.1', sha256='0343e6dbde66e9a31c691f2f61e98d79f3584e03a11511fad3f10e3667832a45')
     version('1.29.0', sha256='c0a6b40a222e51bea5c53090e9e65de46aee2d84c7fa7638f09cb68c3331b983')
@@ -36,6 +46,7 @@ class Grpc(CMakePackage):
     depends_on('zlib')
     depends_on('c-ares')
     depends_on('abseil-cpp', when='@1.27:')
+    depends_on('re2', when='@1.33.1:')
 
     def cmake_args(self):
         args = [
@@ -59,4 +70,6 @@ class Grpc(CMakePackage):
         ]
         if self.spec.satisfies('@1.27.0:'):
             args.append('-DgRPC_ABSL_PROVIDER:String=package')
+        if self.spec.satisfies('@1.33.1:'):
+            args.append('-DgRPC_RE2_PROVIDER:String=package')
         return args

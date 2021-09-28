@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
-import sys
 import os
+import sys
+
+from spack import *
 
 
 class Metis(Package):
@@ -52,6 +53,17 @@ class Metis(Package):
         # Ignore warnings/errors re unrecognized omp pragmas on %intel
         if '%intel@14:' in self.spec:
             env.append_flags('CFLAGS', '-diag-disable 3180')
+        # Ignore some warnings to get it to compile with %nvhpc
+        #   111: statement is unreachable
+        #   177: variable "foo" was declared but never referenced
+        #   188: enumerated type mixed with another type
+        #   550: variable "foo" was set but never used
+        if '%nvhpc' in self.spec:
+            env.append_flags('CFLAGS', '--display_error_number')
+            env.append_flags('CFLAGS', '--diag_suppress 111')
+            env.append_flags('CFLAGS', '--diag_suppress 177')
+            env.append_flags('CFLAGS', '--diag_suppress 188')
+            env.append_flags('CFLAGS', '--diag_suppress 550')
 
     @when('@5:')
     def patch(self):

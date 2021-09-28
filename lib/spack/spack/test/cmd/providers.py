@@ -25,8 +25,6 @@ def test_it_just_runs(pkg):
     (('mpi',), ['intel-mpi',
                 'intel-parallel-studio',
                 'mpich',
-                'mpich@1:',
-                'mpich@3:',
                 'mpilander',
                 'mvapich2',
                 'openmpi',

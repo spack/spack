@@ -9,7 +9,7 @@ from spack import *
 class Xinput(AutotoolsPackage, XorgPackage):
     """xinput is a utility to configure and test XInput devices."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xinput"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xinput"
     xorg_mirror_path = "app/xinput-1.6.2.tar.gz"
 
     version('1.6.2', sha256='2c8ca5ff2a8703cb7d898629a4311db720dbd30d0c162bfe37f18849a727bd42')

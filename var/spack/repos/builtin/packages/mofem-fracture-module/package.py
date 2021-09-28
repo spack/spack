@@ -54,18 +54,17 @@ class MofemFractureModule(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        source = self.stage.source_path
-
-        options = []
 
         # obligatory options
-        options.extend([
-            '-DWITH_SPACK=YES',
-            '-DEXTERNAL_MODULES_BUILD=YES',
-            '-DUM_INSTALL_BREFIX=%s' % spec['mofem-users-modules'].prefix,
-            '-DEXTERNAL_MODULE_SOURCE_DIRS=%s' % source,
-            '-DSTAND_ALLONE_USERS_MODULES=%s' %
-            ('YES' if '+copy_user_modules' in spec else 'NO')])
+        options = [
+            self.define('WITH_SPACK', True),
+            self.define('EXTERNAL_MODULES_BUILD', True),
+            self.define('UM_INSTALL_BREFIX',
+                        spec['mofem-users-modules'].prefix),
+            self.define('EXTERNAL_MODULE_SOURCE_DIRS', self.stage.source_path),
+            self.define_from_variant('STAND_ALLONE_USERS_MODULES',
+                                     'copy_user_modules')
+        ]
 
         # Set module version
         if self.spec.version == Version('develop'):
@@ -80,8 +79,7 @@ class MofemFractureModule(CMakePackage):
                 '-DFM_VERSION_BUILD=%s' % self.spec.version[2]])
 
         # build tests
-        options.append('-DMOFEM_UM_BUILD_TESTS={0}'.format(
-            'ON' if self.run_tests else 'OFF'))
+        options.append(self.define('MOFEM_UM_BUILD_TESTS', self.run_tests))
 
         return options
 

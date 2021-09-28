@@ -13,12 +13,13 @@ import itertools
 import os
 import re
 import shutil
-import six
 import stat
 import sys
 import traceback
 import types
 from typing import Dict  # novm
+
+import six
 
 if sys.version_info >= (3, 5):
     from collections.abc import Mapping  # novm
@@ -27,19 +28,20 @@ else:
 
 import ruamel.yaml as yaml
 
+import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
-import llnl.util.filesystem as fs
-import spack.config
+
 import spack.caches
+import spack.config
 import spack.error
 import spack.patch
-import spack.spec
-import spack.util.spack_json as sjson
-import spack.util.imp as simp
 import spack.provider_index
-import spack.util.path
+import spack.spec
+import spack.util.imp as simp
 import spack.util.naming as nm
+import spack.util.path
+import spack.util.spack_json as sjson
 
 #: Super-namespace for all packages.
 #: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
@@ -660,7 +662,7 @@ class RepoPath(object):
         if namespace:
             fullspace = get_full_namespace(namespace)
             if fullspace not in self.by_namespace:
-                raise UnknownNamespaceError(spec.namespace)
+                raise UnknownNamespaceError(namespace)
             return self.by_namespace[fullspace]
 
         # If there's no namespace, search in the RepoPath.
@@ -918,8 +920,12 @@ class Repo(object):
     @autospec
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
-        if not self.exists(spec.name):
-            raise UnknownPackageError(spec.name)
+        # NOTE: we only check whether the package is None here, not whether it
+        # actually exists, because we have to load it anyway, and that ends up
+        # checking for existence. We avoid constructing FastPackageChecker,
+        # which will stat all packages.
+        if spec.name is None:
+            raise UnknownPackageError(None, self)
 
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownPackageError(spec.name, self.namespace)
@@ -1064,7 +1070,16 @@ class Repo(object):
 
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists."""
-        return pkg_name in self._pkg_checker
+        if pkg_name is None:
+            return False
+
+        # if the FastPackageChecker is already constructed, use it
+        if self._fast_package_checker:
+            return pkg_name in self._pkg_checker
+
+        # if not, check for the package.py file
+        path = self.filename_for_package_name(pkg_name)
+        return os.path.exists(path)
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
@@ -1284,19 +1299,24 @@ def use_repositories(*paths_and_repos):
     """
     global path
 
+    remove_from_meta = None
+
     # Construct a temporary RepoPath object from
     temporary_repositories = RepoPath(*paths_and_repos)
 
     # Swap the current repository out
     saved = path
-    remove_from_meta = set_path(temporary_repositories)
 
-    yield temporary_repositories
+    try:
+        remove_from_meta = set_path(temporary_repositories)
 
-    # Restore _path and sys.meta_path
-    if remove_from_meta:
-        sys.meta_path.remove(temporary_repositories)
-    path = saved
+        yield temporary_repositories
+
+    finally:
+        # Restore _path and sys.meta_path
+        if remove_from_meta:
+            sys.meta_path.remove(temporary_repositories)
+        path = saved
 
 
 class RepoError(spack.error.SpackError):
@@ -1331,7 +1351,7 @@ class UnknownPackageError(UnknownEntityError):
         long_msg = None
         if name:
             if repo:
-                msg = "Package '{0}' not found in repository '{1}'"
+                msg = "Package '{0}' not found in repository '{1.root}'"
                 msg = msg.format(name, repo)
             else:
                 msg = "Package '{0}' not found.".format(name)

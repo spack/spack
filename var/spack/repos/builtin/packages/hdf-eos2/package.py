@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class HdfEos2(AutotoolsPackage):
@@ -86,14 +87,14 @@ class HdfEos2(AutotoolsPackage):
 
         # Provide config args for dependencies
         extra_args.append('--with-hdf4={0}'.format(self.spec['hdf'].prefix))
-        if self.spec['jpeg']:
+        if 'jpeg' in self.spec:
             extra_args.append('--with-jpeg={0}'.format(
                 self.spec['jpeg'].prefix))
-        if self.spec['zlib']:
+        if 'libszip' in self.spec:
+            extra_args.append('--with-szlib={0}'.format(
+                self.spec['libszip'].prefix))
+        if 'zlib' in self.spec:
             extra_args.append('--with-zlib={0}'.format(
                 self.spec['zlib'].prefix))
-        if self.spec['szip']:
-            extra_args.append('--with-szlib={0}'.format(
-                self.spec['szip'].prefix))
 
         return extra_args

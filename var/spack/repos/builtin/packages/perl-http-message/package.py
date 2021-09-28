@@ -9,7 +9,7 @@ from spack import *
 class PerlHttpMessage(PerlPackage):
     """HTTP style message (base class)"""
 
-    homepage = "http://search.cpan.org/~oalders/HTTP-Message-6.13/lib/HTTP/Status.pm"
+    homepage = "https://metacpan.org/pod/HTTP::Message"
     url      = "http://search.cpan.org/CPAN/authors/id/O/OA/OALDERS/HTTP-Message-6.13.tar.gz"
 
     version('6.13', sha256='f25f38428de851e5661e72f124476494852eb30812358b07f1c3a289f6f5eded')

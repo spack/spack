@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import six
 import sys
+
+import six
 
 import llnl.util.tty.colify as colify
 

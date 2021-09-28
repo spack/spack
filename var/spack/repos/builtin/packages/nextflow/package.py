@@ -9,7 +9,7 @@ from spack import *
 class Nextflow(Package):
     """Data-driven computational pipelines"""
 
-    homepage = "http://www.nextflow.io"
+    homepage = "https://www.nextflow.io"
     url = "https://github.com/nextflow-io/nextflow/releases/download/v0.24.1/nextflow"
 
     version('20.10.0', sha256='54f76c83cbabe8ec68d6a878dcf921e647284499f4ae917356e594d873cb78dd', expand=False)

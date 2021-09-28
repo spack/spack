@@ -9,13 +9,14 @@ from spack import *
 class Gaudi(CMakePackage):
     """An experiment-independent HEP event data processing framework"""
 
-    homepage = "http://gaudi.web.cern.ch/gaudi/"
+    homepage = "https://gaudi.web.cern.ch/gaudi/"
     git      = "https://gitlab.cern.ch/gaudi/Gaudi.git"
     url      = "https://gitlab.cern.ch/gaudi/Gaudi/-/archive/v33r1/Gaudi-v33r1.tar.gz"
 
     tags = ['hep']
 
     version('master', branch='master')
+    version('36.0', sha256='8a0458cef5b616532f9db7cca9fa0e892e602b64c9e93dc0cc6d972e03034830')
     version('35.0', sha256='c01b822f9592a7bf875b9997cbeb3c94dea97cb13d523c12649dbbf5d69b5fa6')
     version('34.0', sha256='28fc4abb5a6b08da5a6b1300451c7e8487f918b055939877219d454abf7668ae')
     version('33.2', sha256='26aaf9c4ff237a60ec79af9bd18ad249fc91c16e297ba77e28e4a256123db6e5')
@@ -55,7 +56,7 @@ class Gaudi(CMakePackage):
     depends_on('python@:2.99.99', when='@:32.1', type=('build', 'run'))
     depends_on('py-setuptools@:45.99.99', when='^python@:2.7.99', type='build')
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-xenv@1:', type=('build', 'run'))
+    depends_on('py-xenv@1:', when='@:34.9', type=('build', 'run'))
     depends_on('range-v3')
     depends_on('root +python +root7 +ssl +tbb +threads')
     depends_on('zlib')

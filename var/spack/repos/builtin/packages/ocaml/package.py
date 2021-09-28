@@ -10,7 +10,7 @@ class Ocaml(Package):
     """OCaml is an industrial strength programming language supporting
        functional, imperative and object-oriented styles"""
 
-    homepage = "http://ocaml.org/"
+    homepage = "https://ocaml.org/"
     url      = "https://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz"
 
     maintainers = ['scemama']
@@ -27,6 +27,11 @@ class Ocaml(Package):
     version('4.03.0', sha256='7fdf280cc6c0a2de4fc9891d0bf4633ea417046ece619f011fd44540fcfc8da2')
 
     patch('fix-duplicate-defs.patch', when="@4.08.0:4.09.0 %gcc@10.0:")
+    # #9969, #9981: Added mergeable flag to ELF sections containing mergeable
+    # constants.  Fixes compatibility with the integrated assembler in clang 11.0.0.
+    # (Jacob Young, review by Nicolas Ojeda Bar)
+    patch('https://patch-diff.githubusercontent.com/raw/ocaml/ocaml/pull/9981.patch',
+          sha256='3b1ca67eb124f5460a077d9575f579ef9d2f0416424761ae9d6c701550c5b75b', when="@:4.11.0 %clang@11:")
     depends_on('ncurses')
 
     sanity_check_file = ['bin/ocaml']

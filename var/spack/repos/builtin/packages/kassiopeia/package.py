@@ -17,6 +17,9 @@ class Kassiopeia(CMakePackage):
 
     maintainers = ['wdconinc']
 
+    version("main", branch="main")
+    version('3.7.7', sha256='b5f62b2e796fac57698794b46b63acbc47ce02010bd1f716996918a550b22a21')
+    version('3.7.6', sha256='fa20cf0f29ee2312bf96b07661d7b5c9303782d907671acd01032cc1f13edd55')
     version('3.7.5', sha256='8f28d08c7ef51e64221e0a4705f3cee3a5d738b8cdde5ce9fa58a3a0dd14ae05')
     version('3.7.4', sha256='c1514163a084530930be10dbe487fb1950ccbc9662a4a190bdecffbd84a71fd4')
     version('3.7.3', sha256='a8753585b9fa0903e1f5f821c4ced3cddd72792ad7e6075a7e25318f81ad9eaa')
@@ -47,21 +50,15 @@ class Kassiopeia(CMakePackage):
     depends_on('opencl', when='+opencl')
 
     def cmake_args(self):
-        args = []
-        if self.spec.satisfies('+vtk'):
-            args.append('-DKASPER_USE_VTK=ON')
+        if '+root' in self.spec:
+            cxxstd = self.spec['root'].variants['cxxstd'].value
         else:
-            args.append('-DKASPER_USE_VTK=OFF')
-        if self.spec.satisfies('+tbb'):
-            args.append('-DKASPER_USE_TBB=ON')
-        else:
-            args.append('-DKASPER_USE_TBB=OFF')
-        if self.spec.satisfies('+mpi'):
-            args.append('-DKEMField_USE_MPI=ON')
-        else:
-            args.append('-DKEMField_USE_MPI=OFF')
-        if self.spec.satisfies('+opencl'):
-            args.append('-DKEMField_USE_OPENCL=ON')
-        else:
-            args.append('-DKEMField_USE_OPENCL=OFF')
+            cxxstd = '14'
+        args = [
+            self.define_from_variant("KASPER_USE_VTK", "vtk"),
+            self.define_from_variant("KASPER_USE_TBB", "tbb"),
+            self.define_from_variant("KEMField_USE_MPI", "mpi"),
+            self.define_from_variant("KEMField_USE_OPENCL", "opencl"),
+            self.define("CMAKE_CXX_STANDARD", cxxstd)
+        ]
         return args

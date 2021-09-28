@@ -3,26 +3,30 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import inspect
 import platform
 import sys
 
+from spack import *
 
-class IntelTbb(Package):
+
+class IntelTbb(CMakePackage):
     """Widely used C++ template library for task parallelism.
     Intel Threading Building Blocks (Intel TBB) lets you easily write parallel
     C++ programs that take full advantage of multicore performance, that are
     portable and composable, and that have future-proof scalability.
     """
-    homepage = "http://www.threadingbuildingblocks.org/"
+    homepage = "https://www.threadingbuildingblocks.org/"
     url_prefix = 'https://github.com/oneapi-src/oneTBB/'
     url = url_prefix + 'archive/v2020.1.tar.gz'
 
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 
+    version('2021.3.0', sha256='8f616561603695bbb83871875d2c6051ea28f8187dbe59299961369904d1d49e')
+    version('2021.2.0', sha256='cee20b0a71d977416f3e3b4ec643ee4f38cedeb2a9ff015303431dd9d8d79854')
+    version('2021.1.1', sha256='b182c73caaaabc44ddc5ad13113aca7e453af73c1690e4061f71dfe4935d74e8')
     version('2020.3', sha256='ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3',
             preferred=True)
     version('2020.2', sha256='4804320e1e6cbe3a5421997b52199e3c1a3829b2ecb6489641da4b8e32faf500')
@@ -96,7 +100,9 @@ class IntelTbb(Package):
 
     # Build and install CMake config files if we're new enough.
     # CMake support started in 2017.7.
-    depends_on('cmake@3.0.0:', type='build', when='@2017.7:')
+    depends_on('cmake@3.1.0:', type='build', when='@2017.7:')
+
+    depends_on('hwloc', when='@2021.1.1:')
 
     # Patch for pedantic warnings (#10836).  This was fixed in the TBB
     # source tree in 2019.6.
@@ -119,6 +125,27 @@ class IntelTbb(Package):
     # https://github.com/oneapi-src/oneTBB/commit/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch?full_index=1
     patch("macos-arm64.patch", when="@:2021.0")
 
+    # Support for building with %nvhpc
+    # 1) remove flags nvhpc compilers do not recognize
+    patch("intel-tbb.nvhpc-remove-flags.2017.patch",
+          when="@2017:2018.9 %nvhpc")
+    patch("intel-tbb.nvhpc-remove-flags.2019.patch",
+          when="@2019:2019.0 %nvhpc")
+    patch("intel-tbb.nvhpc-remove-flags.2019.1.patch",
+          when="@2019.1:2019.6 %nvhpc")
+    patch("intel-tbb.nvhpc-remove-flags.2019.7.patch",
+          when="@2019.7:2019.8 %nvhpc")
+    # The 2019.9 patch below was tested successfully
+    # on @2019.9, @2020.0, and @2020.3
+    patch("intel-tbb.nvhpc-remove-flags.2019.9.patch",
+          when="@2019.9: %nvhpc")
+    # 2) Fix generation of version script tbb.def for ld (nvc++ -E
+    # appears to produce more output than g++ -E which was causing problems)
+    # The 2017 patch below was tested on @2017, @2017.8, @2018,
+    # @2018.3, @2018.6, 2019, @2019.[1-9], and @2020.[0-3]
+    patch("intel-tbb.nvhpc-version-script-fix.2017.patch",
+          when="@2017 %nvhpc")
+
     # Version and tar file names:
     #  2020.0 --> v2020.0.tar.gz  starting with 2020
     #  2017.1 --> 2017_U1.tar.gz  starting with 2017
@@ -135,6 +162,12 @@ class IntelTbb(Package):
             name = '{0}'.format(version)
         return url.format(name)
 
+    # We set OS here in case the user has it set to something else
+    # that TBB doesn't expect.
+    def setup_build_environment(self, env):
+        env.set('OS', platform.system())
+
+    @when('@:2020.3')
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:
             fs = glob.glob(join_path(tbb_build_subdir,
@@ -152,7 +185,16 @@ class IntelTbb(Package):
                     else:
                         of.write(lin)
 
-    def install(self, spec, prefix):
+    @when('@:2020.3')
+    def cmake(self, spec, prefix):
+        return
+
+    @when('@:2020.3')
+    def cmake_args(self):
+        return
+
+    @when('@:2020.3')
+    def build(self, spec, prefix):
         # Deactivate use of RTM with GCC when on an OS with a very old
         # assembler.
         if (spec.satisfies('%gcc@4.8.0: os=rhel6')
@@ -180,9 +222,6 @@ class IntelTbb(Package):
         else:
             tbb_compiler = "gcc"
 
-        mkdirp(prefix)
-        mkdirp(prefix.lib)
-
         make_opts = []
 
         # Static builds of TBB are enabled by including 'big_iron.inc' file
@@ -201,6 +240,11 @@ class IntelTbb(Package):
         #
         make_opts.append("compiler={0}".format(tbb_compiler))
         make(*make_opts)
+
+    @when('@:2020.3')
+    def install(self, spec, prefix):
+        mkdirp(prefix)
+        mkdirp(prefix.lib)
 
         # install headers to {prefix}/include
         install_tree('include', prefix.include)
@@ -227,6 +271,7 @@ class IntelTbb(Package):
             with working_dir(join_path(self.stage.source_path, 'cmake')):
                 inspect.getmodule(self).cmake(*cmake_args)
 
+    @when('@:2020.3')
     @run_after('install')
     def darwin_fix(self):
         # Replace @rpath in ids with full path
@@ -238,3 +283,18 @@ class IntelTbb(Package):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
             'libtbb*', root=self.prefix, shared=shared, recursive=True)
+
+    @when('@2021.1.1:')
+    def cmake_args(self):
+        spec = self.spec
+        options = []
+        options.append('-DCMAKE_HWLOC_2_INCLUDE_PATH=%s' %
+                       spec['hwloc'].prefix.include)
+        options.append('-DCMAKE_HWLOC_2_LIBRARY_PATH=%s' %
+                       spec['hwloc'].libs)
+        options.append('-DTBB_CPF=ON')
+        options.append('-DTBB_STRICT=OFF')
+        if spec.variants['cxxstd'].value != 'default':
+            options.append('-DCMAKE_CXX_STANDARD=%s' %
+                           spec.variants['cxxstd'].value)
+        return options

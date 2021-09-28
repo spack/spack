@@ -12,7 +12,7 @@ class RXlconnect(RPackage):
     Provides comprehensive functionality to read, write and format Excel
     data."""
 
-    homepage = "http://miraisolutions.wordpress.com/"
+    homepage = "https://miraisolutions.wordpress.com/"
     url      = "https://cloud.r-project.org/src/contrib/XLConnect_0.2-11.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/XLConnect"
 

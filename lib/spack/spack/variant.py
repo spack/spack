@@ -11,20 +11,21 @@ import functools
 import inspect
 import itertools
 import re
-from six import StringIO
 import sys
+
+from six import StringIO
 
 if sys.version_info >= (3, 5):
     from collections.abc import Sequence  # novm
 else:
     from collections import Sequence
 
-import llnl.util.tty.color
 import llnl.util.lang as lang
+import llnl.util.tty.color
 
-from spack.util.string import comma_or
 import spack.directives
 import spack.error as error
+from spack.util.string import comma_or
 
 special_variant_values = [None, 'none', '*']
 
@@ -93,8 +94,8 @@ class Variant(object):
         exception if any error is found.
 
         Args:
-            vspec (VariantSpec): instance to be validated
-            pkg (Package): the package that required the validation,
+            vspec (Variant): instance to be validated
+            pkg (spack.package.Package): the package that required the validation,
                 if available
 
         Raises:
@@ -201,7 +202,7 @@ def implicit_variant_conversion(method):
     return convert
 
 
-@lang.key_ordering
+@lang.lazy_lexicographic_ordering
 class AbstractVariant(object):
     """A variant that has not yet decided who it wants to be. It behaves like
     a multi valued variant which **could** do things.
@@ -253,7 +254,7 @@ class AbstractVariant(object):
         the variant.
 
         Returns:
-            tuple of str: values stored in the variant
+            tuple: values stored in the variant
         """
         return self._value
 
@@ -282,27 +283,20 @@ class AbstractVariant(object):
         # to a set
         self._value = tuple(sorted(set(value)))
 
-    def _cmp_value(self):
-        """Returns a tuple of strings containing the values stored in
-        the variant.
+    def _cmp_iter(self):
+        yield self.name
 
-        Returns:
-            tuple of str: values stored in the variant
-        """
         value = self._value
         if not isinstance(value, tuple):
             value = (value,)
-        stringified = tuple(str(x) for x in value)
-        return stringified
-
-    def _cmp_key(self):
-        return self.name, self._cmp_value()
+        value = tuple(str(x) for x in value)
+        yield value
 
     def copy(self):
         """Returns an instance of a variant equivalent to self
 
         Returns:
-            any variant type: a copy of self
+            AbstractVariant: a copy of self
 
         >>> a = MultiValuedVariant('foo', True)
         >>> b = a.copy()
@@ -673,7 +667,7 @@ class DisjointSetsOfValues(Sequence):
     and therefore no other set can contain the item ``'none'``.
 
     Args:
-        *sets (list of tuples): mutually exclusive sets of values
+        *sets (list): mutually exclusive sets of values
     """
 
     _empty_set = set(('none',))

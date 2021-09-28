@@ -11,9 +11,10 @@ class PyNeo(PythonPackage):
     together with support for reading a wide range of neurophysiology
     file formats"""
 
-    homepage = "http://neuralensemble.org/neo"
+    homepage = "https://neuralensemble.org/neo"
     pypi = "neo/neo-0.4.1.tar.gz"
 
+    version('0.8.0', sha256='3382a37b24a384006238b72981f1e9259de9bfa71886f8ed564d35d254ace458')
     version('0.5.2', sha256='1de436b7d5e72a5b4f1baa68bae5b790624a9ac44b2673811cb0b6ef554d3f8b')
     version('0.4.1', sha256='a5a4f3aa31654d52789f679717c9fb622ad4f59b56d227dca490357b9de0a1ce')
 

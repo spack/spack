@@ -26,6 +26,5 @@ class Libssh(CMakePackage):
         return url.format(version.up_to(2), version)
 
     def cmake_args(self):
-        args = ['-DWITH_GSSAPI=%s' %
-                ('ON' if '+gssapi' in self.spec else 'OFF')]
+        args = [self.define_from_variant('WITH_GSSAPI', 'gssapi')]
         return args

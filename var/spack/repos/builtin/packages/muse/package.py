@@ -9,7 +9,7 @@ from spack import *
 class Muse(MakefilePackage):
     """Somatic point mutation caller."""
 
-    homepage = "http://bioinformatics.mdanderson.org/main/MuSE"
+    homepage = "https://bioinformatics.mdanderson.org/main/MuSE"
     url      = "https://github.com/danielfan/MuSE/archive/v1.0-rc.tar.gz"
 
     version('1.0-rc', sha256='b48b8be0044a2249bdc0b625fe0192c65089c598bbd1b1142902dfa81e804023')

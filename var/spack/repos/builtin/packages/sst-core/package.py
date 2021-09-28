@@ -14,10 +14,11 @@ class SstCore(AutotoolsPackage):
 
     homepage = "https://github.com/sstsimulator"
     git = "https://github.com/sstsimulator/sst-core.git"
-    url = "https://github.com/sstsimulator/sst-core/releases/download/v10.0.0_Final/sstcore-10.0.0.tar.gz"
+    url = "https://github.com/sstsimulator/sst-core/releases/download/v11.0.0_Final/sstcore-11.0.0.tar.gz"
 
-    maintainers = ['jjwilke']
+    maintainers = ['sknigh']
 
+    version('11.0.0', sha256="25d17c35d1121330ad74375b6d27fe5c5592d1add3edf0bbb356aa3b5f59f401")
     version('10.1.0', sha256="e464213a81c7b3ccec994fdba2b56992b52fb9a6db089ef7c3445b54306d4b87")
     version('10.0.0', sha256="64cf93a46dfab011fba49244bf0e0efe25ef928c6fbde1d49003220d0eb7735a")
     version('9.1.0',  sha256="cfeda39bb2ce9f32032480427517df62e852c0b3713797255e3b838075f3614d")
@@ -41,9 +42,9 @@ class SstCore(AutotoolsPackage):
     depends_on("hdf5", when="+hdf5")
     depends_on("zlib", when="+zlib")
 
-    depends_on('autoconf@1.68:', type='build', when='@master:')
-    depends_on('automake@1.11.1:', type='build', when='@master:')
-    depends_on('libtool@1.2.4:', type='build', when='@master:')
+    depends_on('autoconf@1.68:', type='build')
+    depends_on('automake@1.11.1:', type='build')
+    depends_on('libtool@1.2.4:', type='build')
     depends_on('m4', type='build', when='@master:')
     depends_on('gettext')
 

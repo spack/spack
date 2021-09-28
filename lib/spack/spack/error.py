@@ -5,11 +5,10 @@
 
 from __future__ import print_function
 
-import sys
 import inspect
+import sys
 
 import llnl.util.tty as tty
-
 
 #: whether we should write stack traces or short error messages
 #: this is module-scoped because it needs to be set very early

@@ -11,12 +11,17 @@ class PyPetsc4py(PythonPackage):
     """
 
     homepage = "https://gitlab.com/petsc/petsc4py"
-    pypi = "petsc4py/petsc4py-3.14.0.tar.gz"
+    url      = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc4py-3.15.0.tar.gz"
     git      = "https://gitlab.com/petsc/petsc.git"
 
-    maintainers = ['dalcinl', 'balay']
+    maintainers = ['balay']
 
     version('main', branch='main')
+    version('3.15.4', sha256='f3e1ae8db824d7ac6994f6ae4e04fdd76381f060ca350fee2a85aac668125a8c')
+    version('3.15.3', sha256='06e7a5de3509067d8625330b10c1ab200b36df1dfdc2e93922038784b2722f8e')
+    version('3.15.2', sha256='d7ed1d79d88b35da563d25e733f276595ba538c52756225f79ba92e1cc4658d3')
+    version('3.15.1', sha256='4ec8f42081e4d6a61157b32869b352dcb18c69077f2d1e4160f3837efd9e150f')
+    version('3.15.0', sha256='87dcc5ef63a1f0e1a963619f7527e623f52341b2806056b0ef5fdfb0b8b287ad')
     version('3.14.1', sha256='f5f8daf3a4cd1dfc945876b0d83a05b25f3c54e08046312eaa3e3036b24139c0')
     version('3.14.0', sha256='33ac9fb55a541e4c1deabd6e2144da96d5ae70e70c830a55de558000cf3f0ec5')
     version('3.13.0', sha256='0e11679353c0c2938336a3c8d1a439b853e20d3bccd7d614ad1dbea3ec5cb31f')
@@ -44,6 +49,7 @@ class PyPetsc4py(PythonPackage):
     depends_on('petsc+mpi', when='+mpi')
     depends_on('petsc~mpi', when='~mpi')
     depends_on('petsc@main', when='@main')
+    depends_on('petsc@3.15.0:3.15.99', when='@3.15.0:3.15.99')
     depends_on('petsc@3.14.2:3.14.99', when='@3.14.1:3.14.99')
     depends_on('petsc@3.14.0:3.14.1', when='@3.14.0')
     depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')

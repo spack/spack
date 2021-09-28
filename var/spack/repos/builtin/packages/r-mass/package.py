@@ -16,6 +16,7 @@ class RMass(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/MASS_7.3-47.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/MASS"
 
+    version('7.3-54', sha256='b800ccd5b5c2709b1559cf5eab126e4935c4f8826cf7891253432bb6a056e821')
     version('7.3-53', sha256='41824e70ada302a620226c0f17b1b2c880c6d1a3a100b53bd6df8e8c97e64b38')
     version('7.3-51.5', sha256='464c0615cef01820cde2bb8457e81575d6755ae9b3ac99f3bfaaac47d43d15cc')
     version('7.3-51.4', sha256='844270a2541eaed420871dfb61d681aa67ee57126645fb6b144b436c25698eeb')

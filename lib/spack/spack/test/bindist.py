@@ -2,12 +2,16 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import glob
 import os
-import sys
 import platform
+import shutil
+import sys
 
 import py
 import pytest
+
+import llnl.util.filesystem as fs
 
 import spack.binary_distribution as bindist
 import spack.config
@@ -15,17 +19,20 @@ import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
 import spack.repo
+import spack.spec as spec
 import spack.store
 import spack.util.gpg
 import spack.util.web as web_util
-
-from spack.directory_layout import YamlDirectoryLayout
+from spack.directory_layout import DirectoryLayout
+from spack.paths import test_path
 from spack.spec import Spec
 
 mirror_cmd = spack.main.SpackCommand('mirror')
 install_cmd = spack.main.SpackCommand('install')
 uninstall_cmd = spack.main.SpackCommand('uninstall')
 buildcache_cmd = spack.main.SpackCommand('buildcache')
+
+legacy_mirror_dir = os.path.join(test_path, 'data', 'mirrors', 'legacy_yaml')
 
 
 @pytest.fixture(scope='function')
@@ -54,6 +61,16 @@ def test_mirror(mirror_dir):
     mirror_cmd('add', '--scope', 'site', 'test-mirror-func', mirror_url)
     yield mirror_dir
     mirror_cmd('rm', '--scope=site', 'test-mirror-func')
+
+
+@pytest.fixture(scope='function')
+def test_legacy_mirror(mutable_config, tmpdir):
+    mirror_dir = tmpdir.join('legacy_yaml_mirror')
+    shutil.copytree(legacy_mirror_dir, mirror_dir.strpath)
+    mirror_url = 'file://%s' % mirror_dir
+    mirror_cmd('add', '--scope', 'site', 'test-legacy-yaml', mirror_url)
+    yield mirror_dir
+    mirror_cmd('rm', '--scope=site', 'test-legacy-yaml')
 
 
 @pytest.fixture(scope='module')
@@ -138,7 +155,7 @@ def install_dir_default_layout(tmpdir):
     real_store, real_layout = spack.store.store, spack.store.layout
     opt_dir = tmpdir.join('opt')
     spack.store.store = spack.store.Store(str(opt_dir))
-    spack.store.layout = YamlDirectoryLayout(str(opt_dir), path_scheme=scheme)
+    spack.store.layout = DirectoryLayout(str(opt_dir), path_scheme=scheme)
     try:
         yield spack.store
     finally:
@@ -156,7 +173,7 @@ def install_dir_non_default_layout(tmpdir):
     real_store, real_layout = spack.store.store, spack.store.layout
     opt_dir = tmpdir.join('opt')
     spack.store.store = spack.store.Store(str(opt_dir))
-    spack.store.layout = YamlDirectoryLayout(str(opt_dir), path_scheme=scheme)
+    spack.store.layout = DirectoryLayout(str(opt_dir), path_scheme=scheme)
     try:
         yield spack.store
     finally:
@@ -317,8 +334,6 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
     buildcache_cmd('install', '-auf', cspec.name)
 
 
-@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
-                    reason='This test requires gpg')
 def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
 
@@ -332,7 +347,7 @@ def test_push_and_fetch_keys(mock_gnupghome):
 
     # dir 1: create a new key, record its fingerprint, and push it to a new
     #        mirror
-    with spack.util.gpg.gnupg_home_override(gpg_dir1):
+    with spack.util.gpg.gnupghome_override(gpg_dir1):
         spack.util.gpg.create(name='test-key',
                               email='fake@test.key',
                               expires='0',
@@ -346,7 +361,7 @@ def test_push_and_fetch_keys(mock_gnupghome):
 
     # dir 2: import the key from the mirror, and confirm that its fingerprint
     #        matches the one created above
-    with spack.util.gpg.gnupg_home_override(gpg_dir2):
+    with spack.util.gpg.gnupghome_override(gpg_dir2):
         assert len(spack.util.gpg.public_keys()) == 0
 
         bindist.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
@@ -435,6 +450,45 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     assert rebuild
 
 
+@pytest.mark.usefixtures(
+    'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
+)
+def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
+    """Ensure spack buildcache index only reports available packages"""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+    spack.config.set('mirrors', {'test': mirror_url})
+
+    s = Spec('libdwarf').concretized()
+
+    # Install a package
+    install_cmd('--no-cache', s.name)
+
+    # Create a buildcache and update index
+    buildcache_cmd('create', '-uad', mirror_dir.strpath, s.name)
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Check package and dependency in buildcache
+    cache_list = buildcache_cmd('list', '--allarch')
+    assert 'libdwarf' in cache_list
+    assert 'libelf' in cache_list
+
+    # Remove dependency from cache
+    libelf_files = glob.glob(
+        os.path.join(mirror_dir.join('build_cache').strpath, '*libelf*'))
+    os.remove(*libelf_files)
+
+    # Update index
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Check dependency not in buildcache
+    cache_list = buildcache_cmd('list', '--allarch')
+    assert 'libdwarf' in cache_list
+    assert 'libelf' not in cache_list
+
+
 def test_generate_indices_key_error(monkeypatch, capfd):
 
     def mock_list_url(url, recursive=False):
@@ -517,7 +571,7 @@ def test_update_sbang(tmpdir, test_mirror):
     # Switch the store to the new install tree locations
     newtree_dir = tmpdir.join('newtree')
     s = spack.store.Store(str(newtree_dir))
-    s.layout = YamlDirectoryLayout(str(newtree_dir), path_scheme=scheme)
+    s.layout = DirectoryLayout(str(newtree_dir), path_scheme=scheme)
 
     with spack.store.use_store(s):
         new_spec = Spec('old-sbang')
@@ -552,3 +606,63 @@ def test_update_sbang(tmpdir, test_mirror):
             open(str(installed_script_style_2_path)).read()
 
         uninstall_cmd('-y', '/%s' % new_spec.dag_hash())
+
+
+# Need one where the platform has been changed to the test platform.
+def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
+                             mock_packages):
+    install_cmd('--no-check-signature', '--cache-only', '-f', legacy_mirror_dir
+                + '/build_cache/test-debian6-core2-gcc-4.5.0-zlib-' +
+                '1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml')
+    uninstall_cmd('-y', '/t5mczux3tfqpxwmg7egp7axy2jvyulqk')
+
+
+@pytest.mark.usefixtures(
+    'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
+)
+def test_update_index_fix_deps(monkeypatch, tmpdir, mutable_config):
+    """Ensure spack buildcache update-index properly fixes up spec descriptor
+    files on the mirror when updating the buildcache index."""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+    spack.config.set('mirrors', {'test': mirror_url})
+
+    a = Spec('a').concretized()
+    b = Spec('b').concretized()
+    new_b_full_hash = 'abcdef'
+
+    # Install package a with dep b
+    install_cmd('--no-cache', a.name)
+
+    # Create a buildcache for a and its dep b, and update index
+    buildcache_cmd('create', '-uad', mirror_dir.strpath, a.name)
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Simulate an update to b that only affects full hash by simply overwriting
+    # the full hash in the spec.json file on the mirror
+    b_spec_json_name = bindist.tarball_name(b, '.spec.json')
+    b_spec_json_path = os.path.join(mirror_dir.strpath,
+                                    bindist.build_cache_relative_path(),
+                                    b_spec_json_name)
+    fs.filter_file(r'"full_hash":\s"\S+"',
+                   '"full_hash": "{0}"'.format(new_b_full_hash),
+                   b_spec_json_path)
+    # When we update the index, spack should notice that a's notion of the
+    # full hash of b doesn't match b's notion of it's own full hash, and as
+    # a result, spack should fix the spec.json for a
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Read in the concrete spec json of a
+    a_spec_json_name = bindist.tarball_name(a, '.spec.json')
+    a_spec_json_path = os.path.join(mirror_dir.strpath,
+                                    bindist.build_cache_relative_path(),
+                                    a_spec_json_name)
+
+    # Turn concrete spec json into a concrete spec (a)
+    with open(a_spec_json_path) as fd:
+        a_prime = spec.Spec.from_json(fd.read())
+
+    # Make sure the full hash of b in a's spec json matches the new value
+    assert(a_prime[b.name].full_hash() == new_b_full_hash)

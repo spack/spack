@@ -8,13 +8,14 @@
 The spack package class structure is based strongly on Homebrew
 (http://brew.sh/), mainly because Homebrew makes it very easy to create
 packages.
-
 """
+
 import base64
 import collections
 import contextlib
 import copy
 import functools
+import glob
 import hashlib
 import inspect
 import os
@@ -24,18 +25,23 @@ import sys
 import textwrap
 import time
 import traceback
-import six
 import types
-from typing import Optional, List, Dict, Any, Callable  # novm
+from typing import Any, Callable, Dict, List, Optional  # novm
+
+import six
+from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
+from llnl.util.lang import memoized
+from llnl.util.link_tree import LinkTree
 
 import spack.compilers
 import spack.config
 import spack.dependency
 import spack.directives
 import spack.directory_layout
+import spack.environment
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -48,16 +54,13 @@ import spack.store
 import spack.url
 import spack.util.environment
 import spack.util.web
-from llnl.util.lang import memoized
-from llnl.util.link_tree import LinkTree
-from ordereddict_backport import OrderedDict
 from spack.filesystem_view import YamlFilesystemView
-from spack.installer import PackageInstaller, InstallError
 from spack.install_test import TestFailure, TestSuite
-from spack.util.executable import which, ProcessError
-from spack.util.prefix import Prefix
-from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
+from spack.installer import InstallError, PackageInstaller
+from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
+from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
+from spack.util.prefix import Prefix
 from spack.version import Version
 
 """Allowed URL schemes for spack packages."""
@@ -69,6 +72,9 @@ _spack_build_logfile = 'spack-build-out.txt'
 
 # Filename for the Spack build/install environment file.
 _spack_build_envfile = 'spack-build-env.txt'
+
+# Filename of json with total build and phase times (seconds)
+_spack_times_log = 'install_times.json'
 
 # Filename for the Spack configure args file.
 _spack_configure_argsfile = 'spack-configure-args.txt'
@@ -460,7 +466,7 @@ def test_log_pathname(test_stage, spec):
 
     Args:
         test_stage (str): path to the test stage directory
-        spec (Spec): instance of the spec under test
+        spec (spack.spec.Spec): instance of the spec under test
 
     Returns:
         (str): the pathname of the test log file
@@ -698,7 +704,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Set up timing variables
         self._fetch_time = 0.0
-        self._total_time = 0.0
 
         if self.is_extension:
             spack.repo.get(self.extendee_spec)._check_extendable()
@@ -721,14 +726,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Return dict of possible dependencies of this package.
 
         Args:
-            transitive (bool, optional): return all transitive dependencies if
+            transitive (bool or None): return all transitive dependencies if
                 True, only direct dependencies if False (default True)..
-            expand_virtuals (bool, optional): expand virtual dependencies into
+            expand_virtuals (bool or None): expand virtual dependencies into
                 all possible implementations (default True)
-            deptype (str or tuple, optional): dependency types to consider
-            visited (dicct, optional): dict of names of dependencies visited so
+            deptype (str or tuple or None): dependency types to consider
+            visited (dict or None): dict of names of dependencies visited so
                 far, mapped to their immediate dependencies' names.
-            missing (dict, optional): dict to populate with packages and their
+            missing (dict or None): dict to populate with packages and their
                 *missing* dependencies.
             virtuals (set): if provided, populate with virtuals seen so far.
 
@@ -1067,6 +1072,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return os.path.join(self.stage.path, _spack_build_logfile)
 
     @property
+    def phase_log_files(self):
+        """Find sorted phase log files written to the staging directory"""
+        logs_dir = os.path.join(self.stage.path, "spack-build-*-out.txt")
+        log_files = glob.glob(logs_dir)
+        log_files.sort()
+        return log_files
+
+    @property
     def install_log_path(self):
         """Return the build log file path on successful installation."""
         # Backward compatibility: Return the name of an existing install log.
@@ -1082,6 +1095,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def configure_args_path(self):
         """Return the configure args file path associated with staging."""
         return os.path.join(self.stage.path, _spack_configure_argsfile)
+
+    @property
+    def times_log_path(self):
+        """Return the times log json file."""
+        return os.path.join(self.metadata_dir, _spack_times_log)
 
     @property
     def install_configure_args_path(self):
@@ -1234,18 +1252,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Returns:
             True if the package has been installed, False otherwise.
         """
-        has_prefix = os.path.isdir(self.prefix)
         try:
             # If the spec is in the DB, check the installed
             # attribute of the record
-            rec = spack.store.db.get_record(self.spec)
-            db_says_installed = rec.installed
+            return spack.store.db.get_record(self.spec).installed
         except KeyError:
             # If the spec is not in the DB, the method
             #  above raises a Key error
-            db_says_installed = False
-
-        return has_prefix and db_says_installed
+            return False
 
     @property
     def prefix(self):
@@ -1260,11 +1274,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise ValueError("Can only get the arch for concrete package.")
         return spack.architecture.arch_for_spec(self.spec.architecture)
 
-    @property
+    @property  # type: ignore
+    @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
+
         return spack.compilers.compiler_for_spec(self.spec.compiler,
                                                  self.spec.architecture)
 
@@ -1518,8 +1534,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # should this attempt to download the source and set one? This
             # probably only happens for source repositories which are
             # referenced by branch name rather than tag or commit ID.
-            message = 'Missing a source id for {s.name}@{s.version}'
-            tty.warn(message.format(s=self))
+            env = spack.environment.active_environment()
+            from_local_sources = env and env.is_develop(self.spec)
+            if not self.spec.external and not from_local_sources:
+                message = 'Missing a source id for {s.name}@{s.version}'
+                tty.warn(message.format(s=self))
             hash_content.append(''.encode('utf-8'))
         else:
             hash_content.append(source_id.encode('utf-8'))
@@ -1736,7 +1755,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         during install testing.
 
         Args:
-            srcs (str or list of str): relative path for files and or
+            srcs (str or list): relative path for files and or
                 subdirectories located in the staged source path that are to
                 be copied to the corresponding location(s) under the install
                 testing directory.
@@ -1783,10 +1802,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         Args:
             exe (str): the name of the executable
-            options (str or list of str): list of options to pass to the runner
-            expected (str or list of str): list of expected output strings.
+            options (str or list): list of options to pass to the runner
+            expected (str or list): list of expected output strings.
                 Each string is a regex expected to match part of the output.
-            status (int or list of int): possible passing status values
+            status (int or list): possible passing status values
                 with 0 meaning the test is expected to succeed
             installed (bool): if ``True``, the executable must be in the
                 install prefix
@@ -1814,6 +1833,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 exc_type, _, tb = sys.exc_info()
                 print('FAILED: {0}'.format(e))
                 import traceback
+
                 # remove the current call frame to exclude the extract_stack
                 # call from the error
                 stack = traceback.extract_stack()[:-1]
@@ -1989,9 +2009,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Spack's store.
 
         Args:
-            env (EnvironmentModifications): environment modifications to be
-                applied when the package is built. Package authors can call
-                methods on it to alter the build environment.
+            env (spack.util.environment.EnvironmentModifications): environment
+                modifications to be applied when the package is built. Package authors
+                can call methods on it to alter the build environment.
         """
         legacy_fn = self._get_legacy_environment_method('setup_environment')
         if legacy_fn:
@@ -2002,9 +2022,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Sets up the run environment for a package.
 
         Args:
-            env (EnvironmentModifications): environment modifications to be
-                applied when the package is run. Package authors can call
-                methods on it to alter the run environment.
+            env (spack.util.environment.EnvironmentModifications): environment
+                modifications to be applied when the package is run. Package authors
+                can call methods on it to alter the run environment.
         """
         legacy_fn = self._get_legacy_environment_method('setup_environment')
         if legacy_fn:
@@ -2031,11 +2051,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             variable.
 
         Args:
-            env (EnvironmentModifications): environment modifications to be
-                applied when the dependent package is built. Package authors
-                can call methods on it to alter the build environment.
+            env (spack.util.environment.EnvironmentModifications): environment
+                modifications to be applied when the dependent package is built.
+                Package authors can call methods on it to alter the build environment.
 
-            dependent_spec (Spec): the spec of the dependent package
+            dependent_spec (spack.spec.Spec): the spec of the dependent package
                 about to be built. This allows the extendee (self) to query
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
@@ -2058,11 +2078,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for dependencies.
 
         Args:
-            env (EnvironmentModifications): environment modifications to be
-                applied when the dependent package is run. Package authors
-                can call methods on it to alter the build environment.
+            env (spack.util.environment.EnvironmentModifications): environment
+                modifications to be applied when the dependent package is run.
+                Package authors can call methods on it to alter the build environment.
 
-            dependent_spec (Spec): The spec of the dependent package
+            dependent_spec (spack.spec.Spec): The spec of the dependent package
                 about to be run. This allows the extendee (self) to query
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
@@ -2104,7 +2124,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 object of the dependent package. Packages can use this to set
                 module-scope variables for the dependent to use.
 
-            dependent_spec (Spec): The spec of the dependent package
+            dependent_spec (spack.spec.Spec): The spec of the dependent package
                 about to be built. This allows the extendee (self) to
                 query the dependent's state.  Note that *this*
                 package's spec is available as ``self.spec``.
@@ -2319,8 +2339,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         extensions_layout = view.extensions_layout
 
-        extensions_layout.check_extension_conflict(
-            self.extendee_spec, self.spec)
+        try:
+            extensions_layout.check_extension_conflict(
+                self.extendee_spec, self.spec)
+        except spack.directory_layout.ExtensionAlreadyInstalledError as e:
+            # already installed, let caller know
+            tty.msg(e.message)
+            return
 
         # Activate any package dependencies that are also extensions.
         if with_dependencies:
@@ -2588,6 +2613,14 @@ def test_process(pkg, kwargs):
                         spec_pkg = spec.package
                     except spack.repo.UnknownPackageError:
                         continue
+
+                    # copy installed test sources cache into test cache dir
+                    if spec.concrete:
+                        cache_source = spec_pkg.install_test_root
+                        cache_dir = pkg.test_suite.current_test_cache_dir
+                        if (os.path.isdir(cache_source) and
+                                not os.path.exists(cache_dir)):
+                            fsys.install_tree(cache_source, cache_dir)
 
                     # copy test data into test data dir
                     data_source = Prefix(spec_pkg.package_dir).test

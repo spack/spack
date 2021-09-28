@@ -14,10 +14,16 @@ class RocmDbgapi(CMakePackage):
        AMD's commercially available GPU architectures."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCdbgapi"
-    url      = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-4.0.0.tar.gz"
+    git      = "https://github.com/ROCm-Developer-Tools/ROCdbgapi.git"
+    url      = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='amd-master')
+    version('4.3.1', sha256='dddf2549ad6bb806f7e5d5a5336f5a00fe87a124f2a778be18ec4dc41f891912')
+    version('4.3.0', sha256='4255d83d218bb0db8be9fef18e03a955ea1c6de1c635c31685ee5fc1540ddde6')
+    version('4.2.0', sha256='fcdee5aaf5ed40c0377ce007a2947da9e718eeee86ca3e13192ff9e96a1b7373')
+    version('4.1.0', sha256='d04fd9b2005691313547c4134b027b56b0ec6089f67d3bccbdb8fb1c92cde9bd')
     version('4.0.0', sha256='e87f31b3a22861397eb62d8363dd1e153596097ccfe68c6eefc1a83a2432ae18')
     version('3.10.0', sha256='89a8d352d59e4c0dc13160b1bf1f4bc3bfec5af544050030aa619b1ff88f1850')
     version('3.9.0', sha256='d1553f89d2b0419304ea82ed2b97abdc323c2fed183f0e119da1a72416a48136')
@@ -27,7 +33,8 @@ class RocmDbgapi(CMakePackage):
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0', '4.3.0', '4.3.1', 'master']:
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type=('build', 'link'), when='@' + ver)
 

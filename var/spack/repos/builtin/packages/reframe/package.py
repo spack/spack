@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import shutil
+
+from spack import *
 
 
 class Reframe(Package):
@@ -23,6 +24,19 @@ class Reframe(Package):
     maintainers = ['victorusu', 'vkarak']
 
     version('master', branch='master')
+    version('3.8.1',  sha256='aa8ba4fb862de8ff333add73fd0fbb706a4d4f1381432b094bcdd7acbdcb80d4')
+    version('3.8.0',  sha256='b8a0486fd78786606586364968d1e2a4e7fc424d523b12b2c0ea8a227b485e30')
+    version('3.7.3',  sha256='52427fbbaa558082b71f73b2b8aea37340584d14dc3b1aca1e9bdd8923fa4c65')
+    version('3.7.2',  sha256='b4ba0f0a8788ee43471202d40be43157ec2687ad510c3b02c0869af6c48bb7d0')
+    version('3.7.1',  sha256='fb2efc3ad31056156e797f1d4fe705c79d20ebf66472b2144e84d4e2f4b2b125')
+    version('3.7.0',  sha256='aa2513fafef44ce31120c7d0e3e3788b6c8a57535499e646086bd01af88f2013')
+    version('3.6.3',  sha256='3616478c886c89385385d04f5bce625a690eec6bdca603cd5ac3a6f443168ac2')
+    version('3.6.2',  sha256='b4725e434f4cd721ca825a56a652e67aa77e7af5ed7ca00f281747585827060d')
+    version('3.6.1',  sha256='1ee35a2de42cdd2476c17cc15caf6a7795d976ba7b058d518da7d314e7af2136')
+    version('3.6.0',  sha256='de1e0ea2677f2a49af4b64544379579515db36c2164f6dc647c3fbaab5f78462')
+    version('3.5.3',  sha256='5e7f8b93cd672dcb702c657ec2f595d34d3335b1d16484a596a083b5ef81d7ec')
+    version('3.5.2',  sha256='50d461811f6bba7c9b897866a290063e1bd229e7055f5acc2de1f749b99bfce7')
+    version('3.5.1',  sha256='656ac4c5cddd2af3fc358a7782b0a57c86d61adaeec99181ab7e1ddc630427b7')
     version('3.5.0',  sha256='81b501be4252c99f12043cb21b0b7b8059207a340fc94173b180444599773f1a')
     version('3.4.2',  sha256='0c5c6dbd234b8007be929be2ccbe6a00d9a5ec75cc86e129557590b83f71acca')
     version('3.4.1',  sha256='aed5752a2f687002839923c5432784d3a25d3a29d43b69122dcbf72befa0fdbf')
@@ -54,9 +68,11 @@ class Reframe(Package):
     depends_on('py-setuptools', type='build')
 
     # runtime dependencies
+    depends_on('py-archspec', when='@3.7.0:', type='run')
     depends_on('py-argcomplete', when='@3.4.1:', type='run')
-    depends_on('py-importlib-metadata', type='run')
+    depends_on('py-importlib-metadata', when='^python@:3.7', type='run')
     depends_on('py-jsonschema', type='run')
+    depends_on('py-lxml', when='@3.6.0:', type='run')
     depends_on('py-pyyaml', when='@3.4.1:', type='run')
     depends_on('py-requests', when='@3.4.1:', type='run')
     depends_on('py-semver', when='@3.4.2:', type='run')
@@ -95,6 +111,7 @@ class Reframe(Package):
         install_tree(self.stage.source_path, self.prefix)
 
     def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix)
         if self.spec.version >= Version('3.0'):
             if '+docs' in self.spec:
                 env.prepend_path('MANPATH',  self.prefix.docs.man)

@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
+
+from spack import *
 
 
 class RocmSmi(MakefilePackage):
@@ -13,10 +14,11 @@ class RocmSmi(MakefilePackage):
        management of your ROCm enabled system"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROC-smi"
-    url      = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-4.0.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-4.1.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.1.0', sha256='5f9f551f93f673f4b508f47a7f24bce903288ffb08fa9e4c8e0956a4a57865c2')
     version('4.0.0', sha256='bf8738ae81c0a02d83eb9437b93dc153fb63f659f3b04d454024e30678b43575')
     version('3.10.0', sha256='b1c7e529e8fcc53fb6b40a4126651da0ab07bcb91faac99519ba9660412ea4ed')
     version('3.9.0', sha256='af3cc6d5e2296f47b1873339faad2d27cf2f24725771bf34c7f644d20cc6ef3b')

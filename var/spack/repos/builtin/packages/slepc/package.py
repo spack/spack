@@ -5,19 +5,25 @@
 
 import os
 import sys
+
 from spack import *
 
 
-class Slepc(Package):
+class Slepc(Package, CudaPackage, ROCmPackage):
     """Scalable Library for Eigenvalue Problem Computations."""
 
     homepage = "https://slepc.upv.es"
-    url      = "https://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
+    url      = "https://slepc.upv.es/download/distrib/slepc-3.15.2.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
 
+    test_requires_compiler = True
+
     version('main', branch='main')
+    version('3.15.2', sha256='15fd317c4dd07bb41a994ad4c27271a6675af5f2abe40b82a64a27eaae2e632a')
+    version('3.15.1', sha256='9c7c3a45f0d9df51decf357abe090ef05114c38a69b7836386a19a96fb203aea')
+    version('3.15.0', sha256='e53783ae13acadce274ea65c67186b5ab12332cf17125a694e21d598aa6b5f00')
     version('3.14.2', sha256='3e54578dda1f4c54d35ac27d02f70a43f6837906cb7604dbcec0e033cfb264c8')
     version('3.14.1', sha256='cc78a15e34d26b3e6dde003d4a30064e595225f6185c1975bbd460cb5edd99c7')
     version('3.14.0', sha256='37f8bb270169d1d3f5d43756ac8929d56204e596bd7a78a7daff707513472e46')
@@ -55,6 +61,7 @@ class Slepc(Package):
 
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on('petsc@main', when='@main')
+    depends_on('petsc@3.15:3.15.99', when='@3.15:3.15.99')
     depends_on('petsc@3.14:3.14.99', when='@3.14:3.14.99')
     depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')
     depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
@@ -64,6 +71,8 @@ class Slepc(Package):
     depends_on('petsc@3.8:3.8.99', when='@3.8:3.8.99')
     depends_on('petsc@3.7:3.7.7', when='@3.7.1:3.7.4')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
+    depends_on('petsc+cuda', when='+cuda')
+    depends_on('petsc+rocm', when='+rocm')
     depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi~int64')
     depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi~int64')
 
@@ -74,7 +83,7 @@ class Slepc(Package):
     conflicts('+blopex', when='^petsc+int64')
 
     resource(name='blopex',
-             url='http://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
+             url='https://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
              sha256='0081ee4c4242e635a8113b32f655910ada057c59043f29af4b613508a762f3ac',
              destination=join_path('installed-arch-' + sys.platform + '-c-opt',
                                    'externalpackages'),
@@ -93,8 +102,12 @@ class Slepc(Package):
         # its symlink in spack/stage/ !
         os.environ['SLEPC_DIR'] = os.getcwd()
 
-        options = []
+        if self.spec.satisfies('%cce'):
+            filter_file('          flags = l',
+                        '          flags = l\n        flags += ["-fuse-ld=gold"]',
+                        'config/package.py')
 
+        options = []
         if '+arpack' in spec:
             options.extend([
                 '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
@@ -127,9 +140,35 @@ class Slepc(Package):
         make('install', parallel=False)
 
     def setup_run_environment(self, env):
-        # set SLEPC_DIR in the module file
+        # set SLEPC_DIR & PETSC_DIR in the module file
         env.set('SLEPC_DIR', self.prefix)
+        env.set('PETSC_DIR', self.spec['petsc'].prefix)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        # set up SLEPC_DIR for everyone using SLEPc package
-        env.set('SLEPC_DIR', self.prefix)
+    def run_hello_test(self):
+        """Run stand alone test: hello"""
+        test_dir = self.test_suite.current_test_data_dir
+
+        if not os.path.exists(test_dir):
+            print('Skipping slepc test')
+            return
+
+        exe = 'hello'
+        cc_exe = os.environ['CC']
+
+        self.run_test(exe=cc_exe,
+                      options=['-I{0}'.format(self.prefix.include),
+                               '-L', self.prefix.lib, '-l', 'slepc',
+                               '-L', self.spec['petsc'].prefix.lib, '-l', 'petsc',
+                               '-L', self.spec['mpi'].prefix.lib, '-l', 'mpi',
+                               '-o', exe, join_path(test_dir, 'hello.c')],
+                      purpose='test: compile {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe=exe,
+                      options=[],
+                      expected=['Hello world'],
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_hello_test()

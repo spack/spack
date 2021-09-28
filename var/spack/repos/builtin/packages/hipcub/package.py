@@ -10,10 +10,15 @@ class Hipcub(CMakePackage):
     """ Radeon Open Compute Parallel Primitives Library"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipCUB"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-4.0.0.tar.gz"
+    git      = "https://github.com/ROCmSoftwarePlatform/hipCUB.git"
+    url      = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.1', sha256='20fcd34323c541c182655b7ff6dc6ff268c0127596f0d9993884621c2b14b67a')
+    version('4.3.0', sha256='733499a8d55e2d73bf874d43a98ee7425e4325f77e03fb0c80debf36c740cb70')
+    version('4.2.0', sha256='56b50e185b7cdf4615d2f56d3a4e86fe76f885e9ad04845f3d0671afcb315c69')
+    version('4.1.0', sha256='6d33cc371b9a5ac9c0ab9853bac736f6cea0d2192f4dc9e6d8175d207ee4b4f2')
     version('4.0.0', sha256='656bd6ec547810fd74bcebba41453e6e729f3fdb7346f5564ab71fc0346c3fb5')
     version('3.10.0', sha256='759da5c6ef0cc1e4ecf2083659e78b8bbaa015f0bb360177674e0feb3032c5be')
     version('3.9.0', sha256='c46995f9f18733ec18e370c21d7c0d6ac719e8e9d3254c6303a20ba90831e12e')
@@ -26,21 +31,21 @@ class Hipcub(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('numactl', type='link', when='@3.7.0:')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
-        depends_on('rocprim@' + ver, type='build', when='@' + ver)
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0', '4.3.0', '4.3.1']:
+        depends_on('hip@' + ver, when='@' + ver)
+        depends_on('rocprim@' + ver, when='@' + ver)
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        spec = self.spec
-
         args = [
-            '-DCMAKE_MODULE_PATH={0}/cmake'.format(spec['hip'].prefix)
+            self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake)
         ]
+
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

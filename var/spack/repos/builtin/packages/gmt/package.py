@@ -21,6 +21,8 @@ class Gmt(Package):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('6.2.0', sha256='b70786ca5ba7d1293acc4e901a0f82e1300d368b61009ef87f771f4bc99d058a')
+    version('6.1.1', sha256='4cb17f42ff10b8f5fe372956c23f1fa3ca21a8e94933a6c614894f0be33427c1')
     version('6.1.0', sha256='f76ad7f444d407dfd7e5762644eec3a719c6aeb06d877bf746fe51abd79b1a9e')
     version('6.0.0', sha256='7a733e670f01d99f8fc0da51a4337320d764c06a68746621f83ccf2e3453bcb7')
     version('5.4.4', sha256='b593dfb101e6507c467619f3d2190a9f78b09d49fe2c27799750b8c4c0cd2da0')

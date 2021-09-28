@@ -7,8 +7,15 @@
 We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
+import os
+
 import pytest
 
+from llnl.util.filesystem import working_dir
+
+import spack.package
+import spack.spec
+from spack.util.executable import which
 from spack.version import Version, VersionList, ver
 
 
@@ -373,6 +380,9 @@ def test_intersect_with_containment():
     check_intersection('1.6:1.6.5', ':1.6.5', '1.6')
     check_intersection('1.6:1.6.5', '1.6', ':1.6.5')
 
+    check_intersection('11.2', '11', '11.2')
+    check_intersection('11.2', '11.2', '11')
+
 
 def test_union_with_containment():
     check_union(':1.6', '1.6.5', ':1.6')
@@ -562,3 +572,33 @@ def test_list_highest():
     assert vl2.highest_numeric() is None
     assert vl2.preferred() == Version('develop')
     assert vl2.lowest() == Version('master')
+
+
+@pytest.mark.parametrize('version_str', [
+    "foo 1.2.0",
+    "!",
+    "1!2"
+])
+def test_invalid_versions(version_str):
+    """Ensure invalid versions are rejected with a ValueError"""
+    with pytest.raises(ValueError):
+        Version(version_str)
+
+
+def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase, 'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    for commit in commits:
+        spec = spack.spec.Spec('git-test-commit@%s' % commit)
+        version = spec.version
+        comparator = [str(v) if not isinstance(v, int) else v
+                      for v in version._cmp(version.commit_lookup)]
+
+        with working_dir(repo_path):
+            which('git')('checkout', commit)
+        with open(os.path.join(repo_path, filename), 'r') as f:
+            expected = f.read()
+
+        assert str(comparator) == expected

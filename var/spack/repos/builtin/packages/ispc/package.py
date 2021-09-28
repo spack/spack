@@ -8,8 +8,9 @@
 # glibc-devel.i686 (CentoOS) or libc6-dev-i386 and g++-multilib (Ubuntu)
 
 
-from spack import *
 import re
+
+from spack import *
 
 
 class Ispc(CMakePackage):
@@ -25,6 +26,9 @@ class Ispc(CMakePackage):
     executables = ['^ispc$']
 
     version('master', branch='master')
+    version('1.16.1', sha256='b32dbd374eea5f1b5f535bfd79c5cc35591c0df2e7bf1f86dec96b74e4ebf661')
+    version('1.16.0', sha256='12db1a90046b51752a65f50426e1d99051c6d55e30796ddd079f7bc97d5f6faf')
+    version('1.15.0', sha256='3b634aaa10c9bf0e82505d1af69cb307a3a00182d57eae019680ccfa62338af9')
     version('1.14.1', sha256='ca12f26dafbc4ef9605487d03a2156331c1351a4ffefc9bab4d896a466880794')
     version('1.14.0', sha256='1ed72542f56738c632bb02fb0dd56ad8aec3e2487839ebbc0def8334f305a4c7')
     version('1.13.0', sha256='aca595508b51dd1ff065c406a3fd7c93822320c510077dd4d97a2b98a23f097a')
@@ -34,9 +38,10 @@ class Ispc(CMakePackage):
     depends_on('flex', type='build')
     depends_on('ncurses', type='link')
     depends_on('zlib', type='link')
-    depends_on('llvm~libcxx')
-    depends_on('llvm@10:', when='@1.14:')
-    depends_on('llvm@10:10.999', when='@1.13:1.13.999')
+    depends_on('llvm+clang')
+    depends_on('llvm@11:', when='@1.16:')
+    depends_on('llvm@10:11.999', when='@1.15:1.15.999')
+    depends_on('llvm@10:10.999', when='@1.13:1.14.999')
 
     patch('don-t-assume-that-ncurses-zlib-are-system-libraries.patch',
           when='@1.14:1.14.999',

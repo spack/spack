@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os.path
+
+from spack import *
 
 
 class Glib(Package):
@@ -23,6 +23,10 @@ class Glib(Package):
 
     maintainers = ['michaelkuhn']
 
+    version('2.68.4', sha256='62fd061d08a75492617e625a73e2c05e259f831acbb8e1f8b9c81f23f7993a3b')
+    version('2.68.3', sha256='e7e1a3c20c026109c45c9ec4a31d8dcebc22e86c69486993e565817d64be3138')
+    version('2.68.2', sha256='ecc7798a9cc034eabdfd7f246e6dd461cdbf1175fcc2e9867cc7da7b7309e0fb')
+    version('2.66.8', sha256='97bc87dd91365589af5cbbfea2574833aea7a1b71840fd365ecd2852c76b9c8b')
     version('2.66.7', sha256='09f158769f6f26b31074e15b1ac80ec39b13b53102dfae66cfe826fb2cc65502')
     version('2.66.6', sha256='80fff9c63d2725834328071c42003c311f77f91caf2285195c587c62f5638329')
     version('2.66.2', sha256='ec390bed4e8dd0f89e918f385e8d4cfd7470b1ef7c1ce93ec5c4fc6e3c6a17c4')

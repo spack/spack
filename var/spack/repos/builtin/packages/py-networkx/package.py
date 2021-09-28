@@ -10,9 +10,10 @@ class PyNetworkx(PythonPackage):
     """NetworkX is a Python package for the creation, manipulation, and study
     of the structure, dynamics, and functions of complex networks."""
 
-    homepage = "http://networkx.github.io/"
+    homepage = "https://networkx.github.io/"
     pypi = "networkx/networkx-2.4.tar.gz"
 
+    version('2.5.1', sha256='109cd585cac41297f71103c3c42ac6ef7379f29788eb54cb751be5a663bb235a')
     version('2.4',  sha256='f8f4ff0b6f96e4f9b16af6b84622597b5334bf9cae8cf9b2e42e7985d5c95c64')
     version('2.3',  sha256='8311ddef63cf5c5c5e7c1d0212dd141d9a1fe3f474915281b73597ed5f1d4e3d')
     version('2.2',  sha256='45e56f7ab6fe81652fb4bc9f44faddb0e9025f469f602df14e3b2551c2ea5c8b')
@@ -23,10 +24,12 @@ class PyNetworkx(PythonPackage):
 
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('python@3.5:', type=('build', 'run'), when='@2.3:')
+    depends_on('python@3.6:', type=('build', 'run'), when='@2.5:')
     depends_on('py-setuptools', type='build')
     depends_on('py-decorator@3.4.0:', type=('build', 'run'))
     depends_on('py-decorator@4.1.0:', type=('build', 'run'), when='@2.0:')
     depends_on('py-decorator@4.3.0:', type=('build', 'run'), when='@2.2:')
+    depends_on('py-decorator@4.3.0:4.999', type=('build', 'run'), when='@2.5.1:')
 
     def url_for_version(self, version):
         ext = 'tar.gz'

@@ -18,12 +18,13 @@ class Moab(AutotoolsPackage):
 
     homepage = "https://bitbucket.org/fathomteam/moab"
     git = "https://bitbucket.org/fathomteam/moab.git"
-    url = "http://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
+    url = "https://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
 
     maintainers = ['vijaysm', 'iulian787']
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('5.3.0', sha256='51c31ccbcaa76d9658a44452b9a39f076b795b27a1c9f408fc3d0eea97e032ef')
     version('5.2.1', sha256='60d31762be3f0e5c89416c764e844ec88dac294169b59a5ead3c316b50f85c29')
     version('5.2.0', sha256='805ed3546deff39e076be4d1f68aba1cf0dda8c34ce43e1fc179d1aff57c5d5d')
     version('5.1.0', sha256='0371fc25d2594589e95700739f01614f097b6157fb6023ed8995e582726ca658')

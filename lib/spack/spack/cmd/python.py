@@ -5,12 +5,12 @@
 
 from __future__ import print_function
 
-import os
-import sys
-import code
 import argparse
+import code
+import os
 import platform
 import runpy
+import sys
 
 import llnl.util.tty as tty
 

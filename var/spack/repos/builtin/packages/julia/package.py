@@ -4,20 +4,25 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Julia(Package):
     """The Julia Language: A fresh approach to technical computing"""
 
-    homepage = "http://julialang.org"
+    homepage = "https://julialang.org"
     url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
     git      = "https://github.com/JuliaLang/julia.git"
 
     maintainers = ['glennpj']
 
     version('master', branch='master')
+    version('1.6.2', sha256='01241120515cb9435b96179cf301fbd2c24d4405f252588108d13ceac0f41c0a')
+    version('1.6.1', sha256='71d8e40611361370654e8934c407b2dec04944cf3917c5ecb6482d6b85ed767f')
+    version('1.6.0', sha256='1b05f42c9368bc2349c47363b7ddc175a2da3cd162d52b6e24c4f5d4d6e1232c')
+    version('1.5.4', sha256='dbfb8cd544b223eff70f538da7bb9d5b6f76fd0b00dd2385e6254e74ad4e892f')
     version('1.5.3', sha256='fb69337ca037576758547c7eed9ae8f153a9c052318327b6b7f1917408c14d91')
     version('1.5.2', sha256='850aed3fe39057488ec633f29af705f5ada87e3058fd65e48ad26f91b713a19a')
     version('1.5.1', sha256='1d0debfccfc7cd07047aa862dd2b1a96f7438932da1f5feff6c1033a63f9b1d4')
@@ -165,6 +170,8 @@ class Julia(Package):
                 ]
             else:
                 target_str = str(spec.target).replace('_', '-')
+                if target_str == "zen":
+                    target_str = "znver1"
                 if target_str == "zen2":
                     target_str = "znver2"
                 options += [

@@ -14,9 +14,10 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     number generators, special functions and least-squares fitting. There are
     over 1000 functions in total with an extensive test suite."""
 
-    homepage = "http://www.gnu.org/software/gsl"
+    homepage = "https://www.gnu.org/software/gsl"
     gnu_mirror_path = "gsl/gsl-2.3.tar.gz"
 
+    version('2.7', sha256='efbbf3785da0e53038be7907500628b466152dbc3c173a87de1b5eba2e23602b')
     version('2.6', sha256='b782339fc7a38fe17689cb39966c4d821236c28018b6593ddb6fd59ee40786a8')
     version('2.5', sha256='0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d')
     version('2.4',   sha256='4d46d07b946e7b31c19bbf33dda6204d7bedc2f5462a1bae1d4013426cd1ce9b')
@@ -29,9 +30,11 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     variant('external-cblas', default=False, description='Build against external blas')
 
     # from https://dev.gentoo.org/~mgorny/dist/gsl-2.3-cblas.patch.bz2
-    patch('gsl-2.3-cblas.patch', when="+external-cblas")
+    patch('gsl-2.3-cblas.patch', when="@2.3:2.5.99+external-cblas")
+    patch('gsl-2.6-cblas.patch', when="@2.6: +external-cblas")
 
-    conflicts('+external-cblas', when="@:2.2.9999")
+    conflicts('+external-cblas', when="@:2.2.99")
+
     depends_on('m4',       type='build', when='+external-cblas')
     depends_on('autoconf', type='build', when='+external-cblas')
     depends_on('automake', type='build', when='+external-cblas')

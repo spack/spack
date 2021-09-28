@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import sys
+
+from spack import *
 
 
 class Valgrind(AutotoolsPackage, SourcewarePackage):
@@ -18,11 +19,12 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
     Valgrind is Open Source / Free Software, and is freely available
     under the GNU General Public License, version 2.
     """
-    homepage = "http://valgrind.org/"
+    homepage = "https://valgrind.org/"
     sourceware_mirror_path = "valgrind/valgrind-3.13.0.tar.bz2"
     git      = "git://sourceware.org/git/valgrind.git"
 
     version('develop', branch='master')
+    version('3.17.0', sha256='ad3aec668e813e40f238995f60796d9590eee64a16dff88421430630e69285a2')
     version('3.16.1', sha256='c91f3a2f7b02db0f3bc99479861656154d241d2fdb265614ba918cc6720a33ca')
     version('3.15.0', sha256='417c7a9da8f60dd05698b3a7bc6002e4ef996f14c13f0ff96679a16873e78ab1')
     version('3.14.0', sha256='037c11bfefd477cc6e9ebe8f193bb237fe397f7ce791b4a4ce3fa1c6a520baa5')

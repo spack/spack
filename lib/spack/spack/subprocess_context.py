@@ -13,17 +13,15 @@ modifications to global state in memory that must be replicated in the
 child process.
 """
 
-from types import ModuleType
-
+import io
+import multiprocessing
 import pickle
 import pydoc
-import io
 import sys
-import multiprocessing
+from types import ModuleType
 
 import spack.architecture
 import spack.config
-
 
 _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
 
@@ -65,19 +63,25 @@ class PackageInstallContext(object):
     needs to be transmitted to a child process.
     """
     def __init__(self, pkg):
+        import spack.environment as ev  # break import cycle
         if _serialize:
             self.serialized_pkg = serialize(pkg)
+            self.serialized_env = serialize(ev._active_environment)
         else:
             self.pkg = pkg
+            self.env = ev._active_environment
         self.spack_working_dir = spack.main.spack_working_dir
         self.test_state = TestState()
 
     def restore(self):
+        import spack.environment as ev  # break import cycle
         self.test_state.restore()
         spack.main.spack_working_dir = self.spack_working_dir
         if _serialize:
+            ev._active_environment = pickle.load(self.serialized_env)
             return pickle.load(self.serialized_pkg)
         else:
+            ev._active_environment = self.env
             return self.pkg
 
 
@@ -135,16 +139,15 @@ def store_patches():
     class_patches = list()
     if not patches:
         return TestPatches(list(), list())
-    for patch in patches:
-        for target, name, _ in patches:
-            if isinstance(target, ModuleType):
-                new_val = getattr(target, name)
-                module_name = target.__name__
-                module_patches.append((module_name, name, new_val))
-            elif isinstance(target, type):
-                new_val = getattr(target, name)
-                class_fqn = '.'.join([target.__module__, target.__name__])
-                class_patches.append((class_fqn, name, new_val))
+    for target, name, _ in patches:
+        if isinstance(target, ModuleType):
+            new_val = getattr(target, name)
+            module_name = target.__name__
+            module_patches.append((module_name, name, new_val))
+        elif isinstance(target, type):
+            new_val = getattr(target, name)
+            class_fqn = '.'.join([target.__module__, target.__name__])
+            class_patches.append((class_fqn, name, new_val))
 
     return TestPatches(module_patches, class_patches)
 

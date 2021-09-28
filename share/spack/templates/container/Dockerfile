@@ -14,7 +14,10 @@ RUN mkdir {{ paths.environment }} \
 {{ manifest }} > {{ paths.environment }}/spack.yaml
 
 # Install the software, remove unnecessary deps
-RUN cd {{ paths.environment }} && spack env activate . && spack install --fail-fast && spack gc -y
+RUN {% if monitor.enabled %}--mount=type=secret,id=su --mount=type=secret,id=st {% endif %}cd {{ paths.environment }} && \
+    spack env activate . {% if monitor.enabled %}{% if not monitor.disable_auth %}&& export SPACKMON_USER=$(cat /run/secrets/su) && export SPACKMON_TOKEN=$(cat /run/secrets/st) {% endif %}{% endif %}&& \
+    spack install {% if monitor.enabled %}--monitor {% if monitor.prefix %}--monitor-prefix {{ monitor.prefix }} {% endif %}{% if monitor.tags %}--monitor-tags {{ monitor.tags }} {% endif %}{% if monitor.keep_going %}--monitor-keep-going {% endif %}{% if monitor.host %}--monitor-host {{ monitor.host }} {% endif %}{% if monitor.disable_auth %}--monitor-disable-auth {% endif %}{% endif %}--fail-fast && \
+    spack gc -y
 {% if strip %}
 
 # Strip all the binaries

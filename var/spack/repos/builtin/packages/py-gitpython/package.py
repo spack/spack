@@ -9,7 +9,7 @@ from spack import *
 class PyGitpython(PythonPackage):
     """GitPython is a python library used to interact with Git repositories."""
 
-    homepage = "http://gitpython.readthedocs.org"
+    homepage = "https://gitpython.readthedocs.org"
     pypi = "GitPython/GitPython-3.1.12.tar.gz"
 
     version('3.1.12',  sha256='42dbefd8d9e2576c496ed0059f3103dcef7125b9ce16f9d5f9c834aed44a1dac')
@@ -26,6 +26,7 @@ class PyGitpython(PythonPackage):
     version('3.1.1',  sha256='6d4f10e2aaad1864bb0f17ec06a2c2831534140e5883c350d58b4e85189dab74')
     version('3.1.0',  sha256='e426c3b587bd58c482f0b7fe6145ff4ac7ae6c82673fc656f489719abca6f4cb')
     version('3.0.9',  sha256='7e5df21bfef38505115ad92544fb379e6fedb2753f3b709174c4358cecd0cb97')
+    version('0.3.6', sha256='e6599fcb939cb9b25a015a429702db39de10f2b493655ed5669c49c37707d233')
 
     depends_on('python@3.4:',   type=('build', 'run'))
     depends_on('py-setuptools', type='build')

@@ -8,12 +8,20 @@
 # these commands in this directory to install Sphinx and its plugins,
 # then build the docs:
 #
-#     spack install
 #     spack env activate .
+#     spack install
 #     make
 #
 spack:
   specs:
-  - py-sphinx
+  # Sphinx
+  - "py-sphinx@3.4:4.1.1,4.1.3:"
   - py-sphinxcontrib-programoutput
   - py-sphinx-rtd-theme
+  # VCS
+  - git
+  - mercurial
+  - subversion
+  # Plotting
+  - graphviz
+  concretization: together

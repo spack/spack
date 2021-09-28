@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 import os
+import sys
 
 
 class Hdf(AutotoolsPackage):
@@ -163,6 +163,12 @@ class Hdf(AutotoolsPackage):
 
     extra_install_tests = 'hdf/util/testfiles'
 
+    @property
+    def cached_tests_work_dir(self):
+        """The working directory for cached test sources."""
+        return join_path(self.test_suite.current_test_cache_dir,
+                         self.extra_install_tests)
+
     @run_after('install')
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
@@ -183,8 +189,8 @@ class Hdf(AutotoolsPackage):
     def _test_gif_converters(self):
         """This test performs an image conversion sequence and diff."""
         work_dir = '.'
-        storm_fn = os.path.join(self.install_test_root,
-                                self.extra_install_tests, 'storm110.hdf')
+        storm_fn = os.path.join(self.cached_tests_work_dir, 'storm110.hdf')
+
         gif_fn = 'storm110.gif'
         new_hdf_fn = 'storm110gif.hdf'
 
@@ -203,8 +209,8 @@ class Hdf(AutotoolsPackage):
 
     def _test_list(self):
         """This test compares low-level HDF file information to expected."""
-        storm_fn = os.path.join(self.install_test_root,
-                                self.extra_install_tests, 'storm110.hdf')
+        storm_fn = os.path.join(self.cached_tests_work_dir,
+                                'storm110.hdf')
         test_data_dir = self.test_suite.current_test_data_dir
         work_dir = '.'
 

@@ -18,11 +18,23 @@ import traceback
 
 import six
 from six.moves.urllib.error import URLError
-from six.moves.urllib.request import urlopen, Request
+from six.moves.urllib.request import Request, urlopen
+
+import llnl.util.lang
+import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
+
+import spack.config
+import spack.error
+import spack.url
+import spack.util.crypto
+import spack.util.s3 as s3_util
+import spack.util.url as url_util
+from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParser, HTMLParseError  # novm
+    from HTMLParser import HTMLParseError, HTMLParser  # novm
 else:
     # In Python 3, things moved to html.parser
     from html.parser import HTMLParser
@@ -30,21 +42,6 @@ else:
     # Also, HTMLParseError is deprecated and never raised.
     class HTMLParseError(Exception):
         pass
-
-from llnl.util.filesystem import mkdirp
-import llnl.util.tty as tty
-
-import spack.cmd
-import spack.config
-import spack.error
-import spack.url
-import spack.util.crypto
-import spack.util.s3 as s3_util
-import spack.util.url as url_util
-import llnl.util.lang
-
-from spack.util.compression import ALLOWED_ARCHIVE_TYPES
-
 
 # Timeout in seconds for web requests
 _timeout = 10
@@ -106,7 +103,8 @@ def read_from_url(url, accept_content_type=None):
         else:
             # User has explicitly indicated that they do not want SSL
             # verification.
-            context = ssl._create_unverified_context()
+            if not __UNABLE_TO_VERIFY_SSL:
+                context = ssl._create_unverified_context()
 
     req = Request(url_util.format(url))
     content_type = None
@@ -211,11 +209,10 @@ def url_exists(url):
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
-        from botocore.exceptions import ClientError
         try:
-            s3.get_object(Bucket=url.netloc, Key=url.path)
+            s3.get_object(Bucket=url.netloc, Key=url.path.lstrip('/'))
             return True
-        except ClientError as err:
+        except s3.ClientError as err:
             if err.response['Error']['Code'] == 'NoSuchKey':
                 return False
             raise err
@@ -279,7 +276,7 @@ def remove_url(url, recursive=False):
                 r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
                 _debug_print_delete_results(r)
         else:
-            s3.delete_object(Bucket=bucket, Key=url.path)
+            s3.delete_object(Bucket=bucket, Key=url.path.lstrip('/'))
         return
 
     # Don't even try for other URL schemes.
@@ -369,7 +366,7 @@ def spider(root_urls, depth=0, concurrency=32):
     up to <depth> levels of links from each root.
 
     Args:
-        root_urls (str or list of str): root urls used as a starting point
+        root_urls (str or list): root urls used as a starting point
             for spidering
         depth (int): level of recursion into links
         concurrency (int): number of simultaneous requests that can be sent
@@ -510,9 +507,9 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
-    # We don't pass 'context' parameter because it was only introduced starting
+    # Note: 'context' parameter was only introduced starting
     # with versions 2.7.9 and 3.4.3 of Python.
-    if 'context' in kwargs:
+    if __UNABLE_TO_VERIFY_SSL:
         del kwargs['context']
 
     opener = urlopen
@@ -520,7 +517,13 @@ def _urlopen(req, *args, **kwargs):
         import spack.s3_handler
         opener = spack.s3_handler.open
 
-    return opener(req, *args, **kwargs)
+    try:
+        return opener(req, *args, **kwargs)
+    except TypeError as err:
+        # If the above fails because of 'context', call without 'context'.
+        if 'context' in kwargs and 'context' in str(err):
+            del kwargs['context']
+        return opener(req, *args, **kwargs)
 
 
 def find_versions_of_archive(

@@ -13,7 +13,7 @@ class GdkPixbuf(Package):
        GTK+ 2 but it was split off into a separate package in
        preparation for the change to GTK+ 3."""
 
-    homepage = "https://developer.gnome.org/gdk-pixbuf/"
+    homepage = "https://gitlab.gnome.org/GNOME/gdk-pixbuf"
     url      = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/2.40/gdk-pixbuf-2.40.0.tar.xz"
     list_url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
     list_depth = 1
@@ -25,6 +25,8 @@ class GdkPixbuf(Package):
     version('2.31.2', sha256='9e467ed09894c802499fb2399cd9a89ed21c81700ce8f27f970a833efb1e47aa', deprecated=True)
 
     variant('x11', default=False, description="Enable X11 support")
+    # Man page creation was getting docbook errors, see issue #18853
+    variant('man', default=False, description="Enable man page creation")
 
     depends_on('meson@0.55.3:', type='build', when='@2.42.2:')
     depends_on('meson@0.46.0:', type='build', when='@2.37.92:')
@@ -34,8 +36,8 @@ class GdkPixbuf(Package):
     depends_on('shared-mime-info', type='build', when='@2.36.8: platform=cray')
     depends_on('pkgconfig', type='build')
     # Building the man pages requires libxslt and the Docbook stylesheets
-    depends_on('libxslt', type='build')
-    depends_on('docbook-xsl', type='build')
+    depends_on('libxslt', type='build', when='+man')
+    depends_on('docbook-xsl@1.79.2:', type='build', when='+man')
     depends_on('gettext')
     depends_on('glib@2.38.0:')
     depends_on('jpeg')
@@ -47,7 +49,9 @@ class GdkPixbuf(Package):
 
     # Replace the docbook stylesheet URL with the one that our
     # docbook-xsl package uses/recognizes.
-    patch('docbook-cdn.patch')
+    # Pach modifies meson build files, so it only applies to versions that
+    # depend on meson.
+    patch('docbook-cdn.patch', when='@2.37.0:+man')
 
     def url_for_version(self, version):
         url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/{0}/gdk-pixbuf-{1}.tar.xz"
@@ -70,7 +74,10 @@ class GdkPixbuf(Package):
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             meson_args = std_meson_args
-            meson_args += ['-Dx11={0}'.format('+x11' in spec)]
+            meson_args += [
+                '-Dx11={0}'.format('+x11' in spec),
+                '-Dman={0}'.format('+man' in spec),
+            ]
             meson('..', *meson_args)
             ninja('-v')
             if self.run_tests:

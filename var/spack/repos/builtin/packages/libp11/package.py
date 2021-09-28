@@ -19,6 +19,7 @@ class Libp11(AutotoolsPackage):
     homepage = "https://github.com/OpenSC/libp11/wiki"
     url      = "https://github.com/OpenSC/libp11/archive/libp11-0.4.10.tar.gz"
 
+    version('0.4.11', sha256='56d6149879bda379613d89adfd3486ce5a3c20af6c1e3f9e83d15d900ab9e4bc')
     version('0.4.10', sha256='123c1525fa7ce7a34060f9a4148a30717482c517a378f428b704459820c1bf35')
     version('0.4.9',  sha256='9d1c76d74c21ca224f96204982097ebc6b956f645b2b0b5f9c502a20e9ffcfd8')
     version('0.4.8',  sha256='acccd56b736942dfcc490d102d2cb2b6afa6b2e448dd1dc5a1b773eadb98f83d')
@@ -26,7 +27,8 @@ class Libp11(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on('pkgconfig', type='build')
+    depends_on('openssl')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

@@ -10,7 +10,7 @@ class RMinqa(RPackage):
     """Derivative-free optimization by quadratic approximation based on an
     interface to Fortran implementations by M. J. D. Powell."""
 
-    homepage = "http://optimizer.r-forge.r-project.org/"
+    homepage = "https://optimizer.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/minqa_1.2.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/minqa"
 

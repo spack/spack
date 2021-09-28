@@ -14,7 +14,7 @@ class RRcppparallel(RPackage):
     serial "for" loop into a parallel one and the 'parallelReduce()' function
     can be used for accumulating aggregate or other values."""
 
-    homepage = "http://rcppcore.github.io/RcppParallel"
+    homepage = "https://rcppcore.github.io/RcppParallel"
     url      = "https://cloud.r-project.org/src/contrib/RcppParallel_4.4.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppParallel"
 

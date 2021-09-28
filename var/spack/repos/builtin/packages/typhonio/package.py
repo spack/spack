@@ -10,7 +10,7 @@ class Typhonio(CMakePackage):
     """TyphonIO is a library of routines that perform input/output (I/O)
         of scientific data within application codes"""
 
-    homepage = "http://uk-mac.github.io/typhonio/"
+    homepage = "https://uk-mac.github.io/typhonio/"
     url      = "https://github.com/UK-MAC/typhonio/archive/v1.6_CMake.tar.gz"
     git      = "https://github.com/UK-MAC/typhonio.git"
 

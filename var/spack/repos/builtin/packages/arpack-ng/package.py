@@ -63,6 +63,11 @@ class ArpackNg(Package):
     # Fujitsu compiler does not support 'isnan' function.
     # isnan: function that determines whether it is NaN.
     patch('incompatible_isnan_fix.patch', when='%fj')
+    patch('incompatible_isnan_fix.patch', when='@3.7.0%xl')
+    patch('incompatible_isnan_fix.patch', when='@3.7.0%xl_r')
+
+    patch('xlf.patch', when='@3.7.0%xl', level=0)
+    patch('xlf.patch', when='@3.7.0%xl_r', level=0)
 
     depends_on('blas')
     depends_on('lapack')
@@ -123,6 +128,9 @@ class ArpackNg(Package):
 
         if '+shared' in spec:
             options.append('-DBUILD_SHARED_LIBS=ON')
+        else:
+            options.append('-DBUILD_SHARED_LIBS=OFF')
+            options.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true')
 
         cmake('.', *options)
         make()

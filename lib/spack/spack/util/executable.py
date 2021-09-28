@@ -2,11 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
+
 import os
 import re
 import shlex
 import subprocess
+import sys
+
 from six import string_types, text_type
 
 import llnl.util.tty as tty
@@ -92,6 +94,8 @@ class Executable(object):
             ignore_errors (int or list): A list of error codes to ignore.
                 If these codes are returned, this process will not raise
                 an exception even if ``fail_on_error`` is set to ``True``
+            ignore_quotes (bool): If False, warn users that quotes are not needed
+                as Spack does not use a shell. Defaults to False.
             input: Where to read stdin from
             output: Where to send stdout
             error: Where to send stderr
@@ -121,6 +125,7 @@ class Executable(object):
         env.update(self.default_env)
 
         from spack.util.environment import EnvironmentModifications  # no cycle
+
         # Apply env argument
         if isinstance(env_arg, EnvironmentModifications):
             env_arg.apply_modifications(env)
@@ -140,6 +145,7 @@ class Executable(object):
 
         fail_on_error = kwargs.pop('fail_on_error', True)
         ignore_errors = kwargs.pop('ignore_errors', ())
+        ignore_quotes = kwargs.pop('ignore_quotes', False)
 
         # If they just want to ignore one error code, make it a tuple.
         if isinstance(ignore_errors, int):
@@ -164,22 +170,24 @@ class Executable(object):
         estream, close_estream = streamify(error,  'w')
         istream, close_istream = streamify(input,  'r')
 
-        quoted_args = [arg for arg in args if re.search(r'^"|^\'|"$|\'$', arg)]
-        if quoted_args:
-            tty.warn(
-                "Quotes in command arguments can confuse scripts like"
-                " configure.",
-                "The following arguments may cause problems when executed:",
-                str("\n".join(["    " + arg for arg in quoted_args])),
-                "Quotes aren't needed because spack doesn't use a shell.",
-                "Consider removing them")
+        if not ignore_quotes:
+            quoted_args = [arg for arg in args if re.search(r'^"|^\'|"$|\'$', arg)]
+            if quoted_args:
+                tty.warn(
+                    "Quotes in command arguments can confuse scripts like"
+                    " configure.",
+                    "The following arguments may cause problems when executed:",
+                    str("\n".join(["    " + arg for arg in quoted_args])),
+                    "Quotes aren't needed because spack doesn't use a shell. "
+                    "Consider removing them.",
+                    "If multiple levels of quotation are required, use "
+                    "`ignore_quotes=True`.")
 
         cmd = self.exe + list(args)
 
-        cmd_line = "'%s'" % "' '".join(
-            map(lambda arg: arg.replace("'", "'\"'\"'"), cmd))
-
-        tty.debug(cmd_line)
+        escaped_cmd = ["'%s'" % arg.replace("'", "'\"'\"'") for arg in cmd]
+        cmd_line_string = " ".join(escaped_cmd)
+        tty.debug(cmd_line_string)
 
         try:
             proc = subprocess.Popen(
@@ -206,7 +214,7 @@ class Executable(object):
 
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
-                long_msg = cmd_line
+                long_msg = cmd_line_string
                 if result:
                     # If the output is not captured in the result, it will have
                     # been stored either in the specified files (e.g. if
@@ -221,13 +229,13 @@ class Executable(object):
 
         except OSError as e:
             raise ProcessError(
-                '%s: %s' % (self.exe[0], e.strerror), 'Command: ' + cmd_line)
+                '%s: %s' % (self.exe[0], e.strerror), 'Command: ' + cmd_line_string)
 
         except subprocess.CalledProcessError as e:
             if fail_on_error:
                 raise ProcessError(
                     str(e), '\nExit status %d when invoking command: %s' %
-                    (proc.returncode, cmd_line))
+                    (proc.returncode, cmd_line_string))
 
         finally:
             if close_ostream:
@@ -289,7 +297,7 @@ def which(*args, **kwargs):
         *args (str): One or more executables to search for
 
     Keyword Arguments:
-        path (:func:`list` or str): The path to search. Defaults to ``PATH``
+        path (list or str): The path to search. Defaults to ``PATH``
         required (bool): If set to True, raise an error if executable not found
 
     Returns:

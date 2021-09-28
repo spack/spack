@@ -6,8 +6,8 @@
 import argparse
 
 import pytest
-import spack.cmd.info
 
+import spack.cmd.info
 from spack.main import SpackCommand
 
 info = SpackCommand('info')
@@ -48,6 +48,22 @@ def test_it_just_runs(pkg):
     info(pkg)
 
 
+@pytest.mark.parametrize('pkg_query,expected', [
+    ('zlib', 'False'),
+    ('gcc', 'True (version, variants)'),
+])
+@pytest.mark.usefixtures('mock_print')
+def test_is_externally_detectable(pkg_query, expected, parser, info_lines):
+    args = parser.parse_args([pkg_query])
+    spack.cmd.info.info(parser, args)
+
+    line_iter = info_lines.__iter__()
+    for line in line_iter:
+        if 'Externally Detectable' in line:
+            is_externally_detectable = next(line_iter).strip()
+            assert is_externally_detectable == expected
+
+
 @pytest.mark.parametrize('pkg_query', [
     'hdf5',
     'cloverleaf3d',
@@ -59,6 +75,7 @@ def test_info_fields(pkg_query, parser, info_lines):
     expected_fields = (
         'Description:',
         'Homepage:',
+        'Externally Detectable:',
         'Safe versions:',
         'Variants:',
         'Installation Phases:',

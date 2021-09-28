@@ -10,7 +10,7 @@ class Libunwind(AutotoolsPackage):
     """A portable and efficient C programming interface (API) to determine
        the call-chain of a program."""
 
-    homepage = "http://www.nongnu.org/libunwind/"
+    homepage = "https://www.nongnu.org/libunwind/"
     url      = "http://download.savannah.gnu.org/releases/libunwind/libunwind-1.1.tar.gz"
     git      = "https://github.com/libunwind/libunwind"
     maintainers = ['mwkrentel']
@@ -53,7 +53,9 @@ class Libunwind(AutotoolsPackage):
 
         if name == 'cflags':
             # https://github.com/libunwind/libunwind/pull/166
-            if self.spec.satisfies('@:1.4 %gcc@10:'):
+            if (self.spec.satisfies('@:1.4 %gcc@10:') or
+                self.spec.satisfies('@:1.4 %cce@11:') or
+                self.spec.satisfies('@:1.4 %clang@11:')):
                 wrapper_flags.append('-fcommon')
 
             if '+pic' in self.spec:

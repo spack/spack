@@ -13,7 +13,7 @@ class Randrproto(AutotoolsPackage, XorgPackage):
     screens, so as to resize, rotate and reflect the root window of a screen.
     """
 
-    homepage = "http://cgit.freedesktop.org/xorg/proto/randrproto"
+    homepage = "https://cgit.freedesktop.org/xorg/proto/randrproto"
     xorg_mirror_path = "proto/randrproto-1.5.0.tar.gz"
 
     version('1.5.0', sha256='8f8a716d6daa6ba05df97d513960d35a39e040600bf04b313633f11679006fab')

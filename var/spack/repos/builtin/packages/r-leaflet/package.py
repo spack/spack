@@ -13,7 +13,7 @@ class RLeaflet(RPackage):
     library and the 'htmlwidgets' package. These maps can be used directly from
     the R console, from 'RStudio', in Shiny apps and R Markdown documents."""
 
-    homepage = "http://rstudio.github.io/leaflet/"
+    homepage = "https://rstudio.github.io/leaflet/"
     url      = "https://cloud.r-project.org/src/contrib/leaflet_1.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/leaflet"
 

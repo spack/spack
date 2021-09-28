@@ -16,6 +16,7 @@ class Edm4hep(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version('master', branch='master')
+    version('0.3.1', sha256='eeec38fe7d72d2a72f07a63dca0a34ca7203727f67869c0abf6bef014b8b319b')
     version('0.3', sha256='d0ad8a486c3ed1659ea97d47b268fe56718fdb389b5935f23ba93804e4d5fbc5')
 
     variant('cxxstd',
@@ -38,6 +39,7 @@ class Edm4hep(CMakePackage):
         # C++ Standard
         args.append(self.define('CMAKE_CXX_STANDARD',
                     self.spec.variants['cxxstd'].value))
+        args.append(self.define("BUILD_TESTING", self.run_tests))
         return args
 
     def url_for_version(self, version):

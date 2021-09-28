@@ -171,6 +171,8 @@ class PyHorovod(PythonPackage, CudaPackage):
             env.set('HOROVOD_WITHOUT_PYTORCH', 1)
         if 'frameworks=mxnet' in self.spec:
             env.set('HOROVOD_WITH_MXNET', 1)
+            env.set('MXNET_INCLUDE_PATH', self.spec['mxnet'].prefix.include)
+            env.set('MXNET_LIBRARY_PATH', join_path(self.spec['mxnet'].libs[0]))
         else:
             env.set('HOROVOD_WITHOUT_MXNET', 1)
 

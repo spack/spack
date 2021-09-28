@@ -4,19 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
 import sys
+
+from spack import *
 
 
 class Garply(Package):
     """Toy package for testing dependencies"""
 
     homepage = "https://www.example.com"
-    url      = "https://github.com/gartung/garply/archive/v3.0.0.tar.gz"
-
-    version('3.0.0',
-            sha256='534ac8ba7a6fed7e8bbb543bd43ca04999e65337445a531bd296939f5ac2f33d')
+    has_code = False
+    version('3.0.0')
 
     def install(self, spec, prefix):
         garply_h = '''#ifndef GARPLY_H_

@@ -10,7 +10,7 @@ class PyElephant(PythonPackage):
     """Elephant is a package for analysis of electrophysiology data in Python
     """
 
-    homepage = "http://neuralensemble.org/elephant"
+    homepage = "https://neuralensemble.org/elephant"
     pypi = "elephant/elephant-0.3.0.tar.gz"
 
     version('0.4.1', sha256='86b21a44cbacdc09a6ba6f51738dcd5b42ecd553d73acb29f71a0be7c82eac81')
@@ -25,5 +25,5 @@ class PyElephant(PythonPackage):
     depends_on('py-quantities@0.10.1:', type=('build', 'run'))
     depends_on('py-scipy@0.14.0:',      type=('build', 'run'))
     depends_on('py-pandas@0.14.1:',     type=('build', 'run'), when='+pandas')
-    depends_on('py-numpydoc@0.5:',      type=('build', 'run'), when='+docs')
-    depends_on('py-sphinx@1.2.2:',      type=('build', 'run'), when='+docs')
+    depends_on('py-numpydoc@0.5:',      type=('build', 'run'), when='+doc')
+    depends_on('py-sphinx@1.2.2:',      type=('build', 'run'), when='+doc')

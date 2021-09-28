@@ -74,18 +74,18 @@ class Pagmo(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DBUILD_EXAMPLES={0}'.format(self.variant_to_bool('+examples')),
-            '-DBUILD_MAIN={0}'.format(self.variant_to_bool('+cxx')),
-            '-DBUILD_PYGMO={0}'.format(self.variant_to_bool('+python')),
-            '-DENABLE_GSL={0}'.format(self.variant_to_bool('+gsl')),
-            '-DENABLE_GTOP_DATABASE={0}'.format(self.variant_to_bool('+gtop')),
-            '-DENABLE_IPOPT={0}'.format(self.variant_to_bool('+ipopt')),
-            '-DENABLE_MPI={0}'.format(self.variant_to_bool('+mpi')),
-            '-DENABLE_NLOPT={0}'.format(self.variant_to_bool('+nlopt')),
-            '-DENABLE_SNOPT={0}'.format(self.variant_to_bool('+snopt')),
-            '-DENABLE_WORHP={0}'.format(self.variant_to_bool('+worhp')),
-            '-DINSTALL_HEADERS={0}'.format(self.variant_to_bool('+headers')),
-            '-DENABLE_TESTS={0}'.format('ON' if self.run_tests else 'OFF'),
+            self.define_from_variant('BUILD_EXAMPLES', 'examples'),
+            self.define_from_variant('BUILD_MAIN', 'cxx'),
+            self.define_from_variant('BUILD_PYGMO', 'python'),
+            self.define_from_variant('ENABLE_GSL', 'gsl'),
+            self.define_from_variant('ENABLE_GTOP_DATABASE', 'gtop'),
+            self.define_from_variant('ENABLE_IPOPT', 'ipopt'),
+            self.define_from_variant('ENABLE_MPI', 'mpi'),
+            self.define_from_variant('ENABLE_NLOPT', 'nlopt'),
+            self.define_from_variant('ENABLE_SNOPT', 'snopt'),
+            self.define_from_variant('ENABLE_WORHP', 'worhp'),
+            self.define_from_variant('INSTALL_HEADERS', 'headers'),
+            self.define('ENABLE_TESTS', self.run_tests),
         ]
 
         if '+python' in spec:

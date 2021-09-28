@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -12,8 +14,8 @@ class Postgresql(AutotoolsPackage):
     that has earned it a strong reputation for reliability, data integrity, and
     correctness."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "https://www.postgresql.org/"
+    url      = "https://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
     list_url = "http://ftp.postgresql.org/pub/source"
     list_depth = 1
 
@@ -85,7 +87,7 @@ class Postgresql(AutotoolsPackage):
         return config_args
 
     def install(self, spec, prefix):
-        if '+client-only' in self.spec:
+        if '+client_only' in self.spec:
             for subdir in ('bin', 'include', 'interfaces', 'pl'):
                 with working_dir(os.path.join('src', subdir)):
                     make('install')

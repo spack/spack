@@ -13,7 +13,7 @@ class Pngquant(AutotoolsPackage):
     """
 
     homepage = "https://pngquant.org/"
-    url      = "http://pngquant.org/pngquant-2.12.5-src.tar.gz"
+    url      = "https://pngquant.org/pngquant-2.12.5-src.tar.gz"
 
     version('2.12.5', sha256='3638936cf6270eeeaabcee42e10768d78e4dc07cac9310307835c1f58b140808')
 

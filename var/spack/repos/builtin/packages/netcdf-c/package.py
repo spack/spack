@@ -11,7 +11,7 @@ class NetcdfC(AutotoolsPackage):
     machine-independent data formats that support the creation, access, and
     sharing of array-oriented scientific data. This is the C distribution."""
 
-    homepage = "http://www.unidata.ucar.edu/software/netcdf"
+    homepage = "https://www.unidata.ucar.edu/software/netcdf"
     git      = "https://github.com/Unidata/netcdf-c.git"
     url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-c-4.7.3.tar.gz"
 
@@ -26,6 +26,7 @@ class NetcdfC(AutotoolsPackage):
     maintainers = ['skosukhin', 'WardF']
 
     version('master', branch='master')
+    version('4.8.0',   sha256='679635119a58165c79bb9736f7603e2c19792dd848f19195bf6881492246d6d5')
     version('4.7.4',   sha256='0e476f00aeed95af8771ff2727b7a15b2de353fb7bb3074a0d340b55c2bd4ea8')
     version('4.7.3',   sha256='8e8c9f4ee15531debcf83788594744bd6553b8489c06a43485a15c93b4e0448b')
     version('4.7.2',   sha256='b751cc1f314ac8357df2e0a1bacf35a624df26fe90981d3ad3fa85a5bbd8989a')
@@ -66,6 +67,7 @@ class NetcdfC(AutotoolsPackage):
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
     variant('jna', default=False, description='Enable JNA support')
+    variant('fsync', default=False, description='Enable fsync support')
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
@@ -139,9 +141,7 @@ class NetcdfC(AutotoolsPackage):
                        '--enable-largefile',
                        '--enable-netcdf-4']
 
-        # The flag was introduced in version 4.1.0
-        if self.spec.satisfies('@4.1:'):
-            config_args.append('--enable-fsync')
+        config_args.extend(self.enable_or_disable('fsync'))
 
         # The flag was introduced in version 4.3.1
         if self.spec.satisfies('@4.3.1:'):

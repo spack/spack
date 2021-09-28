@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class PyPyside(PythonPackage):
@@ -13,7 +14,7 @@ class PyPyside(PythonPackage):
 
     # More recent versions of PySide2 (for Qt5) have been taken under
     # the offical Qt umbrella.  For more information, see:
-    # http://wiki.qt.io/Qt_for_Python_Development_Getting_Started
+    # https://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
     # Version 1.2.4 claims to not work with Python 3.5, mostly
     # because it hasn't been tested.  Otherwise, it's the same as v1.2.3

@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from os import path
 import json
+from os import path
+
 from llnl.util import filesystem
+
+from spack import *
 
 
 class Hipsycl(CMakePackage):
@@ -23,6 +25,10 @@ class Hipsycl(CMakePackage):
 
     version("stable", branch="stable", submodules=True)
     version(
+        "0.9.1",
+        commit="fe8465cd5399a932f7221343c07c9942b0fe644c",
+        submodules=True)
+    version(
         "0.8.0",
         commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a",
         submodules=True,
@@ -35,7 +41,8 @@ class Hipsycl(CMakePackage):
     )
 
     depends_on("cmake@3.5:", type="build")
-    depends_on("boost +filesystem")
+    depends_on("boost +filesystem", when="@:0.8.99")
+    depends_on("boost@1.67.0:1.69.0 +filesystem +fiber +context cxxstd=17", when='@0.9.1:')
     depends_on("python@3:")
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
@@ -46,8 +53,13 @@ class Hipsycl(CMakePackage):
 
     conflicts(
         "%gcc@:4.9999",
+        when='@:0.9.0',
         msg="hipSYCL needs proper C++14 support to be built, %gcc is too old",
     )
+    conflicts(
+        "%gcc@:8.9999",
+        when='@0.9.1:',
+        msg="hipSYCL needs proper C++17 support to be built, %gcc is too old")
     conflicts(
         "^llvm build_type=Debug",
         when="+cuda",

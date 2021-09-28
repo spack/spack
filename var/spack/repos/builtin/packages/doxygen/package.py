@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import re
+
+from spack import *
 
 
 class Doxygen(CMakePackage):
@@ -63,10 +64,11 @@ class Doxygen(CMakePackage):
     depends_on("python", type='build')  # 2 or 3 OK; used in CMake build
     depends_on("iconv")
     depends_on("flex", type='build')
+    depends_on("bison", type='build')
     # code.l just checks subminor version <=2.5.4 or >=2.5.33
     # but does not recognize 2.6.x as newer...could be patched if needed
     depends_on("flex@2.5.39", type='build', when='@1.8.10')
-    depends_on("bison", type='build')
+    depends_on("bison@2.7:", type='build', when='@1.8.10:')
 
     # optional dependencies
     depends_on("graphviz", when="+graphviz", type='run')
@@ -76,6 +78,10 @@ class Doxygen(CMakePackage):
     # https://github.com/Sleepyowl/doxygen/commit/6c380ba91ae41c6d5c409a5163119318932ae2a3?diff=unified
     # Also - https://github.com/doxygen/doxygen/pull/6588
     patch('shared_ptr.patch', when='@1.8.14')
+
+    # Support C++17's nested namespaces a::b::c. For details about this patch, see
+    # https://github.com/doxygen/doxygen/pull/6977/commits/788440279e0f0fdc7dce27ec266d7d5c11bcda1c
+    patch('cpp17_namespaces.patch', when='@1.8.15')
 
     # Workaround for gcc getting stuck in an infinite loop
     patch('gcc-partial-inlining-bug.patch', when='@1.8.20: %gcc@7')

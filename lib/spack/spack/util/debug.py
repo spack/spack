@@ -9,10 +9,10 @@
 a stack trace and drops the user into an interpreter.
 
 """
-import os
 import code
-import traceback
+import os
 import signal
+import traceback
 
 
 def debug_handler(sig, frame):

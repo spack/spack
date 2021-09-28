@@ -81,9 +81,9 @@ class Sw4lite(MakefilePackage, CudaPackage):
 
     def build(self, spec, prefix):
         if '+cuda' in spec:
-            make('-f', 'Makefile.cuda')
+            make('-f', 'Makefile.cuda', *self.build_targets)
         else:
-            make('-f', 'Makefile')
+            make('-f', 'Makefile', *self.build_targets)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)

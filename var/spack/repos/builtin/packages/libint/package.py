@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from spack import *
 
+from spack import *
 
 TUNE_VARIANTS = (
     'none',
@@ -28,6 +28,8 @@ class Libint(AutotoolsPackage):
     homepage = "https://github.com/evaleev/libint"
     url = "https://github.com/evaleev/libint/archive/v2.1.0.tar.gz"
 
+    maintainers = ['dev-zero']
+
     version('2.6.0', sha256='4ae47e8f0b5632c3d2a956469a7920896708e9f0e396ec10071b8181e4c8d9fa')
     version('2.4.2', sha256='86dff38065e69a3a51d15cfdc638f766044cb87e5c6682d960c14f9847e2eac3')
     version('2.4.1', sha256='0513be124563fdbbc7cd3c7043e221df1bda236a037027ba9343429a27db8ce4')
@@ -37,11 +39,16 @@ class Libint(AutotoolsPackage):
     version('1.1.6', sha256='f201b0c621df678cfe8bdf3990796b8976ff194aba357ae398f2f29b0e2985a6')
     version('1.1.5', sha256='ec8cd4a4ba1e1a98230165210c293632372f0e573acd878ed62e5ec6f8b6174b')
 
+    variant('debug', default=False,
+            description='Enable building with debug symbols')
     variant('fortran', default=False,
             description='Build & install Fortran bindings')
     variant('tune', default='none', multi=False,
             values=TUNE_VARIANTS,
             description='Tune libint for use with the given package')
+    variant('fma', default=False,
+            description=('Generate code utilizing FMA'
+                         ' (requires capable CPU and recent enough compiler)'))
 
     # Build dependencies
     depends_on('autoconf@2.52:', type='build')
@@ -120,6 +127,9 @@ class Libint(AutotoolsPackage):
 
         if '@2.6.0:' in self.spec:
             config_args += ['--with-libint-exportdir=generated']
+            config_args += self.enable_or_disable(
+                'debug', activation_value=lambda x: 'opt')
+            config_args += self.enable_or_disable('fma')
 
             tune_value = self.spec.variants['tune'].value
             if tune_value.startswith('cp2k'):
@@ -168,30 +178,41 @@ class Libint(AutotoolsPackage):
         return []
 
     @when('@2.6.0:')
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         """
         Starting from libint 2.6.0 we're using the 2-stage build
         to get support for the Fortran bindings, required by some
         packages (CP2K notably).
         """
 
+        super(Libint, self).build(spec, prefix)
+
         # upstream says that using configure/make for the generated code
         # is deprecated and one should use CMake, but with the currently
         # recent 2.7.0.b1 it still doesn't work
         with working_dir(os.path.join(self.build_directory, 'generated')):
             # straight from the AutotoolsPackage class:
-            options = [
+            config_args = [
                 '--prefix={0}'.format(prefix),
                 '--enable-shared',
                 '--with-cxx-optflags={0}'.format(self.optflags),
             ]
-
-            if '+fortran' in spec:
-                options += ['--enable-fortran']
+            config_args += self.enable_or_disable(
+                'debug', activation_value=lambda x: 'opt')
+            config_args += self.enable_or_disable('fortran')
 
             configure = Executable('./configure')
-            configure(*options)
+            configure(*config_args)
             make()
+
+    @when('@2.6.0:')
+    def check(self):
+        with working_dir(os.path.join(self.build_directory, 'generated')):
+            make('check')
+
+    @when('@2.6.0:')
+    def install(self, spec, prefix):
+        with working_dir(os.path.join(self.build_directory, 'generated')):
             make('install')
 
     def patch(self):

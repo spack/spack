@@ -3,17 +3,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Cantera(SConsPackage):
     """Cantera is a suite of object-oriented software tools for problems
     involving chemical kinetics, thermodynamics, and/or transport processes."""
 
-    homepage = "http://www.cantera.org/docs/sphinx/html/index.html"
-    url      = "https://github.com/Cantera/cantera/archive/v2.3.0.tar.gz"
+    homepage = "https://www.cantera.org/docs/sphinx/html/index.html"
+    url      = "https://github.com/Cantera/cantera/archive/v2.5.1.tar.gz"
 
+    version('2.5.1', sha256='59f673cec686bc9b1eeccc1b1c9158a3978a3abe7491d00e8b355908c1c3be0a')
     version('2.4.0', sha256='0dc771693b657d8f4ba835dd229939e5b9cfd8348d2f5ba82775451a524365a5')
     version('2.3.0', sha256='06624f0f06bdd2acc9c0dba13443d945323ba40f68a9d422d95247c02e539b57')
     version('2.2.1', sha256='c7bca241848f541466f56e479402521c618410168e8983e2b54ae48888480e1e')
@@ -33,6 +35,7 @@ class Cantera(SConsPackage):
     depends_on('sundials@:3.1.2+lapack', when='+sundials')  # must be compiled with -fPIC
     depends_on('blas')
     depends_on('lapack')
+    depends_on('yaml-cpp')
 
     # Python module dependencies
     extends('python', when='+python')

@@ -11,7 +11,7 @@ class Bml(CMakePackage):
     formats (in dense and sparse) and their associated algorithms for basic
     matrix operations."""
 
-    homepage = "http://lanl.github.io/bml/"
+    homepage = "https://lanl.github.io/bml/"
     url      = "https://github.com/lanl/bml/tarball/v1.2.2"
     git      = "https://github.com/lanl/bml.git"
 
@@ -34,8 +34,7 @@ class Bml(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DBUILD_SHARED_LIBS={0}'.format(
-                'ON' if '+shared' in self.spec else 'OFF')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
         spec = self.spec
         if '+mpi' in spec:

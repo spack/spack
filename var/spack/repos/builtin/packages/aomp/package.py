@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import re
+
+from spack import *
 
 tools_url = 'https://github.com/ROCm-Developer-Tools'
 compute_url = 'https://github.com/RadeonOpenCompute'
@@ -119,20 +120,17 @@ class Aomp(Package):
     depends_on('libffi', type=('build', 'link'))
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
-        depends_on('hsakmt-roct@' + ver, type=('build', 'run'), when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type=('build', 'run'),
-                   when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type=('build', 'run'),
-                   when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, when='@' + ver)
 
         if ver != '3.5.0':
-            depends_on('hip@' + ver, type=('build', 'run'), when='@' + ver)
-            depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
+            depends_on('hip@' + ver, when='@' + ver)
+            depends_on('hip-rocclr@' + ver, when='@' + ver)
 
         if ver == '3.9.0' or ver == '3.10.0':
-            depends_on('rocm-gdb@' + ver, type=('build', 'run'),
-                       when='@' + ver)
+            depends_on('rocm-gdb@' + ver, when='@' + ver)
 
         resource(
             name='rocm-device-libs',

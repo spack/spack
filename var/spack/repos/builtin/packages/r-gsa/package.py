@@ -9,7 +9,7 @@ from spack import *
 class RGsa(RPackage):
     """Gene Set Analysis."""
 
-    homepage = "http://www-stat.stanford.edu/~tibs/GSA"
+    homepage = "https://www-stat.stanford.edu/~tibs/GSA"
     url      = "https://cloud.r-project.org/src/contrib/GSA_1.03.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/GSA"
 

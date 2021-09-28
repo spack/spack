@@ -11,10 +11,15 @@ class Rocfft(CMakePackage):
     """Radeon Open Compute FFT library"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-4.0.0.tar.gz"
+    git      = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-4.3.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('4.3.1', sha256='fcdc4d12b93d967b6f992b4045da98433eabf2ee0ba84fc6b6f81e380584fbc9')
+    version('4.3.0', sha256='cb5b8f62330bc61b17a3a2fd1500068ee05d48cb51797901dd259dbc84610478')
+    version('4.2.0', sha256='db29c9067f0cfa98bddd3574f6aa7200cfc790cc6da352d19e4696c3f3982163')
+    version('4.1.0', sha256='df23fcb05aae72557461ae3687be7e3b8b78be4132daf1aa9dc07339f4eba0cc')
     version('4.0.0', sha256='d1d10d270f822e0bab64307313ef163ba449b058bf3352962bbb26d4f4db89d0')
     version('3.10.0', sha256='9f57226aac7d9a0515e14a5a5b08a85e727de72b3f9c2177daf56749ac2c76ae')
     version('3.9.0', sha256='9c9c0b7f09bab17250f5101d1605e7a61218eae828a3eb8fe048d607181294ce')
@@ -34,11 +39,10 @@ class Rocfft(CMakePackage):
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0', '4.3.0', '4.3.1']:
+        depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, type=('build', 'link'), when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -58,7 +62,11 @@ class Rocfft(CMakePackage):
         # From version 3.9 and above we have AMDGPU_TARGETS_SRAM_ECC
         tgt_sram = self.spec.variants['amdgpu_target_sram_ecc'].value
 
-        if tgt_sram[0] != 'none' and '@3.9.0:' in self.spec:
+        if tgt_sram[0] != 'none' and self.spec.satisfies('@3.9.0:4.0.0'):
             args.append(self.define('AMDGPU_TARGETS_SRAM_ECC', ";".join(tgt_sram)))
+
+        # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+        if self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

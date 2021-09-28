@@ -4,22 +4,21 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import hashlib
+import inspect
 import os
 import os.path
-import inspect
 
 import llnl.util.filesystem
 import llnl.util.lang
 
+import spack
 import spack.error
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
-import spack
-
 from spack.util.compression import allowed_archive
-from spack.util.crypto import checksum, Checker
+from spack.util.crypto import Checker, checksum
 from spack.util.executable import which
 
 
@@ -29,7 +28,7 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
     Args:
         stage (spack.stage.Stage): stage with code that will be patched
         patch_path (str): filesystem location for the patch to apply
-        level (int, optional): patch level (default 1)
+        level (int or None): patch level (default 1)
         working_dir (str): relative path *within* the stage to change to
             (default '.')
     """
@@ -291,7 +290,7 @@ def from_dict(dictionary):
         if not checker.check(patch.path):
             raise fs.ChecksumError(
                 "sha256 checksum failed for %s" % patch.path,
-                "Expected %s but got %s" % (sha256, checker.sum),
+                "Expected %s but got %s " % (sha256, checker.sum) +
                 "Patch may have changed since concretization.")
         return patch
     else:

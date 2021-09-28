@@ -9,7 +9,7 @@ from spack import *
 class PyQuast(PythonPackage):
     """Quality Assessment Tool for Genome Assemblies"""
 
-    homepage = "http://cab.spbu.ru/software/quast"
+    homepage = "https://cab.spbu.ru/software/quast"
     url      = "https://github.com/ablab/quast/archive/quast_4.6.1.tar.gz"
 
     version('4.6.3', sha256='d7f5e670563d17d683f6df057086f7b816b6a088266c6270f7114a1406aaab63')

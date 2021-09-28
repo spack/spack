@@ -7,6 +7,7 @@ import re
 import sys
 
 import llnl.util.tty as tty
+
 import spack.util.executable
 
 
@@ -251,7 +252,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
                 compilers['c'] = exe
             elif 'flang' in exe:
                 variants.append('+flang')
-                compiler['fc'] = exe
+                compilers['fc'] = exe
                 compilers['f77'] = exe
             elif 'ld.lld' in exe:
                 lld_found = True

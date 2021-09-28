@@ -18,6 +18,9 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.17', sha256='df2934fa33d04fd84d839ca698280df55c690c86a5a1133b3f7266fce1de279f')
+    version('0.3.16', sha256='fa19263c5732af46d40d3adeec0b2c77951b67687e670fb6ba52ea3950460d79')
+    version('0.3.15', sha256='30a99dec977594b387a17f49904523e6bc8dd88bd247266e83485803759e4bbe')
     version('0.3.14', sha256='d381935d26f9cae8e4bbd7d7f278435adf8e3a90920edf284bb9ad789ee9ad60')
     version('0.3.13', sha256='79197543b17cc314b7e43f7a33148c308b0807cd6381ee77f77e15acf3e6459e')
     version('0.3.12', sha256='65a7d3a4010a4e3bd5c0baa41a234797cd3a1735449a4a5902129152601dc57b')
@@ -65,8 +68,8 @@ class Openblas(MakefilePackage):
     #  UPD: the patch has been merged starting version 0.2.20
     patch('openblas_icc.patch', when='@:0.2.19%intel')
     patch('openblas_icc_openmp.patch', when='@:0.2.20%intel@16.0:')
-    patch('openblas_icc_fortran.patch', when='%intel@16.0:')
-    patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
+    patch('openblas_icc_fortran.patch', when='@:0.3.14%intel@16.0:')
+    patch('openblas_icc_fortran2.patch', when='@:0.3.14%intel@18.0:')
     # See https://github.com/spack/spack/issues/15385
     patch('lapack-0.3.9-xerbl.patch', when='@0.3.8:0.3.9 %intel')
 

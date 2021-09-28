@@ -4,49 +4,52 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Superlu(Package):
+class Superlu(CMakePackage):
     """SuperLU is a general purpose library for the direct solution of large,
     sparse, nonsymmetric systems of linear equations on high performance
     machines. SuperLU is designed for sequential machines."""
 
-    homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu"
-    url      = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_5.2.1.tar.gz"
+    homepage = "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu"
+    url      = "https://github.com/xiaoyeli/superlu/archive/refs/tags/v5.2.2.tar.gz"
 
+    version('5.2.2', sha256='470334a72ba637578e34057f46948495e601a5988a602604f5576367e606a28c')
     version('5.2.1', sha256='28fb66d6107ee66248d5cf508c79de03d0621852a0ddeba7301801d3d859f463')
-    version('4.3', sha256='169920322eb9b9c6a334674231479d04df72440257c17870aaa0139d74416781')
+    version('4.3', sha256='169920322eb9b9c6a334674231479d04df72440257c17870aaa0139d74416781',
+            deprecated=True,
+            url='https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.3.tar.gz')
+    version('4.2', sha256='5a06e19bf5a597405dfeea39fe92aa8c5dd41da73c72c7187755a75f581efb28',
+            deprecated=True,
+            url='https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.2.tar.gz')
 
     variant('pic',    default=True,
             description='Build with position independent code')
 
-    depends_on('tcsh', type='build')
-    depends_on('cmake', when='@5.2.1:', type='build')
+    depends_on('cmake', when='@5:', type='build')
     depends_on('blas')
+    conflicts('@:5.2.1', when='%apple-clang@12:',
+              msg='Older SuperLU is incompatible with newer compilers')
 
     test_requires_compiler = True
 
     # CMake installation method
-    def install(self, spec, prefix):
-        cmake_args = [
-            '-Denable_blaslib=OFF',
-            '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].libs.joined()),
-            '-DCMAKE_INSTALL_LIBDIR={0}'.format(self.prefix.lib)
+    def cmake_args(self):
+        if self.version > Version('5.2.1'):
+            _blaslib_key = 'enable_internal_blaslib'
+        else:
+            _blaslib_key = 'enable_blaslib'
+        args = [
+            self.define(_blaslib_key, False),
+            self.define('CMAKE_INSTALL_LIBDIR', self.prefix.lib),
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'),
+            self.define('enable_tests', self.run_tests),
         ]
 
-        if '+pic' in spec:
-            cmake_args.extend([
-                '-DCMAKE_POSITION_INDEPENDENT_CODE=ON'
-            ])
-
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-            make()
-            make('install')
+        return args
 
     # Pre-cmake installation method
-    @when('@4.3')
-    def install(self, spec, prefix):
+    @when("@:4.999")
+    def cmake(self, spec, prefix):
+        """Use autotools before version 5"""
         config = []
 
         # Define make.inc file
@@ -105,6 +108,12 @@ class Superlu(Package):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
+        if self.version == Version('5.2.2'):
+            # Include dir was hardcoded in 5.2.2
+            filter_file(r'INCLUDEDIR  = -I\.\./SRC',
+                        'INCLUDEDIR = -I' + self.prefix.include,
+                        join_path(self.examples_src_dir, 'Makefile'))
+
         self.cache_extra_test_sources(self.examples_src_dir)
 
     def _generate_make_hdr_for_test(self):
@@ -130,7 +139,7 @@ class Superlu(Package):
         return config_args
 
     # Pre-cmake configuration
-    @when('@4.3')
+    @when('@:4.999')
     def _generate_make_hdr_for_test(self):
         config_args = []
 
@@ -164,10 +173,14 @@ class Superlu(Package):
             for option in config_args:
                 inc.write('{0}\n'.format(option))
 
+        args = []
+        if self.version < Version('5.2.2'):
+            args.append('HEADER=' + self.prefix.include)
+        args.append('superlu')
+
         test_dir = join_path(self.install_test_root, self.examples_src_dir)
         with working_dir(test_dir, create=False):
-            make('HEADER={0}'.format(self.prefix.include), 'superlu',
-                 parallel=False)
+            make(*args, parallel=False)
             self.run_test('./superlu', purpose='Smoke test for superlu',
                           work_dir='.')
             make('clean')

@@ -3,18 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import platform
 import sys
-import os
-from spack import *
+
 import llnl.util.tty as tty
+
+from spack import *
 
 
 class Namd(MakefilePackage, CudaPackage):
     """NAMDis a parallel molecular dynamics code designed for
     high-performance simulation of large biomolecular systems."""
 
-    homepage = "http://www.ks.uiuc.edu/Research/namd/"
+    homepage = "https://www.ks.uiuc.edu/Research/namd/"
     url      = "file://{0}/NAMD_2.12_Source.tar.gz".format(os.getcwd())
     git      = "https://charm.cs.illinois.edu/gerrit/namd.git"
     manual_download = True

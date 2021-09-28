@@ -9,7 +9,7 @@ from spack import *
 class PerlHttpNegotiate(PerlPackage):
     """Choose a variant to serve"""
 
-    homepage = "http://search.cpan.org/~gaas/HTTP-Negotiate-6.01/lib/HTTP/Negotiate.pm"
+    homepage = "https://metacpan.org/pod/HTTP::Negotiate"
     url      = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/HTTP-Negotiate-6.01.tar.gz"
 
     version('6.01', sha256='1c729c1ea63100e878405cda7d66f9adfd3ed4f1d6cacaca0ee9152df728e016')

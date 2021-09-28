@@ -13,10 +13,16 @@ class HsakmtRoct(CMakePackage):
        with the ROCk driver."""
 
     homepage = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface"
-    url      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-4.0.0.tar.gz"
+    git      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface.git"
+    url      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='master')
+    version('4.3.1', sha256='9d0727e746d4ae6e2709e3534d91046640be511a71c027f47db25e529fe3b4d4')
+    version('4.3.0', sha256='1ef5fe687bc23ffda17841fe354c1fb94e9aaf276ca9e5757488852f9066f231')
+    version('4.2.0', sha256='cc325d4b9a96062f2ad0515fce724a8c64ba56a7d7f1ac4a0753941b8599c52e')
+    version('4.1.0', sha256='8443ed5907a7ba9ad4003a49d90ff7b8886e1b2a5e90f14e4035765a7f64d7ca')
     version('4.0.0', sha256='a6960fffc8388731ee18953faae12d1449c582e3b3594418845a544455895f42')
     version('3.10.0', sha256='a3d629247a763cc36f5d48e9122cee8498574af628e14e3c38686c05f66e3e06')
     version('3.9.0', sha256='e1bb8b010855736d8a97957222f648532d42646ec2964776a9a1455dc81104a3')
@@ -25,6 +31,7 @@ class HsakmtRoct(CMakePackage):
     version('3.5.0', sha256='d9f458c16cb62c3c611328fd2f2ba3615da81e45f3b526e45ff43ab4a67ee4aa')
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('shared', default=True, description='Build shared or static library')
 
     depends_on('cmake@3:', type='build')
     depends_on('numactl')
@@ -37,7 +44,6 @@ class HsakmtRoct(CMakePackage):
             return ['install']
 
     def cmake_args(self):
-        args = [
-            '-DBUILD_SHARED_LIBS="on"',
+        return [
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
-        return args

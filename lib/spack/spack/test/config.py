@@ -3,29 +3,28 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import collections
 import getpass
+import os
 import tempfile
-from six import StringIO
-
-from llnl.util.filesystem import touch, mkdirp
 
 import pytest
+from six import StringIO
 
-import spack.paths
+from llnl.util.filesystem import mkdirp, touch
+
 import spack.config
+import spack.environment as ev
 import spack.main
-import spack.environment
+import spack.paths
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
-import spack.schema.packages
 import spack.schema.mirrors
+import spack.schema.packages
 import spack.schema.repos
-import spack.util.spack_yaml as syaml
 import spack.util.path as spack_path
-
+import spack.util.spack_yaml as syaml
 
 # sample config data
 config_low = {
@@ -71,6 +70,25 @@ def write_config_file(tmpdir):
         with config_yaml.open('w') as f:
             syaml.dump_config(data, f)
     return _write
+
+
+@pytest.fixture()
+def env_yaml(tmpdir):
+    """Return a sample env.yaml for test purposes"""
+    env_yaml = str(tmpdir.join("env.yaml"))
+    with open(env_yaml, 'w') as f:
+        f.write("""\
+env:
+    config:
+        verify_ssl: False
+        dirty: False
+    packages:
+        libelf:
+            compiler: [ 'gcc@4.5.3' ]
+    repos:
+        - /x/y/z
+""")
+    return env_yaml
 
 
 def check_compiler_config(comps, *compiler_names):
@@ -342,8 +360,8 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
 
     # Fake an active environment and $env is replaced properly
     fake_env_path = '/quux/quuux'
-    monkeypatch.setattr(spack.environment, 'get_env',
-                        lambda x, y: MockEnv(fake_env_path))
+    monkeypatch.setattr(ev, 'active_environment',
+                        lambda: MockEnv(fake_env_path))
     assert spack_path.canonicalize_path(
         '$env/foo/bar/baz'
     ) == os.path.join(fake_env_path, 'foo/bar/baz')
@@ -355,9 +373,9 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
 
     # relative paths with source information are relative to the file
     spack.config.set(
-        'config:module_roots', {'lmod': 'foo/bar/baz'}, scope='low')
+        'modules:default', {'roots': {'lmod': 'foo/bar/baz'}}, scope='low')
     spack.config.config.clear_caches()
-    path = spack.config.get('config:module_roots:lmod')
+    path = spack.config.get('modules:default:roots:lmod')
     assert spack_path.canonicalize_path(path) == os.path.normpath(
         os.path.join(mock_low_high_config.scopes['low'].path,
                      'foo/bar/baz'))
@@ -487,6 +505,20 @@ def test_read_config_override_all(mock_low_high_config, write_config_file):
             'root': 'override_all'
         }
     }
+
+
+@pytest.mark.regression('23663')
+def test_read_with_default(mock_low_high_config):
+    # this very synthetic example ensures that config.get(path, default)
+    # returns default if any element of path doesn't exist, regardless
+    # of the type of default.
+    spack.config.set('modules', {'enable': []})
+
+    default_conf = spack.config.get('modules:default', 'default')
+    assert default_conf == 'default'
+
+    default_enable = spack.config.get('modules:default:enable', [])
+    assert default_enable == []
 
 
 def test_read_config_override_key(mock_low_high_config, write_config_file):
@@ -861,23 +893,10 @@ config:
         scope._write_section('config')
 
 
-def test_single_file_scope(tmpdir, config):
-    env_yaml = str(tmpdir.join("env.yaml"))
-    with open(env_yaml, 'w') as f:
-        f.write("""\
-env:
-    config:
-        verify_ssl: False
-        dirty: False
-    packages:
-        libelf:
-            compiler: [ 'gcc@4.5.3' ]
-    repos:
-        - /x/y/z
-""")
-
+def test_single_file_scope(config, env_yaml):
     scope = spack.config.SingleFileScope(
-        'env', env_yaml, spack.schema.env.schema, ['env'])
+        'env', env_yaml, spack.schema.env.schema, ['env']
+    )
 
     with spack.config.override(scope):
         # from the single-file config
@@ -981,8 +1000,9 @@ def test_bad_config_yaml(tmpdir):
         check_schema(spack.schema.config.schema, """\
 config:
     verify_ssl: False
-    module_roots:
-        fmod: /some/fake/location
+    install_tree:
+      root:
+        extra_level: foo
 """)
 
 
@@ -1109,3 +1129,41 @@ def test_bad_path_double_override(config):
                        match='Meaningless second override'):
         with spack.config.override('bad::double:override::directive', ''):
             pass
+
+
+@pytest.mark.regression('22547')
+def test_single_file_scope_cache_clearing(env_yaml):
+    scope = spack.config.SingleFileScope(
+        'env', env_yaml, spack.schema.env.schema, ['env']
+    )
+    # Check that we can retrieve data from the single file scope
+    before = scope.get_section('config')
+    assert before
+    # Clear the cache of the Single file scope
+    scope.clear()
+    # Check that the section can be retireved again and it's
+    # the same as before
+    after = scope.get_section('config')
+    assert after
+    assert before == after
+
+
+@pytest.mark.regression('22611')
+def test_internal_config_scope_cache_clearing():
+    """
+    An InternalConfigScope object is constructed from data that is already
+    in memory, therefore it doesn't have any cache to clear. Here we ensure
+    that calling the clear method is consistent with that..
+    """
+    data = {
+        'config': {
+            'build_jobs': 10
+        }
+    }
+    internal_scope = spack.config.InternalConfigScope('internal', data)
+    # Ensure that the initial object is properly set
+    assert internal_scope.sections['config'] == data
+    # Call the clear method
+    internal_scope.clear()
+    # Check that this didn't affect the scope object
+    assert internal_scope.sections['config'] == data

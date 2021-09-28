@@ -14,6 +14,7 @@ class Fmt(CMakePackage):
     homepage = "https://fmt.dev/"
     url      = "https://github.com/fmtlib/fmt/releases/download/7.1.3/fmt-7.1.3.zip"
 
+    version('8.0.1', sha256='a627a56eab9554fc1e5dd9a623d0768583b3a383ff70a4312ba68f94c9d415bf')
     version('7.1.3', sha256='5d98c504d0205f912e22449ecdea776b78ce0bb096927334f80781e720084c9f')
     version('7.1.2', sha256='4d6968ab7c01e95cc76df136755703defb985105a117b83057e4fd5d53680ea7')
     version('7.1.0', sha256='308af4e36ee3ab527b51014a2a5d862682c84f5d16f7a597aea34c84853cbcb0')
@@ -34,7 +35,8 @@ class Fmt(CMakePackage):
             values=('98', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building')
-    variant('pic', default=True, description='Enable generation of position-independent code')
+    variant('shared', default=False, description='Build shared library')
+    variant('pic', default=True, description='Build position-independent code')
 
     depends_on('cmake@3.1.0:', type='build')
 
@@ -61,6 +63,9 @@ class Fmt(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
+
+        if self.spec.satisfies('+shared'):
+            args.append('-DBUILD_SHARED_LIBS=ON')
 
         if '+pic' in spec:
             args.extend([

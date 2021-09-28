@@ -4,10 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from os import path
+import glob
+import platform
 import subprocess
-from sys import platform
-
 
 from spack import *
 
@@ -15,17 +14,28 @@ from spack import *
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
     """Intel oneAPI MPI."""
 
-    maintainers = ['rscohn2']
+    maintainers = ['rscohn2', ]
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
-    if platform == 'linux':
+    if platform.system() == 'Linux':
+        version('2021.3.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17947/l_mpi_oneapi_p_2021.3.0.294_offline.sh',
+                sha256='04c48f864ee4c723b1b4ca62f2bea8c04d5d7e3de19171fd62b17868bc79bc36',
+                expand=False)
+        version('2021.2.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17729/l_mpi_oneapi_p_2021.2.0.215_offline.sh',
+                sha256='d0d4cdd11edaff2e7285e38f537defccff38e37a3067c02f4af43a3629ad4aa3',
+                expand=False)
         version('2021.1.1',
-                sha256='8b7693a156c6fc6269637bef586a8fd3ea6610cac2aae4e7f48c1fbb601625fe',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17397/l_mpi_oneapi_p_2021.1.1.76_offline.sh',
+                sha256='8b7693a156c6fc6269637bef586a8fd3ea6610cac2aae4e7f48c1fbb601625fe',
                 expand=False)
 
-    provides('mpi@:3')
+    variant('ilp64', default=False,
+            description='Build with ILP64 support')
+
+    provides('mpi@:3.1')
 
     depends_on('patchelf', type='build')
 
@@ -34,7 +44,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         return 'mpi'
 
     def setup_dependent_package(self, module, dep_spec):
-        dir = join_path(self.prefix, 'mpi', 'latest', 'bin')
+        dir = join_path(self.component_path, 'bin')
         self.spec.mpicc  = join_path(dir, 'mpicc')
         self.spec.mpicxx = join_path(dir, 'mpicxx')
         self.spec.mpif77 = join_path(dir, 'mpif77')
@@ -47,25 +57,51 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set('MPICH_F90', spack_fc)
         env.set('MPICH_FC', spack_fc)
 
+        # Set compiler wrappers for dependent build stage
+        dir = join_path(self.component_path, 'bin')
+        env.set('MPICC', join_path(dir, 'mpicc'))
+        env.set('MPICXX', join_path(dir, 'mpicxx'))
+        env.set('MPIF77', join_path(dir, 'mpif77'))
+        env.set('MPIF90', join_path(dir, 'mpif90'))
+        env.set('MPIFC', join_path(dir, 'mpifc'))
+
+    @property
+    def headers(self):
+        include_path = join_path(self.component_path, 'include')
+        headers = find_headers('*', include_path)
+        if '+ilp64' in self.spec:
+            headers += find_headers('*', join_path(include_path, 'ilp64'))
+        return headers
+
     @property
     def libs(self):
+        lib_dir = join_path(self.component_path, 'lib')
+        release_lib_dir = join_path(lib_dir, 'release')
         libs = []
-        for dir in [path.join('lib', 'release_mt'),
-                    'lib',
-                    path.join('libfabric', 'lib')]:
-            lib_path = path.join(self.prefix, 'mpi', 'latest', dir)
-            ldir = find_libraries('*', root=lib_path, shared=True, recursive=False)
-            libs += ldir
+        if '+ilp64' in self.spec:
+            libs += find_libraries('libmpi_ilp64', release_lib_dir)
+        libs += find_libraries(['libmpicxx', 'libmpifort'], lib_dir)
+        libs += find_libraries('libmpi', release_lib_dir)
+        libs += find_system_libraries(['libdl', 'librt', 'libpthread'])
         return libs
-
-    def _join_prefix(self, path):
-        return join_path(self.prefix, 'mpi', 'latest', path)
 
     def install(self, spec, prefix):
         super(IntelOneapiMpi, self).install(spec, prefix)
 
-        # need to patch libmpi.so so it can always find libfabric
-        libfabric_rpath = self._join_prefix(path.join('libfabric', 'lib'))
-        for lib_version in ['debug', 'release', 'release_mt', 'debug_mt']:
-            file = self._join_prefix(path.join('lib', lib_version, 'libmpi.so'))
-            subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, file])
+        # Patch libmpi.so rpath so it can find libfabric
+        libfabric_rpath = join_path(self.component_path, 'libfabric', 'lib')
+        for libmpi in glob.glob(join_path(self.component_path,
+                                          'lib', '**', 'libmpi*.so')):
+            subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, libmpi])
+
+        # When spack builds from source
+        # fix I_MPI_SUBSTITUTE_INSTALLDIR and
+        #   __EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
+        scripts = ["mpif77", "mpif90", "mpigcc", "mpigxx", "mpiicc", "mpiicpc",
+                   "mpiifort"]
+        for script in scripts:
+            file = join_path(self.component_path, 'bin', script)
+            filter_file('I_MPI_SUBSTITUTE_INSTALLDIR',
+                        self.component_path, file, backup=False)
+            filter_file('__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__',
+                        self.component_path, file, backup=False)
