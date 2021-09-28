@@ -9,9 +9,7 @@ class Hdf5VolAsync(CMakePackage):
     """This package enables asynchronous IO in HDF5."""
 
     homepage = "https://sdm.lbl.gov/"
-    # hpc-io hasn't accepted the pull request for CMakeLists.txt yet.
-    # git      = "https://github.com/hpc-io/vol-async"
-    git      = "https://github.com/hyoklee/vol-async"
+    git      = "https://github.com/hpc-io/vol-async"
     maintainers = ['hyoklee']
 
     version('develop', branch='develop')
