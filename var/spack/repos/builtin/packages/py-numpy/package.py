@@ -3,8 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import platform
 import subprocess
+
+import llnl.util.filesystem as fsys
 
 from spack import *
 
@@ -352,3 +355,36 @@ class PyNumpy(PythonPackage):
     def install_test(self):
         with working_dir('spack-test', create=True):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')
+
+    def run_numpy_tests(self):
+        root = join_path(self.prefix, site_packages_dir, 'numpy', 'tests')
+        if not os.path.isdir(root):
+            print('Skipping site package tests: {0} not found'.format(root))
+            return
+
+        # Copy the numpy/tests over
+        test_dir = join_path(self.test_suite.current_test_cache_dir, 'tests')
+        fsys.mkdirp(test_dir)
+        fsys.copy(join_path(root, '*.py'), test_dir)
+
+        #  Run the tests
+        #  TODO: Should be running through pytest BUT must be able to set
+        #     up the test dependency first
+        #s elf.run_test(join_path(self.spec['py-pytest'].prefix.bin, 'pytest'),
+        #               [test_dir],
+        #               purpose='test: running pytests',
+        #               work_dir=test_dir)
+
+        # TODO: Replace with pytest run once test dependencies made available
+        for name in os.listdir(test_dir):
+            if name == '__init__.py':
+                continue
+
+            self.run_test(self.spec['python'].command.path,
+                          [name],
+                          purpose='test: running pytests',
+                          work_dir=test_dir)
+
+    def test(self):
+        super(PyNumpy, self).test()
+        self.run_numpy_tests()
