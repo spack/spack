@@ -11,13 +11,9 @@ class Hdf5VolAsync(CMakePackage):
 
     homepage = "https://sdm.lbl.gov/"
     git      = "https://github.com/hpc-io/vol-async"
-    #git      = "https://github.com/hyoklee/vol-async"
     maintainers = ['hyoklee']
 
     version('develop', branch='develop')
-    version('hyoklee.develop',
-        branch='develop',
-        git='https://github.com/hyoklee/vol-async', preferred=True)
 
     depends_on('argobots@main')
     depends_on('hdf5@develop-1.13+mpi+threadsafe')
