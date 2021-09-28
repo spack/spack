@@ -16,6 +16,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.config
 import spack.hooks.sbang as sbang
 import spack.paths
 import spack.store
@@ -225,3 +226,15 @@ def test_install_sbang(install_mockery):
     # install again and make sure sbang is still fine
     sbang.install_sbang()
     check_sbang_installation()
+
+def test_install_sbang_too_long(tmpdir):
+    root = str(tmpdir)
+    long_path = os.path.join(tmpdir, 'e' * (sbang.shebang_limit - len(root)))
+    with spack.store.use_store(spack.store.Store(long_path)):
+        with pytest.raises(sbang.SbangPathError) as exc_info:
+            sbang.sbang_install_path()
+
+    err = str(exc_info.value)
+    assert 'root is too long' in err
+    assert 'exceeds limit' in err
+    assert 'cannot patch' in err
