@@ -5,6 +5,7 @@
 
 
 import glob
+import os
 import platform
 import subprocess
 
@@ -77,22 +78,20 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     def libs(self):
         lib_dir = join_path(self.component_path, 'lib')
         release_lib_dir = join_path(lib_dir, 'release')
+        libfabric_lib_dir = join_path(self.component_path, 'libfabric', 'lib')
         libs = []
         if '+ilp64' in self.spec:
             libs += find_libraries('libmpi_ilp64', release_lib_dir)
         libs += find_libraries(['libmpicxx', 'libmpifort'], lib_dir)
         libs += find_libraries('libmpi', release_lib_dir)
+        # Add internal libfabric only if I_MPI_OFI_LIBRARY_INTERNAL != 0
+        if os.environ['I_MPI_OFI_LIBRARY_INTERNAL'] is not in ["0", "no", "off", "disable"]:
+            libs += find_libraries('libfabric', libfabric_lib_dir)
         libs += find_system_libraries(['libdl', 'librt', 'libpthread'])
         return libs
 
     def install(self, spec, prefix):
         super(IntelOneapiMpi, self).install(spec, prefix)
-
-        # Patch libmpi.so rpath so it can find libfabric
-        libfabric_rpath = join_path(self.component_path, 'libfabric', 'lib')
-        for libmpi in glob.glob(join_path(self.component_path,
-                                          'lib', '**', 'libmpi*.so')):
-            subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, libmpi])
 
         # When spack builds from source
         # fix I_MPI_SUBSTITUTE_INSTALLDIR and
