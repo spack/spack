@@ -17,6 +17,11 @@ from spack.util.prefix import Prefix
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '11.0.12_7': {
+        'Linux-x86_64': ('8770f600fc3b89bf331213c7aa21f8eedd9ca5d96036d1cd48cb2748a3dbefd2', 'https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.12_7.tar.gz'),
+        'Linux-aarch64': ('105bdc12fcd54c551e8e8ac96bc82412467244c32063689c41cee29ceb7452a2', 'https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.12_7.tar.gz'),
+        'Linux-ppc64le': ('234a9bafe029ea6cab5d46f9617b5d016a29faa187a42081d0e066f23647b7e5', 'https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.12_7.tar.gz')
+    },
     '11.0.9.1_1': {
         'Linux-ppc64le': ('d94b6b46a14ab0974b1c1b89661741126d8cf8a0068b471b8f5fa286a71636b1', 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.9.1%2B1/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.9.1_1.tar.gz')},
     '11.0.8_10': {
