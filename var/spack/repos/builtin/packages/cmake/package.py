@@ -249,7 +249,6 @@ class Cmake(Package):
     def setup_build_environment(self, env):
         spec = self.spec
         if '+openssl' in spec:
-            print(spec['openssl'].prefix)
             env.set('OPENSSL_ROOT_DIR', spec['openssl'].prefix)
 
     def bootstrap_args(self):
