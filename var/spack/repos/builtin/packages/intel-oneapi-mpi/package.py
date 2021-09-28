@@ -89,7 +89,11 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         libs += find_libraries(['libmpicxx', 'libmpifort'], lib_dir)
         libs += find_libraries('libmpi', release_lib_dir)
         # Add internal libfabric only if I_MPI_OFI_LIBRARY_INTERNAL != 0
-        if os.environ['I_MPI_OFI_LIBRARY_INTERNAL'] not in ["0", "no", "off", "disable"]:
+        try:
+            i_mpi_ofi_library_internal = os.environ['I_MPI_OFI_LIBRARY_INTERNAL']
+        except KeyError:
+            i_mpi_ofi_library_internal = 1
+        if i_mpi_ofi_library_internal not in ["0", "no", "off", "disable"]:
             libs += find_libraries('libfabric', libfabric_lib_dir)
         libs += find_system_libraries(['libdl', 'librt', 'libpthread'])
         return libs
