@@ -13,6 +13,7 @@ class NlohmannJson(CMakePackage):
     url      = "https://github.com/nlohmann/json/archive/v3.1.2.tar.gz"
     maintainers = ['ax3l']
 
+    version('3.10.2', sha256='081ed0f9f89805c2d96335c3acfa993b39a0a5b4b4cef7edb68dd2210a13458c')
     version('3.10.0', sha256='eb8b07806efa5f95b349766ccc7a8ec2348f3b2ee9975ad879259a371aea8084')
     version('3.9.1',  sha256='4cf0df69731494668bdd6460ed8cb269b68de9c19ad8c27abc24cd72605b2d5b')
     version('3.9.0',  sha256='9943db11eeaa5b23e58a88fbc26c453faccef7b546e55063ad00e7caaaf76d0b')
@@ -45,3 +46,10 @@ class NlohmannJson(CMakePackage):
             self.define_from_variant('JSON_MultipleHeaders', 'multiple_headers'),
             self.define('JSON_BuildTests', self.run_tests),
         ]
+
+    @when('@3.1.1:')
+    def check(self):
+        # cmake_fetch_content_configure relies on git to fetch a file, fails from tar:
+        # https://github.com/nlohmann/json/discussions/2596
+        with working_dir(self.build_directory):
+            ctest('--output-on-failure', '-LE', 'not_reproducible|git_required')
