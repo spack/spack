@@ -24,7 +24,7 @@ from spack.util.prefix import Prefix
 
 arch_map = {"AMD64":"x64", "x86": "Win32",
                     "IA64": "Win32", "EM64T": "Win32"}
-
+is_windows = os.name == 'nt'
 
 class Python(Package):
     """The Python programming language."""
@@ -40,142 +40,79 @@ class Python(Package):
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.install`
     #: phase
     install_targets = ['install']
-    if os.name == 'nt':
-        git = "https://github.com/python/cpython.git"
-        version('3.9.6',  tag='v3.9.6')
-        version('3.9.5',  tag='v3.9.5')
-        version('3.9.4',  tag='v3.9.4')
-        version('3.9.2',  tag='v3.9.2')
-        version('3.9.1',  tag='v3.9.1')
-        version('3.9.0',  tag='v3.9.0')
-        version('3.8.11', tag='v3.8.11')
-        version('3.8.10', tag='v3.8.10')
-        version('3.8.9',  tag='v3.8.9')
-        version('3.8.8',  tag='v3.8.8')
-        version('3.8.7',  tag='v3.8.7')
-        version('3.8.6',  tag='v3.8.6')
-        version('3.8.5',  tag='v3.8.5')
-        version('3.8.4',  tag='v3.8.4')
-        version('3.8.3',  tag='v3.8.3')
-        version('3.8.2',  tag='v3.8.2')
-        version('3.8.1',  tag='v3.8.1')
-        version('3.8.0',  tag='v3.8.0')
-        version('3.7.11', tag='v3.7.11')
-        version('3.7.10', tag='v3.7.10')
-        version('3.7.9',  tag='v3.7.9')
-        version('3.7.8',  tag='v3.7.8')
-        version('3.7.7',  tag='v3.7.7')
-        version('3.7.6',  tag='v3.7.6')
-        version('3.7.5',  tag='v3.7.5')
-        version('3.7.4',  tag='v3.7.4')
-        version('3.7.3',  tag='v3.7.3')
-        version('3.7.2',  tag='v3.7.2')
-        version('3.7.1',  tag='v3.7.1')
-        version('3.7.0',  tag='v3.7.0')
-        version('3.6.14', tag='v3.6.14')
-        version('3.6.13', tag='v3.6.13')
-        version('3.6.12', tag='v3.6.12')
-        version('3.6.11', tag='v3.6.11')
-        version('3.6.10', tag='v3.6.10')
-        version('3.6.9',  tag='v3.6.9')
-        version('3.6.8',  tag='v3.6.8')
-        version('3.6.7',  tag='v3.6.7')
-        version('3.6.6',  tag='v3.6.6')
-        version('3.6.5',  tag='v3.6.5')
-        version('3.6.4',  tag='v3.6.4')
-        version('3.6.3',  tag='v3.6.3')
-        version('3.6.2',  tag='v3.6.2')
-        version('3.6.1',  tag='v3.6.1')
-        version('3.6.0',  tag='v3.6.0')
-        version('3.5.10', tag='v3.5.10')
-        version('3.5.9',  tag='v3.5.9')
-        version('3.5.8',  tag='v3.5.8')
-        version('3.5.7',  tag='v3.5.7')
-        version('3.5.6',  tag='v3.5.6')
-        version('3.5.5',  tag='v3.5.5')
-        version('3.5.4',  tag='v3.5.4')
-        version('3.5.3',  tag='v3.5.3')
-        version('3.5.2',  tag='v3.5.2')
-        version('3.5.1',  tag='v3.5.1')
-        version('3.5.0',  tag='v3.5.0')
-        version('3.4.10', tag='v3.4.10')
-        version('3.4.3',  tag='v3.4.3')
-        version('3.3.6',  tag='v3.3.6')
-        version('3.2.6',  tag='v3.2.6')
-        version('3.1.5',  tag='v3.1.5')
-    else:
-        version('3.9.6',  sha256='d0a35182e19e416fc8eae25a3dcd4d02d4997333e4ad1f2eee6010aadc3fe866')
-        version('3.9.5',  sha256='e0fbd5b6e1ee242524430dee3c91baf4cbbaba4a72dd1674b90fda87b713c7ab')
-        version('3.9.4',  sha256='66c4de16daa74a825cf9da9ddae1fe020b72c3854b73b1762011cc33f9e4592f')
-        version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
-        version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
-        version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
-        version('3.8.11', sha256='b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393', preferred=True)
-        version('3.8.10', sha256='b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65')
-        version('3.8.9',  sha256='9779ec1df000bf86914cdd40860b88da56c1e61db59d37784beca14a259ac9e9')
-        version('3.8.8',  sha256='76c0763f048e4f9b861d24da76b7dd5c7a3ba7ec086f40caedeea359263276f7')
-        version('3.8.7',  sha256='20e5a04262f0af2eb9c19240d7ec368f385788bba2d8dfba7e74b20bab4d2bac')
-        version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21')
-        version('3.8.5',  sha256='015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49')
-        version('3.8.4',  sha256='32c4d9817ef11793da4d0d95b3191c4db81d2e45544614e8449255ca9ae3cc18')
-        version('3.8.3',  sha256='6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90')
-        version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
-        version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
-        version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
-        version('3.7.11', sha256='b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a')
-        version('3.7.10', sha256='c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975')
-        version('3.7.9',  sha256='39b018bc7d8a165e59aa827d9ae45c45901739b0bbb13721e4f973f3521c166a')
-        version('3.7.8',  sha256='0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0')
-        version('3.7.7',  sha256='8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a')
-        version('3.7.6',  sha256='aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114')
-        version('3.7.5',  sha256='8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da')
-        version('3.7.4',  sha256='d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3')
-        version('3.7.3',  sha256='d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff')
-        version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
-        version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
-        version('3.7.0',  sha256='85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d')
-        version('3.6.14', sha256='70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5')
-        version('3.6.13', sha256='614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669')
-        version('3.6.12', sha256='12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693')
-        version('3.6.11', sha256='96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c')
-        version('3.6.10', sha256='7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d')
-        version('3.6.9',  sha256='47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa')
-        version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0')
-        version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239')
-        version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58')
-        version('3.6.5',  sha256='53a3e17d77cd15c5230192b6a8c1e031c07cd9f34a2f089a731c6f6bd343d5c6')
-        version('3.6.4',  sha256='7dc453e1a93c083388eb1a23a256862407f8234a96dc4fae0fc7682020227486')
-        version('3.6.3',  sha256='ab6193af1921b30f587b302fe385268510e80187ca83ca82d2bfe7ab544c6f91')
-        version('3.6.2',  sha256='7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82')
-        version('3.6.1',  sha256='aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828')
-        version('3.6.0',  sha256='aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b')
-        version('3.5.10', sha256='3496a0daf51913718a6f10e3eda51fa43634cb6151cb096f312d48bdbeff7d3a')
-        version('3.5.9',  sha256='67a1d4fc6e4540d6a092cadc488e533afa961b3c9becc74dc3d6b55cb56e0cc1')
-        version('3.5.8',  sha256='18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a')
-        version('3.5.7',  sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b')
-        version('3.5.6',  sha256='30d2ff093988e74283e1abfee823292c6b59590796b9827e95ba4940b27d26f8')
-        version('3.5.5',  sha256='2f988db33913dcef17552fd1447b41afb89dbc26e3cdfc068ea6c62013a3a2a5')
-        version('3.5.4',  sha256='6ed87a8b6c758cc3299a8b433e8a9a9122054ad5bc8aad43299cff3a53d8ca44')
-        version('3.5.3',  sha256='d8890b84d773cd7059e597dbefa510340de8336ec9b9e9032bf030f19291565a')
-        version('3.5.2',  sha256='1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0')
-        version('3.5.1',  sha256='687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7')
-        version('3.5.0',  sha256='584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0')
-        version('3.4.10', sha256='217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d')
-        version('3.4.3',  sha256='8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147')
-        version('3.3.6',  sha256='0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034')
-        version('3.2.6',  sha256='fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e')
-        version('3.1.5',  sha256='d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103')
-        version('2.7.18', sha256='da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814')
-        version('2.7.17', sha256='f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde')
-        version('2.7.16', sha256='01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5')
-        version('2.7.15', sha256='18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db')
-        version('2.7.14', sha256='304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8')
-        version('2.7.13', sha256='a4f05a0720ce0fd92626f0278b6b433eee9a6173ddf2bced7957dfb599a5ece1')
-        version('2.7.12', sha256='3cb522d17463dfa69a155ab18cffa399b358c966c0363d6c8b5b3bf1384da4b6')
-        version('2.7.11', sha256='82929b96fd6afc8da838b149107078c02fa1744b7e60999a8babbc0d3fa86fc6')
-        version('2.7.10', sha256='eda8ce6eec03e74991abb5384170e7c65fcd7522e409b8e83d7e6372add0f12a')
-        version('2.7.9',  sha256='c8bba33e66ac3201dabdc556f0ea7cfe6ac11946ec32d357c4c6f9b018c12c5b')
-        version('2.7.8',  sha256='74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557')
+
+    version('3.9.6',  sha256='d0a35182e19e416fc8eae25a3dcd4d02d4997333e4ad1f2eee6010aadc3fe866')
+    version('3.9.5',  sha256='e0fbd5b6e1ee242524430dee3c91baf4cbbaba4a72dd1674b90fda87b713c7ab')
+    version('3.9.4',  sha256='66c4de16daa74a825cf9da9ddae1fe020b72c3854b73b1762011cc33f9e4592f')
+    version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
+    version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
+    version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
+    version('3.8.11', sha256='b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393', preferred=True)
+    version('3.8.10', sha256='b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65')
+    version('3.8.9',  sha256='9779ec1df000bf86914cdd40860b88da56c1e61db59d37784beca14a259ac9e9')
+    version('3.8.8',  sha256='76c0763f048e4f9b861d24da76b7dd5c7a3ba7ec086f40caedeea359263276f7')
+    version('3.8.7',  sha256='20e5a04262f0af2eb9c19240d7ec368f385788bba2d8dfba7e74b20bab4d2bac')
+    version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21')
+    version('3.8.5',  sha256='015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49')
+    version('3.8.4',  sha256='32c4d9817ef11793da4d0d95b3191c4db81d2e45544614e8449255ca9ae3cc18')
+    version('3.8.3',  sha256='6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90')
+    version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
+    version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
+    version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
+    version('3.7.11', sha256='b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a')
+    version('3.7.10', sha256='c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975')
+    version('3.7.9',  sha256='39b018bc7d8a165e59aa827d9ae45c45901739b0bbb13721e4f973f3521c166a')
+    version('3.7.8',  sha256='0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0')
+    version('3.7.7',  sha256='8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a')
+    version('3.7.6',  sha256='aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114')
+    version('3.7.5',  sha256='8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da')
+    version('3.7.4',  sha256='d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3')
+    version('3.7.3',  sha256='d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff')
+    version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
+    version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
+    version('3.7.0',  sha256='85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d')
+    version('3.6.14', sha256='70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5')
+    version('3.6.13', sha256='614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669')
+    version('3.6.12', sha256='12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693')
+    version('3.6.11', sha256='96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c')
+    version('3.6.10', sha256='7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d')
+    version('3.6.9',  sha256='47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa')
+    version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0')
+    version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239')
+    version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58')
+    version('3.6.5',  sha256='53a3e17d77cd15c5230192b6a8c1e031c07cd9f34a2f089a731c6f6bd343d5c6')
+    version('3.6.4',  sha256='7dc453e1a93c083388eb1a23a256862407f8234a96dc4fae0fc7682020227486')
+    version('3.6.3',  sha256='ab6193af1921b30f587b302fe385268510e80187ca83ca82d2bfe7ab544c6f91')
+    version('3.6.2',  sha256='7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82')
+    version('3.6.1',  sha256='aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828')
+    version('3.6.0',  sha256='aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b')
+    version('3.5.10', sha256='3496a0daf51913718a6f10e3eda51fa43634cb6151cb096f312d48bdbeff7d3a')
+    version('3.5.9',  sha256='67a1d4fc6e4540d6a092cadc488e533afa961b3c9becc74dc3d6b55cb56e0cc1')
+    version('3.5.8',  sha256='18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a')
+    version('3.5.7',  sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b')
+    version('3.5.6',  sha256='30d2ff093988e74283e1abfee823292c6b59590796b9827e95ba4940b27d26f8')
+    version('3.5.5',  sha256='2f988db33913dcef17552fd1447b41afb89dbc26e3cdfc068ea6c62013a3a2a5')
+    version('3.5.4',  sha256='6ed87a8b6c758cc3299a8b433e8a9a9122054ad5bc8aad43299cff3a53d8ca44')
+    version('3.5.3',  sha256='d8890b84d773cd7059e597dbefa510340de8336ec9b9e9032bf030f19291565a')
+    version('3.5.2',  sha256='1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0')
+    version('3.5.1',  sha256='687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7')
+    version('3.5.0',  sha256='584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0')
+    version('3.4.10', sha256='217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d')
+    version('3.4.3',  sha256='8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147')
+    version('3.3.6',  sha256='0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034')
+    version('3.2.6',  sha256='fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e')
+    version('3.1.5',  sha256='d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103')
+    version('2.7.18', sha256='da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814')
+    version('2.7.17', sha256='f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde')
+    version('2.7.16', sha256='01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5')
+    version('2.7.15', sha256='18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db')
+    version('2.7.14', sha256='304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8')
+    version('2.7.13', sha256='a4f05a0720ce0fd92626f0278b6b433eee9a6173ddf2bced7957dfb599a5ece1')
+    version('2.7.12', sha256='3cb522d17463dfa69a155ab18cffa399b358c966c0363d6c8b5b3bf1384da4b6')
+    version('2.7.11', sha256='82929b96fd6afc8da838b149107078c02fa1744b7e60999a8babbc0d3fa86fc6')
+    version('2.7.10', sha256='eda8ce6eec03e74991abb5384170e7c65fcd7522e409b8e83d7e6372add0f12a')
+    version('2.7.9',  sha256='c8bba33e66ac3201dabdc556f0ea7cfe6ac11946ec32d357c4c6f9b018c12c5b')
+    version('2.7.8',  sha256='74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557')
 
     extendable = True
 
@@ -210,12 +147,12 @@ class Python(Package):
         description='Enable expensive build-time optimizations, if available'
     )
     # See https://legacy.python.org/dev/peps/pep-0394/
-    variant('pythoncmd', default=True,
+    variant('pythoncmd', default=is_windows,
             description="Symlink 'python3' executable to 'python' "
             "(not PEP 394 compliant)")
 
     # Optional Python modules
-    variant('readline', default=True,  description='Build readline module')
+    variant('readline', default=is_windows,  description='Build readline module')
     variant('ssl',      default=True,  description='Build ssl module')
     variant('sqlite3',  default=True,  description='Build sqlite3 module')
     variant('dbm',      default=True,  description='Build dbm module')
@@ -503,11 +440,15 @@ class Python(Package):
         shared_libraries.extend(glob.glob("%s\\*.exe" % build_root))
         shared_libraries.extend(glob.glob("%s\\*.dll" % build_root))
         shared_libraries.extend(glob.glob("%s\\*.pyd" % build_root))
+        os.makedirs(prefix.DLLs)
         for lib in shared_libraries:
-            if "vcruntime" not in lib and "python" not in lib and not lib.endswith(".exe"):
-                copy(lib, prefix.DLLs)
-            else:
+            file_name = os.path.basename(lib)
+            if file_name.endswith(".exe") or\
+                (file_name.endswith(".dll") and "python" in file_name)\
+                or "vcruntime" in file_name:
                 copy(lib, prefix)
+            else:
+                copy(lib, prefix.DLLs)
         static_libraries = glob.glob("%s\\*.lib")
         for lib in static_libraries:
             copy(lib, prefix.libs)
@@ -626,7 +567,7 @@ class Python(Package):
         and an appropriately set prefix.
         """
         with working_dir(self.build_directory, create=True):
-            if os.name == 'nt':
+            if is_windows:
                 pass
             else:
                 options = getattr(self, 'configure_flag_args', [])
@@ -641,7 +582,7 @@ class Python(Package):
         # Windows builds use a batch script to drive
         # configure and build in one step
         with working_dir(self.build_directory):
-            if os.name == 'nt':
+            if is_windows:
                 pcbuild_root = os.path.join(self.stage.source_path, "PCbuild")
                 builder_cmd = os.path.join(pcbuild_root, 'build.bat')
                 try:
@@ -663,7 +604,7 @@ class Python(Package):
         :py:attr:``~.AutotoolsPackage.install_targets``
         """
         with working_dir(self.build_directory):
-            if os.name == 'nt':
+            if is_windows:
                 self.win_installer(prefix)
             else:
                 inspect.getmodule(self).make(*self.install_targets)
@@ -677,7 +618,7 @@ class Python(Package):
         If this isn't done, they'll have CC and CXX set to Spack's generic
         cc and c++. We want them to be bound to whatever compiler
         they were built with."""
-        if os.name == 'nt':
+        if is_windows:
             return
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
@@ -691,7 +632,7 @@ class Python(Package):
 
     @run_after('install')
     def symlink(self):
-        if os.name == 'nt':
+        if is_windows:
             return
         spec = self.spec
         prefix = self.prefix
