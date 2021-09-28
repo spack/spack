@@ -177,6 +177,17 @@ class _BuildcacheBootstrapper(object):
     def __init__(self, conf):
         self.name = conf['name']
         self.url = conf['info']['url']
+        self.metadata_path = conf['info'].get('metadata_path', None)
+
+    def json_path(self, module):
+        # Read information on verified clingo binaries
+        json_filename = '{0}.json'.format(module)
+        json_path = os.path.join(self.metadata_path, json_filename)
+        if not os.path.isabs(json_path):
+            json_path = os.path.join(
+                spack.paths.share_path, 'bootstrap', self.name, json_path
+            )
+        return json_path
 
     def try_import(self, module, abstract_spec_str):
         if _try_import_from_store(module, abstract_spec_str):
@@ -198,12 +209,7 @@ class _BuildcacheBootstrapper(object):
                     abstract_spec_str + ' ^' + spec_for_current_python()
                 )
 
-        # Read information on verified clingo binaries
-        json_filename = '{0}.json'.format(module)
-        json_path = os.path.join(
-            spack.paths.share_path, 'bootstrap', self.name, json_filename
-        )
-        with open(json_path) as f:
+        with open(self.json_path(module)) as f:
             data = json.load(f)
 
         buildcache = spack.main.SpackCommand('buildcache')
