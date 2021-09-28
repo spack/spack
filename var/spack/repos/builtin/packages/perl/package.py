@@ -299,7 +299,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # This is to avoid failures when using -mmacosx-version-min=11.1
         # since not all Apple Clang compilers support that version range
         # See https://eclecticlight.co/2020/07/21/big-sur-is-both-10-16-and-11-0-its-official/
-        if spec.satisfies('os=bigsur'):
+        # Setting this value *does* seem to break the install on newer xcode
+        # versions, however.
+        if spec.satisfies('os=bigsur %apple-clang@:12.0.0'):
             env.set('SYSTEM_VERSION_COMPAT', 1)
 
         # This is how we tell perl the locations of bzip and zlib.
