@@ -13,16 +13,17 @@ class Cddlib(AutotoolsPackage):
     and extreme rays of a general convex polyhedron in R^d given by a system
     of linear inequalities"""
 
-    homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/"
-    url      = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-094h.tar.gz"
+    homepage = "https://people.inf.ethz.ch/fukudak/cdd_home"
+    url      = "https://github.com/cddlib/cddlib/archive/refs/tags/0.94h.tar.gz"
 
-    version('0.94h', sha256='fe6d04d494683cd451be5f6fe785e147f24e8ce3ef7387f048e739ceb4565ab5')
+    version('0.94h', sha256='7382782c3834214b022c8b2898ed775a7bf915f2cb2acb73fa045d6fd9a3de33')
 
     # Note: It should be possible to build cddlib also without gmp
 
     depends_on("gmp")
     depends_on("libtool", type="build")
-
+    
     def url_for_version(self, version):
-        url = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-{0}.tar.gz"
-        return url.format(version.joined)
+        url = "https://github.com/cddlib/cddlib/archive/refs/tags/{0}.tar.gz"
+        
+    return url.format(version.dotted)
