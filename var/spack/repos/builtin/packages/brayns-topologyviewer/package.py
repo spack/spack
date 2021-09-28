@@ -10,8 +10,8 @@ class BraynsTopologyviewer(CMakePackage):
     """Brayns use-case plugin for interactive visualization of
        the topology of neuron simulation data"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/viz/Brayns-UC-TopologyViewer"
-    git = "ssh://bbpcode.epfl.ch/viz/Brayns-UC-TopologyViewer.git"
+    homepage = "https://bbpgitlab.epfl.ch/viz/archive/Gerrit/Brayns-UC-TopologyViewer"
+    git = "git@bbpgitlab.epfl.ch:viz/archive/Gerrit/Brayns-UC-TopologyViewer.git"
 
     generator = 'Ninja'
 

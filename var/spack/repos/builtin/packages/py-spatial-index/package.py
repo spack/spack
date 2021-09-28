@@ -9,8 +9,8 @@ from spack import *
 class PySpatialIndex(PythonPackage):
     """Spatial index for NGV project"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/molecularsystems/MorphSpatialIndex"
-    git      = "ssh://bbpcode.epfl.ch/molecularsystems/MorphSpatialIndex"
+    homepage = "https://bbpgitlab.epfl.ch/molsys/ngv-spatial-index"
+    git      = "git@bbpgitlab.epfl.ch:molsys/ngv-spatial-index.git"
 
     version('develop', branch='master', submodules=True)
     version('0.0.1', tag='spatial-index-v0.0.1', submodules=True, preferred=True)

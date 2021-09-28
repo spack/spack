@@ -8,8 +8,8 @@ from spack import *
 
 class BraynsMembranelessorganelles(CMakePackage):
     """Brayns plugin"""
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/viz/Brayns-UC-MembranelessOrganelles"
-    git = "ssh://bbpcode.epfl.ch/viz/Brayns-UC-MembranelessOrganelles.git"
+    homepage = "https://bbpgitlab.epfl.ch/viz/archive/Gerrit/Brayns-UC-MembranelessOrganelles"
+    git = "git@bbpgitlab.epfl.ch:viz/archive/Gerrit/Brayns-UC-MembranelessOrganelles.git"
 
     generator = 'Ninja'
 

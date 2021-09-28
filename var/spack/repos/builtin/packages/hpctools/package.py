@@ -9,8 +9,8 @@ from spack import *
 class Hpctools(CMakePackage):
     """Tools from the BBP HPC team
     """
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/hpc/HPCTools"
-    url      = "ssh://bbpcode.epfl.ch/hpc/HPCTools"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/archive/hpctools"
+    url      = "git@bbpgitlab.epfl.ch:hpc/archive/hpctools.git"
 
     version('develop', git=url)
     version('3.5.2', tag='v3.5.2', git=url, preferred=True)
