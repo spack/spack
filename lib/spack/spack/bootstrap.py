@@ -210,7 +210,7 @@ class _BuildcacheBootstrapper(object):
         buildcache = spack.main.SpackCommand('buildcache')
         # Ensure we see only the buildcache being used to bootstrap
         mirror_scope = spack.config.InternalConfigScope(
-            'bootstrap', {'mirrors:': {self.name: self.url}}
+            'bootstrap_buildcache', {'mirrors:': {self.name: self.url}}
         )
         with spack.config.override(mirror_scope):
             # This index is currently needed to get the compiler used to build some
@@ -538,6 +538,8 @@ def _add_externals_if_missing():
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
+    bootstrap_yaml = spack.config.get('bootstrap')
+    config_yaml = spack.config.get('config')
     with spack.environment.deactivate_environment():
         with spack.architecture.use_platform(spack.architecture.real_platform()):
             with spack.repo.use_repositories(spack.paths.packages_path):
@@ -545,12 +547,12 @@ def ensure_bootstrap_configuration():
                     # Default configuration scopes excluding command line
                     # and builtin but accounting for platform specific scopes
                     config_scopes = _bootstrap_config_scopes()
-                    bootstrap_yaml = spack.config.get('bootstrap')
                     with spack.config.use_configuration(*config_scopes):
                         # We may need to compile code from sources, so ensure we have
                         # compilers for the current platform before switching parts.
                         _add_compilers_if_missing()
                         spack.config.set('bootstrap', bootstrap_yaml)
+                        spack.config.set('config', config_yaml)
                         with spack.modules.disable_modules():
                             with spack_python_interpreter():
                                 yield

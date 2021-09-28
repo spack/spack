@@ -99,3 +99,22 @@ def test_bootstrap_search_for_compilers_with_environment_active(
     with spack.bootstrap.ensure_bootstrap_configuration():
         assert spack.compilers.all_compiler_specs(init_config=False)
     assert not spack.compilers.all_compiler_specs(init_config=False)
+
+
+@pytest.mark.regression('26189')
+def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
+    # Mock the command line scope
+    expected_dir = '/tmp/test'
+    internal_scope = spack.config.InternalConfigScope(
+        name='command_line', data={
+            'config': {
+                'test_stage': expected_dir
+            }
+        }
+    )
+    spack.config.config.push_scope(internal_scope)
+
+    assert spack.config.get('config:test_stage') == expected_dir
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.config.get('config:test_stage') == expected_dir
+    assert spack.config.get('config:test_stage') == expected_dir
