@@ -3,15 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+import inspect
 import json
 import os
 import platform
 import re
-from shutil import copy
 import subprocess
-import glob
 import sys
 from distutils.dir_util import copy_tree
+from shutil import copy
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import get_filetype, path_contains_subdirectory
@@ -21,10 +22,10 @@ from spack import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
-
-arch_map = {"AMD64":"x64", "x86": "Win32",
-                    "IA64": "Win32", "EM64T": "Win32"}
+arch_map = {"AMD64": "x64", "x86": "Win32",
+            "IA64": "Win32", "EM64T": "Win32"}
 is_windows = os.name == 'nt'
+
 
 class Python(Package):
     """The Python programming language."""
@@ -147,12 +148,12 @@ class Python(Package):
         description='Enable expensive build-time optimizations, if available'
     )
     # See https://legacy.python.org/dev/peps/pep-0394/
-    variant('pythoncmd', default=is_windows,
+    variant('pythoncmd', default=not is_windows,
             description="Symlink 'python3' executable to 'python' "
             "(not PEP 394 compliant)")
 
     # Optional Python modules
-    variant('readline', default=is_windows,  description='Build readline module')
+    variant('readline', default=not is_windows,  description='Build readline module')
     variant('ssl',      default=True,  description='Build ssl module')
     variant('sqlite3',  default=True,  description='Build sqlite3 module')
     variant('dbm',      default=True,  description='Build dbm module')
@@ -428,7 +429,7 @@ class Python(Package):
         proj_root = self.stage.source_path
         pcbuild_root = os.path.join(proj_root, "PCbuild")
         build_root = os.path.join(pcbuild_root, platform.machine().lower())
-        include_dir = os.path.join(proj_root,"Include")
+        include_dir = os.path.join(proj_root, "Include")
         copy_tree(include_dir, prefix.include)
         doc_dir = os.path.join(proj_root, "Doc")
         copy_tree(doc_dir, prefix.Doc)
@@ -436,6 +437,8 @@ class Python(Package):
         copy_tree(tools_dir, prefix.Tools)
         lib_dir = os.path.join(proj_root, "Lib")
         copy_tree(lib_dir, prefix.Lib)
+        pyconfig = os.path.join(proj_root, "PC", "pyconfig.h")
+        copy(pyconfig, prefix.include)
         shared_libraries = []
         shared_libraries.extend(glob.glob("%s\\*.exe" % build_root))
         shared_libraries.extend(glob.glob("%s\\*.dll" % build_root))
@@ -587,9 +590,9 @@ class Python(Package):
                 builder_cmd = os.path.join(pcbuild_root, 'build.bat')
                 try:
                     subprocess.check_output(  # novermin
-                        " ".join([builder_cmd]+self.win_build_params),
+                        " ".join([builder_cmd] + self.win_build_params),
                         stderr=subprocess.STDOUT
-                        )
+                    )
                 except subprocess.CalledProcessError as e:
                     raise ProcessError("Process exited with status %d" % e.returncode,
                                        long_message=e.output.decode('utf-8'))
@@ -608,7 +611,6 @@ class Python(Package):
                 self.win_installer(prefix)
             else:
                 inspect.getmodule(self).make(*self.install_targets)
-
 
     @run_after('install')
     def filter_compilers(self):
