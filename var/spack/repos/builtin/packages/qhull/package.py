@@ -44,4 +44,5 @@ class Qhull(CMakePackage):
                                   shared=True, recursive=True)
         else:
             return find_libraries('libqhull', self.prefix,
+                                  shared=True, recursive=True)
 
