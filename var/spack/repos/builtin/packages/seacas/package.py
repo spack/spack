@@ -157,6 +157,7 @@ class Seacas(CMakePackage):
                     '-DSEACASProj_ENABLE_SEACASAprepro:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASAprepro_lib:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASConjoin:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASCpup:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASEjoin:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASEpu:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASExo2mat:BOOL=ON',
@@ -169,6 +170,7 @@ class Seacas(CMakePackage):
                     '-DSEACASProj_ENABLE_SEACASNemslice:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASNemspread:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASSlice:BOOL=ON',
+                    '-DSEACASProj_ENABLE_SEACASZellij:BOOL=ON',
                 ])
 
             if '+legacy' in spec:
