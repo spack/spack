@@ -24,6 +24,7 @@ class Itk(CMakePackage):
 
     maintainers = ['glennpj']
 
+    version('5.2.1', sha256='192d41bcdd258273d88069094f98c61c38693553fd751b54f8cda308439555db')
     version('5.1.2', sha256='f1e5a78e11125348f68f655c6b89b617c3a8b2c09f710081f621054811a70c98')
     version('5.1.1', sha256='39e2a63840054361b728878a35b21bbe38374682ffb4b5c4f8f8f7514dedb58e')
 
