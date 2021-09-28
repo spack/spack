@@ -43,7 +43,7 @@ class Unifyfs(AutotoolsPackage):
     depends_on('mochi-margo@0.4.3', when='@:0.9.1')
     depends_on('mochi-margo',       when='@0.9.2:')
     depends_on('mpi')
-    depends_on('openssl')
+    depends_on('openssl@:1')
 
     # Optional dependencies
     depends_on('hdf5', when='+hdf5')
