@@ -34,3 +34,14 @@ class Qhull(CMakePackage):
         if name == 'cxxflags' and self.version == Version('2020.1'):
             flags.append(self.compiler.cxx11_flag)
         return (flags, None, None)
+
+    @property
+    def libs(self):
+        # in 2020.2 the libqhull.so library was deprecated in favor of
+        # libqhull_r.so
+        if self.spec.satisfies('@2020.2:'):
+            return find_libraries('libqhull_r', self.prefix,
+                                  shared=True, recursive=True)
+        else:
+            return find_libraries('libqhull', self.prefix,
+                                  shared=True, recursive=True)
