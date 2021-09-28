@@ -14,7 +14,7 @@ class Hdf5VolCache(CMakePackage):
     maintainers = ['hyoklee']
 
     version('default', branch='develop')
-    
+
     # Set hdf5-cmake package option.
     # o_flt = '~zfp~mafisc~szip~zstd~blosc~bshuf~bitgroom'
     # o_vol = '~av~pv~cv'
@@ -22,7 +22,7 @@ class Hdf5VolCache(CMakePackage):
     # o = o_flt+o_vol+o_par
 
     depends_on('hdf5-vol-async')
-    
+
     def cmake_args(self):
         """Populate cmake arguments for HDF5 DAOS."""
         # spec = self.spec

@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Hdf5VolAsync(CMakePackage):
     """This package enables asynchronous IO in HDF5."""
 
@@ -19,7 +20,6 @@ class Hdf5VolAsync(CMakePackage):
 
     def cmake_args(self):
         """Populate cmake arguments for HDF5 VOL."""
-        spec = self.spec
 
         args = [
             '-DBUILD_SHARED_LIBS:BOOL=ON',
