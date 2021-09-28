@@ -180,7 +180,7 @@ class Boost(Package):
 
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
-    # depends_on('bzip2', when='+iostreams')
+    depends_on('bzip2', when='+iostreams')
     depends_on('zlib', when='+iostreams')
     depends_on('py-numpy', when='+numpy', type=('build', 'run'))
 
@@ -362,6 +362,8 @@ class Boost(Package):
                 return toolset
 
         # fallback to gcc if no toolset found
+        # TODO: This clearly breaks Windows since there's no cl.exe
+        # wrapper; either implement one or change this default
         return 'gcc'
 
     def bjam_python_line(self, spec):
@@ -382,7 +384,8 @@ class Boost(Package):
         # Arm compiler bootstraps with 'gcc' (but builds as 'clang')
         if spec.satisfies('%arm') or spec.satisfies('%fj'):
             options.append('--with-toolset=gcc')
-        else:
+        # This condition is needed until a cl.exe wrapper is made
+        elif not spec.satisfies('platform=windows'):
             options.append('--with-toolset=%s' % boost_toolset_id)
         options.append("--with-libraries=%s" % ','.join(with_libs))
 
@@ -397,8 +400,16 @@ class Boost(Package):
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
-            f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
-                                                   spack_cxx))
+            if not spec.satisfies('%intel') and not spec.satisfies('platform=windows'):
+                # using intel-linux : : spack_cxx in user-config.jam leads to
+                # error: at project-config.jam:12
+                # error: duplicate initialization of intel-linux with the following parameters:  # noqa
+                # error: version = <unspecified>
+                # error: previous initialization at ./user-config.jam:1
+                # We also use a hack right now to get around the fact we don't have
+                # a wrapper in spack/env for cl.exe
+                f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
+                                                       spack_cxx))
 
             if '+mpi' in spec:
                 # Use the correct mpi compiler.  If the compiler options are
@@ -416,6 +427,8 @@ class Boost(Package):
 
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
+                
+        options.append('-show-libraries')
 
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
@@ -465,13 +478,15 @@ class Boost(Package):
             '--layout=%s' % layout
         ])
 
-        if not spec.satisfies('@:1.75 %intel'):
+        if not spec.satisfies('@:1.75 %intel') and not spec.satisfies('platform=windows'):
             # When building any version >= 1.76, the toolset must be specified.
             # Earlier versions could not specify Intel as the toolset
             # as that was considered to be redundant/conflicting with
             # --with-toolset in bootstrap.
             # (although it is not currently known if 1.76 is the earliest
             # version that requires specifying the toolset for Intel)
+            # Also see the above comment on setting default toolset gcc for why
+            # we can't set this option on Windows yet
             options.extend([
                 'toolset=%s' % self.determine_toolset(spec)
             ])
@@ -573,7 +588,7 @@ class Boost(Package):
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = self.stage.source_path
 
-        bootstrap_options = ['--prefix=%s' % prefix]
+        bootstrap_options = []
         self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
         if self.spec.satisfies('platform=windows'):
@@ -595,15 +610,17 @@ class Boost(Package):
 
         b2 = Executable(b2name)
         jobs = make_jobs
+        path_to_config = ''
+        if not spec.satisfies('platform=windows'):
+            '--user-config=%s' % os.path.join(
+                self.stage.source_path, 'user-config.jam')
         # in 1.59 max jobs became dynamic
         if jobs > 64 and spec.satisfies('@:1.58'):
             jobs = 64
 
-        b2_options = [
-            '-j', '%s' % jobs,
-            '--user-config=%s' % os.path.join(
-                self.stage.source_path, 'user-config.jam')
-        ]
+        b2_options = ['-j', '%s' % jobs]
+        if not spec.satisfies('platform=windows'):
+            b2_options.append(path_to_config)
 
         threading_opts = self.determine_b2_options(spec, b2_options)
 
