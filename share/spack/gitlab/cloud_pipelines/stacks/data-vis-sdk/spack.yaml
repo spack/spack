@@ -52,8 +52,6 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd ${SPACK_CONCRETE_ENV_DIR}
-        - spack env activate --without-view .
       tags: ["spack", "public", "medium", "x86_64"]
 
   cdash:

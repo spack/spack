@@ -357,8 +357,6 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd ${SPACK_CONCRETE_ENV_DIR}
-        - spack env activate --without-view .
       image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "ppc64le"]
 
