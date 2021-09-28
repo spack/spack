@@ -35,9 +35,11 @@ class Ruby(AutotoolsPackage):
     depends_on('libx11', when='@:2.3')
     depends_on('tcl', when='@:2.3')
     depends_on('tk', when='@:2.3')
-    depends_on('openssl@:1.0', when='@:2.3+openssl')
-    depends_on('openssl', when='+openssl')
     depends_on('readline', when='+readline')
+
+    with when('+openssl'):
+        depends_on('openssl@:1')
+        depends_on('openssl@:1.0', when='@:2.3')
 
     # Known build issues when Avira antivirus software is running:
     # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379
