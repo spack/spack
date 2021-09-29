@@ -561,9 +561,9 @@ def _read_and_sanitize_configuration():
     """Read the user configuration that needs to be reused for bootstrapping
     and remove the entries that should not be copied over.
     """
-    # Read config.yaml but pop the install tree (the entry will not be considered
-    # due to the use_store context manager, so it will be confusing to have it in
-    # the configuration).
+    # Read the "config" section but pop the install tree (the entry will not be
+    # considered due to the use_store context manager, so it will be confusing
+    # to have it in the configuration).
     config_yaml = spack.config.get('config')
     config_yaml.pop('install_tree', None)
     user_configuration = {
