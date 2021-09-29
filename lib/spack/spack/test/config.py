@@ -432,6 +432,20 @@ def test_substitute_user(mock_low_high_config):
     )
 
 
+def test_substitute_user_config(mock_low_high_config):
+    user_config_path = spack.paths.user_config_path
+    assert user_config_path + '/baz' == spack_path.canonicalize_path(
+        '$user_cache_path/baz'
+    )
+
+
+def test_substitute_user_cache(mock_low_high_config):
+    user_cache_path = spack.paths.user_cache_path
+    assert user_cache_path + '/baz' == spack_path.canonicalize_path(
+        '$user_cache_path/baz'
+    )
+
+
 def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
     assert tempdir == spack_path.canonicalize_path('$tempdir')
@@ -1167,3 +1181,59 @@ def test_internal_config_scope_cache_clearing():
     internal_scope.clear()
     # Check that this didn't affect the scope object
     assert internal_scope.sections['config'] == data
+
+
+def test_system_config_path_is_overridable(working_env):
+    p = "/some/path"
+    os.environ['SPACK_SYSTEM_CONFIG_PATH'] = p
+    assert spack.paths._get_system_config_path() == p
+
+
+def test_system_config_path_is_default_when_env_var_is_empty(working_env):
+    os.environ['SPACK_SYSTEM_CONFIG_PATH'] = ''
+    assert "/etc/spack" == spack.paths._get_system_config_path()
+
+
+def test_user_config_path_is_overridable(working_env):
+    p = "/some/path"
+    os.environ['SPACK_USER_CONFIG_PATH'] = p
+    assert p == spack.paths._get_user_config_path()
+
+
+def test_user_config_path_is_default_when_env_var_is_empty(working_env):
+    os.environ['SPACK_USER_CONFIG_PATH'] = ''
+    assert os.path.expanduser("~/.spack") == spack.paths._get_user_config_path()
+
+
+def test_local_config_can_be_disabled(working_env):
+    os.environ['SPACK_DISABLE_LOCAL_CONFIG'] = 'true'
+    cfg = spack.config._config()
+    assert "defaults" in cfg.scopes
+    assert "system" not in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" not in cfg.scopes
+
+    os.environ['SPACK_DISABLE_LOCAL_CONFIG'] = ''
+    cfg = spack.config._config()
+    assert "defaults" in cfg.scopes
+    assert "system" not in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" not in cfg.scopes
+
+    del os.environ['SPACK_DISABLE_LOCAL_CONFIG']
+    cfg = spack.config._config()
+    assert "defaults" in cfg.scopes
+    assert "system" in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" in cfg.scopes
+
+
+def test_user_cache_path_is_overridable(working_env):
+    p = "/some/path"
+    os.environ['SPACK_USER_CACHE_PATH'] = p
+    assert spack.paths._get_user_cache_path() == p
+
+
+def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
+    os.environ['SPACK_USER_CACHE_PATH'] = ''
+    assert os.path.expanduser("~/.spack") == spack.paths._get_user_cache_path()
