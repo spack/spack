@@ -86,7 +86,7 @@ class Adios(AutotoolsPackage):
     depends_on('hdf5@1.8:+hl+mpi', when='+hdf5')
     depends_on('netcdf-c', when='+netcdf')
     depends_on('libevpath', when='staging=flexpath')
-    depends_on('dataspaces+mpi', when='staging=dataspaces')
+    depends_on('dataspaces', when='staging=dataspaces')
 
     for p in ['+hdf5', '+netcdf', 'staging=flexpath', 'staging=dataspaces']:
         conflicts(p, when='~mpi')
