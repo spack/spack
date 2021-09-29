@@ -23,4 +23,4 @@ class PyJupyterPackaging(PythonPackage):
     depends_on('py-packaging', type=('build', 'run'))
     depends_on('py-tomlkit', when='@0.8.0:', type=('build', 'run'))
     depends_on('py-wheel', when='@0.8.0:', type=('build', 'run'))
-    depends_on('py-deprecation', when='@0.8.0', type=('build', 'run'))
+    depends_on('py-deprecation', when='@0.8.0:', type=('build', 'run'))
