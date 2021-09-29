@@ -68,7 +68,7 @@ class Rocfft(CMakePackage):
         # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
         if self.spec.satisfies('^cmake@3.21:'):
             args.append(self.define('__skip_rocmclang', 'ON'))
-        if '@4.3.0' in self.spec:
+        if '@4.3.0:' in self.spec:
             args.append(
                 '-DCMAKE_PREFIX_PATH={0}/llvm'.
                 format(self.spec['llvm-amdgpu'].prefix))

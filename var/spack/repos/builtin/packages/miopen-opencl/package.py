@@ -62,7 +62,7 @@ class MiopenOpencl(CMakePackage):
             args.append(self.define(
                 'MIOPEN_AMDGCN_ASSEMBLER',
                 '{0}/bin/clang'.format(self.spec['llvm-amdgpu'].prefix)))
-        elif '@4.3.0' in self.spec:
+        elif '@4.3.0:' in self.spec:
             args.append(self.define(
                 'MIOPEN_HIP_COMPILER',
                 '{0}/llvm/bin/clang++'.format(self.spec['llvm-amdgpu'].prefix)))

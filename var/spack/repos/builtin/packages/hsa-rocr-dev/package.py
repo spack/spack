@@ -63,6 +63,10 @@ class HsaRocrDev(CMakePackage):
             self.define('LIBELF_INCLUDE_DIRS', libelf_include),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
+        if '@4.3.0:' in spec:
+            args.append(
+                    '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                    format(self.spec['llvm-amdgpu'].prefix))
 
         if '@3.7.0:' in spec:
             args.append(self.define_from_variant('IMAGE_SUPPORT', 'image'))
@@ -74,9 +78,6 @@ class HsaRocrDev(CMakePackage):
                 bitcode_dir = spec['llvm-amdgpu'].prefix.amdgcn.bitcode
             else:
                 bitcode_dir = spec['llvm-amdgpu'].prefix.llvm.amdgcn.bitcode
-                args.append(
-                    '-DCMAKE_PREFIX_PATH={0}/llvm'.
-                    format(self.spec['llvm-amdgpu'].prefix))
 
             args.append(self.define('BITCODE_DIR', bitcode_dir))
 

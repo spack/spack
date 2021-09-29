@@ -57,7 +57,7 @@ class Comgr(CMakePackage):
     def cmake_args(self):
         args = [
         ]
-        if '@4.3.0' in self.spec:
+        if '@4.3.0:' in self.spec:
             args.append(
                 '-DCMAKE_PREFIX_PATH={0}/llvm'.
                 format(self.spec['llvm-amdgpu'].prefix))
