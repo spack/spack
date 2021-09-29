@@ -538,8 +538,7 @@ def _add_externals_if_missing():
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
-    bootstrap_yaml = spack.config.get('bootstrap')
-    config_yaml = spack.config.get('config')
+    user_configuration = _read_and_sanitize_configuration()
     with spack.environment.deactivate_environment():
         with spack.architecture.use_platform(spack.architecture.real_platform()):
             with spack.repo.use_repositories(spack.paths.packages_path):
@@ -551,11 +550,27 @@ def ensure_bootstrap_configuration():
                         # We may need to compile code from sources, so ensure we have
                         # compilers for the current platform before switching parts.
                         _add_compilers_if_missing()
-                        spack.config.set('bootstrap', bootstrap_yaml)
-                        spack.config.set('config', config_yaml)
+                        spack.config.set('bootstrap', user_configuration['bootstrap'])
+                        spack.config.set('config', user_configuration['config'])
                         with spack.modules.disable_modules():
                             with spack_python_interpreter():
                                 yield
+
+
+def _read_and_sanitize_configuration():
+    """Read the user configuration that needs to be reused for bootstrapping
+    and remove the entries that should not be copied over.
+    """
+    # Read config.yaml but pop the install tree (the entry will not be considered
+    # due to the use_store context manager, so it will be confusing to have it in
+    # the configuration).
+    config_yaml = spack.config.get('config')
+    config_yaml.pop('install_tree', None)
+    user_configuration = {
+        'bootstrap': spack.config.get('bootstrap'),
+        'config': config_yaml
+    }
+    return user_configuration
 
 
 def store_path():
