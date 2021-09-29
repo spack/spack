@@ -38,6 +38,7 @@ class Arborx(CMakePackage):
     variant('trilinos', default=False, description='use Kokkos from Trilinos')
 
     depends_on('cmake@3.12:', type='build')
+    depends_on('cmake@3.16:', type='build', when='@1.0:')
     depends_on('mpi', when='+mpi')
 
     # Standalone Kokkos
