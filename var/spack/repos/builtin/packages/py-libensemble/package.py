@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 from spack import *
-import os
+
 
 class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
@@ -16,7 +17,6 @@ class PyLibensemble(PythonPackage):
     maintainers = ['shuds13']
 
     tags = ['e4s']
-    # test_requires_compiler = True
 
     version('develop', branch='develop')
     version('0.7.2', sha256='69b64304d1ecce4d57687ea6062f89bd813ae93b2a290bb1f595c5626ab6f197')
