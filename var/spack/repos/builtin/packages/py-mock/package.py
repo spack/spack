@@ -22,7 +22,7 @@ class PyMock(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools@17.1:', type='build')
     depends_on('py-wheel',      type='build', when='@:2.0.0')
-    depends_on('py-pbr',        type='build', when='@:2.0.0')
+    depends_on('py-pbr@1.3:',        type='build', when='@:2.0.0')
     depends_on('py-six@1.7:', type=('build', 'run'))
     depends_on('py-six@1.9:', type=('build', 'run'), when='@2.0.0:')
     depends_on('py-funcsigs@1:', type=('build', 'run'), when='^python@:3.2')
