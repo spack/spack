@@ -22,6 +22,7 @@ class Cddlib(AutotoolsPackage):
 
     depends_on("gmp")
     depends_on("libtool", type="build")
+    
     def url_for_version(self, version):
         url = "https://github.com/cddlib/cddlib/archive/refs/tags/{0}.tar.gz"
         return url.format(version.dotted)
