@@ -109,6 +109,7 @@ class Dd4hep(CMakePackage):
         env.set("DD4HEP", self.prefix.examples)
         env.set("DD4hep_DIR", self.prefix)
         env.set("DD4hep_ROOT", self.prefix)
+        env.prepend_path('ROOT_INCLUDE_PATH', self.prefix.include)
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero
