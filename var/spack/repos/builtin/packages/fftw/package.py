@@ -122,9 +122,9 @@ class FftwBase(AutotoolsPackage):
         # Specific SIMD support.
         # all precisions
         simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
-                         'kcvi', 'vsx', 'neon']
+                         'kcvi', 'vsx']
         # float only
-        float_simd_features = ['altivec', 'sse']
+        float_simd_features = ['altivec', 'sse', 'neon']
 
         # Workaround PGI compiler bug when avx2 is enabled
         if spec.satisfies('%pgi') and 'avx2' in simd_features:
