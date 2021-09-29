@@ -13,7 +13,11 @@ import spack.build_environment as build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.paths
-from spack.util.environment import dump_environment, pickle_environment
+from spack.util.environment import (
+    dump_environment,
+    pickle_environment,
+    preserve_environment,
+)
 
 
 def setup_parser(subparser):
@@ -30,6 +34,10 @@ def setup_parser(subparser):
         'spec', nargs=argparse.REMAINDER,
         metavar='spec [--] [cmd]...',
         help="specs of package environment to emulate")
+    subparser.add_argument(
+        '--tty', action='store_true',
+        help="preserve environment variables required for interactive shells"
+    )
     subparser.epilog\
         = 'If a command is not specified, the environment will be printed ' \
         'to standard output (cf /usr/bin/env) unless --dump and/or --pickle ' \
@@ -64,7 +72,12 @@ def emulate_env_utility(cmd_name, context, args):
 
     spec = spack.cmd.matching_spec_from_env(spec)
 
-    build_environment.setup_package(spec.package, args.dirty, context)
+    # Preserve some variables to make the shell and (visual) editors work out
+    # of the box.
+    preserve = ['TERM', 'DISPLAY'] if args.tty else []
+
+    with preserve_environment(*preserve):
+        build_environment.setup_package(spec.package, args.dirty, context)
 
     if args.dump:
         # Dump a source-able environment to a text file.

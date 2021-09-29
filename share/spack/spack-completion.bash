@@ -480,7 +480,7 @@ _spack_bootstrap_untrust() {
 _spack_build_env() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --clean --dirty --dump --pickle"
+        SPACK_COMPREPLY="-h --help --clean --dirty --dump --pickle --tty"
     else
         _all_packages
     fi
@@ -1725,7 +1725,7 @@ _spack_test_remove() {
 _spack_test_env() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --clean --dirty --dump --pickle"
+        SPACK_COMPREPLY="-h --help --clean --dirty --dump --pickle --tty"
     else
         _all_packages
     fi
