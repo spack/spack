@@ -91,8 +91,9 @@ class Seacas(CMakePackage):
     depends_on('adios2@develop~mpi', when='+adios2 ~mpi')
     depends_on('adios2@develop+mpi', when='+adios2 +mpi')
     depends_on('matio', when='+matio')
-    depends_on('metis+int64+real64', when='+metis')
-    depends_on('parmetis+int64', when='+metis +mpi')
+    with when('+metis'):
+        depends_on('metis+int64+real64')
+        depends_on('parmetis+int64', when='+mpi')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
