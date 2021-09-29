@@ -5,6 +5,7 @@
 
 
 import glob
+import os
 import platform
 import subprocess
 
@@ -38,6 +39,8 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     variant('ilp64', default=False,
             description='Build with ILP64 support')
+    variant('libfabric', default=False, description='Enable external libfabric dependency')
+    depends_on('libfabric', when='+libfabric', type=('link', 'run'))
 
     provides('mpi@:3.1')
 
@@ -94,6 +97,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
         # Patch libmpi.so rpath so it can find libfabric
         libfabric_rpath = join_path(self.component_path, 'libfabric', 'lib')
+        if '+libfabric' in self.spec:
+            libfabric_rpath = os.path.dirname(
+                [s for s in spec['libfabric'].libs if s.endswith('libfabric.so')][0]
+            )
         for libmpi in glob.glob(join_path(self.component_path,
                                           'lib', '**', 'libmpi*.so')):
             subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, libmpi])
