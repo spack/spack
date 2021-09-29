@@ -100,7 +100,8 @@ class Arborx(CMakePackage):
         cmake_args = [".",
                       cmake_prefix_path,
                       "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
-                      "-DKokkos_ROOT=%s" % (self.spec['kokkos'].prefix if '~trilinos' in self.spec
+                      "-DKokkos_ROOT=%s" % (self.spec['kokkos'].prefix
+                                            if '~trilinos' in self.spec
                                             else self.spec['trilinos'].prefix)]
 
         self.run_test("cmake", cmake_args,
