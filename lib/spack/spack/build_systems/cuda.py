@@ -109,7 +109,6 @@ class CudaPackage(PackageBase):
 
         # https://gist.github.com/ax3l/9489132#gistcomment-3860114
         conflicts('%gcc@10', when='+cuda ^cuda@:11.4.0')
-        
         conflicts('%gcc@5:', when='+cuda ^cuda@:7.5 target=x86_64:')
         conflicts('%gcc@6:', when='+cuda ^cuda@:8 target=x86_64:')
         conflicts('%gcc@7:', when='+cuda ^cuda@:9.1 target=x86_64:')
