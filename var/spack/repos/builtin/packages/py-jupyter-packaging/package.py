@@ -16,7 +16,7 @@ class PyJupyterPackaging(PythonPackage):
     version('0.10.4', sha256='589db027cb85a92612f9bcfaeecaa8a9072ac8a4bddaf827f648664258e587c4')
     version('0.7.12', sha256='b140325771881a7df7b7f2d14997b619063fe75ae756b9025852e4346000bbb8',
             # name has a '-' instead of a '_'
-            url='https://files.pythonhosted.org/packages/5c/9f/3b332f2a21487026f9521c3fba6efedec77b09f80bffccbb925bba33fcb5/jupyter-packaging-0.7.12.tar.gz')
+            url='https://files.pythonhosted.org/packages/source/j/jupyter_packaging/jupyter-packaging-0.7.12.tar.gz')
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools@46.4.0:', type=('build', 'run'))
