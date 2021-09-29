@@ -646,12 +646,12 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('schedulers=slurm'):
             if spec.satisfies('+pmi'):
                 config_args.append('--with-pmi={0}'.format(
-                   spec['slurm'].prefix))
+                    spec['slurm'].prefix))
             else:
                 config_args.extend(self.with_or_without('pmi'))
             if spec.satisfies('+pmix'):
                 config_args.append('--with-pmix={0}'.format(
-                   spec['pmix'].prefix))
+                    spec['pmix'].prefix))
             else:
                 config_args.extend(self.with_or_without('pmix'))
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
