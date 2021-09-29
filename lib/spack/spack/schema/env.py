@@ -12,6 +12,7 @@ import warnings
 
 from llnl.util.lang import union_dicts
 
+import spack.schema.environment
 import spack.schema.merged
 import spack.schema.packages
 import spack.schema.projections
@@ -152,7 +153,8 @@ schema = {
                         'type': 'string',
                         'enum': ['together', 'separately'],
                         'default': 'separately'
-                    }
+                    },
+                    'environment': spack.schema.environment.definition
                 }
             )
         }
