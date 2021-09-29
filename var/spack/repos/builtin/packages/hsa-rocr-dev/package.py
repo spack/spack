@@ -65,8 +65,8 @@ class HsaRocrDev(CMakePackage):
         ]
         if '@4.3.0:' in spec:
             args.append(
-                    '-DCMAKE_PREFIX_PATH={0}/llvm'.
-                    format(self.spec['llvm-amdgpu'].prefix))
+                '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                format(spec['llvm-amdgpu'].prefix))
 
         if '@3.7.0:' in spec:
             args.append(self.define_from_variant('IMAGE_SUPPORT', 'image'))
