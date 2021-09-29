@@ -16,7 +16,6 @@ class Ffte(Package):
 
     maintainers = ['luszczek']
 
-    # FIXME: Add proper versions and checksums here.
     version('7.0', sha256='078d5f84a5f2479ca5c4a3bd777ad761fe98addf1642a045bac6602a0cae3da0')
     version('6.0', sha256='fc82595a8f8323b2796cc5eeb1cc9f7e50ca9e511a14365cc3984da6b7a9b8b4')
     version('5.0', sha256='1f46ca16badc3aca0ad13ca91a6a67829a57b403501cdc821b80cfa62b2a89c2')
