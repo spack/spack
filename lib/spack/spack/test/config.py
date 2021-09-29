@@ -1167,3 +1167,15 @@ def test_internal_config_scope_cache_clearing():
     internal_scope.clear()
     # Check that this didn't affect the scope object
     assert internal_scope.sections['config'] == data
+
+
+def test_system_config_path_is_overridable(working_env):
+    p = "/some/path"
+    os.environ['SPACK_SYSTEM_CONFIG_PATH'] = p
+    assert spack.config._get_system_config_path() == p
+
+
+def test_system_config_path_is_default_when_env_var_is_empty(working_env):
+    os.environ['SPACK_SYSTEM_CONFIG_PATH'] = ''
+    default = os.path.join(spack.paths.system_etc_path, 'spack')
+    assert spack.config._get_system_config_path() == default

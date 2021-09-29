@@ -84,6 +84,18 @@ all_schemas = copy.deepcopy(section_schemas)
 all_schemas.update(dict((key, spack.schema.env.schema)
                         for key in spack.schema.env.keys))
 
+
+def _get_system_config_path():
+    """
+    The user can override the system config path by setting SPACK_SYSTEM_CONFIG_PATH.
+    This is useful when:
+    a) multiple versions of a system-wide programming environment are installed
+    b) a shared system has spack config in /etc/spack, but the user wants to opt out
+    """
+    return (os.getenv('SPACK_SYSTEM_CONFIG_PATH') or
+            os.path.join(spack.paths.system_etc_path, 'spack'))
+
+
 #: Builtin paths to configuration files in Spack
 configuration_paths = (
     # Default configuration scope is the lowest-level scope. These are
@@ -92,7 +104,7 @@ configuration_paths = (
 
     # System configuration is per machine.
     # No system-level configs should be checked into spack by default
-    ('system', os.path.join(spack.paths.system_etc_path, 'spack')),
+    ('system', _get_system_config_path()),
 
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
