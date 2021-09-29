@@ -65,7 +65,6 @@ index 01ba1ce..39702da 100644
  /* Public HDF5 headers */
  #include "hdf5.h"
 -#include "hdf5dev.h"
-+/* #include "hdf5dev.h" */
  
  /* This connector's private header */
  #include "H5VLpassthru_ext_private.h"
