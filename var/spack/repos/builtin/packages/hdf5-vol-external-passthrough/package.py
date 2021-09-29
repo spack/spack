@@ -19,7 +19,7 @@ class Hdf5VolExternalPassthrough(CMakePackage):
     depends_on('hdf5@develop-1.13')
 
     patch('CMakeLists.patch',
-          sha256='b69d1b81a54aabd6dde64e976371f960d42dbe1081e7bcc69a56037651661fdd')
+          sha256='09876179329cbc7d925055c714cabe05511ba7a9a8e9d5e029cc9acfdac5ffa7')
 
     def cmake_args(self):
         """Populate cmake arguments for HDF5 DAOS."""

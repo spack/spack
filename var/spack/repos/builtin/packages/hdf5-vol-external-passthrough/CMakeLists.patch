@@ -57,7 +57,7 @@ index 0000000..26f4d4b
 +  ARCHIVE DESTINATION ${HDF5_VOL_PASSTHROUGH_INSTALL_LIB_DIR}
 +)
 diff --git a/H5VLpassthru_ext.c b/H5VLpassthru_ext.c
-index 01ba1ce..39702da 100644
+index 01ba1ce..25a80ae 100644
 --- a/H5VLpassthru_ext.c
 +++ b/H5VLpassthru_ext.c
 @@ -38,7 +38,7 @@
@@ -65,6 +65,7 @@ index 01ba1ce..39702da 100644
  /* Public HDF5 headers */
  #include "hdf5.h"
 -#include "hdf5dev.h"
++
  
  /* This connector's private header */
  #include "H5VLpassthru_ext_private.h"
