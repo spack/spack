@@ -49,8 +49,8 @@ class Seacas(CMakePackage):
             description='Build all "current" SEACAS applications. This'
             ' includes a debatable list of essential applications: '
             'aprepro, conjoin, cpup, ejoin, epu, exo2mat, mat2exo, '
-            'exo_format, exodiff, explore, grepos, io_*, '
-            'nemslice, nemspread, zellij')
+            'exo_format, exodiff, explore, grepos, io_shell, io_info, '
+            'io_modify, nemslice, nemspread, zellij')
     variant('legacy', default=True,
             description='Build all "legacy" SEACAS applications. This includes'
             ' a debatable list of "legacy" applications: algebra, blot, '
