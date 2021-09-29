@@ -593,20 +593,22 @@ class EnvironmentModifications(object):
             for x in actions:
                 x.execute(env)
 
-    def shell_modifications(self, shell='sh'):
-        """Return shell code to apply the modifications and clears the list."""
-        modifications = self.group_by_name()
-        new_env = os.environ.copy()
+    def shell_modifications(self, shell='sh', env=None):
+        """Return shell code to apply the modifications in environment env and
+        clears the list.
+        """
+        # Use os.environ if not specified
+        if env is None:
+            env = os.environ
+        new_env = env.copy()
 
-        for name, actions in sorted(modifications.items()):
-            for x in actions:
-                x.execute(new_env)
+        self.apply_modifications(new_env)
 
         cmds = ''
 
-        for name in set(new_env) | set(os.environ):
+        for name in set(new_env) | set(env):
             new = new_env.get(name, None)
-            old = os.environ.get(name, None)
+            old = env.get(name, None)
             if new != old:
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
