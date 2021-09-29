@@ -78,12 +78,15 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.0.1h', sha256='9d1c8a9836aa63e2c6adb684186cbd4371c9e9dcc01d6e3bb447abf2d4d3d093', deprecated=True)
     version('1.0.1e', sha256='f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3', deprecated=True)
 
-    variant('systemcerts', default=True, description='Use system certificates')
+    variant('certs', default='system',
+            values=('mozilla', 'system', 'none'), multi=False,
+            description=('Use certificates from the ca-certificates-mozilla '
+                         'package, symlink system certificates, or none'))
     variant('docs', default=False, description='Install docs and manpages')
 
     depends_on('zlib')
-
     depends_on('perl@5.14.0:', type=('build', 'test'))
+    depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
 
     @classmethod
     def determine_version(cls, exe):
@@ -148,7 +151,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     @run_after('install')
     def link_system_certs(self):
-        if '+systemcerts' not in self.spec:
+        if self.spec.variants['certs'].value != 'system':
             return
 
         system_dirs = [
@@ -187,6 +190,20 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                 if os.path.isdir(pkg_certs):
                     os.rmdir(pkg_certs)
                 os.symlink(sys_certs, pkg_certs)
+
+    @run_after('install')
+    def link_mozilla_certs(self):
+        if self.spec.variants['certs'].value != 'mozilla':
+            return
+
+        pkg_dir = join_path(self.prefix, 'etc', 'openssl')
+        mkdirp(pkg_dir)
+
+        mozilla_pem = self.spec['ca-certificates-mozilla'].pem_path
+        pkg_cert = join_path(pkg_dir, 'cert.pem')
+
+        if not os.path.exists(pkg_cert):
+            os.symlink(mozilla_pem, pkg_cert)
 
     def patch(self):
         if self.spec.satisfies('%nvhpc'):
