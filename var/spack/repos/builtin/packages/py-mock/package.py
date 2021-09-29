@@ -20,7 +20,7 @@ class PyMock(PythonPackage):
     version('1.3.0', sha256='1e247dbecc6ce057299eb7ee019ad68314bb93152e81d9a6110d35f4d5eca0f6')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@17.1:', type='build')
     depends_on('py-wheel',      type='build', when='@:2.0.0')
     depends_on('py-pbr',        type='build', when='@:2.0.0')
     depends_on('py-six@1.7:', type=('build', 'run'))
