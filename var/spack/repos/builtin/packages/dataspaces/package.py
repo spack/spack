@@ -1,8 +1,13 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: MIT
+
 from spack import *
+
 
 class Dataspaces(CMakePackage):
     """DataSpaces v2 based on margo, also called dspaces"""
-
 
     homepage = "wwww.dataspaces.org"
     url = ""
@@ -11,7 +16,7 @@ class Dataspaces(CMakePackage):
     maintainers = ['pradsubedi', 'pdavis']
 
     version('master', branch='master', submodules=True)
-    
+
     variant('pybind', default=True, description='build Python bindings')
 
     depends_on('mpi')
