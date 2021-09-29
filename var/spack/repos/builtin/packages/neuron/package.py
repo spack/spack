@@ -142,6 +142,8 @@ class Neuron(CMakePackage):
                                                              "+rx3d",
                                                              "+coreneuron",
                                                              "+tests"]]
+        if '+tests' in self.spec:
+            args.append('-DNRN_ENABLE_TESTS_BBP:BOOL=ON')
         if "+mpi" in self.spec:
             args.append("-DNRN_ENABLE_MPI=ON")
             if "~coreneuron" in self.spec:
