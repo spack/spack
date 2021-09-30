@@ -156,7 +156,7 @@ class FluxCore(AutotoolsPackage):
             'FLUX_CONNECTOR_PATH',
             self.prefix.lib.flux.connectors
         )
-        env.prepend_path(
+        env.set_path(
             'FLUX_PMI_LIBRARY_PATH',
             os.path.join(self.prefix.lib.flux, "libpmi.so")
         )
