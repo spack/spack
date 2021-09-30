@@ -625,5 +625,6 @@ class Root(CMakePackage):
         env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
         env.prepend_path('PYTHONPATH', self.prefix.lib)
         env.prepend_path('PATH', self.prefix.bin)
+        env.prepend_path('ROOT_INCLUDE_PATH', dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
             env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
