@@ -149,9 +149,6 @@ class FluxCore(AutotoolsPackage):
         )
         env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
         env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
-        env.prepend_path('FLUX_RC_PATH', self.prefix.etc.flux)
-        env.prepend_path('FLUX_RC1_PATH', self.prefix.etc.flux.rc1)
-        env.prepend_path('FLUX_RC3_PATH', self.prefix.etc.flux.rc3)
         env.prepend_path(
             'FLUX_CONNECTOR_PATH',
             self.prefix.lib.flux.connectors
@@ -160,16 +157,6 @@ class FluxCore(AutotoolsPackage):
             'FLUX_PMI_LIBRARY_PATH',
             os.path.join(self.prefix.lib.flux, "libpmi.so")
         )
-        # Wreck was removed in 0.12
-        if self.version < Version("0.12.0"):
-            env.prepend_path(
-                'FLUX_WREXECD_PATH',
-                self.prefix.libexec.flux.wrexecd
-            )
-            env.prepend_path(
-                'FLUX_WRECK_LUA_PATTERN',
-                os.path.join(self.prefix.etc.wreck, "lua.d", "*.lua")
-            )
 
     def configure_args(self):
         args = ['--enable-pylint=no']
