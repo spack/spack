@@ -2017,6 +2017,13 @@
       "features": [],
       "compilers": {
       }
+    },
+    "riscv64": {
+      "from": [],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+      }
     }
   },
   "feature_aliases": {
