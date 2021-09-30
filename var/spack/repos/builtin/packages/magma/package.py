@@ -131,7 +131,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             options.extend(['-DMAGMA_ENABLE_HIP=ON'])
             options.extend(['-DCMAKE_CXX_COMPILER=hipcc'])
             # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
-            if spec.satisfies('^cmake@3.21:'):
+            if spec.satisfies('^cmake@3.21.0:3.21.2'):
                 options.extend(['-D__skip_rocmclang=ON'])
         else:
             options.extend(['-DMAGMA_ENABLE_CUDA=ON'])
