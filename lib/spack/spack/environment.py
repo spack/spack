@@ -43,7 +43,7 @@ from spack.filesystem_view import (
 from spack.installer import PackageInstaller
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
-from spack.util.path import substitute_path_variables
+from spack.util.path import canonicalize_path, substitute_path_variables
 from spack.variant import UnknownVariantError
 
 #: environment variable used to indicate the active environment
@@ -139,6 +139,21 @@ def activate(
 
     tty.debug("Using environment '%s'" % _active_environment.name)
 
+    mods = None
+    cfg = _active_environment.env_file_config_scope().get_section('environment')
+    if cfg is not None and 'environment' in cfg:
+        envenv = cfg['environment']
+        for k in envenv:
+            if k in ('set', 'append_path', 'prepend_path' 'remove_path'):
+                for ev in envenv[k]:
+                    envenv[k][ev] = canonicalize_path(envenv[k][ev])
+        mods = spack.schema.environment.parse(envenv)
+        after_env = os.environ.copy()
+        mods.apply_modifications(after_env)
+        undo = \
+            spack.util.environment.EnvironmentModifications.\
+            from_environment_diff(after_env, os.environ)
+
     # Construct the commands to run
     cmds = ''
     if shell == 'csh':
@@ -149,6 +164,10 @@ def activate(
             cmds += 'if (! $?SPACK_OLD_PROMPT ) '
             cmds += 'setenv SPACK_OLD_PROMPT "${prompt}";\n'
             cmds += 'set prompt="%s ${prompt}";\n' % prompt
+        if mods is not None:
+            cmds += mods.shell_modifications(shell)
+            cmds += 'setenv SPACK_ENV_RESTORE "%s";\n' % \
+                undo.shell_modifications(shell, after_env)
     elif shell == 'fish':
         if os.getenv('TERM') and 'color' in os.getenv('TERM') and prompt:
             prompt = colorize('@G{%s} ' % prompt, color=True)
@@ -157,6 +176,10 @@ def activate(
         cmds += 'function despacktivate;\n'
         cmds += '   spack env deactivate;\n'
         cmds += 'end;\n'
+        if mods is not None:
+            cmds += mods.shell_modifications(shell)
+            cmds += 'set -gx SPACK_ENV_RESTORE "%s";\n' % \
+                undo.shell_modifications(shell, after_env)
         #
         # NOTE: We're not changing the fish_prompt function (which is fish's
         # solution to the PS1 variable) here. This is a bit fiddly, and easy to
@@ -176,7 +199,10 @@ def activate(
             cmds += '    export SPACK_OLD_PS1="${PS1}";\n'
             cmds += 'fi;\n'
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
-
+        if mods is not None:
+            cmds += mods.shell_modifications()
+            cmds += 'export SPACK_ENV_RESTORE="%s";\n' % \
+                undo.shell_modifications(env=after_env)
     #
     # NOTE in the fish-shell: Path variables are a special kind of variable
     # used to support colon-delimited path lists including PATH, CDPATH,
@@ -224,18 +250,30 @@ def deactivate(shell='sh'):
 
     cmds = ''
     if shell == 'csh':
+        cmds += 'if ( $?SPACK_ENV_RESTORE ) then\n'
+        cmds += '    eval "$SPACK_ENV_RESTORE";\n'
+        cmds += '    unsetenv SPACK_ENV_RESTORE;\n'
+        cmds += 'endif;\n'
         cmds += 'unsetenv SPACK_ENV;\n'
         cmds += 'if ( $?SPACK_OLD_PROMPT ) '
         cmds += 'set prompt="$SPACK_OLD_PROMPT" && '
         cmds += 'unsetenv SPACK_OLD_PROMPT;\n'
         cmds += 'unalias despacktivate;\n'
     elif shell == 'fish':
+        cmds += 'if set -q SPACK_ENV_RESTORE;\n'
+        cmds += '    eval "$SPACK_ENV_RESTORE";\n'
+        cmds += '    set -e SPACK_ENV_RESTORE;\n'
+        cmds += 'end;\n'
         cmds += 'set -e SPACK_ENV;\n'
         cmds += 'functions -e despacktivate;\n'
         #
         # NOTE: Not changing fish_prompt (above) => no need to restore it here.
         #
     else:
+        cmds += 'if [ ! -z ${SPACK_ENV_RESTORE+x} ]; then\n'
+        cmds += '    eval "$SPACK_ENV_RESTORE";\n'
+        cmds += '    unset SPACK_ENV_RESTORE; export SPACK_ENV_RESTORE;\n'
+        cmds += 'fi;\n'
         cmds += 'if [ ! -z ${SPACK_ENV+x} ]; then\n'
         cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
         cmds += 'fi;\n'
