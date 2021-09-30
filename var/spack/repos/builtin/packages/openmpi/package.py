@@ -320,7 +320,7 @@ class Openmpi(AutotoolsPackage):
     # PMI support was added in 1.5.5
     conflicts('+pmi', when='@:1.5.4')
     # PMIx support was added in 2.0.0
-    conflicts('+pmix', when='@:1.999.999')
+    conflicts('+pmix', when='@:1')
     # RPATH support in the wrappers was added in 1.7.4
     conflicts('+wrapper-rpath', when='@:1.7.3')
 
