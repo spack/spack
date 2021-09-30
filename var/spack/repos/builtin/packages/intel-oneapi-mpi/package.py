@@ -19,6 +19,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
     if platform.system() == 'Linux':
+        version('2021.4.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18186/l_mpi_oneapi_p_2021.4.0.441_offline.sh',
+                sha256='cc4b7072c61d0bd02b1c431b22d2ea3b84b967b59d2e587e77a9e7b2c24f2a29',
+                expand=False)
         version('2021.3.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17947/l_mpi_oneapi_p_2021.3.0.294_offline.sh',
                 sha256='04c48f864ee4c723b1b4ca62f2bea8c04d5d7e3de19171fd62b17868bc79bc36',
