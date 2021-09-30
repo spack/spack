@@ -405,6 +405,18 @@ class Python(Package):
         return (flags, None, None)
 
     @property
+    def configure_directory(self):
+        """Returns the directory where 'configure' resides.
+        :return: directory where to find configure
+        """
+        return self.stage.source_path
+
+    @property
+    def build_directory(self):
+        """Override to provide another place to build the package"""
+        return self.configure_directory
+
+    @property
     def plat_arch(self):
         arch = platform.machine()
         if arch in arch_map:
