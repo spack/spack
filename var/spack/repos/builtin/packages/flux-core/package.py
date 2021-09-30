@@ -19,6 +19,7 @@ class FluxCore(AutotoolsPackage):
     maintainers = ['SteVwonder']
 
     version('master', branch='master')
+    version('0.29.0', sha256='c13b40e82d66356e75208a689a495ca01f0a013e2e45ac8ea202ed8224987323')
     version('0.28.0', sha256='9a784def7186b0036091bd8d6d8fe5bc3425ab2927e1465e1c9ad266631c285d')
     version('0.27.0', sha256='abd46d38081ba6b501adb1c111374b39d6ae72ac1aec9fbbf31943a856541d3a')
     version('0.26.0', sha256='58bfd4742c59364b13cd83214e8f70735952d01793800b149cae056fddfeeff1')
