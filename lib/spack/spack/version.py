@@ -177,7 +177,7 @@ class Version(object):
         string = string.strip()
         self.string = string
 
-        if not VALID_VERSION.match(string):
+        if string and not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
         # An object that can lookup git commits to compare them to versions
@@ -352,7 +352,7 @@ class Version(object):
                 string_arg = ''.join(string_arg)
                 return cls(string_arg)
             else:
-                return None
+                return Version('')
 
         message = '{cls.__name__} indices must be integers'
         raise TypeError(message.format(cls=cls))

@@ -617,9 +617,10 @@ def test_empty_version_range_raises():
 
 
 def test_version_empty_slice():
-    """Check an empty slice to confirm not getting IndexError (#25953)."""
-    with pytest.raises(ValueError):
-        Version('1.')[1:]
+    """Check an empty slice to confirm get "empty" version instead of
+       an IndexError (#25953).
+    """
+    assert Version('1.')[1:] == Version('')
 
 
 def test_version_wrong_idx_type():
