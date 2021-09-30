@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Here we consolidate the logic for creating an abstract description
 of the information that module systems need.
 
@@ -43,7 +42,7 @@ from llnl.util.lang import dedupe
 
 import spack.build_environment as build_environment
 import spack.config
-import spack.environment as ev
+import spack.environment
 import spack.error
 import spack.paths
 import spack.projections as proj
@@ -698,12 +697,13 @@ class BaseContext(tengine.Context):
         spec = self.spec.copy()  # defensive copy before setting prefix
         if use_view:
             if use_view is True:
-                use_view = ev.default_view_name
+                use_view = spack.environment.default_view_name
 
-            env = ev.active_environment()
+            env = spack.environment.active_environment()
             if not env:
-                raise ev.SpackEnvironmentViewError("Module generation with views "
-                                                   "requires active environment")
+                raise spack.environment.SpackEnvironmentViewError(
+                    "Module generation with views requires active environment"
+                )
 
             view = env.views[use_view]
 
