@@ -5,5 +5,6 @@ sphinx>=3.4,!=4.1.2
 sphinxcontrib-programoutput
 sphinx-rtd-theme
 python-levenshtein
-# issue rendering list in sphinx docutils 0.17 or higher see https://stackoverflow.com/questions/67542699/readthedocs-sphinx-not-rendering-bullet-list-from-rst-file
+# Restrict to docutils <0.17 to workaround a list rendering issue in sphinx.
+# https://stackoverflow.com/questions/67542699
 docutils <0.17
