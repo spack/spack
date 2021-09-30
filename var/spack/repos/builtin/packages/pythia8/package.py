@@ -45,8 +45,8 @@ class Pythia8(AutotoolsPackage):
     variant('hdf5', default=False, description='Support the use of HDF5 format')
 
     depends_on('rsync', type='build')
-    depends_on('hepmc@:2.99.99', when='+hepmc')
-    depends_on('hepmc@3:', when='+hepmc3')
+    depends_on('hepmc', when='+hepmc')
+    depends_on('hepmc3', when='+hepmc3')
     depends_on('root', when='+root')
     depends_on('evtgen', when='+evtgen')
     depends_on('fastjet@3.0.0:', when='+fastjet')
