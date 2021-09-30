@@ -1,4 +1,4 @@
-name: Build & Deploy Docker Containers
+name: Containers
 on:
   # This Workflow can be triggered manually
   workflow_dispatch:
