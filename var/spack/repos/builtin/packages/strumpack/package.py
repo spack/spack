@@ -231,3 +231,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                     break
         else:
             self._test_example(test_exe, test_dir, test_exe, exe_arg)
+
+    def check(self):
+        """Skip the builtin testsuite, use the stand-alone tests instead."""
+        pass
