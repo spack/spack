@@ -509,27 +509,10 @@ class ArchSpec(object):
 
     @staticmethod
     def from_dict(d):
-        """Import an ArchSpec from raw YAML/JSON data.
-
-        This routine implements a measure of compatibility with older
-        versions of Spack.  Spack releases before 0.10 used a single
-        string with no OS or platform identifiers.  We import old Spack
-        architectures with platform ``spack09``, OS ``unknown``, and the
-        old arch string as the target.
-
-        Specs from `0.10` or later have a more fleshed out architecture
-        descriptor with a platform, an OS, and a target.
-
-        """
-        if not isinstance(d['arch'], dict):
-            return ArchSpec(('spack09', 'unknown', d['arch']))
-
-        d = d['arch']
-
-        operating_system = d.get('platform_os', None) or d['os']
-        target = spack.target.Target.from_dict_or_value(d['target'])
-
-        return ArchSpec((d['platform'], operating_system, target))
+        """Import an ArchSpec from raw YAML/JSON data"""
+        arch = d['arch']
+        target = spack.target.Target.from_dict_or_value(arch['target'])
+        return ArchSpec((arch['platform'], arch['platform_os'], target))
 
     def __str__(self):
         return "%s-%s-%s" % (self.platform, self.os, self.target)
