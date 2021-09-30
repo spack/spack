@@ -17,12 +17,6 @@ class Cosma(CMakePackage):
     url = 'https://github.com/eth-cscs/COSMA/releases/download/v2.5.1/COSMA-v2.5.1.tar.gz'
     git = 'https://github.com/eth-cscs/COSMA.git'
 
-    def url_for_version(self, version):
-        if version <= Version('2.3.0'):
-            return 'https://github.com/eth-cscs/COSMA/releases/download/v{0}/cosma.tar.gz'.format(version)
-
-        return 'https://github.com/eth-cscs/COSMA/releases/download/v{0}/COSMA-v{1}.tar.gz'.format(version, version)
-
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version('master', branch='master', submodules=True)
@@ -46,6 +40,12 @@ class Cosma(CMakePackage):
     depends_on('scalapack', when='+scalapack')
     depends_on('cuda', when='+cuda')
     depends_on('rocblas', when='+rocm')
+
+    def url_for_version(self, version):
+        if version <= Version('2.3.0'):
+            return 'https://github.com/eth-cscs/COSMA/releases/download/v{0}/cosma.tar.gz'.format(version)
+
+        return 'https://github.com/eth-cscs/COSMA/releases/download/v{0}/COSMA-v{1}.tar.gz'.format(version, version)
 
     def setup_build_environment(self, env):
         if '+cuda' in self.spec:
