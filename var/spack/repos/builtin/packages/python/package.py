@@ -41,6 +41,7 @@ class Python(Package):
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.install`
     #: phase
     install_targets = ['install']
+    build_targets = []
 
     version('3.9.6',  sha256='d0a35182e19e416fc8eae25a3dcd4d02d4997333e4ad1f2eee6010aadc3fe866')
     version('3.9.5',  sha256='e0fbd5b6e1ee242524430dee3c91baf4cbbaba4a72dd1674b90fda87b713c7ab')
