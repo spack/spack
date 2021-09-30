@@ -91,6 +91,11 @@ class Ffte(Package):
             env['CC'] = spec['mpi'].mpicc
             env['F77'] = spec['mpi'].mpif77
             env['FC'] = spec['mpi'].mpifc
+
+        # allow real/complex aliasing in GNU Fortran 10 and up
+        if spec.satisfies('%gcc@10:'):
+            env['FFLAGS'] = '-fallow-argument-mismatch'
+
         make()
         mkdirp(prefix.lib)
         install('libffte.a', prefix.lib)
