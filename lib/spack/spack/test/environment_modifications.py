@@ -454,3 +454,51 @@ def test_blacklist_lmod_variables():
     # Check that variables related to lmod are not in there
     modifications = env.group_by_name()
     assert not any(x.startswith('LMOD_') for x in modifications)
+
+
+def strip_trailing_slashes(paths):
+    return ':'.join(map(lambda p: p.rstrip('/'), paths.split(':')))
+
+
+@pytest.mark.usefixtures('prepare_environment_for_tests')
+def test_shell_modifications_round_trip():
+
+    # modify the environment
+    mods = EnvironmentModifications()
+    mods.unset('UNSET_ME')
+    mods.set('MY_VAR', 'tada')
+    mods.prepend_path('PATH_LIST', '/path/first')
+    mods.append_path('PATH_LIST', '/path/last')
+    mods.remove_path('REMOVE_PATH_LIST', '/remove/this')
+
+    # apply modifications to a copy of the environment
+    after_env = os.environ.copy()
+    mods.apply_modifications(after_env)
+    assert 'UNSET_ME' not in after_env
+    assert 'MY_VAR' in after_env
+    assert after_env['MY_VAR'] == 'tada'
+    assert after_env['PATH_LIST'].startswith('/path/first:')
+    assert after_env['PATH_LIST'].endswith(':/path/last')
+    assert after_env['REMOVE_PATH_LIST'].find('/remove/this') == -1
+
+    # compute the inverse modifications
+    undo = EnvironmentModifications.from_environment_diff(after_env, os.environ)
+
+    # check forward shell modifications
+    cmds = mods.shell_modifications().splitlines()
+    assert 'unset UNSET_ME;' in cmds
+    assert 'export MY_VAR=tada;' in cmds
+    new_path_list = '/path/first:%s:/path/last' % os.environ['PATH_LIST']
+    assert 'export PATH_LIST=%s;' % new_path_list in cmds
+    new_remove_path_list = \
+        strip_trailing_slashes(os.environ['REMOVE_PATH_LIST']).\
+        replace(':/remove/this', '')
+    assert 'export REMOVE_PATH_LIST=%s;' % new_remove_path_list in cmds
+
+    # check inverse shell modifications
+    undo_cmds = undo.shell_modifications(env=after_env).splitlines()
+    assert 'export UNSET_ME=%s;' % os.environ['UNSET_ME'] in undo_cmds
+    assert 'unset MY_VAR;' in undo_cmds
+    assert 'export PATH_LIST=%s;' % os.environ['PATH_LIST'] in undo_cmds
+    assert 'export REMOVE_PATH_LIST=%s;' % os.environ['REMOVE_PATH_LIST'] \
+        in undo_cmds
