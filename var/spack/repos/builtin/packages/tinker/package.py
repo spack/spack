@@ -20,7 +20,8 @@ class Tinker(MakefilePackage):
 
     depends_on('fftw-api@3')
     depends_on('fftw~mpi+openmp', when='^fftw')
-    depends_on('armpl threads=openmp', when='^armpl')
+    # Needs https://github.com/spack/spack/pull/25461 to be merged first
+    # depends_on('armpl threads=openmp', when='^armpl')
 
     # Just building the OpenMP version (for now) in source directory
     build_directory = 'source'
