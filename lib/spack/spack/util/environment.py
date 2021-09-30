@@ -760,6 +760,8 @@ class EnvironmentModifications(object):
                 remaining_list = [
                     ii for ii in before_list if ii in after_list]
                 try:
+                    # TODO: this should throw only when len(remaining_list) ==
+                    # 0, why not just check that condition?
                     start = after_list.index(remaining_list[0])
                     end = after_list.index(remaining_list[-1])
                     search = sep.join(after_list[start:end + 1])
@@ -769,7 +771,7 @@ class EnvironmentModifications(object):
 
                 if search not in value_before:
                     # We just need to set the variable to the new value
-                    env.prepend_path(x, value_after)
+                    env.set(x, value_after)
                 else:
                     try:
                         prepend_list = after_list[:start]
