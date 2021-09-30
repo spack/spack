@@ -65,6 +65,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     depends_on('xz', when='+xz')
     depends_on('source-highlight', when='+source-highlight')
     depends_on('ncurses', when='+tui')
+    depends_on('gmp', when='@11.1:')
 
     build_directory = 'spack-build'
 
@@ -73,8 +74,11 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
             '--with-system-gdbinit={0}'.format(self.prefix.etc.gdbinit)
         ]
 
+        if self.spec.version >= Version("11.1"):
+            args.append("--with-gmp={}".format(self.spec['gmp'].prefix))
+
         if '+python' in self.spec:
-            args.append('--with-python')
+            args.append('--with-python={}'.format(self.spec['python'].command))
             args.append('LDFLAGS={0}'.format(
                 self.spec['python'].libs.ld_flags))
 
