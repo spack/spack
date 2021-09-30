@@ -44,9 +44,9 @@ class Mpibind(AutotoolsPackage):
 
     # Requiring @master temporarily while Flux adds
     # FLUX_SHELL_RC_PATH to a stable version (>0.29.0).
-    # mpibind will require at least such version. 
+    # mpibind will require at least such version.
     depends_on('flux-core@master', when='+flux', type='link')
-    
+
     def autoreconf(self, spec, prefix):
         autoreconf('--install', '--verbose', '--force')
 
