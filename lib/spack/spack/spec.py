@@ -225,11 +225,6 @@ class ArchSpec(object):
                 Otherwise information on platform, OS and target should be
                 passed in either as a spec string or as a tuple.
         """
-        # If another instance of ArchSpec was passed, duplicate it
-        if isinstance(spec_or_platform_tuple, ArchSpec):
-            self._dup(spec_or_platform_tuple)
-            return
-
         # If the argument to __init__ is a spec string, parse it
         # and construct an ArchSpec
         def _string_or_none(s):
@@ -237,21 +232,27 @@ class ArchSpec(object):
                 return str(s)
             return None
 
-        if isinstance(spec_or_platform_tuple, six.string_types):
-            spec_fields = spec_or_platform_tuple.split("-")
-            msg = "invalid arch spec [{0}]"
-            assert len(spec_fields) == 3, msg.format(spec_or_platform_tuple)
+        # If another instance of ArchSpec was passed, duplicate it
+        if isinstance(spec_or_platform_tuple, ArchSpec):
+            other = spec_or_platform_tuple
+            platform_tuple = other.platform, other.os, other.target
+
+        elif isinstance(spec_or_platform_tuple, (six.string_types, tuple)):
+            spec_fields = spec_or_platform_tuple
+
+            # Normalize the string to a tuple
+            if isinstance(spec_or_platform_tuple, six.string_types):
+                spec_fields = spec_or_platform_tuple.split("-")
+                if len(spec_fields) != 3:
+                    msg = 'cannot construct an ArchSpec from {0!s}'
+                    raise ValueError(msg.format(spec_or_platform_tuple))
 
             platform, operating_system, target = spec_fields
-            platform_tuple = _string_or_none(platform),\
-                _string_or_none(operating_system), target
-
-        if isinstance(spec_or_platform_tuple, tuple):
-            platform, operating_system, target = spec_or_platform_tuple
-            platform_tuple = _string_or_none(platform), \
-                _string_or_none(operating_system), target
-            msg = "invalid arch spec tuple [{0}]"
-            assert len(platform_tuple) == 3, msg.format(platform_tuple)
+            platform_tuple = (
+                _string_or_none(platform),
+                _string_or_none(operating_system),
+                target
+            )
 
         self.platform, self.os, self.target = platform_tuple
 
@@ -264,11 +265,6 @@ class ArchSpec(object):
         yield self.platform
         yield self.os
         yield self.target
-
-    def _dup(self, other):
-        self.platform = other.platform
-        self.os = other.os
-        self.target = other.target
 
     @property
     def platform(self):
@@ -484,9 +480,7 @@ class ArchSpec(object):
 
     def copy(self):
         """Copy the current instance and returns the clone."""
-        clone = ArchSpec.__new__(ArchSpec)
-        clone._dup(self)
-        return clone
+        return ArchSpec(self)
 
     @property
     def concrete(self):
