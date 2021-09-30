@@ -1552,7 +1552,14 @@ class Environment(object):
         """Return all specs, even those a user spec would shadow."""
         all_specs = set()
         for h in self.concretized_order:
-            all_specs.update(self.specs_by_hash[h].traverse())
+            try:
+                spec = self.specs_by_hash[h]
+            except KeyError:
+                tty.warn(
+                    'Environment %s appears to be corrupt: missing spec '
+                    '"%s"' % (self.name, h))
+                continue
+            all_specs.update(spec.traverse())
 
         return sorted(all_specs)
 
