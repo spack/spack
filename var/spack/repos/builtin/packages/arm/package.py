@@ -7,7 +7,6 @@ import subprocess
 
 from spack import *
 
-
 _os_map = {
     'ubuntu18.04': 'Ubuntu-18.04',
     'ubuntu20.04': 'Ubuntu-20.04',
@@ -58,7 +57,6 @@ def get_acfl_prefix(spec):
             get_os()
         )
     )
-
 
 
 class Arm(Package):
