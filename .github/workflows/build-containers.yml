@@ -1,5 +1,7 @@
 name: Build & Deploy Docker Containers
 on:
+  # This Workflow can be triggered manually
+  workflow_dispatch:
   # Build new Spack develop containers nightly.
   schedule:
     - cron: '34 0 * * *'
