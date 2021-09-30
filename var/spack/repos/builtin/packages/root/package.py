@@ -617,6 +617,7 @@ class Root(CMakePackage):
         env.prepend_path('PYTHONPATH', self.prefix.lib)
         env.prepend_path('PATH', self.prefix.bin)
         env.append_path('CMAKE_MODULE_PATH', self.prefix.cmake)
+        env.prepend_path('ROOT_INCLUDE_PATH', dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
             env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
 
