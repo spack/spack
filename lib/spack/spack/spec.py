@@ -518,10 +518,8 @@ class ArchSpec(object):
         return "%s-%s-%s" % (self.platform, self.os, self.target)
 
     def __repr__(self):
-        # TODO: this needs to be changed (repr is meant to return valid
-        # TODO: Python code to return an instance equivalent to the current
-        # TODO: one).
-        return str(self)
+        fmt = 'ArchSpec(({0.platform!r}, {0.os!r}, {1!r}))'
+        return fmt.format(self, str(self.target))
 
     def __contains__(self, string):
         return string in str(self) or string in self.target
