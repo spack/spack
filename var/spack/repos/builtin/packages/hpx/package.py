@@ -210,7 +210,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         # HIP support requires compiling with hipcc
         if '+rocm' in self.spec:
             args += [self.define('CMAKE_CXX_COMPILER', self.spec['hip'].hipcc)]
-            if self.spec.satisfies('^cmake@3.21:'):
+            if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
                 args += [self.define('__skip_rocmclang', True)]
 
         # Instrumentation

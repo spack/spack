@@ -92,7 +92,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
                 args.append('-DCMAKE_CXX_FLAGS={0}'.format(self.hip_flags(rocm_arch)))
 
             # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
-            if self.spec.satisfies('^cmake@3.21:'):
+            if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
                 args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args
