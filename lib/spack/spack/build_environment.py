@@ -799,9 +799,6 @@ def setup_package(pkg, dirty, context='build'):
     # own environment modifications. This ensures Spack controls CC/CXX/... variables.
     if need_compiler:
         for mod in pkg.compiler.modules:
-            # Fixes issue https://github.com/spack/spack/issues/3153
-            if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                load_module("cce")
             load_module(mod)
 
     # kludge to handle cray libsci being automatically loaded by PrgEnv
