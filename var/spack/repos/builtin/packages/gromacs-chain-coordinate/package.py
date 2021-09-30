@@ -77,3 +77,11 @@ class GromacsChainCoordinate(CMakePackage):
 
     def cmake_args(self):
         return super(GromacsChainCoordinate, self).cmake_args()
+
+    def check(self):
+        """The default 'test' targets does not compile the test programs"""
+        with working_dir(self.build_directory):
+            if self.generator == 'Unix Makefiles':
+                self._if_make_target_execute('check')
+            elif self.generator == 'Ninja':
+                self._if_ninja_target_execute('check')
