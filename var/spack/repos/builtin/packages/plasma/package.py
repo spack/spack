@@ -20,6 +20,8 @@ class Plasma(CMakePackage):
     git = "https://github.com/icl-utk-edu/plasma"
     maintainers = ['luszczek']
 
+    tags = ['e4s']
+
     version("develop", git=git)
     version('21.8.29', sha256='e0bb4d9143c8540f9f46cbccac9ed0cbea12500a864e6954fce2fe94ea057a10')
     version("20.9.20", sha256="2144a77b739f8dd2f0dbe5b64d94cde0e916f55c4eb170facd168c0db7fc7970")

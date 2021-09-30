@@ -16,7 +16,7 @@ class OmegaH(CMakePackage):
     git      = "https://github.com/SNLComputation/omega_h.git"
 
     maintainers = ['ibaned']
-
+    tags = ['e4s']
     version('main', branch='main')
     version('9.34.1', sha256='3a812da3b8df3e0e5d78055e91ad23333761bcd9ed9b2c8c13ee1ba3d702e46c')
     version('9.32.5', sha256='963a203e9117024cd48d829d82b8543cd9133477fdc15386113b594fdc3246d8')

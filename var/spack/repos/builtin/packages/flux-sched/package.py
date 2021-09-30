@@ -14,7 +14,7 @@ class FluxSched(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-sched"
     url      = "https://github.com/flux-framework/flux-sched/releases/download/v0.5.0/flux-sched-0.5.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-sched.git"
-    tags     = ['radiuss']
+    tags     = ['radiuss', 'e4s']
 
     maintainers = ['SteVwonder']
 

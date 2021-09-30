@@ -33,6 +33,8 @@ class Trilinos(CMakePackage, CudaPackage):
 
     maintainers = ['keitat', 'sethrj', 'kuberry']
 
+    tags = ['e4s']
+
     # ###################### Versions ##########################
 
     version('master', branch='master')

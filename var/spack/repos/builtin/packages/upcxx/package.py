@@ -24,8 +24,10 @@ class Upcxx(Package):
 
     homepage = "https://upcxx.lbl.gov"
     maintainers = ['bonachea']
-
     git = 'https://bitbucket.org/berkeleylab/upcxx.git'
+
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('master',  branch='master')
 

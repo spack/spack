@@ -21,6 +21,8 @@ class Flecsi(CMakePackage, CudaPackage):
     git      = 'https://github.com/flecsi/flecsi.git'
     maintainers = ['rspavel', 'ktsai7']
 
+    tags = ['e4s']
+
     version('develop', branch='devel', submodules=False)
     version('1', git="https://github.com/laristra/flecsi.git", branch='1', submodules=False, preferred=False)
     version('1.4', git="https://github.com/laristra/flecsi.git",  branch='1.4', submodules=False, preferred=False)

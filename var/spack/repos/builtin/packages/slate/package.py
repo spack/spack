@@ -20,6 +20,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     url      = 'https://bitbucket.org/icl/slate/downloads/slate-2020.10.00.tar.gz'
     maintainers = ['G-Ragghianti', 'mgates3']
 
+    tags = ['e4s']
     test_requires_compiler = True
 
     version('master', branch='master')

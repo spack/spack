@@ -14,6 +14,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     git      = "https://bitbucket.org/icl/heffte.git"
 
     maintainers = ['mkstoyanov']
+    tags = ['e4s']
 
     test_requires_compiler = True
 

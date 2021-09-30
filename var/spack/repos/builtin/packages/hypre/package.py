@@ -21,6 +21,8 @@ class Hypre(Package, CudaPackage):
 
     maintainers = ['ulrikeyang', 'osborn9', 'balay']
 
+    tags = ['e4s']
+
     test_requires_compiler = True
 
     version('develop', branch='master')

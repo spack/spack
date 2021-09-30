@@ -13,6 +13,8 @@ class PyCinemasci(PythonPackage):
     homepage = "https://github.com/cinemascience"
     pypi = "cinemasci/cinemasci-1.3.tar.gz"
 
+    tags = ['e4s']
+
     maintainers = ['EthanS94']
 
     version('1.3', sha256='c024ca9791de9d78e5dad3fd11e8f87d8bc1afa5830f2697d7ec4116a5d23c20')

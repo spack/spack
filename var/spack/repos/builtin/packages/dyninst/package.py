@@ -16,6 +16,8 @@ class Dyninst(CMakePackage):
     git      = "https://github.com/dyninst/dyninst.git"
     maintainers = ['hainest']
 
+    tags = ['e4s']
+
     version('master', branch='master')
     version('11.0.1', tag='v11.0.1')
     version('11.0.0', tag='v11.0.0')

@@ -21,6 +21,8 @@ class Caliper(CMakePackage, CudaPackage):
     url      = "https://github.com/LLNL/Caliper/archive/v2.6.0.tar.gz"
     tags     = ['radiuss']
 
+    tags = ['e4s']
+
     maintainers = ["daboehme"]
 
     test_requires_compiler = True

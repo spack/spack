@@ -18,6 +18,8 @@ class Precice(CMakePackage):
     url      = 'https://github.com/precice/precice/archive/v1.2.0.tar.gz'
     maintainers = ['fsimonis', 'MakisH']
 
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('2.2.1', sha256='bca8cedfb5c86656e4fdfaca5cb982b861f9aba926538fa4411bc0d015e09c1f')
     version('2.2.0', sha256='f8c4e0810dcaeb6a40a0fcab64b95c899f0121c968e0730416d4d2a97d39d0c4')

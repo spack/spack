@@ -14,6 +14,8 @@ class SuperluDist(CMakePackage, CudaPackage):
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
+    tags = ['e4s']
+
     maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels']
 
     version('develop', branch='master')

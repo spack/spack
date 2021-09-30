@@ -27,6 +27,8 @@ class Scr(CMakePackage):
     git      = "https://github.com/llnl/scr.git"
     tags     = ['radiuss']
 
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('legacy', branch='legacy', deprecated=True)
 

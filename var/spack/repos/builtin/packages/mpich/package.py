@@ -21,7 +21,7 @@ class Mpich(AutotoolsPackage):
     list_depth = 1
 
     maintainers = ['raffenet', 'yfguo']
-
+    tags = ['e4s']
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
