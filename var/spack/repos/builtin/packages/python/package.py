@@ -197,6 +197,7 @@ class Python(AutotoolsPackage):
     patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:')
 
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
+    patch('tkinter-3.8.patch', when='@3.8: ~tkinter')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch('cray-rpath-2.3.patch', when='@2.3:3.0.1 platform=cray')
