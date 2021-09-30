@@ -72,7 +72,11 @@ class Curl(AutotoolsPackage):
     variant('gssapi',     default=False, description='enable Kerberos support')
     variant('librtmp',    default=False, description='enable Rtmp support')
     variant('ldap',       default=False, description='enable ldap support')
-    variant('libidn2',    default=False,  description='enable libidn2 support')
+    variant('libidn2',    default=False, description='enable libidn2 support')
+    variant('certs',      default='fallback', values=('fallback', 'mozilla'), multi=False,
+            description=('fallback uses the default certificates from OpenSSL or '
+                         'GnuTLS; mozilla uses certificates from the '
+                         'ca-certificates-mozilla package'))
 
     conflicts('+libssh', when='@:7.57.99')
     # on OSX and --with-ssh the configure steps fails with
@@ -86,6 +90,8 @@ class Curl(AutotoolsPackage):
     conflicts('platform=linux', when='tls=secure_transport', msg='Only supported on macOS')
     conflicts('tls=mbedtls', when='@:7.45')
 
+    conflicts('certs=fallback', when='tls=mbedtls', msg='mbedtls does not have certs by default')
+
     depends_on('gnutls', when='tls=gnutls')
     depends_on('mbedtls', when='tls=mbedtls')
     depends_on('nss', when='tls=nss')
@@ -96,6 +102,7 @@ class Curl(AutotoolsPackage):
     depends_on('libssh2', when='+libssh2')
     depends_on('libssh', when='+libssh')
     depends_on('krb5', when='+gssapi')
+    depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
 
     # curl queries pkgconfig for openssl compilation flags
     depends_on('pkgconfig', type='build')
@@ -111,10 +118,22 @@ class Curl(AutotoolsPackage):
             '--without-libgsasl',
             '--without-libpsl',
             '--without-zstd',
-            '--without-ca-bundle',
-            '--without-ca-path',
-            '--with-ca-fallback',
         ]
+
+        # Take the certificates configured in the tls library
+        certs = spec.variants['certs'].value
+        if certs == 'fallback':
+            args.extend([
+                '--without-ca-bundle',
+                '--without-ca-path',
+                '--with-ca-fallback'
+            ])
+        elif certs == 'mozilla':
+            args.extend([
+                '--with-ca-bundle={0}'.format(spec['ca-certificates-mozilla'].pem_path),
+                '--without-ca-path',
+                '--without-ca-fallback'
+            ])
 
         # https://daniel.haxx.se/blog/2021/06/07/bye-bye-metalink-in-curl/
         # We always disable it explicitly, but the flag is gone in newer
