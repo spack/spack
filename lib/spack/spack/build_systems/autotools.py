@@ -60,16 +60,18 @@ class AutotoolsPackage(PackageBase):
     def patch_config_files(self):
         """
         Whether or not to update old ``config.guess`` and ``config.sub`` files
-        distributed with the tarball. This currently only applies to ``ppc64le:``
-        and ``aarch64:`` target architectures. The substitutes are taken from the
-        ``gnuconfig`` package, which is automatically added as a build dependency
-        for these architectures. In case system versions of these config files are
-        required, the ``gnuconfig`` package can be marked external with a prefix
-        pointing to the directory containing the system ``config.guess`` and
-        ``config.sub`` files.
+        distributed with the tarball. This currently only applies to
+        ``ppc64le:``, ``aarch64:``, and ``riscv64`` target architectures. The
+        substitutes are taken from the ``gnuconfig`` package, which is
+        automatically added as a build dependency for these architectures. In
+        case system versions of these config files are required, the
+        ``gnuconfig`` package can be marked external with a prefix pointing to
+        the directory containing the system ``config.guess`` and ``config.sub``
+        files.
         """
         return (self.spec.satisfies('target=ppc64le:')
-                or self.spec.satisfies('target=aarch64:'))
+                or self.spec.satisfies('target=aarch64:')
+                or self.spec.satisfies('target=riscv64:'))
 
     #: Whether or not to update ``libtool``
     #: (currently only for Arm/Clang/Fujitsu compilers)
@@ -99,6 +101,7 @@ class AutotoolsPackage(PackageBase):
 
     depends_on('gnuconfig', type='build', when='target=ppc64le:')
     depends_on('gnuconfig', type='build', when='target=aarch64:')
+    depends_on('gnuconfig', type='build', when='target=riscv64:')
 
     @property
     def _removed_la_files_log(self):
@@ -121,7 +124,8 @@ class AutotoolsPackage(PackageBase):
         """Some packages ship with older config.guess/config.sub files and
         need to have these updated when installed on a newer architecture.
         In particular, config.guess fails for PPC64LE for version prior
-        to a 2013-06-10 build date (automake 1.13.4) and for ARM (aarch64).
+        to a 2013-06-10 build date (automake 1.13.4) and for ARM (aarch64) and
+        RISC-V (riscv64).
         """
         if not self.patch_config_files:
             return
@@ -133,6 +137,8 @@ class AutotoolsPackage(PackageBase):
             config_arch = 'ppc64le'
         elif self.spec.satisfies('target=aarch64:'):
             config_arch = 'aarch64'
+        elif self.spec.satisfies('target=riscv64:'):
+            config_arch = 'riscv64'
         else:
             config_arch = 'local'
 
