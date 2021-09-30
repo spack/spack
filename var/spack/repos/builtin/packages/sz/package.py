@@ -93,6 +93,7 @@ class Sz(CMakePackage):
 
         if "+python" in self.spec:
             args.append("-DBUILD_PYTHON_WRAPPER=ON")
+            args.append("-DSZ_PYTHON_SITELIB={0}".format(site_packages_dir))
         else:
             args.append("-DBUILD_PYTHON_WRAPPER=OFF")
 
