@@ -6,7 +6,7 @@
 
 class PyPytestRandomOrder(PythonPackage):
     """
-    Randomise the order in which pytest tests are run with some control over the randomness
+    Randomise the order in which pytest tests are run.
     """
 
     homepage = "https://github.com/jbasko/pytest-random-order"
@@ -16,4 +16,3 @@ class PyPytestRandomOrder(PythonPackage):
 
     depends_on('python@3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
