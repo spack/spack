@@ -20,4 +20,3 @@ class PyGlobusSdk(PythonPackage):
     depends_on('py-requests@2.19.1:2.999.999', type=('run', 'test'))
     depends_on('py-cryptography@2.0:3.3.999,3.4.1:3.6.999', type=('run', 'test'))
     depends_on('py-pyjwt@2.0.0:2.999.999+crypto', type=('run', 'test'))
-
