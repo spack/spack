@@ -120,6 +120,8 @@ class Msvc(Compiler):
 
             env.set('CC', self.cc)
             env.set('CXX', self.cxx)
+            env.set('FC', self.fc)
+            env.set('F77', self.f77)
         else:
             # Should not this be an exception?
             print("Cannot pull msvc compiler information in Python 2.6 or below")
