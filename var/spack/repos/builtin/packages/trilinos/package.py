@@ -88,7 +88,6 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('superlu',      default=False, description='Compile with SuperLU solvers')
     variant('strumpack',    default=False, description='Compile with STRUMPACK solvers')
     variant('x11',          default=False, description='Compile with X11 when +exodus')
-    variant('zlib',         default=False, description='Compile with zlib')
 
     # Package options (alphabet order)
     variant('amesos',       default=True, description='Compile with Amesos')
@@ -105,6 +104,7 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('intrepid',     default=False, description='Enable Intrepid')
     variant('intrepid2',    default=False, description='Enable Intrepid2')
     variant('isorropia',    default=False, description='Compile with Isorropia')
+    variant('gtest',        default=False, description='Build vendored Googletest')
     variant('kokkos',       default=True, description='Compile with Kokkos')
     variant('ml',           default=True, description='Compile with ML')
     variant('minitensor',   default=False, description='Compile with MiniTensor')
@@ -196,6 +196,7 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('+amesos2')
         conflicts('+dtk')
         conflicts('+ifpack2')
+        conflicts('+muelu')
         conflicts('+teko')
         conflicts('+zoltan2')
 
@@ -208,15 +209,20 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('~stratimikos')
         conflicts('@:12 gotype=long')
 
+    # Known requirements from tribits dependencies
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
+    conflicts('+minitensor', when='~boost')
     conflicts('+ifpack2', when='~belos')
     conflicts('+intrepid', when='~sacado')
     conflicts('+intrepid', when='~shards')
     conflicts('+intrepid2', when='~shards')
     conflicts('+isorropia', when='~zoltan')
-    conflicts('+muelu', when='~tpetra')
     conflicts('+phalanx', when='~sacado')
+    conflicts('+scorec', when='~mpi')
+    conflicts('+scorec', when='~shards')
+    conflicts('+scorec', when='~stk')
+    conflicts('+scorec', when='~zoltan')
     conflicts('+tempus', when='~nox')
     conflicts('+zoltan2', when='~zoltan')
 
@@ -225,8 +231,13 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+dtk', when='~intrepid2')
     conflicts('+dtk', when='@:12.12,13:')
 
+    # Installed FindTrilinos are broken in SEACAS if Fortran is disabled
+    # see https://github.com/trilinos/Trilinos/issues/3346
+    conflicts('+exodus', when='~fortran')
     # Only allow Mesquite with Trilinos 12.12 and up, and master
     conflicts('+mesquite', when='@:12.10.99,master')
+    # Strumpack is only available as of mid-2021
+    conflicts('+strumpack', when='@:13.0.99')
     # Can only use one type of SuperLU
     conflicts('+superlu-dist', when='+superlu')
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
@@ -235,34 +246,19 @@ class Trilinos(CMakePackage, CudaPackage):
     # see https://github.com/trilinos/Trilinos/issues/3566
     conflicts('+superlu-dist', when='+float+amesos2+explicit_template_instantiation^superlu-dist@5.3.0:')
     # Amesos, conflicting types of double and complex SLU_D
-    # see
-    # https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
-    # and
-    # https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
+    # see https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
+    # and https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
     conflicts('+superlu-dist', when='+complex+amesos2')
-    conflicts('+strumpack', when='@:13.0.99')
     # https://github.com/trilinos/Trilinos/issues/2994
     conflicts(
         '+shared', when='+stk platform=darwin',
         msg='Cannot build Trilinos with STK as a shared library on Darwin.'
     )
     conflicts('+adios2', when='@:12.14.1')
-    conflicts('+cuda_rdc', when='~cuda')
-    conflicts('+wrapper', when='~cuda')
-    conflicts('+wrapper', when='%clang')
     conflicts('cxxstd=11', when='@master:')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
-
-    # Boost requires minitensor
-    conflicts('~boost', when='+minitensor')
-
-    # SCOREC requires shards, stk, and zoltan
-    conflicts('+scorec', when='~mpi')
-    conflicts('+scorec', when='~shards')
-    conflicts('+scorec', when='~stk')
-    conflicts('+scorec', when='~zoltan')
 
     # Multi-value gotype only applies to trilinos through 12.14
     conflicts('gotype=all', when='@12.15:')
@@ -273,6 +269,9 @@ class Trilinos(CMakePackage, CudaPackage):
             conflicts('+cuda', when='~wrapper %' + _compiler,
                       msg='trilinos~wrapper+cuda can only be built with the '
                       'Clang compiler')
+    conflicts('+cuda_rdc', when='~cuda')
+    conflicts('+wrapper', when='~cuda')
+    conflicts('+wrapper', when='%clang')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
@@ -283,18 +282,33 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # ###################### Dependencies ##########################
 
-    # Explicit dependency variants
     depends_on('adios2', when='+adios2')
     depends_on('blas')
     depends_on('boost', when='+boost')
     depends_on('cgns', when='+exodus')
     depends_on('hdf5+hl', when='+hdf5')
-    depends_on('hdf5~mpi', when='+hdf5~mpi')
-    depends_on('hdf5+mpi', when="+hdf5+mpi")
+    depends_on('hypre~internal-superlu~int64', when='+hypre')
+    depends_on('kokkos-nvcc-wrapper', when='+wrapper')
     depends_on('lapack')
+    depends_on('libx11', when='+x11')
+    depends_on('matio', when='+exodus')
+    depends_on('metis', when='+zoltan')
     depends_on('mpi', when='+mpi')
+    depends_on('netcdf-c', when="+exodus")
+    depends_on('parallel-netcdf', when='+exodus+mpi')
+    depends_on('parmetis', when='+mpi +zoltan')
+    depends_on('parmetis', when='+scorec')
+    depends_on('py-mpi4py', when='+mpi+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('python', when='+python')
+    depends_on('scalapack', when='+mumps')
+    depends_on('scalapack', when='+strumpack+mpi')
+    depends_on('strumpack+shared', when='+strumpack')
     depends_on('suite-sparse', when='+suite-sparse')
-    depends_on('zlib', when="+zlib")
+    depends_on('superlu-dist', when='+superlu-dist')
+    depends_on('superlu@4.3 +pic', when='+superlu')
+    depends_on('swig', when='+python')
+    depends_on('zlib', when='+zoltan')
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
@@ -303,38 +317,23 @@ class Trilinos(CMakePackage, CudaPackage):
     # (or alike) and adding results to -DTrilinos_EXTRA_LINK_FLAGS together
     # with Blas and Lapack and ScaLAPACK and Blacs and -lgfortran and it may
     # work at the end. But let's avoid all this by simply using shared libs
-    depends_on('mumps@5.0:+mpi+shared+openmp', when='+mumps+openmp')
-    depends_on('mumps@5.0:+mpi+shared~openmp', when='+mumps~openmp')
-    depends_on('scalapack', when='+mumps')
-    depends_on('superlu-dist', when='+superlu-dist')
-    depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
+    depends_on('mumps@5.0:+shared', when='+mumps')
+
+    for _flag in ('~mpi', '+mpi'):
+        depends_on('hdf5' + _flag, when='+hdf5' + _flag)
+        depends_on('mumps' + _flag, when='+mumps' + _flag)
+    for _flag in ('~openmp', '+openmp'):
+        depends_on('mumps' + _flag, when='+mumps' + _flag)
+
+    depends_on('hwloc', when='@13: +kokkos')
+    depends_on('hwloc+cuda', when='@13: +kokkos+cuda')
+    depends_on('hypre@develop', when='@master: +hypre')
+    depends_on('netcdf-c+mpi+parallel-netcdf', when="+exodus+mpi@12.12.1:")
     depends_on('superlu-dist@4.4:5.3', when='@12.6.2:12.12.1+superlu-dist')
     depends_on('superlu-dist@5.4:6.2.0', when='@12.12.2:13.0.0+superlu-dist')
     depends_on('superlu-dist@6.3.0:', when='@13.0.1:99 +superlu-dist')
+    depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
     depends_on('superlu-dist@develop', when='@master: +superlu-dist')
-    depends_on('superlu+pic@4.3', when='+superlu')
-    depends_on('strumpack+shared', when='+strumpack')
-    depends_on('scalapack', when='+strumpack+mpi')
-    # Trilinos can not be built against 64bit int hypre
-    depends_on('hypre~internal-superlu~int64', when='+hypre')
-    depends_on('hypre@develop', when='@master: +hypre')
-    depends_on('python', when='+python')
-    depends_on('py-mpi4py', when='+mpi +python', type=('build', 'run'))
-    depends_on('py-numpy', when='+python', type=('build', 'run'))
-    depends_on('swig', when='+python')
-    depends_on('kokkos-nvcc-wrapper', when='+wrapper')
-    depends_on('hwloc', when='@13: +kokkos')
-    depends_on('hwloc+cuda', when='@13: +kokkos+cuda')
-
-    # Variant requirements from packages
-    depends_on('metis', when='+zoltan')
-    depends_on('libx11', when='+x11')
-    depends_on('matio', when='+exodus')
-    depends_on('netcdf-c', when="+exodus")
-    depends_on('netcdf-c+mpi+parallel-netcdf', when="+exodus+mpi@12.12.1:")
-    depends_on('parallel-netcdf', when='+exodus+mpi')
-    depends_on('parmetis', when='+mpi +zoltan')
-    depends_on('parmetis', when='+scorec')
 
     # ###################### Patches ##########################
 
@@ -454,7 +453,7 @@ class Trilinos(CMakePackage, CudaPackage):
             define_trilinos_enable('Epetra'),
             define_trilinos_enable('EpetraExt'),
             define_trilinos_enable('FEI', False),
-            define_trilinos_enable('Gtest', False),
+            define_trilinos_enable('Gtest'),
             define_trilinos_enable('Ifpack'),
             define_trilinos_enable('Ifpack2'),
             define_trilinos_enable('Intrepid'),
