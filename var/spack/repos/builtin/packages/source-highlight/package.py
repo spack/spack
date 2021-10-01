@@ -14,20 +14,23 @@ class SourceHighlight(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/src-highlite/"
     gnu_mirror_path = "src-highlite/source-highlight-3.1.8.tar.gz"
-    git = "https://git.savannah.gnu.org/cgit/src-highlite.git"
+    git = "https://git.savannah.gnu.org/git/src-highlite.git"
 
     version('master',  branch='master')
+    version('2020-06-10', commit='904949c9026cb772dc93fbe0947a252ef47127f4')
     version('3.1.9', sha256='3a7fd28378cb5416f8de2c9e77196ec915145d44e30ff4e0ee8beb3fe6211c91')
     version('3.1.8', sha256='01336a7ea1d1ccc374201f7b81ffa94d0aecb33afc7d6903ebf9fbf33a55ada3')
+
+    conflicts('@:3.1.9', when='%gcc@11:')
 
     depends_on('boost')
 
     # git version needs autotools
-    depends_on('m4', when='@master')
-    depends_on('autoconf', when='@master')
-    depends_on('automake', when='@master')
-    depends_on('libtool', when='@master')
-    depends_on('texinfo', when='@master')
+    depends_on('m4', when='@2020-06-10:')
+    depends_on('autoconf', when='@2020-06-10:')
+    depends_on('automake', when='@2020-06-10:')
+    depends_on('libtool', when='@2020-06-10:')
+    depends_on('texinfo', when='@2020-06-10:')
 
     def configure_args(self):
         args = ["--with-boost={0}".format(self.spec['boost'].prefix)]
