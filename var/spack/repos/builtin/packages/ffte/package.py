@@ -30,8 +30,14 @@ class Ffte(Package):
     variant('vector', default=False, description='Use vectorized FFT')
 
     depends_on('mpi', when='+mpi')
-    depends_on('cuda', when='+cuda')
     depends_on('spiral', when='+spiral')
+
+    conflicts('%cce', when='+cuda', msg='Must use NVHPC compiler')
+    conflicts('%clang', when='+cuda', msg='Must use NVHPC compiler')
+    conflicts('%gcc', when='+cuda', msg='Must use NVHPC compiler')
+    conflicts('%llvm', when='+cuda', msg='Must use NVHPC compiler')
+    conflicts('%nag', when='+cuda', msg='Must use NVHPC compiler')
+    conflicts('%intel', when='+cuda', msg='Must use NVHPC compiler')
 
     def edit(self, spec, prefix):
         'No make-file, must create one from scratch.'
@@ -95,6 +101,10 @@ class Ffte(Package):
         # allow real/complex aliasing in GNU Fortran 10 and up
         if spec.satisfies('%gcc@10:'):
             env['FFLAGS'] = '-fallow-argument-mismatch'
+
+        # enable CUDA Fortran in NVHPC
+        if spec.satisfies('%nvhpc'):
+            env['FFLAGS'] = '-Mcuda'
 
         make()
         mkdirp(prefix.lib)
