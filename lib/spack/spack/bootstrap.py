@@ -277,6 +277,8 @@ class _SourceBootstrapper(object):
         if _try_import_from_store(module, abstract_spec_str):
             return True
 
+        tty.info("Bootstrapping {0} from sources".format(module))
+
         # Try to build and install from sources
         with spack_python_interpreter():
             # Add hint to use frontend operating system on Cray
@@ -295,7 +297,6 @@ class _SourceBootstrapper(object):
 
         msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from sources"
         tty.debug(msg.format(module, abstract_spec_str))
-        tty.info("Bootstrapping {0} from sources".format(module))
 
         # Install the spec that should make the module importable
         concrete_spec.package.do_install(fail_fast=True)
