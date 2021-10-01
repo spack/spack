@@ -17,6 +17,7 @@ spack:
         - py-mpi4py%gcc
         - python-dev
         - py-h5py+mpi%gcc
+        - py-notebook
         - py-numpy%gcc
         - py-poisson-recon-pybind
         - py-rtree
@@ -125,6 +126,7 @@ spack:
     - py-mvdtool~mpi
     - py-neurom
     - py-nodeenv
+    - py-notebook
     - py-pathlib2
     - py-pbr
     - py-pillow

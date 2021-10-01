@@ -41,47 +41,47 @@ usage() {
     exit 1
 }
 
+do_setup=no
 do_copy_config=default
 do_copy_modules=default
 do_link=default
-do_generate=default
 do_install=default
-while getopts "cgilm" arg; do
+while getopts "cilms" arg; do
     case "${arg}" in
         c)
             do_copy_config=yes
-            [[ ${do_install} = "default" ]] && do_install=no
-            [[ ${do_generate} = "default" ]] && do_generate=no
-            [[ ${do_link} = "default" ]] && do_link=no
-            [[ ${do_copy_modules} = "default" ]] && do_copy_modules=no
-            ;;
-        g)
-            do_generate=yes
+            [[ ${do_setup} = "default" ]] && do_setup=no
             [[ ${do_install} = "default" ]] && do_install=no
             [[ ${do_link} = "default" ]] && do_link=no
-            [[ ${do_copy_config} = "default" ]] && do_copy_config=no
             [[ ${do_copy_modules} = "default" ]] && do_copy_modules=no
             ;;
         i)
             do_install=yes
-            [[ ${do_generate} = "default" ]] && do_generate=no
+            do_setup=no
             [[ ${do_link} = "default" ]] && do_link=no
             [[ ${do_copy_config} = "default" ]] && do_copy_config=no
             [[ ${do_copy_modules} = "default" ]] && do_copy_modules=no
             ;;
         l)
             do_link=yes
+            [[ ${do_setup} = "default" ]] && do_setup=no
             [[ ${do_install} = "default" ]] && do_install=no
-            [[ ${do_generate} = "default" ]] && do_generate=no
             [[ ${do_copy_config} = "default" ]] && do_copy_config=no
             [[ ${do_copy_modules} = "default" ]] && do_copy_modules=no
             ;;
         m)
             do_copy_modules=yes
+            [[ ${do_setup} = "default" ]] && do_setup=no
             [[ ${do_install} = "default" ]] && do_install=no
-            [[ ${do_generate} = "default" ]] && do_generate=no
             [[ ${do_link} = "default" ]] && do_link=no
             [[ ${do_copy_config} = "default" ]] && do_copy_config=no
+            ;;
+        s)
+            do_setup=yes
+            [[ ${do_install} = "default" ]] && do_install=no
+            [[ ${do_link} = "default" ]] && do_link=no
+            [[ ${do_copy_config} = "default" ]] && do_copy_config=no
+            [[ ${do_copy_modules} = "default" ]] && do_copy_modules=no
             ;;
         *)
             usage
@@ -91,48 +91,33 @@ done
 shift $((OPTIND - 1))
 
 declare -A stage_map
-for what in ${stages}; do
-    stage_map[${what}]=1
+for stage in ${stages}; do
+    stage_map[$stage]=1
 done
 
-if [[ "$@" = "all" ]]; then
-    set -- ${stages}
-else
-    unknown=
-    for what in "$@"; do
-        if [[ ! ${stage_map[${what}]+_} ]]; then
-            unknown="${unknown} ${what}"
-        fi
-    done
-    if [[ -n "${unknown}" ]]; then
-        echo "unknown stage(s):${unknown}"
-        echo "allowed:          ${stages}"
-        exit 1
-    fi
+stage=$1
+part=${2:-}
+
+if [[ ! ${stage_map[${stage}]+_} ]]; then
+    echo "unknown stage(s):${unknown}"
+    echo "allowed:          ${stages}"
+    exit 1
 fi
-
-declare -A desired
-for what in "$@"; do
-    desired[${what}]=Yes
-done
 
 unset $(set +x; env | awk -F= '/^(PMI|SLURM)_/ {print $1}' | xargs)
 
-[[ ${do_generate} = "yes" ]] && generate_specs "$@"
-
-for what in ${stages}; do
-    if [[ ${desired[${what}]+_} ]]; then
-        if [[ ${do_install} != "no" ]]; then
-            install_specs ${what}
-        fi
-        if [[ ${do_link} = "yes" ]]; then
-            set_latest ${what}
-        fi
-        if [[ ${do_copy_config} = "yes" ]]; then
-            copy_user_configuration ${what}
-        fi
-        if [[ ${do_copy_modules} = "yes" ]]; then
-            copy_modules ${what}
-        fi
-    fi
-done
+if [[ ${do_setup} != "no" ]]; then
+    pre_install_setup ${stage} ${part}
+fi
+if [[ ${do_install} != "no" ]]; then
+    install_specs ${stage} ${part}
+fi
+if [[ ${do_link} = "yes" ]]; then
+    set_latest ${stage}
+fi
+if [[ ${do_copy_config} = "yes" ]]; then
+    copy_user_configuration ${stage} ${part}
+fi
+if [[ ${do_copy_modules} = "yes" ]]; then
+    copy_modules ${stage} ${part}
+fi

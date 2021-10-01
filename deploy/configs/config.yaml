@@ -5,8 +5,8 @@ config:
       all: ${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH:6}
   source_cache: $SPACK_INSTALL_PREFIX/.cache
   module_roots:
-    tcl: $SPACK_INSTALL_PREFIX/modules/tcl
-    lmod: $SPACK_INSTALL_PREFIX/modules/lmod
+    tcl: $SPACK_MODULE_PREFIX/tcl
+    lmod: $SPACK_MODULE_PREFIX/lmod
   build_stage:
   - $tempdir
   - $SPACK_INSTALL_PREFIX/.stage

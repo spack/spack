@@ -43,21 +43,6 @@ def temporary_directory() {
     }
 }
 
-def post_process() {
-    dir("${BASEDIR}") {
-        def pull = env.ghprbPullId
-        def last = run_stages()[-1]
-        def stages = run_stages().join(' ')
-
-        if (params.REDEPLOY) {
-            sh "./deploy.sh -l ${stages}"
-        }
-
-        sh "./deploy.sh -m ${stages}"
-        sh "./deploy.sh -c ${last}"
-    }
-}
-
 def deployment_stages() {
     return ['compilers',
             'externals',
@@ -263,7 +248,7 @@ pipeline {
             }
         }
 
-        stage('Applications') {
+        stage('Application Setup') {
             when {
                 expression {
                     return 'applications' in run_stages()
@@ -271,22 +256,163 @@ pipeline {
             }
 
             steps {
-                withEnv(['SOURCECACHE=false',
-                         'BUILDCACHE=false']) {
+                withEnv(['SOURCECACHE=false', 'BUILDCACHE=false']) {
                     dir("${BASEDIR}") {
-                        sh "./deploy.sh applications"
+                        sh "./deploy.sh -s applications"
+                    }
+                }
+            }
+        }
+
+        stage('Application Build') {
+            when {
+                expression {
+                    return 'applications' in run_stages()
+                }
+            }
+
+            parallel {
+                stage('DKE') {
+                    steps {
+                        withEnv(['SOURCECACHE=false', 'BUILDCACHE=false']) {
+                            dir("${BASEDIR}") {
+                                sh "./deploy.sh applications dke"
+                            }
+                        }
+                    }
+
+                    post {
+                        always {
+                            archiveArtifacts artifacts: "stacks/applications_dke/*.xml"
+                            junit testResults: "stacks/applications_dke/*.xml", allowEmptyResults: true
+                        }
+                    }
+                }
+
+                stage('HPC') {
+                    steps {
+                        withEnv(['SOURCECACHE=false', 'BUILDCACHE=false']) {
+                            dir("${BASEDIR}") {
+                                sh "./deploy.sh applications hpc"
+                            }
+                        }
+                    }
+
+                    post {
+                        always {
+                            archiveArtifacts artifacts: "stacks/applications_hpc/*.xml"
+                            junit testResults: "stacks/applications_hpc/*.xml", allowEmptyResults: true
+                        }
+                    }
+                }
+
+                stage('ML') {
+                    steps {
+                        withEnv(['SOURCECACHE=false', 'BUILDCACHE=false']) {
+                            dir("${BASEDIR}") {
+                                sh "./deploy.sh applications ml"
+                            }
+                        }
+                    }
+
+                    post {
+                        always {
+                            archiveArtifacts artifacts: "stacks/applications_ml/*.xml"
+                            junit testResults: "stacks/applications_ml/*.xml", allowEmptyResults: true
+                        }
+                    }
+                }
+
+                stage('NSE') {
+                    steps {
+                        withEnv(['SOURCECACHE=false', 'BUILDCACHE=false']) {
+                            dir("${BASEDIR}") {
+                                sh "./deploy.sh applications nse"
+                            }
+                        }
+                    }
+
+                    post {
+                        always {
+                            archiveArtifacts artifacts: "stacks/applications_nse/*.xml"
+                            junit testResults: "stacks/applications_nse/*.xml", allowEmptyResults: true
+                        }
+                    }
+                }
+
+                stage('NSE Circuits') {
+                    steps {
+                        withEnv(['SOURCECACHE=false', 'BUILDCACHE=false']) {
+                            dir("${BASEDIR}") {
+                                sh "./deploy.sh applications nse_circuits"
+                            }
+                        }
+                    }
+
+                    post {
+                        always {
+                            archiveArtifacts artifacts: "stacks/applications_nse_circuits/*.xml"
+                            junit testResults: "stacks/applications_nse_circuits/*.xml", allowEmptyResults: true
+                        }
+                    }
+                }
+
+                stage('VIZ') {
+                    steps {
+                        withEnv(['SOURCECACHE=false', 'BUILDCACHE=false']) {
+                            dir("${BASEDIR}") {
+                                sh "./deploy.sh applications viz"
+                            }
+                        }
+                    }
+
+                    post {
+                        always {
+                            archiveArtifacts artifacts: "stacks/applications_viz/*.xml"
+                            junit testResults: "stacks/applications_viz/*.xml", allowEmptyResults: true
+                        }
+                    }
+                }
+
+                stage('Science') {
+                    steps {
+                        withEnv(['SOURCECACHE=false', 'BUILDCACHE=false']) {
+                            dir("${BASEDIR}") {
+                                sh "./deploy.sh applications science"
+                            }
+                        }
+                    }
+
+                    post {
+                        always {
+                            archiveArtifacts artifacts: "stacks/applications_science/*.xml"
+                            junit testResults: "stacks/applications_science/*.xml", allowEmptyResults: true
+                        }
                     }
                 }
             }
 
             post {
-                always {
-                    archiveArtifacts artifacts: "stacks/applications/*.xml"
-                    junit testResults: "stacks/applications/*.xml", allowEmptyResults: true
-                }
-
                 success {
-                    post_process()
+                    dir("${BASEDIR}") {
+                        // def stages = run_stages().join(' ')
+
+                        // if (params.REDEPLOY) {
+                        //     sh "./deploy.sh -l ${stages}"
+                        // }
+
+                        sh "./deploy.sh -m compilers"
+                        sh "./deploy.sh -m externals"
+                        sh "./deploy.sh -m libraries"
+                        sh "./deploy.sh -m applications dke"
+                        sh "./deploy.sh -m applications hpc"
+                        sh "./deploy.sh -m applications ml"
+                        sh "./deploy.sh -m applications nse"
+                        sh "./deploy.sh -m applications nse_circuits"
+                        sh "./deploy.sh -m applications science"
+                        sh "./deploy.sh -m applications viz"
+                        sh "./deploy.sh -c applications hpc"  // configurations for parts are identical
+                    }
                 }
             }
         }

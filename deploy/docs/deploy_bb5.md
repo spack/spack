@@ -19,10 +19,10 @@ To update the version of any of these modules, first we have to make sure
 that the corresponding software is built by edit the corresponding Spack
 environment:
 
-    $ nvim spack/deploy/environments/applications.yaml
+    $ nvim spack/deploy/environments/applications_${team}.yaml
 
 The above environment definition provides the end-user software that is
-developed by BlueBrain.
+developed by BlueBrain, split by team.
 Version specifications are only required if the deployed version should be
 static and not change with updates to the package file.
 Please ensure that:

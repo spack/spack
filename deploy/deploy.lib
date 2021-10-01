@@ -77,7 +77,7 @@ log() {
 install_dir_raw() {
     # Create an installation directory name based on the environment
     # variables set.
-    what=$1
+    local what=$1
     date="${DEPLOYMENT_DATE:-${DEFAULT_DEPLOYMENT_DATE}}"
     name="${DEPLOYMENT_ROOT}/deploy/${what}/${date}"
     echo "${name}"
@@ -86,7 +86,7 @@ install_dir_raw() {
 install_dir_name() {
     # Create an installation directory name based on the environment
     # variables set. Resovles any symlinks.
-    what=$1
+    local what=$1
     name=$(install_dir_raw ${what})
     if [[ -L "${name}" ]]; then
         echo "$(readlink -f ${name})"
@@ -97,7 +97,7 @@ install_dir_name() {
 
 set_latest() {
     # Set the "latest" symlink to the current deployment date
-    what=$1
+    local what=$1
     source="$(install_dir_name ${what})"
     local OLD_DEPLOYMENT_DATE="${DEPLOYMENT_DATE}"
     DEPLOYMENT_DATE="latest"
@@ -128,7 +128,7 @@ install_dir() {
     # When DEPLOYMENT_DATE is set to "latest" and the corresponding symlink
     # does not resolve/is not existing, find the last installation
     # directory and symlink it to "latest".
-    what=$1
+    local what=$1
     date="${DEPLOYMENT_DATE:-${DEFAULT_DEPLOYMENT_DATE}}"
     name="$(install_dir_name ${what})"
     if [[ ! -e "${name}" && "${date}" = "latest" ]]; then
@@ -159,7 +159,7 @@ last_install_dir() {
     # 1. Attempt to use the globally set `DEPLOYMENT_DATE` or default via
     #    `install_dir`
     # 2. Otherwise, use the latest directory present
-    what=$1
+    local what=$1
     name="$(install_dir_name ${what})"
     parent="$(dirname ${name})"
     if [[ ! -d "${name}" && -d "${parent}" ]]; then
@@ -372,7 +372,7 @@ configure_compilers() {
 }
 
 setup_mirror() {
-    what="$1"
+    local what="$1"
     log "adding mirrors"
     if [[ -z "${SPACK_PROPRIETARY_MIRROR_DIR:+x}" ]]; then
         log "...need to have \$SPACK_PROPRIETARY_MIRROR_DIR set!"
@@ -449,7 +449,7 @@ populate_build_cache() {
 }
 
 populate_mirror() {
-    what=$1
+    local what=$1
     shift
     spec_list="$*"
 
@@ -479,7 +479,7 @@ populate_mirror() {
 }
 
 copy_configuration() {
-    what="$1"
+    local what="$1"
 
     log "copying local configuration"
     log "...into ${HOME}"
@@ -580,8 +580,9 @@ generate_archive_modules() {
 
 copy_user_configuration() {
     local what="$1"
+    local part=${2:-}
 
-    local source="$(install_dir ${what})/data"
+    local source="$(install_dir ${what})/data${part:+_}${part}"
     local target="${DEPLOYMENT_ROOT}/config/"
 
     local root="${DEPLOYMENT_ROOT}/modules/all"
@@ -620,9 +621,10 @@ EOF
 }
 
 copy_modules() {
-    what="$1"
+    local what="$1"
+    local part=${2:-}
 
-    local source="$(install_dir ${what})/modules"
+    local source="$(install_dir ${what})/modules${part:+_}${part}"
     local target="${DEPLOYMENT_ROOT}/modules/${what}/$(date +%Y-%m)"
 
     log "copying module files"
@@ -657,21 +659,24 @@ bogus_packages() {
     done
 }
 
-install_specs() {
-    what="$1"
+pre_install_setup() {
+    local what="$1"
+    local part="${2:-}"  # Optional
 
     location="$(install_dir ${what})"
-    HOME="${location}/data"
+    HOME="${location}/data${part:+_}${part}"
     SPACK_INSTALL_PREFIX="${location}"
-    export HOME SPACK_INSTALL_PREFIX
+    SPACK_MODULE_PREFIX="${SPACK_INSTALL_PREFIX}/modules${part:+_}${part}"
+    export HOME SPACK_INSTALL_PREFIX SPACK_MODULE_PREFIX
     mkdir -p "${HOME}"
 
     cat > "${HOME}/.profile" <<EOF
 . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
 
 SPACK_INSTALL_PREFIX="${location}"
+SPACK_MODULE_PREFIX="${SPACK_INSTALL_PREFIX}/modules${part:+_}${part}"
 
-export SPACK_INSTALL_PREFIX
+export SPACK_INSTALL_PREFIX SPACK_MODULE_PREFIX
 EOF
 
     copy_configuration "${what}"
@@ -685,6 +690,7 @@ EOF
         log "setting up upstream chains, modules"
         update_chain_config "${what}" "${what}" "-upstream" >> "${HOME}/.spack/upstreams.yaml"
         update_module_path "${what}" "yes"
+
         DEPLOYMENT_ROOT="${OLD_DEPLOYMENT_ROOT}"
         export DEPLOYMENT_ROOT
         # Delete any additional "upstream:" lines
@@ -699,33 +705,43 @@ EOF
     env &> "${HOME}/spack.env"
     (cd "${DEPLOYMENT_ROOT}/spack" && git rev-parse HEAD) &> "${HOME}/spack.version"
 
-    log "stage directory:"
-    ls -l "${SPACK_ROOT}/var/spack/stage" || true
-    log "stage directory in depth:"
-    find "${SPACK_ROOT}/var/spack/stage" || true
-    log "cleaning up after a bad spack"
-    spack clean -a
+    if [[ -z $part ]]; then
+        log "stage directory:"
+        ls -l "${SPACK_ROOT}/var/spack/stage" || true
+        log "stage directory in depth:"
+        find "${SPACK_ROOT}/var/spack/stage" || true
+        log "cleaning up after a bad spack"
+        spack clean -sdfm
 
-    log "cleaning failed installations"
-    bogus_packages "${SPACK_INSTALL_PREFIX}" | while read bogus_package; do
-        log "...removing potentially failed installation of $(basename ${bogus_package})"
-        rm -rf "${bogus_package}"
-    done
+        log "cleaning failed installations"
+        bogus_packages "${SPACK_INSTALL_PREFIX}" | while read bogus_package; do
+            log "...removing potentially failed installation of $(basename ${bogus_package})"
+            rm -rf "${bogus_package}"
+        done
 
-    log "reindexing software"
-    spack reindex
+        log "reindexing software"
+        spack reindex
+    else
+        log "parallel run, no clean up"
+    fi
 
     setup_mirror "${what}"
     populate_mirror "${what}"
+}
+
+install_specs() {
+    local what="$1"
+    local part="${2:-}"  # All future references use the proper ${part:+<replacement>}
+
+    pre_install_setup $what $part
 
     log "starting deployment"
     install_start=$(date "+%Y-%m-%d %H:%M:%S")
     rm -f "${HOME}/"stack*.xml
     rm -f "${HOME}/specs.txt"
     export PATH="${SPACK_ROOT}/deploy/bin:${PATH}"
-    # deploy -e "${HOME}/build_environment" -j 12 "${SPACK_ROOT}/deploy/environments/${what}.yaml" "${HOME}"
     mkdir -p "${HOME}/build_environment"
-    cp "${SPACK_ROOT}/deploy/environments/${what}.yaml" "${HOME}/build_environment/spack.yaml"
+    cp "${SPACK_ROOT}/deploy/environments/${what}${part:+_}${part}.yaml" "${HOME}/build_environment/spack.yaml"
     log "concretizing environment"
     spack -D "${HOME}/build_environment" concretize -f
     if [[ -n "$(installed-hashes -m -e "${HOME}/build_environment")" ]]; then
@@ -747,9 +763,10 @@ EOF
 
     populate_build_cache "${install_start}"
 
-    mkdir -p "${WORKSPACE:-.}/stacks/${what}"
-    rm -rf "${WORKSPACE:-.}/stacks/${what}/"*.xml
-    cp "${HOME}"/stack*.xml "${WORKSPACE:-.}/stacks/${what}"
+    log "moving 'test' results into ${WORKSPACE:-.}/stacks/${what}${part:+_}${part}"
+    mkdir -p "${WORKSPACE:-.}/stacks/${what}${part:+_}${part}"
+    rm -rf "${WORKSPACE:-.}/stacks/${what}${part:+_}${part}/"*.xml
+    cp "${HOME}"/stack*.xml "${WORKSPACE:-.}/stacks/${what}${part:+_}${part}"
 
     log "refreshing modules"
     shas="$(cut -d" " -f1 ${HOME}/specs.txt)"
@@ -785,7 +802,4 @@ EOF
     fi
 
     cp "${HOME}/.spack/compilers.yaml" "${HOME}" || true
-
-    log "cleaning up after a bad spack"
-    spack clean -a
 }
