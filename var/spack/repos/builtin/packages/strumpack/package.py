@@ -20,7 +20,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     iterative solvers."""
 
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
-    url      = "https://github.com/pghysels/STRUMPACK/archive/v5.1.0.tar.gz"
+    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.0.0.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
 
     tags = ['e4s']
@@ -30,6 +30,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('6.0.0', sha256='fcea150b68172d5a4ec2c02f9cce0b7305919b86871c9cf34a9f65b1567d58b7')
     version('5.1.1', sha256='6cf4eaae5beb9bd377f2abce9e4da9fd3e95bf086ae2f04554fad6dd561c28b9')
     version('5.0.0', sha256='bdfd1620ff7158d96055059be04ee49466ebaca8213a2fdab33e2d4571019a49')
     version('4.0.0', sha256='a3629f1f139865c74916f8f69318f53af6319e7f8ec54e85c16466fd7d256938')
@@ -66,6 +67,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('openblas threads=openmp', when='^openblas')
     depends_on('scalapack', when='+mpi')
     depends_on('metis')
     depends_on('parmetis', when='+parmetis')
@@ -79,6 +81,10 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('rocsolver', when='+rocm')
     depends_on('slate', when='+slate')
     depends_on('slate+cuda', when='+cuda+slate')
+    depends_on('slate+rocm', when='+rocm+slate')
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on('slate amdgpu_target={0}'.format(val),
+                   when='amdgpu_target={0}'.format(val))
 
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')
@@ -89,10 +95,6 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+rocm', when='+cuda')
     conflicts('+slate', when='@:5.1.1')
     conflicts('+slate', when='~mpi')
-    conflicts('^openblas@0.3.6: threads=none', when='+openmp',
-              msg='STRUMPACK requires openblas with OpenMP threading support')
-    conflicts('^openblas@0.3.6: threads=pthreads', when='+openmp',
-              msg='STRUMPACK requires openblas with OpenMP threading support')
 
     patch('intel-19-compile.patch', when='@3.1.1')
     patch('shared-rocm.patch', when='@5.1.1')
@@ -229,3 +231,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                     break
         else:
             self._test_example(test_exe, test_dir, test_exe, exe_arg)
+
+    def check(self):
+        """Skip the builtin testsuite, use the stand-alone tests instead."""
+        pass
