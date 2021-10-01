@@ -14,15 +14,6 @@ class Cddlib(AutotoolsPackage):
     of linear inequalities"""
 
     homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/"
-    url      = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-094h.tar.gz"
+    url      = 'https://github.com/cddlib/cddlib/releases/download/0.94m/cddlib-0.94m.tar.gz'
 
-    version('0.94h', sha256='fe6d04d494683cd451be5f6fe785e147f24e8ce3ef7387f048e739ceb4565ab5')
-
-    # Note: It should be possible to build cddlib also without gmp
-
-    depends_on("gmp")
-    depends_on("libtool", type="build")
-
-    def url_for_version(self, version):
-        url = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-{0}.tar.gz"
-        return url.format(version.joined)
+    version('0.94m', sha256='70dffdb3369b8704dc75428a1b3c42ab9047b81ce039f12f427e2eb2b1b0dee2')
