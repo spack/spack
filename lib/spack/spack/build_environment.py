@@ -147,6 +147,13 @@ class MakeExecutable(Executable):
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
+def _on_cray():
+    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
+    on_cray = str(hostarch.platform) == 'cray'
+    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    return on_cray, using_cnl
+
+
 def clean_environment():
     # Stuff in here sanitizes the build environment to eliminate
     # anything the user has set that may interfere. We apply it immediately
@@ -181,9 +188,7 @@ def clean_environment():
     # interference with Spack dependencies.
     # CNL requires these variables to be set (or at least some of them,
     # depending on the CNL version).
-    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
-    on_cray = str(hostarch.platform) == 'cray'
-    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    on_cray, using_cnl = _on_cray()
     if on_cray and not using_cnl:
         env.unset('CRAY_LD_LIBRARY_PATH')
         for varname in os.environ.keys():
@@ -804,7 +809,9 @@ def setup_package(pkg, dirty, context='build'):
     # kludge to handle cray libsci being automatically loaded by PrgEnv
     # modules on cray platform. Module unload does no damage when
     # unnecessary
-    module('unload', 'cray-libsci')
+    on_cray, _ = _on_cray()
+    if on_cray:
+        module('unload', 'cray-libsci')
 
     if pkg.architecture.target.module_name:
         load_module(pkg.architecture.target.module_name)
