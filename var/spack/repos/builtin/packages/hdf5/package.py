@@ -187,33 +187,33 @@ class Hdf5(CMakePackage):
         return url.format(version.up_to(2), version)
 
     def flag_handler(self, name, flags):
+        spec = self.spec
         cmake_flags = []
 
         if name == "cflags":
-            if self.spec.satisfies('%gcc') \
-                    or self.spec.satisfies('%clang'):
+            if spec.compiler.name in ['gcc', 'clang', 'apple-clang']:
                 # Quiet warnings/errors about implicit declaration of functions
                 # in C99:
                 cmake_flags.append("-Wno-implicit-function-declaration")
                 # Note that this flag will cause an error if building %nvhpc.
-            if self.spec.satisfies('@:1.8.12~shared'):
+            if spec.satisfies('@:1.8.12~shared'):
                 # More recent versions set CMAKE_POSITION_INDEPENDENT_CODE to
                 # True and build with PIC flags.
                 cmake_flags.append(self.compiler.cc_pic_flag)
         elif name == 'cxxflags':
-            if self.spec.satisfies('@:1.8.12+cxx~shared'):
+            if spec.satisfies('@:1.8.12+cxx~shared'):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
         elif name == "fflags":
-            if self.spec.satisfies('%cce+fortran'):
+            if spec.satisfies('%cce+fortran'):
                 # Cray compiler generates module files with uppercase names by
                 # default, which is not handled by the CMake scripts. The
                 # following flag forces the compiler to produce module files
                 # with lowercase names.
                 cmake_flags.append('-ef')
-            if self.spec.satisfies('@:1.8.12+fortran~shared'):
+            if spec.satisfies('@:1.8.12+fortran~shared'):
                 cmake_flags.append(self.compiler.fc_pic_flag)
         elif name == "ldlibs":
-            if '+fortran %fj' in self.spec:
+            if '+fortran %fj' in spec:
                 cmake_flags.extend(['-lfj90i', '-lfj90f',
                                     '-lfjsrcinfo', '-lelf'])
 
