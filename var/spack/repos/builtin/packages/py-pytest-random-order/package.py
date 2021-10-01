@@ -12,7 +12,6 @@ class PyPytestRandomOrder(PythonPackage):
     homepage = "https://github.com/jbasko/pytest-random-order"
     pypi     = "pytest-random-order/pytest-random-order-1.0.4.tar.gz"
 
-
     version('1.0.4', sha256='6b2159342a4c8c10855bc4fc6d65ee890fc614cb2b4ff688979b008a82a0ff52')
 
     depends_on('python@3.4:', type=('build', 'run'))
