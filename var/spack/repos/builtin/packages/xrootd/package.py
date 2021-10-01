@@ -62,7 +62,7 @@ class Xrootd(CMakePackage):
     depends_on('cmake@2.6:', type='build')
     depends_on('libxml2', when='+http')
     depends_on('uuid', when="@4.11.0:")
-    depends_on('openssl@1')
+    depends_on('openssl@:1')
     depends_on('python', when='+python')
     depends_on('readline', when='+readline')
     depends_on('xz')
