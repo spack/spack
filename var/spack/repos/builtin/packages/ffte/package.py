@@ -28,11 +28,9 @@ class Ffte(Package):
 
     variant('mpi', default=False, description='Build MPI library')
     variant('cuda', default=False, description='Use CUDA Fortran')
-    variant('spiral', default=False, description='Use Spiral FFT')
     variant('vector', default=False, description='Use vectorized FFT')
 
     depends_on('mpi', when='+mpi')
-    depends_on('spiral', when='+spiral')
 
     conflicts('%cce', when='+cuda', msg='Must use NVHPC compiler')
     conflicts('%clang', when='+cuda', msg='Must use NVHPC compiler')
