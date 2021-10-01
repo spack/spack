@@ -298,7 +298,7 @@ class _SourceBootstrapper(object):
         tty.info("Bootstrapping {0} from sources".format(module))
 
         # Install the spec that should make the module importable
-        concrete_spec.package.do_install()
+        concrete_spec.package.do_install(fail_fast=True)
 
         return _try_import_from_store(module, abstract_spec_str=abstract_spec_str)
 
