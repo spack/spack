@@ -382,6 +382,9 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
 
     abstract_spec = abstract_spec or module
     source_configs = spack.config.get('bootstrap:sources', [])
+
+    errors = {}
+
     for current_config in source_configs:
         if not _source_is_trusted(current_config):
             msg = ('[BOOTSTRAP MODULE {0}] Skipping source "{1}" since it is '
@@ -396,11 +399,18 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
         except Exception as e:
             msg = '[BOOTSTRAP MODULE {0}] Unexpected error "{1}"'
             tty.debug(msg.format(module, str(e)))
+            errors[current_config['name']] = e
 
     # We couldn't import in any way, so raise an import error
-    msg = 'cannot bootstrap the "{0}" Python module'.format(module)
+    msg = 'Cannot bootstrap the "{0}" Python module'.format(module)
     if abstract_spec:
         msg += ' from spec "{0}"'.format(abstract_spec)
+    msg += ' due to the following failures:\n'
+    for method in errors:
+        err = errors[method]
+        msg += "    '{0}' raised {1}: {2}\n".format(
+            method, err.__class__.__name__, str(err))
+    msg += '    Please run `spack -d spec zlib` for more verbose error messages'
     raise ImportError(msg)
 
 
