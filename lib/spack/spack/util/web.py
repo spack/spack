@@ -29,6 +29,7 @@ import spack.error
 import spack.url
 import spack.util.crypto
 import spack.util.s3 as s3_util
+import spack.util.gcs as gcs_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
@@ -74,6 +75,12 @@ def uses_ssl(parsed_url):
         if url_util.parse(endpoint_url, scheme='https').scheme == 'https':
             return True
 
+    elif parsed_url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(parsed_url)
+        if gcs.is_https():
+            tty.debug("(uses_ssl) GCS Blob is https")
+            return True
+
     return False
 
 
@@ -106,7 +113,14 @@ def read_from_url(url, accept_content_type=None):
             if not __UNABLE_TO_VERIFY_SSL:
                 context = ssl._create_unverified_context()
 
-    req = Request(url_util.format(url))
+    if url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(url)
+        gcs_url = gcs.gcs_url()
+        tty.debug("(read_from_url) gcs_url = {}".format(gcs_url))
+        req = Request(gcs.gcs_url())
+    else:
+        req = Request(url_util.format(url))
+
     content_type = None
     is_web_url = url.scheme in ('http', 'https')
     if accept_content_type and is_web_url:
@@ -195,6 +209,12 @@ def push_to_url(
         if not keep_original:
             os.remove(local_file_path)
 
+    elif remote_url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(remote_url)
+        gcs.gcs_upload_to_blob(local_file_path)
+        if not keep_original:
+            os.remove(local_file_path)
+
     else:
         raise NotImplementedError(
             'Unrecognized URL scheme: {SCHEME}'.format(
@@ -216,6 +236,10 @@ def url_exists(url):
             if err.response['Error']['Code'] == 'NoSuchKey':
                 return False
             raise err
+
+    elif url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(url)
+        return gcs.gcs_blob_exists()
 
     # otherwise, just try to "read" from the URL, and assume that *any*
     # non-throwing response contains the resource represented by the URL
@@ -277,6 +301,11 @@ def remove_url(url, recursive=False):
                 _debug_print_delete_results(r)
         else:
             s3.delete_object(Bucket=bucket, Key=url.path.lstrip('/'))
+        return
+
+    elif url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(url)
+        gcs.gcs_delete_blob()
         return
 
     # Don't even try for other URL schemes.
@@ -357,6 +386,10 @@ def list_url(url, recursive=False):
         return list(set(
             key.split('/', 1)[0]
             for key in _iter_s3_prefix(s3, url)))
+
+    elif url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(url)
+        return gcs.gcs_list_blobs()
 
 
 def spider(root_urls, depth=0, concurrency=32):

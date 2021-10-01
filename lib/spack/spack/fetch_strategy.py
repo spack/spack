@@ -318,6 +318,12 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
+            if url[0:1] == 'gs':
+                import spack.util.gcs as gcs_util
+                parsed_url = urllib_parse.urlparse(url)
+                gcs = gcs_util.GCSBlob(parsed_url)
+                url = gcsblob.gcs_url()
+
             if not self._existing_url(url):
                 continue
 
@@ -1590,6 +1596,7 @@ def from_url_scheme(url, *args, **kwargs):
             'https': 'url',
             'ftp': 'url',
             'ftps': 'url',
+            'gs':'url',
         })
 
     scheme = parsed_url.scheme
