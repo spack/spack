@@ -402,7 +402,7 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
             errors[current_config['name']] = e
 
     # We couldn't import in any way, so raise an import error
-    msg = 'Cannot bootstrap the "{0}" Python module'.format(module)
+    msg = 'cannot bootstrap the "{0}" Python module'.format(module)
     if abstract_spec:
         msg += ' from spec "{0}"'.format(abstract_spec)
     msg += ' due to the following failures:\n'
