@@ -144,6 +144,10 @@ class Vtk(CMakePackage):
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
 
+            # prevents installation into lib64 which might not be in the path
+            # (solves #26314)
+            '-DCMAKE_INSTALL_LIBDIR:PATH=lib',
+
             # In general, we disable use of VTK "ThirdParty" libs, preferring
             # spack-built versions whenever possible
             '-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON',
