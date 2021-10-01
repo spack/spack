@@ -25,13 +25,12 @@ class DamaskMesh(CMakePackage):
             values=('Debug', 'Release', 'DebugRelease'))
 
     def cmake_args(self):
-
         args = ['-DDAMASK_SOLVER:STRING=mesh']
         return args
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def execute(self):
-
-        damask_mesh = Executable('DAMASK_mesh')
-        damask_mesh('--help')
+        with working_dir(self.build_directory):
+            damask_mesh = Executable('src/DAMASK_mesh')
+            damask_mesh('--help')

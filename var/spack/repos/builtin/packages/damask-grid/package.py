@@ -25,13 +25,12 @@ class DamaskGrid(CMakePackage):
             values=('Debug', 'Release', 'DebugRelease'))
 
     def cmake_args(self):
-
         args = ['-DDAMASK_SOLVER:STRING=grid']
         return args
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def execute(self):
-
-        damask_grid = Executable('DAMASK_grid')
-        damask_grid('--help')
+        with working_dir(self.build_directory):
+            damask_grid = Executable('src/DAMASK_grid')
+            damask_grid('--help')
