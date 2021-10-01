@@ -216,6 +216,10 @@ class _BuildcacheBootstrapper(object):
             # specs that wwe know by dag hash.
             spack.binary_distribution.binary_index.regenerate_spec_cache()
             index = spack.binary_distribution.update_cache_and_get_specs()
+
+            if not index:
+                raise RuntimeError("Could not populate the binary index")
+
             for item in data['verified']:
                 candidate_spec = item['spec']
                 python_spec = item['python']
