@@ -16,3 +16,8 @@ class PyTypeguard(PythonPackage):
 
     depends_on('python@3.5.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-sphinx-rtd-theme', type='build')
+    depends_on('py-sphinx-autodoc-typehints', type='build')
+    depends_on('py-pytest', type=('test', 'run'))
+    depends_on('py-typing-extensions', type=('test', 'run'))
+    depends_on('py-mypy', type=('test', 'run'))
