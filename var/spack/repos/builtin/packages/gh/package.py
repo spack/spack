@@ -7,7 +7,7 @@ from spack import *
 
 
 class Gh(Package):
-    """GitHub’s official command line tool."""
+    """GitHub's official command line tool."""
 
     homepage = "https://github.com/cli/cli"
     url      = "https://github.com/cli/cli/archive/refs/tags/v2.0.0.tar.gz"
