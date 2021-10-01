@@ -2381,8 +2381,8 @@ class Spec(object):
         # will be removed in v0.18.0
         if deprecation_warning:
             msg = ('the original concretizer is currently being used.\n\tUpgrade to '
-                '"clingo" at your earliest convenience. The original concretizer '
-                'will be removed from Spack starting at v0.18.0')
+                   '"clingo" at your earliest convenience. The original concretizer '
+                   'will be removed from Spack starting at v0.18.0')
             warnings.warn(msg)
 
         if not self.name:
