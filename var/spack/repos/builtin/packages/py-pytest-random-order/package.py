@@ -16,3 +16,9 @@ class PyPytestRandomOrder(PythonPackage):
 
     depends_on('python@3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-pytest@3.0.0:', type=('build', 'test', 'run'))
+    depends_on('py-coverage', type=('test', 'run'))
+    depends_on('py-pytest-xdist', type=('test', 'run'))
+    depends_on('py-sphinx', type=('test', 'run'))
+    depends_on('py-tox', type=('test', 'run'))
+    depends_on('py-py', type=('test', 'run'))
