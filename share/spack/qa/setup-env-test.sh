@@ -155,6 +155,7 @@ is_set SPACK_ENV
 echo "Testing 'spack env deactivate'"
 spack env deactivate
 is_not_set SPACK_ENV
+is_not_set SPACK_ENV_RESTORE
 
 echo "Testing 'spack env activate spack_test_env'"
 spack env activate spack_test_env
@@ -163,6 +164,7 @@ is_set SPACK_ENV
 echo "Testing 'despacktivate'"
 despacktivate
 is_not_set SPACK_ENV
+is_not_set SPACK_ENV_RESTORE
 
 echo "Testing 'spack env activate --prompt spack_test_env'"
 spack env activate --prompt spack_test_env
