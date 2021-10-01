@@ -9,9 +9,9 @@ from spack import *
 
 
 class Ffte(Package):
-    'Fastest Fourier Transform in the East. Provides FFT for powers of 2, 3,
+    """Fastest Fourier Transform in the East. Provides FFT for powers of 2, 3,
     and 5 lengths in one, two, and three dimensions. Support for vector
-    hardware, MPI, and CUDA Fortran is also included.'
+    hardware, MPI, and CUDA Fortran is also included."""
 
     homepage = 'http://www.ffte.jp/'
     url = 'http://www.ffte.jp/ffte-7.0.tgz'
