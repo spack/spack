@@ -2357,13 +2357,15 @@ class Spec(object):
 
         return changed
 
-    def _old_concretize(self, tests=False):
+    def _old_concretize(self, tests=False, deprecation_warning=True):
         """A spec is concrete if it describes one build of a package uniquely.
         This will ensure that this spec is concrete.
 
         Args:
             tests (list or bool): list of packages that will need test
                 dependencies, or True/False for test all/none
+            deprecation_warning (bool): enable or disable the deprecation
+                warning for the old concretizer
 
         If this spec could describe more than one version, variant, or build
         of a package, this will add constraints to make it concrete.
@@ -2377,10 +2379,11 @@ class Spec(object):
 
         # Add a warning message to inform users that the original concretizer
         # will be removed in v0.18.0
-        msg = ('the original concretizer is currently being used.\n\tUpgrade to '
-               '"clingo" at your earliest convenience. The original concretizer '
-               'will be removed from Spack starting at v0.18.0')
-        warnings.warn(msg)
+        if deprecation_warning:
+            msg = ('the original concretizer is currently being used.\n\tUpgrade to '
+                   '"clingo" at your earliest convenience. The original concretizer '
+                   'will be removed from Spack starting at v0.18.0')
+            warnings.warn(msg)
 
         if not self.name:
             raise spack.error.SpecError(
