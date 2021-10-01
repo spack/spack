@@ -71,7 +71,7 @@ class PyLibensemble(PythonPackage):
         """Run tutorials stand alone test"""
 
         test_dir = join_path(self.test_suite.current_test_cache_dir,
-                             'examples', 'tutorials')
+                             'tutorials')
 
         if not os.path.exists(test_dir):
             print('Skipping {0} test'.format(exe))
