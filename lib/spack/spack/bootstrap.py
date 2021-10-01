@@ -291,7 +291,7 @@ class _SourceBootstrapper(object):
 
             if module == 'clingo':
                 # TODO: remove when the old concretizer is deprecated
-                concrete_spec._old_concretize()
+                concrete_spec._old_concretize(deprecation_warning=False)
             else:
                 concrete_spec.concretize()
 
