@@ -231,6 +231,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
+    variant('pmix', default=False, description='Enable PMIx support')
     variant('wrapper-rpath', default=True,
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
@@ -312,6 +313,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('lsf', when='schedulers=lsf')
     depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
+    depends_on('pmix', when='+pmix')
 
     depends_on('openssh', type='run')
 
@@ -319,6 +321,8 @@ class Openmpi(AutotoolsPackage):
     conflicts('+cuda', when='@:1.6')
     # PMI support was added in 1.5.5
     conflicts('+pmi', when='@:1.5.4')
+    # PMIx support was added in 2.0.0
+    conflicts('+pmix', when='@:1')
     # RPATH support in the wrappers was added in 1.7.4
     conflicts('+wrapper-rpath', when='@:1.7.3')
 
@@ -437,6 +441,10 @@ class Openmpi(AutotoolsPackage):
                 variants += '+pmi'
             else:
                 variants += '~pmi'
+            if re.search(r'\bMCA pmix', output):
+                variants += '+pmix'
+            else:
+                variants += '~pmix'
 
             fabrics = get_options_from_variant(cls, "fabrics")
             used_fabrics = []
@@ -643,6 +651,7 @@ class Openmpi(AutotoolsPackage):
                     spec['slurm'].prefix))
             else:
                 config_args.extend(self.with_or_without('pmi'))
+            config_args += self.with_or_without('pmix', activation_value='prefix')
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
                 if '+static' in spec:
                     config_args.append('--enable-static')
