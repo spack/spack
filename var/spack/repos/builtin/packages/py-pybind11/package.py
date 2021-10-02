@@ -63,7 +63,7 @@ class PyPybind11(CMakePackage, PythonPackage):
         env.set('PYBIND11_USE_CMAKE', 1)
 
     # https://github.com/pybind/pybind11/pull/1995
-    @when('@:2.4.99')
+    @when('@:2.4')
     def patch(self):
         """ see https://github.com/spack/spack/issues/13559 """
         filter_file('import sys',

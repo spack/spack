@@ -24,8 +24,8 @@ class PyJupyterlab(PythonPackage):
     depends_on('python@3.6:', when='@3:', type=('build', 'run'))
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-jupyter-packaging@0.9:1.999', when='@3.0.15:', type='build')
-    depends_on('py-jupyter-packaging@0.7.3:0.7.999', when='@3.0.0:3.0.14', type=('build', 'run'))
+    depends_on('py-jupyter-packaging@0.9:1', when='@3.0.15:', type='build')
+    depends_on('py-jupyter-packaging@0.7.3:0.7', when='@3.0.0:3.0.14', type=('build', 'run'))
     # dependency on py-jinja2@2.1 seems to be a migration issue from the switch
     # to setup.cfg in 3.0.15, leave it a 2.10
     depends_on('py-jinja2@2.10:', type=('build', 'run'))
@@ -35,17 +35,17 @@ class PyJupyterlab(PythonPackage):
     depends_on('py-packaging', when='@3:', type=('build', 'run'))
     depends_on('py-tornado@6.1:', when='@3:', type=('build', 'run'))
     depends_on('py-jupyter-core', when='@3:', type=('build', 'run'))
-    depends_on('py-jupyterlab-server@2.3:2.999', when='@3.0.9:', type=('build', 'run'))
-    depends_on('py-jupyterlab-server@2.0:2.999', when='@3.0.0:3.0.8', type=('build', 'run'))
-    depends_on('py-jupyter-server@1.4:1.999', when='@3.0.9:', type=('build', 'run'))
-    depends_on('py-jupyter-server@1.2:1.999', when='@3.0.3:3.0.8', type=('build', 'run'))
-    depends_on('py-jupyter-server@1.1:1.999', when='@3.0.0:3.0.2', type=('build', 'run'))
-    depends_on('py-nbclassic@0.2.0:0.999', when='@3:', type=('build', 'run'))
+    depends_on('py-jupyterlab-server@2.3:2', when='@3.0.9:', type=('build', 'run'))
+    depends_on('py-jupyterlab-server@2.0:2', when='@3.0.0:3.0.8', type=('build', 'run'))
+    depends_on('py-jupyter-server@1.4:1', when='@3.0.9:', type=('build', 'run'))
+    depends_on('py-jupyter-server@1.2:1', when='@3.0.3:3.0.8', type=('build', 'run'))
+    depends_on('py-jupyter-server@1.1:1', when='@3.0.0:3.0.2', type=('build', 'run'))
+    depends_on('py-nbclassic@0.2.0:0', when='@3:', type=('build', 'run'))
 
     # @:3
-    depends_on('py-notebook@4.3.1:', when='@:2.99', type=('build', 'run'))
-    depends_on('py-tornado@:5,6.0.3:', when='@:2.99', type=('build', 'run'))
-    depends_on('py-jupyterlab-server@1.1.5:1.999', when='@:2.99', type=('build', 'run'))
+    depends_on('py-notebook@4.3.1:', when='@:2', type=('build', 'run'))
+    depends_on('py-tornado@:5,6.0.3:', when='@:2', type=('build', 'run'))
+    depends_on('py-jupyterlab-server@1.1.5:1', when='@:2', type=('build', 'run'))
 
     def setup_run_environment(self, env):
         env.set('JUPYTERLAB_DIR', self.prefix.share.jupyter.lab)

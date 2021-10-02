@@ -16,7 +16,7 @@ class Hc(MakefilePackage):
 
     version('1.0.7', sha256='7499ea76ac4739a9c0941bd57d124fb681fd387c8d716ebb358e6af3395103ed')
 
-    depends_on('gmt@4.2.1:4.999')
+    depends_on('gmt@4.2.1:4')
     depends_on('netcdf-c')
 
     # Build phase fails in parallel with the following error messages:

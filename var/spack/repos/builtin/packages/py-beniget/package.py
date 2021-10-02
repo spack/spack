@@ -18,6 +18,6 @@ class PyBeniget(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-gast@0.5.0:0.5.999', when='@0.4.0:', type=('build', 'run'))
-    depends_on('py-gast@0.4.0:0.4.999', when='@0.3.0:0.3.999', type=('build', 'run'))
-    depends_on('py-gast@0.3.3:0.3.999', when='@:0.2.999', type=('build', 'run'))
+    depends_on('py-gast@0.5.0:0.5', when='@0.4.0:', type=('build', 'run'))
+    depends_on('py-gast@0.4.0:0.4', when='@0.3.0:0.3', type=('build', 'run'))
+    depends_on('py-gast@0.3.3:0.3', when='@:0.2', type=('build', 'run'))

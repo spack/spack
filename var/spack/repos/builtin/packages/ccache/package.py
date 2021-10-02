@@ -39,25 +39,25 @@ class Ccache(CMakePackage):
 
     depends_on('zstd', when='@4.0:')
 
-    depends_on('gperf', when='@:3.99')
+    depends_on('gperf', when='@:3')
     depends_on('hiredis@0.13.3:', when='@4.4:')
-    depends_on('libxslt', when='@:3.99')
-    depends_on('zlib', when='@:3.99')
+    depends_on('libxslt', when='@:3')
+    depends_on('zlib', when='@:3')
 
     conflicts('%gcc@:5', when='@4.4:')
     conflicts('%clang@:4', when='@4.4:')
 
     # Before 4.0 this was an Autotools package
-    @when('@:3.99')
+    @when('@:3')
     def cmake(self, spec, prefix):
         configure_args = ["--prefix=" + prefix]
         configure(*configure_args)
 
-    @when('@:3.99')
+    @when('@:3')
     def build(self, spec, prefix):
         make()
 
-    @when('@:3.99')
+    @when('@:3')
     def install(self, spec, prefix):
         make("install")
 

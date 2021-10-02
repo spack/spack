@@ -33,7 +33,7 @@ class PyPycuda(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('cuda')
     depends_on('boost+python')
-    depends_on('python@3.6:3.999', type=('build', 'run'), when='@2020.1:')
+    depends_on('python@3.6:3', type=('build', 'run'), when='@2020.1:')
     depends_on('py-numpy@1.6:', type=('build', 'run'))
     depends_on('py-pytools@2011.2:', type=('build', 'run'))
     depends_on('py-six', type='run')

@@ -48,7 +48,7 @@ class Plasma(CMakePackage):
     conflicts("^atlas")  # does not have LAPACKE interface
 
     # missing LAPACKE features and/or CBLAS headers
-    conflicts("^netlib-lapack@:3.5.999")
+    conflicts("^netlib-lapack@:3.5")
 
     # clashes with OpenBLAS declarations and has a problem compiling on its own
     conflicts("^cblas")
@@ -57,9 +57,9 @@ class Plasma(CMakePackage):
     conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:4.8.99", when='@:17.1')
+    conflicts("%gcc@:4.8", when='@:17.1')
     # only GCC 6.0+ and higher have for OpenMP 4+ Clause "priority"
-    conflicts("%gcc@:5.99", when='@17.2:')
+    conflicts("%gcc@:5", when='@17.2:')
 
     conflicts("%cce")
     conflicts('%apple-clang')

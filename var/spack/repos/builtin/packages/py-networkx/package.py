@@ -29,7 +29,7 @@ class PyNetworkx(PythonPackage):
     depends_on('py-decorator@3.4.0:', type=('build', 'run'))
     depends_on('py-decorator@4.1.0:', type=('build', 'run'), when='@2.0:')
     depends_on('py-decorator@4.3.0:', type=('build', 'run'), when='@2.2:')
-    depends_on('py-decorator@4.3.0:4.999', type=('build', 'run'), when='@2.5.1:')
+    depends_on('py-decorator@4.3.0:4', type=('build', 'run'), when='@2.5.1:')
 
     def url_for_version(self, version):
         ext = 'tar.gz'

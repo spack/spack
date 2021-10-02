@@ -16,7 +16,7 @@ class H5bench(CMakePackage):
 
     depends_on('cmake@3.10:', type='build')
     depends_on('mpi')
-    depends_on('hdf5+mpi@1.12.0:1.99.99,develop-1.12:')
+    depends_on('hdf5+mpi@1.12.0:1,develop-1.12:')
 
     @run_after('install')
     def install_config(self):

@@ -21,6 +21,6 @@ class PyAsdf(PythonPackage):
     depends_on('py-setuptools-scm', type='build')
     depends_on('py-semantic-version@2.3.1:2.6.0', type=('build', 'run'))
     depends_on('py-pyyaml@3.10:', type=('build', 'run'))
-    depends_on('py-jsonschema@2.3:3.999', type=('build', 'run'))
+    depends_on('py-jsonschema@2.3:3', type=('build', 'run'))
     depends_on('py-six@1.9.0:', type=('build', 'run'))
     depends_on('py-numpy@1.8:', type=('build', 'run'))

@@ -32,7 +32,7 @@ class Cereal(CMakePackage):
     patch("Boost2.patch", when="@1.2.2:")
     patch("pointers.patch")
     # fixed in HEAD but not released yet
-    patch("LockGuard-default-ctor.patch", when="@:1.3.999")
+    patch("LockGuard-default-ctor.patch", when="@:1.3")
 
     depends_on('cmake@2.6.2:', type='build')
 

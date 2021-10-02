@@ -19,5 +19,5 @@ class PyPyasn1Modules(PythonPackage):
 
     depends_on('python@2.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pyasn1@0.4.6:0.4.999', type=('build', 'run'), when='@0.2.6')
-    depends_on('py-pyasn1@0.4.1:0.4.999', type=('build', 'run'), when='@0.2.5')
+    depends_on('py-pyasn1@0.4.6:0.4', type=('build', 'run'), when='@0.2.6')
+    depends_on('py-pyasn1@0.4.1:0.4', type=('build', 'run'), when='@0.2.5')

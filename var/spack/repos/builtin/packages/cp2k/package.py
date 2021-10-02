@@ -98,10 +98,10 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     with when('+libxc'):
         depends_on('pkgconfig', type='build', when='@7.0:')
-        depends_on('libxc@2.2.2:3.99.0', when='@:5.5999', type='build')
-        depends_on('libxc@4.0.3:4.99.0', when='@6.0:6.9', type='build')
-        depends_on('libxc@4.0.3:4.99.0', when='@7.0:8.1')
-        depends_on('libxc@5.1.3:5.1.99', when='@8.2:')
+        depends_on('libxc@2.2.2:3', when='@:5', type='build')
+        depends_on('libxc@4.0.3:4', when='@6.0:6.9', type='build')
+        depends_on('libxc@4.0.3:4', when='@7.0:8.1')
+        depends_on('libxc@5.1.3:5.1', when='@8.2:')
 
     with when('+mpi'):
         depends_on('mpi@2:')
@@ -112,14 +112,14 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on('cosma+cuda', when='+cuda')
         conflicts('~mpi')
         # COSMA support was introduced in 8+
-        conflicts('@:7.999')
+        conflicts('@:7')
 
     with when('+elpa'):
         conflicts('~mpi', msg='elpa requires MPI')
         depends_on('elpa+openmp', when='+openmp')
         depends_on('elpa~openmp', when='~openmp')
-        depends_on('elpa@2011.12:2016.13', when='@:5.999')
-        depends_on('elpa@2011.12:2017.11', when='@6.0:6.999')
+        depends_on('elpa@2011.12:2016.13', when='@:5')
+        depends_on('elpa@2011.12:2017.11', when='@6.0:6')
         depends_on('elpa@2018.05:2020.11.001', when='@7.0:8.2')
         depends_on('elpa@2021.05:', when='@8.3:')
 
@@ -132,7 +132,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     # dynamically, therefore can't set this as pure build-type dependency.
     with when('+pexsi'):
         conflicts('~mpi', msg='pexsi requires MPI')
-        depends_on('pexsi+fortran@0.9.0:0.9.999', when='@:4.999')
+        depends_on('pexsi+fortran@0.9.0:0.9', when='@:4')
         depends_on('pexsi+fortran@0.10.0:', when='@5.0:')
 
     # only OpenMP should be consistently used, all other common things
@@ -142,18 +142,18 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on('sirius+fortran+shared')
         depends_on('sirius+openmp', when='+openmp')
         depends_on('sirius~openmp', when='~openmp')
-        depends_on('sirius@:6.999', when='@:7.999')
-        depends_on('sirius@7:7.0.999', when='@8:8.2')
+        depends_on('sirius@:6', when='@:7')
+        depends_on('sirius@7.0.0:7.0', when='@8:8.2')
         depends_on('sirius@7.2:', when='@8.3:')
         conflicts('~mpi')
         # sirius support was introduced in 7+
-        conflicts('@:6.999')
+        conflicts('@:6')
 
     with when('+libvori'):
         depends_on('libvori@201219:', when='@8.1', type='build')
         depends_on('libvori@210412:', when='@8.2:', type='build')
         # libvori support was introduced in 8+
-        conflicts('@:7.999')
+        conflicts('@:7')
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     # which is written using Python 3
@@ -464,10 +464,10 @@ class Cp2k(MakefilePackage, CudaPackage):
                                 .format(elpa_suffix=elpa_suffix,
                                         dso_suffix=dso_suffix))))
 
-            if spec.satisfies('@:4.999'):
-                if elpa.satisfies('@:2014.5.999'):
+            if spec.satisfies('@:4'):
+                if elpa.satisfies('@:2014.5'):
                     cppflags.append('-D__ELPA')
-                elif elpa.satisfies('@2014.6:2015.10.999'):
+                elif elpa.satisfies('@2014.6:2015.10'):
                     cppflags.append('-D__ELPA2')
                 else:
                     cppflags.append('-D__ELPA3')
@@ -616,7 +616,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     def build_directory(self):
         build_dir = self.stage.source_path
 
-        if self.spec.satisfies('@:6.9999'):
+        if self.spec.satisfies('@:6'):
             # prior to version 7.1 was the Makefile located in makefiles/
             build_dir = join_path(build_dir, 'makefiles')
 

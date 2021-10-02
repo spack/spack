@@ -32,7 +32,7 @@ class Vapor(CMakePackage):
     depends_on('libtiff')
     depends_on('proj')
     depends_on('glm@0.9.9.1:')
-    depends_on('python@3.6.0:3.6.99')
+    depends_on('python@3.6.0:3.6')
     depends_on('py-numpy')
 
     def cmake_args(self):

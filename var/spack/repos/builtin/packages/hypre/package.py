@@ -93,17 +93,17 @@ class Hypre(AutotoolsPackage, CudaPackage):
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
-    conflicts("+shared@:2.12.99 platform=darwin")
+    conflicts("+shared@:2.12 platform=darwin")
 
     # Conflicts
     # Option added in v2.13.0
-    conflicts('+superlu-dist', when='@:2.12.99')
+    conflicts('+superlu-dist', when='@:2.12')
 
     # Internal SuperLU Option removed in v2.13.0
     conflicts('+internal-superlu', when='@2.13.0:')
 
     # Option added in v2.16.0
-    conflicts('+mixedint', when='@:2.15.99')
+    conflicts('+mixedint', when='@:2.15')
 
     configure_directory = 'src'
 

@@ -49,8 +49,8 @@ class Precice(CMakePackage):
     depends_on('pkgconfig', type='build', when='@2.2:')
     depends_on('boost@1.60.0:')
     depends_on('boost@1.65.1:', when='@1.4:')
-    depends_on('boost@:1.72.99', when='@:2.0.2')
-    depends_on('boost@:1.74.99', when='@:2.1.1')
+    depends_on('boost@:1.72', when='@:2.0.2')
+    depends_on('boost@:1.74', when='@:2.1.1')
     depends_on('eigen@3.2:')
     depends_on('eigen@:3.3.7', type='build', when='@:1.5')  # bug in prettyprint
     depends_on('libxml2')

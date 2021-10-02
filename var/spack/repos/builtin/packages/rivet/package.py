@@ -67,7 +67,7 @@ class Rivet(AutotoolsPackage):
     variant('hepmc', default='2', values=('2', '3'),
             description="HepMC version to link against")
 
-    conflicts('hepmc=3', when='@:2.99', msg='HepMC support was added in 3.0')
+    conflicts('hepmc=3', when='@:2', msg='HepMC support was added in 3.0')
 
     # According to A. Buckley (main Rivet developer):
     # "typically a given Rivet version will work with
@@ -103,15 +103,15 @@ class Rivet(AutotoolsPackage):
 
     # The following versions were not a part of LCG stack
     # and thus the exact version of YODA is unknown
-    depends_on('yoda@1.7.0:1.7.999', when='@2.6.0,2.7.0,2.7.1,3.0.0,3.0.2')
-    depends_on('yoda@1.5.0:1.5.999', when='@2.4.1')
+    depends_on('yoda@1.7.0:1.7', when='@2.6.0,2.7.0,2.7.1,3.0.0,3.0.2')
+    depends_on('yoda@1.5.0:1.5', when='@2.4.1')
 
     depends_on('hepmc',  type=('build', 'link', 'run'), when='hepmc=2')
     depends_on('hepmc3', type=('build', 'link', 'run'), when='hepmc=3')
     depends_on('boost', when='@:2.5.0', type=('build', 'run'))
     depends_on('fastjet', type=('build', 'run'))
     depends_on('fjcontrib', type=('build', 'run'), when='@3.0.0:')
-    depends_on('gsl', type=('build', 'run'), when='@:2.6.0,2.6.2:2.99.99')
+    depends_on('gsl', type=('build', 'run'), when='@:2.6.0,2.6.2:2')
     depends_on('python', type=('build', 'run'))
     depends_on('py-cython@0.24.0:', type='build')
     depends_on('swig', type=('build', 'run'))
@@ -170,7 +170,7 @@ class Rivet(AutotoolsPackage):
         else:
             args += ['--with-hepmc3=' + self.spec['hepmc'].prefix]
 
-        if self.spec.satisfies('@:1.999.999'):
+        if self.spec.satisfies('@:1'):
             args += ['--with-boost-incpath=' + self.spec['boost'].includes]
         else:
             if self.spec.satisfies('@:2.5.0'):
@@ -180,7 +180,7 @@ class Rivet(AutotoolsPackage):
         if self.spec.satisfies('@2:'):
             args += ['--with-yoda=' + self.spec['yoda'].prefix]
 
-        if self.spec.satisfies('@:2.6.0,2.6.2:2.99.99'):
+        if self.spec.satisfies('@:2.6.0,2.6.2:2'):
             args += ['--with-gsl=' + self.spec['gsl'].prefix]
 
         if self.spec.satisfies('@3.0.0:'):
@@ -189,7 +189,7 @@ class Rivet(AutotoolsPackage):
         if self.spec.satisfies('@:2.5.1'):
             args += ['--enable-unvalidated']
 
-        if self.spec.satisfies('@2:2.4.99'):
+        if self.spec.satisfies('@2:2.4'):
             args += ['--enable-stdcxx11']
 
         args += ['--disable-pdfmanual']

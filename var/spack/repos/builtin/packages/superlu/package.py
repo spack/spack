@@ -49,7 +49,7 @@ class Superlu(CMakePackage):
         return args
 
     # Pre-cmake installation method
-    @when("@:4.999")
+    @when("@:4")
     def cmake(self, spec, prefix):
         """Use autotools before version 5"""
         config = []
@@ -141,7 +141,7 @@ class Superlu(CMakePackage):
         return config_args
 
     # Pre-cmake configuration
-    @when('@:4.999')
+    @when('@:4')
     def _generate_make_hdr_for_test(self):
         config_args = []
 
