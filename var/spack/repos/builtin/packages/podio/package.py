@@ -28,7 +28,7 @@ class Podio(CMakePackage):
 
     variant('build_type', default='Release',
             description='The build type to build',
-            values=('Debug', 'Release'))
+            values=('Debug', 'RelWithDebInfo', 'MinSizeRel', 'Release'))
 
     variant('sio', default=False,
             description='Build the SIO I/O backend')
