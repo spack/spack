@@ -12,6 +12,7 @@ class PyPybids(PythonPackage):
     homepage = "https://github.com/bids-standard/pybids"
     pypi     = "pybids/pybids-0.13.1.tar.gz"
 
+    version('0.13.2', sha256='9692013af3b86b096b5423b88179c6c9b604baff5a6b6f89ba5f40429feb7a3e')
     version('0.13.1', sha256='c920e1557e1dae8b671625d70cafbdc28437ba2822b2db9da4c2587a7625e3ba')
 
     depends_on('python@3.5:', type=('build', 'run'))
