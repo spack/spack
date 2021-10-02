@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+
 
 class Chombo(MakefilePackage):
     """The Chombo package provides a set of tools for implementing finite
@@ -30,15 +32,20 @@ class Chombo(MakefilePackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('gmake', type='build')
+    depends_on('tcsh', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
     depends_on('hdf5+mpi', when='+mpi+hdf5')
 
     def edit(self, spec, prefix):
+        files = glob.glob('lib/mk/local/*.csh')
+        files += ['fixIncludes', 'lib/mk/Make.rules', 'lib/mk/reverse']
+        files += ['lib/test/BoxTools/mpirun.sh']
+        filter_file('/bin/csh', 'env csh', *files)
 
         # Set fortran name mangling in Make.defs
         defs_file = FileFilter('./lib/mk/Make.defs')
-        defs_file.filter(r'^\s*#\s*cppcallsfort\s*=\s*',
+        defs_file.filter(r'^#\s*cppcallsfort\s*=.*',
                          'cppcallsfort = -DCH_FORT_UNDERSCORE')
 
         # Set remaining variables in Make.defs.local
@@ -50,53 +57,52 @@ class Chombo(MakefilePackage):
         defs_file = FileFilter('./lib/mk/Make.defs.local')
 
         # Unconditional settings
-        defs_file.filter(r'^\s*#\s*DEBUG\s*=\s*', 'DEBUG = FALSE')
-        defs_file.filter(r'^\s*#\s*OPT\s*=\s*', 'OPT = TRUE')
-        defs_file.filter(r'^\s*#\s*PIC\s*=\s*', 'PIC = TRUE')
+        defs_file.filter(r'^#\s*DEBUG\s*=.*', 'DEBUG = FALSE')
+        defs_file.filter(r'^#\s*OPT\s*=.*', 'OPT = TRUE')
         # timer code frequently fails compiles. So disable it.
-        defs_file.filter(r'^\s*#\s*USE_TIMER\s*=\s*', 'USE_TIMER = FALSE')
+        defs_file.filter(r'^#\s*USE_TIMER\s*=.*', 'USE_TIMER = FALSE')
 
         # LAPACK setup
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
-        defs_file.filter(r'^\s*#\s*USE_LAPACK\s*=\s*', 'USE_LAPACK = TRUE')
+        defs_file.filter(r'^#\s*USE_LAPACK\s*=.*', 'USE_LAPACK = TRUE')
         defs_file.filter(
-            r'^\s*#\s*lapackincflags\s*=\s*',
+            r'^#\s*lapackincflags\s*=.*',
             'lapackincflags = -I%s' % spec['lapack'].prefix.include)
         defs_file.filter(
-            r'^\s*#\s*syslibflags\s*=\s*',
+            r'^#\s*syslibflags\s*=.*',
             'syslibflags = %s' % lapack_blas.ld_flags)
 
         # Compilers and Compiler flags
-        defs_file.filter(r'^\s*#\s*CXX\s*=\s*', 'CXX = %s' % spack_cxx)
-        defs_file.filter(r'^\s*#\s*FC\s*=\s*', 'FC = %s' % spack_fc)
+        defs_file.filter(r'^#\s*CXX\s*=.*', 'CXX = %s' % spack_cxx)
+        defs_file.filter(r'^#\s*FC\s*=.*', 'FC = %s' % spack_fc)
         if '+mpi' in spec:
             defs_file.filter(
-                r'^\s*#\s*MPICXX\s*=\s*',
+                r'^#\s*MPICXX\s*=.*',
                 'MPICXX = %s' % self.spec['mpi'].mpicxx)
 
         # Conditionally determined settings
         defs_file.filter(
-            r'^\s*#\s*MPI\s*=\s*',
+            r'^#\s*MPI\s*=.*',
             'MPI = %s' % ('TRUE' if '+mpi' in spec else 'FALSE'))
         defs_file.filter(
-            r'^\s*#\s*DIM\s*=\s*',
+            r'^#\s*DIM\s*=.*',
             'DIM = %s' % spec.variants['dims'].value)
 
         # HDF5 settings
         if '+hdf5' in spec:
-            defs_file.filter(r'^\s*#\s*USE_HDF5\s*=\s*', 'USE_HDF5 = TRUE')
+            defs_file.filter(r'^#\s*USE_HDF5\s*=.*', 'USE_HDF5 = TRUE')
             defs_file.filter(
-                r'^\s*#\s*HDFINCFLAGS\s*=.*',
+                r'^#\s*HDFINCFLAGS\s*=.*',
                 'HDFINCFLAGS = -I%s' % spec['hdf5'].prefix.include)
             defs_file.filter(
-                r'^\s*#\s*HDFLIBFLAGS\s*=.*',
+                r'^#\s*HDFLIBFLAGS\s*=.*',
                 'HDFLIBFLAGS = %s' % spec['hdf5'].libs.ld_flags)
             if '+mpi' in spec:
                 defs_file.filter(
-                    r'^\s*#\s*HDFMPIINCFLAGS\s*=.*',
+                    r'^#\s*HDFMPIINCFLAGS\s*=.*',
                     'HDFMPIINCFLAGS = -I%s' % spec['hdf5'].prefix.include)
                 defs_file.filter(
-                    r'^\s*#\s*HDFMPILIBFLAGS\s*=.*',
+                    r'^#\s*HDFMPILIBFLAGS\s*=.*',
                     'HDFMPILIBFLAGS = %s' % spec['hdf5'].libs.ld_flags)
 
     def build(self, spec, prefix):
@@ -106,7 +112,12 @@ class Chombo(MakefilePackage):
     def install(self, spec, prefix):
         with working_dir('lib'):
             install_tree('include', prefix.include)
+            # The package only builds static libs on Linux,
+            # maybe it builds shared libs on another OS.
+            # This restores the originally impemented install:
+            libfiles = glob.glob('lib*.a')
+            libfiles += glob.glob('lib*.so')
+            libfiles += glob.glob('lib*.dylib')
             mkdirp(prefix.lib)
-            install('lib*.a', prefix.lib)
-            install('lib*.so', prefix.lib)
-            install('lib*.dylib', prefix.lib)
+            for lib in libfiles:
+                install(lib, prefix.lib)
