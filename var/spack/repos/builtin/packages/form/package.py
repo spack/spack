@@ -17,8 +17,8 @@ class Form(AutotoolsPackage):
     version('4.1-20131025', sha256='fb3470937d66ed5cb1af896b15058836d2c805d767adac1b9073ed2df731cbe9',
             url='https://github.com/vermaseren/form/releases/download/v4.1-20131025/form-4.1.tar.gz')
 
-    depends_on('gmp',      type='link', when='+zlib')
-    depends_on('zlib',     type='link', when='+gmp')
+    depends_on('gmp',      type='link', when='+gmp')
+    depends_on('zlib',     type='link', when='+zlib')
     depends_on('mpi',      type='link', when='+parform')
 
     variant('gmp', default=False, description='Use GMP for long integer arithmetic')
