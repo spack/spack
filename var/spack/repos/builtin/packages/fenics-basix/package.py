@@ -29,4 +29,4 @@ class FenicsBasix(CMakePackage):
     def root_cmakelists_dir(self):
         if self.spec.satisfies("@main"):
             return "cpp"
-        return None
+        return self.stage.source_path
