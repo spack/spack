@@ -14,6 +14,9 @@ class ClingoBootstrap(Clingo):
     variant('build_type', default='Release', values=('Release',),
             description='CMake build type')
 
+    variant('static_libstdcpp', default=False,
+            description='Require a static version of libstdc++')
+
     # CMake at version 3.16.0 or higher has the possibility to force the
     # Python interpreter, which is crucial to build against external Python
     # in environment where more than one interpreter is in the same prefix
@@ -56,14 +59,17 @@ class ClingoBootstrap(Clingo):
         return args
 
     def setup_build_environment(self, env):
+        opts = None
         if '%apple-clang platform=darwin' in self.spec:
             opts = '-mmacosx-version-min=10.13'
         elif '%gcc' in self.spec:
-            # This is either linux or cray
-            opts = '-static-libstdc++ -static-libgcc -Wl,--exclude-libs,ALL'
+            if '+static_libstdcpp' in self.spec:
+                # This is either linux or cray
+                opts = '-static-libstdc++ -static-libgcc -Wl,--exclude-libs,ALL'
         else:
             msg = 'unexpected compiler for spec "{0}"'.format(self.spec)
             raise RuntimeError(msg)
 
-        env.set('CXXFLAGS', opts)
-        env.set('LDFLAGS', opts)
+        if opts:
+            env.set('CXXFLAGS', opts)
+            env.set('LDFLAGS', opts)
