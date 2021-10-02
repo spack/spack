@@ -107,6 +107,10 @@ class Phist(CMakePackage):
     # error will occur unless -DNO_WARN_X86_INTRINSICS is defined.
     patch('ppc64_sse.patch', when='@1.7.4:1.9.4')
     patch('update_tpetra_gotypes.patch', when='@:1.8')
+    # the phist repo came with it's own FindMPI.cmake before, which may cause some other
+    # MPI installation to be used than the one spack wants.
+    patch('delete_own_FindMPI.patch', when='@:1.9.6')
+    patch('update_tpetra_gotypes.patch', when='@:1.8.99')
     patch('sbang.patch', when='+fortran')
 
     # ###################### Dependencies ##########################
