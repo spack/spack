@@ -11,7 +11,7 @@ class Form(AutotoolsPackage):
 
     homepage = "https://www.nikhef.nl/~form/"
     url      = "https://github.com/vermaseren/form/releases/download/v4.2.1/form-4.2.1.tar.gz"
-    maintainers = ['iarspider']
+    maintainers = ['iarspider', 'tueda']
 
     version('4.2.1', sha256='f2722d6d4ccb034e01cf786d55342e1c21ff55b182a4825adf05d50702ab1a28')
     version('4.1-20131025', sha256='fb3470937d66ed5cb1af896b15058836d2c805d767adac1b9073ed2df731cbe9',
