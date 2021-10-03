@@ -989,7 +989,7 @@ def environment_after_sourcing_files(*files, **kwargs):
         python_cmd = python_cmd.name if python_cmd else sys.executable
 
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = python_cmd + ' -c "{0}"'.format(dump_cmd)
+        dump_environment = python_cmd + ' -E -c "{0}"'.format(dump_cmd)
 
         # Try to source the file
         source_file_arguments = ' '.join([
