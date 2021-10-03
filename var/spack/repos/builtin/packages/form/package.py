@@ -21,8 +21,8 @@ class Form(AutotoolsPackage):
     depends_on('zlib',     type='link', when='+zlib')
     depends_on('mpi',      type='link', when='+parform')
 
-    variant('gmp', default=False, description='Use GMP for long integer arithmetic')
-    variant('zlib', default=False, description='Use zlib for compression')
+    variant('gmp', default=True, description='Use GMP for long integer arithmetic')
+    variant('zlib', default=True, description='Use zlib for compression')
     variant('scalar', default=True, description='Build scalar version (form)')
     variant('threaded', default=True, description='Build threaded version (tform)')
     variant('parform', default=False, description='Build parallel version using MPI (parform)')
