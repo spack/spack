@@ -256,7 +256,7 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
     e = ev.read('test')
     e.add('mpileaks')
 
-    os.replace(e.manifest_path, filepath)
+    os.rename(e.manifest_path, filepath)
     os.symlink(filepath, e.manifest_path)
 
     e.concretize()
