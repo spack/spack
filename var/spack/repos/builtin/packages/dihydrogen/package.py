@@ -122,7 +122,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
-    depends_on('nvshmem', when='+nvshmem')
+    # TODO: Debug linker errors when NVSHMEM is built with UCX
+    depends_on('nvshmem +nccl~ucx', when='+nvshmem')
 
     # Idenfity versions of cuda_arch that are too old
     # from lib/spack/spack/build_systems/cuda.py
