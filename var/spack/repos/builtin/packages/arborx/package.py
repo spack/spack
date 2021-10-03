@@ -104,7 +104,6 @@ class Arborx(CMakePackage):
                                   if '~trilinos' in self.spec
                                   else self.spec['trilinos'].prefix)]
 
-
         self.run_test("cmake", cmake_args,
                       purpose="test: calling cmake",
                       work_dir=self.cached_tests_work_dir)
