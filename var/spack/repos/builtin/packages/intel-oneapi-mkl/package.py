@@ -65,9 +65,11 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         shared = True if '+shared' in self.spec else False
         mkl_libs = [self.xlp64_lib('libmkl_intel'), 'libmkl_sequential', 'libmkl_core']
         libs = find_libraries(mkl_libs,
-                              join_path(self.component_path, 'lib', 'intel64'), shared=shared)
+                              join_path(self.component_path, 'lib', 'intel64'),
+                                        shared=shared)
         if not shared:
-            libs = LibraryList(['-Wl,--start-group'] + libs.libraries + ['-Wl,--end-group'])
+            libs = LibraryList(['-Wl,--start-group'] + libs.libraries +
+                               ['-Wl,--end-group'])
 
         libs += find_system_libraries(['libpthread', 'libm', 'libdl'])
         return libs
