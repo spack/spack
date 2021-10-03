@@ -42,14 +42,14 @@ class Fairlogger(CMakePackage):
     variant('pretty',
             default=False,
             description='Use BOOST_PRETTY_FUNCTION macro (Supported by 1.4+).')
-    conflicts('+pretty', when='@:1.3.99')
+    conflicts('+pretty', when='@:1.3')
 
     depends_on('cmake@3.9.4:', type='build')
     depends_on('git', type='build', when='@develop')
 
     depends_on('boost', when='+pretty')
     conflicts('^boost@1.70:', when='^cmake@:3.14')
-    depends_on('fmt@5.3.0:5.99', when='@1.6.0:1.6.1')
+    depends_on('fmt@5.3.0:5', when='@1.6.0:1.6.1')
     depends_on('fmt@5.3.0:', when='@1.6.2:')
 
     def patch(self):
@@ -71,6 +71,6 @@ class Fairlogger(CMakePackage):
             args.append(self.define_from_variant('USE_BOOST_PRETTY_FUNCTION', 'pretty'))
         if self.spec.satisfies('@1.6:'):
             args.append('-DUSE_EXTERNAL_FMT=ON')
-        if self.spec.satisfies('^boost@:1.69.99'):
+        if self.spec.satisfies('^boost@:1.69'):
             args.append('-DBoost_NO_BOOST_CMAKE=ON')
         return args

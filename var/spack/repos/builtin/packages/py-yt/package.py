@@ -48,7 +48,7 @@ class PyYt(PythonPackage):
     depends_on("py-cython@0.24:", type=('build', 'run'))
     depends_on("py-h5py@3.1:", type=('build', 'run'), when="+h5py")
     depends_on("py-ipython@1.0:", type=('build', 'run'))
-    depends_on("py-ipython@:6.99", type=('build', 'run'), when="^python@:2.99")
+    depends_on("py-ipython@:6", type=('build', 'run'), when="^python@:2")
     depends_on("py-matplotlib@1.5.3:", type=('build', 'run'))
     depends_on("py-matplotlib@:3.2.2", type=('build', 'run'), when="@:3.6.0")
     depends_on("py-numpy@1.10.4:", type=('build', 'run'))
@@ -56,7 +56,7 @@ class PyYt(PythonPackage):
     depends_on("py-setuptools@19.6:", type=('build', 'run'))
     depends_on("py-sympy@1.0:", type=('build', 'run'))
     depends_on("rockstar@yt", type=('build', 'run'), when="+rockstar")
-    depends_on("python@2.7.0:2.7.99,3.5:", type=('build', 'run'))
+    depends_on("python@2.7.0:2.7,3.5:", type=('build', 'run'))
 
     @run_before('install')
     def prep_yt(self):

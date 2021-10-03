@@ -11,7 +11,7 @@ backends='+occa+raja+libceed'
 backends_specs='^occa~cuda ^raja~openmp'
 
 # help the concrtizer find suitable hdf5 version (conduit constraint)
-hdf5_spec='^hdf5@1.8.19:1.8.999'
+hdf5_spec='^hdf5@1.8.19:1.8'
 # petsc spec
 petsc_spec='^petsc+suite-sparse+mumps'
 # strumpack spec without cuda

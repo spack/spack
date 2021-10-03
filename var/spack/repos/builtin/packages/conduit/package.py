@@ -118,8 +118,8 @@ class Conduit(CMakePackage):
     #
     # Use HDF5 1.8, for wider output compatibly
     # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5@1.8.19:1.8.999~cxx", when="+hdf5+hdf5_compat+shared")
-    depends_on("hdf5@1.8.19:1.8.999~shared~cxx", when="+hdf5+hdf5_compat~shared")
+    depends_on("hdf5@1.8.19:1.8~cxx", when="+hdf5+hdf5_compat+shared")
+    depends_on("hdf5@1.8.19:1.8~shared~cxx", when="+hdf5+hdf5_compat~shared")
     depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
     depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
     # we need to hand this to conduit so it can properly

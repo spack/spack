@@ -24,5 +24,5 @@ class PyPykwalify(PythonPackage):
     depends_on('py-pyyaml@3.11:', type=('build', 'run'), when='@1.6.1')
 
     conflicts('^py-ruamel@0.16.0:', when='@1.6.1')
-    conflicts('^python@2.8.0:3.2.99', when='@1.6.1')
-    conflicts('^python@2.8.0:3.4.99', when='@1.7.0:')
+    conflicts('^python@2.8.0:3.2', when='@1.6.1')
+    conflicts('^python@2.8.0:3.4', when='@1.7.0:')

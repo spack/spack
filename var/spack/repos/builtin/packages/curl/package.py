@@ -74,7 +74,7 @@ class Curl(AutotoolsPackage):
     variant('ldap',       default=False, description='enable ldap support')
     variant('libidn2',    default=False,  description='enable libidn2 support')
 
-    conflicts('+libssh', when='@:7.57.99')
+    conflicts('+libssh', when='@:7.57')
     # on OSX and --with-ssh the configure steps fails with
     # one or more libs available at link-time are not available run-time
     # unless the libssh are installed externally (e.g. via homebrew), even

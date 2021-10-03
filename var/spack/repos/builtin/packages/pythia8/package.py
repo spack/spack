@@ -37,7 +37,7 @@ class Pythia8(AutotoolsPackage):
     variant('fastjet', default=False, description='Build fastjet extensions')
 
     depends_on('rsync', type='build')
-    depends_on('hepmc@:2.99.99', when="+hepmc")
+    depends_on('hepmc@:2', when="+hepmc")
     depends_on('root', when="+root")
     depends_on('evtgen', when="+evtgen")
     depends_on("fastjet@3.0.0:", when="+fastjet")

@@ -103,7 +103,7 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
-    patch('update_tpetra_gotypes.patch', when='@:1.8.99')
+    patch('update_tpetra_gotypes.patch', when='@:1.8')
 
     patch('sbang.patch', when='+fortran')
 
@@ -132,7 +132,7 @@ class Phist(CMakePackage):
 
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package
-    conflicts('+fortran', when='@:1.6.99')
+    conflicts('+fortran', when='@:1.6')
 
     # older gcc's may produce incorrect SIMD code and fail
     # to compile some OpenMP statements

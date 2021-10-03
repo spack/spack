@@ -58,7 +58,7 @@ class GromacsChainCoordinate(CMakePackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('fftw-api@3')
-    depends_on('cmake@3.16.0:3.99.99', type='build')
+    depends_on('cmake@3.16.0:3', type='build')
     depends_on('cuda', when='+cuda')
     depends_on('sycl', when='+sycl')
     depends_on('lapack', when='+lapack')

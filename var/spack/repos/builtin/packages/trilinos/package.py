@@ -142,13 +142,13 @@ class Trilinos(CMakePackage, CudaPackage):
              git='https://github.com/ornl-cees/DataTransferKit.git',
              commit='4fe4d9d56cfd4f8a61f392b81d8efd0e389ee764',  # branch dtk-3.0
              placement='DataTransferKit',
-             when='+dtk @12.14.0:12.14.99')
+             when='+dtk @12.14.0:12.14')
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit.git',
              commit='edfa050cd46e2274ab0a0b7558caca0079c2e4ca',  # tag 3.1-rc1
              placement='DataTransferKit',
              submodules=True,
-             when='+dtk @12.18:12.18.99')
+             when='+dtk @12.18.0:12.18')
     resource(name='scorec',
              git='https://github.com/SCOREC/core.git',
              commit='73c16eae073b179e45ec625a5abe4915bc589af2',  # tag v2.2.5
@@ -158,12 +158,12 @@ class Trilinos(CMakePackage, CudaPackage):
              url='https://github.com/trilinos/mesquite/archive/trilinos-release-12-12-1.tar.gz',
              sha256='e0d09b0939dbd461822477449dca611417316e8e8d8268fd795debb068edcbb5',
              placement='packages/mesquite',
-             when='+mesquite @12.12.1:12.16.99')
+             when='+mesquite @12.12.1:12.16')
     resource(name='mesquite',
              git='https://github.com/trilinos/mesquite.git',
              commit='20a679679b5cdf15bf573d66c5dc2b016e8b9ca1',  # branch trilinos-release-12-12-1
              placement='packages/mesquite',
-             when='+mesquite @12.18.1:12.18.99')
+             when='+mesquite @12.18.1:12.18')
     resource(name='mesquite',
              git='https://github.com/trilinos/mesquite.git',
              tag='develop',
@@ -235,9 +235,9 @@ class Trilinos(CMakePackage, CudaPackage):
     # see https://github.com/trilinos/Trilinos/issues/3346
     conflicts('+exodus', when='~fortran')
     # Only allow Mesquite with Trilinos 12.12 and up, and master
-    conflicts('+mesquite', when='@:12.10.99,master')
+    conflicts('+mesquite', when='@:12.10,master')
     # Strumpack is only available as of mid-2021
-    conflicts('+strumpack', when='@:13.0.99')
+    conflicts('+strumpack', when='@:13.0')
     # Can only use one type of SuperLU
     conflicts('+superlu-dist', when='+superlu')
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the

@@ -60,7 +60,7 @@ class SuiteSparse(Package):
 
     # This patch adds '-lm' when linking libgraphblas and when using clang.
     # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
-    patch('graphblas_libm_dep.patch', when='@5.2.0:5.2.99%clang')
+    patch('graphblas_libm_dep.patch', when='@5.2.0:5.2%clang')
 
     # CUDA-11 dropped sm_30 code generation, remove hardcoded sm_30 from makefile
     # open issue: https://github.com/DrTimothyAldenDavis/SuiteSparse/issues/56

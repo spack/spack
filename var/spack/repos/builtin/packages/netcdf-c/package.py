@@ -107,7 +107,7 @@ class NetcdfC(AutotoolsPackage):
 
     # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
     # https://github.com/Unidata/netcdf-c/issues/250
-    depends_on('hdf5@:1.8.999', when='@:4.4.0')
+    depends_on('hdf5@:1.8', when='@:4.4.0')
 
     # The feature was introduced in version 4.1.2
     # and was removed in version 4.4.0

@@ -43,9 +43,9 @@ class PyWarpx(PythonPackage):
                    type=['build', 'link'])
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-numpy@1.15.0:1.99.99', type=('build', 'run'))
+    depends_on('py-numpy@1.15.0:1', type=('build', 'run'))
     depends_on('py-mpi4py@2.0.0:', type=('build', 'run'), when='+mpi')
-    depends_on('py-periodictable@1.5:1.99', type=('build', 'run'))
+    depends_on('py-periodictable@1.5:1', type=('build', 'run'))
     depends_on('py-picmistandard@0.0.14', type=('build', 'run'))
     depends_on('py-setuptools@38.6:', type='build')
     depends_on('py-wheel', type='build')

@@ -18,7 +18,7 @@ class PyFury(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.7.1:', type=('build', 'run'))
     depends_on('py-scipy@1.2:', type=('build', 'run'))  # from requirements/default.txt
-    depends_on('vtk+python@8.1.2:8.99,9.0.1:', type=('build', 'run'))
+    depends_on('vtk+python@8.1.2:8,9.0.1:', type=('build', 'run'))
     depends_on('pil@5.4.1:', type=('build', 'run'))
 
     depends_on('py-codecov', type='test')

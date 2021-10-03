@@ -38,7 +38,7 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision#installation
     depends_on('python@3.6:', when='@0.7:', type=('build', 'link', 'run'))
-    depends_on('python@3.5:', when='@0.6.0:0.6.999', type=('build', 'link', 'run'))
+    depends_on('python@3.5:', when='@0.6.0:0.6', type=('build', 'link', 'run'))
     depends_on('python@2.7:2.8,3.5:3.8', when='@0.5.0', type=('build', 'link', 'run'))
     depends_on('python@2.7:2.8,3.5:3.7', when='@:0.4', type=('build', 'link', 'run'))
 

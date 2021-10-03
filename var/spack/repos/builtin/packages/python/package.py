@@ -202,11 +202,11 @@ class Python(AutotoolsPackage):
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch('cray-rpath-2.3.patch', when='@2.3:3.0.1 platform=cray')
-    patch('cray-rpath-3.1.patch', when='@3.1:3.99  platform=cray')
+    patch('cray-rpath-3.1.patch', when='@3.1:3  platform=cray')
 
     # Ensure that distutils chooses correct compiler option for RPATH on fj:
     patch('fj-rpath-2.3.patch', when='@2.3:3.0.1 %fj')
-    patch('fj-rpath-3.1.patch', when='@3.1:3.99  %fj')
+    patch('fj-rpath-3.1.patch', when='@3.1:3  %fj')
 
     # Fixes an alignment problem with more aggressive optimization in gcc8
     # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
@@ -332,7 +332,7 @@ class Python(AutotoolsPackage):
         # configuration option, so the installation's module setup file needs
         # to be modified directly in order to point to the correct SSL path.
         # See: https://stackoverflow.com/a/5939170
-        if self.spec.satisfies('@:3.6.999+ssl'):
+        if self.spec.satisfies('@:3.6+ssl'):
             ff = FileFilter(join_path('Modules', 'Setup.dist'))
             ff.filter(r'^#(((SSL=)|(_ssl))(.*))$', r'\1')
             ff.filter(r'^#((.*)(\$\(SSL\))(.*))$', r'\1')
@@ -343,7 +343,7 @@ class Python(AutotoolsPackage):
         # Because Python uses compiler system paths during install, it's
         # possible to pick up a system OpenSSL when building 'python~ssl'.
         # To avoid this scenario, we disable the 'ssl' module with patching.
-        elif self.spec.satisfies('@:3.6.999~ssl'):
+        elif self.spec.satisfies('@:3.6~ssl'):
             ff = FileFilter('setup.py')
             ff.filter(
                 r'^(\s+(ssl_((incs)|(libs)))\s+=\s+)(.*)$',

@@ -36,14 +36,14 @@ class QuantumEspresso(Package):
     resource(name='environ',
              git='https://github.com/environ-developers/Environ.git',
              tag='v1.1',
-             when='@6.3:6.4.99 +environ',
+             when='@6.3:6.4 +environ',
              destination='.'
              )
 
     resource(name='environ',
              git='https://github.com/environ-developers/Environ.git',
              tag='v1.0',
-             when='@6.2.1:6.2.99 +environ',
+             when='@6.2.1:6.2 +environ',
              destination='.'
              )
 
@@ -181,7 +181,7 @@ class QuantumEspresso(Package):
     conflicts('+epw', when='~mpi', msg='EPW needs MPI')
 
     # EPW doesn't gets along well with OpenMPI 2.x.x
-    conflicts('+epw', when='^openmpi@2.0.0:2.999.999',
+    conflicts('+epw', when='^openmpi@2.0.0:2',
               msg='OpenMPI version incompatible with EPW')
 
     # EPW also doesn't gets along well with PGI 17.x + OpenMPI 1.10.7
