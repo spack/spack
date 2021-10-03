@@ -13,7 +13,7 @@ class PyFenicsDolfinx(PythonPackage):
     homepage = "https://github.com/FEniCS/dolfinx"
     url = "https://github.com/FEniCS/dolfinx/archive/v0.1.0.tar.gz"
     git = "https://github.com/FEniCS/dolfinx.git"
-    maintainers = ["js947", "chrisrichardson", "garth-wells"]
+    maintainers = ["chrisrichardson", "garth-wells", "nate-sime"]
 
     version("main", branch="main")
     version("0.3.0", sha256="4857d0fcb44a4e9bf9eb298ba5377abdee17a7ad0327448bdd06cce73d109bed")
