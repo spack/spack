@@ -21,7 +21,7 @@ class PyMypy(PythonPackage):
 
     depends_on("python@3.5:", type=("build", "run"))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-typed-ast@1.4.0:1.4.999', type=('build', 'run'))
+    depends_on('py-typed-ast@1.4.0:1.4', type=('build', 'run'))
     depends_on('py-typing-extensions@3.7.4:', type=('build', 'run'))
-    depends_on('py-mypy-extensions@0.4.3:0.4.999', type=('build', 'run'))
+    depends_on('py-mypy-extensions@0.4.3:0.4', type=('build', 'run'))
     depends_on('py-toml', when='@0.900:', type=('build', 'run'))

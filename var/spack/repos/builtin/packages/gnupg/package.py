@@ -45,7 +45,7 @@ class Gnupg(AutotoolsPackage):
 
     @run_after('install')
     def add_gpg2_symlink(self):
-        if self.spec.satisfies("@2.0:2.999"):
+        if self.spec.satisfies("@2.0:2"):
             symlink('gpg', self.prefix.bin.gpg2)
 
     def configure_args(self):

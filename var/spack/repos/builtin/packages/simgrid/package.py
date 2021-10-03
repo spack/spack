@@ -71,7 +71,7 @@ class Simgrid(CMakePackage):
 
     conflicts('%gcc@10:', when='@:3.23',
               msg='simgrid <= v3.23 cannot be built with gcc >= 10,'
-                  ' please use an older release (e.g., %gcc@:9.99).')
+                  ' please use an older release (e.g., %gcc@:9).')
 
     def setup_dependent_package(self, module, dep_spec):
 

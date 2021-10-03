@@ -46,12 +46,12 @@ class MongoCDriver(Package):
     depends_on('pkgconfig', type='build')
 
     # When updating mongo-c-driver, libbson has to be kept in sync.
-    depends_on('libbson@1.17.0:1.17.99', when='@1.17')
-    depends_on('libbson@1.16.0:1.16.99', when='@1.16')
-    depends_on('libbson@1.9.0:1.9.99', when='@1.9')
-    depends_on('libbson@1.8.0:1.8.99', when='@1.8')
-    depends_on('libbson@1.7.0:1.7.99', when='@1.7')
-    depends_on('libbson@1.6.0:1.6.99', when='@1.6')
+    depends_on('libbson@1.17.0:1.17', when='@1.17')
+    depends_on('libbson@1.16.0:1.16', when='@1.16')
+    depends_on('libbson@1.9.0:1.9', when='@1.9')
+    depends_on('libbson@1.8.0:1.8', when='@1.8')
+    depends_on('libbson@1.7.0:1.7', when='@1.7')
+    depends_on('libbson@1.6.0:1.6', when='@1.6')
 
     depends_on('openssl', when='+ssl')
     depends_on('snappy', when='+snappy')
@@ -133,7 +133,7 @@ class MongoCDriver(Package):
 
         return args
 
-    @when('@:1.9.99')
+    @when('@:1.9')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix), *self.configure_args())
         make()

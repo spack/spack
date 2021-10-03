@@ -94,7 +94,7 @@ class Grass(AutotoolsPackage):
     depends_on('opencl', when='+opencl')
     depends_on('bzip2', when='+bzlib')
     depends_on('zstd', when='+zstd')
-    depends_on('gdal@:3.2.999', when='+gdal')
+    depends_on('gdal@:3.2', when='+gdal')
     depends_on('liblas', when='+liblas')
     depends_on('wxwidgets', when='+wxwidgets')
     depends_on('py-wxpython@2.8.10.1:', when='+wxwidgets', type=('build', 'run'))

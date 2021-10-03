@@ -28,7 +28,7 @@ class Grace(AutotoolsPackage):
     depends_on('motif')
     depends_on('jpeg')
     depends_on('libpng')
-    depends_on('fftw@2:2.999')
+    depends_on('fftw@2.0:2')
     depends_on('netcdf-c')
 
     def patch(self):

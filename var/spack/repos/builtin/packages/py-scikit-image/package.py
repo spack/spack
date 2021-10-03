@@ -38,7 +38,7 @@ class PyScikitImage(PythonPackage):
     depends_on('py-networkx@2.0:', type=('build', 'run'), when='@0.16.1:')
     depends_on('py-six', type=('build', 'run'), when='@:0.15.1')
     depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('py-matplotlib@2.0.0:2.9.999, 3.0.1:', type=('build', 'run'), when='@0.16.1:')
+    depends_on('py-matplotlib@2.0.0:2.9, 3.0.1:', type=('build', 'run'), when='@0.16.1:')
     depends_on('py-imageio@2.0.1:', type=('build', 'run'), when='@0.15.1:')
     depends_on('py-imageio@2.3.0:', type=('build', 'run'), when='@0.16.1:')
     depends_on('py-tifffile@2019.7.26:', type=('build', 'run'), when='@0.17.1:')

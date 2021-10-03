@@ -74,7 +74,7 @@ class OpenpmdApi(CMakePackage):
 
     # Fix breaking HDF5 1.12.0 API when build with legacy api options
     # https://github.com/openPMD/openPMD-api/pull/1012
-    patch('hdf5-1.12.0.patch', when='@:0.13.99 +hdf5')
+    patch('hdf5-1.12.0.patch', when='@:0.13 +hdf5')
 
     extends('python', when='+python')
 

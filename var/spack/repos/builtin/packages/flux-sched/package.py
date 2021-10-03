@@ -46,9 +46,9 @@ class FluxSched(AutotoolsPackage):
 
     depends_on("flux-core", type=('build', 'link', 'run'))
     depends_on("flux-core+cuda", when='+cuda', type=('build', 'run', 'link'))
-    depends_on("flux-core@0.16.0:0.16.99", when='@0.8.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.16.0:0.16", when='@0.8.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.22.0", when='@0.14.0', type=('build', 'run', 'link'))
-    depends_on("flux-core@0.23.0:0.25.99", when='@0.15.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.23.0:0.25", when='@0.15.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.26.0:", when='@0.16.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.28.0:", when='@0.17.0', type=('build', 'run', 'link'))
     depends_on("flux-core@master", when='@master', type=('build', 'run', 'link'))

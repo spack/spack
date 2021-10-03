@@ -26,5 +26,5 @@ class PyPackaging(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('py-pyparsing@2.0.2:', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'), when='@:20.7.99')
+    depends_on('py-six', type=('build', 'run'), when='@:20.7')
     depends_on('py-attrs', type=('build', 'run'), when='@19.1')

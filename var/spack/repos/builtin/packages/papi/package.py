@@ -63,11 +63,11 @@ class Papi(AutotoolsPackage):
 
     # This is the only way to match exactly version 6.0.0 without also
     # including version 6.0.0.1 due to spack version matching logic
-    conflicts('@5.9.99999:6.0.0.a', when='+static_tools', msg='Static tools cannot build on version 6.0.0')
+    conflicts('@6.0:6.0.0.a', when='+static_tools', msg='Static tools cannot build on version 6.0.0')
 
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
-    patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8:')
+    patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6%gcc@8:')
     patch('crayftn-fixes.patch', when='@6.0.0:%cce@9:')
 
     configure_directory = 'src'

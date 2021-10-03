@@ -108,10 +108,10 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-python-dateutil@2.7:', when='@3.4:', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'), when='@:2')
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
-    depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@:2.7')
+    depends_on('py-functools32', type=('build', 'run'), when='@:2.0 ^python@:2.7')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
-               when='@2.1.0:2.999.999 ^python@:2')
-    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@2.0:2.999')
+               when='@2.1.0:2 ^python@:2')
+    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@2.0:2')
     depends_on('py-six@1.9.0:',  type=('build', 'run'), when='@:1')
 
     # Optional backend dependencies
@@ -149,7 +149,7 @@ class PyMatplotlib(PythonPackage):
     # https://matplotlib.org/devel/testing.html#requirements
     depends_on('py-pytest@3.6:', type='test')
     depends_on('ghostscript@9.0:', type='test')
-    # depends_on('inkscape@:0.999', type='test')
+    # depends_on('inkscape@:0', type='test')
 
     msg = 'MacOSX backend requires the Cocoa headers included with XCode'
     conflicts('platform=linux', when='backend=macosx', msg=msg)

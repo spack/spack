@@ -35,7 +35,7 @@ class LlvmAmdgpu(CMakePackage):
     variant('rocm-device-libs', default=True, description='Build ROCm device libs as external LLVM project instead of a standalone spack package.')
     variant('openmp', default=True, description='Enable OpenMP')
 
-    depends_on('cmake@3.4.3:',  type='build', when='@:3.8.99')
+    depends_on('cmake@3.4.3:',  type='build', when='@:3.8')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
     depends_on('python', type='build')
     depends_on('z3', type='link')

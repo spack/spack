@@ -74,12 +74,12 @@ class Openjdk(Package):
             is_preferred = preferred_version == ver
             version(ver, sha256=pkg[0], url=pkg[1], preferred=is_preferred)
 
-    provides('java@17', when='@17.0:17.99')
-    provides('java@16', when='@16.0:16.99')
-    provides('java@11', when='@11.0:11.99')
-    provides('java@10', when='@10.0:10.99')
-    provides('java@9', when='@9.0:9.99')
-    provides('java@8', when='@1.8.0:1.8.999')
+    provides('java@17', when='@17.0:17')
+    provides('java@16', when='@16.0:16')
+    provides('java@11', when='@11.0:11')
+    provides('java@10', when='@10.0:10')
+    provides('java@9', when='@9.0:9')
+    provides('java@8', when='@1.8.0:1.8')
 
     conflicts('target=ppc64:', msg='openjdk is not available for ppc64 (big endian)')
 

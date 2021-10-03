@@ -22,7 +22,7 @@ class PyPybids(PythonPackage):
     depends_on('py-nibabel@2.1:', type=('build', 'run'))
     depends_on('py-pandas@0.23:', type=('build', 'run'))
     depends_on('py-patsy', type=('build', 'run'))
-    depends_on('py-sqlalchemy@:1.3.999', type=('build', 'run'))
+    depends_on('py-sqlalchemy@:1.3', type=('build', 'run'))
     depends_on('py-bids-validator', type=('build', 'run'))
     depends_on('py-num2words', type=('build', 'run'))
     depends_on('py-click', type=('build', 'run'))

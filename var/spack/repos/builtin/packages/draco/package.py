@@ -49,18 +49,18 @@ class Draco(CMakePackage):
     variant('qt',       default=False, description='Enable Qt support')
     variant('superlu_dist', default=True, description='Enable SuperLU-DIST support')
 
-    depends_on('cmake@3.9:',  when='@:6.99',        type='build')
-    depends_on('cmake@3.11:', when='@7.0.0:7.1.99', type='build')
-    depends_on('cmake@3.14:', when='@7.2.0:7.6.99', type='build')
+    depends_on('cmake@3.9:',  when='@:6',        type='build')
+    depends_on('cmake@3.11:', when='@7.0.0:7.1', type='build')
+    depends_on('cmake@3.14:', when='@7.2.0:7.6', type='build')
     depends_on('cmake@3.17:', when='@7.7:',         type='build')
     depends_on('cmake@3.18:', when='@7.9:',         type='build')
-    depends_on('gsl@:2.5.99', when='@:7.10.99')
+    depends_on('gsl@:2.5', when='@:7.10')
     depends_on('gsl@2.6:',    when='@7.11.0:')
     depends_on('mpi@3:',         type=('build', 'link', 'run'))
     depends_on('numdiff',        type='build')
-    depends_on('random123@1.09', when='@:7.6.99')
+    depends_on('random123@1.09', when='@:7.6')
     depends_on('random123',      when='@7.7.0:')
-    depends_on('python@2.7:',    when='@:7.6.99',   type=('build', 'run', 'test'))
+    depends_on('python@2.7:',    when='@:7.6',   type=('build', 'run', 'test'))
     depends_on('python@3.5:',    when='@7.7.0:',    type=('build', 'run', 'test'))
 
     # Optional dependencies
@@ -73,17 +73,17 @@ class Draco(CMakePackage):
     depends_on('parmetis',    when='+parmetis')
     depends_on('qt',          when='+qt',
                type=('build', 'link', 'run'))
-    depends_on('superlu-dist@:5.99', when='@:7.6.99+superlu_dist')
+    depends_on('superlu-dist@:5', when='@:7.6+superlu_dist')
     depends_on('py-matplotlib', when='+pythontools', type=('run'))
 
-    conflicts('+cuda', when='@:7.6.99')
-    conflicts('+caliper', when='@:7.7.99')
+    conflicts('+cuda', when='@:7.6')
+    conflicts('+caliper', when='@:7.7')
 
     # Fix python discovery.
     patch('d710.patch', when='@7.1.0^python@3:')
-    patch('d710-python2.patch', when='@7.1.0^python@2.7:2.99')
-    patch('d730.patch', when='@7.3.0:7.3.99')
-    patch('d740.patch', when='@7.4.0:7.4.99')
+    patch('d710-python2.patch', when='@7.1.0^python@2.7:2')
+    patch('d730.patch', when='@7.3.0:7.3')
+    patch('d740.patch', when='@7.4.0:7.4')
     patch('d760-cray.patch', when='@7.6.0')
     patch('d770-nocuda.patch', when='@7.7.0')
 

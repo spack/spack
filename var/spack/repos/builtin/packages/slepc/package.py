@@ -58,20 +58,20 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     variant('blopex', default=False, description='Enables BLOPEX wrappers')
 
     # NOTE: make sure PETSc and SLEPc use the same python.
-    depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
+    depends_on('python@2.6:2.8', type='build', when='@:3.10')
     depends_on('python@2.6:2.8,3.4:', type='build', when='@3.11:')
 
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on('petsc@main', when='@main')
-    depends_on('petsc@3.16:3.16.99', when='@3.16:3.16.99')
-    depends_on('petsc@3.15:3.15.99', when='@3.15:3.15.99')
-    depends_on('petsc@3.14:3.14.99', when='@3.14:3.14.99')
-    depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')
-    depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
-    depends_on('petsc@3.11:3.11.99', when='@3.11:3.11.99')
-    depends_on('petsc@3.10:3.10.99', when='@3.10:3.10.99')
-    depends_on('petsc@3.9:3.9.99', when='@3.9:3.9.99')
-    depends_on('petsc@3.8:3.8.99', when='@3.8:3.8.99')
+    depends_on('petsc@3.16.0:3.16', when='@3.16.0:3.16')
+    depends_on('petsc@3.15.0:3.15', when='@3.15.0:3.15')
+    depends_on('petsc@3.14.0:3.14', when='@3.14.0:3.14')
+    depends_on('petsc@3.13.0:3.13', when='@3.13.0:3.13')
+    depends_on('petsc@3.12.0:3.12', when='@3.12.0:3.12')
+    depends_on('petsc@3.11.0:3.11', when='@3.11.0:3.11')
+    depends_on('petsc@3.10.0:3.10', when='@3.10.0:3.10')
+    depends_on('petsc@3.9.0:3.9', when='@3.9.0:3.9')
+    depends_on('petsc@3.8.0:3.8', when='@3.8.0:3.8')
     depends_on('petsc@3.7:3.7.7', when='@3.7.1:3.7.4')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
     depends_on('petsc+cuda', when='+cuda')
@@ -82,7 +82,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     patch('install_name_371.patch', when='@3.7.1')
 
     # Arpack can not be used with 64bit integers.
-    conflicts('+arpack', when='@:3.12.99 ^petsc+int64')
+    conflicts('+arpack', when='@:3.12 ^petsc+int64')
     conflicts('+blopex', when='^petsc+int64')
 
     resource(name='blopex',
@@ -90,7 +90,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
              sha256='0081ee4c4242e635a8113b32f655910ada057c59043f29af4b613508a762f3ac',
              destination=join_path('installed-arch-' + sys.platform + '-c-opt',
                                    'externalpackages'),
-             when='@:3.12.99+blopex')
+             when='@:3.12+blopex')
 
     resource(name='blopex',
              git='https://github.com/lobpcg/blopex',
@@ -115,7 +115,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
             options.extend([
                 '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
             ])
-            if spec.satisfies('@:3.12.99'):
+            if spec.satisfies('@:3.12'):
                 arpackopt = '--with-arpack-flags'
             else:
                 arpackopt = '--with-arpack-lib'

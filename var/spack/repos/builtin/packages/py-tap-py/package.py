@@ -21,6 +21,6 @@ class PyTapPy(PythonPackage):
     depends_on('python@3.5:3.7', when='@3.0:')
     depends_on('python@2.7:2.8,3.5:3.7', when='@2.6')
     depends_on('python@2.6:2.8,3.2:3.4', when='@:1.8')
-    depends_on('py-nose', type=('build', 'run'), when='@:1.99')
-    depends_on('py-pygments', type=('build', 'run'), when='@:1.99')
+    depends_on('py-nose', type=('build', 'run'), when='@:1')
+    depends_on('py-pygments', type=('build', 'run'), when='@:1')
     depends_on('py-setuptools', type=('build', 'run'))

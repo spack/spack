@@ -62,9 +62,9 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('catch2', type='test')
 
     # Specify the correct version of Aluminum
-    depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
-    depends_on('aluminum@0.5.0:0.5.99', when='@0.2.0 +al')
-    depends_on('aluminum@0.7.0:0.7.99', when='@0.2.1 +al')
+    depends_on('aluminum@0.4.0:0.4', when='@0.1 +al')
+    depends_on('aluminum@0.5.0:0.5', when='@0.2.0 +al')
+    depends_on('aluminum@0.7.0:0.7', when='@0.2.1 +al')
     depends_on('aluminum@0.7.0:', when='@:0.0,0.2.1: +al')
 
     # Add Aluminum variants
@@ -83,7 +83,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     for when in ['+cuda', '+distconv']:
         depends_on('cuda', when=when)
         depends_on('cudnn', when=when)
-    depends_on('cub', when='^cuda@:10.99')
+    depends_on('cub', when='^cuda@:10')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas', when='blas=openblas')
@@ -172,7 +172,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DcuDNN_DIR={0}'.format(
                 spec['cudnn'].prefix))
 
-        if spec.satisfies('^cuda@:10.99'):
+        if spec.satisfies('^cuda@:10'):
             if '+cuda' in spec or '+distconv' in spec:
                 args.append('-DCUB_DIR={0}'.format(
                     spec['cub'].prefix))

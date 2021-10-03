@@ -160,34 +160,34 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     conflicts('+shared', when='@:3.3.2')
     conflicts('~static~shared')
-    conflicts('~threadsafe', when='@:3.99.99+openmp')
+    conflicts('~threadsafe', when='@:3+openmp')
 
-    conflicts('+cuda', when='@:3.99.99')
-    conflicts('+rocm', when='@:4.1.99')
+    conflicts('+cuda', when='@:3')
+    conflicts('+rocm', when='@:4.1')
     conflicts('+cuda+rocm')
     conflicts('+netcdf', when='@:3.1')
     conflicts('+superlu-dist', when='@:3.1')
     # STRUMPACK support was added in mfem v3.3.2, however, here we allow only
     # strumpack v3+ support for which is available starting with mfem v4.0:
-    conflicts('+strumpack', when='@:3.99.99')
+    conflicts('+strumpack', when='@:3')
     conflicts('+gnutls', when='@:3.1')
     conflicts('+zlib', when='@:3.2')
     conflicts('+mpfr', when='@:3.2')
     conflicts('+petsc', when='@:3.2')
-    conflicts('+slepc', when='@:4.1.99')
+    conflicts('+slepc', when='@:4.1')
     conflicts('+sundials', when='@:3.2')
     conflicts('+pumi', when='@:3.3.2')
-    conflicts('+gslib', when='@:4.0.99')
+    conflicts('+gslib', when='@:4.0')
     conflicts('timer=mac', when='@:3.3.0')
     conflicts('timer=mpi', when='@:3.3.0')
     conflicts('~metis+mpi', when='@:3.3.0')
     conflicts('+metis~mpi', when='@:3.3.0')
     conflicts('+conduit', when='@:3.3.2')
-    conflicts('+occa', when='mfem@:3.99.99')
-    conflicts('+raja', when='mfem@:3.99.99')
-    conflicts('+libceed', when='mfem@:4.0.99')
-    conflicts('+umpire', when='mfem@:4.0.99')
-    conflicts('+amgx', when='mfem@:4.1.99')
+    conflicts('+occa', when='mfem@:3')
+    conflicts('+raja', when='mfem@:3')
+    conflicts('+libceed', when='mfem@:4.0')
+    conflicts('+umpire', when='mfem@:4.0')
+    conflicts('+amgx', when='mfem@:4.1')
     conflicts('+amgx', when='~cuda')
 
     conflicts('+superlu-dist', when='~mpi')
@@ -198,8 +198,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts('timer=mpi', when='~mpi')
 
     depends_on('mpi', when='+mpi')
-    depends_on('hypre@2.10.0:2.13.99', when='@:3.3.99+mpi')
-    depends_on('hypre@:2.20.0', when='@3.4:4.2.99+mpi')
+    depends_on('hypre@2.10.0:2.13', when='@:3.3+mpi')
+    depends_on('hypre@:2.20.0', when='@3.4:4.2+mpi')
     depends_on('hypre@:2.22.0', when='@4.3.0+mpi')
     depends_on('hypre', when='+mpi')
 
@@ -248,14 +248,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # superlu-dist@6.1.1. See https://github.com/mfem/mfem/issues/983.
     # This issue was resolved in v4.1.
     conflicts('+superlu-dist',
-              when='mfem@:4.0.99 ^hypre@2.16.0: ^superlu-dist@6:')
+              when='mfem@:4.0 ^hypre@2.16.0: ^superlu-dist@6:')
     # The STRUMPACK v3 interface in MFEM seems to be broken as of MFEM v4.1
     # when using hypre version >= 2.16.0.
     # This issue is resolved in v4.2.
-    conflicts('+strumpack', when='mfem@4.0.0:4.1.99 ^hypre@2.16.0:')
+    conflicts('+strumpack', when='mfem@4.0.0:4.1 ^hypre@2.16.0:')
     conflicts('+strumpack ^strumpack+cuda', when='~cuda')
 
-    depends_on('occa@1.0.8:', when='@:4.1.99+occa')
+    depends_on('occa@1.0.8:', when='@:4.1+occa')
     depends_on('occa@1.1.0:', when='@4.2.0:+occa')
     depends_on('occa+cuda', when='+occa+cuda')
     # TODO: propagate '+rocm' variant to occa when it is supported
@@ -269,7 +269,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on('raja+rocm amdgpu_target={0}'.format(gfx),
                    when='+raja+rocm amdgpu_target={0}'.format(gfx))
 
-    depends_on('libceed@0.6:', when='@:4.1.99+libceed')
+    depends_on('libceed@0.6:', when='@:4.1+libceed')
     depends_on('libceed@0.7:', when='@4.2.0:+libceed')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('libceed+cuda cuda_arch={0}'.format(sm_),

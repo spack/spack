@@ -76,7 +76,7 @@ class Geant4(CMakePackage):
                    when='@10.7.0: cxxstd=' + std)
 
         depends_on('clhep@2.3.3.0: cxxstd=' + std,
-                   when='@10.3.3:10.6.99 cxxstd=' + std)
+                   when='@10.3.3:10.6 cxxstd=' + std)
 
         # Spack only supports Xerces-c 3 and above, so no version req
         depends_on('xerces-c netaccessor=curl cxxstd=' + std, when='cxxstd=' + std)
@@ -85,13 +85,13 @@ class Geant4(CMakePackage):
         depends_on('vecgeom@1.1.8 cxxstd=' + std,
                    when='@10.7.0: +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.5 cxxstd=' + std,
-                   when='@10.6.0:10.6.99 +vecgeom cxxstd=' + std)
+                   when='@10.6.0:10.6 +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.0 cxxstd=' + std,
-                   when='@10.5.0:10.5.99 +vecgeom cxxstd=' + std)
+                   when='@10.5.0:10.5 +vecgeom cxxstd=' + std)
         depends_on('vecgeom@0.5.2 cxxstd=' + std,
-                   when='@10.4.0:10.4.99 +vecgeom cxxstd=' + std)
+                   when='@10.4.0:10.4 +vecgeom cxxstd=' + std)
         depends_on('vecgeom@0.3rc cxxstd=' + std,
-                   when='@10.3.0:10.3.99 +vecgeom cxxstd=' + std)
+                   when='@10.3.0:10.3 +vecgeom cxxstd=' + std)
 
         # Boost.python, conflict handled earlier
         depends_on('boost@1.70: +python cxxstd=' + std,
@@ -110,7 +110,7 @@ class Geant4(CMakePackage):
     # CLHEP.
     patch('CLHEP-10.03.03.patch', level=1, when='@10.3.3')
     # These patches can be applied independent of the cxxstd value?
-    patch('cxx17.patch', when='@:10.3.99 cxxstd=17')
+    patch('cxx17.patch', when='@:10.3 cxxstd=17')
     patch('cxx17_geant4_10_0.patch', level=1, when='@10.4.0 cxxstd=17')
     patch('geant4-10.4.3-cxx17-removed-features.patch',
           level=1, when='@10.4.3 cxxstd=17')
@@ -131,7 +131,7 @@ class Geant4(CMakePackage):
 
         # Don't install the package cache file as Spack will set
         # up CMAKE_PREFIX_PATH etc for the dependencies
-        if spec.version > Version('10.5.99'):
+        if spec.version >= Version('10.6'):
             options.append('-DGEANT4_INSTALL_PACKAGE_CACHE=OFF')
 
         # Multithreading

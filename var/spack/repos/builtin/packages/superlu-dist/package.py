@@ -45,7 +45,7 @@ class SuperluDist(CMakePackage, CudaPackage):
     depends_on('parmetis')
     depends_on('metis@5:')
 
-    conflicts('+cuda', when='@:6.3.999')
+    conflicts('+cuda', when='@:6.3')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')

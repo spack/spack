@@ -17,5 +17,5 @@ class PyArgcomplete(PythonPackage):
     version('1.1.1',  sha256='cca45b5fe07000994f4f06a0b95bd71f7b51b04f81c3be0b4ea7b666e4f1f084')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-importlib-metadata@0.23:4.999', when='@1.12.3: ^python@:3.7', type=('build', 'run'))
-    depends_on('py-importlib-metadata@0.23:1.999', when='@1.12: ^python@:3.7', type=('build', 'run'))
+    depends_on('py-importlib-metadata@0.23:4', when='@1.12.3: ^python@:3.7', type=('build', 'run'))
+    depends_on('py-importlib-metadata@0.23:1', when='@1.12: ^python@:3.7', type=('build', 'run'))

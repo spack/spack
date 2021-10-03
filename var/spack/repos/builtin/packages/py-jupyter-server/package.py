@@ -31,6 +31,6 @@ class PyJupyterServer(PythonPackage):
     depends_on('py-send2trash', type=('build', 'run'))
     depends_on('py-terminado@0.8.3:', type=('build', 'run'))
     depends_on('py-prometheus-client', type=('build', 'run'))
-    depends_on('py-anyio@3.1.0:3.99', type=('build', 'run'))
+    depends_on('py-anyio@3.1.0:3', type=('build', 'run'))
     depends_on('py-websocket-client', type=('build', 'run'))
     depends_on('py-requests-unixsocket', type=('build', 'run'))

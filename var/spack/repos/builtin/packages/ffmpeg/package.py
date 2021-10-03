@@ -93,19 +93,19 @@ class Ffmpeg(AutotoolsPackage):
     depends_on('xz', when='+lzma')
 
     # TODO: enable when libxml2 header issue is resolved
-    # conflicts('+libxml2', when='@:3.999')
+    # conflicts('+libxml2', when='@:3')
     # See: https://www.ffmpeg.org/index.html#news (search AV1)
-    conflicts('+libaom', when='@:3.999')
+    conflicts('+libaom', when='@:3')
     # All of the following constraints were sourced from the official 'ffmpeg'
     # change log, which can be found here:
     # https://raw.githubusercontent.com/FFmpeg/FFmpeg/release/4.0/Changelog
-    conflicts('+sdl2', when='@:3.1.999')
-    conflicts('+libsnappy', when='@:2.7.999')
-    conflicts('+X', when='@:2.4.999')
-    conflicts('+lzma', when='@2.3.999:')
-    conflicts('+libwebp', when='@2.1.999:')
-    conflicts('+libssh', when='@2.0.999:')
-    conflicts('+libzmq', when='@:1.999.999')
+    conflicts('+sdl2', when='@:3.1')
+    conflicts('+libsnappy', when='@:2.7')
+    conflicts('+X', when='@:2.4')
+    conflicts('+lzma', when='@2.3:')
+    conflicts('+libwebp', when='@2.1:')
+    conflicts('+libssh', when='@2.1:')
+    conflicts('+libzmq', when='@:1')
     conflicts('%nvhpc')
 
     @property
