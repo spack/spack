@@ -178,15 +178,15 @@ class Phist(CMakePackage):
                 % ('64' if '+int64' in spec else '32'),
                 self.define_from_variant('PHIST_HOST_OPTIMIZE', 'host'),
                 ]
+        # Force phist to use the MPI wrappers instead of raw compilers
+        # (see issue #26002 and the comment in the trilinos package.py)
         if '+mpi' in spec:
-                # Force phist to use the MPI wrappers instead of raw compilers
-                # (see issue #26002 and the comment in the trilinos package.py)
-                args.extend([
-                        define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
-                        define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
-                        define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
-                        define('MPI_BASE_DIR', spec['mpi'].prefix),
-                ])
+            args.extend(
+                [define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
+                 define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
+                 define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
+                 define('MPI_BASE_DIR', spec['mpi'].prefix),
+                 ])
 
         return args
 
