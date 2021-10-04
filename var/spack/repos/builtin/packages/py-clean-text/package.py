@@ -3,48 +3,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install py-clean-text
-#
-# You can edit this file again by typing:
-#
-#     spack edit py-clean-text
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
 class PyCleanText(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """User-generated content on the Web and in social media is
+    often dirty. Preprocess your scraped data with clean-text
+    to create a normalized text representation."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
     pypi     = "clean-text/clean-text-0.5.0.tar.gz"
-
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
 
     version('0.5.0', sha256='e525951bef0c8b72e03c987fdac2c475b61d7debf7a8834366fd75716179b6e1')
 
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
-
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
+    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-emoji', type=('build', 'run'))
+    depends_on('py-ftfy@6.0:6.999', type=('build', 'run'))
