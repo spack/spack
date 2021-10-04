@@ -70,7 +70,7 @@ SPACK_SYSTEM_DIRS"
 # die MESSAGE
 # Print a message and exit with error code 1.
 die() {
-    echo "$@"
+    echo "[spack cc] ERROR: $*"
     exit 1
 }
 
@@ -191,7 +191,7 @@ system_dir() {
 
 # Fail with a clear message if the input contains any bell characters.
 if eval "[ \"\${*#*${lsep}}\" != \"\$*\" ]"; then
-    die "ERROR: Compiler command line contains our separator ('${lsep}'). Cannot parse."
+    die "Compiler command line contains our separator ('${lsep}'). Cannot parse."
 fi
 
 # ensure required variables are set
@@ -337,10 +337,11 @@ if [ "$SPACK_TEST_COMMAND" = "dump-mode" ]; then
     exit
 fi
 
-# Check that at least one of the real commands was actually selected,
-# otherwise we don't know what to execute.
+# If, say, SPACK_CC is set but SPACK_FC is not, we want to know. Compilers do not
+# *have* to set up Fortran executables, so we need to tell the user when a build is
+# about to attempt to use them unsuccessfully.
 if [ -z "$command" ]; then
-    die "ERROR: Compiler '$SPACK_COMPILER_SPEC' does not support compiling $language programs."
+    die "Compiler '$SPACK_COMPILER_SPEC' does not have a $language compiler configured."
 fi
 
 #
@@ -755,7 +756,7 @@ if [ -n "${SPACK_TEST_COMMAND=}" ]; then
             eval "printf '%s\n' \"\$0: \$var: \$$var\""
             ;;
         *)
-            die "ERROR: Unknown test command: '$SPACK_TEST_COMMAND'"
+            die "Unknown test command: '$SPACK_TEST_COMMAND'"
             ;;
     esac
 fi
