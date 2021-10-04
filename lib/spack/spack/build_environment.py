@@ -184,6 +184,12 @@ def clean_environment():
     env.unset('LD_PRELOAD')
     env.unset('DYLD_INSERT_LIBRARIES')
 
+    # Avoid <packagename>_ROOT user variables overriding spack dependencies
+    # https://cmake.org/cmake/help/latest/variable/PackageName_ROOT.html
+    for varname in os.environ.keys():
+        if '_ROOT' in varname:
+            env.unset(varname)
+
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
     # CNL requires these variables to be set (or at least some of them,
