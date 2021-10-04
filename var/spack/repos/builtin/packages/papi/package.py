@@ -10,7 +10,7 @@ import sys
 import llnl.util.filesystem as fs
 
 
-class Papi(AutotoolsPackage):
+class Papi(AutotoolsPackage, ROCmPackage):
     """PAPI provides the tool designer and application engineer with a
        consistent interface and methodology for use of the performance
        counter hardware found in most major microprocessors. PAPI
@@ -46,6 +46,7 @@ class Papi(AutotoolsPackage):
     variant('sde', default=False, description='Enable software defined events')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('nvml', default=False, description='Enable NVML support')
+    variant('rocm_smi', default=False, description='Enable ROCm SMI support')
 
     variant('shared', default=True, description='Build shared libraries')
     # PAPI requires building static libraries, so there is no "static" variant
@@ -56,6 +57,9 @@ class Papi(AutotoolsPackage):
     depends_on('lm-sensors', when='+lmsensors')
     depends_on('cuda', when='+cuda')
     depends_on('cuda', when='+nvml')
+    depends_on('hsa-rocr-dev', when='+rocm')
+    depends_on('rocprofiler-dev', when='+rocm')
+    depends_on('rocm-smi-lib', when='+rocm_smi')
 
     conflicts('%gcc@8:', when='@5.3.0', msg='Requires GCC version less than 8.0')
     conflicts('+sde', when='@:5', msg='Software defined events (SDE) added in 6.0.0')
@@ -73,10 +77,27 @@ class Papi(AutotoolsPackage):
     configure_directory = 'src'
 
     def setup_build_environment(self, env):
-        if '+lmsensors' in self.spec and self.version >= Version('6'):
-            env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
-        if '^cuda' in self.spec:
-            env.set('PAPI_CUDA_ROOT', self.spec['cuda'].prefix)
+        spec = self.spec
+        if '+lmsensors' in spec and self.version >= Version('6'):
+            env.set('PAPI_LMSENSORS_ROOT', spec['lm-sensors'].prefix)
+        if '^cuda' in spec:
+            env.set('PAPI_CUDA_ROOT', spec['cuda'].prefix)
+        if '+rocm' in spec:
+            env.set('PAPI_ROCM_ROOT', spec['hsa-rocr-dev'].prefix)
+            env.append_flags('CFLAGS',
+                             '-I%s/rocprofiler/include'
+                             % spec['rocprofiler-dev'].prefix)
+            env.set('ROCP_METRICS',
+                    '%s/rocprofiler/lib/metrics.xml' % spec['rocprofiler-dev'].prefix)
+            env.set('ROCPROFILER_LOG', '1')
+            env.set('HSA_VEN_AMD_AQLPROFILE_LOG', '1')
+            env.set('AQLPROFILE_READ_API', '1')
+            # Setting HSA_TOOLS_LIB=librocprofiler64.so (as recommended) doesn't work
+            # due to a conflict between the spack and system-installed versions.
+            env.set('HSA_TOOLS_LIB', 'unset')
+        if '+rocm_smi' in spec:
+            env.append_flags('CFLAGS',
+                             '-I%s/rocm_smi' % spec['rocm-smi-lib'].prefix.include)
 
     setup_run_environment = setup_build_environment
 
@@ -90,7 +111,7 @@ class Papi(AutotoolsPackage):
         components = filter(
             lambda x: spec.variants[x].value,
             ['example', 'infiniband', 'powercap', 'rapl', 'lmsensors', 'sde',
-             'cuda', 'nvml'])
+             'cuda', 'nvml', 'rocm', 'rocm_smi'])
         if components:
             options.append('--with-components=' + ' '.join(components))
 
