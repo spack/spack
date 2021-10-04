@@ -194,6 +194,11 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     conflicts('+cuda', when='cuda_arch=none', msg=cuda_msg)
 
+    # Fix 2- and 3-center integral calls to libint
+    patch("https://github.com/cp2k/cp2k/commit/5eaf864ed2bd21fb1b05a9173bb77a815ad4deda.patch",
+          sha256="18e58ba8fdde5c507bece48ec064f7f2b80e59d1b7cfe6b7a639e5f64f84d43f",
+          when="@8.2")
+
     @property
     def makefile_architecture(self):
         return '{0.architecture}-{0.compiler.name}'.format(self.spec)
@@ -227,6 +232,9 @@ class Cp2k(MakefilePackage, CudaPackage):
             fftw_header_dir = fftw.headers.directories[0]
         elif '^intel-mkl' in spec:
             fftw = spec['intel-mkl']
+            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
+        elif '^intel-oneapi-mkl' in spec:
+            fftw = spec['intel-oneapi-mkl']
             fftw_header_dir = fftw.headers.directories[0] + '/fftw'
         elif '^intel-parallel-studio+mkl' in spec:
             fftw = spec['intel-parallel-studio']
@@ -357,7 +365,9 @@ class Cp2k(MakefilePackage, CudaPackage):
         ldflags.append((lapack + blas).search_flags)
         libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
 
-        if '^intel-mkl' in spec or '^intel-parallel-studio+mkl' in spec:
+        if any(p in spec for p in ('^intel-mkl',
+                                   '^intel-parallel-studio+mkl',
+                                   '^intel-oneapi-mkl')):
             cppflags += ['-D__MKL']
         elif '^accelerate' in spec:
             cppflags += ['-D__ACCELERATE']
@@ -375,11 +385,32 @@ class Cp2k(MakefilePackage, CudaPackage):
                 '-D__SCALAPACK'
             ])
 
-            scalapack = spec['scalapack'].libs
-            ldflags.append(scalapack.search_flags)
+            if '^intel-oneapi-mpi' in spec:
+                mpi = [join_path(
+                       spec['intel-oneapi-mpi'].libs.directories[0],
+                       'libmpi.so')]
+            else:
+                mpi = spec['mpi:cxx'].libs
+
+            # while intel-mkl has a mpi variant and adds the scalapack
+            # libs to its libs, intel-oneapi-mkl does not.
+            if '^intel-oneapi-mkl' in spec:
+                mpi_impl = 'openmpi' if '^openmpi' in spec else 'intelmpi'
+                scalapack = [
+                    join_path(
+                        spec['intel-oneapi-mkl'].libs.directories[0],
+                        'libmkl_scalapack_lp64.so'),
+                    join_path(
+                        spec['intel-oneapi-mkl'].libs.directories[0],
+                        'libmkl_blacs_{0}_lp64.so'.format(mpi_impl)
+                    )
+                ]
+            else:
+                scalapack = spec['scalapack'].libs
+                ldflags.append(scalapack.search_flags)
 
             libs.extend(scalapack)
-            libs.extend(spec['mpi:cxx'].libs)
+            libs.extend(mpi)
             libs.extend(self.compiler.stdcxx_libs)
 
             if 'wannier90' in spec:
@@ -606,7 +637,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             mkf.write(fflags('LIBS', libs))
 
             if '%intel' in spec:
-                mkf.write(fflags('LDFLAGS_C', ldflags + ['-nofor_main']))
+                mkf.write(fflags('LDFLAGS_C', ldflags + ['-nofor-main']))
 
             mkf.write('# CP2K-specific flags\n\n')
             mkf.write('GPUVER = {0}\n'.format(gpuver))
