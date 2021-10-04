@@ -1398,8 +1398,16 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
                                  old_relative_prefix.split(os.path.sep)[-1])
 
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=spack.store.layout.root)
-    shutil.move(extracted_dir, spec.prefix)
+        try:
+            tar.extractall(path=spack.store.layout.root)
+        except Exception as e:
+            shutil.rmtree(extracted_dir)
+            raise e
+    try:
+        shutil.move(extracted_dir, spec.prefix)
+    except Exception as e:
+        shutil.rmtree(extracted_dir)
+        raise e
 
     os.remove(tarfile_path)
     os.remove(specfile_path)
