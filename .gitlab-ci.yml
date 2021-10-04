@@ -1,0 +1,22 @@
+stages:
+  - style
+
+variables:
+  GIT_STRATEGY: clone
+
+style1:
+  stage: style
+  image: python:3.6
+  script:
+    - git remote add upstream https://github.com/spack/spack.git
+    - git remote -v
+    - git fetch upstream
+    - git branch -al
+    - git branch marker
+    - git checkout -b develop upstream/develop
+    - git checkout marker
+    - . share/spack/setup-env.sh
+    - pip3 install isort --upgrade
+    - pip3 install flake8 --upgrade
+    - pip3 install mypy --upgrade
+    - spack style
