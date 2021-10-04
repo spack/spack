@@ -43,8 +43,6 @@ class Meme(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        # have meme build its own versions of libxml2/libxslt, see #6736
-        #args = ['--enable-build-libxml2', '--enable-build-libxslt']
         args = []
         if '~mpi' in spec:
             args += ['--enable-serial']
