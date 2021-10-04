@@ -1317,31 +1317,30 @@ class Environment(object):
         errors = []
         for _, root_spec in self.concretized_specs():
             if root_spec in self.default_view and root_spec.package.installed:
-                for spec in root_spec.traverse(deptype='run', root=True):
-                    if spec.name in visited:
-                        # It is expected that only one instance of the package
-                        # can be added to the environment - do not attempt to
-                        # add multiple.
-                        tty.debug(
-                            "Not adding {0} to shell modifications: "
-                            "this package has already been added".format(
-                                spec.format("{name}/{hash:7}")
-                            )
+                if root_spec.name in visited:
+                    # It is expected that only one instance of the package
+                    # can be added to the environment - do not attempt to
+                    # add multiple.
+                    tty.debug(
+                        "Not adding {0} to shell modifications: "
+                        "this package has already been added".format(
+                            root_spec.format("{name}/{hash:7}")
                         )
-                        continue
-                    else:
-                        visited.add(spec.name)
+                    )
+                    continue
+                else:
+                    visited.add(root_spec.name)
 
-                    try:
-                        mods = uenv.environment_modifications_for_spec(
-                            spec, self.default_view)
-                    except Exception as e:
-                        msg = ("couldn't get environment settings for %s"
-                               % spec.format("{name}@{version} /{hash:7}"))
-                        errors.append((msg, str(e)))
-                        continue
+                try:
+                    mods = uenv.environment_modifications_for_spec(
+                        root_spec, self.default_view)
+                except Exception as e:
+                    msg = ("couldn't get environment settings for %s"
+                           % root_spec.format("{name}@{version} /{hash:7}"))
+                    errors.append((msg, str(e)))
+                    continue
 
-                    all_mods.extend(mods.reversed() if reverse else mods)
+                all_mods.extend(mods.reversed() if reverse else mods)
 
         return all_mods, errors
 
