@@ -135,10 +135,15 @@ class TestSuite(object):
                     dirty=dirty
                 )
 
-                # Clean up on success and log passed test
+                # Clean up on success
                 if remove_directory:
                     shutil.rmtree(test_dir)
-                self.write_test_result(spec, 'PASSED')
+
+                # Log test status based on whether any non-pass-only test
+                # functions were called
+                tested = os.path.exists(self.tested_file_for_spec(spec))
+                status = 'PASSED' if tested else 'NO-TESTS'
+                self.write_test_result(spec, status)
             except BaseException as exc:
                 self.fails += 1
                 if isinstance(exc, (SyntaxError, TestSuiteSpecError)):
@@ -193,6 +198,13 @@ class TestSuite(object):
 
     def test_dir_for_spec(self, spec):
         return self.stage.join(self.test_pkg_id(spec))
+
+    @classmethod
+    def tested_file_name(cls, spec):
+        return '%s-tested.txt' % cls.test_pkg_id(spec)
+
+    def tested_file_for_spec(self, spec):
+        return self.stage.join(self.tested_file_name(spec))
 
     @property
     def current_test_cache_dir(self):
