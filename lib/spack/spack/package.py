@@ -1785,12 +1785,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Clear test failures
         self.test_failures = []
         self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
+        self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
         kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
+        # Defer tests to virtual and concrete packages
         pass
 
     def run_test(self, exe, options=[], expected=[], status=0,
@@ -2605,6 +2607,7 @@ def test_process(pkg, kwargs):
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name)
                                    for v_name in sorted(v_names)]
 
+        ran_actual_test_function = False
         try:
             with fsys.working_dir(
                     pkg.test_suite.test_dir_for_spec(pkg.spec)):
@@ -2639,7 +2642,16 @@ def test_process(pkg, kwargs):
                     if not isinstance(test_fn, types.FunctionType):
                         test_fn = test_fn.__func__
 
+                    # Skip any test methods consisting solely of 'pass'
+                    # since they do not contribute to package testing.
+                    source = (inspect.getsource(test_fn)).splitlines()[1:]
+                    lines = (ln.strip() for ln in source)
+                    statements = [ln for ln in lines if not ln.startswith('#')]
+                    if len(statements) > 0 and statements[0] == 'pass':
+                        continue
+
                     # Run the tests
+                    ran_actual_test_function = True
                     test_fn(pkg)
 
             # If fail-fast was on, we error out above
@@ -2650,6 +2662,11 @@ def test_process(pkg, kwargs):
         finally:
             # reset debug level
             tty.set_debug(old_debug)
+
+            # flag the package as having been tested (i.e., ran one or more
+            # non-pass-only methods
+            if ran_actual_test_function:
+                fsys.touch(pkg.tested_file)
 
 
 inject_flags = PackageBase.inject_flags
