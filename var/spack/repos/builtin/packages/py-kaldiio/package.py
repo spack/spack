@@ -22,7 +22,6 @@ class PyKaldiio(PythonPackage):
     version('2.14.0',   sha256='a24a1ca5392965b5e1e52d97c0f7755188e8ada88d56e347cbab402bf4cb7681')
     version('2.13.9',   sha256='76a0d2162941a91b6d3ffa4d484273d4db7b060c5c10a58d279aa213c7b846cf')
 
-
     depends_on('python@2.7:, 3.5:',     type=('build', 'run'))
     depends_on('py-setuptools',         type='build')
     depends_on('py-numpy',              type=('build', 'run'))
