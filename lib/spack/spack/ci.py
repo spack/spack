@@ -1047,11 +1047,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             ]
             final_job['when'] = 'always'
 
-            if artifacts_root:
-                final_job['variables'] = {
-                    'SPACK_CONCRETE_ENV_DIR': concrete_env_dir
-                }
-
             output_object['rebuild-index'] = final_job
 
         output_object['stages'] = stage_names

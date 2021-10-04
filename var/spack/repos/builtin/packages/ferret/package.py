@@ -38,7 +38,7 @@ class Ferret(Package):
     # Make Java dependency optional with older versions of Ferret
     patch('https://github.com/NOAA-PMEL/Ferret/commit/c7eb70a0b17045c8ca7207d586bfea77a5340668.patch',
           sha256='5bd581db4578c013faed375844b206fbe71f93fe9ce60f8f9f41d64abc6a5972',
-          level=1, working_dir='FERRET', when='@:6.99')
+          level=1, working_dir='FERRET', when='@:6')
 
     resource(name='datasets',
              url='https://github.com/NOAA-PMEL/FerretDatasets/archive/v7.6.tar.gz',

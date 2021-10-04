@@ -21,7 +21,7 @@ class Mpich(AutotoolsPackage):
     list_depth = 1
 
     maintainers = ['raffenet', 'yfguo']
-
+    tags = ['e4s']
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
@@ -476,3 +476,35 @@ spack package at this time.''',
             config_args.append('--with-argobots=' + spec['argobots'].prefix)
 
         return config_args
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(['examples', join_path('test', 'mpi')])
+
+    def run_mpich_test(self, example_dir, exe):
+        """Run stand alone tests"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             example_dir)
+        exe_source = join_path(test_dir, '{0}.c'.format(exe))
+
+        if not os.path.isfile(exe_source):
+            print('Skipping {0} test'.format(exe))
+            return
+
+        self.run_test(self.prefix.bin.mpicc,
+                      options=[exe_source, '-Wall', '-g', '-o', exe],
+                      purpose='test: generate {0} file'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_mpich_test(join_path('test', 'mpi', 'init'), 'finalized')
+        self.run_mpich_test(join_path('test', 'mpi', 'basic'), 'sendrecv')
+        self.run_mpich_test(join_path('test', 'mpi', 'perf'), 'manyrma')
+        self.run_mpich_test('examples', 'cpi')

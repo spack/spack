@@ -127,7 +127,7 @@ class Rocblas(CMakePackage):
             args.append(self.define('AMDGPU_TARGETS', arch))
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
         if '@4.3.0:' in self.spec:
             args.append(

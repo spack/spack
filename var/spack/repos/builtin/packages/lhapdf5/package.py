@@ -30,7 +30,7 @@ class Lhapdf5(AutotoolsPackage):
     variant('python2', default=False,
             description="Enable Python2 extension")
 
-    depends_on('python@2.3:2.7.99', when='+python2')
+    depends_on('python@2.3:2.7', when='+python2')
 
     def setup_build_environment(self, env):
         env.append_flags('FFLAGS', '-std=legacy')

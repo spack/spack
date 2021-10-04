@@ -60,7 +60,7 @@ class Vtk(CMakePackage):
     # We need vtk at least 8.0.1 for python@3,
     # and at least 9.0 for python@3.8
     depends_on('python@2.7:2.9', when='@:8.0 +python', type=('build', 'run'))
-    depends_on('python@2.7:3.7.99', when='@8.0.1:8.9 +python',
+    depends_on('python@2.7:3.7', when='@8.0.1:8.9 +python',
                type=('build', 'run'))
     depends_on('python@2.7:', when='@9.0: +python', type=('build', 'run'))
 
@@ -143,6 +143,10 @@ class Vtk(CMakePackage):
         cmake_args = [
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
+
+            # prevents installation into lib64 which might not be in the path
+            # (solves #26314)
+            '-DCMAKE_INSTALL_LIBDIR:PATH=lib',
 
             # In general, we disable use of VTK "ThirdParty" libs, preferring
             # spack-built versions whenever possible

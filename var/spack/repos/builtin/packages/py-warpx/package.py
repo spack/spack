@@ -23,6 +23,8 @@ class PyWarpx(PythonPackage):
 
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
 
+    tags = ['e4s']
+
     # NOTE: if you update the versions here, also see warpx
     version('develop', branch='development')
     version('21.09', sha256='861a65f11846541c803564db133c8678b9e8779e69902ef1637b21399d257eab')
@@ -41,9 +43,9 @@ class PyWarpx(PythonPackage):
                    type=['build', 'link'])
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-numpy@1.15.0:1.99.99', type=('build', 'run'))
+    depends_on('py-numpy@1.15.0:1', type=('build', 'run'))
     depends_on('py-mpi4py@2.0.0:', type=('build', 'run'), when='+mpi')
-    depends_on('py-periodictable@1.5:1.99', type=('build', 'run'))
+    depends_on('py-periodictable@1.5:1', type=('build', 'run'))
     depends_on('py-picmistandard@0.0.14', type=('build', 'run'))
     depends_on('py-setuptools@38.6:', type='build')
     depends_on('py-wheel', type='build')

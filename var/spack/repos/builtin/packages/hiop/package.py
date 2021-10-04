@@ -63,7 +63,7 @@ class Hiop(CMakePackage, CudaPackage):
     depends_on('mpi', when='+mpi')
 
     depends_on('magma', when='+cuda')
-    depends_on('magma@2.5.4:', when='@0.3.99.1:+cuda')
+    depends_on('magma@2.5.4:', when='@0.4:+cuda')
     depends_on('magma@2.6.1:', when='@0.4.6:+cuda')
 
     depends_on('raja', when='+raja')

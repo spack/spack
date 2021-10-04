@@ -52,7 +52,7 @@ class Sqlite(AutotoolsPackage):
     variant('column_metadata', default=True, description="Build with COLUMN_METADATA")
 
     # See https://blade.tencent.com/magellan/index_en.html
-    conflicts('+fts', when='@:3.25.99.99')
+    conflicts('+fts', when='@:3.25')
 
     resource(name='extension-functions',
              url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',

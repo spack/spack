@@ -70,7 +70,7 @@ class Rocalution(CMakePackage):
              args.append(
                  '-DCMAKE_PREFIX_PATH={0}/llvm'.
                  format(self.spec['llvm-amdgpu'].prefix))
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

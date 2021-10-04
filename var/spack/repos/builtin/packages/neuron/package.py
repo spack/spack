@@ -112,7 +112,7 @@ class Neuron(CMakePackage):
                                      "./bin/nrnmech_makefile")
 
         # assign_operator is changed to fix wheel support
-        if self.spec.satisfies("@:7.99"):
+        if self.spec.satisfies("@:7"):
             assign_operator = "?="
         else:
             assign_operator = "="

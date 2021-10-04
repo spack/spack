@@ -32,7 +32,7 @@ class Libspatialite(AutotoolsPackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('sqlite+rtree')
-    depends_on('proj@:5', when='@:4.999.999')
+    depends_on('proj@:5', when='@:4')
     # PROJ.6 is OK w/ newer versions
     # https://www.gaia-gis.it/fossil/libspatialite/wiki?name=PROJ.6
     depends_on('proj')

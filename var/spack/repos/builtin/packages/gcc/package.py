@@ -291,7 +291,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('zstd.patch', when='@10')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100102
-    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=fc930b3010bd0de899a3da3209eab20664ddb703', sha256='28c5ab3b564d83dd7e6e35b9c683141a4cb57ee886c5367e54a0828538b3c789', when='@10.3,11.1')
+    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=fc930b3010bd0de899a3da3209eab20664ddb703',
+          sha256='28c5ab3b564d83dd7e6e35b9c683141a4cb57ee886c5367e54a0828538b3c789', when='@10.1:10.3')
+    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=f1feb74046e0feb0596b93bbb822fae02940a90e',
+          sha256='3e5029489b79fc0d47fd6719f3d5c9d3bbc727a4a0cbff161a5517e8a3c98cb6',  when='@11.1')
 
     build_directory = 'spack-build'
 

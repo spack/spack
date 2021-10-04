@@ -18,5 +18,5 @@ class PyFlattenDict(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-six@1.12:1.999', type=('build', 'run'))
-    depends_on('py-pathlib2@2.3:2.999', type=('build', 'run'))
+    depends_on('py-six@1.12:1', type=('build', 'run'))
+    depends_on('py-pathlib2@2.3:2', type=('build', 'run'))

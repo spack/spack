@@ -40,7 +40,7 @@ class PyDistributed(PythonPackage):
     depends_on('py-msgpack@0.6.0:', type=('build', 'run'), when='@2.11.0:')
     depends_on('py-psutil@5.0:', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'), when='@:1')
-    depends_on('py-sortedcontainers@:1.999,2.0.2:', type=('build', 'run'))
+    depends_on('py-sortedcontainers@:1,2.0.2:', type=('build', 'run'))
     depends_on('py-tblib', type=('build', 'run'), when='@:2.10.0')
     depends_on('py-tblib@1.6.0:', type=('build', 'run'), when='@2.11.0:')
     depends_on('py-toolz@0.7.4:', type=('build', 'run'), when='@:2.12.0')

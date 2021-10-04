@@ -74,7 +74,7 @@ class Curl(AutotoolsPackage):
     variant('ldap',       default=False, description='enable ldap support')
     variant('libidn2',    default=False,  description='enable libidn2 support')
 
-    conflicts('+libssh', when='@:7.57.99')
+    conflicts('+libssh', when='@:7.57')
     # on OSX and --with-ssh the configure steps fails with
     # one or more libs available at link-time are not available run-time
     # unless the libssh are installed externally (e.g. via homebrew), even
@@ -97,6 +97,9 @@ class Curl(AutotoolsPackage):
     depends_on('libssh', when='+libssh')
     depends_on('krb5', when='+gssapi')
 
+    # curl queries pkgconfig for openssl compilation flags
+    depends_on('pkgconfig', type='build')
+
     def configure_args(self):
         spec = self.spec
 
@@ -108,6 +111,9 @@ class Curl(AutotoolsPackage):
             '--without-libgsasl',
             '--without-libpsl',
             '--without-zstd',
+            '--without-ca-bundle',
+            '--without-ca-path',
+            '--with-ca-fallback',
         ]
 
         # https://daniel.haxx.se/blog/2021/06/07/bye-bye-metalink-in-curl/

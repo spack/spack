@@ -110,3 +110,10 @@ class PyDatalad(PythonPackage):
         depends_on('py-pillow', type=('build', 'run'))
         # duecredit
         depends_on('py-duecredit', type=('build', 'run'))
+
+    depends_on('py-nose', type=('test'))
+    install_time_test_callbacks = ['test', 'installtest']
+
+    def installtest(self):
+        datalad = Executable(self.prefix.bin.datalad)
+        datalad('wtf')

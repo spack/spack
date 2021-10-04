@@ -11,8 +11,10 @@ class Xrootd(CMakePackage):
     """The XROOTD project aims at giving high performance, scalable fault
        tolerant access to data repositories of many kinds."""
     homepage = "http://xrootd.org"
-    url      = "http://xrootd.org/download/v5.0.1/xrootd-5.0.1.tar.gz"
+    url      = "http://xrootd.org/download/v5.3.1/xrootd-5.3.1.tar.gz"
+    list_url = 'https://xrootd.slac.stanford.edu/dload.html'
 
+    version('5.3.1', sha256='7ea3a112ae9d8915eb3a06616141e5a0ee366ce9a5e4d92407b846b37704ee98')
     version('5.1.0', sha256='c639536f1bdc5b6b365e807f3337ed2d41012cd3df608d40e91ed05f1c568b6d')
     version('5.0.3', sha256='be40a1897d6c1f153d3e23c39fe96e45063bfafc3cc073db88a1a9531db79ac5')
     version('5.0.1', sha256='ff4462b0b61db4cc01dda0e26abdd78e43649ee7ac5e90f7a05b74328ff5ac83')
@@ -60,14 +62,14 @@ class Xrootd(CMakePackage):
     depends_on('cmake@2.6:', type='build')
     depends_on('libxml2', when='+http')
     depends_on('uuid', when="@4.11.0:")
-    depends_on('openssl')
+    depends_on('openssl@:1')
     depends_on('python', when='+python')
     depends_on('readline', when='+readline')
     depends_on('xz')
     depends_on('zlib')
 
     extends('python', when='+python')
-    patch('python-support.patch', level=1, when='@:4.8.99+python')
+    patch('python-support.patch', level=1, when='@:4.8+python')
 
     def patch(self):
         """Remove hardcoded -std=c++0x flag

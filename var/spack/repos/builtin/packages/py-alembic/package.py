@@ -17,7 +17,7 @@ class PyAlembic(PythonPackage):
     depends_on('python@2.7:2.8,3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-sqlalchemy@1.3.0:', type=('build', 'run'), when='@1.5:')
-    depends_on('py-sqlalchemy@1.1.0:', type=('build', 'run'), when='@:1.4.999')
+    depends_on('py-sqlalchemy@1.1.0:', type=('build', 'run'), when='@:1.4')
     depends_on('py-mako', type=('build', 'run'))
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-python-editor@0.3:', type=('build', 'run'))

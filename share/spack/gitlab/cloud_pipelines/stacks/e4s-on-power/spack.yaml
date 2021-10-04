@@ -357,8 +357,6 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_pipelines/stacks/e4s-on-power
-        - spack env activate --without-view .
       image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "ppc64le"]
 
