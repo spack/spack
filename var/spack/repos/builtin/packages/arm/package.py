@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
-import subprocess
 
 from spack import *
 
@@ -94,7 +93,9 @@ class Arm(Package):
 
     # Run the installer with the desired install directory
     def install(self, spec, prefix):
-        exe = Executable('./arm-compiler-for-linux_{0}_{1}.sh'.format(spec.version, get_os()))
+        exe = Executable('./arm-compiler-for-linux_{0}_{1}.sh'.format(
+            spec.version, get_os())
+        )
         exe("--accept", "--force", "--install-to", prefix)
 
     @classmethod
