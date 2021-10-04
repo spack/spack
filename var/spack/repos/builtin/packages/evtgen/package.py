@@ -27,6 +27,7 @@ class Evtgen(CMakePackage):
     variant('hepmc3', default=False, description='Link with hepmc3 (instead of hepmc)')
 
     patch("g2c.patch", when='@01.07.00')
+    patch("evtgen-2.0.0.patch", when='@02.00.00 ^pythia@8.304:')
 
     depends_on('hepmc', when='~hepmc3')
     depends_on('hepmc3', when='+hepmc3')
@@ -53,6 +54,16 @@ class Evtgen(CMakePackage):
         args.append(self.define_from_variant('EVTGEN_HEPMC3', 'hepmc3'))
 
         return args
+
+    def patch(self):
+        # gcc on MacOS doesn't recognize `-shared`, should use `-dynamiclib`;
+        # the `-undefined dynamic_lookup` flag enables weak linking on Mac
+        # Patch taken from CMS recipe:
+        # https://github.com/cms-sw/cmsdist/blob/IB/CMSSW_12_1_X/master/evtgen.spec#L48
+        if not self.spec.satisfies("platform=darwin"):
+            return
+
+        filter_file('-shared', '-dynamiclib -undefined dynamic_lookup', 'make.inc')
 
     # Taken from AutotoolsPackage
     def configure(self, spec, prefix):
