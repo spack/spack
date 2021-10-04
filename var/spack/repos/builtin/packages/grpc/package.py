@@ -47,8 +47,7 @@ class Grpc(CMakePackage):
     depends_on('c-ares')
     depends_on('abseil-cpp', when='@1.27:')
     depends_on('re2', when='@1.33.1:')
-    with when('+shared'):
-        depends_on('re2+shared')
+    depends_on('re2+shared', when='+shared @1.33.1:')
 
     def cmake_args(self):
         args = [
