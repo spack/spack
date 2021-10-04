@@ -51,7 +51,9 @@ def setup_parser(subparser):
         '-b', '--bootstrap', action='store_true',
         help="remove software and configuration needed to bootstrap Spack")
     subparser.add_argument(
-        '-a', '--all', action=AllClean, help="equivalent to -sdfmp", nargs=0
+        '-a', '--all', action=AllClean,
+        help="equivalent to -sdfmp (does not include --bootstrap)",
+        nargs=0
     )
     arguments.add_common_arguments(subparser, ['specs'])
 
