@@ -13,7 +13,7 @@ class PyFenicsDolfinx(PythonPackage):
     homepage = "https://github.com/FEniCS/dolfinx"
     url = "https://github.com/FEniCS/dolfinx/archive/v0.1.0.tar.gz"
     git = "https://github.com/FEniCS/dolfinx.git"
-    maintainers = ["js947", "chrisrichardson", "garth-wells"]
+    maintainers = ["chrisrichardson", "garth-wells", "nate-sime"]
 
     version("main", branch="main")
     version("0.3.0", sha256="4857d0fcb44a4e9bf9eb298ba5377abdee17a7ad0327448bdd06cce73d109bed")
@@ -44,7 +44,7 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("py-fenics-ffcx@0.2.0", type="run", when="@0.2.0")
     depends_on("py-fenics-ffcx@0.1.0", type="run", when="@0.1.0")
     depends_on("py-fenics-ufl@main", type="run", when="@main")
-    depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1:")
+    depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1:0.3.99")
 
     depends_on("py-cffi", type="run")
     depends_on("py-numpy", type="run")

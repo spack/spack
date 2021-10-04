@@ -12,7 +12,7 @@ class FenicsDolfinx(CMakePackage):
     homepage = "https://github.com/FEniCS/dolfinx"
     git = "https://github.com/FEniCS/dolfinx.git"
     url = "https://github.com/FEniCS/dolfinx/archive/v0.1.0.tar.gz"
-    maintainers = ["js947", "chrisrichardson", "garth-wells"]
+    maintainers = ["chrisrichardson", "garth-wells", "nate-sime"]
 
     version("main", branch="main")
     version("0.3.0", sha256="4857d0fcb44a4e9bf9eb298ba5377abdee17a7ad0327448bdd06cce73d109bed")
