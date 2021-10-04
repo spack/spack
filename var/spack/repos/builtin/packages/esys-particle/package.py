@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from llnl.util.filesystem import find
 
 
 class EsysParticle(CMakePackage):
@@ -24,36 +25,14 @@ class EsysParticle(CMakePackage):
     depends_on('python@3.6:')
     depends_on('py-setuptools', type='build')
 
+    @when('@3.0-alpha')
     def patch(self):
-        if self.spec.satisfies('@3.0-alpha'):
-            files = ['Geometry/CMakeLists.txt',
-                     'Tools/StressCalculator/CMakeLists.txt',
-                     'ntable/CMakeLists.txt',
-                     'ppa/src/CMakeLists.txt',
-                     'ppa/CMakeLists.txt',
-                     'Foundation/CMakeLists.txt',
-                     'tml/type/CMakeLists.txt',
-                     'tml/comm/CMakeLists.txt',
-                     'tml/message/CMakeLists.txt',
-                     'Python/BoostPythonUtil/CMakeLists.txt',
-                     'Python/esys/lsm/CMakeLists.txt',
-                     'Python/esys/lsm/geometry/CMakeLists.txt',
-                     'Python/esys/lsm/util/CMakeLists.txt',
-                     'Parallel/CMakeLists.txt',
-                     'Tools/dump2vtk/CMakeLists.txt',
-                     'Tools/dump2pov/CMakeLists.txt',
-                     'Tools/ForceChains/CMakeLists.txt',
-                     'Tools/ExtractStrain/CMakeLists.txt',
-                     'Tools/mesh2pov/CMakeLists.txt',
-                     'Tools/ExtractGrains/CMakeLists.txt',
-                     'Fields/CMakeLists.txt',
-                     'Model/CMakeLists.txt',
-                     'pis/CMakeLists.txt']
-            for file in files:
-                filter_file('PYTHON_LIBRARIES', 'Python_LIBRARIES',
-                            file, string=True)
+        files = find('.', 'CMakeLists.txt')
+        for file in files:
+            filter_file('PYTHON_LIBRARIES', 'Python_LIBRARIES',
+                        file, string=True)
 
     def setup_run_environment(self, env):
         pylibpath = join_path(self.prefix.lib, "python{0}".format(
-                              self.spec["python"].version[:-1]))
+                              self.spec["python"].version.up_to(2)))
         env.prepend_path('PYTHONPATH', join_path(pylibpath, 'dist-packages'))
