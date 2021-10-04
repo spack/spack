@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
+import os
 from spack import *
 
 
@@ -64,14 +64,20 @@ class Rocblas(CMakePackage):
         ('@3.10.0', 'ab44bf46b609b5a40053f310bef2ab7511f726ae'),
         ('@4.0.0',  'ab44bf46b609b5a40053f310bef2ab7511f726ae'),
         ('@4.1.0',  'd175277084d3253401583aa030aba121e8875bfd'),
-        ('@4.2.0',  '3438af228dc812768b20a068b0285122f327fa5b'),
-        ('@4.3.0',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf'),
-        ('@4.3.1',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf')
+        ('@4.2.0',  '3438af228dc812768b20a068b0285122f327fa5b')
     ]:
         resource(name='Tensile',
                  git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
                  commit=t_commit,
                  when=t_version)
+    resource(
+        name='Tensile',
+        git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
+        destination='',
+        placement='Tensile',
+        branch='release/rocm-rel-4.3.1-spack',
+        when='@4.3.0:4.3.1'
+    )
 
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
@@ -79,6 +85,13 @@ class Rocblas(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
+        if '@4.3.0:' in self.spec:
+            env.set('TENSILE_ROCM_ASSEMBLER_PATH',
+                os.path.join(self.spec['llvm-amdgpu'].prefix,"llvm/bin",
+                "clang++"))
+            env.set('TENSILE_ROCM_OFFLOAD_BUNDLER_PATH',
+                os.path.join(self.spec['llvm-amdgpu'].prefix,"llvm/bin",
+                "clang-offload-bundler"))
 
     def cmake_args(self):
         arch = self.spec.variants['tensile_architecture'].value
@@ -116,7 +129,7 @@ class Rocblas(CMakePackage):
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
         if self.spec.satisfies('^cmake@3.21:'):
             args.append(self.define('__skip_rocmclang', 'ON'))
-        if '@4.3.0' in self.spec:
+        if '@4.3.0:' in self.spec:
             args.append(
                 '-DCMAKE_PREFIX_PATH={0}/llvm'.
                 format(self.spec['llvm-amdgpu'].prefix))

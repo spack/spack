@@ -52,8 +52,13 @@ class RocmValidationSuite(CMakePackage):
         depends_on('rocm-smi-lib@' + ver, when='@' + ver)
 
     def cmake_args(self):
-        return [
+        args = [
             self.define('HIP_INC_DIR', self.spec['hip'].prefix),
             self.define('ROCM_SMI_DIR', self.spec['rocm-smi-lib'].prefix),
             self.define('ROCBLAS_DIR', self.spec['rocblas'].prefix)
         ]
+        if '@4.3.0:' in self.spec:
+             args.append(
+                 '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                 format(self.spec['llvm-amdgpu'].prefix))
+        return args
