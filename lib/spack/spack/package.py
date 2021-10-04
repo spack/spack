@@ -2642,7 +2642,7 @@ def test_process(pkg, kwargs):
 
                     # Skip any test methods consisting solely of 'pass'
                     # since they do not contribute to package testing.
-                    source = (inspect.getsource(test_fn)).split('\n')[1:]
+                    source = (inspect.getsource(test_fn)).splitlines()[1:]
                     lines = (ln.strip() for ln in source)
                     statements = [ln for ln in lines if not ln.startswith('#')]
                     if len(statements) > 0 and statements[0] == 'pass':
