@@ -94,8 +94,8 @@ class Arm(Package):
 
     # Run the installer with the desired install directory
     def install(self, spec, prefix):
-        exe = './arm-compiler-for-linux_{0}_{1}.sh'.format(spec.version, get_os())
-        subprocess.call([exe, "--accept", "--force", "--install-to", prefix])
+        exe = Executable('./arm-compiler-for-linux_{0}_{1}.sh'.format(spec.version, get_os()))
+        exe("--accept", "--force", "--install-to", prefix)
 
     @classmethod
     def determine_version(cls, exe):
