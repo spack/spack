@@ -92,10 +92,6 @@ class Arborx(CMakePackage):
     def build_tests(self):
         """Build the stand-alone/smoke test."""
 
-        # We don't need to append the path to Kokkos to CMAKE_PREFIX_PATH since
-        # a hint is already hardcoded inside the CMake ArborX configuration.
-        # Omitting it here allows us to avoid to distinguish between Kokkos
-        # being installed as a standalone or as part of Trilinos.
         arborx_dir = self.spec['arborx'].prefix
         cmake_prefix_path = "-DCMAKE_PREFIX_PATH={0}".format(arborx_dir)
         if '+mpi' in self.spec:
@@ -103,7 +99,10 @@ class Arborx(CMakePackage):
 
         cmake_args = [".",
                       cmake_prefix_path,
-                      "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx)]
+                      "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
+                      self.define('Kokkos_ROOT', self.spec['kokkos'].prefix
+                                  if '~trilinos' in self.spec
+                                  else self.spec['trilinos'].prefix)]
 
         self.run_test("cmake", cmake_args,
                       purpose="test: calling cmake",
