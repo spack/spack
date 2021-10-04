@@ -8,7 +8,7 @@ class SinglevalueVariant(Package):
     homepage = "http://www.llnl.gov"
     url = "http://www.llnl.gov/mpileaks-1.0.tar.gz"
 
-    version(1.0, 'foobarbaz')
+    version(1.0, '0123456789abcdef0123456789abcdef')
 
     variant(
         'fum',

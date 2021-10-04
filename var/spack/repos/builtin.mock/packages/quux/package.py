@@ -4,19 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
 import sys
+
+from spack import *
 
 
 class Quux(Package):
     """Toy package for testing dependencies"""
 
     homepage = "https://www.example.com"
-    url      = "https://github.com/gartung/quux/archive/v3.0.0.tar.gz"
-
-    version('3.0.0',
-            sha256='b91bc96fb746495786bddac2c527039177499f2f76d3fa9dcf0b393859e68484')
+    has_code = False
+    version('3.0.0')
 
     depends_on('garply')
 
@@ -89,6 +88,7 @@ main()
 const int quux_version_minor = %s;
 '''
         mkdirp('%s/quux' % prefix.include)
+        mkdirp('%s/quux' % self.stage.source_path)
         with open('%s/quux_version.h' % self.stage.source_path, 'w')  as f:
             f.write(quux_version_h % (self.version[0], self.version[1:]))
         with open('%s/quux/quux.cc' % self.stage.source_path, 'w') as f:

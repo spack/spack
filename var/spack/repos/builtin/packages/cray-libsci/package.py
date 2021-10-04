@@ -2,8 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.util.module_cmd import module
-from spack.util.module_cmd import get_path_args_from_module_line
+from spack.util.module_cmd import get_path_args_from_module_line, module
 
 
 class CrayLibsci(Package):
@@ -83,6 +82,10 @@ class CrayLibsci(Package):
 
     @property
     def scalapack_libs(self):
+        return self.blas_libs
+
+    @property
+    def libs(self):
         return self.blas_libs
 
     def install(self, spec, prefix):

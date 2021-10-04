@@ -10,6 +10,15 @@ class Libspatialindex(CMakePackage):
     """C++ implementation of R*-tree, an MVR-tree and a TPR-tree with C API."""
 
     homepage = "https://libspatialindex.org/"
-    url      = "https://github.com/libspatialindex/libspatialindex/tarball/1.8.5"
+    url = "https://github.com/libspatialindex/libspatialindex/archive/refs/tags/1.8.5.tar.gz"
 
-    version('1.8.5', sha256='271f0d1425c527fd7d8b4be45b27e9383b244047b5918225877105616e7c0ad2')
+    version('1.9.3', sha256='7b44340a3edc55c11abfc453bb60f148b29f569cef9e1148583e76132e9c7379')
+    version('1.8.5', sha256='93cce77269612f45287b521d5afdfb245be2b93b8b6438d92f8b9e0bdb37059d')
+
+    depends_on('cmake@3.5.0:', type='build')
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libspatialindex_c'], root=self.prefix, recursive=True, shared=True
+        )

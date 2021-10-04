@@ -4,26 +4,32 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
-import sys
 import glob
-import tempfile
-import re
 import inspect
+import os
+import re
+import sys
+import tempfile
 import xml.etree.ElementTree as ElementTree
+
 import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    HeaderList,
+    LibraryList,
+    ancestor,
+    filter_file,
+    find_headers,
+    find_libraries,
+    find_system_libraries,
+    install,
+)
 
-from llnl.util.filesystem import \
-    install, ancestor, filter_file, \
-    HeaderList, find_headers, \
-    LibraryList, find_libraries, find_system_libraries
-
-from spack.version import Version, ver
-from spack.package import PackageBase, run_after, InstallError
+from spack.build_environment import dso_suffix
+from spack.package import InstallError, PackageBase, run_after
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
-from spack.build_environment import dso_suffix
+from spack.version import Version, ver
 
 # A couple of utility functions that might be useful in general. If so, they
 # should really be defined elsewhere, unless deemed heretical.
@@ -110,9 +116,9 @@ class IntelPackage(PackageBase):
     # that satisfies self.spec will be used.
     version_years = {
         # intel-daal is versioned 2016 and later, no divining is needed
-        'intel-ipp@9.0:9.99':         2016,
-        'intel-mkl@11.3.0:11.3.999':  2016,
-        'intel-mpi@5.1:5.99':         2016,
+        'intel-ipp@9.0:9':         2016,
+        'intel-mkl@11.3.0:11.3':   2016,
+        'intel-mpi@5.1:5':         2016,
     }
 
     # Below is the list of possible values for setting auto dispatch functions
@@ -362,7 +368,7 @@ class IntelPackage(PackageBase):
                 toplevel psxevars.sh or equivalent file to source (and thus by
                 the modulefiles that Spack produces).
 
-            version_globs (list of str): Suffix glob patterns (most specific
+            version_globs (list): Suffix glob patterns (most specific
                 first) expected to qualify suite_dir_name to its fully
                 version-specific install directory (as opposed to a
                 compatibility directory or symlink).

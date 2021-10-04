@@ -8,16 +8,14 @@ import os
 import re
 import shutil
 import sys
-import tty
 
 import llnl.util.filesystem as fs
-
-from spack.spec import Spec
+import llnl.util.tty as tty
 
 import spack.error
 import spack.util.prefix
 import spack.util.spack_json as sjson
-
+from spack.spec import Spec
 
 test_suite_filename = 'test_suite.lock'
 results_filename = 'results.txt'
@@ -30,7 +28,7 @@ def get_escaped_text_output(filename):
         filename (str): path to the file
 
     Returns:
-        (list of str): escaped text lines read from the file
+        list: escaped text lines read from the file
     """
     with open(filename, 'r') as f:
         # Ensure special characters are escaped as needed
@@ -89,6 +87,8 @@ class TestSuite(object):
         self.alias = alias
         self._hash = None
 
+        self.fails = 0
+
     @property
     def name(self):
         return self.alias if self.alias else self.content_hash
@@ -113,8 +113,11 @@ class TestSuite(object):
 
         for spec in self.specs:
             try:
-                msg = "A package object cannot run in two test suites at once"
-                assert not spec.package.test_suite, msg
+                if spec.package.test_suite:
+                    raise TestSuiteSpecError(
+                        "Package {0} cannot be run in two test suites at once"
+                        .format(spec.package.name)
+                    )
 
                 # Set up the test suite to know which test is running
                 spec.package.test_suite = self
@@ -137,7 +140,8 @@ class TestSuite(object):
                     shutil.rmtree(test_dir)
                 self.write_test_result(spec, 'PASSED')
             except BaseException as exc:
-                if isinstance(exc, SyntaxError):
+                self.fails += 1
+                if isinstance(exc, (SyntaxError, TestSuiteSpecError)):
                     # Create the test log file and report the error.
                     self.ensure_stage()
                     msg = 'Testing package {0}\n{1}'\
@@ -151,6 +155,9 @@ class TestSuite(object):
                 spec.package.test_suite = None
                 self.current_test_spec = None
                 self.current_base_spec = None
+
+        if self.fails:
+            raise TestSuiteFailure(self.fails)
 
     def ensure_stage(self):
         if not os.path.exists(self.stage):
@@ -189,14 +196,22 @@ class TestSuite(object):
 
     @property
     def current_test_cache_dir(self):
-        assert self.current_test_spec and self.current_base_spec
+        if not (self.current_test_spec and self.current_base_spec):
+            raise TestSuiteSpecError(
+                "Unknown test cache directory: no specs being tested"
+            )
+
         test_spec = self.current_test_spec
         base_spec = self.current_base_spec
         return self.test_dir_for_spec(base_spec).cache.join(test_spec.name)
 
     @property
     def current_test_data_dir(self):
-        assert self.current_test_spec and self.current_base_spec
+        if not (self.current_test_spec and self.current_base_spec):
+            raise TestSuiteSpecError(
+                "Unknown test data directory: no specs being tested"
+            )
+
         test_spec = self.current_test_spec
         base_spec = self.current_base_spec
         return self.test_dir_for_spec(base_spec).data.join(test_spec.name)
@@ -271,3 +286,15 @@ class TestFailure(spack.error.SpackError):
             msg += '\n%s\n' % message
 
         super(TestFailure, self).__init__(msg)
+
+
+class TestSuiteFailure(spack.error.SpackError):
+    """Raised when one or more tests in a suite have failed."""
+    def __init__(self, num_failures):
+        msg = "%d test(s) in the suite failed.\n" % num_failures
+
+        super(TestSuiteFailure, self).__init__(msg)
+
+
+class TestSuiteSpecError(spack.error.SpackError):
+    """Raised when there is an issue associated with the spec being tested."""

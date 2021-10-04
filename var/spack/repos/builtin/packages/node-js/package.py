@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import sys
 import subprocess
+import sys
+
+from spack import *
 
 
 class NodeJs(Package):
@@ -52,7 +53,7 @@ class NodeJs(Package):
     depends_on('python@2.7:2.8', when='@:11', type='build')
     # depends_on('bash-completion', when="+bash-completion")
     depends_on('icu4c', when='+icu4c')
-    depends_on('openssl@1.0.2d:1.0.99', when='@:9+openssl')
+    depends_on('openssl@1.0.2d:1.0', when='@:9+openssl')
     depends_on('openssl@1.1:', when='@10:+openssl')
     depends_on('zlib', when='+zlib')
 

@@ -13,10 +13,12 @@ class Precice(CMakePackage):
     capable of simulating a subpart of the complete physics involved in
     a simulation."""
 
-    homepage = 'https://www.precice.org'
+    homepage = 'https://precice.org/'
     git      = 'https://github.com/precice/precice.git'
     url      = 'https://github.com/precice/precice/archive/v1.2.0.tar.gz'
     maintainers = ['fsimonis', 'MakisH']
+
+    tags = ['e4s']
 
     version('develop', branch='develop')
     version('2.2.1', sha256='bca8cedfb5c86656e4fdfaca5cb982b861f9aba926538fa4411bc0d015e09c1f')
@@ -47,8 +49,8 @@ class Precice(CMakePackage):
     depends_on('pkgconfig', type='build', when='@2.2:')
     depends_on('boost@1.60.0:')
     depends_on('boost@1.65.1:', when='@1.4:')
-    depends_on('boost@:1.72.99', when='@:2.0.2')
-    depends_on('boost@:1.74.99', when='@:2.1.1')
+    depends_on('boost@:1.72', when='@:2.0.2')
+    depends_on('boost@:1.74', when='@:2.1.1')
     depends_on('eigen@3.2:')
     depends_on('eigen@:3.3.7', type='build', when='@:1.5')  # bug in prettyprint
     depends_on('libxml2')

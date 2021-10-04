@@ -12,11 +12,13 @@ class RocmDeviceLibs(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs"
     git      = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git"
-    url      = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-4.3.1.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
+    version('4.3.1', sha256='a7291813168e500bfa8aaa5d1dccf5250764ddfe27535def01b51eb5021d4592')
+    version('4.3.0', sha256='055a67e63da6491c84cd45865500043553fb33c44d538313dd87040a6f3826f2')
     version('4.2.0', sha256='34a2ac39b9bb7cfa8175cbab05d30e7f3c06aaffce99eed5f79c616d0f910f5f')
     version('4.1.0', sha256='f5f5aa6bfbd83ff80a968fa332f80220256447c4ccb71c36f1fbd2b4a8e9fc1b')
     version('4.0.0', sha256='d0aa495f9b63f6d8cf8ac668f4dc61831d996e9ae3f15280052a37b9d7670d2a')
@@ -32,15 +34,18 @@ class RocmDeviceLibs(CMakePackage):
     depends_on('zlib', type='link', when='@3.9.0:')
     depends_on('texinfo', type='link', when='@3.9.0:')
 
+    # Make sure llvm is not built with rocm-device-libs (that is, it's already
+    # built with rocm-device-libs as an external project).
+    depends_on('llvm-amdgpu ~rocm-device-libs')
+
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', 'master']:
-        depends_on('llvm-amdgpu@' + ver, type=('build', 'link'), when='@' + ver)
+                '4.2.0', '4.3.0', '4.3.1', 'master']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
 
     def cmake_args(self):
         spec = self.spec
-        args = ['-DLLVM_DIR={0}'.format(spec['llvm-amdgpu'].prefix),
-                '-DCMAKE_C_COMPILER={0}/bin/clang'.format(
-                    spec['llvm-amdgpu'].prefix),
-                ]
-        return args
+        return [
+            self.define('LLVM_DIR', spec['llvm-amdgpu'].prefix),
+            self.define('CMAKE_C_COMPILER', spec['llvm-amdgpu'].prefix.bin.clang)
+        ]

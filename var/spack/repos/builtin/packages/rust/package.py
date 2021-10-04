@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
+
 from six import iteritems
 
 
@@ -64,7 +67,8 @@ class Rust(Package):
     depends_on('cmake@3.4.3:', type='build')
     depends_on('ninja', when='@1.48.0:', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('openssl')
+    # TODO: openssl@3.x should be supported in later versions
+    depends_on('openssl@:1')
     depends_on('libssh2')
     depends_on('libgit2')
 
@@ -458,6 +462,14 @@ class Rust(Package):
                         target=rust_arch['target']
                     )
                 )
+
+    executables = ['^rustc$']
+
+    @classmethod
+    def determine_version(csl, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.match(r'rustc (\S+)', output)
+        return match.group(1) if match else None
 
     # This routine returns the target architecture we intend to build for.
     def get_rust_target(self):

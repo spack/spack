@@ -10,7 +10,7 @@ class PyScikitImage(PythonPackage):
     """Image processing algorithms for SciPy, including IO, morphology,
     filtering, warping, color manipulation, object detection, etc."""
 
-    homepage = "http://scikit-image.org/"
+    homepage = "https://scikit-image.org/"
     pypi = "scikit-image/scikit-image-0.17.2.tar.gz"
 
     version('0.18.1', sha256='fbb618ca911867bce45574c1639618cdfb5d94e207432b19bc19563d80d2f171')
@@ -38,7 +38,7 @@ class PyScikitImage(PythonPackage):
     depends_on('py-networkx@2.0:', type=('build', 'run'), when='@0.16.1:')
     depends_on('py-six', type=('build', 'run'), when='@:0.15.1')
     depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('py-matplotlib@2.0.0:2.9.999, 3.0.1:', type=('build', 'run'), when='@0.16.1:')
+    depends_on('py-matplotlib@2.0.0:2.9, 3.0.1:', type=('build', 'run'), when='@0.16.1:')
     depends_on('py-imageio@2.0.1:', type=('build', 'run'), when='@0.15.1:')
     depends_on('py-imageio@2.3.0:', type=('build', 'run'), when='@0.16.1:')
     depends_on('py-tifffile@2019.7.26:', type=('build', 'run'), when='@0.17.1:')

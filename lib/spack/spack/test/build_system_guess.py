@@ -5,9 +5,10 @@
 
 
 import pytest
+
 import spack.cmd.create
-import spack.util.executable
 import spack.stage
+import spack.util.executable
 
 
 @pytest.fixture(

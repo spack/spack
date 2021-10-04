@@ -3,15 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import shutil
+
+from spack import *
 
 
 class Mumax(MakefilePackage, CudaPackage):
     """GPU accelerated micromagnetic simulator."""
 
-    homepage = "http://mumax.github.io"
+    homepage = "https://mumax.github.io"
     url      = "https://github.com/mumax/3/archive/v3.10.tar.gz"
 
     maintainers = ['glennpj']

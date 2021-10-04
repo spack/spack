@@ -11,10 +11,12 @@ class Migraphx(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX"
     git      = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX.git"
-    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-4.2.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.1', sha256='e0b04da37aed937a2b2218059c189559a15460c191b5e9b00c7366c81c90b06e')
+    version('4.3.0', sha256='99cf202a5e86cf5502b0f8bf12f152dbd5a6aacc204b3d9d5efca67a54793408')
     version('4.2.0', sha256='93f22f6c641dde5d7fb8abcbd99621b3c81e332e125a6f3a258d5e4cf2055f55')
     version('4.1.0', sha256='f9b1d2e25cdbaf5d0bfb07d4c8ccef0abaa291757c4bce296c3b5b9488174045')
     version('4.0.0', sha256='b8b845249626e9169353dbfa2530db468972a7569b248c8118ff19e029a12e55')
@@ -43,16 +45,29 @@ class Migraphx(CMakePackage):
     depends_on('nlohmann-json', type='link')
     depends_on('msgpack-c', type='link')
     depends_on('half@1.12.0', type='link')
+    depends_on('python@3:', type='build')
     depends_on('py-pybind11', type='build', when='@:4.0.0')
     depends_on('py-pybind11@2.6:', type='build', when='@4.1.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocblas@' + ver, type='link', when='@' + ver)
-        depends_on('miopen-hip@' + ver, type='link', when='@' + ver)
+        depends_on('hip@' + ver,                      when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
+        depends_on('rocblas@' + ver,                  when='@' + ver)
+        depends_on('miopen-hip@' + ver,               when='@' + ver)
+
+    @property
+    def cmake_python_hints(self):
+        """Include the python include path to the
+        CMake based on current spec
+        """
+        python_spec = self.spec['python']
+        include_dir = join_path(
+            python_spec.prefix, python_spec.package.config_vars['python_inc']['false'])
+        return [
+            self.define('Python_INCLUDE_DIR', include_dir)
+        ]
 
     def cmake_args(self):
         args = [
@@ -63,4 +78,6 @@ class Migraphx(CMakePackage):
             args.append('-DNLOHMANN_JSON_INCLUDE={0}'.format(
                 self.spec['nlohmann-json'].prefix.include))
 
+        if self.spec['cmake'].satisfies('@3.16.0:'):
+            args += self.cmake_python_hints
         return args

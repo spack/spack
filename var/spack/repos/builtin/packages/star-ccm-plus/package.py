@@ -3,15 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import os
+
+from spack import *
 
 
 class StarCcmPlus(Package):
     """STAR-CCM+ (Computational Continuum Mechanics) CFD solver."""
 
-    homepage = "http://mdx.plm.automation.siemens.com/star-ccm-plus"
+    homepage = "https://mdx.plm.automation.siemens.com/star-ccm-plus"
     url      = "file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz".format(os.getcwd())
     manual_download = True
 

@@ -9,10 +9,10 @@ import re
 import sys
 
 import llnl.util.tty as tty
+
 import spack.architecture
 import spack.util.executable
-
-from spack.operating_systems.mac_os import macos_version, macos_sdk_path
+from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
@@ -22,13 +22,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     homepage = 'https://gcc.gnu.org'
     gnu_mirror_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
     git      = 'git://gcc.gnu.org/git/gcc.git'
-    list_url = 'http://ftp.gnu.org/gnu/gcc/'
+    list_url = 'https://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
-    maintainers = ['michaelkuhn']
+    maintainers = ['michaelkuhn', 'alalazo']
 
     version('master', branch='master')
 
+    version('11.2.0', sha256='d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b')
     version('11.1.0', sha256='4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf')
 
     version('10.3.0', sha256='64f404c1a650f27fc33da242e1f2df54952e3963a49e06e73f6940f3223ac344')
@@ -120,40 +121,23 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
     #   GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
-    depends_on('isl@0.14', when='@5.0:5.2 +graphite')
-    depends_on('isl@0.15', when='@5.3:5.9 +graphite')
-    depends_on('isl@0.15:0.18', when='@6:8.9 +graphite')
-    depends_on('isl@0.15:0.20', when='@9:9.9 +graphite')
-    depends_on('isl@0.15:', when='@10: +graphite')
+    with when('+graphite'):
+        depends_on('isl@0.14', when='@5.0:5.2')
+        depends_on('isl@0.15', when='@5.3:5.9')
+        depends_on('isl@0.15:0.18', when='@6:8.9')
+        depends_on('isl@0.15:0.20', when='@9:9.9')
+        depends_on('isl@0.15:', when='@10:')
+
     depends_on('zlib', when='@6:')
-    # GCC only tries to link with -lzstd but it requires
-    # -pthread too when linking against libzstd.a, so
-    # disable multithreading by default
-    depends_on('zstd~multithread', when='@10:')
+    depends_on('zstd', when='@10:')
     depends_on('diffutils', type='build')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils+gas+ld+plugins~libiberty', when='+binutils', type=('build', 'link', 'run'))
     depends_on('zip', type='build', when='languages=java')
-    depends_on('cuda', when='+nvptx')
 
     # The server is sometimes a bit slow to respond
     timeout = {'timeout': 60}
-
-    resource(name='newlib',
-             url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
-             sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
-             destination='newlibsource',
-             when='+nvptx',
-             fetch_options=timeout)
-
-    # nvptx-tools does not seem to work as a dependency,
-    # but does fine when the source is inside the gcc build directory
-    # nvptx-tools doesn't have any releases, so grabbing the last commit
-    resource(name='nvptx-tools',
-             git='https://github.com/MentorEmbedded/nvptx-tools',
-             commit='d0524fbdc86dfca068db5a21cc78ac255b335be5',
-             when='+nvptx')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -167,14 +151,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('guile@1.4.1:', type='test')
 
     # See https://golang.org/doc/install/gccgo#Releases
-    provides('golang',        when='languages=go @4.6:')
-    provides('golang@:1',     when='languages=go @4.7.1:')
-    provides('golang@:1.1',   when='languages=go @4.8:')
-    provides('golang@:1.1.2', when='languages=go @4.8.2:')
-    provides('golang@:1.2',   when='languages=go @4.9:')
-    provides('golang@:1.4',   when='languages=go @5:')
-    provides('golang@:1.6.1', when='languages=go @6:')
-    provides('golang@:1.8',   when='languages=go @7:')
+    with when('languages=go'):
+        provides('golang',        when='@4.6:')
+        provides('golang@:1',     when='@4.7.1:')
+        provides('golang@:1.1',   when='@4.8:')
+        provides('golang@:1.1.2', when='@4.8.2:')
+        provides('golang@:1.2',   when='@4.9:')
+        provides('golang@:1.4',   when='@5:')
+        provides('golang@:1.6.1', when='@6:')
+        provides('golang@:1.8',   when='@7:')
+        # GCC 4.6 added support for the Go programming language.
+        # See https://gcc.gnu.org/gcc-4.6/changes.html
+        conflicts('@:4.5', msg='support for Go has been added in GCC 4.6')
+        # Go is not supported on macOS
+        conflicts('platform=darwin', msg='Go not supported on MacOS')
 
     # For a list of valid languages for a specific release,
     # run the following command in the GCC source directory:
@@ -194,13 +184,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # but this is the first version that accepts 'c' as a valid language.
     conflicts('languages=c', when='@:4.7')
 
-    # GCC 4.6 added support for the Go programming language.
-    # See https://gcc.gnu.org/gcc-4.6/changes.html
-    conflicts('languages=go', when='@:4.5')
-
-    # Go is not supported on macOS
-    conflicts('languages=go', when='platform=darwin')
-
     # The GCC Java frontend and associated libjava runtime library
     # have been removed from GCC as of GCC 7.
     # See https://gcc.gnu.org/gcc-7/changes.html
@@ -210,17 +193,34 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts('languages=jit', when='@:4')
 
-    # NVPTX offloading supported in 7 and later by limited languages
-    conflicts('+nvptx', when='@:6', msg='NVPTX only supported in gcc 7 and above')
-    conflicts('languages=ada', when='+nvptx')
-    conflicts('languages=brig', when='+nvptx')
-    conflicts('languages=go', when='+nvptx')
-    conflicts('languages=java', when='+nvptx')
-    conflicts('languages=jit', when='+nvptx')
-    conflicts('languages=objc', when='+nvptx')
-    conflicts('languages=obj-c++', when='+nvptx')
-    # NVPTX build disables bootstrap
-    conflicts('+bootstrap', when='+nvptx')
+    with when('+nvptx'):
+        depends_on('cuda')
+        resource(
+            name='newlib',
+            url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
+            sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
+            destination='newlibsource',
+            fetch_options=timeout
+        )
+        # nvptx-tools does not seem to work as a dependency,
+        # but does fine when the source is inside the gcc build directory
+        # nvptx-tools doesn't have any releases, so grabbing the last commit
+        resource(
+            name='nvptx-tools',
+            git='https://github.com/MentorEmbedded/nvptx-tools',
+            commit='d0524fbdc86dfca068db5a21cc78ac255b335be5',
+        )
+        # NVPTX offloading supported in 7 and later by limited languages
+        conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
+        conflicts('languages=ada')
+        conflicts('languages=brig')
+        conflicts('languages=go')
+        conflicts('languages=java')
+        conflicts('languages=jit')
+        conflicts('languages=objc')
+        conflicts('languages=obj-c++')
+        # NVPTX build disables bootstrap
+        conflicts('+bootstrap')
 
     # Binutils can't build ld on macOS
     conflicts('+binutils', when='platform=darwin')
@@ -262,7 +262,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
 
     patch('piclibs.patch', when='+piclibs')
-    patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
+    patch('gcc-backport.patch', when='@4.7:4.9.3,5:5.3')
 
     # Backport libsanitizer patch for glibc >= 2.31 and 5.3.0 <= gcc <= 9.2.0
     # https://bugs.gentoo.org/708346
@@ -271,6 +271,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:8.3.0,9.0.0:9.2.0')
     patch('glibc-2.31-libsanitizer-2-gcc-6.patch', when='@5.3.0:5.5.0,6.1.0:6.5.0')
     patch('glibc-2.31-libsanitizer-2-gcc-7.patch', when='@7.1.0:7.5.0')
+    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=2b40941d23b1570cdd90083b58fa0f66aa58c86e', sha256='b48e48736062e64a6da7cbe7e21a6c1c89422d1f49ef547c73b479a3f3f4935f', when='@6.5.0,7.4.0:7.5.0,8.2.0:9.3.0')
+    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=745dae5923aba02982563481d75a21595df22ff8', sha256='eaa00c91e08a5e767f023911a49bc1b2d1a3eea38703b745ab260f90e8da41aa', when='@10.1.0:11.1.0')
+
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch('ucontext_t.patch', when='@4.9,5.1:5.4,6.1:6.4,7.1')

@@ -13,6 +13,7 @@ class PyScikitLearn(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.0', sha256='776800194e757cd212b47cd05907e0eb67a554ad333fe76776060dbb729e3427')
     version('0.24.2', sha256='d14701a12417930392cd3898e9646cf5670c190b933625ebe7511b1f7d7b8736')
     version('0.24.1', sha256='a0334a1802e64d656022c3bfab56a73fbd6bf4b1298343f3688af2151810bbdf')
     version('0.24.0', sha256='076369634ee72b5a5941440661e2f306ff4ac30903802dc52031c7e9199ac640')
@@ -37,25 +38,33 @@ class PyScikitLearn(PythonPackage):
     variant('openmp', default=True, description='Build with OpenMP support')
 
     depends_on('python@2.6:2.8,3.3:', when='@:0.19', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.4:', when='@0.20.0:0.20.999', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when='@0.20.0:0.20', type=('build', 'run'))
     depends_on('python@3.5:', when='@0.21:', type=('build', 'run'))
     depends_on('python@3.6:', when='@0.23:', type=('build', 'run'))
+    depends_on('python@3.7:', when='@1.0:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.6.1:', when='@:0.19', type=('build', 'run'))
-    depends_on('py-numpy@1.8.2:', when='@0.20.0:0.20.999', type=('build', 'run'))
+    depends_on('py-numpy@1.8.2:', when='@0.20.0:0.20', type=('build', 'run'))
     depends_on('py-numpy@1.11.0:', when='@0.21:', type=('build', 'run'))
     depends_on('py-numpy@1.13.3:', when='@0.23:', type=('build', 'run'))
+    depends_on('py-numpy@1.14.6:', when='@1.0:', type=('build', 'run'))
     depends_on('py-scipy@0.9:', when='@:0.19', type=('build', 'run'))
-    depends_on('py-scipy@0.13.3:', when='@0.20.0:0.20.999', type=('build', 'run'))
+    depends_on('py-scipy@0.13.3:', when='@0.20.0:0.20', type=('build', 'run'))
     depends_on('py-scipy@0.17.0:', when='@0.21:', type=('build', 'run'))
     depends_on('py-scipy@0.19.1:', when='@0.23:', type=('build', 'run'))
+    depends_on('py-scipy@1.1.0:', when='@1.0:', type=('build', 'run'))
     depends_on('py-joblib@0.11:', type=('build', 'run'))
     depends_on('py-threadpoolctl@2.0.0:', when='@0.23:', type=('build', 'run'))
     depends_on('py-cython@0.23:', type='build')
     depends_on('py-cython@0.28.5:', when='@0.21:', type='build')
-    depends_on('py-pytest@5.0.1:', type='test')
-    depends_on('py-pandas', type='test')
-    depends_on('py-setuptools', type='build')
     depends_on('llvm-openmp', when='@0.21: %apple-clang +openmp')
+
+    # Test dependencies
+    depends_on('py-matplotlib@2.2.2:', type='test')
+    depends_on('py-scikit-image@0.14.5:', type='test')
+    depends_on('py-pandas@0.25:', type='test')
+    depends_on('py-pytest@5.0.1:', type='test')
+    depends_on('py-pyamg@4:', type='test')
 
     # Release tarballs are already cythonized. If you wanted to build a release
     # version without OpenMP support, you would need to delete all .c files

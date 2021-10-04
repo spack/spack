@@ -9,7 +9,7 @@ from spack import *
 class Collectd(AutotoolsPackage):
     """The system statistics collection daemon."""
 
-    homepage = "http://collectd.org/"
+    homepage = "https://collectd.org/"
     url      = "https://github.com/collectd/collectd/releases/download/collectd-5.11.0/collectd-5.11.0.tar.bz2"
 
     version('5.12.0', sha256='5bae043042c19c31f77eb8464e56a01a5454e0b39fa07cf7ad0f1bfc9c3a09d6')

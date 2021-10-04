@@ -4,17 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Simple wrapper around JSON to guarantee consistent use of load/dump. """
-import sys
 import json
-from six import string_types
-from six import iteritems
+import sys
+
+from six import iteritems, string_types
 
 import spack.error
 
 __all__ = ['load', 'dump', 'SpackJSONError']
 
 _json_dump_args = {
-    'indent': True,
+    'indent': 2,
     'separators': (',', ': ')
 }
 

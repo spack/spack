@@ -18,7 +18,7 @@ class Tajo(Package):
     and and its optimizer.
     """
 
-    homepage = "http://tajo.apache.org/"
+    homepage = "https://tajo.apache.org/"
     url      = "https://www-eu.apache.org/dist/tajo/tajo-0.11.3/tajo-0.11.3.tar.gz"
     list_url = "https://www-eu.apache.org/dist/tajo/"
     list_depth = 1

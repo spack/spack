@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import sys
+
+from spack import *
 
 
 class Sundials(CMakePackage, CudaPackage, ROCmPackage):
@@ -16,6 +17,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     urls = ["https://computing.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz",
             "https://github.com/LLNL/sundials/releases/download/v2.7.0/sundials-2.7.0.tar.gz"]
     git = "https://github.com/llnl/sundials.git"
+    tags = ['radiuss', 'e4s']
+
     maintainers = ['cswoodward', 'gardner48', 'balos1']
 
     # ==========================================================================
@@ -171,21 +174,22 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja+rocm', when='+raja +rocm')
 
     # External libraries
-    depends_on('lapack',              when='+lapack')
-    depends_on('suite-sparse',        when='+klu')
-    depends_on('petsc+mpi',           when='+petsc')
-    depends_on('hypre+mpi',           when='+hypre')
-    depends_on('superlu-dist@6.1.1:', when='@:5.4.0 +superlu-dist')
-    depends_on('superlu-dist@6.3.0:', when='@5.5.0: +superlu-dist')
-    depends_on('trilinos+tpetra',     when='+trilinos')
+    depends_on('lapack',                  when='+lapack')
+    depends_on('suite-sparse',            when='+klu')
+    depends_on('petsc+mpi',               when='+petsc')
+    depends_on('hypre+mpi~int64',         when='@5.7.1: +hypre ~int64')
+    depends_on('hypre+mpi+int64',         when='@5.7.1: +hypre +int64')
+    depends_on('hypre@:2.22.0+mpi~int64', when='@:5.7.0 +hypre ~int64')
+    depends_on('hypre@:2.22.0+mpi+int64', when='@:5.7.0 +hypre +int64')
+    depends_on('superlu-dist@6.1.1:',     when='@:5.4.0 +superlu-dist')
+    depends_on('superlu-dist@6.3.0:',     when='@5.5.0: +superlu-dist')
+    depends_on('trilinos+tpetra',         when='+trilinos')
 
     # Require that external libraries built with the same precision
     depends_on('petsc~double~complex', when='+petsc precision=single')
     depends_on('petsc+double~complex', when='+petsc precision=double')
 
     # Require that external libraries built with the same index type
-    depends_on('hypre~int64', when='+hypre ~int64')
-    depends_on('hypre+int64', when='+hypre +int64')
     depends_on('petsc~int64', when='+petsc ~int64')
     depends_on('petsc+int64', when='+petsc +int64')
     depends_on('superlu-dist+int64', when='+superlu-dist +int64')
@@ -202,6 +206,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     patch('FindPackageMultipass.cmake.patch', when='@5.0.0')
     patch('5.5.0-xsdk-patches.patch', when='@5.5.0')
     patch('0001-add-missing-README-to-examples-cvode-hip.patch', when='@5.6.0:5.7.0')
+    # remove sundials_nvecopenmp target from ARKODE SuperLU_DIST example
+    patch('remove-links-to-OpenMP-vector.patch', when='@5.5.0:5.7.0')
 
     # ==========================================================================
     # SUNDIALS Settings

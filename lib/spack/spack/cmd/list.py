@@ -3,23 +3,22 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-from __future__ import division
+from __future__ import division, print_function
 
 import argparse
 import fnmatch
+import json
+import math
 import os
 import re
 import sys
-import math
-import json
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
+import spack.cmd.common.arguments as arguments
 import spack.dependency
 import spack.repo
-import spack.cmd.common.arguments as arguments
 from spack.version import VersionList
 
 if sys.version_info > (3, 1):

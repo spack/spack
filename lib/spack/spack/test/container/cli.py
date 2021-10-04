@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import llnl.util.filesystem as fs
-import spack.main
 
+import spack.main
 
 containerize = spack.main.SpackCommand('containerize')
 

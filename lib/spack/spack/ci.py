@@ -17,10 +17,10 @@ import zipfile
 from six import iteritems
 from six.moves.urllib.error import HTTPError, URLError
 from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import build_opener, HTTPHandler, Request
+from six.moves.urllib.request import HTTPHandler, Request, build_opener
 
-import llnl.util.tty as tty
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 import spack
 import spack.binary_distribution as bindist
@@ -28,24 +28,25 @@ import spack.cmd
 import spack.compilers as compilers
 import spack.config as cfg
 import spack.environment as ev
-from spack.error import SpackError
 import spack.main
 import spack.mirror
 import spack.paths
 import spack.repo
-from spack.spec import Spec
 import spack.util.executable as exe
-import spack.util.spack_yaml as syaml
-import spack.util.web as web_util
 import spack.util.gpg as gpg_util
+import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-
+import spack.util.web as web_util
+from spack.error import SpackError
+from spack.spec import Spec
 
 JOB_RETRY_CONDITIONS = [
     'always',
 ]
 
 SPACK_PR_MIRRORS_ROOT_URL = 's3://spack-binaries-prs'
+SPACK_SHARED_PR_MIRROR_URL = url_util.join(SPACK_PR_MIRRORS_ROOT_URL,
+                                           'shared_pr_mirror')
 TEMP_STORAGE_MIRROR_NAME = 'ci_temporary_mirror'
 
 spack_gpg = spack.main.SpackCommand('gpg')
@@ -81,7 +82,8 @@ def _create_buildgroup(opener, headers, url, project, group_name, group_type):
     if response_code != 200 and response_code != 201:
         msg = 'Creating buildgroup failed (response code = {0}'.format(
             response_code)
-        raise SpackError(msg)
+        tty.warn(msg)
+        return None
 
     response_text = response.read()
     response_json = json.loads(response_text)
@@ -110,7 +112,8 @@ def populate_buildgroup(job_names, group_name, project, site,
     if not parent_group_id or not group_id:
         msg = 'Failed to create or retrieve buildgroups for {0}'.format(
             group_name)
-        raise SpackError(msg)
+        tty.warn(msg)
+        return
 
     data = {
         'project': project,
@@ -133,7 +136,7 @@ def populate_buildgroup(job_names, group_name, project, site,
     if response_code != 200:
         msg = 'Error response code ({0}) in populate_buildgroup'.format(
             response_code)
-        raise SpackError(msg)
+        tty.warn(msg)
 
 
 def is_main_phase(phase_name):
@@ -549,9 +552,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     generate_job_name = os.environ.get('CI_JOB_NAME', None)
     parent_pipeline_id = os.environ.get('CI_PIPELINE_ID', None)
 
-    is_pr_pipeline = (
-        os.environ.get('SPACK_IS_PR_PIPELINE', '').lower() == 'true'
-    )
+    spack_pipeline_type = os.environ.get('SPACK_PIPELINE_TYPE', None)
+    is_pr_pipeline = spack_pipeline_type == 'spack_pull_request'
 
     spack_pr_branch = os.environ.get('SPACK_PR_BRANCH', None)
     pr_mirror_url = None
@@ -612,11 +614,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         'strip-compilers': False,
     })
 
-    # Add this mirror if it's enabled, as some specs might be up to date
-    # here and thus not need to be rebuilt.
+    # Add per-PR mirror (and shared PR mirror) if enabled, as some specs might
+    # be up to date in one of those and thus not need to be rebuilt.
     if pr_mirror_url:
         spack.mirror.add(
             'ci_pr_mirror', pr_mirror_url, cfg.default_modify_scope())
+        spack.mirror.add('ci_shared_pr_mirror',
+                         SPACK_SHARED_PR_MIRROR_URL,
+                         cfg.default_modify_scope())
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
@@ -706,14 +711,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 root_spec = spec_record['rootSpec']
                 pkg_name = pkg_name_from_spec_label(spec_label)
                 release_spec = root_spec[pkg_name]
-
-                # Check if this spec is in our list of known failures.
-                if broken_specs_url:
-                    full_hash = release_spec.full_hash()
-                    broken_spec_path = url_util.join(broken_specs_url, full_hash)
-                    if web_util.url_exists(broken_spec_path):
-                        known_broken_specs_encountered.append('{0} ({1})'.format(
-                            release_spec, full_hash))
+                release_spec_full_hash = release_spec.full_hash()
+                release_spec_dag_hash = release_spec.dag_hash()
+                release_spec_build_hash = release_spec.build_hash()
 
                 runner_attribs = find_matching_config(
                     release_spec, gitlab_ci)
@@ -775,7 +775,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 job_vars = {
                     'SPACK_ROOT_SPEC': format_root_spec(
                         root_spec, main_phase, strip_compilers),
-                    'SPACK_JOB_SPEC_DAG_HASH': release_spec.dag_hash(),
+                    'SPACK_JOB_SPEC_DAG_HASH': release_spec_dag_hash,
+                    'SPACK_JOB_SPEC_BUILD_HASH': release_spec_build_hash,
+                    'SPACK_JOB_SPEC_FULL_HASH': release_spec_full_hash,
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action
                 }
@@ -874,7 +876,17 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             tty.debug(debug_msg)
 
                 if prune_dag and not rebuild_spec:
+                    tty.debug('Pruning spec that does not need to be rebuilt.')
                     continue
+
+                # Check if this spec is in our list of known failures, now that
+                # we know this spec needs a rebuild
+                if broken_specs_url:
+                    broken_spec_path = url_util.join(
+                        broken_specs_url, release_spec_full_hash)
+                    if web_util.url_exists(broken_spec_path):
+                        known_broken_specs_encountered.append('{0} ({1})'.format(
+                            release_spec, release_spec_full_hash))
 
                 if artifacts_root:
                     job_dependencies.append({
@@ -911,7 +923,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     bc_root = os.path.join(
                         local_mirror_dir, 'build_cache')
                     artifact_paths.extend([os.path.join(bc_root, p) for p in [
-                        bindist.tarball_name(release_spec, '.spec.yaml'),
+                        bindist.tarball_name(release_spec, '.spec.json'),
                         bindist.tarball_name(release_spec, '.cdashid'),
                         bindist.tarball_directory_name(release_spec),
                     ]])
@@ -1035,11 +1047,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             ]
             final_job['when'] = 'always'
 
-            if artifacts_root:
-                final_job['variables'] = {
-                    'SPACK_CONCRETE_ENV_DIR': concrete_env_dir
-                }
-
             output_object['rebuild-index'] = final_job
 
         output_object['stages'] = stage_names
@@ -1068,7 +1075,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             'SPACK_JOB_LOG_DIR': rel_job_log_dir,
             'SPACK_JOB_REPRO_DIR': rel_job_repro_dir,
             'SPACK_LOCAL_MIRROR_DIR': rel_local_mirror_dir,
-            'SPACK_IS_PR_PIPELINE': str(is_pr_pipeline)
+            'SPACK_PIPELINE_TYPE': str(spack_pipeline_type)
         }
 
         if pr_mirror_url:
@@ -1255,7 +1262,8 @@ def register_cdash_build(build_name, base_url, project, site, track):
 
     if response_code != 200 and response_code != 201:
         msg = 'Adding build failed (response code = {0}'.format(response_code)
-        raise SpackError(msg)
+        tty.warn(msg)
+        return (None, None)
 
     response_text = response.read()
     response_json = json.loads(response_text)
@@ -1292,8 +1300,9 @@ def relate_cdash_builds(spec_map, cdash_base_url, job_build_id, cdash_project,
                 tty.debug('Did not find cdashid for {0} on {1}'.format(
                     dep_pkg_name, url))
         else:
-            raise SpackError('Did not find cdashid for {0} anywhere'.format(
+            tty.warn('Did not find cdashid for {0} anywhere'.format(
                 dep_pkg_name))
+            return
 
         payload = {
             "project": cdash_project,
@@ -1308,16 +1317,20 @@ def relate_cdash_builds(spec_map, cdash_base_url, job_build_id, cdash_project,
 
         request = Request(cdash_api_url, data=enc_data, headers=headers)
 
-        response = opener.open(request)
-        response_code = response.getcode()
+        try:
+            response = opener.open(request)
+            response_code = response.getcode()
 
-        if response_code != 200 and response_code != 201:
-            msg = 'Relate builds ({0} -> {1}) failed (resp code = {2})'.format(
-                job_build_id, dep_build_id, response_code)
-            raise SpackError(msg)
+            if response_code != 200 and response_code != 201:
+                msg = 'Relate builds ({0} -> {1}) failed (resp code = {2})'.format(
+                    job_build_id, dep_build_id, response_code)
+                tty.warn(msg)
+                return
 
-        response_text = response.read()
-        tty.debug('Relate builds response: {0}'.format(response_text))
+            response_text = response.read()
+            tty.debug('Relate builds response: {0}'.format(response_text))
+        except Exception as e:
+            print("Relating builds in CDash failed: {0}".format(e))
 
 
 def write_cdashid_to_mirror(cdashid, spec, mirror_url):
@@ -1337,7 +1350,16 @@ def write_cdashid_to_mirror(cdashid, spec, mirror_url):
         tty.debug('pushing cdashid to url')
         tty.debug('  local file path: {0}'.format(local_cdash_path))
         tty.debug('  remote url: {0}'.format(remote_url))
-        web_util.push_to_url(local_cdash_path, remote_url)
+
+        try:
+            web_util.push_to_url(local_cdash_path, remote_url)
+        except Exception as inst:
+            # No matter what went wrong here, don't allow the pipeline to fail
+            # just because there was an issue storing the cdashid on the mirror
+            msg = 'Failed to write cdashid {0} to mirror {1}'.format(
+                cdashid, mirror_url)
+            tty.warn(inst)
+            tty.warn(msg)
 
 
 def read_cdashid_from_mirror(spec, mirror_url):
@@ -1355,40 +1377,34 @@ def read_cdashid_from_mirror(spec, mirror_url):
     return int(contents)
 
 
-def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id,
-                         sign_binaries):
-    if mirror_url:
-        try:
-            unsigned = not sign_binaries
-            tty.debug('Creating buildcache ({0})'.format(
-                'unsigned' if unsigned else 'signed'))
-            spack.cmd.buildcache._createtarball(
-                env, spec_yaml=yaml_path, add_deps=False,
-                output_location=mirror_url, force=True, allow_root=True,
-                unsigned=unsigned)
-            if build_id:
-                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
-                    build_id, mirror_url))
-                write_cdashid_to_mirror(build_id, spec, mirror_url)
-        except Exception as inst:
-            # If the mirror we're pushing to is on S3 and there's some
-            # permissions problem, for example, we can't just target
-            # that exception type here, since users of the
-            # `spack ci rebuild' may not need or want any dependency
-            # on boto3.  So we use the first non-boto exception type
-            # in the heirarchy:
-            #     boto3.exceptions.S3UploadFailedError
-            #     boto3.exceptions.Boto3Error
-            #     Exception
-            #     BaseException
-            #     object
-            err_msg = 'Error msg: {0}'.format(inst)
-            if 'Access Denied' in err_msg:
-                tty.msg('Permission problem writing to {0}'.format(
-                    mirror_url))
-                tty.msg(err_msg)
-            else:
-                raise inst
+def push_mirror_contents(env, spec, specfile_path, mirror_url, sign_binaries):
+    try:
+        unsigned = not sign_binaries
+        tty.debug('Creating buildcache ({0})'.format(
+            'unsigned' if unsigned else 'signed'))
+        spack.cmd.buildcache._createtarball(
+            env, spec_file=specfile_path, add_deps=False,
+            output_location=mirror_url, force=True, allow_root=True,
+            unsigned=unsigned)
+    except Exception as inst:
+        # If the mirror we're pushing to is on S3 and there's some
+        # permissions problem, for example, we can't just target
+        # that exception type here, since users of the
+        # `spack ci rebuild' may not need or want any dependency
+        # on boto3.  So we use the first non-boto exception type
+        # in the heirarchy:
+        #     boto3.exceptions.S3UploadFailedError
+        #     boto3.exceptions.Boto3Error
+        #     Exception
+        #     BaseException
+        #     object
+        err_msg = 'Error msg: {0}'.format(inst)
+        if any(x in err_msg for x in ['Access Denied', 'InvalidAccessKeyId']):
+            tty.msg('Permission problem writing to {0}'.format(
+                mirror_url))
+            tty.msg(err_msg)
+        else:
+            raise inst
 
 
 def copy_stage_logs_to_artifacts(job_spec, job_log_dir):

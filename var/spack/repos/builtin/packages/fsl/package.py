@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 from spack.util.environment import EnvironmentModifications
-import os
 
 
 class Fsl(Package, CudaPackage):
@@ -15,7 +16,7 @@ class Fsl(Package, CudaPackage):
     # NOTE: A manual download is required for FSL.  Spack will search your
     # current directory for the download file.  Alternatively, add this file to
     # a mirror so that Spack can find it.  For instructions on how to set up a
-    # mirror, see http://spack.readthedocs.io/en/latest/mirrors.html
+    # mirror, see https://spack.readthedocs.io/en/latest/mirrors.html
 
     homepage = "https://fsl.fmrib.ox.ac.uk"
     url      = "file://{0}/fsl-5.0.10-sources.tar.gz".format(os.getcwd())

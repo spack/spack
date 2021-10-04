@@ -8,6 +8,7 @@ import os
 import platform
 import shutil
 import sys
+
 from spack import *
 
 
@@ -123,7 +124,7 @@ class Charmpp(Package):
     conflicts("~tracing", "+papi")
 
     conflicts("backend=multicore", "+smp")
-    conflicts("backend=ucx", when="@:6.9.99")
+    conflicts("backend=ucx", when="@:6.9")
 
     @property
     def charmarch(self):

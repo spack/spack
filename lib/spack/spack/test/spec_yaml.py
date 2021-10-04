@@ -21,12 +21,10 @@ import spack.spec
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.version
-
 from spack import repo
-from spack.spec import Spec, save_dependency_spec_yamls
-from spack.util.spack_yaml import syaml_dict
+from spack.spec import Spec, save_dependency_specfiles
 from spack.util.mock_package import MockPackageMultiRepo
-
+from spack.util.spack_yaml import syaml_dict
 
 if sys.version_info >= (3, 3):
     from collections.abc import Iterable, Mapping  # novm
@@ -40,52 +38,67 @@ def check_yaml_round_trip(spec):
     assert spec.eq_dag(spec_from_yaml)
 
 
+def check_json_round_trip(spec):
+    json_text = spec.to_json()
+    spec_from_json = Spec.from_json(json_text)
+    assert spec.eq_dag(spec_from_json)
+
+
 def test_simple_spec():
     spec = Spec('mpileaks')
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_normal_spec(mock_packages):
     spec = Spec('mpileaks+debug~opt')
     spec.normalize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_external_spec(config, mock_packages):
     spec = Spec('externaltool')
     spec.concretize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
     spec = Spec('externaltest')
     spec.concretize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_ambiguous_version_spec(mock_packages):
     spec = Spec('mpileaks@1.0:5.0,6.1,7.3+debug~opt')
     spec.normalize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_concrete_spec(config, mock_packages):
     spec = Spec('mpileaks+debug~opt')
     spec.concretize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_yaml_multivalue(config, mock_packages):
     spec = Spec('multivalue-variant foo="bar,baz"')
     spec.concretize()
     check_yaml_round_trip(spec)
+    check_json_round_trip(spec)
 
 
 def test_yaml_subdag(config, mock_packages):
     spec = Spec('mpileaks^mpich+debug')
     spec.concretize()
     yaml_spec = Spec.from_yaml(spec.to_yaml())
+    json_spec = Spec.from_json(spec.to_json())
 
     for dep in ('callpath', 'mpich', 'dyninst', 'libdwarf', 'libelf'):
         assert spec[dep].eq_dag(yaml_spec[dep])
+        assert spec[dep].eq_dag(json_spec[dep])
 
 
 def test_using_ordered_dict(mock_packages):
@@ -114,20 +127,6 @@ def test_using_ordered_dict(mock_packages):
 
         # level just makes sure we are doing something here
         assert level >= 5
-
-
-def test_to_record_dict(mock_packages, config):
-    specs = ['mpileaks', 'zmpi', 'dttop']
-    for name in specs:
-        spec = Spec(name).concretized()
-        record = spec.to_record_dict()
-        assert record["name"] == name
-        assert "hash" in record
-
-        node = spec.to_node_dict()
-        for key, value in node[name].items():
-            assert key in record
-            assert record[key] == value
 
 
 @pytest.mark.parametrize("hash_type", [
@@ -310,8 +309,8 @@ def check_specs_equal(original_spec, spec_yaml_path):
         return original_spec.eq_dag(spec_from_yaml)
 
 
-def test_save_dependency_spec_yamls_subset(tmpdir, config):
-    output_path = str(tmpdir.mkdir('spec_yamls'))
+def test_save_dependency_spec_jsons_subset(tmpdir, config):
+    output_path = str(tmpdir.mkdir('spec_jsons'))
 
     default = ('build', 'link')
 
@@ -329,9 +328,70 @@ def test_save_dependency_spec_yamls_subset(tmpdir, config):
         spec_a.concretize()
         b_spec = spec_a['b']
         c_spec = spec_a['c']
-        spec_a_yaml = spec_a.to_yaml(hash=ht.build_hash)
+        spec_a_json = spec_a.to_json(hash=ht.build_hash)
 
-        save_dependency_spec_yamls(spec_a_yaml, output_path, ['b', 'c'])
+        save_dependency_specfiles(spec_a_json, output_path, ['b', 'c'])
 
-        assert check_specs_equal(b_spec, os.path.join(output_path, 'b.yaml'))
-        assert check_specs_equal(c_spec, os.path.join(output_path, 'c.yaml'))
+        assert check_specs_equal(b_spec, os.path.join(output_path, 'b.json'))
+        assert check_specs_equal(c_spec, os.path.join(output_path, 'c.json'))
+
+
+def test_legacy_yaml(tmpdir, install_mockery, mock_packages):
+    """Tests a simple legacy YAML with a dependency and ensures spec survives
+    concretization."""
+    yaml = """
+spec:
+- a:
+    version: '2.0'
+    arch:
+      platform: linux
+      platform_os: rhel7
+      target: x86_64
+    compiler:
+      name: gcc
+      version: 8.3.0
+    namespace: builtin.mock
+    parameters:
+      bvv: true
+      foo:
+      - bar
+      foobar: bar
+      cflags: []
+      cppflags: []
+      cxxflags: []
+      fflags: []
+      ldflags: []
+      ldlibs: []
+    dependencies:
+      b:
+        hash: iaapywazxgetn6gfv2cfba353qzzqvhn
+        type:
+        - build
+        - link
+    hash: obokmcsn3hljztrmctbscmqjs3xclazz
+    full_hash: avrk2tqsnzxeabmxa6r776uq7qbpeufv
+    build_hash: obokmcsn3hljztrmctbscmqjs3xclazy
+- b:
+    version: '1.0'
+    arch:
+      platform: linux
+      platform_os: rhel7
+      target: x86_64
+    compiler:
+      name: gcc
+      version: 8.3.0
+    namespace: builtin.mock
+    parameters:
+      cflags: []
+      cppflags: []
+      cxxflags: []
+      fflags: []
+      ldflags: []
+      ldlibs: []
+    hash: iaapywazxgetn6gfv2cfba353qzzqvhn
+    full_hash: qvsxvlmjaothtpjluqijv7qfnni3kyyg
+    build_hash: iaapywazxgetn6gfv2cfba353qzzqvhy
+"""
+    spec = Spec.from_yaml(yaml)
+    concrete_spec = spec.concretized()
+    assert concrete_spec.eq_dag(spec)

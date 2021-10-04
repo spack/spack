@@ -12,10 +12,12 @@ class MiopenHip(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
     git      = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-4.2.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.1', sha256='1fb2fd8b24f984174ec5338a58b7964e128b74dafb101373a41c8ed33955251a')
+    version('4.3.0', sha256='034445470cfd44480a1d9854f9fdfe92cfb8efa3f002dee508eb9585e338486d')
     version('4.2.0', sha256='8ab02e784c8b3471159794766ed6303c333b33c69dc5186c0930e56504373b7c')
     version('4.1.0', sha256='068b1bc33f90fe21d3aab5697d2b3b7b930e613c54d6c5ee820768579b2b41ee')
     version('4.0.0', sha256='84c6c17be9c1a9cd0d3a2af283433f64b07a4b9941349f498e40fed82fb205a6')
@@ -28,40 +30,51 @@ class MiopenHip(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    depends_on('boost@1.67.0:1.73.0', type='link')
     depends_on('pkgconfig', type='build')
-    depends_on('bzip2', type='link')
-    depends_on('sqlite', type='link')
-    depends_on('half', type='build')
-    depends_on('zlib', type='link', when='@3.9.0:')
+    depends_on('boost@1.67.0:1.73.0')
+    depends_on('bzip2')
+    depends_on('sqlite')
+    depends_on('half')
+    depends_on('zlib', when='@3.9.0:')
 
     patch('0001-Add-rocm-path-and-rocm-device-lib-path-flags.patch', when='@3.9.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='link', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-clang-ocl@' + ver, type='build', when='@' + ver)
-        depends_on('rocblas@' + ver, type='link', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='link', when='@' + ver)
+        depends_on('hip@' + ver,                      when='@' + ver)
+        depends_on('rocm-clang-ocl@' + ver,           when='@' + ver)
+        depends_on('rocblas@' + ver,                  when='@' + ver)
 
     def setup_build_environment(self, env):
         if '@3.9.0:' in self.spec:
             lib_dir = self.spec['zlib'].libs.directories[0]
             env.prepend_path('LIBRARY_PATH', lib_dir)
 
+    def get_bitcode_dir(self):
+        spec = self.spec
+
+        # and the exact location of its bitcode depends on the version
+        if spec.version >= Version('3.9.0'):
+            return spec['llvm-amdgpu'].prefix.amdgcn.bitcode
+        else:
+            return spec['llvm-amdgpu'].prefix.lib
+
     def cmake_args(self):
-        hip_prefix_dir = self.spec['hip'].prefix
-        devicelibs_prefix_dir = self.spec['rocm-device-libs'].prefix
+        spec = self.spec
+
         args = [
-            '-DMIOPEN_BACKEND=HIP',
-            '-DCMAKE_CXX_COMPILER={0}/bin/clang++'
-            .format(self.spec['llvm-amdgpu'].prefix),
-            '-DBoost_USE_STATIC_LIBS=Off',
-            '-DHIP_PREFIX_PATH={0}'.format(hip_prefix_dir),
-            '-DDEVICELIBS_PREFIX_PATH={0}/amdgcn/bitcode'
-            .format(devicelibs_prefix_dir)
+            self.define('MIOPEN_BACKEND', 'HIP'),
+            self.define(
+                'CMAKE_CXX_COMPILER',
+                '{0}/bin/clang++'.format(spec['llvm-amdgpu'].prefix)
+            ),
+            self.define(
+                'MIOPEN_AMDGCN_ASSEMBLER',
+                '{0}/bin/clang'.format(spec['llvm-amdgpu'].prefix)
+            ),
+            self.define('Boost_USE_STATIC_LIBS', 'Off'),
+            self.define('HIP_PREFIX_PATH', spec['hip'].prefix),
+            self.define('DEVICELIBS_PREFIX_PATH', self.get_bitcode_dir())
         ]
         return args

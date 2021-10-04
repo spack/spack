@@ -2,8 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
 import datetime as dt
+
+from spack import *
 
 
 class Lammps(CMakePackage, CudaPackage):
@@ -13,7 +14,7 @@ class Lammps(CMakePackage, CudaPackage):
     See https://github.com/spack/spack/pull/5342 for a detailed
     discussion.
     """
-    homepage = "http://lammps.sandia.gov/"
+    homepage = "https://lammps.sandia.gov/"
     url      = "https://github.com/lammps/lammps/archive/patch_1Sep2017.tar.gz"
     git      = "https://github.com/lammps/lammps.git"
 
@@ -120,7 +121,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('kim-api', when='+kim')
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
-    depends_on('kokkos+deprecated_code+shared@3.0', when='@20200303+kokkos')
+    depends_on('kokkos+deprecated_code+shared@3.0.00', when='@20200303+kokkos')
     depends_on('kokkos+shared@3.1:', when='@20200505:+kokkos')
     depends_on('adios2', when='+user-adios')
     depends_on('plumed', when='+user-plumed')

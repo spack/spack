@@ -13,8 +13,8 @@ class Ace(MakefilePackage):
        for sockets, demultiplexing loops, threads, synchronization
        primitives."""
 
-    homepage = "http://www.dre.vanderbilt.edu/~schmidt/ACE.html"
-    url = "http://download.dre.vanderbilt.edu/previous_versions/ACE-6.5.1.tar.gz"
+    homepage = "https://www.dre.vanderbilt.edu/~schmidt/ACE.html"
+    url = "https://download.dre.vanderbilt.edu/previous_versions/ACE-6.5.1.tar.gz"
 
     version('6.5.12', 'de96c68a6262d6b9ba76b5057c02c7e6964c070b1328a63bf70259e9530a7996')
     version('6.5.6', '7717cad84d4a9c3d6b2c47963eb555d96de0be657870bcab6fcef4c0423af0de')

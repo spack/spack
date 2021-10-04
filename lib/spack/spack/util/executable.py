@@ -2,11 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
+
 import os
 import re
 import shlex
 import subprocess
+import sys
+
 from six import string_types, text_type
 
 import llnl.util.tty as tty
@@ -123,6 +125,7 @@ class Executable(object):
         env.update(self.default_env)
 
         from spack.util.environment import EnvironmentModifications  # no cycle
+
         # Apply env argument
         if isinstance(env_arg, EnvironmentModifications):
             env_arg.apply_modifications(env)
@@ -182,10 +185,9 @@ class Executable(object):
 
         cmd = self.exe + list(args)
 
-        cmd_line = "'%s'" % "' '".join(
-            map(lambda arg: arg.replace("'", "'\"'\"'"), cmd))
-
-        tty.debug(cmd_line)
+        escaped_cmd = ["'%s'" % arg.replace("'", "'\"'\"'") for arg in cmd]
+        cmd_line_string = " ".join(escaped_cmd)
+        tty.debug(cmd_line_string)
 
         try:
             proc = subprocess.Popen(
@@ -212,7 +214,7 @@ class Executable(object):
 
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
-                long_msg = cmd_line
+                long_msg = cmd_line_string
                 if result:
                     # If the output is not captured in the result, it will have
                     # been stored either in the specified files (e.g. if
@@ -227,13 +229,13 @@ class Executable(object):
 
         except OSError as e:
             raise ProcessError(
-                '%s: %s' % (self.exe[0], e.strerror), 'Command: ' + cmd_line)
+                '%s: %s' % (self.exe[0], e.strerror), 'Command: ' + cmd_line_string)
 
         except subprocess.CalledProcessError as e:
             if fail_on_error:
                 raise ProcessError(
                     str(e), '\nExit status %d when invoking command: %s' %
-                    (proc.returncode, cmd_line))
+                    (proc.returncode, cmd_line_string))
 
         finally:
             if close_ostream:
@@ -295,7 +297,7 @@ def which(*args, **kwargs):
         *args (str): One or more executables to search for
 
     Keyword Arguments:
-        path (:func:`list` or str): The path to search. Defaults to ``PATH``
+        path (list or str): The path to search. Defaults to ``PATH``
         required (bool): If set to True, raise an error if executable not found
 
     Returns:

@@ -9,7 +9,7 @@ from spack import *
 class PyPy(PythonPackage):
     """Library with cross-python path, ini-parsing, io, code, log facilities"""
 
-    homepage = "http://pylib.readthedocs.io/en/latest/"
+    homepage = "https://pylib.readthedocs.io/en/latest/"
     pypi = "py/py-1.8.0.tar.gz"
 
     version('1.9.0', sha256='9ca6883ce56b4e8da7e79ac18787889fa5206c79dcc67fb065376cd2fe03f342')

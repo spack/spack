@@ -7,9 +7,10 @@
 
 TODO: this is really part of spack.config. Consolidate it.
 """
+import contextlib
+import getpass
 import os
 import re
-import getpass
 import subprocess
 import tempfile
 
@@ -44,7 +45,11 @@ replacements = {
 #  ---------------------
 #   total        ->  300
 SPACK_MAX_INSTALL_PATH_LENGTH = 300
-SPACK_PATH_PADDING_CHARS = 'spack_path_placeholder'
+
+#: Padded paths comprise directories with this name (or some prefix of it). :
+#: It starts with two underscores to make it unlikely that prefix matches would
+#: include some other component of the intallation path.
+SPACK_PATH_PADDING_CHARS = '__spack_path_placeholder__'
 
 
 @memoized
@@ -80,7 +85,7 @@ def substitute_config_variables(path):
     environment yaml files.
     """
     import spack.environment as ev  # break circular
-    env = ev.get_env({}, '')
+    env = ev.active_environment()
     if env:
         replacements.update({'env': env.path})
     else:
@@ -158,3 +163,89 @@ def canonicalize_path(path):
             tty.debug("Using current working directory as base for abspath")
 
     return os.path.normpath(path)
+
+
+def longest_prefix_re(string, capture=True):
+    """Return a regular expression that matches a the longest possible prefix of string.
+
+    i.e., if the input string is ``the_quick_brown_fox``, then::
+
+        m = re.compile(longest_prefix('the_quick_brown_fox'))
+        m.match('the_').group(1)                 == 'the_'
+        m.match('the_quick').group(1)            == 'the_quick'
+        m.match('the_quick_brown_fox').group(1)  == 'the_quick_brown_fox'
+        m.match('the_xquick_brown_fox').group(1) == 'the_'
+        m.match('the_quickx_brown_fox').group(1) == 'the_quick'
+
+    """
+    if len(string) < 2:
+        return string
+
+    return "(%s%s%s?)" % (
+        "" if capture else "?:",
+        string[0],
+        longest_prefix_re(string[1:], capture=False)
+    )
+
+
+#: regex cache for padding_filter function
+_filter_re = None
+
+
+def padding_filter(string):
+    """Filter used to reduce output from path padding in log output.
+
+    This turns paths like this:
+
+        /foo/bar/__spack_path_placeholder__/__spack_path_placeholder__/...
+
+    Into paths like this:
+
+        /foo/bar/[padded-to-512-chars]/...
+
+    Where ``padded-to-512-chars`` indicates that the prefix was padded with
+    placeholders until it hit 512 characters. The actual value of this number
+    depends on what the `install_tree``'s ``padded_length`` is configured to.
+
+    For a path to match and be filtered, the placeholder must appear in its
+    entirety at least one time. e.g., "/spack/" would not be filtered, but
+    "/__spack_path_placeholder__/spack/" would be.
+
+    """
+    global _filter_re
+
+    pad = spack.util.path.SPACK_PATH_PADDING_CHARS
+    if not _filter_re:
+        longest_prefix = longest_prefix_re(pad)
+        regex = (
+            r"((?:/[^/\s]*)*?)"  # zero or more leading non-whitespace path components
+            r"(/{pad})+"         # the padding string repeated one or more times
+            r"(/{longest_prefix})?(?=/)"  # trailing prefix of padding as path component
+        )
+        regex = regex.replace("/", os.sep)
+        regex = regex.format(pad=pad, longest_prefix=longest_prefix)
+        _filter_re = re.compile(regex)
+
+    def replacer(match):
+        return "%s%s[padded-to-%d-chars]" % (
+            match.group(1),
+            os.sep,
+            len(match.group(0))
+        )
+    return _filter_re.sub(replacer, string)
+
+
+@contextlib.contextmanager
+def filter_padding():
+    """Context manager to safely disable path padding in all Spack output.
+
+    This is needed because Spack's debug output gets extremely long when we use a
+    long padded installation path.
+    """
+    padding = spack.config.get("config:install_tree:padded_length", None)
+    if padding:
+        # filter out all padding from the intsall command output
+        with tty.output_filter(padding_filter):
+            yield
+    else:
+        yield  # no-op: don't filter unless padding is actually enabled

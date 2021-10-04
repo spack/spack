@@ -32,7 +32,7 @@ class Squashfuse(AutotoolsPackage):
     conflicts('~shared', when='~static', msg="Enable shared, static or both")
 
     depends_on('fuse@2.5:')
-    depends_on('fuse@:2.99', when='@:0.1.103')
+    depends_on('fuse@:2', when='@:0.1.103')
 
     # Note: typically libfuse is external, but this implies that you have to make
     # pkg-config external too, because spack's pkg-config doesn't know how to

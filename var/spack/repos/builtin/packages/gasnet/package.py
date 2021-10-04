@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Gasnet(Package):
@@ -28,6 +29,8 @@ class Gasnet(Package):
     git      = "https://bitbucket.org/berkeleylab/gasnet.git"
 
     maintainers = ['PHHargrove', 'bonachea']
+
+    tags = ['e4s']
 
     version('develop', branch='develop')
     version('main',    branch='stable')

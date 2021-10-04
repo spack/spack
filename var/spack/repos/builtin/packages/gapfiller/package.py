@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import os
 import glob
+import os
+
+from spack import *
 
 
 class Gapfiller(Package):
@@ -16,7 +17,7 @@ class Gapfiller(Package):
        Spack will search your current directory for the download file.
        Alternatively, add this file to a mirror so that Spack can find it.
        For instructions on how to set up a mirror, see
-       http://spack.readthedocs.io/en/latest/mirrors.html"""
+       https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.baseclear.com/genomics/bioinformatics/basetools/gapfiller"
     manual_download = True

@@ -6,30 +6,36 @@
 """
 This test checks the binary packaging infrastructure
 """
-import os
-import stat
-import shutil
-import pytest
 import argparse
-import re
+import os
 import platform
+import re
+import shutil
+import stat
+
+import pytest
 
 from llnl.util.filesystem import mkdirp
 
-import spack.repo
-import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.repo
+import spack.store
 import spack.util.gpg
-from spack.spec import Spec
+from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
-from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.relocate import needs_binary_relocation, needs_text_relocation
-from spack.relocate import relocate_text, relocate_links
-from spack.relocate import macho_make_paths_relative
-from spack.relocate import macho_make_paths_normal
-from spack.relocate import _placeholder, macho_find_paths
-from spack.relocate import file_is_relocatable
+from spack.relocate import (
+    _placeholder,
+    file_is_relocatable,
+    macho_find_paths,
+    macho_make_paths_normal,
+    macho_make_paths_relative,
+    needs_binary_relocation,
+    needs_text_relocation,
+    relocate_links,
+    relocate_text,
+)
+from spack.spec import Spec
 
 
 def fake_fetchify(url, pkg):

@@ -10,7 +10,7 @@ class PyPypar(PythonPackage):
     """Pypar is an efficient but easy-to-use module that allows programs
        written in Python to run in parallel on multiple processors and
        communicate using MPI."""
-    homepage = "http://code.google.com/p/pypar/"
+    homepage = "https://github.com/daleroberts/pypar"
     url      = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-2.1.5_108.tgz"
 
     version('2.1.5_108', sha256='6076c47d32d48424a07c7b7b29ac16e12cc4b2d28b681b895f94fa76cd82fa12')

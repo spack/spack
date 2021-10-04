@@ -51,7 +51,7 @@ class Embree(CMakePackage):
             self.define('EMBREE_ISA_AVX512SKX', True),
         ]
 
-        if spec.satisfies('%gcc@:7.99'):
+        if spec.satisfies('%gcc@:7'):
             # remove unsupported -mprefer-vector-width=256, otherwise copied
             # from common/cmake/gnu.cmake
             args.append('-DFLAGS_AVX512SKX=-mavx512f -mavx512dq -mavx512cd'

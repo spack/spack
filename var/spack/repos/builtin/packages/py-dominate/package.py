@@ -20,5 +20,5 @@ class PyDominate(PythonPackage):
 
     version('2.6.0', sha256='76ec2cde23700a6fc4fee098168b9dee43b99c2f1dd0ca6a711f683e8eb7e1e4')
 
-    depends_on('python@2.7:2.9999,3.4:', type=('build', 'run'))
+    depends_on('python@2.7:2,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

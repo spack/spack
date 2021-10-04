@@ -11,10 +11,12 @@ class Ruby(AutotoolsPackage):
     simplicity and productivity."""
 
     homepage = "https://www.ruby-lang.org/"
-    url      = "http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
-    list_url = "http://cache.ruby-lang.org/pub/ruby/"
+    url      = "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
+    list_url = "https://cache.ruby-lang.org/pub/ruby/"
     list_depth = 1
 
+    version('3.0.2', sha256='5085dee0ad9f06996a8acec7ebea4a8735e6fac22f22e2d98c3f2bc3bef7e6f1')
+    version('3.0.1', sha256='369825db2199f6aeef16b408df6a04ebaddb664fb9af0ec8c686b0ce7ab77727')
     version('3.0.0', sha256='a13ed141a1c18eb967aac1e33f4d6ad5f21be1ac543c344e0d6feeee54af8e28')
     version('2.7.2', sha256='6e5706d0d4ee4e1e2f883db9d768586b4d06567debea353c796ec45e8321c3d4')
     version('2.7.1', sha256='d418483bdd0000576c1370571121a6eb24582116db0b7bb2005e90e250eae418')
@@ -33,16 +35,18 @@ class Ruby(AutotoolsPackage):
     depends_on('libx11', when='@:2.3')
     depends_on('tcl', when='@:2.3')
     depends_on('tk', when='@:2.3')
-    depends_on('openssl@:1.0', when='@:2.3+openssl')
-    depends_on('openssl', when='+openssl')
     depends_on('readline', when='+readline')
+
+    with when('+openssl'):
+        depends_on('openssl@:1')
+        depends_on('openssl@:1.0', when='@:2.3')
 
     # Known build issues when Avira antivirus software is running:
     # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379
     # TODO: add check for this and warn user
 
     # gcc-7-based build requires patches (cf. https://bugs.ruby-lang.org/issues/13150)
-    patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2.999 %gcc@7:')
+    patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2 %gcc@7:')
     patch('ruby_23_gcc7.patch', level=0, when='@2.3.0:2.3.4 %gcc@7:')
     patch('ruby_24_gcc7.patch', level=1, when='@2.4.0 %gcc@7:')
 
@@ -65,7 +69,7 @@ class Ruby(AutotoolsPackage):
         return match.group(1) if match else None
 
     def url_for_version(self, version):
-        url = "http://cache.ruby-lang.org/pub/ruby/{0}/ruby-{1}.tar.gz"
+        url = "https://cache.ruby-lang.org/pub/ruby/{0}/ruby-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
     def configure_args(self):
@@ -112,7 +116,7 @@ class Ruby(AutotoolsPackage):
         """ RubyGems updated their SSL certificates at some point, so
         new certificates must be installed after Ruby is installed
         in order to download gems; see
-        http://guides.rubygems.org/ssl-certificate-update/
+        https://guides.rubygems.org/ssl-certificate-update/
         for details.
         """
         if self.spec.satisfies("+openssl"):

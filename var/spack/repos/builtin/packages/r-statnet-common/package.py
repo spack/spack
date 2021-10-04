@@ -12,7 +12,7 @@ class RStatnetCommon(RPackage):
     Non-statistical utilities used by the software developed by the Statnet
     Project. They may also be of use to others."""
 
-    homepage = "http://www.statnet.org"
+    homepage = "https://www.statnet.org"
     url      = "https://cloud.r-project.org/src/contrib/statnet.common_3.3.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/statnet.common"
 

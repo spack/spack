@@ -3,12 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
-
-# to get system platform type
 import sys
+
+from spack import *
 
 
 def detect_scheduler():
@@ -24,9 +22,12 @@ class Scr(CMakePackage):
        Linux cluster to provide a fast, scalable checkpoint/restart
        capability for MPI codes"""
 
-    homepage = "http://computing.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
+    homepage = "https://computing.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
     url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
     git      = "https://github.com/llnl/scr.git"
+    tags     = ['radiuss']
+
+    tags = ['e4s']
 
     version('develop', branch='develop')
     version('legacy', branch='legacy', deprecated=True)
@@ -42,13 +43,13 @@ class Scr(CMakePackage):
     depends_on('mpi')
 
     # Use the latest iteration of the components when installing scr@develop
-    depends_on('axl@master',      when="@develop")
-    depends_on('er@master',       when="@develop")
-    depends_on('kvtree@master',   when="@develop")
-    depends_on('rankstr@master',  when="@develop")
-    depends_on('redset@master',   when="@develop")
-    depends_on('shuffile@master', when="@develop")
-    depends_on('spath@master',    when="@develop")
+    depends_on('axl@main',      when="@develop")
+    depends_on('er@main',       when="@develop")
+    depends_on('kvtree@main',   when="@develop")
+    depends_on('rankstr@main',  when="@develop")
+    depends_on('redset@main',   when="@develop")
+    depends_on('shuffile@main', when="@develop")
+    depends_on('spath@main',    when="@develop")
 
     # SCR legacy is anything 2.x.x or earlier
     # SCR components is anything 3.x.x or later
@@ -64,7 +65,7 @@ class Scr(CMakePackage):
     variant('dtcmp', default=True,
             description="Build with DTCMP. "
             "Necessary to enable user directory naming at runtime")
-    depends_on('dtcmp', when="@:2.999 +dtcmp")
+    depends_on('dtcmp', when="@:2 +dtcmp")
 
     # DTCMP is a required dependency with 3.x and later
     conflicts('~dtcmp', when="@3:", msg="<SCR> DTCMP required for versions >=3")
@@ -155,7 +156,7 @@ class Scr(CMakePackage):
         args.append('-DSCR_RESOURCE_MANAGER={0}'.format(
             spec.variants['resource_manager'].value.upper()))
 
-        if spec.satisfies('@:2.999'):
+        if spec.satisfies('@:2'):
             args.append('-DSCR_ASYNC_API={0}'.format(
                 spec.variants['async_api'].value.upper()))
 

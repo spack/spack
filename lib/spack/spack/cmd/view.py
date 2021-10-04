@@ -37,13 +37,12 @@ import llnl.util.tty as tty
 from llnl.util.link_tree import MergeConflictError
 from llnl.util.tty.color import colorize
 
-import spack.environment as ev
 import spack.cmd
-import spack.store
+import spack.environment as ev
 import spack.schema.projections
+import spack.store
 from spack.config import validate
-from spack.filesystem_view import YamlFilesystemView
-from spack.filesystem_view import view_symlink, view_hardlink, view_copy
+from spack.filesystem_view import YamlFilesystemView, view_func_parser
 from spack.util import spack_yaml as s_yaml
 
 description = "project packages to a compact naming scheme on the filesystem."
@@ -183,12 +182,10 @@ def view(parser, args):
         ordered_projections = {}
 
     # What method are we using for this view
-    if args.action in ("hardlink", "hard"):
-        link_fn = view_hardlink
-    elif args.action in ("copy", "relocate"):
-        link_fn = view_copy
+    if args.action in actions_link:
+        link_fn = view_func_parser(args.action)
     else:
-        link_fn = view_symlink
+        link_fn = view_func_parser('symlink')
 
     view = YamlFilesystemView(
         path, spack.store.layout,
@@ -205,7 +202,7 @@ def view(parser, args):
 
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
-        env = ev.get_env(args, 'view link')
+        env = ev.active_environment()
         specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
 
     elif args.action in actions_status:

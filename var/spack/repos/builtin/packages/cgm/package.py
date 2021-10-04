@@ -10,8 +10,8 @@ class Cgm(AutotoolsPackage):
     """The Common Geometry Module, Argonne (CGMA) is a code library
        which provides geometry functionality used for mesh generation and
        other applications."""
-    homepage = "http://sigma.mcs.anl.gov/cgm-library"
-    url = "http://ftp.mcs.anl.gov/pub/fathom/cgm-16.0.tar.gz"
+    homepage = "https://sigma.mcs.anl.gov/cgm-library"
+    url = "https://ftp.mcs.anl.gov/pub/fathom/cgm-16.0.tar.gz"
 
     version('16.0', sha256='b98afe70c64efa19decc5ff01602e8c7afc6b22ce646cad30dc92ecfdce6e23d')
     version('13.1.1', sha256='ffde54f0c86055b06cad911bbd4297b88c3fb124c873b03ebee626f807b8ab87')

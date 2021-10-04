@@ -695,6 +695,136 @@ structured the way you want:
     }
 
 
+^^^^^^^^^^^^^^
+``spack diff``
+^^^^^^^^^^^^^^
+
+It's often the case that you have two versions of a spec that you need to
+disambiguate. Let's say that we've installed two variants of zlib, one with
+and one without the optimize variant:
+
+.. code-block:: console
+
+   $ spack install zlib
+   $ spack install zlib -optimize
+
+When we do ``spack find`` we see the two versions.
+
+.. code-block:: console
+
+    $ spack find zlib
+    ==> 2 installed packages
+    -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
+    zlib@1.2.11  zlib@1.2.11
+
+
+Let's now say that we want to uninstall zlib. We run the command, and hit a problem
+real quickly since we have two!
+
+.. code-block:: console
+
+    $ spack uninstall zlib
+    ==> Error: zlib matches multiple packages:
+
+        -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
+        efzjziy zlib@1.2.11  sl7m27m zlib@1.2.11
+
+    ==> Error: You can either:
+        a) use a more specific spec, or
+        b) specify the spec by its hash (e.g. `spack uninstall /hash`), or
+        c) use `spack uninstall --all` to uninstall ALL matching specs.
+
+Oh no! We can see from the above that we have two different versions of zlib installed,
+and the only difference between the two is the hash. This is a good use case for
+``spack diff``, which can easily show us the "diff" or set difference
+between properties for two packages. Let's try it out.
+Since the only difference we see in the ``spack find`` view is the hash, let's use
+``spack diff`` to look for more detail. We will provide the two hashes:
+
+.. code-block:: console
+
+    $ spack diff /efzjziy /sl7m27m
+    ==> Warning: This interface is subject to change.
+
+    --- zlib@1.2.11efzjziyc3dmb5h5u5azsthgbgog5mj7g
+    +++ zlib@1.2.11sl7m27mzkbejtkrajigj3a3m37ygv4u2
+    @@ variant_value @@
+    -  zlib optimize False
+    +  zlib optimize True
+
+
+The output is colored, and written in the style of a git diff. This means that you
+can copy and paste it into a GitHub markdown as a code block with language "diff"
+and it will render nicely! Here is an example:
+
+.. code-block:: md
+
+    ```diff
+    --- zlib@1.2.11/efzjziyc3dmb5h5u5azsthgbgog5mj7g
+    +++ zlib@1.2.11/sl7m27mzkbejtkrajigj3a3m37ygv4u2
+    @@ variant_value @@
+    -  zlib optimize False
+    +  zlib optimize True
+    ```
+
+Awesome! Now let's read the diff. It tells us that our first zlib was built with ``~optimize``
+(``False``) and the second was built with ``+optimize`` (``True``). You can't see it in the docs
+here, but the output above is also colored based on the content being an addition (+) or
+subtraction (-).
+
+This is a small example, but you will be able to see differences for any attributes on the
+installation spec. Running ``spack diff A B`` means we'll see which spec attributes are on
+``B`` but not on ``A`` (green) and which are on ``A`` but not on ``B`` (red). Here is another
+example with an additional difference type, ``version``:
+
+.. code-block:: console
+
+    $ spack diff python@2.7.8 python@3.8.11
+    ==> Warning: This interface is subject to change.
+
+    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
+    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
+    @@ variant_value @@
+    -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
+    +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
+    @@ version @@
+    -  openssl 1.0.2u
+    +  openssl 1.1.1k
+    -  python 2.7.8
+    +  python 3.8.11
+
+Let's say that we were only interested in one kind of attribute above, ``version``.
+We can ask the command to only output this attribute.  To do this, you'd add
+the ``--attribute`` for attribute parameter, which defaults to all. Here is how you
+would filter to show just versions:
+
+.. code-block:: console
+
+    $ spack diff --attribute version python@2.7.8 python@3.8.11
+    ==> Warning: This interface is subject to change.
+
+    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
+    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
+    @@ version @@
+    -  openssl 1.0.2u
+    +  openssl 1.1.1k
+    -  python 2.7.8
+    +  python 3.8.11
+
+And you can add as many attributes as you'd like with multiple `--attribute` arguments
+(for lots of attributes, you can use ``-a`` for short). Finally, if you want to view the
+data as json (and possibly pipe into an output file) just add ``--json``:
+
+
+.. code-block:: console
+
+    $ spack diff --json python@2.7.8 python@3.8.11
+
+
+This data will be much longer because along with the differences for ``A`` vs. ``B`` and
+``B`` vs. ``A``, the JSON output also showsthe intersection.
+
+
 ------------------------
 Using installed packages
 ------------------------
@@ -1729,6 +1859,39 @@ This issue typically manifests with the error below:
    IOError: [Errno 38] Function not implemented
 
 A nicer error message is TBD in future versions of Spack.
+
+---------------
+Troubleshooting
+---------------
+
+The ``spack audit`` command:
+
+.. command-output:: spack audit -h
+
+can be used to detect a number of configuration issues. This command detects
+configuration settings which might not be strictly wrong but are not likely
+to be useful outside of special cases.
+
+It can also be used to detect dependency issues with packages - for example
+cases where a package constrains a dependency with a variant that doesn't
+exist (in this case Spack could report the problem ahead of time but
+automatically performing the check would slow down most runs of Spack).
+
+A detailed list of the checks currently implemented for each subcommand can be
+printed with:
+
+.. command-output:: spack -v audit list
+
+Depending on the use case, users might run the appropriate subcommands to obtain
+diagnostics. Issues, if found, are reported to stdout:
+
+.. code-block:: console
+
+   % spack audit packages lammps
+   PKG-DIRECTIVES: 1 issue found
+   1. lammps: wrong variant in "conflicts" directive
+       the variant 'adios' does not exist
+       in /home/spack/spack/var/spack/repos/builtin/packages/lammps/package.py
 
 
 ------------

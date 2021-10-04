@@ -11,7 +11,7 @@ class Libpipeline(AutotoolsPackage):
     in a flexible and convenient way."""
 
     homepage = "http://libpipeline.nongnu.org/"
-    url      = "http://git.savannah.nongnu.org/cgit/libpipeline.git/snapshot/libpipeline-1.4.2.tar.gz"
+    url      = "https://git.savannah.nongnu.org/cgit/libpipeline.git/snapshot/libpipeline-1.4.2.tar.gz"
 
     version('1.4.2', sha256='ac8b103b281ff63129c4fa6a8cc40bb5863e3a4266343d6e3bb5788de1ede488')
 

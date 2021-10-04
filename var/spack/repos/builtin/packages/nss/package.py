@@ -66,4 +66,4 @@ class Nss(MakefilePackage):
             f.write('Version: {0}\n'.format(self.spec.version))
             f.write('Requires: nspr\n')
             f.write('Cflags: -I${includedir}\n')
-            f.write('Libs: -L${libdir} -lssl3 -lsmime3 -lnss3\n')
+            f.write('Libs: -L${libdir} -lssl3 -lsmime3 -lnss3 -lnssutil3\n')

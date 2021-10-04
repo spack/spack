@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os.path
 import platform
+
+from spack import *
 
 
 # The viewer and trace viewer tar files and sha256sum depend on the
@@ -133,7 +134,7 @@ class Hpcviewer(Package):
                          when='@{0}'.format(key[0]))
 
     depends_on('java@11:', type=('build', 'run'), when='@2021.0:')
-    depends_on('java@8', type=('build', 'run'), when='@:2020.99')
+    depends_on('java@8', type=('build', 'run'), when='@:2020')
 
     conflicts('platform=darwin', msg='hpcviewer requires a manual install on MacOS, see homepage')
 

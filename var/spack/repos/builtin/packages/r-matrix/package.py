@@ -14,7 +14,7 @@ class RMatrix(RPackage):
     numeric entries.   Numerous methods for and operations on these matrices,
     using 'LAPACK' and 'SuiteSparse' libraries."""
 
-    homepage = "http://matrix.r-forge.r-project.org/"
+    homepage = "https://matrix.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/Matrix_1.2-14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Matrix"
 

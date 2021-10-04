@@ -16,27 +16,21 @@ Spack.  The simplest store could just contain prefixes named by DAG hash,
 but we use a fancier directory layout to make browsing the store and
 debugging easier.
 
-The directory layout is currently hard-coded to be a YAMLDirectoryLayout,
-so called because it stores build metadata within each prefix, in
-`spec.yaml` files. In future versions of Spack we may consider allowing
-install trees to define their own layouts with some per-tree
-configuration.
-
 """
 import contextlib
 import os
 import re
+
 import six
 
 import llnl.util.lang
 import llnl.util.tty as tty
 
-import spack.paths
 import spack.config
-import spack.util.path
 import spack.database
 import spack.directory_layout
-
+import spack.paths
+import spack.util.path
 
 #: default installation root, relative to the Spack install path
 default_install_tree_root = os.path.join(spack.paths.opt_path, 'spack')
@@ -162,7 +156,7 @@ class Store(object):
         self.hash_length = hash_length
         self.db = spack.database.Database(
             root, upstream_dbs=retrieve_upstream_dbs())
-        self.layout = spack.directory_layout.YamlDirectoryLayout(
+        self.layout = spack.directory_layout.DirectoryLayout(
             root, projections=projections, hash_length=hash_length)
 
     def reindex(self):
@@ -193,6 +187,7 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
+    import spack.bootstrap
     config_dict = spack.config.get('config')
     root, unpadded_root, projections = parse_install_tree(config_dict)
     hash_length = spack.config.get('config:install_hash_length')
@@ -201,7 +196,8 @@ def _store():
     # reserved by Spack to bootstrap its own dependencies, since this would
     # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
     # user installed software)
-    if spack.paths.user_bootstrap_store == root:
+    enable_bootstrap = spack.config.get('bootstrap:enable', True)
+    if enable_bootstrap and spack.bootstrap.store_path() == root:
         msg = ('please change the install tree root "{0}" in your '
                'configuration [path reserved for Spack internal use]')
         raise ValueError(msg.format(root))
@@ -299,9 +295,10 @@ def use_store(store_or_path):
     db, layout = store.db, store.layout
     root, unpadded_root = store.root, store.unpadded_root
 
-    yield temporary_store
-
-    # Restore the original store
-    store = original_store
-    db, layout = original_store.db, original_store.layout
-    root, unpadded_root = original_store.root, original_store.unpadded_root
+    try:
+        yield temporary_store
+    finally:
+        # Restore the original store
+        store = original_store
+        db, layout = original_store.db, original_store.layout
+        root, unpadded_root = original_store.root, original_store.unpadded_root

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
+
 import pytest
 
 import spack.environment as ev
@@ -338,7 +339,9 @@ class TestLmod(object):
         assert old_format == settings['lmod']
 
     def test_modules_relative_to_view(
-            self, tmpdir, modulefile_content, module_configuration, install_mockery):
+        self, tmpdir, modulefile_content, module_configuration, install_mockery,
+        mock_fetch
+    ):
         with ev.Environment(str(tmpdir), with_view=True) as e:
             module_configuration('with_view')
             install('cmake')

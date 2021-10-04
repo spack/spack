@@ -9,7 +9,7 @@ from spack import *
 class PyBrian2(PythonPackage):
     """A clock-driven simulator for spiking neural networks"""
 
-    homepage = "http://www.briansimulator.org"
+    homepage = "https://www.briansimulator.org"
     pypi = "Brian2/Brian2-2.2.2.1.tar.gz"
 
     version('2.4.2',   sha256='7a711af40145d8c62b0bc0861d352dc64f341c3a738174d87ef9d71e50e959f2')

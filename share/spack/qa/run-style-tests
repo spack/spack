@@ -15,10 +15,14 @@
 #     run-flake8-tests
 #
 . "$(dirname $0)/setup.sh"
-check_dependencies flake8 mypy
+
+BASE=""
+if [ -n "$GITHUB_BASE_REF" ]; then
+    BASE="--base ${GITHUB_BASE_REF}"
+fi
 
 # verify that the code style is correct
-spack style
+spack style --root-relative $BASE
 
 # verify that the license headers are present
 spack license verify

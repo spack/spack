@@ -8,16 +8,15 @@ import re
 import sys
 
 import llnl.util.tty as tty
-from llnl.util.lang import pretty_date
 from llnl.util.filesystem import working_dir
+from llnl.util.lang import pretty_date
 from llnl.util.tty.colify import colify_table
-import spack.util.spack_json as sjson
 
 import spack.paths
 import spack.repo
-from spack.util.executable import which
+import spack.util.spack_json as sjson
 from spack.cmd import spack_is_git_repo
-
+from spack.util.executable import which
 
 description = "show contributors to packages"
 section = "developer"

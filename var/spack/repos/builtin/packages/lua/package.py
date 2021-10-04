@@ -3,16 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from llnl.util.filesystem import join_path
-from spack import *
 import os
+
+from llnl.util.filesystem import join_path
+
+from spack import *
 
 
 class Lua(Package):
     """The Lua programming language interpreter and library."""
 
-    homepage = "http://www.lua.org"
-    url = "http://www.lua.org/ftp/lua-5.3.4.tar.gz"
+    homepage = "https://www.lua.org"
+    url = "https://www.lua.org/ftp/lua-5.3.4.tar.gz"
 
     version('5.3.5', sha256='0c2eed3f960446e1a3e4b9a1ca2f3ff893b6ce41942cf54d5dd59ab4b3b058ac')
     version('5.3.4', sha256='f681aa518233bc407e23acf0f5887c884f17436f000d453b2491a9f11a52400c')
@@ -33,6 +35,8 @@ class Lua(Package):
             description='Builds a shared version of the library')
 
     extendable = True
+
+    provides('lua-lang')
 
     depends_on('ncurses+termlib')
     depends_on('readline')

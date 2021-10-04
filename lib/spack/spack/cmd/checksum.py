@@ -15,7 +15,7 @@ import spack.repo
 import spack.stage
 import spack.util.crypto
 from spack.util.naming import valid_fully_qualified_module_name
-from spack.version import ver, Version
+from spack.version import Version, ver
 
 description = "checksum available versions of a package"
 section = "packaging"
@@ -62,6 +62,16 @@ def checksum(parser, args):
         url_dict = pkg.fetch_remote_versions()
         if not url_dict:
             tty.die("Could not find any versions for {0}".format(pkg.name))
+
+        # And ensure the specified version URLs take precedence, if available
+        try:
+            explicit_dict = {}
+            for v in pkg.versions:
+                if not v.isdevelop():
+                    explicit_dict[v] = pkg.url_for_version(v)
+            url_dict.update(explicit_dict)
+        except spack.package.NoURLError:
+            pass
 
     version_lines = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage,

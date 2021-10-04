@@ -8,15 +8,15 @@ non-hierarchical modules.
 """
 import os.path
 import string
-from typing import Dict, Any  # novm
+from typing import Any, Dict  # novm
 
 import llnl.util.tty as tty
 
 import spack.config
 import spack.projections as proj
 import spack.tengine as tengine
-from .common import BaseConfiguration, BaseFileLayout
-from .common import BaseContext, BaseModuleFileWriter
+
+from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 
 
 #: TCL specific part of the configuration
@@ -29,7 +29,7 @@ def configuration(module_set_name):
     return config
 
 
-#: Caches the configuration {spec_hash: configuration}
+# Caches the configuration {spec_hash: configuration}
 configuration_registry = {}  # type: Dict[str, Any]
 
 

@@ -9,7 +9,7 @@ from spack import *
 class PyBleach(PythonPackage):
     """An easy whitelist-based HTML-sanitizing tool."""
 
-    homepage = "http://github.com/mozilla/bleach"
+    homepage = "https://github.com/mozilla/bleach"
     pypi = "bleach/bleach-3.1.0.tar.gz"
 
     version('3.1.0', sha256='3fdf7f77adcf649c9911387df51254b813185e32b2c6619f690b593a617e19fa')

@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class FluxCore(AutotoolsPackage):
@@ -13,9 +14,16 @@ class FluxCore(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-core"
     url      = "https://github.com/flux-framework/flux-core/releases/download/v0.8.0/flux-core-0.8.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-core.git"
+    tags     = ['radiuss', 'e4s']
+
     maintainers = ['SteVwonder']
 
     version('master', branch='master')
+    version('0.28.0', sha256='9a784def7186b0036091bd8d6d8fe5bc3425ab2927e1465e1c9ad266631c285d')
+    version('0.27.0', sha256='abd46d38081ba6b501adb1c111374b39d6ae72ac1aec9fbbf31943a856541d3a')
+    version('0.26.0', sha256='58bfd4742c59364b13cd83214e8f70735952d01793800b149cae056fddfeeff1')
+    version('0.25.0', sha256='3c97e21eaec51e8aa0eaee6aa8eb23246650d102a6b6a5c9943cd69e3c8e1008')
+    version('0.24.0', sha256='fb7e0f9a44d84144a8eaf8f42a5d7e64a4a847861d0ddc2ad8fc4908b5a9190e')
     version('0.23.0', sha256='918b181be4e27c32f02d5036230212cd9235dc78dc2bde249c3651d6f75866c7')
     version('0.22.0', sha256='1dd0b737199b8a40f245e6a4e1b3b28770f0ecf2f483d284232080b8b252521f')
     version('0.21.0', sha256='cc1b7a46d7c1c1a3e99e8861bba0dde89a97351eabd6f1b264788bd76e64c329')
@@ -35,14 +43,14 @@ class FluxCore(AutotoolsPackage):
 
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")
-    depends_on("hwloc@1.11.1:1.99", when="@:0.17.0")
+    depends_on("hwloc@1.11.1:1", when="@:0.17.0")
     depends_on("hwloc@1.11.1:", when="@0.17.0:")
     depends_on("hwloc +cuda", when='+cuda')
     # Provide version hints for lua so that the concretizer succeeds when no
     # explicit flux-core version is given. See issue #10000 for details
     depends_on("lua", type=('build', 'run', 'link'))
-    depends_on("lua@5.1:5.2.99", when="@:0.17.0")
-    depends_on("lua@5.1:5.3.99", when="@0.18.0:,master")
+    depends_on("lua@5.1:5.2", when="@:0.17.0")
+    depends_on("lua@5.1:5.3", when="@0.18.0:,master")
     depends_on("lua-luaposix")
     # `link` dependency on python due to Flux's `pymod` module
     depends_on("python@3.6:", type=('build', 'run', 'link'))
@@ -51,6 +59,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("py-pyyaml")
     depends_on("py-jsonschema")
     depends_on("jansson")
+    depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")
     depends_on("yaml-cpp")
     depends_on("lz4")
@@ -171,7 +180,7 @@ class FluxCore(AutotoolsPackage):
         if name == 'cflags':
             # https://github.com/flux-framework/flux-core/issues/3482
             if self.spec.satisfies('%gcc@10:') and \
-               self.spec.satisfies('@0.23.0:0.23.99'):
+               self.spec.satisfies('@0.23.0:0.23'):
                 if flags is None:
                     flags = []
                 flags.append('-Wno-error=stringop-truncation')

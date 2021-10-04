@@ -3,11 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 
+from spack import *
 
-class PyPybind11(CMakePackage):
+
+class PyPybind11(CMakePackage, PythonPackage):
     """pybind11 -- Seamless operability between C++11 and Python.
 
     pybind11 is a lightweight header-only library that exposes C++ types in
@@ -24,6 +25,8 @@ class PyPybind11(CMakePackage):
     maintainers = ['ax3l']
 
     version('master', branch='master')
+    version('2.7.1', sha256='616d1c42e4cf14fa27b2a4ff759d7d7b33006fdc5ad8fd603bb2c22622f27020')
+    version('2.7.0', sha256='6cd73b3d0bf3daf415b5f9b87ca8817cc2e2b64c275d65f9500250f9fee1677e')
     version('2.6.2', sha256='8ff2fff22df038f5cd02cea8af56622bc67f5b64534f1b83b9f133b8366acff2')
     version('2.6.1', sha256='cdbe326d357f18b83d10322ba202d69f11b2f49e2d87ade0dc2be0c5c34f8e2a')
     version('2.5.0', sha256='97504db65640570f32d3fdf701c25a340c8643037c3b69aec469c10c93dc8504', preferred=True)
@@ -40,12 +43,12 @@ class PyPybind11(CMakePackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-pytest', type='test')
 
-    extends('python')
-
     # compiler support
     conflicts('%gcc@:4.7')
     conflicts('%clang@:3.2')
     conflicts('%intel@:16')
+
+    build_directory = '.'
 
     def cmake_args(self):
         args = []
@@ -60,7 +63,7 @@ class PyPybind11(CMakePackage):
         env.set('PYBIND11_USE_CMAKE', 1)
 
     # https://github.com/pybind/pybind11/pull/1995
-    @when('@:2.4.99')
+    @when('@:2.4')
     def patch(self):
         """ see https://github.com/spack/spack/issues/13559 """
         filter_file('import sys',
@@ -69,9 +72,8 @@ class PyPybind11(CMakePackage):
                     string=True)
 
     def install(self, spec, prefix):
-        super(PyPybind11, self).install(spec, prefix)
-        setup_py('install', '--single-version-externally-managed', '--root=/',
-                 '--prefix={0}'.format(prefix))
+        CMakePackage.install(self, spec, prefix)
+        PythonPackage.install(self, spec, prefix)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

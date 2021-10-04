@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import platform
+
+from spack import *
 
 
 class Hpcg(AutotoolsPackage):
@@ -14,7 +15,7 @@ class Hpcg(AutotoolsPackage):
     (PCG) iterations using double precision (64 bit) floating point values."""
 
     homepage = "https://www.hpcg-benchmark.org"
-    url = "http://www.hpcg-benchmark.org/downloads/hpcg-3.1.tar.gz"
+    url = "https://www.hpcg-benchmark.org/downloads/hpcg-3.1.tar.gz"
     git = "https://github.com/hpcg-benchmark/hpcg.git"
 
     version('develop', branch='master')

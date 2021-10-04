@@ -12,7 +12,7 @@ class Libnfnetlink(AutotoolsPackage):
     netfilter subsystem specific libraries such as libnfnetlink_conntrack,
     libnfnetlink_log and libnfnetlink_queue."""
 
-    homepage = "http://netfilter.org"
+    homepage = "https://netfilter.org"
     url      = "https://github.com/Distrotech/libnfnetlink/archive/libnfnetlink-1.0.1.tar.gz"
 
     version('1.0.1',  sha256='11dd8a1045b03d47c878535eeb6b9eb34db295d21903a4dfd2c2cc63f45e675b')

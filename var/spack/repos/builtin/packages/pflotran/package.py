@@ -12,7 +12,7 @@ class Pflotran(AutotoolsPackage):
        subsurface flow and reactive transport code.
     """
 
-    homepage = "http://www.pflotran.org"
+    homepage = "https://www.pflotran.org"
     git      = "https://bitbucket.org/pflotran/pflotran.git"
 
     maintainers = ['ghammond86', 'balay']
@@ -22,7 +22,6 @@ class Pflotran(AutotoolsPackage):
     version('xsdk-0.5.0', commit='98a959c591b72f73373febf5f9735d2c523b4c20')
     version('xsdk-0.4.0', commit='c851cbc94fc56a32cfdb0678f3c24b9936a5584e')
     version('xsdk-0.3.0', branch='release/xsdk-0.3.0')
-    version('xsdk-0.2.0', commit='4da763c6136df57caff43f98c926433958cfdea6')
 
     depends_on('mpi')
     depends_on('hdf5@1.8.12:+mpi+fortran+hl')
@@ -30,7 +29,6 @@ class Pflotran(AutotoolsPackage):
     depends_on('petsc@3.14:+hdf5+metis', when='@xsdk-0.6.0')
     depends_on('petsc@3.12:+hdf5+metis', when='@xsdk-0.5.0')
     depends_on('petsc@3.10:+hdf5+metis', when='@xsdk-0.4.0')
-    depends_on('petsc@xsdk-0.2.0+hdf5+metis', when='@xsdk-0.2.0')
     depends_on('petsc@3.8.0:+hdf5+metis', when='@xsdk-0.3.0')
 
     @property

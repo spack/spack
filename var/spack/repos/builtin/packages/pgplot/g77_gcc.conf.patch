@@ -1,0 +1,55 @@
+diff -ruN a/sys_linux/g77_gcc.conf b/sys_linux/g77_gcc.conf
+--- a/sys_linux/g77_gcc.conf	1969-12-31 19:00:00.000000000 -0500
++++ b/sys_linux/g77_gcc.conf	2021-04-22 16:48:45.000000000 -0400
+@@ -34,13 +34,13 @@
+ # Mandatory.
+ # The FORTRAN compiler to use.
+  
+-   FCOMPL="g77"
++   FCOMPL="@FCOMPL@"
+ 
+ # Mandatory.
+ # The FORTRAN compiler flags to use when compiling the pgplot library.
+ # (NB. makemake prepends -c to $FFLAGC where needed)
+  
+-   FFLAGC="-u -Wall -fPIC -O"
++   FFLAGC="@FFLAGC@"
+ 
+ # Mandatory.
+ # The FORTRAN compiler flags to use when compiling fortran demo programs.
+@@ -52,12 +52,12 @@
+ # Mandatory.
+ # The C compiler to use.
+  
+-   CCOMPL="gcc"
++   CCOMPL="@CCOMPL@"
+ 
+ # Mandatory.
+ # The C compiler flags to use when compiling the pgplot library.
+  
+-   CFLAGC="-Wall -fPIC -DPG_PPU -O"
++   CFLAGC="@CFLAGC@"
+ 
+ # Mandatory.
+ # The C compiler flags to use when compiling C demo programs.
+@@ -73,9 +73,9 @@
+ # Mandatory.
+ # The library-specification flags to use when linking normal pgplot
+ # demo programs.
+  
+-   LIBS="-L/usr/X11R6/lib -lX11"
++   LIBS="@LIBS@"
+ 
+ # Optional: Needed by XMDRIV (/xmotif).
+ # The library-specification flags to use when linking motif
+ # demo programs.
+@@ -108,8 +108,8 @@
+ # Optional: Needed if SHARED_LIB is set.
+ # How to create a shared library from a trailing list of object files.
+  
+-   SHARED_LD="gcc -shared  -o $SHARED_LIB"
++   SHARED_LD="@SHARED_LD@"
+ 
+ # Optional:
+ # On systems such as Solaris 2.x, that allow specification of the
+ # libraries that a shared library needs to be linked with when a

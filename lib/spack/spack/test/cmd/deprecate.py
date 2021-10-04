@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pytest
-from spack.main import SpackCommand
+
 import spack.store
 from spack.database import InstallStatuses
+from spack.main import SpackCommand
 
 install = SpackCommand('install')
 uninstall = SpackCommand('uninstall')

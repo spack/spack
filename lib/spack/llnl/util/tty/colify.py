@@ -10,10 +10,11 @@ from __future__ import division, unicode_literals
 
 import os
 import sys
+
 from six import StringIO, text_type
 
 from llnl.util.tty import terminal_size
-from llnl.util.tty.color import clen, cextra
+from llnl.util.tty.color import cextra, clen
 
 
 class ColumnConfig:
@@ -108,19 +109,17 @@ def colify(elts, **options):
     using ``str()``.
 
     Keyword Arguments:
-        output (stream): A file object to write to. Default is ``sys.stdout``
-        indent (int):    Optionally indent all columns by some number of spaces
-        padding (int):   Spaces between columns. Default is 2
-        width (int):     Width of the output. Default is 80 if tty not detected
-        cols (int):      Force number of columns. Default is to size to
-                         terminal, or single-column if no tty
-        tty (bool):      Whether to attempt to write to a tty. Default is to
-                         autodetect a tty. Set to False to force single-column
-                         output
-        method (str):    Method to use to fit columns. Options are variable or
-                         uniform. Variable-width columns are tighter, uniform
-                         columns are all the same width and fit less data on
-                         the screen
+        output (typing.IO): A file object to write to. Default is ``sys.stdout``
+        indent (int): Optionally indent all columns by some number of spaces
+        padding (int): Spaces between columns. Default is 2
+        width (int): Width of the output. Default is 80 if tty not detected
+        cols (int): Force number of columns. Default is to size to terminal, or
+            single-column if no tty
+        tty (bool): Whether to attempt to write to a tty. Default is to autodetect a
+            tty. Set to False to force single-column output
+        method (str): Method to use to fit columns. Options are variable or uniform.
+            Variable-width columns are tighter, uniform columns are all the same width
+            and fit less data on the screen
     """
     # Get keyword arguments or set defaults
     cols         = options.pop("cols", 0)

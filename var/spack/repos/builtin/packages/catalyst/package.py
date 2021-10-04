@@ -3,11 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import subprocess
 import sys
+
 import llnl.util.tty as tty
+
+from spack import *
 
 
 class Catalyst(CMakePackage):
@@ -16,9 +18,9 @@ class Catalyst(CMakePackage):
     simulation and analysis and/or visualization tasks."""
 
     homepage = 'http://www.paraview.org'
-    url      = "http://www.paraview.org/files/v5.5/ParaView-v5.5.2.tar.gz"
-    _urlfmt_gz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
-    _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz'
+    url      = "https://www.paraview.org/files/v5.5/ParaView-v5.5.2.tar.gz"
+    _urlfmt_gz = 'https://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
+    _urlfmt_xz = 'https://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz'
 
     maintainers = ['chuckatkins', 'danlipsa']
 

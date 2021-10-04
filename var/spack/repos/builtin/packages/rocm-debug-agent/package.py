@@ -12,10 +12,11 @@ class RocmDebugAgent(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent"
     git      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent.git"
-    url      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-4.3.1.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-
+    version('4.3.1', sha256='7bee6be6c29883f03f47a8944c0d50b7cf43a6b5eeed734602f521c3c40a18d0')
+    version('4.3.0', sha256='0cdee5792b808e03b839070da0d1b08dc4078a7d1fc295f0c99c6a5ae7d636a6')
     version('4.2.0', sha256='ce02a5b752291882daa0a2befa23944e59087ce9fe65a91061476c3c399e4a0c')
     version('4.1.0', sha256='b1ae874887e5ee037070f1dd46b145ad02ec9fd8a724c6b6ae194b534f01acdb')
     version('4.0.0', sha256='a9e64834d56a9221c242e71aa110c2cef0087aa8f86f50428dd618e5e623cc3c')
@@ -37,19 +38,21 @@ class RocmDebugAgent(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    depends_on("elfutils", type='link')
+    depends_on('elfutils@:0.168', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('hsakmt-roct@' + ver, type='link', when='@' + ver)
+                '4.2.0', '4.3.0', '4.3.1']:
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
 
-    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
-        depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
+    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
+                '4.3.0', '4.3.1']:
+        depends_on('rocm-dbgapi@' + ver, when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
 
     # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4
     patch('0001-Drop-overly-strict-Werror-flag.patch', when='@3.7.0:')
+    patch('0002-add-hip-architecture.patch', when='@3.9.0:')
 
     @property
     def root_cmakelists_dir(self):

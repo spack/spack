@@ -3,15 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os.path
+
+from spack import *
 
 
 class Varscan(Package):
     """Variant calling and somatic mutation/CNV detection for next-generation
        sequencing data"""
 
-    homepage = "http://dkoboldt.github.io/varscan/"
+    homepage = "https://dkoboldt.github.io/varscan/"
     url      = "https://github.com/dkoboldt/varscan/releases/download/2.4.2/VarScan.v2.4.2.jar"
 
     version('2.4.2', sha256='34ff6462f91fb6ed3f11e867ab4a179efae5dd8214b97fa261fc616f23d4d031', expand=False)

@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Maker(Package):
@@ -28,9 +29,9 @@ class Maker(Package):
     download link. Spack will search your current directory for the download
     file. Alternatively, add this file to a mirror so that Spack can find it.
     For instructions on how to set up a mirror, see
-    http://spack.readthedocs.io/en/latest/mirrors.html"""
+    https://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://www.yandell-lab.org/software/maker.html"
+    homepage = "https://www.yandell-lab.org/software/maker.html"
     manual_download = True
 
     version('3.01.03', sha256='d3979af9710d61754a3b53f6682d0e2052c6c3f36be6f2df2286d2587406f07d')

@@ -11,11 +11,12 @@ class RocmClangOcl(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/clang-ocl"
     git      = "https://github.com/RadeonOpenCompute/clang-ocl.git"
-    url      = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     version('master', branch='master')
-
+    version('4.3.1', sha256='12461d4fd4f3f40710d2c041cfee37da83ccda9d2761d7708335349e7ec5ad87')
+    version('4.3.0', sha256='bc5650f2f105b10a1e22d8e5cc9464b0f960252a08e5e1fdee222af1fc5c022c')
     version('4.2.0', sha256='702796f4e31f6119173d915db9bee13c060a75d9eb5b1f8e3d20779d6702dfdc')
     version('4.1.0', sha256='c6e65da5541df9ee940caeeffe1b87c92547edc1770538fd2010c9c998a593b5')
     version('4.0.0', sha256='c8f9091396ee0096f6d7c1cd13d80532c424e838bec1e4cebf903ebaf649e82e')
@@ -30,10 +31,9 @@ class RocmClangOcl(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', 'master']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
 
-    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', 'master']:
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
+        # support both builtin and standalone device libs
+        depends_on('rocm-device-libs@' + ver, when='@{0} ^llvm-amdgpu ~rocm-device-libs'.format(ver))

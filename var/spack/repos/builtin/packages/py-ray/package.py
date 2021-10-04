@@ -30,7 +30,7 @@ class PyRay(PythonPackage):
     depends_on('py-gpustat', type=('build', 'run'))
     depends_on('py-grpcio@1.28.1:', type=('build', 'run'))
     depends_on('py-jsonschema', type=('build', 'run'))
-    depends_on('py-msgpack@1.0:1.999', type=('build', 'run'))
+    depends_on('py-msgpack@1.0:1', type=('build', 'run'))
     depends_on('py-numpy@1.16:', type=('build', 'run'))
     depends_on('py-protobuf@3.8.0:', type=('build', 'run'))
     depends_on('py-py-spy@0.2.0:', type=('build', 'run'))

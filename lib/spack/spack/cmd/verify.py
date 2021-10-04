@@ -3,13 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from __future__ import print_function
+
 import argparse
 
 import llnl.util.tty as tty
 
+import spack.environment as ev
 import spack.store
 import spack.verify
-import spack.environment as ev
 
 description = "Check that all spack packages are on disk as installed"
 section = "admin"
@@ -73,7 +74,7 @@ def verify(parser, args):
 
     elif args.specs_or_files:
         # construct disambiguated spec list
-        env = ev.get_env(args, 'verify')
+        env = ev.active_environment()
         specs = list(map(lambda x: spack.cmd.disambiguate_spec(x, env,
                                                                local=local),
                          spec_args))

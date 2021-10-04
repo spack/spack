@@ -4,22 +4,31 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import division, print_function
+
 from collections import defaultdict
 
 import six.moves.urllib.parse as urllib_parse
 
+import llnl.util.tty.color as color
+from llnl.util import tty
+
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.util.crypto as crypto
-
-from llnl.util import tty
-from spack.url import parse_version_offset, parse_name_offset
-from spack.url import parse_name, parse_version, color_url
-from spack.url import substitute_version, substitution_offsets
-from spack.url import UndetectableNameError, UndetectableVersionError
-from spack.url import UrlParseError
-from spack.util.web import find_versions_of_archive
+from spack.url import (
+    UndetectableNameError,
+    UndetectableVersionError,
+    UrlParseError,
+    color_url,
+    parse_name,
+    parse_name_offset,
+    parse_version,
+    parse_version_offset,
+    substitute_version,
+    substitution_offsets,
+)
 from spack.util.naming import simplify_name
+from spack.util.web import find_versions_of_archive
 
 description = "debugging tool for url parsing"
 section = "developer"
@@ -72,9 +81,13 @@ def setup_parser(subparser):
         help='print a summary of how well we are parsing package urls')
 
     # Stats
-    sp.add_parser(
+    stats_parser = sp.add_parser(
         'stats',
         help='print statistics on versions and checksums for all packages')
+    stats_parser.add_argument(
+        "--show-issues", action="store_true",
+        help="show packages with issues (md5 hashes, http urls)"
+    )
 
 
 def url(parser, args):
@@ -254,6 +267,9 @@ def url_summary(args):
 
 
 def url_stats(args):
+    # dictionary of issue type -> package -> descriptions
+    issues = defaultdict(lambda: defaultdict(lambda: []))
+
     class UrlStats(object):
         def __init__(self):
             self.total = 0
@@ -262,7 +278,7 @@ def url_stats(args):
             self.url_type = defaultdict(lambda: 0)
             self.git_type = defaultdict(lambda: 0)
 
-        def add(self, fetcher):
+        def add(self, pkg_name, fetcher):
             self.total += 1
 
             url_type = fetcher.url_attr
@@ -276,9 +292,17 @@ def url_stats(args):
                     algo = 'no checksum'
                 self.checksums[algo] += 1
 
+                if algo == "md5":
+                    md5_hashes = issues["md5 hashes"]
+                    md5_hashes[pkg_name].append(fetcher.url)
+
                 # parse out the URL scheme (https/http/ftp/etc.)
                 urlinfo = urllib_parse.urlparse(fetcher.url)
                 self.schemes[urlinfo.scheme] += 1
+
+                if urlinfo.scheme == "http":
+                    http_urls = issues["http urls"]
+                    http_urls[pkg_name].append(fetcher.url)
 
             elif url_type == 'git':
                 if getattr(fetcher, 'commit', None):
@@ -297,13 +321,16 @@ def url_stats(args):
     for pkg in spack.repo.path.all_packages():
         npkgs += 1
 
-        for v, args in pkg.versions.items():
-            fetcher = fs.for_package_version(pkg, v)
-            version_stats.add(fetcher)
+        for v in pkg.versions:
+            try:
+                fetcher = fs.for_package_version(pkg, v)
+            except (fs.InvalidArgsError, fs.FetcherConflict):
+                continue
+            version_stats.add(pkg.name, fetcher)
 
         for _, resources in pkg.resources.items():
             for resource in resources:
-                resource_stats.add(resource.fetcher)
+                resource_stats.add(pkg.name, resource.fetcher)
 
     # print a nice summary table
     tty.msg("URL stats for %d packages:" % npkgs)
@@ -352,6 +379,21 @@ def url_stats(args):
     for git_type in sorted(git_types):
         print_stat(4, git_type, "git_type")
     print_line()
+
+    if args.show_issues:
+        total_issues = sum(
+            len(issues)
+            for _, pkg_issues in issues.items()
+            for _, issues in pkg_issues.items()
+        )
+        print()
+        tty.msg("Found %d issues." % total_issues)
+        for issue_type, pkgs in issues.items():
+            tty.msg("Package URLs with %s" % issue_type)
+            for pkg, pkg_issues in pkgs.items():
+                color.cprint("    @*C{%s}" % pkg)
+                for issue in pkg_issues:
+                    print("      %s" % issue)
 
 
 def print_name_and_version(url):
@@ -494,7 +536,7 @@ def remove_separators(version):
     Unfortunately, this also means that 1.23 and 12.3 are equal.
 
     Args:
-        version (str or Version): A version
+        version (str or spack.version.Version): A version
 
     Returns:
         str: The version with all separator characters removed

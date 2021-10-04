@@ -16,7 +16,7 @@ class Kvtree(CMakePackage):
 
     tags = ['ecp']
 
-    version('master', branch='master')
+    version('main',  branch='main')
     version('1.1.1', sha256='4776bd55a559b7f9bb594454ae6b14ebff0087c93c3d59ac7d1ab27df4aa4d74')
     version('1.1.0', sha256='3e6c003e7b8094d7c2d1529a973d68a68f953ffa63dcde5f4c7c7e81ddf06564')
     version('1.0.3', sha256='c742cdb1241ef4cb13767019204d5350a3c4383384bed9fb66680b93ff44b0d4')

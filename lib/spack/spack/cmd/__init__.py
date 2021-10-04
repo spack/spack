@@ -5,21 +5,23 @@
 
 from __future__ import print_function
 
+import argparse
 import os
 import re
 import sys
-import argparse
-import ruamel.yaml as yaml
 
+import ruamel.yaml as yaml
 import six
+from ruamel.yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
 from llnl.util.lang import attr_setdefault, index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import join_path
 
 import spack.config
+import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.paths
@@ -27,8 +29,6 @@ import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
 import spack.util.string
-from ruamel.yaml.error import MarkedYAMLError
-
 
 # cmd has a submodule called "list" so preserve the python list module
 python_list = list
@@ -187,27 +187,11 @@ def matching_spec_from_env(spec):
     If no matching spec is found in the environment (or if no environment is
     active), this will return the given spec but concretized.
     """
-    env = spack.environment.get_env({}, cmd_name)
+    env = ev.active_environment()
     if env:
         return env.matching_spec(spec) or spec.concretized()
     else:
         return spec.concretized()
-
-
-def elide_list(line_list, max_num=10):
-    """Takes a long list and limits it to a smaller number of elements,
-       replacing intervening elements with '...'.  For example::
-
-           elide_list([1,2,3,4,5,6], 4)
-
-       gives::
-
-           [1, 2, 3, '...', 6]
-    """
-    if len(line_list) > max_num:
-        return line_list[:max_num - 1] + ['...'] + line_list[-1:]
-    else:
-        return line_list
 
 
 def disambiguate_spec(spec, env, local=False, installed=True, first=False):
@@ -217,10 +201,10 @@ def disambiguate_spec(spec, env, local=False, installed=True, first=False):
         spec (spack.spec.Spec): a spec to disambiguate
         env (spack.environment.Environment): a spack environment,
             if one is active, or None if no environment is active
-        local (boolean, default False): do not search chained spack instances
-        installed (boolean or any, or spack.database.InstallStatus or iterable
-            of spack.database.InstallStatus): install status argument passed to
-            database query. See ``spack.database.Database._query`` for details.
+        local (bool): do not search chained spack instances
+        installed (bool or spack.database.InstallStatus or typing.Iterable):
+            install status argument passed to database query.
+            See ``spack.database.Database._query`` for details.
     """
     hashes = env.all_hashes() if env else None
     return disambiguate_spec_from_hashes(spec, hashes, local, installed, first)
@@ -232,11 +216,11 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False,
 
     Arguments:
         spec (spack.spec.Spec): a spec to disambiguate
-        hashes (iterable): a set of hashes of specs among which to disambiguate
-        local (boolean, default False): do not search chained spack instances
-        installed (boolean or any, or spack.database.InstallStatus or iterable
-            of spack.database.InstallStatus): install status argument passed to
-            database query. See ``spack.database.Database._query`` for details.
+        hashes (typing.Iterable): a set of hashes of specs among which to disambiguate
+        local (bool): do not search chained spack instances
+        installed (bool or spack.database.InstallStatus or typing.Iterable):
+            install status argument passed to database query.
+            See ``spack.database.Database._query`` for details.
     """
     if local:
         matching_specs = spack.store.db.query_local(spec, hashes=hashes,
@@ -278,14 +262,14 @@ def display_specs_as_json(specs, deps=False):
         if spec.dag_hash() in seen:
             continue
         seen.add(spec.dag_hash())
-        records.append(spec.to_record_dict())
+        records.append(spec.to_node_dict())
 
         if deps:
             for dep in spec.traverse():
                 if dep.dag_hash() in seen:
                     continue
                 seen.add(dep.dag_hash())
-                records.append(dep.to_record_dict())
+                records.append(dep.to_node_dict())
 
     sjson.dump(records, sys.stdout)
 
@@ -334,9 +318,8 @@ def display_specs(specs, args=None, **kwargs):
     namespace.
 
     Args:
-        specs (list of spack.spec.Spec): the specs to display
-        args (optional argparse.Namespace): namespace containing
-            formatting arguments
+        specs (list): the specs to display
+        args (argparse.Namespace or None): namespace containing formatting arguments
 
     Keyword Args:
         paths (bool): Show paths with each displayed spec
@@ -349,9 +332,9 @@ def display_specs(specs, args=None, **kwargs):
         indent (int): indent each line this much
         groups (bool): display specs grouped by arch/compiler (default True)
         decorators (dict): dictionary mappng specs to decorators
-        header_callback (function): called at start of arch/compiler groups
+        header_callback (typing.Callable): called at start of arch/compiler groups
         all_headers (bool): show headers even when arch/compiler aren't defined
-        output (stream): A file object to write to. Default is ``sys.stdout``
+        output (typing.IO): A file object to write to. Default is ``sys.stdout``
 
     """
     def get_arg(name, default=None):
@@ -503,3 +486,71 @@ def extant_file(f):
     if not os.path.isfile(f):
         raise argparse.ArgumentTypeError('%s does not exist' % f)
     return f
+
+
+def require_active_env(cmd_name):
+    """Used by commands to get the active environment
+
+    If an environment is not found, print an error message that says the calling
+    command *needs* an active environment.
+
+    Arguments:
+        cmd_name (str): name of calling command
+
+    Returns:
+        (spack.environment.Environment): the active environment
+    """
+    env = ev.active_environment()
+
+    if env:
+        return env
+    else:
+        tty.die(
+            '`spack %s` requires an environment' % cmd_name,
+            'activate an environment first:',
+            '    spack env activate ENV',
+            'or use:',
+            '    spack -e ENV %s ...' % cmd_name)
+
+
+def find_environment(args):
+    """Find active environment from args or environment variable.
+
+    Check for an environment in this order:
+        1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
+        2. via a path in the spack.environment.spack_env_var environment variable.
+
+    If an environment is found, read it in.  If not, return None.
+
+    Arguments:
+        args (argparse.Namespace): argparse namespace with command arguments
+
+    Returns:
+        (spack.environment.Environment): a found environment, or ``None``
+    """
+
+    # treat env as a name
+    env = args.env
+    if env:
+        if ev.exists(env):
+            return ev.read(env)
+
+    else:
+        # if env was specified, see if it is a directory otherwise, look
+        # at env_dir (env and env_dir are mutually exclusive)
+        env = args.env_dir
+
+        # if no argument, look for the environment variable
+        if not env:
+            env = os.environ.get(ev.spack_env_var)
+
+            # nothing was set; there's no active environment
+            if not env:
+                return None
+
+    # if we get here, env isn't the name of a spack environment; it has
+    # to be a path to an environment, or there is something wrong.
+    if ev.is_env_dir(env):
+        return ev.Environment(env)
+
+    raise ev.SpackEnvironmentError('no environment in %s' % env)

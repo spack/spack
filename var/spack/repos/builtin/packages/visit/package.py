@@ -58,6 +58,8 @@ class Visit(CMakePackage):
     git      = "https://github.com/visit-dav/visit.git"
     url = "https://github.com/visit-dav/visit/releases/download/v3.1.1/visit3.1.1.tar.gz"
 
+    tags = ['radiuss']
+
     maintainers = ['cyrush']
 
     extendable = True
@@ -175,14 +177,14 @@ class Visit(CMakePackage):
 
     depends_on('cmake@3.0:', type='build')
     # https://github.com/visit-dav/visit/issues/3498
-    depends_on('vtk@8.1.0:8.1.999+opengl2~python', when='~python @3.0:3.999,develop')
-    depends_on('vtk@8.1.0:8.1.999+opengl2+python', when='+python @3.0:3.999,develop')
+    depends_on('vtk@8.1.0:8.1+opengl2~python', when='~python @3.0:3,develop')
+    depends_on('vtk@8.1.0:8.1+opengl2+python', when='+python @3.0:3,develop')
     depends_on('glu', when='platform=linux')
-    depends_on('vtk@6.1.0~opengl2', when='@:2.999')
+    depends_on('vtk@6.1.0~opengl2', when='@:2')
     depends_on('vtk+python', when='+python @3.0:,develop')
     depends_on('vtk~mpi', when='~mpi')
     depends_on('vtk+qt', when='+gui')
-    depends_on('qt+gui@4.8.6:4.999', when='+gui @:2.999')
+    depends_on('qt+gui@4.8.6:4', when='+gui @:2')
     depends_on('qt+gui@5.10:', when='+gui @3.0:,develop')
     depends_on('qwt', when='+gui')
     depends_on('python@2.6:2.8', when='+python')
@@ -196,13 +198,13 @@ class Visit(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('adios2', when='+adios2')
 
-    conflicts('+adios2', when='@:2.999')
-    conflicts('+hdf5', when='~gui @:2.999')
-    conflicts('+silo', when='~gui @:2.999')
+    conflicts('+adios2', when='@:2')
+    conflicts('+hdf5', when='~gui @:2')
+    conflicts('+silo', when='~gui @:2')
 
     root_cmakelists_dir = 'src'
 
-    @when('@3.0.0:3.999,develop')
+    @when('@3.0.0:3,develop')
     def patch(self):
         # Some of VTK's targets don't create explicit libraries, so there is no
         # 'vtktiff'. Instead, replace with the library variable defined from

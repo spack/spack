@@ -26,6 +26,7 @@ class Genfit(CMakePackage):
     depends_on('root')
     depends_on('root@:6.16.00', when='@b496504a')
     depends_on('eigen')
+    depends_on('googletest')
 
     def cmake_args(self):
         args = []

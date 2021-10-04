@@ -4,16 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+
 import pytest
 
-import spack.repo
+import spack.directives
 import spack.fetch_strategy
+import spack.repo
 from spack.paths import mock_packages_path
-from spack.util.naming import mod_to_class
 from spack.spec import Spec
+from spack.util.naming import mod_to_class
 from spack.util.package_hash import package_content
 from spack.version import VersionChecksumError
-import spack.directives
 
 
 def _generate_content_strip_name(spec):
@@ -109,7 +110,6 @@ class TestPackage(object):
 
     def test_import_package_as(self):
         import spack.pkg.builtin.mock.mpich as mp       # noqa
-
         import spack.pkg.builtin.mock                   # noqa
         import spack.pkg.builtin.mock as m              # noqa
         from spack.pkg.builtin import mock              # noqa
@@ -161,11 +161,9 @@ class TestPackage(object):
         import spack.pkg                                # noqa
         import spack.pkg as p                           # noqa
         from spack import pkg                           # noqa
-
         import spack.pkg.builtin                        # noqa
         import spack.pkg.builtin as b                   # noqa
         from spack.pkg import builtin                   # noqa
-
         import spack.pkg.builtin.mock                   # noqa
         import spack.pkg.builtin.mock as m              # noqa
         from spack.pkg.builtin import mock              # noqa
@@ -283,25 +281,28 @@ def test_git_url_top_level_url_versions(mock_packages, config):
 
     pkg = spack.repo.get('git-url-top-level')
 
+    # leading 62 zeros of sha256 hash
+    leading_zeros = '0' * 62
+
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.0')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://example.com/some/tarball-2.0.tar.gz'
-    assert fetcher.digest == 'abc20'
+    assert fetcher.digest == leading_zeros + '20'
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.1')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://example.com/some/tarball-2.1.tar.gz'
-    assert fetcher.digest == 'abc21'
+    assert fetcher.digest == leading_zeros + '21'
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.2')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://www.example.com/foo2.2.tar.gz'
-    assert fetcher.digest == 'abc22'
+    assert fetcher.digest == leading_zeros + '22'
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '2.3')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == 'https://www.example.com/foo2.3.tar.gz'
-    assert fetcher.digest == 'abc23'
+    assert fetcher.digest == leading_zeros + '23'
 
 
 def test_git_url_top_level_git_versions(mock_packages, config):
@@ -411,15 +412,15 @@ def test_fetch_options(mock_packages, config):
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == 'abc10'
+    assert fetcher.digest == '00000000000000000000000000000010'
     assert fetcher.extra_options == {'timeout': 42, 'cookie': 'foobar'}
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '1.1')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == 'abc11'
+    assert fetcher.digest == '00000000000000000000000000000011'
     assert fetcher.extra_options == {'timeout': 65}
 
     fetcher = spack.fetch_strategy.for_package_version(pkg, '1.2')
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == 'abc12'
+    assert fetcher.digest == '00000000000000000000000000000012'
     assert fetcher.extra_options == {'cookie': 'baz'}

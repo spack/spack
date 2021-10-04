@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import sys
 import os
+import sys
+
+from spack import *
 
 # Only build certain parts of dwarf because the other ones break.
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
@@ -23,8 +24,8 @@ class Libdwarf(Package):
        respectively, not source) with every release of the SGI
        MIPS/IRIX C compiler."""
 
-    homepage = "http://www.prevanders.net/dwarf.html"
-    url      = "http://www.prevanders.net/libdwarf-20160507.tar.gz"
+    homepage = "https://www.prevanders.net/dwarf.html"
+    url      = "https://www.prevanders.net/libdwarf-20160507.tar.gz"
     list_url = homepage
 
     version('20180129', sha256='8bd91b57064b0c14ade5a009d3a1ce819f1b6ec0e189fc876eb8f42a8720d8a6')
