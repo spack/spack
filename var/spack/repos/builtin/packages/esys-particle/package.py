@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from llnl.util.filesystem import find
+
+from spack import *
 
 
 class EsysParticle(CMakePackage):
