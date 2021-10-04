@@ -248,6 +248,25 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch):
         assert 'already installed' in out
 
 
+def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
+    filepath = str(tmpdir.join('spack.yaml'))
+    filepath_mid = str(tmpdir.join('spack_mid.yaml'))
+
+    env('create', 'test')
+    e = ev.read('test')
+    e.add('mpileaks')
+
+    os.rename(e.manifest_path, filepath)
+    os.symlink(filepath, filepath_mid)
+    os.symlink(filepath_mid, e.manifest_path)
+
+    e.concretize()
+    e.write()
+
+    assert os.path.islink(e.manifest_path)
+    assert os.path.islink(filepath_mid)
+
+
 def test_env_install_two_specs_same_dep(
         install_mockery, mock_fetch, tmpdir, capsys):
     """Test installation of two packages that share a dependency with no
