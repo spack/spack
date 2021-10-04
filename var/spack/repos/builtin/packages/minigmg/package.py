@@ -51,7 +51,10 @@ class Minigmg(Package):
 
         # Default optimisation level
         if spec.satisfies('+opt'):
-            args.append('-Ofast')
+            if self.spec.satisfies('%nvhpc'):
+                args.append('-fast')
+            else:
+                args.append('-Ofast')
         else:
             args.append('-O3')
 
