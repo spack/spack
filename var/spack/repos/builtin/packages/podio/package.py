@@ -26,10 +26,6 @@ class Podio(CMakePackage):
     version('0.9', sha256='3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f')
     version('0.8', sha256='9d035a7f5ebfae5279a17405003206853271af692f762e2bac8e73825f2af327')
 
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'RelWithDebInfo', 'MinSizeRel', 'Release'))
-
     variant('sio', default=False,
             description='Build the SIO I/O backend')
 
