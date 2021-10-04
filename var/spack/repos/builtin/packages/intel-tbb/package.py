@@ -305,14 +305,12 @@ class IntelTbb(CMakePackage):
         # It must not be overwritten by spack-generated tbb.pc.
         # https://github.com/oneapi-src/oneTBB/commit/478de5b1887c928e52f029d706af6ea640a877be
         if self.spec.satisfies('@:2021.2.0', strict=True):
-            libdir = self.libs.directories[0]
-            pkg_path = join_path(libdir, 'pkgconfig')
-            mkdirp(pkg_path)
+            mkdirp(self.prefix.lib.pkgconfig)
 
-            with open(join_path(pkg_path, 'tbb.pc'), 'w') as f:
+            with open(join_path(self.prefix.lib.pkgconfig, 'tbb.pc'), 'w') as f:
                 f.write('prefix={0}\n'.format(self.prefix))
                 f.write('exec_prefix=${prefix}\n')
-                f.write('libdir={0}\n'.format(libdir))
+                f.write('libdir={0}\n'.format(self.prefix.lib))
                 f.write('includedir={0}\n'.format(self.prefix.include))
                 f.write('\n')
                 f.write('Name: Threading Building Blocks\n')
