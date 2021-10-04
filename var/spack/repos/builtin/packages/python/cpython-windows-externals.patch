@@ -1,0 +1,28 @@
+diff --git a/PCbuild/get_externals.bat b/PCbuild/get_externals.bat
+index b5a44e3..52941c7 100644
+--- a/PCbuild/get_externals.bat
++++ b/PCbuild/get_externals.bat
+@@ -76,7 +76,7 @@ for %%e in (%libraries%) do (
+ echo.Fetching external binaries...
+ 
+ set binaries=
+-if NOT "%IncludeLibffi%"=="false"  set binaries=%binaries% libffi
++if NOT "%IncludeLibffi%"=="false"  set binaries=%binaries% libffi-3.3.0
+ if NOT "%IncludeSSL%"=="false"     set binaries=%binaries% openssl-bin-1.1.1k-1
+ if NOT "%IncludeTkinter%"=="false" set binaries=%binaries% tcltk-8.6.9.0
+ if NOT "%IncludeSSLSrc%"=="false"  set binaries=%binaries% nasm-2.11.06
+diff --git a/PCbuild/python.props b/PCbuild/python.props
+index 419d5eb..c66fb07 100644
+--- a/PCbuild/python.props
++++ b/PCbuild/python.props
+@@ -59,8 +59,8 @@
+     <sqlite3Dir>$(ExternalsDir)sqlite-3.35.5.0\</sqlite3Dir>
+     <bz2Dir>$(ExternalsDir)bzip2-1.0.6\</bz2Dir>
+     <lzmaDir>$(ExternalsDir)xz-5.2.2\</lzmaDir>
+-    <libffiDir>$(ExternalsDir)libffi\</libffiDir>
+-    <libffiOutDir>$(ExternalsDir)libffi\$(ArchName)\</libffiOutDir>
++    <libffiDir>$(ExternalsDir)libffi-3.3.0\</libffiDir>
++    <libffiOutDir>$(ExternalsDir)libffi-3.3.0\$(ArchName)\</libffiOutDir>
+     <libffiIncludeDir>$(libffiOutDir)include</libffiIncludeDir>
+     <opensslDir>$(ExternalsDir)openssl-1.1.1k\</opensslDir>
+     <opensslOutDir>$(ExternalsDir)openssl-bin-1.1.1k-1\$(ArchName)\</opensslOutDir>
