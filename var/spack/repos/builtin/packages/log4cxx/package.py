@@ -14,6 +14,7 @@ class Log4cxx(CMakePackage):
 
     maintainers = ['nicmcd']
 
+    version('0.12.1', sha256='7bea5cb477f0e31c838f0e1f4f498cc3b30c2eae74703ddda923e7e8c2268d22')
     version('0.12.0', sha256='bd5b5009ca914c8fa7944b92ea6b4ca6fb7d146f65d526f21bf8b3c6a0520e44')
 
     depends_on('cmake@3.13:', type='build')
