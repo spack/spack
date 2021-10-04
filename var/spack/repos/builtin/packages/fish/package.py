@@ -13,6 +13,7 @@ class Fish(CMakePackage):
     url      = 'https://github.com/fish-shell/fish-shell/releases/download/3.3.1/fish-3.3.1.tar.xz'
     git      = 'https://github.com/fish-shell/fish-shell.git'
     list_url = homepage
+    maintainers = ['funnell']
 
     version('master', branch='master')
     version('3.3.1', sha256='b5b4ee1a5269762cbbe993a4bd6507e675e4100ce9bbe84214a5eeb2b19fae89')
