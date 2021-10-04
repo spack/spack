@@ -233,7 +233,7 @@ def test_install_sbang_too_long(tmpdir):
     long_path = root
     while num_extend > 1:
         add = min(num_extend, 255)
-        long_path = os.path.join(root, 'e' * add)
+        long_path = os.path.join(long_path, 'e' * add)
         num_extend -= add
     with spack.store.use_store(spack.store.Store(long_path)):
         with pytest.raises(sbang.SbangPathError) as exc_info:
