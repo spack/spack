@@ -7,7 +7,11 @@ from spack import *
 
 
 class PyFlatbuffers(PythonPackage):
-    """The FlatBuffers serialization format for Python."""
+    """
+    The FlatBuffers serialization format implemented in Python. For a faster and
+    feature-complete version check out the C++ implementation in `flatbuffers`
+    package.
+    """
 
     homepage = "https://google.github.io/flatbuffers/"
     pypi     = "flatbuffers/flatbuffers-2.0.tar.gz"
