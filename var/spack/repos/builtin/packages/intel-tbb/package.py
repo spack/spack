@@ -305,7 +305,7 @@ class IntelTbb(CMakePackage):
         # It must not be overwritten by spack-generated tbb.pc.
         # https://github.com/oneapi-src/oneTBB/commit/478de5b1887c928e52f029d706af6ea640a877be
         if self.spec.satisfies('@:2021.2.0', strict=True):
-            libdir = self.spec['intel-tbb'].libs.directories[0]
+            libdir = self.libs.directories[0]
             pkg_path = join_path(libdir, 'pkgconfig')
             mkdirp(pkg_path)
 
