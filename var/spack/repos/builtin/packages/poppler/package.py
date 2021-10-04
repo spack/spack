@@ -61,7 +61,7 @@ class Poppler(CMakePackage):
     depends_on('libtiff', when='+tiff')
 
     depends_on('qt@5.0:',      when='@0.62.0:+qt')
-    depends_on('qt@4.0:4.8.6', when='@:0.61.999+qt')
+    depends_on('qt@4.0:4.8.6', when='@:0.61+qt')
 
     # Splash is unconditionally disabled. Unfortunately there's
     # a small section of code in the QT5 wrappers that expects it

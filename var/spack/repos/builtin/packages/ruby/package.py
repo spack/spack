@@ -35,16 +35,18 @@ class Ruby(AutotoolsPackage):
     depends_on('libx11', when='@:2.3')
     depends_on('tcl', when='@:2.3')
     depends_on('tk', when='@:2.3')
-    depends_on('openssl@:1.0', when='@:2.3+openssl')
-    depends_on('openssl', when='+openssl')
     depends_on('readline', when='+readline')
+
+    with when('+openssl'):
+        depends_on('openssl@:1')
+        depends_on('openssl@:1.0', when='@:2.3')
 
     # Known build issues when Avira antivirus software is running:
     # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379
     # TODO: add check for this and warn user
 
     # gcc-7-based build requires patches (cf. https://bugs.ruby-lang.org/issues/13150)
-    patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2.999 %gcc@7:')
+    patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2 %gcc@7:')
     patch('ruby_23_gcc7.patch', level=0, when='@2.3.0:2.3.4 %gcc@7:')
     patch('ruby_24_gcc7.patch', level=1, when='@2.4.0 %gcc@7:')
 

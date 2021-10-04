@@ -16,20 +16,20 @@ class PyAzuremlTrainCore(Package):
     version('1.8.0',  sha256='5a8d90a08d4477527049d793feb40d07dc32fafc0e4e57b4f0729d3c50b408a2', expand=False)
 
     extends('python')
-    depends_on('python@3.5:3.999', type=('build', 'run'))
+    depends_on('python@3.5:3', type=('build', 'run'))
     depends_on('py-pip', type='build')
 
-    depends_on('py-azureml-train-restclients-hyperdrive@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
-    depends_on('py-azureml-core@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
-    depends_on('py-azureml-telemetry@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-train-restclients-hyperdrive@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-core@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-telemetry@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
 
-    depends_on('py-azureml-train-restclients-hyperdrive@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
-    depends_on('py-azureml-core@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
-    depends_on('py-azureml-telemetry@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-train-restclients-hyperdrive@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-core@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-telemetry@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
 
-    depends_on('py-azureml-train-restclients-hyperdrive@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
-    depends_on('py-azureml-core@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
-    depends_on('py-azureml-telemetry@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
+    depends_on('py-azureml-train-restclients-hyperdrive@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
+    depends_on('py-azureml-core@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
+    depends_on('py-azureml-telemetry@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
     depends_on('py-flake8@3.1.0:3.7.9', when='@1.8.0 ^python@3.6:', type=('build', 'run'))
 
     def install(self, spec, prefix):

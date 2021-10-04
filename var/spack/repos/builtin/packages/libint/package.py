@@ -60,7 +60,7 @@ class Libint(AutotoolsPackage):
     depends_on('gmp', when='@2:')
 
     for tvariant in TUNE_VARIANTS[1:]:
-        conflicts('tune={0}'.format(tvariant), when='@:2.5.99',
+        conflicts('tune={0}'.format(tvariant), when='@:2.5',
                   msg=('for versions prior to 2.6, tuning for specific'
                        'codes/configurations is not supported'))
 

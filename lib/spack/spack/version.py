@@ -500,7 +500,16 @@ class VersionRange(object):
 
         self.start = start
         self.end = end
-        if start and end and end < start:
+
+        # Unbounded ranges are not empty
+        if not start or not end:
+            return
+
+        # Do not allow empty ranges. We have to be careful about lexicographical
+        # ordering of versions here: 1.2 < 1.2.3 lexicographically, but 1.2.3:1.2
+        # means the range [1.2.3, 1.3), which is non-empty.
+        min_len = min(len(start), len(end))
+        if end.up_to(min_len) < start.up_to(min_len):
             raise ValueError("Invalid Version range: %s" % self)
 
     def lowest(self):

@@ -1952,7 +1952,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         installed = set(os.listdir(self.prefix))
         installed.difference_update(
-            spack.store.layout.hidden_file_paths)
+            spack.store.layout.hidden_file_regexes)
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
@@ -2551,11 +2551,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for name in self.build_time_test_callbacks:
             try:
                 fn = getattr(self, name)
-                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
-                fn()
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+            else:
+                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
+                fn()
 
     @on_package_attributes(run_tests=True)
     def _run_default_install_time_test_callbacks(self):
@@ -2570,11 +2571,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for name in self.install_time_test_callbacks:
             try:
                 fn = getattr(self, name)
-                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
-                fn()
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+            else:
+                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
+                fn()
 
 
 def test_process(pkg, kwargs):

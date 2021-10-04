@@ -19,6 +19,8 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['davidbeckingsale']
 
+    tags = ['ecp', 'e4s']
+
     version('develop', branch='develop', submodules=True)
     version('main', branch='main', submodules=True)
     version('2.4.0', tag='v2.4.0', submodules=True)

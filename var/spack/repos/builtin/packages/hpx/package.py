@@ -16,6 +16,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
     maintainers = ['msimberg', 'albestro', 'teonnik']
 
+    tags = ['e4s']
+
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')
     version('1.7.1', sha256='008a0335def3c551cba31452eda035d7e914e3e4f77eec679eea070ac71bd83b')
@@ -208,7 +210,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         # HIP support requires compiling with hipcc
         if '+rocm' in self.spec:
             args += [self.define('CMAKE_CXX_COMPILER', self.spec['hip'].hipcc)]
-            if self.spec.satisfies('^cmake@3.21:'):
+            if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
                 args += [self.define('__skip_rocmclang', True)]
 
         # Instrumentation

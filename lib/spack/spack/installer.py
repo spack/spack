@@ -85,6 +85,15 @@ STATUS_DEQUEUED = 'dequeued'
 STATUS_REMOVED = 'removed'
 
 
+class InstallAction(object):
+    #: Don't perform an install
+    NONE = 0
+    #: Do a standard install
+    INSTALL = 1
+    #: Do an overwrite install
+    OVERWRITE = 2
+
+
 def _check_last_phase(pkg):
     """
     Ensures the specified package has a valid last phase before proceeding
@@ -1418,6 +1427,42 @@ class PackageInstaller(object):
                 for dependent_id in dependents.difference(task.dependents):
                     task.add_dependent(dependent_id)
 
+    def _install_action(self, task):
+        """
+        Determine whether the installation should be overwritten (if it already
+        exists) or skipped (if has been handled by another process).
+
+        If the package has not been installed yet, this will indicate that the
+        installation should proceed as normal (i.e. no need to transactionally
+        preserve the old prefix).
+        """
+        # If we don't have to overwrite, do a normal install
+        if task.pkg.spec.dag_hash() not in task.request.overwrite:
+            return InstallAction.INSTALL
+
+        # If it's not installed, do a normal install as well
+        rec, installed = self._check_db(task.pkg.spec)
+        if not installed:
+            return InstallAction.INSTALL
+
+        # Ensure install_tree projections have not changed.
+        assert task.pkg.prefix == rec.path
+
+        # If another process has overwritten this, we shouldn't install at all
+        if rec.installation_time >= task.request.overwrite_time:
+            return InstallAction.NONE
+
+        # If the install prefix is missing, warn about it, and proceed with
+        # normal install.
+        if not os.path.exists(task.pkg.prefix):
+            tty.debug("Missing installation to overwrite")
+            return InstallAction.INSTALL
+
+        # Otherwise, do an actual overwrite install. We backup the original
+        # install directory, put the old prefix
+        # back on failure
+        return InstallAction.OVERWRITE
+
     def install(self):
         """
         Install the requested package(s) and or associated dependencies.
@@ -1561,26 +1606,12 @@ class PackageInstaller(object):
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
             try:
-                if pkg.spec.dag_hash() in task.request.overwrite:
-                    rec, _ = self._check_db(pkg.spec)
-                    if rec and rec.installed:
-                        if rec.installation_time < task.request.overwrite_time:
-                            # If it's actually overwriting, do a fs transaction
-                            if os.path.exists(rec.path):
-                                with fs.replace_directory_transaction(
-                                        rec.path):
-                                    # fs transaction will put the old prefix
-                                    # back on failure, so make sure to keep it.
-                                    keep_prefix = True
-                                    self._install_task(task)
-                            else:
-                                tty.debug("Missing installation to overwrite")
-                                self._install_task(task)
-                    else:
-                        # overwriting nothing
-                        self._install_task(task)
-                else:
+                action = self._install_action(task)
+
+                if action == InstallAction.INSTALL:
                     self._install_task(task)
+                elif action == InstallAction.OVERWRITE:
+                    OverwriteInstall(self, spack.store.db, task).install()
 
                 self._update_installed(task)
 
@@ -1631,7 +1662,7 @@ class PackageInstaller(object):
             finally:
                 # Remove the install prefix if anything went wrong during
                 # install.
-                if not keep_prefix:
+                if not keep_prefix and not action == InstallAction.OVERWRITE:
                     pkg.remove_prefix()
 
                 # The subprocess *may* have removed the build stage. Mark it
@@ -1881,6 +1912,35 @@ def build_process(pkg, install_args):
     # don't print long padded paths in executable debug output.
     with spack.util.path.filter_padding():
         return installer.run()
+
+
+class OverwriteInstall(object):
+    def __init__(self, installer, database, task, tmp_root=None):
+        self.installer = installer
+        self.database = database
+        self.task = task
+        self.tmp_root = tmp_root
+
+    def install(self):
+        """
+        Try to run the install task overwriting the package prefix.
+        If this fails, try to recover the original install prefix. If that fails
+        too, mark the spec as uninstalled. This function always the original
+        install error if installation fails.
+        """
+        try:
+            with fs.replace_directory_transaction(self.task.pkg.prefix, self.tmp_root):
+                self.installer._install_task(self.task)
+        except fs.CouldNotRestoreDirectoryBackup as e:
+            self.database.remove(self.task.pkg.spec)
+            tty.error('Recovery of install dir of {0} failed due to '
+                      '{1}: {2}. The spec is now uninstalled.'.format(
+                          self.task.pkg.name,
+                          e.outer_exception.__class__.__name__,
+                          str(e.outer_exception)))
+
+            # Unwrap the actual installation exception.
+            raise e.inner_exception
 
 
 class BuildTask(object):

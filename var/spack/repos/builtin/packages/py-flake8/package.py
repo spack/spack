@@ -33,30 +33,30 @@ class PyFlake8(PythonPackage):
     # http://flake8.pycqa.org/en/latest/internal/releases.html#releasing-flake8
 
     # Flake8 3.8.X
-    depends_on('py-pycodestyle@2.6.0:2.6.999', when='@3.8.0:3.8.999', type=('build', 'run'))
-    depends_on('py-pyflakes@2.2.0:2.2.999',    when='@3.8.0:3.8.999', type=('build', 'run'))
+    depends_on('py-pycodestyle@2.6.0:2.6', when='@3.8.0:3.8', type=('build', 'run'))
+    depends_on('py-pyflakes@2.2.0:2.2',    when='@3.8.0:3.8', type=('build', 'run'))
 
     # Flake8 3.7.X
-    # FIXME @0.3.0:0.3.999 causes concretization to hang
-    depends_on('py-entrypoints@0.3',           when='@3.7.0:3.8.999', type=('build', 'run'))
-    depends_on('py-pyflakes@2.1.0:2.1.999',    when='@3.7.0:3.7.999', type=('build', 'run'))
-    depends_on('py-pycodestyle@2.5.0:2.5.999', when='@3.7.0:3.7.999', type=('build', 'run'))
-    depends_on('py-mccabe@0.6.0:0.6.999',      when='@3.7.0:3.8.999', type=('build', 'run'))
+    # FIXME @0.3.0:0.3 causes concretization to hang
+    depends_on('py-entrypoints@0.3',           when='@3.7.0:3.8', type=('build', 'run'))
+    depends_on('py-pyflakes@2.1.0:2.1',    when='@3.7.0:3.7', type=('build', 'run'))
+    depends_on('py-pycodestyle@2.5.0:2.5', when='@3.7.0:3.7', type=('build', 'run'))
+    depends_on('py-mccabe@0.6.0:0.6',      when='@3.7.0:3.8', type=('build', 'run'))
 
     # Flake8 3.5.X
-    depends_on('py-pyflakes@1.5:1.6',     when='@3.5.0:3.5.999', type=('build', 'run'))
-    depends_on('py-pycodestyle@2.0:2.4',  when='@3.5.0:3.5.999', type=('build', 'run'))
-    depends_on('py-mccabe@0.6.0:0.6.999', when='@3.5.0:3.5.999', type=('build', 'run'))
+    depends_on('py-pyflakes@1.5:1.6',     when='@3.5.0:3.5', type=('build', 'run'))
+    depends_on('py-pycodestyle@2.0:2.4',  when='@3.5.0:3.5', type=('build', 'run'))
+    depends_on('py-mccabe@0.6.0:0.6', when='@3.5.0:3.5', type=('build', 'run'))
 
     # Flake8 3.0.X
-    depends_on('py-pyflakes@0.8.1:1.1,1.2.3:1.2.999', when='@3.0.0:3.0.999', type=('build', 'run'))
-    depends_on('py-pycodestyle@2.0.0:2.0.999',        when='@3.0.0:3.0.999', type=('build', 'run'))
-    depends_on('py-mccabe@0.5.0:0.5.999',             when='@3.0.0:3.0.999', type=('build', 'run'))
+    depends_on('py-pyflakes@0.8.1:1.1,1.2.3:1.2', when='@3.0.0:3.0', type=('build', 'run'))
+    depends_on('py-pycodestyle@2.0.0:2.0',        when='@3.0.0:3.0', type=('build', 'run'))
+    depends_on('py-mccabe@0.5.0:0.5',             when='@3.0.0:3.0', type=('build', 'run'))
 
     # Flake8 2.5.X
-    depends_on('py-pyflakes@0.8.1:1.0',               when='@2.5.0:2.5.999', type=('build', 'run'))
-    depends_on('py-pycodestyle@1.5.7:1.5.999,1.6.3:', when='@2.5.0:2.5.999', type=('build', 'run'))
-    depends_on('py-mccabe@0.2.1:0.4',                 when='@2.5.0:2.5.999', type=('build', 'run'))
+    depends_on('py-pyflakes@0.8.1:1.0',               when='@2.5.0:2.5', type=('build', 'run'))
+    depends_on('py-pycodestyle@1.5.7:1.5,1.6.3:', when='@2.5.0:2.5', type=('build', 'run'))
+    depends_on('py-mccabe@0.2.1:0.4',                 when='@2.5.0:2.5', type=('build', 'run'))
 
     # Python version-specific backports
     depends_on('py-importlib-metadata', when='@3.8.0: ^python@:3.7', type=('build', 'run'))

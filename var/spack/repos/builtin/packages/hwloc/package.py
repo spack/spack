@@ -78,7 +78,7 @@ class Hwloc(AutotoolsPackage):
             description="Support ROCm devices")
 
     # netloc isn't available until version 2.0.0
-    conflicts('+netloc', when="@:1.99.99")
+    conflicts('+netloc', when="@:1")
 
     # libudev isn't available until version 1.11.0
     conflicts('+libudev', when="@:1.10")

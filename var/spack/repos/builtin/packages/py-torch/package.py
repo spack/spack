@@ -23,6 +23,7 @@ class PyTorch(PythonPackage, CudaPackage):
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.9.1', tag='v1.9.1', submodules=True)
     version('1.9.0', tag='v1.9.0', submodules=True)
     version('1.8.2', tag='v1.8.2', submodules=True)
     version('1.8.1', tag='v1.8.1', submodules=True)
@@ -84,18 +85,18 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+mpi', when='~distributed')
     conflicts('+gloo', when='~distributed')
     conflicts('+tensorpipe', when='~distributed')
-    conflicts('+kineto', when='@:1.7.999')
-    conflicts('+valgrind', when='@:1.7.999')
-    conflicts('~caffe2', when='@0.4.0:1.6.999')  # no way to disable caffe2?
+    conflicts('+kineto', when='@:1.7')
+    conflicts('+valgrind', when='@:1.7')
+    conflicts('~caffe2', when='@0.4.0:1.6')  # no way to disable caffe2?
     conflicts('+caffe2', when='@:0.3.1')  # caffe2 did not yet exist?
-    conflicts('+tensorpipe', when='@:1.5.999')
-    conflicts('+xnnpack', when='@:1.4.999')
-    conflicts('~onnx_ml', when='@:1.4.999')  # no way to disable ONNX?
-    conflicts('+rocm', when='@:0.4.999')
-    conflicts('+cudnn', when='@:0.4.999')
-    conflicts('+fbgemm', when='@:0.4.999,1.4.0')
-    conflicts('+qnnpack', when='@:0.4.999')
-    conflicts('+mkldnn', when='@:0.4.999')
+    conflicts('+tensorpipe', when='@:1.5')
+    conflicts('+xnnpack', when='@:1.4')
+    conflicts('~onnx_ml', when='@:1.4')  # no way to disable ONNX?
+    conflicts('+rocm', when='@:0.4')
+    conflicts('+cudnn', when='@:0.4')
+    conflicts('+fbgemm', when='@:0.4,1.4.0')
+    conflicts('+qnnpack', when='@:0.4')
+    conflicts('+mkldnn', when='@:0.4')
 
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
@@ -108,9 +109,9 @@ class PyTorch(PythonPackage, CudaPackage):
     # See python_min_version in setup.py
     depends_on('python@3.6.2:', when='@1.7.1:', type=('build', 'link', 'run'))
     depends_on('python@3.6.1:', when='@1.6.0:1.7.0', type=('build', 'link', 'run'))
-    depends_on('python@3.5:', when='@1.5.0:1.5.999', type=('build', 'link', 'run'))
-    depends_on('python@2.7:2.8,3.5:', when='@1.4.0:1.4.999', type=('build', 'link', 'run'))
-    depends_on('python@2.7:2.8,3.5:3.7.999', when='@:1.3.999', type=('build', 'link', 'run'))
+    depends_on('python@3.5:', when='@1.5.0:1.5', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8,3.5:', when='@1.4.0:1.4', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8,3.5:3.7', when='@:1.3', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-future', when='@1.5:', type=('build', 'run'))
     depends_on('py-future', when='@1.1: ^python@:2', type=('build', 'run'))
@@ -118,11 +119,11 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-typing', when='@0.4: ^python@:3.4', type=('build', 'run'))
     depends_on('py-typing-extensions', when='@1.7:', type=('build', 'run'))
     depends_on('py-pybind11@master', when='@master', type=('build', 'link', 'run'))
-    depends_on('py-pybind11@2.6.2', when='@1.8.0:1.9.999', type=('build', 'link', 'run'))
-    depends_on('py-pybind11@2.3.0', when='@1.1.0:1.7.999', type=('build', 'link', 'run'))
-    depends_on('py-pybind11@2.2.4', when='@1.0.0:1.0.999', type=('build', 'link', 'run'))
-    depends_on('py-pybind11@2.2.2', when='@0.4.0:0.4.999', type=('build', 'link', 'run'))
-    depends_on('py-dataclasses', when='@1.7: ^python@3.6.0:3.6.999', type=('build', 'run'))
+    depends_on('py-pybind11@2.6.2', when='@1.8.0:1.9', type=('build', 'link', 'run'))
+    depends_on('py-pybind11@2.3.0', when='@1.1.0:1.7', type=('build', 'link', 'run'))
+    depends_on('py-pybind11@2.2.4', when='@1.0.0:1.0', type=('build', 'link', 'run'))
+    depends_on('py-pybind11@2.2.2', when='@0.4.0:0.4', type=('build', 'link', 'run'))
+    depends_on('py-dataclasses', when='@1.7: ^python@3.6.0:3.6', type=('build', 'run'))
     depends_on('py-tqdm', type='run')
     depends_on('py-protobuf', when='@0.4:', type=('build', 'run'))
     depends_on('protobuf', when='@0.4:')
@@ -131,32 +132,32 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('eigen', when='@0.4:')
     # https://github.com/pytorch/pytorch/issues/60329
     # depends_on('cpuinfo@master', when='@master')
-    # depends_on('cpuinfo@2020-12-17', when='@1.8.0:1.9.999')
-    # depends_on('cpuinfo@2020-06-11', when='@1.6.0:1.7.999')
+    # depends_on('cpuinfo@2020-12-17', when='@1.8.0:1.9')
+    # depends_on('cpuinfo@2020-06-11', when='@1.6.0:1.7')
     # https://github.com/shibatch/sleef/issues/427
     # depends_on('sleef@master', when='@master')
-    # depends_on('sleef@3.5.1_2020-12-22', when='@1.8.0:1.9.999')
+    # depends_on('sleef@3.5.1_2020-12-22', when='@1.8.0:1.9')
     # https://github.com/pytorch/pytorch/issues/60334
-    # depends_on('sleef@3.4.0_2019-07-30', when='@1.6.0:1.7.999')
+    # depends_on('sleef@3.4.0_2019-07-30', when='@1.6.0:1.7')
     # https://github.com/Maratyszcza/FP16/issues/18
     # depends_on('fp16@master', when='@master')
-    # depends_on('fp16@2020-05-14', when='@1.6.0:1.9.999')
+    # depends_on('fp16@2020-05-14', when='@1.6.0:1.9')
     depends_on('pthreadpool@master', when='@master')
-    depends_on('pthreadpool@2021-04-13', when='@1.9.0:1.9.999')
-    depends_on('pthreadpool@2020-10-05', when='@1.8.0:1.8.999')
-    depends_on('pthreadpool@2020-06-15', when='@1.6.0:1.7.999')
+    depends_on('pthreadpool@2021-04-13', when='@1.9.0:1.9')
+    depends_on('pthreadpool@2020-10-05', when='@1.8.0:1.8')
+    depends_on('pthreadpool@2020-06-15', when='@1.6.0:1.7')
     depends_on('psimd@master', when='@master')
-    depends_on('psimd@2020-05-17', when='@1.6.0:1.9.999')
+    depends_on('psimd@2020-05-17', when='@1.6.0:1.9')
     depends_on('fxdiv@master', when='@master')
-    depends_on('fxdiv@2020-04-17', when='@1.6.0:1.9.999')
+    depends_on('fxdiv@2020-04-17', when='@1.6.0:1.9')
     depends_on('benchmark', when='@1.6:+test')
 
     # Optional dependencies
     depends_on('cuda@7.5:', when='+cuda', type=('build', 'link', 'run'))
     depends_on('cuda@9:', when='@1.1:+cuda', type=('build', 'link', 'run'))
     depends_on('cuda@9.2:', when='@1.6:+cuda', type=('build', 'link', 'run'))
-    depends_on('cudnn@6.0:7.999', when='@:1.0.999+cudnn')
-    depends_on('cudnn@7.0:7.999', when='@1.1.0:1.5.999+cudnn')
+    depends_on('cudnn@6.0:7', when='@:1.0+cudnn')
+    depends_on('cudnn@7.0:7', when='@1.1.0:1.5+cudnn')
     depends_on('cudnn@7.0:', when='@1.6.0:+cudnn')
     depends_on('magma', when='+magma')
     depends_on('nccl', when='+nccl')
@@ -166,18 +167,18 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('valgrind', when='+valgrind')
     # https://github.com/pytorch/pytorch/issues/60332
     # depends_on('xnnpack@master', when='@master+xnnpack')
-    # depends_on('xnnpack@2021-02-22', when='@1.8.0:1.9.999+xnnpack')
-    # depends_on('xnnpack@2020-03-23', when='@1.6.0:1.7.999+xnnpack')
+    # depends_on('xnnpack@2021-02-22', when='@1.8.0:1.9+xnnpack')
+    # depends_on('xnnpack@2020-03-23', when='@1.6.0:1.7+xnnpack')
     depends_on('mpi', when='+mpi')
     # https://github.com/pytorch/pytorch/issues/60270
     # depends_on('gloo@master', when='@master+gloo')
-    # depends_on('gloo@2021-05-04', when='@1.9.0:1.9.999+gloo')
-    # depends_on('gloo@2020-09-18', when='@1.7.0:1.8.999+gloo')
-    # depends_on('gloo@2020-03-17', when='@1.6.0:1.6.999+gloo')
+    # depends_on('gloo@2021-05-04', when='@1.9.0:1.9+gloo')
+    # depends_on('gloo@2020-09-18', when='@1.7.0:1.8+gloo')
+    # depends_on('gloo@2020-03-17', when='@1.6.0:1.6+gloo')
     # https://github.com/pytorch/pytorch/issues/60331
     # depends_on('onnx@master', when='@master+onnx_ml')
-    # depends_on('onnx@1.8.0_2020-11-03', when='@1.8.0:1.9.999+onnx_ml')
-    # depends_on('onnx@1.7.0_2020-05-31', when='@1.6.0:1.7.999+onnx_ml')
+    # depends_on('onnx@1.8.0_2020-11-03', when='@1.8.0:1.9+onnx_ml')
+    # depends_on('onnx@1.7.0_2020-05-31', when='@1.6.0:1.7+onnx_ml')
     depends_on('mkl', when='+mkldnn')
 
     # Test dependencies
@@ -199,15 +200,15 @@ class PyTorch(PythonPackage, CudaPackage):
     # Fixes CMake configuration error when XNNPACK is disabled
     # https://github.com/pytorch/pytorch/pull/35607
     # https://github.com/pytorch/pytorch/pull/37865
-    patch('xnnpack.patch', when='@1.5.0:1.5.999')
+    patch('xnnpack.patch', when='@1.5.0:1.5')
 
     # Fixes build error when ROCm is enabled for pytorch-1.5 release
-    patch('rocm.patch', when='@1.5.0:1.5.999+rocm')
+    patch('rocm.patch', when='@1.5.0:1.5+rocm')
 
     # Fixes fatal error: sleef.h: No such file or directory
     # https://github.com/pytorch/pytorch/pull/35359
     # https://github.com/pytorch/pytorch/issues/26555
-    # patch('sleef.patch', when='@1.0.0:1.5.999')
+    # patch('sleef.patch', when='@1.0.0:1.5')
 
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     # https://github.com/pytorch/pytorch/pull/37086
@@ -217,7 +218,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
     # Removes duplicate definition of getCusparseErrorString
     # https://github.com/pytorch/pytorch/issues/32083
-    patch('cusparseGetErrorString.patch', when='@0.4.1:1.0.999^cuda@10.1.243:')
+    patch('cusparseGetErrorString.patch', when='@0.4.1:1.0^cuda@10.1.243:')
 
     # Fixes 'FindOpenMP.cmake'
     # to detect openmp settings used by Fujitsu compiler.

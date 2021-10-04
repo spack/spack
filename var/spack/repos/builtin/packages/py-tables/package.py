@@ -35,7 +35,7 @@ class PyTables(PythonPackage):
     depends_on('py-numexpr@2.6.2:', type=('build', 'run'))
     depends_on('py-six@1.9.0:', when='@:3.5', type=('build', 'run'))
     # tables/req_versions.py
-    depends_on('hdf5@1.8.4:1.8.999', when='@:3.3.99')
+    depends_on('hdf5@1.8.4:1.8', when='@:3.3')
     depends_on('hdf5@1.8.4:', when='@3.4.0:')
     # Versions prior to 3.3 must build with the internal blosc due to a lock
     # problem in a multithreaded environment.

@@ -37,18 +37,13 @@ class Rocsolver(CMakePackage):
     version('3.7.0', sha256='8c1c630595952806e658c539fd0f3056bd45bafc22b57f0dd10141abefbe4595')
     version('3.5.0', sha256='d655e8c762fb9e123b9fd7200b4258512ceef69973de4d0588c815bc666cb358')
 
-    depends_on('cmake@3:', type='build')
-    depends_on('numactl', type='link', when='@3.7.0:')
-
-    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1']:
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
+    depends_on('cmake@3.8:', type='build', when='@4.1.0:')
+    depends_on('cmake@3.5:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('rocblas@' + ver, type='link', when='@' + ver)
+        depends_on('hip@' + ver, when='@' + ver)
+        depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     def cmake_args(self):
@@ -58,7 +53,7 @@ class Rocsolver(CMakePackage):
             self.define('BUILD_CLIENTS_TESTS', 'OFF'),
             self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF')
         ]
-        if self.spec.satisfies('@4.1.0:'):
+        if self.spec.satisfies('@4.1.0'):
             incl = self.spec['rocblas'].prefix
             args.append(self.define(
                 'CMAKE_CXX_FLAGS',
@@ -75,7 +70,7 @@ class Rocsolver(CMakePackage):
             else:
                 args.append(self.define('AMDGPU_TARGETS', ";".join(tgt)))
 
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

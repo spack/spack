@@ -41,7 +41,7 @@ class Evtgen(CMakePackage):
               "evtgen with pythia bindings results in a circular dependency "
               "that cannot be resolved at the moment! "
               "Use evtgen+pythia8^pythia8~evtgen.")
-    conflicts('+hepmc3', when='@:01.99.99',
+    conflicts('+hepmc3', when='@:01',
               msg='hepmc3 support was added in 02.00.00')
 
     def cmake_args(self):
@@ -67,7 +67,7 @@ class Evtgen(CMakePackage):
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
 
-    @when('@:01.99.99')
+    @when('@:01')
     def configure_args(self):
         args = []
 
@@ -81,11 +81,11 @@ class Evtgen(CMakePackage):
 
         return args
 
-    @when('@:01.99.99')
+    @when('@:01')
     def cmake(self, spec, prefix):
         pass
 
-    @when('@:01.99.99')
+    @when('@:01')
     def build(self, spec, prefix):
         self.configure(spec, prefix)
         # avoid parallel compilation errors
@@ -94,7 +94,7 @@ class Evtgen(CMakePackage):
             make('lib_shared')
             make('all')
 
-    @when('@:01.99.99')
+    @when('@:01')
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             make('install')

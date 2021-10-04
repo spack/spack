@@ -25,6 +25,8 @@ class Llvm(CMakePackage, CudaPackage):
     git = "https://github.com/llvm/llvm-project"
     maintainers = ['trws', 'naromero77']
 
+    tags = ['e4s']
+
     family = "compiler"  # Used by lmod
 
     # fmt: off
@@ -150,12 +152,12 @@ class Llvm(CMakePackage, CudaPackage):
 
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
-    depends_on("python@2.7:2.8", when="@:4.999 ~python", type="build")
+    depends_on("python@2.7:2.8", when="@:4 ~python", type="build")
     depends_on("python", when="@5: ~python", type="build")
     depends_on("pkgconfig", type="build")
 
     # Universal dependency
-    depends_on("python@2.7:2.8", when="@:4.999+python")
+    depends_on("python@2.7:2.8", when="@:4+python")
     depends_on("python", when="@5:+python")
     depends_on("z3", when="@9:")
 
@@ -177,8 +179,8 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("binutils+gold+ld+plugins", when="+gold")
 
     # polly plugin
-    depends_on("gmp", when="@:3.6.999 +polly")
-    depends_on("isl", when="@:3.6.999 +polly")
+    depends_on("gmp", when="@:3.6 +polly")
+    depends_on("isl", when="@:3.6 +polly")
 
     conflicts("+llvm_dylib", when="+shared_libs")
     conflicts("+lldb", when="~clang")
@@ -187,15 +189,15 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("+compiler-rt", when="~clang")
     conflicts("+flang", when="~clang")
     # Introduced in version 11 as a part of LLVM and not a separate package.
-    conflicts("+flang", when="@:10.999")
+    conflicts("+flang", when="@:10")
 
     # Older LLVM do not build with newer GCC
     conflicts("%gcc@11:", when="@:7")
     conflicts("%gcc@8:", when="@:5")
-    conflicts("%gcc@:5.0.999", when="@8:")
+    conflicts("%gcc@:5.0", when="@8:")
 
     # OMP TSAN exists in > 5.x
-    conflicts("+omp_tsan", when="@:5.99")
+    conflicts("+omp_tsan", when="@:5")
 
     # cuda_arch value must be specified
     conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")

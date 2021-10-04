@@ -20,6 +20,7 @@ class Paraview(CMakePackage, CudaPackage):
     git      = "https://gitlab.kitware.com/paraview/paraview.git"
 
     maintainers = ['chuckatkins', 'danlipsa', 'vicentebolea']
+    tags = ['e4s']
 
     version('master', branch='master', submodules=True)
     version('5.9.1', sha256='0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d', preferred=True)
@@ -143,11 +144,11 @@ class Paraview(CMakePackage, CudaPackage):
 
     # Older builds of pugi export their symbols differently,
     # and pre-5.9 is unable to handle that.
-    depends_on('pugixml@:1.10', when='@:5.8.99')
+    depends_on('pugixml@:1.10', when='@:5.8')
     depends_on('pugixml', when='@5.9:')
 
     # Can't contretize with python2 and py-setuptools@45.0.0:
-    depends_on('py-setuptools@:44.99.99', when='+python')
+    depends_on('py-setuptools@:44', when='+python')
     # Can't contretize with python2 and py-pillow@7.0.0:
     depends_on('pil@:6', when='+python')
 
@@ -167,7 +168,7 @@ class Paraview(CMakePackage, CudaPackage):
     patch('vtkm-catalyst-pv551.patch', when='@5.5.0:5.5.2')
 
     # Broken H5Part with external parallel HDF5
-    patch('h5part-parallel.patch', when='@5.7:5.7.999')
+    patch('h5part-parallel.patch', when='@5.7.0:5.7')
 
     # Broken downstream FindMPI
     patch('vtkm-findmpi-downstream.patch', when='@5.9.0')

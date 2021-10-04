@@ -73,7 +73,7 @@ class Libmesh(AutotoolsPackage):
             'scheduler, in the case of openmp and tbb)',
             values=('none', 'pthreads', 'tbb', 'openmp'), multi=False)
 
-    conflicts('+metaphysicl', when='@:1.2.999',
+    conflicts('+metaphysicl', when='@:1.2',
               msg='The interface to metaphysicl is not available in libMesh '
               'versions older than 1.3.0. Please explicitly disable this '
               'variant.')

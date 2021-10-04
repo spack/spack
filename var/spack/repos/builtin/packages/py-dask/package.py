@@ -148,7 +148,7 @@ class PyDask(PythonPackage):
 
     # Requirements for dask.diagnostics
     depends_on('py-bokeh@1.0.0:',       type=('build', 'run'), when='@2.0.0: +diagnostics')
-    depends_on('py-bokeh@1.0.0:1.999,2.0.1:', type=('build', 'run'), when='@2.26.0: +diagnostics')
+    depends_on('py-bokeh@1.0.0:1,2.0.1:', type=('build', 'run'), when='@2.26.0: +diagnostics')
 
     # Requirements for dask.delayed
     depends_on('py-cloudpickle@0.2.1:', type=('build', 'run'), when='@2.7.0: +delayed')

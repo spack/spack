@@ -52,7 +52,7 @@ class Hipsparse(CMakePackage):
             self.define('BUILD_CLIENTS_TESTS', 'OFF'),
         ]
 
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

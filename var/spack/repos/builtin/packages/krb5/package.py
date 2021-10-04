@@ -14,6 +14,7 @@ class Krb5(AutotoolsPackage):
     list_url   = "https://kerberos.org/dist/krb5/"
     list_depth = 1
 
+    version('1.19.2', sha256='10453fee4e3a8f8ce6129059e5c050b8a65dab1c257df68b99b3112eaa0cdf6a')
     version('1.18.2', sha256='c6e4c9ec1a98141c3f5d66ddf1a135549050c9fab4e9a4620ee9b22085873ae0')
     version('1.18.1', sha256='02a4e700f10936f937cd1a4c303cab8687a11abecc6107bd4b706b9329cd5400')
     version('1.18',   sha256='73913934d711dcf9d5f5605803578edb44b9a11786df3c1b2711f4e1752f2c88')
@@ -24,13 +25,14 @@ class Krb5(AutotoolsPackage):
     version('1.16.1', sha256='214ffe394e3ad0c730564074ec44f1da119159d94281bbec541dc29168d21117')
 
     depends_on('bison', type='build')
-    depends_on('openssl')
+    depends_on('openssl@:1')
 
     variant(
         'shared', default=True,
         description='install shared libraries if True, static if false'
     )
-    patch('mit-krb5-1.17-static-libs.patch', level=0)
+    # This patch is applied in newer upstream releases
+    patch('mit-krb5-1.17-static-libs.patch', level=0, when='@:1.18.9')
 
     configure_directory = 'src'
     build_directory = 'src'
