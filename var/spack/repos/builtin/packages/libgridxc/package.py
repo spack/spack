@@ -41,22 +41,21 @@ class Libgridxc(Package):
         with working_dir('build'):
             if self.version < Version('0.8.0'):
                 make('PREFIX=%s' % self.prefix,
-                    'FC=fc',
-                    parallel=False)
+                     'FC=fc',
+                     parallel=False)
             else:
                 make('PREFIX=%s' % self.prefix,
-                    'FC=fc',
-                    'WITH_LIBXC=1',
-                    'LIBXC_ROOT=%s' % self.spec['libxc'].prefix,
-                    parallel=False)
+                     'FC=fc',
+                     'WITH_LIBXC=1',
+                     'LIBXC_ROOT=%s' % self.spec['libxc'].prefix,
+                     parallel=False)
 
     @run_after('build')
     def fix_mk(self):
         mkdirp(join_path(self.prefix, 'share', 'org.siesta-project'))
-        install(join_path(self.prefix, 'gridxc.mk'), 
-            join_path(self.prefix, 'share', 'org.siesta-project', 'gridxc.mk'))
+        install(join_path(self.prefix, 'gridxc.mk'),
+                join_path(self.prefix, 'share', 'org.siesta-project', 'gridxc.mk'))
         os.remove(join_path(self.prefix, 'gridxc.mk'))
-        install(join_path(self.prefix, 'gridxc.mk'), 
-            join_path(self.prefix, 'share', 'org.siesta-project', 'libxc.mk'))
+        install(join_path(self.prefix, 'gridxc.mk'),
+                join_path(self.prefix, 'share', 'org.siesta-project', 'libxc.mk'))
         os.remove(join_path(self.prefix, 'libxc.mk'))
-        
