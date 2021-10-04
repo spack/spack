@@ -4,9 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-
 from spack import *
-
 
 class Legion(CMakePackage, CudaPackage, ROCmPackage):
     """Legion is a data-centric parallel programming system for writing
@@ -27,11 +25,11 @@ class Legion(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['pmccormick', 'streichler']
 
+    version('21.09.0', tag='legion-21.09.0')
     version('21.03.0', tag='legion-21.03.0')
     version('stable', branch='stable')
     version('master', branch='master')
     version('cr', branch='control_replication')
-    version('flexflow', branch='flexflow')
 
     depends_on("cmake@3.16:", type='build')
     # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
@@ -41,21 +39,29 @@ class Legion(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpi', when='network=gasnet')  # MPI is required to build gasnet (needs mpicc).
     depends_on('ucx', when='conduit=ucx')
     depends_on('mpi', when='conduit=mpi')
-    depends_on('cuda@10.0:11.9', when='+cuda_unsupported_compiler')
-    depends_on('cuda@10.0:11.9', when='+cuda')
-    # TODO: need to explore and update to use rocm support already in spack.
-    depends_on('hip@4.1.0:', when='+hip')
+
     depends_on('hdf5', when='+hdf5')
-    depends_on('hwloc@1.11', when='+hwloc')
+    depends_on('hwloc', when='+hwloc')
+
+    # NVIDIA/CUDA support 
+    for sm in CudaPackage.cuda_arch_values:
+        depends_on('kokkos@3.3.01+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(sm),
+                   when='%gcc+kokkos+cuda cuda_arch={0}'.format(sm))
+        depends_on('kokkos@3.3.01+cuda+cuda_lambda~wrapper cuda_arch={0}'.format(sm),
+                   when="%clang+kokkos+cuda cuda_arch={0}".format(sm))
+    depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
+    depends_on("kokkos@3.3.01~cuda+openmp", when='+kokkos+openmp')
+
+    for amd_arch in ROCmPackage.amdgpu_targets:
+        if amd_arch != 'none':
+            depends_on("hip@4.3.0", 
+                       when="+rocm amdgpu_target={0}".format(amd_arch))
+            depends_on("kokkos@3.3.01+rocm amdgpu_target={0}".format(amd_arch),
+                       when="+rocm +kokkos amdgpu_target={0}".format(amd_arch))
+
     depends_on('python@3', when='+python')
     depends_on('papi', when='+papi')
     depends_on('zlib', when='+zlib')
-
-    depends_on('kokkos-nvcc-wrapper', when='+kokkos +cuda')
-    for nv_arch in CudaPackage.cuda_arch_values:
-        depends_on('kokkos cuda_arch=%s' % nv_arch, when='+kokkos +cuda cuda_arch=%s' % nv_arch)
-    depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
-    #depends_on("kokkos@3.3.01~hip", when='+kokkos~hip')
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
@@ -132,30 +138,21 @@ class Legion(CMakePackage, CudaPackage, ROCmPackage):
     variant('spy', default=False,
             description="Enable detailed logging for Legion Spy debugging.")
 
-    # Note: +cuda variant now supported by CudaPackage.
-    # variant('cuda', default=False,
-    #        description="Enable CUDA support.")
+    # note: we will be dependent upon spack's latest-and-greatest cuda version...
     variant('cuda_hijack', default=False,
             description="Hijack application calls into the CUDA runtime (+cuda).")
-    conflicts('+cuda_arch', when='~cuda')
-
-    variant('cuda_unsupported_compiler', default=False,
-            description="Disable nvcc version check (--allow-unsupported-compiler).")
     conflicts('+cuda_hijack', when='~cuda')
-    variant('gpu_reduction', default=False,
-            description="Enable built-in GPU Reduction.")
-    conflicts('+gpu_reduction', when='~cuda')
+    variant('cuda_unsupported_compiler', default=False,
+            description="Disable nvcc version check.")
+    conflicts('+cuda_unsupported_compiler', when='~cuda')
+    conflicts('cuda_arch=none', when='+cuda',
+              msg='CUDA architecture is required')
+    conflicts("+cuda", when="cuda_arch=none")
 
-    # Note: +hip uses +rocm and 'amdgpu_target' variants added by the ROCmPackage
-    variant('hip', default=False,
-            description="Enable HIP support.")
-    conflicts('+hip', when='+cuda')
-    conflicts('+hip', when='+cuda_hijack')
-    for amd_arch in ROCmPackage.amdgpu_targets:
-        depends_on('+rocm amdgpu_target={0}'.format(amd_arch),
-                   when='+hip amdgpu_target={0}'.format(amd_arch))
-    # TODO: awaiting support for '+hip +kokkos' in legion. 
-    conflicts('+kokkos', when='+hip')
+    # Note: +hip/+rocm and 'amdgpu_target' variants added by the ROCmPackage
+    conflicts('+rocm', when='+cuda', msg="cuda & hip/rocm support is mutally exclusive.")
+    conflicts('+rocm', when='+cuda_hijack', msg="cuda hijack is not supported by rocm/hip.")
+    conflicts('+rocm', when='+cuda_unsupported_compiler')
 
     variant('fortran', default=False,
             description="Enable Fortran bindings.")
@@ -248,22 +245,18 @@ class Legion(CMakePackage, CudaPackage, ROCmPackage):
 
         if '+cuda' in spec:
             cuda_arch = spec.variants['cuda_arch'].value
-            options.append('-DLegion_USE_CUDA=ON')
-            options.append('-DLegion_CUDA_ARCH=%s' % cuda_arch)
-            if '+cuda_hijack' in spec:
-                options.append('-DLegion_HIJACK_CUDART=ON')
-            else:
-                options.append('-DLegion_HIJACK_CUDART=OFF')
-
-            if '+cuda_unsupported_compiler' in spec:
-                options.append('-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler')
-
-            if '-gpu_reduction' in spec:
-                options.append('-DLegion_GPU_REDUCTIONS=OFF')
-            else:
+            if not cuda_arch == "none":
+                options.append('-DLegion_USE_CUDA=ON')
                 options.append('-DLegion_GPU_REDUCTIONS=ON')
+                options.append('-DLegion_CUDA_ARCH=%s' % cuda_arch)
+                if '+cuda_hijack' in spec:
+                    options.append('-DLegion_HIJACK_CUDART=ON')
+                else:
+                    options.append('-DLegion_HIJACK_CUDART=OFF')
+                if '+cuda_unsupported_compiler' in spec:
+                    options.append('-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler')
 
-        if '+hip' in spec:
+        if '+rocm' in spec:
             options.append('-DLegion_USE_HIP=ON')
             options.append('-DLegion_HIP_TARGET=ROCM')
             if 'amdgpu_arch' in spec:
