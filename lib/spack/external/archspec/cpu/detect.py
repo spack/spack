@@ -206,11 +206,26 @@ def host():
     # Get a list of possible candidates for this micro-architecture
     candidates = compatible_microarchitectures(info)
 
+    # Sorting criteria for candidates
+    def sorting_fn(item):
+        return len(item.ancestors), len(item.features)
+
+    # Get the best generic micro-architecture
+    generic_candidates = [c for c in candidates if c.vendor == "generic"]
+    best_generic = max(generic_candidates, key=sorting_fn)
+
+    # Filter the candidates to be descendant of the best generic candidate.
+    # This is to avoid that the lack of a niche feature that can be disabled
+    # from e.g. BIOS prevents detection of a reasonably performant architecture
+    candidates = [c for c in candidates if c > best_generic]
+
+    # If we don't have candidates, return the best generic micro-architecture
+    if not candidates:
+        return best_generic
+
     # Reverse sort of the depth for the inheritance tree among only targets we
     # can use. This gets the newest target we satisfy.
-    return sorted(
-        candidates, key=lambda t: (len(t.ancestors), len(t.features)), reverse=True
-    )[0]
+    return max(candidates, key=sorting_fn)
 
 
 def compatibility_check(architecture_family):
@@ -245,7 +260,13 @@ def compatibility_check_for_power(info, target):
     """Compatibility check for PPC64 and PPC64LE architectures."""
     basename = platform.machine()
     generation_match = re.search(r"POWER(\d+)", info.get("cpu", ""))
-    generation = int(generation_match.group(1))
+    try:
+        generation = int(generation_match.group(1))
+    except AttributeError:
+        # There might be no match under emulated environments. For instance
+        # emulating a ppc64le with QEMU and Docker still reports the host
+        # /proc/cpuinfo and not a Power
+        generation = 0
 
     # We can use a target if it descends from our machine type and our
     # generation (9 for POWER9, etc) is at least its generation.
