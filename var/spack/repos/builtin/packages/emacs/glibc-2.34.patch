@@ -1,0 +1,20 @@
+Fix compilation with glibc-2.34
+https://bugs.gentoo.org/803644
+
+In glibc-2.34, definition of SIGSTKSZ has changed from a fixed value
+to sysconf(_SC_SIGSTKSZ), which cannot be used in the definition of a
+static array. In 2.33, the default SIGSTKSZ was 8192, but apparently
+some arches (e.g. aarch64 and sparc) used 16384. Hardcode the larger
+of these values.
+
+--- emacs-27.2/src/sysdep.c
++++ emacs-27.2/src/sysdep.c
+@@ -1818,7 +1818,7 @@
+ 
+ /* Alternate stack used by SIGSEGV handler below.  */
+ 
+-static unsigned char sigsegv_stack[SIGSTKSZ];
++static unsigned char sigsegv_stack[16384];
+ 
+ 
+ /* Return true if SIGINFO indicates a stack overflow.  */

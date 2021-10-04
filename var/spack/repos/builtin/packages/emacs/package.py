@@ -61,6 +61,8 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     conflicts('@:26.3', when='platform=darwin os=catalina')
     conflicts('+native', when='@:27', msg="native compilation require @master")
 
+    patch('glibc-2.34.patch')
+
     @when('platform=darwin')
     def setup_build_environment(self, env):
         # on macOS, emacs' config does search hard enough for ncurses'
