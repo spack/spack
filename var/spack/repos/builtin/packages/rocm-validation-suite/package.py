@@ -59,5 +59,5 @@ class RocmValidationSuite(CMakePackage):
             self.define('ROCM_SMI_DIR', self.spec['rocm-smi-lib'].prefix),
             self.define('ROCBLAS_DIR', self.spec['rocblas'].prefix),
             self.define('YAML_INC_DIR', self.spec['yaml-cpp'].prefix.include),
-            self.define('YAML_LIB_DIR', self.spec['yaml-cpp'].prefix.lib64)
+            self.define('YAML_LIB_DIR', self.spec['yaml-cpp'].libs.directories[0])
         ]
