@@ -298,6 +298,7 @@ class IntelTbb(CMakePackage):
             options.append('-DCMAKE_CXX_STANDARD=%s' %
                            spec.variants['cxxstd'].value)
         return options
+
     @run_after('install')
     def install_pkgconfig(self):
         # pkg-config generation is introduced in May 5, 2021.
