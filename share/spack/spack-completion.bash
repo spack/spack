@@ -890,7 +890,7 @@ _spack_diff() {
     then
         SPACK_COMPREPLY="-h --help --json --first -a --attribute"
     else
-        _all_packages
+        SPACK_COMPREPLY=""
     fi
 }
 
