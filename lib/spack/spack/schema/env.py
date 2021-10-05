@@ -8,8 +8,6 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/env.py
    :lines: 36-
 """
-import warnings
-
 from llnl.util.lang import union_dicts
 
 import spack.schema.merged
@@ -169,11 +167,6 @@ def update(data):
     Returns:
         True if data was changed, False otherwise
     """
-    if 'include' in data:
-        msg = ("included configuration files should be updated manually"
-               " [files={0}]")
-        warnings.warn(msg.format(', '.join(data['include'])))
-
     if 'packages' in data:
         return spack.schema.packages.update(data['packages'])
     return False
