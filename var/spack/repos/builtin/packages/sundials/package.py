@@ -78,6 +78,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable Pthreads parallel vector')
     variant('raja',    default=False,
             description='Enable RAJA vector')
+    variant('sycl',    default=False,
+            description='Enable SYCL vector')
 
     # External libraries
     variant('hypre',        default=False,
@@ -129,6 +131,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+petsc',         when='@:2.6.2')
     conflicts('+cuda',          when='@:2.7.0')
     conflicts('+raja',          when='@:2.7.0')
+    conflicts('+sycl',          when='@:5.6.0')
     conflicts('~int64',         when='@:2.7.0')
     conflicts('+superlu-dist',  when='@:4.1.0')
     conflicts('+f2003',         when='@:4.1.0')
@@ -272,7 +275,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         args.extend([
             self.define_from_variant('MPI_ENABLE', 'mpi'),
             self.define_from_variant('OPENMP_ENABLE', 'openmp'),
-            self.define_from_variant('PTHREAD_ENABLE', 'pthread')
+            self.define_from_variant('PTHREAD_ENABLE', 'pthread'),
+            self.define_from_variant('ENABLE_SYCL', 'sycl')
         ])
 
         if '+cuda' in spec:
@@ -677,6 +681,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             self.run_test('examples/cvode/hip/cvAdvDiff_kry_hip',
                           work_dir=self._extra_tests_path)
             self.run_test('examples/nvector/hip/test_nvector_hip',
+                          options=['10', '0', '0'],
+                          work_dir=self._extra_tests_path)
+        if '+sycl' in self.spec:
+            self.run_test('examples/cvode/CXX_sycl/cvAdvDiff_kry_sycl',
+                          work_dir=self._extra_tests_path)
+            self.run_test('examples/nvector/sycl/test_nvector_sycl',
                           options=['10', '0', '0'],
                           work_dir=self._extra_tests_path)
         return
