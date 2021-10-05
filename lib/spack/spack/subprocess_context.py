@@ -22,6 +22,10 @@ from types import ModuleType
 
 import spack.architecture
 import spack.config
+import spack.environment
+import spack.main
+import spack.repo
+import spack.store
 
 _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
 
@@ -63,26 +67,23 @@ class PackageInstallContext(object):
     needs to be transmitted to a child process.
     """
     def __init__(self, pkg):
-        import spack.environment as ev  # break import cycle
         if _serialize:
             self.serialized_pkg = serialize(pkg)
-            self.serialized_env = serialize(ev._active_environment)
+            self.serialized_env = serialize(spack.environment.active_environment())
         else:
             self.pkg = pkg
-            self.env = ev._active_environment
+            self.env = spack.environment.active_environment()
         self.spack_working_dir = spack.main.spack_working_dir
         self.test_state = TestState()
 
     def restore(self):
-        import spack.environment as ev  # break import cycle
         self.test_state.restore()
         spack.main.spack_working_dir = self.spack_working_dir
-        if _serialize:
-            ev._active_environment = pickle.load(self.serialized_env)
-            return pickle.load(self.serialized_pkg)
-        else:
-            ev._active_environment = self.env
-            return self.pkg
+        env = pickle.load(self.serialized_env) if _serialize else self.env
+        pkg = pickle.load(self.serialized_pkg) if _serialize else self.pkg
+        if env:
+            spack.environment.activate(env)
+        return pkg
 
 
 class TestState(object):

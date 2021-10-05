@@ -539,7 +539,7 @@ def _add_externals_if_missing():
 def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
-    with spack.environment.deactivate_environment():
+    with spack.environment.no_active_environment():
         with spack.architecture.use_platform(spack.architecture.real_platform()):
             with spack.repo.use_repositories(spack.paths.packages_path):
                 with spack.store.use_store(bootstrap_store_path):

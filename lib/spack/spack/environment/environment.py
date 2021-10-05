@@ -16,13 +16,13 @@ from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
 
 import spack.concretize
 import spack.config
 import spack.error
 import spack.hash_types as ht
 import spack.hooks
+import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.spec
@@ -108,9 +108,7 @@ def validate_env_name(name):
     return name
 
 
-def activate(
-    env, use_env_repo=False, add_view=True, shell='sh', prompt=None
-):
+def activate(env, use_env_repo=False):
     """Activate an environment.
 
     To activate an environment, we add its configuration scope to the
@@ -121,96 +119,26 @@ def activate(
         env (Environment): the environment to activate
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
-        add_view (bool): generate commands to add view to path variables
-        shell (str): One of `sh`, `csh`, `fish`.
-        prompt (str): string to add to the users prompt, or None
-
-    Returns:
-        str: Shell commands to activate environment.
-
-    TODO: environment to use the activated spack environment.
     """
     global _active_environment
 
-    _active_environment = env
-    prepare_config_scope(_active_environment)
+    # Fail early to avoid ending in an invalid state
+    if not isinstance(env, Environment):
+        raise TypeError("`env` should be of type {0}".format(Environment.__name__))
+
+    prepare_config_scope(env)
+
     if use_env_repo:
-        spack.repo.path.put_first(_active_environment.repo)
+        spack.repo.path.put_first(env.repo)
 
-    tty.debug("Using environment '%s'" % _active_environment.name)
+    tty.debug("Using environment '%s'" % env.name)
 
-    # Construct the commands to run
-    cmds = ''
-    if shell == 'csh':
-        # TODO: figure out how to make color work for csh
-        cmds += 'setenv SPACK_ENV %s;\n' % env.path
-        cmds += 'alias despacktivate "spack env deactivate";\n'
-        if prompt:
-            cmds += 'if (! $?SPACK_OLD_PROMPT ) '
-            cmds += 'setenv SPACK_OLD_PROMPT "${prompt}";\n'
-            cmds += 'set prompt="%s ${prompt}";\n' % prompt
-    elif shell == 'fish':
-        if os.getenv('TERM') and 'color' in os.getenv('TERM') and prompt:
-            prompt = colorize('@G{%s} ' % prompt, color=True)
-
-        cmds += 'set -gx SPACK_ENV %s;\n' % env.path
-        cmds += 'function despacktivate;\n'
-        cmds += '   spack env deactivate;\n'
-        cmds += 'end;\n'
-        #
-        # NOTE: We're not changing the fish_prompt function (which is fish's
-        # solution to the PS1 variable) here. This is a bit fiddly, and easy to
-        # screw up => spend time reasearching a solution. Feedback welcome.
-        #
-    else:
-        if os.getenv('TERM') and 'color' in os.getenv('TERM') and prompt:
-            prompt = colorize('@G{%s} ' % prompt, color=True)
-
-        cmds += 'export SPACK_ENV=%s;\n' % env.path
-        cmds += "alias despacktivate='spack env deactivate';\n"
-        if prompt:
-            cmds += 'if [ -z ${SPACK_OLD_PS1+x} ]; then\n'
-            cmds += '    if [ -z ${PS1+x} ]; then\n'
-            cmds += "        PS1='$$$$';\n"
-            cmds += '    fi;\n'
-            cmds += '    export SPACK_OLD_PS1="${PS1}";\n'
-            cmds += 'fi;\n'
-            cmds += 'export PS1="%s ${PS1}";\n' % prompt
-
-    #
-    # NOTE in the fish-shell: Path variables are a special kind of variable
-    # used to support colon-delimited path lists including PATH, CDPATH,
-    # MANPATH, PYTHONPATH, etc. All variables that end in PATH (case-sensitive)
-    # become PATH variables.
-    #
-    try:
-        if add_view and default_view_name in env.views:
-            with spack.store.db.read_transaction():
-                cmds += env.add_default_view_to_shell(shell)
-    except (spack.repo.UnknownPackageError,
-            spack.repo.UnknownNamespaceError) as e:
-        tty.error(e)
-        tty.die(
-            'Environment view is broken due to a missing package or repo.\n',
-            '  To activate without views enabled, activate with:\n',
-            '    spack env activate -V {0}\n'.format(env.name),
-            '  To remove it and resolve the issue, '
-            'force concretize with the command:\n',
-            '    spack -e {0} concretize --force'.format(env.name))
-
-    return cmds
+    # Do this last, because setting up the config must succeed first.
+    _active_environment = env
 
 
-def deactivate(shell='sh'):
-    """Undo any configuration or repo settings modified by ``activate()``.
-
-    Arguments:
-        shell (str): One of `sh`, `csh`, `fish`. Shell style to use.
-
-    Returns:
-        str: shell commands for `shell` to undo environment variables
-
-    """
+def deactivate():
+    """Undo any configuration or repo settings modified by ``activate()``."""
     global _active_environment
 
     if not _active_environment:
@@ -222,47 +150,9 @@ def deactivate(shell='sh'):
     if _active_environment._repo:
         spack.repo.path.remove(_active_environment._repo)
 
-    cmds = ''
-    if shell == 'csh':
-        cmds += 'unsetenv SPACK_ENV;\n'
-        cmds += 'if ( $?SPACK_OLD_PROMPT ) '
-        cmds += 'set prompt="$SPACK_OLD_PROMPT" && '
-        cmds += 'unsetenv SPACK_OLD_PROMPT;\n'
-        cmds += 'unalias despacktivate;\n'
-    elif shell == 'fish':
-        cmds += 'set -e SPACK_ENV;\n'
-        cmds += 'functions -e despacktivate;\n'
-        #
-        # NOTE: Not changing fish_prompt (above) => no need to restore it here.
-        #
-    else:
-        cmds += 'if [ ! -z ${SPACK_ENV+x} ]; then\n'
-        cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
-        cmds += 'fi;\n'
-        cmds += 'unalias despacktivate;\n'
-        cmds += 'if [ ! -z ${SPACK_OLD_PS1+x} ]; then\n'
-        cmds += '    if [ "$SPACK_OLD_PS1" = \'$$$$\' ]; then\n'
-        cmds += '        unset PS1; export PS1;\n'
-        cmds += '    else\n'
-        cmds += '        export PS1="$SPACK_OLD_PS1";\n'
-        cmds += '    fi;\n'
-        cmds += '    unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n'
-        cmds += 'fi;\n'
-
-    try:
-        if default_view_name in _active_environment.views:
-            with spack.store.db.read_transaction():
-                cmds += _active_environment.rm_default_view_from_shell(shell)
-    except (spack.repo.UnknownPackageError,
-            spack.repo.UnknownNamespaceError) as e:
-        tty.warn(e)
-        tty.warn('Could not fully deactivate view due to missing package '
-                 'or repo, shell environment may be corrupt.')
-
     tty.debug("Deactivated environment '%s'" % _active_environment.name)
-    _active_environment = None
 
-    return cmds
+    _active_environment = None
 
 
 def active_environment():
@@ -1345,12 +1235,18 @@ class Environment(object):
 
         return all_mods, errors
 
-    def add_default_view_to_shell(self, shell):
-        env_mod = spack.util.environment.EnvironmentModifications()
+    def add_default_view_to_env(self, env_mod):
+        """
+        Collect the environment modifications to activate an environment using the
+        default view. Removes duplicate paths.
 
+        Args:
+            env_mod (spack.util.environment.EnvironmentModifications): the environment
+                modifications object that is modified.
+        """
         if default_view_name not in self.views:
             # No default view to add to shell
-            return env_mod.shell_modifications(shell)
+            return env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view))
@@ -1365,14 +1261,20 @@ class Environment(object):
         for env_var in env_mod.group_by_name():
             env_mod.prune_duplicate_paths(env_var)
 
-        return env_mod.shell_modifications(shell)
+        return env_mod
 
-    def rm_default_view_from_shell(self, shell):
-        env_mod = spack.util.environment.EnvironmentModifications()
+    def rm_default_view_from_env(self, env_mod):
+        """
+        Collect the environment modifications to deactivate an environment using the
+        default view. Reverses the action of ``add_default_view_to_env``.
 
+        Args:
+            env_mod (spack.util.environment.EnvironmentModifications): the environment
+                modifications object that is modified.
+        """
         if default_view_name not in self.views:
             # No default view to add to shell
-            return env_mod.shell_modifications(shell)
+            return env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view).reversed())
@@ -1380,7 +1282,7 @@ class Environment(object):
         mods, _ = self._env_modifications_for_default_view(reverse=True)
         env_mod.extend(mods)
 
-        return env_mod.shell_modifications(shell)
+        return env_mod
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.
@@ -2165,14 +2067,17 @@ def is_latest_format(manifest):
 
 
 @contextlib.contextmanager
-def deactivate_environment():
-    """Deactivate an active environment for the duration of the context."""
-    global _active_environment
-    current, _active_environment = _active_environment, None
+def no_active_environment():
+    """Deactivate the active environment for the duration of the context. Has no
+       effect when there is no active environment."""
+    env = active_environment()
     try:
+        deactivate()
         yield
     finally:
-        _active_environment = current
+        # TODO: we don't handle `use_env_repo` here.
+        if env:
+            activate(env)
 
 
 class SpackEnvironmentError(spack.error.SpackError):
