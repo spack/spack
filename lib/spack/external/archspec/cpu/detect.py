@@ -306,3 +306,22 @@ def compatibility_check_for_aarch64(info, target):
         and (target.vendor == vendor or target.vendor == "generic")
         and target.features.issubset(features)
     )
+
+
+@compatibility_check(architecture_family="riscv64")
+def compatibility_check_for_riscv64(info, target):
+    """Compatibility check for riscv64 architectures."""
+    basename = "riscv64"
+    uarch = info.get("uarch")
+
+    # sifive unmatched board
+    if uarch == "sifive,u74-mc":
+        uarch = "u74mc"
+    # catch-all for unknown uarchs
+    else:
+        uarch = "riscv64"
+
+    arch_root = TARGETS[basename]
+    return (target == arch_root or arch_root in target.ancestors) and (
+        target == uarch or target.vendor == "generic"
+    )
