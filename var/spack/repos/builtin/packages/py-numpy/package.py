@@ -129,7 +129,7 @@ class PyNumpy(PythonPackage):
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
 
     # NVHPC support added in https://github.com/numpy/numpy/pull/17344
-    conflicts('%nvhpc', when='@:1.19.999')
+    conflicts('%nvhpc', when='@:1.19')
 
     def flag_handler(self, name, flags):
         # -std=c99 at least required, old versions of GCC default to -std=c90

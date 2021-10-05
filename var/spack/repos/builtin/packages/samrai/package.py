@@ -49,7 +49,7 @@ class Samrai(AutotoolsPackage):
     depends_on('zlib')
     depends_on('hdf5+mpi')
     depends_on('m4', type='build')
-    depends_on('boost@:1.64.0', when='@3.0.0:3.11.99', type='build')
+    depends_on('boost@:1.64.0', when='@3.0.0:3.11', type='build')
     depends_on('silo+mpi', when='+silo')
 
     # don't build SAMRAI 3+ with tools with gcc
@@ -91,7 +91,7 @@ class Samrai(AutotoolsPackage):
         if '+silo' in self.spec:
             options.append('--with-silo=%s' % self.spec['silo'].prefix)
 
-        if self.spec.satisfies('@3.0:3.11.99'):
+        if self.spec.satisfies('@3.0:3.11'):
             options.append('--with-boost=%s' % self.spec['boost'].prefix)
 
         return options

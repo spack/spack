@@ -14,6 +14,8 @@ class Sz(CMakePackage):
     git      = "https://github.com/szcompressor/sz"
     maintainers = ['disheng222', 'robertu94']
 
+    tags = ['e4s']
+
     version('master', branch='master')
     version('2.1.12', sha256='3712b2cd7170d1511569e48a208f02dfb72ecd7ad053c321e2880b9083e150de')
     version('2.1.11.1', sha256='e6fa5c969b012782b1e5e9fbd1cd7d1c0ace908d9ec982e78b2910ec5c2161ac')
@@ -91,6 +93,7 @@ class Sz(CMakePackage):
 
         if "+python" in self.spec:
             args.append("-DBUILD_PYTHON_WRAPPER=ON")
+            args.append("-DSZ_PYTHON_SITELIB={0}".format(site_packages_dir))
         else:
             args.append("-DBUILD_PYTHON_WRAPPER=OFF")
 

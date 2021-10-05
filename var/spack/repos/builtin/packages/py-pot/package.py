@@ -21,7 +21,7 @@ class PyPot(PythonPackage):
     # Avoid that CC and CXX are overridden with g++ in setup.py.
     patch('175.patch', when='@0.7.0')
 
-    depends_on('python@2.7:2.7.999,3.4:', type=('build', 'run'))
+    depends_on('python@2.7.0:2.7,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
     depends_on('py-numpy@1.16:', type=('build', 'run'))

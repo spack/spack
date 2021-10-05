@@ -14,6 +14,8 @@ class SuperluDist(CMakePackage, CudaPackage):
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
+    tags = ['e4s']
+
     maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels']
 
     version('develop', branch='master')
@@ -43,7 +45,7 @@ class SuperluDist(CMakePackage, CudaPackage):
     depends_on('parmetis')
     depends_on('metis@5:')
 
-    conflicts('+cuda', when='@:6.3.999')
+    conflicts('+cuda', when='@:6.3')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')

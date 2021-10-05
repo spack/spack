@@ -21,10 +21,37 @@ class Libunwind(AutotoolsPackage):
     version('1.4.0', sha256='df59c931bd4d7ebfd83ee481c943edf015138089b8e50abed8d9c57ba9338435')
     version('1.3.1', sha256='43997a3939b6ccdf2f669b50fdb8a4d3205374728c2923ddc2354c65260214f8')
     version('1.2.1', sha256='3f3ecb90e28cbe53fba7a4a27ccce7aad188d3210bb1964a923a731a27a75acb')
-    version('1.1', sha256='9dfe0fcae2a866de9d3942c66995e4b460230446887dbdab302d41a8aee8d09a')
+    version('1.1', sha256='9dfe0fcae2a866de9d3942c66995e4b460230446887dbdab302d41a8aee8d09a',
+            deprecated=True)
 
+    variant('docs', default=True, description='Build man page')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
     variant('pic', default=False,
             description='Compile with position independent code.')
+    variant('tests', default=True, description='Build tests')
+
+    variant('block_signals', default=False,
+            description='Block signals before performing mutex operations')
+
+    variant('components',
+            values=any_combination_of('coredump', 'ptrace', 'setjump'),
+            description='Build specified libunwind libraries')
+
+    variant('conservative_checks', default=False,
+            description='Validate all memory addresses before use')
+
+    variant('cxx_exceptions', default=False,
+            description='Use libunwind to handle C++ exceptions')
+
+    variant('debug', default=False,
+            description='Turn on debug support (slows down execution)')
+
+    variant('debug_frame', default=False,
+            description='Load the ".debug_frame" section if available')
+
+    variant('weak_backtrace', default=True,
+            description="Provide the weak 'backtrace' symbol")
 
     variant('xz', default=False,
             description='Support xz (lzma) compressed symbol tables.')
@@ -67,16 +94,23 @@ class Libunwind(AutotoolsPackage):
         spec = self.spec
         args = []
 
-        if '+xz' in spec:
-            args.append('--enable-minidebuginfo')
-        else:
-            args.append('--disable-minidebuginfo')
+        args += self.enable_or_disable('documentation', variant='docs')
+        args += self.enable_or_disable('libs')
+        args += self.enable_or_disable('tests')
 
+        args += self.enable_or_disable('block-signals', variant='block_signals')
+        args += self.enable_or_disable('components')
+        args += self.enable_or_disable('conservative-checks',
+                                       variant='conservative_checks')
+        args += self.enable_or_disable('cxx-exceptions', variant='cxx_exceptions')
+        args += self.enable_or_disable('debug')
+        args += self.enable_or_disable('debug-frame', variant='debug_frame')
+        args += self.enable_or_disable('minidebuginfo', variant='xz')
+        #  building without weak backtrace symbol is possible in 1.5.x and later
+        if self.spec.satisfies('@1.5:'):
+            args += self.enable_or_disable('weak-backtrace', variant='weak_backtrace')
         # zlib support is available in 1.5.x and later
         if spec.satisfies('@1.5:'):
-            if '+zlib' in spec:
-                args.append('--enable-zlibdebuginfo')
-            else:
-                args.append('--disable-zlibdebuginfo')
+            args += self.enable_or_disable('zlibdebuginfo', variant='zlib')
 
         return args

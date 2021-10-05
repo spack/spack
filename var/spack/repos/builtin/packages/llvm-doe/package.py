@@ -20,6 +20,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
     url = "https://github.com/llvm-doe-org/llvm-project/archive/llvmorg-10.0.0.zip"
     git = "https://github.com/llvm-doe-org/llvm-project"
     maintainers = ['shintaro-iwasaki']
+    tags = ['e4s']
 
     version('doe', branch='doe', preferred=True)
     version('upstream', branch='llvm.org/main')
@@ -153,7 +154,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
     conflicts("+internal_unwind", when="~clang")
     conflicts("+compiler-rt", when="~clang")
 
-    conflicts("%gcc@:5.0.999")
+    conflicts("%gcc@:5.0")
 
     # cuda_arch value must be specified
     conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
@@ -187,7 +188,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
 
     # https://github.com/spack/spack/issues/19625,
     # merged in llvm-11.0.0_rc2
-    patch("lldb_external_ncurses-10.patch", when="@10.0.0:10.99+lldb")
+    patch("lldb_external_ncurses-10.patch", when="@10.0.0:10+lldb")
 
     # https://github.com/spack/spack/issues/19908
     # merged in llvm main prior to 12.0.0

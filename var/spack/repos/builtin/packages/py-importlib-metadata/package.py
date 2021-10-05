@@ -30,4 +30,4 @@ class PyImportlibMetadata(PythonPackage):
     depends_on('py-pathlib2', when='^python@:2', type=('build', 'run'))
     depends_on('py-contextlib2', when='^python@:2', type=('build', 'run'))
     depends_on('py-configparser@3.5:', when='^python@:2', type=('build', 'run'))
-    depends_on('py-typing-extensions@3.6.4:', type=('build', 'run'), when='@3: ^python@:3.7.999')
+    depends_on('py-typing-extensions@3.6.4:', type=('build', 'run'), when='@3: ^python@:3.7')

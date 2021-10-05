@@ -61,7 +61,7 @@ class Reframe(Package):
     depends_on('git', when='@2.0:3.1', type='run')
 
     # supported python versions
-    depends_on('python@3.5:', when='@2.0:2.999', type='run')
+    depends_on('python@3.5:', when='@2.0:2', type='run')
     depends_on('python@3.6:', when='@3.0:', type='run')
 
     # build dependencies

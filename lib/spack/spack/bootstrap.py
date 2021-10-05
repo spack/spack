@@ -216,6 +216,10 @@ class _BuildcacheBootstrapper(object):
             # specs that wwe know by dag hash.
             spack.binary_distribution.binary_index.regenerate_spec_cache()
             index = spack.binary_distribution.update_cache_and_get_specs()
+
+            if not index:
+                raise RuntimeError("Could not populate the binary index")
+
             for item in data['verified']:
                 candidate_spec = item['spec']
                 python_spec = item['python']
@@ -273,6 +277,8 @@ class _SourceBootstrapper(object):
         if _try_import_from_store(module, abstract_spec_str):
             return True
 
+        tty.info("Bootstrapping {0} from sources".format(module))
+
         # Try to build and install from sources
         with spack_python_interpreter():
             # Add hint to use frontend operating system on Cray
@@ -285,16 +291,15 @@ class _SourceBootstrapper(object):
 
             if module == 'clingo':
                 # TODO: remove when the old concretizer is deprecated
-                concrete_spec._old_concretize()
+                concrete_spec._old_concretize(deprecation_warning=False)
             else:
                 concrete_spec.concretize()
 
         msg = "[BOOTSTRAP MODULE {0}] Try installing '{1}' from sources"
         tty.debug(msg.format(module, abstract_spec_str))
-        tty.info("Bootstrapping {0} from sources".format(module))
 
         # Install the spec that should make the module importable
-        concrete_spec.package.do_install()
+        concrete_spec.package.do_install(fail_fast=True)
 
         return _try_import_from_store(module, abstract_spec_str=abstract_spec_str)
 
@@ -377,6 +382,9 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
 
     abstract_spec = abstract_spec or module
     source_configs = spack.config.get('bootstrap:sources', [])
+
+    errors = {}
+
     for current_config in source_configs:
         if not _source_is_trusted(current_config):
             msg = ('[BOOTSTRAP MODULE {0}] Skipping source "{1}" since it is '
@@ -391,11 +399,18 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
         except Exception as e:
             msg = '[BOOTSTRAP MODULE {0}] Unexpected error "{1}"'
             tty.debug(msg.format(module, str(e)))
+            errors[current_config['name']] = e
 
     # We couldn't import in any way, so raise an import error
     msg = 'cannot bootstrap the "{0}" Python module'.format(module)
     if abstract_spec:
         msg += ' from spec "{0}"'.format(abstract_spec)
+    msg += ' due to the following failures:\n'
+    for method in errors:
+        err = errors[method]
+        msg += "    '{0}' raised {1}: {2}\n".format(
+            method, err.__class__.__name__, str(err))
+    msg += '    Please run `spack -d spec zlib` for more verbose error messages'
     raise ImportError(msg)
 
 

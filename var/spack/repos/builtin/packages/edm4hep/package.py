@@ -31,7 +31,7 @@ class Edm4hep(CMakePackage):
     depends_on('root@6.08:')
     depends_on('podio@0.13:')
 
-    depends_on('hepmc@:2.99.99', type='test')
+    depends_on('hepmc@:2', type='test')
     depends_on('heppdt', type='test')
 
     def cmake_args(self):

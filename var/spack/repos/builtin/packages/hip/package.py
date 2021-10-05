@@ -71,7 +71,7 @@ class Hip(CMakePackage):
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.10.0.patch', when='@3.10.0:4.1.0')
 
     # Tests are broken when using cmake 3.21
-    with when('^cmake@3.21:'):
+    with when('^cmake@3.21.0:'):
         patch('0005-Disable-tests-3.5.0.patch', when='@3.5.0')
         patch('0005-Disable-tests-3.6.0.patch', when='@3.6.0:3.8.0')
         patch('0005-Disable-tests-3.9.0.patch', when='@3.9.0:4.0.0')

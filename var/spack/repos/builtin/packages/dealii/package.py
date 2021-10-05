@@ -146,7 +146,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('boost cxxstd=11', when='cxxstd=11')
     depends_on('boost cxxstd=14', when='cxxstd=14')
     depends_on('boost cxxstd=17', when='cxxstd=17')
-    depends_on('bzip2',           when='@:8.99')
+    depends_on('bzip2',           when='@:8')
     depends_on('lapack')
     depends_on('ninja',           type='build')
     depends_on('suite-sparse')
@@ -157,7 +157,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('cmake@3.9:',       when='+cuda', type='build')
     # Older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9.99',    when='@:8.99', type='build')
+    depends_on('cmake@:3.9',    when='@:8', type='build')
     depends_on('mpi',              when='+mpi')
     depends_on('python',           when='@8.5.0:+python')
 
@@ -347,7 +347,7 @@ class Dealii(CMakePackage, CudaPackage):
             self.define('DEAL_II_ALLOW_BUNDLED', False)
         ])
 
-        if spec.satisfies('@:8.99'):
+        if spec.satisfies('@:8'):
             options.extend([
                 # Cmake may still pick up system's bzip2, fix this:
                 self.define('BZIP2_FOUND', True),

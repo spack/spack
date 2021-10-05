@@ -20,6 +20,8 @@ class Plasma(CMakePackage):
     git = "https://github.com/icl-utk-edu/plasma"
     maintainers = ['luszczek']
 
+    tags = ['e4s']
+
     version("develop", git=git)
     version('21.8.29', sha256='e0bb4d9143c8540f9f46cbccac9ed0cbea12500a864e6954fce2fe94ea057a10')
     version("20.9.20", sha256="2144a77b739f8dd2f0dbe5b64d94cde0e916f55c4eb170facd168c0db7fc7970")
@@ -46,7 +48,7 @@ class Plasma(CMakePackage):
     conflicts("^atlas")  # does not have LAPACKE interface
 
     # missing LAPACKE features and/or CBLAS headers
-    conflicts("^netlib-lapack@:3.5.999")
+    conflicts("^netlib-lapack@:3.5")
 
     # clashes with OpenBLAS declarations and has a problem compiling on its own
     conflicts("^cblas")
@@ -55,9 +57,9 @@ class Plasma(CMakePackage):
     conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:4.8.99", when='@:17.1')
+    conflicts("%gcc@:4.8", when='@:17.1')
     # only GCC 6.0+ and higher have for OpenMP 4+ Clause "priority"
-    conflicts("%gcc@:5.99", when='@17.2:')
+    conflicts("%gcc@:5", when='@17.2:')
 
     conflicts("%cce")
     conflicts('%apple-clang')

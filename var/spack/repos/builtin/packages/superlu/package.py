@@ -12,6 +12,8 @@ class Superlu(CMakePackage):
     homepage = "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu"
     url      = "https://github.com/xiaoyeli/superlu/archive/refs/tags/v5.2.2.tar.gz"
 
+    tags = ['e4s']
+
     version('5.2.2', sha256='470334a72ba637578e34057f46948495e601a5988a602604f5576367e606a28c')
     version('5.2.1', sha256='28fb66d6107ee66248d5cf508c79de03d0621852a0ddeba7301801d3d859f463')
     version('4.3', sha256='169920322eb9b9c6a334674231479d04df72440257c17870aaa0139d74416781',
@@ -47,7 +49,7 @@ class Superlu(CMakePackage):
         return args
 
     # Pre-cmake installation method
-    @when("@:4.999")
+    @when("@:4")
     def cmake(self, spec, prefix):
         """Use autotools before version 5"""
         config = []
@@ -139,7 +141,7 @@ class Superlu(CMakePackage):
         return config_args
 
     # Pre-cmake configuration
-    @when('@:4.999')
+    @when('@:4')
     def _generate_make_hdr_for_test(self):
         config_args = []
 

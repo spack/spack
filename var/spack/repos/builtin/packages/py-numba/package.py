@@ -19,13 +19,13 @@ class PyNumba(PythonPackage):
     version('0.40.1', sha256='52d046c13bcf0de79dbfb936874b7228f141b9b8e3447cc35855e9ad3e12aa33')
     version('0.35.0', sha256='11564937757605bee590c5758c73cfe9fd6d569726b56d970316a6228971ecc3')
 
-    depends_on('python@3.7:3.9.999', type=('build', 'run'), when='@0.54.0:')
+    depends_on('python@3.7:3.9', type=('build', 'run'), when='@0.54.0:')
     depends_on('python@3.6:', type=('build', 'run'), when='@0.48.0:')
-    depends_on('python@3.3:3.7.9999', type=('build', 'run'), when='@0.40.1:0.47.999')
-    depends_on('python@3.3:3.6.9999', type=('build', 'run'), when='@:0.35.0')
+    depends_on('python@3.3:3.7', type=('build', 'run'), when='@0.40.1:0.47')
+    depends_on('python@3.3:3.6', type=('build', 'run'), when='@:0.35.0')
     depends_on('py-numpy@1.17:1.20', type=('build', 'run'), when='@0.54.0:')
     depends_on('py-numpy@1.15:', type=('build', 'run'), when='@0.48.0:')
-    depends_on('py-numpy@1.10:1.99', type=('build', 'run'))
+    depends_on('py-numpy@1.10:1', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
 
     # Note: As of 1 Nov 2018, 0.25 was the latest version of py-llvmlite.
@@ -33,16 +33,16 @@ class PyNumba(PythonPackage):
     # calls.  If newer versions maintain backwards compatibility, the calls
     # can be updated accordingly.
     depends_on('py-llvmlite@0.37.0:0.37.9', type=('build', 'run'), when='@0.54.0')
-    depends_on('py-llvmlite@0.34.0:0.34.999', type=('build', 'run'), when='@0.51.1')
-    depends_on('py-llvmlite@0.33.0:0.33.999', type=('build', 'run'), when='@0.50.1')
-    depends_on('py-llvmlite@0.31.0:0.31.999', type=('build', 'run'), when='@0.48.0')
+    depends_on('py-llvmlite@0.34.0:0.34', type=('build', 'run'), when='@0.51.1')
+    depends_on('py-llvmlite@0.33.0:0.33', type=('build', 'run'), when='@0.50.1')
+    depends_on('py-llvmlite@0.31.0:0.31', type=('build', 'run'), when='@0.48.0')
     depends_on('py-llvmlite@0.25.0:',         type=('build', 'run'), when='@0.40.1')
     depends_on('py-llvmlite@0.20:0.25',       type=('build', 'run'), when='@0.35.1')
 
     depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')
-    depends_on('py-funcsigs', type=('build', 'run'), when='@:0.47 ^python@:3.2.99')
-    depends_on('py-enum34', type=('build', 'run'), when='@:0.47 ^python@:3.3.99')
-    depends_on('py-singledispatch', type=('build', 'run'), when='@:0.47 ^python@:3.3.99')
+    depends_on('py-funcsigs', type=('build', 'run'), when='@:0.47 ^python@:3.2')
+    depends_on('py-enum34', type=('build', 'run'), when='@:0.47 ^python@:3.3')
+    depends_on('py-singledispatch', type=('build', 'run'), when='@:0.47 ^python@:3.3')
 
     # Version 6.0.0 of llvm had a hidden symbol which breaks numba at runtime.
     # See https://reviews.llvm.org/D44140

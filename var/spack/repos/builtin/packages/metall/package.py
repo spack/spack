@@ -13,6 +13,8 @@ class Metall(CMakePackage):
 
     maintainers = ['KIwabuchi', 'rogerpearce', 'mayagokhale']
 
+    tags = ['e4s']
+
     version('master', branch='master')
     version('develop', branch='develop')
 

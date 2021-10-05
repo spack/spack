@@ -30,4 +30,4 @@ class PyGitpython(PythonPackage):
 
     depends_on('python@3.4:',   type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-gitdb@4.0.1:4.999', type=('build', 'run'))
+    depends_on('py-gitdb@4.0.1:4', type=('build', 'run'))

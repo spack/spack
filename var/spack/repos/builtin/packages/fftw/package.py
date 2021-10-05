@@ -29,7 +29,7 @@ class FftwBase(AutotoolsPackage):
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
     # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
-    conflicts('%gcc@8:8.9999', when="@3.3.7")
+    conflicts('%gcc@8.0:8', when="@3.3.7")
     conflicts('precision=long_double', when='@2.1.5',
               msg='Long double precision is not supported in FFTW 2')
     conflicts('precision=quad', when='@2.1.5',

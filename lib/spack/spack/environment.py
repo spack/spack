@@ -1944,7 +1944,7 @@ class Environment(object):
         written = os.path.exists(self.manifest_path)
         if changed or not written:
             self.raw_yaml = copy.deepcopy(self.yaml)
-            with fs.write_tmp_and_move(self.manifest_path) as f:
+            with fs.write_tmp_and_move(os.path.realpath(self.manifest_path)) as f:
                 _write_yaml(self.yaml, f)
 
     def __enter__(self):

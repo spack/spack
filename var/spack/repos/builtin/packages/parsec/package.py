@@ -20,6 +20,7 @@ class Parsec(CMakePackage, CudaPackage):
     url         = "https://bitbucket.org/icldistcomp/parsec/get/parsec-3.0.2012.tar.bz2"
     list_url    = "https://bitbucket.org/icldistcomp/parsec/downloads/?tab=tags"
     maintainers = ['abouteiller', 'bosilca', 'herault']
+    tags = ['e4s']
 
     test_requires_compiler = True
 

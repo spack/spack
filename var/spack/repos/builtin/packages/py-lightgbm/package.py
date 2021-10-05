@@ -21,7 +21,7 @@ class PyLightgbm(PythonPackage):
     depends_on('py-wheel', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-scikit-learn@:0.21.999,0.22.1:', type=('build', 'run'))
+    depends_on('py-scikit-learn@:0.21,0.22.1:', type=('build', 'run'))
 
     depends_on('cmake@3.8:', type='build')
 

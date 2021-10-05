@@ -27,4 +27,4 @@ class PyAbslPy(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build'))
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3.99')
+    depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
