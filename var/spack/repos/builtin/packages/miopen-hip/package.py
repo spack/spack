@@ -55,26 +55,44 @@ class MiopenHip(CMakePackage):
         spec = self.spec
 
         # and the exact location of its bitcode depends on the version
-        if spec.version >= Version('3.9.0'):
+        if spec.version >= Version('4.3.0'):
+            return spec['llvm-amdgpu'].prefix.llvm.amdgcn.bitcode
+        elif spec.version >= Version('3.9.0') and spec.version <= Version('4.2.0'):
             return spec['llvm-amdgpu'].prefix.amdgcn.bitcode
         else:
             return spec['llvm-amdgpu'].prefix.lib
 
     def cmake_args(self):
         spec = self.spec
-
         args = [
             self.define('MIOPEN_BACKEND', 'HIP'),
-            self.define(
-                'CMAKE_CXX_COMPILER',
-                '{0}/bin/clang++'.format(spec['llvm-amdgpu'].prefix)
-            ),
-            self.define(
-                'MIOPEN_AMDGCN_ASSEMBLER',
-                '{0}/bin/clang'.format(spec['llvm-amdgpu'].prefix)
-            ),
             self.define('Boost_USE_STATIC_LIBS', 'Off'),
             self.define('HIP_PREFIX_PATH', spec['hip'].prefix),
             self.define('DEVICELIBS_PREFIX_PATH', self.get_bitcode_dir())
         ]
+        if '@:4.2.0' in spec:
+            args.append(self.define(
+                'CMAKE_CXX_COMPILER',
+                '{0}/bin/clang++'.format(spec['llvm-amdgpu'].prefix)))
+            args.append(self.define(
+                'MIOPEN_AMDGCN_ASSEMBLER',
+                '{0}/bin/clang'.format(spec['llvm-amdgpu'].prefix)))
+            args.append(self.define(
+                'MIOPEN_OFFLOADBUNDLER_BIN',
+                '{0}/bin/clang-offload-bundler'.
+                format(spec['llvm-amdgpu'].prefix)))
+        elif '@4.3.0:' in spec:
+            args.append(self.define(
+                'CMAKE_CXX_COMPILER',
+                '{0}/llvm/bin/clang++'.format(spec['llvm-amdgpu'].prefix)))
+            args.append(self.define(
+                'MIOPEN_AMDGCN_ASSEMBLER',
+                '{0}/llvm/bin/clang'.format(spec['llvm-amdgpu'].prefix)))
+            args.append(self.define(
+                'MIOPEN_OFFLOADBUNDLER_BIN',
+                '{0}/llvm/bin/clang-offload-bundler'.
+                format(spec['llvm-amdgpu'].prefix)))
+            args.append(
+                '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                format(self.spec['llvm-amdgpu'].prefix))
         return args

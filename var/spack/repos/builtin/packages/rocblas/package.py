@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 
 
@@ -86,12 +87,10 @@ class Rocblas(CMakePackage):
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
         if '@4.3.0:' in self.spec:
-            env.set('TENSILE_ROCM_ASSEMBLER_PATH',
-                os.path.join(self.spec['llvm-amdgpu'].prefix,"llvm/bin",
-                "clang++"))
-            env.set('TENSILE_ROCM_OFFLOAD_BUNDLER_PATH',
-                os.path.join(self.spec['llvm-amdgpu'].prefix,"llvm/bin",
-                "clang-offload-bundler"))
+            env.set('TENSILE_ROCM_ASSEMBLER_PATH', os.path.join(
+                self.spec['llvm-amdgpu'].prefix, "llvm/bin", "clang++"))
+            env.set('TENSILE_ROCM_OFFLOAD_BUNDLER_PATH', os.path.join(
+                self.spec['llvm-amdgpu'].prefix, "llvm/bin", "clang-offload-bundler"))
 
     def cmake_args(self):
         arch = self.spec.variants['tensile_architecture'].value

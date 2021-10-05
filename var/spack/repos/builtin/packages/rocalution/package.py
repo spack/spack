@@ -67,9 +67,9 @@ class Rocalution(CMakePackage):
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
         ]
         if '@4.3.0:' in self.spec:
-             args.append(
-                 '-DCMAKE_PREFIX_PATH={0}/llvm'.
-                 format(self.spec['llvm-amdgpu'].prefix))
+            args.append(
+                '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                format(self.spec['llvm-amdgpu'].prefix))
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 

@@ -58,7 +58,7 @@ class RocmValidationSuite(CMakePackage):
             self.define('ROCBLAS_DIR', self.spec['rocblas'].prefix)
         ]
         if '@4.3.0:' in self.spec:
-             args.append(
-                 '-DCMAKE_PREFIX_PATH={0}/llvm'.
-                 format(self.spec['llvm-amdgpu'].prefix))
+            args.append(
+                '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                format(self.spec['llvm-amdgpu'].prefix))
         return args

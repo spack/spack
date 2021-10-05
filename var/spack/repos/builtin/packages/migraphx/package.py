@@ -75,11 +75,14 @@ class Migraphx(CMakePackage):
             args.append('-DNLOHMANN_JSON_INCLUDE={0}'.format(
                 self.spec['nlohmann-json'].prefix.include))
         if '@:4.2.0' in self.spec:
-            args.append(self.define('-DCMAKE_CXX_COMPILER={0}/bin/clang++'
-                        .format(self.spec['llvm-amdgpu'].prefix)))
+            args.append('-DCMAKE_CXX_COMPILER={0}/bin/clang++'
+                        .format(self.spec['llvm-amdgpu'].prefix))
         else:
-            args.append(self.define('-DCMAKE_CXX_COMPILER={0}/llvm/bin/clang++'
-                        .format(self.spec['llvm-amdgpu'].prefix)))
+            args.append('-DCMAKE_CXX_COMPILER={0}/llvm/bin/clang++'
+                        .format(self.spec['llvm-amdgpu'].prefix))
+            args.append(
+                '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                format(self.spec['llvm-amdgpu'].prefix))
         if self.spec['cmake'].satisfies('@3.16.0:'):
             args += self.cmake_python_hints
         return args

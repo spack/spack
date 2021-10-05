@@ -60,9 +60,9 @@ class Rocsolver(CMakePackage):
                 '-I{0}/rocblas/include'.format(incl)
             ))
         if '@4.3.0:' in self.spec:
-             args.append(
-                 '-DCMAKE_PREFIX_PATH={0}/llvm'.
-                 format(self.spec['llvm-amdgpu'].prefix))
+            args.append(
+                '-DCMAKE_PREFIX_PATH={0}/llvm'.
+                format(self.spec['llvm-amdgpu'].prefix))
         if self.spec.satisfies('@3.7.0:'):
             args.append(self.define_from_variant('OPTIMAL', 'optimal'))
 
