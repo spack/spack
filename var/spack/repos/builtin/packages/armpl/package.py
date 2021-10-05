@@ -72,7 +72,7 @@ class Armpl(Package):
 
     # Set compiler dependency mapping
 
-    conflicts('%gcc@:6.99.99', when='@21.0.0%gcc', msg='ArmPL 21.0 requires GCC@7')
+    conflicts('%gcc@:9.99.99', when='@21.0.0%gcc', msg='ArmPL 21.0 requires GCC@10')
     conflicts('%arm@:20.99.99', when='@21.0.0%arm', msg='ArmPL 21.0 requires Arm@21')
 
     depends_on('arm@21.0', when='@21.0.0')
