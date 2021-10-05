@@ -1236,6 +1236,14 @@ class Environment(object):
         return all_mods, errors
 
     def add_default_view_to_env(self, env_mod):
+        """
+        Collect the environment modifications to activate an environment using the
+        default view. Removes duplicate paths.
+
+        Args:
+            env_mod (spack.util.environment.EnvironmentModifications): the environment
+                modifications object that is modified.
+        """
         if default_view_name not in self.views:
             # No default view to add to shell
             return env_mod
@@ -1256,6 +1264,14 @@ class Environment(object):
         return env_mod
 
     def rm_default_view_from_env(self, env_mod):
+        """
+        Collect the environment modifications to deactivate an environment using the
+        default view. Reverses the action of ``add_default_view_to_env``.
+
+        Args:
+            env_mod (spack.util.environment.EnvironmentModifications): the environment
+                modifications object that is modified.
+        """
         if default_view_name not in self.views:
             # No default view to add to shell
             return env_mod
