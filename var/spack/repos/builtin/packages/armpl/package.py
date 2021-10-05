@@ -63,12 +63,17 @@ class Armpl(Package):
 
     maintainers = ['OliverPerks', 'annwon']
 
+    version("21.0.0")
+    version("20.2.0")
+
     conflicts('target=x86:', msg='Only available on Aarch64')
     conflicts('target=ppc64:', msg='Only available on Aarch64')
     conflicts('target=ppc64le:', msg='Only available on Aarch64')
 
-    version("21.0.0")
-    version("20.2.0")
+    # Set compiler dependency mapping
+
+    conflicts('%gcc@:6.99.99', when='@21.0.0%gcc', msg='ArmPL 21.0 requires GCC@7')
+    conflicts('%arm@:20.99.99', when='@21.0.0%arm', msg='ArmPL 21.0 requires Arm@21')
 
     depends_on('arm@21.0', when='@21.0.0')
     depends_on('arm@20.2', when='@20.2.0')
