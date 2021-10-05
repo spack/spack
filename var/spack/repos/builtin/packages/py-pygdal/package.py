@@ -32,6 +32,9 @@ class PyPygdal(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'))
+    # pygdal's build only works with the specified gdal version
+    depends_on('gdal@3.3.2', type=('build', 'link', 'run'), when='@3.3.2.10')
+    depends_on('gdal@3.3.0', type=('build', 'link', 'run'), when='@3.3.0.10')
     depends_on('gdal@3.0.4', type=('build', 'link', 'run'), when='@3.0.4.6')
     depends_on('gdal@3.0.1', type=('build', 'link', 'run'), when='@3.0.1.5')
     depends_on('gdal@2.4.2', type=('build', 'link', 'run'), when='@2.4.2.5')
