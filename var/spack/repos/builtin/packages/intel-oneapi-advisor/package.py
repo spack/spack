@@ -14,6 +14,8 @@ class IntelOneapiAdvisor(IntelOneApiPackage):
        efficient threading, vectorization, and memory use, and
        GPU offload on current and future Intel hardware."""
 
+    maintainers = ['rscohn2']
+
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/advisor.html'
 
     if platform.system() == 'Linux':
