@@ -1,7 +1,7 @@
 # These dependencies should be installed using pip in order
 # to build the documentation.
 
-sphinx
+sphinx>=3.4,!=4.1.2
 sphinxcontrib-programoutput
 sphinx-rtd-theme
 python-levenshtein

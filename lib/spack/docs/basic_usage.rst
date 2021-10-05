@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,11 +27,17 @@ It is recommended that the following be put in your ``.bashrc`` file:
 
 If you do not see colorized output when using ``less -R`` it is because color
 is being disabled in the piped output. In this case, tell spack to force
-colorized output.
+colorized output with a flag
 
 .. code-block:: console
 
-    $ spack --color always | less -R 
+    $ spack --color always | less -R
+
+or an environment variable
+
+.. code-block:: console
+
+   $ SPACK_COLOR=always spack | less -R
 
 --------------------------
 Listing available packages
@@ -132,31 +138,26 @@ If ``mpileaks`` depends on other packages, Spack will install the
 dependencies first.  It then fetches the ``mpileaks`` tarball, expands
 it, verifies that it was downloaded without errors, builds it, and
 installs it in its own directory under ``$SPACK_ROOT/opt``. You'll see
-a number of messages from spack, a lot of build output, and a message
-that the packages is installed:
+a number of messages from Spack, a lot of build output, and a message
+that the package is installed.
 
 .. code-block:: console
 
    $ spack install mpileaks
-   ==> Installing mpileaks
-   ==> mpich is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4.
-   ==> callpath is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318.
-   ==> adept-utils is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/adept-utils@1.0-5adef8da.
-   ==> Trying to fetch from https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
-   ######################################################################## 100.0%
-   ==> Staging archive: ~/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23/mpileaks-1.0.tar.gz
-   ==> Created stage in ~/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23.
-   ==> No patches needed for mpileaks.
-   ==> Building mpileaks.
-
-   ... build output ...
-
-   ==> Successfully installed mpileaks.
-     Fetch: 2.16s.  Build: 9.82s.  Total: 11.98s.
-   [+] ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpileaks@1.0-59f6ad23
+   ... dependency build output ...
+   ==> Installing mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2
+   ==> No binary for mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2 found: installing from source
+   ==> mpileaks: Executing phase: 'autoreconf'
+   ==> mpileaks: Executing phase: 'configure'
+   ==> mpileaks: Executing phase: 'build'
+   ==> mpileaks: Executing phase: 'install'
+   [+] ~/spack/opt/linux-rhel7-broadwell/gcc-8.1.0/mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2
 
 The last line, with the ``[+]``, indicates where the package is
 installed.
+
+Add the Spack debug option (one or more times) -- ``spack -d install
+mpileaks`` -- to get additional (and even more verbose) output.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building a specific version
@@ -284,6 +285,102 @@ and removed everything that is not either:
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages
 or :ref:`dependency-types` for a more thorough treatment of dependency types.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Marking packages explicit or implicit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, Spack will mark packages a user installs as explicitly installed,
+while all of its dependencies will be marked as implicitly installed. Packages
+can be marked manually as explicitly or implicitly installed by using
+``spack mark``. This can be used in combination with ``spack gc`` to clean up
+packages that are no longer required.
+
+.. code-block:: console
+
+  $ spack install m4
+  ==> 29005: Installing libsigsegv
+  [...]
+  ==> 29005: Installing m4
+  [...]
+
+  $ spack install m4 ^libsigsegv@2.11
+  ==> 39798: Installing libsigsegv
+  [...]
+  ==> 39798: Installing m4
+  [...]
+
+  $ spack find -d
+  ==> 4 installed packages
+  -- linux-fedora32-haswell / gcc@10.1.1 --------------------------
+  libsigsegv@2.11
+
+  libsigsegv@2.12
+
+  m4@1.4.18
+      libsigsegv@2.12
+
+  m4@1.4.18
+      libsigsegv@2.11
+
+  $ spack gc
+  ==> There are no unused specs. Spack's store is clean.
+
+  $ spack mark -i m4 ^libsigsegv@2.11
+  ==> m4@1.4.18 : marking the package implicit
+
+  $ spack gc
+  ==> The following packages will be uninstalled:
+
+      -- linux-fedora32-haswell / gcc@10.1.1 --------------------------
+      5fj7p2o libsigsegv@2.11  c6ensc6 m4@1.4.18
+
+  ==> Do you want to proceed? [y/N]
+
+In the example above, we ended up with two versions of ``m4`` since they depend
+on different versions of ``libsigsegv``. ``spack gc`` will not remove any of
+the packages since both versions of ``m4`` have been installed explicitly
+and both versions of ``libsigsegv`` are required by the ``m4`` packages.
+
+``spack mark`` can also be used to implement upgrade workflows. The following
+example demonstrates how the ``spack mark`` and ``spack gc`` can be used to
+only keep the current version of a package installed.
+
+When updating Spack via ``git pull``, new versions for either ``libsigsegv``
+or ``m4`` might be introduced. This will cause Spack to install duplicates.
+Since we only want to keep one version, we mark everything as implicitly
+installed before updating Spack. If there is no new version for either of the
+packages, ``spack install`` will simply mark them as explicitly installed and
+``spack gc`` will not remove them.
+
+.. code-block:: console
+
+  $ spack install m4
+  ==> 62843: Installing libsigsegv
+  [...]
+  ==> 62843: Installing m4
+  [...]
+
+  $ spack mark -i -a
+  ==> m4@1.4.18 : marking the package implicit
+
+  $ git pull
+  [...]
+
+  $ spack install m4
+  [...]
+  ==> m4@1.4.18 : marking the package explicit
+  [...]
+
+  $ spack gc
+  ==> There are no unused specs. Spack's store is clean.
+
+When using this workflow for installations that contain more packages, care
+has to be taken to either only mark selected packages or issue ``spack install``
+for all packages that should be kept.
+
+You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly
+or implicitly installed packages.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-Downloadable Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -329,85 +426,6 @@ the tarballs in question to it (see :ref:`mirrors`):
 
        $ spack install galahad
 
------------------------------
-Deprecating insecure packages
------------------------------
-
-``spack deprecate`` allows for the removal of insecure packages with
-minimal impact to their dependents.
-
-.. warning::
-
-  The ``spack deprecate`` command is designed for use only in
-  extraordinary circumstances. This is a VERY big hammer to be used
-  with care.
-
-The ``spack deprecate`` command will remove one package and replace it
-with another by replacing the deprecated package's prefix with a link
-to the deprecator package's prefix.
-
-.. warning::
-
-  The ``spack deprecate`` command makes no promises about binary
-  compatibility. It is up to the user to ensure the deprecator is
-  suitable for the deprecated package.
-
-Spack tracks concrete deprecated specs and ensures that no future packages
-concretize to a deprecated spec.
-
-The first spec given to the ``spack deprecate`` command is the package
-to deprecate. It is an abstract spec that must describe a single
-installed package. The second spec argument is the deprecator
-spec. By default it must be an abstract spec that describes a single
-installed package, but with the ``-i/--install-deprecator`` it can be
-any abstract spec that Spack will install and then use as the
-deprecator. The ``-I/--no-install-deprecator`` option will ensure
-the default behavior.
-
-By default, ``spack deprecate`` will deprecate all dependencies of the
-deprecated spec, replacing each by the dependency of the same name in
-the deprecator spec. The ``-d/--dependencies`` option will ensure the
-default, while the ``-D/--no-dependencies`` option will deprecate only
-the root of the deprecate spec in favor of the root of the deprecator
-spec.
-
-``spack deprecate`` can use symbolic links or hard links. The default
-behavior is symbolic links, but the ``-l/--link-type`` flag can take
-options ``hard`` or ``soft``.
-
------------------------
-Verifying installations
------------------------
-
-The ``spack verify`` command can be used to verify the validity of
-Spack-installed packages any time after installation.
-
-At installation time, Spack creates a manifest of every file in the
-installation prefix. For links, Spack tracks the mode, ownership, and
-destination. For directories, Spack tracks the mode, and
-ownership. For files, Spack tracks the mode, ownership, modification
-time, hash, and size. The Spack verify command will check, for every
-file in each package, whether any of those attributes have changed. It
-will also check for newly added files or deleted files from the
-installation prefix. Spack can either check all installed packages
-using the `-a,--all` or accept specs listed on the command line to
-verify.
-
-The ``spack verify`` command can also verify for individual files that
-they haven't been altered since installation time. If the given file
-is not in a Spack installation prefix, Spack will report that it is
-not owned by any package. To check individual files instead of specs,
-use the ``-f,--files`` option.
-
-Spack installation manifests are part of the tarball signed by Spack
-for binary package distribution. When installed from a binary package,
-Spack uses the packaged installation manifest instead of creating one
-at install time.
-
-The ``spack verify`` command also accepts the ``-l,--local`` option to
-check only local packages (as opposed to those used transparently from
-``upstream`` spack instances) and the ``-j,--json`` option to output
-machine-readable json data for any errors.
 
 -------------------------
 Seeing installed packages
@@ -676,6 +694,225 @@ structured the way you want:
       "hash": "zvaa4lhlhilypw5quj3akyd3apbq5gap"
     }
 
+
+^^^^^^^^^^^^^^
+``spack diff``
+^^^^^^^^^^^^^^
+
+It's often the case that you have two versions of a spec that you need to
+disambiguate. Let's say that we've installed two variants of zlib, one with
+and one without the optimize variant:
+
+.. code-block:: console
+
+   $ spack install zlib
+   $ spack install zlib -optimize
+
+When we do ``spack find`` we see the two versions.
+
+.. code-block:: console
+
+    $ spack find zlib
+    ==> 2 installed packages
+    -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
+    zlib@1.2.11  zlib@1.2.11
+
+
+Let's now say that we want to uninstall zlib. We run the command, and hit a problem
+real quickly since we have two!
+
+.. code-block:: console
+
+    $ spack uninstall zlib
+    ==> Error: zlib matches multiple packages:
+
+        -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
+        efzjziy zlib@1.2.11  sl7m27m zlib@1.2.11
+
+    ==> Error: You can either:
+        a) use a more specific spec, or
+        b) specify the spec by its hash (e.g. `spack uninstall /hash`), or
+        c) use `spack uninstall --all` to uninstall ALL matching specs.
+
+Oh no! We can see from the above that we have two different versions of zlib installed,
+and the only difference between the two is the hash. This is a good use case for
+``spack diff``, which can easily show us the "diff" or set difference
+between properties for two packages. Let's try it out.
+Since the only difference we see in the ``spack find`` view is the hash, let's use
+``spack diff`` to look for more detail. We will provide the two hashes:
+
+.. code-block:: console
+
+    $ spack diff /efzjziy /sl7m27m
+    ==> Warning: This interface is subject to change.
+
+    --- zlib@1.2.11efzjziyc3dmb5h5u5azsthgbgog5mj7g
+    +++ zlib@1.2.11sl7m27mzkbejtkrajigj3a3m37ygv4u2
+    @@ variant_value @@
+    -  zlib optimize False
+    +  zlib optimize True
+
+
+The output is colored, and written in the style of a git diff. This means that you
+can copy and paste it into a GitHub markdown as a code block with language "diff"
+and it will render nicely! Here is an example:
+
+.. code-block:: md
+
+    ```diff
+    --- zlib@1.2.11/efzjziyc3dmb5h5u5azsthgbgog5mj7g
+    +++ zlib@1.2.11/sl7m27mzkbejtkrajigj3a3m37ygv4u2
+    @@ variant_value @@
+    -  zlib optimize False
+    +  zlib optimize True
+    ```
+
+Awesome! Now let's read the diff. It tells us that our first zlib was built with ``~optimize``
+(``False``) and the second was built with ``+optimize`` (``True``). You can't see it in the docs
+here, but the output above is also colored based on the content being an addition (+) or
+subtraction (-).
+
+This is a small example, but you will be able to see differences for any attributes on the
+installation spec. Running ``spack diff A B`` means we'll see which spec attributes are on
+``B`` but not on ``A`` (green) and which are on ``A`` but not on ``B`` (red). Here is another
+example with an additional difference type, ``version``:
+
+.. code-block:: console
+
+    $ spack diff python@2.7.8 python@3.8.11
+    ==> Warning: This interface is subject to change.
+
+    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
+    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
+    @@ variant_value @@
+    -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
+    +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
+    @@ version @@
+    -  openssl 1.0.2u
+    +  openssl 1.1.1k
+    -  python 2.7.8
+    +  python 3.8.11
+
+Let's say that we were only interested in one kind of attribute above, ``version``.
+We can ask the command to only output this attribute.  To do this, you'd add
+the ``--attribute`` for attribute parameter, which defaults to all. Here is how you
+would filter to show just versions:
+
+.. code-block:: console
+
+    $ spack diff --attribute version python@2.7.8 python@3.8.11
+    ==> Warning: This interface is subject to change.
+
+    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
+    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
+    @@ version @@
+    -  openssl 1.0.2u
+    +  openssl 1.1.1k
+    -  python 2.7.8
+    +  python 3.8.11
+
+And you can add as many attributes as you'd like with multiple `--attribute` arguments
+(for lots of attributes, you can use ``-a`` for short). Finally, if you want to view the
+data as json (and possibly pipe into an output file) just add ``--json``:
+
+
+.. code-block:: console
+
+    $ spack diff --json python@2.7.8 python@3.8.11
+
+
+This data will be much longer because along with the differences for ``A`` vs. ``B`` and
+``B`` vs. ``A``, the JSON output also showsthe intersection.
+
+
+------------------------
+Using installed packages
+------------------------
+
+There are several different ways to use Spack packages once you have
+installed them. As you've seen, spack packages are installed into long
+paths with hashes, and you need a way to get them into your path. The
+easiest way is to use :ref:`spack load <cmd-spack-load>`, which is
+described in the next section.
+
+Some more advanced ways to use Spack packages include:
+
+* :ref:`environments <environments>`, which you can use to bundle a
+  number of related packages to "activate" all at once, and
+* :ref:`environment modules <modules>`, which are commonly used on
+  supercomputing clusters. Spack generates module files for every
+  installation automatically, and you can customize how this is done.
+
+.. _cmd-spack-load:
+
+^^^^^^^^^^^^^^^^^^^^^^^
+``spack load / unload``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+If you have :ref:`shell support <shell-support>` enabled you can use the
+``spack load`` command to quickly get a package on your ``PATH``.
+
+For example this will add the ``mpich`` package built with ``gcc`` to
+your path:
+
+.. code-block:: console
+
+   $ spack install mpich %gcc@4.4.7
+
+   # ... wait for install ...
+
+   $ spack load mpich %gcc@4.4.7
+   $ which mpicc
+   ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
+
+These commands will add appropriate directories to your ``PATH``,
+``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH`` according to the
+:ref:`prefix inspections <customize-env-modifications>` defined in your
+modules configuration.  When you no longer want to use a package, you
+can type unload or unuse similarly:
+
+.. code-block:: console
+
+   $ spack unload mpich %gcc@4.4.7
+
+
+"""""""""""""""
+Ambiguous specs
+"""""""""""""""
+
+If a spec used with load/unload or is ambiguous (i.e. more than one
+installed package matches it), then Spack will warn you:
+
+.. code-block:: console
+
+   $ spack load libelf
+   ==> Error: libelf matches multiple packages.
+   Matching packages:
+     qmm4kso libelf@0.8.13%gcc@4.4.7 arch=linux-debian7-x86_64
+     cd2u6jt libelf@0.8.13%intel@15.0.0 arch=linux-debian7-x86_64
+   Use a more specific spec
+
+You can either type the ``spack load`` command again with a fully
+qualified argument, or you can add just enough extra constraints to
+identify one package.  For example, above, the key differentiator is
+that one ``libelf`` is built with the Intel compiler, while the other
+used ``gcc``.  You could therefore just type:
+
+.. code-block:: console
+
+   $ spack load libelf %intel
+
+To identify just the one built with the Intel compiler. If you want to be
+*very* specific, you can load it by its hash. For example, to load the
+first ``libelf`` above, you would run:
+
+.. code-block:: console
+
+   $ spack load /qmm4kso
+
+We'll learn more about Spack's spec syntax in the next section.
+
+
 .. _sec-specs:
 
 --------------------
@@ -862,7 +1099,7 @@ Variants are named options associated with a particular package. They are
 optional, as each package must provide default values for each variant it
 makes available. Variants can be specified using
 a flexible parameter syntax ``name=<value>``. For example,
-``spack install libelf debug=True`` will install libelf built with debug
+``spack install mercury debug=True`` will install mercury built with debug
 flags. The names of particular variants available for a package depend on
 what was provided by the package author. ``spack info <package>`` will
 provide information on what build variants are available.
@@ -870,11 +1107,11 @@ provide information on what build variants are available.
 For compatibility with earlier versions, variants which happen to be
 boolean in nature can be specified by a syntax that represents turning
 options on and off. For example, in the previous spec we could have
-supplied ``libelf +debug`` with the same effect of enabling the debug
+supplied ``mercury +debug`` with the same effect of enabling the debug
 compile time option for the libelf package.
 
 Depending on the package a variant may have any default value.  For
-``libelf`` here, ``debug`` is ``False`` by default, and we turned it on
+``mercury`` here, ``debug`` is ``False`` by default, and we turned it on
 with ``debug=True`` or ``+debug``.  If a variant is ``True`` by default
 you can turn it off by either adding ``-name`` or ``~name`` to the spec.
 
@@ -1234,6 +1471,88 @@ add a version specifier to the spec:
 Notice that the package versions that provide insufficient MPI
 versions are now filtered out.
 
+
+-----------------------------
+Deprecating insecure packages
+-----------------------------
+
+``spack deprecate`` allows for the removal of insecure packages with
+minimal impact to their dependents.
+
+.. warning::
+
+  The ``spack deprecate`` command is designed for use only in
+  extraordinary circumstances. This is a VERY big hammer to be used
+  with care.
+
+The ``spack deprecate`` command will remove one package and replace it
+with another by replacing the deprecated package's prefix with a link
+to the deprecator package's prefix.
+
+.. warning::
+
+  The ``spack deprecate`` command makes no promises about binary
+  compatibility. It is up to the user to ensure the deprecator is
+  suitable for the deprecated package.
+
+Spack tracks concrete deprecated specs and ensures that no future packages
+concretize to a deprecated spec.
+
+The first spec given to the ``spack deprecate`` command is the package
+to deprecate. It is an abstract spec that must describe a single
+installed package. The second spec argument is the deprecator
+spec. By default it must be an abstract spec that describes a single
+installed package, but with the ``-i/--install-deprecator`` it can be
+any abstract spec that Spack will install and then use as the
+deprecator. The ``-I/--no-install-deprecator`` option will ensure
+the default behavior.
+
+By default, ``spack deprecate`` will deprecate all dependencies of the
+deprecated spec, replacing each by the dependency of the same name in
+the deprecator spec. The ``-d/--dependencies`` option will ensure the
+default, while the ``-D/--no-dependencies`` option will deprecate only
+the root of the deprecate spec in favor of the root of the deprecator
+spec.
+
+``spack deprecate`` can use symbolic links or hard links. The default
+behavior is symbolic links, but the ``-l/--link-type`` flag can take
+options ``hard`` or ``soft``.
+
+-----------------------
+Verifying installations
+-----------------------
+
+The ``spack verify`` command can be used to verify the validity of
+Spack-installed packages any time after installation.
+
+At installation time, Spack creates a manifest of every file in the
+installation prefix. For links, Spack tracks the mode, ownership, and
+destination. For directories, Spack tracks the mode, and
+ownership. For files, Spack tracks the mode, ownership, modification
+time, hash, and size. The Spack verify command will check, for every
+file in each package, whether any of those attributes have changed. It
+will also check for newly added files or deleted files from the
+installation prefix. Spack can either check all installed packages
+using the `-a,--all` or accept specs listed on the command line to
+verify.
+
+The ``spack verify`` command can also verify for individual files that
+they haven't been altered since installation time. If the given file
+is not in a Spack installation prefix, Spack will report that it is
+not owned by any package. To check individual files instead of specs,
+use the ``-f,--files`` option.
+
+Spack installation manifests are part of the tarball signed by Spack
+for binary package distribution. When installed from a binary package,
+Spack uses the packaged installation manifest instead of creating one
+at install time.
+
+The ``spack verify`` command also accepts the ``-l,--local`` option to
+check only local packages (as opposed to those used transparently from
+``upstream`` spack instances) and the ``-j,--json`` option to output
+machine-readable json data for any errors.
+
+
 .. _extensions:
 
 ---------------------------
@@ -1540,6 +1859,39 @@ This issue typically manifests with the error below:
    IOError: [Errno 38] Function not implemented
 
 A nicer error message is TBD in future versions of Spack.
+
+---------------
+Troubleshooting
+---------------
+
+The ``spack audit`` command:
+
+.. command-output:: spack audit -h
+
+can be used to detect a number of configuration issues. This command detects
+configuration settings which might not be strictly wrong but are not likely
+to be useful outside of special cases.
+
+It can also be used to detect dependency issues with packages - for example
+cases where a package constrains a dependency with a variant that doesn't
+exist (in this case Spack could report the problem ahead of time but
+automatically performing the check would slow down most runs of Spack).
+
+A detailed list of the checks currently implemented for each subcommand can be
+printed with:
+
+.. command-output:: spack -v audit list
+
+Depending on the use case, users might run the appropriate subcommands to obtain
+diagnostics. Issues, if found, are reported to stdout:
+
+.. code-block:: console
+
+   % spack audit packages lammps
+   PKG-DIRECTIVES: 1 issue found
+   1. lammps: wrong variant in "conflicts" directive
+       the variant 'adios' does not exist
+       in /home/spack/spack/var/spack/repos/builtin/packages/lammps/package.py
 
 
 ------------

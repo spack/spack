@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,6 +77,13 @@ are six configuration scopes. From lowest to highest:
 #. **custom**: Stored in a custom directory specified by ``--config-scope``.
    If multiple scopes are listed on the command line, they are ordered
    from lowest to highest precedence.
+
+#. **environment**: When using Spack :ref:`environments`, Spack reads
+   additional configuration from the environment file. See
+   :ref:`environment-configuration` for further details on these
+   scopes. Environment scopes can be referenced from the command line
+   as ``env:name`` (to reference environment ``foo``, use
+   ``env:foo``).
 
 #. **command line**: Build settings specified on the command line take
    precedence over all other scopes.
@@ -192,10 +199,11 @@ with MPICH. You can create different configuration scopes for use with
 Platform-specific Scopes
 ------------------------
 
-For each scope above, there can also be platform-specific settings.
-For example, on most platforms, GCC is the preferred compiler.
-However, on macOS (darwin), Clang often works for more packages,
-and is set as the default compiler. This configuration is set in
+For each scope above (excluding environment scopes), there can also be
+platform-specific settings.  For example, on most platforms, GCC is
+the preferred compiler.  However, on macOS (darwin), Clang often works
+for more packages, and is set as the default compiler. This
+configuration is set in
 ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``. It will take
 precedence over settings in the ``defaults`` scope, but can still be
 overridden by settings in ``system``, ``system/darwin``, ``site``,

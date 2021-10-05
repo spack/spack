@@ -1,12 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class RubySvn2git(Package):
+class RubySvn2git(RubyPackage):
     """svn2git is a tiny utility for migrating projects from Subversion to Git
     while keeping the trunk, branches and tags where they should be. It uses
     git-svn to clone an svn repository and does some clean-up to make sure
@@ -21,9 +19,3 @@ class RubySvn2git(Package):
 
     depends_on('git')
     depends_on('subversion+perl')
-
-    extends('ruby')
-
-    def install(self, spec, prefix):
-        gem('build', 'svn2git.gemspec')
-        gem('install', 'svn2git-{0}.gem'.format(self.version))

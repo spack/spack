@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@
 
 import ordereddict_backport
 
+import spack.provider_index
 import spack.util.naming
 from spack.dependency import Dependency
 from spack.spec import Spec
@@ -21,6 +22,8 @@ class MockPackageBase(object):
     Use ``MockPackageMultiRepo.add_package()`` to create new instances.
 
     """
+    virtual = False
+
     def __init__(self, dependencies, dependency_types,
                  conditions=None, versions=None):
         """Instantiate a new MockPackageBase.
@@ -67,12 +70,19 @@ class MockPackageBase(object):
 
         return visited
 
+    def content_hash(self):
+        # Unlike real packages, MockPackage doesn't have a corresponding
+        # package.py file; in that sense, the content_hash is always the same.
+        return self.__class__.__name__
+
 
 class MockPackageMultiRepo(object):
     """Mock package repository, mimicking ``spack.repo.Repo``."""
 
     def __init__(self):
         self.spec_to_pkg = {}
+        self.namespace = 'mock'                 # repo namespace
+        self.full_namespace = 'spack.pkg.mock'  # python import namespace
 
     def get(self, spec):
         if not isinstance(spec, spack.spec.Spec):
@@ -82,18 +92,25 @@ class MockPackageMultiRepo(object):
         return self.spec_to_pkg[spec.name]
 
     def get_pkg_class(self, name):
+        namespace, _, name = name.rpartition(".")
+        if namespace and namespace != self.namespace:
+            raise spack.repo.InvalidNamespaceError(
+                "bad namespace: %s" % self.namespace)
         return self.spec_to_pkg[name]
 
     def exists(self, name):
         return name in self.spec_to_pkg
 
-    def is_virtual(self, name):
+    def is_virtual(self, name, use_index=True):
         return False
 
     def repo_for_pkg(self, name):
         import collections
         Repo = collections.namedtuple('Repo', ['namespace'])
         return Repo('mockrepo')
+
+    def __contains__(self, item):
+        return item in self.spec_to_pkg
 
     def add_package(self, name, dependencies=None, dependency_types=None,
                     conditions=None):
@@ -161,3 +178,7 @@ class MockPackageMultiRepo(object):
         self.spec_to_pkg["mockrepo." + name] = mock_package
 
         return mock_package
+
+    @property
+    def provider_index(self):
+        return spack.provider_index.ProviderIndex()

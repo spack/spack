@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,21 @@ from spack import *
 
 
 class RDtw(RPackage):
-    """A comprehensive implementation of dynamic time warping (DTW) algorithms
-    in R. DTW computes the optimal (least cumulative distance) alignment
-    between points of two time series."""
+    """Dynamic Time Warping Algorithms
+
+    A comprehensive implementation of dynamic time warping (DTW) algorithms in
+    R.  DTW computes the optimal (least cumulative distance) alignment between
+    points of two time series.  Common DTW variants covered include local
+    (slope) and global (window) constraints, subsequence matches, arbitrary
+    distance definitions, normalizations, minimum variance matching, and so on.
+    Provides cumulative distances, alignments, specialized plot styles, etc.,
+    as described in Giorgino (2009) <doi:10.18637/jss.v031.i07>."""
 
     homepage = "https://cloud.r-project.org/package=dtw"
     url      = "https://cloud.r-project.org/src/contrib/dtw_1.18-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/dtw"
 
+    version('1.22-3', sha256='df7cf9adf613422ddb22a160597eb5f5475ab6c67c0d790092edb7f72ba98f00')
     version('1.20-1', sha256='43ca1a47a7c81a2b5d5054da1be8b8af79a85d6f9ce7b4512e9ed91f790f60f0')
     version('1.18-1', sha256='d9dab25bdf61705f9f28dc5ca1c96a7465b269233e878516c52c01b5a0da21ad')
     version('1.17-1', sha256='0fc3afcebc58135c78abd7545a3549466ac051a058f913db16214c12141a6e4d')

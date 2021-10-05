@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,11 @@ class Busco(PythonPackage):
     """Assesses genome assembly and annotation completeness with Benchmarking
        Universal Single-Copy Orthologs"""
 
-    homepage = "http://busco.ezlab.org/"
+    homepage = "https://busco.ezlab.org/"
     url      = "https://gitlab.com/api/v4/projects/ezlab%2Fbusco/repository/archive.tar.gz?sha=2.0.1"
     git      = "https://gitlab.com/ezlab/busco.git"
+
+    version('4.1.3', sha256='08ded26aeb4f6aef791cd88524c3c00792a054c7672ea05219f468d495e7b072')
 
     # TODO: check the installation procedure for version 3.0.2
     # and uncomment the following line
@@ -27,11 +29,18 @@ class Busco(PythonPackage):
     depends_on('hmmer')
     depends_on('augustus')
 
+    depends_on('py-biopython', when='@4.1.3', type=('build', 'run'))
+
     def build(self, spec, prefix):
         if self.spec.satisfies('@2.0.1'):
             pass
 
     def install(self, spec, prefix):
+        if self.spec.satisfies('@4.1.3'):
+            install_tree('bin', prefix.bin)
+            install_tree('config', prefix.config)
+            args = self.install_args(spec, prefix)
+            self.setup_py('install', *args)
         if self.spec.satisfies('@3.0.1'):
             with working_dir('scripts'):
                 mkdirp(prefix.bin)

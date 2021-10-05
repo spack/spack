@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,9 @@ class Faodel(CMakePackage):
 
     maintainers = ['tkordenbrock', 'craigulmer']
 
+    tags = ['e4s']
+
+    version('master', branch='master')
     version('1.1906.1', sha256='4b3caf469ae7db50e9bb8d652e4cb532d33d474279def0f8a483f69385648058')
     version('1.1811.2', sha256='22feb502dad0f56fb8af492f6e2cdc53a97fd6c31f6fa3c655be0a6266c46996')
     version('1.1811.1', sha256='8e95ee99b8c136ff687eb07a2481ee04560cb1526408eb22ab56cd9c60206916')
@@ -36,7 +39,7 @@ class Faodel(CMakePackage):
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('libfabric@1.5.3:', when='network=libfabric')
-    depends_on('googletest@1.7.0:', type='build')
+    depends_on('googletest@1.7.0:1.10', type='test')
 
     # FAODEL requires C++11 support which starts with gcc 4.8.1
     conflicts('%gcc@:4.8.0')
@@ -56,31 +59,29 @@ class Faodel(CMakePackage):
     # FAODEL Github issue #5
     patch('faodel_sbl.patch', when='@1.1811.1 logging=sbl')
     patch('lambda-capture-f0267fc.patch', when='@1.1906.1')
+    patch('ugni-target-redef-b67e856.patch', when='@1.1906.1')
 
     def cmake_args(self):
         spec = self.spec
 
+        build_tests = self.run_tests and '+mpi' in spec
+
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DBUILD_TESTS:BOOL={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
-            '-DBOOST_ROOT:PATH={0}'.format(spec['boost'].prefix),
-            '-DGTEST_ROOT:PATH={0}'.format(spec['googletest'].prefix),
-            '-DBUILD_DOCS:BOOL=OFF',
-            '-DFaodel_ENABLE_IOM_HDF5:BOOL={0}'.format(
-                'ON' if '+hdf5' in spec else 'OFF'),
-            '-DFaodel_ENABLE_IOM_LEVELDB:BOOL={0}'.format(
-                'ON' if '+leveldb' in spec else 'OFF'),
-            '-DFaodel_ENABLE_MPI_SUPPORT:BOOL={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
-            '-DFaodel_ENABLE_TCMALLOC:BOOL={0}'.format(
-                'ON' if '+tcmalloc' in spec else 'OFF'),
-            '-DFaodel_LOGGING_METHOD:STRING={0}'.format(
-                spec.variants['logging'].value),
-            '-DFaodel_NETWORK_LIBRARY:STRING={0}'.format(
-                spec.variants['network'].value),
-            '-DFaodel_ENABLE_CEREAL:BOOL={0}'.format(
-                'ON' if '+cereal' in spec else 'OFF')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define('BOOST_ROOT', spec['boost'].prefix),
+            self.define('BUILD_DOCS', False),
+            self.define('BUILD_TESTS', build_tests),
+            self.define_from_variant('Faodel_ENABLE_IOM_HDF5', 'hdf5'),
+            # self.define_from_variant('Faodel_ENABLE_IOM_LEVELDB', 'leveldb'),
+            self.define_from_variant('Faodel_ENABLE_MPI_SUPPORT', 'mpi'),
+            self.define_from_variant('Faodel_ENABLE_TCMALLOC', 'tcmalloc'),
+            self.define_from_variant('Faodel_LOGGING_METHOD', 'logging'),
+            self.define_from_variant('Faodel_NETWORK_LIBRARY', 'network'),
+            self.define_from_variant('Faodel_ENABLE_CEREAL', 'cereal'),
         ]
+        if build_tests:
+            args.extend([
+                self.define('GTEST_ROOT', spec['googletest'].prefix)
+            ])
+
         return args

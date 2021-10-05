@@ -1,8 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+#
+# Original Author: Mark Olesen <mark.olesen@esi-group.com>
+#
 # Legal Notice
 # ------------
 # OPENFOAM is a trademark owned by OpenCFD Ltd
@@ -20,13 +23,12 @@
 # - The openfoam-org package is a modified version of the openfoam package.
 #   If changes are needed here, consider if they should also be applied there.
 #
+# - mpi handling: WM_MPLIB=SYSTEMMPI and populate prefs.{csh,sh} with values
+#   from spack.
+#
 # - Building with boost/cgal is not included, since some of the logic is not
 #   entirely clear and thus untested.
 # - Resolution of flex, zlib needs more attention (within OpenFOAM)
-#
-# - mpi handling: WM_MPLIB=SYSTEMMPI and use spack to populate prefs.sh for it.
-#   Provide wmake rules for special purpose 'USER' and 'USERMPI'
-#   mpi implementations, in case these are required.
 #
 # Known issues
 # - Combining +zoltan with +int64 has not been tested, but probably won't work.
@@ -34,17 +36,19 @@
 #
 ##############################################################################
 import glob
-import re
 import os
+import re
 
 import llnl.util.tty as tty
 
 from spack import *
-from spack.pkg.builtin.openfoam import add_extra_files
-from spack.pkg.builtin.openfoam import write_environ
-from spack.pkg.builtin.openfoam import rewrite_environ_files
-from spack.pkg.builtin.openfoam import mplib_content
-from spack.pkg.builtin.openfoam import OpenfoamArch
+from spack.pkg.builtin.openfoam import (
+    OpenfoamArch,
+    add_extra_files,
+    mplib_content,
+    rewrite_environ_files,
+    write_environ,
+)
 from spack.util.environment import EnvironmentModifications
 
 
@@ -57,12 +61,14 @@ class OpenfoamOrg(Package):
     and owner of the OPENFOAM trademark.
     """
 
-    homepage = "http://www.openfoam.org/"
+    homepage = "https://www.openfoam.org/"
     baseurl  = "https://github.com/OpenFOAM"
     url      = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
     git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
     version('develop', branch='master')
+    version('8', sha256='94ba11cbaaa12fbb5b356e01758df403ac8832d69da309a5d79f76f42eb008fc',
+            url=baseurl + '/OpenFOAM-8/archive/version-8.tar.gz')
     version('7', sha256='12389cf092dc032372617785822a597aee434a50a62db2a520ab35ba5a7548b5',
             url=baseurl + '/OpenFOAM-7/archive/version-7.tar.gz')
     version('6', sha256='32a6af4120e691ca2df29c5b9bd7bc7a3e11208947f9bccf6087cfff5492f025',
@@ -73,6 +79,8 @@ class OpenfoamOrg(Package):
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
     version('2.4.0', sha256='9529aa7441b64210c400c019dcb2e0410fcfd62a6f62d23b6c5994c4753c4465',
             url=baseurl + '/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz')
+    version('2.3.1', sha256='2bbcf4d5932397c2087a9b6d7eeee6d2b1350c8ea4f455415f05e7cd94d9e5ba',
+            url='http://downloads.sourceforge.net/foam/OpenFOAM-2.3.1.tgz')
 
     variant('int64', default=False,
             description='Compile with 64-bit label')
@@ -105,7 +113,11 @@ class OpenfoamOrg(Package):
     patch('50-etc.patch', when='@5.0:5.9')
     patch('41-etc.patch', when='@4.1')
     patch('41-site.patch', when='@4.1:')
-    patch('240-etc.patch', when='@2.4.0')
+    patch('240-etc.patch', when='@:2.4.0')
+    patch('isnan.patch', when='@:2.4.0')
+    # Add support for SYSTEMMPI
+    patch('https://github.com/OpenFOAM/OpenFOAM-2.3.x/commit/ae9a670c99472787f3a5446ac2b522bf3519b796.patch',
+          sha256='6c4c535baca3ce64035d512265c4ce8effd39de7602c923c5e19985db68b632a', when='@:2.3.1')
 
     # The openfoam architecture, compiler information etc
     _foam_arch = None
@@ -127,7 +139,7 @@ class OpenfoamOrg(Package):
     @property
     def config(self):
         settings = {
-            # Use system mpi for spack
+            # Use SYSTEMMPI since openfoam-org doesn't have USERMPI
             'mplib': 'SYSTEMMPI',
 
             # Add links into bin/, lib/ (eg, for other applications)
@@ -172,7 +184,7 @@ class OpenfoamOrg(Package):
     @property
     def foam_arch(self):
         if not self._foam_arch:
-            self._foam_arch = OpenfoamArch(self.spec, **self.config)
+            self._foam_arch = OpenfoamOrgArch(self.spec, **self.config)
         return self._foam_arch
 
     @property
@@ -388,3 +400,17 @@ class OpenfoamOrg(Package):
                 if os.path.isfile(f)
             ]:
                 os.symlink(f, os.path.basename(f))
+
+
+# -----------------------------------------------------------------------------
+
+class OpenfoamOrgArch(OpenfoamArch):
+    """An openfoam-org variant of OpenfoamArch
+    """
+    def update_arch(self, spec):
+        """Handle differences in WM_ARCH naming
+        """
+        OpenfoamArch.update_arch(self, spec)
+
+        # ARM64 (openfoam) -> Arm64 (openfoam-org)
+        self.arch = self.arch.replace("ARM64", "Arm64")

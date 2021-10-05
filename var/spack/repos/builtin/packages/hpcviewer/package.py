@@ -1,10 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os.path
 import platform
+
+from spack import *
 
 
 # The viewer and trace viewer tar files and sha256sum depend on the
@@ -28,7 +30,7 @@ def trace_url(ver, mach):
 
 class Hpcviewer(Package):
     """Binary distribution of hpcviewer and hpctraceviewer for the Rice
-    HPCToolkit (Linux x86_64, ppc64 and ppc64le).  Note: hpctoolkit
+    HPCToolkit (Linux x86_64, ppc64le and aarch64).  Note: hpctoolkit
     databases are platform independent, so you don't need to install
     hpctoolkit to run the viewers and it's common to run hpcrun and
     hpcviewer on different machines."""
@@ -37,6 +39,17 @@ class Hpcviewer(Package):
     maintainers = ['mwkrentel']
 
     viewer_sha = {
+        ('2021.05', 'aarch64'): 'a500bf14be14ca9b08a8382f1d122f59b45690b6a567df0932fc2cabd6382a9a',
+        ('2021.05', 'ppc64le'): 'd39f9f6556abcd5a184db242711b72b2e8571d0b78bb08d0e497fd4e6dbe87a1',
+        ('2021.05', 'x86_64'):  'f316c1fd0b134c96392cd4eb5e5aa2bffa36bd449f401d8fe950ab4f761c34ab',
+        ('2021.03', 'aarch64'): '1b1f7f51a319a159aa96dee21b2cd77ee23b01df263ea122980fa1567e4dab8d',
+        ('2021.03', 'ppc64le'): '8fc4683a9e61263ac78fe35391930b0cdc8e84dd50f8d41dcd0c6d8072b02937',
+        ('2021.03', 'x86_64'):  '40b4453fe662b896a853d869486b481ded0d29abdf5e50aab2d8f3bdf8940b04',
+        ('2021.01', 'aarch64'): 'fe797a1c97943f7509c36a570198291e674cd4a793c1d6538a2761d66542dc52',
+        ('2021.01', 'ppc64le'): 'ba4035de2ae208280c3744000ea08d2d7f8c31bd7095f722e442ddc289648063',
+        ('2021.01', 'x86_64'):  '99eba4e1c613203c4658f2874d0e79e1620db7a22ac7dcb810801886ba9f8a79',
+        ('2020.12', 'ppc64le'): 'ce0d741aa8849621c03183dbf11a0dc1f6d296e3de80e25976a7f2a2750899c4',
+        ('2020.12', 'x86_64'):  '29c5e1427893f0652e863fd6d54a8585077662597e5073532ec9f3b116626498',
         ('2020.07', 'x86_64'):  '19951662626c7c9817c4a75269c85810352dc48ae9a62dfb6ce4a5b502de2118',
         ('2020.07', 'ppc64'):   '3f5d9358ef8ff9ba4f6dcaa4d7132f41ba55f0c132d9fd1e2f6da18341648a4e',
         ('2020.07', 'ppc64le'): 'e236a8578dc247279d1021aa35bac47e2d4864b906efcef76c0610ee0086b353',
@@ -109,16 +122,20 @@ class Hpcviewer(Package):
     }
 
     for key in viewer_sha.keys():
-        if key in trace_sha and key[1] == platform.machine():
+        if key[1] == platform.machine():
             version(key[0], url=viewer_url(*key), sha256=viewer_sha[key])
 
-            resource(name='hpctraceviewer', url=trace_url(*key),
-                     sha256=trace_sha[key], placement='TRACE',
-                     when='@{0}'.format(key[0]))
+            # Current versions include the viewer and trace viewer in
+            # one tar file.  Before 2020.07, the trace viewer was a
+            # separate tar file (resource).
+            if key in trace_sha:
+                resource(name='hpctraceviewer', url=trace_url(*key),
+                         sha256=trace_sha[key], placement='TRACE',
+                         when='@{0}'.format(key[0]))
 
-    depends_on('java@8', type=('build', 'run'))
+    depends_on('java@11:', type=('build', 'run'), when='@2021.0:')
+    depends_on('java@8', type=('build', 'run'), when='@:2020')
 
-    conflicts('target=aarch64:', msg='hpcviewer is not available on arm')
     conflicts('platform=darwin', msg='hpcviewer requires a manual install on MacOS, see homepage')
 
     # Both hpcviewer and trace viewer have an install script.
@@ -128,10 +145,16 @@ class Hpcviewer(Package):
             prefix
         ]
 
-        inst = Executable(join_path('.', 'install'))
+        # Sometimes the script is install.sh, sometimes install.
+        inst_path = join_path('.', 'install.sh')
+        if not os.path.exists(inst_path):
+            inst_path = join_path('.', 'install')
+
+        inst = Executable(inst_path)
         inst(*args)
 
-        cd('TRACE')
-
-        inst = Executable(join_path('.', 'install'))
-        inst(*args)
+        # Older versions used a separate resource for the traceviewer.
+        if os.path.isdir('TRACE'):
+            cd('TRACE')
+            inst = Executable(inst_path)
+            inst(*args)

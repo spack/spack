@@ -1,0 +1,10 @@
+--- a/CMakeLists.txt	2020-04-28 21:54:40.000000000 -0500
++++ b/CMakeLists.txt	2020-09-09 08:25:54.000000000 -0500
+@@ -183,7 +183,6 @@
+ # Define a function to link dependencies.
+ FUNCTION(FISH_LINK_DEPS_AND_SIGN target)
+   TARGET_LINK_LIBRARIES(${target} fishlib)
+-  CODESIGN_ON_MAC(${target})
+ ENDFUNCTION(FISH_LINK_DEPS_AND_SIGN)
+ 
+ # Define libfish.a.

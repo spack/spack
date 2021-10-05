@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,37 +6,36 @@
 """
 This test checks the binary packaging infrastructure
 """
-import os
-import stat
-import shutil
-import pytest
 import argparse
-import re
+import os
 import platform
+import re
+import shutil
+import stat
+
+import pytest
 
 from llnl.util.filesystem import mkdirp
 
-import spack.repo
-import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
-from spack.spec import Spec
+import spack.repo
+import spack.store
+import spack.util.gpg
+from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
-from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.relocate import needs_binary_relocation, needs_text_relocation
-from spack.relocate import relocate_text, relocate_links
-from spack.relocate import macho_make_paths_relative
-from spack.relocate import macho_make_paths_normal
-from spack.relocate import _placeholder, macho_find_paths
-from spack.relocate import file_is_relocatable
-
-
-def has_gpg():
-    try:
-        gpg = spack.util.gpg.Gpg.gpg()
-    except spack.util.gpg.SpackGPGError:
-        gpg = None
-    return bool(gpg)
+from spack.relocate import (
+    _placeholder,
+    file_is_relocatable,
+    macho_find_paths,
+    macho_make_paths_normal,
+    macho_make_paths_relative,
+    needs_binary_relocation,
+    needs_text_relocation,
+    relocate_links,
+    relocate_text,
+)
+from spack.spec import Spec
 
 
 def fake_fetchify(url, pkg):
@@ -46,7 +45,6 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
-@pytest.mark.skipif(not has_gpg(), reason='This test requires gpg')
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
@@ -101,12 +99,9 @@ echo $PATH"""
 
     create_args = ['create', '-a', '-f', '-d', mirror_path, pkghash]
     # Create a private key to sign package with if gpg2 available
-    if spack.util.gpg.Gpg.gpg():
-        spack.util.gpg.Gpg.create(name='test key 1', expires='0',
-                                  email='spack@googlegroups.com',
-                                  comment='Spack test key')
-    else:
-        create_args.insert(create_args.index('-a'), '-u')
+    spack.util.gpg.create(name='test key 1', expires='0',
+                          email='spack@googlegroups.com',
+                          comment='Spack test key')
 
     create_args.insert(create_args.index('-a'), '--rebuild-index')
 
@@ -119,8 +114,6 @@ echo $PATH"""
     pkg.do_uninstall(force=True)
 
     install_args = ['install', '-a', '-f', pkghash]
-    if not spack.util.gpg.Gpg.gpg():
-        install_args.insert(install_args.index('-a'), '-u')
     args = parser.parse_args(install_args)
     # Test install
     buildcache.buildcache(parser, args)
@@ -144,8 +137,6 @@ echo $PATH"""
     # Uninstall the package
     pkg.do_uninstall(force=True)
 
-    if not spack.util.gpg.Gpg.gpg():
-        install_args.insert(install_args.index('-a'), '-u')
     args = parser.parse_args(install_args)
     buildcache.buildcache(parser, args)
 
@@ -209,10 +200,8 @@ def test_relocate_text(tmpdir):
             script.close()
         filenames = [filename]
         new_dir = '/opt/rh/devtoolset/'
-        relocate_text(filenames, old_dir, new_dir,
-                      old_dir, new_dir,
-                      old_dir, new_dir,
-                      {old_dir: new_dir})
+        # Singleton dict doesn't matter if Ordered
+        relocate_text(filenames, {old_dir: new_dir})
         with open(filename, "r")as script:
             for line in script:
                 assert(new_dir in line)
@@ -560,3 +549,52 @@ def test_macho_make_paths():
                    '/Users/Shared/spack/pkgB/libB.dylib',
                    '/usr/local/lib/libloco.dylib':
                    '/usr/local/lib/libloco.dylib'}
+
+
+@pytest.fixture()
+def mock_download():
+    """Mock a failing download strategy."""
+    class FailedDownloadStrategy(spack.fetch_strategy.FetchStrategy):
+        def mirror_id(self):
+            return None
+
+        def fetch(self):
+            raise spack.fetch_strategy.FailedDownloadError(
+                "<non-existent URL>", "This FetchStrategy always fails")
+
+    fetcher = FetchStrategyComposite()
+    fetcher.append(FailedDownloadStrategy())
+
+    @property
+    def fake_fn(self):
+        return fetcher
+
+    orig_fn = spack.package.PackageBase.fetcher
+    spack.package.PackageBase.fetcher = fake_fn
+    yield
+    spack.package.PackageBase.fetcher = orig_fn
+
+
+@pytest.mark.parametrize("manual,instr", [(False, False), (False, True),
+                                          (True, False), (True, True)])
+@pytest.mark.disable_clean_stage_check
+def test_manual_download(install_mockery, mock_download, monkeypatch, manual,
+                         instr):
+    """
+    Ensure expected fetcher fail message based on manual download and instr.
+    """
+    @property
+    def _instr(pkg):
+        return 'Download instructions for {0}'.format(pkg.spec.name)
+
+    spec = Spec('a').concretized()
+    pkg = spec.package
+
+    pkg.manual_download = manual
+    if instr:
+        monkeypatch.setattr(spack.package.PackageBase, 'download_instr',
+                            _instr)
+
+    expected = pkg.download_instr if manual else 'All fetchers failed'
+    with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
+        pkg.do_fetch()

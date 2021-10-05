@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Lesstif(AutotoolsPackage):
     depends_on('libice')
     depends_on('libsm')
     depends_on('libxt')
+    depends_on('libxext')
 
     def patch(self):
         filter_file("ACLOCALDIR=.*",

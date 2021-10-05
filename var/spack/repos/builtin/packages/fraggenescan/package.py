@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Fraggenescan(MakefilePackage):
 
     version('1.31', sha256='cd3212d0f148218eb3b17d24fcd1fc897fb9fee9b2c902682edde29f895f426c')
 
-    build_targets = ['fgs']
+    build_targets = ['clean', 'hmm.obj']
 
     def edit(self, spec, prefix):
         filter_file('gcc', spack_cc, 'Makefile', string=True)

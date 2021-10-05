@@ -1,13 +1,15 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import inspect
+from typing import List  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
+
 from spack.package import PackageBase, run_after
 
 
@@ -48,7 +50,7 @@ class MakefilePackage(PackageBase):
 
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.build`
     #: phase
-    build_targets = []
+    build_targets = []  # type: List[str]
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.install`
     #: phase
     install_targets = ['install']

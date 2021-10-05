@@ -1,0 +1,68 @@
+diff --git a/arch/configure.defaults b/arch/configure.defaults
+index 9098375..7767a81 100644
+--- a/arch/configure.defaults
++++ b/arch/configure.defaults
+@@ -74,7 +74,7 @@ FORMAT_FIXED    =       -ffixed-form
+ FORMAT_FREE     =       -ffree-form -ffree-line-length-none
+ FCSUFFIX        =       
+ BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
+-FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO)
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS)
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -786,7 +786,7 @@ FORMAT_FIXED    =       -ffixed-form
+ FORMAT_FREE     =       -ffree-form -ffree-line-length-none
+ FCSUFFIX        =       
+ BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
+-FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO)
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS)
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -1007,7 +1007,7 @@ FORMAT_FIXED    =       -ffixed-form
+ FORMAT_FREE     =       -ffree-form -ffree-line-length-none
+ FCSUFFIX        =       
+ BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
+-FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO)
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS)
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -1050,7 +1050,7 @@ FORMAT_FIXED    =       -ffixed-form
+ FORMAT_FREE     =       -ffree-form -ffree-line-length-none
+ FCSUFFIX        =       
+ BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
+-FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO)
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS)
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -1598,7 +1598,8 @@ CC_TOOLS        =       $(SCC)
+ 
+ LIB_EXTERNAL    = \
+                      ../external/io_netcdf/libwrfio_nf.a CONFIGURE_NETCDF_PATH/lib/libnetcdf.lib \
+-                     ../external/wavelet/libWavelet.a ../external/wavelet/lib_wavelet.a
++                     ../external/wavelet/libWavelet.a ../external/wavelet/lib_wavelet.a \
++                     CONFIGURE_NETCDFF_PATH/lib/libnetcdff.lib
+ ESMF_IO_LIB     =    ../external/esmf_time_f90/libesmf_time.a
+ LIB_BUNDLED     = \
+                      ../external/fftpack/fftpack5/libfftpack.a \
+@@ -1773,7 +1774,7 @@ FORMAT_FIXED    =       -ffixed-form
+ FORMAT_FREE     =       -ffree-form -ffree-line-length-none
+ FCSUFFIX        =       
+ BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
+-FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO)
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS)
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =
+ TRADFLAG        =      CONFIGURE_TRADFLAG
+@@ -1947,7 +1948,7 @@ FORMAT_FIXED    =       -ffixed-form
+ FORMAT_FREE     =       -ffree-form -ffree-line-length-none
+ FCSUFFIX        =       
+ BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
+-FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO)
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS)
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     
+ TRADFLAG        =      -traditional

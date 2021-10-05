@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,10 @@ class Swfft(MakefilePackage):
         targets.append('DFFT_MPI_CC=%s' % spec['mpi'].mpicc)
         targets.append('DFFT_MPI_CXX=%s' % spec['mpi'].mpicxx)
         targets.append('DFFT_MPI_F90=%s' % spec['mpi'].mpifc)
+
+        if self.spec.satisfies('%nvhpc'):
+            # remove -Wno-deprecated -std=gnu99
+            targets.append('DFFT_MPI_CFLAGS=-g -O3 -Wall')
 
         return targets
 

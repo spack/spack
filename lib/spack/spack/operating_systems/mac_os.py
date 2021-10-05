@@ -1,13 +1,14 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import platform as py_platform
 
-from spack.architecture import OperatingSystem
-from spack.version import Version
 from spack.util.executable import Executable
+from spack.version import Version
+
+from ._operating_system import OperatingSystem
 
 
 # FIXME: store versions inside OperatingSystem as a Version instead of string
@@ -54,10 +55,16 @@ class MacOs(OperatingSystem):
             '10.13': 'highsierra',
             '10.14': 'mojave',
             '10.15': 'catalina',
-            '11.0':  'bigsur',
+            '10.16': 'bigsur',
+            '11': 'bigsur',
+            '12': 'monterey',
         }
 
-        mac_ver = str(macos_version().up_to(2))
+        # Big Sur versions go 11.0, 11.0.1, 11.1 (vs. prior versions that
+        # only used the minor component)
+        part = 1 if macos_version() >= Version('11') else 2
+
+        mac_ver = str(macos_version().up_to(part))
         name = mac_releases.get(mac_ver, "macos")
         super(MacOs, self).__init__(name, mac_ver)
 

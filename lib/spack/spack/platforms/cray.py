@@ -1,21 +1,24 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 import os.path
-import re
 import platform
-import llnl.util.cpu as cpu
+import re
+
+import archspec.cpu
+
 import llnl.util.tty as tty
+
+import spack.target
+from spack.operating_systems.cray_backend import CrayBackend
+from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.paths import build_env_path
 from spack.util.executable import Executable
-from spack.architecture import Platform, Target, NoPlatformError
-from spack.operating_systems.cray_frontend import CrayFrontend
-from spack.operating_systems.cray_backend import CrayBackend
 from spack.util.module_cmd import module
 
+from ._platform import NoPlatformError, Platform
 
 _craype_name_to_target_name = {
     'x86-cascadelake': 'cascadelake',
@@ -50,7 +53,7 @@ class Cray(Platform):
         # Make all craype targets available.
         for target in self._avail_targets():
             name = _target_name_from_craype_target_name(target)
-            self.add_target(name, Target(name, 'craype-%s' % target))
+            self.add_target(name, spack.target.Target(name, 'craype-%s' % target))
 
         self.back_end = os.environ.get('SPACK_BACK_END',
                                        self._default_target_from_env())
@@ -60,12 +63,14 @@ class Cray(Platform):
             raise NoPlatformError()
 
         # Setup frontend targets
-        for name in cpu.targets:
+        for name in archspec.cpu.TARGETS:
             if name not in self.targets:
-                self.add_target(name, Target(name))
-        self.front_end = os.environ.get('SPACK_FRONT_END', cpu.host().name)
+                self.add_target(name, spack.target.Target(name))
+        self.front_end = os.environ.get(
+            'SPACK_FRONT_END', archspec.cpu.host().name
+        )
         if self.front_end not in self.targets:
-            self.add_target(self.front_end, Target(self.front_end))
+            self.add_target(self.front_end, spack.target.Target(self.front_end))
 
         front_distro = CrayFrontend()
         back_distro = CrayBackend()
@@ -143,13 +148,13 @@ class Cray(Platform):
                 tty.debug("Found default module:%s" % default_from_module)
                 return default_from_module
             else:
-                front_end = cpu.host().name
+                front_end = archspec.cpu.host().name
                 if front_end in list(
                         map(lambda x: _target_name_from_craype_target_name(x),
                             self._avail_targets())
                 ):
                     tty.debug("default to front-end architecture")
-                    return cpu.host().name
+                    return archspec.cpu.host().name
                 else:
                     return platform.machine()
 
@@ -166,8 +171,10 @@ class Cray(Platform):
             for mod in modules:
                 if 'craype-' in mod:
                     name = mod[7:]
+                    name = name.split()[0]
                     _n = name.replace('-', '_')  # test for mic-knl/mic_knl
-                    is_target_name = name in cpu.targets or _n in cpu.targets
+                    is_target_name = (name in archspec.cpu.TARGETS or
+                                      _n in archspec.cpu.TARGETS)
                     is_cray_target_name = name in _craype_name_to_target_name
                     if is_target_name or is_cray_target_name:
                         targets.append(name)

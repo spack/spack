@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RSurvival(RPackage):
-    """Contains the core survival analysis routines, including definition of
+    """Survival Analysis
+
+    Contains the core survival analysis routines, including definition of
     Surv objects, Kaplan-Meier and Aalen-Johansen (multi-state) curves, Cox
     models, and parametric accelerated failure time models."""
 
@@ -15,6 +17,7 @@ class RSurvival(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/survival_2.41-3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/survival"
 
+    version('3.2-7', sha256='5356cd73da7ecfda4042e8a8ae00d3531b106f7b39ca31a1843eadf288418a46')
     version('3.1-12', sha256='b62ed66eb646f3df13f7e9bf6571e3bfecae128c66491e174c8833cbef1bf21f')
     version('2.44-1.1', sha256='55b151e15fcd24ccb3acf60331c9a7ad82bc10f3841ab3be9bc2a37e9ee751b9')
     version('2.44-1', sha256='82c44afa41fe4504295855f1da4a5940c3289dfd61bc664bf211bb67c051a909')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,10 +34,10 @@ class AppleLibunwind(Package):
 
         packages:
           apple-libunwind:
-            paths:
-              apple-libunwind@35.3: /usr
             buildable: False
-
+            externals:
+            - spec: apple-libunwind@35.3
+              prefix: /usr
         """
         raise InstallError(msg)
 

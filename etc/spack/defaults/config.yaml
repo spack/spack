@@ -16,23 +16,22 @@
 config:
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
-  install_tree: $spack/opt/spack
+  install_tree:
+    root: $spack/opt/spack
+    projections:
+      all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+    # install_tree can include an optional padded length (int or boolean)
+    # default is False (do not pad)
+    # if padded_length is True, Spack will pad as close to the system max path
+    # length as possible
+    # if padded_length is an integer, Spack will pad to that many characters,
+    # assuming it is higher than the length of the install_tree root.
+    # padded_length: 128
 
 
   # Locations where templates should be found
   template_dirs:
     - $spack/share/spack/templates
-
-
-  # Default directory layout
-  install_path_scheme: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
-
-
-  # Locations where different types of modules should be installed.
-  module_roots:
-    tcl:    $spack/share/spack/modules
-    lmod:   $spack/share/spack/lmod
-
 
   # Temporary locations Spack can try to use for builds.
   #
@@ -64,6 +63,10 @@ config:
     - ~/.spack/stage
   # - $spack/var/spack/stage
 
+  # Directory in which to run tests and store test results.
+  # Tests will be stored in directories named by date/time and package
+  # name/hash.
+  test_stage: ~/.spack/test
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
@@ -97,12 +100,17 @@ config:
   # If set to true, Spack will attempt to build any compiler on the spec
   # that is not already available. If set to False, Spack will only use
   # compilers already configured in compilers.yaml
-  install_missing_compilers: False
+  install_missing_compilers: false
 
 
   # If set to true, Spack will always check checksums after downloading
   # archives. If false, Spack skips the checksum step.
   checksum: true
+
+
+  # If set to true, Spack will fetch deprecated versions without warning.
+  # If false, Spack will raise an error when trying to install a deprecated version.
+  deprecated: false
 
 
   # If set to true, `spack install` and friends will NOT clean
@@ -126,17 +134,36 @@ config:
   # enabling locks.
   locks: true
 
+  # The default url fetch method to use. 
+  # If set to 'curl', Spack will require curl on the user's system
+  # If set to 'urllib', Spack will use python built-in libs to fetch
+  url_fetch_method: urllib
 
-  # The maximum number of jobs to use when running `make` in parallel,
-  # always limited by the number of cores available. For instance:
-  # - If set to 16 on a 4 cores machine `spack install` will run `make -j4`
-  # - If set to 16 on a 18 cores machine `spack install` will run `make -j16`
-  # If not set, Spack will use all available cores up to 16.
+  # The maximum number of jobs to use for the build system (e.g. `make`), when
+  # the -j flag is not given on the command line. Defaults to 16 when not set.
+  # Note that the maximum number of jobs is limited by the number of cores
+  # available, taking thread affinity into account when supported. For instance:
+  # - With `build_jobs: 16` and 4 cores available `spack install` will run `make -j4`
+  # - With `build_jobs: 16` and 32 cores available `spack install` will run `make -j16`
+  # - With `build_jobs: 2` and 4 cores available `spack install -j6` will run `make -j6`
   # build_jobs: 16
 
 
   # If set to true, Spack will use ccache to cache C compiles.
   ccache: false
+
+
+  # The concretization algorithm to use in Spack. Options are:
+  #
+  #   'original': Spack's original greedy, fixed-point concretizer. This
+  #       algorithm can make decisions too early and will not backtrack
+  #       sufficiently for many specs.
+  #
+  #   'clingo': Uses a logic solver under the hood to solve DAGs with full
+  #       backtracking and optimization for user preferences. Spack will
+  #       try to bootstrap the logic solver, if not already available.
+  #
+  concretizer: clingo
 
 
   # How long to wait to lock the Spack installation database. This lock is used
@@ -153,10 +180,12 @@ config:
   # never succeed.
   package_lock_timeout: null
 
+
   # Control whether Spack embeds RPATH or RUNPATH attributes in ELF binaries.
   # Has no effect on macOS. DO NOT MIX these within the same install tree.
   # See the Spack documentation for details.
   shared_linking: 'rpath'
+
 
   # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit
   # manipulation by unprivileged user (e.g. AFS)

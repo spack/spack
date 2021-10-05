@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Opennurbs(Package):
@@ -28,8 +25,7 @@ class Opennurbs(Package):
     # CMake installation method
     def install(self, spec, prefix):
         cmake_args = [
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
 
         cmake_args.extend(std_cmake_args)
@@ -49,6 +45,4 @@ class Opennurbs(Package):
         mkdir(prefix.include)
         install('libopenNURBS.a', prefix.lib)
         install_tree('zlib', join_path(prefix.include, 'zlib'))
-        headers = glob.glob(join_path('.', '*.h'))
-        for h in headers:
-            install(h, prefix.include)
+        install('*.h', prefix.include)

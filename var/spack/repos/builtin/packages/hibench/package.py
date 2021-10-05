@@ -1,12 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class Hibench(Package):
+class Hibench(MavenPackage):
     """HiBench is a big data benchmark suite that helps evaluate different big
     data frameworks in terms of speed, throughput and system resource
     utilizations. It contains a set of Hadoop,Spark and streaming workloads,
@@ -25,11 +23,3 @@ class Hibench(Package):
     version('3.0.0',   sha256='869771e73593caac3a9b2fb14a10041a485d248074ba38cca812c934897db63d')
     version('2.2.1',   sha256='f8531cbaff8d93bfd1c0742fec5dbb375bfeeb9ec1b39b4e857120e933a2c9ec')
     version('2.2',     sha256='5f68e22339cdd141b846d8b1d7134b2b8ff5fbd5e847e406214dc845f5d005cf')
-
-    depends_on('maven', type='build')
-    depends_on('java@8', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        mvn = which('mvn')
-        mvn('package', '-DskipTests')
-        install_tree('.', prefix)

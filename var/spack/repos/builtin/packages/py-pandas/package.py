@@ -1,9 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 
 
 class PyPandas(PythonPackage):
@@ -12,23 +10,39 @@ class PyPandas(PythonPackage):
     programming language."""
 
     homepage = "https://pandas.pydata.org/"
-    url = "https://pypi.io/packages/source/p/pandas/pandas-1.1.1.tar.gz"
+    pypi = "pandas/pandas-1.2.0.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = [
-        'pandas', 'pandas.compat', 'pandas.core', 'pandas.util', 'pandas.io',
-        'pandas.tseries', 'pandas._libs', 'pandas.plotting', 'pandas.arrays',
-        'pandas.api', 'pandas.errors', 'pandas._config', 'pandas.compat.numpy',
+        'pandas', 'pandas.compat', 'pandas.compat.numpy', 'pandas.core',
         'pandas.core.reshape', 'pandas.core.tools', 'pandas.core.util',
-        'pandas.core.dtypes', 'pandas.core.groupby', 'pandas.core.internals',
-        'pandas.core.computation', 'pandas.core.arrays', 'pandas.core.ops',
-        'pandas.core.sparse', 'pandas.core.indexes', 'pandas.io.msgpack',
-        'pandas.io.formats', 'pandas.io.excel', 'pandas.io.json',
-        'pandas.io.sas', 'pandas.io.clipboard', 'pandas._libs.tslibs',
-        'pandas.plotting._matplotlib', 'pandas.api.types',
-        'pandas.api.extensions'
+        'pandas.core.array_algos', 'pandas.core.dtypes', 'pandas.core.groupby',
+        'pandas.core.internals', 'pandas.core.computation',
+        'pandas.core.window', 'pandas.core.arrays',
+        'pandas.core.arrays.sparse', 'pandas.core.ops', 'pandas.core.sparse',
+        'pandas.core.indexes', 'pandas.util', 'pandas.io', 'pandas.io.formats',
+        'pandas.io.excel', 'pandas.io.json', 'pandas.io.sas',
+        'pandas.io.clipboard', 'pandas.tseries', 'pandas._libs',
+        'pandas._libs.window', 'pandas._libs.tslibs', 'pandas.plotting',
+        'pandas.arrays', 'pandas.api', 'pandas.api.indexers',
+        'pandas.api.types', 'pandas.api.extensions', 'pandas.errors',
+        'pandas._config'
     ]
 
+    version('1.3.3',  sha256='272c8cb14aa9793eada6b1ebe81994616e647b5892a370c7135efb2924b701df')
+    version('1.3.2',  sha256='cbcb84d63867af3411fa063af3de64902665bb5b3d40b25b2059e40603594e87')
+    version('1.3.1',  sha256='341935a594db24f3ff07d1b34d1d231786aa9adfa84b76eab10bf42907c8aed3')
+    version('1.3.0',  sha256='c554e6c9cf2d5ea1aba5979cc837b3649539ced0e18ece186f055450c86622e2')
+    version('1.2.5',  sha256='14abb8ea73fce8aebbb1fb44bec809163f1c55241bcc1db91c2c780e97265033')
+    version('1.2.4',  sha256='649ecab692fade3cbfcf967ff936496b0cfba0af00a55dfaacd82bdda5cb2279')
+    version('1.2.3',  sha256='df6f10b85aef7a5bb25259ad651ad1cc1d6bb09000595cab47e718cbac250b1d')
+    version('1.2.2',  sha256='14ed84b463e9b84c8ff9308a79b04bf591ae3122a376ee0f62c68a1bd917a773')
+    version('1.2.1',  sha256='5527c5475d955c0bc9689c56865aaa2a7b13c504d6c44f0aadbf57b565af5ebd')
+    version('1.2.0',  sha256='e03386615b970b8b41da6a68afe717626741bb2431cec993640685614c0680e4')
+    version('1.1.5',  sha256='f10fc41ee3c75a474d3bdf68d396f10782d013d7f67db99c0efbfd0acb99701b')
+    version('1.1.4',  sha256='a979d0404b135c63954dea79e6246c45dd45371a88631cdbb4877d844e6de3b6')
+    version('1.1.3',  sha256='babbeda2f83b0686c9ad38d93b10516e68cdcd5771007eb80a763e98aaf44613')
+    version('1.1.2',  sha256='b64ffd87a2cfd31b40acd4b92cb72ea9a52a48165aec4c140e78fd69c45d1444')
     version('1.1.1',  sha256='53328284a7bb046e2e885fd1b8c078bd896d7fc4575b915d4936f54984a2ba67')
     version('1.1.0',  sha256='b39508562ad0bb3f384b0db24da7d68a2608b9ddc85b1d931ccaaa92d5e45273')
     version('1.0.5',  sha256='69c5d920a0b2a9838e677f78f4dde506b95ea8e4d30da25859db6469ded84fa8')
@@ -54,33 +68,34 @@ class PyPandas(PythonPackage):
 
     # Required dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#dependencies
+    depends_on('python@3.7.1:', type=('build', 'run'), when='@1.2:')
     depends_on('python@3.6.1:', type=('build', 'run'), when='@1:')
     depends_on('python@3.5.3:', type=('build', 'run'), when='@0.25:')
     # https://pandas.pydata.org/docs/whatsnew/v1.0.0.html#build-changes
-    depends_on('py-cython@0.29.13:', type='build', when='@1:')
-    depends_on('py-cython@0.29.16:', type='build', when='@1.1:')
+    depends_on('py-cython@0.29.13:2', type='build', when='@1:')
+    depends_on('py-cython@0.29.16:2', type='build', when='@1.1:')
+    depends_on('py-cython@0.29.21:2', type='build', when='@1.1.3:')
     depends_on('py-setuptools@24.2.0:', type='build')
+    depends_on('py-setuptools@38.6.0:', type='build', when='@1.3:')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numpy@1.13.3:', type=('build', 'run'), when='@0.25:')
     depends_on('py-numpy@1.15.4:', type=('build', 'run'), when='@1.1:')
+    depends_on('py-numpy@1.16.5:', type=('build', 'run'), when='@1.2:')
+    depends_on('py-numpy@1.17.3:', type=('build', 'run'), when='@1.3:')
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-python-dateutil@2.6.1:', type=('build', 'run'), when='@0.25:')
     depends_on('py-python-dateutil@2.7.3:', type=('build', 'run'), when='@1.1:')
     depends_on('py-pytz@2017.2:', type=('build', 'run'))
+    depends_on('py-pytz@2017.3:', type=('build', 'run'), when='@1.2:')
 
     # Recommended dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#recommended-dependencies
     depends_on('py-numexpr', type=('build', 'run'))
     depends_on('py-numexpr@2.6.2:', type=('build', 'run'), when='@0.25:')
+    depends_on('py-numexpr@2.6.8:', type=('build', 'run'), when='@1.2:')
+    depends_on('py-numexpr@2.7.0:', type=('build', 'run'), when='@1.3:')
     depends_on('py-bottleneck', type=('build', 'run'))
     depends_on('py-bottleneck@1.2.1:', type=('build', 'run'), when='@0.25:')
 
     # Optional dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies
-
-    # Test dependencies
-    # https://pandas.pydata.org/pandas-docs/stable/development/contributing.html#running-the-test-suite
-    depends_on('py-pytest@4.0.2:', type='test')
-    depends_on('py-pytest-xdist', type='test')
-    depends_on('py-hypothesis@3.58:', type='test')
-    depends_on('py-pyarrow@0.10.0:', type='test')

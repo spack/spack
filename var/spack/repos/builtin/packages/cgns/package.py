@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 from spack import *
 
 
@@ -12,12 +13,16 @@ class Cgns(CMakePackage):
     and extensible standard for the storage and retrieval of computational
     fluid dynamics (CFD) analysis data."""
 
-    homepage = "http://cgns.github.io/"
+    homepage = "https://cgns.github.io/"
     url      = "https://github.com/CGNS/CGNS/archive/v3.3.0.tar.gz"
     git      = "https://github.com/CGNS/CGNS"
 
+    parallel = False
+
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('4.2.0',   sha256='090ec6cb0916d90c16790183fc7c2bd2bd7e9a5e3764b36c8196ba37bf1dc817')
+    version('4.1.2',   sha256='951653956f509b8a64040f1440c77f5ee0e6e2bf0a9eef1248d370f60a400050')
     version('4.1.1',   sha256='055d345c3569df3ae832fb2611cd7e0bc61d56da41b2be1533407e949581e226')
     version('4.1.0',   sha256='4674de1fac3c47998248725fd670377be497f568312c5903d1bb8090a3cf4da0')
     version('4.0.0',   sha256='748585a8e52dff4d250d6b603e6b847d05498e4566aba2dc3d7a7d85c4d55849')
@@ -36,9 +41,10 @@ class Cgns(CMakePackage):
     variant('static',     default=False, description='Build static libraries')
     variant('testing',    default=False, description='Build CGNS testing')
     variant('legacy',     default=False, description='Enable legacy options')
-    variant('parallel',   default=False, description='Enable parallel features')
     variant('mem_debug',  default=False, description='Enable memory debugging option')
 
+    depends_on('cmake@3.8:', when='@4.2:', type='build')
+    depends_on('cmake@2.8:', when='@:4.1', type='build')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('mpi', when='+mpi')
@@ -48,28 +54,17 @@ class Cgns(CMakePackage):
         options = []
 
         options.extend([
-            '-DCGNS_ENABLE_FORTRAN:BOOL=%s' % (
-                'ON' if '+fortran' in spec else 'OFF'),
-            '-DCGNS_ENABLE_SCOPING:BOOL=%s' % (
-                'ON' if '+scoping' in spec else 'OFF'),
-            '-DCGNS_ENABLE_PARALLEL:BOOL=%s' % (
-                'ON' if '+mpi' in spec else 'OFF'),
+            self.define_from_variant('CGNS_ENABLE_FORTRAN', 'fortran'),
+            self.define_from_variant('CGNS_ENABLE_SCOPING', 'scoping'),
+            self.define_from_variant('CGNS_ENABLE_PARALLEL', 'mpi'),
             '-DCGNS_ENABLE_TESTS:BOOL=OFF',
-            '-DCGNS_BUILD_TESTING:BOOL=%s' % (
-                'ON' if '+testing' in spec else 'OFF'),
+            self.define_from_variant('CGNS_BUILD_TESTING', 'testing'),
             '-DCGNS_BUILD_CGNSTOOLS:BOOL=OFF',
-            '-DCGNS_BUILD_SHARED:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DCGNS_BUILD_STATIC:BOOL=%s' % (
-                'ON' if '+static' in spec else 'OFF'),
-            '-DCGNS_ENABLE_BASE_SCOPE:BOOL=%s' % (
-                'ON' if '+base_scope' in spec else 'OFF'),
-            '-DCGNS_ENABLE_LEGACY:BOOL=%s' % (
-                'ON' if '+legacy' in spec else 'OFF'),
-            '-DCGNS_ENABLE_PARALLEL:BOOL=%s' % (
-                'ON' if '+parallel' in spec else 'OFF'),
-            '-DCGNS_ENABLE_MEM_DEBUG:BOOL=%s' % (
-                'ON' if '+mem_debug' in spec else 'OFF')
+            self.define_from_variant('CGNS_BUILD_SHARED', 'shared'),
+            self.define_from_variant('CGNS_BUILD_STATIC', 'static'),
+            self.define_from_variant('CGNS_ENABLE_BASE_SCOPE', 'base_scope'),
+            self.define_from_variant('CGNS_ENABLE_LEGACY', 'legacy'),
+            self.define_from_variant('CGNS_ENABLE_MEM_DEBUG', 'mem_debug')
         ])
 
         if '+mpi' in spec:
@@ -80,8 +75,7 @@ class Cgns(CMakePackage):
             ])
 
         options.append(
-            '-DCGNS_ENABLE_64BIT:BOOL={0}'.format(
-                'ON' if '+int64' in spec else 'OFF'))
+            self.define_from_variant('CGNS_ENABLE_64BIT', 'int64'))
 
         if '+hdf5' in spec:
             options.extend([

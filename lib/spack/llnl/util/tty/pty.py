@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,10 @@ get tests done quickly, not to avoid high CPU usage.
 """
 from __future__ import print_function
 
-import os
-import signal
 import multiprocessing
+import os
 import re
+import signal
 import sys
 import termios
 import time

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,3 +32,13 @@ def test_true_directives_exist(mock_packages):
 
     assert cls.patches
     assert Spec() in cls.patches
+
+
+def test_constraints_from_context(mock_packages):
+    pkg_cls = spack.repo.path.get_pkg_class('with-constraint-met')
+
+    assert pkg_cls.dependencies
+    assert Spec('@1.0') in pkg_cls.dependencies['b']
+
+    assert pkg_cls.conflicts
+    assert (Spec('@1.0'), None) in pkg_cls.conflicts['%gcc']

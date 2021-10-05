@@ -1,0 +1,33 @@
+diff --git a/arch/Config.pl b/arch/Config.pl
+index 89f86bf..e08bc75 100644
+--- a/arch/Config.pl
++++ b/arch/Config.pl
+@@ -9,6 +9,7 @@
+ $sw_perl_path   = perl;
+ $sw_wrf_path   = "<SET ME>";
+ $sw_netcdf_path = "";
++$sw_netcdff_path = "";
+ $sw_netcdff_lib = "";
+ $sw_phdf5_path  = ""; 
+ $sw_jasperlib_path = ""; 
+@@ -40,7 +41,11 @@ while(substr( $ARGV[0], 0, 1 ) eq "-")
+     }
+     if(substr( $ARGV[0], 1, 8 ) eq "netcdff=")
+     {
+-        $sw_netcdff_lib = substr( $ARGV[0], 9);
++        $sw_netcdff_path = substr( $ARGV[0], 9);
++    }
++    if(substr( $ARGV[0], 1, 11 ) eq "netcdfflib=")
++    {
++        $sw_netcdff_lib = substr( $ARGV[0], 12);
+     }
+     if(substr( $ARGV[0], 1, 6 ) eq "phdf5=")
+     {
+@@ -167,6 +172,7 @@ while(<CONFIGURE_DEFAULTS>)
+     {
+         $_ =~ s/CONFIGURE_PERL_PATH/$sw_perl_path/g;
+         $_ =~ s/CONFIGURE_NETCDF_PATH/$sw_netcdf_path/g;
++        $_ =~ s/CONFIGURE_NETCDFF_PATH/$sw_netcdff_path/g;
+         $_ =~ s/CONFIGURE_LDFLAGS/$sw_ldflags/g;
+         $_ =~ s/CONFIGURE_COMPILEFLAGS/$sw_compileflags/g;
+         $_ =~ s/CONFIGURE_COMP_L/$sw_compL/g;

@@ -1,11 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
-import os
 
 
 class PpopenApplFvm(MakefilePackage):
@@ -29,14 +28,17 @@ class PpopenApplFvm(MakefilePackage):
     """
 
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
-    url = "file://{0}/ppohFVM_0.3.0.tar.gz".format(os.getcwd())
+    git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('0.3.0', sha256='4e05dd71f4eeda62c9683b7c3069a2537f3c2c7e86ba50a00d4963f41d9cbe29')
+    version('master', branch='APPL/FVM')
 
     depends_on('mpi')
     depends_on('metis@:4')
 
     def edit(self, spec, prefix):
+        mkdirp('bin')
+        mkdirp('lib')
+        mkdirp('include')
         fflags = ['-O3']
         if spec.satisfies('%gcc'):
             fflags.append('-ffree-line-length-none')

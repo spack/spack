@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Amrvis(MakefilePackage):
@@ -198,6 +195,4 @@ class Amrvis(MakefilePackage):
     def install(self, spec, prefix):
         # Install exe manually
         mkdirp(prefix.bin)
-        exes = glob.iglob('*.ex')
-        for exe in exes:
-            install(exe, prefix.bin)
+        install('*.ex', prefix.bin)

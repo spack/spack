@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyRaven(PythonPackage):
     """Raven is a client for Sentry."""
 
     homepage = "https://github.com/getsentry/raven-python"
-    url      = "https://pypi.io/packages/source/r/raven/raven-6.10.0.tar.gz"
+    pypi = "raven/raven-6.10.0.tar.gz"
 
     version('6.10.0', sha256='3fa6de6efa2493a7c827472e984ce9b020797d0da16f1db67197bcc23c8fae54')
 

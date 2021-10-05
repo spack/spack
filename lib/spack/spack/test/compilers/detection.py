@@ -1,13 +1,15 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test detection of compiler version"""
-import pytest
 import os
+
+import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.compilers.aocc
 import spack.compilers.arm
 import spack.compilers.cce
 import spack.compilers.clang
@@ -15,12 +17,13 @@ import spack.compilers.fj
 import spack.compilers.gcc
 import spack.compilers.intel
 import spack.compilers.nag
+import spack.compilers.nvhpc
+import spack.compilers.oneapi
 import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
-
-from spack.operating_systems.cray_frontend import CrayFrontend
 import spack.util.module_cmd
+from spack.operating_systems.cray_frontend import CrayFrontend
 
 
 @pytest.mark.parametrize('version_str,expected_version', [
@@ -93,7 +96,11 @@ def test_apple_clang_version_detection(
     ('clang version 8.0.0-3 (tags/RELEASE_800/final)\n'
      'Target: aarch64-unknown-linux-gnu\n'
      'Thread model: posix\n'
-     'InstalledDir: /usr/bin\n', '8.0.0')
+     'InstalledDir: /usr/bin\n', '8.0.0'),
+    ('clang version 11.0.0\n'
+     'Target: aarch64-unknown-linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '11.0.0')
 ])
 def test_clang_version_detection(version_str, expected_version):
     version = spack.compilers.clang.Clang.extract_version_from_output(
@@ -149,11 +156,122 @@ def test_intel_version_detection(version_str, expected_version):
 
 
 @pytest.mark.parametrize('version_str,expected_version', [
+    (  # ICX/ICPX
+        'Intel(R) oneAPI DPC++ Compiler 2021.1.2 (2020.10.0.1214)\n'
+        'Target: x86_64-unknown-linux-gnu\n'
+        'Thread model: posix\n'
+        'InstalledDir: /made/up/path',
+        '2021.1.2'
+    ),
+    (  # ICX/ICPX
+        'Intel(R) oneAPI DPC++ Compiler 2021.2.0 (2021.2.0.20210317)\n'
+        'Target: x86_64-unknown-linux-gnu\n'
+        'Thread model: posix\n'
+        'InstalledDir: /made/up/path',
+        '2021.2.0'
+    ),
+    (  # ICX/ICPX
+        'Intel(R) oneAPI DPC++/C++ Compiler 2021.3.0 (2021.3.0.20210619)\n'
+        'Target: x86_64-unknown-linux-gnu\n'
+        'Thread model: posix\n'
+        'InstalledDir: /made/up/path',
+        '2021.3.0'
+    ),
+    (  # ICX/ICPX
+        'Intel(R) oneAPI DPC++/C++ Compiler 2021.4.0 (2021.4.0.20210924)\n'
+        'Target: x86_64-unknown-linux-gnu\n'
+        'Thread model: posix\n'
+        'InstalledDir: /made/up/path',
+        '2021.4.0'
+    ),
+    (  # IFX
+        'ifx (IFORT) 2021.1.2 Beta 20201214\n'
+        'Copyright (C) 1985-2020 Intel Corporation. All rights reserved.',
+        '2021.1.2'
+    ),
+    (  # IFX
+        'ifx (IFORT) 2021.2.0 Beta 20210317\n'
+        'Copyright (C) 1985-2020 Intel Corporation. All rights reserved.',
+        '2021.2.0'
+    ),
+    (  # IFX
+        'ifx (IFORT) 2021.3.0 Beta 20210619\n'
+        'Copyright (C) 1985-2020 Intel Corporation. All rights reserved.',
+        '2021.3.0'
+    ),
+    (  # IFX
+        'ifx (IFORT) 2021.4.0 Beta 20210924\n'
+        'Copyright (C) 1985-2021 Intel Corporation. All rights reserved.',
+        '2021.4.0'
+    ),
+])
+def test_oneapi_version_detection(version_str, expected_version):
+    version = spack.compilers.oneapi.Oneapi.extract_version_from_output(
+        version_str
+    )
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
     ('NAG Fortran Compiler Release 6.0(Hibiya) Build 1037\n'
      'Product NPL6A60NA for x86-64 Linux\n', '6.0')
 ])
 def test_nag_version_detection(version_str, expected_version):
     version = spack.compilers.nag.Nag.extract_version_from_output(version_str)
+    assert version == expected_version
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # C compiler on x86-64
+    ('nvc 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on x86-64
+    ('nvc++ 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on x86-64
+    ('nvfortran 20.9-0 LLVM 64-bit target on x86-64 Linux -tp haswell\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C compiler on Power
+    ('nvc 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on Power
+    ('nvc++ 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on Power
+    ('nvfortran 20.9-0 linuxpower target on Linuxpower\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C compiler on Arm
+    ('nvc 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # C++ compiler on Arm
+    ('nvc++ 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9'),
+    # Fortran compiler on Arm
+    ('nvfortran 20.9-0 linuxarm64 target on aarch64 Linux\n'
+     'NVIDIA Compilers and Tools\n'
+     'Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.',
+     '20.9')
+])
+def test_nvhpc_version_detection(version_str, expected_version):
+    version = spack.compilers.nvhpc.Nvhpc.extract_version_from_output(
+        version_str
+    )
     assert version == expected_version
 
 
@@ -204,6 +322,8 @@ def test_xl_version_detection(version_str, expected_version):
     ('pgi', '19.1a'),
     ('intel', '9.0.0'),
     ('intel', '0.0.0-foobar')
+    # ('oneapi', '2021.1'),
+    # ('oneapi', '2021.1-foobar')
 ])
 def test_cray_frontend_compiler_detection(
         compiler, version, tmpdir, monkeypatch, working_env
@@ -233,3 +353,33 @@ def test_cray_frontend_compiler_detection(
 
     paths = cray_fe_os.compiler_search_paths
     assert paths == [str(compiler_dir)]
+
+
+@pytest.mark.parametrize('version_str,expected_version', [
+    # This applies to C,C++ and FORTRAN compiler
+    ('AMD clang version 12.0.0 (CLANG: AOCC_3_1_0-Build#126 2021_06_07)'
+     '(based on LLVM Mirror.Version.12.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '3.1.0'
+     ),
+    ('AMD clang version 12.0.0 (CLANG: AOCC_3.0.0-Build#78 2020_12_10)'
+     '(based on LLVM Mirror.Version.12.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '3.0.0'
+     ),
+    ('AMD clang version 11.0.0 (CLANG: AOCC_2.3.0-Build#85 2020_11_10)'
+     '(based on LLVM Mirror.Version.11.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '2.3.0'
+     ),
+    ('AMD clang version 10.0.0 (CLANG: AOCC_2.2.0-Build#93 2020_06_25)'
+     '(based on LLVM Mirror.Version.10.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '2.2.0'
+     )
+])
+def test_aocc_version_detection(version_str, expected_version):
+    version = spack.compilers.aocc.Aocc.extract_version_from_output(
+        version_str
+    )
+    assert version == expected_version

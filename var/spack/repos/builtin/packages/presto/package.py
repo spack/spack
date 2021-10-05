@@ -1,12 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class Presto(Package):
+class Presto(MavenPackage):
     """Presto is a distributed SQL query engine for big data."""
 
     homepage = "https://prestodb.io/"
@@ -22,11 +20,3 @@ class Presto(Package):
     version('0.236.1', sha256='571c74c0b84ee515750c129eb5de1fbac09cd4d028943d9df99c8e89909c83f4')
     version('0.236',   sha256='6d4c1d79216d2530b64a7737a54c35e698ca738e42d77d086f036224b42b508e')
     version('0.235.1', sha256='1353b2b8526bc2a365f70e9af7005e294cfff11d53285279b2f67048bb5511a0')
-
-    depends_on('maven', type='build')
-    depends_on('java@8', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        mvn = which('mvn')
-        mvn('install', '-DskipTests')
-        install_tree('.', prefix)

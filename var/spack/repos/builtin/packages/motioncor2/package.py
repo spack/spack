@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-from glob import glob
 
 
 class Motioncor2(Package):
@@ -28,13 +25,12 @@ class Motioncor2(Package):
             'c75738160ac18d3f27c33677e78e63313d8ec2b023b5a46173428c3fa0451a94',
             url='http://msg.ucsf.edu/MotionCor2/MotionCor2-1.0.4.tar.gz')
 
-    depends_on('cuda@8.0:8.99', type='run')
+    depends_on('cuda@8.0:8', type='run')
     # libtiff.so.3 is required
-    depends_on('libtiff@3.0:3.99', type='run')
+    depends_on('libtiff@3.0:3', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        for files in glob("MotionCor2_*"):
-            install(files, prefix.bin)
+        install('MotionCor2_*', prefix.bin)
         with working_dir(prefix.bin):
             symlink('MotionCor2_{0}'.format(spec.version), 'MotionCor2')

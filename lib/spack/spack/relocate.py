@@ -1,18 +1,21 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import multiprocessing.pool
 import os
 import platform
 import re
 import shutil
 
+import macholib.mach_o
+import macholib.MachO
+from ordereddict_backport import OrderedDict
+
 import llnl.util.lang
 import llnl.util.tty as tty
-import macholib.MachO
-import macholib.mach_o
+
 import spack.architecture
-import spack.cmd
 import spack.repo
 import spack.spec
 import spack.util.executable as executable
@@ -84,7 +87,8 @@ def _patchelf():
         return patchelf.path
 
     # Check if patchelf spec is installed
-    spec = spack.spec.Spec('patchelf').concretized()
+    spec = spack.spec.Spec('patchelf')
+    spec._old_concretize()
     exe_path = os.path.join(spec.prefix.bin, "patchelf")
     if spec.package.installed and os.path.exists(exe_path):
         return exe_path
@@ -136,7 +140,7 @@ def _make_relative(reference_file, path_root, paths):
         reference_file (str): file from which the reference directory
             is computed
         path_root (str): root of the relative paths
-        paths: paths to be examined
+        paths: (list) paths to be examined
 
     Returns:
         List of relative paths
@@ -449,36 +453,26 @@ def needs_text_relocation(m_type, m_subtype):
     return m_type == 'text'
 
 
-def _replace_prefix_text(filename, old_dir, new_dir):
+def _replace_prefix_text(filename, compiled_prefixes):
     """Replace all the occurrences of the old install prefix with a
     new install prefix in text files that are utf-8 encoded.
 
     Args:
         filename (str): target text file (utf-8 encoded)
-        old_dir (str): directory to be searched in the file
-        new_dir (str): substitute for the old directory
+        compiled_prefixes (OrderedDict): OrderedDictionary where the keys are
+        precompiled regex of the old prefixes and the values are the new
+        prefixes (uft-8 encoded)
     """
-    # TODO: cache regexes globally to speedup computation
     with open(filename, 'rb+') as f:
         data = f.read()
         f.seek(0)
-        # Replace old_dir with new_dir if it appears at the beginning of a path
-        # Negative lookbehind for a character legal in a path
-        # Then a match group for any characters legal in a compiler flag
-        # Then old_dir
-        # Then characters legal in a path
-        # Ensures we only match the old_dir if it's precedeed by a flag or by
-        # characters not legal in a path, but not if it's preceeded by other
-        # components of a path.
-        old_bytes = old_dir.encode('utf-8')
-        pat = b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % old_bytes
-        repl = b'\\1%s\\2' % new_dir.encode('utf-8')
-        ndata = re.sub(pat, repl, data)
-        f.write(ndata)
+        for orig_prefix_rexp, new_bytes in compiled_prefixes.items():
+            data = orig_prefix_rexp.sub(new_bytes, data)
+        f.write(data)
         f.truncate()
 
 
-def _replace_prefix_bin(filename, old_dir, new_dir):
+def _replace_prefix_bin(filename, byte_prefixes):
     """Replace all the occurrences of the old install prefix with a
     new install prefix in binary files.
 
@@ -487,33 +481,35 @@ def _replace_prefix_bin(filename, old_dir, new_dir):
 
     Args:
         filename (str): target binary file
-        old_dir (str): directory to be searched in the file
-        new_dir (str): substitute for the old directory
+        byte_prefixes (OrderedDict): OrderedDictionary where the keys are
+        precompiled regex of the old prefixes and the values are the new
+        prefixes (uft-8 encoded)
     """
-    def replace(match):
-        occurances = match.group().count(old_dir.encode('utf-8'))
-        olen = len(old_dir.encode('utf-8'))
-        nlen = len(new_dir.encode('utf-8'))
-        padding = (olen - nlen) * occurances
-        if padding < 0:
-            return data
-        return match.group().replace(
-            old_dir.encode('utf-8'),
-            os.sep.encode('utf-8') * padding + new_dir.encode('utf-8')
-        )
 
     with open(filename, 'rb+') as f:
         data = f.read()
         f.seek(0)
-        original_data_len = len(data)
-        pat = re.compile(old_dir.encode('utf-8'))
-        if not pat.search(data):
-            return
-        ndata = pat.sub(replace, data)
-        if not len(ndata) == original_data_len:
-            raise BinaryStringReplacementError(
-                filename, original_data_len, len(ndata))
-        f.write(ndata)
+        for orig_bytes, new_bytes in byte_prefixes.items():
+            original_data_len = len(data)
+            # Skip this hassle if not found
+            if orig_bytes not in data:
+                continue
+            # We only care about this problem if we are about to replace
+            length_compatible = len(new_bytes) <= len(orig_bytes)
+            if not length_compatible:
+                tty.debug('Binary failing to relocate is %s' % filename)
+                raise BinaryTextReplaceError(orig_bytes, new_bytes)
+            pad_length = len(orig_bytes) - len(new_bytes)
+            padding = os.sep * pad_length
+            padding = padding.encode('utf-8')
+            data = data.replace(orig_bytes, new_bytes + padding)
+            # Really needs to be the same length
+            if not len(data) == original_data_len:
+                print('Length of pad:', pad_length, 'should be', len(padding))
+                print(new_bytes, 'was to replace', orig_bytes)
+                raise BinaryStringReplacementError(
+                    filename, original_data_len, len(data))
+        f.write(data)
         f.truncate()
 
 
@@ -615,12 +611,13 @@ def _transform_rpaths(orig_rpaths, orig_root, new_prefixes):
 
         # Otherwise inspect the mapping and transform + append any prefix
         # that starts with a registered key
+        # avoiding duplicates
         for old_prefix, new_prefix in new_prefixes.items():
             if orig_rpath.startswith(old_prefix):
-                new_rpaths.append(
-                    re.sub(re.escape(old_prefix), new_prefix, orig_rpath)
-                )
-
+                new_rpath = re.sub(re.escape(old_prefix), new_prefix,
+                                   orig_rpath)
+                if new_rpath not in new_rpaths:
+                    new_rpaths.append(new_rpath)
     return new_rpaths
 
 
@@ -668,7 +665,9 @@ def relocate_elf_binaries(binaries, orig_root, new_root,
             new_rpaths = _make_relative(
                 new_binary, new_root, new_norm_rpaths
             )
-            _set_elf_rpaths(new_binary, new_rpaths)
+            # check to see if relative rpaths are changed before rewriting
+            if sorted(new_rpaths) != sorted(orig_rpaths):
+                _set_elf_rpaths(new_binary, new_rpaths)
         else:
             new_rpaths = _transform_rpaths(
                 orig_rpaths, orig_root, new_prefixes
@@ -783,83 +782,95 @@ def relocate_links(links, orig_layout_root,
             tty.warn(msg.format(link_target, abs_link, new_install_prefix))
 
 
-def relocate_text(
-        files, orig_layout_root, new_layout_root, orig_install_prefix,
-        new_install_prefix, orig_spack, new_spack, new_prefixes
-):
+def relocate_text(files, prefixes, concurrency=32):
     """Relocate text file from the original installation prefix to the
-    new prefix.
+     new prefix.
 
-    Relocation also affects the the path in Spack's sbang script.
+     Relocation also affects the the path in Spack's sbang script.
 
-    Args:
-        files (list): text files to be relocated
-        orig_layout_root (str): original layout root
-        new_layout_root (str): new layout root
-        orig_install_prefix (str): install prefix of the original installation
-        new_install_prefix (str): install prefix where we want to relocate
-        orig_spack (str): path to the original Spack
-        new_spack (str): path to the new Spack
-        new_prefixes (dict): dictionary that maps the original prefixes to
-            where they should be relocated
+     Args:
+         files (list): Text files to be relocated
+         prefixes (OrderedDict): String prefixes which need to be changed
+         concurrency (int): Preferred degree of parallelism
     """
-    # TODO: reduce the number of arguments (8 seems too much)
-    orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
-    new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
 
-    for file in files:
-        _replace_prefix_text(file, orig_install_prefix, new_install_prefix)
-        for orig_dep_prefix, new_dep_prefix in new_prefixes.items():
-            _replace_prefix_text(file, orig_dep_prefix, new_dep_prefix)
-        _replace_prefix_text(file, orig_layout_root, new_layout_root)
-        # relocate the sbang location only if the spack directory changed
-        if orig_spack != new_spack:
-            _replace_prefix_text(file, orig_sbang, new_sbang)
+    # This now needs to be handled by the caller in all cases
+    # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
+    # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
+
+    compiled_prefixes = OrderedDict({})
+
+    for orig_prefix, new_prefix in prefixes.items():
+        if orig_prefix != new_prefix:
+            orig_bytes = orig_prefix.encode('utf-8')
+            orig_prefix_rexp = re.compile(
+                b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % orig_bytes)
+            new_bytes = b'\\1%s\\2' % new_prefix.encode('utf-8')
+            compiled_prefixes[orig_prefix_rexp] = new_bytes
+
+    # Do relocations on text that refers to the install tree
+    # multiprocesing.ThreadPool.map requires single argument
+
+    args = []
+    for filename in files:
+        args.append((filename, compiled_prefixes))
+
+    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+    try:
+        tp.map(llnl.util.lang.star(_replace_prefix_text), args)
+    finally:
+        tp.terminate()
+        tp.join()
 
 
-def relocate_text_bin(
-        binaries, orig_install_prefix, new_install_prefix,
-        orig_spack, new_spack, new_prefixes
-):
+def relocate_text_bin(binaries, prefixes, concurrency=32):
     """Replace null terminated path strings hard coded into binaries.
 
     The new install prefix must be shorter than the original one.
 
     Args:
         binaries (list): binaries to be relocated
-        orig_install_prefix (str): install prefix of the original installation
-        new_install_prefix (str): install prefix where we want to relocate
-        orig_spack (str): path to the original Spack
-        new_spack (str): path to the new Spack
-        new_prefixes (dict): dictionary that maps the original prefixes to
-            where they should be relocated
+        prefixes (OrderedDict): String prefixes which need to be changed.
+        concurrency (int): Desired degree of parallelism.
 
     Raises:
-      BinaryTextReplaceError: when the new path in longer than the old path
+      BinaryTextReplaceError: when the new path is longer than the old path
     """
-    # Raise if the new install prefix is longer than the
-    # original one, since it means we can't change the original
-    # binary to relocate it
-    new_prefix_is_shorter = len(new_install_prefix) <= len(orig_install_prefix)
-    if not new_prefix_is_shorter and len(binaries) > 0:
-        raise BinaryTextReplaceError(orig_install_prefix, new_install_prefix)
+    byte_prefixes = OrderedDict({})
+
+    for orig_prefix, new_prefix in prefixes.items():
+        if orig_prefix != new_prefix:
+            if isinstance(orig_prefix, bytes):
+                orig_bytes = orig_prefix
+            else:
+                orig_bytes = orig_prefix.encode('utf-8')
+            if isinstance(new_prefix, bytes):
+                new_bytes = new_prefix
+            else:
+                new_bytes = new_prefix.encode('utf-8')
+            byte_prefixes[orig_bytes] = new_bytes
+
+    # Do relocations on text in binaries that refers to the install tree
+    # multiprocesing.ThreadPool.map requires single argument
+    args = []
 
     for binary in binaries:
-        for old_dep_prefix, new_dep_prefix in new_prefixes.items():
-            if len(new_dep_prefix) <= len(old_dep_prefix):
-                _replace_prefix_bin(binary, old_dep_prefix, new_dep_prefix)
-        _replace_prefix_bin(binary, orig_install_prefix, new_install_prefix)
+        args.append((binary, byte_prefixes))
 
-    # Note: Replacement of spack directory should not be done. This causes
-    # an incorrect replacement path in the case where the install root is a
-    # subdirectory of the spack directory.
+    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+
+    try:
+        tp.map(llnl.util.lang.star(_replace_prefix_bin), args)
+    finally:
+        tp.terminate()
+        tp.join()
 
 
 def is_relocatable(spec):
     """Returns True if an installed spec is relocatable.
 
     Args:
-        spec (Spec): spec to be analyzed
+        spec (spack.spec.Spec): spec to be analyzed
 
     Returns:
         True if the binaries of an installed spec
@@ -888,18 +899,18 @@ def is_relocatable(spec):
     return True
 
 
-def file_is_relocatable(file, paths_to_relocate=None):
-    """Returns True if the file passed as argument is relocatable.
+def file_is_relocatable(filename, paths_to_relocate=None):
+    """Returns True if the filename passed as argument is relocatable.
 
     Args:
-        file: absolute path of the file to be analyzed
+        filename: absolute path of the file to be analyzed
 
     Returns:
         True or false
 
     Raises:
 
-        ValueError: if the file does not exist or the path is not absolute
+        ValueError: if the filename does not exist or the path is not absolute
     """
     default_paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
     paths_to_relocate = paths_to_relocate or default_paths_to_relocate
@@ -909,28 +920,28 @@ def file_is_relocatable(file, paths_to_relocate=None):
         msg = 'function currently implemented only for linux and macOS'
         raise NotImplementedError(msg)
 
-    if not os.path.exists(file):
-        raise ValueError('{0} does not exist'.format(file))
+    if not os.path.exists(filename):
+        raise ValueError('{0} does not exist'.format(filename))
 
-    if not os.path.isabs(file):
-        raise ValueError('{0} is not an absolute path'.format(file))
+    if not os.path.isabs(filename):
+        raise ValueError('{0} is not an absolute path'.format(filename))
 
     strings = executable.Executable('strings')
 
     # Remove the RPATHS from the strings in the executable
-    set_of_strings = set(strings(file, output=str).split())
+    set_of_strings = set(strings(filename, output=str).split())
 
-    m_type, m_subtype = mime_type(file)
+    m_type, m_subtype = mime_type(filename)
     if m_type == 'application':
         tty.debug('{0},{1}'.format(m_type, m_subtype))
 
     if platform.system().lower() == 'linux':
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
-            rpaths = ':'.join(_elf_rpaths_for(file))
+            rpaths = ':'.join(_elf_rpaths_for(filename))
             set_of_strings.discard(rpaths)
     if platform.system().lower() == 'darwin':
         if m_subtype == 'x-mach-binary':
-            rpaths, deps, idpath = macholib_get_paths(file)
+            rpaths, deps, idpath = macholib_get_paths(filename)
             set_of_strings.discard(set(rpaths))
             set_of_strings.discard(set(deps))
             if idpath is not None:
@@ -941,24 +952,24 @@ def file_is_relocatable(file, paths_to_relocate=None):
             # One binary has the root folder not in the RPATH,
             # meaning that this spec is not relocatable
             msg = 'Found "{0}" in {1} strings'
-            tty.debug(msg.format(path_to_relocate, file))
+            tty.debug(msg.format(path_to_relocate, filename))
             return False
 
     return True
 
 
-def is_binary(file):
+def is_binary(filename):
     """Returns true if a file is binary, False otherwise
 
     Args:
-        file: file to be tested
+        filename: file to be tested
 
     Returns:
         True or False
     """
-    m_type, _ = mime_type(file)
+    m_type, _ = mime_type(filename)
 
-    msg = '[{0}] -> '.format(file)
+    msg = '[{0}] -> '.format(filename)
     if m_type == 'application':
         tty.debug(msg + 'BINARY FILE')
         return True
@@ -968,18 +979,19 @@ def is_binary(file):
 
 
 @llnl.util.lang.memoized
-def mime_type(file):
+def mime_type(filename):
     """Returns the mime type and subtype of a file.
 
     Args:
-        file: file to be analyzed
+        filename: file to be analyzed
 
     Returns:
         Tuple containing the MIME type and subtype
     """
     file_cmd = executable.Executable('file')
-    output = file_cmd('-b', '-h', '--mime-type', file, output=str, error=str)
-    tty.debug('[MIME_TYPE] {0} -> {1}'.format(file, output.strip()))
+    output = file_cmd(
+        '-b', '-h', '--mime-type', filename, output=str, error=str)
+    tty.debug('[MIME_TYPE] {0} -> {1}'.format(filename, output.strip()))
     # In corner cases the output does not contain a subtype prefixed with a /
     # In those cases add the / so the tuple can be formed.
     if '/' not in output:

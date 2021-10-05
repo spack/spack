@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyParamz(PythonPackage):
     """The Parameterization Framework."""
 
     homepage = "https://github.com/sods/paramz"
-    url      = "https://pypi.io/packages/source/p/paramz/paramz-0.9.5.tar.gz"
+    pypi = "paramz/paramz-0.9.5.tar.gz"
 
     version('0.9.5', sha256='0917211c0f083f344e7f1bc997e0d713dbc147b6380bc19f606119394f820b9a')
 

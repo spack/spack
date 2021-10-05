@@ -1,0 +1,42 @@
+--- spack-src/ext/phar/phar/pharcommand.inc.org	2019-12-18 01:35:53.000000000 +0900
++++ spack-src/ext/phar/phar/pharcommand.inc	2020-08-20 12:26:16.207347572 +0900
+@@ -68,6 +68,12 @@
+ 				'inf' => '<bang>   Hash-bang line to start the archive (e.g. #!/usr/bin/php). The hash '
+ 						 .'         mark itself \'#!\' and the newline character are optional.'
+ 			),
++			'z' => array(
++				'typ' => 'any',
++				'val' => NULL,
++				'inf' => '<bang>   Hash-bang line to start the archive for spack. The hash '
++						 .'         mark itself \'#!\' and the newline character are optional.'
++			),
+ 			'c' => array(
+ 				'typ' => 'compalg',
+ 				'val' => NULL,
+@@ -455,7 +461,7 @@
+ 	 */
+ 	static function cli_cmd_arg_pack()
+ 	{
+-		$args = self::phar_args('abcFhilpsxy', 'pharnew');
++		$args = self::phar_args('azbcFhilpsxy', 'pharnew');
+
+ 		$args[''] = array(
+ 			'typ'     => 'any',
+@@ -560,6 +566,7 @@
+ 		}
+
+ 		$alias    = $this->args['a']['val'];
++		$spack_hb = $this->args['z']['val'];
+ 		$hashbang = $this->args['b']['val'];
+ 		$archive  = $this->args['f']['val'];
+ 		$hash     = $this->args['h']['val'];
+@@ -571,6 +578,9 @@
+ 		$invregex = $this->args['x']['val'];
+ 		$input    = $this->args['']['val'];
+
++		if (isset($spack_hb)) {
++			$hashbang = "$spack_hb\n<?php #!$hashbang ?>";
++		}
+ 		$hash = self::phar_check_hash($hash, $privkey);
+
+ 		$phar  = new Phar($archive, 0, $alias);

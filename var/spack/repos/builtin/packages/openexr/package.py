@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,10 +6,10 @@
 from spack import *
 
 
-class Openexr(Package):
+class Openexr(AutotoolsPackage):
     """OpenEXR Graphics Tools (high dynamic-range image file format)"""
 
-    homepage = "http://www.openexr.com/"
+    homepage = "https://www.openexr.com/"
     url = "https://github.com/openexr/openexr/releases/download/v2.3.0/openexr-2.3.0.tar.gz"
 
     # New versions should come from github now
@@ -39,9 +39,9 @@ class Openexr(Package):
     depends_on('ilmbase')
     depends_on('zlib', type=('build', 'link'))
 
-    def install(self, spec, prefix):
-        configure_options = ['--prefix={0}'.format(prefix)]
-        if '+debug' not in spec:
-            configure_options.append('--disable-debug')
-        configure(*configure_options)
-        make('install')
+    def configure_args(self):
+        configure_options = []
+
+        configure_options += self.enable_or_disable('debug')
+
+        return configure_options

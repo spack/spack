@@ -1,11 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class Parmetis(CMakePackage):
@@ -22,10 +23,13 @@ class Parmetis(CMakePackage):
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
     variant('gdb', default=False, description='Enables gdb support.')
+    variant('int64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
 
     depends_on('cmake@2.8:', type='build')
     depends_on('mpi')
     depends_on('metis@5:')
+    depends_on('metis+int64', when='+int64')
+    depends_on('metis~int64', when='~int64')
 
     patch('enable_external_metis.patch')
     # bug fixes from PETSc developers

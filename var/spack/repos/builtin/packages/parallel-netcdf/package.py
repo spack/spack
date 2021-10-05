@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack import *
 
@@ -17,6 +19,12 @@ class ParallelNetcdf(AutotoolsPackage):
     url      = "https://parallel-netcdf.github.io/Release/pnetcdf-1.11.0.tar.gz"
     list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
 
+    maintainers = ['skosukhin']
+
+    tags = ['e4s']
+
+    test_requires_compiler = True
+
     def url_for_version(self, version):
         if version >= Version('1.11.0'):
             url = "https://parallel-netcdf.github.io/Release/pnetcdf-{0}.tar.gz"
@@ -26,6 +34,7 @@ class ParallelNetcdf(AutotoolsPackage):
         return url.format(version.dotted)
 
     version('master', branch='master')
+    version('1.12.2', sha256='3ef1411875b07955f519a5b03278c31e566976357ddfc74c2493a1076e7d7c74')
     version('1.12.1', sha256='56f5afaa0ddc256791c405719b6436a83b92dcd5be37fe860dea103aee8250a2')
     version('1.11.2', sha256='d2c18601b364c35b5acb0a0b46cd6e14cae456e0eb854e5c789cf65f3cd6a2a7')
     version('1.11.1', sha256='0c587b707835255126a23c104c66c9614be174843b85b897b3772a590be45779')
@@ -42,6 +51,7 @@ class ParallelNetcdf(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
+    variant('burstbuffer', default=False, description='Enable burst buffer feature')
 
     depends_on('mpi')
 
@@ -52,10 +62,41 @@ class ParallelNetcdf(AutotoolsPackage):
 
     depends_on('perl', type='build')
 
-    conflicts('+shared', when='@:1.9%nag+fortran')
+    # Suport for shared libraries was introduced in version 1.9.0
     conflicts('+shared', when='@:1.8')
+    conflicts('+burstbuffer', when='@:1.10')
 
+    # Before 1.10.0, C utility programs (e.g. ncmpigen) were linked without
+    # explicit specification of the Fortran runtime libraries, which is
+    # required when libpnetcdf.so contains Fortran symbols. Libtool sets the
+    # required linking flags implicitly but only if the Fortran compiler
+    # produces verbose output with the '-v' flag (and, due to a bug in Libtool,
+    # when CXX is not set to 'no'; see macro _LT_LANG_FC_CONFIG in libtool.m4
+    # for more details). The latter is not the case for NAG. Starting 1.10.0,
+    # the required linking flags are explicitly set in the makefiles and
+    # detected using macro AC_FC_LIBRARY_LDFLAGS, which means that we can
+    # override the verbose output flag for Fortran compiler on the command line
+    # (see below).
+    conflicts('+shared', when='@:1.9%nag+fortran')
+
+    # https://github.com/Parallel-NetCDF/PnetCDF/pull/59
     patch('nag_libtool.patch', when='@1.9:1.12.1%nag')
+
+    # We could apply the patch unconditionally. However, it fixes a problem
+    # that manifests itself only when we build shared libraries with Spack on
+    # a Cray system with PGI compiler. Based on the name of the $CC executable,
+    # Libtool "thinks" that it works with PGI compiler directly but on a Cray
+    # system it actually works with the Cray's wrapper. PGI compiler (at least
+    # since the version 15.7) "understands" two formats of the
+    # '--whole-archive' argument. Unluckily, Cray's wrapper "understands" only
+    # one of them but Libtool switches to another one. The following patch
+    # discards the switching.
+    patch('cray_pgi_libtool_release.patch',
+          when='@1.8:999%pgi+shared platform=cray')
+    # Given that the bug manifests itself in rather specific conditions, it is
+    # not reported upstream.
+    patch('cray_pgi_libtool_master.patch',
+          when='@master%pgi+shared platform=cray')
 
     @property
     def libs(self):
@@ -131,4 +172,36 @@ class ParallelNetcdf(AutotoolsPackage):
             args.extend(['ac_cv_prog_fc_v=-Wl,-v',
                          'ac_cv_prog_f77_v=-Wl,-v'])
 
+        if '+burstbuffer' in self.spec:
+            args.append('--enable-burst-buffering')
+
         return args
+
+    examples_src_dir = 'examples/CXX'
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([self.examples_src_dir])
+
+    def test(self):
+        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        # pnetcdf has many examples to serve as a suitable smoke check.
+        # column_wise was chosen based on the E4S test suite. Other
+        # examples should work as well.
+        test_exe = 'column_wise'
+        options = ['{0}.cpp'.format(test_exe), '-o', test_exe, '-lpnetcdf']
+        reason = 'test: compiling and linking pnetcdf example'
+        self.run_test(self.spec['mpi'].mpicxx, options, [],
+                      installed=False, purpose=reason, work_dir=test_dir)
+        mpiexe_list = ['mpirun', 'mpiexec', 'srun']
+        for mpiexe in mpiexe_list:
+            if os.path.isfile(mpiexe):
+                self.run_test(mpiexe, ['-n', '4', test_exe], [],
+                              installed=False,
+                              purpose='test: pnetcdf smoke test',
+                              skip_missing=True,
+                              work_dir=test_dir)
+                break
+        self.run_test('rm', ['-f', test_exe], work_dir=test_dir)

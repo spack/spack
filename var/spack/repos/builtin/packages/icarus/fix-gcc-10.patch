@@ -1,0 +1,71 @@
+From d49d26a5c502faf132a7a65e5cc7173ac0dfa1f5 Mon Sep 17 00:00:00 2001
+From: Huang Rui <vowstar@gmail.com>
+Date: Wed, 29 Jan 2020 00:08:59 +0800
+Subject: [PATCH] Fix fails to build with -fno-common or gcc-10
+
+See also: https://bugs.gentoo.org/706366
+
+gcc-10 and above flipped a default from -fcommon to -fno-common:
+https://gcc.gnu.org/PR85678
+
+Usually all it takes is to add a few 'extern' declarations and
+move definitions from header files to modules. I've port iverilog
+to gcc-10 accroding to this guide:
+https://wiki.gentoo.org/wiki/Gcc_10_porting_notes/fno_common
+
+To fix this, I analyzed the code, and found ``pli_trace`` has been
+defined at here:
+https://github.com/steveicarus/iverilog/blob/v10_3/libveriuser/priv.c#L24
+
+So I changed ``FILE* pli_trace;`` to ``extern FILE* pli_trace;``.
+
+The var ``current_file`` only in ``cfparse_misc.h``, I changed it
+from ``char *current_file;`` to ``extern char *current_file;`` and
+declaring it in cflexor.lex
+
+And then it works.
+
+Signed-off-by: Huang Rui <vowstar@gmail.com>
+---
+ driver/cflexor.lex    | 2 ++
+ driver/cfparse_misc.h | 2 +-
+ libveriuser/priv.h    | 2 +-
+ 3 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/driver/cflexor.lex b/driver/cflexor.lex
+index 5e9e2f506..1bf7cec1d 100644
+--- a/driver/cflexor.lex
++++ b/driver/cflexor.lex
+@@ -27,6 +27,8 @@
+ # include  "globals.h"
+ # include  <string.h>
+ 
++char *current_file = NULL;
++
+ static int comment_enter;
+ static char* trim_trailing_white(char*txt, int trim);
+ 
+diff --git a/driver/cfparse_misc.h b/driver/cfparse_misc.h
+index 3cb7ddd6e..0323690ce 100644
+--- a/driver/cfparse_misc.h
++++ b/driver/cfparse_misc.h
+@@ -39,6 +39,6 @@ int cferror(const char *);
+ int cfparse(void);
+ void switch_to_command_file(const char *);
+ void destroy_lexor(void);
+-char *current_file;
++extern char *current_file;
+ 
+ #endif /* IVL_cfparse_misc_H */
+diff --git a/libveriuser/priv.h b/libveriuser/priv.h
+index 8256e16d3..8d3566087 100644
+--- a/libveriuser/priv.h
++++ b/libveriuser/priv.h
+@@ -31,6 +31,6 @@ extern char* __acc_newstring(const char*txt);
+ /*
+  * Trace file for logging ACC and TF calls.
+  */
+-FILE* pli_trace;
++extern FILE* pli_trace;
+ 
+ #endif /* IVL_priv_H */

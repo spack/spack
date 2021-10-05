@@ -1,0 +1,11 @@
+--- spack-src/ksw.c.bak	2012-08-23 03:32:38.000000000 +0900
++++ spack-src/ksw.c	2020-09-03 13:42:23.495232913 +0900
+@@ -25,7 +25,7 @@
+ 
+ #include <stdlib.h>
+ #include <stdint.h>
+-#include <emmintrin.h>
++#include <sse2neon.h>
+ #include "ksw.h"
+ 
+ #ifdef __GNUC__

@@ -1,10 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.cmd.common import print_module_placeholder_help
-
+import spack.cmd.common
 import spack.cmd.location
 
 description = "cd to spack directories in the shell"
@@ -20,4 +19,8 @@ def setup_parser(subparser):
 
 
 def cd(parser, args):
-    print_module_placeholder_help()
+    spec = " ".join(args.spec) if args.spec else "SPEC"
+    spack.cmd.common.shell_init_instructions(
+        "spack cd",
+        "cd `spack location --install-dir %s`" % spec
+    )

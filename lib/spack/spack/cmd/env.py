@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,23 +6,21 @@
 import os
 import shutil
 import sys
-from collections import namedtuple
 
-import llnl.util.tty as tty
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
-import spack.config
-import spack.schema.env
 import spack.cmd.common.arguments
-import spack.cmd.install
-import spack.cmd.uninstall
-import spack.cmd.modules
 import spack.cmd.common.arguments as arguments
+import spack.cmd.install
+import spack.cmd.modules
+import spack.cmd.uninstall
+import spack.config
 import spack.environment as ev
+import spack.schema.env
 import spack.util.string as string
-
 
 description = "manage virtual environments"
 section = "environments"
@@ -84,18 +82,16 @@ def env_activate_setup_parser(subparser):
 def env_activate(args):
     env = args.activate_env
     if not args.shell:
-        msg = [
-            "This command works best with Spack's shell support",
-            ""
-        ] + spack.cmd.common.shell_init_instructions + [
-            'Or, if you want to use `spack env activate` without initializing',
-            'shell support, you can run one of these:',
-            '',
-            '    eval `spack env activate --sh %s`   # for bash/sh' % env,
-            '    eval `spack env activate --csh %s`  # for csh/tcsh' % env,
-        ]
-        tty.msg(*msg)
+        spack.cmd.common.shell_init_instructions(
+            "spack env activate",
+            "    eval `spack env activate {sh_arg} %s`" % env,
+        )
         return 1
+
+    # Error out when -e, -E, -D flags are given, cause they are ambiguous.
+    if args.env or args.no_env or args.env_dir:
+        tty.die('Calling spack env activate with --env, --env-dir and --no-env '
+                'is ambiguous')
 
     if ev.exists(env) and not args.dir:
         spack_env = ev.root(env)
@@ -111,12 +107,11 @@ def env_activate(args):
         tty.die("No such environment: '%s'" % env)
 
     if spack_env == os.environ.get('SPACK_ENV'):
-        tty.die("Environment %s is already active" % args.activate_env)
+        tty.debug("Environment %s is already active" % args.activate_env)
+        return
 
-    active_env = ev.get_env(namedtuple('args', ['env'])(env),
-                            'activate')
     cmds = ev.activate(
-        active_env, add_view=args.with_view, shell=args.shell,
+        ev.Environment(spack_env), add_view=args.with_view, shell=args.shell,
         prompt=env_prompt if args.prompt else None
     )
     sys.stdout.write(cmds)
@@ -141,18 +136,16 @@ def env_deactivate_setup_parser(subparser):
 
 def env_deactivate(args):
     if not args.shell:
-        msg = [
-            "This command works best with Spack's shell support",
-            ""
-        ] + spack.cmd.common.shell_init_instructions + [
-            'Or, if you want to use `spack env activate` without initializing',
-            'shell support, you can run one of these:',
-            '',
-            '    eval `spack env deactivate --sh`   # for bash/sh',
-            '    eval `spack env deactivate --csh`  # for csh/tcsh',
-        ]
-        tty.msg(*msg)
+        spack.cmd.common.shell_init_instructions(
+            "spack env deactivate",
+            "    eval `spack env deactivate {sh_arg}`",
+        )
         return 1
+
+    # Error out when -e, -E, -D flags are given, cause they are ambiguous.
+    if args.env or args.no_env or args.env_dir:
+        tty.die('Calling spack env deactivate with --env, --env-dir and --no-env '
+                'is ambiguous')
 
     if 'SPACK_ENV' not in os.environ:
         tty.die('No environment is currently active.')
@@ -171,6 +164,10 @@ def env_create_setup_parser(subparser):
     subparser.add_argument(
         '-d', '--dir', action='store_true',
         help='create an environment in a specific directory')
+    subparser.add_argument(
+        '--keep-relative', action='store_true',
+        help='copy relative develop paths verbatim into the new environment'
+             ' when initializing from envfile')
     view_opts = subparser.add_mutually_exclusive_group()
     view_opts.add_argument(
         '--without-view', action='store_true',
@@ -198,13 +195,14 @@ def env_create(args):
     if args.envfile:
         with open(args.envfile) as f:
             _env_create(args.create_env, f, args.dir,
-                        with_view=with_view)
+                        with_view=with_view, keep_relative=args.keep_relative)
     else:
         _env_create(args.create_env, None, args.dir,
                     with_view=with_view)
 
 
-def _env_create(name_or_path, init_file=None, dir=False, with_view=None):
+def _env_create(name_or_path, init_file=None, dir=False, with_view=None,
+                keep_relative=False):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
@@ -213,15 +211,18 @@ def _env_create(name_or_path, init_file=None, dir=False, with_view=None):
             spack.yaml or spack.lock
         dir (bool): if True, create an environment in a directory instead
             of a named environment
+        keep_relative (bool): if True, develop paths are copied verbatim into
+            the new environment file, otherwise they may be made absolute if the
+            new environment is in a different location
     """
     if dir:
-        env = ev.Environment(name_or_path, init_file, with_view)
+        env = ev.Environment(name_or_path, init_file, with_view, keep_relative)
         env.write()
         tty.msg("Created environment in %s" % env.path)
         tty.msg("You can activate this environment with:")
         tty.msg("  spack env activate %s" % env.path)
     else:
-        env = ev.create(name_or_path, init_file, with_view)
+        env = ev.create(name_or_path, init_file, with_view, keep_relative)
         env.write()
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
         tty.msg("You can activate this environment with:")
@@ -321,7 +322,7 @@ def env_view_setup_parser(subparser):
 
 
 def env_view(args):
-    env = ev.get_env(args, 'env view')
+    env = ev.active_environment()
 
     if env:
         if args.action == ViewAction.regenerate:
@@ -348,7 +349,7 @@ def env_status_setup_parser(subparser):
 
 
 def env_status(args):
-    env = ev.get_env(args, 'env status')
+    env = ev.active_environment()
     if env:
         if env.path == os.getcwd():
             tty.msg('Using %s in current directory: %s'
@@ -370,13 +371,16 @@ def env_loads_setup_parser(subparser):
     subparser.add_argument(
         'env', nargs='?', help='name of env to generate loads file for')
     subparser.add_argument(
+        '-n', '--module-set-name', default='default',
+        help='module set for which to generate load operations')
+    subparser.add_argument(
         '-m', '--module-type', choices=('tcl', 'lmod'),
         help='type of module system to generate loads for')
     spack.cmd.modules.add_loads_arguments(subparser)
 
 
 def env_loads(args):
-    env = ev.get_env(args, 'env loads', required=True)
+    env = spack.cmd.require_active_env(cmd_name='env loads')
 
     # Set the module types that have been selected
     module_type = args.module_type

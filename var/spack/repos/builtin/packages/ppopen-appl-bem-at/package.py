@@ -1,10 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class PpopenApplBemAt(MakefilePackage):
@@ -15,14 +14,14 @@ class PpopenApplBemAt(MakefilePackage):
     """
 
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
-    url = "file://{0}/ppohBEM_AT_0.1.0.tar.gz".format(os.getcwd())
+    git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('0.1.0', sha256='215034fea7d9f64e6361d8e605e04c7f5d302c87ce048dcd6d146b14d22c17f9')
+    version('master', branch='ATA/BEM')
     # In OAT_bem-bb-fw-dense-0.1.0.f90 the 2 variables are defined.
     # But ame variables are already defined in include file DAT.h.
     # This patch is deleted the variables definitions
     # in OAT_bem-bb-fw-dense-0.1.0.f90.
-    patch('duplicate_defs.patch', when="@0.1.0")
+    patch('duplicate_defs.patch', when="@master")
 
     depends_on('mpi')
     depends_on('ppopen-appl-bem', type='run')

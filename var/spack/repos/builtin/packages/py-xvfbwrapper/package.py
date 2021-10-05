@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,7 @@ from spack import *
 class PyXvfbwrapper(PythonPackage):
     """run headless display inside X virtual framebuffer (Xvfb)"""
 
-    homepage = "https://pypi.python.org/pypi/xvfbwrapper/0.2.9"
-    url      = "https://pypi.io/packages/source/x/xvfbwrapper/xvfbwrapper-0.2.9.tar.gz"
+    pypi = "xvfbwrapper/xvfbwrapper-0.2.9.tar.gz"
 
     version('0.2.9', sha256='bcf4ae571941b40254faf7a73432dfc119ad21ce688f1fdec533067037ecfc24')
 

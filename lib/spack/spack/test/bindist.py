@@ -1,77 +1,79 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-"""
-This test checks creating and install buildcaches
-"""
+import glob
 import os
+import platform
+import shutil
 import sys
+
 import py
 import pytest
-import argparse
-import platform
-import spack.repo
-import spack.store
+
+import llnl.util.filesystem as fs
+
 import spack.binary_distribution as bindist
-import spack.cmd.buildcache as buildcache
-import spack.cmd.install as install
-import spack.cmd.uninstall as uninstall
-import spack.cmd.mirror as mirror
+import spack.config
+import spack.hooks.sbang as sbang
+import spack.main
+import spack.mirror
+import spack.repo
+import spack.spec as spec
+import spack.store
+import spack.util.gpg
+import spack.util.web as web_util
+from spack.directory_layout import DirectoryLayout
+from spack.paths import test_path
 from spack.spec import Spec
-from spack.directory_layout import YamlDirectoryLayout
 
+mirror_cmd = spack.main.SpackCommand('mirror')
+install_cmd = spack.main.SpackCommand('install')
+uninstall_cmd = spack.main.SpackCommand('uninstall')
+buildcache_cmd = spack.main.SpackCommand('buildcache')
 
-def_install_path_scheme = '${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}'  # noqa: E501
-ndef_install_path_scheme = '${PACKAGE}/${VERSION}/${ARCHITECTURE}-${COMPILERNAME}-${COMPILERVER}-${HASH}'  # noqa: E501
-
-mirror_path_def = None
-mirror_path_rel = None
+legacy_mirror_dir = os.path.join(test_path, 'data', 'mirrors', 'legacy_yaml')
 
 
 @pytest.fixture(scope='function')
 def cache_directory(tmpdir):
-    old_cache_path = spack.caches.fetch_cache
-    tmpdir.ensure('fetch_cache', dir=True)
-    fsc = spack.fetch_strategy.FsCache(str(tmpdir.join('fetch_cache')))
-    spack.config.caches = fsc
+    fetch_cache_dir = tmpdir.ensure('fetch_cache', dir=True)
+    fsc = spack.fetch_strategy.FsCache(str(fetch_cache_dir))
+    spack.config.caches, old_cache_path = fsc, spack.caches.fetch_cache
+
     yield spack.config.caches
-    tmpdir.join('fetch_cache').remove()
+
+    fetch_cache_dir.remove()
     spack.config.caches = old_cache_path
 
 
-@pytest.fixture(scope='session')
-def session_mirror_def(tmpdir_factory):
+@pytest.fixture(scope='module')
+def mirror_dir(tmpdir_factory):
     dir = tmpdir_factory.mktemp('mirror')
-    global mirror_path_rel
-    mirror_path_rel = dir
     dir.ensure('build_cache', dir=True)
-    yield dir
+    yield str(dir)
     dir.join('build_cache').remove()
 
 
 @pytest.fixture(scope='function')
-def mirror_directory_def(session_mirror_def):
-    yield str(session_mirror_def)
-
-
-@pytest.fixture(scope='session')
-def session_mirror_rel(tmpdir_factory):
-    dir = tmpdir_factory.mktemp('mirror')
-    global mirror_path_rel
-    mirror_path_rel = dir
-    dir.ensure('build_cache', dir=True)
-    yield dir
-    dir.join('build_cache').remove()
+def test_mirror(mirror_dir):
+    mirror_url = 'file://%s' % mirror_dir
+    mirror_cmd('add', '--scope', 'site', 'test-mirror-func', mirror_url)
+    yield mirror_dir
+    mirror_cmd('rm', '--scope=site', 'test-mirror-func')
 
 
 @pytest.fixture(scope='function')
-def mirror_directory_rel(session_mirror_rel):
-    yield(session_mirror_rel)
+def test_legacy_mirror(mutable_config, tmpdir):
+    mirror_dir = tmpdir.join('legacy_yaml_mirror')
+    shutil.copytree(legacy_mirror_dir, mirror_dir.strpath)
+    mirror_url = 'file://%s' % mirror_dir
+    mirror_cmd('add', '--scope', 'site', 'test-legacy-yaml', mirror_url)
+    yield mirror_dir
+    mirror_cmd('rm', '--scope=site', 'test-legacy-yaml')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def config_directory(tmpdir_factory):
     tmpdir = tmpdir_factory.mktemp('test_configs')
     # restore some sane defaults for packages and config
@@ -97,8 +99,14 @@ def config_directory(tmpdir_factory):
 
 
 @pytest.fixture(scope='function')
-def default_config(tmpdir_factory, config_directory, monkeypatch):
-
+def default_config(
+        tmpdir_factory, config_directory, monkeypatch,
+        install_mockery_mutable_config
+):
+    # This fixture depends on install_mockery_mutable_config to ensure
+    # there is a clear order of initialization. The substitution of the
+    # config scopes here is done on top of the substitution that comes with
+    # install_mockery_mutable_config
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     config_directory.copy(mutable_dir)
 
@@ -107,7 +115,7 @@ def default_config(tmpdir_factory, config_directory, monkeypatch):
           for name in ['site/%s' % platform.system().lower(),
                        'site', 'user']])
 
-    monkeypatch.setattr(spack.config, 'config', cfg)
+    spack.config.config, old_config = cfg, spack.config.config
 
     # This is essential, otherwise the cache will create weird side effects
     # that will compromise subsequent tests if compilers.yaml is modified
@@ -129,34 +137,48 @@ def default_config(tmpdir_factory, config_directory, monkeypatch):
     timeout = spack.config.get('config:connect_timeout')
     if not timeout:
         spack.config.set('config:connect_timeout', 10, scope='user')
+
     yield spack.config.config
+
+    spack.config.config = old_config
     mutable_dir.remove()
 
 
 @pytest.fixture(scope='function')
 def install_dir_default_layout(tmpdir):
     """Hooks a fake install directory with a default layout"""
-    real_store = spack.store.store
-    real_layout = spack.store.layout
-    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
-    spack.store.layout = YamlDirectoryLayout(str(tmpdir.join('opt')),
-                                             path_scheme=def_install_path_scheme)  # noqa: E501
-    yield spack.store
-    spack.store.store = real_store
-    spack.store.layout = real_layout
+    scheme = os.path.join(
+        '${architecture}',
+        '${compiler.name}-${compiler.version}',
+        '${name}-${version}-${hash}'
+    )
+    real_store, real_layout = spack.store.store, spack.store.layout
+    opt_dir = tmpdir.join('opt')
+    spack.store.store = spack.store.Store(str(opt_dir))
+    spack.store.layout = DirectoryLayout(str(opt_dir), path_scheme=scheme)
+    try:
+        yield spack.store
+    finally:
+        spack.store.store = real_store
+        spack.store.layout = real_layout
 
 
 @pytest.fixture(scope='function')
 def install_dir_non_default_layout(tmpdir):
     """Hooks a fake install directory with a non-default layout"""
-    real_store = spack.store.store
-    real_layout = spack.store.layout
-    spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
-    spack.store.layout = YamlDirectoryLayout(str(tmpdir.join('opt')),
-                                             path_scheme=ndef_install_path_scheme)  # noqa: E501
-    yield spack.store
-    spack.store.store = real_store
-    spack.store.layout = real_layout
+    scheme = os.path.join(
+        '${name}', '${version}',
+        '${architecture}-${compiler.name}-${compiler.version}-${hash}'
+    )
+    real_store, real_layout = spack.store.store, spack.store.layout
+    opt_dir = tmpdir.join('opt')
+    spack.store.store = spack.store.Store(str(opt_dir))
+    spack.store.layout = DirectoryLayout(str(opt_dir), path_scheme=scheme)
+    try:
+        yield spack.store
+    finally:
+        spack.store.store = real_store
+        spack.store.layout = real_layout
 
 
 args = ['strings', 'file']
@@ -167,305 +189,480 @@ else:
 
 
 @pytest.mark.requires_executables(*args)
-@pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
-@pytest.mark.usefixtures('default_config', 'cache_directory',
-                         'install_dir_default_layout')
-def test_default_rpaths_create_install_default_layout(tmpdir,
-                                                      mirror_directory_def,
-                                                      install_mockery):
+@pytest.mark.usefixtures(
+    'default_config', 'cache_directory', 'install_dir_default_layout',
+    'test_mirror'
+)
+def test_default_rpaths_create_install_default_layout(mirror_dir):
     """
     Test the creation and installation of buildcaches with default rpaths
     into the default directory layout scheme.
     """
+    gspec, cspec = Spec('garply').concretized(), Spec('corge').concretized()
 
-    gspec = Spec('garply')
-    gspec.concretize()
-    cspec = Spec('corge')
-    cspec.concretize()
-
-    iparser = argparse.ArgumentParser()
-    install.setup_parser(iparser)
-    # Install some packages with dependent packages
-    iargs = iparser.parse_args(['--no-cache', cspec.name])
-    install.install(iparser, iargs)
-
-    global mirror_path_def
-    mirror_path_def = mirror_directory_def
-    mparser = argparse.ArgumentParser()
-    mirror.setup_parser(mparser)
-    margs = mparser.parse_args(
-        ['add', '--scope', 'site', 'test-mirror-def', 'file://%s' % mirror_path_def])
-    mirror.mirror(mparser, margs)
-    margs = mparser.parse_args(['list'])
-    mirror.mirror(mparser, margs)
-
-    # setup argument parser
-    parser = argparse.ArgumentParser()
-    buildcache.setup_parser(parser)
-
-    # Set default buildcache args
-    create_args = ['create', '-a', '-u', '-d', str(mirror_path_def),
-                   cspec.name]
-    install_args = ['install', '-a', '-u', cspec.name]
+    # Install 'corge' without using a cache
+    install_cmd('--no-cache', cspec.name)
 
     # Create a buildache
-    args = parser.parse_args(create_args)
-    buildcache.buildcache(parser, args)
-    # Test force overwrite create buildcache
-    create_args.insert(create_args.index('-a'), '-f')
-    args = parser.parse_args(create_args)
-    buildcache.buildcache(parser, args)
-    # create mirror index
-    args = parser.parse_args(['update-index', '-d', 'file://%s' % str(mirror_path_def)])
-    buildcache.buildcache(parser, args)
-    # list the buildcaches in the mirror
-    args = parser.parse_args(['list', '-a', '-l', '-v'])
-    buildcache.buildcache(parser, args)
+    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec.name)
+    # Test force overwrite create buildcache (-f option)
+    buildcache_cmd('create', '-auf', '-d', mirror_dir, cspec.name)
+
+    # Create mirror index
+    mirror_url = 'file://{0}'.format(mirror_dir)
+    buildcache_cmd('update-index', '-d', mirror_url)
+    # List the buildcaches in the mirror
+    buildcache_cmd('list', '-alv')
 
     # Uninstall the package and deps
-    uparser = argparse.ArgumentParser()
-    uninstall.setup_parser(uparser)
-    uargs = uparser.parse_args(['-y', '--dependents', gspec.name])
-    uninstall.uninstall(uparser, uargs)
+    uninstall_cmd('-y', '--dependents', gspec.name)
 
-    # test install
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
+    # Test installing from build caches
+    buildcache_cmd('install', '-au', cspec.name)
 
     # This gives warning that spec is already installed
-    buildcache.buildcache(parser, args)
+    buildcache_cmd('install', '-au', cspec.name)
 
-    # test overwrite install
-    install_args.insert(install_args.index('-a'), '-f')
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
+    # Test overwrite install
+    buildcache_cmd('install', '-afu', cspec.name)
 
-    args = parser.parse_args(['keys', '-f'])
-    buildcache.buildcache(parser, args)
+    buildcache_cmd('keys', '-f')
+    buildcache_cmd('list')
 
-    args = parser.parse_args(['list'])
-    buildcache.buildcache(parser, args)
-
-    args = parser.parse_args(['list', '-a'])
-    buildcache.buildcache(parser, args)
-
-    args = parser.parse_args(['list', '-l', '-v'])
-    buildcache.buildcache(parser, args)
-    bindist._cached_specs = set()
-    spack.stage.purge()
-    margs = mparser.parse_args(
-        ['rm', '--scope', 'site', 'test-mirror-def'])
-    mirror.mirror(mparser, margs)
+    buildcache_cmd('list', '-a')
+    buildcache_cmd('list', '-l', '-v')
 
 
 @pytest.mark.requires_executables(*args)
-@pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
-@pytest.mark.usefixtures('default_config', 'cache_directory',
-                         'install_dir_non_default_layout')
-def test_default_rpaths_install_nondefault_layout(tmpdir,
-                                                  install_mockery):
+@pytest.mark.usefixtures(
+    'default_config', 'cache_directory', 'install_dir_non_default_layout',
+    'test_mirror'
+)
+def test_default_rpaths_install_nondefault_layout(mirror_dir):
     """
     Test the creation and installation of buildcaches with default rpaths
     into the non-default directory layout scheme.
     """
-
-    gspec = Spec('garply')
-    gspec.concretize()
-    cspec = Spec('corge')
-    cspec.concretize()
-
-    global mirror_path_def
-    mparser = argparse.ArgumentParser()
-    mirror.setup_parser(mparser)
-    margs = mparser.parse_args(
-        ['add', '--scope', 'site', 'test-mirror-def', 'file://%s' % mirror_path_def])
-    mirror.mirror(mparser, margs)
-
-    # setup argument parser
-    parser = argparse.ArgumentParser()
-    buildcache.setup_parser(parser)
-
-    # Set default buildcache args
-    install_args = ['install', '-a', '-u', '%s' % cspec.name]
+    cspec = Spec('corge').concretized()
 
     # Install some packages with dependent packages
     # test install in non-default install path scheme
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
-    # test force install in non-default install path scheme
-    install_args.insert(install_args.index('-a'), '-f')
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
+    buildcache_cmd('install', '-au', cspec.name)
 
-    bindist._cached_specs = set()
-    spack.stage.purge()
-    margs = mparser.parse_args(
-        ['rm', '--scope', 'site', 'test-mirror-def'])
-    mirror.mirror(mparser, margs)
+    # Test force install in non-default install path scheme
+    buildcache_cmd('install', '-auf', cspec.name)
 
 
 @pytest.mark.requires_executables(*args)
-@pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
-@pytest.mark.usefixtures('default_config', 'cache_directory',
-                         'install_dir_default_layout')
-def test_relative_rpaths_create_default_layout(tmpdir,
-                                               mirror_directory_rel,
-                                               install_mockery):
+@pytest.mark.usefixtures(
+    'default_config', 'cache_directory', 'install_dir_default_layout'
+)
+def test_relative_rpaths_create_default_layout(mirror_dir):
     """
     Test the creation and installation of buildcaches with relative
     rpaths into the default directory layout scheme.
     """
 
-    gspec = Spec('garply')
-    gspec.concretize()
-    cspec = Spec('corge')
-    cspec.concretize()
+    gspec, cspec = Spec('garply').concretized(), Spec('corge').concretized()
 
-    global mirror_path_rel
-    mirror_path_rel = mirror_directory_rel
-    # Install patchelf needed for relocate in linux test environment
-    iparser = argparse.ArgumentParser()
-    install.setup_parser(iparser)
-    # Install some packages with dependent packages
-    iargs = iparser.parse_args(['--no-cache', cspec.name])
-    install.install(iparser, iargs)
+    # Install 'corge' without using a cache
+    install_cmd('--no-cache', cspec.name)
 
-    # setup argument parser
-    parser = argparse.ArgumentParser()
-    buildcache.setup_parser(parser)
+    # Create build cache with relative rpaths
+    buildcache_cmd(
+        'create', '-aur', '-d', mirror_dir, cspec.name
+    )
 
-    # set default buildcache args
-    create_args = ['create', '-a', '-u', '-r', '-d',
-                   str(mirror_path_rel),
-                   cspec.name]
+    # Create mirror index
+    mirror_url = 'file://%s' % mirror_dir
+    buildcache_cmd('update-index', '-d', mirror_url)
 
-    # create build cache with relatived rpaths
-    args = parser.parse_args(create_args)
-    buildcache.buildcache(parser, args)
-    # create mirror index
-    args = parser.parse_args(['update-index', '-d', 'file://%s' % str(mirror_path_rel)])
-    buildcache.buildcache(parser, args)
     # Uninstall the package and deps
-    uparser = argparse.ArgumentParser()
-    uninstall.setup_parser(uparser)
-    uargs = uparser.parse_args(['-y', '--dependents', gspec.name])
-    uninstall.uninstall(uparser, uargs)
-
-    bindist._cached_specs = set()
-    spack.stage.purge()
+    uninstall_cmd('-y', '--dependents', gspec.name)
 
 
 @pytest.mark.requires_executables(*args)
-@pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
-@pytest.mark.usefixtures('default_config', 'cache_directory',
-                         'install_dir_default_layout')
-def test_relative_rpaths_install_default_layout(tmpdir,
-                                                install_mockery):
+@pytest.mark.usefixtures(
+    'default_config', 'cache_directory', 'install_dir_default_layout',
+    'test_mirror'
+)
+def test_relative_rpaths_install_default_layout(mirror_dir):
     """
     Test the creation and installation of buildcaches with relative
     rpaths into the default directory layout scheme.
     """
+    gspec, cspec = Spec('garply').concretized(), Spec('corge').concretized()
 
-    gspec = Spec('garply')
-    gspec.concretize()
-    cspec = Spec('corge')
-    cspec.concretize()
-
-    global mirror_path_rel
-    mparser = argparse.ArgumentParser()
-    mirror.setup_parser(mparser)
-    margs = mparser.parse_args(
-        ['add', '--scope', 'site', 'test-mirror-rel', 'file://%s' % mirror_path_rel])
-    mirror.mirror(mparser, margs)
-
-    iparser = argparse.ArgumentParser()
-    install.setup_parser(iparser)
-
-    # setup argument parser
-    parser = argparse.ArgumentParser()
-    buildcache.setup_parser(parser)
-
-    # set default buildcache args
-    install_args = ['install', '-a', '-u',
-                    cspec.name]
-
-    # install buildcache created with relativized rpaths
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
+    # Install buildcache created with relativized rpaths
+    buildcache_cmd('install', '-auf', cspec.name)
 
     # This gives warning that spec is already installed
-    buildcache.buildcache(parser, args)
+    buildcache_cmd('install', '-auf', cspec.name)
 
     # Uninstall the package and deps
-    uparser = argparse.ArgumentParser()
-    uninstall.setup_parser(uparser)
-    uargs = uparser.parse_args(['-y', '--dependents', gspec.name])
-    uninstall.uninstall(uparser, uargs)
+    uninstall_cmd('-y', '--dependents', gspec.name)
 
-    # install build cache
-    buildcache.buildcache(parser, args)
+    # Install build cache
+    buildcache_cmd('install', '-auf', cspec.name)
 
-    # test overwrite install
-    install_args.insert(install_args.index('-a'), '-f')
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
-
-    bindist._cached_specs = set()
-    spack.stage.purge()
-    margs = mparser.parse_args(
-        ['rm', '--scope', 'site', 'test-mirror-rel'])
-    mirror.mirror(mparser, margs)
+    # Test overwrite install
+    buildcache_cmd('install', '-auf', cspec.name)
 
 
 @pytest.mark.requires_executables(*args)
-@pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
-@pytest.mark.usefixtures('default_config', 'cache_directory',
-                         'install_dir_non_default_layout')
-def test_relative_rpaths_install_nondefault(tmpdir,
-                                            install_mockery):
+@pytest.mark.usefixtures(
+    'default_config', 'cache_directory', 'install_dir_non_default_layout',
+    'test_mirror'
+)
+def test_relative_rpaths_install_nondefault(mirror_dir):
     """
     Test the installation of buildcaches with relativized rpaths
     into the non-default directory layout scheme.
     """
+    cspec = Spec('corge').concretized()
 
-    gspec = Spec('garply')
-    gspec.concretize()
-    cspec = Spec('corge')
-    cspec.concretize()
+    # Test install in non-default install path scheme and relative path
+    buildcache_cmd('install', '-auf', cspec.name)
 
-    global mirror_path_rel
 
-    mparser = argparse.ArgumentParser()
-    mirror.setup_parser(mparser)
-    margs = mparser.parse_args(
-        ['add', '--scope', 'site', 'test-mirror-rel', 'file://%s' % mirror_path_rel])
-    mirror.mirror(mparser, margs)
+def test_push_and_fetch_keys(mock_gnupghome):
+    testpath = str(mock_gnupghome)
 
-    iparser = argparse.ArgumentParser()
-    install.setup_parser(iparser)
+    mirror = os.path.join(testpath, 'mirror')
+    mirrors = {'test-mirror': mirror}
+    mirrors = spack.mirror.MirrorCollection(mirrors)
+    mirror = spack.mirror.Mirror('file://' + mirror)
 
-    # setup argument parser
-    parser = argparse.ArgumentParser()
-    buildcache.setup_parser(parser)
+    gpg_dir1 = os.path.join(testpath, 'gpg1')
+    gpg_dir2 = os.path.join(testpath, 'gpg2')
 
-    # Set default buildcache args
-    install_args = ['install', '-a', '-u', '%s' % cspec.name]
+    # dir 1: create a new key, record its fingerprint, and push it to a new
+    #        mirror
+    with spack.util.gpg.gnupghome_override(gpg_dir1):
+        spack.util.gpg.create(name='test-key',
+                              email='fake@test.key',
+                              expires='0',
+                              comment=None)
 
-    # test install in non-default install path scheme and relative path
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
+        keys = spack.util.gpg.public_keys()
+        assert len(keys) == 1
+        fpr = keys[0]
 
-    bindist._cached_specs = set()
-    spack.stage.purge()
-    margs = mparser.parse_args(
-        ['rm', '--scope', 'site', 'test-mirror-rel'])
-    mirror.mirror(mparser, margs)
+        bindist.push_keys(mirror, keys=[fpr], regenerate_index=True)
+
+    # dir 2: import the key from the mirror, and confirm that its fingerprint
+    #        matches the one created above
+    with spack.util.gpg.gnupghome_override(gpg_dir2):
+        assert len(spack.util.gpg.public_keys()) == 0
+
+        bindist.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
+
+        new_keys = spack.util.gpg.public_keys()
+        assert len(new_keys) == 1
+        assert new_keys[0] == fpr
+
+
+@pytest.mark.requires_executables(*args)
+@pytest.mark.maybeslow
+@pytest.mark.nomockstage
+@pytest.mark.usefixtures(
+    'default_config', 'cache_directory', 'install_dir_non_default_layout',
+    'test_mirror'
+)
+def test_built_spec_cache(mirror_dir):
+    """ Because the buildcache list command fetches the buildcache index
+    and uses it to populate the binary_distribution built spec cache, when
+    this test calls get_mirrors_for_spec, it is testing the popluation of
+    that cache from a buildcache index. """
+    buildcache_cmd('list', '-a', '-l')
+
+    gspec, cspec = Spec('garply').concretized(), Spec('corge').concretized()
+
+    full_hash_map = {
+        'garply': gspec.full_hash(),
+        'corge': cspec.full_hash(),
+    }
+
+    gspec_results = bindist.get_mirrors_for_spec(gspec)
+
+    gspec_mirrors = {}
+    for result in gspec_results:
+        s = result['spec']
+        assert(s._full_hash == full_hash_map[s.name])
+        assert(result['mirror_url'] not in gspec_mirrors)
+        gspec_mirrors[result['mirror_url']] = True
+
+    cspec_results = bindist.get_mirrors_for_spec(cspec, full_hash_match=True)
+
+    cspec_mirrors = {}
+    for result in cspec_results:
+        s = result['spec']
+        assert(s._full_hash == full_hash_map[s.name])
+        assert(result['mirror_url'] not in cspec_mirrors)
+        cspec_mirrors[result['mirror_url']] = True
+
+
+def fake_full_hash(spec):
+    # Generate an arbitrary hash that is intended to be different than
+    # whatever a Spec reported before (to test actions that trigger when
+    # the hash changes)
+    return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+
+
+@pytest.mark.usefixtures(
+    'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
+    'test_mirror'
+)
+def test_spec_needs_rebuild(monkeypatch, tmpdir):
+    """Make sure needs_rebuild properly compares remote full_hash
+    against locally computed one, avoiding unnecessary rebuilds"""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    s = Spec('libdwarf').concretized()
+
+    # Install a package
+    install_cmd(s.name)
+
+    # Put installed package in the buildcache
+    buildcache_cmd('create', '-u', '-a', '-d', mirror_dir.strpath, s.name)
+
+    rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
+
+    assert not rebuild
+
+    # Now monkey patch Spec to change the full hash on the package
+    monkeypatch.setattr(spack.spec.Spec, 'full_hash', fake_full_hash)
+
+    rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
+
+    assert rebuild
+
+
+@pytest.mark.usefixtures(
+    'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
+)
+def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
+    """Ensure spack buildcache index only reports available packages"""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+    spack.config.set('mirrors', {'test': mirror_url})
+
+    s = Spec('libdwarf').concretized()
+
+    # Install a package
+    install_cmd('--no-cache', s.name)
+
+    # Create a buildcache and update index
+    buildcache_cmd('create', '-uad', mirror_dir.strpath, s.name)
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Check package and dependency in buildcache
+    cache_list = buildcache_cmd('list', '--allarch')
+    assert 'libdwarf' in cache_list
+    assert 'libelf' in cache_list
+
+    # Remove dependency from cache
+    libelf_files = glob.glob(
+        os.path.join(mirror_dir.join('build_cache').strpath, '*libelf*'))
+    os.remove(*libelf_files)
+
+    # Update index
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Check dependency not in buildcache
+    cache_list = buildcache_cmd('list', '--allarch')
+    assert 'libdwarf' in cache_list
+    assert 'libelf' not in cache_list
+
+
+def test_generate_indices_key_error(monkeypatch, capfd):
+
+    def mock_list_url(url, recursive=False):
+        print('mocked list_url({0}, {1})'.format(url, recursive))
+        raise KeyError('Test KeyError handling')
+
+    monkeypatch.setattr(web_util, 'list_url', mock_list_url)
+
+    test_url = 'file:///fake/keys/dir'
+
+    # Make sure generate_key_index handles the KeyError
+    bindist.generate_key_index(test_url)
+
+    err = capfd.readouterr()[1]
+    assert 'Warning: No keys at {0}'.format(test_url) in err
+
+    # Make sure generate_package_index handles the KeyError
+    bindist.generate_package_index(test_url)
+
+    err = capfd.readouterr()[1]
+    assert 'Warning: No packages at {0}'.format(test_url) in err
+
+
+def test_generate_indices_exception(monkeypatch, capfd):
+
+    def mock_list_url(url, recursive=False):
+        print('mocked list_url({0}, {1})'.format(url, recursive))
+        raise Exception('Test Exception handling')
+
+    monkeypatch.setattr(web_util, 'list_url', mock_list_url)
+
+    test_url = 'file:///fake/keys/dir'
+
+    # Make sure generate_key_index handles the Exception
+    bindist.generate_key_index(test_url)
+
+    err = capfd.readouterr()[1]
+    expect = 'Encountered problem listing keys at {0}'.format(test_url)
+    assert expect in err
+
+    # Make sure generate_package_index handles the Exception
+    bindist.generate_package_index(test_url)
+
+    err = capfd.readouterr()[1]
+    expect = 'Encountered problem listing packages at {0}'.format(test_url)
+    assert expect in err
+
+
+@pytest.mark.usefixtures('mock_fetch', 'install_mockery')
+def test_update_sbang(tmpdir, test_mirror):
+    """Test the creation and installation of buildcaches with default rpaths
+    into the non-default directory layout scheme, triggering an update of the
+    sbang.
+    """
+    scheme = os.path.join(
+        '${name}', '${version}',
+        '${architecture}-${compiler.name}-${compiler.version}-${hash}'
+    )
+    spec_str = 'old-sbang'
+    # Concretize a package with some old-fashioned sbang lines.
+    old_spec = Spec(spec_str).concretized()
+    old_spec_hash_str = '/{0}'.format(old_spec.dag_hash())
+
+    # Need a fake mirror with *function* scope.
+    mirror_dir = test_mirror
+    mirror_url = 'file://{0}'.format(mirror_dir)
+
+    # Assume all commands will concretize old_spec the same way.
+    install_cmd('--no-cache', old_spec.name)
+
+    # Create a buildcache with the installed spec.
+    buildcache_cmd('create', '-u', '-a', '-d', mirror_dir, old_spec_hash_str)
+
+    # Need to force an update of the buildcache index
+    buildcache_cmd('update-index', '-d', mirror_url)
+
+    # Uninstall the original package.
+    uninstall_cmd('-y', old_spec_hash_str)
+
+    # Switch the store to the new install tree locations
+    newtree_dir = tmpdir.join('newtree')
+    s = spack.store.Store(str(newtree_dir))
+    s.layout = DirectoryLayout(str(newtree_dir), path_scheme=scheme)
+
+    with spack.store.use_store(s):
+        new_spec = Spec('old-sbang')
+        new_spec.concretize()
+        assert new_spec.dag_hash() == old_spec.dag_hash()
+
+        # Install package from buildcache
+        buildcache_cmd('install', '-a', '-u', '-f', new_spec.name)
+
+        # Continue blowing away caches
+        bindist.clear_spec_cache()
+        spack.stage.purge()
+
+        # test that the sbang was updated by the move
+        sbang_style_1_expected = '''{0}
+#!/usr/bin/env python
+
+{1}
+'''.format(sbang.sbang_shebang_line(), new_spec.prefix.bin)
+        sbang_style_2_expected = '''{0}
+#!/usr/bin/env python
+
+{1}
+'''.format(sbang.sbang_shebang_line(), new_spec.prefix.bin)
+
+        installed_script_style_1_path = new_spec.prefix.bin.join('sbang-style-1.sh')
+        assert sbang_style_1_expected == \
+            open(str(installed_script_style_1_path)).read()
+
+        installed_script_style_2_path = new_spec.prefix.bin.join('sbang-style-2.sh')
+        assert sbang_style_2_expected == \
+            open(str(installed_script_style_2_path)).read()
+
+        uninstall_cmd('-y', '/%s' % new_spec.dag_hash())
+
+
+# Need one where the platform has been changed to the test platform.
+def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
+                             mock_packages):
+    install_cmd('--no-check-signature', '--cache-only', '-f', legacy_mirror_dir
+                + '/build_cache/test-debian6-core2-gcc-4.5.0-zlib-' +
+                '1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml')
+    uninstall_cmd('-y', '/t5mczux3tfqpxwmg7egp7axy2jvyulqk')
+
+
+@pytest.mark.usefixtures(
+    'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
+)
+def test_update_index_fix_deps(monkeypatch, tmpdir, mutable_config):
+    """Ensure spack buildcache update-index properly fixes up spec descriptor
+    files on the mirror when updating the buildcache index."""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+    spack.config.set('mirrors', {'test': mirror_url})
+
+    a = Spec('a').concretized()
+    b = Spec('b').concretized()
+    new_b_full_hash = 'abcdef'
+
+    # Install package a with dep b
+    install_cmd('--no-cache', a.name)
+
+    # Create a buildcache for a and its dep b, and update index
+    buildcache_cmd('create', '-uad', mirror_dir.strpath, a.name)
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Simulate an update to b that only affects full hash by simply overwriting
+    # the full hash in the spec.json file on the mirror
+    b_spec_json_name = bindist.tarball_name(b, '.spec.json')
+    b_spec_json_path = os.path.join(mirror_dir.strpath,
+                                    bindist.build_cache_relative_path(),
+                                    b_spec_json_name)
+    fs.filter_file(r'"full_hash":\s"\S+"',
+                   '"full_hash": "{0}"'.format(new_b_full_hash),
+                   b_spec_json_path)
+    # When we update the index, spack should notice that a's notion of the
+    # full hash of b doesn't match b's notion of it's own full hash, and as
+    # a result, spack should fix the spec.json for a
+    buildcache_cmd('update-index', '-d', mirror_dir.strpath)
+
+    # Read in the concrete spec json of a
+    a_spec_json_name = bindist.tarball_name(a, '.spec.json')
+    a_spec_json_path = os.path.join(mirror_dir.strpath,
+                                    bindist.build_cache_relative_path(),
+                                    a_spec_json_name)
+
+    # Turn concrete spec json into a concrete spec (a)
+    with open(a_spec_json_path) as fd:
+        a_prime = spec.Spec.from_json(fd.read())
+
+    # Make sure the full hash of b in a's spec json matches the new value
+    assert(a_prime[b.name].full_hash() == new_b_full_hash)

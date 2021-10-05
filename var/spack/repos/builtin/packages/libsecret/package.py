@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Libsecret(AutotoolsPackage):
     version('0.18.8', sha256='3bfa889d260e0dbabcf5b9967f2aae12edcd2ddc9adc365de7a5cc840c311d15')
 
     variant('gcrypt', default=True, description='Build with libgcrypt')
-    variant('gobj', default=True, description='Build with gobject-introspection')
+    variant('gobj', default=False, description='Build with gobject-introspection')
     # Optional Vala support is not implemented yet
     # variant('vala', default=False, descript='Build with Vala support')
 
@@ -37,7 +37,7 @@ class Libsecret(AutotoolsPackage):
         url = 'http://ftp.gnome.org/pub/gnome/sources/libsecret'
         return url + '/%s/libsecret-%s.tar.xz' % (version.up_to(2), version)
 
-    # http://www.linuxfromscratch.org/blfs/view/svn/gnome/libsecret.html
+    # https://www.linuxfromscratch.org/blfs/view/svn/gnome/libsecret.html
     def configure_args(self):
         args = []
         args.append('--disable-static')

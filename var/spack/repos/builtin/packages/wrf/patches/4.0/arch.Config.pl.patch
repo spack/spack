@@ -1,0 +1,37 @@
+--- a/arch/Config.pl	2018-06-08 19:39:31.000000000 -0500
++++ b/arch/Config.pl	2018-11-02 13:33:12.165660199 -0500
+@@ -8,6 +8,7 @@
+ select((select(STDOUT), $|=1)[0]);
+ $sw_perl_path = perl ;
+ $sw_netcdf_path = "" ;
++$sw_netcdff_path = "" ;
+ $sw_pnetcdf_path = "" ;
+ $sw_hdf5_path=""; 
+ $sw_phdf5_path=""; 
+@@ -63,6 +64,10 @@
+   {
+     $sw_netcdf_path = substr( $ARGV[0], 8 ) ;
+   }
++  if (substr( $ARGV[0], 1, 8) eq "netcdff=" )
++  {
++    $sw_netcdff_path = substr( $ARGV[0], 9) ;
++  }
+   if ( substr( $ARGV[0], 1, 13 ) eq "dep_lib_path=" )
+   {
+     $sw_dep_lib_path = substr( $ARGV[0], 14 ) ;
+@@ -117,6 +122,7 @@
+   if ( substr( $ARGV[0], 1, 11 ) eq "USENETCDFF=" )
+   {
+     $sw_usenetcdff = substr( $ARGV[0], 12 ) ;
++    $sw_usenetcdff =~ s/!/ /g ;
+   }
+   if ( substr( $ARGV[0], 1, 10 ) eq "USENETCDF=" )
+   {
+@@ -439,6 +445,7 @@
+   {
+     $_ =~ s/CONFIGURE_PERL_PATH/$sw_perl_path/g ;
+     $_ =~ s/CONFIGURE_NETCDF_PATH/$sw_netcdf_path/g ;
++    $_ =~ s/CONFIGURE_NETCDFF_PATH/$sw_netcdff_path/g ;
+     $_ =~ s/CONFIGURE_PNETCDF_PATH/$sw_pnetcdf_path/g ;
+     $_ =~ s/CONFIGURE_HDF5_PATH/$sw_hdf5_path/g ;
+     $_ =~ s/CONFIGURE_PHDF5_PATH/$sw_phdf5_path/g ;

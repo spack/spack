@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,7 @@ class PyMpi4py(PythonPackage):
        MPI-1/MPI-2 specification and exposes an API which grounds on the
        standard MPI-2 C++ bindings.
     """
-    homepage = "https://pypi.python.org/pypi/mpi4py"
-    url      = "https://pypi.io/packages/source/m/mpi4py/mpi4py-3.0.3.tar.gz"
+    pypi = "mpi4py/mpi4py-3.0.3.tar.gz"
     git      = "https://github.com/mpi4py/mpi4py.git"
 
     version('develop', branch='master')
@@ -23,7 +22,7 @@ class PyMpi4py(PythonPackage):
     version('2.0.0', sha256='6543a05851a7aa1e6d165e673d422ba24e45c41e4221f0993fe1e5924a00cb81')
     version('1.3.1', sha256='e7bd2044aaac5a6ea87a87b2ecc73b310bb6efe5026031e33067ea3c2efc3507')
 
-    depends_on('python@2.6:2.7.99,3.2:')
+    depends_on('python@2.6:2.7,3.2:')
     depends_on('py-setuptools', type='build')
     depends_on('mpi')
     depends_on('py-cython@0.22.0:', when='@develop', type='build')

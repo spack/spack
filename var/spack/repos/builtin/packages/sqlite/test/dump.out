@@ -1,0 +1,10 @@
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION;
+CREATE TABLE packages (
+name varchar(80) primary key,
+has_code integer,
+url varchar(160));
+INSERT INTO packages VALUES('sqlite',1,'https://www.sqlite.org');
+INSERT INTO packages VALUES('readline',1,'https://tiswww.case.edu/php/chet/readline/rltop.html');
+INSERT INTO packages VALUES('xsdk',0,'http://xsdk.info');
+COMMIT;

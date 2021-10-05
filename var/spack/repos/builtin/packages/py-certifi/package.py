@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,8 @@ class PyCertifi(PythonPackage):
     the trustworthiness of SSL certificates while verifying the identity of TLS
     hosts."""
 
-    homepage = "http://certifi.io/"
-    url      = "https://pypi.io/packages/source/c/certifi/certifi-2020.6.20.tar.gz"
-
-    import_modules = ['certifi']
+    homepage = "https://github.com/certifi/python-certifi"
+    pypi = "certifi/certifi-2020.6.20.tar.gz"
 
     version('2020.6.20', sha256='5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3')
     version('2019.9.11', sha256='e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50')

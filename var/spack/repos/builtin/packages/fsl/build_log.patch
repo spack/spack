@@ -1,0 +1,11 @@
+--- a/build	2020-06-29 10:30:36.000000000 -0500
++++ b/build	2020-11-02 12:34:25.408157699 -0600
+@@ -158,7 +158,7 @@
+ fi #full build
+ 
+ echo "Building projects - see build.log file for progress..."
+-./config/common/buildproj $PROJECTS > ./build.log 2>&1
++./config/common/buildproj $PROJECTS
+ finalStatus=$?
+ if [ $finalStatus -eq 0 ]; then
+     echo "Build completed successfully.";

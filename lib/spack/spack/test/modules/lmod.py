@@ -1,17 +1,21 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import re
+
 import pytest
 
+import spack.environment as ev
+import spack.main
 import spack.modules.lmod
+import spack.spec
 
 mpich_spec_string = 'mpich@3.0.4'
 mpileaks_spec_string = 'mpileaks'
 libdwarf_spec_string = 'libdwarf arch=x64-linux'
+
+install = spack.main.SpackCommand('install')
 
 #: Class of the writer tested in this module
 writer_cls = spack.modules.lmod.LmodModulefileWriter
@@ -126,7 +130,7 @@ class TestLmod(object):
         assert len([x for x in content if 'unsetenv("BAR")' in x]) == 1
 
         content = modulefile_content(
-            'libdwarf %clang platform=test target=x86'
+            'libdwarf platform=test target=core2'
         )
 
         assert len(
@@ -229,7 +233,7 @@ class TestLmod(object):
         content = modulefile_content('override-module-templates')
         assert 'Override even better!' in content
 
-        content = modulefile_content('mpileaks arch=x86-linux')
+        content = modulefile_content('mpileaks target=x86_64')
         assert 'Override even better!' in content
 
     @pytest.mark.usefixtures('config')
@@ -316,3 +320,37 @@ class TestLmod(object):
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections['all'])
         assert projection in writer.layout.use_name
+
+    def test_config_backwards_compat(self, mutable_config):
+        settings = {
+            'enable': ['lmod'],
+            'lmod': {
+                'core_compilers': ['%gcc@0.0.0']
+            }
+        }
+
+        spack.config.set('modules:default', settings)
+        new_format = spack.modules.lmod.configuration('default')
+
+        spack.config.set('modules', settings)
+        old_format = spack.modules.lmod.configuration('default')
+
+        assert old_format == new_format
+        assert old_format == settings['lmod']
+
+    def test_modules_relative_to_view(
+        self, tmpdir, modulefile_content, module_configuration, install_mockery,
+        mock_fetch
+    ):
+        with ev.Environment(str(tmpdir), with_view=True) as e:
+            module_configuration('with_view')
+            install('cmake')
+
+            spec = spack.spec.Spec('cmake').concretized()
+
+            content = modulefile_content('cmake')
+            expected = e.default_view.get_projection_for_spec(spec)
+            # Rather than parse all lines, ensure all prefixes in the content
+            # point to the right one
+            assert any(expected in line for line in content)
+            assert not any(spec.prefix in line for line in content)

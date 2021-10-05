@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,19 +13,23 @@ import multiprocessing
 import os
 import re
 import select
+import signal
 import sys
 import traceback
-import signal
 from contextlib import contextmanager
-from six import string_types
-from six import StringIO
+from types import ModuleType  # novm
+from typing import Optional  # novm
+
+from six import StringIO, string_types
 
 import llnl.util.tty as tty
 
+termios = None  # type: Optional[ModuleType]
 try:
-    import termios
+    import termios as term_mod
+    termios = term_mod
 except ImportError:
-    termios = None
+    pass
 
 
 # Use this to strip escape sequences
@@ -236,6 +240,8 @@ class keyboard_input(object):
         """If termios was available, restore old settings."""
         if self.old_cfg:
             self._restore_default_terminal_settings()
+            if sys.version_info >= (3,):
+                atexit.unregister(self._restore_default_terminal_settings)
 
         # restore SIGSTP and SIGCONT handlers
         if self.old_handlers:
@@ -287,6 +293,112 @@ def _file_descriptors_work(*streams):
         return False
 
 
+class FileWrapper(object):
+    """Represents a file. Can be an open stream, a path to a file (not opened
+    yet), or neither. When unwrapped, it returns an open file (or file-like)
+    object.
+    """
+    def __init__(self, file_like):
+        # This records whether the file-like object returned by "unwrap" is
+        # purely in-memory. In that case a subprocess will need to explicitly
+        # transmit the contents to the parent.
+        self.write_in_parent = False
+
+        self.file_like = file_like
+
+        if isinstance(file_like, string_types):
+            self.open = True
+        elif _file_descriptors_work(file_like):
+            self.open = False
+        else:
+            self.file_like = None
+            self.open = True
+            self.write_in_parent = True
+
+        self.file = None
+
+    def unwrap(self):
+        if self.open:
+            if self.file_like:
+                if sys.version_info < (3,):
+                    self.file = open(self.file_like, 'w')
+                else:
+                    self.file = open(self.file_like, 'w', encoding='utf-8')
+            else:
+                self.file = StringIO()
+            return self.file
+        else:
+            # We were handed an already-open file object. In this case we also
+            # will not actually close the object when requested to.
+            return self.file_like
+
+    def close(self):
+        if self.file:
+            self.file.close()
+
+
+class MultiProcessFd(object):
+    """Return an object which stores a file descriptor and can be passed as an
+       argument to a function run with ``multiprocessing.Process``, such that
+       the file descriptor is available in the subprocess."""
+    def __init__(self, fd):
+        self._connection = None
+        self._fd = None
+        if sys.version_info >= (3, 8):
+            self._connection = multiprocessing.connection.Connection(fd)
+        else:
+            self._fd = fd
+
+    @property
+    def fd(self):
+        if self._connection:
+            return self._connection._handle
+        else:
+            return self._fd
+
+    def close(self):
+        if self._connection:
+            self._connection.close()
+        else:
+            os.close(self._fd)
+
+
+def close_connection_and_file(multiprocess_fd, file):
+    # MultiprocessFd is intended to transmit a FD
+    # to a child process, this FD is then opened to a Python File object
+    # (using fdopen). In >= 3.8, MultiprocessFd encapsulates a
+    # multiprocessing.connection.Connection; Connection closes the FD
+    # when it is deleted, and prints a warning about duplicate closure if
+    # it is not explicitly closed. In < 3.8, MultiprocessFd encapsulates a
+    # simple FD; closing the FD here appears to conflict with
+    # closure of the File object (in < 3.8 that is). Therefore this needs
+    # to choose whether to close the File or the Connection.
+    if sys.version_info >= (3, 8):
+        multiprocess_fd.close()
+    else:
+        file.close()
+
+
+@contextmanager
+def replace_environment(env):
+    """Replace the current environment (`os.environ`) with `env`.
+
+    If `env` is empty (or None), this unsets all current environment
+    variables.
+    """
+    env = env or {}
+    old_env = os.environ.copy()
+    try:
+        os.environ.clear()
+        for name, val in env.items():
+            os.environ[name] = val
+        yield
+    finally:
+        os.environ.clear()
+        for name, val in old_env.items():
+            os.environ[name] = val
+
+
 class log_output(object):
     """Context manager that logs its output to a file.
 
@@ -323,7 +435,8 @@ class log_output(object):
     work within test frameworks like nose and pytest.
     """
 
-    def __init__(self, file_like=None, echo=False, debug=0, buffer=False):
+    def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
+                 env=None, filter_fn=None):
         """Create a new output log context manager.
 
         Args:
@@ -333,6 +446,8 @@ class log_output(object):
             debug (int): positive to enable tty debug mode during logging
             buffer (bool): pass buffer=True to skip unbuffering output; note
                 this doesn't set up any *new* buffering
+            filter_fn (callable, optional): Callable[str] -> str to filter each
+                line of output
 
         log_output can take either a file object or a filename. If a
         filename is passed, the file will be opened and closed entirely
@@ -351,6 +466,8 @@ class log_output(object):
         self.echo = echo
         self.debug = debug
         self.buffer = buffer
+        self.env = env  # the environment to use for _writer_daemon
+        self.filter_fn = filter_fn
 
         self._active = False  # used to prevent re-entry
 
@@ -392,18 +509,7 @@ class log_output(object):
                 "file argument must be set by either __init__ or __call__")
 
         # set up a stream for the daemon to write to
-        self.close_log_in_parent = True
-        self.write_log_in_parent = False
-        if isinstance(self.file_like, string_types):
-            self.log_file = open(self.file_like, 'w')
-
-        elif _file_descriptors_work(self.file_like):
-            self.log_file = self.file_like
-            self.close_log_in_parent = False
-
-        else:
-            self.log_file = StringIO()
-            self.write_log_in_parent = True
+        self.log_file = FileWrapper(self.file_like)
 
         # record parent color settings before redirecting.  We do this
         # because color output depends on whether the *original* stdout
@@ -418,6 +524,8 @@ class log_output(object):
         # OS-level pipe for redirecting output to logger
         read_fd, write_fd = os.pipe()
 
+        read_multiprocess_fd = MultiProcessFd(read_fd)
+
         # Multiprocessing pipe for communication back from the daemon
         # Currently only used to save echo value between uses
         self.parent_pipe, child_pipe = multiprocessing.Pipe()
@@ -425,25 +533,31 @@ class log_output(object):
         # Sets a daemon that writes to file what it reads from a pipe
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
+            input_multiprocess_fd = None
             try:
-                input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
+                if sys.stdin.isatty():
+                    input_multiprocess_fd = MultiProcessFd(
+                        os.dup(sys.stdin.fileno())
+                    )
             except BaseException:
-                input_stream = None  # just don't forward input if this fails
+                # just don't forward input if this fails
+                pass
 
-            self.process = multiprocessing.Process(
-                target=_writer_daemon,
-                args=(
-                    input_stream, read_fd, write_fd, self.echo, self.log_file,
-                    child_pipe
+            with replace_environment(self.env):
+                self.process = multiprocessing.Process(
+                    target=_writer_daemon,
+                    args=(
+                        input_multiprocess_fd, read_multiprocess_fd, write_fd,
+                        self.echo, self.log_file, child_pipe, self.filter_fn
+                    )
                 )
-            )
-            self.process.daemon = True  # must set before start()
-            self.process.start()
-            os.close(read_fd)  # close in the parent process
+                self.process.daemon = True  # must set before start()
+                self.process.start()
 
         finally:
-            if input_stream:
-                input_stream.close()
+            if input_multiprocess_fd:
+                input_multiprocess_fd.close()
+            read_multiprocess_fd.close()
 
         # Flush immediately before redirecting so that anything buffered
         # goes to the original stream
@@ -514,18 +628,21 @@ class log_output(object):
             sys.stderr = self._saved_stderr
 
         # print log contents in parent if needed.
-        if self.write_log_in_parent:
+        if self.log_file.write_in_parent:
             string = self.parent_pipe.recv()
             self.file_like.write(string)
 
-        if self.close_log_in_parent:
-            self.log_file.close()
-
         # recover and store echo settings from the child before it dies
-        self.echo = self.parent_pipe.recv()
+        try:
+            self.echo = self.parent_pipe.recv()
+        except EOFError:
+            # This may occur if some exception prematurely terminates the
+            # _writer_daemon. An exception will have already been generated.
+            pass
 
-        # join the daemon process. The daemon will quit automatically
-        # when the write pipe is closed; we just wait for it here.
+        # now that the write pipe is closed (in this __exit__, when we restore
+        # stdout with dup2), the logger daemon process loop will terminate. We
+        # wait for that here.
         self.process.join()
 
         # restore old color and debug settings
@@ -554,7 +671,8 @@ class log_output(object):
             sys.stdout.flush()
 
 
-def _writer_daemon(stdin, read_fd, write_fd, echo, log_file, control_pipe):
+def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
+                   log_file_wrapper, control_pipe, filter_fn):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -591,25 +709,43 @@ def _writer_daemon(stdin, read_fd, write_fd, echo, log_file, control_pipe):
     ``StringIO`` in the parent. This is mainly for testing.
 
     Arguments:
-        stdin (stream): input from the terminal
-        read_fd (int): pipe for reading from parent's redirected stdout
-        write_fd (int): parent's end of the pipe will write to (will be
-            immediately closed by the writer daemon)
+        stdin_multiprocess_fd (int): input from the terminal
+        read_multiprocess_fd (int): pipe for reading from parent's redirected
+            stdout
         echo (bool): initial echo setting -- controlled by user and
             preserved across multiple writer daemons
-        log_file (file-like): file to log all output
+        log_file_wrapper (FileWrapper): file to log all output
         control_pipe (Pipe): multiprocessing pipe on which to send control
             information to the parent
+        filter_fn (callable, optional): function to filter each line of output
 
     """
+    # If this process was forked, then it will inherit file descriptors from
+    # the parent process. This process depends on closing all instances of
+    # write_fd to terminate the reading loop, so we close the file descriptor
+    # here. Forking is the process spawning method everywhere except Mac OS
+    # for Python >= 3.8 and on Windows
+    if sys.version_info < (3, 8) or sys.platform != 'darwin':
+        os.close(write_fd)
+
     # Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
-    in_pipe = os.fdopen(read_fd, 'r', 1)
-    os.close(write_fd)
+    if sys.version_info < (3,):
+        in_pipe = os.fdopen(read_multiprocess_fd.fd, 'r', 1)
+    else:
+        # Python 3.x before 3.7 does not open with UTF-8 encoding by default
+        in_pipe = os.fdopen(read_multiprocess_fd.fd, 'r', 1, encoding='utf-8')
+
+    if stdin_multiprocess_fd:
+        stdin = os.fdopen(stdin_multiprocess_fd.fd)
+    else:
+        stdin = None
 
     # list of streams to select from
     istreams = [in_pipe, stdin] if stdin else [in_pipe]
     force_echo = False      # parent can force echo for certain output
+
+    log_file = log_file_wrapper.unwrap()
 
     try:
         with keyboard_input(stdin) as kb:
@@ -640,28 +776,42 @@ def _writer_daemon(stdin, read_fd, write_fd, echo, log_file, control_pipe):
                                 raise
 
                 if in_pipe in rlist:
-                    # Handle output from the calling process.
-                    line = _retry(in_pipe.readline)()
-                    if not line:
-                        break
+                    line_count = 0
+                    try:
+                        while line_count < 100:
+                            # Handle output from the calling process.
+                            line = _retry(in_pipe.readline)()
+                            if not line:
+                                return
+                            line_count += 1
 
-                    # find control characters and strip them.
-                    controls = control.findall(line)
-                    line = control.sub('', line)
+                            # find control characters and strip them.
+                            clean_line, num_controls = control.subn('', line)
 
-                    # Echo to stdout if requested or forced.
-                    if echo or force_echo:
-                        sys.stdout.write(line)
-                        sys.stdout.flush()
+                            # Echo to stdout if requested or forced.
+                            if echo or force_echo:
+                                output_line = clean_line
+                                if filter_fn:
+                                    output_line = filter_fn(clean_line)
+                                sys.stdout.write(output_line)
 
-                    # Stripped output to log file.
-                    log_file.write(_strip(line))
-                    log_file.flush()
+                            # Stripped output to log file.
+                            log_file.write(_strip(clean_line))
 
-                    if xon in controls:
-                        force_echo = True
-                    if xoff in controls:
-                        force_echo = False
+                            if num_controls > 0:
+                                controls = control.findall(line)
+                                if xon in controls:
+                                    force_echo = True
+                                if xoff in controls:
+                                    force_echo = False
+
+                            if not _input_available(in_pipe):
+                                break
+                    finally:
+                        if line_count > 0:
+                            if echo or force_echo:
+                                sys.stdout.flush()
+                            log_file.flush()
 
     except BaseException:
         tty.error("Exception occurred in writer daemon!")
@@ -671,10 +821,13 @@ def _writer_daemon(stdin, read_fd, write_fd, echo, log_file, control_pipe):
         # send written data back to parent if we used a StringIO
         if isinstance(log_file, StringIO):
             control_pipe.send(log_file.getvalue())
-        log_file.close()
+        log_file_wrapper.close()
+        close_connection_and_file(read_multiprocess_fd, in_pipe)
+        if stdin_multiprocess_fd:
+            close_connection_and_file(stdin_multiprocess_fd, stdin)
 
-    # send echo value back to the parent so it can be preserved.
-    control_pipe.send(echo)
+        # send echo value back to the parent so it can be preserved.
+        control_pipe.send(echo)
 
 
 def _retry(function):
@@ -710,3 +863,7 @@ def _retry(function):
                     continue
                 raise
     return wrapped
+
+
+def _input_available(f):
+    return f in select.select([f], [], [], 0)[0]

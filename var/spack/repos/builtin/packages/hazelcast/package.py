@@ -1,12 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class Hazelcast(Package):
+class Hazelcast(MavenPackage):
     """Hazelcast is an open-source distributed in-memory data
      store and computation platform. It provides a wide variety
      of distributed data structures and concurrency primitives."""
@@ -20,10 +18,4 @@ class Hazelcast(Package):
     version('3.12.7', sha256='0747de968082bc50202f825b4010be28a3885b3dbcee4b83cbe21b2f8b26a7e0')
     version('3.11.7', sha256='c9f636b8813027d4cc24459bd27740549f89b4f11f62a868079bcb5b41d9b2bb')
 
-    depends_on('maven', type='build')
-    depends_on('java', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        mvn = which('mvn')
-        mvn('package', '-DskipTests')
-        install_tree('.', prefix)
+    depends_on('java@8:', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Graphmap(MakefilePackage):
         mkdirp(prefix.bin)
         makefile = FileFilter('Makefile')
         makefile.filter('/usr/bin/graphmap', prefix.bin.graphmap)
+        if self.spec.target.family == 'aarch64':
+            makefile.filter('-m64', '')
 
     def build(self, spec, prefix):
         make('modules')

@@ -1,12 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class Zipkin(Package):
+class Zipkin(MavenPackage):
     """Zipkin is a distributed tracing system. It helps gather timing
     data needed to troubleshoot latency problems in service
     architectures. Features include both the collection and lookup
@@ -19,10 +17,4 @@ class Zipkin(Package):
     version('2.21.4', sha256='ee7b0110b3852479c925b6429ff278aa38b1d5da27f4762891b1f863e67bdad5')
     version('2.21.3', sha256='02526e2ba4de85938b510cb2db01865ec46cdad53157862c39fa5e9b6cbd15b6')
 
-    depends_on('maven', type='build')
-    depends_on('java', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        mvn = which('mvn')
-        mvn('package', '-DskipTests')
-        install_tree('.', prefix)
+    depends_on('maven@1.8:14', type='build')

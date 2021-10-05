@@ -1,0 +1,20 @@
+--- a/ambertools_tmpdir/AmberTools/src/configure2	2020-09-10 07:37:44.380726161 -0700
++++ b/ambertools_tmpdir/AmberTools/src/configure2	2020-09-10 07:38:22.052936370 -0700
+@@ -3190,7 +3190,7 @@
+       cd fftw-3.3 && \
+         ./configure --disable-doc --prefix=$amberprefix --libdir=$amberprefix/lib \
+         --enable-static $enable_mpi $mpicc $enable_debug $enable_sse\
+-        CC="$cc" CFLAGS="$cflags $coptflags" \
++        CC="$cc" CFLAGS="$cflags $cnooptflags" \
+         F77="$fc" FFLAGS="$fflags $foptflags" \
+         FLIBS="$flibs_arch" \
+         > ../fftw3_config.log 2>&1
+@@ -3287,6 +3287,8 @@
+       # b2 install will use intel-linux.compile.c++ (boost_1_64_0).
+       ./bootstrap.sh --prefix=$amberprefix --with-toolset=intel-linux > ../boost_config.log
+       ncerror=$?
++  elif [ $x86_64 = 'no' ] && [ "$compiler" = 'pgi' ]; then
++      ./bootstrap.sh --prefix=$amberprefix --with-toolset=pgi > ../boost_config.log
+   else
+       ./bootstrap.sh --prefix=$amberprefix > ../boost_config.log
+       ncerror=$?

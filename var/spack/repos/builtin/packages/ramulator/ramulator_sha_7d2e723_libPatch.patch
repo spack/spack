@@ -1,22 +1,25 @@
 diff --git a/Makefile b/Makefile
-index ea340c8..314113d 100644
+index ea340c8..bcc765d 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -9,7 +9,7 @@ OBJS := $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCS))
+@@ -7,9 +7,7 @@ OBJS := $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCS))
+ 
+ # Ramulator currently supports g++ 5.1+ or clang++ 3.4+.  It will NOT work with
  #   g++ 4.x due to an internal compiler error when processing lambda functions.
- CXX := clang++
- # CXX := g++-5
+-CXX := clang++
+-# CXX := g++-5
 -CXXFLAGS := -O3 -std=c++11 -g -Wall
 +CXXFLAGS := -O3 -std=c++11 -g -Wall -fpic
  
  .PHONY: all clean depend
  
-@@ -38,6 +38,9 @@ ramulator: $(MAIN) $(OBJS) $(SRCDIR)/*.h | depend
+@@ -38,6 +36,10 @@ ramulator: $(MAIN) $(OBJS) $(SRCDIR)/*.h | depend
  libramulator.a: $(OBJS) $(OBJDIR)/Gem5Wrapper.o
  	libtool -static -o $@ $(OBJS) $(OBJDIR)/Gem5Wrapper.o
  
 +libramulator.so: $(OBJS) $(OBJDIR)/Gem5Wrapper.o
 +	$(CXX) -shared -o $@ $(OBJS) $(OBJDIR)/Gem5Wrapper.o
++
 +
  $(OBJS): | $(OBJDIR)
  

@@ -1,7 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import glob
+import os
+from shutil import Error, copyfile
 
 from spack import *
 
@@ -13,10 +17,11 @@ class NetcdfFortran(AutotoolsPackage):
     distribution."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
-    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-fortran-4.5.2.tar.gz"
+    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-fortran-4.5.3.tar.gz"
 
     maintainers = ['skosukhin', 'WardF']
 
+    version('4.5.3', sha256='123a5c6184336891e62cf2936b9f2d1c54e8dee299cfd9d2c1a1eb05dd668a74')
     version('4.5.2', sha256='b959937d7d9045184e9d2040a915d94a7f4d0185f4a9dceb8f08c94b0c3304aa')
     version('4.4.5', sha256='2467536ce29daea348c736476aa8e684c075d2f6cab12f3361885cb6905717b8')
     version('4.4.4', sha256='b2d395175f8d283e68c8be516e231a96b191ade67ad0caafaf7fa01b1e6b5d75')
@@ -68,6 +73,14 @@ class NetcdfFortran(AutotoolsPackage):
             if self.spec.satisfies('%gcc@10:'):
                 # https://github.com/Unidata/netcdf-fortran/issues/212
                 flags.append('-fallow-argument-mismatch')
+            elif self.compiler.name == 'cce':
+                # Cray compiler generates module files with uppercase names by
+                # default, which is not handled by the makefiles of
+                # NetCDF-Fortran:
+                # https://github.com/Unidata/netcdf-fortran/pull/221.
+                # The following flag forces the compiler to produce module
+                # files with lowercase names.
+                flags.append('-ef')
         elif name == 'ldflags':
             # We need to specify LDFLAGS to get correct dependency_libs
             # in libnetcdff.la, so packages that use libtool for linking
@@ -124,7 +137,80 @@ class NetcdfFortran(AutotoolsPackage):
 
         return config_args
 
+    @run_after('configure')
+    def patch_libtool(self):
+        """AOCC support for NETCDF-F"""
+        if '%aocc' in self.spec:
+            # Libtool does not fully support the compiler toolchain, therefore
+            # we have to patch the script. The C compiler normally gets
+            # configured correctly, the variables of interest in the
+            # 'BEGIN LIBTOOL CONFIG' section are set to non-empty values and,
+            # therefore, are not affected by the replacements below. A more
+            # robust solution would be to extend the filter_file function with
+            # an additional argument start_at and perform the replacements
+            # between the '# ### BEGIN LIBTOOL TAG CONFIG: FC' and
+            # '# ### END LIBTOOL TAG CONFIG: FC' markers for the Fortran
+            # compiler, and between the '# ### BEGIN LIBTOOL TAG CONFIG: F77'
+            # and '# ### END LIBTOOL TAG CONFIG: F77' markers for the Fortran 77
+            # compiler.
+
+            # How to pass a linker flag through the compiler:
+            filter_file(r'^wl=""$',
+                        'wl="{0}"'.format(self.compiler.linker_arg),
+                        'libtool')
+
+            # Additional compiler flags for building library objects (we need
+            # this to enable shared libraries when building with ~pic). Note
+            # that the following will set fc_pic_flag for both FC and F77, which
+            # in the case of AOCC, should not be a problem. If it is, the
+            # aforementioned modification of the filter_file function could be
+            # a solution.
+            filter_file(r'^pic_flag=""$',
+                        'pic_flag=" {0}"'.format(self.compiler.fc_pic_flag),
+                        'libtool')
+
+            # The following is supposed to tell the compiler to use the GNU
+            # linker. However, the replacement does not happen (at least for
+            # NetCDF-Fortran 4.5.3) because the replaced substring (i.e. the
+            # first argument passed to the filter_file function) is not present
+            # in the file. The flag should probably be added to 'ldflags' in the
+            # flag_handler method above (another option is to add the flag to
+            # 'ldflags' in compilers.yaml automatically as it was done for other
+            # flags in https://github.com/spack/spack/pull/22219).
+            filter_file(
+                r'\${wl}-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
+                'libtool', string=True)
+
+        # TODO: resolve the NAG-related issues in a similar way: remove the
+        #  respective patch files and tune the generated libtool script instead.
+
     @when('@:4.4.5')
     def check(self):
         with working_dir(self.build_directory):
             make('check', parallel=False)
+
+    @run_after('install')
+    def cray_module_filenames(self):
+        # Cray compiler searches for module files with uppercase names by
+        # default and with lowercase names when the '-ef' flag is specified.
+        # To avoid warning messages when compiler user applications in both
+        # cases, we create copies of all '*.mod' files in the prefix/include
+        # with names in upper- and lowercase.
+        if self.spec.compiler.name != 'cce':
+            return
+
+        with working_dir(self.spec.prefix.include):
+            for f in glob.glob('*.mod'):
+                name, ext = os.path.splitext(f)
+                try:
+                    # Create a copy with uppercase name:
+                    copyfile(f, name.upper() + ext)
+                except Error:
+                    # Assume that the exception tells us that the file with
+                    # uppercase name already exists. Try to create a file with
+                    # lowercase name then:
+                    try:
+                        copyfile(f, name.lower() + ext)
+                    except Error:
+                        pass

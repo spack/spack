@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Trimgalore(Package):
     homepage = "https://github.com/FelixKrueger/TrimGalore"
     url      = "https://github.com/FelixKrueger/TrimGalore/archive/0.4.4.tar.gz"
 
+    version('0.6.6', sha256='b8db8ffd131d9d9e7c8532a5a1f1caee656c0c58d3eafd460fee3c39b9fcab5e')
     version('0.6.4', sha256='eb57e18203d8a1dce1397b930a348a9969eebaa758b8a7304d04c22f216cea2d')
     version('0.6.3', sha256='c85104452dbb5cfa8c9307920e804fb53baaad355ce656b111f5243e5eb92db4')
     version('0.6.2', sha256='c50b841bdc294a6cdc6a27fb7bfbed1973541d20a68a4708584b817c58b3f376')

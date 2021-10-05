@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyDryscrape(PythonPackage):
        for Python"""
 
     homepage = "https://github.com/niklasb/dryscrape"
-    url      = "https://pypi.io/packages/source/d/dryscrape/dryscrape-1.0.tar.gz"
+    pypi = "dryscrape/dryscrape-1.0.tar.gz"
     git      = "https://github.com/niklasb/dryscrape.git"
 
     version('develop', branch='master')

@@ -1,22 +1,23 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import filecmp
 import os
+
 import pytest
 
-import spack.repo
+from llnl.util.filesystem import resolve_link_target_relative_to_the_link
+
 import spack.mirror
+import spack.repo
 import spack.util.executable
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
 
-from llnl.util.filesystem import resolve_link_target_relative_to_the_link
-
-pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_repo')
+pytestmark = pytest.mark.usefixtures('mutable_config', 'mutable_mock_repo')
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']
@@ -97,7 +98,7 @@ def check_mirror():
                         # tarball
                         assert not dcmp.right_only
                         # and that all original files are present.
-                        assert all(l in exclude for l in dcmp.left_only)
+                        assert all(left in exclude for left in dcmp.left_only)
 
 
 def test_url_mirror(mock_archive):

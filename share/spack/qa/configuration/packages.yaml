@@ -29,4 +29,8 @@ packages:
     externals:
     - spec: libpciaccess@0.13.5
       prefix: /usr
-
+  ruby:
+    buildable: False
+    externals:
+    - spec: ruby@2.5.1
+      prefix: /usr

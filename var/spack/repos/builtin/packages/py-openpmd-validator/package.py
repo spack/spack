@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyOpenpmdValidator(PythonPackage):
 
     openPMD is an open standard for particle-mesh data files."""
 
-    homepage = "http://www.openPMD.org"
+    homepage = "https://www.openPMD.org"
     url      = "https://github.com/openPMD/openPMD-validator/archive/1.0.0.2.tar.gz"
     maintainers = ['ax3l']
 

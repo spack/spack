@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,9 @@ class Fermi(MakefilePackage):
 
     depends_on('zlib')
     depends_on('perl', type='run')
+    depends_on('sse2neon', when='target=aarch64:')
+
+    patch('ksw_for_aarch64.patch', when='target=aarch64:')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)

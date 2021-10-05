@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,9 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.hash_types as ht
 import spack.spec
 import spack.store
-import spack.hash_types as ht
 
 description = "show what would be installed, given a spec"
 section = "build"
@@ -42,7 +42,10 @@ for further documentation regarding the spec syntax, see:
     subparser.add_argument(
         '-N', '--namespaces', action='store_true', default=False,
         help='show fully qualified package names')
-
+    subparser.add_argument(
+        '--hash-type', default="build_hash",
+        choices=['build_hash', 'full_hash', 'dag_hash'],
+        help='generate spec with a particular hash type.')
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
@@ -84,11 +87,14 @@ def spec(parser, args):
             if spec.name in spack.repo.path or spec.virtual:
                 spec.concretize()
 
+            # The user can specify the hash type to use
+            hash_type = getattr(ht, args.hash_type)
+
             if args.format == 'yaml':
                 # use write because to_yaml already has a newline.
-                sys.stdout.write(spec.to_yaml(hash=ht.build_hash))
+                sys.stdout.write(spec.to_yaml(hash=hash_type))
             else:
-                print(spec.to_json(hash=ht.build_hash))
+                print(spec.to_json(hash=hash_type))
             continue
 
         with tree_context():

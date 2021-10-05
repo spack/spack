@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Codes(AutotoolsPackage):
     """ CO-Design of multi-layer Exascale Storage (CODES) simulation framework
     """
 
-    homepage = "http://www.mcs.anl.gov/projects/codes"
+    homepage = "https://www.mcs.anl.gov/projects/codes"
     git      = "https://xgitlab.cels.anl.gov/codes/codes.git"
 
     version('develop', branch='master')
@@ -47,6 +47,6 @@ class Codes(AutotoolsPackage):
 
         if "+dumpi" in spec:
             config_args.extend([
-                '--with-dumpi=%s'.format(spec['sst-dumpi'].prefix)])
+                '--with-dumpi=%s' % spec['sst-dumpi'].prefix])
 
         return config_args

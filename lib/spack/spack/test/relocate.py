@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,8 +8,10 @@ import platform
 import re
 import shutil
 
-import llnl.util.filesystem
 import pytest
+
+import llnl.util.filesystem
+
 import spack.architecture
 import spack.concretize
 import spack.paths
@@ -271,18 +273,26 @@ def test_set_elf_rpaths_warning(mock_patchelf):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_replace_prefix_bin(hello_world):
     # Compile an "Hello world!" executable and set RPATHs
     executable = hello_world(rpaths=['/usr/lib', '/usr/lib64'])
 
     # Relocate the RPATHs
-    spack.relocate._replace_prefix_bin(str(executable), '/usr', '/foo')
+    spack.relocate._replace_prefix_bin(str(executable), {b'/usr': b'/foo'})
 
     # Some compilers add rpaths so ensure changes included in final result
     assert '/foo/lib:/foo/lib64' in rpaths_for(executable)
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_relocate_elf_binaries_absolute_paths(
         hello_world, copy_binary, tmpdir
 ):
@@ -307,6 +317,10 @@ def test_relocate_elf_binaries_absolute_paths(
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
     orig_binary = hello_world(rpaths=['lib', 'lib64', '/opt/local/lib'])
@@ -327,6 +341,10 @@ def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
     orig_binary = hello_world(rpaths=[
         str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
@@ -350,6 +368,10 @@ def test_raise_if_not_relocatable(monkeypatch):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.skipif(
+    platform.system().lower() != 'linux',
+    reason='implementation for MacOS still missing'
+)
 def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     orig_binary = hello_world(rpaths=[
         str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
@@ -361,11 +383,12 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     assert not text_in_bin(str(new_binary.dirpath()), new_binary)
 
     # Check this call succeed
+    orig_path_bytes = str(orig_binary.dirpath()).encode('utf-8')
+    new_path_bytes = str(new_binary.dirpath()).encode('utf-8')
+
     spack.relocate.relocate_text_bin(
         [str(new_binary)],
-        str(orig_binary.dirpath()), str(new_binary.dirpath()),
-        spack.paths.spack_root, spack.paths.spack_root,
-        {str(orig_binary.dirpath()): str(new_binary.dirpath())}
+        {orig_path_bytes: new_path_bytes}
     )
 
     # Check original directory is not there anymore and it was
@@ -374,10 +397,13 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     assert text_in_bin(str(new_binary.dirpath()), new_binary)
 
 
-def test_relocate_text_bin_raise_if_new_prefix_is_longer():
-    short_prefix = '/short'
-    long_prefix = '/much/longer'
+def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
+    short_prefix = b'/short'
+    long_prefix = b'/much/longer'
+    fpath = str(tmpdir.join('fakebin'))
+    with open(fpath, 'w') as f:
+        f.write('/short')
     with pytest.raises(spack.relocate.BinaryTextReplaceError):
         spack.relocate.relocate_text_bin(
-            ['item'], short_prefix, long_prefix, None, None, None
+            [fpath], {short_prefix: long_prefix}
         )

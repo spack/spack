@@ -1,25 +1,24 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-from __future__ import division
+from __future__ import division, print_function
 
 import argparse
 import fnmatch
+import json
+import math
 import os
 import re
 import sys
-import math
-import json
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
+import spack.cmd.common.arguments as arguments
 import spack.dependency
 import spack.repo
-import spack.cmd.common.arguments as arguments
 from spack.version import VersionList
 
 if sys.version_info > (3, 1):
@@ -54,6 +53,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--update', metavar='FILE', default=None, action='store',
         help='write output to the specified file, if any package is newer')
+    subparser.add_argument(
+        '-v', '--virtuals', action='store_true', default=False,
+        help='include virtual packages in list')
 
     arguments.add_common_arguments(subparser, ['tags'])
 
@@ -267,7 +269,7 @@ def list(parser, args):
     formatter = formatters[args.format]
 
     # Retrieve the names of all the packages
-    pkgs = set(spack.repo.all_package_names())
+    pkgs = set(spack.repo.all_package_names(args.virtuals))
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Libtomlc99(Package):
 
     # Since there is no official versioning, yet, just use the date and prefix
     # with '0.' to make switching to proper versioning easier later.
+    version('0.2020.12.23', commit='e97a56633e54297990158ab56a7e50a089cddf7d')
     version('0.2019.06.24', commit='b701a09579200b1bd87081d1e6a284a89b5576c8')
     # Unfortunately, upstream Makefile does not build shared libaries, so use
     # local changes for now.

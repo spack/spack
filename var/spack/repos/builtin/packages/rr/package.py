@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class Rr(CMakePackage):
     """Application execution recorder, player and debugger"""
-    homepage = "http://rr-project.org/"
+    homepage = "https://rr-project.org/"
     url      = "https://github.com/mozilla/rr/archive/4.5.0.tar.gz"
 
     version('4.5.0', sha256='19f28259c0aa562c9518ae51207377fa93071a7dc270a0738d8d39e45ae2b1c0')
@@ -29,7 +29,7 @@ class Rr(CMakePackage):
     # Only 'Release' is supported at the moment
     variant('build_type', default='Release',
             description='The build type to build',
-            values=('Release'))
+            values=('Release',))
 
     def patch(self):
         # because otherwise CMake would try and fail to set RPATH of

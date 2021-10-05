@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,17 +9,18 @@ import copy
 import os
 import sys
 
+import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
-import llnl.util.lang
 
-import spack.environment as ev
-import spack.repo
+import spack.bootstrap
 import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.repo
 import spack.user_environment as uenv
-from spack.util.string import plural
 from spack.database import InstallStatuses
+from spack.util.string import plural
 
 description = "list and search installed packages"
 section = "basic"
@@ -108,6 +109,10 @@ def setup_parser(subparser):
     )
     subparser.add_argument(
         '--end-date', help='latest date of installation [YYYY-MM-DD]'
+    )
+    subparser.add_argument(
+        '-b', '--bootstrap', action='store_true',
+        help='show software in the internal bootstrap store'
     )
 
     arguments.add_common_arguments(subparser, ['constraint'])
@@ -200,16 +205,24 @@ def display_env(env, args, decorator):
 
 
 def find(parser, args):
+    if args.bootstrap:
+        bootstrap_store_path = spack.bootstrap.store_path()
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            msg = 'Showing internal bootstrap store at "{0}"'
+            tty.msg(msg.format(bootstrap_store_path))
+            _find(parser, args)
+        return
+    _find(parser, args)
+
+
+def _find(parser, args):
     q_args = query_arguments(args)
     results = args.specs(**q_args)
 
+    env = ev.active_environment()
     decorator = lambda s, f: f
-    added = set()
-    removed = set()
-
-    env = ev.get_env(args, 'find')
     if env:
-        decorator, added, roots, removed = setup_env(env)
+        decorator, _, roots, _ = setup_env(env)
 
     # use groups by default except with format.
     if args.groups is None:
@@ -220,7 +233,7 @@ def find(parser, args):
         msg = "No package matches the query: {0}"
         msg = msg.format(' '.join(args.constraint))
         tty.msg(msg)
-        return 1
+        raise SystemExit(1)
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:
@@ -235,8 +248,9 @@ def find(parser, args):
     if args.json:
         cmd.display_specs_as_json(results, deps=args.deps)
     else:
-        if env:
-            display_env(env, args, decorator)
+        if not args.format:
+            if env:
+                display_env(env, args, decorator)
         if sys.stdout.isatty() and args.groups:
             tty.msg("%s" % plural(len(results), 'installed package'))
         cmd.display_specs(

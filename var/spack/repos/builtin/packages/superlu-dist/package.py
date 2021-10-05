@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,18 +6,20 @@
 from spack import *
 
 
-class SuperluDist(CMakePackage):
+class SuperluDist(CMakePackage, CudaPackage):
     """A general purpose library for the direct solution of large, sparse,
     nonsymmetric systems of linear equations on high performance machines."""
 
-    homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
+    homepage = "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
-    maintainers = ['xiaoye', 'gchavez2', 'balay']
+    tags = ['e4s']
+
+    maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels']
 
     version('develop', branch='master')
-    version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('6.4.0', sha256='cb9c0b2ba4c28e5ed5817718ba19ae1dd63ccd30bc44c8b8252b54f5f04a44cc')
     version('6.3.1', sha256='3787c2755acd6aadbb4d9029138c293a7570a2ed228806676edcc7e1d3f5a1d3')
     version('6.3.0', sha256='daf3264706caccae2b8fd5a572e40275f1e128fa235cb7c21ee2f8051c11af95')
     version('6.2.0', sha256='15ad1badd81b41e37941dd124d06d3b92e51c4f0ff532ad23fb09c4ebfe6eb9e')
@@ -42,6 +44,8 @@ class SuperluDist(CMakePackage):
     depends_on('lapack')
     depends_on('parmetis')
     depends_on('metis@5:')
+
+    conflicts('+cuda', when='@:6.3')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
@@ -77,6 +81,15 @@ class SuperluDist(CMakePackage):
             args.append('-Denable_openmp=OFF')
             args.append('-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=ON')
 
+        if '+cuda' in spec:
+            args.append('-DTPL_ENABLE_CUDALIB=TRUE')
+            args.append('-DTPL_CUDA_LIBRARIES=-L%s -lcublas -lcudart'
+                        % spec['cuda'].libs.directories[0])
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch[0] != 'none':
+                args.append(
+                    '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
+
         if '+shared' in spec:
             args.append('-DBUILD_SHARED_LIBS:BOOL=ON')
         else:
@@ -90,3 +103,53 @@ class SuperluDist(CMakePackage):
         if name == 'cflags' and '%pgi' not in self.spec:
             flags.append('-std=c99')
         return (None, None, flags)
+
+    examples_src_dir = 'EXAMPLE'
+    mk_hdr = 'make.inc'
+    mk_hdr_in = mk_hdr + '.in'
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([self.examples_src_dir, self.mk_hdr])
+
+    def test(self):
+        mk_file = join_path(self.install_test_root, self.mk_hdr)
+        # Replace 'SRC' with 'lib' in the library's path
+        filter_file(r'^(DSUPERLULIB.+)SRC(.+)', '\\1lib\\2', mk_file)
+        # Set library flags for all libraries superlu-dist depends on
+        filter_file(r'^LIBS.+\+=.+', '', mk_file)
+        filter_file(r'^LIBS[^\+]+=.+', 'LIBS = $(DSUPERLULIB)' +
+                    ' {0}'.format(self.spec['blas'].libs.ld_flags) +
+                    ' {0}'.format(self.spec['lapack'].libs.ld_flags) +
+                    ' {0}'.format(self.spec['parmetis'].libs.ld_flags) +
+                    ' {0}'.format(self.spec['metis'].libs.ld_flags) +
+                    ' $(CUDALIBS)',
+                    mk_file)
+        cuda_lib_opts = ''
+        if '+cuda' in self.spec:
+            cuda_lib_opts = ',-rpath,{0}'.format(
+                            self.spec['cuda'].libs.directories[0])
+        # Set the rpath for all the libs
+        filter_file(r'^LOADOPTS.+', 'LOADOPTS = -Wl' +
+                    ',-rpath,{0}'.format(self.prefix.lib) +
+                    ',-rpath,{0}'.format(self.spec['blas'].prefix.lib) +
+                    ',-rpath,{0}'.format(self.spec['lapack'].prefix.lib) +
+                    ',-rpath,{0}'.format(self.spec['parmetis'].prefix.lib) +
+                    ',-rpath,{0}'.format(self.spec['metis'].prefix.lib) +
+                    cuda_lib_opts,
+                    mk_file)
+
+        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        test_exe = 'pddrive'
+        with working_dir(test_dir, create=False):
+            make(test_exe)
+            # Smoke test input parameters: -r 2 -c 2 g20.rua
+            test_args = ['-n', '4', test_exe, '-r', '2', '-c', '2', 'g20.rua']
+            # Find the correct mpirun command
+            mpiexe_f = which('srun', 'mpirun', 'mpiexec')
+            if mpiexe_f:
+                self.run_test(mpiexe_f.command, test_args, work_dir='.',
+                              purpose='superlu-dist smoke test')
+            make('clean')

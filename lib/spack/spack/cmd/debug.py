@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
 import spack.architecture as architecture
+import spack.config
 import spack.paths
 from spack.main import get_version
 from spack.util.executable import which
@@ -73,6 +74,7 @@ def create_db_tarball(args):
     wd = os.path.dirname(str(spack.store.root))
     with working_dir(wd):
         files = [spack.store.db._index_path]
+        files += glob('%s/*/*/*/.spack/spec.json' % base)
         files += glob('%s/*/*/*/.spack/spec.yaml' % base)
         files = [os.path.relpath(f) for f in files]
 
@@ -89,6 +91,7 @@ def report(args):
     print('* **Python:**', platform.python_version())
     print('* **Platform:**', architecture.Arch(
         architecture.platform(), 'frontend', 'frontend'))
+    print('* **Concretizer:**', spack.config.get('config:concretizer'))
 
 
 def debug(parser, args):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,11 +24,17 @@ class Upcxx(Package):
 
     homepage = "https://upcxx.lbl.gov"
     maintainers = ['bonachea']
+    git = 'https://bitbucket.org/berkeleylab/upcxx.git'
 
-    git = 'https://bonachea@bitbucket.org/berkeleylab/upcxx.git'
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('master',  branch='master')
 
+    version('2021.3.0', sha256='3433714cd4162ffd8aad9a727c12dbf1c207b7d6664879fc41259a4b351595b7')
+    version('2020.11.0', sha256='f6f212760a485a9f346ca11bb4751e7095bbe748b8e5b2389ff9238e9e321317',
+            url='https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-2020.11.0-memory_kinds_prototype.tar.gz')
+    version('2020.10.0', sha256='623e074b512bf8cad770a04040272e1cc660d2749760398b311f9bcc9d381a37')
     version('2020.3.0', sha256='01be35bef4c0cfd24e9b3d50c88866521b9cac3ad4cbb5b1fc97aea55078810f')
     version('2019.9.0', sha256='7d67ccbeeefb59de9f403acc719f52127a30801a2c2b9774a1df03f850f8f1d4')
     version('2019.3.2', sha256='dcb0b337c05a0feb2ed5386f5da6c60342412b49cab10f282f461e74411018ad')
@@ -46,10 +52,17 @@ class Upcxx(Package):
               msg='cross=none is unacceptable on Cray.' +
                   'Please specify an appropriate "cross" value')
 
+    # UPC++ always relies on GASNet-EX.
+    # The default (and recommendation) is to use the implicit, embedded version.
+    # This variant allows overriding with a particular version of GASNet-EX sources.
+    variant('gasnet', default=False,
+            description="Override embedded GASNet-EX version")
+    depends_on('gasnet conduits=none', when='+gasnet')
+
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
     # Require Python2 2.7.5+ up to v2019.9.0
-    depends_on('python@2.7.5:2.999',
+    depends_on('python@2.7.5:2',
                type=("build", "run"), when='@:2019.9.0')
     # v2020.3.0 and later also permit Python3
     depends_on('python@2.7.5:', type=("build", "run"), when='@2020.3.0:')
@@ -116,6 +129,8 @@ class Upcxx(Package):
                     env['CXX'] = spec['mpi'].mpicxx
             else:
                 env['CXX'] = self.compiler.cxx
+            if '+gasnet' in self.spec:
+                env['GASNET'] = spec['gasnet'].prefix.src
             installsh = Executable("./install")
             installsh(prefix)
         else:
@@ -146,12 +161,18 @@ class Upcxx(Package):
             env['CC'] = real_cc
             env['CXX'] = real_cxx
 
-            installsh = Executable("./configure")
-            installsh('--prefix=' + prefix)
+            options = ["--prefix=%s" % prefix]
+
+            if '+gasnet' in self.spec:
+                options.append('--with-gasnet=' + spec['gasnet'].prefix.src)
+
+            configure(*options)
 
             make()
 
             make('install')
+
+        install_tree('example', prefix.example)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -171,3 +192,15 @@ class Upcxx(Package):
             if 'cross=none' in self.spec:
                 make('run-tests', 'NETWORKS=smp')  # runs tests for smp backend
             make('tests-clean')  # cleanup
+
+    def test(self):
+        if self.spec.version <= Version('2019.9.0'):
+            spack.main.send_warning_to_tty(
+                "post-install tests not supported in UPC++ version " +
+                self.spec.version.string + " -- SKIPPED")
+        else:   # run post-install smoke test:
+            test_install = join_path(self.prefix.bin, 'test-upcxx-install.sh')
+            self.run_test(test_install, expected=['SUCCESS'], status=0,
+                          installed=True,
+                          purpose='Checking UPC++ compile+link ' +
+                                  'for all installed backends')

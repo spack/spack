@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import os
 import re
 
 import llnl.util.tty as tty
+
 from spack.util.prefix import Prefix
 
 
@@ -15,7 +16,7 @@ class Jdk(Package):
     form of a binary product aimed at Java developers. Includes a complete JRE
     plus tools for developing, debugging, and monitoring Java applications."""
 
-    homepage = "http://www.oracle.com/technetwork/java/javase/downloads/index.html"
+    homepage = "https://www.oracle.com/technetwork/java/javase/downloads/index.html"
 
     maintainers = ['justintoo']
 
@@ -59,14 +60,14 @@ class Jdk(Package):
     version('1.8.0_131-b11', sha256='62b215bdfb48bace523723cdbb2157c665e6a25429c73828a32f00e587301236',
             url='https://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz')
 
-    provides('java@14', when='@14.0:14.999')
-    provides('java@13', when='@13.0:13.999')
-    provides('java@12', when='@12.0:12.999')
-    provides('java@11', when='@11.0:11.999')
-    provides('java@10', when='@10.0:10.999')
-    provides('java@9',  when='@9.0:9.999')
-    provides('java@8',  when='@1.8.0:1.8.999')
-    provides('java@7',  when='@1.7.0:1.7.999')
+    provides('java@14', when='@14.0:14')
+    provides('java@13', when='@13.0:13')
+    provides('java@12', when='@12.0:12')
+    provides('java@11', when='@11.0:11')
+    provides('java@10', when='@10.0:10')
+    provides('java@9',  when='@9.0:9')
+    provides('java@8',  when='@1.8.0:1.8')
+    provides('java@7',  when='@1.7.0:1.7')
 
     conflicts('target=ppc64:', msg='jdk is only available for x86_64')
     conflicts('target=ppc64le:', msg='jdk is only available for x86_64')
@@ -155,11 +156,13 @@ Spack will think it is a variant. Add JDK as an external package by running:
 and adding entries for each installation:
 
     packages:
-        jdk:
-            paths:
-                jdk@10.0.1_10:    /path/to/jdk/Home
-                jdk@1.7.0_45-b18: /path/to/jdk/Home
-            buildable: False""".format(self.homepage)
+      jdk:
+        buildable: False
+        externals:
+        - spec: jdk@10.0.1_10
+          prefix: /path/to/jdk/Home
+        - spec: jdk@1.7.0_45-b18
+          prefix: /path/to/jdk/Home""".format(self.homepage)
 
             tty.die(msg)
 

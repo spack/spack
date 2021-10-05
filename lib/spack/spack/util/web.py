@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,32 +18,30 @@ import traceback
 
 import six
 from six.moves.urllib.error import URLError
-from six.moves.urllib.request import urlopen, Request
+from six.moves.urllib.request import Request, urlopen
 
-try:
-    # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParser, HTMLParseError  # novm
-except ImportError:
-    # In Python 3, things moved to html.parser
-    from html.parser import HTMLParser
-
-    # Also, HTMLParseError is deprecated and never raised.
-    class HTMLParseError(Exception):
-        pass
-
-from llnl.util.filesystem import mkdirp
+import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 
-import spack.cmd
 import spack.config
 import spack.error
 import spack.url
 import spack.util.crypto
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
-
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
+if sys.version_info < (3, 0):
+    # Python 2 had these in the HTMLParser package.
+    from HTMLParser import HTMLParseError, HTMLParser  # novm
+else:
+    # In Python 3, things moved to html.parser
+    from html.parser import HTMLParser
+
+    # Also, HTMLParseError is deprecated and never raised.
+    class HTMLParseError(Exception):
+        pass
 
 # Timeout in seconds for web requests
 _timeout = 10
@@ -105,7 +103,8 @@ def read_from_url(url, accept_content_type=None):
         else:
             # User has explicitly indicated that they do not want SSL
             # verification.
-            context = ssl._create_unverified_context()
+            if not __UNABLE_TO_VERIFY_SSL:
+                context = ssl._create_unverified_context()
 
     req = Request(url_util.format(url))
     content_type = None
@@ -210,11 +209,10 @@ def url_exists(url):
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
-        from botocore.exceptions import ClientError
         try:
-            s3.get_object(Bucket=url.netloc, Key=url.path)
+            s3.get_object(Bucket=url.netloc, Key=url.path.lstrip('/'))
             return True
-        except ClientError as err:
+        except s3.ClientError as err:
             if err.response['Error']['Code'] == 'NoSuchKey':
                 return False
             raise err
@@ -224,21 +222,61 @@ def url_exists(url):
     try:
         read_from_url(url)
         return True
-    except URLError:
+    except (SpackWebError, URLError):
         return False
 
 
-def remove_url(url):
+def _debug_print_delete_results(result):
+    if 'Deleted' in result:
+        for d in result['Deleted']:
+            tty.debug('Deleted {0}'.format(d['Key']))
+    if 'Errors' in result:
+        for e in result['Errors']:
+            tty.debug('Failed to delete {0} ({1})'.format(
+                e['Key'], e['Message']))
+
+
+def remove_url(url, recursive=False):
     url = url_util.parse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
-        os.remove(local_path)
+        if recursive:
+            shutil.rmtree(local_path)
+        else:
+            os.remove(local_path)
         return
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
-        s3.delete_object(Bucket=url.netloc, Key=url.path)
+        bucket = url.netloc
+        if recursive:
+            # Because list_objects_v2 can only return up to 1000 items
+            # at a time, we have to paginate to make sure we get it all
+            prefix = url.path.strip('/')
+            paginator = s3.get_paginator('list_objects_v2')
+            pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
+
+            delete_request = {'Objects': []}
+            for item in pages.search('Contents'):
+                if not item:
+                    continue
+
+                delete_request['Objects'].append({'Key': item['Key']})
+
+                # Make sure we do not try to hit S3 with a list of more
+                # than 1000 items
+                if len(delete_request['Objects']) >= 1000:
+                    r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
+                    _debug_print_delete_results(r)
+                    delete_request = {'Objects': []}
+
+            # Delete any items that remain
+            if len(delete_request['Objects']):
+                r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
+                _debug_print_delete_results(r)
+        else:
+            s3.delete_object(Bucket=bucket, Key=url.path.lstrip('/'))
         return
 
     # Don't even try for other URL schemes.
@@ -295,15 +333,27 @@ def _iter_s3_prefix(client, url, num_entries=1024):
             break
 
 
-def list_url(url):
+def _iter_local_prefix(path):
+    for root, _, files in os.walk(path):
+        for f in files:
+            yield os.path.relpath(os.path.join(root, f), path)
+
+
+def list_url(url, recursive=False):
     url = url_util.parse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
-        return os.listdir(local_path)
+        if recursive:
+            return list(_iter_local_prefix(local_path))
+        return [subpath for subpath in os.listdir(local_path)
+                if os.path.isfile(os.path.join(local_path, subpath))]
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
+        if recursive:
+            return list(_iter_s3_prefix(s3, url))
+
         return list(set(
             key.split('/', 1)[0]
             for key in _iter_s3_prefix(s3, url)))
@@ -316,7 +366,7 @@ def spider(root_urls, depth=0, concurrency=32):
     up to <depth> levels of links from each root.
 
     Args:
-        root_urls (str or list of str): root urls used as a starting point
+        root_urls (str or list): root urls used as a starting point
             for spidering
         depth (int): level of recursion into links
         concurrency (int): number of simultaneous requests that can be sent
@@ -412,12 +462,6 @@ def spider(root_urls, depth=0, concurrency=32):
 
         return pages, links, subcalls
 
-    # TODO: Needed until we drop support for Python 2.X
-    def star(func):
-        def _wrapper(args):
-            return func(*args)
-        return _wrapper
-
     if isinstance(root_urls, six.string_types):
         root_urls = [root_urls]
 
@@ -438,7 +482,7 @@ def spider(root_urls, depth=0, concurrency=32):
             tty.debug("SPIDER: [depth={0}, max_depth={1}, urls={2}]".format(
                 current_depth, depth, len(spider_args))
             )
-            results = tp.map(star(_spider), spider_args)
+            results = tp.map(llnl.util.lang.star(_spider), spider_args)
             spider_args = []
             collect = current_depth < depth
             for sub_pages, sub_links, sub_spider_args in results:
@@ -463,9 +507,9 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
-    # We don't pass 'context' parameter because it was only introduced starting
+    # Note: 'context' parameter was only introduced starting
     # with versions 2.7.9 and 3.4.3 of Python.
-    if 'context' in kwargs:
+    if __UNABLE_TO_VERIFY_SSL:
         del kwargs['context']
 
     opener = urlopen
@@ -473,7 +517,13 @@ def _urlopen(req, *args, **kwargs):
         import spack.s3_handler
         opener = spack.s3_handler.open
 
-    return opener(req, *args, **kwargs)
+    try:
+        return opener(req, *args, **kwargs)
+    except TypeError as err:
+        # If the above fails because of 'context', call without 'context'.
+        if 'context' in kwargs and 'context' in str(err):
+            del kwargs['context']
+        return opener(req, *args, **kwargs)
 
 
 def find_versions_of_archive(
@@ -542,7 +592,10 @@ def find_versions_of_archive(
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        url_regex += r'(\/download)?$'
+        url_regex += r'(\/download)?'
+        # PyPI adds #sha256=... to the end of the URL
+        url_regex += '(#sha256=.*)?'
+        url_regex += '$'
 
         regexes.append(url_regex)
 

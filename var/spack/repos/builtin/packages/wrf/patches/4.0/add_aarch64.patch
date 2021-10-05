@@ -1,0 +1,124 @@
+From 34c03dc455dc7b18d3d0c6489075d63c66fbb5be Mon Sep 17 00:00:00 2001
+From: Phil Tooley <phil.tooley@nag.co.uk>
+Date: Fri, 16 Oct 2020 13:20:24 +0100
+Subject: [PATCH] add aarch64 gcc support
+
+---
+ arch/configure.defaults | 101 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 101 insertions(+)
+
+diff --git a/arch/configure.defaults b/arch/configure.defaults
+index 6ecf44ed..fb7694b8 100644
+--- a/arch/configure.defaults
++++ b/arch/configure.defaults
+@@ -1917,6 +1917,107 @@ RANLIB          =      ranlib
+ RLFLAGS		=	
+ CC_TOOLS        =      $(SCC) 
+ 
++###########################################################
++#ARCH    CYGWIN_NT i686 x86_64 Cygwin, gfortran compiler with gcc  #serial smpar dmpar dm+sm
++#
++DESCRIPTION     =       GNU ($SFC/$SCC)
++DMPARALLEL      =       # 1
++OMPCPP          =       # -D_OPENMP
++OMP             =       # -fopenmp
++OMPCC           =       # -fopenmp
++SFC             =       gfortran
++SCC             =       gcc
++CCOMP           =       gcc
++DM_FC           =       mpif90
++DM_CC           =       mpicc
++FC              =       CONFIGURE_FC
++CC              =       CONFIGURE_CC
++LD              =       $(FC)
++RWORDSIZE       =       CONFIGURE_RWORDSIZE
++PROMOTION       =       #-fdefault-real-8
++ARCH_LOCAL      =       -DNONSTANDARD_SYSTEM_SUBR  -DWRF_USE_CLM
++CFLAGS_LOCAL    =       -w -O3 -c
++LDFLAGS_LOCAL   =       
++CPLUSPLUSLIB    =       
++ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
++FCOPTIM         =       -O2 -ftree-vectorize -funroll-loops
++FCREDUCEDOPT	=       $(FCOPTIM)
++FCNOOPT		=       -O0
++FCDEBUG         =       # -g $(FCNOOPT) # -ggdb -fbacktrace
++FORMAT_FIXED    =       -ffixed-form
++FORMAT_FREE     =       -ffree-form -ffree-line-length-none
++FCSUFFIX        =       
++BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FFLAGS)
++FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
++MODULE_SRCH_FLAG =     
++TRADFLAG        =      -traditional
++CPP             =      /lib/cpp -P
++AR              =      ar
++ARFLAGS         =      ru
++M4              =      m4 -G
++RANLIB          =      ranlib
++RLFLAGS		=	
++CC_TOOLS        =      $(SCC)
++
++LIB_EXTERNAL    = \
++                     $(WRF_SRC_ROOT_DIR)/external/io_netcdf/libwrfio_nf.a CONFIGURE_NETCDF_PATH/lib/libnetcdf.dll.a \
++		     -L CONFIGURE_NETCDF_PATH -lnetcdff -lnetcdf -lnetcdf -ltirpc -lhdf5_hl -lhdf5 -lm -lz \
++		     CONFIGURE_GRIB2_LIB
++ESMF_IO_LIB     =    $(WRF_SRC_ROOT_DIR)/external/esmf_time_f90/libesmf_time.a
++LIB_BUNDLED     = \
++                     $(WRF_SRC_ROOT_DIR)/external/fftpack/fftpack5/libfftpack.a \
++                     $(WRF_SRC_ROOT_DIR)/external/io_grib1/libio_grib1.a \
++                     $(WRF_SRC_ROOT_DIR)/external/io_grib_share/libio_grib_share.a \
++                     $(WRF_SRC_ROOT_DIR)/external/io_int/libwrfio_int.a \
++                     $(ESMF_IO_LIB) \
++                     CONFIGURE_COMMS_LIB \
++                     $(WRF_SRC_ROOT_DIR)/frame/module_internal_header_util.o \
++                     $(WRF_SRC_ROOT_DIR)/frame/pack_utils.o
++
++###########################################################
++#ARCH    Linux aarch64, gfortran compiler with gcc  #serial smpar dmpar dm+sm
++#
++DESCRIPTION     =       Arm GNU ($SFC/$SCC): Aarch64
++DMPARALLEL      =       # 1
++OMPCPP          =       # -D_OPENMP
++OMP             =       # -fopenmp
++OMPCC           =       # -fopenmp
++SFC             =       gfortran
++SCC             =       gcc
++CCOMP           =       gcc
++DM_FC           =       mpif90 
++DM_CC           =       mpicc -DMPI2_SUPPORT
++FC              =       CONFIGURE_FC
++CC              =       CONFIGURE_CC
++LD              =       $(FC)
++RWORDSIZE       =       CONFIGURE_RWORDSIZE
++PROMOTION       =       #-fdefault-real-8
++ARCH_LOCAL      =       -DNONSTANDARD_SYSTEM_SUBR  -DWRF_USE_CLM
++CFLAGS_LOCAL    =       -w -O3 -c -march=native -mtune=native
++DFLAGS_LOCAL   =       
++CPLUSPLUSLIB    =       
++ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
++FCOPTIM         =       -O3 -ftree-vectorize -funroll-loops -march=native -mtune=native
++FCREDUCEDOPT	=       $(FCOPTIM)
++FCNOOPT		=       -O0
++FCDEBUG         =       -g # -g $(FCNOOPT) # -ggdb -fbacktrace -fcheck=bounds,do,mem,pointer -ffpe-trap=invalid,zero,overflow
++FORMAT_FIXED    =       -ffixed-form
++FORMAT_FREE     =       -ffree-form -ffree-line-length-none
++FCSUFFIX        =       
++BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
++FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO)
++FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
++MODULE_SRCH_FLAG =     
++TRADFLAG        =      CONFIGURE_TRADFLAG
++CPP             =      /lib/cpp CONFIGURE_CPPFLAGS
++AR              =      ar
++ARFLAGS         =      ru
++M4              =      m4 -G
++RANLIB          =      ranlib
++RLFLAGS		=	
++CC_TOOLS        =      $(SCC) 
++
+ #insert new stanza here
+ 
+ ###########################################################
+-- 
+2.28.0
+

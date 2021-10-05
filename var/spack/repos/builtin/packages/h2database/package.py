@@ -1,12 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class H2database(Package):
+class H2database(MavenPackage):
     """H2 is an embeddable RDBMS written in Java."""
 
     homepage = "https://h2database.com"
@@ -23,15 +21,4 @@ class H2database(Package):
     version('1.4.192', sha256='b5f370d7256cf816696a28acd282ed10bf8a05e09b814bf79d4527509846c977')
     version('1.4.191', sha256='9890adc66979647b131242e87ad1498b906c0dcc041d25fcb24ff304b86b4f98')
 
-    depends_on('maven', type='build')
-    depends_on('java', type=('build', 'run'))
-
-    @property
-    def build_directory(self):
-        return 'h2'
-
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            mvn = which('mvn')
-            mvn('install', '-DskipTests')
-            install_tree('.', prefix)
+    build_directory = 'h2'

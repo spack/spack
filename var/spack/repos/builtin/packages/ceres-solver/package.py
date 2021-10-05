@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class CeresSolver(CMakePackage):
     homepage = "http://ceres-solver.org"
     url      = "http://ceres-solver.org/ceres-solver-1.12.0.tar.gz"
 
+    version('2.0.0',  sha256='10298a1d75ca884aa0507d1abb0e0f04800a92871cd400d4c361b56a777a7603')
     version('1.14.0', sha256='4744005fc3b902fed886ea418df70690caa8e2ff6b5a90f3dd88a3d291ef8e8e')
     version('1.12.0', sha256='745bfed55111e086954126b748eb9efe20e30be5b825c6dec3c525cf20afc895')
 

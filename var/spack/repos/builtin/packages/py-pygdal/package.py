@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class PyPygdal(PythonPackage):
     """
 
     homepage = "https://github.com/nextgis/pygdal"
-    url      = "https://pypi.io/packages/source/p/pygdal/pygdal-3.0.1.5.tar.gz"
+    pypi = "pygdal/pygdal-3.0.1.5.tar.gz"
 
     version('3.0.4.6', sha256='8e39b58cd9465bb5f41786a7cf6a62df93334c104db05a5bfb8181a0be276b86')
     version('3.0.1.5', sha256='1222f69fe5e6b632d0d2a42d3acb8fac80fb4577c05e01969d8cd5548192ccaa')

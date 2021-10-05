@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -99,7 +99,7 @@ username is not already in the path, Spack will append the value of ``$user`` to
 the selected ``build_stage`` path.
 
 .. warning:: We highly recommend specifying ``build_stage`` paths that
-   distinguish between staging and other activities to ensure 
+   distinguish between staging and other activities to ensure
    ``spack clean`` does not inadvertently remove unrelated files.
    Spack prepends ``spack-stage-`` to temporary staging directory names to
    reduce this risk.  Using a combination of ``spack`` and or ``stage`` in
@@ -202,28 +202,30 @@ of builds.
 
 Unless overridden in a package or on the command line, Spack builds all
 packages in parallel. The default parallelism is equal to the number of
-cores on your machine, up to 16. Parallelism cannot exceed the number of
-cores available on the host. For a build system that uses Makefiles, this
-means running:
+cores available to the process, up to 16 (the default of ``build_jobs``).
+For a build system that uses Makefiles, this ``spack install`` runs:
 
 - ``make -j<build_jobs>``, when ``build_jobs`` is less than the number of
-  cores on the machine
+  cores available
 - ``make -j<ncores>``, when ``build_jobs`` is greater or equal to the
-  number of cores on the machine
+  number of cores available
 
 If you work on a shared login node or have a strict ulimit, it may be
 necessary to set the default to a lower value. By setting ``build_jobs``
 to 4, for example, commands like ``spack install`` will run ``make -j4``
-instead of hogging every core.
+instead of hogging every core. To build all software in serial,
+set ``build_jobs`` to 1.
 
-To build all software in serial, set ``build_jobs`` to 1.
+Note that specifying the number of jobs on the command line always takes
+priority, so that ``spack install -j<n>`` always runs `make -j<n>`, even
+when that exceeds the number of cores available.
 
 --------------------
 ``ccache``
 --------------------
 
 When set to ``true`` Spack will use ccache to cache compiles. This is
-useful specifically in two cases: (1) when using ``spack setup``, and (2)
+useful specifically in two cases: (1) when using ``spack dev-build``, and (2)
 when building the same package with many different variants. The default is
 ``false``.
 

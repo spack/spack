@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,8 +35,6 @@ class Mapnik(AutotoolsPackage):
     depends_on('gdal', type=('build', 'link', 'run'))
     depends_on('sqlite+rtree', type=('build', 'link', 'run'))
     depends_on('libwebp')
-
-    conflicts('%gcc@9.0.0:')
 
     def setup_build_environment(self, env):
         spec = self.spec

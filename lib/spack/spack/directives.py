@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,12 +27,13 @@ The available directives are:
   * ``version``
 
 """
-
-import collections
 import functools
 import os.path
 import re
-from six import string_types
+import sys
+from typing import List, Set  # novm
+
+import six
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -42,15 +43,21 @@ import spack.patch
 import spack.spec
 import spack.url
 import spack.variant
-from spack.dependency import Dependency, default_deptype, canonical_deptype
+from spack.dependency import Dependency, canonical_deptype, default_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version, VersionChecksumError
 
-__all__ = []
+if sys.version_info >= (3, 3):
+    from collections.abc import Sequence  # novm
+else:
+    from collections import Sequence
+
+
+__all__ = ['DirectiveError', 'DirectiveMeta']
 
 #: These are variant names used by Spack internally; packages can't use them
-reserved_names = ['patches']
+reserved_names = ['patches', 'dev_path']
 
 _patch_order_index = 0
 
@@ -78,7 +85,7 @@ def make_when_spec(value):
     as part of concretization.
 
     Arguments:
-        value (Spec or bool): a conditional Spec or a constant ``bool``
+        value (spack.spec.Spec or bool): a conditional Spec or a constant ``bool``
            value indicating when a directive should be applied.
 
     """
@@ -103,8 +110,9 @@ class DirectiveMeta(type):
     """
 
     # Set of all known directives
-    _directive_names = set()
-    _directives_to_be_executed = []
+    _directive_names = set()  # type: Set[str]
+    _directives_to_be_executed = []  # type: List[str]
+    _when_constraints_from_context = []  # type: List[str]
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -159,6 +167,16 @@ class DirectiveMeta(type):
         super(DirectiveMeta, cls).__init__(name, bases, attr_dict)
 
     @staticmethod
+    def push_to_context(when_spec):
+        """Add a spec to the context constraints."""
+        DirectiveMeta._when_constraints_from_context.append(when_spec)
+
+    @staticmethod
+    def pop_from_context():
+        """Pop the last constraint from the context"""
+        return DirectiveMeta._when_constraints_from_context.pop()
+
+    @staticmethod
     def directive(dicts=None):
         """Decorator for Spack directives.
 
@@ -169,11 +187,15 @@ class DirectiveMeta(type):
 
         Here's an example directive:
 
+        .. code-block:: python
+
             @directive(dicts='versions')
             version(pkg, ...):
                 ...
 
         This directive allows you write:
+
+        .. code-block:: python
 
             class Foo(Package):
                 version(...)
@@ -196,15 +218,16 @@ class DirectiveMeta(type):
         This is just a modular way to add storage attributes to the
         Package class, and it's how Spack gets information from the
         packages to the core.
-
         """
         global __all__
 
-        if isinstance(dicts, string_types):
+        if isinstance(dicts, six.string_types):
             dicts = (dicts, )
-        if not isinstance(dicts, collections.Sequence):
+
+        if not isinstance(dicts, Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
+
         # Add the dictionary names if not already there
         DirectiveMeta._directive_names |= set(dicts)
 
@@ -214,6 +237,23 @@ class DirectiveMeta(type):
 
             @functools.wraps(decorated_function)
             def _wrapper(*args, **kwargs):
+                # Inject when arguments from the context
+                if DirectiveMeta._when_constraints_from_context:
+                    # Check that directives not yet supporting the when= argument
+                    # are not used inside the context manager
+                    if decorated_function.__name__ in ('version', 'variant'):
+                        msg = ('directive "{0}" cannot be used within a "when"'
+                               ' context since it does not support a "when=" '
+                               'argument')
+                        msg = msg.format(decorated_function.__name__)
+                        raise DirectiveError(msg)
+
+                    when_spec_from_context = ' '.join(
+                        DirectiveMeta._when_constraints_from_context
+                    )
+                    when_spec = kwargs.get('when', '') + ' ' + when_spec_from_context
+                    kwargs['when'] = when_spec
+
                 # If any of the arguments are executors returned by a
                 # directive passed as an argument, don't execute them
                 # lazily. Instead, let the called directive handle them.
@@ -243,7 +283,7 @@ class DirectiveMeta(type):
 
                 # ...so if it is not a sequence make it so
                 values = result
-                if not isinstance(values, collections.Sequence):
+                if not isinstance(values, Sequence):
                     values = (values, )
 
                 DirectiveMeta._directives_to_be_executed.extend(values)
@@ -269,6 +309,9 @@ def version(ver, checksum=None, **kwargs):
 
     The ``dict`` of arguments is turned into a valid fetch strategy for
     code packages later. See ``spack.fetch_strategy.for_package_version()``.
+
+    Keyword Arguments:
+        deprecated (bool): whether or not this version is deprecated
     """
     def _execute_version(pkg):
         if checksum is not None:
@@ -299,8 +342,18 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
 
     # call this patches here for clarity -- we want patch to be a list,
     # but the caller doesn't have to make it one.
-    if patches and dep_spec.virtual:
-        raise DependencyPatchError("Cannot patch a virtual dependency.")
+
+    # Note: we cannot check whether a package is virtual in a directive
+    # because directives are run as part of class instantiation, and specs
+    # instantiate the package class as part of the `virtual` check.
+    # To be technical, specs only instantiate the package class as part of the
+    # virtual check if the provider index hasn't been created yet.
+    # TODO: There could be a cache warming strategy that would allow us to
+    # ensure `Spec.virtual` is a valid thing to call in a directive.
+    # For now, we comment out the following check to allow for virtual packages
+    # with package files.
+    # if patches and dep_spec.virtual:
+    #     raise DependencyPatchError("Cannot patch a virtual dependency.")
 
     # ensure patches is a list
     if patches is None:
@@ -309,7 +362,7 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
         patches = [patches]
 
     # auto-call patch() directive on any strings in patch list
-    patches = [patch(p) if isinstance(p, string_types) else p
+    patches = [patch(p) if isinstance(p, six.string_types) else p
                for p in patches]
     assert all(callable(p) for p in patches)
 
@@ -343,8 +396,8 @@ def conflicts(conflict_spec, when=None, msg=None):
         conflicts('%intel', when='+foo')
 
     Args:
-        conflict_spec (Spec): constraint defining the known conflict
-        when (Spec): optional constraint that triggers the conflict
+        conflict_spec (spack.spec.Spec): constraint defining the known conflict
+        when (spack.spec.Spec): optional constraint that triggers the conflict
         msg (str): optional user defined message
     """
     def _execute_conflicts(pkg):
@@ -364,11 +417,11 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
     """Creates a dict of deps with specs defining when they apply.
 
     Args:
-        spec (Spec or str): the package and constraints depended on
-        when (Spec or str): when the dependent satisfies this, it has
+        spec (spack.spec.Spec or str): the package and constraints depended on
+        when (spack.spec.Spec or str): when the dependent satisfies this, it has
             the dependency represented by ``spec``
-        type (str or tuple of str): str or tuple of legal Spack deptypes
-        patches (obj or list): single result of ``patch()`` directive, a
+        type (str or tuple): str or tuple of legal Spack deptypes
+        patches (typing.Callable or list): single result of ``patch()`` directive, a
             ``str`` to be passed to ``patch``, or a list of these
 
     This directive is to be used inside a Package definition to declare
@@ -382,7 +435,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
 
 @directive(('extendees', 'dependencies'))
-def extends(spec, **kwargs):
+def extends(spec, type=('build', 'run'), **kwargs):
     """Same as depends_on, but allows symlinking into dependency's
     prefix tree.
 
@@ -403,7 +456,7 @@ def extends(spec, **kwargs):
         if not when_spec:
             return
 
-        _depends_on(pkg, spec, when=when)
+        _depends_on(pkg, spec, when=when, type=type)
         pkg.extendees[spec] = (spack.spec.Spec(spec), kwargs)
     return _execute_extends
 
@@ -446,7 +499,7 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
     Args:
         url_or_filename (str): url or relative filename of the patch
         level (int): patch level (as in the patch shell command)
-        when (Spec): optional anonymous spec that specifies when to apply
+        when (spack.spec.Spec): optional anonymous spec that specifies when to apply
             the patch
         working_dir (str): dir to change to before applying
 
@@ -510,12 +563,12 @@ def variant(
             specified otherwise the default will be False for a boolean
             variant and 'nothing' for a multi-valued variant
         description (str): description of the purpose of the variant
-        values (tuple or callable): either a tuple of strings containing the
+        values (tuple or typing.Callable): either a tuple of strings containing the
             allowed values, or a callable accepting one value and returning
             True if it is valid
         multi (bool): if False only one value per spec is allowed for
             this variant
-        validator (callable): optional group validator to enforce additional
+        validator (typing.Callable): optional group validator to enforce additional
             logic. It receives the package name, the variant name and a tuple
             of values and should raise an instance of SpackError if the group
             doesn't meet the additional constraints

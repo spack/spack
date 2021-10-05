@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,11 @@ import stat
 
 from six import string_types
 
-import spack.repo
 import spack.error
+import spack.repo
+from spack.config import ConfigError
 from spack.util.path import canonicalize_path
 from spack.version import VersionList
-from spack.config import ConfigError
 
 _lesser_spec_types = {'compiler': spack.spec.CompilerSpec,
                       'version': VersionList}
@@ -50,10 +50,11 @@ class PackagePrefs(object):
        provider_spec_list.sort(key=kf)
 
     """
-    def __init__(self, pkgname, component, vpkg=None):
+    def __init__(self, pkgname, component, vpkg=None, all=True):
         self.pkgname = pkgname
         self.component = component
         self.vpkg = vpkg
+        self.all = all
 
         self._spec_order = None
 
@@ -66,7 +67,7 @@ class PackagePrefs(object):
         """
         if self._spec_order is None:
             self._spec_order = self._specs_for_pkg(
-                self.pkgname, self.component, self.vpkg)
+                self.pkgname, self.component, self.vpkg, self.all)
         spec_order = self._spec_order
 
         # integer is the index of the first spec in order that satisfies
@@ -114,12 +115,13 @@ class PackagePrefs(object):
         return []
 
     @classmethod
-    def _specs_for_pkg(cls, pkgname, component, vpkg=None):
+    def _specs_for_pkg(cls, pkgname, component, vpkg=None, all=True):
         """Given a sort order specified by the pkgname/component/second_key,
            return a list of CompilerSpecs, VersionLists, or Specs for
            that sorting list.
         """
-        pkglist = cls.order_for_package(pkgname, component, vpkg)
+        pkglist = cls.order_for_package(
+            pkgname, component, vpkg, all)
         spec_type = _spec_type(component)
         return [spec_type(s) for s in pkglist]
 
@@ -157,7 +159,7 @@ def spec_externals(spec):
     """Return a list of external specs (w/external directory path filled in),
        one for each known external installation."""
     # break circular import.
-    from spack.util.module_cmd import path_from_modules # NOQA: ignore=F401
+    from spack.util.module_cmd import path_from_modules  # NOQA: ignore=F401
 
     allpkgs = spack.config.get('packages')
     names = set([spec.name])

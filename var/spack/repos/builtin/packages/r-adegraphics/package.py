@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RAdegraphics(RPackage):
     It is a complete re-implementation of the functions available in the 'ade4'
     package."""
 
-    homepage = "http://pbil.univ-lyon1.fr/ADE-4"
+    homepage = "https://pbil.univ-lyon1.fr/ADE-4"
     url      = "https://cloud.r-project.org/src/contrib/adegraphics_1.0-15.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/adegraphics"
 

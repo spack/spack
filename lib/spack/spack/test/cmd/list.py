@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,15 +33,15 @@ def test_list_search_description():
 
 
 def test_list_tags():
-    output = list('--tags', 'proxy-app')
+    output = list('--tag', 'proxy-app')
     assert 'cloverleaf3d' in output
     assert 'hdf5' not in output
 
-    output = list('--tags', 'hpc')
+    output = list('--tag', 'hpc')
     assert 'nek5000' in output
     assert 'mfem' in output
 
-    output = list('--tags', 'HPC')
+    output = list('--tag', 'HPC')
     assert 'nek5000' in output
     assert 'mfem' in output
 

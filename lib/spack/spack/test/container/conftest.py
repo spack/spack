@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,8 @@ def minimal_configuration():
             ],
             'container': {
                 'format': 'docker',
-                'base': {
-                    'image': 'ubuntu:18.04',
+                'images': {
+                    'os': 'ubuntu:18.04',
                     'spack': 'develop'
                 }
             }

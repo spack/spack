@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Librom(AutotoolsPackage):
@@ -42,16 +39,15 @@ class Librom(AutotoolsPackage):
     # TODO(oxberry1@llnl.gov): Submit PR upstream that implements
     # install phase in autotools
     def install(self, spec, prefix):
-        mkdirp(self.spec.prefix.lib)
-        install('libROM.a', join_path(self.spec.prefix.lib, 'libROM.a'))
+        mkdirp(prefix.lib)
+        install('libROM.a', join_path(prefix.lib, 'libROM.a'))
 
-        mkdirp(self.spec.prefix.include)
-        for f in glob.glob('*.h'):
-            install(f, join_path(self.spec.prefix.include, f))
+        mkdirp(prefix.include)
+        install('*.h', prefix.include)
 
-        mkdirp(self.spec.prefix.share)
+        mkdirp(prefix.share)
         install('libROM_Design_and_Theory.pdf',
-                join_path(self.spec.prefix.share,
+                join_path(prefix.share,
                           'libROM_Design_and_Theory.pdf'))
 
-        install_tree('docs', self.spec.prefix.share.docs)
+        install_tree('docs', prefix.share.docs)

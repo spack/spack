@@ -1,12 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+import os
+
 from spack import *
-from glob import glob
-from os.path import exists, join
-from os import makedirs
 
 
 class Ncurses(AutotoolsPackage, GNUMirrorPackage):
@@ -16,9 +16,11 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     characters and function-key mapping, and has all the other
     SYSV-curses enhancements over BSD curses."""
 
-    homepage = "http://invisible-island.net/ncurses/ncurses.html"
+    homepage = "https://invisible-island.net/ncurses/ncurses.html"
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "ncurses/ncurses-6.1.tar.gz"
+
+    executables = [r'^ncursesw?\d*-config$']
 
     version('6.2', sha256='30306e0c76e0f9f1f0de987cf1c82a5c21e1ce6568b9227f7da5b71cbea86c9d')
     version('6.1', sha256='aa057eeeb4a14d470101eff4597d5833dcef5965331be3528c08d99cebaa0d17')
@@ -30,11 +32,55 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     variant('termlib', default=True,
             description='Enables termlib features. This is an extra '
                         'lib and optional internal dependency.')
+    # Build ncurses with ABI compaitibility.
+    variant('abi', default='none', description='choose abi compatibility', values=('none', '5', '6'), multi=False)
+
+    conflicts('abi=6', when='@:5.9', msg='6 is not compatible with this release')
 
     depends_on('pkgconfig', type='build')
 
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
+
+    @classmethod
+    def determine_version(cls, exe):
+        return Executable(exe)('--version', output=str, error=str).rstrip()
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        results = []
+        for exe in exes:
+            variants = ''
+            output = Executable(exe)('--libs', output=str, error=str)
+
+            if '-ltinfo' in output:
+                variants += "+termlib"
+
+            output = Executable(exe)('--terminfo-dirs', output=str, error=str)
+            usingSymlinks = False
+            for termDir in output.split(':'):
+                for top, dirs, files in os.walk(termDir):
+                    for filename in files:
+                        if os.path.islink(os.path.join(top, filename)):
+                            usingSymlinks = True
+                            break
+                    if usingSymlinks:
+                        break
+                if usingSymlinks:
+                    break
+            if usingSymlinks:
+                variants += '+symlinks'
+
+            abiVersion = 'none'
+            output = Executable(exe)('--abi-version', output=str, error=str)
+            if '6' in output:
+                abiVersion = '6'
+            elif '5' in output:
+                abiVersion = '5'
+            variants += ' abi=' + abiVersion
+
+            results.append(variants)
+        return results
 
     def setup_build_environment(self, env):
         env.unset('TERMINFO')
@@ -73,7 +119,12 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             opts.extend(('--with-termlib',
                          '--enable-termcap',
                          '--enable-getcap',
-                         '--enable-tcap-names'))
+                         '--enable-tcap-names',
+                         '--with-versioned-syms'))
+
+        abi = self.spec.variants['abi'].value
+        if abi != 'none':
+            opts.append('--with-abi-version=' + abi)
 
         prefix = '--prefix={0}'.format(prefix)
 
@@ -98,19 +149,19 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             make('install')
 
         # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
-        headers = glob(join(prefix.include, '*'))
+        headers = glob.glob(os.path.join(prefix.include, '*'))
         for p_dir in ['ncurses', 'ncursesw']:
-            path = join(prefix.include, p_dir)
-            if not exists(path):
-                makedirs(path)
+            path = os.path.join(prefix.include, p_dir)
+            if not os.path.exists(path):
+                os.makedirs(path)
             for header in headers:
                 install(header, path)
 
     @property
     def libs(self):
-        nc_libs = find_libraries(
-            ['libncurses', 'libncursesw'], root=self.prefix, recursive=True)
+        libraries = ['libncurses', 'libncursesw']
+
         if '+termlib' in self.spec:
-            nc_libs.extend(find_libraries(
-                ['libtinfo', 'libtinfow'], root=self.prefix, recursive=True))
-        return nc_libs
+            libraries += ['libtinfo', 'libtinfow']
+
+        return find_libraries(libraries, root=self.prefix, recursive=True)

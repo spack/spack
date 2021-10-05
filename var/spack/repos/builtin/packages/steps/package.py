@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Steps(CMakePackage):
     depends_on("petsc~debug+int64", when="+petsc")
     depends_on("python")
     depends_on("py-cython")
+
+    patch('for_aarch64.patch', when='target=aarch64:')
 
     def cmake_args(self):
         args = []

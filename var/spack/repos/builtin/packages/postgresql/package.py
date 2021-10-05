@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack import *
 
@@ -12,8 +14,8 @@ class Postgresql(AutotoolsPackage):
     that has earned it a strong reputation for reliability, data integrity, and
     correctness."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "https://www.postgresql.org/"
+    url      = "https://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
     list_url = "http://ftp.postgresql.org/pub/source"
     list_depth = 1
 
@@ -44,6 +46,7 @@ class Postgresql(AutotoolsPackage):
     variant('tcl', default=False, description='Enable Tcl bindings.')
     variant('gssapi', default=False,
             description='Build with GSSAPI functionality.')
+    variant('xml', default=False, description='Build with XML support.')
 
     depends_on('readline', when='lineedit=readline')
     depends_on('libedit', when='lineedit=libedit')
@@ -51,6 +54,7 @@ class Postgresql(AutotoolsPackage):
     depends_on('tcl', when='+tcl')
     depends_on('perl', when='+perl')
     depends_on('python', when='+python')
+    depends_on('libxml2', when='+xml')
 
     def configure_args(self):
         config_args = ["--with-openssl"]
@@ -77,10 +81,13 @@ class Postgresql(AutotoolsPackage):
         if '+tcl' in self.spec:
             config_args.append('--with-tcl')
 
+        if '+xml' in self.spec:
+            config_args.append('--with-libxml')
+
         return config_args
 
     def install(self, spec, prefix):
-        if '+client-only' in self.spec:
+        if '+client_only' in self.spec:
             for subdir in ('bin', 'include', 'interfaces', 'pl'):
                 with working_dir(os.path.join('src', subdir)):
                     make('install')

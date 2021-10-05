@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,14 @@ from spack import *
 
 
 class RGeneplotter(RPackage):
-    """Graphics related functions for Bioconductor."""
+    """Graphics related functions for Bioconductor
+
+    Functions for plotting genomic data."""
 
     homepage = "https://bioconductor.org/packages/geneplotter"
     git      = "https://git.bioconductor.org/packages/geneplotter.git"
 
+    version('1.68.0', commit='f1fea7e468fb24fdfa93ef4493600a4d8d183f69')
     version('1.62.0', commit='1fbaddde11014b453b131860409f89cd784e8e48')
     version('1.60.0', commit='6723a9fc0730e146187e79c2ddab6a68186dc5ad')
     version('1.58.0', commit='2b3f44804d61a40cfe7eaedf74ac9f5a054f7fde')

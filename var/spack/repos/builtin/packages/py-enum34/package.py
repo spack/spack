@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyEnum34(PythonPackage):
     """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
 
     homepage = "https://bitbucket.org/stoneleaf/enum34/src"
-    url      = "https://pypi.io/packages/source/e/enum34/enum34-1.1.6.tar.gz"
+    pypi = "enum34/enum34-1.1.6.tar.gz"
 
     version('1.1.6', sha256='8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1')
 

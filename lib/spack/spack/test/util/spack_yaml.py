@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ config_cmd = SpackCommand('config')
 
 def get_config_line(pattern, lines):
     """Get a configuration line that matches a particular pattern."""
-    line = next((l for l in lines if re.search(pattern, l)), None)
+    line = next((x for x in lines if re.search(pattern, x)), None)
     assert line is not None, 'no such line!'
     return line
 
@@ -57,7 +57,7 @@ def test_config_blame_with_override(config):
     """check blame for an element from an override scope"""
     config_file = config.get_config_filename('site', 'config')
 
-    with spack.config.override('config:install_tree', 'foobar'):
+    with spack.config.override('config:install_tree', {'root': 'foobar'}):
         check_blame('install_tree', 'overrides')
 
         check_blame('source_cache', config_file, 11)
@@ -65,3 +65,31 @@ def test_config_blame_with_override(config):
         check_blame('verify_ssl', config_file, 13)
         check_blame('checksum', config_file, 14)
         check_blame('dirty', config_file, 15)
+
+
+def test_config_blame_defaults():
+    """check blame for an element from an override scope"""
+    files = {}
+
+    def get_file_lines(filename):
+        if filename not in files:
+            with open(filename, "r") as f:
+                files[filename] = [""] + f.read().split("\n")
+        return files[filename]
+
+    config_blame = config_cmd("blame", "config")
+    for line in config_blame.split("\n"):
+        # currently checking only simple lines with dict keys
+        match = re.match(r"^([^:]+):(\d+)\s+([^:]+):\s+(.*)", line)
+
+        # check that matches are on the lines they say they are
+        if match:
+            filename, line, key, val = match.groups()
+            line = int(line)
+
+            if val.lower() in ("true", "false"):
+                val = val.lower()
+
+            lines = get_file_lines(filename)
+            assert key in lines[line]
+            assert val in lines[line]

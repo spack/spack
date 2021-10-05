@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,7 @@ class RAmpliqueso(RPackage):
     version('1.16.0', commit='25d2543ff9dedef4f966f999c95cdf87185d3bb3')
     version('1.14.0', commit='9a4c26ec594171279aba8ab7fe59c4a2ea09b06b')
 
+    depends_on('r+X', type=('build', 'run'))
     depends_on('r@2.15.0:', type=('build', 'run'))
     depends_on('r-rnaseqmap@2.17.1:', type=('build', 'run'))
     depends_on('r-knitr', type=('build', 'run'))

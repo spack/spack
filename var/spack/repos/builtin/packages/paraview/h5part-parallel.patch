@@ -1,0 +1,11 @@
+--- a/VTK/ThirdParty/h5part/vtkh5part/src/H5PartTypes.h	2020-10-12 17:56:08.942848601 -0400
++++ b/VTK/ThirdParty/h5part/vtkh5part/src/H5PartTypes.h	2020-10-12 17:56:50.656772295 -0400
+@@ -19,7 +19,7 @@
+ #endif
+  ;
+ 
+-#ifndef PARALLEL_IO
++#if !(defined(PARALLEL_IO) || defined(H5_HAVE_PARALLEL))
+ typedef unsigned long		MPI_Comm;
+ #endif
+ 

@@ -1,0 +1,44 @@
+--- spack-src/bwa/ksw.c.bak	2020-01-06 19:27:05.000000000 +0900
++++ spack-src/bwa/ksw.c	2020-09-02 16:33:44.405293034 +0900
+@@ -26,7 +26,7 @@
+ #include <stdlib.h>
+ #include <stdint.h>
+ #include <assert.h>
+-#include <emmintrin.h>
++#include <sse2neon.h>
+ #include "ksw.h"
+ 
+ #ifdef USE_MALLOC_WRAPPERS
+--- spack-src/fermi2/ksw.c.bak	2020-01-06 19:27:08.000000000 +0900
++++ spack-src/fermi2/ksw.c	2020-09-02 16:25:28.865284742 +0900
+@@ -25,7 +25,7 @@
+ 
+ #include <stdlib.h>
+ #include <stdint.h>
+-#include <emmintrin.h>
++#include <sse2neon.h>
+ #include "ksw.h"
+ 
+ #ifdef __GNUC__
+--- spack-src/seqtk/ksw.c.bak	2020-01-06 19:27:18.000000000 +0900
++++ spack-src/seqtk/ksw.c	2020-09-02 16:44:31.825298048 +0900
+@@ -25,7 +25,7 @@
+ 
+ #include <stdlib.h>
+ #include <stdint.h>
+-#include <emmintrin.h>
++#include <sse2neon.h>
+ #include "ksw.h"
+ 
+ #ifdef __GNUC__
+--- spack-src/trimadap/ksw.c.bak	2020-01-06 19:27:20.000000000 +0900
++++ spack-src/trimadap/ksw.c	2020-09-02 16:45:07.375298449 +0900
+@@ -26,7 +26,7 @@
+ #include <stdlib.h>
+ #include <stdint.h>
+ #include <string.h>
+-#include <emmintrin.h>
++#include <sse2neon.h>
+ #include "ksw.h"
+ 
+ #ifdef __GNUC__

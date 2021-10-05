@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RAdegenet(RPackage):
-    """Toolset for the exploration of genetic and genomic data. Adegenet
+    """Exploratory Analysis of Genetic and Genomic Data
+
+    Toolset for the exploration of genetic and genomic data. Adegenet
     provides formal (S4) classes for storing and handling various genetic
     data, including genetic markers with varying ploidy and hierarchical
     population structure ('genind' class), alleles counts by populations
@@ -21,6 +23,7 @@ class RAdegenet(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/adegenet_2.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/adegenet"
 
+    version('2.1.3', sha256='0790114ecb22642683b5be1f4b3a6a49856e06dc2f9e21b9cba4390c2257f6c6')
     version('2.1.1', sha256='3043fe5d731a38ff0e266f090dcda448640c3d0fd61934c76da32d082e5dce7a')
     version('2.1.0', sha256='7ee44061002b41164bbc09256307ab02e536f4f2ac03f36c7dc8f85f6af4639a')
     version('2.0.1', sha256='7eddf46e64f680d54d034b68c50900d9bd5bc2e08309d062e230121b7460bb10')
@@ -34,7 +37,7 @@ class RAdegenet(RPackage):
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-seqinr', type=('build', 'run'))
     depends_on('r-spdep', type=('build', 'run'))
+    depends_on('r-boot', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
     depends_on('r-dplyr@0.4.1:', type=('build', 'run'))
     depends_on('r-vegan', type=('build', 'run'))
-    depends_on('r-boot', type=('build', 'run'))

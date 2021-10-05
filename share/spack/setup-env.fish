@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -246,9 +246,46 @@ end
 
 
 
+function match_flag -d "checks all combinations of flags ocurring inside of a string"
+
+    # Remove leading and trailing spaces -- but we need to insert a "guard" (x)
+    # so that eg. `string trim -h` doesn't trigger the help string for `string trim`
+    set -l _a (string sub -s 2 (string trim "x$argv[1]"))
+    set -l _b (string sub -s 2 (string trim "x$argv[2]"))
+
+    if test -z "$_a"; or test -z "$_b"
+        return 0
+    end
+
+    # surrounded by spaced
+    if echo "$_a" | string match -r -q " +$_b +"
+        return 0
+    end
+
+    # beginning of string + trailing space
+    if echo "$_a" | string match -r -q "^$_b +"
+        return 0
+    end
+
+    # end of string + leadingg space
+    if echo "$_a" | string match -r -q " +$_b\$"
+        return 0
+    end
+
+    # entire string
+    if echo "$_a" | string match -r -q "^$_b\$"
+        return 0
+    end
+
+    return 1
+
+end
+
+
+
 function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, or --fish"
     #
-    # Check if inputs contain -h, --sh, --csh, or --fish
+    # Check if inputs contain -h/--help, --sh, --csh, or --fish
     #
 
     # combine argument array into single string (space seperated), to be passed
@@ -257,23 +294,29 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
 
     # skip if called with blank input. Notes: [1] (cf. EOF)
     if test -n "$_a"
-        # looks for a single `-h` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *-h *"
+
+        # looks for a single `-h`
+        if match_flag $_a "-h"
             return 0
         end
 
-        # looks for a single `--sh` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--sh *"
+        # looks for a single `--help`
+        if match_flag $_a "--help"
             return 0
         end
 
-        # looks for a single `--csh` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--csh *"
+        # looks for a single `--sh`
+        if match_flag $_a "--sh"
             return 0
         end
 
-        # looks for a single `--fish` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--fish *"
+        # looks for a single `--csh`
+        if match_flag $_a "--csh"
+            return 0
+        end
+
+        # looks for a single `--fish`
+        if match_flag $_a "--fish"
             return 0
         end
 
@@ -285,7 +328,7 @@ end
 
 function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, --csh, or --fish"
     #
-    # Check if inputs contain -h, --sh, --csh, or --fish
+    # Check if inputs contain --sh, --csh, or --fish
     #
 
     # combine argument array into single string (space seperated), to be passed
@@ -295,20 +338,18 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
     # skip if called with blank input. Notes: [1] (cf. EOF)
     if test -n "$_a"
 
-        # TODO: should this crash (we're clearly using fish, not bash, here)?
-        # looks for a single `--sh` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--sh *"
+        # looks for a single `--sh`
+        if match_flag $_a "--sh"
             return 0
         end
 
-        # TODO: should this crash (we're clearly using fish, not csh, here)?
-        # looks for a single `--csh` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--csh *"
+        # looks for a single `--csh`
+        if match_flag $_a "--csh"
             return 0
         end
 
-        # looks for a single `--fish` (possibly surrounded by spaces)
-        if echo $_a | string match -r -q " *--fish *"
+        # looks for a single `--fish`
+        if match_flag $_a "--fish"
             return 0
         end
 
@@ -627,6 +668,19 @@ set -l sp_source_file (status -f)  # name of current file
 
 
 #
+# Identify and lock the python interpreter
+#
+for cmd in "$SPACK_PYTHON" python3 python python2
+    set -l _sp_python (command -v "$cmd")
+    if test $status -eq 0
+        set -x SPACK_PYTHON $_sp_python
+        break
+    end
+end
+
+
+
+#
 # Find root directory and add bin to path.
 #
 set -l sp_share_dir (realpath (dirname $sp_source_file))
@@ -645,71 +699,73 @@ set -xg _sp_shell "fish"
 
 
 
-#
-# Check whether we need environment-variables (module) <= `use` is not available
-#
-set -l need_module "no"
-if not functions -q use; and not functions -q module
-    set need_module "yes"
-end
-
-
-
-#
-# Make environment-modules available to shell
-#
-function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
-
-    # convert `a='b' to array variable `a b`
-    set -l expr_token (string trim -c "'" (string split "=" $argv))
-
-    # run set command to takes, converting lists of type `a:b:c` to array
-    # variables `a b c` by splitting around the `:` character
-    set -xg $expr_token[1] (string split ":" $expr_token[2])
-end
-
-
-if test "$need_module" = "yes"
-    set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
-
-    for sp_var_expr in $sp_shell_vars
-        sp_apply_shell_vars $sp_var_expr
+if test -z "$SPACK_SKIP_MODULES"
+    #
+    # Check whether we need environment-variables (module) <= `use` is not available
+    #
+    set -l need_module "no"
+    if not functions -q use; and not functions -q module
+        set need_module "yes"
     end
 
-    # _sp_module_prefix is set by spack --print-sh-vars
-    if test "$_sp_module_prefix" != "not_installed"
-        set -xg MODULE_PREFIX $_sp_module_prefix
-        spack_pathadd PATH "$MODULE_PREFIX/bin"
+
+
+    #
+    # Make environment-modules available to shell
+    #
+    function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
+
+        # convert `a='b' to array variable `a b`
+        set -l expr_token (string trim -c "'" (string split "=" $argv))
+
+        # run set command to takes, converting lists of type `a:b:c` to array
+        # variables `a b c` by splitting around the `:` character
+        set -xg $expr_token[1] (string split ":" $expr_token[2])
     end
 
-else
 
-    set -l sp_shell_vars (command spack --print-shell-vars sh)
+    if test "$need_module" = "yes"
+        set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
 
-    for sp_var_expr in $sp_shell_vars
-        sp_apply_shell_vars $sp_var_expr
+        for sp_var_expr in $sp_shell_vars
+            sp_apply_shell_vars $sp_var_expr
+        end
+
+        # _sp_module_prefix is set by spack --print-sh-vars
+        if test "$_sp_module_prefix" != "not_installed"
+            set -xg MODULE_PREFIX $_sp_module_prefix
+            spack_pathadd PATH "$MODULE_PREFIX/bin"
+        end
+
+    else
+
+        set -l sp_shell_vars (command spack --print-shell-vars sh)
+
+        for sp_var_expr in $sp_shell_vars
+            sp_apply_shell_vars $sp_var_expr
+        end
+
     end
 
-end
-
-if test "$need_module" = "yes"
-    function module -d "wrapper for the `module` command to point at Spack's modules instance" --inherit-variable MODULE_PREFIX
-        eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
+    if test "$need_module" = "yes"
+        function module -d "wrapper for the `module` command to point at Spack's modules instance" --inherit-variable MODULE_PREFIX
+            eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
+        end
     end
+
+
+
+    #
+    # set module system roots
+    #
+
+    # Search of MODULESPATHS by trying all possible compatible system types as
+    # module roots.
+    if test -z "$MODULEPATH"
+        set -gx MODULEPATH
+    end
+    sp_multi_pathadd MODULEPATH $_sp_tcl_roots
 end
-
-
-
-#
-# set module system roots
-#
-
-# Search of MODULESPATHS by trying all possible compatible system types as
-# module roots.
-if test -z "$MODULEPATH"
-    set -gx MODULEPATH
-end
-sp_multi_pathadd MODULEPATH $_sp_tcl_roots
 
 
 

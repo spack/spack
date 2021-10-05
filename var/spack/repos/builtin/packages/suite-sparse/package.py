@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,15 @@ class SuiteSparse(Package):
     """
     SuiteSparse is a suite of sparse matrix algorithms
     """
-    homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
+    homepage = 'https://people.engr.tamu.edu/davis/suitesparse.html'
     url      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz'
     git      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse.git'
 
+    version('5.10.1', sha256='acb4d1045f48a237e70294b950153e48dce5b5f9ca8190e86c2b8c54ce00a7ee')
+    version('5.10.0', sha256='4bcc974901c0173acf80c41ee0fd779eb7dce2871d4afa24a5d15b1a468f93e5')
+    version('5.9.0', sha256='7bdd4811f1cf0767c5fdb5e435817fdadee50b0acdb598f4882ae7b8291a7f24')
+    version('5.8.1', sha256='06726e471fbaa55f792578f9b4ab282ea9d008cf39ddcc3b42b73400acddef40')
+    version('5.8.0', sha256='94a9b7134eb4dd82b97f1a22a6b464feb81e73af2dcdf683c6f252285191df1d')
     version('5.7.2', sha256='fe3bc7c3bd1efdfa5cffffb5cebf021ff024c83b5daf0ab445429d3d741bd3ad')
     version('5.7.1', sha256='5ba5add1663d51a1b6fb128b50fe869b497f3096765ff7f8212f0ede044b9557')
     version('5.6.0', sha256='76d34d9f6dafc592b69af14f58c1dc59e24853dcd7c2e8f4c98ffa223f6a1adb')
@@ -33,6 +38,8 @@ class SuiteSparse(Package):
     variant('cuda', default=False, description='Build with CUDA')
     variant('openmp', default=False, description='Build with OpenMP')
 
+    depends_on('mpfr@4.0.0:', type=('build', 'link'), when='@5.8.0:')
+    depends_on('gmp', type=('build', 'link'), when='@5.8.0:')
     depends_on('blas')
     depends_on('lapack')
     depends_on('m4', type='build', when='@5.0.0:')
@@ -49,10 +56,16 @@ class SuiteSparse(Package):
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
+    patch('pgi.patch', when='%nvhpc')
 
     # This patch adds '-lm' when linking libgraphblas and when using clang.
     # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
-    patch('graphblas_libm_dep.patch', when='@5.2.0:5.2.99%clang')
+    patch('graphblas_libm_dep.patch', when='@5.2.0:5.2%clang')
+
+    # CUDA-11 dropped sm_30 code generation, remove hardcoded sm_30 from makefile
+    # open issue: https://github.com/DrTimothyAldenDavis/SuiteSparse/issues/56
+    # Tested only with 5.9.0, previous versions probably work too
+    patch('fix_cuda11.patch', when='@5.9.0:+cuda ^cuda@11:')
 
     conflicts('%gcc@:4.8', when='@5.2.0:', msg='gcc version must be at least 4.9 for suite-sparse@5.2.0:')
 
@@ -114,8 +127,8 @@ class SuiteSparse(Package):
         # SuiteSparse defaults to using '-fno-common -fexceptions' in
         # CFLAGS, but not all compilers use the same flags for these
         # optimizations
-        if any([x in spec
-                for x in ('%apple-clang', '%clang', '%gcc', '%intel')]):
+        if any([x in spec for x in
+                ('%apple-clang', '%clang', '%gcc', '%intel', '%fj')]):
             make_args += ['CFLAGS+=-fno-common -fexceptions']
         elif '%pgi' in spec:
             make_args += ['CFLAGS+=--exceptions']
@@ -146,6 +159,13 @@ class SuiteSparse(Package):
 
         make_args.append('INSTALL=%s' % prefix)
         make('install', *make_args)
+
+    @run_after('install')
+    def fix_darwin_install(self):
+        # The shared libraries are not installed correctly on Darwin:
+        # See https://github.com/DrTimothyAldenDavis/SuiteSparse/issues/42
+        if '+pic platform=darwin' in self.spec:
+            fix_darwin_install_name(self.spec.prefix.lib)
 
     @property
     def libs(self):

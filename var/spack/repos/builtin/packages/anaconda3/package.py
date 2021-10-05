@@ -1,10 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from os.path import split
+
+from spack import *
 
 
 class Anaconda3(Package):
@@ -19,6 +20,10 @@ class Anaconda3(Package):
 
     maintainers = ['ajkotobi']
 
+    version('2021.05', sha256='2751ab3d678ff0277ae80f9e8a74f218cfc70fe9a9cdc7bb1c137d7e47e33d53', expand=False)
+    version('2020.11', sha256='cf2ff493f11eaad5d09ce2b4feaa5ea90db5174303d5b3fe030e16d29aeef7de', expand=False)
+    version('2020.07', sha256='38ce717758b95b3bd0b1797cc6ccfb76f29a90c25bdfa50ee45f11e583edfdbf', expand=False)
+    version('2020.02', sha256='2b9f088b2022edb474915d9f69a803d6449d5fdb4c303041f60ac4aefcc208bb', expand=False)
     version('2019.10', sha256='46d762284d252e51cd58a8ca6c8adc9da2eadc82c342927b2f66ed011d1d8b53', expand=False)
     version('2019.07', sha256='69581cf739365ec7fb95608eef694ba959d7d33b36eb961953f2b82cb25bdf5a', expand=False)
     version('2019.03', sha256='45c851b7497cc14d5ca060064394569f724b67d9b5f98a926ed49b834a6bb73a', expand=False)

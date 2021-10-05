@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,8 @@ class Verilator(AutotoolsPackage):
     homepage = "https://www.veripool.org/projects/verilator"
     url      = "https://www.veripool.org/ftp/verilator-3.920.tgz"
 
+    version('4.108', sha256='8e8ec1de0bf200b6206035214f9071a5acc64bd2e7134361d564271e48552702')
+    version('4.020', sha256='abd79fc2a54cab9da33dfccd669bda3baa71e79060abec17517f0b7374dbc31a')
     version('3.920', sha256='2b5c38aa432d0766a38475219f9548d64d18104ce8bdcb5d29e42f5da06943ff')
     version('3.904', sha256='ea95e08b2d70682ad42e6c2f5ba99f59b2e7b220791214076099cdf6b7a8c1cb')
 

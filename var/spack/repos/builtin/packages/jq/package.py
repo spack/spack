@@ -1,10 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os.path
+
+from spack import *
 
 
 class Jq(AutotoolsPackage):
@@ -21,7 +22,7 @@ class Jq(AutotoolsPackage):
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
-    def installtest(self):
+    def install_test(self):
         jq = self.spec['jq'].command
         f = os.path.join(os.path.dirname(__file__), 'input.json')
 

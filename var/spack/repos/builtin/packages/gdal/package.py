@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
 import sys
 
 
@@ -18,17 +18,21 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "https://www.gdal.org/"
-    url        = "https://download.osgeo.org/gdal/3.1.2/gdal-3.1.2.tar.xz"
+    url        = "https://download.osgeo.org/gdal/3.2.0/gdal-3.2.0.tar.xz"
     list_url   = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
     maintainers = ['adamjstewart']
 
-    import_modules = [
-        'osgeo', 'osgeo.gdal', 'osgeo.ogr', 'osgeo.osr',
-        'osgeo.gdal_array', 'osgeo.gdalconst'
-    ]
-
+    version('3.3.2',  sha256='630e34141cf398c3078d7d8f08bb44e804c65bbf09807b3610dcbfbc37115cc3')
+    version('3.3.1',  sha256='48ab00b77d49f08cf66c60ccce55abb6455c3079f545e60c90ee7ce857bccb70')
+    version('3.3.0',  sha256='190c8f4b56afc767f43836b2a5cd53cc52ee7fdc25eb78c6079c5a244e28efa7')
+    version('3.2.3',  sha256='d9ec8458fe97fd02bf36379e7f63eaafce1005eeb60e329ed25bb2d2a17a796f')
+    version('3.2.2',  sha256='a7e1e414e5c405af48982bf4724a3da64a05770254f2ce8affb5f58a7604ca57')
+    version('3.2.1',  sha256='6c588b58fcb63ff3f288eb9f02d76791c0955ba9210d98c3abd879c770ae28ea')
+    version('3.2.0',  sha256='b051f852600ffdf07e337a7f15673da23f9201a9dbb482bd513756a3e5a196a6')
+    version('3.1.4',  sha256='7b82486f71c71cec61f9b237116212ce18ef6b90f068cbbf9f7de4fc50b576a8')
+    version('3.1.3',  sha256='161cf55371a143826f1d76ce566db1f0a666496eeb4371aed78b1642f219d51d')
     version('3.1.2',  sha256='767c8d0dfa20ba3283de05d23a1d1c03a7e805d0ce2936beaff0bb7d11450641')
     version('3.1.1',  sha256='97154a606339a6c1d87c80fb354d7456fe49828b2ef9a3bc9ed91771a03d2a04')
     version('3.1.0',  sha256='e754a22242ccbec731aacdb2333b567d4c95b9b02d3ba1ea12f70508d244fcda')
@@ -48,7 +52,7 @@ class Gdal(AutotoolsPackage):
     version('2.3.0',  sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
     version('2.1.2',  sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
     version('2.0.2',  sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
-    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042')
+    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042', deprecated=True)
 
     variant('libtool',   default=True,  description='Use libtool to build the library')
     variant('libz',      default=True,  description='Include libz support')
@@ -91,6 +95,7 @@ class Gdal(AutotoolsPackage):
 
     # FIXME: Allow packages to extend multiple packages
     # See https://github.com/spack/spack/issues/987
+    # extends('jdk', when='+java')
     # extends('perl', when='+perl')
     extends('python', when='+python')
 
@@ -102,7 +107,7 @@ class Gdal(AutotoolsPackage):
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
     depends_on('libgeotiff@1.2.1:1.4', when='@:2.4.0')
-    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4.99')
+    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4')
     depends_on('libgeotiff@1.5:', when='@3.0.0:')
     depends_on('json-c')
     depends_on('json-c@0.12.1', when='@:2.2')
@@ -123,7 +128,7 @@ class Gdal(AutotoolsPackage):
     depends_on('hdf5', when='+hdf5')
     depends_on('kealib', when='+kea @2:')
     depends_on('netcdf-c', when='+netcdf')
-    depends_on('jasper@1.900.1', patches='uuid.patch', when='+jasper')
+    depends_on('jasper@1.900.1', patches=[patch('uuid.patch')], when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
     depends_on('xerces-c', when='+xerces')
     depends_on('expat', when='+expat')
@@ -140,17 +145,26 @@ class Gdal(AutotoolsPackage):
     depends_on('poppler@:0.63', when='@:2.3 +poppler')
     depends_on('poppler@:0.71', when='@:2.4 +poppler')
     depends_on('poppler@0.24:', when='@3: +poppler')
-    depends_on('proj@:4', when='+proj @2.3.0:2.3.999')
-    depends_on('proj@:5', when='+proj @2.4.0:2.4.999')
-    depends_on('proj@:6', when='+proj @2.5:2.999')
+    depends_on('proj@:4', when='+proj @2.3.0:2.3')
+    depends_on('proj@:5', when='+proj @2.4.0:2.4')
+    depends_on('proj@:6', when='+proj @2.5:2')
     depends_on('proj@6:', when='+proj @3:')
     depends_on('perl', type=('build', 'run'), when='+perl')
+    # see gdal_version_and_min_supported_python_version
+    # in swig/python/osgeo/__init__.py
+    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@3.3:+python')
+    depends_on('python@2.0:', type=('build', 'link', 'run'), when='@3.2:+python')
     depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java', type=('build', 'link', 'run'), when='+java')
-    depends_on('jackcess@1.2.0:1.2.999', type='run', when='+mdb')
+    depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
+    depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')
+    depends_on('java@5:', type=('build', 'link', 'run'), when='@2.1:+java')
+    depends_on('java@4:', type=('build', 'link', 'run'), when='@:2.0+java')
+    depends_on('ant', type='build', when='+java')
+    depends_on('swig', type='build', when='+java')
+    depends_on('jackcess@1.2.0:1.2', type='run', when='+mdb')
     depends_on('armadillo', when='+armadillo')
     depends_on('cryptopp', when='+cryptopp @2.1:')
     depends_on('openssl', when='+crypto @2.3:')
@@ -165,11 +179,27 @@ class Gdal(AutotoolsPackage):
 
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
+    conflicts('+jasper', when='@3.5:', msg='JPEG2000 driver removed in GDAL 3.5')
+    conflicts('+perl', when='@3.5:', msg='Perl bindings removed in GDAL 3.5')
+
+    # https://github.com/OSGeo/gdal/issues/3782
+    patch('https://github.com/OSGeo/gdal/pull/3786.patch', when='@3.3.0', level=2,
+          sha256='5e14c530289bfa1257277357baa8d485f852ea480152fb150d152c85af8d01f8')
+
     executables = ['^gdal-config$']
 
     @classmethod
     def determine_version(cls, exe):
         return Executable(exe)('--version', output=str, error=str).rstrip()
+
+    @property
+    def import_modules(self):
+        modules = ['osgeo']
+        if self.spec.satisfies('@3.3:'):
+            modules.append('osgeo_utils')
+        else:
+            modules.append('osgeo.utils')
+        return modules
 
     def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
@@ -177,6 +207,27 @@ class Gdal(AutotoolsPackage):
         # See swig/python/GNUmakefile for more details.
         env.set('PREFIX', self.prefix)
         env.set('DESTDIR', '/')
+
+    def setup_run_environment(self, env):
+        if '+java' in self.spec:
+            class_paths = find(self.prefix, '*.jar')
+            classpath = os.pathsep.join(class_paths)
+            env.prepend_path('CLASSPATH', classpath)
+
+        # `spack test run gdal+python` requires these for the Python bindings
+        # to find the correct libraries
+        libs = []
+        for dep in self.spec.dependencies(deptype='link'):
+            query = self.spec[dep.name]
+            libs.extend(query.libs.directories)
+        if sys.platform == 'darwin':
+            env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', ':'.join(libs))
+        else:
+            env.prepend_path('LD_LIBRARY_PATH', ':'.join(libs))
+
+    def patch(self):
+        if '+java platform=darwin' in self.spec:
+            filter_file('linux', 'darwin', 'swig/java/java.opt', string=True)
 
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):
@@ -203,7 +254,7 @@ class Gdal(AutotoolsPackage):
             else:
                 args.append('--disable-driver-grib')
         else:
-            args.append('--without-bsb')
+            args.append('--with-bsb=no')
 
             if '+grib' in spec:
                 args.append('--with-grib=yes')
@@ -406,6 +457,7 @@ class Gdal(AutotoolsPackage):
             args.append('--with-python=no')
 
         # https://trac.osgeo.org/gdal/wiki/GdalOgrInJava
+        # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
         if '+java' in spec:
             args.extend([
                 '--with-java={0}'.format(spec['java'].home),
@@ -460,10 +512,6 @@ class Gdal(AutotoolsPackage):
             '--with-dods-root=no',
             '--with-spatialite=no',
             '--with-idb=no',
-            # https://trac.osgeo.org/gdal/wiki/ArcSDE
-            '--with-sde=no',
-            # https://trac.osgeo.org/gdal/wiki/Epsilon
-            '--with-epsilon=no',
             '--with-webp=no',
             '--with-freexl=no',
             '--with-pam=no',
@@ -471,9 +519,37 @@ class Gdal(AutotoolsPackage):
             '--with-rasdaman=no',
         ])
 
+        # TODO: add packages for these dependencies (only for 3.2 and older)
+        if spec.satisfies('@:3.2'):
+            # https://trac.osgeo.org/gdal/wiki/Epsilon
+            args.append('--with-epsilon=no')
+
+        # TODO: add packages for these dependencies (only for 3.1 and older)
+        if spec.satisfies('@:3.1'):
+            # https://trac.osgeo.org/gdal/wiki/ArcSDE
+            args.append('--with-sde=no')
+
         # TODO: add packages for these dependencies (only for 2.3 and older)
         if spec.satisfies('@:2.3'):
             args.append('--with-php=no')
+
+        # TODO: add packages for these dependencies (only for 3.2 and newer)
+        if spec.satisfies('@3.2:'):
+            args.append('--with-heif=no')
+
+        # TODO: add packages for these dependencies (only for 3.1 and newer)
+        if spec.satisfies('@3.1:'):
+            args.extend([
+                '--with-exr=no',
+                '--with-rdb=no',
+            ])
+
+        # TODO: add packages for these dependencies (only for 3.0 and newer)
+        if spec.satisfies('@3.0:'):
+            args.extend([
+                '--with-tiledb=no',
+                '--with-mongocxxv3=no',
+            ])
 
         # TODO: add packages for these dependencies (only for 2.3 and newer)
         if spec.satisfies('@2.3:'):
@@ -489,7 +565,6 @@ class Gdal(AutotoolsPackage):
         if spec.satisfies('@2.1:'):
             args.extend([
                 '--with-mongocxx=no',
-                '--with-gnm=no',
                 '--with-pdfium=no',
             ])
 
@@ -498,16 +573,40 @@ class Gdal(AutotoolsPackage):
 
         return args
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
-        if '+python' in self.spec:
-            with working_dir('spack-test', create=True):
-                for module in self.import_modules:
-                    python('-c', 'import {0}'.format(module))
+    # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix
+    def build(self, spec, prefix):
+        make()
+        if '+java' in spec:
+            with working_dir('swig/java'):
+                make()
+
+    def check(self):
+        # no top-level test target
+        if '+java' in self.spec:
+            with working_dir('swig/java'):
+                make('test')
+
+    def install(self, spec, prefix):
+        make('install')
+        if '+java' in spec:
+            with working_dir('swig/java'):
+                make('install')
+                install('*.jar', prefix)
 
     @run_after('install')
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
-        if sys.platform == 'darwin':
+        if 'platform=darwin' in self.spec:
             fix_darwin_install_name(self.prefix.lib)
+
+    def test(self):
+        """Attempts to import modules of the installed package."""
+
+        if '+python' in self.spec:
+            # Make sure we are importing the installed modules,
+            # not the ones in the source directory
+            for module in self.import_modules:
+                self.run_test(self.spec['python'].command.path,
+                              ['-c', 'import {0}'.format(module)],
+                              purpose='checking import of {0}'.format(module),
+                              work_dir='spack-test')

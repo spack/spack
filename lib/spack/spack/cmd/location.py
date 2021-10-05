@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,12 @@
 from __future__ import print_function
 
 import os
+
 import llnl.util.tty as tty
 
-import spack.environment as ev
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment
+import spack.environment as ev
 import spack.paths
 import spack.repo
 import spack.stage
@@ -48,11 +48,15 @@ def setup_parser(subparser):
         '-S', '--stages', action='store_true',
         help="top level stage directory")
     directories.add_argument(
-        '-b', '--build-dir', action='store_true',
-        help="checked out or expanded source directory for a spec "
+        '--source-dir', action='store_true',
+        help="source directory for a spec "
              "(requires it to be staged first)")
     directories.add_argument(
-        '-e', '--env', action='store',
+        '-b', '--build-dir', action='store_true',
+        help="build directory for a spec "
+             "(requires it to be staged first)")
+    directories.add_argument(
+        '-e', '--env', action='store', dest='location_env',
         help="location of an environment managed by spack")
 
     arguments.add_common_arguments(subparser, ['spec'])
@@ -61,53 +65,77 @@ def setup_parser(subparser):
 def location(parser, args):
     if args.module_dir:
         print(spack.paths.module_path)
+        return
 
-    elif args.spack_root:
+    if args.spack_root:
         print(spack.paths.prefix)
+        return
 
-    elif args.env:
-        path = spack.environment.root(args.env)
+    if args.location_env:
+        path = ev.root(args.location_env)
         if not os.path.isdir(path):
-            tty.die("no such environment: '%s'" % args.env)
+            tty.die("no such environment: '%s'" % args.location_env)
         print(path)
+        return
 
-    elif args.packages:
+    if args.packages:
         print(spack.repo.path.first_repo().root)
+        return
 
-    elif args.stages:
+    if args.stages:
         print(spack.stage.get_stage_root())
+        return
 
-    else:
-        specs = spack.cmd.parse_specs(args.spec)
-        if not specs:
-            tty.die("You must supply a spec.")
-        if len(specs) != 1:
-            tty.die("Too many specs.  Supply only one.")
+    specs = spack.cmd.parse_specs(args.spec)
 
-        if args.install_dir:
-            # install_dir command matches against installed specs.
-            env = ev.get_env(args, 'location')
-            spec = spack.cmd.disambiguate_spec(specs[0], env)
-            print(spec.prefix)
+    if not specs:
+        tty.die("You must supply a spec.")
 
-        else:
-            spec = specs[0]
+    if len(specs) != 1:
+        tty.die("Too many specs.  Supply only one.")
 
-            if args.package_dir:
-                # This one just needs the spec name.
-                print(spack.repo.path.dirname_for_package_name(spec.name))
+    # install_dir command matches against installed specs.
+    if args.install_dir:
+        env = ev.active_environment()
+        spec = spack.cmd.disambiguate_spec(specs[0], env)
+        print(spec.prefix)
+        return
 
-            else:
-                # These versions need concretized specs.
-                spec.concretize()
-                pkg = spack.repo.get(spec)
+    spec = specs[0]
 
-                if args.stage_dir:
-                    print(pkg.stage.path)
+    # Package dir just needs the spec name
+    if args.package_dir:
+        print(spack.repo.path.dirname_for_package_name(spec.name))
+        return
 
-                else:  # args.build_dir is the default.
-                    if not pkg.stage.expanded:
-                        tty.die("Build directory does not exist yet. "
-                                "Run this to create it:",
-                                "spack stage " + " ".join(args.spec))
-                    print(pkg.stage.source_path)
+    # Either concretize or filter from already concretized environment
+    spec = spack.cmd.matching_spec_from_env(spec)
+    pkg = spec.package
+
+    if args.stage_dir:
+        print(pkg.stage.path)
+        return
+
+    if args.build_dir:
+        # Out of source builds have build_directory defined
+        if hasattr(pkg, 'build_directory'):
+            # build_directory can be either absolute or relative to the stage path
+            # in either case os.path.join makes it absolute
+            print(os.path.normpath(os.path.join(
+                pkg.stage.path,
+                pkg.build_directory
+            )))
+            return
+
+        # Otherwise assume in-source builds
+        print(pkg.stage.source_path)
+        return
+
+    # source dir remains, which requires the spec to be staged
+    if not pkg.stage.expanded:
+        tty.die("Source directory does not exist yet. "
+                "Run this to create it:",
+                "spack stage " + " ".join(args.spec))
+
+    # Default to source dir.
+    print(pkg.stage.source_path)

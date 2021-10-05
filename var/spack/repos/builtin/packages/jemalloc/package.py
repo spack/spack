@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,13 @@
 from spack import *
 
 
-class Jemalloc(Package):
+class Jemalloc(AutotoolsPackage):
     """jemalloc is a general purpose malloc(3) implementation that emphasizes
        fragmentation avoidance and scalable concurrency support."""
-    homepage = "http://www.canonware.com/jemalloc/"
+    homepage = "http://jemalloc.net/"
     url      = "https://github.com/jemalloc/jemalloc/releases/download/4.0.4/jemalloc-4.0.4.tar.bz2"
+
+    maintainers = ['iarspider']
 
     version('5.2.1', sha256='34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6')
     version('5.2.0', sha256='74be9f44a60d2a99398e706baa921e4efde82bf8fd16e5c0643c375c5851e3b4')
@@ -24,22 +26,33 @@ class Jemalloc(Package):
 
     variant('stats', default=False, description='Enable heap statistics')
     variant('prof', default=False, description='Enable heap profiling')
-    variant('je', default=False, description='Prepend the public API functions with "je_"')
+    variant(
+        'jemalloc_prefix', default='none',
+        description='Prefix to prepend to all public APIs',
+        values=None,
+        multi=False
+    )
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+    variant('documentation', default=False, description='Build documentation')
+    variant('debug', default=False, description='Build debugging code')
+    variant('fill', default=True, description='Enable or disable support for junk/zero filling')
 
-    def install(self, spec, prefix):
-        configure_args = ['--prefix=%s' % prefix, ]
+    def configure_args(self):
+        spec = self.spec
+        args = []
 
         if '+stats' in spec:
-            configure_args.append('--enable-stats')
+            args.append('--enable-stats')
         if '+prof' in spec:
-            configure_args.append('--enable-prof')
-        if '+je' in spec:
-            configure_args.append('--with-jemalloc-prefix=je_')
+            args.append('--enable-prof')
 
-        configure(*configure_args)
+        je_prefix = spec.variants['jemalloc_prefix'].value
+        if je_prefix != 'none':
+            args.append('--with-jemalloc-prefix={0}'.format(je_prefix))
 
-        # Don't use -Werror
-        filter_file(r'-Werror=\S*', '', 'Makefile')
-
-        make()
-        make("install")
+        args += self.enable_or_disable('libs')
+        args += self.enable_or_disable('documentation')
+        args += self.enable_or_disable('debug')
+        args += self.enable_or_disable('fill')
+        return args

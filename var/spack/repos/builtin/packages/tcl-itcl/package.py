@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,6 @@ class TclItcl(AutotoolsPackage):
         args = [
             '--enable-shared',
             '--enable-threads',
-            '--with-tcl=' + self.spec['tcl'].tcl_lib_dir,
+            '--with-tcl=' + self.spec['tcl'].libs.directories[0],
         ]
         return args

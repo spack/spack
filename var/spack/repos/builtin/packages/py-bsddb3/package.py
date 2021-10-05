@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,7 @@ class PyBsddb3(PythonPackage):
        Sequence and Transaction objects, and each of these is exposed
        as a Python type in the bsddb3.db module."""
 
-    homepage = "https://pypi.python.org/pypi/bsddb3/6.2.5"
-    url      = "https://pypi.io/packages/source/b/bsddb3/bsddb3-6.2.5.tar.gz"
+    pypi = "bsddb3/bsddb3-6.2.5.tar.gz"
 
     version('6.2.5', sha256='784bf40ad935258507594a89b32ea11f362cde120751c8b96de163955ced7db8')
 
@@ -22,4 +21,4 @@ class PyBsddb3(PythonPackage):
     depends_on('berkeley-db')
 
     # For testing... see here for an example that uses BerkeleyDB
-    # http://code.activestate.com/recipes/189060-using-berkeley-db-database/
+    # https://code.activestate.com/recipes/189060-using-berkeley-db-database/

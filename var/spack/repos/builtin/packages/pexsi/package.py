@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,9 +32,9 @@ class Pexsi(MakefilePackage):
     version('0.9.0', sha256='e5efe0c129013392cdac3234e37f1f4fea641c139b1fbea47618b4b839d05029')
 
     depends_on('parmetis')
-    depends_on('superlu-dist@3.3:3.999', when='@:0.9.0')
-    depends_on('superlu-dist@4.3:4.999', when='@0.9.2')
-    depends_on('superlu-dist@5.1.2:5.3.999', when='@0.10.2:')
+    depends_on('superlu-dist@3.3:3', when='@:0.9.0')
+    depends_on('superlu-dist@4.3:4', when='@0.9.2')
+    depends_on('superlu-dist@5.1.2:5.3', when='@0.10.2:')
 
     variant(
         'fortran', default=False, description='Builds the Fortran interface'
@@ -62,14 +62,15 @@ class Pexsi(MakefilePackage):
             ('@STDCXX_LIB', ' '.join(self.compiler.stdcxx_libs))
         ]
 
+        fldflags = ''
         if '@0.9.2' in self.spec:
-            substitutions.append(
-                ('@FLDFLAGS', '-Wl,--allow-multiple-definition')
-            )
-        else:
-            substitutions.append(
-                ('@FLDFLAGS', '')
-            )
+            fldflags += ' -Wl,--allow-multiple-definition'
+
+        if ('^superlu +openmp' in self.spec
+                or '^openblas threads=openmp' in self.spec):
+            fldflags += ' ' + self.compiler.openmp_flag
+
+        substitutions.append(('@FLDFLAGS', fldflags.lstrip()))
 
         template = join_path(
             os.path.dirname(inspect.getmodule(self).__file__),

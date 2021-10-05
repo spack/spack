@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 #   Spack Project Developers. See the top-level COPYRIGHT file for details.
 # Copyright 2020 GSI Helmholtz Centre for Heavy Ion Research GmbH,
 #   Darmstadt, Germany
@@ -18,6 +18,9 @@ class Fairlogger(CMakePackage):
     # generator = 'Ninja'
 
     version('develop', branch='dev', get_full_repo=True)
+    version('1.9.0', sha256='13bcaa0d4129f8d4e69a0a2ece8e5b7073760082c8aa028e3fc0c11106503095')
+    version('1.8.0', sha256='3f0a38dba1411b542d998e02badcc099c057b33a402954fc5c2ab74947a0c42c')
+    version('1.7.0', sha256='ef467f0a70afc0549442323d70b165fa0b0b4b4e6f17834573ca15e8e0b007e4')
     version('1.6.2', sha256='5c6ef0c0029eb451fee71756cb96e6c5011040a9813e8889667b6f3b6b04ed03')
     version('1.6.1', sha256='3894580f4c398d724ba408e410e50f70c9f452e8cfaf7c3ff8118c08df28eaa8')
     version('1.6.0', sha256='721e8cadfceb2f63014c2a727e098babc6deba653baab8866445a772385d0f5b')
@@ -33,20 +36,20 @@ class Fairlogger(CMakePackage):
             multi=False,
             description='CMake build type')
     variant('cxxstd', default='default',
-            values=('11', '14', '17'),
+            values=('default', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant('pretty',
             default=False,
             description='Use BOOST_PRETTY_FUNCTION macro (Supported by 1.4+).')
-    conflicts('+pretty', when='@:1.3.99')
+    conflicts('+pretty', when='@:1.3')
 
     depends_on('cmake@3.9.4:', type='build')
     depends_on('git', type='build', when='@develop')
 
     depends_on('boost', when='+pretty')
     conflicts('^boost@1.70:', when='^cmake@:3.14')
-    depends_on('fmt@5.3.0:5.99', when='@1.6.0:1.6.1')
+    depends_on('fmt@5.3.0:5', when='@1.6.0:1.6.1')
     depends_on('fmt@5.3.0:', when='@1.6.2:')
 
     def patch(self):
@@ -60,11 +63,14 @@ class Fairlogger(CMakePackage):
 
     def cmake_args(self):
         args = []
+        args.append('-DDISABLE_COLOR=ON')
         cxxstd = self.spec.variants['cxxstd'].value
         if cxxstd != 'default':
             args.append('-DCMAKE_CXX_STANDARD=%s' % cxxstd)
-        args.append('-DUSE_BOOST_PRETTY_FUNCTION=%s' %
-                    ('ON' if '+pretty' in self.spec else 'OFF'))
+        if self.spec.satisfies('@1.4:'):
+            args.append(self.define_from_variant('USE_BOOST_PRETTY_FUNCTION', 'pretty'))
         if self.spec.satisfies('@1.6:'):
             args.append('-DUSE_EXTERNAL_FMT=ON')
+        if self.spec.satisfies('^boost@:1.69'):
+            args.append('-DBoost_NO_BOOST_CMAKE=ON')
         return args

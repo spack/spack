@@ -1,12 +1,16 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import platform
-import llnl.util.cpu as cpu
-from spack.architecture import Platform, Target
+
+import archspec.cpu
+
+import spack.target
 from spack.operating_systems.mac_os import MacOs
+
+from ._platform import Platform
 
 
 class Darwin(Platform):
@@ -17,10 +21,10 @@ class Darwin(Platform):
     def __init__(self):
         super(Darwin, self).__init__('darwin')
 
-        for name in cpu.targets:
-            self.add_target(name, Target(name))
+        for name in archspec.cpu.TARGETS:
+            self.add_target(name, spack.target.Target(name))
 
-        self.default = cpu.host().name
+        self.default = archspec.cpu.host().name
         self.front_end = self.default
         self.back_end = self.default
 

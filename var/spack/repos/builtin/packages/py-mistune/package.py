@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyMistune(PythonPackage):
     """
     Python markdown parser
     """
-    homepage = "http://mistune.readthedocs.org/en/latest/"
+    homepage = "https://mistune.readthedocs.org/en/latest/"
     url      = "https://github.com/lepture/mistune/archive/v0.7.1.tar.gz"
 
     version('0.8.4', sha256='a1443771ea9ed7268a0cb3cf31462604ae148938ba32070bd5c54545f8f36a5d')

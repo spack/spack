@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGenelendatabase(RPackage):
-    """Lengths of mRNA transcripts for a number of genomes.
+    """Lengths of mRNA transcripts for a number of genomes
 
        Length of mRNA transcripts for a number of genomes and gene ID formats,
        largely based on UCSC table browser"""
@@ -15,6 +15,7 @@ class RGenelendatabase(RPackage):
     homepage = "https://bioconductor.org/packages/geneLenDataBase"
     git      = "https://git.bioconductor.org/packages/geneLenDataBase.git"
 
+    version('1.26.0', commit='2724715ae23a6647d1c0c6e934720aad9377d65e')
     version('1.20.0', commit='70a1abed00ee68f7bfa07c42c011f9edae9915e4')
     version('1.18.0', commit='77db87e5a4819bf94761fabef0d2ff741a1c5d07')
     version('1.16.0', commit='c2a8b2359c6c59388853d6f6d15d71dffb17a198')

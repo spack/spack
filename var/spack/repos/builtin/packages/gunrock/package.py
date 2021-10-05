@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,10 @@ class Gunrock(CMakePackage, CudaPackage):
     homepage = "https://gunrock.github.io/docs/"
     git      = "https://github.com/gunrock/gunrock.git"
 
-    # tagged versions are broken. See
+    version('master',   submodules=True)
+    version('1.2',      submodules=True, tag='v1.2')
+    # v1.1 build is broken. See:
     # https://github.com/gunrock/gunrock/issues/777
-    # Hence, prefer master version.
-    version('master',   submodules=True, preferred=True)
     version('1.1',      submodules=True, tag='v1.1')
     version('1.0',      submodules=True, tag='v1.0')
     version('0.5.1',    submodules=True, tag='v0.5.1')
@@ -60,23 +60,17 @@ See "spack info gunrock"')
 
     def cmake_args(self):
         spec = self.spec
-        args = []
-        args.extend([
-                    '-DGUNROCK_BUILD_LIB={0}'.format(
-                        'ON' if '+lib' in spec else 'OFF'),
-                    '-DGUNROCK_BUILD_SHARED_LIBS={0}'.format(
-                        'ON' if '+shared_libs' in spec else 'OFF'),
-                    '-DGUNROCK_BUILD_TESTS={0}'.format(
-                        'ON' if '+tests' in spec else 'OFF'),
-                    '-DGUNROCK_MGPU_TESTS={0}'.format(
-                        'ON' if '+mgpu_tests' in spec else 'OFF'),
-                    '-DCUDA_VERBOSE_PTXAS={0}'.format(
-                        'ON' if '+cuda_verbose_ptxas' in spec else 'OFF'),
-                    '-DGUNROCK_GOOGLE_TESTS={0}'.format(
-                        'ON' if '+google_tests' in spec else 'OFF'),
-                    '-DGUNROCK_CODE_COVERAGE={0}'.format(
-                        'ON' if '+code_coverage' in spec else 'OFF'),
-                    ])
+        from_variant = self.define_from_variant
+
+        args = [
+            from_variant('GUNROCK_BUILD_LIB', 'lib'),
+            from_variant('GUNROCK_BUILD_SHARED_LIBS', 'shared_libs'),
+            from_variant('GUNROCK_BUILD_TESTS', 'tests'),
+            from_variant('GUNROCK_MGPU_TESTS', 'mgpu_tests'),
+            from_variant('CUDA_VERBOSE_PTXAS', 'cuda_verbose_ptxas'),
+            from_variant('GUNROCK_GOOGLE_TESTS', 'google_tests'),
+            from_variant('GUNROCK_CODE_COVERAGE', 'code_coverage'),
+        ]
 
         # turn off auto detect, which undoes custom cuda arch options
         args.append('-DCUDA_AUTODETECT_GENCODE=OFF')

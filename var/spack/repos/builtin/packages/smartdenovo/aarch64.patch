@@ -23,7 +23,7 @@ index 15dd0f2..22641ed 100644
  #include <stdlib.h>
  #include <stdint.h>
 -#include <emmintrin.h>
-+#include "SSE2NEON.h"
++#include "sse2neon.h"
  #include "ksw.h"
  
  #ifdef USE_MALLOC_WRAPPERS

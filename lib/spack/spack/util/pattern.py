@@ -1,11 +1,37 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
-import collections
 import functools
+import inspect
+import sys
+
+if sys.version_info >= (3, 3):
+    from collections.abc import MutableSequence  # novm
+else:
+    from collections import MutableSequence
+
+
+class Delegate(object):
+    def __init__(self, name, container):
+        self.name = name
+        self.container = container
+
+    def __call__(self, *args, **kwargs):
+        return [getattr(item, self.name)(*args, **kwargs)
+                for item in self.container]
+
+
+class Composite(list):
+    def __init__(self, fns_to_delegate):
+        self.fns_to_delegate = fns_to_delegate
+
+    def __getattr__(self, name):
+        if name != 'fns_to_delegate' and name in self.fns_to_delegate:
+            return Delegate(name, self)
+        else:
+            return self.__getattribute__(name)
 
 
 def composite(interface=None, method_list=None, container=list):
@@ -15,7 +41,7 @@ def composite(interface=None, method_list=None, container=list):
         interface (type): class exposing the interface to which the
             composite object must conform. Only non-private and
             non-special methods will be taken into account
-        method_list (list of str): names of methods that should be part
+        method_list (list): names of methods that should be part
             of the composite
         container (MutableSequence): container for the composite object
             (default = list).  Must fulfill the MutableSequence
@@ -31,7 +57,7 @@ def composite(interface=None, method_list=None, container=list):
     # exception if it doesn't. The patched class returned by the decorator will
     # inherit from the container class to expose the interface needed to manage
     # objects composition
-    if not issubclass(container, collections.MutableSequence):
+    if not issubclass(container, MutableSequence):
         raise TypeError("Container must fulfill the MutableSequence contract")
 
     # Check if at least one of the 'interface' or the 'method_list' arguments

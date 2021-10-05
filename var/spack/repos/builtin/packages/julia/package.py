@@ -1,23 +1,33 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Julia(Package):
     """The Julia Language: A fresh approach to technical computing"""
 
-    homepage = "http://julialang.org"
+    homepage = "https://julialang.org"
     url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
     git      = "https://github.com/JuliaLang/julia.git"
 
     maintainers = ['glennpj']
 
     version('master', branch='master')
+    version('1.6.2', sha256='01241120515cb9435b96179cf301fbd2c24d4405f252588108d13ceac0f41c0a')
+    version('1.6.1', sha256='71d8e40611361370654e8934c407b2dec04944cf3917c5ecb6482d6b85ed767f')
+    version('1.6.0', sha256='1b05f42c9368bc2349c47363b7ddc175a2da3cd162d52b6e24c4f5d4d6e1232c')
+    version('1.5.4', sha256='dbfb8cd544b223eff70f538da7bb9d5b6f76fd0b00dd2385e6254e74ad4e892f')
+    version('1.5.3', sha256='fb69337ca037576758547c7eed9ae8f153a9c052318327b6b7f1917408c14d91')
+    version('1.5.2', sha256='850aed3fe39057488ec633f29af705f5ada87e3058fd65e48ad26f91b713a19a')
+    version('1.5.1', sha256='1d0debfccfc7cd07047aa862dd2b1a96f7438932da1f5feff6c1033a63f9b1d4')
+    version('1.5.0', sha256='4a6ffadc8dd04ca0b7fdef6ae203d0af38185e57b78f7c0b972c4707354a6d1b')
+    version('1.4.2', sha256='948c70801d5cce81eeb7f764b51b4bfbb2dc0b1b9effc2cb9fc8f8cf6c90a334')
     version('1.4.1', sha256='b21585db55673ac0668c163678fcf2aad11eb7c64bb2aa03a43046115fab1553')
     version('1.4.0', sha256='880c73a08296ce8d94ad9605149f2a2b2b028e7202a700ef725da899300b8be9')
     version('1.3.1', sha256='053908ec2706eb76cfdc998c077de123ecb1c60c945b4b5057aa3be19147b723')
@@ -159,8 +169,13 @@ class Julia(Package):
                     'JULIA_CPU_TARGET=generic'
                 ]
             else:
+                target_str = str(spec.target).replace('_', '-')
+                if target_str == "zen":
+                    target_str = "znver1"
+                if target_str == "zen2":
+                    target_str = "znver2"
                 options += [
-                    'JULIA_CPU_TARGET={0}'.format(spec.target)
+                    'JULIA_CPU_TARGET={0}'.format(target_str)
                 ]
 
         if '%intel' in spec:

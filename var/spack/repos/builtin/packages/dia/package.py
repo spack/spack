@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Dia(Package):
     depends_on('python')
     depends_on('swig')
     depends_on('libsm')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('libxinerama')
     depends_on('libxrender')
     depends_on('libxml2')

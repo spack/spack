@@ -1,0 +1,27 @@
+From: A Costa <agcosta@gis.net>
+Subject: manpage typo: priviliges -> privileges
+Bug-Debian: http://bugs.debian.org/309877
+X-Debian-version: 2.31-3
+
+--- a/man/zip.1
++++ b/man/zip.1
+@@ -2403,7 +2403,7 @@
+ .TP
+ .PD
+ .B \-\-use\-privileges
+-[WIN32] Use priviliges (if granted) to obtain all aspects of WinNT security.
++[WIN32] Use privileges (if granted) to obtain all aspects of WinNT security.
+ .TP
+ .PD 0
+ .B \-@
+--- a/zip.txt
++++ b/zip.txt
+@@ -1696,7 +1696,7 @@
+ 
+        -!
+        --use-privileges
+-              [WIN32]  Use  priviliges  (if  granted) to obtain all aspects of
++              [WIN32]  Use  privileges  (if  granted) to obtain all aspects of
+               WinNT security.
+ 
+        -@

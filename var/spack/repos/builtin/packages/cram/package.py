@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Cram(CMakePackage):
 
     version('1.0.1', sha256='985888018f6481c3e9ab4f1d1788e25725d8b92a1cf52b1366ee93793614709a')
 
-    extends('python@2.7:')
+    extends('python')
+    depends_on('python@2.7:')
     depends_on('mpi')
     depends_on('cmake@2.8:', type='build')

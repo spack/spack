@@ -1,11 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 from glob import glob
+
+from spack import *
 
 
 class Libxsmm(MakefilePackage):
@@ -16,6 +17,8 @@ class Libxsmm(MakefilePackage):
     homepage = 'https://github.com/hfp/libxsmm'
     url      = 'https://github.com/hfp/libxsmm/archive/1.16.1.tar.gz'
     git      = 'https://github.com/hfp/libxsmm.git'
+
+    maintainers = ['hfp']
 
     version('master', branch='master')
     version('1.16.1', sha256='93dc7a3ec40401988729ddb2c6ea2294911261f7e6cd979cf061b5c3691d729d')
@@ -60,6 +63,7 @@ class Libxsmm(MakefilePackage):
             description='With generator executable(s)')
     conflicts('+header-only', when='@:1.6.2',
               msg='Header-only is available since v1.6.2!')
+    depends_on('python', type='build')
 
     @property
     def libs(self):
@@ -81,7 +85,7 @@ class Libxsmm(MakefilePackage):
         ]
 
         # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
-#       make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
+        # make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
 
         # include call trace as the build is already de-optimized
         if '+debug' in spec:
@@ -113,10 +117,8 @@ class Libxsmm(MakefilePackage):
             install_tree('bin', prefix.bin)
 
         mkdirp(prefix.doc)
-        for doc_file in glob(join_path('documentation', '*.md')):
-            install(doc_file, prefix.doc)
-        for doc_file in glob(join_path('documentation', '*.pdf')):
-            install(doc_file, prefix.doc)
+        install(join_path('documentation', '*.md'), prefix.doc)
+        install(join_path('documentation', '*.pdf'), prefix.doc)
         if '@1.8.2:' in spec:
             install('LICENSE.md', prefix.doc)
         else:

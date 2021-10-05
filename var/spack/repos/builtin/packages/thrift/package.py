@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Thrift(Package):
 
     """
 
-    homepage = "http://thrift.apache.org"
+    homepage = "https://thrift.apache.org"
     url      = "http://apache.mirrors.ionfish.org/thrift/0.11.0/thrift-0.11.0.tar.gz"
 
     version('0.13.0', sha256='7ad348b88033af46ce49148097afe354d513c1fca7c607b59c33ebb6064b5179')
@@ -45,6 +45,15 @@ class Thrift(Package):
 
     # Variant dependencies
     extends('python', when='+python')
+    depends_on('py-setuptools', type=('build', 'run'), when='+python')
+    depends_on('py-six@1.7.2:', type=('build', 'run'), when='@0.10.0:+python')
+    depends_on('py-tornado', type=('build', 'run'), when='+python')
+    depends_on('py-twisted', type=('build', 'run'), when='+python')
+    depends_on('py-zope-interface', type=('build', 'run'), when='+python')
+    depends_on('py-ipaddress', type=('build', 'run'), when='+python ^python@2')
+    depends_on('py-backports-ssl-match-hostname@3.5:', when='+python ^python@:3.4', type=('build', 'run'))
+    depends_on('py-pure-sasl', type=('build', 'run'), when='+python')
+    depends_on('scons', type=('build', 'run'), when='+python')
 
     depends_on('zlib', when='+c')
     depends_on('libevent', when='+c')

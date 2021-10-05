@@ -1,12 +1,14 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+
 import pytest
-from spack.main import SpackCommand, SpackCommandError
+
 import spack.spec
 import spack.user_environment as uenv
+from spack.main import SpackCommand, SpackCommandError
 
 load = SpackCommand('load')
 unload = SpackCommand('unload')
@@ -21,7 +23,9 @@ def test_load(install_mockery, mock_fetch, mock_archive, mock_packages):
 
     CMAKE_PREFIX_PATH is the only prefix inspection guaranteed for fake
     packages, since it keys on the prefix instead of a subdir."""
-    install('mpileaks')
+    install_out = install('mpileaks', output=str, fail_on_error=False)
+    print('spack install mpileaks')
+    print(install_out)
     mpileaks_spec = spack.spec.Spec('mpileaks').concretized()
 
     sh_out = load('--sh', '--only', 'package', 'mpileaks')
@@ -102,7 +106,7 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive,
     install('mpileaks')
 
     out = load('mpileaks', fail_on_error=False)
-    assert "To initialize spack's shell commands" in out
+    assert "To set up shell support" in out
 
 
 def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages,
@@ -135,4 +139,4 @@ def test_unload_fails_no_shell(install_mockery, mock_fetch, mock_archive,
     os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
 
     out = unload('mpileaks', fail_on_error=False)
-    assert "To initialize spack's shell commands" in out
+    assert "To set up shell support" in out

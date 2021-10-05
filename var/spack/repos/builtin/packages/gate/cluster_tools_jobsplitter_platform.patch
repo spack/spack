@@ -1,0 +1,371 @@
+diff -ruN a/cluster_tools/jobsplitter/gjs.cc b/cluster_tools/jobsplitter/gjs.cc
+--- a/cluster_tools/jobsplitter/gjs.cc	2020-03-25 04:30:34.000000000 -0500
++++ b/cluster_tools/jobsplitter/gjs.cc	2020-11-01 14:09:36.980752856 -0600
+@@ -30,15 +30,18 @@
+ 	cout<<"  -a value alias             : use any alias"<<endl;
+ 	cout<<"  -numberofsplits, -n   n    : the number of job splits; default=1"<<endl;
+ 	cout<<"  -clusterplatform, -c  name : the cluster platform, name is one of the following:"<<endl;
+-	cout<<"                               openmosix - condor - openPBS - slurm - xgrid"<<endl;
++	cout<<"                               openmosix - condor - openPBS - slurm - xgrid - SGE"<<endl;
+ 	cout<<"                               This executable is compiled with "<<GC_DEFAULT_PLATFORM<<" as default"<<endl<<endl;
+-	cout<<"  -openPBSscript, os         : template for an openPBS script "<<endl;
++	cout<<"  -openPBSscript, os script  : template for an openPBS script "<<endl;
+ 	cout<<"                               see the example that comes with the source code (script/openPBS.script)"<<endl;
+ 	cout<<"                               overrules the environment variable below"<<endl<<endl; 
+-	cout<<"  -slurmscript, ss           : template for a SLURM script "<<endl;
++	cout<<"  -slurmscript, ss script    : template for a SLURM script "<<endl;
+ 	cout<<"                               see the example that comes with the source code (script/slurm.script)"<<endl;
+ 	cout<<"                               overrules the environment variable below"<<endl<<endl; 
+-	cout<<"  -condorscript, cs          : template for a condor submit file"<<endl;
++	cout<<"  -SGEscript, gs script      : template for a SGE script "<<endl;
++	cout<<"                               see the example that comes with the source code (script/SGE.script)"<<endl;
++	cout<<"                               overrules the environment variable below"<<endl<<endl; 
++	cout<<"  -condorscript, cs script   : template for a condor submit file"<<endl;
+ 	cout<<"                               see the example that comes with the source code (script/condor.script)"<<endl;
+ 	cout<<"  -v                         : verbosity 0 1 2 3 - 1 default "<<endl;
+ 	cout<<endl;
+@@ -46,6 +49,10 @@
+ 	cout<<"  GC_DOT_GATE_DIR  : indicates the .Gate directory for splitted mac files"<<endl;
+ 	cout<<"  GC_GATE_EXE_DIR  : indicates the directory with the Gate executable"<<endl;
+ 	cout<<"  GC_PBS_SCRIPT : the openPBS template script (!optionnal variable!)"<<endl;
++	cout<<"  GC_SLURM_SCRIPT : the Slurm template script (!optionnal variable!)"<<endl;
++	cout<<"  GC_SGE_SCRIPT : the SGE template script (!optionnal variable!)"<<endl;
++	cout<<"  GC_CONDOR_SCRIPT : the condor template script (!optionnal variable!)"<<endl;
++	cout<<"  GC_SGE_QUEUE : the SGE queue to use, defaults to all.q if unset (!optional variable!)"<<endl;
+ 	cout<<endl;
+ 	cout<<"  Usage (bash):"<<endl;
+ 	cout<<"    export GC_DOT_GATE_DIR=/home/user/gatedir/"<<endl;
+@@ -55,6 +62,9 @@
+ 	cout<<"    gjs -numberofsplits 10 -clusterplatform openmosix macro.mac"<<endl;
+ 	cout<<"    gjs -numberofsplits 10 -clusterplatform openmosix -a /somedir/rootfilename ROOT_FILE macro.mac"<<endl<<endl;
+ 	cout<<"    gjs -numberofsplits 10 -clusterplatform openPBS -openPBSscript /somedir/script macro.mac"<<endl<<endl;
++	cout<<"    gjs -numberofsplits 10 -clusterplatform slurm -slurmscript /somedir/script macro.mac"<<endl<<endl;
++	cout<<"    gjs -numberofsplits 10 -clusterplatform SGE -SGEscript /somedir/script macro.mac"<<endl<<endl;
++	cout<<"    gjs -numberofsplits 10 -clusterplatform condor -condorscript /somedir/script macro.mac"<<endl<<endl;
+ 	cout<<"    gjs -numberofsplits 10 -clusterplatform xgrid macro.mac"<<endl<<endl;
+ 	cout<<"    gjs -numberofsplits 10  /somedir/script macro.mac"<<endl<<endl;
+ 	exit(0);
+@@ -67,6 +77,7 @@
+ 	G4String macfile;
+ 	G4String pbsscript;
+ 	G4String slurmscript;
++	G4String sgescript;
+ 	G4String condorscript;
+ 	G4int nSplits=0;
+ 	G4int nextArg = 1;
+@@ -131,6 +142,12 @@
+ 			slurmscript=argv[nextArg+1];
+ 			if(debug)cout<<"found -slurmscript "<<slurmscript<<endl;
+ 		}  
++		if ((!strcmp(argv[nextArg],"-SGEscript") || !strcmp(argv[nextArg],"-gs")) && indicator==0)
++		{
++			indicator=1;
++			sgescript=argv[nextArg+1];
++			if(debug)cout<<"found -SGEscript "<<sgescript<<endl;
++		}  
+ 		if ((!strcmp(argv[nextArg],"-condorscript") || !strcmp(argv[nextArg],"-cs")) && indicator==0)
+ 		{
+ 			indicator=1;
+@@ -168,7 +185,7 @@
+ 		}
+ 	} 
+ 	
+-	if (platform=="" || platform=="openmosix" || platform=="openPBS" || platform=="slurm" || platform=="condor"|| platform=="xgrid")
++	if (platform=="" || platform=="openmosix" || platform=="openPBS" || platform=="slurm" || platform=="SGE" || platform=="condor"|| platform=="xgrid")
+ 	{  
+ 		if (platform=="")
+ 		{
+@@ -180,6 +197,21 @@
+ 				pbsscript=getenv("GC_PBS_SCRIPT");
+ 				if(verb>1&&pbsscript!="")cout<<"Information : using $GC_PBS_SCRIPT="<<pbsscript<<" as default PBS template script"<<endl;
+ 			}}  
++		if (platform=="slurm"&&slurmscript==""){
++			if (getenv("GC_SLURM_SCRIPT")){
++				slurmscript=getenv("GC_SLURM_SCRIPT");
++				if(verb>1&&slurmscript!="")cout<<"Information : using $GC_SLURM_SCRIPT="<<slurmscript<<" as default slurm template script"<<endl;
++			}}  
++		if (platform=="SGE"&&sgescript==""){
++			if (getenv("GC_SGE_SCRIPT")){
++				sgescript=getenv("GC_SGE_SCRIPT");
++				if(verb>1&&sgescript!="")cout<<"Information : using $GC_SGE_SCRIPT="<<sgescript<<" as default SGE template script"<<endl;
++			}}  
++		if (platform=="condoe"&&condorscript==""){
++			if (getenv("GC_CONDOR_SCRIPT")){
++				condorscript=getenv("GC_CONDOR_SCRIPT");
++				if(verb>1&&condorscript!="")cout<<"Information : using $GC_CONDOR_SCRIPT="<<condorscript<<" as default condor template script"<<endl;
++			}}  
+ 		if (platform!="openPBS"&&pbsscript!="")
+ 		{
+ 			if(verb>0)cout<<"Warning : cluster platform is not openPBS, openPBSscript ignored!"<<endl;
+@@ -189,7 +221,25 @@
+ 			cout<<"Error : cluster platform is openPBS but openPBSscript undefined!"<<endl;
+ 			exit(1);
+ 		}
+-		if ((platform=="openPBS"&&pbsscript!="")||platform=="openmosix"||(platform=="condor"&&condorscript!=""))
++		if (platform!="slurm"&&slurmscript!="")
++		{
++			if(verb>0)cout<<"Warning : cluster platform is not slurm, slurmscript ignored!"<<endl;
++		}
++		if (platform=="slurm"&&slurmscript=="")
++		{
++			cout<<"Error : cluster platform is slurm but slurmscript undefined!"<<endl;
++			exit(1);
++		}
++		if (platform!="SGE"&&sgescript!="")
++		{
++			if(verb>0)cout<<"Warning : cluster platform is not SGE, sgescript ignored!"<<endl;
++		}
++		if (platform=="SGE"&&sgescript=="")
++		{
++			cout<<"Error : cluster platform is SGE but sgescript undefined!"<<endl;
++			exit(1);
++		}
++		if ((platform=="openPBS"&&pbsscript!="")||(platform=="slurm"&&slurmscript!="")||(platform=="SGE"&&sgescript!="")||platform=="openmosix"||(platform=="condor"&&condorscript!=""))
+ 		{
+ 			if(verb>1)cout<<"Information : using  "<<platform<<" as cluster platform!"<<endl;
+ 		}
+@@ -216,7 +266,7 @@
+ 	}
+ 	//create a splitmanager to coordinate it all  
+ 	GateSplitManager* manager;
+-	manager=new GateSplitManager(nAliases,aliases,platform,pbsscript,slurmscript,condorscript,macfile,nSplits,time);
++	manager=new GateSplitManager(nAliases,aliases,platform,pbsscript,slurmscript,sgescript,condorscript,macfile,nSplits,time);
+ 	manager->SetVerboseLevel(verb);
+ 	manager->StartSplitting();
+ 	
+diff -ruN a/cluster_tools/jobsplitter/include/GateSplitManager.hh b/cluster_tools/jobsplitter/include/GateSplitManager.hh
+--- a/cluster_tools/jobsplitter/include/GateSplitManager.hh	2020-03-25 04:30:34.000000000 -0500
++++ b/cluster_tools/jobsplitter/include/GateSplitManager.hh	2020-11-01 14:09:36.980752856 -0600
+@@ -21,7 +21,7 @@
+ {
+ public:
+ 
+-  GateSplitManager(G4int nAliases,G4String* aliases,G4String platform,G4String pbsscript,G4String slurmscript,G4String condorscript,G4String macfile,G4int nSplits,G4int time);
++  GateSplitManager(G4int nAliases,G4String* aliases,G4String platform,G4String pbsscript,G4String slurmscript,G4String sgescript,G4String condorscript,G4String macfile,G4int nSplits,G4int time);
+   ~GateSplitManager();
+   void SetVerboseLevel(G4int value) { m_verboseLevel = value; };
+   void StartSplitting();
+diff -ruN a/cluster_tools/jobsplitter/include/GateToPlatform.hh b/cluster_tools/jobsplitter/include/GateToPlatform.hh
+--- a/cluster_tools/jobsplitter/include/GateToPlatform.hh	2020-03-25 04:30:34.000000000 -0500
++++ b/cluster_tools/jobsplitter/include/GateToPlatform.hh	2020-11-01 14:09:36.980752856 -0600
+@@ -20,7 +20,7 @@
+ {
+ public:
+   GateToPlatform();
+-  GateToPlatform(G4int numberOfSplits, G4String thePlatform, G4String pbsscript,G4String slurmscript,G4String theCondorScript,G4String outputMacName,G4int time);
++  GateToPlatform(G4int numberOfSplits, G4String thePlatform, G4String pbsscript,G4String slurmscript,G4String sgescript,G4String theCondorScript,G4String outputMacName,G4int time);
+   ~GateToPlatform();
+   void SetVerboseLevel(G4int value) { m_verboseLevel = value; };
+   int GenerateSubmitfile(G4String outputMacDir);
+@@ -31,6 +31,8 @@
+   int GenerateOpenPBSScriptfile();
+   int GenerateSlurmSubmitfile();
+   int GenerateSlurmScriptfile();
++  int GenerateSGESubmitfile();
++  int GenerateSGEScriptfile();
+   int GenerateCondorSubmitfile();
+   int GenerateXgridSubmitfile();    
+   G4int m_verboseLevel;  
+@@ -38,6 +40,7 @@
+   G4String platform;
+   G4String pbsScript;
+   G4String slurmScript;
++  G4String sgeScript;
+   G4String condorScript;
+   G4String outputMacfilename;
+   G4String outputDir;
+diff -ruN a/cluster_tools/jobsplitter/script/SGE.script b/cluster_tools/jobsplitter/script/SGE.script
+--- a/cluster_tools/jobsplitter/script/SGE.script	1969-12-31 18:00:00.000000000 -0600
++++ b/cluster_tools/jobsplitter/script/SGE.script	2020-11-01 14:10:22.665715635 -0600
+@@ -0,0 +1,32 @@
++#!/bin/bash
++##############################################################
++#
++#  Standard batch script for SGE in ClusterGATE 
++#  This script will be proccessed by gjs. The
++#  following keywords 
++#   GC_JOBNAME
++#   GC_LOG
++#   GC_ERR
++#   GC_GATE
++#   GC_WORKDIR
++#   GC_QUEUE
++#  will be replaced by actual values.
++#  Do not remove any of them!
++#    
++##############################################################
++#
++# Queue to submit to
++#$ -q GC_SGE_QUEUE
++
++# batch job stderr and stdout
++#$ -o GC_WORKDIR/GC_LOG
++#$ -e GC_WORKDIR/GC_ERR
++
++# Job name
++#$ -N GC_JOBNAME
++
++# Use current working directory
++#$ -cwd
++
++# executable
++GC_GATE 
+diff -ruN a/cluster_tools/jobsplitter/src/GateSplitManager.cc b/cluster_tools/jobsplitter/src/GateSplitManager.cc
+--- a/cluster_tools/jobsplitter/src/GateSplitManager.cc	2020-03-25 04:30:34.000000000 -0500
++++ b/cluster_tools/jobsplitter/src/GateSplitManager.cc	2020-11-01 14:09:36.981752855 -0600
+@@ -17,9 +17,10 @@
+ using std::endl;
+ 
+ GateSplitManager::GateSplitManager(G4int nAliases,G4String* aliases,G4String platform,G4String pbsscript,
+-                                   G4String slurmscript,G4String condorscript,G4String macfile,G4int nSplits,G4int time)
++                                   G4String slurmscript,G4String sgescript,G4String condorscript,
++				   G4String macfile,G4int nSplits,G4int time)
+ {
+- toPlatform = new GateToPlatform(nSplits,platform,pbsscript,slurmscript,condorscript,macfile,time);
++ toPlatform = new GateToPlatform(nSplits,platform,pbsscript,slurmscript,sgescript,condorscript,macfile,time);
+  macParser  = new GateMacfileParser(macfile,nSplits,nAliases,aliases);
+  numberOfSplits=nSplits;
+ }
+diff -ruN a/cluster_tools/jobsplitter/src/GateToPlatform.cc b/cluster_tools/jobsplitter/src/GateToPlatform.cc
+--- a/cluster_tools/jobsplitter/src/GateToPlatform.cc	2020-03-25 04:30:34.000000000 -0500
++++ b/cluster_tools/jobsplitter/src/GateToPlatform.cc	2020-11-01 14:09:36.981752855 -0600
+@@ -25,12 +25,13 @@
+ using std::ifstream;
+ using std::ostringstream;
+               
+-GateToPlatform::GateToPlatform(G4int numberOfSplits, G4String thePlatform, G4String thePbsscript, G4String theSlurmScript, G4String theCondorScript, G4String outputMacName, G4int time)
++GateToPlatform::GateToPlatform(G4int numberOfSplits, G4String thePlatform, G4String thePbsScript, G4String theSlurmScript,  G4String theSgeScript,G4String theCondorScript, G4String outputMacName, G4int time)
+ {
+ 	nSplits=numberOfSplits;
+ 	platform=thePlatform;
+-	pbsScript=thePbsscript;
++	pbsScript=thePbsScript;
+ 	slurmScript=theSlurmScript;
++	sgeScript=theSgeScript;
+ 	condorScript=theCondorScript;
+ 	useTiming=time;
+ 	outputMacfilename=outputMacName.substr(0,outputMacName.length()-4);
+@@ -60,6 +61,11 @@
+ 		err+=GenerateSlurmSubmitfile();
+ 		if (err>0) return 1;
+ 	}
++	if (platform=="SGE"){
++		err+=GenerateSGEScriptfile();
++		err+=GenerateSGESubmitfile();
++		if (err>0) return 1;
++	}
+ 	if (platform=="condor"){
+ 		err+=GenerateCondorSubmitfile();
+ 		if (err>0) return 1;
+@@ -262,6 +268,111 @@
+ 	}
+ 	submitFile.close();
+ 	chmod( submitFilename.c_str() , S_IRWXU|S_IRGRP );
++	return 0;
++}
++
++int GateToPlatform::GenerateSGEScriptfile()
++{
++        G4String queue="";
++        if (!getenv("GC_SGE_QUEUE")) {
++                queue="all.q";
++        } else {
++                queue=getenv("GC_SGE_QUEUE");
++        }
++ 
++	G4String dir=getenv("GC_GATE_EXE_DIR");
++	if (dir.substr(dir.length()-1,dir.length())!="/") dir=dir+"/"; 
++	
++	//check if we have an existing directory
++	ifstream dirstream(dir.c_str());
++	if (!dirstream) { 
++		cout<<"Error : Failed to detect the Gate executable directory"<<endl;
++		cout<<"Please check your environment variables!"<<endl; 
++		cout<<"Generated submit file may be invalid..."<<endl;  
++		return 1;
++	}
++	dirstream.close();
++	
++	//create script file to be submitted with qsub (SGE)
++	
++	
++	char out_name[1000];
++	G4String buf;
++	for (G4int i=1;i<=nSplits;i++)
++	{
++		ostringstream cnt;
++		cnt<<i;
++		// open template script file
++		ifstream inFile(sgeScript);
++		if (!inFile) {
++			cout<< "Error : could not access SGE script template file! "<<sgeScript<< endl;
++			return(1);
++		}
++		sprintf(out_name,"%s%i%s",outputDir.c_str(),i,".sge");
++		ofstream scriptFile(out_name);
++		if (!scriptFile) {
++			cout<< "Error : could not create script file! "<<out_name<< endl;
++			return(1);
++		}
++		while(getline(inFile,buf)){
++			if(buf.find("#")!=0||buf.find("#$")==0){
++				unsigned int pos=buf.find("GC_WORKDIR");
++				if(pos<buf.length())  buf=buf.substr(0,pos)+outputDir.substr(0,outputDir.rfind("/"))+buf.substr(pos+10);
++                                pos=buf.find("GC_SGE_QUEUE");
++                                if(pos<buf.length())  buf=buf.substr(0,pos)+queue+buf.substr(pos+12);
++				pos=buf.find("GC_LOG");
++				if(pos<buf.length())  buf=buf.substr(0,pos)+"log"+cnt.str()+buf.substr(pos+6);
++				pos=buf.find("GC_ERR");
++				if(pos<buf.length())  buf=buf.substr(0,pos)+"err"+cnt.str()+buf.substr(pos+6);
++				pos=buf.find("GC_JOBNAME");
++				if(pos<buf.length())  {
++					//SGE max_jobname_length=512
++					char jobname[256]="";
++					strncpy(jobname,outputMacfilename.c_str(),255-cnt.str().length());
++					buf=buf.substr(0,pos)+jobname+cnt.str()+buf.substr(pos+10);
++				}
++				pos=buf.find("GC_GATE");
++				G4String timestr="";
++				if (useTiming==1) timestr="time ";
++				if(pos<buf.length())  buf=timestr+dir+"Gate "+outputDir+cnt.str()+".mac"+buf.substr(pos+7);
++			}
++			scriptFile<<buf<<endl;
++		}
++		scriptFile.close();
++		inFile.close();
++	}
++	return 0; 
++}
++
++int GateToPlatform::GenerateSGESubmitfile()
++{
++	G4String dir=getenv("GC_GATE_EXE_DIR");
++	if (dir.substr(dir.length()-1,dir.length())!="/") dir=dir+"/"; 
++	
++	//check if we have an existing director
++	ifstream dirstream(dir.c_str());
++	if (!dirstream) { 
++		cout<<"Error : Failed to detect the Gate executable directory"<<endl;
++		cout<<"Please check your environment variables!"<<endl; 
++		cout<<"Generated submit file may be invalid..."<<endl;  
++		return 1;
++	}
++	dirstream.close();
++	
++	G4String submitFilename=outputMacfilename+".submit";
++	ofstream submitFile(submitFilename.c_str());
++	if (!submitFile) {
++		cout<< "Error : could not create submit file! "<<submitFilename<< endl;
++		return(1);
++	}
++	submitFile<<"#! /bin/sh"<<endl;
++	for (G4int i=1;i<=nSplits;i++)
++	{
++		submitFile<<"echo qsub "<<outputDir<<i<<+".sge"<<endl;
++		submitFile<<"qsub "<<outputDir<<i<<+".sge"<<endl;
++	}
++	submitFile.close();
++	chmod( submitFilename.c_str() , S_IRWXU|S_IRGRP );
+ 	return 0;
+ }
+ 

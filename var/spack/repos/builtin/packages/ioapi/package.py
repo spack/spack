@@ -1,12 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
 import os
-
-from spack import *
 
 
 class Ioapi(MakefilePackage):
@@ -14,7 +11,7 @@ class Ioapi(MakefilePackage):
 
     homepage = "https://www.cmascenter.org/ioapi/"
     url      = "https://www.cmascenter.org/ioapi/download/ioapi-3.2.tar.gz"
-    version('3.2', sha256='56771ff0053d47f2445e00ff369bca7bfc484325a2816b2c648744e523134fe9')
+    version('3.2', sha256='0a3cbf236ffbd9fb5f6509e35308c3353f1f53096efe0c51b84883d2da86924b')
     depends_on('netcdf-c@4:')
     depends_on('netcdf-fortran@4:')
     depends_on('sed', type='build')
@@ -34,11 +31,7 @@ class Ioapi(MakefilePackage):
         make('install')
         # Install the header files.
         mkdirp(prefix.include.fixed132)
-        headers = glob.glob('ioapi/*.EXT')
-        for header in headers:
-            install(header, prefix.include)
+        install('ioapi/*.EXT', prefix.include)
         # Install the header files for CMAQ and SMOKE in the
         # non-standard -ffixed-line-length-132 format.
-        headers_fixed132 = glob.glob('ioapi/fixed_src/*.EXT')
-        for header in headers_fixed132:
-            install(header, prefix.include.fixed132)
+        install('ioapi/fixed_src/*.EXT', prefix.include.fixed132)
