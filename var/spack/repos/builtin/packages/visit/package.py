@@ -62,7 +62,7 @@ class Visit(CMakePackage):
 
     extendable = True
 
-    executables = ['^xml2cmake$']
+    executables = ['^visit$']
 
     version('develop', branch='develop')
     version('3.1.1', sha256='0b60ac52fd00aff3cf212a310e36e32e13ae3ca0ddd1ea3f54f75e4d9b6c6cf0')
