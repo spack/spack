@@ -26,6 +26,7 @@ import llnl.util.tty as tty
 import spack.architecture
 import spack.binary_distribution
 import spack.config
+import spack.detection
 import spack.environment
 import spack.main
 import spack.modules
@@ -209,7 +210,7 @@ class _BuildcacheBootstrapper(object):
         buildcache = spack.main.SpackCommand('buildcache')
         # Ensure we see only the buildcache being used to bootstrap
         mirror_scope = spack.config.InternalConfigScope(
-            'bootstrap', {'mirrors:': {self.name: self.url}}
+            'bootstrap_buildcache', {'mirrors:': {self.name: self.url}}
         )
         with spack.config.override(mirror_scope):
             # This index is currently needed to get the compiler used to build some
@@ -218,7 +219,7 @@ class _BuildcacheBootstrapper(object):
             index = spack.binary_distribution.update_cache_and_get_specs()
 
             if not index:
-                raise RuntimeError("Could not populate the binary index")
+                raise RuntimeError("could not populate the binary index")
 
             for item in data['verified']:
                 candidate_spec = item['spec']
@@ -278,6 +279,10 @@ class _SourceBootstrapper(object):
             return True
 
         tty.info("Bootstrapping {0} from sources".format(module))
+
+        # If we compile code from sources detecting a few build tools
+        # might reduce compilation time by a fair amount
+        _add_externals_if_missing()
 
         # Try to build and install from sources
         with spack_python_interpreter():
@@ -492,7 +497,11 @@ def _bootstrap_config_scopes():
     config_scopes = [
         spack.config.InternalConfigScope('_builtin', spack.config.config_defaults)
     ]
-    for name, path in spack.config.configuration_paths:
+    configuration_paths = (
+        spack.config.configuration_defaults_path,
+        ('bootstrap', _config_path())
+    )
+    for name, path in configuration_paths:
         platform = spack.architecture.platform().name
         platform_scope = spack.config.ConfigScope(
             '/'.join([name, platform]), os.path.join(path, platform)
@@ -517,9 +526,19 @@ def _add_compilers_if_missing():
             spack.compilers.add_compilers_to_config(new_compilers, init_config=False)
 
 
+def _add_externals_if_missing():
+    search_list = [
+        spack.repo.path.get('cmake'),
+        spack.repo.path.get('bison')
+    ]
+    detected_packages = spack.detection.by_executable(search_list)
+    spack.detection.update_configuration(detected_packages, scope='bootstrap')
+
+
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
+    user_configuration = _read_and_sanitize_configuration()
     with spack.environment.deactivate_environment():
         with spack.architecture.use_platform(spack.architecture.real_platform()):
             with spack.repo.use_repositories(spack.paths.packages_path):
@@ -531,9 +550,27 @@ def ensure_bootstrap_configuration():
                         # We may need to compile code from sources, so ensure we have
                         # compilers for the current platform before switching parts.
                         _add_compilers_if_missing()
+                        spack.config.set('bootstrap', user_configuration['bootstrap'])
+                        spack.config.set('config', user_configuration['config'])
                         with spack.modules.disable_modules():
                             with spack_python_interpreter():
                                 yield
+
+
+def _read_and_sanitize_configuration():
+    """Read the user configuration that needs to be reused for bootstrapping
+    and remove the entries that should not be copied over.
+    """
+    # Read the "config" section but pop the install tree (the entry will not be
+    # considered due to the use_store context manager, so it will be confusing
+    # to have it in the configuration).
+    config_yaml = spack.config.get('config')
+    config_yaml.pop('install_tree', None)
+    user_configuration = {
+        'bootstrap': spack.config.get('bootstrap'),
+        'config': config_yaml
+    }
+    return user_configuration
 
 
 def store_path():
@@ -544,13 +581,28 @@ def store_path():
                'Use "spack bootstrap enable" to enable it')
         raise RuntimeError(msg)
 
-    bootstrap_root_path = spack.config.get(
+    return _store_path()
+
+
+def _root_path():
+    """Root of all the bootstrap related folders"""
+    return spack.config.get(
         'bootstrap:root', spack.paths.user_bootstrap_path
     )
-    bootstrap_store_path = spack.util.path.canonicalize_path(
+
+
+def _store_path():
+    bootstrap_root_path = _root_path()
+    return spack.util.path.canonicalize_path(
         os.path.join(bootstrap_root_path, 'store')
     )
-    return bootstrap_store_path
+
+
+def _config_path():
+    bootstrap_root_path = _root_path()
+    return spack.util.path.canonicalize_path(
+        os.path.join(bootstrap_root_path, 'config')
+    )
 
 
 def clingo_root_spec():

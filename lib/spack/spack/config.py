@@ -84,11 +84,16 @@ all_schemas = copy.deepcopy(section_schemas)
 all_schemas.update(dict((key, spack.schema.env.schema)
                         for key in spack.schema.env.keys))
 
+#: Path to the default configuration
+configuration_defaults_path = (
+    'defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+)
+
 #: Builtin paths to configuration files in Spack
 configuration_paths = (
     # Default configuration scope is the lowest-level scope. These are
     # versioned with Spack and can be overridden by systems, sites or users
-    ('defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')),
+    configuration_defaults_path,
 
     # System configuration is per machine.
     # No system-level configs should be checked into spack by default
