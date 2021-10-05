@@ -25,6 +25,8 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        persist-credentials: false
     - uses: actions/setup-python@v2
       with:
         python-version: 3.9
@@ -40,6 +42,8 @@ jobs:
     timeout-minutes: 700
     steps:
     - uses: actions/checkout@v2
+      with:
+        persist-credentials: false
     - uses: actions/setup-python@v2
       with:
         python-version: 3.9
@@ -53,6 +57,8 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        persist-credentials: false
     - uses: actions/setup-python@v2
       with:
         python-version: 3.9
@@ -68,6 +74,8 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        persist-credentials: false
     - uses: actions/setup-python@v2
       with:
         python-version: 3.9

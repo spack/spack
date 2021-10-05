@@ -30,6 +30,8 @@ jobs:
               make patch unzip which xz python3 python3-devel tree \
               cmake bison bison-devel libstdc++-static
       - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - name: Setup repo and non-root user
         run: |
           git --version
@@ -60,6 +62,8 @@ jobs:
               make patch unzip xz-utils python3 python3-dev tree \
               cmake bison
       - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - name: Setup repo and non-root user
         run: |
           git --version
@@ -88,6 +92,8 @@ jobs:
               make patch unzip which xz python3 python3-devel tree \
               cmake bison
       - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - name: Setup repo and non-root user
         run: |
           git --version
@@ -108,6 +114,8 @@ jobs:
         run: |
           brew install cmake bison@2.7 tree
       - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
@@ -127,6 +135,8 @@ jobs:
         run: |
           brew install tree
       - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -145,6 +155,8 @@ jobs:
         python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9']
     steps:
       - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
