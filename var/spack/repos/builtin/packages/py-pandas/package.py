@@ -29,6 +29,11 @@ class PyPandas(PythonPackage):
         'pandas._config'
     ]
 
+    version('1.3.0',  sha256='c554e6c9cf2d5ea1aba5979cc837b3649539ced0e18ece186f055450c86622e2')
+    version('1.2.5',  sha256='14abb8ea73fce8aebbb1fb44bec809163f1c55241bcc1db91c2c780e97265033')
+    version('1.2.4',  sha256='649ecab692fade3cbfcf967ff936496b0cfba0af00a55dfaacd82bdda5cb2279')
+    version('1.2.3',  sha256='df6f10b85aef7a5bb25259ad651ad1cc1d6bb09000595cab47e718cbac250b1d')
+    version('1.2.2',  sha256='14ed84b463e9b84c8ff9308a79b04bf591ae3122a376ee0f62c68a1bd917a773')
     version('1.2.1',  sha256='5527c5475d955c0bc9689c56865aaa2a7b13c504d6c44f0aadbf57b565af5ebd')
     version('1.2.0',  sha256='e03386615b970b8b41da6a68afe717626741bb2431cec993640685614c0680e4')
     version('1.1.5',  sha256='f10fc41ee3c75a474d3bdf68d396f10782d013d7f67db99c0efbfd0acb99701b')
@@ -68,10 +73,12 @@ class PyPandas(PythonPackage):
     depends_on('py-cython@0.29.16:2', type='build', when='@1.1:')
     depends_on('py-cython@0.29.21:2', type='build', when='@1.1.3:')
     depends_on('py-setuptools@24.2.0:', type='build')
+    depends_on('py-setuptools@38.6.0:', type='build', when='@1.3:')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numpy@1.13.3:', type=('build', 'run'), when='@0.25:')
     depends_on('py-numpy@1.15.4:', type=('build', 'run'), when='@1.1:')
     depends_on('py-numpy@1.16.5:', type=('build', 'run'), when='@1.2:')
+    depends_on('py-numpy@1.17.3:', type=('build', 'run'), when='@1.3:')
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-python-dateutil@2.6.1:', type=('build', 'run'), when='@0.25:')
     depends_on('py-python-dateutil@2.7.3:', type=('build', 'run'), when='@1.1:')
@@ -83,6 +90,7 @@ class PyPandas(PythonPackage):
     depends_on('py-numexpr', type=('build', 'run'))
     depends_on('py-numexpr@2.6.2:', type=('build', 'run'), when='@0.25:')
     depends_on('py-numexpr@2.6.8:', type=('build', 'run'), when='@1.2:')
+    depends_on('py-numexpr@2.7.0:', type=('build', 'run'), when='@1.3:')
     depends_on('py-bottleneck', type=('build', 'run'))
     depends_on('py-bottleneck@1.2.1:', type=('build', 'run'), when='@0.25:')
 

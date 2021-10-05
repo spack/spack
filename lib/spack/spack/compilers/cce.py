@@ -66,6 +66,12 @@ class Cce(Compiler):
         return "-h std=c++11"
 
     @property
+    def cxx14_flag(self):
+        if self.is_clang_based:
+            return '-std=c++14'
+        return "-h std=c++14"
+
+    @property
     def c99_flag(self):
         if self.is_clang_based:
             return '-std=c99'
@@ -112,3 +118,9 @@ class Cce(Compiler):
         if self.is_clang_based:
             return "-fPIC"
         return "-h PIC"
+
+    @property
+    def stdcxx_libs(self):
+        # Cray compiler wrappers link to the standard C++ library
+        # without additional flags.
+        return ()

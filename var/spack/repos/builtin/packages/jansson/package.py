@@ -26,6 +26,5 @@ class Jansson(CMakePackage):
 
     def cmake_args(self):
         return [
-            '-DJANSSON_BUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in self.spec else 'OFF'),
+            self.define_from_variant('JANSSON_BUILD_SHARED_LIBS', 'shared'),
         ]

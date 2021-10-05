@@ -24,6 +24,9 @@ class Dd4hep(CMakePackage):
     tags = ['hep']
 
     version('master', branch='master')
+    version('1.17', sha256='036a9908aaf1e13eaf5f2f43b6f5f4a8bdda8183ddc5befa77a4448dbb485826')
+    version('1.16.1', sha256='c8b1312aa88283986f89cc008d317b3476027fd146fdb586f9f1fbbb47763f1a')
+    version('1.16', sha256='ea9755cd255cf1b058e0e3cd743101ca9ca5ff79f4c60be89f9ba72b1ae5ec69')
     version('1.15', sha256='992a24bd4b3dfaffecec9d1c09e8cde2c7f89d38756879a47b23208242f4e352')
     version('1.14.1', sha256='5b5742f1e23c2b36d3174cca95f810ce909c0eb66f3d6d7acb0ba657819e6717')
     version('1.14', sha256='b603aa3c0db8dda392253aa71fa4a0f0c3c9715d47df0b895d45c1e8849f4895')
@@ -42,6 +45,9 @@ class Dd4hep(CMakePackage):
     # See https://github.com/AIDASoft/DD4hep/pull/613 .
     patch('tbb-workarounds.patch', when='@1.11')
     patch('tbb2.patch', when='@1.12.1')
+    # Workaround for failing build file generation in some cases
+    # See https://github.com/spack/spack/issues/24232
+    patch('cmake_language.patch', when='@:1.17')
 
     variant('xercesc', default=False, description="Enable 'Detector Builders' based on XercesC")
     variant('geant4', default=False, description="Enable the simulation part based on Geant4")
@@ -49,6 +55,7 @@ class Dd4hep(CMakePackage):
     variant('hepmc3', default=False, description="Enable build with hepmc3")
     variant('lcio', default=False, description="Enable build with lcio")
     variant('edm4hep', default=True, description="Enable build with edm4hep")
+    variant('geant4units', default=False, description="Use geant4 units throughout")
     variant('debug', default=False,
             description="Enable debug build flag - adds extra info in"
             " some places in addtion to the debug build type")
@@ -65,6 +72,10 @@ class Dd4hep(CMakePackage):
     depends_on('lcio', when="+lcio")
     depends_on('edm4hep', when="+edm4hep")
 
+    # See https://github.com/AIDASoft/DD4hep/pull/771
+    conflicts('^cmake@3.16:3.17.0', when='@1.15',
+              msg='cmake version with buggy FindPython breaks dd4hep cmake config')
+
     def cmake_args(self):
         spec = self.spec
         cxxstd = spec['root'].variants['cxxstd'].value
@@ -77,6 +88,7 @@ class Dd4hep(CMakePackage):
             self.define_from_variant('DD4HEP_USE_GEANT4', 'geant4'),
             self.define_from_variant('DD4HEP_USE_LCIO', 'lcio'),
             self.define_from_variant('DD4HEP_USE_HEPMC3', 'hepmc3'),
+            self.define_from_variant('DD4HEP_USE_GEANT4_UNITS', 'geant4units'),
             self.define_from_variant('DD4HEP_BUILD_DEBUG', 'debug'),
             # Downloads assimp from github and builds it on the fly.
             # However, with spack it is preferrable to have a proper external
@@ -93,6 +105,7 @@ class Dd4hep(CMakePackage):
     def setup_run_environment(self, env):
         # used p.ex. in ddsim to find DDDetectors dir
         env.set("DD4hepINSTALL", self.prefix)
+        env.set("DD4HEP", self.prefix.examples)
         env.set("DD4hep_DIR", self.prefix)
         env.set("DD4hep_ROOT", self.prefix)
 

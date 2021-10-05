@@ -8,13 +8,14 @@
 The spack package class structure is based strongly on Homebrew
 (http://brew.sh/), mainly because Homebrew makes it very easy to create
 packages.
-
 """
+
 import base64
 import collections
 import contextlib
 import copy
 import functools
+import glob
 import hashlib
 import inspect
 import os
@@ -24,13 +25,14 @@ import sys
 import textwrap
 import time
 import traceback
-import six
 import types
-from typing import Optional, List, Dict, Any, Callable  # novm
+from typing import Any, Callable, Dict, List, Optional  # novm
+
+import six
+from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-
 import spack.compilers
 import spack.config
 import spack.dependency
@@ -50,14 +52,13 @@ import spack.util.environment
 import spack.util.web
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
-from ordereddict_backport import OrderedDict
 from spack.filesystem_view import YamlFilesystemView
-from spack.installer import PackageInstaller, InstallError
 from spack.install_test import TestFailure, TestSuite
-from spack.util.executable import which, ProcessError
-from spack.util.prefix import Prefix
-from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
+from spack.installer import InstallError, PackageInstaller
+from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
+from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
+from spack.util.prefix import Prefix
 from spack.version import Version
 
 """Allowed URL schemes for spack packages."""
@@ -69,6 +70,9 @@ _spack_build_logfile = 'spack-build-out.txt'
 
 # Filename for the Spack build/install environment file.
 _spack_build_envfile = 'spack-build-env.txt'
+
+# Filename of json with total build and phase times (seconds)
+_spack_times_log = 'install_times.json'
 
 # Filename for the Spack configure args file.
 _spack_configure_argsfile = 'spack-configure-args.txt'
@@ -698,7 +702,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Set up timing variables
         self._fetch_time = 0.0
-        self._total_time = 0.0
 
         if self.is_extension:
             spack.repo.get(self.extendee_spec)._check_extendable()
@@ -1067,6 +1070,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return os.path.join(self.stage.path, _spack_build_logfile)
 
     @property
+    def phase_log_files(self):
+        """Find sorted phase log files written to the staging directory"""
+        logs_dir = os.path.join(self.stage.path, "spack-build-*-out.txt")
+        log_files = glob.glob(logs_dir)
+        log_files.sort()
+        return log_files
+
+    @property
     def install_log_path(self):
         """Return the build log file path on successful installation."""
         # Backward compatibility: Return the name of an existing install log.
@@ -1082,6 +1093,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def configure_args_path(self):
         """Return the configure args file path associated with staging."""
         return os.path.join(self.stage.path, _spack_configure_argsfile)
+
+    @property
+    def times_log_path(self):
+        """Return the times log json file."""
+        return os.path.join(self.metadata_dir, _spack_times_log)
 
     @property
     def install_configure_args_path(self):
@@ -1260,11 +1276,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise ValueError("Can only get the arch for concrete package.")
         return spack.architecture.arch_for_spec(self.spec.architecture)
 
-    @property
+    @property  # type: ignore
+    @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
+
         return spack.compilers.compiler_for_spec(self.spec.compiler,
                                                  self.spec.architecture)
 
@@ -1309,7 +1327,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             tty.debug('No fetch required for {0}: package has no code.'
                       .format(self.name))
 
-        start_time = time.time()
         checksum = spack.config.get('config:checksum')
         fetch = self.stage.managed_by_spack
         if checksum and fetch and self.version not in self.versions:
@@ -1331,8 +1348,34 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise FetchError("Will not fetch %s" %
                                  self.spec.format('{name}{@version}'), ck_msg)
 
+        deprecated = spack.config.get('config:deprecated')
+        if not deprecated and self.versions.get(
+                self.version, {}).get('deprecated', False):
+            tty.warn("{0} is deprecated and may be removed in a future Spack "
+                     "release.".format(
+                         self.spec.format('{name}{@version}')))
+
+            # Ask the user whether to install deprecated version if we're
+            # interactive, but just fail if non-interactive.
+            dp_msg = ("If you are willing to be a maintainer for this version "
+                      "of the package, submit a PR to remove `deprecated=False"
+                      "`, or use `--deprecated` to skip this check.")
+            ignore_deprecation = False
+            if sys.stdout.isatty():
+                ignore_deprecation = tty.get_yes_or_no("  Fetch anyway?",
+                                                       default=False)
+
+                if ignore_deprecation:
+                    tty.debug("Fetching deprecated version. {0}".format(
+                        dp_msg))
+
+            if not ignore_deprecation:
+                raise FetchError("Will not fetch {0}".format(
+                    self.spec.format('{name}{@version}')), dp_msg)
+
         self.stage.create()
         err_msg = None if not self.manual_download else self.download_instr
+        start_time = time.time()
         self.stage.fetch(mirror_only, err_msg=err_msg)
         self._fetch_time = time.time() - start_time
 
@@ -1379,7 +1422,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If there are no patches, note it.
         if not patches and not has_patch_fun:
-            tty.debug('No patches needed for {0}'.format(self.name))
+            tty.msg('No patches needed for {0}'.format(self.name))
             return
 
         # Construct paths to special files in the archive dir used to
@@ -1397,10 +1440,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
-            tty.debug('Already patched {0}'.format(self.name))
+            tty.msg('Already patched {0}'.format(self.name))
             return
         elif os.path.isfile(no_patches_file):
-            tty.debug('No patches needed for {0}'.format(self.name))
+            tty.msg('No patches needed for {0}'.format(self.name))
             return
 
         # Apply all the patches for specs that match this one
@@ -1409,7 +1452,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     patch.apply(self.stage)
-                tty.debug('Applied patch {0}'.format(patch.path_or_url))
+                tty.msg('Applied patch {0}'.format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
                 tty.debug(e)
@@ -1423,7 +1466,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     self.patch()
-                tty.debug('Ran patch() for {0}'.format(self.name))
+                tty.msg('Ran patch() for {0}'.format(self.name))
                 patched = True
             except spack.multimethod.NoSuchMethodError:
                 # We are running a multimethod without a default case.
@@ -1433,7 +1476,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # directive, AND the patch function didn't apply, say
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
-                    tty.debug('No patches needed for {0}'.format(self.name))
+                    tty.msg('No patches needed for {0}'.format(self.name))
             except spack.error.SpackError as e:
                 tty.debug(e)
 
@@ -1493,17 +1536,24 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # should this attempt to download the source and set one? This
             # probably only happens for source repositories which are
             # referenced by branch name rather than tag or commit ID.
-            message = 'Missing a source id for {s.name}@{s.version}'
-            tty.warn(message.format(s=self))
+            if not self.spec.external:
+                message = 'Missing a source id for {s.name}@{s.version}'
+                tty.warn(message.format(s=self))
             hash_content.append(''.encode('utf-8'))
         else:
             hash_content.append(source_id.encode('utf-8'))
         hash_content.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
                             for p in self.spec.patches)
         hash_content.append(package_hash(self.spec, content))
-        return base64.b32encode(
+        b32_hash = base64.b32encode(
             hashlib.sha256(bytes().join(
                 sorted(hash_content))).digest()).lower()
+
+        # convert from bytes if running python 3
+        if sys.version_info[0] >= 3:
+            b32_hash = b32_hash.decode('utf-8')
+
+        return b32_hash
 
     def _has_make_target(self, target):
         """Checks to see if 'target' is a valid target in a Makefile.
@@ -2288,8 +2338,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         extensions_layout = view.extensions_layout
 
-        extensions_layout.check_extension_conflict(
-            self.extendee_spec, self.spec)
+        try:
+            extensions_layout.check_extension_conflict(
+                self.extendee_spec, self.spec)
+        except spack.directory_layout.ExtensionAlreadyInstalledError as e:
+            # already installed, let caller know
+            tty.msg(e.message)
+            return
 
         # Activate any package dependencies that are also extensions.
         if with_dependencies:
@@ -2557,6 +2612,14 @@ def test_process(pkg, kwargs):
                         spec_pkg = spec.package
                     except spack.repo.UnknownPackageError:
                         continue
+
+                    # copy installed test sources cache into test cache dir
+                    if spec.concrete:
+                        cache_source = spec_pkg.install_test_root
+                        cache_dir = pkg.test_suite.current_test_cache_dir
+                        if (os.path.isdir(cache_source) and
+                                not os.path.exists(cache_dir)):
+                            fsys.install_tree(cache_source, cache_dir)
 
                     # copy test data into test data dir
                     data_source = Prefix(spec_pkg.package_dir).test

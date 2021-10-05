@@ -15,8 +15,11 @@ class Hadoop(Package):
     homepage = "http://hadoop.apache.org/"
     url      = "https://www.apache.org/dist/hadoop/common/hadoop-3.2.1/hadoop-3.2.1.tar.gz"
 
+    version('3.3.0',  sha256='ea1a0f0afcdfb9b6b9d261cdce5a99023d7e8f72d26409e87f69bda65c663688')
+    version('3.2.2',  sha256='97e73b46c3972cd3c40c2295bd9488843c24e8503c36e7c57f6e6ecc4e12b8c3')
     version('3.2.1',  sha256='f66a3a4115b8f16c1077d1a198a06854dbef0e4233291712ed08d0a10629ed37')
     version('3.1.3',  sha256='1e8b7ca4e3911f8ec999595f71921390e9ad7a27255fbd36af1f3a1628b67e2b')
+    version('2.10.1', sha256='273d5fa1d479d0bb96759b16cf4cbd6ba3e7f863a0778cbae55ab83417e961f0')
     version('2.10.0', sha256='131750c258368be4baff5d4a83b4de2cd119bda3774ed26d1d233b6fdf33f07f')
     version('2.9.2',  sha256='3d2023c46b1156c1b102461ad08cbc17c8cc53004eae95dab40a1f659839f28a')
     version('2.8.5',  sha256='f9c726df693ce2daa4107886f603270d66e7257f77a92c9886502d6cd4a884a4')

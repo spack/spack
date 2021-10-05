@@ -188,6 +188,13 @@ class TestSuite(object):
         return self.stage.join(self.test_pkg_id(spec))
 
     @property
+    def current_test_cache_dir(self):
+        assert self.current_test_spec and self.current_base_spec
+        test_spec = self.current_test_spec
+        base_spec = self.current_base_spec
+        return self.test_dir_for_spec(base_spec).cache.join(test_spec.name)
+
+    @property
     def current_test_data_dir(self):
         assert self.current_test_spec and self.current_base_spec
         test_spec = self.current_test_spec

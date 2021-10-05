@@ -11,8 +11,7 @@ import sys
 import llnl.util.tty as tty
 import spack.architecture
 import spack.util.executable
-
-from spack.operating_systems.mac_os import macos_version, macos_sdk_path
+from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
@@ -25,17 +24,22 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
-    maintainers = ['michaelkuhn']
+    maintainers = ['michaelkuhn', 'alalazo']
 
     version('master', branch='master')
 
+    version('11.1.0', sha256='4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf')
+
+    version('10.3.0', sha256='64f404c1a650f27fc33da242e1f2df54952e3963a49e06e73f6940f3223ac344')
     version('10.2.0', sha256='b8dd4368bb9c7f0b98188317ee0254dd8cc99d1e3a18d0ff146c855fe16c1d8c')
     version('10.1.0', sha256='b6898a23844b656f1b68691c5c012036c2e694ac4b53a8918d4712ad876e7ea2')
 
+    version('9.4.0', sha256='c95da32f440378d7751dd95533186f7fc05ceb4fb65eb5b85234e6299eb9838e')
     version('9.3.0', sha256='71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1')
     version('9.2.0', sha256='ea6ef08f121239da5695f76c9b33637a118dcf63e24164422231917fa61fb206')
     version('9.1.0', sha256='79a66834e96a6050d8fe78db2c3b32fb285b230b855d0a66288235bc04b327a0')
 
+    version('8.5.0', sha256='d308841a511bb830a6100397b0042db24ce11f642dab6ea6ee44842e5325ed50')
     version('8.4.0', sha256='e30a6e52d10e1f27ed55104ad233c30bd1e99cfb5ff98ab022dc941edd1b2dd4')
     version('8.3.0', sha256='64baadfe6cc0f4947a84cb12d7f0dfaf45bb58b7e92461639596c21e02d97d2c')
     version('8.2.0', sha256='196c3c04ba2613f893283977e6011b2345d1cd1af9abeac58e916b1aab3e0080')
@@ -96,8 +100,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
     variant('bootstrap',
-            default=False,
-            description='add --enable-bootstrap flag for stage3 build')
+            default=True,
+            description='Enable 3-stage bootstrap')
     variant('graphite',
             default=False,
             description='Enable Graphite loop optimizations (requires ISL)')
@@ -115,37 +119,26 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
     #   GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
-    depends_on('isl@0.14', when='@5.0:5.2 +graphite')
-    depends_on('isl@0.15', when='@5.3:5.9 +graphite')
-    depends_on('isl@0.15:0.18', when='@6:8.9 +graphite')
-    depends_on('isl@0.15:0.20', when='@9:9.9 +graphite')
-    depends_on('isl@0.15:', when='@10: +graphite')
+    with when('+graphite'):
+        depends_on('isl@0.14', when='@5.0:5.2')
+        depends_on('isl@0.15', when='@5.3:5.9')
+        depends_on('isl@0.15:0.18', when='@6:8.9')
+        depends_on('isl@0.15:0.20', when='@9:9.9')
+        depends_on('isl@0.15:', when='@10:')
+
     depends_on('zlib', when='@6:')
-    depends_on('zstd', when='@10:')
+    # GCC only tries to link with -lzstd but it requires
+    # -pthread too when linking against libzstd.a, so
+    # disable multithreading by default
+    depends_on('zstd~multithread', when='@10:')
     depends_on('diffutils', type='build')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
-    depends_on('binutils~libiberty', when='+binutils', type=('build', 'link', 'run'))
+    depends_on('binutils+gas+ld+plugins~libiberty', when='+binutils', type=('build', 'link', 'run'))
     depends_on('zip', type='build', when='languages=java')
-    depends_on('cuda@:10', when='+nvptx')
 
     # The server is sometimes a bit slow to respond
     timeout = {'timeout': 60}
-
-    resource(name='newlib',
-             url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
-             sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
-             destination='newlibsource',
-             when='+nvptx',
-             fetch_options=timeout)
-
-    # nvptx-tools does not seem to work as a dependency,
-    # but does fine when the source is inside the gcc build directory
-    # nvptx-tools doesn't have any releases, so grabbing the last commit
-    resource(name='nvptx-tools',
-             git='https://github.com/MentorEmbedded/nvptx-tools',
-             commit='5f6f343a302d620b0868edab376c00b15741e39e',
-             when='+nvptx')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -159,14 +152,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('guile@1.4.1:', type='test')
 
     # See https://golang.org/doc/install/gccgo#Releases
-    provides('golang',        when='languages=go @4.6:')
-    provides('golang@:1',     when='languages=go @4.7.1:')
-    provides('golang@:1.1',   when='languages=go @4.8:')
-    provides('golang@:1.1.2', when='languages=go @4.8.2:')
-    provides('golang@:1.2',   when='languages=go @4.9:')
-    provides('golang@:1.4',   when='languages=go @5:')
-    provides('golang@:1.6.1', when='languages=go @6:')
-    provides('golang@:1.8',   when='languages=go @7:')
+    with when('languages=go'):
+        provides('golang',        when='@4.6:')
+        provides('golang@:1',     when='@4.7.1:')
+        provides('golang@:1.1',   when='@4.8:')
+        provides('golang@:1.1.2', when='@4.8.2:')
+        provides('golang@:1.2',   when='@4.9:')
+        provides('golang@:1.4',   when='@5:')
+        provides('golang@:1.6.1', when='@6:')
+        provides('golang@:1.8',   when='@7:')
+        # GCC 4.6 added support for the Go programming language.
+        # See https://gcc.gnu.org/gcc-4.6/changes.html
+        conflicts('@:4.5', msg='support for Go has been added in GCC 4.6')
+        # Go is not supported on macOS
+        conflicts('platform=darwin', msg='Go not supported on MacOS')
 
     # For a list of valid languages for a specific release,
     # run the following command in the GCC source directory:
@@ -186,13 +185,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # but this is the first version that accepts 'c' as a valid language.
     conflicts('languages=c', when='@:4.7')
 
-    # GCC 4.6 added support for the Go programming language.
-    # See https://gcc.gnu.org/gcc-4.6/changes.html
-    conflicts('languages=go', when='@:4.5')
-
-    # Go is not supported on macOS
-    conflicts('languages=go', when='platform=darwin')
-
     # The GCC Java frontend and associated libjava runtime library
     # have been removed from GCC as of GCC 7.
     # See https://gcc.gnu.org/gcc-7/changes.html
@@ -202,17 +194,34 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts('languages=jit', when='@:4')
 
-    # NVPTX offloading supported in 7 and later by limited languages
-    conflicts('+nvptx', when='@:6', msg='NVPTX only supported in gcc 7 and above')
-    conflicts('languages=ada', when='+nvptx')
-    conflicts('languages=brig', when='+nvptx')
-    conflicts('languages=go', when='+nvptx')
-    conflicts('languages=java', when='+nvptx')
-    conflicts('languages=jit', when='+nvptx')
-    conflicts('languages=objc', when='+nvptx')
-    conflicts('languages=obj-c++', when='+nvptx')
-    # NVPTX build disables bootstrap
-    conflicts('+binutils', when='+nvptx')
+    with when('+nvptx'):
+        depends_on('cuda')
+        resource(
+            name='newlib',
+            url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
+            sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
+            destination='newlibsource',
+            fetch_options=timeout
+        )
+        # nvptx-tools does not seem to work as a dependency,
+        # but does fine when the source is inside the gcc build directory
+        # nvptx-tools doesn't have any releases, so grabbing the last commit
+        resource(
+            name='nvptx-tools',
+            git='https://github.com/MentorEmbedded/nvptx-tools',
+            commit='d0524fbdc86dfca068db5a21cc78ac255b335be5',
+        )
+        # NVPTX offloading supported in 7 and later by limited languages
+        conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
+        conflicts('languages=ada')
+        conflicts('languages=brig')
+        conflicts('languages=go')
+        conflicts('languages=java')
+        conflicts('languages=jit')
+        conflicts('languages=objc')
+        conflicts('languages=obj-c++')
+        # NVPTX build disables bootstrap
+        conflicts('+bootstrap')
 
     # Binutils can't build ld on macOS
     conflicts('+binutils', when='platform=darwin')
@@ -221,6 +230,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # generated by new GCC (see https://github.com/spack/spack/issues/12235)
     conflicts('~binutils', when='@7: os=rhel6',
               msg='New GCC cannot use system assembler on RHEL6')
+
+    # GCC 11 requires GCC 4.8 or later (https://gcc.gnu.org/gcc-11/changes.html)
+    conflicts('%gcc@:4.7', when='@11:')
 
     if sys.platform == 'darwin':
         # Fix parallel build on APFS filesystem
@@ -441,6 +453,19 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                         '-I{0}'.format(spec['zlib'].prefix.include),
                         'gcc/Makefile.in')
 
+        if spec.satisfies('+nvptx'):
+            # backport of 383400a6078d upstream to allow support of cuda@11:
+            filter_file('#define ASM_SPEC "%{misa=*:-m %*}"',
+                        '#define ASM_SPEC "%{misa=*:-m %*; :-m sm_35}"',
+                        'gcc/config/nvptx/nvptx.h',
+                        string=True)
+            filter_file('Target RejectNegative ToLower Joined '
+                        'Enum(ptx_isa) Var(ptx_isa_option) Init(PTX_ISA_SM30)',
+                        'Target RejectNegative ToLower Joined '
+                        'Enum(ptx_isa) Var(ptx_isa_option) Init(PTX_ISA_SM35)',
+                        'gcc/config/nvptx/nvptx.opt',
+                        string=True)
+
     # https://gcc.gnu.org/install/configure.html
     def configure_args(self):
         spec = self.spec
@@ -463,7 +488,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             options.append('--with-system-zlib')
 
         if 'zstd' in spec:
-            options.append('--with-zstd={0}'.format(spec['zstd'].prefix))
+            options.append('--with-zstd-include={0}'.format(
+                spec['zstd'].headers.directories[0]))
+            options.append('--with-zstd-lib={0}'.format(
+                spec['zstd'].libs.directories[0]))
 
         # Enabling language "jit" requires --enable-host-shared.
         if 'languages=jit' in spec:
@@ -483,6 +511,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if spec.satisfies('+bootstrap'):
             options.extend([
                 '--enable-bootstrap',
+            ])
+        else:
+            options.extend([
+                '--disable-bootstrap',
             ])
 
         # Configure include and lib directories explicitly for these

@@ -345,8 +345,11 @@ class Compiler(object):
         """
         if not self._real_version:
             try:
-                self._real_version = spack.version.Version(
+                real_version = spack.version.Version(
                     self.get_real_version())
+                if real_version == spack.version.Version('unknown'):
+                    return self.version
+                self._real_version = real_version
             except spack.util.executable.ProcessError:
                 self._real_version = self.version
         return self._real_version

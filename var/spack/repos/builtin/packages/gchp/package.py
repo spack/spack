@@ -11,18 +11,23 @@ class Gchp(CMakePackage):
     """GEOS-Chem High Performance model of atmospheric chemistry"""
 
     homepage = "https://gchp.readthedocs.io/"
-    url      = "https://github.com/geoschem/GCHP/archive/13.0.0-rc.0.tar.gz"
-
+    url      = "https://github.com/geoschem/GCHP/archive/13.0.1.tar.gz"
+    git      = "https://github.com/geoschem/GCHP.git"
     maintainers = ['williamdowns']
 
-    version('13.0.0-rc.0', git='https://github.com/geoschem/GCHP.git',
-            commit='4bd15316faf4e5f06517d3a6b1df1986b1126d90',  submodules=True)
-    # NOTE: Post-13.0.0-rc.0 versions will have fix that
-    # allows these ESMF variants to be enabled
-    depends_on('esmf@8.0.1: -lapack -pio -pnetcdf -xerces')
+    version('13.0.2', commit='017ad7276a801ab7b3d6945ad24602eb9927cf01',  submodules=True)
+    version('13.0.1', commit='f40a2476fda901eacf78c0972fdb6c20e5a06700',  submodules=True)
+    version('13.0.0', commit='1f5a5c5630c5d066ff8306cbb8b83e267ca7c265',  submodules=True)
+    version('dev', branch='dev', submodules=True)
+
+    patch('for_aarch64.patch', when='target=aarch64:')
+
+    depends_on('esmf@8.0.1', when='@13.0.0:')
     depends_on('mpi@3')
     depends_on('netcdf-fortran')
     depends_on('cmake@3.13:')
+    depends_on('libfabric', when='+ofi')
+    depends_on('m4')
 
     variant('omp',   default=False, description="OpenMP parallelization")
     variant('real8', default=True,  description="REAL*8 precision")
@@ -30,6 +35,7 @@ class Gchp(CMakePackage):
     variant('rrtmg', default=False, description="RRTMG radiative transfer model")
     variant('luo',   default=False, description="Luo et al 2019 wet deposition scheme")
     variant('tomas', default=False, description="TOMAS Microphysics (Experimental)")
+    variant('ofi',   default=False, description="Build with Libfabric support")
 
     def cmake_args(self):
         args = [self.define("RUNDIR", self.prefix),
@@ -42,7 +48,7 @@ class Gchp(CMakePackage):
         return args
 
     def install(self, spec, prefix):
-        super().install(spec, prefix)
+        super(Gchp, self).install(spec, prefix)
         # Preserve source code in prefix for two reasons:
         # 1. Run directory creation occurs independently of code compilation,
         # possibly multiple times depending on user needs,

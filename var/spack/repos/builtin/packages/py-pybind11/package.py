@@ -18,12 +18,13 @@ class PyPybind11(CMakePackage):
     introspection."""
 
     homepage = "https://pybind11.readthedocs.io"
-    url      = "https://github.com/pybind/pybind11/archive/v2.1.0.tar.gz"
+    url      = "https://github.com/pybind/pybind11/archive/v2.6.2.tar.gz"
     git      = "https://github.com/pybind/pybind11.git"
 
     maintainers = ['ax3l']
 
     version('master', branch='master')
+    version('2.6.2', sha256='8ff2fff22df038f5cd02cea8af56622bc67f5b64534f1b83b9f133b8366acff2')
     version('2.6.1', sha256='cdbe326d357f18b83d10322ba202d69f11b2f49e2d87ade0dc2be0c5c34f8e2a')
     version('2.5.0', sha256='97504db65640570f32d3fdf701c25a340c8643037c3b69aec469c10c93dc8504', preferred=True)
     version('2.4.3', sha256='1eed57bc6863190e35637290f97a20c81cfe4d9090ac0a24f3bbf08f265eb71d')
@@ -37,6 +38,7 @@ class PyPybind11(CMakePackage):
     version('2.1.0', sha256='2860f2b8d0c9f65f0698289a161385f59d099b7ead1bf64e8993c486f2b93ee0')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-pytest', type='test')
 
     extends('python')
 
@@ -50,8 +52,7 @@ class PyPybind11(CMakePackage):
         args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
                     % self.spec['python'].command.path)
         args += [
-            '-DPYBIND11_TEST:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF')
+            self.define('PYBIND11_TEST', self.run_tests)
         ]
         return args
 

@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
 
 
 class Libdrm(AutotoolsPackage):
@@ -22,13 +21,16 @@ class Libdrm(AutotoolsPackage):
     version('2.4.33',  sha256='bd2a8fecf28616f2157ca33ede691c139cc294ed2d0c4244b62ca7d22e98e5a4')
 
     depends_on('pkgconfig', type='build')
-    depends_on('libpciaccess@0.10:', when=(sys.platform != 'darwin'))
+    depends_on('libpciaccess@0.10:')
     depends_on('libpthread-stubs')
 
     def configure_args(self):
         args = []
         args.append('--enable-static')
-        args.append('LIBS=-lrt')  # This fixes a bug with `make check`
+        if self.version <= Version('2.4.70'):
+            # Needed to fix build for spack/spack#1740, but breaks newer
+            # builds/compilers
+            args.append('LIBS=-lrt')
         if self.spec.satisfies('%gcc@10.0.0:'):
             args.append('CFLAGS=-fcommon')
         return args

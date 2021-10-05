@@ -253,7 +253,7 @@ function match_flag -d "checks all combinations of flags ocurring inside of a st
     set -l _a (string sub -s 2 (string trim "x$argv[1]"))
     set -l _b (string sub -s 2 (string trim "x$argv[2]"))
 
-    if test -z "$_a" || test -z "$_b"
+    if test -z "$_a"; or test -z "$_b"
         return 0
     end
 
@@ -668,6 +668,19 @@ set -l sp_source_file (status -f)  # name of current file
 
 
 #
+# Identify and lock the python interpreter
+#
+for cmd in "$SPACK_PYTHON" python3 python python2
+    set -l _sp_python (command -v "$cmd")
+    if test $status -eq 0
+        set -x SPACK_PYTHON $_sp_python
+        break
+    end
+end
+
+
+
+#
 # Find root directory and add bin to path.
 #
 set -l sp_share_dir (realpath (dirname $sp_source_file))
@@ -690,7 +703,7 @@ set -xg _sp_shell "fish"
 # Check whether we need environment-variables (module) <= `use` is not available
 #
 set -l need_module "no"
-if not functions -q use; and not functions -q module
+if test -z "$SPACK_SKIP_MODULES"; and not functions -q use; and not functions -q module
     set need_module "yes"
 end
 

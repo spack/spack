@@ -44,8 +44,7 @@ class Alquimia(CMakePackage):
         options = ['-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
                    '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
                    '-DUSE_XSDK_DEFAULTS=YES',
-                   '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                       'ON' if '+shared' in spec else 'OFF'),
+                   self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
                    '-DTPL_ENABLE_MPI:BOOL=ON',
                    '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
                    '-DTPL_ENABLE_HDF5:BOOL=ON',

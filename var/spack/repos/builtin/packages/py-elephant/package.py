@@ -25,5 +25,5 @@ class PyElephant(PythonPackage):
     depends_on('py-quantities@0.10.1:', type=('build', 'run'))
     depends_on('py-scipy@0.14.0:',      type=('build', 'run'))
     depends_on('py-pandas@0.14.1:',     type=('build', 'run'), when='+pandas')
-    depends_on('py-numpydoc@0.5:',      type=('build', 'run'), when='+docs')
-    depends_on('py-sphinx@1.2.2:',      type=('build', 'run'), when='+docs')
+    depends_on('py-numpydoc@0.5:',      type=('build', 'run'), when='+doc')
+    depends_on('py-sphinx@1.2.2:',      type=('build', 'run'), when='+doc')

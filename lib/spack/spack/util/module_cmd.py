@@ -95,6 +95,7 @@ def load_module(mod):
     load that module. It then loads the provided module. Depends on the
     modulecmd implementation of modules used in cray and lmod.
     """
+    tty.debug("module_cmd.load_module: {0}".format(mod))
     # Read the module and remove any conflicting modules
     # We do this without checking that they are already installed
     # for ease of programming because unloading a module that is not
@@ -155,7 +156,7 @@ def path_from_modules(modules):
 
         if candidate_path and not os.path.exists(candidate_path):
             msg = ("Extracted path from module does not exist "
-                   "[module={0}, path={0}]")
+                   "[module={0}, path={1}]")
             tty.warn(msg.format(module_name, candidate_path))
 
         # If anything is found, then it's the best choice. This means
@@ -195,9 +196,13 @@ def get_path_from_module_contents(text, module_name):
     def match_flag_and_strip(line, flag, strip=[]):
         flag_idx = line.find(flag)
         if flag_idx >= 0:
-            end = line.find(' ', flag_idx)
-            if end >= 0:
-                path = line[flag_idx + len(flag):end]
+            # Search for the first occurence of any separator marking the end of
+            # the path.
+            separators = (' ', '"', "'")
+            occurrences = [line.find(s, flag_idx) for s in separators]
+            indices = [idx for idx in occurrences if idx >= 0]
+            if indices:
+                path = line[flag_idx + len(flag):min(indices)]
             else:
                 path = line[flag_idx + len(flag):]
             path = strip_path(path, strip)

@@ -14,10 +14,11 @@ class SstElements(AutotoolsPackage):
 
     homepage = "https://github.com/sstsimulator"
     git = "https://github.com/sstsimulator/sst-elements.git"
-    url = "https://github.com/sstsimulator/sst-elements/releases/download/v10.0.0_Final/sstelements-10.0.0.tar.gz"
+    url = "https://github.com/sstsimulator/sst-elements/releases/download/v11.0.0_Final/sstelements-11.0.0.tar.gz"
 
     maintainers = ['jjwilke']
 
+    version('11.0.0', sha256="bf265cb25afc041b74422cc5cddc8e3ae1e7c3efa3e37e699dac4e3f7629be6e")
     version('10.1.0', sha256="a790561449795dac48a84c525b8e0b09f05d0b0bff1a0da1aa2e903279a03c4a")
     version('10.0.0', sha256="ecf28ef97b27ea75be7e64cb0acb99d36773a888c1b32ba16034c62174b02693")
     version('9.1.0', sha256="e19b05aa6e59728995fc059840c79e476ba866b67887ccde7eaf52a18a1f52ca")

@@ -22,19 +22,23 @@ class Elpa(AutotoolsPackage, CudaPackage):
     version('2017.11.001', sha256='59f99c3abe2190fac0db8a301d0b9581ee134f438669dbc92551a54f6f861820')
     version('2017.05.003', sha256='bccd49ce35a323bd734b17642aed8f2588fea4cc78ee8133d88554753bc3bf1b')
     version('2017.05.002', sha256='568b71024c094d667b5cbb23045ad197ed5434071152ac608dae490ace5eb0aa')
+    version('2017.05.001', sha256='28f7edad60984d93da299016ad33571dc6db1cdc9fab0ceaef05dc07de2c7dfd')
     version('2016.11.001.pre', sha256='69b67f0f6faaa2b3b5fd848127b632be32771636d2ad04583c5269d550956f92')
     version('2016.05.004', sha256='08c59dc9da458bab856f489d779152e5506e04f0d4b8d6dcf114ca5fbbe46c58')
     version('2016.05.003', sha256='c8da50c987351514e61491e14390cdea4bdbf5b09045261991876ed5b433fca4')
     version('2015.11.001', sha256='c0761a92a31c08a4009c9688c85fc3fc8fde9b6ce05e514c3e1587cf045e9eba')
 
     variant('openmp', default=False, description='Activates OpenMP support')
-    variant('optflags', default=True, description='Build with optimization flags')
 
     depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
     depends_on('scalapack')
     depends_on('libtool', type='build')
+    depends_on('python@:2', type='build', when='@:2020.05.001')
+    depends_on('python@3:', type='build', when='@2020.11.001:')
+
+    patch('python_shebang.patch', when='@:2020.05.001')
 
     def url_for_version(self, version):
         t = 'https://elpa.mpcdf.mpg.de/html/Releases/{0}/elpa-{0}.tar.gz'
@@ -79,14 +83,32 @@ class Elpa(AutotoolsPackage, CudaPackage):
         if spec.target.family == 'aarch64':
             options.append('--disable-sse-assembly')
 
+        if '%aocc' in spec:
+            options.append('--disable-shared')
+            options.append('--enable-static')
+
         # If no features are found, enable the generic ones
         if not any(f in spec.target for f in simd_features):
             options.append('--enable-generic')
 
-        if '+optflags' in spec:
+        if self.compiler.name == "gcc":
+            gcc_options = []
+            gfortran_options = ['-ffree-line-length-none']
+
+            if self.compiler.version >= Version("10.0.0") \
+               and spec.version <= Version("2019.11.001"):
+                gfortran_options.append('-fallow-argument-mismatch')
+
+            space_separator = ' '
             options.extend([
-                'FCFLAGS=-O2 -ffree-line-length-none',
-                'CFLAGS=-O2'
+                'CFLAGS=' + space_separator.join(gcc_options),
+                'FCFLAGS=' + space_separator.join(gfortran_options),
+            ])
+
+        if '%aocc' in spec:
+            options.extend([
+                'FCFLAGS=-O3',
+                'CFLAGS=-O3'
             ])
 
         if '+cuda' in spec:
@@ -113,7 +135,8 @@ class Elpa(AutotoolsPackage, CudaPackage):
             'FC={0}'.format(spec['mpi'].mpifc),
             'CXX={0}'.format(spec['mpi'].mpicxx),
             'LDFLAGS={0}'.format(spec['lapack'].libs.search_flags),
-            'LIBS={0}'.format(spec['lapack'].libs.link_flags),
+            'LIBS={0} {1}'.format(
+                spec['lapack'].libs.link_flags, spec['blas'].libs.link_flags),
             'SCALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
         ])
 

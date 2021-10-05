@@ -31,7 +31,7 @@ class Xsdktrilinos(CMakePackage):
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
     depends_on('petsc@xsdk-0.2.0+mpi~complex', when='@xsdk-0.2.0+petsc')
-    depends_on('petsc@develop+mpi~complex', when='@develop+petsc')
+    depends_on('petsc@main+mpi~complex', when='@develop+petsc')
     depends_on('trilinos@12.6.4', when='@12.6.4')
     depends_on('trilinos@12.8.1', when='@12.8.1')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
@@ -52,15 +52,12 @@ class Xsdktrilinos(CMakePackage):
             '-DxSDKTrilinos_ENABLE_TESTS:BOOL=ON',
             '-DxSDKTrilinos_ENABLE_EXAMPLES:BOOL=ON',
             '-DTrilinos_INSTALL_DIR=%s' % spec['trilinos'].prefix,
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DTPL_ENABLE_MPI:BOOL=ON',
             '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
             '-DxSDKTrilinos_ENABLE_CXX11:BOOL=ON',
-            '-DTPL_ENABLE_HYPRE:BOOL=%s' % (
-                'ON' if '+hypre' in spec else 'OFF'),
-            '-DTPL_ENABLE_PETSC:BOOL=%s' % (
-                'ON' if '+petsc' in spec else 'OFF'),
+            self.define_from_variant('TPL_ENABLE_HYPRE', 'hypre'),
+            self.define_from_variant('TPL_ENABLE_PETSC', 'petsc'),
             '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix
         ])
 

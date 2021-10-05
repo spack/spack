@@ -20,6 +20,7 @@ class PyPytest(PythonPackage):
     version('4.6.9', sha256='19e8f75eac01dd3f211edd465b39efbcbdc8fc5f7866d7dd49fedb30d8adf339')
     version('4.6.5', sha256='8fc39199bdda3d9d025d3b1f4eb99a192c20828030ea7c9a0d2840721de7d347')
     version('4.6.2', sha256='bea27a646a3d74cbbcf8d3d4a06b2dfc336baf3dc2cc85cf70ad0157e73e8322')
+    version('4.4.0', sha256='f21d2f1fb8200830dcbb5d8ec466a9c9120e20d8b53c7585d180125cce1d297a')
     version('4.3.0', sha256='067a1d4bf827ffdd56ad21bd46674703fce77c5957f6c1eef731f6146bfcef1c')
     version('3.7.2', sha256='3459a123ad5532852d36f6f4501dfe1acf4af1dd9541834a164666aa40395b02')
     version('3.7.1', sha256='86a8dbf407e437351cef4dba46736e9c5a6e3c3ac71b2e942209748e76ff2086')

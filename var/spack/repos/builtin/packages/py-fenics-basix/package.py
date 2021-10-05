@@ -11,16 +11,21 @@ class PyFenicsBasix(PythonPackage):
     environment"""
 
     homepage = "https://github.com/FEniCS/basix"
+    url = "https://github.com/FEniCS/basix/archive/0.1.0.tar.gz"
     git = "https://github.com/FEniCS/basix.git"
     maintainers = ["chrisrichardson", "mscroggs"]
 
     version("main", branch="main")
+    version("0.1.0", sha256="2ab41fe6ad4f6c42f01b17a6e7c39debb4e0ae61c334d1caebee78b741bca4e7")
 
-    depends_on("cmake@3.9:", type="build")
-    depends_on("eigen@3.3.7:")
-    depends_on("python@3.5:", type=('build', 'run'))
+    depends_on("fenics-basix@main", type=("build", "run"), when="@main")
+    depends_on("fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
+
+    depends_on("python@3.6:", type=('build', 'run'))
     depends_on("py-setuptools", type="build")
-    depends_on("py-scikit-build", type="build")
-    depends_on("py-pybind11", type="build")
+    depends_on("cmake@3.18:", type="build")
+    depends_on("py-pybind11@2.6.1:2.6.99", type="build")
 
-    phases = ['build', 'install']
+    phases = ['build_ext', 'build', 'install']
+
+    build_directory = 'python'

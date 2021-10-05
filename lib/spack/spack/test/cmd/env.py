@@ -2,13 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import glob
 import os
 from six import StringIO
 
 import pytest
 
 import llnl.util.filesystem as fs
+import llnl.util.link_tree
 
 import spack.hash_types as ht
 import spack.modules
@@ -25,8 +26,10 @@ from spack.util.path import substitute_path_variables
 
 
 # everything here uses the mock_env_path
-pytestmark = pytest.mark.usefixtures(
-    'mutable_mock_env_path', 'config', 'mutable_mock_repo')
+pytestmark = [
+    pytest.mark.usefixtures('mutable_mock_env_path', 'config', 'mutable_mock_repo'),
+    pytest.mark.maybeslow
+]
 
 env        = SpackCommand('env')
 install    = SpackCommand('install')
@@ -139,6 +142,19 @@ def test_concretize():
     assert any(x.name == 'mpileaks' for x in env_specs)
 
 
+def test_env_uninstalled_specs(install_mockery, mock_fetch):
+    e = ev.create('test')
+    e.add('cmake-client')
+    e.concretize()
+    assert any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    e.install_all()
+    assert not any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    e.add('mpileaks')
+    e.concretize()
+    assert not any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    assert any(s.name == 'mpileaks' for s in e.uninstalled_specs())
+
+
 def test_env_install_all(install_mockery, mock_fetch):
     e = ev.create('test')
     e.add('cmake-client')
@@ -163,6 +179,27 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
 
 
+def test_env_roots_marked_explicit(install_mockery, mock_fetch):
+    install = SpackCommand('install')
+    install('dependent-install')
+
+    # Check one explicit, one implicit install
+    dependent = spack.store.db.query(explicit=True)
+    dependency = spack.store.db.query(explicit=False)
+    assert len(dependent) == 1
+    assert len(dependency) == 1
+
+    env('create', 'test')
+    with ev.read('test') as e:
+        # make implicit install a root of the env
+        e.add(dependency[0].name)
+        e.concretize()
+        e.install_all()
+
+    explicit = spack.store.db.query(explicit=True)
+    assert len(explicit) == 2
+
+
 def test_env_modifications_error_on_activate(
         install_mockery, mock_fetch, monkeypatch, capfd):
     env('create', 'test')
@@ -183,6 +220,19 @@ def test_env_modifications_error_on_activate(
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
     assert "Warning: couldn't get environment settings" in err
+
+
+def test_activate_adds_transitive_run_deps_to_path(
+        install_mockery, mock_fetch, monkeypatch):
+    env('create', 'test')
+    install = SpackCommand('install')
+
+    e = ev.read('test')
+    with e:
+        install('depends-on-run-env')
+
+    cmds = spack.environment.activate(e)
+    assert 'DEPENDENCY_ENV_VAR=1' in cmds
 
 
 def test_env_install_same_spec_twice(install_mockery, mock_fetch):
@@ -330,7 +380,7 @@ def test_env_status_broken_view(
         # switch to a new repo that doesn't include the installed package
         # test that Spack detects the missing package and warns the user
         new_repo = MockPackageMultiRepo()
-        with spack.repo.swap(new_repo):
+        with spack.repo.use_repositories(new_repo):
             output = env('status')
             assert 'In environment test' in output
             assert 'Environment test includes out of date' in output
@@ -351,7 +401,7 @@ def test_env_activate_broken_view(
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
     new_repo = MockPackageMultiRepo()
-    with spack.repo.swap(new_repo):
+    with spack.repo.use_repositories(new_repo):
         with pytest.raises(SpackCommandError):
             env('activate', '--sh', 'test')
 
@@ -929,7 +979,7 @@ def test_read_old_lock_and_write_new(tmpdir):
     y = mock_repo.add_package('y', [], [])
     mock_repo.add_package('x', [y], [build_only])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         x = Spec('x')
         x.concretize()
 
@@ -960,7 +1010,7 @@ def test_read_old_lock_creates_backup(tmpdir):
     mock_repo = MockPackageMultiRepo()
     y = mock_repo.add_package('y', [], [])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         y = Spec('y')
         y.concretize()
 
@@ -997,7 +1047,7 @@ def test_indirect_build_dep():
         pass
     setattr(mock_repo, 'dump_provenance', noop)
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         x_spec = Spec('x')
         x_concretized = x_spec.concretized()
 
@@ -1038,7 +1088,7 @@ def test_store_different_build_deps():
         pass
     setattr(mock_repo, 'dump_provenance', noop)
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         y_spec = Spec('y ^z@3')
         y_concretized = y_spec.concretized()
 
@@ -1069,7 +1119,7 @@ def test_store_different_build_deps():
 
 def test_env_updates_view_install(
         tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.mkdir('view')
+    view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
         add('mpileaks')
@@ -1080,12 +1130,13 @@ def test_env_updates_view_install(
 
 def test_env_view_fails(
         tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.mkdir('view')
+    view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
         add('libelf')
         add('libelf cflags=-g')
-        with pytest.raises(RuntimeError, match='merge blocked by file'):
+        with pytest.raises(llnl.util.link_tree.MergeConflictError,
+                           match='merge blocked by file'):
             install('--fake')
 
 
@@ -1098,7 +1149,7 @@ def test_env_without_view_install(
     with pytest.raises(spack.environment.SpackEnvironmentError):
         test_env.default_view
 
-    view_dir = tmpdir.mkdir('view')
+    view_dir = tmpdir.join('view')
 
     with ev.read('test'):
         add('mpileaks')
@@ -1133,7 +1184,7 @@ env:
 
 def test_env_updates_view_install_package(
         tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.mkdir('view')
+    view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
         install('--fake', 'mpileaks')
@@ -1143,7 +1194,7 @@ def test_env_updates_view_install_package(
 
 def test_env_updates_view_add_concretize(
         tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.mkdir('view')
+    view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
     with ev.read('test'):
@@ -1155,7 +1206,7 @@ def test_env_updates_view_add_concretize(
 
 def test_env_updates_view_uninstall(
         tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.mkdir('view')
+    view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
         install('--fake', 'mpileaks')
@@ -1170,7 +1221,7 @@ def test_env_updates_view_uninstall(
 
 def test_env_updates_view_uninstall_referenced_elsewhere(
         tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.mkdir('view')
+    view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
     with ev.read('test'):
@@ -1187,7 +1238,7 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
 
 def test_env_updates_view_remove_concretize(
         tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.mkdir('view')
+    view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
     with ev.read('test'):
@@ -1205,7 +1256,7 @@ def test_env_updates_view_remove_concretize(
 
 def test_env_updates_view_force_remove(
         tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.mkdir('view')
+    view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
         install('--fake', 'mpileaks')
@@ -2100,7 +2151,11 @@ def test_env_activate_default_view_root_unconditional(env_deactivate,
         viewdir = e.default_view.root
 
     out = env('activate', '--sh', 'test')
-    assert 'PATH=%s' % os.path.join(viewdir, 'bin') in out
+    viewdir_bin = os.path.join(viewdir, 'bin')
+
+    assert "export PATH={0}".format(viewdir_bin) in out or \
+           "export PATH='{0}".format(viewdir_bin) in out or \
+           'export PATH="{0}'.format(viewdir_bin) in out
 
 
 def test_concretize_user_specs_together():
@@ -2356,3 +2411,186 @@ spack:
             e.clear()
             e.write()
     assert os.path.exists(str(spack_lock))
+
+
+def _setup_develop_packages(tmpdir):
+    """Sets up a structure ./init_env/spack.yaml, ./build_folder, ./dest_env
+       where spack.yaml has a relative develop path to build_folder"""
+    init_env = tmpdir.join('init_env')
+    build_folder = tmpdir.join('build_folder')
+    dest_env = tmpdir.join('dest_env')
+
+    fs.mkdirp(str(init_env))
+    fs.mkdirp(str(build_folder))
+    fs.mkdirp(str(dest_env))
+
+    raw_yaml = """
+spack:
+  specs: ['mypkg1', 'mypkg2']
+  develop:
+    mypkg1:
+      path: ../build_folder
+      spec: mypkg@main
+    mypkg2:
+      path: /some/other/path
+      spec: mypkg@main
+"""
+    spack_yaml = init_env.join('spack.yaml')
+    spack_yaml.write(raw_yaml)
+
+    return init_env, build_folder, dest_env, spack_yaml
+
+
+def test_rewrite_rel_dev_path_new_dir(tmpdir):
+    """Relative develop paths should be rewritten for new environments in
+       a different directory from the original manifest file"""
+    _, build_folder, dest_env, spack_yaml = _setup_develop_packages(tmpdir)
+
+    env('create', '-d', str(dest_env), str(spack_yaml))
+    with ev.Environment(str(dest_env)) as e:
+        assert e.dev_specs['mypkg1']['path'] == str(build_folder)
+        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+
+
+def test_rewrite_rel_dev_path_named_env(tmpdir):
+    """Relative develop paths should by default be rewritten for new named
+       environment"""
+    _, build_folder, _, spack_yaml = _setup_develop_packages(tmpdir)
+    env('create', 'named_env', str(spack_yaml))
+    with ev.read('named_env') as e:
+        assert e.dev_specs['mypkg1']['path'] == str(build_folder)
+        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+
+
+def test_rewrite_rel_dev_path_original_dir(tmpdir):
+    """Relative devevelop paths should not be rewritten when initializing an
+       environment with root path set to the same directory"""
+    init_env, _, _, spack_yaml = _setup_develop_packages(tmpdir)
+    with ev.Environment(str(init_env), str(spack_yaml)) as e:
+        assert e.dev_specs['mypkg1']['path'] == '../build_folder'
+        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+
+
+def test_rewrite_rel_dev_path_create_original_dir(tmpdir):
+    """Relative develop paths should not be rewritten when creating an
+       environment in the original directory"""
+    init_env, _, _, spack_yaml = _setup_develop_packages(tmpdir)
+    env('create', '-d', str(init_env), str(spack_yaml))
+    with ev.Environment(str(init_env)) as e:
+        assert e.dev_specs['mypkg1']['path'] == '../build_folder'
+        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+
+
+def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmpdir):
+    """Relative develop paths should not be rewritten when --keep-relative is
+       passed to create"""
+    _, _, _, spack_yaml = _setup_develop_packages(tmpdir)
+    env('create', '--keep-relative', 'named_env', str(spack_yaml))
+    with ev.read('named_env') as e:
+        print(e.dev_specs)
+        assert e.dev_specs['mypkg1']['path'] == '../build_folder'
+        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+
+
+@pytest.mark.regression('23440')
+def test_custom_version_concretize_together(tmpdir):
+    # Custom versions should be permitted in specs when
+    # concretizing together
+    e = ev.create('custom_version')
+    e.concretization = 'together'
+
+    # Concretize a first time using 'mpich' as the MPI provider
+    e.add('hdf5@myversion')
+    e.add('mpich')
+    e.concretize()
+
+    assert any('hdf5@myversion' in spec for _, spec in e.concretized_specs())
+
+
+def test_modules_relative_to_views(tmpdir, install_mockery, mock_fetch):
+    spack_yaml = """
+spack:
+  specs:
+  - trivial-install-test-package
+  modules:
+    default:
+      enable:: [tcl]
+      use_view: true
+      roots:
+        tcl: modules
+"""
+    _env_create('test', StringIO(spack_yaml))
+
+    with ev.read('test') as e:
+        install()
+
+        spec = e.specs_by_hash[e.concretized_order[0]]
+        view_prefix = e.default_view.get_projection_for_spec(spec)
+        modules_glob = '%s/modules/**/*' % e.path
+        modules = glob.glob(modules_glob)
+        assert len(modules) == 1
+        module = modules[0]
+
+    with open(module, 'r') as f:
+        contents = f.read()
+
+    assert view_prefix in contents
+    assert spec.prefix not in contents
+
+
+def test_multiple_modules_post_env_hook(tmpdir, install_mockery, mock_fetch):
+    spack_yaml = """
+spack:
+  specs:
+  - trivial-install-test-package
+  modules:
+    default:
+      enable:: [tcl]
+      use_view: true
+      roots:
+        tcl: modules
+    full:
+      enable:: [tcl]
+      roots:
+        tcl: full_modules
+"""
+    _env_create('test', StringIO(spack_yaml))
+
+    with ev.read('test') as e:
+        install()
+
+        spec = e.specs_by_hash[e.concretized_order[0]]
+        view_prefix = e.default_view.get_projection_for_spec(spec)
+        modules_glob = '%s/modules/**/*' % e.path
+        modules = glob.glob(modules_glob)
+        assert len(modules) == 1
+        module = modules[0]
+
+        full_modules_glob = '%s/full_modules/**/*' % e.path
+        full_modules = glob.glob(full_modules_glob)
+        assert len(full_modules) == 1
+        full_module  = full_modules[0]
+
+    with open(module, 'r') as f:
+        contents = f.read()
+
+    with open(full_module, 'r') as f:
+        full_contents = f.read()
+
+    assert view_prefix in contents
+    assert spec.prefix not in contents
+
+    assert view_prefix not in full_contents
+    assert spec.prefix in full_contents
+
+
+@pytest.mark.regression('24148')
+def test_virtual_spec_concretize_together(tmpdir):
+    # An environment should permit to concretize "mpi"
+    e = ev.create('virtual_spec')
+    e.concretization = 'together'
+
+    e.add('mpi')
+    e.concretize()
+
+    assert any(s.package.provides('mpi') for _, s in e.concretized_specs())

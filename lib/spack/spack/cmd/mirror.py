@@ -28,7 +28,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
 
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='mirror_command')
@@ -66,6 +66,19 @@ def setup_parser(subparser):
         help="the number of versions to fetch for each spec, choose 'all' to"
              " retrieve all versions of each package")
     arguments.add_common_arguments(create_parser, ['specs'])
+
+    # Destroy
+    destroy_parser = sp.add_parser('destroy', help=mirror_destroy.__doc__)
+
+    destroy_target = destroy_parser.add_mutually_exclusive_group(required=True)
+    destroy_target.add_argument('-m', '--mirror-name',
+                                metavar='mirror_name',
+                                type=str,
+                                help="find mirror to destroy by name")
+    destroy_target.add_argument('--mirror-url',
+                                metavar='mirror_url',
+                                type=str,
+                                help="find mirror to destroy by url")
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
@@ -117,50 +130,12 @@ def setup_parser(subparser):
 def mirror_add(args):
     """Add a mirror to Spack."""
     url = url_util.format(args.url)
-
-    mirrors = spack.config.get('mirrors', scope=args.scope)
-    if not mirrors:
-        mirrors = syaml_dict()
-
-    if args.name in mirrors:
-        tty.die("Mirror with name %s already exists." % args.name)
-
-    items = [(n, u) for n, u in mirrors.items()]
-    items.insert(0, (args.name, url))
-    mirrors = syaml_dict(items)
-    spack.config.set('mirrors', mirrors, scope=args.scope)
+    spack.mirror.add(args.name, url, args.scope)
 
 
 def mirror_remove(args):
     """Remove a mirror by name."""
-    name = args.name
-
-    mirrors = spack.config.get('mirrors', scope=args.scope)
-    if not mirrors:
-        mirrors = syaml_dict()
-
-    if name not in mirrors:
-        tty.die("No mirror with name %s" % name)
-
-    old_value = mirrors.pop(name)
-    spack.config.set('mirrors', mirrors, scope=args.scope)
-
-    debug_msg_url = "url %s"
-    debug_msg = ["Removed mirror %s with"]
-    values = [name]
-
-    try:
-        fetch_value = old_value['fetch']
-        push_value = old_value['push']
-
-        debug_msg.extend(("fetch", debug_msg_url, "and push", debug_msg_url))
-        values.extend((fetch_value, push_value))
-    except TypeError:
-        debug_msg.append(debug_msg_url)
-        values.append(old_value)
-
-    tty.debug(" ".join(debug_msg) % tuple(values))
-    tty.msg("Removed mirror %s." % name)
+    spack.mirror.remove(args.name, args.scope)
 
 
 def mirror_set_url(args):
@@ -360,8 +335,22 @@ def mirror_create(args):
         sys.exit(1)
 
 
+def mirror_destroy(args):
+    """Given a url, recursively delete everything under it."""
+    mirror_url = None
+
+    if args.mirror_name:
+        result = spack.mirror.MirrorCollection().lookup(args.mirror_name)
+        mirror_url = result.push_url
+    elif args.mirror_url:
+        mirror_url = args.mirror_url
+
+    web_util.remove_url(mirror_url, recursive=True)
+
+
 def mirror(parser, args):
     action = {'create': mirror_create,
+              'destroy': mirror_destroy,
               'add': mirror_add,
               'remove': mirror_remove,
               'rm': mirror_remove,
@@ -370,5 +359,8 @@ def mirror(parser, args):
 
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
+
+    if args.deprecated:
+        spack.config.set('config:deprecated', True, scope='command_line')
 
     action[args.mirror_command](args)

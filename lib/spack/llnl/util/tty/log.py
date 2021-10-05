@@ -321,7 +321,10 @@ class FileWrapper(object):
     def unwrap(self):
         if self.open:
             if self.file_like:
-                self.file = open(self.file_like, 'w')
+                if sys.version_info < (3,):
+                    self.file = open(self.file_like, 'w')
+                else:
+                    self.file = open(self.file_like, 'w', encoding='utf-8')
             else:
                 self.file = StringIO()
             return self.file
@@ -722,7 +725,11 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
 
     # Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
-    in_pipe = os.fdopen(read_multiprocess_fd.fd, 'r', 1)
+    if sys.version_info < (3,):
+        in_pipe = os.fdopen(read_multiprocess_fd.fd, 'r', 1)
+    else:
+        # Python 3.x before 3.7 does not open with UTF-8 encoding by default
+        in_pipe = os.fdopen(read_multiprocess_fd.fd, 'r', 1, encoding='utf-8')
 
     if stdin_multiprocess_fd:
         stdin = os.fdopen(stdin_multiprocess_fd.fd)
@@ -764,28 +771,39 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                                 raise
 
                 if in_pipe in rlist:
-                    # Handle output from the calling process.
-                    line = _retry(in_pipe.readline)()
-                    if not line:
-                        break
+                    line_count = 0
+                    try:
+                        while line_count < 100:
+                            # Handle output from the calling process.
+                            line = _retry(in_pipe.readline)()
+                            if not line:
+                                return
+                            line_count += 1
 
-                    # find control characters and strip them.
-                    controls = control.findall(line)
-                    line = control.sub('', line)
+                            # find control characters and strip them.
+                            clean_line, num_controls = control.subn('', line)
 
-                    # Echo to stdout if requested or forced.
-                    if echo or force_echo:
-                        sys.stdout.write(line)
-                        sys.stdout.flush()
+                            # Echo to stdout if requested or forced.
+                            if echo or force_echo:
+                                sys.stdout.write(clean_line)
 
-                    # Stripped output to log file.
-                    log_file.write(_strip(line))
-                    log_file.flush()
+                            # Stripped output to log file.
+                            log_file.write(_strip(clean_line))
 
-                    if xon in controls:
-                        force_echo = True
-                    if xoff in controls:
-                        force_echo = False
+                            if num_controls > 0:
+                                controls = control.findall(line)
+                                if xon in controls:
+                                    force_echo = True
+                                if xoff in controls:
+                                    force_echo = False
+
+                            if not _input_available(in_pipe):
+                                break
+                    finally:
+                        if line_count > 0:
+                            if echo or force_echo:
+                                sys.stdout.flush()
+                            log_file.flush()
 
     except BaseException:
         tty.error("Exception occurred in writer daemon!")
@@ -837,3 +855,7 @@ def _retry(function):
                     continue
                 raise
     return wrapped
+
+
+def _input_available(f):
+    return f in select.select([f], [], [], 0)[0]

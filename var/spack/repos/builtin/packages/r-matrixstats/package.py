@@ -19,6 +19,7 @@ class RMatrixstats(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/matrixStats_0.52.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/matrixStats"
 
+    version('0.58.0', sha256='8367b4b98cd24b6e40022cb2b11e907aa0bcf5ee5b2f89fefb186f53661f4b49')
     version('0.57.0', sha256='f9681887cd3b121762c83f55f189cae26cb8443efce91fcd212ac714fde9f343')
     version('0.55.0', sha256='16d6bd90eee4cee8df4c15687de0f9b72730c03e56603c2998007d4533e8db19')
     version('0.54.0', sha256='8f0db4e181300a208b9aedbebfdf522a2626e6675d2662656efb8ba71b05a06f')

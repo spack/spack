@@ -17,6 +17,8 @@ class Libxsmm(MakefilePackage):
     url      = 'https://github.com/hfp/libxsmm/archive/1.16.1.tar.gz'
     git      = 'https://github.com/hfp/libxsmm.git'
 
+    maintainers = ['hfp']
+
     version('master', branch='master')
     version('1.16.1', sha256='93dc7a3ec40401988729ddb2c6ea2294911261f7e6cd979cf061b5c3691d729d')
     version('1.16',   sha256='4f4f2ad97815413af80821d2e306eb6f00541941ad412662da05c02361a20e07')
@@ -82,7 +84,7 @@ class Libxsmm(MakefilePackage):
         ]
 
         # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
-#       make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
+        # make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
 
         # include call trace as the build is already de-optimized
         if '+debug' in spec:

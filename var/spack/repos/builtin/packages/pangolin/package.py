@@ -17,6 +17,7 @@ class Pangolin(CMakePackage):
     depends_on('cmake@2.8.12:', type='build')
     depends_on('gl')
     depends_on('glew')
+    depends_on('glu', type='link')
 
     # Optional dependencies
     depends_on('eigen')

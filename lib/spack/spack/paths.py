@@ -33,6 +33,7 @@ external_path         = os.path.join(lib_path, "external")
 build_env_path        = os.path.join(lib_path, "env")
 module_path           = os.path.join(lib_path, "spack")
 command_path          = os.path.join(module_path, "cmd")
+analyzers_path        = os.path.join(module_path, "analyzers")
 platform_path         = os.path.join(module_path, 'platforms')
 compilers_path        = os.path.join(module_path, "compilers")
 build_systems_path    = os.path.join(module_path, 'build_systems')
@@ -50,7 +51,10 @@ mock_packages_path = os.path.join(repos_path, "builtin.mock")
 
 #: User configuration location
 user_config_path = os.path.expanduser('~/.spack')
-
+user_bootstrap_path = os.path.join(user_config_path, 'bootstrap')
+user_bootstrap_store = os.path.join(user_bootstrap_path, 'store')
+reports_path = os.path.join(user_config_path, "reports")
+monitor_path = os.path.join(reports_path, "monitor")
 
 opt_path        = os.path.join(prefix, "opt")
 etc_path        = os.path.join(prefix, "etc")

@@ -25,8 +25,8 @@ level = "long"
 
 
 # tutorial configuration parameters
-tutorial_branch = "releases/v0.15"
-tutorial_mirror = "s3://spack-tutorial-container/mirror/"
+tutorial_branch = "releases/v0.16"
+tutorial_mirror = "file:///mirror"
 tutorial_key    = os.path.join(spack.paths.share_path, "keys", "tutorial.pub")
 
 # configs to remove
@@ -73,12 +73,12 @@ def tutorial(parser, args):
 
     tty.msg("Ensuring that we trust tutorial binaries",
             "spack gpg trust %s" % tutorial_key)
-    spack.util.gpg.Gpg().trust(tutorial_key)
+    spack.util.gpg.trust(tutorial_key)
 
     # Note that checkout MUST be last. It changes Spack under our feet.
     # If you don't put this last, you'll get import errors for the code
     # that follows (exacerbated by the various lazy singletons we use)
-    tty.msg("Ensuring we're on the releases/v0.15 branch")
+    tty.msg("Ensuring we're on the releases/v0.16 branch")
     git = which("git", required=True)
     with working_dir(spack.paths.prefix):
         git("checkout", tutorial_branch)

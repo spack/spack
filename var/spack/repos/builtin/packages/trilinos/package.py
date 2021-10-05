@@ -5,6 +5,7 @@
 
 import os
 import sys
+
 from spack import *
 from spack.operating_systems.mac_os import macos_version
 from spack.pkg.builtin.kokkos import Kokkos
@@ -29,7 +30,7 @@ class Trilinos(CMakePackage, CudaPackage):
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
     git      = "https://github.com/trilinos/Trilinos.git"
 
-    maintainers = ['keitat']
+    maintainers = ['keitat', 'sethrj']
 
     # ###################### Versions ##########################
 
@@ -70,7 +71,7 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('float', default=False,
             description='Enable single precision (float) numbers in Trilinos')
     variant('gotype', default='long',
-            values=('int', 'long', 'long_long'),
+            values=('int', 'long', 'long_long', 'all'),
             multi=False,
             description='global ordinal type for Tpetra')
     variant('fortran',      default=True,
@@ -100,7 +101,7 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Enable ADIOS2')
     variant('glm',          default=True,
             description='Compile with GLM')
-    variant('gtest',        default=True,
+    variant('gtest',        default=False,
             description='Compile with Gtest')
     variant('hdf5',         default=True,
             description='Compile with HDF5')
@@ -191,6 +192,8 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Shards')
     variant('shylu',        default=False,
             description='Compile with ShyLU')
+    variant('stokhos',      default=False,
+            description='Compile with Stokhos')
     variant('stratimikos',  default=False,
             description='Compile with Stratimikos')
     variant('teko',         default=False,
@@ -201,14 +204,28 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Teuchos')
     variant('tpetra',       default=True,
             description='Compile with Tpetra')
+    variant('trilinoscouplings', default=False,
+            description='Compile with TrilinosCouplings')
     variant('zoltan',       default=True,
             description='Compile with Zoltan')
     variant('zoltan2',      default=True,
             description='Compile with Zoltan2')
 
+    # Internal package options (alphabetical order)
+    variant('amesos2basker',             default=False,
+            description='Compile with Basker in Amesos2')
+    variant('epetraextbtf',              default=False,
+            description='Compile with BTF in EpetraExt')
+    variant('epetraextexperimental',     default=False,
+            description='Compile with experimental in EpetraExt')
+    variant('epetraextgraphreorderings', default=False,
+            description='Compile with graph reorderings in EpetraExt')
+
     # External package options
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
+    variant('scorec',       default=False,
+            description='Enable SCOREC')
     variant('mesquite',     default=False,
             description='Enable Mesquite')
 
@@ -229,6 +246,11 @@ class Trilinos(CMakePackage, CudaPackage):
              placement='DataTransferKit',
              submodules=True,
              when='+dtk @develop')
+    resource(name='scorec',
+             git='https://github.com/SCOREC/core.git',
+             commit='73c16eae073b179e45ec625a5abe4915bc589af2',  # tag v2.2.5
+             placement='SCOREC',
+             when='+scorec')
     resource(name='mesquite',
              url='https://github.com/trilinos/mesquite/archive/trilinos-release-12-12-1.tar.gz',
              sha256='e0d09b0939dbd461822477449dca611417316e8e8d8268fd795debb068edcbb5',
@@ -281,10 +303,13 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+teko', when='~amesos')
     conflicts('+teko', when='~anasazi')
     conflicts('+teko', when='~aztec')
+    conflicts('+teko', when='~epetraext')
     conflicts('+teko', when='~ifpack')
     conflicts('+teko', when='~ml')
+    conflicts('+teko', when='~stratimikos')
     conflicts('+teko', when='~teuchos')
     conflicts('+teko', when='~tpetra')
+    conflicts('+teko', when='@:12 gotype=long')
     conflicts('+tempus', when='~nox')
     conflicts('+tempus', when='~teuchos')
     conflicts('+tpetra', when='~kokkos')
@@ -292,6 +317,11 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+zoltan2', when='~teuchos')
     conflicts('+zoltan2', when='~tpetra')
     conflicts('+zoltan2', when='~zoltan')
+
+    conflicts('+epetraextbtf', when='~epetraext')
+    conflicts('+epetraextexperimental', when='~epetraext')
+    conflicts('+epetraextgraphreorderings', when='~epetraext')
+    conflicts('+amesos2basker', when='~amesos2')
 
     conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
@@ -331,16 +361,27 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+cuda_rdc', when='~cuda')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
+    conflicts('cxxstd=11', when='@develop')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
+
+    # SCOREC requires parmetis, shards, stk, and zoltan
+    conflicts('+scorec', when='~metis')
+    conflicts('+scorec', when='~mpi')
+    conflicts('+scorec', when='~shards')
+    conflicts('+scorec', when='~stk')
+    conflicts('+scorec', when='~zoltan')
+
+    # Multi-value gotype only applies to trilinos through 12.14
+    conflicts('gotype=all', when='@12.15:')
 
     # All compilers except for pgi are in conflict:
     for __compiler in spack.compilers.supported_compilers():
         if __compiler != 'clang':
             conflicts('+cuda', when='~wrapper %{0}'.format(__compiler),
-                      msg='trilinos~wrapper+cuda can only be built with the\
-                      Clang compiler')
+                      msg='trilinos~wrapper+cuda can only be built with the '
+                      'Clang compiler')
 
     # ###################### Dependencies ##########################
 
@@ -371,7 +412,8 @@ class Trilinos(CMakePackage, CudaPackage):
     # (or alike) and adding results to -DTrilinos_EXTRA_LINK_FLAGS together
     # with Blas and Lapack and ScaLAPACK and Blacs and -lgfortran and it may
     # work at the end. But let's avoid all this by simply using shared libs
-    depends_on('mumps@5.0:+mpi+shared', when='+mumps')
+    depends_on('mumps@5.0:+mpi+shared+openmp', when='+mumps+openmp')
+    depends_on('mumps@5.0:+mpi+shared~openmp', when='+mumps~openmp')
     depends_on('scalapack', when='+mumps')
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
@@ -407,7 +449,21 @@ class Trilinos(CMakePackage, CudaPackage):
     patch('xlf_tpetra.patch', when='@12.12.1%clang')
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
     patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
-    patch('cray_secas.patch', when='@12.14.1:12.18.1%cce')
+    patch('cray_secas.patch', when='@12.14.1:%cce')
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%cce'):
+            if name == 'ldflags':
+                flags.append('-fuse-ld=gold')
+        return (None, None, flags)
+
+    # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
+    # avoid calling deprecated functions with CUDA-11
+    patch('fix_cxx14_cuda11.patch', when='@13.0.0:13.0.1 cxxstd=14 ^cuda@11:')
+
+    patch('https://github.com/trilinos/Trilinos/commit/b17f20a0b91e0b9fc5b1b0af3c8a34e2a4874f3f.patch',
+          sha256='dee6c55fe38eb7f6367e1896d6bc7483f6f9ab8fa252503050cc0c68c6340610',
+          when='@13.0.0:13.0.1 +teko gotype=long')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
@@ -449,6 +505,12 @@ class Trilinos(CMakePackage, CudaPackage):
                 spec_var = cmake_var.lower()
             return self.define_from_variant('TPL_ENABLE_' + cmake_var,
                                             spec_var)
+
+        def define_prefix_enable(prefix, cmake_var, spec_var=None):
+            if spec_var is None:
+                spec_var = cmake_var.lower()
+            return self.define_from_variant(
+                '%s' % prefix, spec_var)
 
         cxx_flags = []
         options = []
@@ -512,16 +574,25 @@ class Trilinos(CMakePackage, CudaPackage):
             define_trilinos_enable('ROL'),
             define_trilinos_enable('Rythmos'),
             define_trilinos_enable('Sacado'),
+            define_trilinos_enable('SCOREC'),
             define_trilinos_enable('Shards'),
             define_trilinos_enable('ShyLU'),
             define_trilinos_enable('STK'),
+            define_trilinos_enable('Stokhos'),
             define_trilinos_enable('Stratimikos'),
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
             define_trilinos_enable('Teuchos'),
             define_trilinos_enable('Tpetra'),
+            define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
+            define_prefix_enable('EpetraExt_BUILD_BTF', 'epetraextbtf'),
+            define_prefix_enable('EpetraExt_BUILD_EXPERIMENTAL',
+                                 'epetraextexperimental'),
+            define_prefix_enable('EpetraExt_BUILD_GRAPH_REORDERINGS',
+                                 'epetraextgraphreorderings'),
+            define_prefix_enable('Amesos2_ENABLE_Basker', 'amesos2basker'),
         ])
 
         options.append(self.define_from_variant('USE_XSDK_DEFAULTS',
@@ -815,21 +886,13 @@ class Trilinos(CMakePackage, CudaPackage):
             ])
 
             gotype = spec.variants['gotype'].value
-            # default in older Trilinos versions to enable multiple GOs
-            if ((gotype == 'none') and spec.satisfies('@:12.14.1')):
+            if gotype == 'all':
+                # default in older Trilinos versions to enable multiple GOs
                 options.extend([
-                    '-DTpetra_INST_INT_INT:BOOL=ON',
-                    '-DTpetra_INST_INT_LONG:BOOL=ON',
-                    '-DTpetra_INST_INT_LONG_LONG:BOOL=ON'
+                    define('Tpetra_INST_INT_INT', True),
+                    define('Tpetra_INST_INT_LONG', True),
+                    define('Tpetra_INST_INT_LONG_LONG', True),
                 ])
-            # set default GO in newer versions to long
-            elif (gotype == 'none'):
-                options.extend([
-                    '-DTpetra_INST_INT_INT:BOOL=OFF',
-                    '-DTpetra_INST_INT_LONG:BOOL=ON',
-                    '-DTpetra_INST_INT_LONG_LONG:BOOL=OFF'
-                ])
-            # if another GO is specified, use this
             else:
                 options.extend([
                     define('Tpetra_INST_INT_INT', gotype == 'int'),
@@ -846,6 +909,8 @@ class Trilinos(CMakePackage, CudaPackage):
 
         if sys.platform == 'darwin':
             options.append(define('Trilinos_ENABLE_FEI', False))
+            if '+stk' in spec:
+                cxx_flags.extend(['-DSTK_NO_BOOST_STACKTRACE'])
 
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader

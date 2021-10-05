@@ -50,8 +50,8 @@ class Gl2ps(CMakePackage):
 
     def cmake_args(self):
         options = [
-            '-DENABLE_PNG={0}'.format(self.variant_to_bool('+png')),
-            '-DENABLE_ZLIB={0}'.format(self.variant_to_bool('+zlib')),
+            self.define_from_variant('ENABLE_PNG', 'png'),
+            self.define_from_variant('ENABLE_ZLIB', 'zlib'),
         ]
         if '~doc' in self.spec:
             # Make sure we don't look.

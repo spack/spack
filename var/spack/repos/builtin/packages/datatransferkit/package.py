@@ -19,11 +19,14 @@ class Datatransferkit(CMakePackage):
     version('master', branch='master', submodules=True)
     version('3.1-rc2', commit='1abc1a43b33dffc7a16d7497b4185d09d865e36a', submodules=True)
 
+    variant('external-arborx', default=False,
+            description='use an external ArborX library instead of the submodule')
     variant('openmp', default=False, description='enable OpenMP backend')
     variant('serial', default=True, description='enable Serial backend (default)')
     variant('shared', default=True,
             description='enable the build of shared lib')
 
+    depends_on('arborx@1.0:', when='+external-arborx')
     depends_on('cmake', type='build')
     depends_on('trilinos+intrepid2+shards~dtk', when='+serial')
     depends_on('trilinos+intrepid2+shards+openmp~dtk', when='+openmp')
@@ -32,11 +35,12 @@ class Datatransferkit(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
 
         options = [
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
+            from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DDataTransferKit_ENABLE_DataTransferKit=ON',
+            from_variant('DataTransferKit_ENABLE_ArborX_TPL', 'external-arborx'),
             '-DDataTransferKit_ENABLE_TESTS=OFF',
             '-DDataTransferKit_ENABLE_EXAMPLES=OFF',
             '-DCMAKE_CXX_EXTENSIONS=OFF',

@@ -63,7 +63,7 @@ def load(parser, args):
         specs_str = ' '.join(args.specs) or "SPECS"
         spack.cmd.common.shell_init_instructions(
             "spack load",
-            "    eval `spack load {sh_arg}` %s" % specs_str,
+            "    eval `spack load {sh_arg} %s`" % specs_str,
         )
         return 1
 

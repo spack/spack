@@ -159,6 +159,27 @@ can supply a file with specs in it, one per line:
 This is useful if there is a specific suite of software managed by
 your site.
 
+^^^^^^^^^^^^^^^^^^
+Mirror environment
+^^^^^^^^^^^^^^^^^^
+
+To create a mirror of all packages required by a concerte environment, activate the environment and call ``spack mirror create -a``.
+This is especially useful to create a mirror of an environment concretized on another machine.
+
+.. code-block:: console
+
+   [remote] $ spack env create myenv
+   [remote] $ spack env activate myenv
+   [remote] $ spack add ...
+   [remote] $ spack concretize
+   
+   $ sftp remote:/spack/var/environment/myenv/spack.lock
+   $ spack env create myenv spack.lock
+   $ spack env activate myenv
+   $ spack mirror create -a
+  
+
+
 .. _cmd-spack-mirror-add:
 
 --------------------

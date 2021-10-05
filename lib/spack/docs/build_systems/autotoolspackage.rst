@@ -155,7 +155,7 @@ version, this can be done like so:
 
    @property
    def force_autoreconf(self):
-       return self.version == Version('1.2.3'):
+       return self.version == Version('1.2.3')
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Finding configure flags

@@ -46,8 +46,10 @@ class HdfEos5(AutotoolsPackage):
     conflicts('~static', when='~shared',
               msg='At least one of +static or +shared must be set')
 
+    maintainers = ['payerle']
+
     # Build dependencies
-    depends_on('hdf5')
+    depends_on('hdf5+hl')
 
     # The standard Makefile.am, etc. add a --single_module flag to LDFLAGS
     # to pass to the linker.
@@ -92,11 +94,11 @@ class HdfEos5(AutotoolsPackage):
 
         # Provide config args for dependencies
         extra_args.append('--with-hdf5={0}'.format(self.spec['hdf5'].prefix))
-        if self.spec['zlib']:
+        if 'szip' in self.spec:
+            extra_args.append('--with-szlib={0}'.format(
+                self.spec['libszip'].prefix))
+        if 'zlib' in self.spec:
             extra_args.append('--with-zlib={0}'.format(
                 self.spec['zlib'].prefix))
-        if self.spec['szip']:
-            extra_args.append('--with-szlib={0}'.format(
-                self.spec['szip'].prefix))
 
         return extra_args

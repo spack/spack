@@ -20,17 +20,6 @@ import six
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlopen, Request
 
-if sys.version_info < (3, 0):
-    # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParser, HTMLParseError  # novm
-else:
-    # In Python 3, things moved to html.parser
-    from html.parser import HTMLParser
-
-    # Also, HTMLParseError is deprecated and never raised.
-    class HTMLParseError(Exception):
-        pass
-
 from llnl.util.filesystem import mkdirp
 import llnl.util.tty as tty
 
@@ -45,6 +34,16 @@ import llnl.util.lang
 
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
+if sys.version_info < (3, 0):
+    # Python 2 had these in the HTMLParser package.
+    from HTMLParser import HTMLParser, HTMLParseError  # novm
+else:
+    # In Python 3, things moved to html.parser
+    from html.parser import HTMLParser
+
+    # Also, HTMLParseError is deprecated and never raised.
+    class HTMLParseError(Exception):
+        pass
 
 # Timeout in seconds for web requests
 _timeout = 10
@@ -106,7 +105,8 @@ def read_from_url(url, accept_content_type=None):
         else:
             # User has explicitly indicated that they do not want SSL
             # verification.
-            context = ssl._create_unverified_context()
+            if not __UNABLE_TO_VERIFY_SSL:
+                context = ssl._create_unverified_context()
 
     req = Request(url_util.format(url))
     content_type = None
@@ -211,11 +211,10 @@ def url_exists(url):
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
-        from botocore.exceptions import ClientError
         try:
-            s3.get_object(Bucket=url.netloc, Key=url.path)
+            s3.get_object(Bucket=url.netloc, Key=url.path.lstrip('/'))
             return True
-        except ClientError as err:
+        except s3.ClientError as err:
             if err.response['Error']['Code'] == 'NoSuchKey':
                 return False
             raise err
@@ -229,17 +228,57 @@ def url_exists(url):
         return False
 
 
-def remove_url(url):
+def _debug_print_delete_results(result):
+    if 'Deleted' in result:
+        for d in result['Deleted']:
+            tty.debug('Deleted {0}'.format(d['Key']))
+    if 'Errors' in result:
+        for e in result['Errors']:
+            tty.debug('Failed to delete {0} ({1})'.format(
+                e['Key'], e['Message']))
+
+
+def remove_url(url, recursive=False):
     url = url_util.parse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
-        os.remove(local_path)
+        if recursive:
+            shutil.rmtree(local_path)
+        else:
+            os.remove(local_path)
         return
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
-        s3.delete_object(Bucket=url.netloc, Key=url.path)
+        bucket = url.netloc
+        if recursive:
+            # Because list_objects_v2 can only return up to 1000 items
+            # at a time, we have to paginate to make sure we get it all
+            prefix = url.path.strip('/')
+            paginator = s3.get_paginator('list_objects_v2')
+            pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
+
+            delete_request = {'Objects': []}
+            for item in pages.search('Contents'):
+                if not item:
+                    continue
+
+                delete_request['Objects'].append({'Key': item['Key']})
+
+                # Make sure we do not try to hit S3 with a list of more
+                # than 1000 items
+                if len(delete_request['Objects']) >= 1000:
+                    r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
+                    _debug_print_delete_results(r)
+                    delete_request = {'Objects': []}
+
+            # Delete any items that remain
+            if len(delete_request['Objects']):
+                r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
+                _debug_print_delete_results(r)
+        else:
+            s3.delete_object(Bucket=bucket, Key=url.path.lstrip('/'))
         return
 
     # Don't even try for other URL schemes.

@@ -13,6 +13,7 @@ import spack.package
 from spack.spec import Spec
 from spack.dependency import all_deptypes, Dependency, canonical_deptype
 from spack.util.mock_package import MockPackageMultiRepo
+import spack.util.hash as hashutil
 
 
 def check_links(spec_to_check):
@@ -75,7 +76,7 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
     y = mock_repo.add_package('y', [z], [test_only])
     w = mock_repo.add_package('w', [x, y], [test_only, default])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         spec = Spec('w')
         spec.concretize(tests=(w.name,))
 
@@ -114,7 +115,7 @@ def test_installed_deps():
     b = mock_repo.add_package('b', [d, e], [default, default])
     mock_repo.add_package('a', [b, c], [default, default])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         c_spec = Spec('c')
         c_spec.concretize()
         assert c_spec['d'].version == spack.version.Version('2')
@@ -143,7 +144,7 @@ def test_specify_preinstalled_dep():
     b = mock_repo.add_package('b', [c], [default])
     mock_repo.add_package('a', [b], [default])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         b_spec = Spec('b')
         b_spec.concretize()
         for spec in b_spec.traverse():
@@ -186,7 +187,7 @@ def test_conditional_dep_with_user_constraints(spec_str, expr_str, expected):
     }
     mock_repo.add_package('x', [y], [default], conditions=x_on_y_conditions)
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         spec = Spec(spec_str)
         spec.concretize()
 
@@ -705,17 +706,17 @@ class TestSpecDag(object):
                                 for c in test_hash])
 
             for bits in (1, 2, 3, 4, 7, 8, 9, 16, 64, 117, 128, 160):
-                actual_int = spack.spec.base32_prefix_bits(test_hash, bits)
+                actual_int = hashutil.base32_prefix_bits(test_hash, bits)
                 fmt = "#0%sb" % (bits + 2)
                 actual = format(actual_int, fmt).replace('0b', '')
 
                 assert expected[:bits] == actual
 
             with pytest.raises(ValueError):
-                spack.spec.base32_prefix_bits(test_hash, 161)
+                hashutil.base32_prefix_bits(test_hash, 161)
 
             with pytest.raises(ValueError):
-                spack.spec.base32_prefix_bits(test_hash, 256)
+                hashutil.base32_prefix_bits(test_hash, 256)
 
     def test_traversal_directions(self):
         """Make sure child and parent traversals of specs work."""

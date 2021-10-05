@@ -37,8 +37,7 @@ class Xeus(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DBUILD_EXAMPLES:BOOL=%s' % (
-                'ON' if '+examples' in self.spec else 'OFF')
+            self.define_from_variant('BUILD_EXAMPLES', 'examples')
         ]
 
         return args

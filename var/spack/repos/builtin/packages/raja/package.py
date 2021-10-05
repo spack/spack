@@ -37,17 +37,20 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
     # and remove the +tests conflict below.
     variant('tests', default=False, description='Build tests')
 
-    depends_on('blt', type='build')
-    depends_on('blt@0.3.7:', type='build', when='+rocm')
-
-    depends_on('camp')
-    depends_on('camp+cuda', when='+cuda')
+    depends_on('blt@0.4.0:', type='build', when='@0.13.1:')
+    depends_on('blt@:0.3.6', type='build', when='@:0.13.0')
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
     depends_on('camp+rocm', when='+rocm')
     for val in ROCmPackage.amdgpu_targets:
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+
+    depends_on('camp')
+    depends_on('camp+cuda', when='+cuda')
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on('camp cuda_arch={0}'.format(sm_),
+                   when='cuda_arch={0}'.format(sm_))
 
     conflicts('+openmp', when='+rocm')
 
@@ -58,8 +61,7 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
 
         options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
 
-        options.append('-DENABLE_OPENMP={0}'.format(
-            'ON' if '+openmp' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_OPENMP', 'openmp'))
 
         if '+cuda' in spec:
             options.extend([
@@ -69,6 +71,7 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
+                options.append('-DCMAKE_CUDA_ARCHITECTURES={0}'.format(cuda_arch[0]))
         else:
             options.append('-DENABLE_CUDA=OFF')
 
@@ -85,14 +88,11 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
         else:
             options.append('-DENABLE_HIP=OFF')
 
-        options.append('-DBUILD_SHARED_LIBS={0}'.format(
-            'ON' if '+shared' in spec else 'OFF'))
+        options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
 
-        options.append('-DENABLE_EXAMPLES={0}'.format(
-            'ON' if '+examples' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_EXAMPLES', 'examples'))
 
-        options.append('-DENABLE_EXERCISES={0}'.format(
-            'ON' if '+exercises' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_EXERCISES', 'exercises'))
 
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT
@@ -100,8 +100,7 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies('%clang target=ppc64le:') or not self.run_tests:
             options.append('-DENABLE_TESTS=OFF')
         else:
-            options.append('-DENABLE_TESTS={0}'.format(
-                'ON' if '+tests' in spec else 'OFF'))
+            options.append(self.define_from_variant('ENABLE_TESTS', 'tests'))
 
         return options
 

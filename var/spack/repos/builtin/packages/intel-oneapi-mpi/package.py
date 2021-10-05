@@ -4,32 +4,44 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+import platform
+import subprocess
 
-releases = {
-    '2021.1.1': {'irc_id': '17397', 'build': '76'}}
+
+from spack import *
 
 
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
     """Intel oneAPI MPI."""
 
-    maintainers = ['rscohn2']
+    maintainers = ['rscohn2', 'danvev']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
-    version('2021.1.1', sha256='8b7693a156c6fc6269637bef586a8fd3ea6610cac2aae4e7f48c1fbb601625fe', expand=False)
+    if platform.system() == 'Linux':
+        version('2021.3.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17947/l_mpi_oneapi_p_2021.3.0.294_offline.sh',
+                sha256='04c48f864ee4c723b1b4ca62f2bea8c04d5d7e3de19171fd62b17868bc79bc36',
+                expand=False)
+        version('2021.2.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17729/l_mpi_oneapi_p_2021.2.0.215_offline.sh',
+                sha256='d0d4cdd11edaff2e7285e38f537defccff38e37a3067c02f4af43a3629ad4aa3',
+                expand=False)
+        version('2021.1.1',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17397/l_mpi_oneapi_p_2021.1.1.76_offline.sh',
+                sha256='8b7693a156c6fc6269637bef586a8fd3ea6610cac2aae4e7f48c1fbb601625fe',
+                expand=False)
 
     provides('mpi@:3')
 
-    def __init__(self, spec):
-        self.component_info(dir_name='mpi',
-                            components='intel.oneapi.lin.mpi.devel',
-                            releases=releases,
-                            url_name='mpi_oneapi')
-        super(IntelOneapiMpi, self).__init__(spec)
+    depends_on('patchelf', type='build')
+
+    @property
+    def component_dir(self):
+        return 'mpi'
 
     def setup_dependent_package(self, module, dep_spec):
-        dir = join_path(self.prefix, 'mpi', 'latest', 'bin')
+        dir = join_path(self.component_path, 'bin')
         self.spec.mpicc  = join_path(dir, 'mpicc')
         self.spec.mpicxx = join_path(dir, 'mpicxx')
         self.spec.mpif77 = join_path(dir, 'mpif77')
@@ -42,11 +54,41 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set('MPICH_F90', spack_fc)
         env.set('MPICH_FC', spack_fc)
 
+        # Set compiler wrappers for dependent build stage
+        dir = join_path(self.component_path, 'bin')
+        env.set('MPICC', join_path(dir, 'mpicc'))
+        env.set('MPICXX', join_path(dir, 'mpicxx'))
+        env.set('MPIF77', join_path(dir, 'mpif77'))
+        env.set('MPIF90', join_path(dir, 'mpif90'))
+        env.set('MPIFC', join_path(dir, 'mpifc'))
+
     @property
     def libs(self):
         libs = []
-        for dir in ['lib/release_mt', 'lib', 'libfabric/lib']:
-            lib_path = '{0}/{1}/latest/{2}'.format(self.prefix, self._dir_name, dir)
+        for dir in [join_path('lib', 'release_mt'),
+                    'lib',
+                    join_path('libfabric', 'lib')]:
+            lib_path = join_path(self.component_path, dir)
             ldir = find_libraries('*', root=lib_path, shared=True, recursive=False)
             libs += ldir
         return libs
+
+    def install(self, spec, prefix):
+        super(IntelOneapiMpi, self).install(spec, prefix)
+
+        # need to patch libmpi.so so it can always find libfabric
+        libfabric_rpath = join_path(self.component_path, 'libfabric', 'lib')
+        for lib_version in ['debug', 'release', 'release_mt', 'debug_mt']:
+            file = join_path(self.component_path, 'lib', lib_version, 'libmpi.so')
+            subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, file])
+
+        # fix I_MPI_SUBSTITUTE_INSTALLDIR and
+        #   __EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
+        scripts = ["mpif77", "mpif90", "mpigcc", "mpigxx", "mpiicc", "mpiicpc",
+                   "mpiifort"]
+        for script in scripts:
+            file = join_path(self.component_path, 'bin', script)
+            filter_file('I_MPI_SUBSTITUTE_INSTALLDIR',
+                        self.component_path, file, backup=False)
+            filter_file('__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__',
+                        self.component_path, file, backup=False)

@@ -1,0 +1,30 @@
+From 788440279e0f0fdc7dce27ec266d7d5c11bcda1c Mon Sep 17 00:00:00 2001
+From: Matthew Hatch <mrhatch97@gmail.com>
+Date: Thu, 9 May 2019 01:05:43 -0700
+Subject: [PATCH] Fixed C++17-namespace assignment bug
+
+Added scope save and restore before and after namespace parsing
+---
+ src/scanner.l | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/scanner.l b/src/scanner.l
+index d3902b38d..5395e499c 100644
+--- a/src/scanner.l
++++ b/src/scanner.l
+@@ -3941,6 +3941,7 @@ OPERATOR  "operator"{B}*({ARITHOP}|{ASSIGNOP}|{LOGICOP}|{BITOP})
+ 					  else
+ 					  {
+ 					    current->endBodyLine = yyLineNr;
++                        Entry * original_root = current_root; // save root this namespace is in
+                                             if (current->section == Entry::NAMESPACE_SEC && current->type == "namespace")
+                                             {
+                                               int split_point;
+@@ -4005,6 +4006,7 @@ OPERATOR  "operator"{B}*({ARITHOP}|{ASSIGNOP}|{LOGICOP}|{BITOP})
+ 						   )
+ 						{ // namespaces and interfaces and java classes ends with a closing bracket without semicolon
+ 						  current->reset();
++                          current_root = original_root; // restore scope from before namespace descent
+ 						  initEntry();
+ 						  memspecEntry = 0;
+ 						  BEGIN( FindMembers ) ;

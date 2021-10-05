@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import sys
+
 
 class Gdal(AutotoolsPackage):
     """GDAL (Geospatial Data Abstraction Library) is a translator library for
@@ -21,6 +24,10 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.3.1',  sha256='48ab00b77d49f08cf66c60ccce55abb6455c3079f545e60c90ee7ce857bccb70')
+    version('3.3.0',  sha256='190c8f4b56afc767f43836b2a5cd53cc52ee7fdc25eb78c6079c5a244e28efa7')
+    version('3.2.3',  sha256='d9ec8458fe97fd02bf36379e7f63eaafce1005eeb60e329ed25bb2d2a17a796f')
+    version('3.2.2',  sha256='a7e1e414e5c405af48982bf4724a3da64a05770254f2ce8affb5f58a7604ca57')
     version('3.2.1',  sha256='6c588b58fcb63ff3f288eb9f02d76791c0955ba9210d98c3abd879c770ae28ea')
     version('3.2.0',  sha256='b051f852600ffdf07e337a7f15673da23f9201a9dbb482bd513756a3e5a196a6')
     version('3.1.4',  sha256='7b82486f71c71cec61f9b237116212ce18ef6b90f068cbbf9f7de4fc50b576a8')
@@ -44,7 +51,7 @@ class Gdal(AutotoolsPackage):
     version('2.3.0',  sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
     version('2.1.2',  sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
     version('2.0.2',  sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
-    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042')
+    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042', deprecated=True)
 
     variant('libtool',   default=True,  description='Use libtool to build the library')
     variant('libz',      default=True,  description='Include libz support')
@@ -168,13 +175,27 @@ class Gdal(AutotoolsPackage):
 
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
-    executables = ['^gdal-config$']
+    conflicts('+jasper', when='@3.5:', msg='JPEG2000 driver removed in GDAL 3.5')
+    conflicts('+perl', when='@3.5:', msg='Perl bindings removed in GDAL 3.5')
 
-    import_modules = PythonPackage.import_modules
+    # https://github.com/OSGeo/gdal/issues/3782
+    patch('https://github.com/OSGeo/gdal/pull/3786.patch', when='@3.3.0', level=2,
+          sha256='5e14c530289bfa1257277357baa8d485f852ea480152fb150d152c85af8d01f8')
+
+    executables = ['^gdal-config$']
 
     @classmethod
     def determine_version(cls, exe):
         return Executable(exe)('--version', output=str, error=str).rstrip()
+
+    @property
+    def import_modules(self):
+        modules = ['osgeo']
+        if self.spec.satisfies('@3.3:'):
+            modules.append('osgeo_utils')
+        else:
+            modules.append('osgeo.utils')
+        return modules
 
     def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
@@ -188,6 +209,17 @@ class Gdal(AutotoolsPackage):
             class_paths = find(self.prefix, '*.jar')
             classpath = os.pathsep.join(class_paths)
             env.prepend_path('CLASSPATH', classpath)
+
+        # `spack test run gdal+python` requires these for the Python bindings
+        # to find the correct libraries
+        libs = []
+        for dep in self.spec.dependencies(deptype='link'):
+            query = self.spec[dep.name]
+            libs.extend(query.libs.directories)
+        if sys.platform == 'darwin':
+            env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', ':'.join(libs))
+        else:
+            env.prepend_path('LD_LIBRARY_PATH', ':'.join(libs))
 
     def patch(self):
         if '+java platform=darwin' in self.spec:
@@ -218,7 +250,7 @@ class Gdal(AutotoolsPackage):
             else:
                 args.append('--disable-driver-grib')
         else:
-            args.append('--without-bsb')
+            args.append('--with-bsb=no')
 
             if '+grib' in spec:
                 args.append('--with-grib=yes')
@@ -476,14 +508,17 @@ class Gdal(AutotoolsPackage):
             '--with-dods-root=no',
             '--with-spatialite=no',
             '--with-idb=no',
-            # https://trac.osgeo.org/gdal/wiki/Epsilon
-            '--with-epsilon=no',
             '--with-webp=no',
             '--with-freexl=no',
             '--with-pam=no',
             '--with-podofo=no',
             '--with-rasdaman=no',
         ])
+
+        # TODO: add packages for these dependencies (only for 3.2 and older)
+        if spec.satisfies('@:3.2'):
+            # https://trac.osgeo.org/gdal/wiki/Epsilon
+            args.append('--with-epsilon=no')
 
         # TODO: add packages for these dependencies (only for 3.1 and older)
         if spec.satisfies('@:3.1'):
@@ -562,5 +597,13 @@ class Gdal(AutotoolsPackage):
             fix_darwin_install_name(self.prefix.lib)
 
     def test(self):
+        """Attempts to import modules of the installed package."""
+
         if '+python' in self.spec:
-            PythonPackage.test(self)
+            # Make sure we are importing the installed modules,
+            # not the ones in the source directory
+            for module in self.import_modules:
+                self.run_test(self.spec['python'].command.path,
+                              ['-c', 'import {0}'.format(module)],
+                              purpose='checking import of {0}'.format(module),
+                              work_dir='spack-test')

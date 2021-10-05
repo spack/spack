@@ -12,7 +12,7 @@ class Relion(CMakePackage, CudaPackage):
     refinement of (multiple) 3D reconstructions or 2D class averages in
     electron cryo-microscopy (cryo-EM)."""
 
-    homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
+    homepage = "http://www2.mrc-lmb.cam.ac.uk/relion"
     git      = "https://github.com/3dem/relion.git"
     url      = "https://github.com/3dem/relion/archive/3.1.0.zip"
 
@@ -52,6 +52,8 @@ class Relion(CMakePackage, CudaPackage):
     depends_on('cuda@9:', when='@3: +cuda')
     depends_on('tbb', when='~cuda')
     depends_on('mkl', when='~cuda +mklfft')
+
+    patch('0002-Simple-patch-to-fix-intel-mkl-linking.patch', when='@:3.1.1 os=ubuntu18.04')
 
     def cmake_args(self):
 

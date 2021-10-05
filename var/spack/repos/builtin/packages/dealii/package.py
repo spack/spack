@@ -16,7 +16,7 @@ class Dealii(CMakePackage, CudaPackage):
     url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
     git      = "https://github.com/dealii/dealii.git"
 
-    maintainers = ['davydden', 'jppelteret', 'luca-heltai']
+    maintainers = ['jppelteret', 'luca-heltai']
 
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
@@ -25,6 +25,7 @@ class Dealii(CMakePackage, CudaPackage):
     generator = 'Ninja'
 
     version('master', branch='master')
+    version('9.3.0', sha256='aef8c7a87510ce827dfae3bdd4ed7bff82004dc09f96fa7a65b2554f2839b931')
     version('9.2.0', sha256='d05a82fb40f1f1e24407451814b5a6004e39366a44c81208b1ae9d65f3efa43a')
     version('9.1.1', sha256='fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276')
     version('9.1.0', sha256='5b070112403f8afbb72345c1bb24d2a38d11ce58891217e353aab97957a04600')
@@ -62,6 +63,8 @@ class Dealii(CMakePackage, CudaPackage):
     # Package variants
     variant('assimp',   default=True,
             description='Compile with Assimp')
+    variant('arborx',   default=True,
+            description='Compile with Arborx support')
     variant('arpack',   default=True,
             description='Compile with Arpack and PArpack (only with MPI)')
     variant('adol-c',   default=True,
@@ -78,8 +81,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Metis')
     variant('muparser', default=True,
             description='Compile with muParser')
-    # TODO @9.3: disable by default
-    variant('nanoflann', default=True,
+    variant('nanoflann', default=False,
             description='Compile with Nanoflann')
     variant('netcdf',   default=False,
             description='Compile with Netcdf (only with MPI)')
@@ -97,8 +99,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Slepc (only with Petsc and MPI)')
     variant('symengine', default=True,
             description='Compile with SymEngine')
-    # TODO @9.3: enable by default
-    variant('simplex', default=False,
+    variant('simplex', default=True,
             description='Compile with Simplex support')
     # TODO @9.3: enable by default, when we know what to do
     # variant('taskflow',  default=False,
@@ -161,6 +162,8 @@ class Dealii(CMakePackage, CudaPackage):
 
     # Optional dependencies: Packages
     depends_on('adol-c@2.6.4:',    when='@9.0:+adol-c')
+    depends_on('arborx',           when='@9.3:+arborx')
+    depends_on('arborx+trilinos',  when='@9.3:+arborx+trilinos')
     depends_on('arpack-ng+mpi',    when='+arpack+mpi')
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
@@ -267,7 +270,7 @@ class Dealii(CMakePackage, CudaPackage):
                       'via ~{0}'.format(p))
 
     # interfaces added in 9.3.0:
-    for p in ['simplex']:  # , 'taskflow']:
+    for p in ['simplex', 'arborx']:  # , 'taskflow']:
         conflicts('+{0}'.format(p), when='@:9.2',
                   msg='The interface to {0} is supported from version 9.3.0 '
                       'onwards. Please explicitly disable this variant '
@@ -487,7 +490,7 @@ class Dealii(CMakePackage, CudaPackage):
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
                 'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
-                'symengine', 'ginkgo'):  # 'taskflow'):
+                'symengine', 'ginkgo', 'arborx'):  # 'taskflow'):
             options.append(self.define_from_variant(
                 'DEAL_II_WITH_{0}'.format(library.upper()), library
             ))

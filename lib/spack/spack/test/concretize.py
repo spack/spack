@@ -304,7 +304,7 @@ class TestConcretize(object):
         barpkg = mock_repo.add_package('barpkg', [bazpkg], [default_dep])
         mock_repo.add_package('foopkg', [barpkg], [default_dep])
 
-        with spack.repo.swap(mock_repo):
+        with spack.repo.use_repositories(mock_repo):
             spec = Spec('foopkg %gcc@4.5.0 os=CNL target=nocona' +
                         ' ^barpkg os=SuSE11 ^bazpkg os=be')
             spec.concretize()
@@ -660,8 +660,7 @@ class TestConcretize(object):
 
         abstract_specs = [Spec(x) for x in abstract_specs]
         concrete_specs = spack.concretize.concretize_specs_together(
-            *abstract_specs
-        )
+            *abstract_specs)
 
         # Check there's only one configuration of each package in the DAG
         names = set(
@@ -690,7 +689,7 @@ class TestConcretize(object):
 
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
-        ('mpileaks%gcc@4.4.7 target=x86_64:', 'core2'),
+        ('mpileaks%gcc@4.4.7 ^dyninst@10.2.1 target=x86_64:', 'core2'),
         ('mpileaks%gcc@4.8 target=x86_64:', 'haswell'),
         ('mpileaks%gcc@5.3.0 target=x86_64:', 'broadwell'),
         ('mpileaks%apple-clang@5.1.0 target=x86_64:', 'x86_64')
@@ -925,6 +924,35 @@ class TestConcretize(object):
         assert s.external
         assert s.satisfies(expected)
 
+    @pytest.mark.regression('20976')
+    @pytest.mark.parametrize('compiler,spec_str,expected,xfailold', [
+        ('gcc', 'external-common-python %clang',
+         '%clang ^external-common-openssl%gcc ^external-common-gdbm%clang', False),
+        ('clang', 'external-common-python',
+         '%clang ^external-common-openssl%clang ^external-common-gdbm%clang', True)
+    ])
+    def test_compiler_in_nonbuildable_external_package(
+            self, compiler, spec_str, expected, xfailold
+    ):
+        """Check that the compiler of a non-buildable external package does not
+           spread to other dependencies, unless no other commpiler is specified."""
+        packages_yaml = {
+            'external-common-openssl': {
+                'externals': [
+                    {'spec': 'external-common-openssl@1.1.1i%' + compiler,
+                     'prefix': '/usr'}
+                ],
+                'buildable': False
+            }
+        }
+        spack.config.set('packages', packages_yaml)
+
+        s = Spec(spec_str).concretized()
+        if xfailold and spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('This only works on the ASP-based concretizer')
+        assert s.satisfies(expected)
+        assert 'external-common-perl' not in [d.name for d in s.dependencies()]
+
     def test_external_packages_have_consistent_hash(self):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('This tests needs the ASP-based concretizer')
@@ -1060,6 +1088,9 @@ class TestConcretize(object):
         # having an additional dependency, but the dependency shouldn't
         # appear in the answer set
         ('external-buildable-with-variant@0.9 +baz', True, '@0.9'),
+        # This package has an external version declared that would be
+        # the least preferred if Spack had to build it
+        ('old-external', True, '@1.0.0'),
     ])
     def test_external_package_versions(self, spec_str, is_external, expected):
         s = Spec(spec_str).concretized()
@@ -1098,3 +1129,135 @@ class TestConcretize(object):
         # dependency type declared to infer that the dependency holds.
         s = Spec('test-dep-with-imposed-conditions').concretized()
         assert 'c' not in s
+
+    @pytest.mark.parametrize('spec_str', [
+        'wrong-variant-in-conflicts',
+        'wrong-variant-in-depends-on'
+    ])
+    def test_error_message_for_inconsistent_variants(self, spec_str):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec(spec_str)
+        with pytest.raises(RuntimeError, match='not found in package'):
+            s.concretize()
+
+    @pytest.mark.regression('22533')
+    @pytest.mark.parametrize('spec_str,variant_name,expected_values', [
+        # Test the default value 'auto'
+        ('mvapich2', 'file_systems', ('auto',)),
+        # Test setting a single value from the disjoint set
+        ('mvapich2 file_systems=lustre', 'file_systems', ('lustre',)),
+        # Test setting multiple values from the disjoint set
+        ('mvapich2 file_systems=lustre,gpfs', 'file_systems',
+         ('lustre', 'gpfs')),
+    ])
+    def test_mv_variants_disjoint_sets_from_spec(
+            self, spec_str, variant_name, expected_values
+    ):
+        s = Spec(spec_str).concretized()
+        assert set(expected_values) == set(s.variants[variant_name].value)
+
+    @pytest.mark.regression('22533')
+    def test_mv_variants_disjoint_sets_from_packages_yaml(self):
+        external_mvapich2 = {
+            'mvapich2': {
+                'buildable': False,
+                'externals': [{
+                    'spec': 'mvapich2@2.3.1 file_systems=nfs,ufs',
+                    'prefix': '/usr'
+                }]
+            }
+        }
+        spack.config.set('packages', external_mvapich2)
+
+        s = Spec('mvapich2').concretized()
+        assert set(s.variants['file_systems'].value) == set(['ufs', 'nfs'])
+
+    @pytest.mark.regression('22596')
+    def test_external_with_non_default_variant_as_dependency(self):
+        # This package depends on another that is registered as an external
+        # with 'buildable: true' and a variant with a non-default value set
+        s = Spec('trigger-external-non-default-variant').concretized()
+
+        assert '~foo' in s['external-non-default-variant']
+        assert '~bar' in s['external-non-default-variant']
+        assert s['external-non-default-variant'].external
+
+    @pytest.mark.regression('22871')
+    @pytest.mark.parametrize('spec_str,expected_os', [
+        ('mpileaks', 'os=debian6'),
+        # To trigger the bug in 22871 we need to have the same compiler
+        # spec available on both operating systems
+        ('mpileaks%gcc@4.5.0 platform=test os=debian6', 'os=debian6'),
+        ('mpileaks%gcc@4.5.0 platform=test os=redhat6', 'os=redhat6')
+    ])
+    def test_os_selection_when_multiple_choices_are_possible(
+            self, spec_str, expected_os
+    ):
+        s = Spec(spec_str).concretized()
+
+        for node in s.traverse():
+            assert node.satisfies(expected_os)
+
+    @pytest.mark.regression('22718')
+    @pytest.mark.parametrize('spec_str,expected_compiler', [
+        ('mpileaks', '%gcc@4.5.0'),
+        ('mpileaks ^mpich%clang@3.3', '%clang@3.3')
+    ])
+    def test_compiler_is_unique(self, spec_str, expected_compiler):
+        s = Spec(spec_str).concretized()
+
+        for node in s.traverse():
+            assert node.satisfies(expected_compiler)
+
+    @pytest.mark.parametrize('spec_str,expected_dict', [
+        # Check the defaults from the package (libs=shared)
+        ('multivalue-variant', {
+            'libs=shared': True,
+            'libs=static': False
+        }),
+        # Check that libs=static doesn't extend the default
+        ('multivalue-variant libs=static', {
+            'libs=shared': False,
+            'libs=static': True
+        }),
+    ])
+    def test_multivalued_variants_from_cli(self, spec_str, expected_dict):
+        s = Spec(spec_str).concretized()
+
+        for constraint, value in expected_dict.items():
+            assert s.satisfies(constraint) == value
+
+    @pytest.mark.regression('22351')
+    @pytest.mark.parametrize('spec_str,expected', [
+        # Version 1.1.0 is deprecated and should not be selected, unless we
+        # explicitly asked for that
+        ('deprecated-versions', ['deprecated-versions@1.0.0']),
+        ('deprecated-versions@1.1.0', ['deprecated-versions@1.1.0']),
+    ])
+    def test_deprecated_versions_not_selected(self, spec_str, expected):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec(spec_str).concretized()
+
+        for abstract_spec in expected:
+            assert abstract_spec in s
+
+    @pytest.mark.regression('24196')
+    def test_version_badness_more_important_than_default_mv_variants(self):
+        # If a dependency had an old version that for some reason pulls in
+        # a transitive dependency with a multi-valued variant, that old
+        # version was preferred because of the order of our optimization
+        # criteria.
+        s = spack.spec.Spec('root').concretized()
+        assert s['gmt'].satisfies('@2.0')
+
+    @pytest.mark.regression('24205')
+    def test_provider_must_meet_requirements(self):
+        # A package can be a provider of a virtual only if the underlying
+        # requirements are met.
+        s = spack.spec.Spec('unsat-virtual-dependency')
+        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+            s.concretize()

@@ -1,3 +1,59 @@
+# v0.16.2 (2021-05-22)
+
+* Major performance improvement for `spack load` and other commands. (#23661)
+* `spack fetch` is now environment-aware. (#19166)
+* Numerous fixes for the new, `clingo`-based concretizer. (#23016, #23307,
+  #23090, #22896, #22534, #20644, #20537, #21148)
+* Supoprt for automatically bootstrapping `clingo` from source. (#20652, #20657
+  #21364, #21446, #21913, #22354, #22444, #22460, #22489, #22610, #22631)
+* Python 3.10 support: `collections.abc` (#20441)
+* Fix import issues by using `__import__` instead of Spack package importe.
+  (#23288, #23290)
+* Bugfixes and `--source-dir` argument for `spack location`. (#22755, #22348,
+  #22321)
+* Better support for externals in shared prefixes. (#22653)
+* `spack build-env` now prefers specs defined in the active environment.
+  (#21642)
+* Remove erroneous warnings about quotes in `from_sourcing_files`. (#22767)
+* Fix clearing cache of `InternalConfigScope`. (#22609)
+* Bugfix for active when pkg is already active error. (#22587)
+* Make `SingleFileScope` able to repopulate the cache after clearing it.
+  (#22559)
+* Channelflow: Fix the package. (#22483)
+* More descriptive error message for bugs in `package.py` (#21811)
+* Use package-supplied `autogen.sh`. (#20319)
+* Respect `-k/verify-ssl-false` in `_existing_url` method. (#21864)
+
+
+# v0.16.1 (2021-02-22)
+
+This minor release includes a new feature and associated fixes:
+* intel-oneapi support through new packages (#20411, #20686, #20693, #20717,
+  #20732, #20808, #21377, #21448)
+
+This release also contains bug fixes/enhancements for:
+* HIP/ROCm support (#19715, #20095)
+* concretization (#19988, #20020, #20082, #20086, #20099, #20102, #20128,
+  #20182, #20193, #20194, #20196, #20203, #20247, #20259, #20307, #20362,
+  #20383, #20423, #20473, #20506, #20507, #20604, #20638, #20649, #20677,
+  #20680, #20790)
+* environment install reporting fix (#20004)
+* avoid import in ABI compatibility info (#20236)
+* restore ability of dev-build to skip patches (#20351)
+* spack find -d spec grouping (#20028)
+* spack smoke test support (#19987, #20298)
+* macOS fixes (#20038, #21662)
+* abstract spec comparisons (#20341)
+* continuous integration (#17563)
+* performance improvements for binary relocation (#19690, #20768)
+* additional sanity checks for variants in builtin packages (#20373)
+* do not pollute auto-generated configuration files with empty lists or
+  dicts (#20526)
+
+plus assorted documentation (#20021, #20174) and package bug fixes/enhancements
+(#19617, #19933, #19986, #20006, #20097, #20198, #20794, #20906, #21411).
+
+
 # v0.16.0 (2020-11-18)
 
 `v0.16.0` is a major feature release.

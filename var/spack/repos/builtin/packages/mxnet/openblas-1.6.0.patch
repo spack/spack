@@ -1,0 +1,14 @@
+https://github.com/apache/incubator-mxnet/pull/19174
+--- a/CMakeLists.txt	2020-01-30 17:45:22.000000000 -0600
++++ b/CMakeLists.txt	2021-02-03 11:11:30.000000000 -0600
+@@ -446,7 +446,9 @@
+ if(USE_LAPACK)
+   message("USE_LAPACK is ON")
+   add_definitions(-DMXNET_USE_LAPACK=1)
+-  if (NOT MSVC)
++  # BLAS=open case is handled in ChooseBlas.cmake
++  if(NOT MSVC AND NOT CMAKE_BUILD_TYPE STREQUAL "Distribution"
++     AND NOT BLAS STREQUAL "Open" AND NOT BLAS STREQUAL "open")
+     list(APPEND mxnet_LINKER_LIBS lapack)
+   endif()
+ endif()

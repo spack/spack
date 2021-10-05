@@ -2,10 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import copy
 import os
 import os.path
-import copy
 
 import spack.util.environment
 
@@ -22,6 +21,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     maintainers = ['dev-zero']
 
+    version('8.2', sha256='2e24768720efed1a5a4a58e83e2aca502cd8b95544c21695eb0de71ed652f20a')
     version('8.1', sha256='7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772')
     version('7.1', sha256='ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb')
     version('6.1', sha256='af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b')
@@ -67,7 +67,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('lmax',
             description='Maximum supported angular momentum (HFX and others)',
             default='5',
-            values=tuple(map(str, HFX_LMAX_RANGE)),
+            values=[str(x) for x in HFX_LMAX_RANGE],
             multi=False)
 
     depends_on('python', type='build')
@@ -77,69 +77,88 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('lapack')
     depends_on('fftw-api@3')
 
-    # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
-    depends_on('libxsmm@1.11:~header-only', when='smm=libxsmm')
-    # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
-    depends_on('pkgconfig', type='build', when='smm=libxsmm')
-    # ... and in CP2K 7.0+ for linking to libint2
-    depends_on('pkgconfig', type='build', when='+libint@7.0:')
-    depends_on('pkgconfig', type='build', when='+libxc@7.0:')
+    with when('smm=libxsmm'):
+        # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
+        depends_on('libxsmm@1.11:~header-only')
+        # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
+        depends_on('pkgconfig', type='build')
+        # please set variants: smm=blas by configuring packages.yaml or install
+        # cp2k with option smm=blas on aarch64
+        conflicts('target=aarch64:', msg='libxsmm is not available on arm')
 
-    # libint & libxc are always statically linked
-    depends_on('libint@1.1.4:1.2', when='+libint@3.0:6.9', type='build')
-    for lmax in HFX_LMAX_RANGE:
-        # libint2 can be linked dynamically again
-        depends_on('libint@2.6.0:+fortran tune=cp2k-lmax-{0}'.format(lmax),
-                   when='+libint@7.0: lmax={0}'.format(lmax))
+    with when('+libint'):
+        # ... and in CP2K 7.0+ for linking to libint2
+        depends_on('pkgconfig', type='build', when='@7.0:')
+        # libint & libxc are always statically linked
+        depends_on('libint@1.1.4:1.2', when='@3.0:6.9')
+        for lmax in HFX_LMAX_RANGE:
+            # libint2 can be linked dynamically again
+            depends_on('libint@2.6.0:+fortran tune=cp2k-lmax-{0}'.format(lmax),
+                       when='@7.0: lmax={0}'.format(lmax))
 
-    depends_on('libxc@2.2.2:3.99.0', when='+libxc@:5.5999', type='build')
-    depends_on('libxc@4.0.3:4.99.0', when='+libxc@6.0:6.9', type='build')
-    depends_on('libxc@4.0.3:4.99.0', when='+libxc@7.0:')
+    with when('+libxc'):
+        depends_on('pkgconfig', type='build', when='@7.0:')
+        depends_on('libxc@2.2.2:3.99.0', when='@:5.5999', type='build')
+        depends_on('libxc@4.0.3:4.99.0', when='@6.0:6.9', type='build')
+        depends_on('libxc@4.0.3:4.99.0', when='@7.0:8.1')
+        depends_on('libxc@5.1.3:5.1.99', when='@8.2:')
 
-    depends_on('mpi@2:', when='+mpi')
-    depends_on('scalapack', when='+mpi')
-    depends_on('cosma+scalapack', when='+cosma')
-    depends_on('cosma+cuda+scalapack', when='+cosma+cuda')
-    depends_on('elpa@2011.12:2016.13+openmp', when='+openmp+elpa@:5.999')
-    depends_on('elpa@2011.12:2017.11+openmp', when='+openmp+elpa@6.0:6.999')
-    depends_on('elpa@2018.05:+openmp', when='+openmp+elpa@7.0:')
-    depends_on('elpa@2011.12:2016.13~openmp', when='~openmp+elpa@:5.999')
-    depends_on('elpa@2011.12:2017.11~openmp', when='~openmp+elpa@6.0:6.999')
-    depends_on('elpa@2018.05:~openmp', when='~openmp+elpa@7.0:')
-    depends_on('plumed+shared+mpi', when='+plumed+mpi')
-    depends_on('plumed+shared~mpi', when='+plumed~mpi')
+    with when('+mpi'):
+        depends_on('mpi@2:')
+        depends_on('scalapack')
+
+    with when('+cosma'):
+        depends_on('cosma+scalapack')
+        depends_on('cosma+cuda', when='+cuda')
+        conflicts('~mpi')
+        # COSMA support was introduced in 8+
+        conflicts('@:7.999')
+
+    with when('+elpa'):
+        conflicts('~mpi', msg='elpa requires MPI')
+        depends_on('elpa+openmp', when='+openmp')
+        depends_on('elpa~openmp', when='~openmp')
+        depends_on('elpa@2011.12:2016.13', when='@:5.999')
+        depends_on('elpa@2011.12:2017.11', when='@6.0:6.999')
+        depends_on('elpa@2018.05:', when='@7.0:')
+
+    with when('+plumed'):
+        depends_on('plumed+shared')
+        depends_on('plumed+mpi', when='+mpi')
+        depends_on('plumed~mpi', when='~mpi')
 
     # while we link statically against PEXSI, its own deps may be linked in
     # dynamically, therefore can't set this as pure build-type dependency.
-    depends_on('pexsi+fortran@0.9.0:0.9.999', when='+pexsi@:4.999')
-    depends_on('pexsi+fortran@0.10.0:', when='+pexsi@5.0:')
+    with when('+pexsi'):
+        conflicts('~mpi', msg='pexsi requires MPI')
+        depends_on('pexsi+fortran@0.9.0:0.9.999', when='@:4.999')
+        depends_on('pexsi+fortran@0.10.0:', when='@5.0:')
 
-    # only OpenMP should be consistenly used, all other common things
+    # only OpenMP should be consistently used, all other common things
     # like ELPA, SCALAPACK are independent and Spack will ensure that
-    # a consistent/compat. combination is pulled in to the dependency graph.
-    depends_on('sirius@:6.999+fortran+vdwxc+shared+openmp', when='@:7.999+sirius+openmp')
-    depends_on('sirius@:6.999+fortran+vdwxc+shared~openmp', when='@:7.999+sirius~openmp')
+    # a consistent/compatible combination is pulled into the dependency graph.
+    with when('+sirius'):
+        depends_on('sirius+fortran+vdwxc+shared')
+        depends_on('sirius+openmp', when='+openmp')
+        depends_on('sirius~openmp', when='~openmp')
+        depends_on('sirius@:6.999', when='@:7.999')
+        depends_on('sirius@7:', when='@8:')
+        conflicts('~mpi')
+        # sirius support was introduced in 7+
+        conflicts('@:6.999')
 
-    depends_on('sirius@7:+fortran+vdwxc+shared+openmp', when='@8:+sirius+openmp')
+    with when('+libvori'):
+        depends_on('libvori@201219:', when='@8.1', type='build')
+        depends_on('libvori@210412:', when='@8.2:', type='build')
+        # libvori support was introduced in 8+
+        conflicts('@:7.999')
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     # which is written using Python 3
     depends_on('py-numpy', when='@7:+cuda', type='build')
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
-    depends_on('libvori@201219:', when='@8:+libvori', type='build')
     depends_on('spglib', when='+spglib')
-
-    # PEXSI, ELPA, COSMA and SIRIUS depend on MPI
-    conflicts('~mpi', '+pexsi')
-    conflicts('~mpi', '+elpa')
-    conflicts('~mpi', '+sirius')
-    conflicts('~mpi', '+cosma')
-    conflicts('+sirius', '@:6.999')  # sirius support was introduced in 7+
-    conflicts('+cosma', '@:7.999')  # COSMA support was introduced in 8+
-
-    conflicts('+libvori', '@:7.999')  # libvori support was introduced in 8+
-
     conflicts('~cuda', '+cuda_fft')
     conflicts('~cuda', '+cuda_blas')
 
@@ -153,11 +172,8 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('%clang')
     conflicts('%nag')
 
-    # please set variants: smm=blas by configuring packages.yaml or install
-    # cp2k with option smm=blas on aarch64
-    conflicts('smm=libxsmm',  when='target=aarch64:', msg='libxsmm is not available on arm')
-
     conflicts('^fftw~openmp', when='+openmp')
+    conflicts('^amdfftw~openmp', when='+openmp')
     conflicts('^openblas threads=none', when='+openmp')
     conflicts('^openblas threads=pthreads', when='+openmp')
 
@@ -192,17 +208,20 @@ class Cp2k(MakefilePackage, CudaPackage):
         makefile_basename = '.'.join([
             self.makefile_architecture, self.makefile_version
         ])
-        return os.path.join('arch', makefile_basename)
+        return join_path('arch', makefile_basename)
 
     @property
     def archive_files(self):
-        return [os.path.join(self.stage.source_path, self.makefile)]
+        return [join_path(self.stage.source_path, self.makefile)]
 
     def edit(self, spec, prefix):
         pkgconf = which('pkg-config')
 
         if '^fftw' in spec:
             fftw = spec['fftw:openmp' if '+openmp' in spec else 'fftw']
+            fftw_header_dir = fftw.headers.directories[0]
+        elif '^amdfftw' in spec:
+            fftw = spec['amdfftw:openmp' if '+openmp' in spec else 'amdfftw']
             fftw_header_dir = fftw.headers.directories[0]
         elif '^intel-mkl' in spec:
             fftw = spec['intel-mkl']
@@ -215,6 +234,9 @@ class Cp2k(MakefilePackage, CudaPackage):
                 if os.path.exists(incdir):
                     fftw_header_dir = incdir
                     break
+        elif '^cray-fftw' in spec:
+            fftw = spec['cray-fftw']
+            fftw_header_dir = fftw.headers.directories[0]
 
         optimization_flags = {
             'gcc': [
@@ -225,8 +247,9 @@ class Cp2k(MakefilePackage, CudaPackage):
             'intel': ['-O2', '-pc64', '-unroll', ],
             'pgi': ['-fast'],
             'nvhpc': ['-fast'],
-            'cray': ['-O2'],
+            'cce': ['-O2'],
             'xl': ['-O3'],
+            'aocc': ['-O1'],
         }
 
         dflags = ['-DNDEBUG']
@@ -263,9 +286,14 @@ class Cp2k(MakefilePackage, CudaPackage):
                 '-ffree-line-length-none',
                 '-ggdb',  # make sure we get proper Fortran backtraces
             ]
+        elif '%aocc' in spec:
+            fcflags += [
+                '-ffree-form',
+                '-Mbackslash',
+            ]
         elif '%pgi' in spec or '%nvhpc' in spec:
             fcflags += ['-Mfreeform', '-Mextend']
-        elif '%cray' in spec:
+        elif '%cce' in spec:
             fcflags += ['-emf', '-ffree', '-hflex_mp=strict']
         elif '%xl' in spec:
             fcflags += ['-qpreprocess', '-qstrict', '-q64']
@@ -278,7 +306,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             ldflags.append(self.compiler.openmp_flag)
             nvflags.append('-Xcompiler="{0}"'.format(
                 self.compiler.openmp_flag))
-        elif '%cray' in spec:  # Cray enables OpenMP by default
+        elif '%cce' in spec:  # Cray enables OpenMP by default
             cflags   += ['-hnoomp']
             cxxflags += ['-hnoomp']
             fcflags  += ['-hnoomp']
@@ -297,8 +325,8 @@ class Cp2k(MakefilePackage, CudaPackage):
             dflags.extend(['-D__PLUMED2'])
             cppflags.extend(['-D__PLUMED2'])
             libs.extend([
-                os.path.join(self.spec['plumed'].prefix.lib,
-                             'libplumed.{0}'.format(dso_suffix))
+                join_path(self.spec['plumed'].prefix.lib,
+                          'libplumed.{0}'.format(dso_suffix))
             ])
 
         cc = spack_cc if '~mpi' in spec else spec['mpi'].mpicc
@@ -351,7 +379,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             if 'wannier90' in spec:
                 cppflags.append('-D__WANNIER90')
-                wannier = os.path.join(
+                wannier = join_path(
                     spec['wannier90'].libs.directories[0], 'libwannier.a'
                 )
                 libs.append(wannier)
@@ -371,9 +399,9 @@ class Cp2k(MakefilePackage, CudaPackage):
                 # runtime due to wrong offsets into the shared library
                 # symbols.
                 libs.extend([
-                    os.path.join(
+                    join_path(
                         spec['libint'].libs.directories[0], 'libderiv.a'),
-                    os.path.join(
+                    join_path(
                         spec['libint'].libs.directories[0], 'libint.a'),
                 ])
             else:
@@ -390,22 +418,24 @@ class Cp2k(MakefilePackage, CudaPackage):
                 libs.append(str(libxc.libs))
             else:
                 fcflags += pkgconf('--cflags', 'libxcf03', output=str).split()
-                libs += pkgconf('--libs', 'libxcf03', output=str).split()
+                # some Fortran functions seem to be direct wrappers of the
+                # C functions such that we get a direct dependency on them,
+                # requiring `-lxc` to be present in addition to `-lxcf03`
+                libs += pkgconf('--libs', 'libxcf03', 'libxc', output=str).split()
 
         if '+pexsi' in spec:
             cppflags.append('-D__LIBPEXSI')
-            fcflags.append('-I' + os.path.join(
+            fcflags.append('-I' + join_path(
                 spec['pexsi'].prefix, 'fortran'))
             libs.extend([
-                os.path.join(spec['pexsi'].libs.directories[0],
-                             'libpexsi.a'),
-                os.path.join(spec['superlu-dist'].libs.directories[0],
-                             'libsuperlu_dist.a'),
-                os.path.join(
+                join_path(spec['pexsi'].libs.directories[0], 'libpexsi.a'),
+                join_path(spec['superlu-dist'].libs.directories[0],
+                          'libsuperlu_dist.a'),
+                join_path(
                     spec['parmetis'].libs.directories[0],
                     'libparmetis.{0}'.format(dso_suffix)
                 ),
-                os.path.join(
+                join_path(
                     spec['metis'].libs.directories[0],
                     'libmetis.{0}'.format(dso_suffix)
                 ),
@@ -416,11 +446,18 @@ class Cp2k(MakefilePackage, CudaPackage):
             elpa_suffix = '_openmp' if '+openmp' in elpa else ''
             elpa_incdir = elpa.headers.directories[0]
 
-            fcflags += ['-I{0}'.format(os.path.join(elpa_incdir, 'modules'))]
-            libs.append(os.path.join(elpa.libs.directories[0],
-                                     ('libelpa{elpa_suffix}.{dso_suffix}'
-                                      .format(elpa_suffix=elpa_suffix,
-                                              dso_suffix=dso_suffix))))
+            fcflags += ['-I{0}'.format(join_path(elpa_incdir, 'modules'))]
+
+            # Currently AOCC support only static libraries of ELPA
+            if '%aocc' in spec:
+                libs.append(join_path(elpa.prefix.lib,
+                            ('libelpa{elpa_suffix}.a'
+                                .format(elpa_suffix=elpa_suffix))))
+            else:
+                libs.append(join_path(elpa.prefix.lib,
+                            ('libelpa{elpa_suffix}.{dso_suffix}'
+                                .format(elpa_suffix=elpa_suffix,
+                                        dso_suffix=dso_suffix))))
 
             if spec.satisfies('@:4.999'):
                 if elpa.satisfies('@:2014.5.999'):
@@ -433,7 +470,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 cppflags.append('-D__ELPA={0}{1:02d}'
                                 .format(elpa.version[0],
                                         int(elpa.version[1])))
-                fcflags += ['-I{0}'.format(os.path.join(elpa_incdir, 'elpa'))]
+                fcflags += ['-I{0}'.format(join_path(elpa_incdir, 'elpa'))]
 
         if spec.satisfies('+sirius'):
             sirius = spec['sirius']
@@ -469,12 +506,12 @@ class Cp2k(MakefilePackage, CudaPackage):
                     gpuver = 'K20X'
 
         if 'smm=libsmm' in spec:
-            lib_dir = os.path.join(
+            lib_dir = join_path(
                 'lib', self.makefile_architecture, self.makefile_version
             )
             mkdirp(lib_dir)
             try:
-                copy(env['LIBSMM_PATH'], os.path.join(lib_dir, 'libsmm.a'))
+                copy(env['LIBSMM_PATH'], join_path(lib_dir, 'libsmm.a'))
             except KeyError:
                 raise KeyError('Point environment variable LIBSMM_PATH to '
                                'the absolute path of the libsmm.a file')
@@ -545,7 +582,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             if spec.satisfies('+cuda'):
                 mkf.write('NVCC = {0}\n'.format(
-                    os.path.join(spec['cuda'].prefix, 'bin', 'nvcc')))
+                    join_path(spec['cuda'].prefix, 'bin', 'nvcc')))
 
             # Write compiler flags to file
             def fflags(var, lst):
@@ -576,7 +613,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         if self.spec.satisfies('@:6.9999'):
             # prior to version 7.1 was the Makefile located in makefiles/
-            build_dir = os.path.join(build_dir, 'makefiles')
+            build_dir = join_path(build_dir, 'makefiles')
 
         return build_dir
 
@@ -597,12 +634,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             super(Cp2k, self).build(spec, prefix)
 
     def install(self, spec, prefix):
-        exe_dir = os.path.join('exe', self.makefile_architecture)
+        exe_dir = join_path('exe', self.makefile_architecture)
         install_tree(exe_dir, self.prefix.bin)
         install_tree('data', self.prefix.share.data)
 
     def check(self):
-        data_dir = os.path.join(self.stage.source_path, 'data')
+        data_dir = join_path(self.stage.source_path, 'data')
 
         # CP2K < 7 still uses $PWD to detect the current working dir
         # and Makefile is in a subdir, account for both facts here:

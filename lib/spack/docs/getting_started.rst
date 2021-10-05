@@ -19,7 +19,7 @@ before Spack is run:
 #. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.9) to run Spack
 #. A C/C++ compiler for building
 #. The ``make`` executable for building
-#. The ``tar``, ``gzip``, ``bzip2``, ``xz`` and optionally ``zstd``
+#. The ``tar``, ``gzip``, ``unzip``, ``bzip2``, ``xz`` and optionally ``zstd``
    executables for extracting source code
 #. The ``patch`` command to apply patches
 #. The ``git`` and ``curl`` commands for fetching
@@ -70,10 +70,24 @@ Sourcing these files will put the ``spack`` command in your ``PATH``, set
 up your ``MODULEPATH`` to use Spack's packages, and add other useful
 shell integration for :ref:`certain commands <packaging-shell-support>`,
 :ref:`environments <environments>`, and :ref:`modules <modules>`. For
-``bash``, it also sets up tab completion.
+``bash`` and ``zsh``, it also sets up tab completion.
+
+In order to know which directory to add to your ``MODULEPATH``, these scripts
+query the ``spack`` command. On shared filesystems, this can be a bit slow,
+especially if you log in frequently. If you don't use modules, or want to set
+``MODULEPATH`` manually instead, you can set the ``SPACK_SKIP_MODULES``
+environment variable to skip this step and speed up sourcing the file.
 
 If you do not want to use Spack's shell support, you can always just run
 the ``spack`` command directly from ``spack/bin/spack``.
+
+When the ``spack`` command is executed it searches for an appropriate
+Python interpreter to use, which can be explicitly overridden by setting
+the ``SPACK_PYTHON`` environment variable.  When sourcing the appropriate shell
+setup script, ``SPACK_PYTHON`` will be set to the interpreter found at
+sourcing time, ensuring future invocations of the ``spack`` command will
+continue to use the same consistent python version regardless of changes in
+the environment.
 
 
 ^^^^^^^^^^^^^^^^^^
@@ -102,6 +116,53 @@ Therefore, it is recommended that Spack users run with a *clean
 environment*, especially for ``PATH``.  Only software that comes with
 the system, or that you know you wish to use with Spack, should be
 included.  This procedure will avoid many strange build errors.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Optional: Bootstrapping clingo
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack supports using clingo as an external solver to compute which software
+needs to be installed. If you have a default compiler supporting C++14 Spack
+can automatically bootstrap this tool from sources the first time it is
+needed:
+
+.. code-block:: console
+
+   $ spack solve zlib
+   [+] /usr (external bison-3.0.4-wu5pgjchxzemk5ya2l3ddqug2d7jv6eb)
+   [+] /usr (external cmake-3.19.4-a4kmcfzxxy45mzku4ipmj5kdiiz5a57b)
+   [+] /usr (external python-3.6.9-x4fou4iqqlh5ydwddx3pvfcwznfrqztv)
+   ==> Installing re2c-1.2.1-e3x6nxtk3ahgd63ykgy44mpuva6jhtdt
+   [ ... ]
+   ==> Optimization: [0, 0, 0, 0, 0, 1, 0, 0, 0]
+   zlib@1.2.11%gcc@10.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
+
+If you want to speed-up bootstrapping, you may try to search for ``cmake`` and ``bison``
+on your system:
+
+.. code-block:: console
+
+   $ spack external find cmake bison
+   ==> The following specs have been detected on this system and added to /home/spack/.spack/packages.yaml
+   bison@3.0.4  cmake@3.19.4
+
+All the tools Spack needs for its own functioning are installed in a separate store, which lives
+under the ``${HOME}/.spack`` directory. The software installed there can be queried with:
+
+.. code-block:: console
+
+   $ spack find --bootstrap
+   ==> Showing internal bootstrap store at "/home/spack/.spack/bootstrap/store"
+   ==> 3 installed packages
+   -- linux-ubuntu18.04-x86_64 / gcc@10.1.0 ------------------------
+   clingo-bootstrap@spack  python@3.6.9  re2c@1.2.1
+
+In case it's needed the bootstrap store can also be cleaned with:
+
+.. code-block:: console
+
+   $ spack clean -b
+   ==> Removing software in "/home/spack/.spack/bootstrap/store"
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Optional: Alternate Prefix
@@ -1064,6 +1125,33 @@ Secret keys may also be later exported using the
       <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_
       provides a good overview of sources of randomness.
 
+Here is an example of creating a key. Note that we provide a name for the key first
+(which we can use to reference the key later) and an email address:
+
+.. code-block:: console
+
+    $ spack gpg create dinosaur dinosaur@thedinosaurthings.com
+
+
+If you want to export the key as you create it:
+
+
+.. code-block:: console
+
+    $ spack gpg create --export key.pub dinosaur dinosaur@thedinosaurthings.com
+
+Or the private key:
+
+
+.. code-block:: console
+
+    $ spack gpg create --export-secret key.priv dinosaur dinosaur@thedinosaurthings.com
+
+
+You can include both ``--export`` and ``--export-secret``, each with
+an output file of choice, to export both.
+
+
 ^^^^^^^^^^^^
 Listing keys
 ^^^^^^^^^^^^
@@ -1072,7 +1160,22 @@ In order to list the keys available in the keyring, the
 ``spack gpg list`` command will list trusted keys with the ``--trusted`` flag
 and keys available for signing using ``--signing``. If you would like to
 remove keys from your keyring, ``spack gpg untrust <keyid>``. Key IDs can be
-email addresses, names, or (best) fingerprints.
+email addresses, names, or (best) fingerprints. Here is an example of listing
+the key that we just created:
+
+.. code-block:: console
+
+    gpgconf: socketdir is '/run/user/1000/gnupg'
+    /home/spackuser/spack/opt/spack/gpg/pubring.kbx
+    ----------------------------------------------------------
+    pub   rsa4096 2021-03-25 [SC]
+          60D2685DAB647AD4DB54125961E09BB6F2A0ADCB
+    uid           [ultimate] dinosaur (GPG created for Spack) <dinosaur@thedinosaurthings.com>
+
+
+Note that the name "dinosaur" can be seen under the uid, which is the unique
+id. We might need this reference if we want to export or otherwise reference the key.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Signing and Verifying Packages
@@ -1086,6 +1189,38 @@ must be specified using the ``--key <keyid>`` flag. The ``--clearsign`` flag
 may also be used to create a signed file which contains the contents, but it
 is not recommended. Signed packages may be verified by using
 ``spack gpg verify <file>``.
+
+
+^^^^^^^^^^^^^^
+Exporting Keys
+^^^^^^^^^^^^^^
+
+You likely might want to export a public key, and that looks like this. Let's
+use the previous example and ask spack to export the key with uid "dinosaur."
+We will provide an output location (typically a `*.pub` file) and the name of
+the key.
+
+.. code-block:: console
+
+    $ spack gpg export dinosaur.pub dinosaur
+
+You can then look at the created file, `dinosaur.pub`, to see the exported key.
+If you want to include the private key, then just add `--secret`:
+
+.. code-block:: console
+
+    $ spack gpg export --secret dinosaur.priv dinosaur
+
+This will write the private key to the file `dinosaur.priv`.
+
+.. warning::
+
+    You should be very careful about exporting private keys. You likely would
+    only want to do this in the context of moving your spack installation to
+    a different server, and wanting to preserve keys for a buildcache. If you
+    are unsure about exporting, you can ask your local system administrator
+    or for help on an issue or the Spack slack.
+
 
 .. _cray-support:
 

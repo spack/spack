@@ -151,7 +151,7 @@ class IntelPackage(PackageBase):
                 '+advisor':    'advisor',
                 '+inspector':  'inspector',
                 '+itac':       'itac',
-                '+vtune':      'vtune_amplifier',
+                '+vtune':      'vtune_profiler',
             }.items():
                 if variant in self.spec:
                     dirs.append(self.normalize_path(
@@ -202,7 +202,8 @@ class IntelPackage(PackageBase):
             '+itac':      ' intel-itac intel-ta intel-tc'
                           ' intel-trace-analyzer intel-trace-collector',
                           # Trace Analyzer and Collector
-            '+vtune':     ' intel-vtune-amplifier',    # VTune
+            '+vtune':     ' intel-vtune'
+                          # VTune, ..-profiler since 2020, ..-amplifier before
         }.items():
             if variant in self.spec:
                 c += components_to_add
@@ -535,8 +536,9 @@ class IntelPackage(PackageBase):
             [None,              '2016:', 'compilers_and_libraries'],
             ['advisor',         ':2016', 'advisor_xe'],
             ['inspector',       ':2016', 'inspector_xe'],
-            ['vtune_amplifier', ':2017', 'vtune_amplifier_xe'],
+            ['vtune_profiler',  ':2017', 'vtune_amplifier_xe'],
             ['vtune',           ':2017', 'vtune_amplifier_xe'],  # alt.
+            ['vtune_profiler',  ':2019', 'vtune_amplifier'],
             ['itac',            ':',     'itac',  [os.sep + standalone_glob]],
         ]:
             if cs == rename_rule[0] and v.satisfies(ver(rename_rule[1])):
@@ -815,6 +817,7 @@ class IntelPackage(PackageBase):
             # Was supported only up to 2015.
             blacs_lib = 'libmkl_blacs'
         elif ('^mpich@2:' in spec_root or
+              '^cray-mpich' in spec_root or
               '^mvapich2' in spec_root or
               '^intel-mpi' in spec_root or
               '^intel-parallel-studio' in spec_root):
@@ -1086,7 +1089,7 @@ class IntelPackage(PackageBase):
                 # Intel MPI since 2019 depends on libfabric which is not in the
                 # lib directory but in a directory of its own which should be
                 # included in the rpath
-                if self.version >= ver('2019'):
+                if self.version_yearlike >= ver('2019'):
                     d = ancestor(self.component_lib_dir('mpi'))
                     libfabrics_path = os.path.join(d, 'libfabric', 'lib')
                     env.append_path('SPACK_COMPILER_EXTRA_RPATHS',

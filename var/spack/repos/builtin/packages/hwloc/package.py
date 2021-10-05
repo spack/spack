@@ -30,6 +30,8 @@ class Hwloc(AutotoolsPackage):
     maintainers = ['bgoglin']
 
     version('master', branch='master')
+    version('2.5.0', sha256='38aa8102faec302791f6b4f0d23960a3ffa25af3af6af006c64dbecac23f852c')
+    version('2.4.1', sha256='4267fe1193a8989f3ab7563a7499e047e77e33fed8f4dec16822a7aebcf78459')
     version('2.4.0', sha256='30404065dc1d6872b0181269d0bb2424fbbc6e3b0a80491aa373109554006544')
     version('2.3.0', sha256='155480620c98b43ddf9ca66a6c318b363ca24acb5ff0683af9d25d9324f59836')
     version('2.2.0', sha256='2defba03ddd91761b858cbbdc2e3a6e27b44e94696dbfa21380191328485a433')
@@ -89,6 +91,19 @@ class Hwloc(AutotoolsPackage):
     depends_on('libxml2', when='+libxml2')
     depends_on('cairo', when='+cairo')
     depends_on('numactl', when='@:1.11.11 platform=linux')
+    depends_on('ncurses')
+
+    # Before 2.2 hwloc does not consider linking to libtinfo
+    # to detect ncurses, which is considered a bug.
+    # For older versions this can be fixed by depending on
+    # ncurses~termlib, but this could lead to insatisfiable
+    # constraints (e.g. llvm explicitly depends on ncurses+termlib)
+    # Therefore we patch the latest 1.x configure script to make
+    # it consider libtinfo too.
+    # see https://github.com/open-mpi/hwloc/pull/417
+    patch('0001-Try-linking-to-libtinfo.patch', when='@1.11.13')
+    depends_on('ncurses ~termlib', when='@2.0:2.2')
+    depends_on('ncurses ~termlib', when='@1.0:1.11.12')
 
     # When mpi=openmpi, this introduces an unresolvable dependency.
     # See https://github.com/spack/spack/issues/15836 for details

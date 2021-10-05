@@ -25,6 +25,7 @@ class Ispc(CMakePackage):
     executables = ['^ispc$']
 
     version('master', branch='master')
+    version('1.15.0', sha256='3b634aaa10c9bf0e82505d1af69cb307a3a00182d57eae019680ccfa62338af9')
     version('1.14.1', sha256='ca12f26dafbc4ef9605487d03a2156331c1351a4ffefc9bab4d896a466880794')
     version('1.14.0', sha256='1ed72542f56738c632bb02fb0dd56ad8aec3e2487839ebbc0def8334f305a4c7')
     version('1.13.0', sha256='aca595508b51dd1ff065c406a3fd7c93822320c510077dd4d97a2b98a23f097a')

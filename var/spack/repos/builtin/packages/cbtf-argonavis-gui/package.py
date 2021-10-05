@@ -29,18 +29,18 @@ class CbtfArgonavisGui(QMakePackage):
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop')
-    depends_on("cbtf@1.9.1.0:9999", when='@1.3.0.0:9999')
+    depends_on("cbtf@1.9.3:9999", when='@1.3.0.0:9999')
 
     depends_on("cbtf-krell@develop", when='@develop')
-    depends_on("cbtf-krell@1.9.1.0:9999", when='@1.3.0.0:9999')
+    depends_on("cbtf-krell@1.9.3:9999", when='@1.3.0.0:9999')
 
     depends_on("cbtf-argonavis@develop", when='@develop')
-    depends_on("cbtf-argonavis@1.9.1.0:9999", when='@1.3.0.0:9999')
+    depends_on("cbtf-argonavis@1.9.3:9999", when='@1.3.0.0:9999')
 
     depends_on("cuda")
 
     depends_on("openspeedshop-utils+cuda@develop", when='@develop')
-    depends_on("openspeedshop-utils@2.3.1.3:+cuda", when='@1.3.0.0:9999')
+    depends_on("openspeedshop-utils@2.4.0:+cuda", when='@1.3.0.0:9999')
 
     # For Xerces-C
     depends_on("xerces-c")

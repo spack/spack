@@ -15,6 +15,7 @@ class PyTensorflow(Package, CudaPackage):
     url      = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
 
     maintainers = ['adamjstewart', 'aweits']
+    import_modules = ['tensorflow']
 
     version('2.4.1',  sha256='f681331f8fc0800883761c7709d13cda11942d4ad5ff9f44ad855e9dc78387e0')
     version('2.4.0',  sha256='26c833b7e1873936379e810a39d14700281125257ddda8cd822c89111db6f6ae')
@@ -154,7 +155,11 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-google-pasta@0.1.8:', type=('build', 'run'), when='@2.1:2.3')
     depends_on('py-google-pasta@0.1.6:', type=('build', 'run'), when='@1.14:2.0')
     depends_on('py-google-pasta@0.1.2:', type=('build', 'run'), when='@1.12.1')
-    depends_on('py-h5py@2.10.0:2.10.999', type=('build', 'run'), when='@2.2:')
+    # propagate the mpi variant setting for h5py/hdf5 to avoid unexpected crashes
+    depends_on('py-h5py@2.10.0:2.10.999+mpi', type=('build', 'run'), when='@2.2:+mpi')
+    depends_on('py-h5py@2.10.0:2.10.999~mpi', type=('build', 'run'), when='@2.2:~mpi')
+    depends_on('hdf5+mpi', type='build', when='@2.2:+mpi')
+    depends_on('hdf5~mpi', type='build', when='@2.2:~mpi')
     depends_on('py-keras-applications@1.0.8:', type=('build', 'run'), when='@1.15:2.1')
     depends_on('py-keras-applications@1.0.6:', type=('build', 'run'), when='@1.12:1.14')
     depends_on('py-keras-applications@1.0.5:', type=('build', 'run'), when='@1.11.0:1.11.999')
@@ -297,9 +302,6 @@ class PyTensorflow(Package, CudaPackage):
     patch('contrib_cloud_1.1.patch', when='@1.1:1.3')
 
     phases = ['configure', 'build', 'install']
-
-    import_modules = PythonPackage.import_modules
-    test = PythonPackage.test
 
     # https://www.tensorflow.org/install/source
     def setup_build_environment(self, env):
@@ -548,7 +550,7 @@ class PyTensorflow(Package, CudaPackage):
         #       ])
         #       to not be nfs. This is only valid for Linux and we'd like to
         #       stay at least also OSX compatible
-        tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
+        tmp_path = tempfile.mkdtemp(prefix='spack')
         env.set('TEST_TMPDIR', tmp_path)
 
         env.set('TF_SYSTEM_LIBS', 'com_google_protobuf')
@@ -790,3 +792,14 @@ def protobuf_deps():
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
         remove_linked_tree(tmp_path)
+
+    def test(self):
+        """Attempts to import modules of the installed package."""
+
+        # Make sure we are importing the installed modules,
+        # not the ones in the source directory
+        for module in self.import_modules:
+            self.run_test(self.spec['python'].command.path,
+                          ['-c', 'import {0}'.format(module)],
+                          purpose='checking import of {0}'.format(module),
+                          work_dir='spack-test')

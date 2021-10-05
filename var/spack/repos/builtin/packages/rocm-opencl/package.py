@@ -10,6 +10,7 @@ class RocmOpencl(CMakePackage):
     """OpenCL: Open Computing Language on ROCclr"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime"
+    git      = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
@@ -19,7 +20,9 @@ class RocmOpencl(CMakePackage):
 
         url = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz"
         return url.format(version)
-
+    version('master', branch='main')
+    version('4.2.0', sha256='18133451948a83055ca5ebfb5ba1bd536ed0bcb611df98829f1251a98a38f730')
+    version('4.1.0', sha256='0729e6c2adf1e3cf649dc6e679f9cb936f4f423f4954ad9852857c0a53ef799c')
     version('4.0.0', sha256='d43ea5898c6b9e730b5efabe8367cc136a9260afeac5d0fe85b481d625dd7df1')
     version('3.10.0', sha256='3aa9dc5a5f570320b04b35ee129ce9ff21062d2770df934c6c307913f975e93d')
     version('3.9.0', sha256='286ff64304905384ce524cd8794c28aee216befd6c9267d4187a12e5a21e2daf')
@@ -31,7 +34,8 @@ class RocmOpencl(CMakePackage):
     depends_on('mesa18~llvm@18.3:', type='link')
     depends_on('numactl', type='link', when='@3.7.0:')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0', 'master']:
         depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)

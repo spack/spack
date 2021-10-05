@@ -19,6 +19,8 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ['^bison$']
 
+    version('3.7.6', sha256='69dc0bb46ea8fc307d4ca1e0b61c8c355eb207d0b0c69f4f8462328e74d7b9ea')
+    version('3.7.5', sha256='151cb5f12716e3fe93a27a317cd44878329659f275b342779bfaef4a526bbf70')
     version('3.7.4', sha256='fbabc7359ccd8b4b36d47bfe37ebbce44805c052526d5558b95eda125d1677e2')
     version('3.7.3', sha256='104fe912f2212ab4e4a59df888a93b719a046ffc38d178e943f6c54b1f27b3c7')
     version('3.7.2', sha256='415cd91044517bbfd8d135dea24e054501db238a5515edd9cdbb795ba3e82a84')
@@ -48,10 +50,12 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
     depends_on('diffutils', type='build')
     depends_on('m4', type=('build', 'run'))
     depends_on('perl', type='build')
-    depends_on('help2man', type='build')
 
     patch('pgi.patch', when='@3.0.4')
-    patch('nvhpc.patch', when='%nvhpc')
+    # The NVIDIA compilers do not currently support some GNU builtins.
+    # Detect this case and use the fallback path.
+    patch('nvhpc-3.6.patch', when='@3.6.0:3.6.99 %nvhpc')
+    patch('nvhpc-3.7.patch', when='@3.7.0:3.7.99 %nvhpc')
 
     conflicts('%intel@:14', when='@3.4.2:',
               msg="Intel 14 has immature C11 support")

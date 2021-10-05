@@ -23,7 +23,7 @@ class GobjectIntrospection(Package):
     # version 1.48.0 build fails with glib 2.49.4
     depends_on("glib@2.48.1", when="@1.48.0")
     depends_on("python")
-    depends_on("cairo")
+    depends_on("cairo+gobject")
     depends_on("bison", type="build")
     depends_on("flex", type="build")
     depends_on("pkgconfig", type="build")
@@ -52,6 +52,14 @@ class GobjectIntrospection(Package):
     #   an `#!/bin/bash /path/to/spack/bin/sbang` unconditionally being
     #   inserted into the scripts as they're generated.
     patch("sbang.patch")
+
+    # Drop deprecated xml.etree.ElementTree.Element.getchildren() which leads
+    # to compilation issues with Python 3.9.
+    # https://gitlab.gnome.org/GNOME/gobject-introspection/-/issues/325
+    patch('https://gitlab.gnome.org/GNOME/gobject-introspection/-/commit/'
+          '1f9284228092b2a7200e8a78bc0ea6702231c6db.patch',
+          sha256='7700828b638c85255c87fcc317ea7e9572ff443f65c86648796528885e5b4cea',
+          when='@:1.63.1')
 
     def url_for_version(self, version):
         url = 'http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/{0}/gobject-introspection-{1}.tar.xz'

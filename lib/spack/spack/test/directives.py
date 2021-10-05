@@ -32,3 +32,13 @@ def test_true_directives_exist(mock_packages):
 
     assert cls.patches
     assert Spec() in cls.patches
+
+
+def test_constraints_from_context(mock_packages):
+    pkg_cls = spack.repo.path.get_pkg_class('with-constraint-met')
+
+    assert pkg_cls.dependencies
+    assert Spec('@1.0') in pkg_cls.dependencies['b']
+
+    assert pkg_cls.conflicts
+    assert (Spec('@1.0'), None) in pkg_cls.conflicts['%gcc']

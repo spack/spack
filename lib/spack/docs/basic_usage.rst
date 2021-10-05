@@ -27,11 +27,17 @@ It is recommended that the following be put in your ``.bashrc`` file:
 
 If you do not see colorized output when using ``less -R`` it is because color
 is being disabled in the piped output. In this case, tell spack to force
-colorized output.
+colorized output with a flag
 
 .. code-block:: console
 
     $ spack --color always | less -R
+
+or an environment variable
+
+.. code-block:: console
+
+   $ SPACK_COLOR=always spack | less -R
 
 --------------------------
 Listing available packages
@@ -963,7 +969,7 @@ Variants are named options associated with a particular package. They are
 optional, as each package must provide default values for each variant it
 makes available. Variants can be specified using
 a flexible parameter syntax ``name=<value>``. For example,
-``spack install libelf debug=True`` will install libelf built with debug
+``spack install mercury debug=True`` will install mercury built with debug
 flags. The names of particular variants available for a package depend on
 what was provided by the package author. ``spack info <package>`` will
 provide information on what build variants are available.
@@ -971,11 +977,11 @@ provide information on what build variants are available.
 For compatibility with earlier versions, variants which happen to be
 boolean in nature can be specified by a syntax that represents turning
 options on and off. For example, in the previous spec we could have
-supplied ``libelf +debug`` with the same effect of enabling the debug
+supplied ``mercury +debug`` with the same effect of enabling the debug
 compile time option for the libelf package.
 
 Depending on the package a variant may have any default value.  For
-``libelf`` here, ``debug`` is ``False`` by default, and we turned it on
+``mercury`` here, ``debug`` is ``False`` by default, and we turned it on
 with ``debug=True`` or ``+debug``.  If a variant is ``True`` by default
 you can turn it off by either adding ``-name`` or ``~name`` to the spec.
 
@@ -1723,6 +1729,39 @@ This issue typically manifests with the error below:
    IOError: [Errno 38] Function not implemented
 
 A nicer error message is TBD in future versions of Spack.
+
+---------------
+Troubleshooting
+---------------
+
+The ``spack audit`` command:
+
+.. command-output:: spack audit -h
+
+can be used to detect a number of configuration issues. This command detects
+configuration settings which might not be strictly wrong but are not likely
+to be useful outside of special cases.
+
+It can also be used to detect dependency issues with packages - for example
+cases where a package constrains a dependency with a variant that doesn't
+exist (in this case Spack could report the problem ahead of time but
+automatically performing the check would slow down most runs of Spack).
+
+A detailed list of the checks currently implemented for each subcommand can be
+printed with:
+
+.. command-output:: spack -v audit list
+
+Depending on the use case, users might run the appropriate subcommands to obtain
+diagnostics. Issues, if found, are reported to stdout:
+
+.. code-block:: console
+
+   % spack audit packages lammps
+   PKG-DIRECTIVES: 1 issue found
+   1. lammps: wrong variant in "conflicts" directive
+       the variant 'adios' does not exist
+       in /home/spack/spack/var/spack/repos/builtin/packages/lammps/package.py
 
 
 ------------

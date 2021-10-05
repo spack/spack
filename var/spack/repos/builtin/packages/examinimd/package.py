@@ -56,7 +56,7 @@ class Examinimd(MakefilePackage):
             targets.append('CXX = {0}'.format(self.spec['mpi'].mpicxx))
         else:
             targets.append('MPI=0')
-            targets.append('CXX = {0}'.format('spack_cxx'))
+            targets.append('CXX = {0}'.format(spack_cxx))
         return targets
 
     def install(self, spec, prefix):

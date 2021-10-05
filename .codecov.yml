@@ -14,3 +14,8 @@ ignore:
   - share/spack/qa/.*
 
 comment: off
+
+# Inline codecov annotations make the code hard to read, and they add
+# annotations in files that seemingly have nothing to do with the PR.
+github_checks:
+    annotations: false

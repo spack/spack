@@ -10,10 +10,13 @@ class Rocprim(CMakePackage):
     """ Radeon Open Compute Parallel Primitives Library"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-4.0.0.tar.gz"
+    git      = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-4.2.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.2.0', sha256='3932cd3a532eea0d227186febc56747dd95841732734d9c751c656de9dd770c8')
+    version('4.1.0', sha256='c46d789f85d15f8ec97f90d67b9d49fb87239912fe8d5f60a7b4c59f9d0e3da8')
     version('4.0.0', sha256='61abf4d51853ae71e54258f43936bbbb096bf06f5891d224d359bfe3104015d0')
     version('3.10.0', sha256='b406956b27d1c06b749e991a250d4ad3eb26e20c6bebf121e2ca6051597b4fa4')
     version('3.9.0', sha256='ace6b4ee4b641280807028375cb0e6fa7b296edba9e9fc09177a5d8d075a716e')
@@ -26,24 +29,25 @@ class Rocprim(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('numactl', type='link', when='@3.7.0:')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
-        depends_on('hip@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0']:
+        depends_on('hip@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, when='@' + ver)
+        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+
+    for ver in ['4.1.0', '4.2.0']:
+        depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        spec = self.spec
-
-        args = [
-            '-DCMAKE_MODULE_PATH={0}/cmake'.format(spec['hip'].prefix),
-            '-DONLY_INSTALL=ON',
-            '-DBUILD_TEST=OFF',
-            '-DBUILD_BENCHMARK=OFF',
-            '-DBUILD_EXAMPLE=OFF'
+        return [
+            self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
+            self.define('ONLY_INSTALL', 'ON'),
+            self.define('BUILD_TEST', 'OFF'),
+            self.define('BUILD_BENCHMARK', 'OFF'),
+            self.define('BUILD_EXAMPLE', 'OFF')
         ]
-
-        return args
