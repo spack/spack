@@ -225,6 +225,12 @@ class Vtk(CMakePackage):
                 '-DQT_QMAKE_EXECUTABLE:PATH={0}'.format(qmake_exe),
                 '-DVTK_Group_Qt:BOOL=ON',
             ])
+            # https://github.com/martijnkoopman/Qt-VTK-viewer/blob/master/doc/Build-VTK.md
+            if spec.satisfies('@9.0.0:'):
+                cmake_args.extend([
+                    '-DVTK_GROUP_ENABLE_Qt:STRING=YES',
+                    '-DVTK_MODULE_ENABLE_VTK_GUISupportQt:STRING=YES',
+                ])
 
             # NOTE: The following definitions are required in order to allow
             # VTK to build with qt~webkit versions (see the documentation for
