@@ -14,7 +14,7 @@ class H5utils(AutotoolsPackage):
     url      = "https://github.com/NanoComp/h5utils/releases/download/1.13.1/h5utils-1.13.1.tar.gz"
 
     version('1.13.1', sha256='c5a76f064d6daa3e65583dce2b61202510e67cf6590f076af9a8aa72511d7d65')
-    version('1.12.1', sha256='7290290ca5d5d4451d757a70c86baaa70d23a28edb09c951b6b77c22b924a38d',
+    version('1.12.1', sha256='7e6db86fee00a8008f78b2be921177042c661203c0936b078fcc8f9c71e4a883',
             url="https://github.com/NanoComp/h5utils/archive/refs/tags/1.12.1.tar.gz")
 
     variant('png',    default=True,  description='Enable PNG support')
