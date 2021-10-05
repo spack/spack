@@ -103,8 +103,10 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
+    # resolve #22758: while SSE instructions are handled correctly, but a compile-time
+    # error will occur unless -DNO_WARN_X86_INTRINSICS is defined.
+    patch('ppc64_sse.patch', when='@1.7.4:1.9.4')
     patch('update_tpetra_gotypes.patch', when='@:1.8')
-
     patch('sbang.patch', when='+fortran')
 
     # ###################### Dependencies ##########################
