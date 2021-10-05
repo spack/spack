@@ -1394,7 +1394,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     # The directory created is the base directory name of the old prefix.
     # Moving the old prefix name to the new prefix location should preserve
     # hard links and symbolic links.
-    extract_tmp = os.path.join(spack.store.layout.root,'.tmp')
+    extract_tmp = os.path.join(spack.store.layout.root, '.tmp')
     mkdirp(extract_tmp)
     extracted_dir = os.path.join(extract_tmp,
                                  old_relative_prefix.split(os.path.sep)[-1])
