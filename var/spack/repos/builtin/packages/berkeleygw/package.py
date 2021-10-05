@@ -14,6 +14,10 @@ class Berkeleygw(MakefilePackage):
 
     homepage = "https://berkeleygw.org"
 
+    version('3.0.1',
+            '7d8c2cc1ee679afb48efbdd676689d4d537226b50e13a049dbcb052aaaf3654f',
+            url='https://berkeley.box.com/shared/static/m1dgnhiemo47lhxczrn6si71bwxoxor8.gz',
+            expand=False)
     version('3.0',
             'ab411acead5e979fd42b8d298dbb0a12ce152e7be9eee0bb87e9e5a06a638e2a',
             url='https://berkeley.box.com/shared/static/lp6hj4kxr459l5a6t05qfuzl2ucyo03q.gz',
