@@ -9,7 +9,7 @@ class Fleur(Package):
 	   of solids within the context of density functional theory (DFT)."""
 
 	homepage = "https://www.flapw.de/MaX-5.1"
-	url = "https://iffgit.fz-juelich.de/fleur/fleur/-/archive/develop/fleur-develop.tar.gz"
+	url = "https://iffgit.fz-juelich.de/fleur/fleur/-/archive/MaX-R5.1/fleur-MaX-R5.1.tar.gz"
 	git = "https://iffgit.fz-juelich.de/fleur/fleur.git"
 
 	version('MaX-R5.1', sha256='4004d32033f8f31b65e43123014573e2db84cec8287bc11532eb5d411a53b395')
