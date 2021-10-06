@@ -64,7 +64,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant('xpmem', default=False,
             description='Enable XPMEM support')
     variant('cma', default=False,
-            description="nable Cross Memory Attach")
+            description="Enable Cross Memory Attach")
     variant('rc', default=False,
             description="Compile with IB Reliable Connection support")
     variant('dc', default=False,
