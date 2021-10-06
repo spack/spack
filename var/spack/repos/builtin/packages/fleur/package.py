@@ -9,21 +9,20 @@ class Fleur(Package):
 	   of solids within the context of density functional theory (DFT)."""
 
 	homepage = "https://www.flapw.de/MaX-5.1"
-	url = "https://iffgit.fz-juelich.de/fleur/fleur/-/archive/MaX-R5.1/fleur-MaX-R5.1.tar.gz"
 	git = "https://iffgit.fz-juelich.de/fleur/fleur.git"
 
-	version('MaX-R5.1', sha256='4004d32033f8f31b65e43123014573e2db84cec8287bc11532eb5d411a53b395')
-	version('MaX-R5',	sha256='ab1eb42934a9549334bddbfcb1cd6274f32eed16ba0a6d730df0197dbaf1a4ce')
-	version('MaX-R4',	sha256='744003286735319411273536665c868362bd62c6769e4ecf68e4a7f63f675424')
-	version('MaX-R3.1',	sha256='2d19bf9c00998cd2d917806e8231e11f2f6b33628794ab806248e3d6e36fc456')
-	version('MaX-R3',	sha256='f1d2e7dda7a31c1487059c211b2310f5519decf0a989e453511f2be86a2c8d38')
-	version('MaX-R2.1',	sha256='4e24d6bb74a21cdf830794e9223f46cb67f37dd0de7afdfcd9cf946feb25cdaa')
-	version('MaX-R2',	sha256='8467637f48d4998811a79344b13f8b2805d21637d4a9097504a569f4ddb35298')
-	version('MaX-R2',	sha256='8467637f48d4998811a79344b13f8b2805d21637d4a9097504a569f4ddb35298')
-	version('MaX-R1.3',	sha256='8419208bdbe6e2c6ed664356094cab231191f42e2a77266336e7860ab5a6cbd6')
-	version('MaX-R1.2',	sha256='92cf061f550768df91f6b697c61fd277290e39d616c15aeb61c6d70a3d7f30b3')
-	version('MaX-R1.1',	sha256='00e0d14fe3d5fa8dbb4c7a8ddcfc1288fbd856a93eb4887e3a8901781b7fd3a4')
-	version('MaX-R1',	sha256='f609a6238386cf7203a9c3bdd8005131b21fd1ee6837a5837f4a7de36ea20d9f')
+	version('MaX-R5.1', tag='MaX-R5.1')
+	version('MaX-R5',	tag='MaX-R5')
+	version('MaX-R4',	tag='MaX-R4')
+	version('MaX-R3.1',	tag='MaX-R3.1')
+	version('MaX-R3',	tag='MaX-R3')
+	version('MaX-R2.1',	tag='MaX-R2.1')
+	version('MaX-R2',	tag='MaX-R2')
+	version('MaX-R2',	tag='MaX-R2')
+	version('MaX-R1.3',	tag='MaX-R1.3')
+	version('MaX-R1.2',	tag='MaX-R1.2')
+	version('MaX-R1.1',	tag='MaX-R1.1')
+	version('MaX-R1',	tag='MaX-R1')
 
 	variant('mpi', default=True, description='Build with MPI support')
 	variant('hdf5', default=False, description='Enable HDF5 support')
@@ -40,7 +39,7 @@ class Fleur(Package):
 
 	depends_on('blas')
 	depends_on('lapack')
-	depends_on('fftw')
+	depends_on('fftw-api')
 	depends_on('libxml2')
 	depends_on('cmake')
 	depends_on('python')
