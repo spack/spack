@@ -14,7 +14,7 @@ class Fenics(CMakePackage):
     the code generation interface UFC, the form language UFL and a range of
     additional components."""
 
-    homepage = "http://fenicsproject.org/"
+    homepage = "https://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/dolfin.git"
     url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2019.1.0.post0.tar.gz"
 
@@ -102,7 +102,7 @@ class Fenics(CMakePackage):
     depends_on('zlib', when='+zlib')
 
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
-    depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono@1.68.0', when='@:2018.99')
+    depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono@1.68.0', when='@:2018')
 
     depends_on('mpi', when='+mpi')
     depends_on('hdf5+hl+fortran', when='+hdf5+petsc')

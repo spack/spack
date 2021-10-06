@@ -21,7 +21,7 @@ class Hwloc(AutotoolsPackage):
     efficiently.
     """
 
-    homepage = "http://www.open-mpi.org/projects/hwloc/"
+    homepage = "https://www.open-mpi.org/projects/hwloc/"
     url      = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
     list_url = "http://www.open-mpi.org/software/hwloc/"
     list_depth = 2
@@ -78,7 +78,7 @@ class Hwloc(AutotoolsPackage):
             description="Support ROCm devices")
 
     # netloc isn't available until version 2.0.0
-    conflicts('+netloc', when="@:1.99.99")
+    conflicts('+netloc', when="@:1")
 
     # libudev isn't available until version 1.11.0
     conflicts('+libudev', when="@:1.10")

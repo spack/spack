@@ -14,7 +14,7 @@ class RGgplot2(RPackage):
     aesthetics, what graphical primitives to use, and it takes care of the
     details."""
 
-    homepage = "http://ggplot2.org/"
+    homepage = "https://ggplot2.tidyverse.org/"
     url      = "https://cloud.r-project.org/src/contrib/ggplot2_2.2.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ggplot2"
 

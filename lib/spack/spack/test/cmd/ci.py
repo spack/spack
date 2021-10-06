@@ -22,9 +22,10 @@ import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
 import spack.util.gpg
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-from spack.schema.buildcache_spec import schema as spec_yaml_schema
+from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import CompilerSpec, Spec
@@ -51,13 +52,6 @@ def project_dir_env():
 
     if 'CI_PROJECT_DIR' in os.environ:
         os.environ.pop('CI_PROJECT_DIR')
-
-
-@pytest.fixture()
-def env_deactivate():
-    yield
-    spack.environment._active_environment = None
-    os.environ.pop('SPACK_ENV', None)
 
 
 def set_env_var(key, val):
@@ -123,7 +117,7 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
         assert (spec_a_label in stages[3])
 
 
-def test_ci_generate_with_env(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_ci_generate_with_env(tmpdir, mutable_mock_env_path,
                               install_mockery, mock_packages, project_dir_env):
     """Make sure we can get a .gitlab-ci.yml from an environment file
        which has the gitlab-ci, cdash, and mirrors sections."""
@@ -219,7 +213,7 @@ def _validate_needs_graph(yaml_contents, needs_graph, artifacts):
 
 
 def test_ci_generate_bootstrap_gcc(tmpdir, mutable_mock_env_path,
-                                   env_deactivate, install_mockery,
+                                   install_mockery,
                                    mock_packages, project_dir_env):
     """Test that we can bootstrap a compiler and use it as the
     compiler for a spec in the environment"""
@@ -282,7 +276,6 @@ spack:
 
 def test_ci_generate_bootstrap_artifacts_buildcache(tmpdir,
                                                     mutable_mock_env_path,
-                                                    env_deactivate,
                                                     install_mockery,
                                                     mock_packages,
                                                     project_dir_env):
@@ -349,7 +342,7 @@ spack:
 
 
 def test_ci_generate_with_env_missing_section(tmpdir, mutable_mock_env_path,
-                                              env_deactivate, install_mockery,
+                                              install_mockery,
                                               mock_packages, project_dir_env):
     """Make sure we get a reasonable message if we omit gitlab-ci section"""
     project_dir_env(tmpdir.strpath)
@@ -374,7 +367,7 @@ spack:
 
 
 def test_ci_generate_with_cdash_token(tmpdir, mutable_mock_env_path,
-                                      env_deactivate, install_mockery,
+                                      install_mockery,
                                       mock_packages, project_dir_env):
     """Make sure we it doesn't break if we configure cdash"""
     project_dir_env(tmpdir.strpath)
@@ -429,7 +422,7 @@ spack:
 
 
 def test_ci_generate_with_custom_scripts(tmpdir, mutable_mock_env_path,
-                                         env_deactivate, install_mockery,
+                                         install_mockery,
                                          mock_packages, monkeypatch,
                                          project_dir_env):
     """Test use of user-provided scripts"""
@@ -520,7 +513,7 @@ spack:
 
 
 def test_ci_generate_pkg_with_deps(tmpdir, mutable_mock_env_path,
-                                   env_deactivate, install_mockery,
+                                   install_mockery,
                                    mock_packages, project_dir_env):
     """Test pipeline generation for a package w/ dependencies"""
     project_dir_env(tmpdir.strpath)
@@ -574,7 +567,7 @@ spack:
 
 
 def test_ci_generate_for_pr_pipeline(tmpdir, mutable_mock_env_path,
-                                     env_deactivate, install_mockery,
+                                     install_mockery,
                                      mock_packages, monkeypatch,
                                      project_dir_env):
     """Test that PR pipelines do not include a final stage job for
@@ -617,6 +610,8 @@ spack:
             os.environ['SPACK_PR_BRANCH'] = 'fake-test-branch'
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            monkeypatch.setattr(
+                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             try:
                 ci_cmd('generate', '--output-file', outputfile)
             finally:
@@ -636,7 +631,7 @@ spack:
 
 
 def test_ci_generate_with_external_pkg(tmpdir, mutable_mock_env_path,
-                                       env_deactivate, install_mockery,
+                                       install_mockery,
                                        mock_packages, monkeypatch,
                                        project_dir_env):
     """Make sure we do not generate jobs for external pkgs"""
@@ -668,6 +663,8 @@ spack:
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            monkeypatch.setattr(
+                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
@@ -677,7 +674,7 @@ spack:
         assert not any('externaltool' in key for key in yaml_contents)
 
 
-def test_ci_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_ci_rebuild(tmpdir, mutable_mock_env_path,
                     install_mockery, mock_packages, monkeypatch,
                     mock_gnupghome, mock_fetch, project_dir_env):
     project_dir_env(tmpdir.strpath)
@@ -835,7 +832,7 @@ spack:
         env_cmd('deactivate')
 
 
-def test_ci_nothing_to_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_ci_nothing_to_rebuild(tmpdir, mutable_mock_env_path,
                                install_mockery, mock_packages, monkeypatch,
                                mock_fetch, project_dir_env):
     project_dir_env(tmpdir.strpath)
@@ -910,7 +907,7 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
-def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_push_mirror_contents(tmpdir, mutable_mock_env_path,
                               install_mockery_mutable_config, mock_packages,
                               mock_fetch, mock_stage, mock_gnupghome,
                               project_dir_env):
@@ -960,16 +957,16 @@ spack:
             spec_map = ci.get_concrete_specs(
                 env, 'patchelf', 'patchelf', '', 'FIND_ANY')
             concrete_spec = spec_map['patchelf']
-            spec_yaml = concrete_spec.to_yaml(hash=ht.build_hash)
-            yaml_path = str(tmpdir.join('spec.yaml'))
-            with open(yaml_path, 'w') as ypfd:
-                ypfd.write(spec_yaml)
+            spec_json = concrete_spec.to_json(hash=ht.build_hash)
+            json_path = str(tmpdir.join('spec.json'))
+            with open(json_path, 'w') as ypfd:
+                ypfd.write(spec_json)
 
-            install_cmd('--keep-stage', yaml_path)
+            install_cmd('--keep-stage', json_path)
 
-            # env, spec, yaml_path, mirror_url, build_id, sign_binaries
+            # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(
-                env, concrete_spec, yaml_path, mirror_url, True)
+                env, concrete_spec, json_path, mirror_url, True)
 
             ci.write_cdashid_to_mirror('42', concrete_spec, mirror_url)
 
@@ -1027,15 +1024,14 @@ spack:
             # Now that index is regenerated, validate "buildcache list" output
             buildcache_list_output = buildcache_cmd('list', output=str)
             assert('patchelf' in buildcache_list_output)
-
             # Also test buildcache_spec schema
             bc_files_list = os.listdir(buildcache_path)
             for file_name in bc_files_list:
-                if file_name.endswith('.spec.yaml'):
-                    spec_yaml_path = os.path.join(buildcache_path, file_name)
-                    with open(spec_yaml_path) as yaml_fd:
-                        yaml_object = syaml.load(yaml_fd)
-                        validate(yaml_object, spec_yaml_schema)
+                if file_name.endswith('.spec.json'):
+                    spec_json_path = os.path.join(buildcache_path, file_name)
+                    with open(spec_json_path) as json_fd:
+                        json_object = sjson.load(json_fd)
+                        validate(json_object, specfile_schema)
 
             logs_dir = working_dir.join('logs_dir')
             if not os.path.exists(logs_dir.strpath):
@@ -1054,17 +1050,15 @@ spack:
             dl_dir = working_dir.join('download_dir')
             if not os.path.exists(dl_dir.strpath):
                 os.makedirs(dl_dir.strpath)
-
-            buildcache_cmd('download', '--spec-yaml', yaml_path, '--path',
+            buildcache_cmd('download', '--spec-file', json_path, '--path',
                            dl_dir.strpath, '--require-cdashid')
-
             dl_dir_list = os.listdir(dl_dir.strpath)
 
             assert(len(dl_dir_list) == 3)
 
 
 def test_push_mirror_contents_exceptions(monkeypatch, capsys):
-    def faked(env, spec_yaml=None, packages=None, add_spec=True,
+    def faked(env, spec_file=None, packages=None, add_spec=True,
               add_deps=True, output_location=os.getcwd(),
               signing_key=None, force=False, make_relative=False,
               unsigned=False, allow_root=False, rebuild_index=False):
@@ -1084,7 +1078,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
 
 
 def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,
-                                           env_deactivate, install_mockery,
+                                           install_mockery,
                                            mock_packages, monkeypatch,
                                            project_dir_env):
     """Test that we get the behavior we want with respect to the provision
@@ -1153,6 +1147,8 @@ spack:
                 spack.main, 'get_version', lambda: '0.15.3-416-12ad69eb1')
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            monkeypatch.setattr(
+                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
@@ -1227,7 +1223,7 @@ spack:
 
 
 def test_ci_generate_with_workarounds(tmpdir, mutable_mock_env_path,
-                                      env_deactivate, install_mockery,
+                                      install_mockery,
                                       mock_packages, monkeypatch,
                                       project_dir_env):
     """Make sure the post-processing cli workarounds do what they should"""
@@ -1257,6 +1253,8 @@ spack:
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            monkeypatch.setattr(
+                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
             ci_cmd('generate', '--output-file', outputfile, '--dependencies')
 
             with open(outputfile) as f:
@@ -1276,7 +1274,7 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
-def test_ci_rebuild_index(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_ci_rebuild_index(tmpdir, mutable_mock_env_path,
                           install_mockery, mock_packages, mock_fetch,
                           mock_stage):
     working_dir = tmpdir.join('working_dir')
@@ -1330,7 +1328,7 @@ spack:
 def test_ci_generate_bootstrap_prune_dag(
         install_mockery_mutable_config, mock_packages, mock_fetch,
         mock_archive, mutable_config, monkeypatch, tmpdir,
-        mutable_mock_env_path, env_deactivate, project_dir_env):
+        mutable_mock_env_path, project_dir_env):
     """Test compiler bootstrapping with DAG pruning.  Specifically, make
        sure that if we detect the bootstrapped compiler needs to be rebuilt,
        we ensure the spec we want to build with that compiler is scheduled
@@ -1417,6 +1415,8 @@ spack:
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            monkeypatch.setattr(
+                ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
 
             ci_cmd('generate', '--output-file', outputfile)
 
@@ -1460,7 +1460,7 @@ spack:
 
 
 def test_ci_subcommands_without_mirror(tmpdir, mutable_mock_env_path,
-                                       env_deactivate, mock_packages,
+                                       mock_packages,
                                        install_mockery, project_dir_env):
     """Make sure we catch if there is not a mirror and report an error"""
     project_dir_env(tmpdir.strpath)
@@ -1538,9 +1538,9 @@ def test_ensure_only_one_temporary_storage():
 
 
 def test_ci_generate_temp_storage_url(tmpdir, mutable_mock_env_path,
-                                      env_deactivate, install_mockery,
+                                      install_mockery,
                                       mock_packages, monkeypatch,
-                                      project_dir_env):
+                                      project_dir_env, mock_binary_index):
     """Verify correct behavior when using temporary-storage-url-prefix"""
     project_dir_env(tmpdir.strpath)
     filename = str(tmpdir.join('spack.yaml'))
@@ -1568,6 +1568,8 @@ spack:
 
         monkeypatch.setattr(
             ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+        monkeypatch.setattr(
+            ci, 'SPACK_SHARED_PR_MIRROR_URL', r"file:///fake/mirror_two")
 
         with ev.read('test'):
             ci_cmd('generate', '--output-file', outputfile)
@@ -1592,7 +1594,7 @@ spack:
 
 
 def test_ci_generate_read_broken_specs_url(tmpdir, mutable_mock_env_path,
-                                           env_deactivate, install_mockery,
+                                           install_mockery,
                                            mock_packages, monkeypatch,
                                            project_dir_env):
     """Verify that `broken-specs-url` works as intended"""
@@ -1648,9 +1650,9 @@ spack:
             assert(ex not in output)
 
 
-def test_ci_reproduce(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_ci_reproduce(tmpdir, mutable_mock_env_path,
                       install_mockery, mock_packages, monkeypatch,
-                      last_two_git_commits, project_dir_env):
+                      last_two_git_commits, project_dir_env, mock_binary_index):
     project_dir_env(tmpdir.strpath)
     working_dir = tmpdir.join('repro_dir')
     image_name = 'org/image:tag'
@@ -1744,13 +1746,11 @@ spack:
 
     monkeypatch.setattr(ci, 'download_and_extract_artifacts',
                         fake_download_and_extract_artifacts)
-
     rep_out = ci_cmd('reproduce-build',
                      'https://some.domain/api/v1/projects/1/jobs/2/artifacts',
                      '--working-dir',
                      working_dir.strpath,
                      output=str)
-
     expect_out = 'docker run --rm -v {0}:{0} -ti {1}'.format(
         working_dir.strpath, image_name)
 

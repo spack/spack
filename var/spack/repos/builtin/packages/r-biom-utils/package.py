@@ -8,7 +8,7 @@ from spack import *
 
 class RBiomUtils(RPackage):
     """Provides utilities to facilitate import, export and computation with
-    the BIOM (Biological Observation Matrix) format (http://biom-format.org).
+    the BIOM (Biological Observation Matrix) format (https://biom-format.org/).
     """
 
     homepage = "https://github.com/braithwaite/BIOM.utils/"

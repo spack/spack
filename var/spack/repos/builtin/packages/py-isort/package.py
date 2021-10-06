@@ -18,10 +18,10 @@ class PyIsort(PythonPackage):
 
     variant('colors', default=False, description='Install colorama for --color support')
 
-    depends_on('python@3.6.1:3.999', type=('build', 'run'), when='@5:')
+    depends_on('python@3.6.1:3', type=('build', 'run'), when='@5:')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@4.3:')
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-futures', type=('build', 'run'), when='@4.3:4.999 ^python@:3.1')
-    depends_on('py-backports-functools-lru-cache', type=('build', 'run'), when='@4.3.10:4.999 ^python@:3.1')
-    depends_on('py-colorama@0.4.3:0.4.999', type=('build', 'run'), when='+colors')
+    depends_on('py-futures', type=('build', 'run'), when='@4.3:4 ^python@:3.1')
+    depends_on('py-backports-functools-lru-cache', type=('build', 'run'), when='@4.3.10:4 ^python@:3.1')
+    depends_on('py-colorama@0.4.3:0.4', type=('build', 'run'), when='+colors')

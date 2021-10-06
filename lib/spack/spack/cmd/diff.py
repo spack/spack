@@ -175,7 +175,7 @@ def print_difference(c, attributes="all", out=None):
 
 
 def diff(parser, args):
-    env = ev.get_env(args, 'diff')
+    env = ev.active_environment()
 
     if len(args.specs) != 2:
         tty.die("You must provide two specs to diff.")

@@ -22,7 +22,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     homepage = 'https://gcc.gnu.org'
     gnu_mirror_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
     git      = 'git://gcc.gnu.org/git/gcc.git'
-    list_url = 'http://ftp.gnu.org/gnu/gcc/'
+    list_url = 'https://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
     maintainers = ['michaelkuhn', 'alalazo']
@@ -129,10 +129,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         depends_on('isl@0.15:', when='@10:')
 
     depends_on('zlib', when='@6:')
-    # GCC only tries to link with -lzstd but it requires
-    # -pthread too when linking against libzstd.a, so
-    # disable multithreading by default
-    depends_on('zstd~multithread', when='@10:')
+    depends_on('zstd', when='@10:')
     depends_on('diffutils', type='build')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
@@ -265,7 +262,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
 
     patch('piclibs.patch', when='+piclibs')
-    patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
+    patch('gcc-backport.patch', when='@4.7:4.9.3,5:5.3')
 
     # Backport libsanitizer patch for glibc >= 2.31 and 5.3.0 <= gcc <= 9.2.0
     # https://bugs.gentoo.org/708346
@@ -274,6 +271,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:8.3.0,9.0.0:9.2.0')
     patch('glibc-2.31-libsanitizer-2-gcc-6.patch', when='@5.3.0:5.5.0,6.1.0:6.5.0')
     patch('glibc-2.31-libsanitizer-2-gcc-7.patch', when='@7.1.0:7.5.0')
+    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=2b40941d23b1570cdd90083b58fa0f66aa58c86e', sha256='b48e48736062e64a6da7cbe7e21a6c1c89422d1f49ef547c73b479a3f3f4935f', when='@6.5.0,7.4.0:7.5.0,8.2.0:9.3.0')
+    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=745dae5923aba02982563481d75a21595df22ff8', sha256='eaa00c91e08a5e767f023911a49bc1b2d1a3eea38703b745ab260f90e8da41aa', when='@10.1.0:11.1.0')
+
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch('ucontext_t.patch', when='@4.9,5.1:5.4,6.1:6.4,7.1')
@@ -289,6 +289,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
     patch('zstd.patch', when='@10')
+
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100102
+    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=fc930b3010bd0de899a3da3209eab20664ddb703',
+          sha256='28c5ab3b564d83dd7e6e35b9c683141a4cb57ee886c5367e54a0828538b3c789', when='@10.1:10.3')
+    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=f1feb74046e0feb0596b93bbb822fae02940a90e',
+          sha256='3e5029489b79fc0d47fd6719f3d5c9d3bbc727a4a0cbff161a5517e8a3c98cb6',  when='@11.1')
 
     build_directory = 'spack-build'
 

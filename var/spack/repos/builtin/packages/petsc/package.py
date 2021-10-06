@@ -11,13 +11,18 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     differential equations.
     """
 
-    homepage = "http://www.mcs.anl.gov/petsc/index.html"
-    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
+    homepage = "https://www.mcs.anl.gov/petsc/index.html"
+    url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
+    tags = ['e4s']
+
     version('main', branch='main')
 
+    version('3.16.0', sha256='5aaad7deea127a4790c8aa95c42fd9451ab10b5d6c68b226b92d4853002f438d')
+    version('3.15.5', sha256='67dc31f1c1c941a0e45301ed4042628586e92e8c4e9b119695717ae782ef23a3')
+    version('3.15.4', sha256='1e62fb0859a12891022765d1e24660cfcd704291c58667082d81a0618d6b0047')
     version('3.15.3', sha256='483028088020001e6f8d57b78a7fc880ed52d6693f57d627779c428f55cff73d')
     version('3.15.2', sha256='3b10c19c69fc42e01a38132668724a01f1da56f5c353105cd28f1120cc9041d8')
     version('3.15.1', sha256='c0ac6566e69d1d70b431e07e7598e9de95e84891c2452db1367c846b75109deb')
@@ -91,6 +96,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             description='Activates support for HDF5 (only parallel)')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
+    variant('hpddm',   default=False,
+            description='Activates support for HPDDM (only parallel)')
+    variant('mmg',   default=False,
+            description='Activates support for MMG')
+    variant('parmmg',   default=False,
+            description='Activates support for ParMMG (only parallel)')
+    variant('tetgen',   default=False,
+            description='Activates support for Tetgen')
     # Mumps is disabled by default, because it depends on Scalapack
     # which is not portable to all HPC systems
     variant('mumps',   default=False,
@@ -161,6 +174,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     conflicts('+fftw', when='~mpi', msg=mpi_msg)
     conflicts('+hdf5', when='~mpi', msg=mpi_msg)
     conflicts('+hypre', when='~mpi', msg=mpi_msg)
+    conflicts('+hpddm', when='~mpi', msg=mpi_msg)
+    conflicts('+parmmg', when='~mpi', msg=mpi_msg)
     conflicts('+moab', when='~mpi', msg=mpi_msg)
     conflicts('+mumps', when='~mpi', msg=mpi_msg)
     conflicts('+p4est', when='~mpi', msg=mpi_msg)
@@ -169,7 +184,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     conflicts('+trilinos', when='~mpi', msg=mpi_msg)
 
     # older versions of petsc did not support mumps when +int64
-    conflicts('+mumps', when='@:3.12.99+int64')
+    conflicts('+mumps', when='@:3.12+int64')
 
     filter_compiler_wrappers(
         'petscvariables', relative_root='lib/petsc/conf'
@@ -202,14 +217,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hipsparse', when='+rocm')
 
     # Build dependencies
-    depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
+    depends_on('python@2.6:2.8', type='build', when='@:3.10')
     depends_on('python@2.6:2.8,3.4:', type='build', when='@3.11:')
 
     # Other dependencies
-    depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
-    depends_on('metis@5:~int64', when='@:3.7.99+metis~int64~double')
-    depends_on('metis@5:+int64+real64', when='@:3.7.99+metis+int64+double')
-    depends_on('metis@5:+int64', when='@:3.7.99+metis+int64~double')
+    depends_on('metis@5:~int64+real64', when='@:3.7+metis~int64+double')
+    depends_on('metis@5:~int64', when='@:3.7+metis~int64~double')
+    depends_on('metis@5:+int64+real64', when='@:3.7+metis+int64+double')
+    depends_on('metis@5:+int64', when='@:3.7+metis+int64~double')
     # petsc-3.8+ uses default (float) metis with any (petsc) precision
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
@@ -219,7 +234,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('scotch+esmumps~metis+mpi', when='+ptscotch')
     depends_on('scotch+int64', when='+ptscotch+int64')
 
-    depends_on('hdf5@:1.10.99+mpi', when='@:3.12.99+hdf5+mpi')
+    depends_on('hdf5@:1.10+mpi', when='@:3.12+hdf5+mpi')
     depends_on('hdf5+mpi', when='@3.13:+hdf5+mpi')
     depends_on('hdf5+mpi', when='+exodusii+mpi')
     depends_on('hdf5+mpi', when='+cgns+mpi')
@@ -229,30 +244,35 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('parmetis+int64', when='+metis+mpi+int64')
     depends_on('parmetis~int64', when='+metis+mpi~int64')
     depends_on('valgrind', when='+valgrind')
+    depends_on('mmg', when='+mmg')
+    depends_on('parmmg', when='+parmmg')
+    depends_on('tetgen+pic', when='+tetgen')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on('hypre@:2.13.99+mpi~internal-superlu~int64', when='@:3.8.99+hypre+mpi~complex~int64')
-    depends_on('hypre@:2.13.99+mpi~internal-superlu+int64', when='@:3.8.99+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu~int64', when='@3.9:3.13.99+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu+int64', when='@3.9:3.13.99+hypre+mpi~complex+int64')
-    depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.14:+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.14:+hypre+mpi~complex+int64')
+    depends_on('hypre@:2.13+mpi~internal-superlu~int64', when='@:3.8+hypre+mpi~complex~int64')
+    depends_on('hypre@:2.13+mpi~internal-superlu+int64', when='@:3.8+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu~int64', when='@3.9:3.13+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:2.18.2+mpi~internal-superlu+int64', when='@3.9:3.13+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu~int64', when='@3.14:3.15+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:2.22.0+mpi~internal-superlu+int64', when='@3.14:3.15+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.16:+hypre+mpi~complex~int64')
+    depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.16:+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
     depends_on('hypre@develop+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64')
     depends_on('hypre@develop+mpi~internal-superlu~int64', when='@main+hypre+mpi~complex~int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.0.0:5.1.3~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.0.0:5.1.3+int64', when='@3.7:3.7.99+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.2:5.2.99~int64', when='@3.8:3.9.99+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.9.99+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.4:5.4.99~int64', when='@3.10:3.10.2+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@6.1:6.1.99~int64', when='@3.10.3:3.12.99+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@6.1:6.1.99+int64', when='@3.10.3:3.12.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.0.0:5.1.3~int64', when='@3.7.0:3.7+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.0.0:5.1.3+int64', when='@3.7.0:3.7+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.2.0:5.2~int64', when='@3.8:3.9+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.2.0:5.2+int64', when='@3.8:3.9+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.4.0:5.4~int64', when='@3.10:3.10.2+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.4.0:5.4+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@6.1.0:6.1~int64', when='@3.10.3:3.12+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@6.1.0:6.1+int64', when='@3.10.3:3.12+superlu-dist+mpi+int64')
     depends_on('superlu-dist@6.1:~int64', when='@3.13.0:+superlu-dist+mpi~int64')
     depends_on('superlu-dist@6.1:+int64', when='@3.13.0:+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
@@ -340,6 +360,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
+            '--with-openmp=%s' % ('1' if '+openmp' in spec else '0'),
             '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
         ])
         if '+debug' not in spec:
@@ -405,7 +426,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('netcdf-c', 'netcdf', True, True),
                 ('parallel-netcdf', 'pnetcdf', True, True),
                 ('moab', 'moab', False, False),
-                'openmp',
                 ('random123', 'random123', False, False),
                 'exodusii',
                 'cgns',
@@ -417,6 +437,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 (jpeg_sp, 'libjpeg', True, True),
                 (scalapack_sp, 'scalapack', False, True),
                 'strumpack',
+                'mmg',
+                'parmmg',
+                ('tetgen', 'tetgen', False, False),
         ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
@@ -471,6 +494,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             options.append(
                 '--with-mkl_pardiso-dir=%s' % spec['mkl'].prefix
             )
+
+        # For the moment, HPDDM does not work as a dependency
+        # using download instead
+        if '+hpddm' in spec:
+            options.append('--download-hpddm')
 
         python('configure', '--prefix=%s' % prefix, *options)
 

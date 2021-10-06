@@ -62,14 +62,15 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('catch2', type='test')
 
     # Specify the correct version of Aluminum
-    depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
-    depends_on('aluminum@0.5.0:0.5.99', when='@0.2.0 +al')
-    depends_on('aluminum@0.7.0:0.7.99', when='@0.2.1 +al')
+    depends_on('aluminum@0.4.0:0.4', when='@0.1 +al')
+    depends_on('aluminum@0.5.0:0.5', when='@0.2.0 +al')
+    depends_on('aluminum@0.7.0:0.7', when='@0.2.1 +al')
     depends_on('aluminum@0.7.0:', when='@:0.0,0.2.1: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +cuda_rma', when='+al +cuda')
     depends_on('aluminum +rocm +rccl', when='+al +rocm')
+    depends_on('aluminum +ht', when='+al +distconv')
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
@@ -82,7 +83,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     for when in ['+cuda', '+distconv']:
         depends_on('cuda', when=when)
         depends_on('cudnn', when=when)
-    depends_on('cub', when='^cuda@:10.99')
+    depends_on('cub', when='^cuda@:10')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas', when='blas=openblas')
@@ -121,7 +122,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
-    depends_on('nvshmem', when='+nvshmem')
+    # TODO: Debug linker errors when NVSHMEM is built with UCX
+    depends_on('nvshmem +nccl~ucx', when='+nvshmem')
 
     # Idenfity versions of cuda_arch that are too old
     # from lib/spack/spack/build_systems/cuda.py
@@ -144,6 +146,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         args = [
             '-DCMAKE_CXX_STANDARD=17',
+            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DH2_ENABLE_ALUMINUM=%s' % ('+al' in spec),
@@ -169,7 +172,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DcuDNN_DIR={0}'.format(
                 spec['cudnn'].prefix))
 
-        if spec.satisfies('^cuda@:10.99'):
+        if spec.satisfies('^cuda@:10'):
             if '+cuda' in spec or '+distconv' in spec:
                 args.append('-DCUB_DIR={0}'.format(
                     spec['cub'].prefix))

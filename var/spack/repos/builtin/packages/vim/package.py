@@ -15,7 +15,7 @@ class Vim(AutotoolsPackage):
     composing email to editing configuration files.
     """
 
-    homepage = "http://www.vim.org"
+    homepage = "https://www.vim.org"
     url      = "https://github.com/vim/vim/archive/v8.1.0338.tar.gz"
     maintainers = ['sethrj']
 

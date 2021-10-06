@@ -253,7 +253,7 @@ def _determine_specs_to_mirror(args):
                         "To mirror all packages, use the '--all' option"
                         " (this will require significant time and space).")
 
-            env = ev.get_env(args, 'mirror')
+            env = ev.active_environment()
             if env:
                 env_specs = env.all_specs()
             else:

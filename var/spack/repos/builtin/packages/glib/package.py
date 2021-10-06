@@ -23,6 +23,7 @@ class Glib(Package):
 
     maintainers = ['michaelkuhn']
 
+    version('2.68.4', sha256='62fd061d08a75492617e625a73e2c05e259f831acbb8e1f8b9c81f23f7993a3b')
     version('2.68.3', sha256='e7e1a3c20c026109c45c9ec4a31d8dcebc22e86c69486993e565817d64be3138')
     version('2.68.2', sha256='ecc7798a9cc034eabdfd7f246e6dd461cdbf1175fcc2e9867cc7da7b7309e0fb')
     version('2.66.8', sha256='97bc87dd91365589af5cbbfea2574833aea7a1b71840fd365ecd2852c76b9c8b')
@@ -75,7 +76,7 @@ class Glib(Package):
     patch('g_date_strftime.patch', when='@2.42.1')
     # Clang doesn't seem to acknowledge the pragma lines to disable the -Werror
     # around a legitimate usage.
-    patch('no-Werror=format-security.patch', when='@:2.57.99')
+    patch('no-Werror=format-security.patch', when='@:2.57')
     # Patch to prevent compiler errors in kernels older than 2.6.35
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=rhel6')
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=centos6')
@@ -186,7 +187,7 @@ class Glib(Package):
         args.append('GTKDOC_REBASE={0}'.format(true))
         return args
 
-    @when('@:2.57.99')
+    @when('@:2.57')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix), *self.configure_args())
         make()
@@ -265,7 +266,7 @@ class Glib(Package):
         # the gettext library directory. The patch below explitly adds the
         # appropriate -L path.
         spec = self.spec
-        if spec.satisfies('@2:2.99'):
+        if spec.satisfies('@2.0:2'):
             pattern = 'Libs:'
             repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
                    spec['gettext'].libs.directories[0])

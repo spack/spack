@@ -21,6 +21,8 @@ class Sirius(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('7.2.7', sha256='929bf7f131a4847624858b9c4295532c24b0c06f6dcef5453c0dfc33fb78eb03')
+    version('7.2.6', sha256='e751fd46cdc7c481ab23b0839d3f27fb00b75dc61dc22a650c92fe8e35336e3a')
     version('7.2.5', sha256='794e03d4da91025f77542d3d593d87a8c74e980394f658a0210a4fd91c011f22')
     version('7.2.4', sha256='aeed0e83b80c3a79a9469e7f3fe10d80ad331795e38dbc3c49cb0308e2bd084d')
     version('7.2.3', sha256='6c10f0e87e50fcc7cdb4d1b2d35e91dba6144de8f111e36c7d08912e5942a906')
@@ -125,7 +127,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     extends('python', when='+python')
 
-    conflicts('+shared', when='@6.3.0:6.4.999')
+    conflicts('+shared', when='@6.3.0:6.4')
     conflicts('+boost_filesystem', when='~apps')
     conflicts('^libxc@5.0.0')  # known to produce incorrect results
     conflicts('+single_precision', when='@:7.2.4')

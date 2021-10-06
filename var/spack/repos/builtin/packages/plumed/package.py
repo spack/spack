@@ -20,7 +20,7 @@ class Plumed(AutotoolsPackage):
     The software, written in C++, can be easily interfaced with both fortran
     and C/C++ codes.
     """
-    homepage = 'http://www.plumed.org/'
+    homepage = 'https://www.plumed.org/'
     url = 'https://github.com/plumed/plumed2/archive/v2.6.3.tar.gz'
     git = 'https://github.com/plumed/plumed2.git'
 
@@ -72,7 +72,7 @@ class Plumed(AutotoolsPackage):
     depends_on('lapack')
     # For libmatheval support through the 'function' module
     # which is enabled by default (or when optional_modules=all)
-    depends_on('libmatheval', when='@:2.4.99')
+    depends_on('libmatheval', when='@:2.4')
     depends_on('arrayfire', when='arrayfire=cpu')
     depends_on('arrayfire+cuda', when='arrayfire=cuda')
     depends_on('arrayfire+opencl', when='arrayfire=opencl')

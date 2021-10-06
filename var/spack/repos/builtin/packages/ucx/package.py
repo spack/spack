@@ -16,12 +16,13 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     maintainers = ['hppritcha']
 
-    # Development
-    version('1.9-dev', branch='v1.9.x')
-
     # Current
-    version('1.10.1', sha256='ae9a108af6842ca135e7ec9b6131469adf9f1e50f899349fafcc69a215368bc9', preferred=True)
+    version('1.11.2', sha256='deebf86a5344fc2bd9e55449f88c650c4514928592807c9bc6fe4190e516c6df')
+    version('1.11.1', sha256='29338cad18858517f96b46ff83bdd259a5899e274792cebd269717c660aa86fd')
+    version('1.11.0', sha256='b7189b69fe0e16e3c03784ef674e45687a9c520750bd74a45125c460ede37647')
+    version('1.10.1', sha256='ae9a108af6842ca135e7ec9b6131469adf9f1e50f899349fafcc69a215368bc9')
     version('1.10.0', sha256='b885e24b1b94724c03cb213c355381e98df1e2d1fd7f633cf8055b6dd05db92d')
+    version('1.9-dev', branch='v1.9.x')
     version('1.9.0', sha256='a7a2c8841dc0d5444088a4373dc9b9cc68dbffcd917c1eba92ca8ed8e5e635fb')
     version('1.8.1', sha256='a48820cb8d0761b5ccf3e7ba03a7c8c1dde6276017657178829e07ffc35b556a')
     version('1.8.0', sha256='e400f7aa5354971c8f5ac6b881dc2846143851df868088c37d432c076445628d')
@@ -90,6 +91,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
               msg='gdrcopy currently requires cuda support')
     depends_on('xpmem', when='+xpmem')
     depends_on('knem', when='+knem')
+    depends_on('binutils+ld', when='%aocc', type='build')
 
     configure_abs_path = 'contrib/configure-release'
 
@@ -144,5 +146,9 @@ class Ucx(AutotoolsPackage, CudaPackage):
                                                 activation_value='prefix'))
         config_args.extend(self.with_or_without('xpmem',
                                                 activation_value='prefix'))
+
+        # lld doesn't support '-dynamic-list-data'
+        if '%aocc' in spec:
+            config_args.append('LDFLAGS=-fuse-ld=bfd')
 
         return config_args

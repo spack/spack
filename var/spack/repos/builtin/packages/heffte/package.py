@@ -14,6 +14,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     git      = "https://bitbucket.org/icl/heffte.git"
 
     maintainers = ['mkstoyanov']
+    tags = ['e4s']
 
     test_requires_compiler = True
 
@@ -89,6 +90,10 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             rocm_arch = self.spec.variants['amdgpu_target'].value
             if 'none' not in rocm_arch:
                 args.append('-DCMAKE_CXX_FLAGS={0}'.format(self.hip_flags(rocm_arch)))
+
+            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
+                args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args
 

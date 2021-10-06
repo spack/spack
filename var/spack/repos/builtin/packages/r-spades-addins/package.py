@@ -12,7 +12,7 @@ class RSpadesAddins(RPackage):
     Provides 'RStudio' addins for 'SpaDES' packages and 'SpaDES' module
     development. See '?SpaDES.addins' for an overview of the tools provided."""
 
-    homepage = "http://spades-addins.predictiveecology.org/"
+    homepage = "https://spades-addins.predictiveecology.org/"
     url      = "https://cloud.r-project.org/src/contrib/SpaDES.addins_0.1.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/SpaDES.addins"
 

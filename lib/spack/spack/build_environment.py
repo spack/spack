@@ -61,6 +61,7 @@ import spack.repo
 import spack.schema.environment
 import spack.store
 import spack.subprocess_context
+import spack.user_environment
 import spack.util.path
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.util.cpus import cpus_available
@@ -69,8 +70,8 @@ from spack.util.environment import (
     env_flag,
     filter_system_paths,
     get_path,
+    inspect_path,
     is_system_path,
-    preserve_environment,
     system_dirs,
     validate,
 )
@@ -146,6 +147,13 @@ class MakeExecutable(Executable):
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
+def _on_cray():
+    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
+    on_cray = str(hostarch.platform) == 'cray'
+    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    return on_cray, using_cnl
+
+
 def clean_environment():
     # Stuff in here sanitizes the build environment to eliminate
     # anything the user has set that may interfere. We apply it immediately
@@ -169,6 +177,9 @@ def clean_environment():
 
     env.unset('CMAKE_PREFIX_PATH')
 
+    # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
+    env.unset('MAKEFLAGS')
+
     # Avoid that libraries of build dependencies get hijacked.
     env.unset('LD_PRELOAD')
     env.unset('DYLD_INSERT_LIBRARIES')
@@ -177,9 +188,7 @@ def clean_environment():
     # interference with Spack dependencies.
     # CNL requires these variables to be set (or at least some of them,
     # depending on the CNL version).
-    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
-    on_cray = str(hostarch.platform) == 'cray'
-    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    on_cray, using_cnl = _on_cray()
     if on_cray and not using_cnl:
         env.unset('CRAY_LD_LIBRARY_PATH')
         for varname in os.environ.keys():
@@ -781,37 +790,33 @@ def setup_package(pkg, dirty, context='build'):
                       "config to assume that the package is part of the system"
                       " includes and omit it when invoked with '--cflags'.")
     elif context == 'test':
+        env.extend(
+            inspect_path(
+                pkg.spec.prefix,
+                spack.user_environment.prefix_inspections(pkg.spec.platform),
+                exclude=is_system_path
+            )
+        )
         pkg.setup_run_environment(env)
         env.prepend_path('PATH', '.')
 
-    # Loading modules, in particular if they are meant to be used outside
-    # of Spack, can change environment variables that are relevant to the
-    # build of packages. To avoid a polluted environment, preserve the
-    # value of a few, selected, environment variables
-    # With the current ordering of environment modifications, this is strictly
-    # unnecessary. Modules affecting these variables will be overwritten anyway
-    with preserve_environment('CC', 'CXX', 'FC', 'F77'):
-        # All module loads that otherwise would belong in previous
-        # functions have to occur after the env object has its
-        # modifications applied. Otherwise the environment modifications
-        # could undo module changes, such as unsetting LD_LIBRARY_PATH
-        # after a module changes it.
-        if need_compiler:
-            for mod in pkg.compiler.modules:
-                # Fixes issue https://github.com/spack/spack/issues/3153
-                if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                    load_module("cce")
-                load_module(mod)
+    # Load modules on an already clean environment, just before applying Spack's
+    # own environment modifications. This ensures Spack controls CC/CXX/... variables.
+    if need_compiler:
+        for mod in pkg.compiler.modules:
+            load_module(mod)
 
-        # kludge to handle cray libsci being automatically loaded by PrgEnv
-        # modules on cray platform. Module unload does no damage when
-        # unnecessary
+    # kludge to handle cray libsci being automatically loaded by PrgEnv
+    # modules on cray platform. Module unload does no damage when
+    # unnecessary
+    on_cray, _ = _on_cray()
+    if on_cray:
         module('unload', 'cray-libsci')
 
-        if pkg.architecture.target.module_name:
-            load_module(pkg.architecture.target.module_name)
+    if pkg.architecture.target.module_name:
+        load_module(pkg.architecture.target.module_name)
 
-        load_external_modules(pkg)
+    load_external_modules(pkg)
 
     implicit_rpaths = pkg.compiler.implicit_rpaths()
     if implicit_rpaths:

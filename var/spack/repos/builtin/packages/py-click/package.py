@@ -22,5 +22,5 @@ class PyClick(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-importlib-metadata', type=('build', 'run'), when='@8.0.0: ^python@:3.7.999')
+    depends_on('py-importlib-metadata', type=('build', 'run'), when='@8.0.0: ^python@:3.7')
     # depends_on('py-colorama', type=('build', 'run'), when='platform=windows')

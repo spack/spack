@@ -20,7 +20,7 @@ class PyTestinfra(PythonPackage):
     version('1.11.1', sha256='a54224c39d71fe120c1f4c88330397ddcb6f6362dc38e1ce9fd53290bccbf153')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-importlib', when='^python@2.6.0:2.6.999', type=('build', 'run'))
+    depends_on('py-importlib', when='^python@2.6.0:2.6', type=('build', 'run'))
     depends_on('py-pytest@:3.0.1,3.0.3:', type=('build', 'run'))
     depends_on('py-six@1.4:', type=('build', 'run'))
 

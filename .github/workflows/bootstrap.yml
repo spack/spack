@@ -11,6 +11,7 @@ on:
       - 'var/spack/repos/builtin/**'
       - '!var/spack/repos/builtin/packages/clingo-bootstrap/**'
       - '!var/spack/repos/builtin/packages/python/**'
+      - '!var/spack/repos/builtin/packages/re2c/**'
       - 'lib/spack/docs/**'
   schedule:
     # nightly at 2:16 AM
@@ -77,7 +78,7 @@ jobs:
 
   opensuse-sources:
     runs-on: ubuntu-latest
-    container: "opensuse/tumbleweed:latest"
+    container: "opensuse/leap:latest"
     steps:
       - name: Install dependencies
         run: |

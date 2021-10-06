@@ -666,7 +666,7 @@ def print_setup_info(*info):
             tty.die('shell must be sh or csh')
 
     # print sys type
-    shell_set('_sp_sys_type', spack.architecture.sys_type())
+    shell_set('_sp_sys_type', str(spack.architecture.default_arch()))
     shell_set('_sp_compatible_sys_types',
               ':'.join(spack.architecture.compatible_sys_types()))
     # print roots for all module systems
@@ -743,9 +743,9 @@ def main(argv=None):
 
     # activate an environment if one was specified on the command line
     if not args.no_env:
-        env = ev.find_environment(args)
+        env = spack.cmd.find_environment(args)
         if env:
-            ev.activate(env, args.use_env_repo, add_view=False)
+            ev.activate(env, args.use_env_repo)
 
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(','))

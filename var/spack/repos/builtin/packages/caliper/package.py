@@ -19,6 +19,9 @@ class Caliper(CMakePackage, CudaPackage):
     homepage = "https://github.com/LLNL/Caliper"
     git      = "https://github.com/LLNL/Caliper.git"
     url      = "https://github.com/LLNL/Caliper/archive/v2.6.0.tar.gz"
+    tags     = ['radiuss']
+
+    tags = ['e4s']
 
     maintainers = ["daboehme"]
 
@@ -64,26 +67,26 @@ class Caliper(CMakePackage, CudaPackage):
     variant('fortran', default=False,
             description='Enable Fortran support')
 
-    depends_on('adiak@0.1:0.99', when='@2.2: +adiak')
+    depends_on('adiak@0.1:0', when='@2.2: +adiak')
 
-    depends_on('papi@5.3:5.99', when='@:2.2 +papi')
-    depends_on('papi@5.3:6.99', when='@2.3: +papi')
+    depends_on('papi@5.3:5', when='@:2.2 +papi')
+    depends_on('papi@5.3:6', when='@2.3: +papi')
 
-    depends_on('libpfm4@4.8:4.99', when='+libpfm')
+    depends_on('libpfm4@4.8:4', when='+libpfm')
 
     depends_on('mpi', when='+mpi')
-    depends_on('unwind@1.2:1.99', when='+libunwind')
+    depends_on('unwind@1.2:1', when='+libunwind')
     depends_on('elfutils', when='+libdw')
 
-    depends_on('sosflow@spack', when='@1.0:1.99+sosflow')
+    depends_on('sosflow@spack', when='@1.0:1+sosflow')
 
     depends_on('cmake',  type='build')
     depends_on('python', type='build')
 
     # sosflow support not yet in 2.0
-    conflicts('+sosflow', '@2.0.0:2.5.99')
-    conflicts('+adiak', '@:2.1.99')
-    conflicts('+libdw', '@:2.4.99')
+    conflicts('+sosflow', '@2.0.0:2.5')
+    conflicts('+adiak', '@:2.1')
+    conflicts('+libdw', '@:2.4')
 
     patch('for_aarch64.patch', when='target=aarch64:')
 

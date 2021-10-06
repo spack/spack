@@ -47,7 +47,7 @@ def fetch(parser, args):
         # fetch all uninstalled specs from it otherwise fetch all.
         # If we are also not in an environment, complain to the
         # user that we don't know what to do.
-        env = ev.get_env(args, "fetch")
+        env = ev.active_environment()
         if env:
             if args.missing:
                 specs = env.uninstalled_specs()

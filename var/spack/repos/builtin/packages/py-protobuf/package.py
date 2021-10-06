@@ -20,12 +20,12 @@ class PyProtobuf(PythonPackage):
     variant('cpp', default=False,
             description='Enable the cpp implementation')
 
-    version('3.17.3',  sha256='3253c6d17ec0bb6f6382e555cf5ca0a9ffab8d81b691f100f96ce9f5e753018e')
-    version('3.17.2',  sha256='1edd5de2cf5bc3807ba14abdf475c3e7597007f116a68702be5d59bb3eb77b0c')
-    version('3.17.1',  sha256='644b759b76824b13397f1ad6708e720edf4aea2a2b1570ea06824df620d978c7')
-    version('3.17.0',  sha256='3011bfbc18d1c695ee393cb0dc1042282cfa33ef6573fe82732aefc9f7286121')
-    version('3.16.0',  sha256='7f1b19ff546e1f7417361c70028e6da7a4978eaac254e8cc67a570f6459ff9dd')
-    version('3.15.8',  sha256='26496db804123bc8b058054e8b1fabc592e7648729e4f92ff60d120c7803eaeb')
+    version('3.17.3',  sha256='72804ea5eaa9c22a090d2803813e280fb273b62d5ae497aaf3553d141c4fdd7b')
+    version('3.17.2',  sha256='5a3450acf046716e4a4f02a3f7adfb7b86f1b5b3ae392cec759915e79538d40d')
+    version('3.17.1',  sha256='25bc4f1c23aced9b3a9e70eef7f03e63bcbd6cfbd881a91b5688412dce8992e1')
+    version('3.17.0',  sha256='05dfe9319939a8473c21b469f34f6486646e54fb8542637cf7ed8e2fbfe21538')
+    version('3.16.0',  sha256='228eecbedd46d75010f1e0f8ce34dbcd11ae5a40c165a9fc9d330a58aa302818')
+    version('3.15.8',  sha256='0277f62b1e42210cafe79a71628c1d553348da81cbd553402a7f7549c50b11d0')
     version('3.15.7',  sha256='2d03fc2591543cd2456d0b72230b50c4519546a8d379ac6fd3ecd84c6df61e5d')
     version('3.15.6',  sha256='2b974519a2ae83aa1e31cff9018c70bbe0e303a46a598f982943c49ae1d4fcd3')
     version('3.15.5',  sha256='be8a929c6178bb6cbe9e2c858be62fa08966a39ae758a8493a88f0ed1efb6097')
@@ -45,7 +45,8 @@ class PyProtobuf(PythonPackage):
     version('3.4.0',   sha256='ef02609ef445987976a3a26bff77119c518e0915c96661c3a3b17856d0ef6374')
     version('3.3.0',   sha256='1cbcee2c45773f57cb6de7ee0eceb97f92b9b69c0178305509b162c0160c1f04')
     version('3.1.0',   sha256='0bc10bfd00a9614fae58c86c21fbcf339790e48accf6d45f098034de985f5405',
-            url='https://github.com/protocolbuffers/protobuf/releases/download/v3.1.0/protobuf-python-3.1.0.tar.gz')
+            url='https://github.com/protocolbuffers/protobuf/releases/download/v3.1.0/protobuf-python-3.1.0.tar.gz',
+            deprecated=True)
     version('3.0.0',   sha256='ecc40bc30f1183b418fe0ec0c90bc3b53fa1707c4205ee278c6b90479e5b6ff5')
     version('3.0.0b2', sha256='d5b560bbc4b7d97cc2455c05cad9299d9db02d7bd11193b05684e3a86303c229')
     version('3.0.0a3', sha256='b61622de5048415bfd3f2d812ad64606438ac9e25009ae84191405fe58e522c1')

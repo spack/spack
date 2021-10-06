@@ -9,7 +9,7 @@ from spack import *
 class PerlInlineC(PerlPackage):
     """C Language Support for Inline"""
 
-    homepage = "http://search.cpan.org/~tinita/Inline-C-0.78/lib/Inline/C.pod"
+    homepage = "https://metacpan.org/pod/Inline::C"
     url      = "http://search.cpan.org/CPAN/authors/id/T/TI/TINITA/Inline-C-0.78.tar.gz"
 
     version('0.78', sha256='9a7804d85c01a386073d2176582b0262b6374c5c0341049da3ef84c6f53efbc7')

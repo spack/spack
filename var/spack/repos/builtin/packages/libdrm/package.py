@@ -10,7 +10,7 @@ class Libdrm(AutotoolsPackage):
     """A userspace library for accessing the DRM, direct rendering manager,
     on Linux, BSD and other systems supporting the ioctl interface."""
 
-    homepage = "http://dri.freedesktop.org/libdrm/"
+    homepage = "https://dri.freedesktop.org/libdrm/"
     url      = "https://dri.freedesktop.org/libdrm/libdrm-2.4.59.tar.gz"
 
     version('2.4.100', sha256='6a5337c054c0c47bc16607a21efa2b622e08030be4101ef4a241c5eb05b6619b')

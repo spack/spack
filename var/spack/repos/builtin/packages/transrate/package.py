@@ -12,7 +12,7 @@ class Transrate(Package):
     """Transrate is software for de-novo transcriptome assembly quality
        analysis."""
 
-    homepage = "http://hibberdlab.com/transrate/"
+    homepage = "https://hibberdlab.com/transrate/"
 
     if sys.platform == 'darwin':
         version('1.0.3', sha256='039eba81747dd53f65a99a61923369aae4ba341891215d31a2babe574ac99ca8',

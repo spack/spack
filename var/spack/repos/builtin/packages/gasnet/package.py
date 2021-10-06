@@ -30,6 +30,8 @@ class Gasnet(Package):
 
     maintainers = ['PHHargrove', 'bonachea']
 
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('main',    branch='stable')
     version('master',  branch='master')

@@ -7,7 +7,7 @@
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
-    homepage = "http://www.gnu.org/software/binutils/"
+    homepage = "https://www.gnu.org/software/binutils/"
     gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
     maintainers = ['alalazo']
@@ -54,8 +54,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     # Prior to 2.30, gold did not distribute the generated files and
     # thus needs bison, even for a one-time build.
-    depends_on('m4', type='build', when='@:2.29.99 +gold')
-    depends_on('bison', type='build', when='@:2.29.99 +gold')
+    depends_on('m4', type='build', when='@:2.29 +gold')
+    depends_on('bison', type='build', when='@:2.29 +gold')
 
     # 2.34 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491

@@ -11,7 +11,7 @@ class Imlib2(AutotoolsPackage, SourceforgePackage):
     manipulation, arbitrary polygon support
     """
 
-    homepage = "http://sourceforge.net/projects/enlightenment/"
+    homepage = "https://sourceforge.net/projects/enlightenment/"
     sourceforge_mirror_path = "enlightenment/imlib2-1.5.1.tar.bz2"
 
     maintainers = ['TheQueasle']

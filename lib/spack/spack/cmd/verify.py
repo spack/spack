@@ -74,7 +74,7 @@ def verify(parser, args):
 
     elif args.specs_or_files:
         # construct disambiguated spec list
-        env = ev.get_env(args, 'verify')
+        env = ev.active_environment()
         specs = list(map(lambda x: spack.cmd.disambiguate_spec(x, env,
                                                                local=local),
                          spec_args))

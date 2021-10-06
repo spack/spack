@@ -16,7 +16,7 @@ class Cask(Package):
     """Cask is a project management tool for Emacs Lisp to automate the package
        development cycle; development, dependencies, testing, building,
        packaging and more."""
-    homepage = "http://cask.readthedocs.io/en/latest/"
+    homepage = "https://cask.readthedocs.io/en/latest/"
     url      = "https://github.com/cask/cask/archive/v0.7.4.tar.gz"
 
     version('0.8.1', sha256='8739ba608f23c79b3426faa8b068d5d1bc096c7305ce30b1163babd354be821c')

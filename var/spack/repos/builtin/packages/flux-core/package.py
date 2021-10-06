@@ -14,6 +14,8 @@ class FluxCore(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-core"
     url      = "https://github.com/flux-framework/flux-core/releases/download/v0.8.0/flux-core-0.8.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-core.git"
+    tags     = ['radiuss', 'e4s']
+
     maintainers = ['SteVwonder']
 
     version('master', branch='master')
@@ -41,14 +43,14 @@ class FluxCore(AutotoolsPackage):
 
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")
-    depends_on("hwloc@1.11.1:1.99", when="@:0.17.0")
+    depends_on("hwloc@1.11.1:1", when="@:0.17.0")
     depends_on("hwloc@1.11.1:", when="@0.17.0:")
     depends_on("hwloc +cuda", when='+cuda')
     # Provide version hints for lua so that the concretizer succeeds when no
     # explicit flux-core version is given. See issue #10000 for details
     depends_on("lua", type=('build', 'run', 'link'))
-    depends_on("lua@5.1:5.2.99", when="@:0.17.0")
-    depends_on("lua@5.1:5.3.99", when="@0.18.0:,master")
+    depends_on("lua@5.1:5.2", when="@:0.17.0")
+    depends_on("lua@5.1:5.3", when="@0.18.0:,master")
     depends_on("lua-luaposix")
     # `link` dependency on python due to Flux's `pymod` module
     depends_on("python@3.6:", type=('build', 'run', 'link'))
@@ -178,7 +180,7 @@ class FluxCore(AutotoolsPackage):
         if name == 'cflags':
             # https://github.com/flux-framework/flux-core/issues/3482
             if self.spec.satisfies('%gcc@10:') and \
-               self.spec.satisfies('@0.23.0:0.23.99'):
+               self.spec.satisfies('@0.23.0:0.23'):
                 if flags is None:
                     flags = []
                 flags.append('-Wno-error=stringop-truncation')

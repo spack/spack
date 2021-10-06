@@ -6,7 +6,6 @@
 import os
 import shutil
 import sys
-from collections import namedtuple
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -20,6 +19,7 @@ import spack.cmd.modules
 import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
+import spack.environment.shell
 import spack.schema.env
 import spack.util.string as string
 
@@ -82,12 +82,18 @@ def env_activate_setup_parser(subparser):
 
 def env_activate(args):
     env = args.activate_env
+
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate",
             "    eval `spack env activate {sh_arg} %s`" % env,
         )
         return 1
+
+    # Error out when -e, -E, -D flags are given, cause they are ambiguous.
+    if args.env or args.no_env or args.env_dir:
+        tty.die('Calling spack env activate with --env, --env-dir and --no-env '
+                'is ambiguous')
 
     if ev.exists(env) and not args.dir:
         spack_env = ev.root(env)
@@ -106,12 +112,19 @@ def env_activate(args):
         tty.debug("Environment %s is already active" % args.activate_env)
         return
 
-    active_env = ev.get_env(namedtuple('args', ['env'])(env),
-                            'activate')
-    cmds = ev.activate(
-        active_env, add_view=args.with_view, shell=args.shell,
+    # Activate new environment
+    active_env = ev.Environment(spack_env)
+    cmds = spack.environment.shell.activate_header(
+        env=active_env,
+        shell=args.shell,
         prompt=env_prompt if args.prompt else None
     )
+    env_mods = spack.environment.shell.activate(
+        env=active_env,
+        add_view=args.with_view
+    )
+    cmds += env_mods.shell_modifications(args.shell)
+
     sys.stdout.write(cmds)
 
 
@@ -140,10 +153,17 @@ def env_deactivate(args):
         )
         return 1
 
+    # Error out when -e, -E, -D flags are given, cause they are ambiguous.
+    if args.env or args.no_env or args.env_dir:
+        tty.die('Calling spack env deactivate with --env, --env-dir and --no-env '
+                'is ambiguous')
+
     if 'SPACK_ENV' not in os.environ:
         tty.die('No environment is currently active.')
 
-    cmds = ev.deactivate(shell=args.shell)
+    cmds = spack.environment.shell.deactivate_header(args.shell)
+    env_mods = spack.environment.shell.deactivate()
+    cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
 
@@ -315,7 +335,7 @@ def env_view_setup_parser(subparser):
 
 
 def env_view(args):
-    env = ev.get_env(args, 'env view')
+    env = ev.active_environment()
 
     if env:
         if args.action == ViewAction.regenerate:
@@ -342,7 +362,7 @@ def env_status_setup_parser(subparser):
 
 
 def env_status(args):
-    env = ev.get_env(args, 'env status')
+    env = ev.active_environment()
     if env:
         if env.path == os.getcwd():
             tty.msg('Using %s in current directory: %s'
@@ -373,7 +393,7 @@ def env_loads_setup_parser(subparser):
 
 
 def env_loads(args):
-    env = ev.get_env(args, 'env loads', required=True)
+    env = spack.cmd.require_active_env(cmd_name='env loads')
 
     # Set the module types that have been selected
     module_type = args.module_type

@@ -8,7 +8,7 @@ from spack import *
 
 class Rr(CMakePackage):
     """Application execution recorder, player and debugger"""
-    homepage = "http://rr-project.org/"
+    homepage = "https://rr-project.org/"
     url      = "https://github.com/mozilla/rr/archive/4.5.0.tar.gz"
 
     version('4.5.0', sha256='19f28259c0aa562c9518ae51207377fa93071a7dc270a0738d8d39e45ae2b1c0')

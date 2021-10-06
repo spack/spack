@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import json
 import os
 import platform
 import re
@@ -191,19 +192,24 @@ class Python(AutotoolsPackage):
     # https://github.com/spack/spack/pull/16856
     patch('python-2.7.8-distutils-C++.patch', when='@2.7.8:2.7.16')
     patch('python-2.7.17+-distutils-C++.patch', when='@2.7.17:2.7.18')
+    patch('python-2.7.17+-distutils-C++-fixup.patch', when='@2.7.17:2.7.18')
     patch('python-3.6.8-distutils-C++.patch', when='@3.6.8,3.7.2')
     patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
     patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:')
+    patch('python-3.7.4+-distutils-C++-testsuite.patch', when='@3.7.4:')
 
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
+    # Patch the setup script to deny that tcl/x11 exists rather than allowing
+    # autodetection of (possibly broken) system components
+    patch('tkinter-3.8.patch', when='@3.8: ~tkinter')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch('cray-rpath-2.3.patch', when='@2.3:3.0.1 platform=cray')
-    patch('cray-rpath-3.1.patch', when='@3.1:3.99  platform=cray')
+    patch('cray-rpath-3.1.patch', when='@3.1:3  platform=cray')
 
     # Ensure that distutils chooses correct compiler option for RPATH on fj:
     patch('fj-rpath-2.3.patch', when='@2.3:3.0.1 %fj')
-    patch('fj-rpath-3.1.patch', when='@3.1:3.99  %fj')
+    patch('fj-rpath-3.1.patch', when='@3.1:3  %fj')
 
     # Fixes an alignment problem with more aggressive optimization in gcc8
     # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
@@ -231,8 +237,8 @@ class Python(AutotoolsPackage):
 
     conflicts('%nvhpc')
 
-    # Used to cache home locations, since computing them might be expensive
-    _homes = {}
+    # Used to cache various attributes that are expensive to compute
+    _config_vars = {}
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
@@ -329,7 +335,7 @@ class Python(AutotoolsPackage):
         # configuration option, so the installation's module setup file needs
         # to be modified directly in order to point to the correct SSL path.
         # See: https://stackoverflow.com/a/5939170
-        if self.spec.satisfies('@:3.6.999+ssl'):
+        if self.spec.satisfies('@:3.6+ssl'):
             ff = FileFilter(join_path('Modules', 'Setup.dist'))
             ff.filter(r'^#(((SSL=)|(_ssl))(.*))$', r'\1')
             ff.filter(r'^#((.*)(\$\(SSL\))(.*))$', r'\1')
@@ -340,7 +346,7 @@ class Python(AutotoolsPackage):
         # Because Python uses compiler system paths during install, it's
         # possible to pick up a system OpenSSL when building 'python~ssl'.
         # To avoid this scenario, we disable the 'ssl' module with patching.
-        elif self.spec.satisfies('@:3.6.999~ssl'):
+        elif self.spec.satisfies('@:3.6~ssl'):
             ff = FileFilter('setup.py')
             ff.filter(
                 r'^(\s+(ssl_((incs)|(libs)))\s+=\s+)(.*)$',
@@ -506,7 +512,7 @@ class Python(AutotoolsPackage):
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
         filenames = [
-            self.get_sysconfigdata_name(), self.get_makefile_filename()
+            self.get_sysconfigdata_name(), self.config_vars['makefile_filename']
         ]
 
         filter_file(spack_cc,  self.compiler.cc,  *filenames, **kwargs)
@@ -686,87 +692,61 @@ class Python(AutotoolsPackage):
         else:
             return 'print({0})'.format(string)
 
-    def get_config_var(self, key):
-        """Return the value of a single variable. Wrapper around
-        ``distutils.sysconfig.get_config_var()``."""
+    @property
+    def config_vars(self):
+        """Return a set of variable definitions associated with a Python installation.
 
-        cmd = 'from distutils.sysconfig import get_config_var; '
-        cmd += self.print_string("get_config_var('{0}')".format(key))
-
-        return self.command('-c', cmd, output=str).strip()
-
-    def get_config_h_filename(self):
-        """Return the full path name of the configuration header.
-        Wrapper around ``distutils.sysconfig.get_config_h_filename()``."""
-
-        cmd = 'from distutils.sysconfig import get_config_h_filename; '
-        cmd += self.print_string('get_config_h_filename()')
-
-        return self.command('-c', cmd, output=str).strip()
-
-    def get_makefile_filename(self):
-        """Return the full path name of ``Makefile`` used to build Python.
-        Wrapper around ``distutils.sysconfig.get_makefile_filename()``."""
-
-        cmd = 'from distutils.sysconfig import get_makefile_filename; '
-        cmd += self.print_string('get_makefile_filename()')
-
-        return self.command('-c', cmd, output=str).strip()
-
-    def get_python_inc(self, plat_specific=False, prefix=None):
-        """Return the directory for either the general or platform-dependent C
-        include files. Wrapper around ``distutils.sysconfig.get_python_inc()``.
-
-        Parameters:
-            plat_specific (bool): if true, the platform-dependent include directory
-                is returned, else the platform-independent directory is returned
-            prefix (str): prefix to use instead of ``distutils.sysconfig.PREFIX``
+        Wrapper around various ``distutils.sysconfig`` functions.
 
         Returns:
-            str: include files directory
+            dict: variable definitions
         """
-        # Wrap strings in quotes
-        if prefix is not None:
-            prefix = '"{0}"'.format(prefix)
+        # TODO: distutils is deprecated in Python 3.10 and will be removed in
+        # Python 3.12, find a different way to access this information.
+        # Also, calling the python executable disallows us from cross-compiling,
+        # so we want to try to avoid that if possible.
+        cmd = """
+import json
+from distutils.sysconfig import (
+    get_config_vars,
+    get_config_h_filename,
+    get_makefile_filename,
+    get_python_inc,
+    get_python_lib,
+)
 
-        args = 'plat_specific={0}, prefix={1}'.format(plat_specific, prefix)
+config = get_config_vars()
+config['config_h_filename'] = get_config_h_filename()
+config['makefile_filename'] = get_makefile_filename()
+config['python_inc'] = {}
+config['python_lib'] = {}
 
-        cmd = 'from distutils.sysconfig import get_python_inc; '
-        cmd += self.print_string('get_python_inc({0})'.format(args))
+for plat_specific in [True, False]:
+    plat_key = str(plat_specific).lower()
+    config['python_inc'][plat_key] = get_python_inc(plat_specific, prefix='')
+    config['python_lib'][plat_key] = {}
+    for standard_lib in [True, False]:
+        lib_key = str(standard_lib).lower()
+        config['python_lib'][plat_key][lib_key] = get_python_lib(
+            plat_specific, standard_lib, prefix=''
+        )
 
-        return self.command('-c', cmd, output=str).strip()
+%s
+""" % self.print_string("json.dumps(config)")
 
-    def get_python_lib(self, plat_specific=False, standard_lib=False, prefix=None):
-        """Return the directory for either the general or platform-dependent
-        library installation. Wrapper around ``distutils.sysconfig.get_python_lib()``.
-
-        Parameters:
-            plat_specific (bool): if true, the platform-dependent library directory
-                is returned, else the platform-independent directory is returned
-            standard_lib (bool): if true, the directory for the standard library is
-                returned rather than the directory for the installation of
-                third-party extensions
-            prefix (str): prefix to use instead of ``distutils.sysconfig.PREFIX``
-
-        Returns:
-            str: library installation directory
-        """
-        # Wrap strings in quotes
-        if prefix is not None:
-            prefix = '"{0}"'.format(prefix)
-
-        args = 'plat_specific={0}, standard_lib={1}, prefix={2}'.format(
-            plat_specific, standard_lib, prefix)
-
-        cmd = 'from distutils.sysconfig import get_python_lib; '
-        cmd += self.print_string('get_python_lib({0})'.format(args))
-
-        return self.command('-c', cmd, output=str).strip()
+        dag_hash = self.spec.dag_hash()
+        if dag_hash not in self._config_vars:
+            try:
+                config = json.loads(self.command('-c', cmd, output=str))
+            except (ProcessError, RuntimeError):
+                config = {}
+            self._config_vars[dag_hash] = config
+        return self._config_vars[dag_hash]
 
     def get_sysconfigdata_name(self):
         """Return the full path name of the sysconfigdata file."""
 
-        libdest = self.get_config_var('LIBDEST')
+        libdest = self.config_vars['LIBDEST']
 
         filename = '_sysconfigdata.py'
         if self.spec.satisfies('@3.6:'):
@@ -790,14 +770,11 @@ class Python(AutotoolsPackage):
         determine exactly where it is installed. Fall back on
         ``spec['python'].prefix`` if that doesn't work."""
 
-        dag_hash = self.spec.dag_hash()
-        if dag_hash not in self._homes:
-            try:
-                prefix = self.get_config_var('prefix')
-            except ProcessError:
-                prefix = self.prefix
-            self._homes[dag_hash] = Prefix(prefix)
-        return self._homes[dag_hash]
+        if 'prefix' in self.config_vars:
+            prefix = self.config_vars['prefix']
+        else:
+            prefix = self.prefix
+        return Prefix(prefix)
 
     @property
     def libs(self):
@@ -805,19 +782,19 @@ class Python(AutotoolsPackage):
         # installs them into lib64. If the user is using an externally
         # installed package, it may be in either lib or lib64, so we need
         # to ask Python where its LIBDIR is.
-        libdir = self.get_config_var('LIBDIR')
+        libdir = self.config_vars['LIBDIR']
 
         # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
         # in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
-        libpl = self.get_config_var('LIBPL')
+        libpl = self.config_vars['LIBPL']
 
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
-        frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
+        frameworkprefix = self.config_vars['PYTHONFRAMEWORKPREFIX']
 
         if '+shared' in self.spec:
-            ldlibrary = self.get_config_var('LDLIBRARY')
+            ldlibrary = self.config_vars['LDLIBRARY']
 
             if os.path.exists(os.path.join(libdir, ldlibrary)):
                 return LibraryList(os.path.join(libdir, ldlibrary))
@@ -829,7 +806,7 @@ class Python(AutotoolsPackage):
                 msg = 'Unable to locate {0} libraries in {1}'
                 raise RuntimeError(msg.format(ldlibrary, libdir))
         else:
-            library = self.get_config_var('LIBRARY')
+            library = self.config_vars['LIBRARY']
 
             if os.path.exists(os.path.join(libdir, library)):
                 return LibraryList(os.path.join(libdir, library))
@@ -841,16 +818,16 @@ class Python(AutotoolsPackage):
 
     @property
     def headers(self):
-        try:
-            config_h = self.get_config_h_filename()
+        if 'config_h_filename' in self.config_vars:
+            config_h = self.config_vars['config_h_filename']
 
             if not os.path.exists(config_h):
-                includepy = self.get_config_var('INCLUDEPY')
+                includepy = self.config_vars['INCLUDEPY']
                 msg = 'Unable to locate {0} headers in {1}'
                 raise RuntimeError(msg.format(self.name, includepy))
 
             headers = HeaderList(config_h)
-        except ProcessError:
+        else:
             headers = find_headers(
                 'pyconfig', self.prefix.include, recursive=True)
             config_h = headers[0]
@@ -872,8 +849,8 @@ class Python(AutotoolsPackage):
             str: include files directory
         """
         try:
-            return self.get_python_inc(prefix='')
-        except (ProcessError, RuntimeError):
+            return self.config_vars['python_inc']['false']
+        except KeyError:
             return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
 
     @property
@@ -896,8 +873,8 @@ class Python(AutotoolsPackage):
             str: standard library directory
         """
         try:
-            return self.get_python_lib(standard_lib=True, prefix='')
-        except (ProcessError, RuntimeError):
+            return self.config_vars['python_lib']['false']['true']
+        except KeyError:
             return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
 
     @property
@@ -920,8 +897,8 @@ class Python(AutotoolsPackage):
             str: site-packages directory
         """
         try:
-            return self.get_python_lib(prefix='')
-        except (ProcessError, RuntimeError):
+            return self.config_vars['python_lib']['true']['false']
+        except KeyError:
             return self.default_site_packages_dir
 
     @property
@@ -978,8 +955,8 @@ class Python(AutotoolsPackage):
         for compile_var, link_var in [('CC', 'LDSHARED'),
                                       ('CXX', 'LDCXXSHARED')]:
             # First, we get the values from the sysconfigdata:
-            config_compile = self.get_config_var(compile_var)
-            config_link = self.get_config_var(link_var)
+            config_compile = self.config_vars[compile_var]
+            config_link = self.config_vars[link_var]
 
             # The dependent environment will have the compilation command set to
             # the following:

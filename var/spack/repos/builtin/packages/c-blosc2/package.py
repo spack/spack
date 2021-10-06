@@ -10,7 +10,7 @@ class CBlosc2(CMakePackage):
     """Next generation c-blosc with a new API, a new container and
        other bells and whistles"""
 
-    homepage = "http://www.blosc.org"
+    homepage = "https://www.blosc.org/"
     url      = "https://github.com/Blosc/c-blosc2/archive/refs/tags/v2.0.1.tar.gz"
     git      = "https://github.com/Blosc/c-blosc2.git"
 

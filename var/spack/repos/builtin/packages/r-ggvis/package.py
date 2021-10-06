@@ -13,7 +13,7 @@ class RGgvis(RPackage):
     parts of 'ggplot2', combining them with the reactive framework from 'shiny'
     and web graphics from 'vega'."""
 
-    homepage = "http://ggvis.rstudio.com/"
+    homepage = "https://ggvis.rstudio.com/"
     url      = "https://cloud.r-project.org/src/contrib/ggvis_0.4.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ggvis"
 

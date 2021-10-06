@@ -1,0 +1,32 @@
+--- a/library/EOS_Barotropic/eos_barotr_poly.cc
++++ b/library/EOS_Barotropic/eos_barotr_poly.cc
+@@ -1,6 +1,7 @@
+ #include "eos_barotr_poly.h"
+ #include "eos_barotr_poly_impl.h"
+ #include <cmath>
++#include <limits>
+ #include <stdexcept>
+ 
+ using namespace std;
+--- a/library/EOS_Barotropic/eos_barotr_pwpoly.cc
++++ b/library/EOS_Barotropic/eos_barotr_pwpoly.cc
+@@ -1,6 +1,7 @@
+ #include "eos_barotr_pwpoly.h"
+ #include "eos_barotr_pwpoly_impl.h"
+-#include <stdexcept>
+-#include <cmath>
++#include <cmath>
++#include <limits>
++#include <stdexcept>
+ 
+ using namespace std;
+--- a/tests/benchmarks/src/accuracy_con2prim_mhd.cc
++++ b/tests/benchmarks/src/accuracy_con2prim_mhd.cc
+@@ -9,6 +9,7 @@
+ #include <fstream>
+ #include <iomanip>
+ #include <string>
++#include <limits>
+ #include "con2prim_imhd.h"
+ #include "eos_thermal_file.h"
+ #include "eos_hybrid.h"

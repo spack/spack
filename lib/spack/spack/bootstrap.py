@@ -2,9 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from __future__ import print_function
+
 import contextlib
+import fnmatch
 import json
 import os
+import os.path
+import re
 import sys
 
 try:
@@ -21,8 +26,12 @@ import llnl.util.tty as tty
 import spack.architecture
 import spack.binary_distribution
 import spack.config
+import spack.detection
+import spack.environment
 import spack.main
+import spack.modules
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
@@ -77,6 +86,7 @@ def _try_import_from_store(module, abstract_spec_str):
         sys.path.extend(module_paths)
 
         try:
+            _fix_ext_suffix(candidate_spec)
             if _python_import(module):
                 msg = ('[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
                        'provides the "{0}" Python module').format(
@@ -97,6 +107,71 @@ def _try_import_from_store(module, abstract_spec_str):
     return False
 
 
+def _fix_ext_suffix(candidate_spec):
+    """Fix the external suffixes of Python extensions on the fly for
+    platforms that may need it
+
+    Args:
+        candidate_spec (Spec): installed spec with a Python module
+            to be checked.
+    """
+    # Here we map target families to the patterns expected
+    # by pristine CPython. Only architectures with known issues
+    # are included. Known issues:
+    #
+    # [RHEL + ppc64le]: https://github.com/spack/spack/issues/25734
+    #
+    _suffix_to_be_checked = {
+        'ppc64le': {
+            'glob': '*.cpython-*-powerpc64le-linux-gnu.so',
+            're': r'.cpython-[\w]*-powerpc64le-linux-gnu.so',
+            'fmt': r'{module}.cpython-{major}{minor}m-powerpc64le-linux-gnu.so'
+        }
+    }
+
+    # If the current architecture is not problematic return
+    generic_target = archspec.cpu.host().family
+    if str(generic_target) not in _suffix_to_be_checked:
+        return
+
+    # If there's no EXT_SUFFIX (Python < 3.5) or the suffix matches
+    # the expectations, return since the package is surely good
+    ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
+    if ext_suffix is None:
+        return
+
+    expected = _suffix_to_be_checked[str(generic_target)]
+    if fnmatch.fnmatch(ext_suffix, expected['glob']):
+        return
+
+    # If we are here it means the current interpreter expects different names
+    # than pristine CPython. So:
+    # 1. Find what we have installed
+    # 2. Create symbolic links for the other names, it they're not there already
+
+    # Check if standard names are installed and if we have to create
+    # link for this interpreter
+    standard_extensions = fs.find(candidate_spec.prefix, expected['glob'])
+    link_names = [re.sub(expected['re'], ext_suffix,  s) for s in standard_extensions]
+    for file_name, link_name in zip(standard_extensions, link_names):
+        if os.path.exists(link_name):
+            continue
+        os.symlink(file_name, link_name)
+
+    # Check if this interpreter installed something and we have to create
+    # links for a standard CPython interpreter
+    non_standard_extensions = fs.find(candidate_spec.prefix, '*' + ext_suffix)
+    for abs_path in non_standard_extensions:
+        directory, filename = os.path.split(abs_path)
+        module = filename.split('.')[0]
+        link_name = os.path.join(directory, expected['fmt'].format(
+            module=module, major=sys.version_info[0], minor=sys.version_info[1])
+        )
+        if os.path.exists(link_name):
+            continue
+        os.symlink(abs_path, link_name)
+
+
 @_bootstrapper(type='buildcache')
 class _BuildcacheBootstrapper(object):
     """Install the software needed during bootstrapping from a buildcache."""
@@ -105,11 +180,10 @@ class _BuildcacheBootstrapper(object):
         self.url = conf['info']['url']
 
     def try_import(self, module, abstract_spec_str):
-        # This import is local since it is needed only on Cray
-        import spack.platforms.linux
-
         if _try_import_from_store(module, abstract_spec_str):
             return True
+
+        tty.info("Bootstrapping {0} from pre-built binaries".format(module))
 
         # Try to install from an unsigned binary cache
         abstract_spec = spack.spec.Spec(
@@ -119,7 +193,7 @@ class _BuildcacheBootstrapper(object):
         # On Cray we want to use Linux binaries if available from mirrors
         bincache_platform = spack.architecture.real_platform()
         if str(bincache_platform) == 'cray':
-            bincache_platform = spack.platforms.linux.Linux()
+            bincache_platform = spack.platforms.Linux()
             with spack.architecture.use_platform(bincache_platform):
                 abstract_spec = spack.spec.Spec(
                     abstract_spec_str + ' ^' + spec_for_current_python()
@@ -136,13 +210,17 @@ class _BuildcacheBootstrapper(object):
         buildcache = spack.main.SpackCommand('buildcache')
         # Ensure we see only the buildcache being used to bootstrap
         mirror_scope = spack.config.InternalConfigScope(
-            'bootstrap', {'mirrors:': {self.name: self.url}}
+            'bootstrap_buildcache', {'mirrors:': {self.name: self.url}}
         )
         with spack.config.override(mirror_scope):
             # This index is currently needed to get the compiler used to build some
             # specs that wwe know by dag hash.
             spack.binary_distribution.binary_index.regenerate_spec_cache()
             index = spack.binary_distribution.update_cache_and_get_specs()
+
+            if not index:
+                raise RuntimeError("could not populate the binary index")
+
             for item in data['verified']:
                 candidate_spec = item['spec']
                 python_spec = item['python']
@@ -200,6 +278,12 @@ class _SourceBootstrapper(object):
         if _try_import_from_store(module, abstract_spec_str):
             return True
 
+        tty.info("Bootstrapping {0} from sources".format(module))
+
+        # If we compile code from sources detecting a few build tools
+        # might reduce compilation time by a fair amount
+        _add_externals_if_missing()
+
         # Try to build and install from sources
         with spack_python_interpreter():
             # Add hint to use frontend operating system on Cray
@@ -212,7 +296,7 @@ class _SourceBootstrapper(object):
 
             if module == 'clingo':
                 # TODO: remove when the old concretizer is deprecated
-                concrete_spec._old_concretize()
+                concrete_spec._old_concretize(deprecation_warning=False)
             else:
                 concrete_spec.concretize()
 
@@ -220,7 +304,7 @@ class _SourceBootstrapper(object):
         tty.debug(msg.format(module, abstract_spec_str))
 
         # Install the spec that should make the module importable
-        concrete_spec.package.do_install()
+        concrete_spec.package.do_install(fail_fast=True)
 
         return _try_import_from_store(module, abstract_spec_str=abstract_spec_str)
 
@@ -265,7 +349,7 @@ def spack_python_interpreter():
     which Spack is currently running as the only Python external spec
     available.
     """
-    python_prefix = os.path.dirname(os.path.dirname(sys.executable))
+    python_prefix = sys.exec_prefix
     external_python = spec_for_current_python()
 
     entry = {
@@ -303,6 +387,9 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
 
     abstract_spec = abstract_spec or module
     source_configs = spack.config.get('bootstrap:sources', [])
+
+    errors = {}
+
     for current_config in source_configs:
         if not _source_is_trusted(current_config):
             msg = ('[BOOTSTRAP MODULE {0}] Skipping source "{1}" since it is '
@@ -317,11 +404,18 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
         except Exception as e:
             msg = '[BOOTSTRAP MODULE {0}] Unexpected error "{1}"'
             tty.debug(msg.format(module, str(e)))
+            errors[current_config['name']] = e
 
     # We couldn't import in any way, so raise an import error
     msg = 'cannot bootstrap the "{0}" Python module'.format(module)
     if abstract_spec:
         msg += ' from spec "{0}"'.format(abstract_spec)
+    msg += ' due to the following failures:\n'
+    for method in errors:
+        err = errors[method]
+        msg += "    '{0}' raised {1}: {2}\n".format(
+            method, err.__class__.__name__, str(err))
+    msg += '    Please run `spack -d spec zlib` for more verbose error messages'
     raise ImportError(msg)
 
 
@@ -403,7 +497,11 @@ def _bootstrap_config_scopes():
     config_scopes = [
         spack.config.InternalConfigScope('_builtin', spack.config.config_defaults)
     ]
-    for name, path in spack.config.configuration_paths:
+    configuration_paths = (
+        spack.config.configuration_defaults_path,
+        ('bootstrap', _config_path())
+    )
+    for name, path in configuration_paths:
         platform = spack.architecture.platform().name
         platform_scope = spack.config.ConfigScope(
             '/'.join([name, platform]), os.path.join(path, platform)
@@ -416,18 +514,63 @@ def _bootstrap_config_scopes():
     return config_scopes
 
 
+def _add_compilers_if_missing():
+    # Do not use spack.architecture.default_arch() since it memoize the result
+    arch = spack.architecture.Arch(
+        spack.architecture.real_platform(), 'default_os', 'default_target'
+    )
+    arch = spack.spec.ArchSpec(str(arch))  # The call below expects an ArchSpec object
+    if not spack.compilers.compilers_for_arch(arch):
+        new_compilers = spack.compilers.find_new_compilers()
+        if new_compilers:
+            spack.compilers.add_compilers_to_config(new_compilers, init_config=False)
+
+
+def _add_externals_if_missing():
+    search_list = [
+        spack.repo.path.get('cmake'),
+        spack.repo.path.get('bison')
+    ]
+    detected_packages = spack.detection.by_executable(search_list)
+    spack.detection.update_configuration(detected_packages, scope='bootstrap')
+
+
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
-    with spack.architecture.use_platform(spack.architecture.real_platform()):
-        with spack.repo.use_repositories(spack.paths.packages_path):
-            with spack.store.use_store(bootstrap_store_path):
-                # Default configuration scopes excluding command line
-                # and builtin but accounting for platform specific scopes
-                config_scopes = _bootstrap_config_scopes()
-                with spack.config.use_configuration(*config_scopes):
-                    with spack_python_interpreter():
-                        yield
+    user_configuration = _read_and_sanitize_configuration()
+    with spack.environment.no_active_environment():
+        with spack.architecture.use_platform(spack.architecture.real_platform()):
+            with spack.repo.use_repositories(spack.paths.packages_path):
+                with spack.store.use_store(bootstrap_store_path):
+                    # Default configuration scopes excluding command line
+                    # and builtin but accounting for platform specific scopes
+                    config_scopes = _bootstrap_config_scopes()
+                    with spack.config.use_configuration(*config_scopes):
+                        # We may need to compile code from sources, so ensure we have
+                        # compilers for the current platform before switching parts.
+                        _add_compilers_if_missing()
+                        spack.config.set('bootstrap', user_configuration['bootstrap'])
+                        spack.config.set('config', user_configuration['config'])
+                        with spack.modules.disable_modules():
+                            with spack_python_interpreter():
+                                yield
+
+
+def _read_and_sanitize_configuration():
+    """Read the user configuration that needs to be reused for bootstrapping
+    and remove the entries that should not be copied over.
+    """
+    # Read the "config" section but pop the install tree (the entry will not be
+    # considered due to the use_store context manager, so it will be confusing
+    # to have it in the configuration).
+    config_yaml = spack.config.get('config')
+    config_yaml.pop('install_tree', None)
+    user_configuration = {
+        'bootstrap': spack.config.get('bootstrap'),
+        'config': config_yaml
+    }
+    return user_configuration
 
 
 def store_path():
@@ -438,13 +581,28 @@ def store_path():
                'Use "spack bootstrap enable" to enable it')
         raise RuntimeError(msg)
 
-    bootstrap_root_path = spack.config.get(
+    return _store_path()
+
+
+def _root_path():
+    """Root of all the bootstrap related folders"""
+    return spack.config.get(
         'bootstrap:root', spack.paths.user_bootstrap_path
     )
-    bootstrap_store_path = spack.util.path.canonicalize_path(
+
+
+def _store_path():
+    bootstrap_root_path = _root_path()
+    return spack.util.path.canonicalize_path(
         os.path.join(bootstrap_root_path, 'store')
     )
-    return bootstrap_store_path
+
+
+def _config_path():
+    bootstrap_root_path = _root_path()
+    return spack.util.path.canonicalize_path(
+        os.path.join(bootstrap_root_path, 'config')
+    )
 
 
 def clingo_root_spec():

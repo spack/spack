@@ -19,7 +19,7 @@ class RRstan(RPackage):
     quickly and accurately evaluate gradients without burdening the user with
     the need to derive the partial derivatives."""
 
-    homepage = "http://mc-stan.org/"
+    homepage = "https://mc-stan.org/users/interfaces/rstan"
     url      = "https://cloud.r-project.org/src/contrib/rstan_2.10.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rstan"
 

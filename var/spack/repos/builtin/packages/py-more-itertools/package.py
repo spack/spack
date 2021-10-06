@@ -24,4 +24,4 @@ class PyMoreItertools(PythonPackage):
     depends_on('python@2.7:2.8,3.2:', when='@2.3:', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-six@1.0.0:1.999', when='@:5', type=('build', 'run'))
+    depends_on('py-six@1.0.0:1', when='@:5', type=('build', 'run'))

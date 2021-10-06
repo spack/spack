@@ -11,7 +11,7 @@ class TrivialSmokeTest(Package):
     homepage = "http://www.example.com/trivial_test"
     url      = "http://www.unit-test-should-replace-this-url/trivial_test-1.0.tar.gz"
 
-    version('1.0', 'foobarbaz')
+    version('1.0', '0123456789abcdef0123456789abcdef')
 
     test_source_filename = 'cached_file.in'
 

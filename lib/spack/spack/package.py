@@ -41,6 +41,7 @@ import spack.config
 import spack.dependency
 import spack.directives
 import spack.directory_layout
+import spack.environment
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -1251,18 +1252,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Returns:
             True if the package has been installed, False otherwise.
         """
-        has_prefix = os.path.isdir(self.prefix)
         try:
             # If the spec is in the DB, check the installed
             # attribute of the record
-            rec = spack.store.db.get_record(self.spec)
-            db_says_installed = rec.installed
+            return spack.store.db.get_record(self.spec).installed
         except KeyError:
             # If the spec is not in the DB, the method
             #  above raises a Key error
-            db_says_installed = False
-
-        return has_prefix and db_says_installed
+            return False
 
     @property
     def prefix(self):
@@ -1537,7 +1534,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # should this attempt to download the source and set one? This
             # probably only happens for source repositories which are
             # referenced by branch name rather than tag or commit ID.
-            env = spack.environment.get_env(None, None)
+            env = spack.environment.active_environment()
             from_local_sources = env and env.is_develop(self.spec)
             if not self.spec.external and not from_local_sources:
                 message = 'Missing a source id for {s.name}@{s.version}'
@@ -1788,12 +1785,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Clear test failures
         self.test_failures = []
         self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
+        self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
         kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
+        # Defer tests to virtual and concrete packages
         pass
 
     def run_test(self, exe, options=[], expected=[], status=0,
@@ -1955,7 +1954,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         installed = set(os.listdir(self.prefix))
         installed.difference_update(
-            spack.store.layout.hidden_file_paths)
+            spack.store.layout.hidden_file_regexes)
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
@@ -2554,11 +2553,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for name in self.build_time_test_callbacks:
             try:
                 fn = getattr(self, name)
-                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
-                fn()
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+            else:
+                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
+                fn()
 
     @on_package_attributes(run_tests=True)
     def _run_default_install_time_test_callbacks(self):
@@ -2573,11 +2573,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for name in self.install_time_test_callbacks:
             try:
                 fn = getattr(self, name)
-                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
-                fn()
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+            else:
+                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
+                fn()
 
 
 def test_process(pkg, kwargs):
@@ -2606,6 +2607,7 @@ def test_process(pkg, kwargs):
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name)
                                    for v_name in sorted(v_names)]
 
+        ran_actual_test_function = False
         try:
             with fsys.working_dir(
                     pkg.test_suite.test_dir_for_spec(pkg.spec)):
@@ -2640,7 +2642,16 @@ def test_process(pkg, kwargs):
                     if not isinstance(test_fn, types.FunctionType):
                         test_fn = test_fn.__func__
 
+                    # Skip any test methods consisting solely of 'pass'
+                    # since they do not contribute to package testing.
+                    source = (inspect.getsource(test_fn)).splitlines()[1:]
+                    lines = (ln.strip() for ln in source)
+                    statements = [ln for ln in lines if not ln.startswith('#')]
+                    if len(statements) > 0 and statements[0] == 'pass':
+                        continue
+
                     # Run the tests
+                    ran_actual_test_function = True
                     test_fn(pkg)
 
             # If fail-fast was on, we error out above
@@ -2651,6 +2662,11 @@ def test_process(pkg, kwargs):
         finally:
             # reset debug level
             tty.set_debug(old_debug)
+
+            # flag the package as having been tested (i.e., ran one or more
+            # non-pass-only methods
+            if ran_actual_test_function:
+                fsys.touch(pkg.tested_file)
 
 
 inject_flags = PackageBase.inject_flags

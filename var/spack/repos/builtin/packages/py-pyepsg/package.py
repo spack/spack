@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyPyepsg(PythonPackage):
-    """Provides simple access to http://epsg.io/."""
+    """Provides simple access to https://epsg.io/."""
 
     homepage = "https://pyepsg.readthedocs.io/en/latest/"
     pypi = "pyepsg/pyepsg-0.3.2.tar.gz"

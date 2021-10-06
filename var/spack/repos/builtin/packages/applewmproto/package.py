@@ -13,7 +13,7 @@ class Applewmproto(AutotoolsPackage, XorgPackage):
     to better interact with the Mac OS X Aqua user interface when
     running X11 in a rootless mode."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/proto/applewmproto"
+    homepage = "https://cgit.freedesktop.org/xorg/proto/applewmproto"
     xorg_mirror_path = "proto/applewmproto-1.4.2.tar.gz"
 
     version('1.4.2', sha256='ff8ac07d263a23357af2d6ff0cca3c1d56b043ddf7797a5a92ec624f4704df2e')

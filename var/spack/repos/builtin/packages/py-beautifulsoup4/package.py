@@ -25,7 +25,7 @@ class PyBeautifulsoup4(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-soupsieve@1.3:', when='@4.9.0: ^python@3:', type=('build', 'run'))
-    depends_on('py-soupsieve@1.3:1.99', when='@4.9.0: ^python@:2.8', type=('build', 'run'))
+    depends_on('py-soupsieve@1.3:1', when='@4.9.0: ^python@:2.8', type=('build', 'run'))
     depends_on('py-soupsieve@1.2:', when='@4.7.0:', type=('build', 'run'))
 
     depends_on('py-lxml', when='+lxml', type=('build', 'run'))

@@ -16,7 +16,7 @@ class PyArchspec(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
 
-    depends_on('py-click@7.1.2:7.999.0', type=('build', 'run'))
-    depends_on('py-six@1.13.0:1.999.0', type=('build', 'run'))
+    depends_on('py-click@7.1.2:7', type=('build', 'run'))
+    depends_on('py-six@1.13.0:1', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')

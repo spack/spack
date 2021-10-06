@@ -29,7 +29,7 @@ class Acts(CMakePackage, CudaPackage):
     propagation and fitting, basic seed finding algorithms.
     """
 
-    homepage = "http://acts.web.cern.ch/ACTS/"
+    homepage = "https://acts.web.cern.ch/ACTS/"
     git      = "https://github.com/acts-project/acts.git"
     maintainers = ['HadrienG2']
 
@@ -38,6 +38,11 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version('main', branch='main')
     version('master', branch='main', deprecated=True)  # For compatibility
+    version('13.0.0', commit='ad05672e48b693fd37156f1ad62ed57aa82f858c', submodules=True)
+    version('12.0.1', commit='a80d1ef995d8cdd4190cc09cb249276a3e0161f4', submodules=True)
+    version('12.0.0', commit='e0aa4e7dcb70df025576e050b6e652a2f736454a', submodules=True)
+    version('11.0.0', commit='eac3def261f65b343af6d8ce4bc40443ac57b57e')
+    version('10.0.0', commit='9bfe0b83f277f686408b896a84d2b9b53610f623')
     version('9.02.0', commit='c438ee490e94eaf1c854a336ef54f398da637a48')
     version('9.01.0', commit='bf8fd4c03dd94f497d8501df510d8f6a48434afd')
     version('9.00.1', commit='7d59bc508d898d2cb67ba05a7150a978b9fcc32d')
@@ -120,6 +125,7 @@ class Acts(CMakePackage, CudaPackage):
     # FIXME: Cannot build ONNX plugin as Spack doesn't have an ONNX runtime
     # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
     variant('tgeo', default=False, description='Build the TGeo plugin')
+    variant('alignment', default=False, description='Build the alignment package')
 
     # Variants that only affect Acts examples for now
     variant('geant4', default=False, description='Build the Geant4-based examples')
@@ -128,12 +134,12 @@ class Acts(CMakePackage, CudaPackage):
 
     # Build dependencies
     # FIXME: Use spack's autodiff package once there is one
-    depends_on('boost @1.62:1.69.99 +program_options +test', when='@:0.10.3')
+    depends_on('boost @1.62:1.69 +program_options +test', when='@:0.10.3')
     depends_on('boost @1.71: +filesystem +program_options +test', when='@0.10.4:')
     depends_on('cmake @3.14:', type='build')
     depends_on('dd4hep @1.11:', when='+dd4hep')
     depends_on('dd4hep @1.11: +geant4', when='+dd4hep +geant4')
-    depends_on('eigen @3.3.7:', type='build')
+    depends_on('eigen @3.3.7:')
     depends_on('geant4', when='+fatras_geant4')
     depends_on('geant4', when='+geant4')
     depends_on('hepmc3 @3.2.1:', when='+hepmc3')
@@ -162,6 +168,7 @@ class Acts(CMakePackage, CudaPackage):
     conflicts('+pythia8', when='@:0.22')
     conflicts('+pythia8', when='-examples')
     conflicts('+tgeo', when='-identification')
+    conflicts('+alignment', when='@:12')
     conflicts('%gcc@:7', when='@0.23:')
 
     def cmake_args(self):
@@ -211,7 +218,8 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("JSON", "json"),
             cmake_variant(unit_tests_label, "unit_tests"),
             cmake_variant(legacy_plugin_label, "legacy"),
-            plugin_cmake_variant("TGEO", "tgeo")
+            plugin_cmake_variant("TGEO", "tgeo"),
+            cmake_variant("ALIGNMENT", "alignment")
         ]
 
         log_failure_threshold = spec.variants['log_failure_threshold'].value
