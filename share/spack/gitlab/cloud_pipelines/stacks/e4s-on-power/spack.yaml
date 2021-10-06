@@ -303,7 +303,7 @@ spack:
     #- variorum
 
   - arch:
-    - '%gcc@9.3.0 arch=linux-ubuntu20.04-ppc64le'
+    - '%gcc target=ppc64le'
 
 
   specs:

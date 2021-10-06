@@ -19,7 +19,7 @@ spack:
       - r-rcpp  # RPackage
       - ruby-rake  # RubyPackage
     - arch:
-      - '%gcc@7.5.0 arch=linux-ubuntu18.04-x86_64'
+      - '%gcc target=x86_64'
 
   specs:
     - matrix:
