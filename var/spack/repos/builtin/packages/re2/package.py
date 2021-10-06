@@ -22,7 +22,6 @@ class Re2(CMakePackage):
     variant('pic', default=True,
             description='Enable position independent code')
 
-
     # shared libs must have position-independent code
     conflicts('+shared ~pic')
 
