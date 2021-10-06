@@ -39,11 +39,15 @@ class Mesa(MesonPackage):
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
-    variant('swr', default='auto',
-            values=('auto', 'none', 'avx', 'avx2', 'knl', 'skx'),
+    _SWR_AUTO_VALUE = 'auto'
+    _SWR_ENABLED_VALUES = (_SWR_AUTO_VALUE, 'avx', 'avx2', 'knl', 'skx')
+    _SWR_DISABLED_VALUES = ('none',)
+    variant('swr', default=_SWR_AUTO_VALUE,
+            values=_SWR_DISABLED_VALUES + _SWR_ENABLED_VALUES,
             multi=True,
             description="Enable the SWR driver.")
-    # conflicts('~llvm', when='~swr=none')
+    for swr_enabled_value in _SWR_ENABLED_VALUES:
+        conflicts('~llvm', when='swr={0}'.format(swr_enabled_value))
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
@@ -192,8 +196,6 @@ class Mesa(MesonPackage):
                 args_swr_arches.append('skx')
 
         if args_swr_arches:
-            if '+llvm' not in spec:
-                raise SpecError('Variant swr requires +llvm')
             args_gallium_drivers.append('swr')
             args.append('-Dswr-arches=' + ','.join(args_swr_arches))
 
