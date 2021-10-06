@@ -173,10 +173,10 @@ class Openmpi(AutotoolsPackage):
     # Make NAG compiler pass the -pthread option to the linker:
     # https://github.com/open-mpi/ompi/pull/6378
     # We support only versions based on Libtool 2.4.6.
-    patch('nag_pthread/2.1.4_2.1.999_3.0.1_4.patch', when='@2.1.4:2.1.999,3.0.1:4%nag')
+    patch('nag_pthread/2.1.4_2.1.999_3.0.1_4.patch', when='@2.1.4:2.1,3.0.1:4%nag')
     patch('nag_pthread/2.1.2_2.1.3_3.0.0.patch', when='@2.1.2:2.1.3,3.0.0%nag')
     patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
-    patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10.999%nag')
+    patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10%nag')
 
     patch('nvhpc-libtool.patch', when='@master %nvhpc')
     patch('nvhpc-configure.patch', when='%nvhpc')
@@ -189,7 +189,7 @@ class Openmpi(AutotoolsPackage):
     # The first one was applied starting version v3.0.0 and backported to
     # v1.10. A subset with relevant modifications is applicable starting
     # version 1.8.4.
-    patch('use_mpi_tkr_sizeof/step_1.patch', when='@1.8.4:1.10.6,2:2.999')
+    patch('use_mpi_tkr_sizeof/step_1.patch', when='@1.8.4:1.10.6,2.0:2')
     # The second patch was applied starting version v4.0.0 and backported to
     # v2.x, v3.0.x, and v3.1.x.
     patch('use_mpi_tkr_sizeof/step_2.patch', when='@1.8.4:2.1.3,3:3.0.1')
@@ -285,7 +285,7 @@ class Openmpi(AutotoolsPackage):
     # "configure: error: OMPI does not currently support hwloc v2 API"
     # Future ompi releases may support it, needs to be verified.
     # See #7483 for context.
-    depends_on('hwloc@:1.999', when='@:3.999.999 ~internal-hwloc')
+    depends_on('hwloc@:1', when='@:3 ~internal-hwloc')
 
     depends_on('hwloc +cuda', when='+cuda ~internal-hwloc')
     depends_on('cuda', when='+cuda')
@@ -348,7 +348,7 @@ class Openmpi(AutotoolsPackage):
     # knem support was added in 1.5
     conflicts('fabrics=knem', when='@:1.4')
 
-    conflicts('schedulers=slurm ~pmi', when='@1.5.4:2.999.999',
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4:2',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3.0.0:',
               msg='The loadleveler scheduler is not supported with '
@@ -727,19 +727,19 @@ class Openmpi(AutotoolsPackage):
                 ])
 
         # SQLite3 support
-        if spec.satisfies('@1.7.3:1.999'):
+        if spec.satisfies('@1.7.3:1'):
             if '+sqlite3' in spec:
                 config_args.append('--with-sqlite3')
             else:
                 config_args.append('--without-sqlite3')
 
         # VampirTrace support
-        if spec.satisfies('@1.3:1.999'):
+        if spec.satisfies('@1.3:1'):
             if '+vt' not in spec:
                 config_args.append('--enable-contrib-no-build=vt')
 
         # Multithreading support
-        if spec.satisfies('@1.5.4:2.999'):
+        if spec.satisfies('@1.5.4:2'):
             if '+thread_multiple' in spec:
                 config_args.append('--enable-mpi-thread-multiple')
             else:
@@ -761,7 +761,7 @@ class Openmpi(AutotoolsPackage):
                 if spec.satisfies('@1.7.2'):
                     # There was a bug in 1.7.2 when --enable-static is used
                     config_args.append('--enable-mca-no-build=pml-bfo')
-                if spec.satisfies('%pgi^cuda@7.0:7.999'):
+                if spec.satisfies('%pgi^cuda@7.0:7'):
                     # OpenMPI has problems with CUDA 7 and PGI
                     config_args.append(
                         '--with-wrapper-cflags=-D__LP64__ -ta:tesla')

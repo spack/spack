@@ -18,5 +18,5 @@ class PyAstunparse(PythonPackage):
     version('1.6.2', sha256='dab3e426715373fd76cd08bb1abe64b550f5aa494cf1e32384f26fd60961eb67')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-wheel@0.23.0:0.99.99',        type=('build', 'run'))
-    depends_on('py-six@1.6.1:1.99.99',        type=('build', 'run'))
+    depends_on('py-wheel@0.23.0:0',        type=('build', 'run'))
+    depends_on('py-six@1.6.1:1',        type=('build', 'run'))

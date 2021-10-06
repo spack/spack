@@ -32,7 +32,7 @@ class ClingoBootstrap(Clingo):
         conflicts('%{0}'.format(compiler_spec), when='platform=cray',
                   msg='GCC is required to bootstrap clingo on Cray')
     conflicts(
-        '%gcc@:5.99.99', msg='C++14 support is required to bootstrap clingo'
+        '%gcc@:5', msg='C++14 support is required to bootstrap clingo'
     )
 
     # On Darwin we bootstrap with Apple Clang

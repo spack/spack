@@ -40,14 +40,14 @@ class Ispc(CMakePackage):
     depends_on('zlib', type='link')
     depends_on('llvm+clang')
     depends_on('llvm@11:', when='@1.16:')
-    depends_on('llvm@10:11.999', when='@1.15:1.15.999')
-    depends_on('llvm@10:10.999', when='@1.13:1.14.999')
+    depends_on('llvm@10:11', when='@1.15.0:1.15')
+    depends_on('llvm@10.0:10', when='@1.13:1.14')
 
     patch('don-t-assume-that-ncurses-zlib-are-system-libraries.patch',
-          when='@1.14:1.14.999',
+          when='@1.14.0:1.14',
           sha256='d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc')
 
-    patch('fix-linking-against-llvm-10.patch', when='@1.13:1.13.999',
+    patch('fix-linking-against-llvm-10.patch', when='@1.13.0:1.13',
           sha256='d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc')
 
     def cmake_args(self):

@@ -95,7 +95,7 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('python@3.0:', when='+tutorial @:1.9')
     depends_on('doxygen', when='+doxygen @:1.9')
     depends_on('llvm', when='+flecstan @:1.9')
-    depends_on('pfunit@3.0:3.99', when='@:1.9')
+    depends_on('pfunit@3.0:3', when='@:1.9')
     depends_on('py-gcovr', when='+coverage @:1.9')
 
     # FleCSI@2.x

@@ -195,7 +195,7 @@ def no_path_access(monkeypatch):
 @pytest.fixture(scope='session', autouse=True)
 def clean_user_environment():
     spack_env_value = os.environ.pop(ev.spack_env_var, None)
-    with ev.deactivate_environment():
+    with ev.no_active_environment():
         yield
     if spack_env_value:
         os.environ[ev.spack_env_var] = spack_env_value
@@ -1386,11 +1386,11 @@ def mock_svn_repository(tmpdir_factory):
 @pytest.fixture()
 def mutable_mock_env_path(tmpdir_factory):
     """Fixture for mocking the internal spack environments directory."""
-    saved_path = ev.env_path
+    saved_path = ev.environment.env_path
     mock_path = tmpdir_factory.mktemp('mock-env-path')
-    ev.env_path = str(mock_path)
+    ev.environment.env_path = str(mock_path)
     yield mock_path
-    ev.env_path = saved_path
+    ev.environment.env_path = saved_path
 
 
 @pytest.fixture()

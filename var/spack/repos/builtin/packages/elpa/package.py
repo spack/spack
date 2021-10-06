@@ -44,9 +44,9 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     patch('python_shebang.patch', when='@:2020.05.001')
 
     # fails to build due to broken type-bound procedures in OMP parallel regions
-    conflicts('+openmp', when='@2021.05.001: %gcc@:7.999',
+    conflicts('+openmp', when='@2021.05.001: %gcc@:7',
               msg='ELPA-2021.05.001+ requires GCC-8+ for OpenMP support')
-    conflicts('+rocm', when='@:2020.99',
+    conflicts('+rocm', when='@:2020',
               msg='ROCm support was introduced in ELPA 2021.05.001')
     conflicts('+mpi', when='+rocm',
               msg='ROCm support and MPI are not yet compatible')

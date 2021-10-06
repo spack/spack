@@ -25,4 +25,4 @@ class PyHypothesis(PythonPackage):
     depends_on('py-attrs@16.0.0:', when='@3.44.22:', type=('build', 'run'))
     depends_on('py-attrs', when='@3.28.0:', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'), when='^python@:2')
-    depends_on('py-sortedcontainers@2.1.0:2.999.0', type=('build', 'run'), when='@4.57.1:')
+    depends_on('py-sortedcontainers@2.1.0:2', type=('build', 'run'), when='@4.57.1:')

@@ -21,7 +21,7 @@ class PyPyvista(PythonPackage):
     depends_on('pil', type=('build', 'run'))
     depends_on('py-appdirs', type=('build', 'run'))
     depends_on('py-scooby@0.5.1:', type=('build', 'run'))
-    depends_on('py-meshio@4.0.3:4.99', type=('build', 'run'))
+    depends_on('py-meshio@4.0.3:4', type=('build', 'run'))
     depends_on('vtk+python', type=('build', 'run'))
     depends_on('py-dataclasses', when='^python@3.6', type=('build', 'run'))
     depends_on('py-typing-extensions', type=('build', 'run'))

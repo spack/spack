@@ -65,7 +65,7 @@ class Scr(CMakePackage):
     variant('dtcmp', default=True,
             description="Build with DTCMP. "
             "Necessary to enable user directory naming at runtime")
-    depends_on('dtcmp', when="@:2.999 +dtcmp")
+    depends_on('dtcmp', when="@:2 +dtcmp")
 
     # DTCMP is a required dependency with 3.x and later
     conflicts('~dtcmp', when="@3:", msg="<SCR> DTCMP required for versions >=3")
@@ -156,7 +156,7 @@ class Scr(CMakePackage):
         args.append('-DSCR_RESOURCE_MANAGER={0}'.format(
             spec.variants['resource_manager'].value.upper()))
 
-        if spec.satisfies('@:2.999'):
+        if spec.satisfies('@:2'):
             args.append('-DSCR_ASYNC_API={0}'.format(
                 spec.variants['async_api'].value.upper()))
 

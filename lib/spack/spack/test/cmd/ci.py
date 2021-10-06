@@ -54,13 +54,6 @@ def project_dir_env():
         os.environ.pop('CI_PROJECT_DIR')
 
 
-@pytest.fixture()
-def env_deactivate():
-    yield
-    ev._active_environment = None
-    os.environ.pop('SPACK_ENV', None)
-
-
 def set_env_var(key, val):
     os.environ[key] = val
 
@@ -124,7 +117,7 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
         assert (spec_a_label in stages[3])
 
 
-def test_ci_generate_with_env(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_ci_generate_with_env(tmpdir, mutable_mock_env_path,
                               install_mockery, mock_packages, project_dir_env):
     """Make sure we can get a .gitlab-ci.yml from an environment file
        which has the gitlab-ci, cdash, and mirrors sections."""
@@ -220,7 +213,7 @@ def _validate_needs_graph(yaml_contents, needs_graph, artifacts):
 
 
 def test_ci_generate_bootstrap_gcc(tmpdir, mutable_mock_env_path,
-                                   env_deactivate, install_mockery,
+                                   install_mockery,
                                    mock_packages, project_dir_env):
     """Test that we can bootstrap a compiler and use it as the
     compiler for a spec in the environment"""
@@ -283,7 +276,6 @@ spack:
 
 def test_ci_generate_bootstrap_artifacts_buildcache(tmpdir,
                                                     mutable_mock_env_path,
-                                                    env_deactivate,
                                                     install_mockery,
                                                     mock_packages,
                                                     project_dir_env):
@@ -350,7 +342,7 @@ spack:
 
 
 def test_ci_generate_with_env_missing_section(tmpdir, mutable_mock_env_path,
-                                              env_deactivate, install_mockery,
+                                              install_mockery,
                                               mock_packages, project_dir_env):
     """Make sure we get a reasonable message if we omit gitlab-ci section"""
     project_dir_env(tmpdir.strpath)
@@ -375,7 +367,7 @@ spack:
 
 
 def test_ci_generate_with_cdash_token(tmpdir, mutable_mock_env_path,
-                                      env_deactivate, install_mockery,
+                                      install_mockery,
                                       mock_packages, project_dir_env):
     """Make sure we it doesn't break if we configure cdash"""
     project_dir_env(tmpdir.strpath)
@@ -430,7 +422,7 @@ spack:
 
 
 def test_ci_generate_with_custom_scripts(tmpdir, mutable_mock_env_path,
-                                         env_deactivate, install_mockery,
+                                         install_mockery,
                                          mock_packages, monkeypatch,
                                          project_dir_env):
     """Test use of user-provided scripts"""
@@ -521,7 +513,7 @@ spack:
 
 
 def test_ci_generate_pkg_with_deps(tmpdir, mutable_mock_env_path,
-                                   env_deactivate, install_mockery,
+                                   install_mockery,
                                    mock_packages, project_dir_env):
     """Test pipeline generation for a package w/ dependencies"""
     project_dir_env(tmpdir.strpath)
@@ -575,7 +567,7 @@ spack:
 
 
 def test_ci_generate_for_pr_pipeline(tmpdir, mutable_mock_env_path,
-                                     env_deactivate, install_mockery,
+                                     install_mockery,
                                      mock_packages, monkeypatch,
                                      project_dir_env):
     """Test that PR pipelines do not include a final stage job for
@@ -639,7 +631,7 @@ spack:
 
 
 def test_ci_generate_with_external_pkg(tmpdir, mutable_mock_env_path,
-                                       env_deactivate, install_mockery,
+                                       install_mockery,
                                        mock_packages, monkeypatch,
                                        project_dir_env):
     """Make sure we do not generate jobs for external pkgs"""
@@ -682,7 +674,7 @@ spack:
         assert not any('externaltool' in key for key in yaml_contents)
 
 
-def test_ci_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_ci_rebuild(tmpdir, mutable_mock_env_path,
                     install_mockery, mock_packages, monkeypatch,
                     mock_gnupghome, mock_fetch, project_dir_env):
     project_dir_env(tmpdir.strpath)
@@ -840,7 +832,7 @@ spack:
         env_cmd('deactivate')
 
 
-def test_ci_nothing_to_rebuild(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_ci_nothing_to_rebuild(tmpdir, mutable_mock_env_path,
                                install_mockery, mock_packages, monkeypatch,
                                mock_fetch, project_dir_env):
     project_dir_env(tmpdir.strpath)
@@ -915,7 +907,7 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
-def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_push_mirror_contents(tmpdir, mutable_mock_env_path,
                               install_mockery_mutable_config, mock_packages,
                               mock_fetch, mock_stage, mock_gnupghome,
                               project_dir_env):
@@ -1086,7 +1078,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
 
 
 def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,
-                                           env_deactivate, install_mockery,
+                                           install_mockery,
                                            mock_packages, monkeypatch,
                                            project_dir_env):
     """Test that we get the behavior we want with respect to the provision
@@ -1231,7 +1223,7 @@ spack:
 
 
 def test_ci_generate_with_workarounds(tmpdir, mutable_mock_env_path,
-                                      env_deactivate, install_mockery,
+                                      install_mockery,
                                       mock_packages, monkeypatch,
                                       project_dir_env):
     """Make sure the post-processing cli workarounds do what they should"""
@@ -1282,7 +1274,7 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
-def test_ci_rebuild_index(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_ci_rebuild_index(tmpdir, mutable_mock_env_path,
                           install_mockery, mock_packages, mock_fetch,
                           mock_stage):
     working_dir = tmpdir.join('working_dir')
@@ -1336,7 +1328,7 @@ spack:
 def test_ci_generate_bootstrap_prune_dag(
         install_mockery_mutable_config, mock_packages, mock_fetch,
         mock_archive, mutable_config, monkeypatch, tmpdir,
-        mutable_mock_env_path, env_deactivate, project_dir_env):
+        mutable_mock_env_path, project_dir_env):
     """Test compiler bootstrapping with DAG pruning.  Specifically, make
        sure that if we detect the bootstrapped compiler needs to be rebuilt,
        we ensure the spec we want to build with that compiler is scheduled
@@ -1468,7 +1460,7 @@ spack:
 
 
 def test_ci_subcommands_without_mirror(tmpdir, mutable_mock_env_path,
-                                       env_deactivate, mock_packages,
+                                       mock_packages,
                                        install_mockery, project_dir_env):
     """Make sure we catch if there is not a mirror and report an error"""
     project_dir_env(tmpdir.strpath)
@@ -1546,7 +1538,7 @@ def test_ensure_only_one_temporary_storage():
 
 
 def test_ci_generate_temp_storage_url(tmpdir, mutable_mock_env_path,
-                                      env_deactivate, install_mockery,
+                                      install_mockery,
                                       mock_packages, monkeypatch,
                                       project_dir_env, mock_binary_index):
     """Verify correct behavior when using temporary-storage-url-prefix"""
@@ -1602,7 +1594,7 @@ spack:
 
 
 def test_ci_generate_read_broken_specs_url(tmpdir, mutable_mock_env_path,
-                                           env_deactivate, install_mockery,
+                                           install_mockery,
                                            mock_packages, monkeypatch,
                                            project_dir_env):
     """Verify that `broken-specs-url` works as intended"""
@@ -1658,7 +1650,7 @@ spack:
             assert(ex not in output)
 
 
-def test_ci_reproduce(tmpdir, mutable_mock_env_path, env_deactivate,
+def test_ci_reproduce(tmpdir, mutable_mock_env_path,
                       install_mockery, mock_packages, monkeypatch,
                       last_two_git_commits, project_dir_env, mock_binary_index):
     project_dir_env(tmpdir.strpath)

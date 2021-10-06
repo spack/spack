@@ -73,7 +73,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('parmetis', when='+parmetis')
     depends_on('scotch~metis', when='+scotch')
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
-    depends_on('butterflypack@1.1.0', when='@3.3.0:3.9.999 +butterflypack+mpi')
+    depends_on('butterflypack@1.1.0', when='@3.3.0:3.9 +butterflypack+mpi')
     depends_on('butterflypack@1.2.0:', when='@4.0.0: +butterflypack+mpi')
     depends_on('cuda', when='@4.0.0: +cuda')
     depends_on('zfp', when='+zfp')
@@ -89,9 +89,9 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')
     conflicts('+butterflypack', when='@:3.2.0')
-    conflicts('+zfp', when='@:3.9.999')
-    conflicts('+cuda', when='@:3.9.999')
-    conflicts('+rocm', when='@:5.0.999')
+    conflicts('+zfp', when='@:3.9')
+    conflicts('+cuda', when='@:3.9')
+    conflicts('+rocm', when='@:5.0')
     conflicts('+rocm', when='+cuda')
     conflicts('+slate', when='@:5.1.1')
     conflicts('+slate', when='~mpi')
@@ -124,7 +124,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 '-DTPL_SCALAPACK_LIBRARIES=%s' % spec['scalapack'].
                 libs.joined(";"))
 
-        if spec.satisfies('@:3.9.999'):
+        if spec.satisfies('@:3.9'):
             if '+mpi' in spec:
                 args.extend([
                     '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,

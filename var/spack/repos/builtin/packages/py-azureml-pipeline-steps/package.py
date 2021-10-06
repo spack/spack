@@ -18,17 +18,17 @@ class PyAzuremlPipelineSteps(Package):
     depends_on('python@3:', type=('build', 'run'))
     depends_on('py-pip', type='build')
 
-    depends_on('py-azureml-train-core@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
-    depends_on('py-azureml-train-automl-client@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
-    depends_on('py-azureml-pipeline-core@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-train-core@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-train-automl-client@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-pipeline-core@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
 
-    depends_on('py-azureml-train-core@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
-    depends_on('py-azureml-train-automl-client@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
-    depends_on('py-azureml-pipeline-core@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-train-core@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-train-automl-client@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-pipeline-core@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
 
-    depends_on('py-azureml-train-core@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
-    depends_on('py-azureml-train-automl-client@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
-    depends_on('py-azureml-pipeline-core@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
+    depends_on('py-azureml-train-core@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
+    depends_on('py-azureml-train-automl-client@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
+    depends_on('py-azureml-pipeline-core@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
 
     def install(self, spec, prefix):
         pip = which('pip')

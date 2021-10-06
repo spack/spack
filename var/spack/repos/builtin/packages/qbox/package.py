@@ -43,7 +43,7 @@ class Qbox(MakefilePackage):
     depends_on('scalapack')
     depends_on('fftw')
     depends_on('xerces-c')
-    depends_on('python@:2.999', type='run')
+    depends_on('python@:2', type='run')
     depends_on('gnuplot', type='run')
 
     # Change /usr/bin/python shebangs to /usr/bin/env python

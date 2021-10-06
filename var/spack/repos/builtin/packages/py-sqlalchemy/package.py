@@ -44,9 +44,9 @@ class PySqlalchemy(PythonPackage):
 
     # >=1.4.0
     depends_on('py-mysqlclient@1.4:',       when='backend=mysql @1.4: ^python@3:',     type=('build', 'run'))
-    depends_on('py-mysqlclient@1.4:,:1.99', when='backend=mysql @1.4: ^python@:2.7',   type=('build', 'run'))
+    depends_on('py-mysqlclient@1.4:,:1', when='backend=mysql @1.4: ^python@:2.7',   type=('build', 'run'))
     depends_on('py-pymysql',                when='backend=pymysql @1.4: ^python@3:',   type=('build', 'run'))
-    depends_on('py-pymysql@:0.999',             when='backend=pymysql @1.4: ^python@:2.7', type=('build', 'run'))
+    depends_on('py-pymysql@:0',             when='backend=pymysql @1.4: ^python@:2.7', type=('build', 'run'))
     depends_on('py-psycopg2@2.7:',          when='backend=postgresql @1.4:',           type=('build', 'run'))
 
     # < 1.4.0

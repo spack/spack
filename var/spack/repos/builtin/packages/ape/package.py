@@ -16,7 +16,7 @@ class Ape(Package):
     version('2.2.1', sha256='1bdb7f987fde81f8a5f335da6b59fa884e6d185d4a0995c90fde7c04376ce9e3')
 
     depends_on('gsl')
-    depends_on('libxc@:4.999', when='@2.3.0:')
+    depends_on('libxc@:4', when='@2.3.0:')
     depends_on('libxc@:2.2.2', when='@:2.2.1')
 
     def install(self, spec, prefix):

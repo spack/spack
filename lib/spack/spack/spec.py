@@ -1544,10 +1544,7 @@ class Spec(object):
         """Hash  to determine when to rebuild packages in the build pipeline.
 
         This hash includes the package hash, so that we know when package
-        files has changed between builds. It does not currently include
-        build dependencies, though it likely should.
-
-        TODO: investigate whether to include build deps here.
+        files has changed between builds.
         """
         return self._cached_hash(ht.full_hash, length)
 

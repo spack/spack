@@ -38,7 +38,7 @@ class Pinentry(AutotoolsPackage):
     depends_on('gtkplus@2:', when='gui=gtk2')
     # depends_on('gnome@3:', when='gui=gnome3')  # GNOME
     depends_on('qt@4.4.0:', when='gui=qt')
-    depends_on('qt@5.0:5.999', when='gui=qt5')
+    depends_on('qt@5.0:5', when='gui=qt5')
     # depends_on('tqt', when='gui=tqt')  # Trinity QT
     depends_on('fltk@1.3:', when='gui=fltk')
 

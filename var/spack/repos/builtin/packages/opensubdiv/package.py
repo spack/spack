@@ -34,7 +34,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
     depends_on('graphviz', type='build', when='+doc')
     depends_on('doxygen', type='build', when='+doc')
     depends_on('py-docutils', type='build', when='+doc')
-    depends_on('python@2.6:2.999', type='build', when='+doc')
+    depends_on('python@2.6:2', type='build', when='+doc')
     depends_on('gl')
     depends_on('glew@1.9.0:')
     depends_on('glfw@3.0.0:')

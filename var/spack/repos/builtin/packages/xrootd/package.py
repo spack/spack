@@ -69,7 +69,7 @@ class Xrootd(CMakePackage):
     depends_on('zlib')
 
     extends('python', when='+python')
-    patch('python-support.patch', level=1, when='@:4.8.99+python')
+    patch('python-support.patch', level=1, when='@:4.8+python')
 
     def patch(self):
         """Remove hardcoded -std=c++0x flag
