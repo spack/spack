@@ -2663,3 +2663,21 @@ def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, 
         method(args)
     _, err = capsys.readouterr()
     assert 'is ambiguous' in err
+
+
+@pytest.mark.regression('26548')
+def test_custom_store_in_environment(mutable_config, tmpdir):
+    spack_yaml = tmpdir.join('spack.yaml')
+    spack_yaml.write("""
+spack:
+  specs:
+  - libelf
+  config:
+    install_tree:
+      root: /tmp/store
+""")
+    current_store_root = str(spack.store.root)
+    assert str(current_store_root) != '/tmp/store'
+    with spack.environment.Environment(str(tmpdir)):
+        assert str(spack.store.root) == '/tmp/store'
+    assert str(spack.store.root) == current_store_root

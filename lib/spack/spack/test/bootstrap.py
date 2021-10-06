@@ -118,3 +118,25 @@ def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
     with spack.bootstrap.ensure_bootstrap_configuration():
         assert spack.config.get('config:test_stage') == expected_dir
     assert spack.config.get('config:test_stage') == expected_dir
+
+
+@pytest.mark.regression('26548')
+def test_custom_store_in_environment(mutable_config, tmpdir):
+    # Test that the custom store in an environment is taken into account
+    # during bootstrapping
+    spack_yaml = tmpdir.join('spack.yaml')
+    spack_yaml.write("""
+spack:
+  specs:
+  - libelf
+  config:
+    install_tree:
+      root: /tmp/store
+""")
+    with spack.environment.Environment(str(tmpdir)):
+        assert spack.environment.active_environment()
+        assert spack.config.get('config:install_tree:root') == '/tmp/store'
+        # Don't trigger evaluation here
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            pass
+        assert str(spack.store.root) == '/tmp/store'
