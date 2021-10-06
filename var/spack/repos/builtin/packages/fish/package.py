@@ -44,11 +44,12 @@ class Fish(CMakePackage):
         return match.group(1) if match else None
 
     def url_for_version(self, version):
-        if version < spack.version.Version('3.2.0'):
-            url = 'https://github.com/fish-shell/fish-shell/releases/download/{0}/fish-{0}.tar.gz'
+        url = 'https://github.com/fish-shell/fish-shell/releases/download/{0}/fish-{0}.tar.{1}'
+        if version < Version('3.2.0'):
+            ext = 'gz'
         else:
-            url = 'https://github.com/fish-shell/fish-shell/releases/download/{0}/fish-{0}.tar.xz'
-        return url.format(version)
+            ext = 'xz'
+        return url.format(version, ext)
 
     def setup_build_environment(self, env):
         env.append_flags('LDFLAGS', self.spec['ncurses'].libs.link_flags)
