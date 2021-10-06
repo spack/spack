@@ -309,21 +309,27 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     # avoid error message for libgcc_s
     if 'libgcc_' in cur_path:
         return
-    install_name_tool = executable.Executable('install_name_tool')
+    args = []
 
     if idpath:
         new_idpath = paths_to_paths.get(idpath, None)
         if new_idpath and not idpath == new_idpath:
-            install_name_tool('-id', new_idpath, str(cur_path))
+            args += ['-id', new_idpath]
     for dep in deps:
         new_dep = paths_to_paths.get(dep)
         if new_dep and dep != new_dep:
-            install_name_tool('-change', dep, new_dep, str(cur_path))
+            args += ['-change', dep, new_dep]
 
     for orig_rpath in rpaths:
         new_rpath = paths_to_paths.get(orig_rpath)
         if new_rpath and not orig_rpath == new_rpath:
-            install_name_tool('-rpath', orig_rpath, new_rpath, str(cur_path))
+            args += ['-rpath', orig_rpath, new_rpath]
+
+    if args:
+        args.append(str(cur_path))
+        install_name_tool = executable.Executable('install_name_tool')
+        install_name_tool(*args)
+
     return
 
 
@@ -339,14 +345,7 @@ def modify_object_macholib(cur_path, paths_to_paths):
     """
 
     dll = macholib.MachO.MachO(cur_path)
-
-    changedict = paths_to_paths
-
-    def changefunc(path):
-        npath = changedict.get(path, None)
-        return npath
-
-    dll.rewriteLoadCommands(changefunc)
+    dll.rewriteLoadCommands(paths_to_paths.get)
 
     try:
         f = open(dll.filename, 'rb+')
