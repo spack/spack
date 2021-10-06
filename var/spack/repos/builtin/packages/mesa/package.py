@@ -40,10 +40,10 @@ class Mesa(MesonPackage):
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
     _SWR_AUTO_VALUE = 'auto'
-    _SWR_ENABLED_VALUES = [_SWR_AUTO_VALUE, 'avx', 'avx2', 'knl', 'skx']
-    _SWR_DISABLED_VALUE = 'none'
+    _SWR_ENABLED_VALUES = (_SWR_AUTO_VALUE, 'avx', 'avx2', 'knl', 'skx')
+    _SWR_DISABLED_VALUES = ('none',)
     variant('swr', default=_SWR_AUTO_VALUE,
-            values=(_SWR_DISABLED_VALUE,) + tuple(_SWR_ENABLED_VALUES),
+            values=_SWR_DISABLED_VALUES + _SWR_ENABLED_VALUES,
             multi=True,
             description="Enable the SWR driver.")
     for swr_enabled_value in _SWR_ENABLED_VALUES:
