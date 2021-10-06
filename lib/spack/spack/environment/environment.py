@@ -126,7 +126,14 @@ def activate(env, use_env_repo=False):
     if not isinstance(env, Environment):
         raise TypeError("`env` should be of type {0}".format(Environment.__name__))
 
+    # Check if we need to reinitialize the store due to pushing the configuration
+    # below.
+    store_before_pushing = spack.config.get('config:install_tree')
     prepare_config_scope(env)
+    store_after_pushing = spack.config.get('config:install_tree')
+    if store_before_pushing != store_after_pushing:
+        # Hack to store the state of the store before activation
+        env.store_token = spack.store.reinitialize()
 
     if use_env_repo:
         spack.repo.path.put_first(env.repo)
@@ -144,6 +151,11 @@ def deactivate():
     if not _active_environment:
         return
 
+    # If we attached a store token on activation, restore the previous state
+    # and consume the token
+    if hasattr(_active_environment, 'store_token'):
+        spack.store.restore(_active_environment.store_token)
+        delattr(_active_environment, 'store_token')
     deactivate_config_scope(_active_environment)
 
     # use _repo so we only remove if a repo was actually constructed
