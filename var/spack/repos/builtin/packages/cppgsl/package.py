@@ -31,4 +31,7 @@ class Cppgsl(CMakePackage):
         args = [
             '-DGSL_CXX_STANDARD={0}'.format(self.spec.variants['cxxstd'].value)
         ]
+        # test triggers array out of bounds errors on gcc11
+        if self.spec.satisfies('%gcc@11:'):
+            args.append('-DGSL_TEST:BOOL=OFF')
         return args
