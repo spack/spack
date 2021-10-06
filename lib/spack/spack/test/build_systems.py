@@ -10,7 +10,6 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-import spack.architecture
 import spack.environment
 import spack.repo
 from spack.build_environment import ChildError, get_std_cmake_args, setup_package

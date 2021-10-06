@@ -15,7 +15,7 @@ from ordereddict_backport import OrderedDict
 import llnl.util.lang
 import llnl.util.tty as tty
 
-import spack.architecture
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.util.executable as executable
@@ -94,7 +94,7 @@ def _patchelf():
         return exe_path
 
     # Skip darwin
-    if str(spack.architecture.platform()) == 'darwin':
+    if str(spack.platforms.host()) == 'darwin':
         return None
 
     # Install the spec and return its path

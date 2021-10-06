@@ -49,7 +49,6 @@ from llnl.util.lang import dedupe
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
-import spack.architecture as arch
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.config
@@ -57,6 +56,7 @@ import spack.install_test
 import spack.main
 import spack.package
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.schema.environment
 import spack.store
@@ -148,9 +148,10 @@ class MakeExecutable(Executable):
 
 
 def _on_cray():
-    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
-    on_cray = str(hostarch.platform) == 'cray'
-    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system('default_os')
+    on_cray = str(host_platform) == 'cray'
+    using_cnl = re.match(r'cnl\d+', str(host_os))
     return on_cray, using_cnl
 
 
@@ -780,7 +781,9 @@ def setup_package(pkg, dirty, context='build'):
         pkg.spec, context, custom_mods_only=False))
 
     # architecture specific setup
-    pkg.architecture.platform.setup_platform_environment(pkg, env)
+    platform = spack.platforms.by_name(pkg.spec.architecture.platform)
+    target = platform.target(pkg.spec.architecture.target)
+    platform.setup_platform_environment(pkg, env)
 
     if context == 'build':
         pkg.setup_build_environment(env)
@@ -813,8 +816,8 @@ def setup_package(pkg, dirty, context='build'):
     if on_cray:
         module('unload', 'cray-libsci')
 
-    if pkg.architecture.target.module_name:
-        load_module(pkg.architecture.target.module_name)
+    if target.module_name:
+        load_module(target.module_name)
 
     load_external_modules(pkg)
 

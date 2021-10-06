@@ -2,8 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import llnl.util.lang
+import contextlib
 
+from ._functions import _host, by_name, platforms
 from ._platform import Platform
 from .cray import Cray
 from .darwin import Darwin
@@ -15,41 +16,57 @@ __all__ = [
     'Cray',
     'Darwin',
     'Linux',
-    'Test'
+    'Test',
+    'platforms',
+    'host',
+    'by_name'
 ]
 
-#: List of all the platform classes known to Spack
-platforms = [Cray, Darwin, Linux, Test]
+#: The "real" platform of the host running Spack. This should not be changed
+#: by any method and is here as a convenient way to refer to the host platform.
+real_host = _host
+
+#: The current platform used by Spack. May be swapped by the use_platform
+#: context manager.
+host = _host
 
 
-def host():
-    """Detect and return the platform for this machine or None if detection fails."""
-    for platform_cls in sorted(platforms, key=lambda plt: plt.priority):
-        if platform_cls.detect():
-            return platform_cls()
-    return None
-
-
-@llnl.util.lang.memoized
-def cls_by_name(name):
-    """Return a platform class that corresponds to the given name or None
-    if there is no match.
-
-    Args:
-        name (str): name of the platform
+class _PickleableCallable(object):
+    """Class used to pickle a callable that may substitute either
+    _platform or _all_platforms. Lambda or nested functions are
+    not pickleable.
     """
-    for platform_cls in sorted(platforms, key=lambda plt: plt.priority):
-        if name.replace("_", "").lower() == platform_cls.__name__.lower():
-            return platform_cls
-    return None
+    def __init__(self, return_value):
+        self.return_value = return_value
+
+    def __call__(self):
+        return self.return_value
 
 
-def by_name(name):
-    """Return a platform object that corresponds to the given name or None
-    if there is no match.
+@contextlib.contextmanager
+def use_platform(new_platform):
+    global host
 
-    Args:
-        name (str): name of the platform
-    """
-    platform_cls = cls_by_name(name)
-    return platform_cls() if platform_cls else None
+    import spack.compilers
+    import spack.config
+
+    msg = '"{0}" must be an instance of Platform'
+    assert isinstance(new_platform, Platform), msg.format(new_platform)
+
+    original_host_fn = host
+
+    try:
+        host = _PickleableCallable(new_platform)
+
+        # Clear configuration and compiler caches
+        spack.config.config.clear_caches()
+        spack.compilers._cache_config_files = []
+
+        yield new_platform
+
+    finally:
+        host = original_host_fn
+
+        # Clear configuration and compiler caches
+        spack.config.config.clear_caches()
+        spack.compilers._cache_config_files = []

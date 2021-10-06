@@ -43,7 +43,7 @@ _versions = {
 
 
 def get_os():
-    spack_os = spack.architecture.platform().default_os
+    spack_os = spack.platforms.host().default_os
     return _os_map.get(spack_os, 'RHEL-7')
 
 

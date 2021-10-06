@@ -92,7 +92,6 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 
-import spack.architecture
 import spack.compiler
 import spack.compilers
 import spack.config
@@ -213,6 +212,27 @@ def colorize_spec(spec):
 
 @lang.lazy_lexicographic_ordering
 class ArchSpec(object):
+    """Aggregate the target platform, the operating system and the target
+    microarchitecture into an architecture spec..
+    """
+    @staticmethod
+    def _return_arch(os_tag, target_tag):
+        platform = spack.platforms.host()
+        default_os = platform.operating_system(os_tag)
+        default_target = platform.target(target_tag)
+        arch_tuple = str(platform), str(default_os), str(default_target)
+        return ArchSpec(arch_tuple)
+
+    @staticmethod
+    def default_arch():
+        """Return the default architecture"""
+        return ArchSpec._return_arch('default_os', 'default_target')
+
+    @staticmethod
+    def frontend_arch():
+        """Return the frontend architecture"""
+        return ArchSpec._return_arch('frontend', 'frontend')
+
     def __init__(self, spec_or_platform_tuple=(None, None, None)):
         """ Architecture specification a package should be built with.
 
@@ -294,7 +314,7 @@ class ArchSpec(object):
         value = str(value) if value is not None else None
 
         if value in spack.platforms.Platform.reserved_oss:
-            curr_platform = str(spack.architecture.platform())
+            curr_platform = str(spack.platforms.host())
             self.platform = self.platform or curr_platform
 
             if self.platform != curr_platform:
@@ -331,7 +351,7 @@ class ArchSpec(object):
         value = target_or_none(value)
 
         if str(value) in spack.platforms.Platform.reserved_targets:
-            curr_platform = str(spack.architecture.platform())
+            curr_platform = str(spack.platforms.host())
             self.platform = self.platform or curr_platform
 
             if self.platform != curr_platform:
@@ -1020,6 +1040,13 @@ class Spec(object):
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
 
+    @staticmethod
+    def default_arch():
+        """Return an anonymous spec for the default architecture"""
+        s = Spec()
+        s.architecture = ArchSpec.default_arch()
+        return s
+
     def __init__(self, spec_like=None, normal=False,
                  concrete=False, external_path=None, external_modules=None):
         """Create a new Spec.
@@ -1242,7 +1269,7 @@ class Spec(object):
         """
         arch = self.architecture
         if arch and not arch.platform and (arch.os or arch.target):
-            self._set_architecture(platform=spack.architecture.platform().name)
+            self._set_architecture(platform=spack.platforms.host().name)
 
     #
     # Public interface

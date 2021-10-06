@@ -1266,14 +1266,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
 
-    @property
-    def architecture(self):
-        """Get the spack.architecture.Arch object that represents the
-        environment in which this package will be built."""
-        if not self.spec.concrete:
-            raise ValueError("Can only get the arch for concrete package.")
-        return spack.architecture.arch_for_spec(self.spec.architecture)
-
     @property  # type: ignore
     @memoized
     def compiler(self):

@@ -2,12 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 import re
 from tempfile import NamedTemporaryFile
 
-from spack import architecture
+import spack.platforms
 
 
 class Sqlite(AutotoolsPackage):
@@ -168,9 +167,8 @@ class Sqlite(AutotoolsPackage):
         return find_libraries('libsqlite3', root=self.prefix.lib)
 
     def get_arch(self):
-        arch = architecture.Arch()
-        arch.platform = architecture.platform()
-        return str(arch.platform.target('default_target'))
+        host_platform = spack.platforms.host()
+        return str(host_platform.target('default_target'))
 
     def configure_args(self):
         args = []

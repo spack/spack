@@ -47,9 +47,9 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack.architecture
 import spack.compilers
 import spack.paths
+import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.compilers
@@ -769,7 +769,7 @@ command_line_scopes = []  # type: List[str]
 
 def _add_platform_scope(cfg, scope_type, name, path):
     """Add a platform-specific subdirectory for the current platform."""
-    platform = spack.architecture.platform().name
+    platform = spack.platforms.host().name
     plat_name = '%s/%s' % (name, platform)
     plat_path = os.path.join(path, platform)
     cfg.push_scope(scope_type(plat_name, plat_path))
