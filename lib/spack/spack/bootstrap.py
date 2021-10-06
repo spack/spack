@@ -23,7 +23,6 @@ import archspec.cpu
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack.architecture
 import spack.binary_distribution
 import spack.config
 import spack.detection
@@ -65,10 +64,10 @@ def _try_import_from_store(module, abstract_spec_str):
         module: Python module to be imported
         abstract_spec_str: abstract spec that may provide the module
     """
-    bincache_platform = spack.architecture.real_platform()
+    bincache_platform = spack.platforms.real_host()
     if str(bincache_platform) == 'cray':
         bincache_platform = spack.platforms.linux.Linux()
-        with spack.architecture.use_platform(bincache_platform):
+        with spack.platforms.use_platform(bincache_platform):
             abstract_spec_str = str(spack.spec.Spec(abstract_spec_str))
 
     # We have to run as part of this python interpreter
@@ -191,10 +190,10 @@ class _BuildcacheBootstrapper(object):
         )
 
         # On Cray we want to use Linux binaries if available from mirrors
-        bincache_platform = spack.architecture.real_platform()
+        bincache_platform = spack.platforms.real_host()
         if str(bincache_platform) == 'cray':
             bincache_platform = spack.platforms.Linux()
-            with spack.architecture.use_platform(bincache_platform):
+            with spack.platforms.use_platform(bincache_platform):
                 abstract_spec = spack.spec.Spec(
                     abstract_spec_str + ' ^' + spec_for_current_python()
                 )
@@ -249,7 +248,7 @@ class _BuildcacheBootstrapper(object):
                         "spec": str(index_spec.compiler),
                         "target": str(index_spec.target.family)
                     }
-                    with spack.architecture.use_platform(bincache_platform):
+                    with spack.platforms.use_platform(bincache_platform):
                         with spack.config.override(
                                 'compilers', [{'compiler': compiler_entry}]
                         ):
@@ -287,7 +286,7 @@ class _SourceBootstrapper(object):
         # Try to build and install from sources
         with spack_python_interpreter():
             # Add hint to use frontend operating system on Cray
-            if str(spack.architecture.platform()) == 'cray':
+            if str(spack.platforms.host()) == 'cray':
                 abstract_spec_str += ' os=fe'
 
             concrete_spec = spack.spec.Spec(
@@ -502,7 +501,7 @@ def _bootstrap_config_scopes():
         ('bootstrap', _config_path())
     )
     for name, path in configuration_paths:
-        platform = spack.architecture.platform().name
+        platform = spack.platforms.host().name
         platform_scope = spack.config.ConfigScope(
             '/'.join([name, platform]), os.path.join(path, platform)
         )
@@ -515,11 +514,7 @@ def _bootstrap_config_scopes():
 
 
 def _add_compilers_if_missing():
-    # Do not use spack.architecture.default_arch() since it memoize the result
-    arch = spack.architecture.Arch(
-        spack.architecture.real_platform(), 'default_os', 'default_target'
-    )
-    arch = spack.spec.ArchSpec(str(arch))  # The call below expects an ArchSpec object
+    arch = spack.spec.ArchSpec.frontend_arch()
     if not spack.compilers.compilers_for_arch(arch):
         new_compilers = spack.compilers.find_new_compilers()
         if new_compilers:
@@ -540,7 +535,7 @@ def ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
     with spack.environment.no_active_environment():
-        with spack.architecture.use_platform(spack.architecture.real_platform()):
+        with spack.platforms.use_platform(spack.platforms.real_host()):
             with spack.repo.use_repositories(spack.paths.packages_path):
                 with spack.store.use_store(bootstrap_store_path):
                     # Default configuration scopes excluding command line
@@ -611,7 +606,7 @@ def clingo_root_spec():
 
     # Add a proper compiler hint to the root spec. We use GCC for
     # everything but MacOS.
-    if str(spack.architecture.platform()) == 'darwin':
+    if str(spack.platforms.host()) == 'darwin':
         spec_str += ' %apple-clang'
     else:
         spec_str += ' %gcc'

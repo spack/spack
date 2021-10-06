@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Utilities for setting and modifying environment variables."""
 import collections
 import contextlib
@@ -22,6 +21,8 @@ from six.moves import shlex_quote as cmd_quote
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
+import spack.platforms
+import spack.spec
 import spack.util.executable as executable
 
 system_paths = ['/', '/usr', '/usr/local']
@@ -158,18 +159,20 @@ def get_host_environment():
     """Return a dictionary (lookup) with host information (not including the
     os.environ).
     """
-    import spack.architecture as architecture
-    import spack.spec
-    arch = architecture.Arch(
-        architecture.platform(), 'default_os', 'default_target')
-    arch_spec = spack.spec.Spec('arch=%s' % arch)
+    host_platform = spack.platforms.host()
+    host_target = host_platform.target('default_target')
+    host_os = host_platform.operating_system('default_os')
+    arch_fmt = 'platform={0} os={1} target={2}'
+    arch_spec = spack.spec.Spec(
+        arch_fmt.format(host_platform, host_os, host_target)
+    )
     return {
-        'target': str(arch.target),
-        'os': str(arch.os),
-        'platform': str(arch.platform),
+        'target': str(host_target),
+        'os': str(host_os),
+        'platform': str(host_platform),
         'arch': arch_spec,
         'architecture': arch_spec,
-        'arch_str': str(arch),
+        'arch_str': str(arch_spec),
         'hostname': socket.gethostname()
     }
 

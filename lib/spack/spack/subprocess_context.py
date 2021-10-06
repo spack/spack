@@ -20,10 +20,10 @@ import pydoc
 import sys
 from types import ModuleType
 
-import spack.architecture
 import spack.config
 import spack.environment
 import spack.main
+import spack.platforms
 import spack.repo
 import spack.store
 
@@ -96,7 +96,7 @@ class TestState(object):
         if _serialize:
             self.repo_dirs = list(r.root for r in spack.repo.path.repos)
             self.config = spack.config.config
-            self.platform = spack.architecture.platform
+            self.platform = spack.platforms.host
             self.test_patches = store_patches()
             self.store_token = spack.store.store.serialize()
 
@@ -104,7 +104,7 @@ class TestState(object):
         if _serialize:
             spack.repo.path = spack.repo._path(self.repo_dirs)
             spack.config.config = self.config
-            spack.architecture.platform = self.platform
+            spack.platforms.host = self.platform
 
             new_store = spack.store.Store.deserialize(self.store_token)
             spack.store.store = new_store

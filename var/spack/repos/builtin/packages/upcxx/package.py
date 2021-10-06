@@ -7,7 +7,7 @@ from spack import *
 
 
 def cross_detect():
-    if spack.architecture.platform().name == 'cray':
+    if spack.platforms.host().name == 'cray':
         if which('srun'):
             return 'cray-aries-slurm'
         if which('aprun'):
