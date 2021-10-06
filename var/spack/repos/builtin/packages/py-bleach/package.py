@@ -12,6 +12,7 @@ class PyBleach(PythonPackage):
     homepage = "https://github.com/mozilla/bleach"
     pypi = "bleach/bleach-3.1.0.tar.gz"
 
+    version('3.3.1', sha256='306483a5a9795474160ad57fce3ddd1b50551e981eed8e15a582d34cef28aafa')
     version('3.1.0', sha256='3fdf7f77adcf649c9911387df51254b813185e32b2c6619f690b593a617e19fa')
     version('1.5.0', sha256='978e758599b54cd3caa2e160d74102879b230ea8dc93871d0783721eef58bc65')
 
@@ -19,3 +20,4 @@ class PyBleach(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-six@1.9.0:', type=('build', 'run'))
     depends_on('py-webencodings', type=('build', 'run'))
+    depends_on('py-packaging',    type=('test', 'run'))
