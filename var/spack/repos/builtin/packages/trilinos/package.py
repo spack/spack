@@ -337,6 +337,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # ###################### Patches ##########################
 
+    patch('hypre.patch')
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
     for _compiler in ['xl', 'xl_r', 'clang']:
         patch('xlf_seacas.patch', when='@12.10.1:12.12.1 %' + _compiler)

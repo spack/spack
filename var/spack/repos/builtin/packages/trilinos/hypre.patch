@@ -1,0 +1,25 @@
+diff --git a/packages/ifpack/src/Ifpack_Hypre.cpp b/packages/ifpack/src/Ifpack_Hypre.cpp
+index 9fe6a6d4362..53e07463770 100644
+--- a/packages/ifpack/src/Ifpack_Hypre.cpp
++++ b/packages/ifpack/src/Ifpack_Hypre.cpp
+@@ -798,7 +798,6 @@ int Ifpack_Hypre::Compute(){
+     hypre_ParAMGData   *amg_data = (hypre_ParAMGData*) Preconditioner_;
+     hypre_ParCSRMatrix    **A_array = hypre_ParAMGDataAArray(amg_data);
+     hypre_ParCSRMatrix    **P_array = hypre_ParAMGDataPArray(amg_data);
+-    HYPRE_Int     **CF_marker_array = hypre_ParAMGDataCFMarkerArray(amg_data);
+     HYPRE_Int num_levels = hypre_ParAMGDataNumLevels(amg_data);
+ 
+     char ofs[80];
+@@ -818,8 +817,10 @@ int Ifpack_Hypre::Compute(){
+         FILE * f = fopen(ofs,"w");
+         fprintf(f,"%%%%MatrixMarket matrix array real general\n");
+         fprintf(f,"%d 1\n",local_size);
+-        for(int i=0; i<local_size; i++)
+-          fprintf(f,"%d\n",(int)CF_marker_array[k][i]);
++        for(int i=0; i<local_size; i++) {
++          HYPRE_Int *CF_marker = hypre_IntArrayData(hypre_ParAMGDataCFMarkerArray(amg_data)[i]);
++          fprintf(f,"%d\n",(int)CF_marker[k]);
++        }
+         fclose(f);
+       }
+ 
