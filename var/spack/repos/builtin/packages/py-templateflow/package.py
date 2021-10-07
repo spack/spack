@@ -20,7 +20,7 @@ class PyTemplateflow(PythonPackage):
     depends_on('py-setuptools@40.9:', when='@0.7.1:', type='build')
     depends_on('py-setuptools@30.3:', type='build')
     depends_on('py-setuptools-scm+toml@3.4:', when='@0.6:', type='build')
-    depends_on('py-wheel', type='build')
+    depends_on('py-wheel', when='@0.7.1', type='build')
     depends_on('py-pybids@0.12.1:', when='@0.6.3:', type=('build', 'run'))
     depends_on('py-pybids@0.9.2:', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
