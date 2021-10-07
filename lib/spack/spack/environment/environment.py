@@ -30,6 +30,7 @@ import spack.schema.env
 import spack.spec
 import spack.stage
 import spack.store
+import spack.subprocess_context
 import spack.user_environment as uenv
 import spack.util.cpus
 import spack.util.environment
@@ -1143,7 +1144,11 @@ class Environment(object):
         nprocesses = min(spack.util.cpus.cpus_available(), 16)
         msg = 'Starting concretization pool with {0} processes'
         tty.msg(msg.format(nprocesses))
-        with spack.util.parallel.pool(processes=nprocesses) as pool:
+        with spack.util.parallel.pool(
+            processes=nprocesses,
+            initializer=spack.subprocess_context.global_init,
+            initargs=spack.subprocess_context.global_initargs()
+        ) as pool:
             concretized_root_specs = pool.map(_concretize_task, arguments)
         spack.util.parallel.raise_if_errors(*concretized_root_specs)
 

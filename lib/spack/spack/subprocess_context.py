@@ -156,3 +156,11 @@ def store_patches():
 def clear_patches():
     global patches
     patches = None
+
+
+def global_initargs():
+    return (TestState(),)
+
+
+def global_init(test_state):
+    test_state.restore()

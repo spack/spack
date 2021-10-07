@@ -31,6 +31,7 @@ class ErrorFromWorker(object):
         buffer = six.StringIO()
         traceback.print_tb(tb, file=buffer)
         self.exc_stacktrace = buffer.getvalue()
+        buffer.close()
 
     def __str__(self):
         msg = ("[PID={0.pid}] {0.error_message}\n"
@@ -49,17 +50,18 @@ def raise_if_errors(*results):
     Raise:
         RuntimeError: if ErrorFromWorker objects are in the results
     """
+    err_stream = six.StringIO()  # sys.stderr
     errors = [x for x in results if isinstance(x, ErrorFromWorker)]
     if not errors:
         return
 
     # Report the errors and then raise
     for error in errors:
-        print(error, file=sys.stderr)
+        print(error, file=err_stream)
 
-    print('[PARENT PROCESS]:', file=sys.stderr)
-    traceback.print_stack(file=sys.stderr)
-    raise RuntimeError('errors occurred in worker processes')
+    print('[PARENT PROCESS]:', file=err_stream)
+    traceback.print_stack(file=err_stream)
+    raise RuntimeError('errors occurred in worker processes:\n{0}'.format(err_stream.getvalue()))
 
 
 @contextlib.contextmanager
