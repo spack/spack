@@ -10,23 +10,18 @@ class Fleur(Package):
 
 	homepage = "https://www.flapw.de/MaX-5.1"
 	git = "https://iffgit.fz-juelich.de/fleur/fleur.git"
+	
+	version('develop', branch='develop')
+	version('5.1', tag='MaX-R5.1')
+	version('5.0', tag='MaX-R5')
+	version('4.0', tag='MaX-R4')
+	version('3.1', tag='MaX-R3.1')
 
-	version('MaX-R5.1', tag='MaX-R5.1')
-	version('MaX-R5',	tag='MaX-R5')
-	version('MaX-R4',	tag='MaX-R4')
-	version('MaX-R3.1',	tag='MaX-R3.1')
-	version('MaX-R3',	tag='MaX-R3')
-	version('MaX-R2.1',	tag='MaX-R2.1')
-	version('MaX-R2',	tag='MaX-R2')
-	version('MaX-R2',	tag='MaX-R2')
-	version('MaX-R1.3',	tag='MaX-R1.3')
-	version('MaX-R1.2',	tag='MaX-R1.2')
-	version('MaX-R1.1',	tag='MaX-R1.1')
-	version('MaX-R1',	tag='MaX-R1')
-
-	variant('mpi', default=True, description='Build with MPI support')
+	variant('mpi', default=True, description='Enable MPI support')
 	variant('hdf5', default=False, description='Enable HDF5 support')
 	variant('scalapack', default=False, description='Enable SCALAPACK')
+	variant('fft', default='none', values=('none', 'mkl', 'fftw'), 
+			description="Enable the use of Intel MKL FFT/FFTW provider")
 	variant('elpa', default=False, description="Enable ELPA support")
 	variant('magma', default=False, description='Enable Magma support')
 	variant('libxc', default=False, description='Enable libxc support')
@@ -37,13 +32,14 @@ class Fleur(Package):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
 
+	depends_on('cmake', type='build')
+	depends_on('python', type='build')
 	depends_on('blas')
 	depends_on('lapack')
-	depends_on('fftw-api')
 	depends_on('libxml2')
-	depends_on('cmake')
-	depends_on('python')
 	depends_on('mpi', when='+mpi')
+	depends_on('intel-mkl', when="fft=mkl")
+	depends_on('fftw-api', when='fft=fftw')
 	depends_on('scalapack', when='+scalapack')
 	depends_on('libxc', when='+libxc')
 	depends_on('hdf5+hl+fortran', when='+hdf5')
@@ -55,14 +51,19 @@ class Fleur(Package):
 	phases = ['configure', 'build', 'install']
 
 	conflicts('%intel@:16.0.4', 
-		msg='Intel gfort<16.0 will most probably not work correctly')
+			  msg='ifort version <16.0 will most probably not work correctly')
 	conflicts('%gcc@:6.3.0', 
-		msg='gfortran is known to work with versions newer than 6.3.')
+			  msg='gfortran is known to work with versions newer than v6.3')
 	conflicts('%pgi@:18.4.0', 
-		msg='You need at least PGI version 18.4 but might still run into some problems.')
+			  msg='You need at least PGI version 18.4 but might still run into some problems.')
 	conflicts('%python@:3.0.0', 
-		msg='At least a Python3 is mandatory')
-	conflicts('~scalapack', when='+elpa', msg='ELPA requires SCALAPACK support')
+			  msg='At least Python3 is mandatory')
+	conflicts('~scalapack', when='+elpa', 
+			  msg='ELPA requires scalapack support')
+	conflicts('@:4.0', when='+wannier90',
+			  msg='wannier90 is supported from Fleur v5.0')
+	conflicts('@:3.1', when='+spfft',
+			  msg='SpFFT is supported from Fleur v4.0')
 
 	def setup_build_environment(self, env):
 		spec = self.spec
@@ -91,19 +92,28 @@ class Fleur(Package):
 		options["-libdir"].append(spec['lapack'].prefix.lib)
 		options["-includedir"].append(spec['lapack'].prefix.include)
 
-		options["-link"].append(spec['fftw'].libs.link_flags)
-		options["-libdir"].append(spec['fftw'].prefix.lib)
-		options["-includedir"].append(spec['fftw'].prefix.include)
-
 		options["-link"].append(spec['libxml2'].libs.link_flags)
 		options["-libdir"].append(spec['libxml2'].prefix.lib)
 		options["-includedir"].append(spec['libxml2'].prefix.include)
+		options["-includedir"].append(
+			join_path(spec['libxml2'].prefix.include, "libxml2")
+		)
 
+		if 'fft=mkl' in spec:
+			options["-link"].append(spec['intel-mkl'].libs.link_flags)
+			options["-libdir"].append(spec['intel-mkl'].prefix.lib)
+			options["-includedir"].append(spec['intel-mkl'].prefix.include)
+		if 'fft=fftw' in spec:
+			options["-link"].append(spec['fftw-api'].libs.link_flags)
+			options["-libdir"].append(spec['fftw-api'].prefix.lib)
+			options["-includedir"].append(spec['fftw-api'].prefix.include)
 		if '+scalapack' in spec:
 			options["-link"].append(spec['scalapack'].libs.link_flags)
 			options["-libdir"].append(spec['scalapack'].prefix.lib)
 		if '+libxc' in spec:
-			options["-link"].append(spec['libxc'].libs.link_flags)
+			# Workaround: The fortran library is called libxcf90.a/so
+			#	but spec['wannier90'].libs.link_flags return -lxc
+			options["-link"].append('-lxcf90')
 			options["-libdir"].append(spec['libxc'].prefix.lib)
 			options["-includedir"].append(spec['libxc'].prefix.include)
 		if '+hdf5' in spec:
@@ -162,7 +172,3 @@ class Fleur(Package):
 			else:
 				install('fleur', prefix.bin)
 			install('inpgen', prefix.bin)
-
-			# copy include
-			mkdirp(prefix.include)
-			install_tree('include', prefix.include)
