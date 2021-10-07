@@ -12,9 +12,8 @@ class PyGraphviz(PythonPackage):
 
     homepage = "https://github.com/xflr6/graphviz"
     pypi = "graphviz/graphviz-0.10.1.zip"
-    url = "https://github.com/pygraphviz/pygraphviz/archive/refs/tags/pygraphviz-1.7.tar.gz"
 
-    version('1.7', sha256='9dba480cf9b13cf90e7ef43070b1c8445fb52cd7f27a305ab2b6fe0c100fd768')
+    version('1.7', sha256='9dba480cf9b13cf90e7ef43070b1c8445fb52cd7f27a305ab2b6fe0c100fd768', url='https://github.com/pygraphviz/pygraphviz/archive/refs/tags/pygraphviz-1.7.tar.gz')
     version('0.13.2', sha256='60acbeee346e8c14555821eab57dbf68a169e6c10bce40e83c1bf44f63a62a01')
     version('0.13', sha256='dc08677f37c65a4a480f00df4bd0d19a0a103c06aad95f21a37f0b7fd440de81')
     version('0.12', sha256='c60e232a66e4847f9f644fbaa94730ca4f78385a1314a2cc1e7f4cb2d7461298')
