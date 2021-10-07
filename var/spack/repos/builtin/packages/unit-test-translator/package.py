@@ -14,6 +14,7 @@ class UnitTestTranslator(PythonPackage):
     git      = "git@bbpgitlab.epfl.ch:hpc/unit-test-translator.git"
 
     version('develop')
+    version('0.0.2', tag='v0.0.2')
     version('0.0.1', tag='v0.0.1')
 
     depends_on('py-setuptools', type=('build', 'run'))
