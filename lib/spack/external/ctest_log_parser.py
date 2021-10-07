@@ -109,7 +109,7 @@ _error_matches = [
     "^Unresolved:",
     "Undefined symbol",
     "^Undefined[ \\t]+first referenced",
-    "^CMake Error.*:",
+    "^CMake Error",
     ":[ \\t]cannot find",
     ":[ \\t]can't find",
     ": \\*\\*\\* No rule to make target [`'].*\\'.  Stop",
@@ -178,7 +178,7 @@ _warning_matches = [
     "\\([0-9]*\\): remark #[0-9]*",
     "\".*\", line [0-9]+: remark\\([0-9]*\\):",
     "cc-[0-9]* CC: REMARK File = .*, Line = [0-9]*",
-    "^CMake Warning.*:",
+    "^CMake Warning",
     "^\\[WARNING\\]",
 ]
 
