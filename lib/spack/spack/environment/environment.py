@@ -31,6 +31,7 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.user_environment as uenv
+import spack.util.cpus
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
@@ -1139,8 +1140,10 @@ class Environment(object):
         _ = spack.compilers.get_compiler_config()
 
         # Solve the environment in parallel
-        tty.msg('Starting concretization pool')
-        with spack.util.parallel.pool() as pool:
+        nprocesses = min(spack.util.cpus.cpus_available(), 16)
+        msg = 'Starting concretization pool with {0} processes'
+        tty.msg(msg.format(nprocesses))
+        with spack.util.parallel.pool(processes=nprocesses) as pool:
             concretized_root_specs = pool.map(_concretize_task, arguments)
         spack.util.parallel.raise_if_errors(*concretized_root_specs)
 
