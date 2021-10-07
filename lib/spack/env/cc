@@ -21,6 +21,25 @@
 #      -Wl,-rpath         arguments for dependency /lib directories.
 #
 
+if [ -n "$ZSH_VERSION" ]; then
+    # ensure posix-shell compatibility for field splitting
+    emulate -R sh
+    unset IFS
+    load_prof() {
+        emulate -L zsh
+        zmodload zsh/zprof
+        echo prof loaded
+    }
+    print_prof() {
+        emulate -L zsh
+        zprof >opt.txt
+        echo prof printing
+    }
+    if [[ $PROF_CC == "true" ]]; then
+        load_prof
+    fi
+fi
+
 # Reset IFS to the default: whitespace-separated lists. When we use
 # other separators, we set and reset it.
 unset IFS
@@ -88,15 +107,15 @@ empty() {
 #   3. any other list is assumed to be separated by spaces: " "
 setsep() {
     case "$1" in
-        *_dirs|*_DIRS|*PATH|*PATHS)
-            sep=':'
-            ;;
-        *_list)
-            sep="$lsep"
-            ;;
-        *)
-            sep=" "
-            ;;
+    *_dirs | *_DIRS | *PATH | *PATHS)
+        sep=':'
+        ;;
+    *_list)
+        sep="$lsep"
+        ;;
+    *)
+        sep=" "
+        ;;
     esac
 }
 
@@ -106,16 +125,8 @@ setsep() {
 # assuming the list is separated by SEP.
 # Handles empty lists and single-element lists.
 prepend() {
-    varname="$1"
-    elt="$2"
-
-    if empty "$varname"; then
-        eval "$varname=\"\${elt}\""
-    else
-        # Get the appropriate separator for the list we're appending to.
-        setsep "$varname"
-        eval "$varname=\"\${elt}${sep}\${$varname}\""
-    fi
+    setsep "$1"
+    eval "$1=\"\${2}\${$1:+${sep}\$$1}\""
 }
 
 # append LISTNAME ELEMENT [SEP]
@@ -124,16 +135,30 @@ prepend() {
 # assuming the list is separated by SEP.
 # Handles empty lists and single-element lists.
 append() {
-    varname="$1"
-    elt="$2"
-
-    if empty "$varname"; then
-        eval "$varname=\"\${elt}\""
+    if [ -z "$3" ]; then
+        setsep "$1"
     else
-        # Get the appropriate separator for the list we're appending to.
-        setsep "$varname"
-        eval "$varname=\"\${$varname}${sep}\${elt}\""
+        sep="$3"
     fi
+    eval "$1=\"\${$1:+\$$1${sep}}\${2}\""
+}
+
+# appends LISTNAME ELEMENT SEP
+#
+# Append ELEMENT to the list stored in the variable LISTNAME,
+# assuming the list is separated by SEP.
+# Handles empty lists and single-element lists.
+appends() {
+    eval "$1=\"\${$1:+\$$1${3}}\${2}\""
+}
+
+# appends LISTNAME ELEMENTVAR SEP
+#
+# Append ELEMENT to the list stored in the variable LISTNAME,
+# assuming the list is separated by SEP.
+# Handles empty lists and single-element lists.
+appendsv() {
+    eval "$1=\"\${$1:+\$$1${3}}\$${2}\""
 }
 
 # extend LISTNAME1 LISTNAME2 [PREFIX]
@@ -142,12 +167,27 @@ append() {
 # to the list stored in LISTNAME1.
 # If PREFIX is provided, prepend it to each element.
 extend() {
+    if eval "[ -z \"\$$2\" ]"; then
+        return
+    fi
+    # Figure out the appropriate IFS for the list we're writing.
+    setsep "$1"
+    osep="$sep"
     # Figure out the appropriate IFS for the list we're reading.
     setsep "$2"
     if [ "$sep" != " " ]; then
         IFS="$sep"
     fi
-    eval "for elt in \${$2}; do append $1 \"$3\${elt}\"; done"
+    # if separators match, and no prefix, just append
+    if [ -z "$3" -a "$sep" = "$osep" ]; then
+        appendsv "$1" "$2" "$osep"
+        return
+    fi
+    # if all else fails, loop
+    eval "\
+    for elt in \$$2; do
+        $1=\"\${$1:+\$$1${osep}}\$3\${elt}\"
+    done"
     unset IFS
 }
 
@@ -173,20 +213,37 @@ preextend() {
     unset IFS
 }
 
-# system_dir PATH
+# contains str listval [sep=:] [strip=/]
+# test whether a path is a system directory
+contains() {
+    sep="${3:-:}"
+    # SPACK_SYSTEM_DIRS is colon-separated
+    case "$sep${2}$sep" in
+    *"$sep${1%${4:-/}}$sep"*)
+        return 0
+        ;;
+    esac
+    return 1
+}
+
+# contains str listvar [strip=/]
+# test whether a path is a system directory
+containsv() {
+    setsep "$2"
+    eval "lst=\$$2"
+    # SPACK_SYSTEM_DIRS is colon-separated
+    case "$sep${lst}$sep" in
+    *"$sep${1%${3:-/}}$sep"*)
+        return 0
+        ;;
+    esac
+    return 1
+}
+
+# system_dir PATH [COLON-SEP ALT PATH]
 # test whether a path is a system directory
 system_dir() {
-    IFS=':'  # SPACK_SYSTEM_DIRS is colon-separated
-    path="$1"
-    for sd in $SPACK_SYSTEM_DIRS; do
-        if [ "${path}" = "${sd}" ] || [ "${path}" = "${sd}/" ]; then
-            # success if path starts with a system prefix
-            unset IFS
-            return 0
-        fi
-    done
-    unset IFS
-    return 1  # fail if path starts no system prefix
+    contains "$1" "$SPACK_SYSTEM_DIRS" ":"
 }
 
 # Fail with a clear message if the input contains any bell characters.
@@ -210,9 +267,9 @@ fi
 # SPACK_ADD_DEBUG_FLAGS must be true/false/custom
 is_valid="false"
 for param in "true" "false" "custom"; do
-  if [ "$param" = "$SPACK_ADD_DEBUG_FLAGS" ];  then
-      is_valid="true"
-  fi
+    if [ "$param" = "$SPACK_ADD_DEBUG_FLAGS" ]; then
+        is_valid="true"
+    fi
 done
 
 # Exit with error if we are given an incorrect value
@@ -283,10 +340,10 @@ esac
 if [ -z "$mode" ] || [ "$mode" = ld ]; then
     for arg in "$@"; do
         case $arg in
-            -v|-V|--version|-dumpversion)
-                mode=vcheck
-                break
-                ;;
+        -v | -V | --version | -dumpversion)
+            mode=vcheck
+            break
+            ;;
         esac
     done
 fi
@@ -351,18 +408,15 @@ fi
 new_dirs=""
 IFS=':'
 for dir in $PATH; do
-    addpath=true
-    for spack_env_dir in $SPACK_ENV_PATH; do
-        case "${dir%%/}" in
-            "$spack_env_dir"|'.'|'')
-                addpath=false
-                break
-                ;;
-        esac
-    done
-    if [ $addpath = true ]; then
-        append new_dirs "$dir"
+    case "${dir%%/}" in
+    '.' | '')
+        continue
+        ;;
+    esac
+    if containsv "$dir" "SPACK_ENV_PATH" ; then
+        continue
     fi
+    append new_dirs "$dir"
 done
 unset IFS
 export PATH="$new_dirs"
@@ -427,7 +481,6 @@ isystem_include_dirs_list=""
 libs_list=""
 other_args_list=""
 
-
 while [ $# -ne 0 ]; do
 
     # an RPATH to be added after the case statement.
@@ -441,119 +494,139 @@ while [ $# -ne 0 ]; do
     fi
 
     case "$1" in
-        -isystem*)
-            arg="${1#-isystem}"
-            isystem_was_used=true
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
-                append isystem_system_include_dirs_list "$arg"
-            else
-                append isystem_include_dirs_list "$arg"
-            fi
-            ;;
-        -I*)
-            arg="${1#-I}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
-                append system_include_dirs_list "$arg"
-            else
-                append include_dirs_list "$arg"
-            fi
-            ;;
-        -L*)
-            arg="${1#-L}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
-                append system_lib_dirs_list "$arg"
-            else
-                append lib_dirs_list "$arg"
-            fi
-            ;;
-        -l*)
-            # -loopopt=0 is generated erroneously in autoconf <= 2.69,
-            # and passed by ifx to the linker, which confuses it with a
-            # library. Filter it out.
-            # TODO: generalize filtering of args with an env var, so that
-            # TODO: we do not have to special case this here.
-            if { [ "$mode" = "ccld" ] || [ $mode = "ld" ]; } \
-                && [ "$1" != "${1#-loopopt}" ]; then
-                shift
-                continue
-            fi
-            arg="${1#-l}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            append other_args_list "-l$arg"
-            ;;
-        -Wl,*)
-            arg="${1#-Wl,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
+    -isystem*)
+        arg="${1#-isystem}"
+        isystem_was_used=true
+        if [ -z "$arg" ]; then
+            shift
+            arg="$1"
+        fi
+        if system_dir "$arg"; then
+            append isystem_system_include_dirs_list "$arg"
+        else
+            append isystem_include_dirs_list "$arg"
+        fi
+        ;;
+    -I*)
+        arg="${1#-I}"
+        if [ -z "$arg" ]; then
+            shift
+            arg="$1"
+        fi
+        if system_dir "$arg"; then
+            append system_include_dirs_list "$arg"
+        else
+            append include_dirs_list "$arg"
+        fi
+        ;;
+    -L*)
+        arg="${1#-L}"
+        if [ -z "$arg" ]; then
+            shift
+            arg="$1"
+        fi
+        if system_dir "$arg"; then
+            append system_lib_dirs_list "$arg"
+        else
+            append lib_dirs_list "$arg"
+        fi
+        ;;
+    -l*)
+        # -loopopt=0 is generated erroneously in autoconf <= 2.69,
+        # and passed by ifx to the linker, which confuses it with a
+        # library. Filter it out.
+        # TODO: generalize filtering of args with an env var, so that
+        # TODO: we do not have to special case this here.
+        if { [ "$mode" = "ccld" ] || [ $mode = "ld" ]; } &&
+            [ "$1" != "${1#-loopopt}" ]; then
+            shift
+            continue
+        fi
+        arg="${1#-l}"
+        if [ -z "$arg" ]; then
+            shift
+            arg="$1"
+        fi
+        append other_args_list "-l$arg"
+        ;;
+    -Wl,*)
+        arg="${1#-Wl,}"
+        if [ -z "$arg" ]; then
+            shift
+            arg="$1"
+        fi
+        case "$arg" in
+        -rpath=*) rp="${arg#-rpath=}" ;;
+        --rpath=*) rp="${arg#--rpath=}" ;;
+        -rpath,*) rp="${arg#-rpath,}" ;;
+        --rpath,*) rp="${arg#--rpath,}" ;;
+        -rpath | --rpath)
+            shift
+            arg="$1"
             case "$arg" in
-                -rpath=*)  rp="${arg#-rpath=}"  ;;
-                --rpath=*) rp="${arg#--rpath=}" ;;
-                -rpath,*)  rp="${arg#-rpath,}"  ;;
-                --rpath,*) rp="${arg#--rpath,}" ;;
-                -rpath|--rpath)
-                    shift; arg="$1"
-                    case "$arg" in
-                        -Wl,*)
-                            rp="${arg#-Wl,}"
-                            ;;
-                        *)
-                            die "-Wl,-rpath was not followed by -Wl,*"
-                            ;;
-                    esac
-                    ;;
-                "$dtags_to_strip")
-                    :  # We want to remove explicitly this flag
-                    ;;
-                *)
-                    append other_args_list "-Wl,$arg"
-                    ;;
+            -Wl,*)
+                rp="${arg#-Wl,}"
+                ;;
+            *)
+                die "-Wl,-rpath was not followed by -Wl,*"
+                ;;
             esac
             ;;
-        -Xlinker,*)
-            arg="${1#-Xlinker,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-
-            case "$arg" in
-                -rpath=*)  rp="${arg#-rpath=}"  ;;
-                --rpath=*) rp="${arg#--rpath=}" ;;
-                -rpath|--rpath)
-                    shift; arg="$1"
-                    case "$arg" in
-                        -Xlinker,*)
-                            rp="${arg#-Xlinker,}"
-                        ;;
-                        *)
-                            die "-Xlinker,-rpath was not followed by -Xlinker,*"
-                            ;;
-                    esac
-                    ;;
-                *)
-                    append other_args_list "-Xlinker,$arg"
-                    ;;
-            esac
-            ;;
-        -Xlinker)
-            if [ "$2" = "-rpath" ]; then
-                if [ "$3" != "-Xlinker" ]; then
-                    die "-Xlinker,-rpath was not followed by -Xlinker,*"
-                fi
-                shift 3;
-                rp="$1"
-            elif [ "$2" = "$dtags_to_strip" ]; then
-                shift  # We want to remove explicitly this flag
-            else
-                append other_args_list "$1"
-            fi
+        "$dtags_to_strip")
+            : # We want to remove explicitly this flag
             ;;
         *)
-            if [ "$1" = "$dtags_to_strip" ]; then
-                :  # We want to remove explicitly this flag
-            else
-                append other_args_list "$1"
-            fi
+            append other_args_list "-Wl,$arg"
             ;;
+        esac
+        ;;
+    -Xlinker,*)
+        arg="${1#-Xlinker,}"
+        if [ -z "$arg" ]; then
+            shift
+            arg="$1"
+        fi
+
+        case "$arg" in
+        -rpath=*) rp="${arg#-rpath=}" ;;
+        --rpath=*) rp="${arg#--rpath=}" ;;
+        -rpath | --rpath)
+            shift
+            arg="$1"
+            case "$arg" in
+            -Xlinker,*)
+                rp="${arg#-Xlinker,}"
+                ;;
+            *)
+                die "-Xlinker,-rpath was not followed by -Xlinker,*"
+                ;;
+            esac
+            ;;
+        *)
+            append other_args_list "-Xlinker,$arg"
+            ;;
+        esac
+        ;;
+    -Xlinker)
+        if [ "$2" = "-rpath" ]; then
+            if [ "$3" != "-Xlinker" ]; then
+                die "-Xlinker,-rpath was not followed by -Xlinker,*"
+            fi
+            shift 3
+            rp="$1"
+        elif [ "$2" = "$dtags_to_strip" ]; then
+            shift # We want to remove explicitly this flag
+        else
+            append other_args_list "$1"
+        fi
+        ;;
+    *)
+        if [ "$1" = "$dtags_to_strip" ]; then
+            : # We want to remove explicitly this flag
+        else
+            append other_args_list "$1"
+        fi
+        ;;
     esac
 
     # test rpaths against system directories in one place.
@@ -587,55 +660,56 @@ fi
 
 # Fortran flags come before CPPFLAGS
 case "$mode" in
-    cc|ccld)
-        case $lang_flags in
-            F)
-                extend flags_list SPACK_FFLAGS
-                ;;
-        esac
+cc | ccld)
+    case $lang_flags in
+    F)
+        extend flags_list SPACK_FFLAGS
         ;;
+    esac
+    ;;
 esac
 
 # C preprocessor flags come before any C/CXX flags
 case "$mode" in
-    cpp|as|cc|ccld)
-        extend flags_list SPACK_CPPFLAGS
-        ;;
+cpp | as | cc | ccld)
+    extend flags_list SPACK_CPPFLAGS
+    ;;
 esac
-
 
 # Add C and C++ flags
 case "$mode" in
-    cc|ccld)
-        case $lang_flags in
-            C)
-                extend flags_list SPACK_CFLAGS
-                ;;
-            CXX)
-                extend flags_list SPACK_CXXFLAGS
-                ;;
-        esac
-
-        # prepend target args
-        preextend flags_list SPACK_TARGET_ARGS
+cc | ccld)
+    case $lang_flags in
+    C)
+        extend flags_list SPACK_CFLAGS
         ;;
+    CXX)
+        extend flags_list SPACK_CXXFLAGS
+        ;;
+    esac
+
+    # prepend target args
+    preextend flags_list SPACK_TARGET_ARGS
+    ;;
 esac
 
 # Linker flags
 case "$mode" in
-    ld|ccld)
-        extend flags_list SPACK_LDFLAGS
-        ;;
+ld | ccld)
+    extend flags_list SPACK_LDFLAGS
+    ;;
 esac
 
 # On macOS insert headerpad_max_install_names linker flag
 if [ "$mode" = ld ] || [ "$mode" = ccld ]; then
     if [ "${SPACK_SHORT_SPEC#*darwin}" != "${SPACK_SHORT_SPEC}" ]; then
         case "$mode" in
-            ld)
-                append flags_list "-headerpad_max_install_names" ;;
-            ccld)
-                append flags_list "-Wl,-headerpad_max_install_names" ;;
+        ld)
+            append flags_list "-headerpad_max_install_names"
+            ;;
+        ccld)
+            append flags_list "-Wl,-headerpad_max_install_names"
+            ;;
         esac
     fi
 fi
@@ -655,23 +729,23 @@ fi
 
 # add RPATHs if we're in in any linking mode
 case "$mode" in
-    ld|ccld)
-        # Set extra RPATHs
-        extend lib_dirs_list SPACK_COMPILER_EXTRA_RPATHS
-        if [ "$add_rpaths" != "false" ]; then
-            extend rpath_dirs_list SPACK_COMPILER_EXTRA_RPATHS
-        fi
+ld | ccld)
+    # Set extra RPATHs
+    extend lib_dirs_list SPACK_COMPILER_EXTRA_RPATHS
+    if [ "$add_rpaths" != "false" ]; then
+        extend rpath_dirs_list SPACK_COMPILER_EXTRA_RPATHS
+    fi
 
-        # Set implicit RPATHs
-        if [ "$add_rpaths" != "false" ]; then
-            extend rpath_dirs_list SPACK_COMPILER_IMPLICIT_RPATHS
-        fi
+    # Set implicit RPATHs
+    if [ "$add_rpaths" != "false" ]; then
+        extend rpath_dirs_list SPACK_COMPILER_IMPLICIT_RPATHS
+    fi
 
-        # Add SPACK_LDLIBS to args
-        for lib in $SPACK_LDLIBS; do
-            append libs_list "${lib#-l}"
-        done
-        ;;
+    # Add SPACK_LDLIBS to args
+    for lib in $SPACK_LDLIBS; do
+        append libs_list "${lib#-l}"
+    done
+    ;;
 esac
 
 #
@@ -685,13 +759,13 @@ extend args_list include_dirs_list "-I"
 extend args_list isystem_include_dirs_list "-isystem${lsep}"
 
 case "$mode" in
-    cpp|cc|as|ccld)
-        if [ "$isystem_was_used" = "true" ]; then
-            extend args_list SPACK_INCLUDE_DIRS "-isystem${lsep}"
-        else
-            extend args_list SPACK_INCLUDE_DIRS "-I"
-        fi
-        ;;
+cpp | cc | as | ccld)
+    if [ "$isystem_was_used" = "true" ]; then
+        extend args_list SPACK_INCLUDE_DIRS "-isystem${lsep}"
+    else
+        extend args_list SPACK_INCLUDE_DIRS "-I"
+    fi
+    ;;
 esac
 
 extend args_list system_include_dirs_list -I
@@ -703,20 +777,20 @@ extend args_list system_lib_dirs_list "-L"
 
 # RPATHs arguments
 case "$mode" in
-    ccld)
-        if [ -n "$dtags_to_add" ] ; then
-            append args_list "$linker_arg$dtags_to_add"
-        fi
-        extend args_list rpath_dirs_list "$rpath"
-        extend args_list system_rpath_dirs_list "$rpath"
-        ;;
-    ld)
-        if [ -n "$dtags_to_add" ] ; then
-            append args_list "$dtags_to_add"
-        fi
-        extend args_list rpath_dirs_list "-rpath${lsep}"
-        extend args_list system_rpath_dirs_list "-rpath${lsep}"
-        ;;
+ccld)
+    if [ -n "$dtags_to_add" ]; then
+        append args_list "$linker_arg$dtags_to_add"
+    fi
+    extend args_list rpath_dirs_list "$rpath"
+    extend args_list system_rpath_dirs_list "$rpath"
+    ;;
+ld)
+    if [ -n "$dtags_to_add" ]; then
+        append args_list "$dtags_to_add"
+    fi
+    extend args_list rpath_dirs_list "-rpath${lsep}"
+    extend args_list system_rpath_dirs_list "-rpath${lsep}"
+    ;;
 esac
 
 # Other arguments from the input command
@@ -731,33 +805,39 @@ extend full_command_list args_list
 # prepend the ccache binary if we're using ccache
 if [ -n "$SPACK_CCACHE_BINARY" ]; then
     case "$lang_flags" in
-        C|CXX)  # ccache only supports C languages
-            prepend full_command_list "${SPACK_CCACHE_BINARY}"
-            # workaround for stage being a temp folder
-            # see #3761#issuecomment-294352232
-            export CCACHE_NOHASHDIR=yes
-            ;;
+    C | CXX) # ccache only supports C languages
+        prepend full_command_list "${SPACK_CCACHE_BINARY}"
+        # workaround for stage being a temp folder
+        # see #3761#issuecomment-294352232
+        export CCACHE_NOHASHDIR=yes
+        ;;
     esac
+fi
+
+if [ -n "$ZSH_VERSION" ]; then
+    if [[ $PROF_INIT == "true" ]]; then
+        print_prof
+    fi
 fi
 
 # dump the full command if the caller supplies SPACK_TEST_COMMAND=dump-args
 if [ -n "${SPACK_TEST_COMMAND=}" ]; then
     case "$SPACK_TEST_COMMAND" in
-        dump-args)
-            IFS="$lsep"
-            for arg in $full_command_list; do
-                echo "$arg"
-            done
-            unset IFS
-            exit
-            ;;
-        dump-env-*)
-            var=${SPACK_TEST_COMMAND#dump-env-}
-            eval "printf '%s\n' \"\$0: \$var: \$$var\""
-            ;;
-        *)
-            die "Unknown test command: '$SPACK_TEST_COMMAND'"
-            ;;
+    dump-args)
+        IFS="$lsep"
+        for arg in $full_command_list; do
+            echo "$arg"
+        done
+        unset IFS
+        exit
+        ;;
+    dump-env-*)
+        var=${SPACK_TEST_COMMAND#dump-env-}
+        eval "printf '%s\n' \"\$0: \$var: \$$var\""
+        ;;
+    *)
+        die "Unknown test command: '$SPACK_TEST_COMMAND'"
+        ;;
     esac
 fi
 
@@ -767,10 +847,11 @@ fi
 if [ "$SPACK_DEBUG" = TRUE ]; then
     input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_DEBUG_LOG_ID.in.log"
     output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_DEBUG_LOG_ID.out.log"
-    echo "[$mode] $command $input_command" >> "$input_log"
-    echo "[$mode] ${full_command_list}" >> "$output_log"
+    echo "[$mode] $command $input_command" >>"$input_log"
+    echo "[$mode] ${full_command_list}" >>"$output_log"
 fi
 
 # Execute the full command, preserving spaces with IFS set
 # to the alarm bell separator.
-IFS="$lsep"; exec $full_command_list
+IFS="$lsep"
+exec $full_command_list
