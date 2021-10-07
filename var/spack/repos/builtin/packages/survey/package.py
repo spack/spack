@@ -31,14 +31,11 @@ class Survey(CMakePackage):
     maintainers = ['jgalarowicz']
 
     version('develop', branch='master')
+    version('1.0.1', branch='1.0.1')
     version('1.0.0', branch='1.0.0')
 
     variant('mpi', default=False,
             description="Enable mpi, build MPI data collector")
-
-    variant('build_type', default='RelWithDebInfo',
-            description='The build type to build',
-            values=('Debug', 'Release', 'RelWithDebInfo'))
 
     # must have cmake at 3.12 or greater to find python3
     depends_on('cmake@3.12:')
@@ -54,24 +51,24 @@ class Survey(CMakePackage):
     depends_on("mpi", when="+mpi")
 
     depends_on("python@3:", type=('build', 'link', 'run'))
-    depends_on("py-setuptools", type=('build', 'link', 'run'))
-    depends_on("py-pip", type=('build', 'link', 'run'))
-    depends_on("py-python-dateutil", type=('build', 'link', 'run'))
-    depends_on("py-pandas", type=('build', 'link', 'run'))
-    depends_on("py-psutil", type=('build', 'link', 'run'))
-    depends_on("py-sqlalchemy", type=('build', 'link', 'run'))
-    depends_on("py-pbr", type=('build', 'link', 'run'))
-    depends_on("py-pyyaml", type=('build', 'link', 'run'))
+    depends_on("py-setuptools", type=('run'))
+    depends_on("py-pip", type=('run'))
+    depends_on("py-python-dateutil", type=('run'))
+    depends_on("py-pandas", type=('run'))
+    depends_on("py-psutil", type=('run'))
+    depends_on("py-sqlalchemy", type=('run'))
+    depends_on("py-pbr", type=('build', 'run'))
+    depends_on("py-pyyaml", type=('run'))
 
     extends('python')
 
     parallel = False
 
-    def set_mpi_cmake_options(self, spec, cmake_options):
-        # Appends to cmake_options the options that will enable the appropriate
-        # MPI implementations
-        mpi_options = ['-D%s_DIR=%s' % (spec['mpi'].name.upper(), spec['mpi'].prefix)]
-        cmake_options.extend(mpi_options)
+    def get_mpi_cmake_options(self, spec):
+        # Returns MPI cmake_options that will enable the appropriate
+        # MPI implementation is specified as a cmake argument.
+        mpi_args = ['-D%s_DIR=%s' % (spec['mpi'].name.upper(), spec['mpi'].prefix)]
+        return mpi_args
 
     def cmake_args(self):
         spec = self.spec
@@ -89,7 +86,8 @@ class Survey(CMakePackage):
         ]
 
         # Add any MPI implementations coming from variant settings
-        self.set_mpi_cmake_options(spec, cmake_args)
+        mpi_options = self.get_mpi_cmake_options(spec)
+        cmake_args.extend(mpi_options)
         return cmake_args
 
     @property
