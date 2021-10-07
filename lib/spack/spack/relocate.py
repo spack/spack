@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import multiprocessing.pool
 import os
-import platform
 import re
 import shutil
 
@@ -19,6 +18,8 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.util.executable as executable
+
+is_macos = (str(spack.platforms.real_host()) == 'darwin')
 
 
 class InstallRootStringError(spack.error.SpackError):
@@ -94,7 +95,7 @@ def _patchelf():
         return exe_path
 
     # Skip darwin
-    if str(spack.platforms.host()) == 'darwin':
+    if is_macos:
         return None
 
     # Install the spec and return its path
@@ -538,7 +539,7 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                                   rpaths, deps,
                                                   idpath)
             # replace the relativized paths with normalized paths
-            if platform.system().lower() == 'darwin':
+            if is_macos:
                 modify_macho_object(path_name, rpaths, deps,
                                     idpath, rel_to_orig)
             else:
@@ -551,7 +552,7 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                               old_layout_root,
                                               prefix_to_prefix)
             # replace the old paths with new paths
-            if platform.system().lower() == 'darwin':
+            if is_macos:
                 modify_macho_object(path_name, rpaths, deps,
                                     idpath, paths_to_paths)
             else:
@@ -564,7 +565,7 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                                        new_layout_root,
                                                        rpaths, deps, idpath)
             # replace the new paths with relativized paths in the new prefix
-            if platform.system().lower() == 'darwin':
+            if is_macos:
                 modify_macho_object(path_name, rpaths, deps,
                                     idpath, paths_to_paths)
             else:
@@ -578,7 +579,7 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                               old_layout_root,
                                               prefix_to_prefix)
             # replace the old paths with new paths
-            if platform.system().lower() == 'darwin':
+            if is_macos:
                 modify_macho_object(path_name, rpaths, deps,
                                     idpath, paths_to_paths)
             else:
@@ -694,18 +695,15 @@ def make_macho_binaries_relative(cur_path_names, orig_path_names,
     """
     Replace old RPATHs with paths relative to old_dir in binary files
     """
+    if not is_macos:
+        return
+
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        rpaths = set()
-        deps = set()
-        idpath = None
-        if platform.system().lower() == 'darwin':
-            (rpaths, deps, idpath) = macholib_get_paths(cur_path)
-            paths_to_paths = macho_make_paths_relative(orig_path,
-                                                       old_layout_root,
-                                                       rpaths, deps, idpath)
-            modify_macho_object(cur_path,
-                                rpaths, deps, idpath,
-                                paths_to_paths)
+        (rpaths, deps, idpath) = macholib_get_paths(cur_path)
+        paths_to_paths = macho_make_paths_relative(
+            orig_path, old_layout_root, rpaths, deps, idpath
+        )
+        modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths)
 
 
 def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
@@ -914,11 +912,6 @@ def file_is_relocatable(filename, paths_to_relocate=None):
     default_paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
     paths_to_relocate = paths_to_relocate or default_paths_to_relocate
 
-    if not (platform.system().lower() == 'darwin'
-            or platform.system().lower() == 'linux'):
-        msg = 'function currently implemented only for linux and macOS'
-        raise NotImplementedError(msg)
-
     if not os.path.exists(filename):
         raise ValueError('{0} does not exist'.format(filename))
 
@@ -934,11 +927,11 @@ def file_is_relocatable(filename, paths_to_relocate=None):
     if m_type == 'application':
         tty.debug('{0},{1}'.format(m_type, m_subtype))
 
-    if platform.system().lower() == 'linux':
+    if not is_macos:
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
             rpaths = ':'.join(_elf_rpaths_for(filename))
             set_of_strings.discard(rpaths)
-    if platform.system().lower() == 'darwin':
+    else:
         if m_subtype == 'x-mach-binary':
             rpaths, deps, idpath = macholib_get_paths(filename)
             set_of_strings.discard(set(rpaths))

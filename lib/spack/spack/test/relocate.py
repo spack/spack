@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import os.path
-import platform
 import re
 import shutil
 
@@ -14,11 +13,19 @@ import llnl.util.filesystem
 
 import spack.concretize
 import spack.paths
+import spack.platforms
 import spack.relocate
 import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
+
+
+def skip_unless_linux(f):
+    return pytest.mark.skipif(
+        str(spack.platforms.real_host()) != 'linux',
+        reason='implementation currently requires linux'
+    )(f)
 
 
 def rpaths_for(new_binary):
@@ -179,10 +186,7 @@ def test_patchelf_is_relocatable():
     assert spack.relocate.file_is_relocatable(patchelf)
 
 
-@pytest.mark.skipif(
-    platform.system().lower() != 'linux',
-    reason='implementation for MacOS still missing'
-)
+@skip_unless_linux
 def test_file_is_relocatable_errors(tmpdir):
     # The file passed in as argument must exist...
     with pytest.raises(ValueError) as exc_info:
@@ -199,10 +203,7 @@ def test_file_is_relocatable_errors(tmpdir):
         assert 'is not an absolute path' in str(exc_info.value)
 
 
-@pytest.mark.skipif(
-    platform.system().lower() != 'linux',
-    reason='implementation for MacOS still missing'
-)
+@skip_unless_linux
 def test_search_patchelf(expected_patchelf_path):
     current = spack.relocate._patchelf()
     assert current == expected_patchelf_path
@@ -272,10 +273,7 @@ def test_set_elf_rpaths_warning(mock_patchelf):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
-@pytest.mark.skipif(
-    platform.system().lower() != 'linux',
-    reason='implementation for MacOS still missing'
-)
+@skip_unless_linux
 def test_replace_prefix_bin(hello_world):
     # Compile an "Hello world!" executable and set RPATHs
     executable = hello_world(rpaths=['/usr/lib', '/usr/lib64'])
@@ -288,10 +286,7 @@ def test_replace_prefix_bin(hello_world):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
-@pytest.mark.skipif(
-    platform.system().lower() != 'linux',
-    reason='implementation for MacOS still missing'
-)
+@skip_unless_linux
 def test_relocate_elf_binaries_absolute_paths(
         hello_world, copy_binary, tmpdir
 ):
@@ -316,10 +311,7 @@ def test_relocate_elf_binaries_absolute_paths(
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
-@pytest.mark.skipif(
-    platform.system().lower() != 'linux',
-    reason='implementation for MacOS still missing'
-)
+@skip_unless_linux
 def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
     orig_binary = hello_world(rpaths=['lib', 'lib64', '/opt/local/lib'])
@@ -340,10 +332,7 @@ def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
-@pytest.mark.skipif(
-    platform.system().lower() != 'linux',
-    reason='implementation for MacOS still missing'
-)
+@skip_unless_linux
 def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
     orig_binary = hello_world(rpaths=[
         str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
@@ -367,10 +356,7 @@ def test_raise_if_not_relocatable(monkeypatch):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
-@pytest.mark.skipif(
-    platform.system().lower() != 'linux',
-    reason='implementation for MacOS still missing'
-)
+@skip_unless_linux
 def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     orig_binary = hello_world(rpaths=[
         str(tmpdir.mkdir('lib')), str(tmpdir.mkdir('lib64')), '/opt/local/lib'
