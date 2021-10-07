@@ -1004,6 +1004,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         'after_script',
     ]
 
+    service_job_retries = {
+        'max': 2,
+        'when': [
+            'runner_system_failure',
+            'stuck_or_timeout_failure'
+        ]
+    }
+
     if job_id > 0:
         if temp_storage_url_prefix:
             # There were some rebuild jobs scheduled, so we will need to
@@ -1023,6 +1031,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     temp_storage_url_prefix)
             ]
             cleanup_job['when'] = 'always'
+            cleanup_job['retry'] = service_job_retries
 
             output_object['cleanup'] = cleanup_job
 
@@ -1046,6 +1055,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     index_target_mirror)
             ]
             final_job['when'] = 'always'
+            final_job['retry'] = service_job_retries
 
             output_object['rebuild-index'] = final_job
 
@@ -1108,6 +1118,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             noop_job['script'] = [
                 'echo "All specs already up to date, nothing to rebuild."',
             ]
+
+        noop_job['retry'] = service_job_retries
 
         sorted_output = {'no-specs-to-rebuild': noop_job}
 
