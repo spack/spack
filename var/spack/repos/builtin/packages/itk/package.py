@@ -60,28 +60,23 @@ class Itk(CMakePackage):
     depends_on('zlib')
 
     def cmake_args(self):
+        force = CMakePackage.define
+        from_variant = self.define_from_variant
+        use_mkl = '^mkl' in self.spec
+
         args = [
-            '-DBUILD_SHARED_LIBS=ON',
-            '-DITK_USE_SYSTEM_LIBRARIES=ON',
+            force('BUILD_SHARED_LIBS', True),
+            force('ITK_USE_SYSTEM_LIBRARIES', True),
+            force('ITK_USE_MKL', use_mkl),
+            from_variant('Module_ITKReview', 'review'),
+            from_variant('Module_RTK', 'rtk'),
         ]
 
-        if '+review' in self.spec:
-            args.append('-DModule_ITKReview=ON')
-        else:
-            args.append('-DModule_ITKReview=OFF')
-        if '+rtk' in self.spec:
-            args.append('-DModule_RTK=ON')
-        else:
-            args.append('-DModule_RTK=OFF')
-
-        if '^mkl' in self.spec:
-            args.append('-DITK_USE_MKL=ON')
-        else:
+        if not use_mkl:
             args.extend([
-                '-DITK_USE_MKL=OFF',
-                '-DUSE_FFTWD=ON',
-                '-DUSE_FFTWF=ON',
-                '-DUSE_SYSTEM_FFTW=ON',
+                force('USE_FFTWD', True),
+                force('USE_FFTWF', True),
+                force('USE_SYSTEM_FFTW', True),
             ])
 
         return args
