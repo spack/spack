@@ -25,7 +25,7 @@ import spack.store
 import spack.util.crypto
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.cmd import display_specs
+from spack.cmd import display_specs, display_specs_as_json
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_specfiles
 from spack.stage import Stage
