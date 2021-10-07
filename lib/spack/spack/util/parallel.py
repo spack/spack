@@ -61,7 +61,8 @@ def raise_if_errors(*results):
 
     print('[PARENT PROCESS]:', file=err_stream)
     traceback.print_stack(file=err_stream)
-    raise RuntimeError('errors occurred in worker processes:\n{0}'.format(err_stream.getvalue()))
+    error_msg = 'errors occurred in worker processes:\n{0}'
+    raise RuntimeError(error_msg.format(err_stream.getvalue()))
 
 
 @contextlib.contextmanager

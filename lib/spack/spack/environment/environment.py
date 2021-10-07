@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import sys
+import time
 
 import ruamel.yaml as yaml
 import six
@@ -1144,6 +1145,7 @@ class Environment(object):
         nprocesses = min(spack.util.cpus.cpus_available(), 16)
         msg = 'Starting concretization pool with {0} processes'
         tty.msg(msg.format(nprocesses))
+        start = time.time()
         with spack.util.parallel.pool(
             processes=nprocesses,
             initializer=spack.subprocess_context.global_init,
@@ -1151,6 +1153,8 @@ class Environment(object):
         ) as pool:
             concretized_root_specs = pool.map(_concretize_task, arguments)
         spack.util.parallel.raise_if_errors(*concretized_root_specs)
+        finish = time.time()
+        tty.msg('Environment concretized in {0} sec.'.format(finish - start))
 
         results = []
         for abstract, concrete in zip(root_specs, concretized_root_specs):
