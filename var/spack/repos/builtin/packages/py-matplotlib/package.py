@@ -95,7 +95,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('qhull@2020.2:', when='@3.4:')
     # starting from qhull 2020 libqhull.so on which py-matplotlib@3.3 versions
     # rely on does not exist anymore, only libqhull_r.so
-    depends_on('qhull@2015.2:2020.1', when='@3.3.0:3')
+    depends_on('qhull@2015.2:2020.1', when='@3.3.0:3.3')
     depends_on('libpng@1.2:')
     depends_on('py-setuptools', type=('build', 'run'))  # See #3813
     depends_on('py-certifi@2020.6.20:', when='@3.3.1:', type='build')
