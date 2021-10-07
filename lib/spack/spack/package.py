@@ -283,34 +283,27 @@ class PackageMeta(
 
         def _flush_callbacks(check_name):
             # Name of the attribute I am going to check it exists
-            attr_name = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(cls, attr_name)
+            check_attr = PackageMeta.phase_fmt.format(check_name)
+            checks = getattr(cls, check_attr)
             if checks:
                 for phase_name, funcs in checks.items():
+                    phase_attr = PackageMeta.phase_fmt.format(phase_name)
                     try:
                         # Search for the phase in the attribute dictionary
-                        phase = attr_dict[
-                            PackageMeta.phase_fmt.format(phase_name)]
+                        phase = attr_dict[phase_attr]
                     except KeyError:
                         # If it is not there it's in the bases
                         # and we added a check. We need to copy
                         # and extend
                         for base in bases:
-                            phase = getattr(
-                                base,
-                                PackageMeta.phase_fmt.format(phase_name),
-                                None
-                            )
+                            phase = getattr(base, phase_attr, None)
                             if phase is not None:
                                 break
 
-                        attr_dict[PackageMeta.phase_fmt.format(
-                            phase_name)] = phase.copy()
-                        phase = attr_dict[
-                            PackageMeta.phase_fmt.format(phase_name)]
+                        phase = attr_dict[phase_attr] = phase.copy()
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
-                setattr(cls, attr_name, {})
+                setattr(cls, check_attr, {})
 
         _flush_callbacks('run_before')
         _flush_callbacks('run_after')
