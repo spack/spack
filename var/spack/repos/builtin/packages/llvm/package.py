@@ -199,9 +199,9 @@ class Llvm(CMakePackage, CudaPackage):
 
     # libc++ of LLVM13, see https://libcxx.llvm.org/#platform-and-compiler-support
     # @13 does not support %gcc@:10 https://bugs.llvm.org/show_bug.cgi?id=51359#c1
-    # GCC    11     - latest stable release per GCC’s release page
-    # Clang: 11, 12 - latest two stable releases per LLVM’s release page
-    # AppleClang 12 - latest stable release per Xcode’s release page
+    # GCC    11     - latest stable release per GCC release page
+    # Clang: 11, 12 - latest two stable releases per LLVM release page
+    # AppleClang 12 - latest stable release per Xcode release page
     conflicts("%gcc@:10",         when="@13:+libcxx")
     conflicts("%clang@:10",       when="@13:+libcxx")
     conflicts("%apple_clang@:11", when="@13:+libcxx")
