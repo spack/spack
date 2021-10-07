@@ -32,11 +32,11 @@ class Legion(CMakePackage, CudaPackage, ROCmPackage):
     version('cr', branch='control_replication')
 
     depends_on("cmake@3.16:", type='build')
-    # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
-    # layer. At present the MPI layer is still experimental and we discourge its
-    # use for general (not legion development) use cases.
+    # TODO: Need to spec version of MPI v3 for use of the low-level MPI 
+    # transport layer. At present the MPI layer is still experimental and 
+    # we discourge its use for general (not legion development) use cases.
     depends_on('mpi', when='network=mpi')
-    depends_on('mpi', when='network=gasnet')  # MPI is required to build gasnet (needs mpicc).
+    depends_on('mpi', when='network=gasnet')  # gasnet needs mpicc.
     depends_on('ucx', when='conduit=ucx')
     depends_on('mpi', when='conduit=mpi')
 
@@ -51,10 +51,10 @@ class Legion(CMakePackage, CudaPackage, ROCmPackage):
                    when="%clang+kokkos+cuda cuda_arch={0}".format(sm))
     depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
     depends_on("kokkos@3.3.01~cuda+openmp", when='+kokkos+openmp')
-
+    
     for amd_arch in ROCmPackage.amdgpu_targets:
         if amd_arch != 'none':
-            depends_on("hip@4.3.0", 
+            depends_on("hip@4.3", 
                        when="+rocm amdgpu_target={0}".format(amd_arch))
             depends_on("kokkos@3.3.01+rocm amdgpu_target={0}".format(amd_arch),
                        when="+rocm +kokkos amdgpu_target={0}".format(amd_arch))
@@ -257,6 +257,7 @@ class Legion(CMakePackage, CudaPackage, ROCmPackage):
                     options.append('-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler')
 
         if '+rocm' in spec:
+            options.append('-DCMAKE_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc))
             options.append('-DLegion_USE_HIP=ON')
             options.append('-DLegion_HIP_TARGET=ROCM')
             if 'amdgpu_arch' in spec:
