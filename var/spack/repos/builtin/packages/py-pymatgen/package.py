@@ -19,7 +19,8 @@ class PyPymatgen(PythonPackage):
     version('4.7.2', sha256='e439b78cc3833a03963c3c3efe349d8a0e52a1550c8a05c56a89aa1b86657436')
     version('4.6.2', sha256='f34349090c6f604f7d402cb09cd486830b38523639d7160d7fd282d504036a0e')
 
-    # 2021.1.1, requires Python >=3.7, previous versions don't build with it
+    # Old versions come pre-cythonized and so don't support newer python versions
+    # and 2021.1.1 and newer require Python >= 3.7
     extends('python@:3.6',               ignore='bin/tabulate',  when='@:4.7.2')
     extends('python@3.7:',               ignore='bin/tabulate',  when='@2021.1.1:')
 
