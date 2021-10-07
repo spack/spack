@@ -90,7 +90,7 @@ class Minigmg(Package):
         args += ['-D__TEST_MG_CONVERGENCE', '-D__PRINT_NORM', '-D__USE_BICGSTAB']
         args += ['-o', 'run.miniGMG', '-lm']
 
-        cc(*args,)
+        cc(*args)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
