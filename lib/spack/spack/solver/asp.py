@@ -311,7 +311,7 @@ class PyclingoDriver(object):
     def newline(self):
         self.out.write('\n')
 
-    def fact(self, head):
+    def fact(self, head): # assumption=True
         """ASP fact (a rule without a body)."""
         symbol = head.symbol() if hasattr(head, 'symbol') else head
 
@@ -319,7 +319,7 @@ class PyclingoDriver(object):
 
         atom = self.backend.add_atom(symbol)
         self.backend.add_rule([atom], [], choice=self.cores)
-        if self.cores:
+        if self.cores:  # and assumption
             self.assumptions.append(atom)
 
     def solve(
@@ -456,6 +456,18 @@ class SpackSolverSetup(object):
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
 
+    def error_messages(self):
+        error_messages = [
+            "Internal error: two versions with identical weights",
+            "All dependencies must be reachable from root",
+            "Cyclic dependency requested",
+            "No satisfying compiler is compatible with a satisfying target",
+            "No satisfying compiler is compatible with a satisfying os",
+            "This should be the only error",
+        ]
+        for message in error_messages:
+            self.gen.fact(fn.error(message))
+
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
 
@@ -478,7 +490,7 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.version_declared(
                 pkg.name, declared_version.version, weight,
                 version_origin_str[declared_version.origin]
-            ))
+            )) #, False)
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
@@ -548,7 +560,7 @@ class SpackSolverSetup(object):
 
         for i, cspec in enumerate(matches):
             f = fn.default_compiler_preference(cspec.name, cspec.version, i)
-            self.gen.fact(f)
+            self.gen.fact(f)  #, False)
 
         # Enumerate target families. This may be redundant, but compilers with
         # custom versions will be able to concretize properly.
@@ -606,7 +618,7 @@ class SpackSolverSetup(object):
                 self.gen.fact(fn.variant_single_value(pkg.name, name))
                 self.gen.fact(
                     fn.variant_default_value_from_package_py(
-                        pkg.name, name, variant.default)
+                        pkg.name, name, variant.default)  #, False
                 )
             else:
                 spec_variant = variant.make_default()
@@ -636,7 +648,7 @@ class SpackSolverSetup(object):
                 values = [variant.default]
 
             for value in sorted(values):
-                self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
+                self.gen.fact(fn.variant_possible_value(pkg.name, name, value))  #, False)
 
             self.gen.newline()
 
@@ -813,7 +825,7 @@ class SpackSolverSetup(object):
             for local_idx, spec in enumerate(external_specs):
                 condition_id = self.condition(spec)
                 self.gen.fact(
-                    fn.possible_external(condition_id, pkg_name, local_idx)
+                    fn.possible_external(condition_id, pkg_name, local_idx) #, False
                 )
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
@@ -868,7 +880,7 @@ class SpackSolverSetup(object):
 
         # types of flags that can be on specs
         for flag in spack.spec.FlagMap.valid_compiler_flags():
-            self.gen.fact(fn.flag_type(flag))
+            self.gen.fact(fn.flag_type(flag)) #, False)
         self.gen.newline()
 
         # flags from compilers.yaml
@@ -1102,10 +1114,10 @@ class SpackSolverSetup(object):
 
         # make directives for possible OS's
         for possible_os in sorted(possible):
-            self.gen.fact(fn.os(possible_os))
+            self.gen.fact(fn.os(possible_os))#, False)
 
         # mark this one as default
-        self.gen.fact(fn.node_os_default(platform.default_os))
+        self.gen.fact(fn.node_os_default(platform.default_os))#, False)
 
     def target_defaults(self, specs):
         """Add facts about targets and target compatibility."""
@@ -1173,18 +1185,18 @@ class SpackSolverSetup(object):
 
         i = 0
         for target in compatible_targets:
-            self.gen.fact(fn.target(target.name))
-            self.gen.fact(fn.target_family(target.name, target.family.name))
+            self.gen.fact(fn.target(target.name))#, False)
+            self.gen.fact(fn.target_family(target.name, target.family.name))#, False)
             for parent in sorted(target.parents):
-                self.gen.fact(fn.target_parent(target.name, parent.name))
+                self.gen.fact(fn.target_parent(target.name, parent.name))#, False)
 
             # prefer best possible targets; weight others poorly so
             # they're not used unless set explicitly
             if target.name in best_targets:
-                self.gen.fact(fn.default_target_weight(target.name, i))
+                self.gen.fact(fn.default_target_weight(target.name, i))#, False)
                 i += 1
             else:
-                self.gen.fact(fn.default_target_weight(target.name, 100))
+                self.gen.fact(fn.default_target_weight(target.name, 100))#, False)
 
             self.gen.newline()
 
@@ -1346,7 +1358,7 @@ class SpackSolverSetup(object):
         # Tell the concretizer about possible values from specs we saw in
         # spec_clauses()
         for pkg, variant, value in sorted(self.variant_values_from_specs):
-            self.gen.fact(fn.variant_possible_value(pkg, variant, value))
+            self.gen.fact(fn.variant_possible_value(pkg, variant, value))#, False)
 
     def setup(self, driver, specs, tests=False):
         """Generate an ASP program with relevant constraints for specs.
@@ -1441,6 +1453,9 @@ class SpackSolverSetup(object):
 
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
+
+        self.gen.h1("Rule explanations")
+        self.error_messages()
 
 
 class SpecBuilder(object):

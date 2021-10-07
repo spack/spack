@@ -19,6 +19,7 @@ version_declared(Package, Version, Weight) :- version_declared(Package, Version,
 :- version_declared(Package, Version, Weight, Origin1),
    version_declared(Package, Version, Weight, Origin2),
    Origin1 != Origin2.
+%   error("Internal error: two versions with identical weights").
 
 % versions are declared w/priority -- declared with priority implies declared
 version_declared(Package, Version) :- version_declared(Package, Version, _).
@@ -123,6 +124,7 @@ node(Dependency) :- node(Package), depends_on(Package, Dependency).
 needed(Package) :- root(Package).
 needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
 :- node(Package), not needed(Package).
+%   error("All dependencies must be reachable from root").
 
 % Avoid cycles in the DAG
 % some combinations of conditional dependencies can result in cycles;
@@ -130,6 +132,9 @@ needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
 path(Parent, Child) :- depends_on(Parent, Child).
 path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 :- path(A, B), path(B, A).
+
+:- error("This should be the only error").
+#defined error/1.
 
 #defined dependency_type/2.
 #defined dependency_condition/3.
@@ -516,6 +521,7 @@ node_os(Package, OS)
 %-----------------------------------------------------------------------------
 % one target per node -- optimization will pick the "best" one
 1 { node_target(Package, Target) : target(Target) } 1 :- node(Package).
+%     error("Each node must have exactly one target").
 
 % node_target_satisfies semantics
 1 { node_target(Package, Target) : node_target_satisfies(Package, Constraint, Target) } 1
@@ -547,6 +553,7 @@ target_weight(Target, Package, Weight)
    not compiler_supports_target(Compiler, Version, Target),
    node_compiler(Package, Compiler),
    node_compiler_version(Package, Compiler, Version).
+%   error("No satisfying compiler is compatible with a satisfying target").
 
 % if a target is set explicitly, respect it
 node_target(Package, Target)
@@ -615,6 +622,7 @@ node_compiler_version(Package, Compiler, Version) :- node_compiler_version_set(P
 :- node_compiler_version(Package, Compiler, Version), node_os(Package, OS),
    not compiler_supports_os(Compiler, Version, OS),
    not allow_compiler(Compiler, Version).
+%   error("No satisfying compiler is compatible with a satisfying os").
 
 % If a package and one of its dependencies don't have the
 % same compiler there's a mismatch.
