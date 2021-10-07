@@ -63,7 +63,6 @@ class Apex(CMakePackage):
     depends_on('papi@5.7.0:', when='+papi')
     depends_on('cuda', when='+cuda')
     depends_on('hip', when='+hip')
-    #depends_on('roctracer-dev-api', when='+hip')
     depends_on('roctracer-dev', when='+hip')
     depends_on('rocm-smi-lib', when='+hip')
     depends_on('boost@1.54:', when='+boost')
