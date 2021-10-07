@@ -67,10 +67,12 @@ class Seacas(CMakePackage):
             description='Enable thread-safe exodus and IOSS libraries')
 
     # TPLs (alphabet order)
-    variant('adios2',         default=False,
+    variant('adios2',       default=False,
             description='Enable ADIOS2')
     variant('cgns',         default=True,
             description='Enable CGNS')
+    variant('faodel',       default=False,
+            description='Enable Faodel')
     variant('matio',        default=True,
             description='Compile with matio (MatLab) support')
     variant('metis',        default=False,
@@ -92,6 +94,10 @@ class Seacas(CMakePackage):
     depends_on('matio', when='+matio')
     depends_on('metis+int64+real64', when='+metis ~mpi')
     depends_on('parmetis+int64+real64', when='+metis +mpi')
+
+    # The Faodel TPL is only supported in seacas@2021-04-05:
+    depends_on('faodel@1.2108.1:+mpi', when='+faodel +mpi')
+    conflicts('+faodel', when='@:2021-01-20', msg='The Faodel TPL is only compatible with @2021-04-05 and later.')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
@@ -236,6 +242,17 @@ class Seacas(CMakePackage):
         else:
             options.extend([
                 '-DTPL_ENABLE_CGNS:BOOL=OFF'
+            ])
+
+        if '+faodel' in spec:
+            options.extend([
+                '-DTPL_ENABLE_Faodel:BOOL=ON',
+                '-DFaodel_ROOT:PATH=%s' % spec['faodel'].prefix,
+                '-DBOOST_ROOT:PATH=%s' % spec['boost'].prefix,
+            ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_Faodel:BOOL=OFF'
             ])
 
         if '+adios2' in spec:
