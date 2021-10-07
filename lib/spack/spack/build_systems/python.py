@@ -13,11 +13,13 @@ from llnl.util.filesystem import (
     get_filetype,
     path_contains_subdirectory,
     same_path,
+    touch,
     working_dir,
 )
 from llnl.util.lang import match_predicate
 
 from spack.directives import extends
+from spack.install_test import TestFailure
 from spack.package import PackageBase, run_after
 
 
@@ -314,15 +316,23 @@ class PythonPackage(PackageBase):
     # Testing
 
     def test(self):
-        """Attempts to import modules of the installed package."""
+        """Check importing the modules of the installed package and show all errors"""
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
+        self.test_log_file = os.path.join(self.stage.path, 'spack-import-test-log.txt')
+        touch(self.test_log_file)
+        self.test_failures = []
+
         for module in self.import_modules:
             self.run_test(inspect.getmodule(self).python.path,
                           ['-c', 'import {0}'.format(module)],
                           purpose='checking import of {0}'.format(module),
                           work_dir='spack-test')
+
+        # Show the logfile of failed imports in case of failures
+        if self.test_failures:
+            raise TestFailure(self.test_failures)
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 
