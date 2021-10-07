@@ -13,6 +13,7 @@ from .test import Test
 platforms = [Cray, Darwin, Linux, Test]
 
 
+@llnl.util.lang.memoized
 def _host():
     """Detect and return the platform for this machine or None if detection fails."""
     for platform_cls in sorted(platforms, key=lambda plt: plt.priority):
