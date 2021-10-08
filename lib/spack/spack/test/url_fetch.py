@@ -118,8 +118,6 @@ if sys.platform != "win32":
               ('.tar.xz', 'J'), ('.txz', 'J')]
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('secure', [True, False])
 @pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
 @pytest.mark.parametrize('mock_archive',
@@ -265,8 +263,6 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
         assert '##### 100' in status
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
 def test_url_extra_fetch(tmpdir, mock_archive, _fetch_method):
     """Ensure a fetch after downloading is effectively a no-op."""

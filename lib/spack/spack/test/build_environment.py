@@ -5,6 +5,7 @@
 
 import os
 import platform
+import posixpath
 
 import pytest
 
@@ -113,8 +114,6 @@ def test_static_to_shared_library(build_environment):
                 static_lib, shared_lib, os.path.basename(shared_lib)).split())
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('8345')
 @pytest.mark.usefixtures('config', 'mock_packages')
 def test_cc_not_changed_by_modules(monkeypatch, working_env):
@@ -191,13 +190,14 @@ def test_compiler_config_modifications(
     # Check they were applied
     for name, value in expected.items():
         if value is not None:
-            assert os.environ[name] == value
+            eviron_value = os.environ[name]
+            if sys.platform == "win32":
+                eviron_value = eviron_value.replace("\\", "/")
+            assert eviron_value == value
             continue
         assert name not in os.environ
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('9107')
 def test_spack_paths_before_module_paths(
         config, mock_packages, monkeypatch, working_env):
@@ -208,7 +208,7 @@ def test_spack_paths_before_module_paths(
     module_path = '/path/to/module'
 
     def _set_wrong_cc(x):
-        os.environ['PATH'] = module_path + ':' + os.environ['PATH']
+        os.environ['PATH'] = module_path + os.pathsep + os.environ['PATH']
 
     monkeypatch.setattr(
         spack.build_environment, 'load_module', _set_wrong_cc
@@ -219,14 +219,15 @@ def test_spack_paths_before_module_paths(
 
     spack.build_environment.setup_package(pkg, False)
 
-    spack_path = os.path.join(spack.paths.prefix, 'lib/spack/env')
-    paths = os.environ['PATH'].split(':')
+    spack_path = posixpath.join(spack.paths.prefix, 'lib/spack/env')
+
+    paths = os.environ['PATH'].split(os.pathsep)
+    if sys.platform == 'win32':
+        paths = [p.replace("\\", "/") for p in paths]
 
     assert paths.index(spack_path) < paths.index(module_path)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_package_inheritance_module_setup(config, mock_packages, working_env):
     s = spack.spec.Spec('multimodule-inheritance')
     s.concretize()
@@ -240,8 +241,6 @@ def test_package_inheritance_module_setup(config, mock_packages, working_env):
     assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_wrapper_variables(
         config, mock_packages, working_env, monkeypatch,
         installation_dir_with_headers
@@ -257,10 +256,10 @@ def test_wrapper_variables(
         'prefix/include/cuda/atomic',
         'prefix/include/cuda/std/detail/libcxx/include/ctype.h'])
     cuda_include_dirs = cuda_headers.directories
-    assert(os.path.join('prefix', 'include')
+    assert(posixpath.join('prefix', 'include')
            in cuda_include_dirs)
-    assert(os.path.join('prefix', 'include', 'cuda', 'std', 'detail',
-                        'libcxx', 'include')
+    assert(posixpath.join('prefix', 'include', 'cuda', 'std', 'detail',
+                          'libcxx', 'include')
            not in cuda_include_dirs)
 
     root = spack.spec.Spec('dt-diamond')
@@ -306,7 +305,7 @@ def test_wrapper_variables(
         # The default implementation looks for header files only
         # in <prefix>/include and subdirectories
         prefix = str(installation_dir_with_headers)
-        include_dirs = normpaths(header_dir_var.split(':'))
+        include_dirs = normpaths(header_dir_var.split(os.pathsep))
 
         assert os.path.join(prefix, 'include') in include_dirs
         assert os.path.join(prefix, 'include', 'boost') not in include_dirs
@@ -317,8 +316,6 @@ def test_wrapper_variables(
         delattr(dep_pkg, 'libs')
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_external_prefixes_last(mutable_config, mock_packages, working_env,
                                 monkeypatch):
     # Sanity check: under normal circumstances paths associated with
@@ -349,7 +346,8 @@ dt-diamond-left:
     env_mods.apply_modifications()
     link_dir_var = os.environ['SPACK_LINK_DIRS']
     link_dirs = link_dir_var.split(':')
-    external_lib_paths = set(['/fake/path1/lib', '/fake/path1/lib64'])
+    external_lib_paths = set([os.path.normpath('/fake/path1/lib'),
+                              os.path.normpath('/fake/path1/lib64')])
     # The external lib paths should be the last two entries of the list and
     # should not appear anywhere before the last two entries
     assert (set(os.path.normpath(x) for x in link_dirs[-2:]) ==
@@ -358,8 +356,6 @@ dt-diamond-left:
                 external_lib_paths)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 def test_parallel_false_is_not_propagating(config, mock_packages):
     class AttributeHolder(object):
         pass
@@ -377,8 +373,6 @@ def test_parallel_false_is_not_propagating(config, mock_packages):
         assert m.make_jobs == expected_jobs
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('config_setting,expected_flag', [
     ('runpath', '' if platform.system() == 'Darwin' else '--enable-new-dtags'),
     ('rpath', '' if platform.system() == 'Darwin' else '--disable-new-dtags'),

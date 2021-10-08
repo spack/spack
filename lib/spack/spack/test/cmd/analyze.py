@@ -19,16 +19,12 @@ install = SpackCommand('install')
 analyze = SpackCommand('analyze')
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
 def test_test_package_not_installed(mock_fetch, install_mockery_mutable_config):
     # We cannot run an analysis for a package not installed
     out = analyze('run', 'libdwarf', fail_on_error=False)
     assert "==> Error: Spec 'libdwarf' matches no installed packages.\n" in out
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
 def test_analyzer_get_install_dir(mock_fetch, install_mockery_mutable_config):
     """
     Test that we cannot get an analyzer directory without a spec package.
@@ -48,8 +44,6 @@ def test_analyzer_get_install_dir(mock_fetch, install_mockery_mutable_config):
         spack.analyzers.analyzer_base.get_analyzer_dir(Packageless())
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
 def test_malformed_analyzer(mock_fetch, install_mockery_mutable_config):
     """
     Test that an analyzer missing needed attributes is invalid.
@@ -66,8 +60,6 @@ def test_malformed_analyzer(mock_fetch, install_mockery_mutable_config):
         MyAnalyzer(spec)
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
 def test_analyze_output(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     Test that an analyzer errors if requested name does not exist.
@@ -162,8 +154,6 @@ def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config
     assert not result['environment_variables']
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
 def test_list_analyzers():
     """
     test that listing analyzers shows all the possible analyzers.
@@ -179,8 +169,6 @@ def test_list_analyzers():
         assert analyzer_type in out
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
 def test_configargs_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     test the config args analyzer.
