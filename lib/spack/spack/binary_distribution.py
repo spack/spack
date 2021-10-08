@@ -50,7 +50,8 @@ _build_cache_keys_relative_path = '_pgp'
 class FetchCacheError(Exception):
     """Error thrown when fetching the cache failed, usually a composite error list."""
     def __init__(self, errors):
-        assert isinstance(errors, list)
+        if not isinstance(errors, list):
+            raise TypeError("Expected a list of errors")
         self.errors = errors
         if len(errors) > 1:
             self.message = "Multiple errors during fetching:\n"
