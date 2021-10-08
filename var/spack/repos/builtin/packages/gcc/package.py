@@ -645,18 +645,27 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         """Generate a spec file so the linker adds a rpath to the libs
            the compiler used to build the executable.
 
+           .. caution::
+
+              The custom spec file by default with *always* pass ``-Wl,-rpath
+              ...`` to the linker, which will cause the linker to *ignore* the
+              value of ``LD_RUN_PATH``, which otherwise would be saved to the
+              binary as the default rpath. See the mitigation below for how to
+              temporarily disable this behavior.
+
            Structure the specs file so that users can define a custom spec file
            to suppress the spack-linked rpaths to facilitate rpath adjustment
            for relocatable binaries. The custom spec file
            :file:`{norpath}.spec` will have a single
-           line followed by two blanks::
+           line followed by two blanks lines::
 
                *link_libgcc_rpath:
 
 
 
-           and it can be passed to the GCC linker using the argument
-           ``--specs=norpath.spec``."""
+           It can be passed to the GCC linker using the argument
+           ``--specs=norpath.spec`` to disable the automatic rpath and restore
+           the behavior of ``LD_RUN_PATH``."""
         if not self.spec_dir:
             tty.warn('Could not install specs for {0}.'.format(
                      self.spec.format('{name}{@version}')))
@@ -681,8 +690,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
             # Add easily-overridable rpath string at the end
             rpath = ':'.join([self.prefix.lib, self.prefix.lib64])
-            out.write('\n'
-                      '*link_libgcc_rpath:\n'
+            out.write('*link_libgcc_rpath:\n'
                       '-rpath {0}\n'.format(rpath))
         set_install_permissions(specs_file)
 
