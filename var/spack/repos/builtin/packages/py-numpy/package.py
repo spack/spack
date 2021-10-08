@@ -3,11 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import platform
 import subprocess
-
-import llnl.util.filesystem as fsys
 
 from spack import *
 
@@ -356,35 +353,37 @@ class PyNumpy(PythonPackage):
         with working_dir('spack-test', create=True):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')
 
-    def run_numpy_tests(self):
-        root = join_path(self.prefix, site_packages_dir, 'numpy', 'tests')
-        if not os.path.isdir(root):
-            print('Skipping site package tests: {0} not found'.format(root))
-            return
-
-        # Copy the numpy/tests over
-        test_dir = join_path(self.test_suite.current_test_cache_dir, 'tests')
-        fsys.mkdirp(test_dir)
-        fsys.copy(join_path(root, '*.py'), test_dir)
-
-        #  Run the tests
-        #  TODO: Should be running through pytest BUT must be able to set
-        #     up the test dependency first
-        #s elf.run_test(join_path(self.spec['py-pytest'].prefix.bin, 'pytest'),
-        #               [test_dir],
-        #               purpose='test: running pytests',
-        #               work_dir=test_dir)
-
-        # TODO: Replace with pytest run once test dependencies made available
-        for name in os.listdir(test_dir):
-            if name == '__init__.py':
-                continue
-
-            self.run_test(self.spec['python'].command.path,
-                          [name],
-                          purpose='test: running pytests',
-                          work_dir=test_dir)
-
     def test(self):
         super(PyNumpy, self).test()
-        self.run_numpy_tests()
+
+        xfailures = {
+            # https://github.com/numpy/numpy/issues/19521
+            '1.21.1-3.7': [
+                "NameError: name '_DType_co' is not defined",
+                "4 errors"
+            ],
+            '1.21.2-3.7': [
+                "TypeError: 'dict_keys' object does not support indexing",
+                "1 errors"
+            ],
+        }
+
+        pyspec = self.spec["python"]
+        success = ["0 error"]
+        if pyspec.satisfies("@3.7.0:3.7.999"):
+            vers = pyspec.package.version.up_to(2).string
+            key = '-'.join([self.version.string, vers])
+            expected = xfailures[key] if key in xfailures else success
+            status = 1
+        else:
+            expected, status = success, 0
+
+        # Warning: These tests will fail due to missing pytest until test
+        #   dependencies are supported.
+        self.run_test(
+            pyspec.command.path,
+            ["-c", "import numpy; numpy.test(verbose=2)"],
+            expected=expected,
+            status=status,
+            purpose="test: running numpy.test"
+        )
