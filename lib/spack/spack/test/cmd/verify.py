@@ -22,7 +22,7 @@ install = SpackCommand('install')
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_single_file_verify_cmd(tmpdir):
     # Test the verify command interface to verifying a single file.
     filedir = os.path.join(str(tmpdir), 'a', 'b', 'c', 'd')
@@ -70,7 +70,7 @@ def test_single_file_verify_cmd(tmpdir):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_single_spec_verify_cmd(tmpdir, mock_packages, mock_archive,
                                 mock_fetch, config, install_mockery):
     # Test the verify command interface to verify a single spec

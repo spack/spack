@@ -151,7 +151,7 @@ class TestInstall:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not yet implemented on windows")
+                    reason="Skip test on Windows")
 class TestCopyTree:
     """Tests for ``filesystem.copy_tree``"""
 
@@ -241,7 +241,7 @@ class TestCopyTree:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Not yet implemented on windows")
+                    reason="Skip test on Windows")
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
 

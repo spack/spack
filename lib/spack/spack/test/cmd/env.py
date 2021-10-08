@@ -202,7 +202,7 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install = SpackCommand('install')
     install('dependent-install')

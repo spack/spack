@@ -61,7 +61,7 @@ def module_type(request):
 # TODO : add tests for loads and find to check the prompt format
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_exit_with_failure(database, module_type, failure_args):
     with pytest.raises(spack.main.SpackCommandError):
@@ -69,7 +69,7 @@ def test_exit_with_failure(database, module_type, failure_args):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_remove_and_add(database, module_type):
     """Tests adding and removing a tcl module file."""
@@ -94,7 +94,7 @@ def test_remove_and_add(database, module_type):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.parametrize('cli_args', [
     ['libelf'],
@@ -110,7 +110,7 @@ def test_find(database, cli_args, module_type):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
 @pytest.mark.regression('2215')
@@ -131,7 +131,7 @@ def test_find_fails_on_multiple_matches():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
 @pytest.mark.regression('2570')
@@ -143,7 +143,7 @@ def test_find_fails_on_non_existing_packages():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
 def test_find_recursive():
@@ -158,7 +158,7 @@ def test_find_recursive():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_find_recursive_blacklisted(database, module_configuration):
     module_configuration('blacklist')
@@ -168,7 +168,7 @@ def test_find_recursive_blacklisted(database, module_configuration):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_loads_recursive_blacklisted(database, module_configuration):
     module_configuration('blacklist')
@@ -194,7 +194,7 @@ writer_cls = spack.modules.lmod.LmodModulefileWriter
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_setdefault_command(
         mutable_database, module_configuration

@@ -38,7 +38,7 @@ def mock_print(monkeypatch, info_lines):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.parametrize('pkg', [
     'openmpi',
     'trilinos',
@@ -52,7 +52,7 @@ def test_it_just_runs(pkg):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.parametrize('pkg_query,expected', [
     ('zlib', 'False'),
     ('gcc', 'True (version, variants)'),
@@ -70,7 +70,7 @@ def test_is_externally_detectable(pkg_query, expected, parser, info_lines):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.parametrize('pkg_query', [
     'hdf5',
     'cloverleaf3d',

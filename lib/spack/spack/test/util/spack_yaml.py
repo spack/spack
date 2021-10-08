@@ -6,7 +6,6 @@
 import re
 
 import spack.config
-import spack.platforms
 from spack.main import SpackCommand
 
 config_cmd = SpackCommand('config')

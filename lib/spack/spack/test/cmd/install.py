@@ -132,7 +132,7 @@ def test_install_dirty_flag(arguments, expected):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     """
     Ensure output printed from pkgs is captured by output redirection.
@@ -155,7 +155,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
                                        config, install_mockery, capfd):
@@ -171,7 +171,7 @@ def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_install_output_on_python_error(
         mock_packages, mock_archive, mock_fetch, config, install_mockery):
@@ -182,7 +182,7 @@ def test_install_output_on_python_error(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_install_with_source(
         mock_packages, mock_archive, mock_fetch, config, install_mockery):
@@ -196,7 +196,7 @@ def test_install_with_source(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
                            config, install_mockery, capfd):
@@ -214,7 +214,7 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_overwrite(
         mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
@@ -249,7 +249,7 @@ def test_install_overwrite(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_overwrite_not_installed(
         mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
@@ -264,7 +264,7 @@ def test_install_overwrite_not_installed(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_overwrite_multiple(
         mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
@@ -323,7 +323,7 @@ def test_install_overwrite_multiple(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.usefixtures(
     'mock_packages', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
 )
@@ -334,7 +334,7 @@ def test_install_conflicts(conflict_spec):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.usefixtures(
     'mock_packages', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
 )
@@ -345,7 +345,7 @@ def test_install_invalid_spec(invalid_spec):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('spec,concretize,error_code', [
     (Spec('mpi'), False, 1),
@@ -379,7 +379,7 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.usefixtures(
     'mock_packages', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
@@ -414,7 +414,7 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize('exc_typename,msg', [
     ('RuntimeError', 'something weird happened'),
@@ -455,7 +455,7 @@ def test_junit_output_with_errors(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('clispecs,filespecs', [
     [[],                  ['mpi']],
@@ -481,7 +481,7 @@ def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
                                   config, install_mockery):
     s = Spec('archive-files')
@@ -502,7 +502,7 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
                                            capfd, conflict_spec):
@@ -530,7 +530,7 @@ def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
                                   capfd):
@@ -552,7 +552,7 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing of e.g., Build.xml output
@@ -572,7 +572,7 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capture of e.g., Build.xml output
@@ -596,7 +596,7 @@ def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capture of e.g., Build.xml output
@@ -620,7 +620,7 @@ def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
                                       capfd, mock_packages, mock_archive,
@@ -660,7 +660,7 @@ def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_build_error_output(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
@@ -676,7 +676,7 @@ def test_build_error_output(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
@@ -692,7 +692,7 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
@@ -710,7 +710,7 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
     dep = Spec('dependency-install').concretized()
     root = Spec('dependent-install').concretized()
@@ -722,7 +722,7 @@ def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
     msg = ''
     with capfd.disabled():
@@ -736,7 +736,7 @@ def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery):
     dep = Spec('dependency-install').concretized()
     root = Spec('dependent-install').concretized()
@@ -750,7 +750,7 @@ def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.regression('12002')
 def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
                                           mutable_mock_env_path):
@@ -767,7 +767,7 @@ def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.regression('12002')
 def test_install_only_dependencies_of_all_in_env(
     tmpdir, mock_fetch, install_mockery, mutable_mock_env_path
@@ -789,7 +789,7 @@ def test_install_only_dependencies_of_all_in_env(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
                                mutable_mock_env_path):
     # To test behavior of --no-add option, we create the following environment:
@@ -897,7 +897,7 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_help_does_not_show_cdash_options(capsys):
     """
     Make sure `spack install --help` does not describe CDash arguments
@@ -909,7 +909,7 @@ def test_install_help_does_not_show_cdash_options(capsys):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_help_cdash(capsys):
     """Make sure `spack install --help-cdash` describes CDash arguments"""
     install_cmd = SpackCommand('install')
@@ -918,7 +918,7 @@ def test_install_help_cdash(capsys):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_auth_token(tmpdir, install_mockery, capfd):
     # capfd interferes with Spack's capturing
@@ -934,7 +934,7 @@ def test_cdash_auth_token(tmpdir, install_mockery, capfd):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing of e.g., Build.xml output
@@ -955,7 +955,7 @@ def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_compiler_bootstrap(
         install_mockery_mutable_config, mock_packages, mock_fetch,
         mock_archive, mutable_config, monkeypatch):
@@ -969,7 +969,7 @@ def test_compiler_bootstrap(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_compiler_bootstrap_from_binary_mirror(
         install_mockery_mutable_config, mock_packages, mock_fetch,
         mock_archive, mutable_config, monkeypatch, tmpdir):
@@ -1009,7 +1009,7 @@ def test_compiler_bootstrap_from_binary_mirror(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.regression('16221')
 def test_compiler_bootstrap_already_installed(
         install_mockery_mutable_config, mock_packages, mock_fetch,
@@ -1126,7 +1126,7 @@ def test_cache_install_full_hash_match(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_env_with_tests_all(tmpdir, mock_packages, mock_fetch,
                                     install_mockery, mutable_mock_env_path):
     env('create', 'test')
@@ -1138,7 +1138,7 @@ def test_install_env_with_tests_all(tmpdir, mock_packages, mock_fetch,
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_install_env_with_tests_root(tmpdir, mock_packages, mock_fetch,
                                      install_mockery, mutable_mock_env_path):
     env('create', 'test')

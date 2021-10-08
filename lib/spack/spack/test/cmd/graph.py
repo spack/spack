@@ -13,7 +13,7 @@ graph = SpackCommand('graph')
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_ascii():
@@ -22,7 +22,7 @@ def test_graph_ascii():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_dot():
@@ -31,7 +31,7 @@ def test_graph_dot():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_static():
@@ -40,7 +40,7 @@ def test_graph_static():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_installed():
@@ -53,7 +53,7 @@ def test_graph_installed():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('mock_packages', 'database')
 def test_graph_deptype():
@@ -62,7 +62,7 @@ def test_graph_deptype():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_graph_no_specs():
     """Tests spack graph with no arguments"""
 

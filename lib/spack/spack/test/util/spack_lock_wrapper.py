@@ -13,7 +13,6 @@ import pytest
 from llnl.util.filesystem import group_ids
 
 import spack.config
-import spack.platforms
 import spack.util.lock as lk
 
 

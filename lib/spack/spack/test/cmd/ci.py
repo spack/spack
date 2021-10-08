@@ -67,7 +67,7 @@ def set_env_var(key, val):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_specs_staging(config):
     """Make sure we achieve the best possible staging for the following
 spec DAG::
@@ -128,7 +128,7 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_with_env(tmpdir, mutable_mock_env_path, env_deactivate,
                               install_mockery, mock_packages, project_dir_env):
     """Make sure we can get a .gitlab-ci.yml from an environment file
@@ -225,7 +225,7 @@ def _validate_needs_graph(yaml_contents, needs_graph, artifacts):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_bootstrap_gcc(tmpdir, mutable_mock_env_path,
                                    env_deactivate, install_mockery,
                                    mock_packages, project_dir_env):
@@ -289,7 +289,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_bootstrap_artifacts_buildcache(tmpdir,
                                                     mutable_mock_env_path,
                                                     env_deactivate,
@@ -359,7 +359,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_with_env_missing_section(tmpdir, mutable_mock_env_path,
                                               env_deactivate, install_mockery,
                                               mock_packages, project_dir_env):
@@ -386,7 +386,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_with_cdash_token(tmpdir, mutable_mock_env_path,
                                       env_deactivate, install_mockery,
                                       mock_packages, project_dir_env):
@@ -443,7 +443,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_with_custom_scripts(tmpdir, mutable_mock_env_path,
                                          env_deactivate, install_mockery,
                                          mock_packages, monkeypatch,
@@ -536,7 +536,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_pkg_with_deps(tmpdir, mutable_mock_env_path,
                                    env_deactivate, install_mockery,
                                    mock_packages, project_dir_env):
@@ -592,7 +592,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_for_pr_pipeline(tmpdir, mutable_mock_env_path,
                                      env_deactivate, install_mockery,
                                      mock_packages, monkeypatch,
@@ -658,7 +658,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_with_external_pkg(tmpdir, mutable_mock_env_path,
                                        env_deactivate, install_mockery,
                                        mock_packages, monkeypatch,
@@ -940,7 +940,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.disable_clean_stage_check
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
                               install_mockery_mutable_config, mock_packages,
@@ -1093,7 +1093,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_push_mirror_contents_exceptions(monkeypatch, capsys):
     def faked(env, spec_file=None, packages=None, add_spec=True,
               add_deps=True, output_location=os.getcwd(),
@@ -1115,7 +1115,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,
                                            env_deactivate, install_mockery,
                                            mock_packages, monkeypatch,
@@ -1262,7 +1262,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_with_workarounds(tmpdir, mutable_mock_env_path,
                                       env_deactivate, install_mockery,
                                       mock_packages, monkeypatch,
@@ -1504,7 +1504,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_subcommands_without_mirror(tmpdir, mutable_mock_env_path,
                                        env_deactivate, mock_packages,
                                        install_mockery, project_dir_env):
@@ -1544,7 +1544,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ensure_only_one_temporary_storage():
     """Make sure 'gitlab-ci' section of env does not allow specification of
     both 'enable-artifacts-buildcache' and 'temporary-storage-url-prefix'."""
@@ -1586,7 +1586,7 @@ def test_ensure_only_one_temporary_storage():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_generate_temp_storage_url(tmpdir, mutable_mock_env_path,
                                       env_deactivate, install_mockery,
                                       mock_packages, monkeypatch,
@@ -1703,7 +1703,7 @@ spack:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_ci_reproduce(tmpdir, mutable_mock_env_path, env_deactivate,
                       install_mockery, mock_packages, monkeypatch,
                       last_two_git_commits, project_dir_env, mock_binary_index):

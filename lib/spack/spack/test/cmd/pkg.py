@@ -106,7 +106,7 @@ pkg = spack.main.SpackCommand('pkg')
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_packages_path():
     assert (spack.cmd.pkg.packages_path() ==
             spack.repo.path.get_repo('builtin').packages_path)
@@ -194,7 +194,7 @@ def test_pkg_removed(mock_pkg_git_repo):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_pkg_changed(mock_pkg_git_repo):
     out = split(pkg('changed', 'HEAD^^', 'HEAD^'))
     assert out == []

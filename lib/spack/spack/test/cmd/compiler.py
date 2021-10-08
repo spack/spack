@@ -64,7 +64,7 @@ done
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.regression('11678,13138')
 def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir):
     with tmpdir.as_cwd():
@@ -118,7 +118,7 @@ def test_compiler_remove(mutable_config, mock_packages):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_compiler_add(
         mutable_config, mock_packages, mock_compiler_dir, mock_compiler_version
 ):
@@ -199,7 +199,7 @@ fi
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.regression('17590')
 def test_compiler_find_mixed_suffixes(
         no_compilers_yaml, working_env, clangdir):
@@ -236,7 +236,7 @@ def test_compiler_find_mixed_suffixes(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.regression('17590')
 def test_compiler_find_prefer_no_suffix(
         no_compilers_yaml, working_env, clangdir):
@@ -263,7 +263,7 @@ def test_compiler_find_prefer_no_suffix(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_compiler_find_path_order(no_compilers_yaml, working_env, clangdir):
     """Ensure that we find compilers that come first in the PATH first"""
 

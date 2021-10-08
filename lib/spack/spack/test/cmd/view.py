@@ -27,7 +27,7 @@ def create_projection_file(tmpdir, projection):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add',
                                  'copy', 'relocate'])
 def test_view_link_type(
@@ -45,7 +45,7 @@ def test_view_link_type(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.parametrize('add_cmd', ['hardlink', 'symlink', 'hard', 'add',
                                      'copy', 'relocate'])
 def test_view_link_type_remove(
@@ -62,7 +62,7 @@ def test_view_link_type_remove(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add',
                                  'copy', 'relocate'])
 def test_view_projections(
@@ -89,7 +89,7 @@ def test_view_projections(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_multiple_projections(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, ):
@@ -113,7 +113,7 @@ def test_view_multiple_projections(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_multiple_projections_all_first(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, ):
@@ -137,7 +137,7 @@ def test_view_multiple_projections_all_first(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_external(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -148,7 +148,7 @@ def test_view_external(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_extension(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, ):
@@ -176,7 +176,7 @@ def test_view_extension(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_extension_projection(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, ):
@@ -211,7 +211,7 @@ def test_view_extension_projection(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_extension_remove(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, ):
@@ -232,7 +232,7 @@ def test_view_extension_remove(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_extension_conflict(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, ):
@@ -246,7 +246,7 @@ def test_view_extension_conflict(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_extension_conflict_ignored(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, ):
@@ -261,7 +261,7 @@ def test_view_extension_conflict_ignored(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_extension_global_activation(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, ):
@@ -292,7 +292,7 @@ def test_view_extension_global_activation(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_extendee_with_global_activations(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery, ):
@@ -307,7 +307,7 @@ def test_view_extendee_with_global_activations(
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_view_fails_with_missing_projections_file(tmpdir):
     viewpath = str(tmpdir.mkdir('view'))
     projection_file = os.path.join(str(tmpdir), 'nonexistent')

@@ -30,6 +30,13 @@ from typing import Dict  # novm
 
 import six
 
+try:
+    import uuid
+    _use_uuid = True
+except ImportError:
+    _use_uuid = False
+    pass
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 

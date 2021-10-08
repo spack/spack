@@ -17,7 +17,7 @@ uninstall = SpackCommand('uninstall')
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_mode_required(mutable_database):
     with pytest.raises(SystemExit):
@@ -25,7 +25,7 @@ def test_mark_mode_required(mutable_database):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_spec_required(mutable_database):
     with pytest.raises(SpackCommandError):
@@ -33,7 +33,7 @@ def test_mark_spec_required(mutable_database):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_all_explicit(mutable_database):
     mark('-e', '-a')
@@ -43,7 +43,7 @@ def test_mark_all_explicit(mutable_database):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_all_implicit(mutable_database):
     mark('-i', '-a')
@@ -53,7 +53,7 @@ def test_mark_all_implicit(mutable_database):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_one_explicit(mutable_database):
     mark('-e', 'libelf')
@@ -64,7 +64,7 @@ def test_mark_one_explicit(mutable_database):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_one_implicit(mutable_database):
     mark('-i', 'externaltest')
@@ -74,7 +74,7 @@ def test_mark_one_implicit(mutable_database):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_all_implicit_then_explicit(mutable_database):
     mark('-i', '-a')

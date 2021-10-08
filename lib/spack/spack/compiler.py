@@ -588,6 +588,7 @@ class Compiler(object):
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
+        pass
 
     def __repr__(self):
         """Return a string representation of the compiler toolchain."""

@@ -112,6 +112,7 @@ class WafPackage(PackageBase):
         By default, does nothing. Override this if you want to
         add package-specific tests.
         """
+        pass
 
     run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
@@ -121,6 +122,7 @@ class WafPackage(PackageBase):
         By default, does nothing. Override this if you want to
         add package-specific tests.
         """
+        pass
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 

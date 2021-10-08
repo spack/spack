@@ -12,7 +12,7 @@ providers = SpackCommand('providers')
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.parametrize('pkg', [
     ('mpi',),
     ('mpi@2',),
@@ -24,7 +24,7 @@ def test_it_just_runs(pkg):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.parametrize('vpkg,provider_list', [
     (('mpi',), ['intel-mpi',
                 'intel-parallel-studio',

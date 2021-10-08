@@ -234,7 +234,7 @@ env:
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_dev_build_env_version_mismatch(tmpdir, mock_packages, install_mockery,
                                         mutable_mock_env_path):
     """Test Spack constraints concretization by develop specs."""

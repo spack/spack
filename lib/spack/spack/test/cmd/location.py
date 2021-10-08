@@ -50,7 +50,7 @@ def mock_spec():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_location_build_dir(mock_spec):
     """Tests spack location --build-dir."""
     spec, pkg = mock_spec
@@ -58,7 +58,7 @@ def test_location_build_dir(mock_spec):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.regression('22738')
 def test_location_source_dir(mock_spec):
     """Tests spack location --source-dir."""
@@ -68,7 +68,7 @@ def test_location_source_dir(mock_spec):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_location_source_dir_missing():
     """Tests spack location --source-dir with a missing source directory."""
     spec = 'mpileaks'
@@ -80,7 +80,7 @@ def test_location_source_dir_missing():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.parametrize('options', [([]),
                                      (['--source-dir', 'mpileaks']),
                                      (['--env', 'missing-env']),
@@ -92,7 +92,7 @@ def test_location_cmd_error(options):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_location_env(mock_test_env):
     """Tests spack location --env."""
     test_env_name, env_dir = mock_test_env
@@ -100,7 +100,7 @@ def test_location_env(mock_test_env):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_location_env_flag_interference(mutable_mock_env_path, tmpdir):
     """
     Tests that specifying an active environment using `spack -e x location ...`
@@ -123,7 +123,7 @@ def test_location_env_flag_interference(mutable_mock_env_path, tmpdir):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_location_env_missing():
     """Tests spack location --env."""
     missing_env_name = 'missing-env'
@@ -133,7 +133,7 @@ def test_location_env_missing():
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_location_install_dir(mock_spec):
     """Tests spack location --install-dir."""
@@ -142,7 +142,7 @@ def test_location_install_dir(mock_spec):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_location_package_dir(mock_spec):
     """Tests spack location --package-dir."""
@@ -151,7 +151,7 @@ def test_location_package_dir(mock_spec):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.parametrize('option,expected', [
     ('--module-dir', spack.paths.module_path),
@@ -163,7 +163,7 @@ def test_location_paths_options(option, expected):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.parametrize('specs,expected', [
     ([], "You must supply a spec."),
     (['spec1', 'spec2'], "Too many specs.  Supply only one.")])
@@ -174,7 +174,7 @@ def test_location_spec_errors(specs, expected):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_location_stage_dir(mock_spec):
     """Tests spack location --stage-dir."""
@@ -183,7 +183,7 @@ def test_location_stage_dir(mock_spec):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_location_stages(mock_spec):
     """Tests spack location --stages."""

@@ -155,7 +155,7 @@ mpich@1.0
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_mirror_crud(tmp_scope, capsys):
     with capsys.disabled():
         mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')
@@ -187,7 +187,7 @@ def test_mirror_crud(tmp_scope, capsys):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_mirror_nonexisting(tmp_scope):
     with pytest.raises(SpackCommandError):
         mirror('remove', '--scope', tmp_scope, 'not-a-mirror')
@@ -198,7 +198,7 @@ def test_mirror_nonexisting(tmp_scope):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Skip test on Windows")
 def test_mirror_name_collision(tmp_scope):
     mirror('add', '--scope', tmp_scope, 'first', '1')
 
