@@ -21,4 +21,4 @@ class PyBleach(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-six@1.9.0:', type=('build', 'run'))
     depends_on('py-webencodings', type=('build', 'run'))
-    depends_on('py-packaging', when='@3.1.5:', type=('test', 'run'))
+    depends_on('py-packaging', when='@3.1.5:', type=('build', 'run'))
