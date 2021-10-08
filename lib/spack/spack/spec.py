@@ -2609,7 +2609,7 @@ class Spec(object):
 
         result = spack.solver.asp.solve([self], tests=tests)
         if not result.satisfiable:
-            result.print_cores()
+            result.minimize_and_print_cores()
             raise spack.error.UnsatisfiableSpecError(
                 self, "unknown", "Unsatisfiable!")
 

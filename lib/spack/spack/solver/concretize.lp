@@ -133,7 +133,6 @@ path(Parent, Child) :- depends_on(Parent, Child).
 path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 :- path(A, B), path(B, A).
 
-:- error("This should be the only error").
 #defined error/1.
 
 #defined dependency_type/2.

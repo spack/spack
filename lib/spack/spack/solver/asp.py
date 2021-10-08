@@ -205,6 +205,9 @@ class Result(object):
         self.warnings = None
         self.nmodels = 0
 
+        # Saved control object for reruns when necessary
+        self.control = None
+
         # specs ordered by optimization level
         self.answers = []
         self.cores = []
@@ -218,11 +221,41 @@ class Result(object):
         # Concrete specs
         self._concrete_specs = None
 
-    def print_cores(self):
+    def print_core(self, core):
+        symbols = dict(
+            (a.literal, a.symbol)
+            for a in self.control.symbolic_atoms
+        )
+
+        core_symbols = []
+        for atom in core:
+            sym = symbols[atom]
+            if sym.name == "rule":
+                sym = sym.arguments[0].string
+            core_symbols.append(sym)
+
+        tty.msg(
+            "The following constraints are unsatisfiable:",
+            *sorted(str(symbol) for symbol in core_symbols))
+
+    def minimize_and_print_cores(self):
+        assert self.control
+
         for core in self.cores:
-            tty.msg(
-                "The following constraints are unsatisfiable:",
-                *sorted(str(symbol) for symbol in core))
+            min_core = self.minimize_core(core)
+            self.print_core(min_core)
+
+    def minimize_core(self, core):
+        assert self.control
+
+        min_core = core[:]
+        for fact in core:
+            # Try solving without this fact
+            min_core.remove(fact)
+            ret = self.control.solve(assumptions=min_core)
+            if not ret.unsatisfiable:
+                min_core.append(fact)
+        return min_core
 
     @property
     def specs(self):
@@ -311,7 +344,7 @@ class PyclingoDriver(object):
     def newline(self):
         self.out.write('\n')
 
-    def fact(self, head): # assumption=True
+    def fact(self, head, assumption=True):
         """ASP fact (a rule without a body)."""
         symbol = head.symbol() if hasattr(head, 'symbol') else head
 
@@ -319,7 +352,7 @@ class PyclingoDriver(object):
 
         atom = self.backend.add_atom(symbol)
         self.backend.add_rule([atom], [], choice=self.cores)
-        if self.cores:  # and assumption
+        if self.cores and assumption:
             self.assumptions.append(atom)
 
     def solve(
@@ -367,6 +400,7 @@ class PyclingoDriver(object):
         solve_kwargs = {"assumptions": self.assumptions,
                         "on_model": on_model,
                         "on_core": cores.append}
+
         if clingo_cffi:
             solve_kwargs["on_unsat"] = cores.append
         solve_result = self.control.solve(**solve_kwargs)
@@ -409,18 +443,8 @@ class PyclingoDriver(object):
             result.nmodels = len(models)
 
         elif cores:
-            symbols = dict(
-                (a.literal, a.symbol)
-                for a in self.control.symbolic_atoms
-            )
-            for core in cores:
-                core_symbols = []
-                for atom in core:
-                    sym = symbols[atom]
-                    if sym.name == "rule":
-                        sym = sym.arguments[0].string
-                    core_symbols.append(sym)
-                result.cores.append(core_symbols)
+            result.control = self.control
+            result.cores.extend(cores)
 
         if timers:
             timer.write_tty()
@@ -463,10 +487,9 @@ class SpackSolverSetup(object):
             "Cyclic dependency requested",
             "No satisfying compiler is compatible with a satisfying target",
             "No satisfying compiler is compatible with a satisfying os",
-            "This should be the only error",
         ]
         for message in error_messages:
-            self.gen.fact(fn.error(message))
+            self.gen.fact(fn.error(message), assumption=True)
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
