@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from llnl.util import tty
 
 
 class Zstd(MakefilePackage):
@@ -37,10 +38,10 @@ class Zstd(MakefilePackage):
     depends_on('lzma', when='+programs')
     depends_on('lz4', when='+programs')
 
-    def _make(self, *args):
+    def _make(self, *args, **kwargs):
         # PREFIX must be defined on macOS even when building the library, since
         # it gets hardcoded into the library's install_path
-        make('VERBOSE=1', 'PREFIX=' + self.prefix, '-C', *args)
+        make('VERBOSE=1', 'PREFIX=' + self.prefix, '-C', *args, **kwargs)
 
     def build(self, spec, prefix):
         self._make('lib')
@@ -48,6 +49,6 @@ class Zstd(MakefilePackage):
             self._make('programs')
 
     def install(self, spec, prefix):
-        self._make('lib', 'install')
+        self._make('lib', 'install', parallel=False)
         if spec.variants['programs'].value:
             self._make('programs', 'install')
