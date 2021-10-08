@@ -49,8 +49,7 @@ class PyPymatgen(PythonPackage):
     depends_on('py-scipy@1.5.0:',         when='@2021.1.1:', type=('build', 'run'))
     depends_on('py-spglib@1.9.9.44:',     when='@2021.1.1:', type=('build', 'run'))
     depends_on('py-sympy',                when='@2021.1.1:', type=('build', 'run'))
-    depends_on('py-tabulate',             when='@2021.1.1:', type=('build', 'run'))
     depends_on('py-uncertainties@3.1.4:', when='@2021.1.1:', type=('build', 'run'))
     # while optional, for imports of spack install --test=root, these are required
     depends_on('py-networkx@2.2:',        when='@2021.1.1:', type=('build', 'run'))
-    depends_on('py-netcdf4@1.5.3:',       when='@2021.1.1:', type=('test', 'run'))
+    depends_on('py-netcdf4@1.5.3:',       when='@2021.1.1:', type=('test'))
