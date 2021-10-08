@@ -894,3 +894,12 @@ def test_prefix_write_lock_error(mutable_database, monkeypatch):
     with pytest.raises(Exception):
         with spack.store.db.prefix_write_lock(s):
             assert False
+
+
+@pytest.mark.regression('26600')
+def test_database_works_with_empty_dir(tmpdir):
+    db = spack.database.Database(str(tmpdir))
+    with db.read_transaction():
+        db.query()
+    # Check that reading an empty directory didn't create a new index.json
+    assert not os.path.exists(db._index_path)
