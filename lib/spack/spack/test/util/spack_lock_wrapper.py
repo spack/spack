@@ -49,8 +49,6 @@ def test_disable_locking(tmpdir):
     assert old_value == spack.config.get('config:locks')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="group ids not supported on Windows")
 # "Disable" mock_stage fixture to avoid subdir permissions issues on cleanup.
 @pytest.mark.nomockstage
 def test_lock_checks_user(tmpdir):
@@ -85,8 +83,6 @@ def test_lock_checks_user(tmpdir):
     lk.check_lock_safety(path)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="group ids not supported on Windows")
 # "Disable" mock_stage fixture to avoid subdir permissions issues on cleanup.
 @pytest.mark.nomockstage
 def test_lock_checks_group(tmpdir):

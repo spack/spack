@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
-import sys
-
-import pytest
 
 import spack.config
 from spack.main import SpackCommand
@@ -44,8 +41,6 @@ def check_blame(element, file_name, line=None):
     assert file_name in element_line
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_config_blame(config):
     """check blame info for elements in mock configuration."""
     config_file = config.get_config_filename('site', 'config')
@@ -58,8 +53,6 @@ def test_config_blame(config):
     check_blame('dirty', config_file, 15)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_config_blame_with_override(config):
     """check blame for an element from an override scope"""
     config_file = config.get_config_filename('site', 'config')

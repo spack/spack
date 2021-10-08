@@ -65,8 +65,6 @@ def test_reset_in_file_scopes(mutable_config, scopes):
         assert not os.path.exists(bootstrap_yaml)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_reset_in_environment(mutable_mock_env_path, mutable_config):
     env = spack.main.SpackCommand('env')
     env('create', 'bootstrap-test')

@@ -47,7 +47,6 @@ def stage(tmpdir_factory):
     yield s
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 class TestCopy:
     """Tests for ``filesystem.copy``"""
 
@@ -101,7 +100,6 @@ def check_added_exe_permissions(src, dst):
             assert dst_mode & perm
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 class TestInstall:
     """Tests for ``filesystem.install``"""
 
@@ -314,7 +312,6 @@ class TestInstallTree:
                 fs.install_tree('source', 'source/sub/directory')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_paths_containing_libs(dirs_with_libfiles):
     lib_to_dirs, all_dirs = dirs_with_libfiles
 
@@ -325,7 +322,6 @@ def test_paths_containing_libs(dirs_with_libfiles):
             set(lib_to_dirs['libirc']))
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_move_transaction_commit(tmpdir):
 
     fake_library = tmpdir.mkdir('lib').join('libfoo.so')
@@ -342,7 +338,6 @@ def test_move_transaction_commit(tmpdir):
     assert new_md5 == fs.hash_directory(str(tmpdir))
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_move_transaction_rollback(tmpdir):
 
     fake_library = tmpdir.mkdir('lib').join('libfoo.so')
@@ -362,7 +357,6 @@ def test_move_transaction_rollback(tmpdir):
     assert h == fs.hash_directory(str(tmpdir))
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.regression('10601')
 @pytest.mark.regression('10603')
 def test_recursive_search_of_headers_from_prefix(
@@ -411,7 +405,6 @@ else:
     ]
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('list_of_headers,expected_directories', dir_list)
 def test_computation_of_header_directories(
         list_of_headers, expected_directories
@@ -420,7 +413,6 @@ def test_computation_of_header_directories(
     assert hl.directories == expected_directories
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_headers_directory_setter():
     if sys.platform == "win32":
         # TODO: Test with \\'s
@@ -483,7 +475,6 @@ else:
     ]
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('path,entry,expected', paths)
 def test_partition_path(path, entry, expected):
     print(fs.partition_path(path, entry))
@@ -506,13 +497,11 @@ else:
     ]
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('path,expected', path_list)
 def test_prefixes(path, expected):
     assert fs.prefixes(path) == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.regression('7358')
 @pytest.mark.parametrize('regex,replacement,filename,keyword_args', [
     (r"\<malloc\.h\>", "<stdlib.h>", 'x86_cpuid_info.c', {}),
@@ -541,7 +530,6 @@ def test_filter_files_with_different_encodings(
         assert replacement in f.read()
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_filter_files_multiple(tmpdir):
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
@@ -566,7 +554,6 @@ def test_filter_files_multiple(tmpdir):
         assert '<stdio.h>' not in f.read()
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 # Each test input is a tuple of entries which prescribe
 # - the 'subdirs' to be created from tmpdir
 # - the 'files' in that directory
@@ -652,7 +639,6 @@ def test_safe_remove(files_or_dirs, tmpdir):
         assert os.path.exists(entry)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.regression('18441')
 def test_content_of_files_with_same_name(tmpdir):
     # Create two subdirectories containing a file with the same name,
@@ -672,7 +658,6 @@ def test_content_of_files_with_same_name(tmpdir):
     assert file2.read().strip() == 'file2'
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_keep_modification_time(tmpdir):
     file1 = tmpdir.ensure('file1')
     file2 = tmpdir.ensure('file2')
