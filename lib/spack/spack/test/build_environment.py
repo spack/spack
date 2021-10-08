@@ -6,6 +6,7 @@
 import os
 import platform
 import posixpath
+import sys
 
 import pytest
 
