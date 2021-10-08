@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
-class Pkgconf(AutotoolsPackage):
+class Pkgconf(Package):
     """pkgconf is a program which helps to configure compiler and linker
     flags for development frameworks. It is similar to pkg-config from
     freedesktop.org, providing additional functionality while also
@@ -29,6 +31,8 @@ class Pkgconf(AutotoolsPackage):
     version('1.3.8',  sha256='fc06f058e6905435481f649865ca51000192c91808f307b1053ca5e859cb1488')
 
     provides('pkgconfig')
+
+    depends_on('meson@0.47:', when='@:1.4.0')
 
     # https://github.com/spack/spack/issues/11704
     patch('nvhpc.patch', when='@1.7.3%nvhpc')
@@ -65,8 +69,32 @@ class Pkgconf(AutotoolsPackage):
         # thus disable the tests to be able to run --test=all for other specs
         pass
 
+    def meson_args(self):
+        return ["-Dtests=false"] + std_meson_args
+
+    def install(self, spec, prefix):
+        with working_dir('spack-build', create=True):
+            meson('..', *self.meson_args())
+            ninja('-v')
+            ninja('install')
+
+    @when('@:1.3.10')
+    def install(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix))
+        make()
+        if self.run_tests:
+            make('check')
+        make('install')
+        if self.run_tests:
+            make('installcheck')
+
     @run_after('install')
     def link_pkg_config(self):
-        symlink('pkgconf', '{0}/pkg-config'.format(self.prefix.bin))
+        exe = os.path.join(self.build_directory, 'pkgconf')
+        abtr = os.path.join(self.prefix.bin, 'pkg-config')
+        if os.name == 'nt':
+            exe += '.exe'
+            abtr += '.exe'
+        symlink(exe, abtr)
         symlink('pkgconf.1',
                 '{0}/pkg-config.1'.format(self.prefix.share.man.man1))
