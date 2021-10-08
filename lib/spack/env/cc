@@ -271,6 +271,10 @@ case "$command" in
         ;;
     ld|ld.gold|ld.lld)
         mode=ld
+        # ld.lld may not be in PATH, but it should be provided by llvm/clang:
+        if [ "$command" = ld.lld ] && [ "${SPACK_CC##*/}" = clang ]; then
+	    [ -x "${SPACK_CC%/*}/ld.lld" ] && command="${SPACK_CC%/*}/ld.lld"
+        fi
         ;;
     *)
         die "Unknown compiler: $command"
