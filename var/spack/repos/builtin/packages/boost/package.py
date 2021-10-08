@@ -431,10 +431,13 @@ class Boost(Package):
         options.append('-show-libraries')
 
     def determine_b2_options(self, spec, options):
+        variant_string = ''
         if '+debug' in spec:
-            options.append('variant=debug')
+            variant_string = 'variant=debug'
         else:
-            options.append('variant=release')
+            variant_string = 'variant=release'
+
+        options.append(variant_string)
 
         if '+icu' in spec:
             options.extend(['-s', 'ICU_PATH=%s' % spec['icu4c'].prefix])
