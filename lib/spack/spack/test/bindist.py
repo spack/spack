@@ -670,15 +670,17 @@ def test_update_index_fix_deps(monkeypatch, tmpdir, mutable_config):
 
 def test_FetchCacheError_only_accepts_lists_of_errors():
     with pytest.raises(TypeError, match="list"):
-        bindist.FetchCacheError()
+        bindist.FetchCacheError("error")
 
 
 def test_FetchCacheError_pretty_printing_multiple():
     e = bindist.FetchCacheError([RuntimeError("Oops!"), TypeError("Trouble!")])
     str_e = str(e)
+    print("'" + str_e + "'")
     assert "Multiple errors" in str_e
     assert "Error 1: RuntimeError: Oops!" in str_e
     assert "Error 2: TypeError: Trouble!" in str_e
+    assert str_e.rstrip() == str_e
 
 
 def test_FetchCacheError_pretty_printing_single():
@@ -686,3 +688,4 @@ def test_FetchCacheError_pretty_printing_single():
     str_e = str(e)
     assert "Multiple errors" not in str_e
     assert "RuntimeError: Oops!" in str_e
+    assert str_e.rstrip() == str_e

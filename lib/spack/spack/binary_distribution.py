@@ -54,13 +54,15 @@ class FetchCacheError(Exception):
             raise TypeError("Expected a list of errors")
         self.errors = errors
         if len(errors) > 1:
+            msg = "        Error {0}: {1}: {2}"
             self.message = "Multiple errors during fetching:\n"
-            for (i, err) in enumerate(errors):
-                self.message += "        Error {0}: {1}: {2}\n".format(
-                    i + 1, err.__class__.__name__, str(err))
+            self.message += "\n".join((
+                msg.format(i + 1, err.__class__.__name__, str(err))
+                for (i, err) in enumerate(errors)
+            ))
         else:
             err = errors[0]
-            self.message = "{0}: {1}\n".format(err.__class__.__name__, str(err))
+            self.message = "{0}: {1}".format(err.__class__.__name__, str(err))
         super().__init__(self.message)
 
 
