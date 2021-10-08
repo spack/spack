@@ -22,5 +22,6 @@ class PyDecorator(PythonPackage):
     version('4.3.0', sha256='c39efa13fbdeb4506c476c9b3babf6a718da943dab7811c206005a4a956c080c')
     version('4.0.9', sha256='90022e83316363788a55352fe39cfbed357aa3a71d90e5f2803a35471de4bba8')
 
+    depends_on('python@3.5:', when='@5.0.1:', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
