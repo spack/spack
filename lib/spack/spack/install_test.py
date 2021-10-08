@@ -310,5 +310,9 @@ class TestSuiteFailure(spack.error.SpackError):
         super(TestSuiteFailure, self).__init__(msg)
 
 
+class TestSuiteSpecError(spack.error.SpackError):
+    """Raised when there is an issue associated with the spec being tested."""
+
+
 class TestSuiteNameError(spack.error.SpackError):
     """Raised when there is an issue with the naming of the test suite."""
