@@ -80,7 +80,7 @@ def test_config_blame_defaults():
     config_blame = config_cmd("blame", "config")
     for line in config_blame.split("\n"):
         # currently checking only simple lines with dict keys
-        match = re.match(r"^([^:]+):(\d+)\s+([^#:]+):\s+(.*)", line)
+        match = re.match(r"^([^:]+):(\d+)\s+([^:]+):\s+(.*)", line)
 
         # check that matches are on the lines they say they are
         if match:

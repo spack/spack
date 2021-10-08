@@ -27,9 +27,9 @@ fake_archives = [compose_to_dict('.'.join(['Foo', ext]), ext, ext_archive) for e
 
 
 def build_temp_archive(extension, mode, archiver, compression, archive_file, ext_dir):
-    if compression.lower() == ':z':
-        pytest.skip('Extension %s unsupported for testing' % compression.strip(':'))
-    if compression.strip(':') in ['xz', 'txz']:
+    if compression.lower() == 'z':
+        pytest.skip('Extension %s unsupported for testing')
+    if compression in ['xz', 'txz']:
         try:
             import lzma  # noqa # novermin
         except ImportError:
@@ -38,7 +38,7 @@ def build_temp_archive(extension, mode, archiver, compression, archive_file, ext
             mode = 'system_tar'
     out = os.path.join(ext_dir, 'Foo.%s' % extension)
     if mode == 'tarfile':
-        archive = archiver.open(out, 'w%s' % compression)
+        archive = archiver.open(out, 'w:%s' % compression)
         archive.add(archive_file)
         archive.close()
     elif mode == 'system_tar':
@@ -51,22 +51,19 @@ def build_temp_archive(extension, mode, archiver, compression, archive_file, ext
 
 
 def derive_compression_algo(ext, style):
+    native = style == 'native'
     if ext and re.match(r'\.?zip$', ext):
-        return 'zipfile' if style == "native" else "unzip"
+        return 'zipfile' if native else "unzip"
     if ext and re.match(r'gz', ext):
-        return 'gzip' if style == "native" else "gzip"
+        return 'gzip' if native else "gzip"
     if ext and re.match(r'bz2', ext):
-        return 'bz2' if style == "native" else "bunzip2"
+        return 'bz2' if native else "bunzip2"
     if ext and not re.search(r'\.?Z', ext):
-        return 'tarfile' if style == "native" else "tar"
+        return 'tarfile' if native else "tar"
 
 
 def is_on_system(util):
-    try:
-        which(util, required=True)
-    except CommandNotFoundError:
-        return False
-    return True
+    return bool(which(util, required=False))
 
 
 def module(ext, archiver=None):
@@ -93,12 +90,12 @@ def archive_file(tmpdir_factory, request):
     extension = request.param
     mod = 'tarfile'
     archiver = [0]
-    compression = ':' + extension.lower()
+    compression = extension.lower()
     decomp_ext = extension.split('.')
     if decomp_ext[1:]:
-        compression = ':' + decomp_ext[-1]
+        compression = decomp_ext[-1]
     elif re.match('t', extension) and not re.match('tar', extension):
-        compression = ':' + extension[1:]
+        compression = extension[1:]
         if extension[1:] == 'bz':
             compression = compression + '2'
     if extension == 'zip':
@@ -131,7 +128,7 @@ def test_native_unpacking(tmpdir_factory, archive_file):
 def test_system_unpacking(tmpdir_factory, archive_file):
     extension = scomp.extension(archive_file)
     if not skip(extension, "system"):
-        pytest.skip("Extension %s does not have system support." % extension)
+        pytest.fail("Extension %s does not have system support." % extension)
     # configure testing env, remove import resolution attributes
     tmp_path = sys.path
     catch_modules = sys.modules
@@ -151,10 +148,10 @@ def test_system_unpacking(tmpdir_factory, archive_file):
     sys.modules = catch_modules
 
 
-@pytest.mark.xfail
 def test_unallowed_extension():
     bad_ext_archive = 'Foo.py'
-    scomp.decompressor_for(bad_ext_archive, 'py')
+    with pytest.raises(CommandNotFoundError):
+        scomp.decompressor_for(bad_ext_archive, 'py')
 
 
 @pytest.mark.parametrize('archive', fake_archives)
