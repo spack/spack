@@ -197,6 +197,15 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("%gcc@8:", when="@:5")
     conflicts("%gcc@:5.0", when="@8:")
 
+    # libc++ of LLVM13, see https://libcxx.llvm.org/#platform-and-compiler-support
+    # @13 does not support %gcc@:10 https://bugs.llvm.org/show_bug.cgi?id=51359#c1
+    # GCC    11     - latest stable release per GCC release page
+    # Clang: 11, 12 - latest two stable releases per LLVM release page
+    # AppleClang 12 - latest stable release per Xcode release page
+    conflicts("%gcc@:10",         when="@13:+libcxx")
+    conflicts("%clang@:10",       when="@13:+libcxx")
+    conflicts("%apple_clang@:11", when="@13:+libcxx")
+
     # OMP TSAN exists in > 5.x
     conflicts("+omp_tsan", when="@:5")
 
