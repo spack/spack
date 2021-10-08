@@ -63,7 +63,7 @@ class FetchCacheError(Exception):
         else:
             err = errors[0]
             self.message = "{0}: {1}".format(err.__class__.__name__, str(err))
-        super().__init__(self.message)
+        super(FetchCacheError, self).__init__(self.message)
 
 
 class BinaryCacheIndex(object):
