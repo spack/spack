@@ -643,21 +643,47 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     @run_after('install')
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
-           the compiler used to build the executable."""
+           the compiler used to build the executable.
+
+           Structure the specs file so that users can define a custom spec file
+           to suppress the spack-linked rpaths to facilitate rpath adjustment
+           for relocatable binaries. The custom spec file
+           :file:`{norpath}.spec` will have a single
+           line followed by two blanks::
+
+               *link_libgcc_rpath:
+
+
+
+           and it can be passed to the GCC linker using the argument
+           ``--specs=norpath.spec``."""
         if not self.spec_dir:
             tty.warn('Could not install specs for {0}.'.format(
                      self.spec.format('{name}{@version}')))
             return
 
         gcc = self.spec['gcc'].command
-        lines = gcc('-dumpspecs', output=str).strip().split('\n')
+        lines = gcc('-dumpspecs', output=str).splitlines(True)
         specs_file = join_path(self.spec_dir, 'specs')
+
+        # Save a backup
+        with open(specs_file + '.orig', 'w') as out:
+            out.writelines(lines)
+
+        # Overwrite the specs file
         with open(specs_file, 'w') as out:
             for line in lines:
-                out.write(line + '\n')
-                if line.startswith('*link:'):
-                    out.write('-rpath {0}:{1} '.format(
-                              self.prefix.lib, self.prefix.lib64))
+                out.write(line)
+                if line.startswith('*link_libgcc:'):
+                    # Insert at start of line following link_libgcc, which gets
+                    # inserted into every call to the linker
+                    out.write('%(link_libgcc_rpath) ')
+
+            # Add easily-overridable rpath string at the end
+            rpath = ':'.join([self.prefix.lib, self.prefix.lib64])
+            out.write('\n'
+                      '*link_libgcc_rpath:\n'
+                      '-rpath {0}\n'.format(rpath))
         set_install_permissions(specs_file)
 
     def setup_run_environment(self, env):
