@@ -17,7 +17,7 @@ class PyStorm(PythonPackage):
     version('0.20', sha256='35f5883e93a262002ca59dbb39645c67434a182d758543c4a2467ff690ac23a5')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-six', when='@0.23:')
+    depends_on('py-six',               type=('build', 'run'),  when='@0.23:')
     depends_on('py-zope-interface@4:', type=('build', 'run'))
-    depends_on('python@2.7:2.8', when='@:0.20')
-    depends_on('python@2.7:2.8,3.5:', when='@0.21:')
+    depends_on('python@2.7:2.8',       type=('build', 'run'),  when='@:0.20')
+    depends_on('python@2.7:2.8,3.5:',  type=('build', 'run'),  when='@0.21:')
