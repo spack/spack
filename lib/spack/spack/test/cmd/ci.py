@@ -118,7 +118,8 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
 
 def test_ci_generate_with_env(tmpdir, mutable_mock_env_path,
-                              install_mockery, mock_packages, project_dir_env):
+                              install_mockery, mock_packages, project_dir_env,
+                              mock_binary_index):
     """Make sure we can get a .gitlab-ci.yml from an environment file
        which has the gitlab-ci, cdash, and mirrors sections."""
     project_dir_env(tmpdir.strpath)
@@ -343,7 +344,8 @@ spack:
 
 def test_ci_generate_with_env_missing_section(tmpdir, mutable_mock_env_path,
                                               install_mockery,
-                                              mock_packages, project_dir_env):
+                                              mock_packages, project_dir_env,
+                                              mock_binary_index):
     """Make sure we get a reasonable message if we omit gitlab-ci section"""
     project_dir_env(tmpdir.strpath)
     filename = str(tmpdir.join('spack.yaml'))
@@ -368,7 +370,8 @@ spack:
 
 def test_ci_generate_with_cdash_token(tmpdir, mutable_mock_env_path,
                                       install_mockery,
-                                      mock_packages, project_dir_env):
+                                      mock_packages, project_dir_env,
+                                      mock_binary_index):
     """Make sure we it doesn't break if we configure cdash"""
     project_dir_env(tmpdir.strpath)
     filename = str(tmpdir.join('spack.yaml'))
@@ -424,7 +427,7 @@ spack:
 def test_ci_generate_with_custom_scripts(tmpdir, mutable_mock_env_path,
                                          install_mockery,
                                          mock_packages, monkeypatch,
-                                         project_dir_env):
+                                         project_dir_env, mock_binary_index):
     """Test use of user-provided scripts"""
     project_dir_env(tmpdir.strpath)
     filename = str(tmpdir.join('spack.yaml'))
@@ -676,7 +679,8 @@ spack:
 
 def test_ci_rebuild(tmpdir, mutable_mock_env_path,
                     install_mockery, mock_packages, monkeypatch,
-                    mock_gnupghome, mock_fetch, project_dir_env):
+                    mock_gnupghome, mock_fetch, project_dir_env,
+                    mock_binary_index):
     project_dir_env(tmpdir.strpath)
     working_dir = tmpdir.join('working_dir')
 
@@ -834,7 +838,7 @@ spack:
 
 def test_ci_nothing_to_rebuild(tmpdir, mutable_mock_env_path,
                                install_mockery, mock_packages, monkeypatch,
-                               mock_fetch, project_dir_env):
+                               mock_fetch, project_dir_env, mock_binary_index):
     project_dir_env(tmpdir.strpath)
     working_dir = tmpdir.join('working_dir')
 
@@ -1461,7 +1465,8 @@ spack:
 
 def test_ci_subcommands_without_mirror(tmpdir, mutable_mock_env_path,
                                        mock_packages,
-                                       install_mockery, project_dir_env):
+                                       install_mockery, project_dir_env,
+                                       mock_binary_index):
     """Make sure we catch if there is not a mirror and report an error"""
     project_dir_env(tmpdir.strpath)
     filename = str(tmpdir.join('spack.yaml'))
