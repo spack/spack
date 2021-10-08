@@ -898,6 +898,12 @@ def test_prefix_write_lock_error(mutable_database, monkeypatch):
 
 @pytest.mark.regression('26600')
 def test_database_works_with_empty_dir(tmpdir):
+    # Create the lockfile and failures directory otherwise
+    # we'll get a permission error on Database creation
+    db_dir = tmpdir.ensure_dir('.spack-db')
+    db_dir.ensure('lock')
+    db_dir.ensure_dir('failures')
+    tmpdir.chmod(mode=0o555, rec=1)
     db = spack.database.Database(str(tmpdir))
     with db.read_transaction():
         db.query()
