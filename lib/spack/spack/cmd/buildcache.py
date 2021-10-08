@@ -336,9 +336,8 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
 
     try:
         specs = bindist.update_cache_and_get_specs()
-    except bindist.FetchCacheError:
-        # ignore?
-        pass
+    except bindist.FetchCacheError as e:
+        tty.error(e)
 
     if not other_arch:
         arch = spack.spec.Spec.default_arch()
@@ -567,9 +566,8 @@ def listspecs(args):
     """list binary packages available from mirrors"""
     try:
         specs = bindist.update_cache_and_get_specs()
-    except bindist.FetchCacheError:
-        # ignore?
-        pass
+    except bindist.FetchCacheError as e:
+        tty.error(e)
 
     if not args.allarch:
         arch = spack.spec.Spec.default_arch()

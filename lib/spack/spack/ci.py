@@ -670,9 +670,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     # (including the per-PR mirror we may have just added above).
     try:
         bindist.binary_index.update()
-    except bindist.FetchCacheError:
-        # Ignore this for now?
-        pass
+    except bindist.FetchCacheError as e:
+        tty.error(e)
 
     staged_phases = {}
     try:
