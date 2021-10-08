@@ -12,7 +12,7 @@ import spack.cmd.install
 import spack.config
 import spack.package
 from spack.cmd.test import has_test_method
-from spack.main import SpackCommand
+from spack.main import SpackCommand, SpackCommandError
 
 install = SpackCommand('install')
 spack_test = SpackCommand('test')
@@ -37,6 +37,24 @@ def test_test_dirty_flag(arguments, expected):
     spack.cmd.test.setup_parser(parser)
     args = parser.parse_args(arguments)
     assert args.dirty == expected
+
+
+def test_test_dup_alias(
+        mock_test_stage, mock_packages, mock_archive, mock_fetch,
+        install_mockery_mutable_config, capfd):
+    """Ensure re-using an alias fails with suggestion to change."""
+    install('libdwarf')
+
+    # Run the tests with the alias once
+    out = spack_test('run', '--alias', 'libdwarf', 'libdwarf')
+    assert "Spack test libdwarf" in out
+
+    # Try again with the alias but don't let it fail on the error
+    with capfd.disabled():
+        out = spack_test(
+            'run', '--alias', 'libdwarf', 'libdwarf', fail_on_error=False)
+
+    assert "already exists" in out
 
 
 def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
