@@ -16,7 +16,6 @@ import os
 import platform
 import re
 from contextlib import contextmanager
-from shutil import make_archive
 
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
@@ -24,6 +23,7 @@ from llnl.util.symlink import symlink
 from spack import *
 
 is_windows = str(spack.platforms.host()) == 'windows'
+
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     """Perl 5 is a highly capable, feature-rich programming language with over
@@ -191,12 +191,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             args.append("CCTYPE=%s" % self.compiler.msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
-        args.append("INST_TOP=%s" % self.prefix.replace('/','\\'))
+        args.append("INST_TOP=%s" % self.prefix.replace('/', '\\'))
         args.append("INST_ARCH=\\$(ARCHNAME)")
         if self.spec.satisfies('~shared'):
             args.append("ALL_STATIC=%s" % "define")
         if self.spec.satisfies('~threads'):
-            args.extend(["USE_MULTI=undef","USE_ITHREADS=undef", "USE_IMP_SYS=undef"])
+            args.extend(["USE_MULTI=undef", "USE_ITHREADS=undef", "USE_IMP_SYS=undef"])
         if not self.host_is_64bit():
             args.append("WIN64=undef")
         return args
@@ -297,7 +297,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             src_path = os.path.join(win_install_path, f)
             if not os.path.exists(lnk_path):
                 symlink(src_path, lnk_path)
-
 
     @run_after('install')
     def install_cpanm(self):
