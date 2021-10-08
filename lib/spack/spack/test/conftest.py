@@ -22,8 +22,8 @@ import pytest
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
-import llnl.util.lang
 from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
+from llnl.util.lang import Singleton
 
 import spack.binary_distribution
 import spack.caches
@@ -413,16 +413,17 @@ def mock_fetch_cache(monkeypatch):
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
-@pytest.fixture()
-def mock_binary_index(monkeypatch, tmpdir_factory):
-    """Changes the directory for the binary index and creates binary index for
-    every test. Clears its own index when it's done.
-    """
-    tmpdir = tmpdir_factory.mktemp('mock_binary_index')
-    index_path = tmpdir.join('binary_index').strpath
-    mock_index = spack.binary_distribution.BinaryCacheIndex(index_path)
-    monkeypatch.setattr(spack.binary_distribution, 'binary_index', mock_index)
+@pytest.fixture(autouse=True)
+def mock_binary_index(tmpdir_factory, monkeypatch):
+    """For every test, set up a lazy binary index instance using a temporary dir for
+    caching. This should avoid leaking state in the binary_index global across tests"""
+    def binary_cache_index():
+        path = tmpdir_factory.mktemp('binary_index').strpath
+        return spack.binary_distribution.BinaryCacheIndex(path)
+    old = spack.binary_distribution.binary_index
+    spack.binary_distribution.binary_index = Singleton(binary_cache_index)
     yield
+    spack.binary_distribution.binary_index = old
 
 
 @pytest.fixture(autouse=True)
@@ -1525,10 +1526,3 @@ def mock_test_stage(mutable_config, tmpdir):
     mutable_config.set('config:test_stage', tmp_stage)
 
     yield tmp_stage
-
-
-@pytest.fixture(autouse=True)
-def brand_new_binary_cache():
-    yield
-    spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
-        spack.binary_distribution._binary_index)
