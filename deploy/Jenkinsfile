@@ -404,13 +404,7 @@ pipeline {
                         sh "./deploy.sh -m compilers"
                         sh "./deploy.sh -m externals"
                         sh "./deploy.sh -m libraries"
-                        sh "./deploy.sh -m applications dke"
-                        sh "./deploy.sh -m applications hpc"
-                        sh "./deploy.sh -m applications ml"
-                        sh "./deploy.sh -m applications nse"
-                        sh "./deploy.sh -m applications nse_circuits"
-                        sh "./deploy.sh -m applications science"
-                        sh "./deploy.sh -m applications viz"
+                        sh "./deploy.sh -m applications hpc"  // will copy modules for all teams
                         sh "./deploy.sh -c applications hpc"  // configurations for parts are identical
                     }
                 }
