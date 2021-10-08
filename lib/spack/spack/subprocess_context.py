@@ -20,6 +20,7 @@ import pydoc
 import sys
 from types import ModuleType
 
+import spack.concretize
 import spack.config
 import spack.environment
 import spack.main
@@ -94,6 +95,8 @@ class TestState(object):
     """
     def __init__(self):
         if _serialize:
+            Concretizer = spack.concretize.Concretizer
+            self.compiler_check = Concretizer.check_for_compiler_existence
             self.repo_dirs = list(r.root for r in spack.repo.path.repos)
             self.config = spack.config.config
             self.platform = spack.platforms.host
@@ -102,6 +105,8 @@ class TestState(object):
 
     def restore(self):
         if _serialize:
+            Concretizer = spack.concretize.Concretizer
+            Concretizer.check_for_compiler_existence = self.compiler_check
             spack.repo.path = spack.repo._path(self.repo_dirs)
             spack.config.config = self.config
             spack.platforms.host = self.platform
@@ -159,7 +164,7 @@ def clear_patches():
 
 
 def global_initargs():
-    return (TestState(),)
+    return TestState(),
 
 
 def global_init(test_state):

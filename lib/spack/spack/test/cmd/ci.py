@@ -424,6 +424,11 @@ spack:
             assert(filecmp.cmp(orig_file, copy_to_file) is True)
 
 
+# Defined at the module level since it needs to be pickleable
+def _mock_get_version_for_custom_scripts():
+    return '0.15.3'
+
+
 def test_ci_generate_with_custom_scripts(tmpdir, mutable_mock_env_path,
                                          install_mockery,
                                          mock_packages, monkeypatch,
@@ -466,7 +471,9 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
-            monkeypatch.setattr(spack.main, 'get_version', lambda: '0.15.3')
+            monkeypatch.setattr(
+                spack.main, 'get_version', _mock_get_version_for_custom_scripts
+            )
             ci_cmd('generate', '--output-file', outputfile)
 
             with open(outputfile) as f:
@@ -1081,6 +1088,11 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
     assert(expect_msg in std_out)
 
 
+# Defined at the module level since it needs to be pickleable
+def _mock_get_version_for_runner_attributes():
+    return '0.15.3-416-12ad69eb1'
+
+
 def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,
                                            install_mockery,
                                            mock_packages, monkeypatch,
@@ -1148,7 +1160,7 @@ spack:
 
         with ev.read('test'):
             monkeypatch.setattr(
-                spack.main, 'get_version', lambda: '0.15.3-416-12ad69eb1')
+                spack.main, 'get_version', _mock_get_version_for_runner_attributes)
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
             monkeypatch.setattr(
@@ -1329,14 +1341,32 @@ spack:
                 validate(index_object, db_idx_schema)
 
 
+# Defined at the module level since it needs to be pickleable
+class FakeGetMirrorsForSpec(object):
+    def __init__(self, url):
+        self.url = url
+
+    def __call__(
+        self, spec=None, full_hash_match=False, mirrors_to_check=None, index_only=False
+    ):
+        if spec.name == 'gcc':
+            return []
+        else:
+            return [{
+                'spec': spec,
+                'mirror_url': self.url,
+            }]
+
+
 def test_ci_generate_bootstrap_prune_dag(
         install_mockery_mutable_config, mock_packages, mock_fetch,
         mock_archive, mutable_config, monkeypatch, tmpdir,
         mutable_mock_env_path, project_dir_env):
     """Test compiler bootstrapping with DAG pruning.  Specifically, make
-       sure that if we detect the bootstrapped compiler needs to be rebuilt,
-       we ensure the spec we want to build with that compiler is scheduled
-       for rebuild as well."""
+    sure that if we detect the bootstrapped compiler needs to be rebuilt,
+    we ensure the spec we want to build with that compiler is scheduled
+    for rebuild as well.
+    """
 
     # Create a temp mirror directory for buildcache usage
     project_dir_env(tmpdir.strpath)
@@ -1402,15 +1432,7 @@ spack:
     # nothing in the environment needs rebuilding.  With the monkeypatch, the
     # process sees the compiler as needing a rebuild, which should then result
     # in the specs built with that compiler needing a rebuild too.
-    def fake_get_mirrors_for_spec(spec=None, full_hash_match=False,
-                                  mirrors_to_check=None, index_only=False):
-        if spec.name == 'gcc':
-            return []
-        else:
-            return [{
-                'spec': spec,
-                'mirror_url': mirror_url,
-            }]
+    fake_get_mirrors_for_spec = FakeGetMirrorsForSpec(url=mirror_url)
 
     with tmpdir.as_cwd():
         env_cmd('create', 'test', './spack.yaml')
