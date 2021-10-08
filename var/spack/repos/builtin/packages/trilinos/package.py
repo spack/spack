@@ -233,7 +233,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Installed FindTrilinos are broken in SEACAS if Fortran is disabled
     # see https://github.com/trilinos/Trilinos/issues/3346
-    conflicts('+exodus', when='~fortran')
+    conflicts('+exodus', when='@:13.0.1 ~fortran')
     # Only allow Mesquite with Trilinos 12.12 and up, and master
     conflicts('+mesquite', when='@:12.10,master')
     # Strumpack is only available as of mid-2021
@@ -677,6 +677,7 @@ class Trilinos(CMakePackage, CudaPackage):
             ])
             if '+cuda' in spec:
                 options.extend([
+                    define_tpl_enable('CUDA', True),
                     define_kok_enable('CUDA_UVM', True),
                     define_kok_enable('CUDA_LAMBDA', True),
                     define_kok_enable('CUDA_RELOCATABLE_DEVICE_CODE', 'cuda_rdc')
