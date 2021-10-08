@@ -43,6 +43,7 @@ def _noop(*args, **kwargs):
     """Generic monkeypatch no-op routine."""
     pass
 
+
 def _none(*args, **kwargs):
     """Generic monkeypatch function that always returns None."""
     return None
