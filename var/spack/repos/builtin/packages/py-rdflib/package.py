@@ -24,3 +24,5 @@ class PyRdflib(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))
     depends_on('py-isodate', type=('build', 'run'))
+    # An optional dependency of the sparql feature, but it fixes import the tests:
+    depends_on('py-requests', type=('build', 'run'))
