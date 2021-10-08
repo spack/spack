@@ -129,7 +129,7 @@ const int quux_version_minor = %s;
             mkdirp(prefix.lib64)
             copy('libquux.dylib', '%s/libquux.dylib' % prefix.lib64)
             os.link('%s/libquux.dylib' % prefix.lib64,
-                   '%s/libquux.dylib.3.0' % prefix.lib64)
+                    '%s/libquux.dylib.3.0' % prefix.lib64)
         else:
             gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
                 '-Wl,-soname,libquux.so', '-o', 'libquux.so', 'quux.cc.o',
@@ -145,7 +145,7 @@ const int quux_version_minor = %s;
             mkdirp(prefix.lib64)
             copy('libquux.so', '%s/libquux.so' % prefix.lib64)
             os.link('%s/libquux.so' % prefix.lib64,
-                   '%s/libquux.so.3.0' % prefix.lib64)
+                    '%s/libquux.so.3.0' % prefix.lib64)
         copy('quuxifier', '%s/quuxifier' % prefix.lib64)
         copy('%s/quux/quux.h' % self.stage.source_path,
              '%s/quux/quux.h' % prefix.include)

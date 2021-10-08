@@ -147,7 +147,7 @@ main(int argc, char* argv[])
             mkdirp(prefix.lib64)
             copy('libcorge.dylib', '%s/libcorge.dylib' % prefix.lib64)
             os.link('%s/libcorge.dylib' % prefix.lib64,
-                   '%s/libcorge.dylib.3.0' % prefix.lib64)
+                    '%s/libcorge.dylib.3.0' % prefix.lib64)
         else:
             gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
                 '-Wl,-soname,libcorge.so', '-o', 'libcorge.so', 'corge.cc.o',
@@ -166,7 +166,7 @@ main(int argc, char* argv[])
             mkdirp(prefix.lib64)
             copy('libcorge.so', '%s/libcorge.so' % prefix.lib64)
             os.link('%s/libcorge.so' % prefix.lib64,
-                   '%s/libcorge.so.3.0' % prefix.lib64)
+                    '%s/libcorge.so.3.0' % prefix.lib64)
         copy('corgegator', '%s/corgegator' % prefix.lib64)
         copy('%s/corge/corge.h' % self.stage.source_path,
              '%s/corge/corge.h' % prefix.include)

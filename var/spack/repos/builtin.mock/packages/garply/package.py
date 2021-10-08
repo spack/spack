@@ -110,7 +110,7 @@ const int garply_version_minor = %s;
             mkdirp(prefix.lib64)
             copy('libgarply.dylib', '%s/libgarply.dylib' % prefix.lib64)
             os.link('%s/libgarply.dylib' % prefix.lib64,
-                   '%s/libgarply.dylib.3.0' % prefix.lib64)
+                    '%s/libgarply.dylib.3.0' % prefix.lib64)
         else:
             gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
                 '-Wl,-soname,libgarply.so',
@@ -122,7 +122,7 @@ const int garply_version_minor = %s;
             mkdirp(prefix.lib64)
             copy('libgarply.so', '%s/libgarply.so' % prefix.lib64)
             os.link('%s/libgarply.so' % prefix.lib64,
-                   '%s/libgarply.so.3.0' % prefix.lib64)
+                    '%s/libgarply.so.3.0' % prefix.lib64)
         copy('garplinator', '%s/garplinator' % prefix.lib64)
         copy('%s/garply/garply.h' % self.stage.source_path,
              '%s/garply/garply.h' % prefix.include)
