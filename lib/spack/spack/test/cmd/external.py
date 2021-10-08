@@ -189,7 +189,7 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
-                    reason="Install hangs on windows")
+                    reason="Not yet implemented on windows")
 def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable('gcc', output="echo 4.2.1")
