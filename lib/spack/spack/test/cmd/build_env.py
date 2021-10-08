@@ -6,7 +6,6 @@
 import pytest
 from six.moves import cPickle
 
-import spack.platforms
 from spack.main import SpackCommand
 
 build_env = SpackCommand('build-env')
