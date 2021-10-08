@@ -16,8 +16,9 @@ class PyBleach(PythonPackage):
     version('3.1.0', sha256='3fdf7f77adcf649c9911387df51254b813185e32b2c6619f690b593a617e19fa')
     version('1.5.0', sha256='978e758599b54cd3caa2e160d74102879b230ea8dc93871d0783721eef58bc65')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@2.7:2,3.5:', when='@3.1.3:', type=('build', 'run'))
+    depends_on('python@2.7:2,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-six@1.9.0:', type=('build', 'run'))
     depends_on('py-webencodings', type=('build', 'run'))
-    depends_on('py-packaging',    type=('test', 'run'))
+    depends_on('py-packaging', when='@3.1.5:', type=('build', 'run'))
