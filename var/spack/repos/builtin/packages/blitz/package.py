@@ -6,8 +6,9 @@
 from spack import *
 
 
-class Blitz(AutotoolsPackage):
+class Blitz(CMakePackage):
     """N-dimensional arrays for C++"""
+
     homepage = "https://github.com/blitzpp/blitz"
     url = "https://github.com/blitzpp/blitz/archive/1.0.2.tar.gz"
 
@@ -20,6 +21,11 @@ class Blitz(AutotoolsPackage):
 
     build_targets = ['lib']
 
+    def cmake_args(self):
+        return ['-DBUILD_TESTING=True']
+
     def check(self):
-        make('check-testsuite')
-        make('check-examples')
+        with working_dir(self.build_directory):
+            make('check-testsuite')
+            make('check-examples')
+            make('check-benchmarks')
