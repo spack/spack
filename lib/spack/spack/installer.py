@@ -561,6 +561,10 @@ def log(pkg):
     # Archive the environment modifications for the build.
     fs.install(pkg.env_mods_path, pkg.install_env_path)
 
+    # Archive the install-phase test log, if present
+    if pkg.test_install_log_path and os.path.exists(pkg.test_install_log_path):
+        fs.install(pkg.test_install_log_path, pkg.install_test_install_log_path)
+
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
         fs.install(pkg.configure_args_path, pkg.install_configure_args_path)

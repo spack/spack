@@ -76,6 +76,9 @@ _spack_build_envfile = 'spack-build-env.txt'
 # Filename for the Spack build/install environment modifications file.
 _spack_build_envmodsfile = 'spack-build-env-mods.txt'
 
+# Filename for the Spack install phase-time test log.
+_spack_install_test_log = 'install-time-test-log.txt'
+
 # Filename of json with total build and phase times (seconds)
 _spack_times_log = 'install_times.json'
 
@@ -1251,6 +1254,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def configure_args_path(self):
         """Return the configure args file path associated with staging."""
         return os.path.join(self.stage.path, _spack_configure_argsfile)
+
+    @property
+    def test_install_log_path(self):
+        """Return the install phase-time test log file path, if set."""
+        return getattr(self, 'test_log_file', None)
+
+    @property
+    def install_test_install_log_path(self):
+        """Return the install location for the install phase-time test log."""
+        return fsys.join_path(self.metadata_dir, _spack_install_test_log)
 
     @property
     def times_log_path(self):
@@ -2724,15 +2737,39 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.install_time_test_callbacks is None:
             return
 
-        for name in self.install_time_test_callbacks:
-            try:
-                fn = getattr(self, name)
-            except AttributeError:
-                msg = 'RUN-TESTS: method not implemented [{0}]'
-                tty.warn(msg.format(name))
-            else:
-                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
-                fn()
+        # Ensure capture of output for tests that use run_test
+        self.test_failures = []
+        self.test_log_file = fsys.join_path(
+            self.stage.path, _spack_install_test_log)
+        fsys.touch(self.test_log_file)  # Otherwise log_parse complains
+
+        # Log running install-time tests to the build log
+        tty.msg('Running install-time tests')
+
+        # Switch to the test log for logging test details
+        with tty.log.log_output(self.test_log_file):
+            # use debug print levels for log file to record commands
+            tty.set_debug(True)
+
+            for name in self.install_time_test_callbacks:
+                try:
+                    fn = getattr(self, name)
+                except AttributeError:
+                    msg = 'RUN-TESTS: method not implemented [{0}]'
+                    tty.warn(msg.format(name))
+                else:
+                    tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
+                    try:
+                        fn()
+                    except BaseException as exc:
+                        self.test_failures.append((exc, str(exc)))
+
+        # raise any collected failures here
+        if self.test_failures:
+            # Make sure the build log also contains the failure(s)
+            for _, msg in self.test_failures:
+                tty.msg(msg)
+            raise TestFailure(self.test_failures)
 
 
 def has_test_method(pkg):
