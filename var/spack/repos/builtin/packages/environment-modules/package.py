@@ -57,6 +57,8 @@ class EnvironmentModules(Package):
 
         config_args = [
             "--prefix=" + prefix,
+            # It looks for tclConfig.sh
+            "--with-tcl=" + tcl.libs.directories[0],
             '--datarootdir=' + prefix.share
         ]
 
@@ -117,8 +119,6 @@ class EnvironmentModules(Package):
             config_args.extend([
                 "--without-tclx",
                 "--with-tclx-ver=0.0",
-                # It looks for tclConfig.sh
-                "--with-tcl=" + tcl.libs.directories[0],
                 "--with-tcl-ver={0}".format(tcl.version.up_to(2)),
                 '--disable-versioning'
             ])
