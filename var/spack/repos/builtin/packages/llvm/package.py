@@ -192,10 +192,11 @@ class Llvm(CMakePackage, CudaPackage):
     # Introduced in version 11 as a part of LLVM and not a separate package.
     conflicts("+flang", when="@:10")
 
-    # Older LLVM do not build with newer GCC
+    # Older LLVM do not build with newer compilers, and vice versa
     conflicts("%gcc@11:", when="@:7")
     conflicts("%gcc@8:", when="@:5")
     conflicts("%gcc@:5.0", when="@8:")
+    conflicts("%apple-clang@13:", when="@:9")
 
     # libc++ of LLVM13, see https://libcxx.llvm.org/#platform-and-compiler-support
     # @13 does not support %gcc@:10 https://bugs.llvm.org/show_bug.cgi?id=51359#c1
