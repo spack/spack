@@ -20,7 +20,7 @@ class Fleur(Package):
 	variant('mpi', default=True, description='Enable MPI support')
 	variant('hdf5', default=False, description='Enable HDF5 support')
 	variant('scalapack', default=False, description='Enable SCALAPACK')
-	variant('fft', default='none', values=('none', 'mkl', 'fftw'), 
+	variant('fft', default='internal', values=('internal', 'mkl', 'fftw'), 
 			description="Enable the use of Intel MKL FFT/FFTW provider")
 	variant('elpa', default=False, description="Enable ELPA support")
 	variant('magma', default=False, description='Enable Magma support')
@@ -33,7 +33,7 @@ class Fleur(Package):
             values=('Debug', 'Release', 'RelWithDebInfo'))
 
 	depends_on('cmake', type='build')
-	depends_on('python', type='build')
+	depends_on('python@3:', type='build')
 	depends_on('blas')
 	depends_on('lapack')
 	depends_on('libxml2')
@@ -56,13 +56,13 @@ class Fleur(Package):
 			  msg='gfortran is known to work with versions newer than v6.3')
 	conflicts('%pgi@:18.4.0', 
 			  msg='You need at least PGI version 18.4 but might still run into some problems.')
-	conflicts('%python@:3.0.0', 
-			  msg='At least Python3 is mandatory')
 	conflicts('~scalapack', when='+elpa', 
 			  msg='ELPA requires scalapack support')
-	conflicts('@:4.0', when='+wannier90',
+	conflicts('@:5.0', when='fft=fftw',
+			  msg='FFTW interface is supported from Fleur v5.0')
+	conflicts('@:5.0', when='+wannier90',
 			  msg='wannier90 is supported from Fleur v5.0')
-	conflicts('@:3.1', when='+spfft',
+	conflicts('@:4.0', when='+spfft',
 			  msg='SpFFT is supported from Fleur v4.0')
 
 	def setup_build_environment(self, env):
