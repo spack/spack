@@ -558,6 +558,13 @@ class Environment(object):
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
 
+    @property
+    def token(self):
+        init_file = six.StringIO()
+        with open(self.manifest_path) as manifest:
+            init_file.write(manifest.read())
+        return self.path, init_file.getvalue(), self.with_view, self.keep_relative
+
     def __reduce__(self):
         return _create_environment, (
             self.path, self.init_file, self.with_view, self.keep_relative
