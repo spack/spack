@@ -83,7 +83,7 @@ def _patchelf():
     Return None on Darwin or if patchelf cannot be found.
     """
     # Check if patchelf is already in the PATH
-    patchelf = spack.util.executable.which('patchelf')
+    patchelf = executable.which('patchelf')
     if patchelf is not None:
         return patchelf.path
 
@@ -196,6 +196,10 @@ def _normalize_relative_paths(start_path, relative_paths):
 def _placeholder(dirname):
     """String of  of @'s with same length of the argument"""
     return '@' * len(dirname)
+
+
+def _decode_macho_data(bytestring):
+    return bytestring.rstrip(b'\x00').decode('ascii')
 
 
 def macho_make_paths_relative(path_name, old_layout_root,
@@ -363,30 +367,35 @@ def modify_object_macholib(cur_path, paths_to_paths):
 
 
 def macholib_get_paths(cur_path):
+    """Get rpaths, dependent libraries, and library id of mach-o objects.
     """
-    Get rpaths, dependencies and id of mach-o objects
-    using python macholib package
-    """
-    dll = macholib.MachO.MachO(cur_path)
+    headers = macholib.MachO.MachO(cur_path).headers
+    if not headers:
+        tty.warn("Failed to read Mach-O headers: {0}".format(cur_path))
+        commands = []
+    else:
+        if len(headers) > 1:
+            # Reproduce original behavior of only returning the last mach-O
+            # header section
+            tty.warn("Encountered fat binary: {0}".format(cur_path))
+        commands = headers[-1].commands
+
+    LC_ID_DYLIB = macholib.mach_o.LC_ID_DYLIB
+    LC_LOAD_DYLIB = macholib.mach_o.LC_LOAD_DYLIB
+    LC_RPATH = macholib.mach_o.LC_RPATH
 
     ident = None
-    rpaths = list()
-    deps = list()
-    for header in dll.headers:
-        rpaths = [data.rstrip(b'\0').decode('utf-8')
-                  for load_command, dylib_command, data in header.commands if
-                  load_command.cmd == macholib.mach_o.LC_RPATH]
-        deps = [data.rstrip(b'\0').decode('utf-8')
-                for load_command, dylib_command, data in header.commands if
-                load_command.cmd == macholib.mach_o.LC_LOAD_DYLIB]
-        idents = [data.rstrip(b'\0').decode('utf-8')
-                  for load_command, dylib_command, data in header.commands if
-                  load_command.cmd == macholib.mach_o.LC_ID_DYLIB]
-        if len(idents) == 1:
-            ident = idents[0]
-    tty.debug('ident: %s' % ident)
-    tty.debug('deps: %s' % deps)
-    tty.debug('rpaths: %s' % rpaths)
+    rpaths = []
+    deps = []
+    for load_command, dylib_command, data in commands:
+        cmd = load_command.cmd
+        if cmd == LC_RPATH:
+            rpaths.append(_decode_macho_data(data))
+        elif cmd == LC_LOAD_DYLIB:
+            deps.append(_decode_macho_data(data))
+        elif cmd == LC_ID_DYLIB:
+            ident = _decode_macho_data(data)
+
     return (rpaths, deps, ident)
 
 
@@ -971,6 +980,14 @@ def is_binary(filename):
 
 
 @llnl.util.lang.memoized
+def _get_mime_type():
+    file_cmd = executable.which('file')
+    for arg in ['-b', '-h', '--mime-type']:
+        file_cmd.add_default_arg(arg)
+    return file_cmd
+
+
+@llnl.util.lang.memoized
 def mime_type(filename):
     """Returns the mime type and subtype of a file.
 
@@ -980,13 +997,7 @@ def mime_type(filename):
     Returns:
         Tuple containing the MIME type and subtype
     """
-    file_cmd = executable.Executable('file')
-    output = file_cmd(
-        '-b', '-h', '--mime-type', filename, output=str, error=str)
-    tty.debug('[MIME_TYPE] {0} -> {1}'.format(filename, output.strip()))
-    # In corner cases the output does not contain a subtype prefixed with a /
-    # In those cases add the / so the tuple can be formed.
-    if '/' not in output:
-        output += '/'
-    split_by_slash = output.strip().split('/')
-    return split_by_slash[0], "/".join(split_by_slash[1:])
+    output = _get_mime_type()(filename, output=str, error=str).strip()
+    tty.debug('==> ' + output)
+    type, _, subtype = output.partition('/')
+    return type, subtype
