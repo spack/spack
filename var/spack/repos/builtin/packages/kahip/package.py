@@ -24,7 +24,8 @@ class Kahip(CMakePackage):
 
     homepage  = 'http://algo2.iti.kit.edu/documents/kahip/index.html'
     url       = 'https://github.com/KaHIP/KaHIP/archive/v3.11.tar.gz'
-    git       = 'https://github.com/schulzchristian/KaHIP.git'
+    git       = 'https://github.com/KaHIP/KaHIP.git'
+    maintainers = ["ma595"]
 
     version('develop', branch='master')
     version('3.11', sha256='347575d48c306b92ab6e47c13fa570e1af1e210255f470e6aa12c2509a8c13e3')
