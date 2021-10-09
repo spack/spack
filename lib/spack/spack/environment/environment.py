@@ -1148,21 +1148,22 @@ class Environment(object):
         # processes try to write the config file in parallel
         _ = spack.compilers.get_compiler_config()
 
-        # Solve the environment in parallel
-        nprocesses = min(spack.util.cpus.cpus_available(), 16)
-        msg = 'Starting concretization pool with {0} processes'
-        tty.msg(msg.format(nprocesses))
-        start = time.time()
-        with spack.util.parallel.pool(
-            processes=nprocesses,
-            initializer=spack.subprocess_context.global_init,
-            initargs=spack.subprocess_context.global_initargs()
-        ) as pool:
-            concretized_root_specs = pool.map(_concretize_task, arguments)
-        spack.util.parallel.raise_if_errors(*concretized_root_specs)
-        finish = time.time()
+        # Solve the environment in parallel on Linux
+        if sys.platform != 'darwin':
+            nprocesses = min(spack.util.cpus.cpus_available(), 16)
+            msg = 'Starting concretization pool with {0} processes'
+            tty.msg(msg.format(nprocesses))
+            start = time.time()
+            with spack.util.parallel.pool(processes=nprocesses) as pool:
+                concretized_root_specs = pool.map(_concretize_task, arguments)
+            spack.util.parallel.raise_if_errors(*concretized_root_specs)
+            finish = time.time()
+        else:
+            tty.msg('Starting concretization')
+            start = time.time()
+            concretized_root_specs = list(map(_concretize_task, arguments))
+            finish = time.time()
         tty.msg('Environment concretized in {0} sec.'.format(finish - start))
-
         results = []
         for abstract, concrete in zip(root_specs, concretized_root_specs):
             self._add_concrete_spec(abstract, concrete)

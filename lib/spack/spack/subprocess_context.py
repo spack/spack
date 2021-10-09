@@ -163,20 +163,3 @@ def store_patches():
 def clear_patches():
     global patches
     patches = None
-
-
-def global_initargs():
-    env = spack.environment.active_environment()
-    token = env.token if env else None
-    return TestState(), token
-
-
-def global_init(test_state, active_environment_token):
-    if active_environment_token:
-        tokens = list(active_environment_token)
-        spack_yaml_str = tokens[1]
-        spack_yaml_sio = six.StringIO(spack_yaml_str)
-        tokens[1] = spack_yaml_sio
-        env = spack.environment.Environment(*tokens)
-        spack.environment.activate(env)
-    test_state.restore()
