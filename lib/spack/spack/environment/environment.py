@@ -558,13 +558,6 @@ class Environment(object):
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
 
-    @property
-    def token(self):
-        init_file = six.StringIO()
-        with open(self.manifest_path) as manifest:
-            init_file.write(manifest.read())
-        return self.path, init_file.getvalue(), self.with_view, self.keep_relative
-
     def __reduce__(self):
         return _create_environment, (
             self.path, self.init_file, self.with_view, self.keep_relative
@@ -1161,7 +1154,10 @@ class Environment(object):
         else:
             tty.msg('Starting concretization')
             start = time.time()
-            concretized_root_specs = list(map(_concretize_task, arguments))
+            concretized_root_specs = []
+            for spec_constraints, tests in arguments:
+                value = _concretize_from_constraints(spec_constraints, tests)
+                concretized_root_specs.append(value)
             finish = time.time()
         tty.msg('Environment concretized in {0} sec.'.format(finish - start))
         results = []
