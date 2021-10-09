@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -29,7 +31,7 @@ class Libgridxc(Package):
     depends_on('m4', type='build')
     depends_on('libxc@:4.3.4', when='@0.8.0:')
 
-    phases = ['configure', 'build']
+    phases = ['configure', 'build', 'install']
 
     def configure(self, spec, prefix):
         sh = which('sh')
@@ -50,12 +52,11 @@ class Libgridxc(Package):
                      'LIBXC_ROOT=%s' % self.spec['libxc'].prefix,
                      parallel=False)
 
-    @run_after('build')
-    def fix_mk(self):
+    def install(self, spec, prefix):
         mkdirp(join_path(self.prefix, 'share', 'org.siesta-project'))
         install(join_path(self.prefix, 'gridxc.mk'),
                 join_path(self.prefix, 'share', 'org.siesta-project', 'gridxc.mk'))
         os.remove(join_path(self.prefix, 'gridxc.mk'))
-        install(join_path(self.prefix, 'gridxc.mk'),
+        install(join_path(self.prefix, 'libxc.mk'),
                 join_path(self.prefix, 'share', 'org.siesta-project', 'libxc.mk'))
         os.remove(join_path(self.prefix, 'libxc.mk'))
