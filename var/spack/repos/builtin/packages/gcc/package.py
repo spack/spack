@@ -689,9 +689,15 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     out.write('%(link_libgcc_rpath) ')
 
             # Add easily-overridable rpath string at the end
-            rpath = ':'.join([self.prefix.lib, self.prefix.lib64])
-            out.write('*link_libgcc_rpath:\n'
-                      '-rpath {0}\n'.format(rpath))
+            libdirs = [self.prefix.lib, self.prefix.lib64]
+            out.write('*link_libgcc_rpath:\n')
+            if 'platform=darwin' in spec:
+                # macOS linker requires separate rpath commands
+                out.write(' '.join('-rpath ' + lib for lib in libdirs))
+            else:
+                # linux linker uses colon-separated rpath
+                out.write('-rpath ' + ':'.join(libdirs))
+            out.write('\n')
         set_install_permissions(specs_file)
 
     def setup_run_environment(self, env):
