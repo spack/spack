@@ -20,8 +20,6 @@ import pydoc
 import sys
 from types import ModuleType
 
-import six
-
 import spack.concretize
 import spack.config
 import spack.environment
