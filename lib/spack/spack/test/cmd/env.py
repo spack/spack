@@ -2,10 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import argparse
 import glob
 import os
-import sys
+from argparse import Namespace
 
 import pytest
 from six import StringIO
@@ -1042,10 +1041,6 @@ def test_read_old_lock_creates_backup(tmpdir):
 
 
 @pytest.mark.usefixtures('config')
-@pytest.mark.skipif(
-    sys.platform == 'darwin',
-    reason='MockPackageMultiRepo not reconstructed in worker processes'
-)
 def test_indirect_build_dep():
     """Simple case of X->Y->Z where Y is a build/link dep and Z is a
     build-only dep. Make sure this concrete DAG is preserved when writing the
@@ -1081,10 +1076,6 @@ def test_indirect_build_dep():
 
 
 @pytest.mark.usefixtures('config')
-@pytest.mark.skipif(
-    sys.platform == 'darwin',
-    reason='MockPackageMultiRepo not reconstructed in worker processes'
-)
 def test_store_different_build_deps():
     r"""Ensure that an environment can store two instances of a build-only
     dependency::
@@ -2421,11 +2412,6 @@ spack:
     assert libelf_first_hash == libelf_second_hash
 
 
-# Defined at the module level since it needs to be pickleable
-def _write_helper_raise(self, x, y):
-    raise RuntimeError('some error')
-
-
 @pytest.mark.regression('18441')
 def test_lockfile_not_deleted_on_write_error(tmpdir, monkeypatch):
     raw_yaml = """
@@ -2449,6 +2435,9 @@ spack:
 
     # If I run concretize again and there's an error during write,
     # the spack.lock file shouldn't disappear from disk
+    def _write_helper_raise(self, x, y):
+        raise RuntimeError('some error')
+
     monkeypatch.setattr(
         ev.Environment, '_update_and_write_manifest', _write_helper_raise
     )
@@ -2668,9 +2657,8 @@ def test_query_develop_specs():
     ])
 def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
-    args = argparse.Namespace(
-        shell='sh', activate_env='a', env=env, no_env=no_env, env_dir=env_dir
-    )
+    args = Namespace(shell='sh', activate_env='a',
+                     env=env, no_env=no_env, env_dir=env_dir)
     with pytest.raises(SystemExit):
         method(args)
     _, err = capsys.readouterr()

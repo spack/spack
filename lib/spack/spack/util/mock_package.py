@@ -83,7 +83,6 @@ class MockPackageMultiRepo(object):
         self.spec_to_pkg = {}
         self.namespace = 'mock'                 # repo namespace
         self.full_namespace = 'spack.pkg.mock'  # python import namespace
-        self.root = '/some/root'
 
     def get(self, spec):
         if not isinstance(spec, spack.spec.Spec):
