@@ -152,6 +152,64 @@ def hello_world(tmpdir):
 
 
 @pytest.fixture()
+def make_bad_macos_rpath(tmpdir_factory):
+    """Create a shared library with unfriendly qualities.
+
+    - Writes the same rpath twice
+    - Writes its install path as an absolute path
+    """
+    cc = spack.util.executable.which('cc')
+
+    def _factory(abs_install_name="abs", extra_rpaths=True):
+        tmpdir = tmpdir_factory.mktemp(
+            abs_install_name + '_badrpath' if extra_rpaths else ''
+        )
+        src = tmpdir.join('foo.c')
+        src.write("int foo() { return 1; }\n")
+
+        filename = 'foo.dylib'
+        lib = tmpdir.join(filename)
+
+        args = ['-shared', str(src), '-o', str(lib)]
+        if abs_install_name == 'abs':
+            args += ['-install_name', str(lib)]
+        elif abs_install_name == 'rpath':
+            args += ['-install_name', '@rpath/foo.dylib',
+                     '-Wl,-rpath,' + str(tmpdir)]
+
+        if extra_rpaths:
+            args += ['-Wl,-rpath,' + str(tmpdir),
+                     '-Wl,-rpath,/usr/local/lib',
+                     '-Wl,-rpath,/usr/local/lib']
+
+        cc(*args)
+
+        return (str(tmpdir), filename)
+
+    return _factory
+
+
+@pytest.fixture()
+def make_object_file(tmpdir):
+    cc = spack.util.executable.which('cc')
+
+    def _factory():
+        src = tmpdir.join('bar.c')
+        src.write("int bar() { return 2; }\n")
+
+        filename = 'bar.o'
+        lib = tmpdir.join(filename)
+
+        args = ['-c', str(src), '-o', str(lib)]
+
+        cc(*args)
+
+        return (str(tmpdir), filename)
+
+    return _factory
+
+
+@pytest.fixture()
 def copy_binary():
     """Returns a function that copies a binary somewhere and
     returns the new location.
@@ -392,3 +450,35 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
         spack.relocate.relocate_text_bin(
             [fpath], {short_prefix: long_prefix}
         )
+
+
+@pytest.mark.requires_executables('install_name_tool', 'file', 'cc')
+def test_fixup_macos_rpaths(make_bad_macos_rpath, make_object_file):
+    # For each of these tests except for the "correct" case, the first fixup
+    # should make changes, and the second fixup should be a null-op.
+    fixup_rpath = spack.relocate.fixup_macos_rpath
+
+    # Bad library id *and* duplicate rpaths
+    (root, filename) = make_bad_macos_rpath("abs", True)
+    assert fixup_rpath(root, filename)
+    assert not fixup_rpath(root, filename)
+
+    # Bad library id but rpaths are ok
+    (root, filename) = make_bad_macos_rpath("abs", False)
+    assert fixup_rpath(root, filename)
+    assert not fixup_rpath(root, filename)
+
+    # Library id uses rpath but there are extra duplicate rpaths
+    (root, filename) = make_bad_macos_rpath("rpath", True)
+    assert fixup_rpath(root, filename)
+    assert not fixup_rpath(root, filename)
+
+    # Shared library was constructed correctly from the get-go
+    (root, filename) = make_bad_macos_rpath("rpath", False)
+    assert not fixup_rpath(root, filename)
+
+    # Test on an object file, which *also* has type 'application/x-mach-binary'
+    # but should be ignored (no ID headers, no RPATH)
+    # (this is a corner case for GCC installation)
+    (root, filename) = make_object_file()
+    assert not fixup_rpath(root, filename)

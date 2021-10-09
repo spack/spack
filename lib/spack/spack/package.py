@@ -1944,6 +1944,25 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
 
+    def apply_macos_rpath_fixups(self):
+        """On Darwin, make installed libraries more easily relocatable.
+
+        Some build systems (handrolled, autotools, makefiles) can set their own
+        rpaths that are duplicated by spack's compiler wrapper. Additionally,
+        many simpler build systems do not link using ``-install_name
+        @rpath/foo.dylib``, which propagates the library's hardcoded
+        absolute path into downstream dependencies. This fixup interrogates,
+        and postprocesses if necessary, all libraries installed by the code.
+
+        It should be added as a @run_after to packaging systems (or individual
+        packages) that do not install relocatable libraries by default.
+        """
+        if 'platform=darwin' not in self.spec:
+            return
+
+        from spack.relocate import fixup_macos_rpaths
+        fixup_macos_rpaths(self.spec)
+
     @property
     def build_log_path(self):
         """
@@ -2684,6 +2703,8 @@ class Package(PackageBase):
     # This will be used as a registration decorator in user
     # packages, if need be
     run_after('install')(PackageBase.sanity_check_prefix)
+    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
+    run_after('install')(PackageBase.apply_macos_rpath_fixups)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):

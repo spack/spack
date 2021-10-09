@@ -6,6 +6,7 @@ import multiprocessing.pool
 import os
 import re
 import shutil
+from collections import defaultdict
 
 import macholib.mach_o
 import macholib.MachO
@@ -1001,3 +1002,127 @@ def mime_type(filename):
     tty.debug('==> ' + output)
     type, _, subtype = output.partition('/')
     return type, subtype
+
+
+def fixup_macos_rpath(root, filename):
+    """Apply rpath fixups to the given file.
+
+    Args:
+        root: absolute path to the parent directory
+        filename: relative path to the library or binary
+
+    Returns:
+        True if fixups were applied, else False
+    """
+    abspath = os.path.join(root, filename)
+    if mime_type(abspath) != ('application', 'x-mach-binary'):
+        return False
+
+    # Get Mach-O header commands
+    (rpath_list, deps, id_dylib) = macholib_get_paths(abspath)
+
+    # Convert rpaths list to (name -> number of occurrences)
+    add_rpaths = set()
+    rpaths = defaultdict(int)
+    for rpath in rpath_list:
+        rpaths[rpath] += 1
+
+    args = []
+
+    # Check dependencies for non-rpath entries
+    spack_root = spack.store.layout.root
+    for name in deps:
+        if name.startswith(spack_root):
+            tty.debug("Spack-installed dependency for {0}: {1}"
+                      .format(abspath, name))
+            (dirname, basename) = os.path.split(name)
+            args += ['-change', name, '@rpath/' + basename]
+            add_rpaths.add(dirname.rstrip('/'))
+
+    # Check for relocatable ID
+    if id_dylib is None:
+        tty.info("No dylib ID is set for {0}".format(abspath))
+    elif not id_dylib.startswith('@'):
+        tty.debug("Non-relocatable dylib ID for {0}: {1}"
+                  .format(abspath, id_dylib))
+        args += ['-id', '@rpath/' + filename]
+        add_rpaths.add(root)
+
+    for (rpath, count) in rpaths.items():
+        if count > 1:
+            # Rpath should only be there once, but it can sometimes be
+            # duplicated between Spack's compiler and libtool. If there are
+            # more copies of the same one, something is very odd....
+            tty_debug = tty.debug if count == 2 else tty.warn
+            tty_debug("Rpath appears {0} times in {1}: {2}".format(
+                count, abspath, rpath
+            ))
+            args += ['-delete_rpath', rpath]
+
+    # Add missing rpaths
+    for rpath in add_rpaths - set(rpaths):
+        args += ['-add_rpath', rpath]
+
+    if not args:
+        # No fixes needed
+        return False
+
+    args.append(abspath)
+    executable.Executable('install_name_tool')(*args)
+    return True
+
+
+def fixup_macos_rpaths(spec):
+    """Remove duplicate rpaths and make shared library IDs relocatable.
+
+    Some autotools packages write their own ``-rpath`` entries in addition to
+    those implicitly added by the Spack compiler wrappers. On Linux these
+    duplicate rpaths are eliminated, but on macOS they result in multiple
+    entries which makes it harder to adjust with ``install_name_tool
+    -delete_rpath``.
+
+    Furthermore, many autotools programs (on macOS) set a library's install
+    paths to use absolute paths rather than relative paths.
+    """
+    if spec.external or spec.virtual:
+        tty.warn('external or virtual package cannot be fixed up: {0!s}'
+                 .format(spec))
+        return False
+
+    if 'platform=darwin' not in spec:
+        raise NotImplementedError('fixup_macos_rpaths requires macOS')
+
+    applied = 0
+
+    libs = frozenset(['lib', 'lib64', 'libexec', 'plugins',
+                      'Library', 'Frameworks'])
+    prefix = spec.prefix
+
+    if not os.path.exists(prefix):
+        raise RuntimeError(
+            'Could not fix up install prefix spec {0} because it does '
+            'not exist: {1!s}'.format(prefix, spec.name)
+        )
+
+    # Explore the installation prefix of the spec
+    for root, dirs, files in os.walk(prefix, topdown=True):
+        dirs[:] = set(dirs) & libs
+        for name in files:
+            try:
+                needed_fix = fixup_macos_rpath(root, name)
+            except Exception as e:
+                tty.warn("Failed to apply library fixups to: {0}/{1}: {2!s}"
+                         .format(root, name, e))
+                needed_fix = False
+            if needed_fix:
+                applied += 1
+
+    specname = spec.format('{name}{/hash:7}')
+    if applied:
+        tty.info('Fixed rpaths for {0:d} {1} installed to {2}'.format(
+            applied,
+            "binary" if applied == 1 else "binaries",
+            specname
+        ))
+    else:
+        tty.debug('No rpath fixup needed for ' + specname)
