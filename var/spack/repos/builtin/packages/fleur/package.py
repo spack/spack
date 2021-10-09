@@ -24,7 +24,7 @@ class Fleur(Package):
 			description="Enable the use of Intel MKL FFT/FFTW provider")
 	variant('elpa', default=False, description="Enable ELPA support")
 	variant('magma', default=False, description='Enable Magma support')
-	variant('libxc', default=False, description='Enable libxc support')
+	variant('external_libxc', default=False, description='Enable external libxc support')
 	variant('spfft', default=False, description='Enable spfft support')
 	variant('wannier90', default=False, description='Enable wannier90 support')
 	variant('openmp', default=False, description="Enable OpenMP support.")
@@ -41,12 +41,14 @@ class Fleur(Package):
 	depends_on('intel-mkl', when="fft=mkl")
 	depends_on('fftw-api', when='fft=fftw')
 	depends_on('scalapack', when='+scalapack')
-	depends_on('libxc', when='+libxc')
+	depends_on('libxc', when='+external_libxc')
 	depends_on('hdf5+hl+fortran', when='+hdf5')
 	depends_on('magma+fortran', when='+magma')
 	depends_on('wannier90', when='+wannier90')
-	depends_on('spfft+fortran', when='+spfft')
-	depends_on('elpa', when='+elpa')
+	depends_on('spfft+fortran~openmp', when='+spfft~openmp')
+	depends_on('spfft+fortran+openmp', when='+spfft+openmp')
+	depends_on('elpa~openmp', when='+elpa~openmp')
+	depends_on('elpa+openmp', when='+elpa+openmp')
 
 	phases = ['configure', 'build', 'install']
 
@@ -64,6 +66,8 @@ class Fleur(Package):
 			  msg='wannier90 is supported from Fleur v5.0')
 	conflicts('@:4.0', when='+spfft',
 			  msg='SpFFT is supported from Fleur v4.0')
+	conflicts('@:4.0', when='+external_libxc',
+			  msg='External libxc is supported from Fleur v4.0')
 
 	def setup_build_environment(self, env):
 		spec = self.spec
@@ -75,7 +79,7 @@ class Fleur(Package):
 
 	def configure(self, spec, prefix):
 		spec = self.spec
-		sh = which('sh')
+		sh = which('bash')
 
 		options = {
 			"-link":[],
@@ -110,7 +114,7 @@ class Fleur(Package):
 		if '+scalapack' in spec:
 			options["-link"].append(spec['scalapack'].libs.link_flags)
 			options["-libdir"].append(spec['scalapack'].prefix.lib)
-		if '+libxc' in spec:
+		if '+external_libxc' in spec:
 			# Workaround: The fortran library is called libxcf90.a/so
 			#	but spec['wannier90'].libs.link_flags return -lxc
 			options["-link"].append('-lxcf90')
