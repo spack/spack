@@ -29,9 +29,9 @@ class Kahip(CMakePackage):
 
     version('develop', branch='master')
     version('3.11', sha256='347575d48c306b92ab6e47c13fa570e1af1e210255f470e6aa12c2509a8c13e3')
-    version('2.00', sha256='1cc9e5b12fea559288d377e8b8b701af1b2b707de8e550d0bda18b36be29d21d')
+    version('2.00', sha256='1cc9e5b12fea559288d377e8b8b701af1b2b707de8e550d0bda18b36be29d21d', url='https://algo2.iti.kit.edu/schulz/software_releases/KaHIP_2.00.tar.gz', deprecated=True)
 
-    depends_on('scons @3.1.2 ', type='build', when='@2:2.11')
+    depends_on('scons', type='build', when='@2:2.10')
     depends_on('argtable')
     depends_on('mpi')  # Note: upstream package only tested on openmpi
 
@@ -42,13 +42,13 @@ class Kahip(CMakePackage):
     # statement to a function)
     # Split into 2 patch files:
     # *) first file patches Sconstruct files present in all versions (from
-    # 2.00 to 2.11)
+    # 2.00 to 2.10)
     # *) second is for files only present in 2.00
-    patch('fix-sconstruct-for-py3.patch', when='@2:2.11 ^python@3:')
+    patch('fix-sconstruct-for-py3.patch', when='@2:2.10 ^python@3:')
     patch('fix-sconstruct-for-py3-v2.00.patch', when='@2.00 ^python@3:')
 
     # 'when' decorators to override new CMake build approach (old build was SConstruct).
-    @when("@:2.11")
+    @when("@:2.10")
     def patch(self):
         """Internal compile.sh scripts hardcode number of cores to build with.
         Filter these out so Spack can control it."""
@@ -62,17 +62,17 @@ class Kahip(CMakePackage):
         for f in files:
             filter_file('NCORES=.*', 'NCORES={0}'.format(make_jobs), f)
 
-    @when("@:2.11")
+    @when("@:2.10")
     def cmake(self, spac, prefix):
         pass
 
-    @when("@:2.11")
+    @when("@:2.10")
     def build(self, spec, prefix):
         """Build using the KaHIP compile.sh script. Uses scons internally."""
         builder = Executable('./compile.sh')
         builder()
 
-    @when("@:2.11")
+    @when("@:2.10")
     def install(self, spec, prefix):
         """Install under the prefix"""
         # Ugly: all files land under 'deploy' and we need to disentangle them
