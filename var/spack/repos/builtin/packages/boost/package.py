@@ -437,7 +437,8 @@ class Boost(Package):
         else:
             variant_string = 'variant=release'
 
-        options.append(variant_string)
+        if not spec.satisfies('platform=windows'):
+            options.append(variant_string)
 
         if '+icu' in spec:
             options.extend(['-s', 'ICU_PATH=%s' % spec['icu4c'].prefix])
