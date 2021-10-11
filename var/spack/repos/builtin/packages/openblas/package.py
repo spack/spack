@@ -191,7 +191,7 @@ class Openblas(MakefilePackage):
 
         # List of available architectures, and possible aliases
         openblas_arch = set(['alpha', 'arm', 'ia64', 'mips', 'mips64',
-                             'power', 'sparc', 'zarch'])
+                             'power', 'riscv64', 'sparc', 'zarch'])
         openblas_arch_map = {
             'amd64': 'x86_64',
             'powerpc64': 'power',
@@ -220,7 +220,7 @@ class Openblas(MakefilePackage):
                 arch_name = openblas_arch_map.get(arch_name, arch_name)
                 args.append('ARCH=' + arch_name)
 
-        if microarch.vendor == 'generic':
+        if microarch.vendor == 'generic' and microarch.name != 'riscv64':
             # User requested a generic platform, or we couldn't find a good
             # match for the requested one. Allow OpenBLAS to determine
             # an optimized kernel at run time, including older CPUs, while
@@ -238,6 +238,14 @@ class Openblas(MakefilePackage):
             if microarch.name == "skylake":
                 # Special case for disabling avx512 instructions
                 args.append('NO_AVX512=1')
+
+        elif microarch.name == 'riscv64':
+            # Special case for renaming the generic riscv64 uarch to the
+            # corresponding OpenBLAS target. riscv64 does not yet support
+            # DYNAMIC_ARCH or TARGET=GENERIC. Once it does, this special
+            # case can go away.
+            args.append('TARGET=' + "RISCV64_GENERIC")
+
         else:
             args.append('TARGET=' + microarch.name.upper())
 
