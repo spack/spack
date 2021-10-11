@@ -911,7 +911,7 @@ _spack_env() {
 _spack_env_activate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish -v --with-view -V --without-view -d --dir -p --prompt"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish -v --with-view -V --without-view -p --prompt --temp -d --dir"
     else
         _environments
     fi
