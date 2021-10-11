@@ -134,7 +134,7 @@ config:
   # enabling locks.
   locks: true
 
-  # The default url fetch method to use. 
+  # The default url fetch method to use.
   # If set to 'curl', Spack will require curl on the user's system
   # If set to 'urllib', Spack will use python built-in libs to fetch
   url_fetch_method: urllib
@@ -190,3 +190,8 @@ config:
   # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit
   # manipulation by unprivileged user (e.g. AFS)
   allow_sgid: true
+
+  # Whether to set the terminal title to display status information during
+  # building and installing packages. This gives information about Spack's
+  # current progress as well as the current and total number of packages.
+  terminal_title: false
