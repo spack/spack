@@ -344,15 +344,16 @@ class PyclingoDriver(object):
     def newline(self):
         self.out.write('\n')
 
-    def fact(self, head, assumption=True):
+    def fact(self, head, assumption=False):
         """ASP fact (a rule without a body)."""
         symbol = head.symbol() if hasattr(head, 'symbol') else head
 
         self.out.write("%s.\n" % str(symbol))
 
         atom = self.backend.add_atom(symbol)
-        self.backend.add_rule([atom], [], choice=self.cores)
-        if self.cores and assumption:
+        choice = self.cores and assumption
+        self.backend.add_rule([atom], [], choice=choice)
+        if choice:
             self.assumptions.append(atom)
 
     def solve(
@@ -483,9 +484,31 @@ class SpackSolverSetup(object):
     def error_messages(self):
         error_messages = [
             "Internal error: two versions with identical weights",
+            "Each node must have exactly one version",
+            "Internal error: Package version must have a unique weight",
+            "Internal error: package version weight mismatch",
             "All dependencies must be reachable from root",
-            "Cyclic dependency requested",
+            "Cyclic dependencies are not allowed",
+            "A conflict was triggered",
+            "Virtual packages must be satisfied by a unique provider",
+            "Internal error: virtual when provides not respected",
+            "Virtual packages must provide all of their virtuals",
+            "Internal error: package provider weights must be unique",
+            "External package version does not satisfy external spec",
+            "Internal error: external weight used for internal spec",
+            "External package does not satisfy external spec",
+            "Single valued variants must have a single value",
+            "Internal error: All variants must have a value",
+            "Variant set to invalid value",
+            "Variant values selected from multiple disjoint sets",
+            "Variant value 'none' cannot be combined with any other value",
+            "A node must have exactly one platform",
+            "Each node must have exactly one OS",
+            "Each node must have exactly one target",
             "No satisfying compiler is compatible with a satisfying target",
+            "Each node must have exactly one compiler",
+            "Internal error: mismatch between selected compiler and compiler version",
+            "Internal error: node compiler version mismatch",
             "No satisfying compiler is compatible with a satisfying os",
         ]
         for message in error_messages:
@@ -513,7 +536,7 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.version_declared(
                 pkg.name, declared_version.version, weight,
                 version_origin_str[declared_version.origin]
-            )) #, False)
+            ))
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
@@ -583,7 +606,7 @@ class SpackSolverSetup(object):
 
         for i, cspec in enumerate(matches):
             f = fn.default_compiler_preference(cspec.name, cspec.version, i)
-            self.gen.fact(f)  #, False)
+            self.gen.fact(f)
 
         # Enumerate target families. This may be redundant, but compilers with
         # custom versions will be able to concretize properly.
@@ -641,7 +664,7 @@ class SpackSolverSetup(object):
                 self.gen.fact(fn.variant_single_value(pkg.name, name))
                 self.gen.fact(
                     fn.variant_default_value_from_package_py(
-                        pkg.name, name, variant.default)  #, False
+                        pkg.name, name, variant.default)
                 )
             else:
                 spec_variant = variant.make_default()
@@ -671,7 +694,7 @@ class SpackSolverSetup(object):
                 values = [variant.default]
 
             for value in sorted(values):
-                self.gen.fact(fn.variant_possible_value(pkg.name, name, value))  #, False)
+                self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
 
             self.gen.newline()
 
@@ -848,7 +871,7 @@ class SpackSolverSetup(object):
             for local_idx, spec in enumerate(external_specs):
                 condition_id = self.condition(spec)
                 self.gen.fact(
-                    fn.possible_external(condition_id, pkg_name, local_idx) #, False
+                    fn.possible_external(condition_id, pkg_name, local_idx)
                 )
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
@@ -903,7 +926,7 @@ class SpackSolverSetup(object):
 
         # types of flags that can be on specs
         for flag in spack.spec.FlagMap.valid_compiler_flags():
-            self.gen.fact(fn.flag_type(flag)) #, False)
+            self.gen.fact(fn.flag_type(flag))
         self.gen.newline()
 
         # flags from compilers.yaml
@@ -1137,10 +1160,10 @@ class SpackSolverSetup(object):
 
         # make directives for possible OS's
         for possible_os in sorted(possible):
-            self.gen.fact(fn.os(possible_os))#, False)
+            self.gen.fact(fn.os(possible_os))
 
         # mark this one as default
-        self.gen.fact(fn.node_os_default(platform.default_os))#, False)
+        self.gen.fact(fn.node_os_default(platform.default_os))
 
     def target_defaults(self, specs):
         """Add facts about targets and target compatibility."""
@@ -1208,18 +1231,18 @@ class SpackSolverSetup(object):
 
         i = 0
         for target in compatible_targets:
-            self.gen.fact(fn.target(target.name))#, False)
-            self.gen.fact(fn.target_family(target.name, target.family.name))#, False)
+            self.gen.fact(fn.target(target.name))
+            self.gen.fact(fn.target_family(target.name, target.family.name))
             for parent in sorted(target.parents):
-                self.gen.fact(fn.target_parent(target.name, parent.name))#, False)
+                self.gen.fact(fn.target_parent(target.name, parent.name))
 
             # prefer best possible targets; weight others poorly so
             # they're not used unless set explicitly
             if target.name in best_targets:
-                self.gen.fact(fn.default_target_weight(target.name, i))#, False)
+                self.gen.fact(fn.default_target_weight(target.name, i))
                 i += 1
             else:
-                self.gen.fact(fn.default_target_weight(target.name, 100))#, False)
+                self.gen.fact(fn.default_target_weight(target.name, 100))
 
             self.gen.newline()
 
@@ -1381,7 +1404,7 @@ class SpackSolverSetup(object):
         # Tell the concretizer about possible values from specs we saw in
         # spec_clauses()
         for pkg, variant, value in sorted(self.variant_values_from_specs):
-            self.gen.fact(fn.variant_possible_value(pkg, variant, value))#, False)
+            self.gen.fact(fn.variant_possible_value(pkg, variant, value))
 
     def setup(self, driver, specs, tests=False):
         """Generate an ASP program with relevant constraints for specs.
