@@ -53,6 +53,7 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
+    'getuid',
     'chgrp',
     'chmod_x',
     'copy',

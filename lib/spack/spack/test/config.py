@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-import ctypes
 import getpass
 import os
 import sys
@@ -13,7 +12,7 @@ import tempfile
 import pytest
 from six import StringIO
 
-from llnl.util.filesystem import mkdirp, touch
+from llnl.util.filesystem import getuid, mkdirp, touch
 
 import spack.config
 import spack.environment as ev
@@ -28,16 +27,6 @@ import spack.schema.packages
 import spack.schema.repos
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
-
-
-def getuid():
-    if sys.platform == "win32":
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            return 1
-        return 0
-    else:
-        return os.getuid()
-
 
 # sample config data
 config_low = {

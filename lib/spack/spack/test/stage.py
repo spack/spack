@@ -5,7 +5,6 @@
 
 """Test that the Stage class works correctly."""
 import collections
-import ctypes
 import errno
 import getpass
 import os
@@ -16,7 +15,7 @@ import tempfile
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, partition_path, touch, working_dir
+from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
 
 import spack.paths
 import spack.platforms
@@ -42,15 +41,6 @@ _readme_contents = 'hello world!\n'
 _include_readme = 1
 _include_hidden = 2
 _include_extra = 3
-
-
-def getuid():
-    if sys.platform == "win32":
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            return 1
-        return 0
-    else:
-        return os.getuid()
 
 
 # Mock fetch directories are expected to appear as follows:

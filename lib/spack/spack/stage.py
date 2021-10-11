@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 
-import ctypes
 import errno
 import getpass
 import glob
@@ -52,15 +51,6 @@ _source_path_subdir = 'spack-src'
 
 # The temporary stage name prefix.
 stage_prefix = 'spack-stage-'
-
-
-def getuid():
-    if sys.platform == "win32":
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            return 1
-        return 0
-    else:
-        return os.getuid()
 
 
 def create_stage_root(path):

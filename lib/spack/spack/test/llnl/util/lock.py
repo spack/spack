@@ -43,7 +43,6 @@ actually on a shared filesystem.
 
 """
 import collections
-import ctypes
 import errno
 import getpass
 import glob
@@ -61,7 +60,7 @@ import pytest
 
 import llnl.util.lock as lk
 import llnl.util.multiproc as mp
-from llnl.util.filesystem import touch
+from llnl.util.filesystem import getuid, touch
 
 if _platform == "win32":
     import pywintypes
@@ -122,15 +121,6 @@ barrier_timeout = 5
 """This is the lock timeout for expected failures.
 This may need to be higher for some filesystems."""
 lock_fail_timeout = 0.1
-
-
-def getuid():
-    if _platform == "win32":
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            return 1
-        return 0
-    else:
-        return os.getuid()
 
 
 def make_readable(*paths):

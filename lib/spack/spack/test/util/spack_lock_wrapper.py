@@ -4,25 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for Spack's wrapper module around llnl.util.lock."""
-import ctypes
+
 import os
 import sys
 
 import pytest
 
-from llnl.util.filesystem import group_ids
+from llnl.util.filesystem import getuid, group_ids
 
 import spack.config
 import spack.util.lock as lk
-
-
-def getuid():
-    if sys.platform == "win32":
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            return 1
-        return 0
-    else:
-        return os.getuid()
 
 
 def test_disable_locking(tmpdir):
