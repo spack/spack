@@ -31,6 +31,10 @@ class Picsar(MakefilePackage):
 
     parallel = False
 
+    def patch(self):
+        if '%arm' in self.spec:
+            filter_file(r'!\$OMP SIMD SAFELEN\(LVEC2\)', '', 'src/diags/diags.F90')
+
     @property
     def build_targets(self):
         targets = []
@@ -64,6 +68,10 @@ class Picsar(MakefilePackage):
         targets.append('MODE = {0}'.format(mode))
 
         targets.append('SYS = default')
+
+        if '%gcc' in self.spec:
+            targets.append('FARGS=-g -fbounds-check -O3 -fopenmp '
+                           '-JModules -fallow-argument-mismatch')
 
         return targets
 

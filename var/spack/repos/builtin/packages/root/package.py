@@ -74,7 +74,7 @@ class Root(CMakePackage):
     # Some ROOT versions did not honor the option to avoid building an
     # internal version of unuran, _cf_
     # https://github.com/root-project/ROOT/commit/3e60764f133218b6938e5aa4986de760e8f058d9.
-    patch('honor-unuran-switch.patch', level=1, when='@6.08.06:6.13.99')
+    patch('honor-unuran-switch.patch', level=1, when='@6.08.06:6.13')
     # 6.16.00 fails to handle particular build option combinations, _cf_
     # https://github.com/root-project/ROOT/commit/e0ae0483985d90a71a6cabd10d3622dfd1c15611.
     patch('root7-webgui.patch', level=1, when='@6.16.00')
@@ -197,7 +197,7 @@ class Root(CMakePackage):
 
     # ###################### Dependencies ######################
 
-    depends_on('cmake@3.4.3:', type='build', when='@:6.16.99')
+    depends_on('cmake@3.4.3:', type='build', when='@:6.16')
     depends_on('cmake@3.9:', type='build', when='@6.18.00:')
     depends_on('pkgconfig', type='build')
 
@@ -230,7 +230,7 @@ class Root(CMakePackage):
     depends_on('gl2ps', when="+x+opengl")
 
     # Qt4
-    depends_on('qt@:4.999', when='+qt4')
+    depends_on('qt@:4', when='+qt4')
 
     # Python
     depends_on('python@2.7:', when='+python', type=('build', 'run'))
@@ -275,7 +275,7 @@ class Root(CMakePackage):
     depends_on('veccore',   when='+veccore')
     depends_on('libxml2',   when='+xml')
     depends_on('xrootd',          when='+xrootd')
-    depends_on('xrootd@:4.99.99', when='@:6.22.03 +xrootd')
+    depends_on('xrootd@:4', when='@:6.22.03 +xrootd')
 
     # ###################### Conflicts ######################
 
@@ -284,14 +284,14 @@ class Root(CMakePackage):
     conflicts('%intel')
 
     # ROOT <6.08 was incompatible with the GCC 5+ ABI
-    conflicts('%gcc@5.0.0:', when='@:6.07.99')
+    conflicts('%gcc@5.0.0:', when='@:6.07')
 
     # The version of Clang featured in ROOT <6.12 fails to build with
     # GCC 9.2.1, which we can safely extrapolate to the GCC 9 series.
-    conflicts('%gcc@9.0.0:', when='@:6.11.99')
+    conflicts('%gcc@9.0.0:', when='@:6.11')
 
     # ROOT <6.14 was incompatible with Python 3.7+
-    conflicts('^python@3.7:', when='@:6.13.99 +python')
+    conflicts('^python@3.7:', when='@:6.13 +python')
 
     # See README.md
     conflicts('+http',
@@ -445,7 +445,7 @@ class Root(CMakePackage):
             define('builtin_glew', False),
             define('builtin_gsl', False),
             define('builtin_llvm', True),
-            define('builtin_lz4', self.spec.satisfies('@6.12.02:6.12.99')),
+            define('builtin_lz4', self.spec.satisfies('@6.12.02:6.12')),
             define('builtin_lzma', False),
             define('builtin_nlohmannjson', False),
             define('builtin_openssl', False),
@@ -456,7 +456,7 @@ class Root(CMakePackage):
             define('builtin_vdt', False),
             define('builtin_veccore', False),
             define('builtin_xrootd', False),
-            define('builtin_xxhash', self.spec.satisfies('@6.12.02:6.12.99')),
+            define('builtin_xxhash', self.spec.satisfies('@6.12.02:6.12')),
             define('builtin_zlib', False)
         ]
 
@@ -594,10 +594,10 @@ class Root(CMakePackage):
                 env.append_path('SPACK_INCLUDE_DIRS', include_path)
 
         # With that done, let's go fixing those deps
-        if spec.satisfies('@:6.12.99'):
+        if spec.satisfies('@:6.12'):
             add_include_path('zlib')
         if '+x' in spec:
-            if spec.satisfies('@:6.08.99') or spec.satisfies('@6.22:'):
+            if spec.satisfies('@:6.08') or spec.satisfies('@6.22:'):
                 add_include_path('xextproto')
             add_include_path('fontconfig')
             add_include_path('libx11')

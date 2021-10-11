@@ -12,12 +12,15 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url      = "https://github.com/AMReX-Codes/amrex/releases/download/20.05/amrex-20.05.tar.gz"
+    url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.10/amrex-21.10.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
+
+    tags = ['ecp', 'e4s']
 
     maintainers = ['WeiqunZhang', 'asalmgren']
 
     version('develop', branch='development')
+    version('21.10', sha256='a11954c03b1ec26c26b676460dc5de5195469e813b70fbcea6dfdefeafaf5407')
     version('21.09', sha256='983b41d93bf9417c032080fd2ec7c04d0d2b820e613a076bd07566aa5a8aa4bd')
     version('21.08', sha256='34fb6c72735c74820b27db1138e5bc9fe698ffbd8344aae10a5fbdace479b57f')
     version('21.07', sha256='9630b8c0c7ffbf3f5ea4d973a3fdb40b9b10fec0f8df33b9e24d76d2c1d15771')
@@ -90,7 +93,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('sundials@5.7.0: +ARKODE +CVODE +rocm amdgpu_target=%s' % tgt, when='@21.07: +sundials +rocm amdgpu_target=%s' % tgt)
     depends_on('cuda@9.0.0:', when='+cuda')
     depends_on('python@2.7:', type='build', when='@:20.04')
-    depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
+    depends_on('cmake@3.5:',  type='build', when='@:18.10')
     depends_on('cmake@3.13:', type='build', when='@18.11:')
     depends_on('cmake@3.14:', type='build', when='@19.04:')
     # cmake @3.17: is necessary to handle cuda @11: correctly
@@ -138,7 +141,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('cuda_arch=30', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('cuda_arch=32', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('+rocm', when='@:20.11', msg='AMReX HIP support needs AMReX newer than version 20.11')
-    conflicts('%rocm@4.2.0:4.2.99', when='+rocm',
+    conflicts('%rocm@4.2.0:4.2', when='+rocm',
               msg='AMReX does not support rocm-4.2 due to a compiler bug')
     conflicts('+cuda', when='+rocm', msg='CUDA and HIP support are exclusive')
 

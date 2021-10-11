@@ -131,34 +131,34 @@ class Gromacs(CMakePackage):
     depends_on('plumed@2.5.3:2.6.0~mpi', when='@2019.4+plumed~mpi')
     depends_on('plumed@2.5.2+mpi', when='@2019.2+plumed+mpi')
     depends_on('plumed@2.5.2~mpi', when='@2019.2+plumed~mpi')
-    depends_on('plumed@2.5.3:2.6.99+mpi', when='@2018.8+plumed+mpi')
-    depends_on('plumed@2.5.3:2.6.99~mpi', when='@2018.8+plumed~mpi')
+    depends_on('plumed@2.5.3:2.6+mpi', when='@2018.8+plumed+mpi')
+    depends_on('plumed@2.5.3:2.6~mpi', when='@2018.8+plumed~mpi')
     depends_on('plumed@2.5.1:2.5.2+mpi', when='@2018.6+plumed+mpi')
     depends_on('plumed@2.5.1:2.5.2~mpi', when='@2018.6+plumed~mpi')
     depends_on('plumed@2.5.0+mpi', when='@2018.4+plumed+mpi')
     depends_on('plumed@2.5.0~mpi', when='@2018.4+plumed~mpi')
-    depends_on('plumed@2.5.1:2.5.99+mpi', when='@2016.6+plumed+mpi')
-    depends_on('plumed@2.5.1:2.5.99~mpi', when='@2016.6+plumed~mpi')
+    depends_on('plumed@2.5.1:2.5+mpi', when='@2016.6+plumed+mpi')
+    depends_on('plumed@2.5.1:2.5~mpi', when='@2016.6+plumed~mpi')
     depends_on('plumed@2.5.0+mpi', when='@2016.5+plumed+mpi')
     depends_on('plumed@2.5.0~mpi', when='@2016.5+plumed~mpi')
 
     depends_on('fftw-api@3')
-    depends_on('cmake@2.8.8:3.99.99', type='build')
-    depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
-    depends_on('cmake@3.9.6:3.99.99', type='build', when='@2020')
-    depends_on('cmake@3.13.0:3.99.99', type='build', when='@2021:')
-    depends_on('cmake@3.16.0:3.99.99', type='build', when='@master')
-    depends_on('cmake@3.16.0:3.99.99', type='build', when='%fj')
+    depends_on('cmake@2.8.8:3', type='build')
+    depends_on('cmake@3.4.3:3', type='build', when='@2018:')
+    depends_on('cmake@3.9.6:3', type='build', when='@2020')
+    depends_on('cmake@3.13.0:3', type='build', when='@2021:')
+    depends_on('cmake@3.16.0:3', type='build', when='@master')
+    depends_on('cmake@3.16.0:3', type='build', when='%fj')
     depends_on('cuda', when='+cuda')
     depends_on('sycl', when='+sycl')
     depends_on('lapack', when='+lapack')
     depends_on('blas', when='+blas')
 
-    depends_on('hwloc@1:1.999', when='+hwloc@2016:2018.999')
+    depends_on('hwloc@1.0:1', when='+hwloc@2016:2018')
     depends_on('hwloc', when='+hwloc@2019:')
 
     patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
-    patch('gmxDetectSimd-cmake-3.14.patch', when='@5.0:2017.99^cmake@3.14.0:')
+    patch('gmxDetectSimd-cmake-3.14.patch', when='@5.0:2017^cmake@3.14.0:')
 
     filter_compiler_wrappers(
         '*.cmake',
@@ -198,7 +198,7 @@ class Gromacs(CMakePackage):
                 filter_file(r'-gencode;arch=compute_20,code=compute_20;?', '',
                             'cmake/gmxManageNvccConfig.cmake')
 
-            if self.spec.satisfies('@4.6:5.0.999^cuda@9:'):
+            if self.spec.satisfies('@4.6:5.0^cuda@9:'):
                 filter_file(r'-gencode;arch=compute_20,code=sm_21;?', '',
                             'cmake/gmxManageNvccConfig.cmake')
 

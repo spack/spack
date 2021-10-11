@@ -336,7 +336,7 @@ This would be translated to:
 .. code-block:: python
 
    extends('python')
-   depends_on('python@3.5:3.999', type=('build', 'run'))
+   depends_on('python@3.5:3', type=('build', 'run'))
 
 
 Many ``setup.py`` or ``setup.cfg`` files also contain information like::
@@ -568,7 +568,7 @@ check the ``METADATA`` file for lines like::
 Lines that use ``Requires-Dist`` are similar to ``install_requires``.
 Lines that use ``Provides-Extra`` are similar to ``extra_requires``,
 and you can add a variant for those dependencies. The ``~=1.11.0``
-syntax is equivalent to ``1.11.0:1.11.999``.
+syntax is equivalent to ``1.11.0:1.11``.
 
 """"""""""
 setuptools

@@ -259,17 +259,19 @@ def display_specs_as_json(specs, deps=False):
     seen = set()
     records = []
     for spec in specs:
-        if spec.dag_hash() in seen:
+        dag_hash = spec.dag_hash()
+        if dag_hash in seen:
             continue
-        seen.add(spec.dag_hash())
-        records.append(spec.to_node_dict())
+        records.append(spec.node_dict_with_hashes())
+        seen.add(dag_hash)
 
         if deps:
             for dep in spec.traverse():
-                if dep.dag_hash() in seen:
+                dep_dag_hash = dep.dag_hash()
+                if dep_dag_hash in seen:
                     continue
-                seen.add(dep.dag_hash())
-                records.append(dep.to_node_dict())
+                records.append(dep.node_dict_with_hashes())
+                seen.add(dep_dag_hash)
 
     sjson.dump(records, sys.stdout)
 

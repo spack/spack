@@ -15,4 +15,4 @@ class PyJsonpickle(PythonPackage):
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm@3.4.1:+toml', type='build')
-    depends_on("py-importlib-metadata", when="^python@:3.7.99", type=('build', 'run'))
+    depends_on("py-importlib-metadata", when="^python@:3.7", type=('build', 'run'))

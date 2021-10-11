@@ -47,9 +47,9 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack.architecture
 import spack.compilers
 import spack.paths
+import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.compilers
@@ -84,11 +84,16 @@ all_schemas = copy.deepcopy(section_schemas)
 all_schemas.update(dict((key, spack.schema.env.schema)
                         for key in spack.schema.env.keys))
 
+#: Path to the default configuration
+configuration_defaults_path = (
+    'defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+)
+
 #: Builtin paths to configuration files in Spack
 configuration_paths = (
     # Default configuration scope is the lowest-level scope. These are
     # versioned with Spack and can be overridden by systems, sites or users
-    ('defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')),
+    configuration_defaults_path,
 
     # System configuration is per machine.
     # No system-level configs should be checked into spack by default
@@ -764,7 +769,7 @@ command_line_scopes = []  # type: List[str]
 
 def _add_platform_scope(cfg, scope_type, name, path):
     """Add a platform-specific subdirectory for the current platform."""
-    platform = spack.architecture.platform().name
+    platform = spack.platforms.host().name
     plat_name = '%s/%s' % (name, platform)
     plat_path = os.path.join(path, platform)
     cfg.push_scope(scope_type(plat_name, plat_path))

@@ -76,7 +76,7 @@ class Glib(Package):
     patch('g_date_strftime.patch', when='@2.42.1')
     # Clang doesn't seem to acknowledge the pragma lines to disable the -Werror
     # around a legitimate usage.
-    patch('no-Werror=format-security.patch', when='@:2.57.99')
+    patch('no-Werror=format-security.patch', when='@:2.57')
     # Patch to prevent compiler errors in kernels older than 2.6.35
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=rhel6')
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=centos6')
@@ -187,7 +187,7 @@ class Glib(Package):
         args.append('GTKDOC_REBASE={0}'.format(true))
         return args
 
-    @when('@:2.57.99')
+    @when('@:2.57')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix), *self.configure_args())
         make()
@@ -266,7 +266,7 @@ class Glib(Package):
         # the gettext library directory. The patch below explitly adds the
         # appropriate -L path.
         spec = self.spec
-        if spec.satisfies('@2:2.99'):
+        if spec.satisfies('@2.0:2'):
             pattern = 'Libs:'
             repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
                    spec['gettext'].libs.directories[0])

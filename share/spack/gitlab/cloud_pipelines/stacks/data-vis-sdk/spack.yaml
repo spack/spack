@@ -30,7 +30,7 @@ spack:
   mirrors: { "mirror": "s3://spack-binaries-develop/data-vis-sdk" }
 
   gitlab-ci:
-    image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
+    image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
@@ -46,13 +46,12 @@ spack:
         runner-attributes:
           tags: ["spack", "public", "large", "x86_64"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
-      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
+      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_pipelines/stacks/data-vis-sdk
-        - spack env activate --without-view .
       tags: ["spack", "public", "medium", "x86_64"]
 
   cdash:

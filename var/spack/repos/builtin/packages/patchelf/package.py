@@ -27,6 +27,8 @@ class Patchelf(AutotoolsPackage):
     # of SHT_NOTE and PT_NOTE'
     patch('https://github.com/NixOS/patchelf/pull/230.patch', sha256='a155f233b228f02d7886e304cb13898d93801b52f351e098c2cc0719697ec9d0', when='@0.12')
 
+    conflicts('%gcc@:4.6', when='@0.10:', msg="Requires C++11 support")
+
     def url_for_version(self, version):
         if version < Version('0.12'):
             return "https://nixos.org/releases/patchelf/patchelf-{0}/patchelf-{1}.tar.gz".format(version, version)

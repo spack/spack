@@ -13,6 +13,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     git = "https://github.com/kokkos/kokkos-kernels.git"
     url = "https://github.com/kokkos/kokkos-kernels/archive/3.1.00.tar.gz"
 
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('master',  branch='master')
     version('3.2.00', sha256="8ac20ee28ae7813ce1bda461918800ad57fdbac2af86ef5d1ba74e83e10956de")

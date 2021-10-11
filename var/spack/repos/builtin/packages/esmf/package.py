@@ -47,25 +47,25 @@ class Esmf(MakefilePackage):
     depends_on('perl', type='test')
 
     # Make esmf build with newer intel versions
-    patch('intel.patch', when='@:7.0.99 %intel@17:')
+    patch('intel.patch', when='@:7.0 %intel@17:')
     # Make esmf build with newer gcc versions
     # https://sourceforge.net/p/esmf/esmf/ci/3706bf758012daebadef83d6575c477aeff9c89b/
-    patch('gcc.patch', when='@:7.0.99 %gcc@6:')
+    patch('gcc.patch', when='@:7.0 %gcc@6:')
 
     # Fix undefined reference errors with mvapich2
     # https://sourceforge.net/p/esmf/esmf/ci/34de0ccf556ba75d35c9687dae5d9f666a1b2a18/
-    patch('mvapich2.patch', when='@:7.0.99')
+    patch('mvapich2.patch', when='@:7.0')
 
     # Allow different directories for creation and
     # installation of dynamic libraries on OSX:
-    patch('darwin_dylib_install_name.patch', when='platform=darwin @:7.0.99')
+    patch('darwin_dylib_install_name.patch', when='platform=darwin @:7.0')
 
     # Missing include file for newer gcc compilers
     # https://trac.macports.org/ticket/57493
     patch('cstddef.patch', when='@7.1.0r %gcc@8:')
 
     # Make script from mvapich2.patch executable
-    @when('@:7.0.99')
+    @when('@:7.0')
     @run_before('build')
     def chmod_scripts(self):
         chmod = which('chmod')

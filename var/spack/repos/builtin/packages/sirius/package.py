@@ -127,7 +127,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     extends('python', when='+python')
 
-    conflicts('+shared', when='@6.3.0:6.4.999')
+    conflicts('+shared', when='@6.3.0:6.4')
     conflicts('+boost_filesystem', when='~apps')
     conflicts('^libxc@5.0.0')  # known to produce incorrect results
     conflicts('+single_precision', when='@:7.2.4')

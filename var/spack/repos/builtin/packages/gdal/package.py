@@ -107,7 +107,7 @@ class Gdal(AutotoolsPackage):
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
     depends_on('libgeotiff@1.2.1:1.4', when='@:2.4.0')
-    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4.99')
+    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4')
     depends_on('libgeotiff@1.5:', when='@3.0.0:')
     depends_on('json-c')
     depends_on('json-c@0.12.1', when='@:2.2')
@@ -145,9 +145,9 @@ class Gdal(AutotoolsPackage):
     depends_on('poppler@:0.63', when='@:2.3 +poppler')
     depends_on('poppler@:0.71', when='@:2.4 +poppler')
     depends_on('poppler@0.24:', when='@3: +poppler')
-    depends_on('proj@:4', when='+proj @2.3.0:2.3.999')
-    depends_on('proj@:5', when='+proj @2.4.0:2.4.999')
-    depends_on('proj@:6', when='+proj @2.5:2.999')
+    depends_on('proj@:4', when='+proj @2.3.0:2.3')
+    depends_on('proj@:5', when='+proj @2.4.0:2.4')
+    depends_on('proj@:6', when='+proj @2.5:2')
     depends_on('proj@6:', when='+proj @3:')
     depends_on('perl', type=('build', 'run'), when='+perl')
     # see gdal_version_and_min_supported_python_version
@@ -158,10 +158,13 @@ class Gdal(AutotoolsPackage):
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java@4:8', type=('build', 'link', 'run'), when='+java')
+    depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
+    depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')
+    depends_on('java@5:', type=('build', 'link', 'run'), when='@2.1:+java')
+    depends_on('java@4:', type=('build', 'link', 'run'), when='@:2.0+java')
     depends_on('ant', type='build', when='+java')
     depends_on('swig', type='build', when='+java')
-    depends_on('jackcess@1.2.0:1.2.999', type='run', when='+mdb')
+    depends_on('jackcess@1.2.0:1.2', type='run', when='+mdb')
     depends_on('armadillo', when='+armadillo')
     depends_on('cryptopp', when='+cryptopp @2.1:')
     depends_on('openssl', when='+crypto @2.3:')
@@ -562,7 +565,6 @@ class Gdal(AutotoolsPackage):
         if spec.satisfies('@2.1:'):
             args.extend([
                 '--with-mongocxx=no',
-                '--with-gnm=no',
                 '--with-pdfium=no',
             ])
 

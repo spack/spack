@@ -15,7 +15,7 @@ from ordereddict_backport import OrderedDict
 import llnl.util.lang
 import llnl.util.tty as tty
 
-import spack.architecture
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.util.executable as executable
@@ -94,7 +94,7 @@ def _patchelf():
         return exe_path
 
     # Skip darwin
-    if str(spack.architecture.platform()) == 'darwin':
+    if str(spack.platforms.host()) == 'darwin':
         return None
 
     # Install the spec and return its path
@@ -497,6 +497,7 @@ def _replace_prefix_bin(filename, byte_prefixes):
             # We only care about this problem if we are about to replace
             length_compatible = len(new_bytes) <= len(orig_bytes)
             if not length_compatible:
+                tty.debug('Binary failing to relocate is %s' % filename)
                 raise BinaryTextReplaceError(orig_bytes, new_bytes)
             pad_length = len(orig_bytes) - len(new_bytes)
             padding = os.sep * pad_length

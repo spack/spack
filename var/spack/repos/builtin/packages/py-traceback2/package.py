@@ -16,3 +16,5 @@ class PyTraceback2(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pbr', type='build')
+    depends_on('py-six',        type=('build', 'run'))
+    depends_on('py-linecache2', type=('build', 'run'))

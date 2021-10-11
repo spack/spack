@@ -27,7 +27,7 @@ class Gpdb(AutotoolsPackage):
     version('5.23.0',    sha256='b06a797eb941362d5473b84d5def349b5ce12ce87ab116bea7c74ad193738ae9')
 
     depends_on('zstd')
-    depends_on('py-setuptools@:44.99.99')
+    depends_on('py-setuptools@:44')
     depends_on('apr')
     depends_on('libevent')
     depends_on('curl')

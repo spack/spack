@@ -49,8 +49,6 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_pipelines/stacks/build_systems
-        - spack env activate --without-view .
       image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "x86_64"]
 

@@ -28,7 +28,7 @@ class PyDocutils(PythonPackage):
     depends_on('python@2.6:2.8,3.3:', when='@0.14:0.15',     type=('build', 'run'))
     depends_on('python@2.4:3',        when='@0.10:0.13',     type=('build', 'run'))
     depends_on('python@2.2.1:3',      when='@0.6:0.9',       type=('build', 'run'))
-    depends_on('python@2.2.1:2.8',    when='@0.5.0:0.5.999', type=('build', 'run'))
+    depends_on('python@2.2.1:2.8',    when='@0.5.0:0.5', type=('build', 'run'))
     depends_on('python@2.1:2.8',      when='@:0.4',          type=('build', 'run'))
 
     # NOTE: This creates symbolic links to be able to run docutils scripts

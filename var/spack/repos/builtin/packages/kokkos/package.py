@@ -15,6 +15,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/kokkos/kokkos.git"
     url      = "https://github.com/kokkos/kokkos/archive/3.4.01.tar.gz"
 
+    tags = ['e4s']
+
     test_requires_compiler = True
 
     maintainers = ['DavidPoliakoff', 'jciesko']
@@ -177,7 +179,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     variant("pic", default=False, description="Build position independent code")
 
     # nvcc does not currently work with C++17 or C++20
-    conflicts("+cuda", when="std=17 ^cuda@:10.99.99")
+    conflicts("+cuda", when="std=17 ^cuda@:10")
     conflicts("+cuda", when="std=20")
 
     # HPX should use the same C++ standard

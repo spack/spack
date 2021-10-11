@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+import pytest
+
 import llnl.util.filesystem as fs
 
 import spack.install_test
@@ -56,7 +58,7 @@ def test_write_test_result(mock_packages, mock_test_stage):
         assert spec.name in msg
 
 
-def test_do_test(mock_packages, mock_test_stage, install_mockery):
+def test_do_test(mock_packages, install_mockery, mock_test_stage):
     """Perform a stand-alone test with files to copy."""
     spec = spack.spec.Spec('trivial-smoke-test').concretized()
     test_name = 'test_do_test'
@@ -83,3 +85,37 @@ def test_do_test(mock_packages, mock_test_stage, install_mockery):
 
     assert os.path.exists(cached_filename)
     assert os.path.exists(data_filename)
+
+
+def test_test_stage_caches(mock_packages, install_mockery, mock_test_stage):
+    def ensure_current_cache_fail(test_suite):
+        with pytest.raises(spack.install_test.TestSuiteSpecError):
+            _ = test_suite.current_test_cache_dir
+
+        with pytest.raises(spack.install_test.TestSuiteSpecError):
+            _ = test_suite.current_test_data_dir
+
+    spec = spack.spec.Spec('libelf').concretized()
+    test_suite = spack.install_test.TestSuite([spec], 'test-cache')
+
+    # Check no current specs yield failure
+    ensure_current_cache_fail(test_suite)
+
+    # Check no current base spec yields failure
+    test_suite.current_base_spec = None
+    test_suite.current_test_spec = spec
+    ensure_current_cache_fail(test_suite)
+
+    # Check no current test spec yields failure
+    test_suite.current_base_spec = spec
+    test_suite.current_test_spec = None
+    ensure_current_cache_fail(test_suite)
+
+
+def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
+    spec = spack.spec.Spec('libelf').concretized()
+    test_suite = spack.install_test.TestSuite([spec], 'test-dups')
+    (test_suite.specs[0]).package.test_suite = test_suite
+
+    with pytest.raises(spack.install_test.TestSuiteFailure):
+        test_suite()
