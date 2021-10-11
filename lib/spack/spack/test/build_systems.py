@@ -10,7 +10,6 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-import spack.error as serr
 import spack.platforms
 import spack.repo
 from spack.build_environment import get_std_cmake_args, setup_package
@@ -128,9 +127,12 @@ def test_cmake_std_args(config, mock_packages):
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_cmake_bad_generator(config, mock_packages):
-    with pytest.raises(serr.SpackError):
-        s = Spec('cmake-client generator="Yellow Sticky Note"')
-        s.concretize()
+    s = Spec('cmake-client')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    pkg.generator = 'Yellow Sticky Notes'
+    with pytest.raises(spack.package.InstallError):
+        get_std_cmake_args(pkg)
 
 
 @pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
