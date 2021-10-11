@@ -1211,7 +1211,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --fish --first --only"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --first --only"
     else
         _installed_packages
     fi
