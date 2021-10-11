@@ -56,8 +56,8 @@ def setup_parser(subparser):
         help="build directory for a spec "
              "(requires it to be staged first)")
     directories.add_argument(
-        '-e', '--env', action='store', dest='location_env',
-        help="location of an environment managed by spack")
+        '-e', '--env', action='store', dest='location_env', nargs='*',
+        help="location of the named or current environment")
 
     arguments.add_common_arguments(subparser, ['spec'])
 
@@ -71,10 +71,19 @@ def location(parser, args):
         print(spack.paths.prefix)
         return
 
-    if args.location_env:
-        path = ev.root(args.location_env)
-        if not os.path.isdir(path):
-            tty.die("no such environment: '%s'" % args.location_env)
+    if isinstance(args.location_env, list):
+        if len(args.location_env) == 0:
+            # Get current environment path
+            spack.cmd.require_active_env('location -e')
+            path = ev.active_environment().path
+        elif len(args.location_env) == 1:
+            # Get named environment path
+            name = args.location_env[0]
+            if not ev.exists(name):
+                tty.die("no such environment: '%s'" % name)
+            path = ev.root(args.location_env[0])
+        else:
+            tty.die("provide a single environment name")
         print(path)
         return
 
