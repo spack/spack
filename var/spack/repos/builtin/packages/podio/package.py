@@ -17,6 +17,7 @@ class Podio(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version('master', branch='master')
+    version('0.14', sha256='47f99f1190dc71d6deb52a2b1831250515dbd5c9e0f263c3c8553ffc5b260dfb')
     version('0.13.2', sha256='645f6915ca6f34789157c0a9dc8b0e9ec901e019b96eb8a68fb39011602e92eb')
     version('0.13.1', sha256='2ae561c2a0e46c44245aa2098772374ad246c9fcb1956875c95c69c963501353')
     version('0.13', sha256='e9cbd4e25730003d3706ad82e28b15cb5bdc524a78b0a26e90b89ea852101498')
