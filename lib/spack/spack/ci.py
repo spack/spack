@@ -681,7 +681,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             phase_name = phase['name']
             with spack.concretize.disable_compiler_existence_check():
                 staged_phases[phase_name] = stage_spec_jobs(
-                    env.concretized_user_specs,
+                    list(env.specs_by_hash.values()),
                     check_index_only=check_index_only)
     finally:
         # Clean up PR mirror if enabled
