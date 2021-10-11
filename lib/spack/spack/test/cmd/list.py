@@ -3,23 +3,25 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
+import spack.platforms
 from spack.main import SpackCommand
 
 list = SpackCommand('list')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_list():
     output = list()
     assert 'cloverleaf3d' in output
     assert 'hdf5' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_list_filter():
     output = list('py-*')
     assert 'py-numpy' in output
@@ -30,14 +32,16 @@ def test_list_filter():
     assert 'perl-file-copy-recursive' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.maybeslow
 def test_list_search_description():
     output = list('--search-description', 'xml')
     assert 'expat' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_list_tags():
     output = list('--tag', 'proxy-app')
     assert 'cloverleaf3d' in output
@@ -52,14 +56,16 @@ def test_list_tags():
     assert 'mfem' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_list_format_name_only():
     output = list('--format', 'name_only')
     assert 'cloverleaf3d' in output
     assert 'hdf5' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.maybeslow
 def test_list_format_version_json():
     output = list('--format', 'version_json')
@@ -69,7 +75,8 @@ def test_list_format_version_json():
     json.loads(output)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.maybeslow
 def test_list_format_html():
     output = list('--format', 'html')

@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test detection of compiler version"""
 import os
-import sys
 
 import pytest
 
@@ -23,6 +22,7 @@ import spack.compilers.oneapi
 import spack.compilers.pgi
 import spack.compilers.xl
 import spack.compilers.xl_r
+import spack.platforms
 import spack.util.module_cmd
 from spack.operating_systems.cray_frontend import CrayFrontend
 
@@ -304,7 +304,7 @@ def test_xl_version_detection(version_str, expected_version):
     assert version == expected_version
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('compiler,version', [
     ('gcc', '8.1.0'),

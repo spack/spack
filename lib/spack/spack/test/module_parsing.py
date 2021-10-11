@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
 import spack
+import spack.platforms
 from spack.util.module_cmd import (
     get_path_args_from_module_line,
     get_path_from_module_contents,
@@ -25,7 +25,7 @@ test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
 _test_template = "'. %s 2>&1' % args[1]"
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_module_function_change_env(tmpdir, working_env, monkeypatch):
     monkeypatch.setattr(spack.util.module_cmd, '_cmd_template', _test_template)
@@ -40,7 +40,7 @@ def test_module_function_change_env(tmpdir, working_env, monkeypatch):
     assert os.environ['NOT_AFFECTED'] == "NOT_AFFECTED"
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_module_function_no_change(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.util.module_cmd, '_cmd_template', _test_template)

@@ -38,6 +38,7 @@ import spack.config
 import spack.environment as ev
 import spack.modules
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.store
 import spack.util.debug
@@ -580,7 +581,7 @@ class SpackCommand(object):
 
         out = StringIO()
         try:
-            if sys.platform == 'win32':
+            if str(spack.platforms.host()) == 'windows':
                 with winlog(out):
                     self.returncode = _invoke_command(
                         self.command, self.parser, args, unknown)

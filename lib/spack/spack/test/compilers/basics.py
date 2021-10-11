@@ -15,6 +15,7 @@ import llnl.util.filesystem as fs
 
 import spack.compiler
 import spack.compilers as compilers
+import spack.platforms
 import spack.spec
 import spack.util.environment
 from spack.compiler import Compiler
@@ -212,7 +213,7 @@ def call_compiler(exe, *args, **kwargs):
     return no_flag_output
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('exe,flagname', [
     ('cxx', ''),
@@ -267,7 +268,7 @@ def test_get_compiler_link_paths_no_verbose_flag():
     assert dirs == []
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.enable_compiler_link_paths
 def test_get_compiler_link_paths_load_env(working_env, monkeypatch, tmpdir):
@@ -701,7 +702,7 @@ def test_raising_if_compiler_target_is_over_specific(config):
             spack.compilers.get_compilers(cfg, 'gcc@9.0.1', arch_spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
     # Test variables
@@ -812,7 +813,7 @@ fi
         assert 'SPACK_TEST_CMP_ON' not in os.environ
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
     # Create compiler
@@ -849,7 +850,7 @@ echo "4.4.4"
     assert flag == '-std=c++0x'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     """Test a code path that is taken only if the package uses
@@ -912,7 +913,7 @@ echo "/Library/Developer"
     assert env.env_modifications[2].name == 'DEVELOPER_DIR'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('xcode_select_output', [
     '', '/Library/Developer/CommandLineTools'

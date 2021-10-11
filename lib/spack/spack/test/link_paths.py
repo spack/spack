@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import sys
 
 import pytest
 
 import spack.paths
+import spack.platforms
 from spack.compiler import _parse_non_system_link_dirs
 
 #: directory with sample compiler data
@@ -39,7 +39,7 @@ def check_link_paths(filename, paths):
     assert actual == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_icc16_link_paths():
     check_link_paths('icc-16.0.3.txt', [
@@ -48,7 +48,7 @@ def test_icc16_link_paths():
         '/usr/tce/packages/gcc/gcc-4.9.3/lib64'])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_pgi_link_paths():
     check_link_paths('pgcc-16.3.txt', [
@@ -63,7 +63,7 @@ def test_clang4_link_paths():
     check_link_paths('clang-4.0.1.txt', [])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_xl_link_paths():
     check_link_paths('xl-13.1.5.txt', [
@@ -72,7 +72,7 @@ def test_xl_link_paths():
         '/opt/ibm/xlC/13.1.5/lib'])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_cce_link_paths():
     check_link_paths('cce-8.6.5.txt', [
@@ -94,14 +94,14 @@ def test_cce_link_paths():
         '/opt/cray/pe/cce/8.6.5/binutils/x86_64/x86_64-unknown-linux-gnu/lib'])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_clang_apple_ld_link_paths():
     check_link_paths('clang-9.0.0-apple-ld.txt', [
         '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk/usr/lib'])  # noqa
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_nag_mixed_gcc_gnu_ld_link_paths():
     # This is a test of a mixed NAG/GCC toolchain, i.e. 'cxx' is set to g++ and
@@ -114,7 +114,7 @@ def test_nag_mixed_gcc_gnu_ld_link_paths():
         '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib'])  # noqa
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_nag_link_paths():
     # This is a test of a NAG-only toolchain, i.e. 'cc' and 'cxx' are empty,
@@ -127,7 +127,7 @@ def test_nag_link_paths():
         '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib'])  # noqa
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_obscure_parsing_rules():
     check_link_paths('obscure-parsing-rules.txt', [

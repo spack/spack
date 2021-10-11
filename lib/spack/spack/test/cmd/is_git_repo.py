@@ -12,6 +12,7 @@ import pytest
 from llnl.util.filesystem import mkdirp
 
 import spack
+import spack.platforms
 from spack.util.executable import which
 from spack.version import ver
 
@@ -44,7 +45,7 @@ def git_tmp_worktree(tmpdir):
     """Create new worktree in a temporary folder and monkeypatch
     spack.paths.prefix to point to it.
     """
-    if os.name == 'nt':
+    if str(spack.platforms.host()) == 'windows':
         long_pth = str(tmpdir).split(os.path.sep)
         tmp_worktree = os.path.sep.join(long_pth[:-1])
     else:

@@ -5,9 +5,9 @@
 import os
 import posixpath
 import subprocess
-import sys
 
 import spack.paths
+import spack.platforms
 import spack.util.executable
 from spack.spec import Spec
 
@@ -60,7 +60,7 @@ def make_installer(parser, args):
     """
        Use CMake to generate WIX installer in newly created build directory
     """
-    if sys.platform == 'win32':
+    if str(spack.platforms.host()) == 'windows':
         output_dir = args.output_dir
         cmake_spec = Spec('cmake')
         cmake_spec.concretize()

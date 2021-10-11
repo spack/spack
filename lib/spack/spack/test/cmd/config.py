@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
 import os
-import sys
 
 import pytest
 
@@ -14,6 +13,7 @@ import spack.config
 import spack.database
 import spack.environment as ev
 import spack.main
+import spack.platforms
 import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
@@ -240,7 +240,8 @@ def test_config_add_ordered_dict(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_add_invalid_fails(mutable_empty_config):
     config('add', 'packages:all:variants:+debug')
     with pytest.raises(
@@ -249,7 +250,8 @@ def test_config_add_invalid_fails(mutable_empty_config):
         config('add', 'packages:all:True')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_add_from_file(mutable_empty_config, tmpdir):
     contents = """spack:
   config:
@@ -267,7 +269,8 @@ def test_config_add_from_file(mutable_empty_config, tmpdir):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_add_from_file_multiple(mutable_empty_config, tmpdir):
     contents = """spack:
   config:
@@ -323,7 +326,8 @@ def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     config('add', 'packages:all:compiler:[gcc]')
 
@@ -375,7 +379,8 @@ def test_config_add_invalid_file_fails(tmpdir):
         config('add', '-f', file)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_remove_value(mutable_empty_config):
     config('add', 'config:dirty:true')
     config('remove', 'config:dirty:true')
@@ -385,7 +390,8 @@ def test_config_remove_value(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_remove_alias_rm(mutable_empty_config):
     config('add', 'config:dirty:true')
     config('rm', 'config:dirty:true')
@@ -395,7 +401,8 @@ def test_config_remove_alias_rm(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_remove_dict(mutable_empty_config):
     config('add', 'config:dirty:true')
     config('rm', 'config:dirty')
@@ -405,7 +412,8 @@ def test_config_remove_dict(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_remove_from_list(mutable_empty_config):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
@@ -420,7 +428,8 @@ def test_remove_from_list(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_remove_list(mutable_empty_config):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
@@ -435,7 +444,8 @@ def test_remove_list(mutable_empty_config):
 """
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
     ev.create('test')
     with ev.read('test'):
@@ -449,7 +459,8 @@ def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
     assert expected in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_add_to_env_preserve_comments(mutable_empty_config,
                                              mutable_mock_env_path,
                                              tmpdir):
@@ -482,7 +493,8 @@ spack:  # comment
     assert output == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     env('create', 'test')
 
@@ -500,7 +512,8 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     assert output == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_update_packages(packages_yaml_v015):
     """Test Spack updating old packages.yaml format for externals
     to new format. Ensure that data is preserved and converted
@@ -514,7 +527,8 @@ def test_config_update_packages(packages_yaml_v015):
     check_packages_updated(data)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_update_config(config_yaml_v015):
     config_yaml_v015()
     config('update', '-y', 'config')
@@ -524,7 +538,8 @@ def test_config_update_config(config_yaml_v015):
     check_config_updated(data)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_update_not_needed(mutable_config):
     data_before = spack.config.get('repos')
     config('update', '-y', 'repos')
@@ -532,7 +547,8 @@ def test_config_update_not_needed(mutable_config):
     assert data_before == data_after
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_update_fail_on_permission_issue(
         packages_yaml_v015, monkeypatch
 ):
@@ -546,7 +562,8 @@ def test_config_update_fail_on_permission_issue(
         config('update', '-y', 'packages')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 def test_config_revert(packages_yaml_v015):
     cfg_file = packages_yaml_v015()
     bkp_file = cfg_file + '.bkp'

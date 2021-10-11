@@ -8,11 +8,11 @@ This test verifies that the Spack directory layout works properly.
 """
 import os
 import os.path
-import sys
 
 import pytest
 
 import spack.paths
+import spack.platforms
 import spack.repo
 from spack.directory_layout import (
     DirectoryLayout,
@@ -24,7 +24,7 @@ from spack.spec import Spec
 max_packages = 10
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_yaml_directory_layout_parameters(tmpdir, config):
     """This tests the various parameters that can be used to configure
@@ -81,7 +81,7 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
                         projections=projections_package7)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_read_and_write_spec(temporary_store, config, mock_packages):
     """This goes through each package in spack and creates a directory for
@@ -208,7 +208,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
             assert spec.dag_hash() == spec_from_file.dag_hash()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_find(temporary_store, config, mock_packages):
     """Test that finding specs within an install layout works."""
@@ -233,7 +233,7 @@ def test_find(temporary_store, config, mock_packages):
         assert found_specs[name].eq_dag(spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_yaml_directory_layout_build_path(tmpdir, config):
     """This tests build path method."""

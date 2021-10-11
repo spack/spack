@@ -5,10 +5,10 @@
 
 """Test Spack's environment utility functions."""
 import os
-import sys
 
 import pytest
 
+import spack.platforms
 import spack.util.environment as envutil
 
 
@@ -20,7 +20,8 @@ def prepare_environment_for_tests():
     del os.environ['TEST_ENV_VAR']
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_is_system_path():
     assert(envutil.is_system_path('/usr/bin'))
     assert(not envutil.is_system_path('/nonsense_path/bin'))
@@ -34,7 +35,8 @@ test_paths = ['/usr/bin',
               '/usr/lib64']
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_filter_system_paths():
     expected = [p for p in test_paths if p.startswith('/nonsense_path')]
     filtered = envutil.filter_system_paths(test_paths)
@@ -55,7 +57,8 @@ def test_prune_duplicate_paths():
     assert(expected == envutil.prune_duplicate_paths(test_paths))
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_get_path(prepare_environment_for_tests):
     os.environ['TEST_ENV_VAR'] = '/a:/b:/c/d'
     expected = ['/a', '/b', '/c/d']

@@ -3,13 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
 import spack.cmd.diff
 import spack.config
 import spack.main
+import spack.platforms
 import spack.store
 import spack.util.spack_json as sjson
 
@@ -37,7 +37,7 @@ def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
     assert c['b_not_a'][0] == ['variant_value', 'mpileaks debug True']
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""

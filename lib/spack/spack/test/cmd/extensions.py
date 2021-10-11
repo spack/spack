@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
+import spack.platforms
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 
@@ -27,7 +27,8 @@ def python_database(mock_packages, mutable_database):
     yield
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.db
 def test_extensions(mock_packages, python_database, config, capsys):
     ext2   = Spec("py-extension2").concretized()

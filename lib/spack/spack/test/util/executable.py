@@ -11,6 +11,7 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack
+import spack.platforms
 import spack.util.executable as ex
 from spack.hooks.sbang import filter_shebangs_in_directory
 
@@ -35,7 +36,7 @@ print(u'\\xc3')
         filter_shebangs_in_directory('.', [script_name])
 
         # read the unicode back in and see whether things work
-        if sys.platform == 'win32':
+        if str(spack.platforms.host()) == 'windows':
             script = ex.Executable('%s %s' % (sys.executable, script_name))
         else:
             script = ex.Executable('./%s' % script_name)

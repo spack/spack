@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
 import llnl.util.tty as tty
 
+import spack.platforms
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
 
@@ -26,7 +26,8 @@ class MockArgs(object):
         self.yes_to_all = True
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_multiple_matches(mutable_database):
     """Test unable to uninstall when multiple matches."""
@@ -34,7 +35,8 @@ def test_multiple_matches(mutable_database):
         uninstall('-y', 'mpileaks')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_installed_dependents(mutable_database):
     """Test can't uninstall when there are installed dependents."""
@@ -42,7 +44,8 @@ def test_installed_dependents(mutable_database):
         uninstall('-y', 'libelf')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_recursive_uninstall(mutable_database):
     """Test recursive uninstall."""
@@ -60,7 +63,8 @@ def test_recursive_uninstall(mutable_database):
     assert len(mpi_specs) == 3
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.regression('3690')
 @pytest.mark.parametrize('constraint,expected_number_of_specs', [
@@ -75,7 +79,8 @@ def test_uninstall_spec_with_multiple_roots(
     assert len(all_specs) == expected_number_of_specs
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.parametrize('constraint,expected_number_of_specs', [
     ('dyninst', 14), ('libelf', 14)
@@ -89,7 +94,8 @@ def test_force_uninstall_spec_with_ref_count_not_zero(
     assert len(all_specs) == expected_number_of_specs
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_force_uninstall_and_reinstall_by_hash(mutable_database):
     """Test forced uninstall and reinstall of old specs."""
@@ -169,7 +175,8 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
     assert len(mpi_specs) == 3
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.regression('15773')
 def test_in_memory_consistency_when_uninstalling(

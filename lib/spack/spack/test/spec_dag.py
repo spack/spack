@@ -5,13 +5,13 @@
 """
 These tests check Spec DAG operations using dummy packages.
 """
-import sys
 
 import pytest
 
 import spack.architecture
 import spack.error
 import spack.package
+import spack.platforms
 import spack.util.hash as hashutil
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.spec import Spec
@@ -55,7 +55,7 @@ def set_dependency(saved_deps):
     return _mock
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 def test_test_deptype():
@@ -88,7 +88,7 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
         assert ('z' not in spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 def test_installed_deps():
@@ -138,7 +138,7 @@ def test_installed_deps():
         assert a_spec['e'].version == spack.version.Version('2')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 def test_specify_preinstalled_dep():
@@ -165,7 +165,7 @@ def test_specify_preinstalled_dep():
         assert set(x.name for x in a_spec.traverse()) == set(['a', 'b', 'c'])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 @pytest.mark.parametrize('spec_str,expr_str,expected', [
@@ -205,7 +205,7 @@ def test_conditional_dep_with_user_constraints(spec_str, expr_str, expected):
     assert result is expected, '{0} in {1}'.format(expr_str, spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('mutable_mock_repo', 'config')
 class TestSpecDag(object):

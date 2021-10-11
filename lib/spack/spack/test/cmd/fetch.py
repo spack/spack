@@ -3,11 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 import pytest
 
 import spack.environment as ev
+import spack.platforms
 from spack.main import SpackCommand, SpackCommandError
 
 # everything here uses the mock_env_path
@@ -16,7 +15,8 @@ pytestmark = pytest.mark.usefixtures(
 )
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.disable_clean_stage_check
 def test_fetch_in_env(
     tmpdir, mock_archive, mock_stage, mock_fetch, install_mockery
@@ -30,7 +30,8 @@ def test_fetch_in_env(
         SpackCommand("fetch")()
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.disable_clean_stage_check
 def test_fetch_single_spec(
     tmpdir, mock_archive, mock_stage, mock_fetch, install_mockery
@@ -38,7 +39,8 @@ def test_fetch_single_spec(
     SpackCommand("fetch")("mpileaks")
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 @pytest.mark.disable_clean_stage_check
 def test_fetch_multiple_specs(
     tmpdir, mock_archive, mock_stage, mock_fetch, install_mockery

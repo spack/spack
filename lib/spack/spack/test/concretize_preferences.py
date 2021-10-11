@@ -5,12 +5,12 @@
 
 import os
 import stat
-import sys
 
 import pytest
 
 import spack.config
 import spack.package_prefs
+import spack.platforms
 import spack.repo
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigError, ConfigScope
@@ -72,7 +72,7 @@ def assert_variant_values(spec, **variants):
         assert concrete.variants[variant].value == value
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('concretize_scope', 'mock_packages')
 class TestConcretizePreferences(object):

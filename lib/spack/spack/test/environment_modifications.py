@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
+import spack.platforms
 import spack.util.environment as environment
 from spack.paths import spack_root
 from spack.util.environment import (
@@ -163,7 +163,7 @@ def test_unset(env):
         os.environ['UNSET_ME']
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_filter_system_paths(miscellaneous_paths):
     """Tests that the filtering of system paths works as expected."""
@@ -178,7 +178,7 @@ def test_filter_system_paths(miscellaneous_paths):
     assert filtered == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_set_path(env):
     """Tests setting paths in an environment variable."""
@@ -195,7 +195,7 @@ def test_set_path(env):
     assert 'foo;bar;baz' == os.environ['B']
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_path_manipulation(env):
     """Tests manipulating list of paths in the environment."""
@@ -261,7 +261,7 @@ def test_extend(env):
         assert x is y
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('prepare_environment_for_tests')
 def test_source_files(files_to_be_sourced):
@@ -330,7 +330,7 @@ def test_preserve_environment(prepare_environment_for_tests):
     assert os.environ['PATH_LIST'] == '/path/second:/path/third'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('files,expected,deleted', [
     # Sets two variables
@@ -417,7 +417,7 @@ def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
     assert all(x not in after for x in deleted)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.regression('12085')
 @pytest.mark.parametrize('before,after,search_list', [
@@ -458,7 +458,7 @@ def test_from_environment_diff(before, after, search_list):
         assert item in mod
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.regression('15775')
 def test_blacklist_lmod_variables():

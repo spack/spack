@@ -5,13 +5,13 @@
 
 import filecmp
 import os
-import sys
 
 import pytest
 
 from llnl.util.filesystem import resolve_link_target_relative_to_the_link
 
 import spack.mirror
+import spack.platforms
 import spack.repo
 import spack.util.executable
 from spack.spec import Spec
@@ -102,7 +102,7 @@ def check_mirror():
                         assert all(left in exclude for left in dcmp.left_only)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_url_mirror(mock_archive):
     set_up_package('trivial-install-test-package', mock_archive, 'url')
@@ -110,7 +110,7 @@ def test_url_mirror(mock_archive):
     repos.clear()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(
     not which('git'), reason='requires git to be installed')
@@ -120,7 +120,7 @@ def test_git_mirror(mock_git_repository):
     repos.clear()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(
     not which('svn') or not which('svnadmin'),
@@ -131,7 +131,7 @@ def test_svn_mirror(mock_svn_repository):
     repos.clear()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(
     not which('hg'), reason='requires mercurial to be installed')
@@ -141,7 +141,7 @@ def test_hg_mirror(mock_hg_repository):
     repos.clear()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(
     not all([which('svn'), which('hg'), which('git')]),
@@ -160,7 +160,7 @@ def test_all_mirror(
     repos.clear()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
     spec = Spec('trivial-install-test-package@nonexistingversion')
@@ -168,7 +168,7 @@ def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
     spack.mirror.mirror_archive_paths(fetcher, 'per-package-ref', spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
     spec = Spec('patch-several-dependencies')
@@ -222,7 +222,7 @@ class MockFetcher(object):
             pass
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.regression('14067')
 def test_mirror_cache_symlinks(tmpdir):

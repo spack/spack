@@ -2,10 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 
 import pytest
 
+import spack.platforms
 from spack.main import SpackCommand
 
 activate = SpackCommand('activate')
@@ -14,7 +14,8 @@ install = SpackCommand('install')
 extensions = SpackCommand('extensions')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_activate(
         mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -24,7 +25,8 @@ def test_activate(
     assert 'extension1' in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_deactivate(
         mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
@@ -35,7 +37,8 @@ def test_deactivate(
     assert 'extension1' not in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Hangs on windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_deactivate_all(
         mock_packages, mock_archive, mock_fetch, config,
         install_mockery):

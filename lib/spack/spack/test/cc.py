@@ -8,10 +8,10 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
-import sys
 
 import pytest
 
+import spack.platforms
 from spack.paths import build_env_path
 from spack.util.environment import set_env, system_dirs
 from spack.util.executable import Executable
@@ -159,7 +159,7 @@ def dump_mode(cc, args):
         return cc(*args, output=str).strip()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_vcheck_mode():
     assert dump_mode(cc, ['-I/include', '--version']) == 'vcheck'
@@ -170,7 +170,7 @@ def test_vcheck_mode():
     assert dump_mode(cc, ['-I/include', '-V', '-o', 'output']) == 'vcheck'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_cpp_mode():
     assert dump_mode(cc, ['-E']) == 'cpp'
@@ -178,13 +178,13 @@ def test_cpp_mode():
     assert dump_mode(cpp, []) == 'cpp'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_as_mode():
     assert dump_mode(cc, ['-S']) == 'as'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ccld_mode():
     assert dump_mode(cc, []) == 'ccld'
@@ -194,7 +194,7 @@ def test_ccld_mode():
         'foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo']) == 'ccld'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ld_mode():
     assert dump_mode(ld, []) == 'ld'
@@ -202,7 +202,7 @@ def test_ld_mode():
         'foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo']) == 'ld'
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ld_flags(wrapper_flags):
     check_args(
@@ -217,7 +217,7 @@ def test_ld_flags(wrapper_flags):
         spack_ldlibs)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_cpp_flags(wrapper_flags):
     check_args(
@@ -229,7 +229,7 @@ def test_cpp_flags(wrapper_flags):
         test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_cc_flags(wrapper_flags):
     check_args(
@@ -246,7 +246,7 @@ def test_cc_flags(wrapper_flags):
         spack_ldlibs)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_cxx_flags(wrapper_flags):
     check_args(
@@ -263,7 +263,7 @@ def test_cxx_flags(wrapper_flags):
         spack_ldlibs)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_fc_flags(wrapper_flags):
     check_args(
@@ -280,7 +280,7 @@ def test_fc_flags(wrapper_flags):
         spack_ldlibs)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_dep_rpath():
     """Ensure RPATHs for root package are added."""
@@ -294,7 +294,7 @@ def test_dep_rpath():
         test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_dep_include():
     """Ensure a single dependency include directory is added."""
@@ -310,7 +310,7 @@ def test_dep_include():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_system_path_cleanup():
     """Ensure SPACK_ENV_PATH is removed from PATH, even with trailing /
@@ -332,7 +332,7 @@ def test_system_path_cleanup():
             check_env_var(cc, 'PATH', system_path)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_dep_lib():
     """Ensure a single dependency RPATH is added."""
@@ -350,7 +350,7 @@ def test_dep_lib():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_dep_lib_no_rpath():
     """Ensure a single dependency link flag is added with no dep RPATH."""
@@ -366,7 +366,7 @@ def test_dep_lib_no_rpath():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_dep_lib_no_lib():
     """Ensure a single dependency RPATH is added with no -L."""
@@ -382,7 +382,7 @@ def test_dep_lib_no_lib():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ccld_deps():
     """Ensure all flags are added in ccld mode."""
@@ -408,7 +408,7 @@ def test_ccld_deps():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ccld_deps_isystem():
     """Ensure all flags are added in ccld mode.
@@ -440,7 +440,7 @@ def test_ccld_deps_isystem():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_cc_deps():
     """Ensure -L and RPATHs are not added in cc mode."""
@@ -459,7 +459,7 @@ def test_cc_deps():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ccld_with_system_dirs():
     """Ensure all flags are added in ccld mode."""
@@ -496,7 +496,7 @@ def test_ccld_with_system_dirs():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ccld_with_system_dirs_isystem():
     """Ensure all flags are added in ccld mode.
@@ -536,7 +536,7 @@ def test_ccld_with_system_dirs_isystem():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ld_deps():
     """Ensure no (extra) -I args or -Wl, are passed in ld mode."""
@@ -559,7 +559,7 @@ def test_ld_deps():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ld_deps_no_rpath():
     """Ensure SPACK_LINK_DEPS controls -L for ld."""
@@ -578,7 +578,7 @@ def test_ld_deps_no_rpath():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ld_deps_no_link():
     """Ensure SPACK_RPATH_DEPS controls -rpath for ld."""
@@ -597,7 +597,7 @@ def test_ld_deps_no_link():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ld_deps_partial():
     """Make sure ld -r (partial link) is handled correctly on OS's where it
@@ -637,7 +637,7 @@ def test_ld_deps_partial():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_ccache_prepend_for_cc():
     with set_env(SPACK_CCACHE_BINARY='ccache'):
@@ -664,7 +664,7 @@ def test_ccache_prepend_for_cc():
             test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_no_ccache_prepend_for_fc():
     os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
@@ -690,7 +690,7 @@ def test_no_ccache_prepend_for_fc():
         test_args_without_paths)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.regression('9160')
 def test_disable_new_dtags(wrapper_flags):
@@ -701,7 +701,7 @@ def test_disable_new_dtags(wrapper_flags):
         assert '-Wl,--disable-new-dtags' in result
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.regression('9160')
 def test_filter_enable_new_dtags(wrapper_flags):
@@ -715,7 +715,7 @@ def test_filter_enable_new_dtags(wrapper_flags):
         assert '-Wl,--enable-new-dtags' not in result
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.regression('22643')
 def test_linker_strips_loopopt(wrapper_flags):

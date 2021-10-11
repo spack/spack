@@ -3,13 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
-import sys
 
 import pytest
 
 import spack.config
 import spack.environment as ev
 import spack.main
+import spack.platforms
 
 _bootstrap = spack.main.SpackCommand('bootstrap')
 
@@ -39,7 +39,7 @@ def test_root_get_and_set(mutable_config, scope):
 
     _bootstrap('root', path, *scope_args)
     out = _bootstrap('root', *scope_args, output=str)
-    if sys.platform == 'win32':
+    if str(spack.platforms.host()) == 'windows':
         out = out.replace("\\", "/")
     assert out.strip() == path
 

@@ -18,6 +18,7 @@ import spack.config
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
+import spack.platforms
 import spack.repo
 import spack.spec as spec
 import spack.store
@@ -334,7 +335,7 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
     buildcache_cmd('install', '-auf', cspec.name)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
@@ -424,7 +425,7 @@ def fake_full_hash(spec):
     'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
     'test_mirror'
 )
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_spec_needs_rebuild(monkeypatch, tmpdir):
     """Make sure needs_rebuild properly compares remote full_hash
@@ -454,7 +455,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     assert rebuild
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures(
     'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',
@@ -495,7 +496,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     assert 'libelf' not in cache_list
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_generate_indices_key_error(monkeypatch, capfd):
 
@@ -545,7 +546,7 @@ def test_generate_indices_exception(monkeypatch, capfd):
     assert expect in err
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('mock_fetch', 'install_mockery')
 def test_update_sbang(tmpdir, test_mirror):
@@ -618,7 +619,7 @@ def test_update_sbang(tmpdir, test_mirror):
         uninstall_cmd('-y', '/%s' % new_spec.dag_hash())
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 # Need one where the platform has been changed to the test platform.
 def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
@@ -629,7 +630,7 @@ def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
     uninstall_cmd('-y', '/t5mczux3tfqpxwmg7egp7axy2jvyulqk')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures(
     'install_mockery_mutable_config', 'mock_packages', 'mock_fetch',

@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import sys
 
 import pytest
 
@@ -15,7 +14,8 @@ deprecate = SpackCommand('deprecate')
 reindex = SpackCommand('reindex')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_reindex_basic(mock_packages, mock_archive, mock_fetch,
                        install_mockery):
     install('libelf@0.8.13')
@@ -28,7 +28,8 @@ def test_reindex_basic(mock_packages, mock_archive, mock_fetch,
     assert spack.store.db.query() == all_installed
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch,
                             install_mockery):
     install('libelf@0.8.13')
@@ -42,7 +43,8 @@ def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch,
     assert spack.store.db.query() == all_installed
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_reindex_with_deprecated_packages(mock_packages, mock_archive,
                                           mock_fetch, install_mockery):
     install('libelf@0.8.13')

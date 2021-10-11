@@ -5,13 +5,13 @@
 
 import os.path
 import re
-import sys
 
 import pytest
 
 import spack.config
 import spack.main
 import spack.modules
+import spack.platforms
 import spack.store
 
 module = spack.main.SpackCommand('module')
@@ -60,14 +60,16 @@ def module_type(request):
 # TODO : this requires having a separate directory for test modules
 # TODO : add tests for loads and find to check the prompt format
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_exit_with_failure(database, module_type, failure_args):
     with pytest.raises(spack.main.SpackCommandError):
         module(module_type, *failure_args)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_remove_and_add(database, module_type):
     """Tests adding and removing a tcl module file."""
@@ -91,7 +93,8 @@ def test_remove_and_add(database, module_type):
         assert os.path.exists(item)
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.parametrize('cli_args', [
     ['libelf'],
@@ -106,7 +109,8 @@ def test_find(database, cli_args, module_type):
     module(module_type, *(['find'] + cli_args))
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
 @pytest.mark.regression('2215')
@@ -126,7 +130,8 @@ def test_find_fails_on_multiple_matches():
     assert 'matches multiple packages' in out
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
 @pytest.mark.regression('2570')
@@ -137,7 +142,8 @@ def test_find_fails_on_non_existing_packages():
     assert 'matches no package' in out
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
 def test_find_recursive():
@@ -151,7 +157,8 @@ def test_find_recursive():
     assert len(out.split()) > 1
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_find_recursive_blacklisted(database, module_configuration):
     module_configuration('blacklist')
@@ -160,7 +167,8 @@ def test_find_recursive_blacklisted(database, module_configuration):
     module('lmod', 'find', '-r', 'mpileaks ^mpich')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_loads_recursive_blacklisted(database, module_configuration):
     module_configuration('blacklist')
@@ -185,7 +193,8 @@ def test_loads_recursive_blacklisted(database, module_configuration):
 writer_cls = spack.modules.lmod.LmodModulefileWriter
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_setdefault_command(
         mutable_database, module_configuration

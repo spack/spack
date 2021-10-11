@@ -11,6 +11,7 @@ import pytest
 
 import spack.error
 import spack.modules.tcl
+import spack.platforms
 import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
@@ -63,7 +64,8 @@ def mock_package_perms(monkeypatch):
     yield perms
 
 
-@pytest.mark.skipif(os.name == 'nt', reason="Skip test on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_modules_written_with_proper_permissions(mock_module_filename,
                                                  mock_package_perms,
                                                  mock_packages, config):
@@ -187,7 +189,8 @@ module_index:
         spack.modules.common.upstream_module_index = old_index
 
 
-@pytest.mark.skipif(os.name == 'nt', reason="Skip test on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Not yet implemented on windows")
 def test_load_installed_package_not_in_repo(install_mockery, mock_fetch,
                                             monkeypatch):
     # Get a basic concrete spec for the trivial install package.

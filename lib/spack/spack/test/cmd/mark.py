@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 import pytest
 
+import spack.platforms
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
 
@@ -16,21 +16,24 @@ install = SpackCommand('install')
 uninstall = SpackCommand('uninstall')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_mode_required(mutable_database):
     with pytest.raises(SystemExit):
         mark('-a')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_spec_required(mutable_database):
     with pytest.raises(SpackCommandError):
         mark('-i')
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_all_explicit(mutable_database):
     mark('-e', '-a')
@@ -39,7 +42,8 @@ def test_mark_all_explicit(mutable_database):
     assert len(all_specs) == 15
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_all_implicit(mutable_database):
     mark('-i', '-a')
@@ -48,7 +52,8 @@ def test_mark_all_implicit(mutable_database):
     assert len(all_specs) == 0
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_one_explicit(mutable_database):
     mark('-e', 'libelf')
@@ -58,7 +63,8 @@ def test_mark_one_explicit(mutable_database):
     assert len(all_specs) == 3
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_one_implicit(mutable_database):
     mark('-i', 'externaltest')
@@ -67,7 +73,8 @@ def test_mark_one_implicit(mutable_database):
     assert len(all_specs) == 14
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason="Skip test on Windows")
 @pytest.mark.db
 def test_mark_all_implicit_then_explicit(mutable_database):
     mark('-i', '-a')

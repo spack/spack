@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 import pytest
 
@@ -12,6 +11,7 @@ import llnl.util.tty as tty
 
 import spack.config
 import spack.monitor
+import spack.platforms
 import spack.spec
 from spack.main import SpackCommand
 from spack.monitor import SpackMonitorClient
@@ -144,7 +144,7 @@ def test_spack_monitor_without_auth(mock_monitor_request):
     get_client(host="hostname", disable_auth=True)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
                     reason="Not supported on Windows (yet)")
 def test_spack_monitor_build_env(mock_monitor_request, install_mockery_mutable_config):
     monitor = get_client(host="hostname", disable_auth=True)
