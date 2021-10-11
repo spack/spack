@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 import subprocess
 import sys
 from distutils.version import StrictVersion
@@ -89,6 +90,12 @@ class Msvc(Compiler):
     @property
     def pic_flag(self):
         return ""
+
+    @property
+    def msvc_version(self):
+        ver = re.search(Msvc.version_regex, self.cc).group(1)
+        ver = "".join(ver.split('.')[:2])[:-1]
+        return "MSVC" + ver
 
     def setup_custom_environment(self, pkg, env):
         """Set environment variables for MSVC using the
