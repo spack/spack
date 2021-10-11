@@ -144,8 +144,8 @@ class Xsdk(BundlePackage):
 
     depends_on('amrex@develop', when='@develop %intel')
     depends_on('amrex@develop', when='@develop %gcc')
-    depends_on('amrex@21.09', when='@0.7.0 %intel')
-    depends_on('amrex@21.09', when='@0.7.0 %gcc')
+    depends_on('amrex@21.10', when='@0.7.0 %intel')
+    depends_on('amrex@21.10', when='@0.7.0 %gcc')
     depends_on('amrex@20.10', when='@0.6.0 %intel')
     depends_on('amrex@20.10', when='@0.6.0 %gcc')
     depends_on('amrex@19.08', when='@0.5.0 %intel')
@@ -192,7 +192,7 @@ class Xsdk(BundlePackage):
     depends_on('tasmanian@6.0+xsdkflags+blas~openmp', when='@0.4.0')
     depends_on('tasmanian@6.0+xsdkflags+blas+cuda+magma~openmp', when='@0.4.0 +cuda')
 
-    depends_on('arborx@1.0', when='@develop +arborx')
+    depends_on('arborx@master', when='@develop +arborx')
     depends_on('arborx@1.1', when='@0.7.0 +arborx')
 
     # the Fortran 2003 bindings of phist require python@3:, but this
@@ -204,7 +204,7 @@ class Xsdk(BundlePackage):
     depends_on('phist kernel_lib=tpetra', when='+trilinos +phist')
     depends_on('phist kernel_lib=petsc', when='~trilinos +phist')
     depends_on('phist@develop ~fortran ~scamac ~openmp ~host ~int64', when='@develop +phist')
-    depends_on('phist@1.10.0 ~fortran ~scamac ~openmp ~host ~int64', when='@0.7.0 +phist')
+    depends_on('phist@1.9.5 ~fortran ~scamac ~openmp ~host ~int64', when='@0.7.0 +phist')
     depends_on('phist@1.9.3 ~fortran ~scamac ~openmp ~host ~int64', when='@0.6.0 +phist')
     depends_on('phist@1.8.0 ~fortran ~scamac ~openmp ~host ~int64', when='@0.5.0 +phist')
     depends_on('phist@1.7.5 ~fortran ~scamac ~openmp ~host ~int64', when='@0.4.0 +phist')
@@ -241,7 +241,7 @@ class Xsdk(BundlePackage):
     depends_on('heffte +fftw+cuda+magma', when='+cuda +heffte')
     depends_on('openmpi +cuda', when='+cuda +heffte')
     depends_on('heffte@develop+fftw', when='@develop +heffte')
-    depends_on('heffte@2.1.1+fftw', when='@0.7.0 +heffte')
+    depends_on('heffte@2.2.0+fftw', when='@0.7.0 +heffte')
     depends_on('heffte@2.0.0+fftw', when='@0.6.0 +heffte')
 
     depends_on('slate@master ~cuda', when='@develop ~cuda +slate %gcc@6.0:')
