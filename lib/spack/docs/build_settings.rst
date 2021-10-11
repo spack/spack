@@ -212,21 +212,27 @@ Specific limitations include:
 
 .. _manually-adding-external-packages:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Manually Adding External Packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Manually Adding External Packages in Modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This section discusses how to add external packages to the ``packages.yaml``
-file when modules depend on other modules or when Spack is unable to compute
-the prefix. When using modules, Spack will attempt to parse the ``module show``
-output in order to determine all relevant settings and variables. Reasons why
-this may not work automatically are
+So far this section described external package detection and its limitations.
+The paragraphs below deal with challenges arising when external packages are
+found in loadable modules. When using modules, Spack will attempt to parse the
+``module show`` output in order to determine all relevant settings and
+variables. Reasons why this may not work automatically are
 
-* the wrong package name,
-* missing module dependencies,
-* nonstandard paths, and
+* a mismatch between module and package name,
+* missing module dependencies in the ``packages.yaml`` file,
+* modules whose directory structure does not match conventions, and
 * the use of metamodules, i.e., modules whose only purpose is to load other
   modules.
+
+Each following paragraph will discuss one of the bullet points above.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Module/Package Name Mismatches
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For certain libraries there exist multiple implementations (e.g., MPI). If you
 modify the ``packages.yaml`` file, then you must make sure to select the
@@ -234,6 +240,10 @@ correct package name. For example, the package ``mpich`` can be used only for
 the vanilla MPICH implementation but not for Cray MPICH; Cray MPICH has its own
 package called ``cray-mpich``. If the wrong module name is picked, this can
 cause errors later, e.g., Spack may compute a wrong prefix.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Missing Modules Dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The case of missing dependencies will be discussed based on the real-world
 example of loading OpenMPI 4.0.2 with CUDA support. Shown below is the ``module
@@ -264,10 +274,10 @@ show openmpi/4.0.2`` output.
     -------------------------------------------------------------------
 
 There are two things of importance to note. First, there are multiple possible
-module combinations to satisfy the compiler and CUDA dependency; for this
-example will use ``gcc/8.3.1`` and ``cuda/10.1.2``. Second, the output does not
-contain any information about environment variables or flags that are needed.
-The situation changes as soon as the dependencies are satisfied.
+module combinations to satisfy the compiler and CUDA dependency; this example
+will use ``gcc/8.3.1`` and ``cuda/10.1.2``. Second, the output does not contain
+any information about environment variables or flags that are needed. The
+situation changes as soon as the dependencies are satisfied.
 
 .. code-block:: console
 
@@ -306,13 +316,21 @@ following OpenMPI entry:
           prefix: /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3
           modules: [gcc/8.3.1, cuda-10.1.2, openmpi/4.0.2-cuda]
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Nonstandard Directory Structure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Once all dependencies are satisfied or if there are no dependencies, then the
-prefix determined by Spack may not be correct in the presence of nonstandard
-paths. This is rarely the case because Spack contains package-specific code to
-deal with these quirks. Before manually setting the prefix in the
-``packages.yaml`` file in addition to a list of modules, it is strongly
-suggested to check the package name and the module list again. Consider the
-OpenMPI module on CentOS 7:
+prefix determined by Spack may not be correct in the presence of a nonstandard
+directory structure. This is rarely the case because Spack contains
+package-specific code to deal with these quirks. Before manually setting the
+prefix in the ``packages.yaml`` file in addition to a list of modules, it is
+strongly suggested to check the package name and the module list again. 
+
+The files of OpenMPI on CentOS 7 use a nonstandard directory structure. For
+example on x86-64, the libraries are in ``/usr/lib64/openmpi`` (on x86-64
+machines) instead of ``/usr/lib64`` or ``/usr/lib``. Consider the ``module show
+mpi`` output:
 
 .. code-block:: console
 
@@ -349,7 +367,11 @@ The solution in this case is to manually edit the prefix in the
           prefix: /usr
           modules: [mpi]
 
-At last, we consider the case of metamodules.
+~~~~~~~~~~~
+Metamodules
+~~~~~~~~~~~
+
+Consider the following ``module show`` output:
 
 .. code-block:: console
 
