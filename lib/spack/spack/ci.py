@@ -286,7 +286,8 @@ def stage_spec_jobs(specs, check_index_only=False):
     spec_labels = {}
 
     get_spec_dependencies(
-        specs, deps, spec_labels, check_index_only=check_index_only)
+        specs, deps, spec_labels, check_index_only=check_index_only
+    )
 
     # Save the original deps, as we need to return them at the end of the
     # function.  In the while loop below, the "dependencies" variable is
@@ -332,11 +333,11 @@ def print_staging_summary(spec_labels, dependencies, stages):
 
 
 def compute_spec_deps(spec_list, check_index_only=False):
-    """
-    Computes all the dependencies for the spec(s) and generates a JSON
-    object which provides both a list of unique spec names as well as a
-    comprehensive list of all the edges in the dependency graph.  For
-    example, given a single spec like 'readline@7.0', this function
+    """Compute all the dependencies for the spec(s) and generate a JSON
+    object which provide both a list of unique spec names as well as a
+    comprehensive list of all the edges in the dependency graph.
+
+    For example, given a single spec like 'readline@7.0', this function
     generates the following JSON object:
 
     .. code-block:: JSON
@@ -385,38 +386,37 @@ def compute_spec_deps(spec_list, check_index_only=False):
 
     """
     spec_labels = {}
+    specs, dependencies = [], []
 
-    specs = []
-    dependencies = []
-
-    def append_dep(s, d):
+    def append_dep(current_spec, appended_dependency):
         dependencies.append({
-            'spec': s,
-            'depends': d,
+            'spec': current_spec,
+            'depends': appended_dependency,
         })
 
     for spec in spec_list:
-        spec.concretize()
+        assert spec.concrete
 
         # root_spec = get_spec_string(spec)
         root_spec = spec
 
-        for s in spec.traverse(deptype=all):
-            if s.external:
-                tty.msg('Will not stage external pkg: {0}'.format(s))
+        for current_spec in spec.traverse(deptype=all):
+            if current_spec.external:
+                tty.msg('Will not stage external pkg: {0}'.format(current_spec))
                 continue
 
             up_to_date_mirrors = bindist.get_mirrors_for_spec(
-                spec=s, full_hash_match=True, index_only=check_index_only)
+                spec=current_spec, full_hash_match=True, index_only=check_index_only
+            )
 
-            skey = spec_deps_key(s)
+            skey = spec_deps_key(current_spec)
             spec_labels[skey] = {
-                'spec': get_spec_string(s),
+                'spec': get_spec_string(current_spec),
                 'root': root_spec,
                 'needs_rebuild': not up_to_date_mirrors,
             }
 
-            for d in s.dependencies(deptype=all):
+            for d in current_spec.dependencies(deptype=all):
                 dkey = spec_deps_key(d)
                 if d.external:
                     tty.msg('Will not stage external dep: {0}'.format(d))
@@ -521,16 +521,17 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             prune_dag=False, check_index_only=False,
                             run_optimizer=False, use_dependencies=False,
                             artifacts_root=None):
+    # Concretize the environment with compiler existence check disabled
+    # to allow concretizing on hosts with different OS / platform than
+    # the environment.
     with spack.concretize.disable_compiler_existence_check():
         with env.write_transaction():
             env.concretize()
             env.write()
 
     yaml_root = ev.config_dict(env.yaml)
-
     if 'gitlab-ci' not in yaml_root:
         tty.die('Environment yaml does not have "gitlab-ci" section')
-
     gitlab_ci = yaml_root['gitlab-ci']
 
     build_group = None
@@ -609,6 +610,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     'strip-compilers': strip_compilers,
                 })
 
+    # If we don't bootstrap specs, this is the only "phase" we have
     phases.append({
         'name': 'specs',
         'strip-compilers': False,
@@ -672,11 +674,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     staged_phases = {}
     try:
+        # TODO: This needs to be revisited. It currently works only because there is
+        # TODO: a single "phase". If we disallow bootstrapping specs that is always
+        # TODO: the case.
         for phase in phases:
             phase_name = phase['name']
             with spack.concretize.disable_compiler_existence_check():
                 staged_phases[phase_name] = stage_spec_jobs(
-                    env.spec_lists[phase_name],
+                    env.concretized_user_specs,
                     check_index_only=check_index_only)
     finally:
         # Clean up PR mirror if enabled
