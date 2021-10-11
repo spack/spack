@@ -395,7 +395,7 @@ def compute_spec_deps(spec_list, check_index_only=False):
         })
 
     for spec in spec_list:
-        assert spec.concrete
+        assert spec.concrete, str(spec)
 
         # root_spec = get_spec_string(spec)
         root_spec = spec
