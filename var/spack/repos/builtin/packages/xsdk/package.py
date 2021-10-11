@@ -52,7 +52,7 @@ class Xsdk(BundlePackage):
     depends_on('hypre@2.12.1~internal-superlu', when='@0.3.0')
 
     depends_on('mfem@develop+mpi+superlu-dist+petsc+sundials+examples+miniapps', when='@develop')
-    depends_on('mfem@develop+mpi+superlu-dist+petsc+sundials+examples+miniapps', when='@0.7.0')
+    depends_on('mfem@4.3.0+mpi+superlu-dist+petsc+sundials+examples+miniapps', when='@0.7.0')
     depends_on('mfem@4.2.0+mpi+superlu-dist+petsc+sundials+examples+miniapps', when='@0.6.0')
     depends_on('mfem@4.0.1-xsdk+mpi~superlu-dist+petsc+sundials+examples+miniapps', when='@0.5.0')
     depends_on('mfem@3.4.0+mpi+superlu-dist+petsc+sundials+examples+miniapps', when='@0.4.0')
