@@ -7,6 +7,7 @@ spack:
         - py-atlalign
         - py-atlannot
         - py-atldld
+        - py-atlinter
   packages:
     hdf5:
       variants: ~mpi+hl
@@ -28,3 +29,4 @@ spack:
     - py-atlalign ^py-six@1.15.0
     - py-atlannot
     - py-atldld
+    - py-atlinter

@@ -327,6 +327,11 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('zstd', newer=True)
         enable_or_disable('tbb', newer=True)
 
+        # BBP: this is set by our module, pytorch will unconditionally grab
+        # all environment variables and pass them through with `-D`,
+        # leading to a redefinition where CMake will look for modules
+        env.unset('CMAKE_ROOT')
+
     @run_before('install')
     def build_amd(self):
         if '+rocm' in self.spec:
