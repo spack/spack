@@ -16,6 +16,7 @@ class Herwig3(AutotoolsPackage):
 
     tags = ['hep']
 
+    version('7.2.2', sha256='53e06b386df5bc20fe268b6c8ba50f1e62b6744e577d383ec836ea3fc672c383')
     version('7.2.1', sha256='d4fff32f21c5c08a4b2e563c476b079859c2c8e3b78d853a8a60da96d5eea686')
 
     depends_on('autoconf', type='build')
