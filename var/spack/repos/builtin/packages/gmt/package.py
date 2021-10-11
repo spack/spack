@@ -72,6 +72,11 @@ class Gmt(Package):
     def determine_version(cls, exe):
         return Executable(exe)('--version', output=str, error=str).rstrip()
 
+    def setup_build_environment(self, env):
+        # https://github.com/spack/spack/issues/26661
+        if self.spec.satisfies('@:5 %gcc@11:'):
+            env.set('GLIBC_EXTRA_CFLAGS', '-gdwarf-4')
+
     @when('@5:')
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
