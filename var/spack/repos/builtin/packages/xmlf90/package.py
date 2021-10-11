@@ -11,6 +11,7 @@ class Xmlf90(AutotoolsPackage):
     """xmlf90 is a suite of libraries to handle XML in Fortran."""
 
     homepage = "https://launchpad.net/xmlf90"
+    url      = "https://launchpad.net/xmlf90/trunk/1.5/+download/xmlf90-1.5.4.tar.gz"
 
     version('1.5.4', sha256='a0b1324ff224d5b5ad1127a6ad4f90979f6b127f1a517f98253eea377237bbe4')
     version('1.5.3', sha256='a5378a5d9df4b617f51382092999eb0f20fa1a90ab49afbccfd80aa51650d27c')
