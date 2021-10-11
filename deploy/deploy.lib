@@ -310,6 +310,15 @@ configure_compilers() {
         fi
 
         GCC_DIR=$(spack location --install-dir gcc@${BASE_GCC_VERSION})
+        # Use the Spack configuration to grab the matching module for GCC;
+        # requires GCC to be compiler found beforehand.
+        GCC_MODULES="$(spack config get compilers|sed -n "
+            /^\s*spec: gcc@${BASE_GCC_VERSION}/,/^\s*modules:/ {
+                /^\s*modules:/ {
+                    s/^\s*modules: \[\(.*\)\]\$/\1/;
+                    p;
+                }
+            }")"
         log "...using gcc ${BASE_GCC_VERSION} from ${GCC_DIR}"
         if [[ ${spec} = *"intel"* ]]; then
             # update intel modules to use newer gcc in .cfg files
@@ -351,6 +360,14 @@ configure_compilers() {
 
         cmd=${cmd/unload/show/}
         full_module_path="$(${cmd}|&sed -ne '2{s/:$// p}')"
+        if [[ $line = *"nvhpc"* ]]; then
+            if [[ -n $GCC_MODULES ]]; then
+                full_module_path="${GCC_MODULES},${full_module_path}"
+            else
+                log "unable to add GCC module(s) to NVHPC definition"
+                exit 1
+            fi
+        fi
         spec=${spec%%[+ ]*}             # truncate variants
         spec=${spec/llvm/clang}         # LLVM identifies as clang
         spec=${spec/20.0.2/19.1.2.254}  # Intel identifies as an older version
