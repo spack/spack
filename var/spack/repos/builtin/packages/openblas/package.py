@@ -220,7 +220,7 @@ class Openblas(MakefilePackage):
                 arch_name = openblas_arch_map.get(arch_name, arch_name)
                 args.append('ARCH=' + arch_name)
 
-        if microarch.vendor == 'generic' and microarch.family.name != 'riscv64':
+        if microarch.vendor == 'generic' and microarch.name != 'riscv64':
             # User requested a generic platform, or we couldn't find a good
             # match for the requested one. Allow OpenBLAS to determine
             # an optimized kernel at run time, including older CPUs, while
