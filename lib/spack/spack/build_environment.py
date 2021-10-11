@@ -232,7 +232,7 @@ def clean_environment():
         if '/macports/' in p:
             env.remove_path('PATH', p)
 
-    env.apply_modifications()
+    return env
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -765,43 +765,46 @@ def setup_package(pkg, dirty, context='build'):
 
     set_module_variables_for_package(pkg)
 
-    env = EnvironmentModifications()
-
-    if not dirty:
-        clean_environment()
+    # Keep track of env changes from packages separately, since we want to
+    # issue warnings when packages make "suspicious" modifications.
+    env_base = EnvironmentModifications() if dirty else clean_environment()
+    env_mods = EnvironmentModifications()
 
     # setup compilers for build contexts
     need_compiler = context == 'build' or (context == 'test' and
                                            pkg.test_requires_compiler)
     if need_compiler:
-        set_compiler_environment_variables(pkg, env)
-        set_wrapper_variables(pkg, env)
+        set_compiler_environment_variables(pkg, env_mods)
+        set_wrapper_variables(pkg, env_mods)
 
-    env.extend(modifications_from_dependencies(
+    env_mods.extend(modifications_from_dependencies(
         pkg.spec, context, custom_mods_only=False))
 
     # architecture specific setup
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
     target = platform.target(pkg.spec.architecture.target)
-    platform.setup_platform_environment(pkg, env)
+    platform.setup_platform_environment(pkg, env_mods)
 
     if context == 'build':
-        pkg.setup_build_environment(env)
+        pkg.setup_build_environment(env_mods)
 
-        if (not dirty) and (not env.is_unset('CPATH')):
+        if (not dirty) and (not env_mods.is_unset('CPATH')):
             tty.debug("A dependency has updated CPATH, this may lead pkg-"
                       "config to assume that the package is part of the system"
                       " includes and omit it when invoked with '--cflags'.")
     elif context == 'test':
-        env.extend(
+        env_mods.extend(
             inspect_path(
                 pkg.spec.prefix,
                 spack.user_environment.prefix_inspections(pkg.spec.platform),
                 exclude=is_system_path
             )
         )
-        pkg.setup_run_environment(env)
-        env.prepend_path('PATH', '.')
+        pkg.setup_run_environment(env_mods)
+        env_mods.prepend_path('PATH', '.')
+
+    # First apply the clean environment changes
+    env_base.apply_modifications()
 
     # Load modules on an already clean environment, just before applying Spack's
     # own environment modifications. This ensures Spack controls CC/CXX/... variables.
@@ -823,12 +826,16 @@ def setup_package(pkg, dirty, context='build'):
 
     implicit_rpaths = pkg.compiler.implicit_rpaths()
     if implicit_rpaths:
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
-                ':'.join(implicit_rpaths))
+        env_mods.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                     ':'.join(implicit_rpaths))
 
     # Make sure nothing's strange about the Spack environment.
-    validate(env, tty.warn)
-    env.apply_modifications()
+    validate(env_mods, tty.warn)
+    env_mods.apply_modifications()
+
+    # Return all env modifications we controlled (excluding module related ones)
+    env_base.extend(env_mods)
+    return env_base
 
 
 def _make_runnable(pkg, env):
@@ -1016,8 +1023,8 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
 
         if not kwargs.get('fake', False):
             kwargs['unmodified_env'] = os.environ.copy()
-            setup_package(pkg, dirty=kwargs.get('dirty', False),
-                          context=context)
+            kwargs['env_modifications'] = setup_package(
+                pkg, dirty=kwargs.get('dirty', False), context=context)
         return_value = function(pkg, kwargs)
         child_pipe.send(return_value)
 
