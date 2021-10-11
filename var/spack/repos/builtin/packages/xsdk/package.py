@@ -107,14 +107,14 @@ class Xsdk(BundlePackage):
     depends_on('dealii@9.0.1~assimp~python~doc~gmsh+petsc~slepc+mpi~int64+hdf5~netcdf+metis~ginkgo~symengine', when='@0.4.0 +dealii')
 
     depends_on('pflotran@develop', when='@develop')
-    depends_on('pflotran@xsdk-0.7.0', when='@0.7.0')
+    depends_on('pflotran@3.0.2', when='@0.7.0')
     depends_on('pflotran@xsdk-0.6.0', when='@0.6.0')
     depends_on('pflotran@xsdk-0.5.0', when='@0.5.0')
     depends_on('pflotran@xsdk-0.4.0', when='@0.4.0')
     depends_on('pflotran@xsdk-0.3.0', when='@0.3.0')
 
     depends_on('alquimia@develop', when='@develop +alquimia')
-    depends_on('alquimia@xsdk-0.7.0', when='@0.7.0 +alquimia')
+    depends_on('alquimia@1.0.9', when='@0.7.0 +alquimia')
     depends_on('alquimia@xsdk-0.6.0', when='@0.6.0 +alquimia')
     depends_on('alquimia@xsdk-0.5.0', when='@0.5.0 +alquimia ')
     depends_on('alquimia@xsdk-0.4.0', when='@0.4.0 +alquimia')
