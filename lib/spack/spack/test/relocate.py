@@ -162,7 +162,7 @@ def make_bad_macos_rpath(tmpdir_factory):
 
     def _factory(abs_install_name="abs", extra_rpaths=True):
         tmpdir = tmpdir_factory.mktemp(
-            abs_install_name + '_badrpath' if extra_rpaths else ''
+            abs_install_name + ('_badrpath' if extra_rpaths else '')
         )
         src = tmpdir.join('foo.c')
         src.write("int foo() { return 1; }\n")
@@ -173,6 +173,9 @@ def make_bad_macos_rpath(tmpdir_factory):
         args = ['-shared', str(src), '-o', str(lib)]
         if abs_install_name == 'abs':
             args += ['-install_name', str(lib)]
+        elif abs_install_name == 'abs_with_rpath':
+            args += ['-install_name', str(lib),
+                     '-Wl,-rpath,' + str(tmpdir)]
         elif abs_install_name == 'rpath':
             args += ['-install_name', '@rpath/foo.dylib',
                      '-Wl,-rpath,' + str(tmpdir)]
@@ -463,8 +466,8 @@ def test_fixup_macos_rpaths(make_bad_macos_rpath, make_object_file):
     assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
-    # Bad library id but rpaths are ok
-    (root, filename) = make_bad_macos_rpath("abs", False)
+    # Bad but relocatable library id but rpaths are ok
+    (root, filename) = make_bad_macos_rpath("abs_with_rpath", False)
     assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
@@ -475,6 +478,10 @@ def test_fixup_macos_rpaths(make_bad_macos_rpath, make_object_file):
 
     # Shared library was constructed correctly from the get-go
     (root, filename) = make_bad_macos_rpath("rpath", False)
+    assert not fixup_rpath(root, filename)
+
+    # Non-relocatable library id
+    (root, filename) = make_bad_macos_rpath("abs", False)
     assert not fixup_rpath(root, filename)
 
     # Test on an object file, which *also* has type 'application/x-mach-binary'

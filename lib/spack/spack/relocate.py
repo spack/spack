@@ -1041,12 +1041,15 @@ def fixup_macos_rpath(root, filename):
 
     # Check for relocatable ID
     if id_dylib is None:
-        tty.info("No dylib ID is set for {0}".format(abspath))
+        tty.debug("No dylib ID is set for {0}".format(abspath))
     elif not id_dylib.startswith('@'):
         tty.debug("Non-relocatable dylib ID for {0}: {1}"
                   .format(abspath, id_dylib))
-        args += ['-id', '@rpath/' + filename]
-        add_rpaths.add(root)
+        if root in rpaths or root in add_rpaths:
+            args += ['-id', '@rpath/' + filename]
+        else:
+            tty.debug("Allowing hardcoded dylib ID because its rpath "
+                      "is *not* in the library already")
 
     for (rpath, count) in rpaths.items():
         if count > 1:
