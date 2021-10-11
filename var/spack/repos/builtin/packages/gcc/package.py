@@ -12,6 +12,7 @@ import llnl.util.tty as tty
 
 import spack.platforms
 import spack.util.executable
+from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 
 
@@ -679,6 +680,18 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         with open(specs_file + '.orig', 'w') as out:
             out.writelines(lines)
 
+        # Find which directories have shared libraries
+        rpath_libdirs = []
+        for dir in ['lib', 'lib64']:
+            libdir = join_path(self.prefix, dir)
+            if glob.glob(join_path(libdir, "*." + dso_suffix)):
+                rpath_libdirs.append(libdir)
+
+        if not rpath_libdirs:
+            # No shared libraries
+            tty.warn('No dynamic libraries found in lib/lib64')
+            return
+
         # Overwrite the specs file
         with open(specs_file, 'w') as out:
             for line in lines:
@@ -689,16 +702,16 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     out.write('%(link_libgcc_rpath) ')
 
             # Add easily-overridable rpath string at the end
-            libdirs = [self.prefix.lib, self.prefix.lib64]
             out.write('*link_libgcc_rpath:\n')
-            if 'platform=darwin' in spec:
+            if 'platform=darwin' in self.spec:
                 # macOS linker requires separate rpath commands
-                out.write(' '.join('-rpath ' + lib for lib in libdirs))
+                out.write(' '.join('-rpath ' + lib for lib in rpath_libdirs))
             else:
                 # linux linker uses colon-separated rpath
-                out.write('-rpath ' + ':'.join(libdirs))
+                out.write('-rpath ' + ':'.join(rpath_libdirs))
             out.write('\n')
         set_install_permissions(specs_file)
+        tty.info('Wrote new spec file to {0}'.format(specs_file))
 
     def setup_run_environment(self, env):
         # Search prefix directory for possibly modified compiler names
