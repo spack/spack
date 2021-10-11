@@ -5,12 +5,6 @@
 import collections
 import errno
 import glob
-from sys import platform as _platform
-
-if _platform != "win32":
-    import grp
-    import pwd
-
 import hashlib
 import itertools
 import numbers
@@ -29,6 +23,12 @@ from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import symlink
 
 from spack.util.executable import Executable
+
+# Cannot use spack.platforms here - causes circular import
+is_windows = sys.platform == 'win32'
+if not is_windows:
+    import grp
+    import pwd
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm
@@ -82,7 +82,7 @@ __all__ = [
 
 
 def getuid():
-    if _platform == "win32":
+    if is_windows:
         import ctypes
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return 1
@@ -312,7 +312,7 @@ def group_ids(uid=None):
     Returns:
         (list of int): gids of groups the user is a member of
     """
-    if _platform == 'win32':
+    if is_windows:
         tty.warn("Function is not supported on Windows")
         return []
 
@@ -324,7 +324,7 @@ def group_ids(uid=None):
 
 def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
-    if _platform == 'win32':
+    if is_windows:
         tty.warn("Function is not supported on Windows")
         return
 
@@ -785,7 +785,7 @@ def open_if_filename(str_or_file, mode='r'):
 
 def touch(path):
     """Creates an empty file at the specified path."""
-    if _platform == 'win32':
+    if is_windows:
         perms = (os.O_WRONLY | os.O_CREAT)
     else:
         perms = (os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY)
@@ -921,7 +921,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         source_child = os.path.join(source_path, f)
         dest_child = os.path.join(dest_path, f)
         rel_child = os.path.join(rel_path, f)
-        if sys.platform == "win32":
+        if is_windows:
             source_child = source_child.replace("\\", "/")
             dest_child = dest_child.replace("\\", "/")
             rel_child = rel_child.replace("\\", "/")
@@ -1167,15 +1167,15 @@ def _find_recursive(root, search_files):
 
     # Make the path absolute to have os.walk also return an absolute path
     root = os.path.abspath(root)
-    if sys.platform == "win32":
+    if is_windows:
         root = root.replace("\\", "/")
     for path, _, list_files in os.walk(root):
-        if sys.platform == "win32":
+        if is_windows:
             path = path.replace("\\", "/")
         for search_file in search_files:
             matches = glob.glob(os.path.join(path, search_file))
             matches = [os.path.join(path, x) for x in matches]
-            if sys.platform == "win32":
+            if is_windows:
                 matches = [x.replace("\\", "/") for x in matches]
             found_files[search_file].extend(matches)
 
@@ -1193,13 +1193,13 @@ def _find_non_recursive(root, search_files):
 
     # Make the path absolute to have absolute path returned
     root = os.path.abspath(root)
-    if sys.platform == "win32":
+    if is_windows:
         root = root.replace("\\", "/")
 
     for search_file in search_files:
         matches = glob.glob(os.path.join(root, search_file))
         matches = [os.path.join(root, x) for x in matches]
-        if sys.platform == "win32":
+        if is_windows:
             matches = [x.replace("\\", "/") for x in matches]
         found_files[search_file].extend(matches)
 
@@ -1322,7 +1322,7 @@ class HeaderList(FileList):
             value = [value]
 
         self._directories = [os.path.normpath(x) for x in value]
-        if sys.platform == "win32":
+        if is_windows:
             self._directories = [d.replace("\\", "/") for d in self._directories]
 
     def _default_directories(self):
@@ -1336,7 +1336,7 @@ class HeaderList(FileList):
             # there and don't add anything else to the path.
             m = self.include_regex.match(d)
             value = os.path.join(*m.group(1, 2)) if m else d
-            if sys.platform == "win32":
+            if is_windows:
                 value = value.replace("\\", "/")
             values.append(value)
         return values
@@ -1794,7 +1794,7 @@ def partition_path(path, entry=None):
         # Derive the index of entry within paths, which will correspond to
         # the location of the entry in within the path.
         try:
-            if sys.platform == "win32":
+            if is_windows:
                 sep = "/"
             else:
                 sep = os.sep
@@ -1837,12 +1837,12 @@ def prefixes(path):
     if not path:
         return []
 
-    if sys.platform == "win32":
+    if is_windows:
         sep = "/"
     else:
         sep = os.sep
 
-    if sys.platform == "win32":
+    if is_windows:
         path = path.replace("\\", "/")
 
     parts = path.strip(sep).split(sep)
@@ -1853,7 +1853,7 @@ def prefixes(path):
         parts[0] = parts[0] + sep
     paths = [os.path.join(*parts[:i + 1]) for i in range(len(parts))]
 
-    if sys.platform == "win32":
+    if is_windows:
         paths = [path.replace("\\", "/") for path in paths]
 
     try:

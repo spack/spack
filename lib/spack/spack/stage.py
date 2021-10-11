@@ -14,6 +14,8 @@ import shutil
 import stat
 import sys
 import tempfile
+
+# Cannot use spack.platforms here - causes circular import
 from sys import platform as _platform
 from typing import Dict  # novm
 
@@ -42,7 +44,8 @@ import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack.util.crypto import bit_length, prefix_bits
 
-if _platform == "win32":
+is_windows = _platform == 'win32'
+if is_windows:
     import win32api
     import win32security
 
@@ -61,7 +64,7 @@ def create_stage_root(path):
 
     err_msg = 'Cannot create stage root {0}: Access to {1} is denied'
 
-    if _platform != "win32":
+    if not is_windows:
         user_uid = os.getuid()  # type: ignore[attr-defined]
     else:
         user_uid = win32api.GetUserName()
@@ -109,7 +112,7 @@ def create_stage_root(path):
         else:
             p_stat = os.stat(p)
 
-        if _platform != "win32":
+        if not is_windows:
             owner_uid = p_stat.st_uid
         else:
             sid = win32security.GetFileSecurity(

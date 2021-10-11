@@ -22,6 +22,7 @@ from six.moves import shlex_quote as cmd_quote
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
+import spack.platforms
 import spack.util.executable as executable
 
 system_paths = ['/', '/usr', '/usr/local']
@@ -619,7 +620,7 @@ class EnvironmentModifications(object):
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
-                    if sys.platform != "win32":
+                    if str(spack.platforms.host()) != 'windows':
                         cmd = _shell_set_strings[shell].format(
                             name, cmd_quote(new_env[name]))
                     else:

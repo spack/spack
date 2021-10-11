@@ -41,6 +41,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.hash_types as ht
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
@@ -1012,7 +1013,8 @@ class Database(object):
                 self._write_to_file(f)
             # On Windows, os.rename will fail if the destination file
             # already exists
-            if sys.platform == "win32" and os.path.exists(self._index_path):
+            if str(spack.platforms.host()) == 'windows' and \
+                    os.path.exists(self._index_path):
                 os.remove(self._index_path)
             os.rename(temp_file, self._index_path)
             if _use_uuid:

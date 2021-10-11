@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 
 
 class Ninja(Package):
@@ -58,7 +57,7 @@ class Ninja(Package):
         install(name, prefix.bin)
         install_tree('misc', prefix.misc)
 
-        if sys.platform == "win32":
+        if str(spack.platforms.host()) == 'windows':
             return
         # Some distros like Fedora install a 'ninja-build' executable
         # instead of 'ninja'. Install both for uniformity.

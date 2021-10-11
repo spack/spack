@@ -50,6 +50,7 @@ from llnl.util.filesystem import mkdirp
 import spack.architecture
 import spack.compilers
 import spack.paths
+import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.compilers
@@ -305,7 +306,7 @@ class SingleFileScope(ConfigScope):
                                   default_flow_style=False)
             # On Windows, os.rename will fail if the destination file
             # already exists
-            if sys.platform == "win32":
+            if str(spack.platforms.host()) == 'windows':
                 if os.path.exists(self.path):
                     os.remove(self.path)
             os.rename(tmp, self.path)

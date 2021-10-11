@@ -46,6 +46,7 @@ from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
+import spack.platforms
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
@@ -259,7 +260,6 @@ class URLFetchStrategy(FetchStrategy):
 
         # Prefer values in kwargs to the positionals.
         self.url = kwargs.get('url', url)
-
         self.mirrors = kwargs.get('mirrors', [])
 
         # digest can be set as the first argument, or from an explicit
@@ -306,7 +306,7 @@ class URLFetchStrategy(FetchStrategy):
         for url in [self.url] + (self.mirrors or []):
             if url.startswith('file://'):
                 path = urllib_parse.quote(url[len('file://'):])
-                if sys.platform == "win32":
+                if str(spack.platforms.host()) == 'windows':
                     if not path.startswith("/"):
                         path = "/" + path
                 url = 'file://' + path
@@ -681,7 +681,7 @@ class VCSFetchStrategy(FetchStrategy):
             raise ValueError(
                 "%s requires %s argument." % (self.__class__, self.url_attr))
 
-        if sys.platform == "win32":
+        if str(spack.platforms.host()) == 'windows':
             self.url = self.url.replace('\\', '/')
 
         for attr in self.optional_attrs:

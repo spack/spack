@@ -26,6 +26,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.error
+import spack.platforms
 import spack.url
 import spack.util.crypto
 import spack.util.s3 as s3_util
@@ -155,7 +156,7 @@ def warn_no_ssl_cert_checking():
 
 def push_to_url(
         local_file_path, remote_path, keep_original=True, extra_args=None):
-    if sys.platform == "win32":
+    if str(spack.platforms.host()) == 'windows':
         if remote_path[1] == ':':
             remote_path = "file:///" + remote_path
     remote_url = url_util.parse(remote_path)

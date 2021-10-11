@@ -6,7 +6,6 @@
 """Tests for Spack's wrapper module around llnl.util.lock."""
 
 import os
-import sys
 
 import pytest
 

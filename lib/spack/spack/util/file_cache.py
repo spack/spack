@@ -5,10 +5,10 @@
 
 import os
 import shutil
-from sys import platform as _platform
 
 from llnl.util.filesystem import mkdirp
 
+import spack.platforms
 from spack.error import SpackError
 from spack.util.lock import Lock, ReadTransaction, WriteTransaction
 
@@ -148,7 +148,7 @@ class FileCache(object):
                 else:
                     # On Windows, os.rename will fail if the destination file
                     # already exists
-                    if _platform == "win32":
+                    if str(spack.platforms.host()) == 'windows':
                         if os.path.exists(cm.orig_filename):
                             os.remove(cm.orig_filename)
                     os.rename(cm.tmp_filename, cm.orig_filename)

@@ -6,7 +6,6 @@
 import os
 import platform
 import posixpath
-import sys
 
 import pytest
 
@@ -192,7 +191,7 @@ def test_compiler_config_modifications(
     for name, value in expected.items():
         if value is not None:
             eviron_value = os.environ[name]
-            if sys.platform == "win32":
+            if str(spack.platforms.host()) == 'windows':
                 eviron_value = eviron_value.replace("\\", "/")
             assert eviron_value == value
             continue
@@ -223,7 +222,7 @@ def test_spack_paths_before_module_paths(
     spack_path = posixpath.join(spack.paths.prefix, 'lib/spack/env')
 
     paths = os.environ['PATH'].split(os.pathsep)
-    if sys.platform == 'win32':
+    if str(spack.platforms.host()) == 'windows':
         paths = [p.replace("\\", "/") for p in paths]
 
     assert paths.index(spack_path) < paths.index(module_path)

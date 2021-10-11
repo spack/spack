@@ -52,6 +52,7 @@ import spack.hooks
 import spack.monitor
 import spack.package
 import spack.package_prefs as prefs
+import spack.platforms
 import spack.repo
 import spack.store
 import spack.util.executable
@@ -1806,7 +1807,7 @@ class BuildProcessInstaller(object):
 
             # Spawn a daemon that reads from a pipe and redirects
             # everything to log_path, and provide the phase for logging
-            if sys.platform != 'win32':
+            if str(spack.platforms.host()) != 'windows':
                 for i, (phase_name, phase_attr) in enumerate(zip(
                         pkg.phases, pkg._InstallPhase_phases)):
 
@@ -1875,7 +1876,7 @@ class BuildProcessInstaller(object):
 
                     log(pkg)
 
-        if sys.platform != 'win32':
+        if str(spack.platforms.host()) != 'windows':
             # After log, we can get all output/error files from the package stage
             combine_phase_logs(pkg.phase_log_files, pkg.log_path)
             log(pkg)

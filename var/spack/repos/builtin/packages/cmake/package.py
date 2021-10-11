@@ -6,7 +6,6 @@
 import os
 import re
 import shutil
-import sys
 
 import spack.build_environment
 from spack import *
@@ -24,6 +23,8 @@ class Cmake(Package):
     tags = ['build-tools']
 
     executables = ['^cmake$']
+
+    is_windows = str(spack.platforms.host()) == 'windows'
 
     version('master',  branch='master')
     version('3.21.2',   sha256='94275e0b61c84bb42710f5320a23c6dcb2c6ee032ae7d2a616f53f68b3d21659')
@@ -140,7 +141,7 @@ class Cmake(Package):
     patch('fix-xlf-ninja-mr-4075.patch', sha256="42d8b2163a2f37a745800ec13a96c08a3a20d5e67af51031e51f63313d0dedd1", when="@3.15.5")
 
     variant('generator',
-            default='Unix Makefiles' if sys.platform != 'win32' else 'Ninja',
+            default='Unix Makefiles' if not is_windows else 'Ninja',
             description='Build system to generate',
             values=('Unix Makefiles', 'Ninja'))
     depends_on('ninja', when='generator=Ninja')
@@ -153,7 +154,7 @@ class Cmake(Package):
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enable openssl for curl bootstrapped by CMake when using +ownlibs")
-    variant('ncurses', default=os.name != 'nt',  description='Enables the build of the ncurses gui')
+    variant('ncurses', default=not is_windows, description='Enables the build of the ncurses gui')
 
     # Does not compile and is not covered in upstream CI (yet).
     conflicts('%gcc platform=darwin',

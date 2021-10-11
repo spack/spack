@@ -58,6 +58,7 @@ import spack.install_test
 import spack.main
 import spack.package
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.schema.environment
 import spack.store
@@ -511,7 +512,8 @@ def _set_variables_for_single_module(pkg, module):
     # m.cmake = Executable('cmake')
     m.cmake = Executable('cmake')
     m.ctest = MakeExecutable('ctest', jobs)
-    if os.name == 'nt':
+
+    if str(spack.platforms.host()) == 'windows':
         m.nmake = Executable('nmake')
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
@@ -818,7 +820,7 @@ def setup_package(pkg, dirty, context='build'):
         # kludge to handle cray libsci being automatically loaded by PrgEnv
         # modules on cray platform. Module unload does no damage when
         # unnecessary
-        if sys.platform != 'win32':
+        if str(spack.platforms.host()) != 'windows':
             module('unload', 'cray-libsci')
 
         if pkg.architecture.target.module_name:
@@ -1023,7 +1025,6 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
             kwargs['unmodified_env'] = os.environ.copy()
             setup_package(pkg, dirty=kwargs.get('dirty', False),
                           context=context)
-
         return_value = function(pkg, kwargs)
         child_pipe.send(return_value)
 
@@ -1117,8 +1118,8 @@ def start_build_process(pkg, function, kwargs):
 
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
-        if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin,
-                                                                      'fileno'):
+        if str(spack.platforms.host()) != 'windows' and \
+                sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
 

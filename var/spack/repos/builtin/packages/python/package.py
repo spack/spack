@@ -10,7 +10,6 @@ import os
 import platform
 import re
 import subprocess
-import sys
 from distutils.dir_util import copy_tree
 from shutil import copy
 
@@ -24,7 +23,7 @@ from spack.util.prefix import Prefix
 
 arch_map = {"AMD64": "x64", "x86": "Win32",
             "IA64": "Win32", "EM64T": "Win32"}
-is_windows = os.name == 'nt'
+is_windows = str(spack.platforms.host()) == 'windows'
 
 
 class Python(Package):
@@ -168,7 +167,7 @@ class Python(Package):
     variant('uuid',     default=True,  description='Build uuid module')
     variant('tix',      default=False, description='Build Tix module')
 
-    if os.name != 'nt':
+    if not is_windows:
         depends_on('pkgconfig@0.9.0:', type='build')
         depends_on('gettext +libxml2', when='+libxml2')
         depends_on('gettext ~libxml2', when='~libxml2')
@@ -788,13 +787,12 @@ class Python(Package):
         # in that order if using python@3.6.5, for example.
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), '']:
-            if sys.platform != "win32":
+            if not is_windows:
                 path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
             else:
                 path = os.path.join(self.prefix, 'python{0}.exe'.format(ver))
             if os.path.exists(path):
                 return Executable(path)
-
         else:
             msg = 'Unable to locate {0} command in {1}'
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
@@ -1255,8 +1253,7 @@ for plat_specific in [True, False]:
                                         ))
 
     def add_files_to_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin if os.name != 'nt'\
-            else self.spec.prefix
+        bin_dir = self.spec.prefix.bin if not is_windows else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst, spec=self.spec)
@@ -1288,8 +1285,7 @@ for plat_specific in [True, False]:
                 view.link(new_link_target, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin if os.name != 'nt'\
-            else self.spec.prefix
+        bin_dir = self.spec.prefix.bin if not is_windows else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.remove_file(src, dst)

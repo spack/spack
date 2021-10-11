@@ -6,7 +6,6 @@
 import collections
 import getpass
 import os
-import sys
 import tempfile
 
 import pytest

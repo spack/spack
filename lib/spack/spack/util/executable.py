@@ -13,8 +13,10 @@ from six import string_types, text_type
 
 import llnl.util.tty as tty
 
-import spack
 import spack.error
+
+# Cannot use spack.platforms here - causes circular import
+is_windows = sys.platform == 'win32'
 
 __all__ = ['Executable', 'which', 'ProcessError']
 
@@ -23,7 +25,7 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        if str(spack.platforms.host()) == 'windows':
+        if is_windows:
             name = name.replace('\\', '/')
         self.exe = shlex.split(str(name))
         self.default_env = {}
@@ -76,7 +78,7 @@ class Executable(object):
         Returns:
             str: The path to the executable
         """
-        if sys.platform == "win32":
+        if is_windows:
             return self.exe[0].replace('/', '\\')
         else:
             return self.exe[0]
@@ -208,7 +210,7 @@ class Executable(object):
             if output in (str, str.split) or error in (str, str.split):
                 result = ''
                 if output in (str, str.split):
-                    if str(spack.platforms.host()) == 'windows':
+                    if is_windows:
                         outstr = text_type(out.decode('ISO-8859-1'))
                     else:
                         outstr = text_type(out.decode('utf-8'))
@@ -216,7 +218,7 @@ class Executable(object):
                     if output is str.split:
                         sys.stdout.write(outstr)
                 if error in (str, str.split):
-                    if str(spack.platforms.host()) == 'windows':
+                    if is_windows:
                         errstr = text_type(err.decode('ISO-8859-1'))
                     else:
                         errstr = text_type(err.decode('utf-8'))
@@ -283,8 +285,8 @@ def which_string(*args, **kwargs):
 
     for name in args:
         win_candidates = []
-        if sys.platform == "win32" and (not name.endswith(".exe")
-           and not name.endswith(".bat")):
+        if is_windows and \
+                not name.endswith(".exe") and not name.endswith(".bat"):
             win_candidates = [name + ext for ext in ['.exe', '.bat']]
         candidate_names = [name] if not win_candidates else win_candidates
 

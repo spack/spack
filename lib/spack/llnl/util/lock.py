@@ -8,6 +8,8 @@ import os
 import socket
 import time
 from datetime import datetime
+
+# Cannot use spack.platforms here - causes circular import
 from sys import platform as _platform
 from typing import Dict, Tuple  # novm
 
@@ -15,7 +17,8 @@ import llnl.util.tty as tty
 
 import spack.util.string
 
-if _platform != "win32":
+is_windows = _platform == 'win32'
+if not is_windows:
     import fcntl
 else:
     import win32con
@@ -177,7 +180,7 @@ def lock_checking(func):
 
     @wraps(func)
     def win_lock(self, *args, **kwargs):
-        if _platform == "win32" and self._reads > 0:
+        if is_windows and self._reads > 0:
             self._partial_unlock()
             try:
                 suc = func(self, *args, **kwargs)
@@ -255,7 +258,7 @@ class Lock(object):
         self.pid = self.old_pid = None
         self.host = self.old_host = None
 
-        if _platform == "win32":
+        if is_windows:
             self.LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK  # exclusive lock
             self.LOCK_SH = 0  # shared lock, default
             self.LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY  # non-blocking
@@ -272,7 +275,7 @@ class Lock(object):
         self._current_lock = None
 
     def __lock_fail_condition(self, e):
-        if _platform == "win32":
+        if is_windows:
             # 33 "The process cannot access the file because another
             #     process has locked a portion of the file."
             # 32 "The process cannot access the file because it is being
@@ -378,7 +381,7 @@ class Lock(object):
 
         try:
             # Try to get the lock (will raise if not available.)
-            if _platform == "win32":
+            if is_windows:
                 hfile = win32file._get_osfhandle(self._file.fileno())
                 win32file.LockFileEx(hfile,
                                      op | self.LOCK_NB,  # flags
@@ -427,7 +430,7 @@ class Lock(object):
 
     def _read_log_debug_data(self):
         """Read PID and host data out of the file if it is there."""
-        if _platform == "win32":
+        if is_windows:
             # Not implemented for windows
             return
 
@@ -443,7 +446,7 @@ class Lock(object):
 
     def _write_log_debug_data(self):
         """Write PID and host data to the file, recording old values."""
-        if _platform == "win32":
+        if is_windows:
             # Not implemented for windows
             return
 
@@ -468,7 +471,7 @@ class Lock(object):
 
         """
 
-        if _platform == "win32":
+        if is_windows:
             hfile = win32file._get_osfhandle(self._file.fileno())
             win32file.UnlockFileEx(hfile,
                                    0,

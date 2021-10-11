@@ -24,6 +24,7 @@ import spack.config
 import spack.error
 import spack.hash_types as ht
 import spack.hooks
+import spack.platforms
 import spack.repo
 import spack.schema.env
 import spack.spec
@@ -581,7 +582,8 @@ class ViewDescriptor(object):
                 raise SpackEnvironmentViewError(msg)
             # On Windows, os.rename will fail if the destination file
             # already exists
-            if sys.platform == "win32" and os.path.exists(self.root):
+            if str(spack.platforms.host()) == 'windows' and \
+                    os.path.exists(self.root):
                 os.remove(self.root)
             os.rename(tmp_symlink_name, self.root)
 

@@ -28,6 +28,8 @@ from six import StringIO, string_types
 
 import llnl.util.tty as tty
 
+import spack.platforms
+
 termios = None  # type: Optional[ModuleType]
 try:
     import termios as term_mod
@@ -680,7 +682,7 @@ class StreamWrapper:
     def __init__(self, sys_attr):
         self.sys_attr = sys_attr
         self.saved_stream = None
-        if sys.platform.startswith('win32'):
+        if str(spack.platforms.host()) == 'windows':
             if sys.version_info < (3, 5):
                 libc = ctypes.CDLL(ctypes.util.find_library('c'))
             else:
@@ -714,7 +716,7 @@ class StreamWrapper:
     def redirect_stream(self, to_fd):
         """Redirect stdout to the given file descriptor."""
         # Flush the C-level buffer stream
-        if sys.platform.startswith('win32'):
+        if str(spack.platforms.host()) == 'windows':
             self.libc.fflush(None)
         else:
             self.libc.fflush(self.c_stream)
@@ -731,7 +733,7 @@ class StreamWrapper:
         self.sys_stream = getattr(sys, self.sys_attr)
 
     def flush(self):
-        if sys.platform.startswith('win32'):
+        if str(spack.platforms.host()) == 'windows':
             self.libc.fflush(None)
         else:
             self.libc.fflush(self.c_stream)

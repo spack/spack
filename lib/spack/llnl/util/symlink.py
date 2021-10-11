@@ -5,9 +5,13 @@
 import errno
 import os
 import shutil
-import sys
 import tempfile
 from os.path import exists, join
+
+# Cannot use spack.platforms here - causes circular import
+from sys import platform as _platform
+
+is_windows = _platform == 'win32'
 
 __win32_can_symlink__ = None
 
@@ -18,7 +22,7 @@ def symlink(real_path, link_path):
 
     On Windows, use junctions if os.symlink fails.
     """
-    if sys.platform != "win32" or _win32_can_symlink():
+    if not is_windows or _win32_can_symlink():
         os.symlink(real_path, link_path)
     else:
         try:
@@ -102,7 +106,7 @@ def _win32_is_junction(path):
     if os.path.islink(path):
         return False
 
-    if sys.platform == "win32":
+    if is_windows:
         import ctypes.wintypes
 
         GetFileAttributes = ctypes.windll.kernel32.GetFileAttributesW

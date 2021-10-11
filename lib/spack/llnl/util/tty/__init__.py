@@ -18,7 +18,8 @@ import six
 from six import StringIO
 from six.moves import input
 
-if _platform != "win32":
+# Cannot use spack.platforms here - causes circular import
+if _platform != 'win32':
     import fcntl
     import termios
 

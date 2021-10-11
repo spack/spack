@@ -14,11 +14,11 @@ raising an EnvironmentError if we are unable to find one.
 """
 import os
 import shlex
-import sys
 
 import llnl.util.tty as tty
 
 import spack.config
+import spack.platforms
 from spack.util.executable import which_string
 
 #: editors to try if VISUAL and EDITOR are not set
@@ -40,13 +40,12 @@ def _find_exe_from_env_var(var):
     if not exe:
         return None, []
 
-    if sys.platform == "win32":
+    if str(spack.platforms.host()) == 'windows':
         # Fix separators
         exe = exe.replace('\\', '/')
 
     # split env var into executable and args if needed
     args = shlex.split(str(exe))
-
     if not args:
         return None, []
 
