@@ -55,6 +55,7 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.store
 import spack.util.executable
+from spack.error import SpackError
 from spack.util.environment import dump_environment
 from spack.util.executable import which
 from spack.util.timer import Timer
@@ -1472,9 +1473,7 @@ class PackageInstaller(object):
 
         self._init_queue()
         fail_fast_err = 'Terminating after first install failure'
-        single_explicit_spec = len(self.build_requests) == 1
-        failed_explicits = []
-        exists_errors = []
+        install_errors = []
 
         while self.build_pq:
             task = self._pop_task()
@@ -1534,6 +1533,12 @@ class PackageInstaller(object):
 
                 if self.fail_fast:
                     raise InstallError(fail_fast_err)
+
+                install_errors.append((
+                    pkg.name,
+                    SpackError('Other install process failed.  '
+                               'Refer to reported errors.')
+                ))
 
                 continue
 
@@ -1634,9 +1639,15 @@ class PackageInstaller(object):
                 self._update_failed(task, True, exc)
                 spack.hooks.on_install_failure(task.request.pkg.spec)
 
+                # Collect short versions of exceptions
+                if isinstance(exc, SpackError):
+                    install_errors.append((pkg.name, SpackError(exc.message)))
+                else:
+                    install_errors.append((pkg.name, exc))
+
                 # Best effort installs suppress the exception and mark the
                 # package as a failure.
-                if (not isinstance(exc, spack.error.SpackError) or
+                if (not isinstance(exc, SpackError) or
                     not exc.printed):
                     exc.printed = True
                     # SpackErrors can be printed by the build process or at
@@ -1649,15 +1660,6 @@ class PackageInstaller(object):
                 if self.fail_fast:
                     raise InstallError('{0}: {1}'
                                        .format(fail_fast_err, str(exc)))
-
-                # Terminate at this point if the single explicit spec has
-                # failed to install.
-                if single_explicit_spec and task.explicit:
-                    raise
-
-                # Track explicit spec id and error to summarize when done
-                if task.explicit:
-                    failed_explicits.append((pkg_id, str(exc)))
 
             finally:
                 # Remove the install prefix if anything went wrong during
@@ -1676,24 +1678,37 @@ class PackageInstaller(object):
 
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()
+        self._summarize_errors(install_errors)
 
-        # Ensure we properly report if one or more explicit specs failed
-        # or were not installed when should have been.
+    def _summarize_errors(self, install_errors):
+        """
+        Throw an informative error about failed installs if any
+        """
         missing = [request.pkg_id for request in self.build_requests if
                    request.install_args.get('install_package') and
                    request.pkg_id not in self.installed]
-        if exists_errors or failed_explicits or missing:
-            for pkg_id, err in exists_errors:
-                tty.error('{0}: {1}'.format(pkg_id, err))
+        if not missing:
+            return
 
-            for pkg_id, err in failed_explicits:
-                tty.error('{0}: {1}'.format(pkg_id, err))
-
+        # Show the failed top-level requests if there were more than one.
+        if len(self.build_requests) > 1:
             for pkg_id in missing:
                 tty.error('{0}: Package was not installed'.format(pkg_id))
 
-            raise InstallError('Installation request failed.  Refer to '
-                               'reported errors for failing package(s).')
+        # Be brief when there's a single failure.
+        if len(install_errors) == 1:
+            name, exc = install_errors[0]
+            message = ('Failed to install {0} due to {1}: {2}'.format(
+                       name, exc.__class__.__name__, str(exc)))
+        else:
+            message = 'Multiple packages failed to install:\n'
+            templ = '    {0} due to {1}: {2}'
+            message += "\n".join((
+                templ.format(name, exc.__class__.__name__, str(exc))
+                for (name, exc) in install_errors
+            ))
+
+        raise InstallError(message)
 
 
 class BuildProcessInstaller(object):
@@ -2273,7 +2288,7 @@ class BuildRequest(object):
             yield get_spec(dspec)
 
 
-class InstallError(spack.error.SpackError):
+class InstallError(SpackError):
     """Raised when something goes wrong during install or uninstall."""
 
     def __init__(self, message, long_msg=None):
