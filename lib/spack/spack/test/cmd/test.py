@@ -12,7 +12,7 @@ import spack.cmd.install
 import spack.config
 import spack.package
 from spack.cmd.test import has_test_method
-from spack.main import SpackCommand, SpackCommandError
+from spack.main import SpackCommand
 
 install = SpackCommand('install')
 spack_test = SpackCommand('test')
