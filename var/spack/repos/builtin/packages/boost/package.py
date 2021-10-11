@@ -427,7 +427,7 @@ class Boost(Package):
 
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
-                
+
         options.append('-show-libraries')
 
     def determine_b2_options(self, spec, options):
@@ -482,7 +482,7 @@ class Boost(Package):
             '--layout=%s' % layout
         ])
 
-        if not spec.satisfies('@:1.75 %intel') and not spec.satisfies('platform=windows'):
+        if not (spec.satisfies('@:1.75 %intel') or spec.satisfies('platform=windows')):
             # When building any version >= 1.76, the toolset must be specified.
             # Earlier versions could not specify Intel as the toolset
             # as that was considered to be redundant/conflicting with
@@ -600,7 +600,7 @@ class Boost(Package):
             bootstrap('/c', '.\\bootstrap.bat', *bootstrap_options)
         else:
             bootstrap = Executable('./bootstrap.sh')
-            bootstrap(*bootstrap_options) 
+            bootstrap(*bootstrap_options)
 
         # strip the toolchain to avoid double include errors (intel) or
         # user-config being overwritten (again intel, but different boost version)
@@ -627,7 +627,7 @@ class Boost(Package):
             b2_options.append(path_to_config)
 
         threading_opts = self.determine_b2_options(spec, b2_options)
-        
+
         # Windows build just wants a b2 call with no args
         if spec.satisfies('platform=windows'):
             b2_options.clear()
