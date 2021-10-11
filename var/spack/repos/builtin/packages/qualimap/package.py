@@ -17,7 +17,7 @@ class Qualimap(Package):
 
     version('2.2.1', sha256='08f1d66e49c83c76c56c4225c53aee44f41e0592c8bdc84b8c4ecd975700e045')
 
-    depends_on('openjdk', type=('build', 'run'))
+    depends_on('java', type='run')
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', prefix)
