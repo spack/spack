@@ -61,6 +61,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         args = [
             '-DCMAKE_CXX_STANDARD:STRING=17',
+            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec or '+rccl' in spec),
             '-DALUMINUM_ENABLE_ROCM:BOOL=%s' % ('+rocm' in spec)]

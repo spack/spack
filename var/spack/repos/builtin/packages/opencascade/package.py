@@ -16,6 +16,10 @@ class Opencascade(CMakePackage):
     homepage = "https://www.opencascade.com"
     url      = "https://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_4_0;sf=tgz"
 
+    maintainers = ['wdconinc']
+
+    version('7.5.3', extension='tar.gz',
+            sha256='cc3d3fd9f76526502c3d9025b651f45b034187430f231414c97dda756572410b')
     version('7.5.2', extension='tar.gz',
             sha256='1a32d2b0d6d3c236163cb45139221fb198f0f3cdad56606c5b1c9a2a8869b3ac')
     version('7.4.0p2', extension='tar.gz',
@@ -65,6 +69,8 @@ class Opencascade(CMakePackage):
             args.append('-DUSE_VTK=ON')
             args.append('-D3RDPARTY_VTK_DIR=%s' %
                         self.spec['vtk'].prefix)
+            args.append('-D3RDPARTY_VTK_INCLUDE_DIR=%s' %
+                        self.spec['vtk'].prefix.include)
         else:
             args.append('-DUSE_VTK=OFF')
 

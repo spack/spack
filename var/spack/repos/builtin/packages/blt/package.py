@@ -13,6 +13,7 @@ class Blt(Package):
     homepage = "https://github.com/LLNL/blt"
     url      = "https://github.com/LLNL/blt/archive/v0.4.0.tar.gz"
     git      = "https://github.com/LLNL/blt.git"
+    tags     = ['radiuss']
 
     maintainers = ['white238', 'davidbeckingsale']
 
