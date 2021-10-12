@@ -1144,7 +1144,9 @@ class Environment(object):
         # Solve the environment in parallel on Linux
         start = time.time()
         if sys.platform != 'darwin':
-            nprocesses = min(spack.util.cpus.cpus_available(), 16)
+            max_processes = min(spack.util.cpus.cpus_available(), 16)
+            nspecs = len(arguments)
+            nprocesses = min(nspecs, max_processes)
             msg = 'Starting concretization pool with {0} processes'
             tty.msg(msg.format(nprocesses))
             with spack.util.parallel.pool(processes=nprocesses) as pool:
