@@ -76,7 +76,11 @@ def clean(parser, args):
     if args.stage:
         tty.msg('Removing all temporary build stages')
         spack.stage.purge()
-
+        # Temp directory where buildcaches are extracted
+        extract_tmp = os.path.join(spack.store.layout.root, '.tmp')
+        if os.path.exists(extract_tmp):
+            tty.debug('Removing {0}'.format(extract_tmp))
+            shutil.rmtree(extract_tmp)
     if args.downloads:
         tty.msg('Removing cached downloads')
         spack.caches.fetch_cache.destroy()
