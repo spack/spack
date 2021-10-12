@@ -87,6 +87,8 @@ class TestSuite(object):
         self.alias = alias
         self._hash = None
 
+        self.fails = 0
+
     @property
     def name(self):
         return self.alias if self.alias else self.content_hash
@@ -135,6 +137,7 @@ class TestSuite(object):
                     shutil.rmtree(test_dir)
                 self.write_test_result(spec, 'PASSED')
             except BaseException as exc:
+                self.fails += 1
                 if isinstance(exc, SyntaxError):
                     # Create the test log file and report the error.
                     self.ensure_stage()
@@ -149,6 +152,9 @@ class TestSuite(object):
                 spec.package.test_suite = None
                 self.current_test_spec = None
                 self.current_base_spec = None
+
+        if self.fails:
+            raise TestSuiteFailure(self.fails)
 
     def ensure_stage(self):
         if not os.path.exists(self.stage):
@@ -269,3 +275,11 @@ class TestFailure(spack.error.SpackError):
             msg += '\n%s\n' % message
 
         super(TestFailure, self).__init__(msg)
+
+
+class TestSuiteFailure(spack.error.SpackError):
+    """Raised when one or more tests in a suite have failed."""
+    def __init__(self, num_failures):
+        msg = "%d test(s) in the suite failed.\n" % num_failures
+
+        super(TestSuiteFailure, self).__init__(msg)

@@ -262,7 +262,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
 
     patch('piclibs.patch', when='+piclibs')
-    patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
+    patch('gcc-backport.patch', when='@4.7:4.9.3,5:5.3')
 
     # Backport libsanitizer patch for glibc >= 2.31 and 5.3.0 <= gcc <= 9.2.0
     # https://bugs.gentoo.org/708346
@@ -289,6 +289,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
     patch('zstd.patch', when='@10')
+
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100102
+    patch('https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=fc930b3010bd0de899a3da3209eab20664ddb703', sha256='28c5ab3b564d83dd7e6e35b9c683141a4cb57ee886c5367e54a0828538b3c789', when='@10.3,11.1')
 
     build_directory = 'spack-build'
 

@@ -82,6 +82,7 @@ import operator
 import os
 import re
 import sys
+import warnings
 
 import ruamel.yaml as yaml
 import six
@@ -2399,6 +2400,13 @@ class Spec(object):
         """
         import spack.concretize
 
+        # Add a warning message to inform users that the original concretizer
+        # will be removed in v0.18.0
+        msg = ('the original concretizer is currently being used.\n\tUpgrade to '
+               '"clingo" at your earliest convenience. The original concretizer '
+               'will be removed from Spack starting at v0.18.0')
+        warnings.warn(msg)
+
         if not self.name:
             raise spack.error.SpecError(
                 "Attempting to concretize anonymous spec")
@@ -4698,6 +4706,15 @@ class SpecParser(spack.parse.Parser):
 
         except spack.parse.ParseError as e:
             raise SpecParseError(e)
+
+        # Generate lookups for git-commit-based versions
+        for spec in specs:
+            # Cannot do lookups for versions in anonymous specs
+            # Only allow concrete versions using git for now
+            if spec.name and spec.versions.concrete and spec.version.is_commit:
+                pkg = spec.package
+                if hasattr(pkg, 'git'):
+                    spec.version.generate_commit_lookup(pkg)
 
         return specs
 

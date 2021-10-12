@@ -160,11 +160,10 @@ config:
   #       sufficiently for many specs.
   #
   #   'clingo': Uses a logic solver under the hood to solve DAGs with full
-  #       backtracking and optimization for user preferences.
+  #       backtracking and optimization for user preferences. Spack will
+  #       try to bootstrap the logic solver, if not already available.
   #
-  # 'clingo' currently requires the clingo ASP solver to be installed and
-  # built with python bindings. 'original' is built in.
-  concretizer: original
+  concretizer: clingo
 
 
   # How long to wait to lock the Spack installation database. This lock is used
