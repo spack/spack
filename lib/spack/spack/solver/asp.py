@@ -221,7 +221,7 @@ class Result(object):
         # Concrete specs
         self._concrete_specs = None
 
-    def print_core(self, core):
+    def print_core(self, core, debug=False):
         symbols = dict(
             (a.literal, a.symbol)
             for a in self.control.symbolic_atoms
@@ -234,14 +234,17 @@ class Result(object):
                 sym = sym.arguments[0].string
             core_symbols.append(sym)
 
-        tty.msg(
-            "The following constraints are unsatisfiable:",
-            *sorted(str(symbol) for symbol in core_symbols))
+        out_list = sorted(str(symbol) for symbol in core_symbols)
+        if debug:
+            tty.debug("The following core was generated:", *out_list, level=debug)
+        else:
+            tty.msg("The following constraints are unsatisfiable:", *out_list)
 
     def minimize_and_print_cores(self):
         assert self.control
 
         for core in self.cores:
+            self.print_core(core, debug=3)
             min_core = self.minimize_core(core)
             self.print_core(min_core)
 
@@ -1430,6 +1433,13 @@ class SpackSolverSetup(object):
             virtuals=self.possible_virtuals,
             deptype=spack.dependency.all_deptypes
         )
+
+        # Fail if we already know an unreachable node is requested
+        for spec in specs:
+            missing_deps = [d for d in spec.traverse() if d.name not in possible]
+            if missing_deps:
+                raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
+
         pkgs = set(possible)
 
         # driver is used by all the functions below to add facts and
