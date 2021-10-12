@@ -36,6 +36,7 @@ class PySlepc4py(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('py-petsc4py', type=('build', 'run'))
+    depends_on('py-petsc4py@3.16.0:3.16', when='@3.16.0:3.16', type=('build', 'run'))
     depends_on('py-petsc4py@3.15.0:3.15', when='@3.15.0:3.15', type=('build', 'run'))
     depends_on('py-petsc4py@3.13.0:3.13', when='@3.13.0:3.13', type=('build', 'run'))
     depends_on('py-petsc4py@3.12.0:3.12', when='@3.12.0:3.12', type=('build', 'run'))
@@ -47,6 +48,7 @@ class PySlepc4py(PythonPackage):
     depends_on('py-petsc4py@3.6.0:3.6', when='@3.6.0:3.6', type=('build', 'run'))
 
     depends_on('slepc')
+    depends_on('slepc@3.16.0:3.16', when='@3.16.0:3.16')
     depends_on('slepc@3.15.0:3.15', when='@3.15.0:3.15')
     depends_on('slepc@3.13.0:3.13', when='@3.13.0:3.13')
     depends_on('slepc@3.12.0:3.12', when='@3.12.0:3.12')
