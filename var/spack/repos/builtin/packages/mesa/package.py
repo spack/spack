@@ -187,7 +187,7 @@ class Mesa(MesonPackage):
         if '+egl' in spec:
             num_frontends += 1
             args.extend(['-Degl=enabled', '-Dgbm=enabled'])
-            args_platforms.append('surfaceless')
+            args.append('-Degl-native-platform=`surfaceless')
         else:
             args.extend(
                 ['-Degl=disabled', '-Dgbm=disabled'])
@@ -196,7 +196,7 @@ class Mesa(MesonPackage):
         args.append(opt_enable('+opengles' in spec, 'gles1'))
         args.append(opt_enable('+opengles' in spec, 'gles2'))
 
-        args.append(opt_enable(num_frontends > 1 or ('+glvnd' in spec), 'shared-glapi'))
+        args.append(opt_enable(num_frontends > 1 or (use_dri), 'shared-glapi'))
 
         if '+llvm' in spec:
             args.append('-Dllvm=enabled')
