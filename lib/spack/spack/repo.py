@@ -78,7 +78,7 @@ NOT_PROVIDED = object()
 #:
 #: TODO: At some point in the future, consider removing ``from spack import *``
 #: TODO: from packages and shifting to from ``spack.pkgkit import *``
-_package_prepend = 'from spack.pkgkit import *'
+_package_prepend = 'from __future__ import absolute_import; from spack.pkgkit import *'
 
 
 def autospec(function):
