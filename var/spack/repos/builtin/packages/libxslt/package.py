@@ -51,9 +51,9 @@ class Libxslt(AutotoolsPackage):
 
         return args
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
+    # @run_after('install')
+    # @on_package_attributes(run_tests=True)
+    def check_imports(self):
         if '+python' in self.spec:
             with working_dir('spack-test', create=True):
                 python('-c', 'import libxslt')

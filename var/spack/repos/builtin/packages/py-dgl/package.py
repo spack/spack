@@ -127,9 +127,9 @@ class PyDgl(CMakePackage):
 
         return modules
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
+    # @run_after('install')
+    # @on_package_attributes(run_tests=True)
+    def check_imports(self):
         with working_dir('spack-test', create=True):
             for module in self.import_modules:
                 python('-c', 'import {0}'.format(module))

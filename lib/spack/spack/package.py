@@ -1794,6 +1794,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
+    def check_imports(self):
+        # Defer checks to imports
+        pass
+
     def test(self):
         # Defer tests to virtual and concrete packages
         pass
@@ -2702,6 +2706,9 @@ class Package(PackageBase):
     # This will be used as a registration decorator in user
     # packages, if need be
     run_after('install')(PackageBase.sanity_check_prefix)
+    #: TODO: Should always apply the potentially no-op check?
+    #: Perform any import checks
+    run_after('install')(PackageBase.check_imports)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):

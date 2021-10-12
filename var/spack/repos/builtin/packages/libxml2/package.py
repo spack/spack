@@ -80,10 +80,13 @@ class Libxml2(AutotoolsPackage):
             filter_file('-Wno-long-long -Wno-format-extra-args', '',
                         'configure')
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
+    # @run_after('install')
+    # @on_package_attributes(run_tests=True)
+    def check_imports(self):
+        """Perform simple import test."""
         if '+python' in self.spec:
+            # TODO: Need to properly set up the test environment even though
+            #    the software has not been installed
             with working_dir('spack-test', create=True):
                 python('-c', 'import libxml2')
 
@@ -91,7 +94,7 @@ class Libxml2(AutotoolsPackage):
         """Perform smoke tests on the installed package"""
         # Start with what we already have post-install
         tty.msg('test: Performing simple import test')
-        self.import_module_test()
+        self.check_imports()
 
         data_dir = self.test_suite.current_test_data_dir
 
@@ -114,6 +117,3 @@ class Libxml2(AutotoolsPackage):
         for exe in exec_checks:
             for options, expected, status in exec_checks[exe]:
                 self.run_test(exe, options, expected, status)
-
-        # Perform some cleanup
-        fs.force_remove(test_filename)

@@ -82,7 +82,7 @@ class PythonPackage(PackageBase):
     build_system_class = 'PythonPackage'
 
     #: Callback names for install-time test
-    install_time_test_callbacks = ['test']
+    install_time_test_callbacks = ['check_imports']
 
     extends('python')
 
@@ -311,9 +311,9 @@ class PythonPackage(PackageBase):
         """Arguments to pass to install_data."""
         return []
 
-    # Testing
+    # Sanity checks
 
-    def test(self):
+    def check_imports(self):
         """Attempts to import modules of the installed package."""
 
         # Make sure we are importing the installed modules,
