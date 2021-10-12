@@ -67,7 +67,7 @@ class Brayns(CMakePackage):
             )
         for cmake_filename in find(self.stage.source_path, "CMakeLists.txt"):
             filter_file(r'\$\{GLEW_LIBRARIES\}', 'GLEW', cmake_filename)
-        if self.spec.satisfies('@1.0:'):
+        if self.spec.satisfies('@1.0:1.1'):
             filter_file(r'cast<const uint8_t \*const',
                         'cast<const uint8_t *',
                         'plugins/Rockets/encoder.cpp')
