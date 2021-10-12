@@ -6,7 +6,7 @@
 import shutil
 
 from spack import *
-
+from shutil import copyfile
 
 class Herwig3(AutotoolsPackage):
     """Herwig is a multi-purpose particle physics event generator."""
@@ -46,6 +46,8 @@ class Herwig3(AutotoolsPackage):
         mkdirp(self.prefix.tmppdfsets)
         lhapdf = which('lhapdf')
         if self.spec.satisfies('@7.2.0:'):
+            copyfile(join_path(self.spec['lhapdf'].prefix.share, 'LHAPDF', 'pdfsets.index'),
+                     join_path(self.prefix.tmppdfsets, 'pdfsets.index'))
             lhapdf("--pdfdir=" + self.prefix.tmppdfsets,
                    # "--source=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current",
                    # "--listdir=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current",
