@@ -74,6 +74,10 @@ class SalomeMedcoupling(CMakePackage):
     depends_on('salome-med@4.0.0+static',     when='@9.3.0~mpi+static')
     depends_on('salome-med@4.0.0',            when='@9.3.0~mpi')
 
+    def check(self):
+        with working_dir(self.build_directory):
+            make('test', parallel=False)
+
     def setup_build_environment(self, env):
         if '+metis' in self.spec:
             env.set('METIS_ROOT_DIR', self.spec['metis'].prefix)

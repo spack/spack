@@ -43,6 +43,10 @@ class SalomeMed(CMakePackage):
 
     patch('MAJ_400_410_champs.patch', when='@4.1.0+static', working_dir='./tools/medimport/4.0.0')
 
+    def check(self):
+        with working_dir(self.build_directory):
+            make('test', parallel=False)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('HDF5_ROOT_DIR', self.spec['hdf5'].prefix)
 
@@ -74,7 +78,7 @@ class SalomeMed(CMakePackage):
         options.extend([
             '-DMEDFILE_BUILD_PYTHON=OFF',
             '-DMEDFILE_INSTALL_DOC=OFF',
-            '-DMEDFILE_BUILD_TESTS={0}'.format('ON' if self.run_tests else 'OFF'),
+            '-DMEDFILE_BUILD_TESTS=%s' % self.run_tests,
             '-DHDF5_ROOT_DIR=%s' % spec['hdf5'].prefix])
 
         return options
