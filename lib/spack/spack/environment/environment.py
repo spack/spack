@@ -1145,7 +1145,7 @@ class Environment(object):
         start = time.time()
         if sys.platform != 'darwin':
             max_processes = min(spack.util.cpus.cpus_available(), 16)
-            nspecs = len(arguments)
+            nspecs = max(len(arguments), 1)
             nprocesses = min(nspecs, max_processes)
             msg = 'Starting concretization pool with {0} processes'
             tty.msg(msg.format(nprocesses))
