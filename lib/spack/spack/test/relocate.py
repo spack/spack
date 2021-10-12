@@ -152,7 +152,7 @@ def hello_world(tmpdir):
 
 
 @pytest.fixture()
-def make_bad_macos_rpath(tmpdir_factory):
+def make_dylib(tmpdir_factory):
     """Create a shared library with unfriendly qualities.
 
     - Writes the same rpath twice
@@ -160,9 +160,11 @@ def make_bad_macos_rpath(tmpdir_factory):
     """
     cc = spack.util.executable.which('cc')
 
-    def _factory(abs_install_name="abs", extra_rpaths=True):
+    def _factory(abs_install_name="abs", extra_rpaths=[]):
+        assert all(extra_rpaths)
+
         tmpdir = tmpdir_factory.mktemp(
-            abs_install_name + ('_badrpath' if extra_rpaths else '')
+            abs_install_name + '-'.join(extra_rpaths).replace('/', '')
         )
         src = tmpdir.join('foo.c')
         src.write("int foo() { return 1; }\n")
@@ -171,19 +173,16 @@ def make_bad_macos_rpath(tmpdir_factory):
         lib = tmpdir.join(filename)
 
         args = ['-shared', str(src), '-o', str(lib)]
-        if abs_install_name == 'abs':
+        rpaths = list(extra_rpaths)
+        if abs_install_name.startswith('abs'):
             args += ['-install_name', str(lib)]
-        elif abs_install_name == 'abs_with_rpath':
-            args += ['-install_name', str(lib),
-                     '-Wl,-rpath,' + str(tmpdir)]
-        elif abs_install_name == 'rpath':
-            args += ['-install_name', '@rpath/foo.dylib',
-                     '-Wl,-rpath,' + str(tmpdir)]
+        else:
+            args += ['-install_name', '@rpath/' + filename]
 
-        if extra_rpaths:
-            args += ['-Wl,-rpath,' + str(tmpdir),
-                     '-Wl,-rpath,/usr/local/lib',
-                     '-Wl,-rpath,/usr/local/lib']
+        if abs_install_name.endswith('rpath'):
+            rpaths.append(str(tmpdir))
+
+        args.extend('-Wl,-rpath,' + s for s in rpaths)
 
         cc(*args)
 
@@ -456,32 +455,47 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
 
 
 @pytest.mark.requires_executables('install_name_tool', 'file', 'cc')
-def test_fixup_macos_rpaths(make_bad_macos_rpath, make_object_file):
+def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # For each of these tests except for the "correct" case, the first fixup
     # should make changes, and the second fixup should be a null-op.
     fixup_rpath = spack.relocate.fixup_macos_rpath
 
-    # Bad library id *and* duplicate rpaths
-    (root, filename) = make_bad_macos_rpath("abs", True)
+    no_rpath = []
+    duplicate_rpaths = ['/usr', '/usr']
+    bad_rpath = ['/nonexistent/path']
+
+    # Non-relocatable library id and duplicate rpaths
+    (root, filename) = make_dylib("abs", duplicate_rpaths)
     assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
-    # Bad but relocatable library id but rpaths are ok
-    (root, filename) = make_bad_macos_rpath("abs_with_rpath", False)
+    # Bad but relocatable library id
+    (root, filename) = make_dylib("abs_with_rpath", no_rpath)
     assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Library id uses rpath but there are extra duplicate rpaths
-    (root, filename) = make_bad_macos_rpath("rpath", True)
+    (root, filename) = make_dylib("rpath", duplicate_rpaths)
     assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
-    # Shared library was constructed correctly from the get-go
-    (root, filename) = make_bad_macos_rpath("rpath", False)
+    # Shared library was constructed with relocatable id from the get-go
+    (root, filename) = make_dylib("rpath", no_rpath)
     assert not fixup_rpath(root, filename)
 
     # Non-relocatable library id
-    (root, filename) = make_bad_macos_rpath("abs", False)
+    (root, filename) = make_dylib("abs", no_rpath)
+    assert not fixup_rpath(root, filename)
+
+    # Non-relocatable library id but nonexistent rpath
+    (root, filename) = make_dylib("abs", bad_rpath)
+    assert fixup_rpath(root, filename)
+    assert not fixup_rpath(root, filename)
+
+    # Duplicate nonexistent rpath will need *two* passes
+    (root, filename) = make_dylib("rpath", bad_rpath * 2)
+    assert fixup_rpath(root, filename)
+    assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Test on an object file, which *also* has type 'application/x-mach-binary'

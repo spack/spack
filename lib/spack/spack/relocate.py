@@ -1004,6 +1004,12 @@ def mime_type(filename):
     return type, subtype
 
 
+# Memoize this due to repeated calls to libraries in the same directory.
+@llnl.util.lang.memoized
+def _exists_dir(dirname):
+    return os.path.isdir(dirname)
+
+
 def fixup_macos_rpath(root, filename):
     """Apply rpath fixups to the given file.
 
@@ -1023,6 +1029,7 @@ def fixup_macos_rpath(root, filename):
 
     # Convert rpaths list to (name -> number of occurrences)
     add_rpaths = set()
+    del_rpaths = set()
     rpaths = defaultdict(int)
     for rpath in rpath_list:
         rpaths[rpath] += 1
@@ -1036,8 +1043,20 @@ def fixup_macos_rpath(root, filename):
             tty.debug("Spack-installed dependency for {0}: {1}"
                       .format(abspath, name))
             (dirname, basename) = os.path.split(name)
-            args += ['-change', name, '@rpath/' + basename]
-            add_rpaths.add(dirname.rstrip('/'))
+            if dirname != root or dirname in rpaths:
+                # Only change the rpath if it's a dependency *or* if the root
+                # rpath was already added to the library (this is to prevent
+                # GCC or similar getting rpaths when they weren't at all
+                # configured)
+                args += ['-change', name, '@rpath/' + basename]
+                add_rpaths.add(dirname.rstrip('/'))
+
+    # Check for nonexistent rpaths (often added by spack linker overzealousness
+    # with both lib/ and lib64/)
+    for rpath in rpaths:
+        if not _exists_dir(rpath):
+            tty.debug("Nonexistent rpath in {0}: {1}".format(abspath, rpath))
+            del_rpaths.add(rpath)
 
     # Check for relocatable ID
     if id_dylib is None:
@@ -1060,7 +1079,14 @@ def fixup_macos_rpath(root, filename):
             tty_debug("Rpath appears {0} times in {1}: {2}".format(
                 count, abspath, rpath
             ))
-            args += ['-delete_rpath', rpath]
+            del_rpaths.add(rpath)
+
+    # Make sure no duplicate or invalid rpaths are being added
+    add_rpaths -= del_rpaths
+
+    # Delete bad rpaths
+    for rpath in del_rpaths:
+        args += ['-delete_rpath', rpath]
 
     # Add missing rpaths
     for rpath in add_rpaths - set(rpaths):
