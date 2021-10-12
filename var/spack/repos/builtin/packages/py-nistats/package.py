@@ -26,6 +26,3 @@ class PyNistats(PythonPackage):
     # Functionality has been incorporated into py-nilearn@0.7:
     depends_on('py-nilearn+plotting@0.4:0.6', type=('build', 'run'))
     depends_on('py-pandas@0.18:', type=('build', 'run'))
-
-    depends_on('py-nose@1.2.1:', type='test')
-    depends_on('py-coverage@3.7:', type='test')
