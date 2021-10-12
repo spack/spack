@@ -148,7 +148,6 @@ class Phist(CMakePackage):
     def patch(self):
         os.unlink('cmake/FindMPI.cmake')
 
-
     def setup_build_environment(self, env):
         env.set('SPACK_SBANG', sbang.sbang_install_path())
 
