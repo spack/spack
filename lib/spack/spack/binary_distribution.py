@@ -47,6 +47,25 @@ _build_cache_relative_path = 'build_cache'
 _build_cache_keys_relative_path = '_pgp'
 
 
+class FetchCacheError(Exception):
+    """Error thrown when fetching the cache failed, usually a composite error list."""
+    def __init__(self, errors):
+        if not isinstance(errors, list):
+            raise TypeError("Expected a list of errors")
+        self.errors = errors
+        if len(errors) > 1:
+            msg = "        Error {0}: {1}: {2}"
+            self.message = "Multiple errors during fetching:\n"
+            self.message += "\n".join((
+                msg.format(i + 1, err.__class__.__name__, str(err))
+                for (i, err) in enumerate(errors)
+            ))
+        else:
+            err = errors[0]
+            self.message = "{0}: {1}".format(err.__class__.__name__, str(err))
+        super(FetchCacheError, self).__init__(self.message)
+
+
 class BinaryCacheIndex(object):
     """
     The BinaryCacheIndex tracks what specs are available on (usually remote)
@@ -293,14 +312,22 @@ class BinaryCacheIndex(object):
         # Otherwise the concrete spec cache should not need to be updated at
         # all.
 
+        fetch_errors = []
+        all_methods_failed = True
+
         for cached_mirror_url in self._local_index_cache:
             cache_entry = self._local_index_cache[cached_mirror_url]
             cached_index_hash = cache_entry['index_hash']
             cached_index_path = cache_entry['index_path']
             if cached_mirror_url in configured_mirror_urls:
                 # May need to fetch the index and update the local caches
-                needs_regen = self._fetch_and_cache_index(
-                    cached_mirror_url, expect_hash=cached_index_hash)
+                try:
+                    needs_regen = self._fetch_and_cache_index(
+                        cached_mirror_url, expect_hash=cached_index_hash)
+                    all_methods_failed = False
+                except FetchCacheError as fetch_error:
+                    needs_regen = False
+                    fetch_errors.extend(fetch_error.errors)
                 # The need to regenerate implies a need to clear as well.
                 spec_cache_clear_needed |= needs_regen
                 spec_cache_regenerate_needed |= needs_regen
@@ -327,7 +354,12 @@ class BinaryCacheIndex(object):
         for mirror_url in configured_mirror_urls:
             if mirror_url not in self._local_index_cache:
                 # Need to fetch the index and update the local caches
-                needs_regen = self._fetch_and_cache_index(mirror_url)
+                try:
+                    needs_regen = self._fetch_and_cache_index(mirror_url)
+                    all_methods_failed = False
+                except FetchCacheError as fetch_error:
+                    fetch_errors.extend(fetch_error.errors)
+                    needs_regen = False
                 # Generally speaking, a new mirror wouldn't imply the need to
                 # clear the spec cache, so leave it as is.
                 if needs_regen:
@@ -335,7 +367,9 @@ class BinaryCacheIndex(object):
 
         self._write_local_index_cache()
 
-        if spec_cache_regenerate_needed:
+        if all_methods_failed:
+            raise FetchCacheError(fetch_errors)
+        elif spec_cache_regenerate_needed:
             self.regenerate_spec_cache(clear_existing=spec_cache_clear_needed)
 
     def _fetch_and_cache_index(self, mirror_url, expect_hash=None):
@@ -354,6 +388,8 @@ class BinaryCacheIndex(object):
             True if this function thinks the concrete spec cache,
                 ``_mirrors_for_spec``, should be regenerated.  Returns False
                 otherwise.
+        Throws:
+            FetchCacheError: a composite exception.
         """
         index_fetch_url = url_util.join(
             mirror_url, _build_cache_relative_path, 'index.json')
@@ -363,14 +399,19 @@ class BinaryCacheIndex(object):
         old_cache_key = None
         fetched_hash = None
 
+        errors = []
+
         # Fetch the hash first so we can check if we actually need to fetch
         # the index itself.
         try:
             _, _, fs = web_util.read_from_url(hash_fetch_url)
             fetched_hash = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError) as url_err:
-            tty.debug('Unable to read index hash {0}'.format(
-                hash_fetch_url), url_err, 1)
+            errors.append(
+                RuntimeError("Unable to read index hash {0} due to {1}: {2}".format(
+                    hash_fetch_url, url_err.__class__.__name__, str(url_err)
+                ))
+            )
 
         # The only case where we'll skip attempting to fetch the buildcache
         # index from the mirror is when we already have a hash for this
@@ -397,24 +438,23 @@ class BinaryCacheIndex(object):
             _, _, fs = web_util.read_from_url(index_fetch_url)
             index_object_str = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError) as url_err:
-            tty.debug('Unable to read index {0}'.format(index_fetch_url),
-                      url_err, 1)
-            # We failed to fetch the index, even though we decided it was
-            # necessary.  However, regenerating the spec cache won't produce
-            # anything different than what it has already, so return False.
-            return False
+            errors.append(
+                RuntimeError("Unable to read index {0} due to {1}: {2}".format(
+                    index_fetch_url, url_err.__class__.__name__, str(url_err)
+                ))
+            )
+            raise FetchCacheError(errors)
 
         locally_computed_hash = compute_hash(index_object_str)
 
         if fetched_hash is not None and locally_computed_hash != fetched_hash:
-            msg_tmpl = ('Computed hash ({0}) did not match remote ({1}), '
-                        'indicating error in index transmission')
-            tty.error(msg_tmpl.format(locally_computed_hash, expect_hash))
+            msg = ('Computed hash ({0}) did not match remote ({1}), '
+                   'indicating error in index transmission').format(
+                       locally_computed_hash, expect_hash)
+            errors.append(RuntimeError(msg))
             # We somehow got an index that doesn't match the remote one, maybe
-            # the next time we try we'll be successful.  Regardless, we're not
-            # updating our index cache with this, so don't regenerate the spec
-            # cache either.
-            return False
+            # the next time we try we'll be successful.
+            raise FetchCacheError(errors)
 
         url_hash = compute_hash(mirror_url)
 
@@ -1559,6 +1599,9 @@ def update_cache_and_get_specs():
     possible, so this method will also attempt to initialize and update the
     local index cache (essentially a no-op if it has been done already and
     nothing has changed on the configured mirrors.)
+
+    Throws:
+        FetchCacheError
     """
     binary_index.update()
     return binary_index.get_all_built_specs()

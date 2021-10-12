@@ -218,7 +218,7 @@ class _BuildcacheBootstrapper(object):
             index = spack.binary_distribution.update_cache_and_get_specs()
 
             if not index:
-                raise RuntimeError("could not populate the binary index")
+                raise RuntimeError("The binary index is empty")
 
             for item in data['verified']:
                 candidate_spec = item['spec']
