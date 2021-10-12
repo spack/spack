@@ -81,6 +81,7 @@ import itertools
 import operator
 import os
 import re
+import sys
 import warnings
 
 import ruamel.yaml as yaml
@@ -1112,10 +1113,9 @@ class Spec(object):
         self._build_spec = None
 
         if isinstance(spec_like, six.string_types):
-            spec_list = SpecParser(self).parse(spec_like)
-            if len(spec_list) > 1:
-                raise ValueError("More than one spec in string: " + spec_like)
-            if len(spec_list) < 1:
+            print('spec_like={0}'.format(spec_like), file=sys.stderr)
+            parsed_spec = SpecParser(self).parse(spec_like)
+            if len(parsed_spec) < 1:
                 raise ValueError("String contains no specs: " + spec_like)
 
         elif spec_like is not None:
@@ -4605,7 +4605,7 @@ class LazySpecCache(collections.defaultdict):
 
 
 #: These are possible token types in the spec grammar.
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE, WS, Q1, Q2 = range(15)
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r'\w[\w.-]*'
@@ -4625,22 +4625,24 @@ class SpecLexer(spack.parse.Lexer):
                 (
                     "BEGIN_PHASE",
                     [
+                        (r"'", lambda scanner, val: self.token(Q1, val)),
+                        (r'"', lambda scanner, val: self.token(Q2, val)),
                         # '^': dependency, or "AND":
                         (r"\^", lambda scanner, val: self.token(DEP, val)),
                         # '@': begin a Version, VersionRange, or VersionList:
-                        (r"\@", lambda scanner, val: self.token(AT, val)),
+                        (r"@", lambda scanner, val: self.token(AT, val)),
                         # VersionRange syntax:
-                        (r"\:", lambda scanner, val: self.token(COLON, val)),
+                        (r":", lambda scanner, val: self.token(COLON, val)),
                         # VersionList syntax:
-                        (r"\,", lambda scanner, val: self.token(COMMA, val)),
+                        (r",", lambda scanner, val: self.token(COMMA, val)),
                         # variant syntax:
                         (r"\+", lambda scanner, val: self.token(ON, val)),
                         (r"\-", lambda scanner, val: self.token(OFF, val)),
-                        (r"\~", lambda scanner, val: self.token(OFF, val)),
+                        (r"~", lambda scanner, val: self.token(OFF, val)),
                         # Compiler dependency syntax:
-                        (r"\%", lambda scanner, val: self.token(PCT, val)),
+                        (r"%", lambda scanner, val: self.token(PCT, val)),
                         # This is *not* used in version string parsing.
-                        (r"\=", lambda scanner, val: self.token(EQ, val)),
+                        (r"=", lambda scanner, val: self.token(EQ, val)),
                         # Filenames match before identifiers, so no initial filename
                         # component is parsed as a spec (e.g., in subdir/spec.yaml)
                         (
@@ -4653,24 +4655,75 @@ class SpecLexer(spack.parse.Lexer):
                         # Identifiers match after filenames and hashes.
                         (spec_id_re, lambda scanner, val: self.token(ID, val)),
                         # Gobble up all remaining whitespace between tokens.
-                        (r"\s+", lambda scanner, val: None),
+                        (r"\s+", lambda scanner, val: self.token(WS, val)),
                     ],
-                    {"EQUALS_PHASE": [EQ]},
+                    {"EQUALS_PHASE": [EQ], "SINGLE_QUOTED_ASSIGNMENT_PHASE": [Q1],
+                     "DOUBLE_QUOTED_ASSIGNMENT_PHASE": [Q2]},
                 ),
                 (
                     "EQUALS_PHASE",
                     [
-                        (r"[\S].*", lambda scanner, val: self.token(VAL, val)),
-                        (r'\s+', lambda scanner, val: None),
+                        (r"'", lambda scanner, val: self.token(Q1, val)),
+                        (r'"', lambda scanner, val: self.token(Q2, val)),
+                        (r"\S+", lambda scanner, val: self.token(VAL, val)),
+                        (r"\s+", lambda scanner, val: self.token(WS, val)),
                     ],
-                    {"BEGIN_PHASE": [VAL]},
+                    {"BEGIN_PHASE": [WS], "SINGLE_QUOTED_VALUE_PHASE": [Q1],
+                     "DOUBLE_QUOTED_VALUE_PHASE": [Q2]},
                 ),
+                ("SINGLE_QUOTED_VALUE_PHASE",
+                 [
+                     (r"'", lambda scanner, val: self.token(Q1, val)),
+                     (r"[^']+", lambda scanner, val: self.token(VAL, val)),
+                 ],
+                 {"BEGIN_PHASE": [Q1]},
+                 ),
+                ("DOUBLE_QUOTED_VALUE_PHASE",
+                 [
+                     (r'"', lambda scanner, val: self.token(Q2, val)),
+                     (r'[^"]+', lambda scanner, val: self.token(VAL, val)),
+                 ],
+                 {"BEGIN_PHASE": [Q2]}
+                 ),
+                ("SINGLE_QUOTED_ASSIGNMENT_PHASE",
+                 [
+                     (r"=", lambda scanner, val: self.token(EQ, val)),
+                     (spec_id_re, lambda scanner, val: self.token(ID, val)),
+                     (r"\s+", lambda scanner, val: self.token(WS, val)),
+                 ],
+                 {"SINGLE_QUOTED_ASSIGNMENT_ONLY_VALUE_PHASE": [EQ]}),
+                ("SINGLE_QUOTED_ASSIGNMENT_ONLY_VALUE_PHASE",
+                 [
+                     (r"'", lambda scanner, val: self.token(Q1, val)),
+                     (r"\S+", lambda scanner, val: self.token(VAL, val)),
+                     (r"\s+", lambda scanner, val: self.token(WS, val)),
+                 ],
+                 {"BEGIN_PHASE": [Q1]}),
+                ("DOUBLE_QUOTED_ASSIGNMENT_PHASE",
+                 [
+                     (r"=", lambda scanner, val: self.token(EQ, val)),
+                     (spec_id_re, lambda scanner, val: self.token(ID, val)),
+                     (r"\s+", lambda scanner, val: self.token(WS, val)),
+                 ],
+                 {"DOUBLE_QUOTED_ASSIGNMENT_ONLY_VALUE_PHASE": [EQ]}),
+                ("DOUBLE_QUOTED_ASSIGNMENT_ONLY_VALUE_PHASE",
+                 [
+                     (r'"', lambda scanner, val: self.token(Q2, val)),
+                     (r"\S+", lambda scanner, val: self.token(VAL, val)),
+                     (r"\s+", lambda scanner, val: self.token(WS, val)),
+                 ],
+                 {"BEGIN_PHASE": [Q2]})
             ]
         )
 
+    def token(self, id, val):
+        print('token id {0} matching string {1} (mode {2})'.format(id, val, self.mode),
+              file=sys.stderr)
+        return super(SpecLexer, self).token(id, val)
 
-# Lexer is always the same for every parser.
-_lexer = SpecLexer()
+    def lex(self, s):
+        print('input to lexer: {0}'.format(s), file=sys.stderr)
+        return super(SpecLexer, self).lex(s)
 
 
 class SpecParser(spack.parse.Parser):
@@ -4684,7 +4737,7 @@ class SpecParser(spack.parse.Parser):
                 directly into. This is used to avoid construction of a
                 superfluous Spec object in the Spec constructor.
         """
-        super(SpecParser, self).__init__(_lexer)
+        super(SpecParser, self).__init__(SpecLexer())
         self.previous = None
         self._initial = initial_spec
 
@@ -4693,6 +4746,13 @@ class SpecParser(spack.parse.Parser):
 
         try:
             while self.next:
+                print('specs: {0}'.format(specs), file=sys.stderr)
+                print('next: {0}'.format(self.next.value), file=sys.stderr)
+                print('next-type: {0}'.format(self.next.type), file=sys.stderr)
+
+                if self.accept(WS) or self.accept(Q1) or self.accept(Q2):
+                    continue
+
                 # Try a file first, but if it doesn't succeed, keep parsing
                 # as from_file may backtrack and try an id.
                 if self.accept(FILE):
@@ -4713,8 +4773,22 @@ class SpecParser(spack.parse.Parser):
                         else:
                             if specs[-1].concrete:
                                 # Trying to add k-v pair to spec from hash
-                                raise RedundantSpecError(specs[-1],
-                                                         'key-value pair')
+                                raise RedundantSpecError(specs[-1], "key-value pair")
+                            if self.accept(VAL):
+                                specs[-1]._add_flag(
+                                    self.previous.value, self.token.value)
+                                continue
+                            elif self.accept(WS):
+                                continue
+                            elif self.accept(Q1) or self.accept(Q2):
+                                assert self.accept(VAL)
+                                specs[-1]._add_flag(
+                                    self.previous.value, self.token.value)
+                                assert self.accept(Q1) or self.accept(Q2)
+                                print('specs: {0}'.format(specs), file=sys.stderr)
+                                continue
+                            else:
+                                self.unexpected_token()
                             # We should never end up here.
                             # This requires starting a new spec with ID, EQ
                             # After another spec that is not concrete
@@ -4723,7 +4797,6 @@ class SpecParser(spack.parse.Parser):
                             # If it is concrete, see the if statement above
                             # If there is no previous spec, we don't land in
                             # this else case.
-                            self.unexpected_token()
                     else:
                         # We're parsing a new spec by name
                         self.previous = None
@@ -4790,7 +4863,14 @@ class SpecParser(spack.parse.Parser):
                                                      'compiler, version, '
                                                      'or variant')
                         specs.append(self.spec(None))
+                    elif self.accept(VAL):
+                        print('val-next: {0}'.format(self.token.value), file=sys.stderr)
+                        specs.append(self.spec(self.token.value))
+                    elif self.accept(WS) or self.accept(Q1) or self.accept(Q2):
+                        self.push_tokens([self.token])
                     else:
+                        print('next: {0}'.format(self.next), file=sys.stderr)
+                        print('specs: {0}'.format(specs), file=sys.stderr)
                         self.unexpected_token()
 
         except spack.parse.ParseError as e:

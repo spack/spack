@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import os
+import re
 import shlex
 
 import pytest
@@ -108,12 +109,19 @@ class TestSpecSyntax(object):
         output = sp.parse(spec)
 
         parsed = (" ".join(str(spec) for spec in output))
-        assert expected == parsed
+        # assert expected == parsed
+        assert re.sub(' +', '', expected) == re.sub(' +', '', parsed)
+
+    _tokens_to_ignore = frozenset([sp.WS, sp.Q1, sp.Q2])
 
     def check_lex(self, tokens, spec):
         """Check that the provided spec parses to the provided token list."""
         spec = shlex.split(str(spec))
-        lex_output = sp.SpecLexer().lex(spec)
+        lex_output = [
+            tok
+            for tok in sp.SpecLexer().lex(spec)
+            if tok.type not in self._tokens_to_ignore
+        ]
         assert len(tokens) == len(lex_output), "unexpected number of tokens"
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type == sp.ID or tok.type == sp.VAL:

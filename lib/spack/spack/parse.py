@@ -14,6 +14,14 @@ from six import string_types
 
 import spack.error
 
+_whitespace = re.compile("^\s+$")
+_quoted = re.compile("^['\"]$")
+
+
+def _should_ignore_token(value):
+    # type: (str) -> bool
+    return bool(_whitespace.match(value) or _quoted.match(value))
+
 
 class Token(object):
     """Represents tokens; generated from input by lexer and fed to parse()."""
@@ -144,10 +152,10 @@ class Parser(object):
             sys.exit(1)
 
     def setup(self, text):
-        if isinstance(text, string_types):
-            text = shlex.split(str(text))
-        self.text = text
-        self.push_tokens(self.lexer.lex(text))
+        print('input to parser: {0}'.format(text), file=sys.stderr)
+        self.text = [text]
+        print('output of lexer: {0}'.format(self.lexer.lex([text])), file=sys.stderr)
+        self.push_tokens(self.lexer.lex([text]))
 
     def parse(self, text):
         self.setup(text)
