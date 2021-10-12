@@ -22,8 +22,6 @@ class PyNiworkflows(PythonPackage):
     depends_on('python@3.7:', when='@1.3.3:', type=('build', 'run'))
     depends_on('python@3.6:', when='@1.2:', type=('build', 'run'))
     depends_on('python@3.5:', type=('build', 'run'))
-    # versions from setup.py and pyproject.toml differ
-    # -> take the one from setup.py
     depends_on('py-setuptools@38.4.1:', when='@1.2.3:', type='build')
     depends_on('py-setuptools@30.4.0:', type='build')
     depends_on('py-attrs', when='@1.1.4:', type=('build', 'run'))
