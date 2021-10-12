@@ -31,6 +31,9 @@ class Mpibind(AutotoolsPackage):
     variant('flux', default=False,
             description='Build the Flux plugin.')
 
+    conflicts('+flux', when='@:0.6',
+              msg='flux variant is not available until mpibind 0.7.0')
+
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
@@ -42,10 +45,12 @@ class Mpibind(AutotoolsPackage):
     depends_on('hwloc@2:+cuda+nvml', when='+cuda', type='link')
     depends_on('hwloc@2.4:+rocm+opencl', when='+rocm', type='link')
 
-    # Requiring @master temporarily while Flux adds
-    # FLUX_SHELL_RC_PATH to a stable version (>0.29.0).
-    # mpibind will require at least such version.
-    depends_on('flux-core@master', when='+flux', type='link')
+    # Need FLUX_SHELL_RC_PATH from (>=0.30.0) for flux variant:
+    depends_on('flux-core@0.30.0:', when='+flux', type='link')
+
+    # https://github.com/flux-framework/flux-core/pull/3879
+    conflicts("flux-core@0.30:", when='@:0.6+flux',
+              msg='flux-core >= 0.30.0 is not supported with mpibind < 0.7.0')
 
     def autoreconf(self, spec, prefix):
         autoreconf('--install', '--verbose', '--force')

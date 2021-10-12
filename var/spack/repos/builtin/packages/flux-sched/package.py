@@ -54,6 +54,9 @@ class FluxSched(AutotoolsPackage):
     depends_on("flux-core@0.28.0:", when='@0.17.0', type=('build', 'run', 'link'))
     depends_on("flux-core@master", when='@master', type=('build', 'run', 'link'))
 
+    # https://github.com/flux-framework/flux-core/pull/3879
+    conflicts("flux-core@0.30", when='@:0.18.0', msg='@0.30.0 needs master or new rel')
+
     # Need autotools when building on master:
     depends_on("autoconf", type='build', when='@master')
     depends_on("automake", type='build', when='@master')
