@@ -112,20 +112,44 @@ phase runs:
 
 .. code-block:: console
 
-   $ libtoolize
-   $ aclocal
-   $ autoreconf --install --verbose --force
+   $ autoreconf --install --verbose --force -I <aclocal-prefix>/share/aclocal
 
-All you need to do is add a few Autotools dependencies to the package.
-Most stable releases will come with a ``configure`` script, but if you
-check out a commit from the ``develop`` branch, you would want to add:
+In case you need to add more arguments, override ``autoreconf_extra_args``
+in your ``package.py`` on class scope like this:
 
 .. code-block:: python
 
-   depends_on('autoconf', type='build', when='@develop')
-   depends_on('automake', type='build', when='@develop')
-   depends_on('libtool',  type='build', when='@develop')
-   depends_on('m4',       type='build', when='@develop')
+   autoreconf_extra_args = ["-Im4"]
+
+All you need to do is add a few Autotools dependencies to the package.
+Most stable releases will come with a ``configure`` script, but if you
+check out a commit from the ``master`` branch, you would want to add:
+
+.. code-block:: python
+
+   depends_on('autoconf', type='build', when='@master')
+   depends_on('automake', type='build', when='@master')
+   depends_on('libtool',  type='build', when='@master')
+
+It is typically redundant to list the ``m4`` macro processor package as a
+dependency, since ``autoconf`` already depends on it.
+
+"""""""""""""""""""""""""""""""
+Using a custom autoreconf phase
+"""""""""""""""""""""""""""""""
+
+In some cases, it might be needed to replace the default implementation
+of the autoreconf phase with one running a script interpreter. In this
+example, the ``bash`` shell is used to run the ``autogen.sh`` script.
+
+.. code-block:: python
+
+   def autoreconf(self, spec, prefix):
+       which('bash')('autogen.sh')
+
+"""""""""""""""""""""""""""""""""""""""
+patching configure or Makefile.in files
+"""""""""""""""""""""""""""""""""""""""
 
 In some cases, developers might need to distribute a patch that modifies
 one of the files used to generate ``configure`` or ``Makefile.in``.
@@ -134,6 +158,57 @@ preferable to regenerate these manually using the patch, and then
 create a new patch that directly modifies ``configure``. That way,
 Spack can use the secondary patch and additional build system
 dependencies aren't necessary.
+
+""""""""""""""""""""""""""""
+Old Autotools helper scripts
+""""""""""""""""""""""""""""
+
+Autotools based tarballs come with helper scripts such as ``config.sub`` and
+``config.guess``. It is the responsibility of the developers to keep these files
+up to date so that they run on every platform, but for very old software
+releases this is impossible. In these cases Spack can help to replace these
+files with newer ones, without having to add the heavy dependency on
+``automake``.
+
+Automatic helper script replacement is currently enabled by default on
+``ppc64le`` and ``aarch64``, as these are the known cases where old scripts fail.
+On these targets, ``AutotoolsPackage`` adds a build dependency on ``gnuconfig``,
+which is a very light-weight package with newer versions of the helper files.
+Spack then tries to run all the helper scripts it can find in the release, and
+replaces them on failure with the helper scripts from ``gnuconfig``.
+
+To opt out of this feature, use the following setting:
+
+.. code-block:: python
+
+   patch_config_files = False
+
+To enable it conditionally on different architectures, define a property and
+make the package depend on ``gnuconfig`` as a build dependency:
+
+.. code-block
+
+   depends_on('gnuconfig', when='@1.0:')
+
+   @property
+   def patch_config_files(self):
+      return self.spec.satisfies("@1.0:")
+
+.. note::
+
+    On some exotic architectures it is necessary to use system provided
+    ``config.sub`` and ``config.guess`` files. In this case, the most
+    transparent solution is to mark the ``gnuconfig`` package as external and
+    non-buildable, with a prefix set to the directory containing the files:
+
+   .. code-block:: yaml
+
+       gnuconfig:
+         buildable: false
+         externals:
+         - spec: gnuconfig@master
+           prefix: /usr/share/configure_files/
+
 
 """"""""""""""""
 force_autoreconf
@@ -324,8 +399,29 @@ options:
 
    --with-libfabric=</path/to/libfabric>
 
+"""""""""""""""""""""""
+The ``variant`` keyword
+"""""""""""""""""""""""
+
+When Spack variants and configure flags do not correspond one-to-one, the
+``variant`` keyword can be passed to ``with_or_without`` and
+``enable_or_disable``. For example:
+
+.. code-block:: python
+
+   variant('debug_tools', default=False)
+   config_args += self.enable_or_disable('debug-tools', variant='debug_tools')
+
+Or when one variant controls multiple flags:
+
+.. code-block:: python
+
+   variant('debug_tools', default=False)
+   config_args += self.with_or_without('memchecker', variant='debug_tools')
+   config_args += self.with_or_without('profiler', variant='debug_tools')
+
 """"""""""""""""""""
-activation overrides
+Activation overrides
 """"""""""""""""""""
 
 Finally, the behavior of either ``with_or_without`` or

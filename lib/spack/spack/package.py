@@ -73,6 +73,9 @@ _spack_build_logfile = 'spack-build-out.txt'
 # Filename for the Spack build/install environment file.
 _spack_build_envfile = 'spack-build-env.txt'
 
+# Filename for the Spack build/install environment modifications file.
+_spack_build_envmodsfile = 'spack-build-env-mods.txt'
+
 # Filename of json with total build and phase times (seconds)
 _spack_times_log = 'install_times.json'
 
@@ -1042,6 +1045,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             return os.path.join(self.stage.path, _spack_build_envfile)
 
     @property
+    def env_mods_path(self):
+        """
+        Return the build environment modifications file path associated with
+        staging.
+        """
+        return os.path.join(self.stage.path, _spack_build_envmodsfile)
+
+    @property
     def metadata_dir(self):
         """Return the install metadata directory."""
         return spack.store.layout.metadata_path(self.spec)
@@ -1265,14 +1276,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def prefix(self):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
-
-    @property
-    def architecture(self):
-        """Get the spack.architecture.Arch object that represents the
-        environment in which this package will be built."""
-        if not self.spec.concrete:
-            raise ValueError("Can only get the arch for concrete package.")
-        return spack.architecture.arch_for_spec(self.spec.architecture)
 
     @property  # type: ignore
     @memoized
@@ -1785,12 +1788,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Clear test failures
         self.test_failures = []
         self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
+        self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
         kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
+        # Defer tests to virtual and concrete packages
         pass
 
     def run_test(self, exe, options=[], expected=[], status=0,
@@ -1952,7 +1957,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         installed = set(os.listdir(self.prefix))
         installed.difference_update(
-            spack.store.layout.hidden_file_paths)
+            spack.store.layout.hidden_file_regexes)
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
@@ -2551,11 +2556,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for name in self.build_time_test_callbacks:
             try:
                 fn = getattr(self, name)
-                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
-                fn()
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+            else:
+                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
+                fn()
 
     @on_package_attributes(run_tests=True)
     def _run_default_install_time_test_callbacks(self):
@@ -2570,11 +2576,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for name in self.install_time_test_callbacks:
             try:
                 fn = getattr(self, name)
-                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
-                fn()
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+            else:
+                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
+                fn()
 
 
 def test_process(pkg, kwargs):
@@ -2603,6 +2610,7 @@ def test_process(pkg, kwargs):
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name)
                                    for v_name in sorted(v_names)]
 
+        ran_actual_test_function = False
         try:
             with fsys.working_dir(
                     pkg.test_suite.test_dir_for_spec(pkg.spec)):
@@ -2637,7 +2645,16 @@ def test_process(pkg, kwargs):
                     if not isinstance(test_fn, types.FunctionType):
                         test_fn = test_fn.__func__
 
+                    # Skip any test methods consisting solely of 'pass'
+                    # since they do not contribute to package testing.
+                    source = (inspect.getsource(test_fn)).splitlines()[1:]
+                    lines = (ln.strip() for ln in source)
+                    statements = [ln for ln in lines if not ln.startswith('#')]
+                    if len(statements) > 0 and statements[0] == 'pass':
+                        continue
+
                     # Run the tests
+                    ran_actual_test_function = True
                     test_fn(pkg)
 
             # If fail-fast was on, we error out above
@@ -2648,6 +2665,11 @@ def test_process(pkg, kwargs):
         finally:
             # reset debug level
             tty.set_debug(old_debug)
+
+            # flag the package as having been tested (i.e., ran one or more
+            # non-pass-only methods
+            if ran_actual_test_function:
+                fsys.touch(pkg.tested_file)
 
 
 inject_flags = PackageBase.inject_flags

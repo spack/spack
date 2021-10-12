@@ -128,11 +128,12 @@ def test_namespaces_shown_correctly(database):
 def _check_json_output(spec_list):
     assert len(spec_list) == 3
     assert all(spec["name"] == "mpileaks" for spec in spec_list)
+    assert all(spec["hash"] for spec in spec_list)
 
     deps = [spec["dependencies"] for spec in spec_list]
-    assert sum(["zmpi" in d for d in deps]) == 1
-    assert sum(["mpich" in d for d in deps]) == 1
-    assert sum(["mpich2" in d for d in deps]) == 1
+    assert sum(["zmpi" in [node["name"] for d in deps for node in d]]) == 1
+    assert sum(["mpich" in [node["name"] for d in deps for node in d]]) == 1
+    assert sum(["mpich2" in [node["name"] for d in deps for node in d]]) == 1
 
 
 def _check_json_output_deps(spec_list):

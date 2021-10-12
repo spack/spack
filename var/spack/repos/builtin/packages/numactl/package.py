@@ -22,11 +22,16 @@ class Numactl(AutotoolsPackage):
     # https://github.com/numactl/numactl/issues/94
     patch('numactl-2.0.14-symver.patch', when="@2.0.14")
     patch('fix-empty-block.patch', when="@2.0.10:2.0.14")
+    patch('link-with-latomic-if-needed.patch', when="@2.0.14")
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+
+    # Numactl has hardcoded minimum versions for libtool,
+    # libtool@develop returns UNKOWN as a version tag and fails
+    conflicts('libtool@develop')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

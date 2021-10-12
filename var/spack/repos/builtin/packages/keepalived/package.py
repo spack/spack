@@ -13,7 +13,7 @@ class Keepalived(AutotoolsPackage):
     """
 
     homepage = "https://www.keepalived.org"
-    url      = "http://www.keepalived.org/software/keepalived-1.2.0.tar.gz"
+    url      = "https://www.keepalived.org/software/keepalived-1.2.0.tar.gz"
 
     version('2.0.19', sha256='0e2f8454765bc6a5fa26758bd9cec18aae42882843cdd24848aff0ae65ce4ca7')
     version('2.0.18', sha256='1423a2b1b8e541211029b9e1e1452e683bbe5f4b0b287eddd609aaf5ff024fd0')

@@ -16,4 +16,4 @@ class RubyZentest(RubyPackage):
 
     version('4.12.0', sha256='5301757c3ab29dd2222795c1b076dd348f4d92fe0426e97a13ae56fea47a786e', expand=False)
 
-    depends_on('ruby@1.8:2.999', type=('build', 'run'))
+    depends_on('ruby@1.8:2', type=('build', 'run'))

@@ -13,7 +13,7 @@ class Yasm(AutotoolsPackage):
        object formats."""
 
     homepage = "https://yasm.tortall.net"
-    url      = "http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz"
+    url      = "https://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz"
     git      = "https://github.com/yasm/yasm.git"
 
     version('develop', branch='master')

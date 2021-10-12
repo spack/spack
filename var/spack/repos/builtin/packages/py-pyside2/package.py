@@ -14,7 +14,7 @@ class PyPyside2(PythonPackage):
 
     # More recent versions of PySide2 (for Qt5) have been taken under
     # the offical Qt umbrella.  For more information, see:
-    # http://wiki.qt.io/Qt_for_Python_Development_Getting_Started
+    # https://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
     version('develop', tag='dev')
     version('5.14.2.1', tag='v5.14.2.1', submodules=True)
@@ -25,7 +25,7 @@ class PyPyside2(PythonPackage):
 
     variant('doc', default=False, description='Enables the generation of html and man page documentation')
 
-    depends_on('python@2.7:2.7.99,3.5.0:3.5.99,3.6.1:', type=('build', 'run'))
+    depends_on('python@2.7.0:2.7,3.5.0:3.5,3.6.1:', type=('build', 'run'))
 
     depends_on('cmake@3.1:', type='build')
     depends_on('llvm@6:', type='build')

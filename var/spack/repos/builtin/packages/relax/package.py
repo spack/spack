@@ -21,7 +21,7 @@ class Relax(CMakePackage):
 
     depends_on('clhep')
     depends_on('gsl')
-    depends_on('hepmc@:2.99.99')
+    depends_on('hepmc@:2')
     depends_on('root@6.0.0:')
 
     def cmake_args(self):

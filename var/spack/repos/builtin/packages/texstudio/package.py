@@ -29,7 +29,7 @@ class Texstudio(QMakePackage):
     depends_on('poppler+qt', when="+poppler")
     # There is a known issue with QT 5.10
     # See https://github.com/texstudio-org/texstudio/wiki/Compiling
-    depends_on('qt@4.4.4:5.9.999,5.11.0:')
+    depends_on('qt@4.4.4:5.9,5.11.0:')
 
     conflicts('target=aarch64:', when='@:2.12.22')
 

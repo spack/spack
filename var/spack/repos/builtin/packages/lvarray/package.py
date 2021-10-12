@@ -36,11 +36,13 @@ class Lvarray(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/GEOSX/lvarray"
     git      = "https://github.com/GEOSX/LvArray.git"
+    tags     = ['radiuss']
 
     maintainers = ['corbett5']
 
     version('develop', branch='develop', submodules=False)
     version('main', branch='main', submodules=False)
+    version('0.2.2', tag='v0.2.2', submodules=False)
     version('0.2.1', tag='v0.2.1', submodules=False)
     version('0.1.0', tag='v0.1.0', submodules=True)
 

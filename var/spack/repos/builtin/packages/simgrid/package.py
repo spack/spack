@@ -47,16 +47,16 @@ class Simgrid(CMakePackage):
             url='https://gforge.inria.fr/frs/download.php/file/36621/SimGrid-3.15.tar.gz')
     version('3.14.159', sha256='2d93db245c6ec8039ffe332a77531b836ad093d57f18ec3f7920fe98e3719f48',
             deprecated=True,
-            url='http://gforge.inria.fr/frs/download.php/file/36384/SimGrid-3.14.159.tar.gz')
+            url='https://gforge.inria.fr/frs/download.php/file/36384/SimGrid-3.14.159.tar.gz')
     version('3.13', sha256='7bcedd19492f9a32cc431840ad2688d0d6e4121982d6d26e0174b5c92b086121',
             deprecated=True,
-            url='http://gforge.inria.fr/frs/download.php/file/35817/SimGrid-3.13.tar.gz')
+            url='https://gforge.inria.fr/frs/download.php/file/35817/SimGrid-3.13.tar.gz')
     version('3.12', sha256='d397ee0273395dc687fbcd2601515e7142559801a3db387454d77e0e18cd7878',
             deprecated=True,
-            url='http://gforge.inria.fr/frs/download.php/file/35215/SimGrid-3.12.tar.gz')
+            url='https://gforge.inria.fr/frs/download.php/file/35215/SimGrid-3.12.tar.gz')
     version('3.11', sha256='6efb006e028e37f74a34fc37d585a8cb296720020cabad361d65662533f1600b',
             deprecated=True,
-            url='http://gforge.inria.fr/frs/download.php/file/33683/SimGrid-3.11.tar.gz')
+            url='https://gforge.inria.fr/frs/download.php/file/33683/SimGrid-3.11.tar.gz')
 
     version('develop', branch='master')
 
@@ -71,7 +71,7 @@ class Simgrid(CMakePackage):
 
     conflicts('%gcc@10:', when='@:3.23',
               msg='simgrid <= v3.23 cannot be built with gcc >= 10,'
-                  ' please use an older release (e.g., %gcc@:9.99).')
+                  ' please use an older release (e.g., %gcc@:9).')
 
     def setup_dependent_package(self, module, dep_spec):
 

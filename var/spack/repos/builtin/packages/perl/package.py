@@ -30,7 +30,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     executables = [r'^perl(-?\d+.*)?$']
 
-    # see http://www.cpan.org/src/README.html for
+    # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)
@@ -63,12 +63,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     extendable = True
 
-    depends_on('gdbm')
+    # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
+    depends_on('gdbm@:1.19')
     # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
     depends_on('gdbm@:1.14.1', when='@:5.28.0')
     depends_on('berkeley-db')
-    depends_on('bzip2+shared')
-    depends_on('zlib+shared')
+    depends_on('bzip2')
+    depends_on('zlib')
     # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
     depends_on('zlib@:1.2.8', when='@5.20.3:5.24.1')
 
@@ -96,10 +97,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # Enable builds with the NVIDIA compiler
     # The Configure script assumes some gcc specific behavior, and use
     # the mini Perl environment to bootstrap installation.
-    patch('nvhpc-5.30.patch', when='@5.30.0:5.30.99 %nvhpc')
-    patch('nvhpc-5.32.patch', when='@5.32.0:5.32.99 %nvhpc')
+    patch('nvhpc-5.30.patch', when='@5.30.0:5.30 %nvhpc')
+    patch('nvhpc-5.32.patch', when='@5.32.0:5.32 %nvhpc')
     conflicts('@5.32.0:', when='%nvhpc@:20.11',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
+
+    # Make sure we don't get "recompile with -fPIC" linker errors when using static libs
+    conflicts('^zlib~shared~pic', msg='Needs position independent code when using static zlib')
+    conflicts('^bzip2~shared~pic', msg='Needs position independent code when using static bzip2')
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
@@ -123,6 +128,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     )
 
     phases = ['configure', 'build', 'install']
+
+    def patch(self):
+        # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
+        os.chmod('lib/perlbug.t', 0o644)
+        filter_file('!/$B/', '! (/(?:$B|PATH)/)', 'lib/perlbug.t')
 
     @classmethod
     def determine_version(cls, exe):

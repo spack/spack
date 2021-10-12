@@ -24,7 +24,7 @@ class Interproscan(Package):
     resource(
         when='@:4.8',
         name='binaries',
-        url="http://ftp.ebi.ac.uk/pub/databases/interpro/iprscan/BIN/4.x/iprscan_bin4.x_Linux64.tar.gz",
+        url="https://ftp.ebi.ac.uk/pub/databases/interpro/iprscan/BIN/4.x/iprscan_bin4.x_Linux64.tar.gz",
         sha256='551610a4682b112522f3ded5268f76ba9a47399a72e726fafb17cc938a50e7ee',
     )
 

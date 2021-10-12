@@ -9,12 +9,12 @@ from spack import *
 class Ip(CMakePackage):
     """The NCEP general interpolation library (iplib) contains Fortran 90
     subprograms to be used for interpolating between nearly all grids used at
-    NCEP."""
+    NCEP. This is part of the NCEPLIBS project."""
 
     homepage = "https://noaa-emc.github.io/NCEPLIBS-ip"
     url      = "https://github.com/NOAA-EMC/NCEPLIBS-ip/archive/refs/tags/v3.3.3.tar.gz"
 
-    maintainers = ['t-brown']
+    maintainers = ['t-brown', 'kgerheiser', 'edwardhartnett', 'Hang-Lei-NOAA']
 
     version('3.3.3', sha256='d5a569ca7c8225a3ade64ef5cd68f3319bcd11f6f86eb3dba901d93842eb3633')
 

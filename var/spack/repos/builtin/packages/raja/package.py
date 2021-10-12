@@ -3,14 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import socket
+
 from spack import *
 
 
-class Raja(CMakePackage, CudaPackage, ROCmPackage):
+class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
 
     homepage = "https://software.llnl.gov/RAJA/"
     git      = "https://github.com/LLNL/RAJA.git"
+    tags     = ['radiuss', 'e4s']
 
     maintainers = ['davidbeckingsale']
 
@@ -33,6 +36,11 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
     version('0.5.0', tag='v0.5.0', submodules="True")
     version('0.4.1', tag='v0.4.1', submodules="True")
     version('0.4.0', tag='v0.4.0', submodules="True")
+
+    # export targets when building pre-2.4.0 release with BLT 0.4.0+
+    patch('https://github.com/LLNL/RAJA/commit/eca1124ee4af380d6613adc6012c307d1fd4176b.patch',
+          sha256='57dd531a50ac791b4bb214d34a4bf3fca1349354927c72915b7ccd20524701a9',
+          when='@:0.13.0 ^blt@0.4:')
 
     variant('openmp', default=True, description='Build OpenMP backend')
     variant('shared', default=True, description='Build Shared Libs')
@@ -63,54 +71,78 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
             depends_on('camp +cuda cuda_arch={0}'.format(sm_),
                        when='cuda_arch={0}'.format(sm_))
 
-    def cmake_args(self):
+    def _get_sys_type(self, spec):
+        sys_type = spec.architecture
+        if "SYS_TYPE" in env:
+            sys_type = env["SYS_TYPE"]
+        return sys_type
+
+    @property
+    def cache_name(self):
+        hostname = socket.gethostname()
+        if "SYS_TYPE" in env:
+            hostname = hostname.rstrip('1234567890')
+        return "{0}-{1}-{2}@{3}.cmake".format(
+            hostname,
+            self._get_sys_type(self.spec),
+            self.spec.compiler.name,
+            self.spec.compiler.version
+        )
+
+    def initconfig_hardware_entries(self):
         spec = self.spec
+        entries = super(Raja, self).initconfig_hardware_entries()
 
-        options = []
-
-        options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
-
-        options.append(self.define_from_variant('ENABLE_OPENMP', 'openmp'))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
 
         if '+cuda' in spec:
-            options.extend([
-                '-DENABLE_CUDA=ON',
-                '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
+            entries.append(cmake_cache_option("ENABLE_CUDA", True))
 
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
-                options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
-                options.append('-DCMAKE_CUDA_ARCHITECTURES={0}'.format(cuda_arch[0]))
+                entries.append(cmake_cache_string(
+                    "CUDA_ARCH", 'sm_{0}'.format(cuda_arch[0])))
+                entries.append(cmake_cache_string(
+                    "CMAKE_CUDA_ARCHITECTURES", '{0}'.format(cuda_arch[0])))
         else:
-            options.append('-DENABLE_CUDA=OFF')
+            entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
         if '+rocm' in spec:
-            options.extend([
-                '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)])
+            entries.append(cmake_cache_option("ENABLE_HIP", True))
+            entries.append(cmake_cache_path(
+                "HIP_ROOT_DIR", '{0}'.format(spec['hip'].prefix)))
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
-                options.append(
-                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
-                )
+                entries.append(cmake_cache_string(
+                    "HIP_HIPCC_FLAGS", '--amdgpu-target={0}'.format(arch_str)))
         else:
-            options.append('-DENABLE_HIP=OFF')
+            entries.append(cmake_cache_option("ENABLE_HIP", False))
 
-        options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
+        return entries
 
-        options.append(self.define_from_variant('ENABLE_EXAMPLES', 'examples'))
+    def initconfig_package_entries(self):
+        spec = self.spec
+        entries = []
 
-        options.append(self.define_from_variant('ENABLE_EXERCISES', 'exercises'))
+        entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
+        entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
+        entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
+        entries.append(cmake_cache_option("ENABLE_EXERCISES", '+exercises' in spec))
 
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT
         # removes -Werror from GTest flags
         if self.spec.satisfies('%clang target=ppc64le:') or not self.run_tests:
-            options.append('-DENABLE_TESTS=OFF')
+            entries.append(cmake_cache_option("ENABLE_TESTS", False))
         else:
-            options.append(self.define_from_variant('ENABLE_TESTS', 'tests'))
+            entries.append(cmake_cache_option("ENABLE_TESTS", True))
 
+        return entries
+
+    def cmake_args(self):
+        options = []
         return options
 
     @property

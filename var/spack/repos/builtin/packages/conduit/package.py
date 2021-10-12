@@ -36,6 +36,7 @@ class Conduit(CMakePackage):
     homepage = "https://software.llnl.gov/conduit"
     url      = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
     git      = "https://github.com/LLNL/conduit.git"
+    tags     = ['radiuss', 'e4s']
 
     version('develop', branch='develop', submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry
@@ -117,10 +118,13 @@ class Conduit(CMakePackage):
     #
     # Use HDF5 1.8, for wider output compatibly
     # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5@1.8.19:1.8.999~cxx", when="+hdf5+hdf5_compat+shared")
-    depends_on("hdf5@1.8.19:1.8.999~shared~cxx", when="+hdf5+hdf5_compat~shared")
+    depends_on("hdf5@1.8.19:1.8~cxx", when="+hdf5+hdf5_compat+shared")
+    depends_on("hdf5@1.8.19:1.8~shared~cxx", when="+hdf5+hdf5_compat~shared")
     depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
     depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
+    # we need to hand this to conduit so it can properly
+    # handle downstream linking of zlib reqed by hdf5
+    depends_on("zlib", when="+hdf5")
 
     ###############
     # Silo
@@ -514,6 +518,7 @@ class Conduit(CMakePackage):
 
         if "+hdf5" in spec:
             cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
+            cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
         else:
             cfg.write("# hdf5 not built by spack \n")
 

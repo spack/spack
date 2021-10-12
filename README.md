@@ -4,6 +4,7 @@
 [![Bootstrapping](https://github.com/spack/spack/actions/workflows/bootstrap.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/bootstrap.yml)
 [![macOS Builds (nightly)](https://github.com/spack/spack/workflows/macOS%20builds%20nightly/badge.svg?branch=develop)](https://github.com/spack/spack/actions?query=workflow%3A%22macOS+builds+nightly%22)
 [![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
+[![Containers](https://github.com/spack/spack/actions/workflows/build-containers.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/build-containers.yml)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
 [![Slack](https://slack.spack.io/badge.svg)](https://slack.spack.io)
 
@@ -26,7 +27,7 @@ for examples and highlights.
 To install spack and your first package, make sure you have Python.
 Then:
 
-    $ git clone https://github.com/spack/spack.git
+    $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
     $ cd spack/bin
     $ ./spack install zlib
 

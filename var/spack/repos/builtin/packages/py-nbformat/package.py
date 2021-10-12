@@ -21,5 +21,5 @@ class PyNbformat(PythonPackage):
     depends_on('python@2.7:2.8,3.3:', when='@:4', type=('build', 'run'))
     depends_on('py-ipython-genutils', type=('build', 'run'))
     depends_on('py-traitlets@4.1:', type=('build', 'run'))
-    depends_on('py-jsonschema@2.4.0:2.4.999,2.5.1:', type=('build', 'run'))
+    depends_on('py-jsonschema@2.4.0:2.4,2.5.1:', type=('build', 'run'))
     depends_on('py-jupyter-core', type=('build', 'run'))

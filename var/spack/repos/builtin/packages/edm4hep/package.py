@@ -31,7 +31,7 @@ class Edm4hep(CMakePackage):
     depends_on('root@6.08:')
     depends_on('podio@0.13:')
 
-    depends_on('hepmc@:2.99.99', type='test')
+    depends_on('hepmc@:2', type='test')
     depends_on('heppdt', type='test')
 
     def cmake_args(self):
@@ -39,6 +39,7 @@ class Edm4hep(CMakePackage):
         # C++ Standard
         args.append(self.define('CMAKE_CXX_STANDARD',
                     self.spec.variants['cxxstd'].value))
+        args.append(self.define("BUILD_TESTING", self.run_tests))
         return args
 
     def url_for_version(self, version):

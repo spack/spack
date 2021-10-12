@@ -14,6 +14,8 @@ class FluxSched(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-sched"
     url      = "https://github.com/flux-framework/flux-sched/releases/download/v0.5.0/flux-sched-0.5.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-sched.git"
+    tags     = ['radiuss', 'e4s']
+
     maintainers = ['SteVwonder']
 
     version('master', branch='master')
@@ -36,6 +38,7 @@ class FluxSched(AutotoolsPackage):
 
     depends_on("boost+graph@1.53.0,1.59.0:")
     depends_on("py-pyyaml")
+    depends_on("libedit")
     depends_on("libxml2@2.9.1:")
     depends_on("yaml-cpp")
     depends_on("uuid")
@@ -43,9 +46,9 @@ class FluxSched(AutotoolsPackage):
 
     depends_on("flux-core", type=('build', 'link', 'run'))
     depends_on("flux-core+cuda", when='+cuda', type=('build', 'run', 'link'))
-    depends_on("flux-core@0.16.0:0.16.99", when='@0.8.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.16.0:0.16", when='@0.8.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.22.0", when='@0.14.0', type=('build', 'run', 'link'))
-    depends_on("flux-core@0.23.0:0.25.99", when='@0.15.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.23.0:0.25", when='@0.15.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.26.0:", when='@0.16.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.28.0:", when='@0.17.0', type=('build', 'run', 'link'))
     depends_on("flux-core@master", when='@master', type=('build', 'run', 'link'))

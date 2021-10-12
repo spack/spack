@@ -876,6 +876,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             tty.debug(debug_msg)
 
                 if prune_dag and not rebuild_spec:
+                    tty.debug('Pruning spec that does not need to be rebuilt.')
                     continue
 
                 # Check if this spec is in our list of known failures, now that
@@ -922,7 +923,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     bc_root = os.path.join(
                         local_mirror_dir, 'build_cache')
                     artifact_paths.extend([os.path.join(bc_root, p) for p in [
-                        bindist.tarball_name(release_spec, '.spec.yaml'),
+                        bindist.tarball_name(release_spec, '.spec.json'),
                         bindist.tarball_name(release_spec, '.cdashid'),
                         bindist.tarball_directory_name(release_spec),
                     ]])
@@ -1003,6 +1004,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         'after_script',
     ]
 
+    service_job_retries = {
+        'max': 2,
+        'when': [
+            'runner_system_failure',
+            'stuck_or_timeout_failure'
+        ]
+    }
+
     if job_id > 0:
         if temp_storage_url_prefix:
             # There were some rebuild jobs scheduled, so we will need to
@@ -1022,6 +1031,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     temp_storage_url_prefix)
             ]
             cleanup_job['when'] = 'always'
+            cleanup_job['retry'] = service_job_retries
 
             output_object['cleanup'] = cleanup_job
 
@@ -1045,11 +1055,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     index_target_mirror)
             ]
             final_job['when'] = 'always'
-
-            if artifacts_root:
-                final_job['variables'] = {
-                    'SPACK_CONCRETE_ENV_DIR': concrete_env_dir
-                }
+            final_job['retry'] = service_job_retries
 
             output_object['rebuild-index'] = final_job
 
@@ -1112,6 +1118,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             noop_job['script'] = [
                 'echo "All specs already up to date, nothing to rebuild."',
             ]
+
+        noop_job['retry'] = service_job_retries
 
         sorted_output = {'no-specs-to-rebuild': noop_job}
 
@@ -1381,13 +1389,13 @@ def read_cdashid_from_mirror(spec, mirror_url):
     return int(contents)
 
 
-def push_mirror_contents(env, spec, yaml_path, mirror_url, sign_binaries):
+def push_mirror_contents(env, spec, specfile_path, mirror_url, sign_binaries):
     try:
         unsigned = not sign_binaries
         tty.debug('Creating buildcache ({0})'.format(
             'unsigned' if unsigned else 'signed'))
         spack.cmd.buildcache._createtarball(
-            env, spec_yaml=yaml_path, add_deps=False,
+            env, spec_file=specfile_path, add_deps=False,
             output_location=mirror_url, force=True, allow_root=True,
             unsigned=unsigned)
     except Exception as inst:

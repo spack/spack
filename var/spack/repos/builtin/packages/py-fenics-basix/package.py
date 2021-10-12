@@ -30,7 +30,7 @@ class PyFenicsBasix(PythonPackage):
     depends_on("cmake@3.18:", type="build")
     depends_on("xtl@0.7.2:", type="build")
     depends_on("xtensor@0.23.10:", type="build")
-    depends_on("py-pybind11@2.6.2:2.7.99", type="build")
+    depends_on("py-pybind11@2.6.2:2.7", type="build")
 
     phases = ['build_ext', 'build', 'install']
 

@@ -11,7 +11,7 @@ class Libarchive(AutotoolsPackage):
        writing tar, cpio, zip, ISO, and other archive formats."""
 
     homepage = "https://www.libarchive.org"
-    url      = "http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
+    url      = "https://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
     maintainers = ['haampie']
 
     version('3.5.2', sha256='5f245bd5176bc5f67428eb0aa497e09979264a153a074d35416521a5b8e86189')
@@ -42,7 +42,7 @@ class Libarchive(AutotoolsPackage):
 
     depends_on('nettle', when='crypto=nettle')
     depends_on('openssl', when='crypto=openssl')
-    depends_on('mbedtls@2:2.999 +pic', when='crypto=mbedtls')
+    depends_on('mbedtls@2.0:2 +pic', when='crypto=mbedtls')
 
     depends_on('libxml2', when='xar=libxml2')
     depends_on('expat', when='xar=expat')

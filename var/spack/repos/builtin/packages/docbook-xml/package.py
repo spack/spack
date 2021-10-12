@@ -159,11 +159,11 @@ class DocbookXml(Package):
                    'file://{0}/isotech.ent'.format(ent_dir),
                    docbook)
         xmlcatalog('--noout', '--add', 'rewriteSystem',
-                   'http://www.oasis-open.org/docbook/xml/{0}'.format(version),
+                   'https://www.oasis-open.org/docbook/xml/{0}'.format(version),
                    'file://{0}'.format(prefix),
                    docbook)
         xmlcatalog('--noout', '--add', 'rewriteURI',
-                   'http://www.oasis-open.org/docbook/xml/{0}'.format(version),
+                   'https://www.oasis-open.org/docbook/xml/{0}'.format(version),
                    'file://{0}'.format(prefix),
                    docbook)
 
@@ -182,11 +182,11 @@ class DocbookXml(Package):
                    'file://{0}'.format(docbook),
                    catalog)
         xmlcatalog('--noout', '--add', 'delegateSystem',
-                   'http://www.oasis-open.org/docbook/',
+                   'https://www.oasis-open.org/docbook/',
                    'file://{0}'.format(docbook),
                    catalog)
         xmlcatalog('--noout', '--add', 'delegateURI',
-                   'http://www.oasis-open.org/docbook/',
+                   'https://www.oasis-open.org/docbook/',
                    'file://{0}'.format(docbook),
                    catalog)
 

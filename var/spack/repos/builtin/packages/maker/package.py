@@ -29,7 +29,7 @@ class Maker(Package):
     download link. Spack will search your current directory for the download
     file. Alternatively, add this file to a mirror so that Spack can find it.
     For instructions on how to set up a mirror, see
-    http://spack.readthedocs.io/en/latest/mirrors.html"""
+    https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.yandell-lab.org/software/maker.html"
     manual_download = True

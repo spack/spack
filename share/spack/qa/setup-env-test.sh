@@ -137,7 +137,7 @@ contains " spack env list " spack env list --help
 
 title 'Testing `spack env activate`'
 contains "No such environment:" spack env activate no_such_environment
-contains "usage: spack env activate " spack env activate
+contains "env activate requires an environment " spack env activate
 contains "usage: spack env activate " spack env activate -h
 contains "usage: spack env activate " spack env activate --help
 
@@ -173,3 +173,9 @@ echo "Testing 'despacktivate'"
 despacktivate
 is_not_set SPACK_ENV
 is_not_set SPACK_OLD_PS1
+
+echo "Testing 'spack env activate --temp'"
+spack env activate --temp
+is_set SPACK_ENV
+spack env deactivate
+is_not_set SPACK_ENV

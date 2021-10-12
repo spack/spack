@@ -14,6 +14,6 @@ class PyRise(PythonPackage):
 
     version('5.6.1', sha256='1343f068d01adc4dd0226d9b278ce93fc92f365d827431a57e8d5679eb39f4d6')
 
-    depends_on('python@2.7:2.7.99,3.4:', type=('build', 'run'))
+    depends_on('python@2.7.0:2.7,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-notebook@5.5.0:', type=('build', 'run'))

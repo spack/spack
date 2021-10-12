@@ -4,18 +4,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import socket
 
 import llnl.util.tty as tty
 
 from spack import *
 
 
-class Umpire(CMakePackage, CudaPackage, ROCmPackage):
+class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     """An application-focused API for memory management on NUMA & GPU
     architectures"""
 
     homepage = 'https://github.com/LLNL/Umpire'
     git      = 'https://github.com/LLNL/Umpire.git'
+    tags     = ['radiuss', 'e4s']
 
     maintainers = ['davidbeckingsale']
 
@@ -52,6 +54,11 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     patch('camp_target_umpire_3.0.0.patch', when='@3.0.0')
     patch('cmake_version_check.patch', when='@4.1')
     patch('missing_header_for_numeric_limits.patch', when='@4.1:5.0.1')
+
+    # export targets when building pre-6.0.0 release with BLT 0.4.0+
+    patch('https://github.com/LLNL/Umpire/commit/5773ce9af88952c8d23f9bcdcb2e503ceda40763.patch',
+          sha256='f5c691752e4833a936bce224bbe0fe884d3afa84c5e5a4a481f59a12840159c9',
+          when='@:5.0.1 ^blt@0.4:')
 
     variant('fortran', default=False, description='Build C/Fortran API')
     variant('c', default=True, description='Build C API')
@@ -95,69 +102,103 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     # currently only available for cuda.
     conflicts('+shared', when='+cuda')
 
-    def cmake_args(self):
-        spec = self.spec
+    # https://github.com/LLNL/Umpire/issues/653
+    # This range looks weird, but it ensures the concretizer looks at it as a
+    # range, not as a concrete version, so that it also matches compilers
+    # specified as `gcc@10.3.0-identifier`. See #8957.
+    conflicts('%gcc@10.3.0:10.3.0.0', when='+cuda')
 
-        options = []
-        options.append("-DBLT_SOURCE_DIR={0}".format(spec['blt'].prefix))
-        if spec.satisfies('@5.0.0:'):
-            options.append("-Dcamp_DIR={0}".format(spec['camp'].prefix))
+    def _get_sys_type(self, spec):
+        sys_type = spec.architecture
+        if "SYS_TYPE" in env:
+            sys_type = env["SYS_TYPE"]
+        return sys_type
+
+    @property
+    def cache_name(self):
+        hostname = socket.gethostname()
+        if "SYS_TYPE" in env:
+            hostname = hostname.rstrip('1234567890')
+        return "{0}-{1}-{2}@{3}.cmake".format(
+            hostname,
+            self._get_sys_type(self.spec),
+            self.spec.compiler.name,
+            self.spec.compiler.version
+        )
+
+    def initconfig_compiler_entries(self):
+        spec = self.spec
+        entries = super(Umpire, self).initconfig_compiler_entries()
+
+        if '+fortran' in spec and self.compiler.fc is not None:
+            entries.append(cmake_cache_option("ENABLE_FORTRAN", True))
+        else:
+            entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
+
+        entries.append(cmake_cache_option("ENABLE_C", '+c' in spec))
+
+        return entries
+
+    def initconfig_hardware_entries(self):
+        spec = self.spec
+        entries = super(Umpire, self).initconfig_hardware_entries()
 
         if '+cuda' in spec:
-            options.extend([
-                '-DENABLE_CUDA=On',
-                '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
+            entries.append(cmake_cache_option("ENABLE_CUDA", True))
 
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
-                options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
-                options.append('-DCMAKE_CUDA_ARCHITECTURES={0}'.format(cuda_arch[0]))
+                entries.append(cmake_cache_string(
+                    "CUDA_ARCH", 'sm_{0}'.format(cuda_arch[0])))
+                entries.append(cmake_cache_string(
+                    "CMAKE_CUDA_ARCHITECTURES", '{0}'.format(cuda_arch[0])))
                 flag = '-arch sm_{0}'.format(cuda_arch[0])
-                options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
+                entries.append(cmake_cache_string(
+                    "CMAKE_CUDA_FLAGS", '{0}'.format(flag)))
 
-            if '+deviceconst' in spec:
-                options.append('-DENABLE_DEVICE_CONST=On')
+            entries.append(cmake_cache_option(
+                "ENABLE_DEVICE_CONST", spec.satisfies('+deviceconst')))
         else:
-            options.append('-DENABLE_CUDA=Off')
+            entries.append(cmake_cache_option("ENABLE_CUDA", False))
 
         if '+rocm' in spec:
-            options.extend([
-                '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)
-            ])
+            entries.append(cmake_cache_option("ENABLE_HIP", True))
+            entries.append(cmake_cache_path(
+                "HIP_ROOT_DIR", '{0}'.format(spec['hip'].prefix)))
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
-                options.append(
-                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
-                )
+                entries.append(cmake_cache_string(
+                    "HIP_HIPCC_FLAGS", '--amdgpu-target={0}'.format(arch_str)))
         else:
-            options.append('-DENABLE_HIP=OFF')
+            entries.append(cmake_cache_option("ENABLE_HIP", False))
 
-        options.append('-DENABLE_C={0}'.format(
-            'On' if '+c' in spec else 'Off'))
+        return entries
 
-        options.append('-DENABLE_FORTRAN={0}'.format(
-            'On' if '+fortran' in spec else 'Off'))
+    def initconfig_package_entries(self):
+        spec = self.spec
+        entries = []
 
-        options.append('-DENABLE_NUMA={0}'.format(
-            'On' if '+numa' in spec else 'Off'))
+        # TPL locations
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# TPLs")
+        entries.append("#------------------{0}\n".format("-" * 60))
 
-        options.append('-DENABLE_OPENMP={0}'.format(
-            'On' if '+openmp' in spec else 'Off'))
+        entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
+        if spec.satisfies('@5.0.0:'):
+            entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
+        entries.append(cmake_cache_option("ENABLE_NUMA", '+numa' in spec))
+        entries.append(cmake_cache_option("ENABLE_OPENMP", '+openmp' in spec))
+        entries.append(cmake_cache_option(
+            "ENABLE_BENCHMARKS", 'tests=benchmarks' in spec))
+        entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
+        entries.append(cmake_cache_option("ENABLE_TESTS", 'tests=none' not in spec))
 
-        options.append('-DBUILD_SHARED_LIBS={0}'.format(
-            'On' if '+shared' in spec else 'Off'))
+        return entries
 
-        options.append('-DENABLE_BENCHMARKS={0}'.format(
-            'On' if 'tests=benchmarks' in spec else 'Off'))
-
-        options.append('-DENABLE_EXAMPLES={0}'.format(
-            'On' if '+examples' in spec else 'Off'))
-
-        options.append('-DENABLE_TESTS={0}'.format(
-            'Off' if 'tests=none' in spec else 'On'))
-
+    def cmake_args(self):
+        options = []
         return options
 
     def test(self):
