@@ -6,9 +6,8 @@
 import os
 import shutil
 
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, rename
 
-import spack.platforms
 from spack.error import SpackError
 from spack.util.lock import Lock, ReadTransaction, WriteTransaction
 
@@ -146,12 +145,7 @@ class FileCache(object):
                     shutil.rmtree(cm.tmp_filename, True)
 
                 else:
-                    # On Windows, os.rename will fail if the destination file
-                    # already exists
-                    if str(spack.platforms.host()) == 'windows':
-                        if os.path.exists(cm.orig_filename):
-                            os.remove(cm.orig_filename)
-                    os.rename(cm.tmp_filename, cm.orig_filename)
+                    rename(cm.tmp_filename, cm.orig_filename)
 
         return WriteTransaction(
             self._get_lock(key), acquire=WriteContextManager)

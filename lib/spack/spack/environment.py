@@ -580,12 +580,7 @@ class ViewDescriptor(object):
                 msg = "Cannot create view: "
                 msg += "file already exists and is not a link: %s" % self.root
                 raise SpackEnvironmentViewError(msg)
-            # On Windows, os.rename will fail if the destination file
-            # already exists
-            if str(spack.platforms.host()) == 'windows' and \
-                    os.path.exists(self.root):
-                os.remove(self.root)
-            os.rename(tmp_symlink_name, self.root)
+            fs.rename(tmp_symlink_name, self.root)
 
             # remove old_root
             if old_root and os.path.exists(old_root):

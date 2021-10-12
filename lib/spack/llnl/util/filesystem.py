@@ -70,6 +70,7 @@ __all__ = [
     'remove_directory_contents',
     'remove_if_dead_link',
     'remove_linked_tree',
+    'rename',
     'set_executable',
     'set_install_permissions',
     'touch',
@@ -89,6 +90,14 @@ def getuid():
         return 0
     else:
         return os.getuid()
+
+
+def rename(src, dst):
+    # On Windows, os.rename will fail if the destination file already exists
+    if is_windows:
+        if os.path.exists(dst):
+            os.remove(dst)
+    os.rename(src, dst)
 
 
 def path_contains_subdirectory(path, root):

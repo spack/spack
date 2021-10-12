@@ -45,7 +45,7 @@ from six import iteritems
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, rename
 
 import spack.architecture
 import spack.compilers
@@ -304,12 +304,7 @@ class SingleFileScope(ConfigScope):
             with open(tmp, 'w') as f:
                 syaml.dump_config(data_to_write, stream=f,
                                   default_flow_style=False)
-            # On Windows, os.rename will fail if the destination file
-            # already exists
-            if str(spack.platforms.host()) == 'windows':
-                if os.path.exists(self.path):
-                    os.remove(self.path)
-            os.rename(tmp, self.path)
+            rename(tmp, self.path)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
                 "Error writing to config file: '%s'" % str(e))
