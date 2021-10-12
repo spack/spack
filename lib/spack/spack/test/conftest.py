@@ -971,7 +971,10 @@ def mock_gnupghome(monkeypatch):
         yield short_name_tmpdir
 
     # clean up, since we are doing this manually
-    shutil.rmtree(short_name_tmpdir)
+    # Ignore errors cause we seem to be hitting a bug similar to
+    # https://bugs.python.org/issue29699 in CI (FileNotFoundError: [Errno 2] No such
+    # file or directory: 'S.gpg-agent.extra').
+    shutil.rmtree(short_name_tmpdir, ignore_errors=True)
 
 ##########
 # Fake archives and repositories
