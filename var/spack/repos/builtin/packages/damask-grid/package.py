@@ -17,9 +17,24 @@ class DamaskGrid(CMakePackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('cmake@3.10:', type='build')
+    depends_on('petsc+hdf5+mpi')
     depends_on('petsc@3.14.0:3.14,3.15.1:3.15', when='@3.0.0-alpha4')
     depends_on('petsc@3.14.0:3.14,3.15.1:3.16', when='@3.0.0-alpha5')
-    depends_on('hdf5+fortran')
+
+    #
+    # damask-grid and damask-mesh depends on hdf5+fortran. +hl is added
+    # don't have to concretize use an environment or packages.yaml to avoid
+    # building and using two diffrent versions of h5py, which uses h5py+hl:
+    #
+    # The package damask depends on py-damask which depends on py-h5py,
+    # which depends hdf5@1.8.4:+hl. As spack can only use one concretization
+    # a build, 'spack install damask', spack is forced to use hdf5@1.8.4:+hl.
+    #
+    # When damask-grid is built without that concretization in the picture,
+    # e.g using 'spack install damask-grid', spack would use the hdf5~hl instead,
+    # causing a second build of hdf5.
+    #
+    depends_on('hdf5+fortran+hl')
     depends_on('fftw+mpi')
 
     patch('CMakeDebugRelease.patch', when='@3.0.0-alpha4')
@@ -29,12 +44,11 @@ class DamaskGrid(CMakePackage):
             values=('Debug', 'Release', 'DebugRelease'))
 
     def patch(self):
-        filter_file(' -lhdf5 ', ' -lhdf5_fortran -lhdf5 ', 'CMakeLists.txt')
-        filter_file(' -lz ', ' -lz -lfftw3 -lfftw3_mpi ', 'CMakeLists.txt')
+        filter_file(' -lz ', ' -lz ${FFTW_LIBS} ', 'CMakeLists.txt')
 
     def cmake_args(self):
-        args = ['-DDAMASK_SOLVER:STRING=grid']
-        return args
+        return [self.define('DAMASK_SOLVER', 'grid'),
+                self.define('FFTW_LIBS', self.spec['fftw:mpi'].libs.link_flags)]
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

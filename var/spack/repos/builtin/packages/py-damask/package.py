@@ -22,5 +22,8 @@ class PyDamask(PythonPackage):
     depends_on('py-h5py')
     depends_on('py-matplotlib')
     depends_on('py-pyyaml')
+    # Force the hdf5+hl variant added by py-h5py to also have +fortan.
+    # This makes that hdf5 to use the same variants as damask-grid and damask-mesh:
+    depends_on('hdf5+fortran')
 
     build_directory = 'python'
