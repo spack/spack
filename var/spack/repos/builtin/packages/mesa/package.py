@@ -69,11 +69,12 @@ class Mesa(MesonPackage):
     # Provides
     provides('gl@4.5',  when='+opengl ~glvnd')
     provides('glx@1.4', when='+glx ~glvnd')
+    # This isn't possible b/c of conflict. Should remove?
     # provides('egl@1.5', when='+egl ~glvnd')
 
     provides('libglvnd-be-gl', when='+opengl +glvnd')
     provides('libglvnd-be-glx', when='+opengl +glvnd +glx')
-    # provides('libglvnd-be-egl', when='+opengl +glvnd +egl')
+    provides('libglvnd-be-egl', when='+opengl +glvnd +egl')
     provides('osmesa', when='+osmesa +glvnd')
 
     # Variant dependencies
@@ -109,8 +110,7 @@ class Mesa(MesonPackage):
     conflicts('%gcc@10.1.0', msg='GCC 10.1.0 has a bug')
 
     # Require at least 1 front-end
-    # TODO: Add egl to this conflict once made available
-    conflicts('~osmesa ~glx')
+    conflicts('~egl ~glx ~osmesa')
 
     # Require at least 1 back-end
     # TODO: Add vulkan to this conflict once made available
@@ -118,6 +118,9 @@ class Mesa(MesonPackage):
 
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
+
+    # EGL and OpenGL are in separate libraries. libglvnd is needed to combine the two 
+    conflicts('+egl +opengl ~glvnd')
 
     # requires native to be added to llvm_modules when using gallium swrast
     patch('https://cgit.freedesktop.org/mesa/mesa/patch/meson.build?id=054dd668a69acc70d47c73abe4646e96a1f23577', sha256='36096a178070e40217945e12d542dfe80016cb897284a01114d616656c577d73', when='@21.0.0:21.0.3')
@@ -254,6 +257,9 @@ class Mesa(MesonPackage):
             if '+glx' in spec:
                 libs_to_seek.add('libGL')
 
+            if '+egl' in spec:
+                libs_to_seek.add('libEGL')
+
             if '+opengl' in spec:
                 libs_to_seek.add('libGL')
 
@@ -286,6 +292,15 @@ class Mesa(MesonPackage):
                               recursive=True)
 
     @property
+    def egl_libs(self):
+        if '+glvnd' in self.spec:
+            return LibraryList(())
+
+        return find_libraries('libEGL',
+                              root=self.spec.prefix,
+                              recursive=True)
+
+    @property
     def gl_libs(self):
         if '+glvnd' in self.spec:
             return LibraryList(())
@@ -297,3 +312,8 @@ class Mesa(MesonPackage):
     def setup_run_environment(self, env):
         if '+glx +glvnd' in self.spec:
             env.set('__GLX_VENDOR_LIBRARY_NAME', 'mesa')
+
+        if '+glx +glvnd' in self.spec:
+            env.set('__EGL_VENDOR_LIBRARY_FILENAMES', ':'.join((
+                os.path.join(self.spec.prefix, 'share', 'glvnd',
+                             'egl_vendor.d', '50_mesa.json'))))

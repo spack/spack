@@ -51,7 +51,7 @@ class Libglvnd(AutotoolsPackage):
 
     def configure_args(self):
         return [
-            '--disable-egl',
+            '--enable-egl',
             '--disable-gles',
             '--enable-glx'
         ]

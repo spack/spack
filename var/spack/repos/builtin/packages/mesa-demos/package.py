@@ -23,6 +23,8 @@ class MesaDemos(AutotoolsPackage):
     is_linux = sys.platform.startswith('linux')
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
+    variant('egl', default=False, description="Enable the EGL frontend.")
+
     depends_on('autoconf',  type='build')
     depends_on('automake',  type='build')
     depends_on('libtool',   type='build')
@@ -31,6 +33,7 @@ class MesaDemos(AutotoolsPackage):
 
     depends_on('gl')
     depends_on('glx', when='+glx')
+    depends_on('egl', when='+egl')
     depends_on('libx11',  when='+glx')
     depends_on('libxext', when='+glx')
     depends_on('osmesa', when='+osmesa')
@@ -43,7 +46,6 @@ class MesaDemos(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            "--disable-egl",
             "--disable-gles1",
             "--disable-gles2",
             "--disable-vg",
@@ -55,6 +57,7 @@ class MesaDemos(AutotoolsPackage):
         ]
 
         args.extend(self.enable_or_disable('osmesa'))
+        args.extend(self.enable_or_disable('egl'))
 
         if '+glx' in spec:
             args.append('--enable-x11')
