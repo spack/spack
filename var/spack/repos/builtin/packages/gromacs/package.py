@@ -172,6 +172,20 @@ class Gromacs(CMakePackage):
         relative_root=os.path.join('share', 'cmake', 'gromacs'))
 
     def patch(self):
+        # Otherwise build fails with GCC 11 (11.2)
+        if self.spec.satisfies('@2018:2020.6'):
+            filter_file('#include <vector>', '#include <vector>\n#include <limits>',
+                        'src/gromacs/awh/biasparams.h')
+        if self.spec.satisfies('@2018:2018.8'):
+            filter_file('#include <vector>', '#include <vector>\n#include <limits>',
+                        'src/gromacs/mdlib/minimize.cpp')
+        if self.spec.satisfies('@2019:2019.6,2020:2020.6'):
+            filter_file('#include <vector>', '#include <vector>\n#include <limits>',
+                        'src/gromacs/mdrun/minimize.cpp')
+        if self.spec.satisfies('@2020:2020.6'):
+            filter_file('#include <queue>', '#include <queue>\n#include <limits>',
+                        'src/gromacs/modularsimulator/modularsimulator.h')
+
         if '+plumed' in self.spec:
             self.spec['plumed'].package.apply_patch(self)
 
