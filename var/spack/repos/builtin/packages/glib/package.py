@@ -94,6 +94,16 @@ class Glib(Package):
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
 
+    def patch(self):
+        """A few glib tests have external dependices / try to access the X server"""
+        # Surgically disable tests which we cannot make pass in a spack build
+        gio_tests = FileFilter('gio/tests/meson.build')
+        gio_tests.filter('if not glib_have_cocoa', 'if false')
+        gio_tests.filter("'contenttype' : {},", '')
+        gio_tests.filter("'gdbus-address-get-session' : {},", '')
+        gio_tests.filter("host_machine.system() != 'windows'", 'false')
+        filter_file("'mkenums.py',*", '', 'gobject/tests/meson.build')
+
     @property
     def libs(self):
         return find_libraries(['libglib*'], root=self.prefix, recursive=True)
