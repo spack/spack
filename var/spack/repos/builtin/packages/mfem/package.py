@@ -200,7 +200,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+mpi')
     depends_on('hypre@2.10.0:2.13', when='@:3.3+mpi')
     depends_on('hypre@:2.20.0', when='@3.4:4.2+mpi')
-    depends_on('hypre@:2.22.0', when='@4.3.0+mpi')
+    depends_on('hypre@:2.23.0', when='@4.3.0+mpi')
     depends_on('hypre', when='+mpi')
 
     depends_on('metis', when='+metis')
@@ -300,6 +300,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch('mfem-4.2-umpire.patch', when='@4.2.0+umpire')
     patch('mfem-4.2-slepc.patch', when='@4.2.0+slepc')
     patch('mfem-4.2-petsc-3.15.0.patch', when='@4.2.0+petsc ^petsc@3.15.0:')
+    patch('mfem-4.3-hypre-2.23.0.patch', when='@4.3.0')
 
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
