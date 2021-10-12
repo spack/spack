@@ -243,7 +243,7 @@ class TestSuite(object):
                 data = sjson.load(f)
                 return TestSuite.from_dict(data)
         except Exception as e:
-            import tty
+            import llnl.util.tty as tty
             tty.debug(e)
             raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e))
 
