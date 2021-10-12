@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 import spack.hooks.sbang as sbang
 from spack import *
@@ -107,6 +108,7 @@ class Phist(CMakePackage):
     # error will occur unless -DNO_WARN_X86_INTRINSICS is defined.
     patch('ppc64_sse.patch', when='@1.7.4:1.9.4')
     patch('update_tpetra_gotypes.patch', when='@:1.8')
+    patch('update_tpetra_gotypes.patch', when='@:1.8.99')
     patch('sbang.patch', when='+fortran')
 
     # ###################### Dependencies ##########################
@@ -140,11 +142,18 @@ class Phist(CMakePackage):
     # to compile some OpenMP statements
     conflicts('%gcc@:4.9.1')
 
+    # the phist repo came with it's own FindMPI.cmake before, which may cause some other
+    # MPI installation to be used than the one spack wants.
+    @when('@:1.9.6')
+    def patch(self):
+        os.unlink('cmake/FindMPI.cmake')
+
     def setup_build_environment(self, env):
         env.set('SPACK_SBANG', sbang.sbang_install_path())
 
     def cmake_args(self):
         spec = self.spec
+        define = CMakePackage.define
 
         kernel_lib = spec.variants['kernel_lib'].value
         outlev = spec.variants['outlev'].value
@@ -173,6 +182,15 @@ class Phist(CMakePackage):
                 % ('64' if '+int64' in spec else '32'),
                 self.define_from_variant('PHIST_HOST_OPTIMIZE', 'host'),
                 ]
+        # Force phist to use the MPI wrappers instead of raw compilers
+        # (see issue #26002 and the comment in the trilinos package.py)
+        if '+mpi' in spec:
+            args.extend(
+                [define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
+                 define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
+                 define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
+                 define('MPI_HOME', spec['mpi'].prefix),
+                 ])
 
         return args
 
