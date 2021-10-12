@@ -101,9 +101,11 @@ class PyNumpy(PythonPackage):
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
-    depends_on('py-pytest', when='@1.15:', type='test')
-    depends_on('py-hypothesis', when='@1.19:', type='test')
+    # TODO: Remove 'run' dependency for the following once 'test' dependencies
+    #    are properly handled by Spack for stand-alone tests
+    depends_on('py-nose@1.0.0:', when='@:1.14', type=('run', 'test'))
+    depends_on('py-pytest', when='@1.15:', type=('run', 'test'))
+    depends_on('py-hypothesis', when='@1.19:', type=('run', 'test'))
 
     # Allows you to specify order of BLAS/LAPACK preference
     # https://github.com/numpy/numpy/pull/13132
@@ -374,16 +376,13 @@ class PyNumpy(PythonPackage):
             vers = pyspec.package.version.up_to(2).string
             key = '-'.join([self.version.string, vers])
             expected = xfailures[key] if key in xfailures else success
-            status = 1
         else:
-            expected, status = success, 0
+            expected = success
 
-        # Warning: These tests will fail due to missing pytest until test
-        #   dependencies are supported.
+        # Warning: This check depend on `test` dependencies
         self.run_test(
             pyspec.command.path,
             ["-c", "import numpy; numpy.test(verbose=2)"],
             expected=expected,
-            status=status,
-            purpose="test: running numpy.test"
+            purpose="test: running fast numpy.test"
         )
