@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -151,3 +153,17 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define_from_variant('Tasmanian_ENABLE_CUBLAS', 'cuda'))
 
         return args
+
+    def run_example_tests(self, example_name):
+        """Run examples stand alone tests"""
+
+        test_dir = join_path(self.prefix, 'share', 'Tasmanian', 'examples')
+        exe_source = join_path(test_dir, 'example_{0}.cpp'.format(example_name))
+
+        if not os.path.isfile(exe_source):
+            print('Skipping all example_{0} tests'.format(example_name))
+            return
+
+    def test(self):
+        self.run_example_tests('dream')
+        self.run_example_tests('sparse_grids')
