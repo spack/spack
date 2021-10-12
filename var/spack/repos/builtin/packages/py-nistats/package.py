@@ -23,11 +23,9 @@ class PyNistats(PythonPackage):
     depends_on('py-nibabel@2.0.2:', type=('build', 'run'))
     # needs +plotting to avoid ModuleNotFoundError:
     # 'nilearn.plotting.js_plotting_utils' when importing nistats.reporting
+    # Functionality has been incorporated into py-nilearn@0.7:
     depends_on('py-nilearn+plotting@0.4:0.6', type=('build', 'run'))
     depends_on('py-pandas@0.18:', type=('build', 'run'))
-
-    conflicts('py-nilearn@0.7:',
-              msg='Functionality has now been incorporated into py-nilearn')
 
     depends_on('py-nose@1.2.1:', type='test')
     depends_on('py-coverage@3.7:', type='test')
