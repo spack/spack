@@ -5,7 +5,6 @@ spack:
     tcl:
       whitelist:
         - asciitoh5
-        - functionalizer
         - model-neocortex
         - nest
         - neurodamus-core
@@ -31,7 +30,6 @@ spack:
         +common: '{name}/{version}-commonmods'
   specs:
     - asciitoh5@1.0
-    - functionalizer@3.12.2
     - model-neocortex%intel
     - nest@2.18.0
     - nest@2.20.0
