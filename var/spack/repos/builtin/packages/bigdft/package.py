@@ -65,7 +65,6 @@ class Bigdft(Package):
             "FCFLAGS='%s'" % " ".join(fcflags),
             "CFLAGS='%s'" % " ".join(cflags),
             "--with-gobject=yes",
-            "--with-yaml-path=%s" % spec['libyaml'].prefix,
             "--with-ext-linalg=\'%s\'" % " ".join(ext_linalg),
         ]
 
