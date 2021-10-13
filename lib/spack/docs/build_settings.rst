@@ -253,7 +253,7 @@ show openmpi/4.0.2`` output.
 
     $ module show openmpi/4.0.2-cuda
     -------------------------------------------------------------------
-    /gpfslocalsup/pub/modules-idris-env4/modulefiles/linux-rhel8-skylake_avx512/openmpi/4.0.2-cuda:
+    /usr/local/modulefiles/openmpi/4.0.2-cuda:
 
     module-whatis   {An open source Message Passing Interface implementation.}
     prereq          intel-compilers/19.0.4 pgi/20.1 pgi/19.10 gcc/10.1.0 gcc/8.3.1
@@ -286,17 +286,17 @@ situation changes as soon as the dependencies are satisfied.
     $ module load cuda/10.1.2
     $ module show openmpi/4.0.2-cuda
     -------------------------------------------------------------------
-    /gpfslocalsup/pub/modules-idris-env4/modulefiles/linux-rhel8-skylake_avx512/openmpi/4.0.2-cuda:
+    /usr/local/modulefiles/openmpi/4.0.2-cuda:
 
     module-whatis   {An open source Message Passing Interface implementation.}
     prereq          intel-compilers/19.0.4 pgi/20.1 pgi/19.10 gcc/10.1.0 gcc/8.3.1
     prereq          cuda/10.2 cuda/10.1.2 cuda/10.1.1
     conflict        openmpi
     conflict        intel-mpi
-    prepend-path    CPATH /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/include
-    prepend-path    LD_LIBRARY_PATH /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/lib
-    prepend-path    LIBRARY_PATH /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/lib
-    prepend-path    PATH /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/bin
+    prepend-path    CPATH /usr/local/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/include
+    prepend-path    LD_LIBRARY_PATH /usr/local/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/lib
+    prepend-path    LIBRARY_PATH /usr/local/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/lib
+    prepend-path    PATH /usr/local/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3/bin
     [snip]
 
 This output can be parsed by Spack when building software. To obtain an entry
@@ -313,7 +313,7 @@ following OpenMPI entry:
         externals:
         - spec: openmpi@4.0.2+cuda+cxx+cxx_exceptions~java~memchecker+pmi~sqlite3+static~thread_multiple~wrapper-rpath
             fabrics=psm2 schedulers=slurm
-          prefix: /gpfslocalsup/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3
+          prefix: /usr/local/spack_soft/openmpi/4.0.2/gcc-8.3.1-n6vcsair26tkpepojy3c2gqxtqccijq3
           modules: [gcc/8.3.1, cuda-10.1.2, openmpi/4.0.2-cuda]
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
