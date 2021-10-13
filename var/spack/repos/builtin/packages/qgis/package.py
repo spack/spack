@@ -164,7 +164,7 @@ class Qgis(CMakePackage):
                     self.spec['postgresql'].prefix.bin,
                     '-DPROJ_INCLUDE_DIR=' + self.spec['proj'].prefix.include,
                     '-DSQLITE3_LIBRARY='
-                    + join_path(self.spec['sqlite'].prefix.lib, 'libsqlite3.so')
+                    + self.spec['sqlite'].libs[0]
                     ])
 
         args.extend([
