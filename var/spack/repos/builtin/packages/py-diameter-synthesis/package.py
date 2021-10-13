@@ -9,8 +9,8 @@ from spack import *
 class PyDiameterSynthesis(PythonPackage):
     """Python library to generate synthetic diameters for neurons."""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/cells/diameter-synthesis"
-    git      = "ssh://bbpcode.epfl.ch/cells/diameter-synthesis"
+    homepage = "https://bbpgitlab.epfl.ch/neuromath/diameter-synthesis/"
+    git      = "git@bbpgitlab.epfl.ch:neuromath/diameter-synthesis.git"
 
     version('0.2.5', tag='diameter-synthesis-v0.2.5')
     version('0.2.4', tag='diameter-synthesis-v0.2.4')
