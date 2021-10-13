@@ -2810,7 +2810,7 @@ The snippet above is equivalent to the more verbose:
        conflicts('languages=brig', when='+nvptx')
        conflicts('languages=go', when='+nvptx')
 
-Constraints stemming from the context are added to what is explicitly present in the
+Constraints stemming from the context are by default appended to what is explicitly present in the
 ``when=`` argument of a directive, so:
 
 .. code-block:: python
@@ -2824,7 +2824,20 @@ is equivalent to:
 
    depends_on('elpa+openmp', when='+openmp+elpa')
 
-Constraints from nested context managers are also added together, but they are rarely
+Sometimes the constraint that is grouped together in the context manager needs to be
+prepended for the ``when=`` argument to make sense. In those cases users need to specify
+that behavior with a keyword argument:
+
+.. code-block:: python
+
+   with when('@14:', prepend=True):
+       depends_on('py-distro', when='^python@3.8:')
+
+In the example above ``prepend=True`` is needed to constrain the dependency
+on ``@0.14: ^python@3.8:``. Not doing so would result in a syntax error since
+``^python@3.8: @0.14:`` is an invalid spec.
+
+Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
 
 .. _install-method:

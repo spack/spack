@@ -112,7 +112,8 @@ class DirectiveMeta(type):
     # Set of all known directives
     _directive_names = set()  # type: Set[str]
     _directives_to_be_executed = []  # type: List[str]
-    _when_constraints_from_context = []  # type: List[str]
+    _when_constraints_appended_from_context = []  # type: List[str]
+    _when_constraints_prepended_from_context = []  # type: List[str]
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -167,14 +168,28 @@ class DirectiveMeta(type):
         super(DirectiveMeta, cls).__init__(name, bases, attr_dict)
 
     @staticmethod
-    def push_to_context(when_spec):
-        """Add a spec to the context constraints."""
-        DirectiveMeta._when_constraints_from_context.append(when_spec)
+    def _when_context_list(prepend):
+        context_attribute = DirectiveMeta._when_constraints_appended_from_context
+        if prepend is True:
+            context_attribute = DirectiveMeta._when_constraints_prepended_from_context
+        return context_attribute
 
     @staticmethod
-    def pop_from_context():
+    def push_to_context(when_spec, prepend):
+        """Add a spec to the context constraints."""
+        context_attribute = DirectiveMeta._when_context_list(prepend)
+        context_attribute.append(when_spec)
+
+    @staticmethod
+    def pop_from_context(prepend):
         """Pop the last constraint from the context"""
-        return DirectiveMeta._when_constraints_from_context.pop()
+        context_attribute = DirectiveMeta._when_context_list(prepend)
+        return context_attribute.pop()
+
+    @staticmethod
+    def has_when_constraints_from_context():
+        return (DirectiveMeta._when_constraints_appended_from_context or
+                DirectiveMeta._when_constraints_prepended_from_context)
 
     @staticmethod
     def directive(dicts=None):
@@ -238,7 +253,7 @@ class DirectiveMeta(type):
             @functools.wraps(decorated_function)
             def _wrapper(*args, **kwargs):
                 # Inject when arguments from the context
-                if DirectiveMeta._when_constraints_from_context:
+                if DirectiveMeta.has_when_constraints_from_context():
                     # Check that directives not yet supporting the when= argument
                     # are not used inside the context manager
                     if decorated_function.__name__ in ('version', 'variant'):
@@ -248,10 +263,15 @@ class DirectiveMeta(type):
                         msg = msg.format(decorated_function.__name__)
                         raise DirectiveError(msg)
 
-                    when_spec_from_context = ' '.join(
-                        DirectiveMeta._when_constraints_from_context
+                    when_spec_appended_from_context = ' '.join(
+                        DirectiveMeta._when_constraints_appended_from_context
                     )
-                    when_spec = kwargs.get('when', '') + ' ' + when_spec_from_context
+                    when_spec_prepended_from_context = ' '.join(
+                        DirectiveMeta._when_constraints_prepended_from_context
+                    )
+                    when_spec = (when_spec_prepended_from_context +
+                                 ' ' + kwargs.get('when', '') + ' ' +
+                                 when_spec_appended_from_context)
                     kwargs['when'] = when_spec
 
                 # If any of the arguments are executors returned by a

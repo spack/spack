@@ -155,7 +155,7 @@ class SpecMultiMethod(object):
 
 
 class when(object):
-    def __init__(self, condition):
+    def __init__(self, condition, prepend=False):
         """Can be used both as a decorator, for multimethods, or as a context
         manager to group ``when=`` arguments together.
 
@@ -163,11 +163,15 @@ class when(object):
 
         Args:
             condition (str): condition to be met
+            prepend (bool): if the object is used as a context manager determine if
+                the constrain needs to be prepended or appended to the ones already
+                expressed in each directive
         """
         if isinstance(condition, bool):
             self.spec = Spec() if condition else None
         else:
             self.spec = Spec(condition)
+        self.prepend = prepend
 
     def __call__(self, method):
         """This annotation lets packages declare multiple versions of
@@ -266,10 +270,10 @@ class when(object):
         and add their constraint to whatever may be already present in the directive
         `when=` argument.
         """
-        spack.directives.DirectiveMeta.push_to_context(str(self.spec))
+        spack.directives.DirectiveMeta.push_to_context(str(self.spec), self.prepend)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        spack.directives.DirectiveMeta.pop_from_context()
+        spack.directives.DirectiveMeta.pop_from_context(self.prepend)
 
 
 class MultiMethodError(spack.error.SpackError):
