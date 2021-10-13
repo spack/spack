@@ -1117,3 +1117,11 @@ def test_install_empty_env(tmpdir, mock_packages, mock_fetch,
     assert env_name in out
     assert 'environment' in out
     assert 'no specs to install' in out
+
+
+@pytest.mark.disable_clean_stage_check
+def test_install_callbacks_fail(install_mockery, mock_fetch):
+    out = install('--test=root', 'test-missing-test', fail_on_error=False)
+
+    assert 'TestFailure: 1 test' in out
+    assert 'Mock test failure' in out
