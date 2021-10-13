@@ -53,6 +53,7 @@ class SuperluDist(CMakePackage, CudaPackage):
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
+    patch('superlu-cray-ftn-case.patch', when='%cce')
 
     def cmake_args(self):
         spec = self.spec
