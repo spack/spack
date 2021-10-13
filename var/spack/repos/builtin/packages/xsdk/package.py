@@ -12,16 +12,16 @@ from copy import deepcopy
 
 def depends_on_cuda(cuda_var, *args, **kwargs):
     # require ~cuda when xsdk~cuda
-    args_new = list(deepcopy(args))
     if not isinstance(cuda_var, list):
         cuda_var = [cuda_var]
-    for var in cuda_var:
+    args_new = list(deepcopy(args))
+    for idx, var in enumerate(cuda_var):
         # skip variants starting with '?' so that
         # that that they are unspecified
         if not var.startswith('?'):
             args_new[0] += '~%s' % var
         else:
-            var = var.replace('?', '')
+            cuda_var[idx] = var.replace('?', '')
     kwargs_new = deepcopy(kwargs)
     if 'when' in kwargs_new:
         kwargs_new['when'] += '~cuda'
@@ -29,33 +29,30 @@ def depends_on_cuda(cuda_var, *args, **kwargs):
         kwargs_new['when'] = '~cuda'
     depends_on(*args_new, **kwargs_new)
 
-    print('>>>>> DEBUG')
-    print(args_new)
-    print(kwargs_new)
-
     # require +cuda when xsdk+cuda, and match the arch
     for arch in CudaPackage.cuda_arch_values:
         args_new = list(deepcopy(args))
         kwargs_new = deepcopy(kwargs)
-        args_new[0] += '%s cuda_arch=%s' % ('+'.join(cuda_var), arch)
+        args_new[0] += '+%s cuda_arch=%s' % ('+'.join(cuda_var), arch)
         if 'when' in kwargs_new:
             kwargs_new['when'] += '+cuda cuda_arch=%s' % arch
         else:
             kwargs_new['when'] = '+cuda cuda_arch=%s' % arch
         depends_on(*args_new, **kwargs_new)
 
+
 def depends_on_rocm(rocm_var, *args, **kwargs):
     # require ~rocm when xsdk~rocm
     args_new = list(deepcopy(args))
     if not isinstance(rocm_var, list):
         rocm_var = [rocm_var]
-    for var in rocm_var:
+    for idx, var in enumerate(rocm_var):
         # skip variants starting with '?' so that
         # that that they are unspecified
         if not var.startswith('?'):
             args_new[0] += '~%s' % var
         else:
-            var = var.replace('?', '')
+            rocm_var[idx] = var.replace('?', '')
     kwargs_new = deepcopy(kwargs)
     if 'when' in kwargs_new:
         kwargs_new['when'] += '~rocm'
@@ -63,15 +60,11 @@ def depends_on_rocm(rocm_var, *args, **kwargs):
         kwargs_new['when'] = '~rocm'
     depends_on(*args_new, **kwargs_new)
 
-    print('>>>>> DEBUG')
-    print(args_new)
-    print(kwargs_new)
-
     # require +rocm when xsdk+rocm, and match the target
     for tgt in ROCmPackage.amdgpu_targets:
         args_new = list(deepcopy(args))
         kwargs_new = deepcopy(kwargs)
-        args_new[0] += '%s amdgpu_target=%s' % ('+'.join(rocm_var), tgt)
+        args_new[0] += '+%s amdgpu_target=%s' % ('+'.join(rocm_var), tgt)
         if 'when' in kwargs_new:
             kwargs_new['when'] += '+rocm amdgpu_target=%s' % tgt
         else:
@@ -86,12 +79,25 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://xsdk.info"
-
     maintainers = ['balay', 'luszczek', 'balos1']
 
     def xsdk_depends_on(*args, cuda_var='', rocm_var='', **kwargs):
-        #if bool(cuda_var):
-        #    depends_on_cuda(cuda_var, *args, **kwargs)
+        """
+        Wrapper for depends_on which can handle propagating variants.
+
+        Currently, it propagates +cuda_var when xsdk+cuda and rocm_var
+        when xsdk+rocm. When xsdk~[cuda|rocm], then ~[cuda|rocm]_var is
+        selected unless the variant string is prefixed with a '?'
+        (see the tasmanian use below). When '?' prefix is used, then
+        the variant is left unspecified.
+
+        [cuda|rocm]_var can be an array of variant strings or just a single
+        variant string. The spack '+'' and '~' symbols should not appear
+        in the strings.
+
+        """
+        if bool(cuda_var):
+            depends_on_cuda(cuda_var, *args, **kwargs)
         if bool(rocm_var):
             depends_on_rocm(rocm_var, *args, **kwargs)
         else:
@@ -105,7 +111,6 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     version('0.3.0', deprecated=True)
 
     variant('debug', default=False, description='Compile in debug mode')
-    # variant('cuda', default=False, description='Enable CUDA dependent packages')
     variant('trilinos', default=True, description='Enable trilinos package build')
     variant('datatransferkit', default=True, description='Enable datatransferkit package build')
     variant('omega-h', default=True, description='Enable omega-h package build')
@@ -259,7 +264,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     xsdk_depends_on('pumi@2.2.0', when='@0.4.0')
 
     tasmanian_openmp = '~openmp' if sys.platform == 'darwin' else '+openmp'
-    xsdk_depends_on('tasmanian@develop+xsdkflags+blas' + tasmanian_openmp, when='@develop', cuda_var=['cuda', '?magma'], rocm_var=['rocm', '?magma'])
+    #xsdk_depends_on('tasmanian@develop+xsdkflags+blas' + tasmanian_openmp, when='@develop', cuda_var=['cuda', '?magma'], rocm_var=['rocm', '?magma']) # TODO: not sure why this causes a conflict
     xsdk_depends_on('tasmanian@7.7+xsdkflags+mpi+blas' + tasmanian_openmp, when='@0.7.0', cuda_var=['cuda', '?magma'], rocm_var=['rocm', '?magma'])
     xsdk_depends_on('tasmanian@7.3+xsdkflags+mpi+blas' + tasmanian_openmp, when='@0.6.0', cuda_var=['cuda', '?magma'])
     xsdk_depends_on('tasmanian@7.0+xsdkflags+mpi+blas' + tasmanian_openmp, when='@0.5.0', cuda_var=['cuda', '?magma'])
@@ -307,11 +312,10 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     xsdk_depends_on('butterflypack@1.2.1', when='@0.6.0 +butterflypack')
     xsdk_depends_on('butterflypack@1.1.0', when='@0.5.0 +butterflypack')
 
-    xsdk_depends_on('heffte +fftw+cuda+magma', when='+cuda +heffte')
-    xsdk_depends_on('openmpi +cuda', when='+cuda +heffte') # TODO: how to handle this?
-    xsdk_depends_on('heffte@develop+fftw', when='@develop +heffte')
-    xsdk_depends_on('heffte@2.2.0+fftw', when='@0.7.0 +heffte')
-    xsdk_depends_on('heffte@2.0.0+fftw', when='@0.6.0 +heffte')
+    xsdk_depends_on('heffte@develop+fftw', when='@develop +heffte', cuda_var=['cuda', '?magma'], rocm_var=['rocm', '?magma'])
+    xsdk_depends_on('heffte@2.2.0+fftw', when='@0.7.0 +heffte', cuda_var=['cuda', '?magma'], rocm_var=['rocm', '?magma'])
+    xsdk_depends_on('heffte@2.0.0+fftw', when='@0.6.0 +heffte', cuda_var=['cuda', '?magma'])
+    xsdk_depends_on('openmpi+cuda', when='+cuda +heffte') # openmpi does not use CudaPackage and has no cuda_arch variant
 
     xsdk_depends_on('slate@master', when='@develop +slate %gcc@6.0:', cuda_var='cuda')
     xsdk_depends_on('slate@2021.05.02 ~cuda', when='@0.7.0 ~cuda +slate %gcc@6.0:') # TODO: should this version have +cuda?
