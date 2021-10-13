@@ -4,11 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
-import glob
 import hashlib
 import json
 import os
-import re
 import shutil
 import sys
 import tarfile
@@ -1428,42 +1426,30 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     buildinfo = spec_dict.get('buildinfo', {})
     old_relative_prefix = buildinfo.get('relative_prefix', new_relative_prefix)
     rel = buildinfo.get('relative_rpaths')
-    # if the original relative prefix and new relative prefix differ the
-    # directory layout has changed and the  buildcache cannot be installed
-    # if it was created with relative rpaths
     info = 'old relative prefix %s\nnew relative prefix %s\nrelative rpaths %s'
     tty.debug(info %
               (old_relative_prefix, new_relative_prefix, rel))
-#    if (old_relative_prefix != new_relative_prefix and (rel)):
-#        shutil.rmtree(tmpdir)
-#        msg = "Package tarball was created from an install "
-#        msg += "prefix with a different directory layout. "
-#        msg += "It cannot be relocated because it "
-#        msg += "uses relative rpaths."
-#        raise NewLayoutException(msg)
 
-    # extract the tarball in a temp directory
+    # Extract the tarball into the store root, presumably on the same filesystem.
+    # The directory created is the base directory name of the old prefix.
+    # Moving the old prefix name to the new prefix location should preserve
+    # hard links and symbolic links.
+    extract_tmp = os.path.join(spack.store.layout.root, '.tmp')
+    mkdirp(extract_tmp)
+    extracted_dir = os.path.join(extract_tmp,
+                                 old_relative_prefix.split(os.path.sep)[-1])
+
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=tmpdir)
-    # get the parent directory of the file .spack/binary_distribution
-    # this should the directory unpacked from the tarball whose
-    # name is unknown because the prefix naming is unknown
-    bindist_file = glob.glob('%s/*/.spack/binary_distribution' % tmpdir)[0]
-    workdir = re.sub('/.spack/binary_distribution$', '', bindist_file)
-    tty.debug('workdir %s' % workdir)
-    # install_tree copies hardlinks
-    # create a temporary tarfile from prefix and exract it to workdir
-    # tarfile preserves hardlinks
-    temp_tarfile_name = tarball_name(spec, '.tar')
-    temp_tarfile_path = os.path.join(tmpdir, temp_tarfile_name)
-    with closing(tarfile.open(temp_tarfile_path, 'w')) as tar:
-        tar.add(name='%s' % workdir,
-                arcname='.')
-    with closing(tarfile.open(temp_tarfile_path, 'r')) as tar:
-        tar.extractall(spec.prefix)
-    os.remove(temp_tarfile_path)
-
-    # cleanup
+        try:
+            tar.extractall(path=extract_tmp)
+        except Exception as e:
+            shutil.rmtree(extracted_dir)
+            raise e
+    try:
+        shutil.move(extracted_dir, spec.prefix)
+    except Exception as e:
+        shutil.rmtree(extracted_dir)
+        raise e
     os.remove(tarfile_path)
     os.remove(specfile_path)
 
