@@ -28,17 +28,34 @@ def trace_url(ver, mach):
     ).format(ver, ver2, mach)
 
 
+def darwin_url(ver, mach):
+    return (
+        'http://hpctoolkit.org/download/hpcviewer/{0}/'
+        'hpcviewer-{0}-macosx.cocoa.{1}.zip'
+    ).format(ver, mach)
+
+
 class Hpcviewer(Package):
-    """Binary distribution of hpcviewer and hpctraceviewer for the Rice
-    HPCToolkit (Linux x86_64, ppc64le and aarch64).  Note: hpctoolkit
-    databases are platform independent, so you don't need to install
-    hpctoolkit to run the viewers and it's common to run hpcrun and
-    hpcviewer on different machines."""
+    """Binary distribution of hpcviewer and integrated hpctraceviewer for
+    the Rice HPCToolkit (Linux x86_64, ppc64le and aarch64, and MacOSX
+    x86_64 and M1).  Note: hpctoolkit databases are platform independent,
+    so you don't need to install hpctoolkit to run the viewers and it's
+    common to run hpcrun and hpcviewer on different machines."""
 
     homepage = "http://hpctoolkit.org"
     maintainers = ['mwkrentel']
 
+    darwin_sha = {
+        ('2021.10', 'aarch64'): 'c430ee8f04373e99026018eadff71f750cedbc5ab32a260675ee727b7fc3ee05',
+        ('2021.10', 'x86_64'):  'b628e33f1f981498b215447813846526c9e2c8d937d4125724f50a060dc4d406',
+        ('2021.05', 'aarch64'): '033a9c772a53b861dcce5174ae971c5feb57401590ff4a46b604c72a361751f3',
+        ('2021.05', 'x86_64'):  '4643567b41dddbbf9272cb56b0720f4eddfb144ca05aaad7d08c878ffaf8f2fa',
+    }
+
     viewer_sha = {
+        ('2021.10', 'aarch64'): '16d8a9174f3a4948041dc6cf0c2ef322db61c0faca20a1e8c272728d4c224246',
+        ('2021.10', 'ppc64le'): 'f7893f0744dac6b3cf4ca9881072680c4340daceec8d6f3d9616323a5631205d',
+        ('2021.10', 'x86_64'):  '6398333e7ecbf359c7822c3cf0286d10e2bda1366fcc8dce623f737337871ead',
         ('2021.05', 'aarch64'): 'a500bf14be14ca9b08a8382f1d122f59b45690b6a567df0932fc2cabd6382a9a',
         ('2021.05', 'ppc64le'): 'd39f9f6556abcd5a184db242711b72b2e8571d0b78bb08d0e497fd4e6dbe87a1',
         ('2021.05', 'x86_64'):  'f316c1fd0b134c96392cd4eb5e5aa2bffa36bd449f401d8fe950ab4f761c34ab',
@@ -121,25 +138,62 @@ class Hpcviewer(Package):
         ('2019.02', 'ppc64le'): '01a159306e7810efe07157ec823ac6ca7570ec2014c95db599a3f90eee33355c',
     }
 
-    for key in viewer_sha.keys():
-        if key[1] == platform.machine():
-            version(key[0], url=viewer_url(*key), sha256=viewer_sha[key])
+    # On Apple M1, python machine() returns 'arm64', but we use 'aarch64'.
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+    if machine == 'arm64':
+        machine = 'aarch64'
 
-            # Current versions include the viewer and trace viewer in
-            # one tar file.  Before 2020.07, the trace viewer was a
-            # separate tar file (resource).
-            if key in trace_sha:
-                resource(name='hpctraceviewer', url=trace_url(*key),
-                         sha256=trace_sha[key], placement='TRACE',
-                         when='@{0}'.format(key[0]))
+    # Versions for MacOSX / Darwin
+    if system == 'darwin':
+        for key in darwin_sha.keys():
+            if key[1] == machine:
+                version(key[0], url=darwin_url(*key), sha256=darwin_sha[key])
 
-    depends_on('java@11:', type=('build', 'run'), when='@2021.0:')
+    # Versions for Linux and Cray front-end
+    if system == 'linux':
+        for key in viewer_sha.keys():
+            if key[1] == machine:
+                version(key[0], url=viewer_url(*key), sha256=viewer_sha[key],
+                        deprecated=(key[0] <= '2020.01'))
+
+                # Current versions include the viewer and trace viewer in
+                # one tar file.  Before 2020.07, the trace viewer was a
+                # separate tar file (resource).
+                if key in trace_sha:
+                    resource(name='hpctraceviewer', url=trace_url(*key),
+                             sha256=trace_sha[key], placement='TRACE',
+                             when='@{0}'.format(key[0]))
+
+    depends_on('java@11:14', type=('build', 'run'), when='@2021.0:')
     depends_on('java@8', type=('build', 'run'), when='@:2020')
 
-    conflicts('platform=darwin', msg='hpcviewer requires a manual install on MacOS, see homepage')
+    # Install for MacOSX / Darwin
+    @when('platform=darwin')
+    def install(self, spec, prefix):
+        # Add path to java binary to hpcviewer.ini file.
+        ini_file = join_path('Contents', 'Eclipse', 'hpcviewer.ini')
+        java_binary = join_path(spec['java'].prefix.bin, 'java')
+        filter_file('(-startup)', '-vm\n' + java_binary + '\n' + r'\1',
+                    ini_file, backup=False)
+
+        # Copy files into prefix/hpcviewer.app, symlink bin directory.
+        app_dir = join_path(prefix, 'hpcviewer.app')
+        mkdirp(app_dir)
+        install_tree('.', app_dir)
+        os.symlink(join_path('hpcviewer.app', 'Contents', 'MacOS'), prefix.bin)
+
+    # Install for Cray front-end is the same as Linux.
+    @when('platform=cray')
+    def install(self, spec, prefix):
+        self.linux_install(spec, prefix)
+
+    @when('platform=linux')
+    def install(self, spec, prefix):
+        self.linux_install(spec, prefix)
 
     # Both hpcviewer and trace viewer have an install script.
-    def install(self, spec, prefix):
+    def linux_install(self, spec, prefix):
         args = [
             '--java', spec['java'].home,
             prefix
