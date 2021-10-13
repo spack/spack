@@ -781,6 +781,19 @@ impose(Hash) :- hash(Package, Hash).
 % if we haven't selected a hash for a package, we'll be building it
 build(Package) :- not hash(Package, _), node(Package).
 
+% Minimizing builds is tricky. We want a minimizing criterion
+
+% because we want to reuse what is avaialble, but
+% we also want things that are built to stick to *default preferences* from
+% the package and from the user. We therefore treat built specs differently and apply
+% a different set of optimization criteria to them. Spack's *first* priority is to
+% reuse what it *can*, but if it builds something, the built specs will respect
+% defaults and preferences.  This is implemented by bumping the priority of optimization
+% criteria for built specs -- so that they take precedence over the otherwise
+% topmost-priority criterion to reuse what is installed.
+build_priority(Package, 100) :- build(Package), node(Package).
+build_priority(Package, 0)   :- not build(Package), node(Package).
+
 #defined installed_hash/2.
 
 %-----------------------------------------------------------------------------
@@ -792,111 +805,182 @@ build(Package) :- not hash(Package, _), node(Package).
 %      is displayed (clingo doesn't display sums over empty sets by default)
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
-opt_criterion(16, "number of packages to build (vs. reuse)").
-#minimize { 0@16: #true }.
-#minimize { 1@16,Package : build(Package), optimize_for_reuse() }.
+opt_criterion(17, "number of packages to build (vs. reuse)").
+#minimize { 0@17: #true }.
+#minimize { 1@17,Package : build(Package), optimize_for_reuse() }.
 #defined optimize_for_reuse/0.
 
 % Minimize the number of deprecated versions being used
-opt_criterion(15, "deprecated versions used").
-#minimize{ 0@15: #true }.
-#minimize{ 1@15,Package : deprecated(Package, _)}.
+opt_criterion(116, "(build) deprecated versions used").
+opt_criterion(16, "deprecated versions used").
+#minimize{ 0@116: #true }.
+#minimize{ 0@16: #true }.
+#minimize{
+    1@16+Priority,Package
+    : deprecated(Package, _),
+      build_priority(Package, Priority)
+}.
 
 % Minimize the:
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root(Package)
-opt_criterion(14, "version weight").
-#minimize{ 0@14: #true }.
-#minimize { Weight@14: root(Package),version_weight(Package, Weight) }.
-
-opt_criterion(13, "number of non-default variants (roots)").
-#minimize{ 0@13: #true }.
+opt_criterion(115, "(build) version weight").
+opt_criterion(15, "version weight").
+#minimize{ 0@115: #true }.
+#minimize{ 0@15: #true }.
 #minimize {
-    Weight@13,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight), root(Package)
+    Weight@15+Priority
+    : root(Package),version_weight(Package, Weight),
+      build_priority(Package, Priority)
 }.
 
+opt_criterion(114, "(build) number of non-default variants (roots)").
+opt_criterion(14, "number of non-default variants (roots)").
+#minimize{ 0@114: #true }.
+#minimize{ 0@14: #true }.
+#minimize {
+    Weight@14+Priority,Package,Variant,Value
+    : variant_not_default(Package, Variant, Value, Weight),
+      root(Package),
+      build_priority(Package, Priority)
+}.
+
+opt_criterion(112, "(build) preferred providers for roots").
 opt_criterion(12, "preferred providers for roots").
+#minimize{ 0@112 : #true }.
 #minimize{ 0@12: #true }.
 #minimize{
-    Weight@12,Provider,Virtual
-    : provider_weight(Provider, Virtual, Weight), root(Provider)
+    Weight@12+Priority,Provider,Virtual
+    : provider_weight(Provider, Virtual, Weight),
+      root(Provider),
+      build_priority(Provider, Priority)
 }.
 
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
+opt_criterion(111, "(build) number of values in multi-valued variants (root)").
 opt_criterion(11, "number of values in multi-valued variants (root)").
-#minimize{ 0@11: #true }.
+#minimize{ 0@111 : #true }.
+#minimize{ 0@11 : #true }.
 #maximize {
-    1@11,Package,Variant,Value
+    1@11+Priority,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight),
-    not variant_single_value(Package, Variant),
-    root(Package)
+      not variant_single_value(Package, Variant),
+      root(Package),
+      build_priority(Package, Priority)
 }.
 
 % Try to use default variants or variants that have been set
+opt_criterion(110, "(build) number of non-default variants (non-roots)").
 opt_criterion(10, "number of non-default variants (non-roots)").
 #minimize{ 0@10: #true }.
 #minimize {
-    Weight@10,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight), not root(Package)
+    Weight@10+Priority,Package,Variant,Value
+    : variant_not_default(Package, Variant, Value, Weight),
+      not root(Package),
+      build_priority(Package, Priority)
 }.
 
 % Minimize the weights of the providers, i.e. use as much as
 % possible the most preferred providers
+opt_criterion(109, "(build) preferred providers (non-roots)").
 opt_criterion(9, "preferred providers (non-roots)").
+#minimize{ 0@109: #true }.
 #minimize{ 0@9: #true }.
 #minimize{
-    Weight@9,Provider,Virtual
-    : provider_weight(Provider, Virtual, Weight), not root(Provider)
+    Weight@9+Priority,Provider,Virtual
+    : provider_weight(Provider, Virtual, Weight), not root(Provider),
+      build_priority(Provider, Priority)
 }.
 
 % Try to minimize the number of compiler mismatches in the DAG.
+opt_criterion(108, "(build) compiler mismatches").
 opt_criterion(8, "compiler mismatches").
+#minimize{ 0@108: #true }.
 #minimize{ 0@8: #true }.
-#minimize{ 1@8,Package,Dependency : compiler_mismatch(Package, Dependency) }.
+#minimize{
+    1@8+Priority,Package,Dependency
+    : compiler_mismatch(Package, Dependency),
+      build_priority(Package, Priority)
+}.
 
 % Try to minimize the number of compiler mismatches in the DAG.
+opt_criterion(107, "(build) OS mismatches").
 opt_criterion(7, "OS mismatches").
+#minimize{ 0@107: #true }.
 #minimize{ 0@7: #true }.
-#minimize{ 1@7,Package,Dependency : node_os_mismatch(Package, Dependency) }.
+#minimize{
+    1@7+Priority,Package,Dependency
+    : node_os_mismatch(Package, Dependency),
+      build_priority(Package, Priority)
+}.
 
-opt_criterion(6, "non-preferred OSes").
+opt_criterion(106, "(build) non-preferred OSes").
+#minimize{ 0@106: #true }.
 #minimize{ 0@6: #true }.
-#minimize{ Weight@6,Package : node_os_weight(Package, Weight) }.
+#minimize{
+    Weight@6+Priority,Package
+    : node_os_weight(Package, Weight),
+      build_priority(Package, Priority)
+}.
 
 % Choose more recent versions for nodes
+opt_criterion(105, "(build) version badness").
 opt_criterion(5, "version badness").
+#minimize{ 0@105: #true }.
 #minimize{ 0@5: #true }.
 #minimize{
-    Weight@5,Package : version_weight(Package, Weight)
+    Weight@5+Priority,Package
+    : version_weight(Package, Weight),
+      build_priority(Package, Priority)
 }.
 
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
+opt_criterion(104, "(build) number of values in multi valued variants (non-root)").
 opt_criterion(4, "number of values in multi valued variants (non-root)").
-#minimize{ 0@4: #true }.
+#minimize{ 0@104 : #true }.
+#minimize{ 0@4 : #true }.
 #maximize {
-    1@4,Package,Variant,Value
+    1@4+Priority,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, _),
-    not variant_single_value(Package, Variant),
-    not root(Package)
+      not variant_single_value(Package, Variant),
+      not root(Package),
+      build_priority(Package, Priority)
 }.
 
 % Try to use preferred compilers
+opt_criterion(103, "(build) non-preferred compilers").
 opt_criterion(3, "non-preferred compilers").
+#minimize{ 0@103: #true }.
 #minimize{ 0@3: #true }.
-#minimize{ Weight@3,Package : compiler_weight(Package, Weight) }.
+#minimize{
+    Weight@3+Priority,Package
+    : compiler_weight(Package, Weight),
+      build_priority(Package, Priority)
+}.
 
 % Minimize the number of mismatches for targets in the DAG, try
 % to select the preferred target.
+opt_criterion(102, "(build) target mismatches").
 opt_criterion(2, "target mismatches").
+#minimize{ 0@102: #true }.
 #minimize{ 0@2: #true }.
-#minimize{ 1@2,Package,Dependency : node_target_mismatch(Package, Dependency) }.
+#minimize{
+    1@2+Priority,Package,Dependency
+    : node_target_mismatch(Package, Dependency),
+      build_priority(Package, Priority)
+}.
 
+opt_criterion(101, "(build) non-preferred targets").
 opt_criterion(1, "non-preferred targets").
+#minimize{ 0@101: #true }.
 #minimize{ 0@1: #true }.
-#minimize{ Weight@1,Package : node_target_weight(Package, Weight) }.
+#minimize{
+    Weight@1+Priority,Package
+    : node_target_weight(Package, Weight),
+      build_priority(Package, Priority)
+}.
