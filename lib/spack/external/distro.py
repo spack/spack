@@ -1072,7 +1072,7 @@ class LinuxDistribution(object):
         return distro_info
 
 
-_distro = LinuxDistribution()
+_distro = LinuxDistribution(include_lsb=False)
 
 
 def main():
