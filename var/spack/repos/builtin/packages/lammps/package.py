@@ -198,7 +198,7 @@ class Lammps(CMakePackage, CudaPackage):
 
         if spec.satisfies('%aocc'):
             cxx_flags = '-Ofast -mfma -fvectorize -funroll-loops'
-            args.append('-DCMAKE_CXX_FLAGS_RELEASE={0}'.format(cxx_flags))
+            args.append(self.define('CMAKE_CXX_FLAGS_RELEASE', cxx_flags))
 
         args.append(self.define_from_variant('WITH_JPEG', 'jpeg'))
         args.append(self.define_from_variant('WITH_PNG', 'png'))
