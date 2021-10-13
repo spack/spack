@@ -238,7 +238,7 @@ class Result(object):
         if debug:
             tty.debug("The following core was generated:", *out_list, level=debug)
         else:
-            tty.msg("The following constraints are unsatisfiable:", *out_list)
+            tty.msg("The input spec(s) break the following rules:", *out_list)
 
     def minimize_and_print_cores(self):
         assert self.control

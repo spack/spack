@@ -117,11 +117,21 @@ class SpecError(SpackError):
 
 
 class UnsatisfiableSpecError(SpecError):
-    """Raised when a spec conflicts with package constraints.
-       Provide the requirement that was violated when raising."""
-    def __init__(self, provided, required, constraint_type):
-        super(UnsatisfiableSpecError, self).__init__(
-            "%s does not satisfy %s" % (provided, required))
+    """
+    Raised when a spec conflicts with package constraints.
+
+    For original concretizer, provide the requirement that was violated when
+    raising.
+    """
+    def __init__(self, provided, required=None, constraint_type=None):
+        # required is only set by the original concretizer.
+        # clingo concretizer handles error messages differently.
+        if required:
+            super(UnsatisfiableSpecError, self).__init__(
+                "%s does not satisfy %s" % (provided, required))
+        else:
+            super(UnsatisfiableSpecError, self).__init__(
+                "%s is unsatisfiable." % provided)
         self.provided = provided
         self.required = required
         self.constraint_type = constraint_type
