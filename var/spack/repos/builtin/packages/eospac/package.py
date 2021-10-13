@@ -21,10 +21,13 @@ class Eospac(Package):
     # current EOSPAC release procedure, even a release that only fixes
     # known bugs in a previous stable release will appear first as a
     # new beta.
+    version('6.5.0', preferred=True,
+            sha256='4e539418f773a5bd00dc49a5000ca857e5228cc5e83f198d46827a5671d34cff',
+            url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.0_6b10f4ccc1fc333b5d6023b93ab194ab0621d5ae.tgz")
     version('6.5.0beta',
             sha256='42e6d491aaf296e4d6ab946481aaafd64b0a4e9801fc2ff098cc16aa118f54c8',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.0beta_859ce5b1b8c4106057ca61d03a6c9c713a7f0328.tgz")
-    version('6.4.2', preferred=True,
+    version('6.4.2',
             sha256='13627a5c94d3a456659d1bba0f3cec157380933fbd401e13e25906166150a252',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.2_e2f7906a0863932e3d65d329f789c4b90c6be58d.tgz")
     version('6.4.2beta',   sha256='635b94f1ec7558deca92a3858c92db0f4437170252bb114cbdb809b74b6ee870',
