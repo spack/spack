@@ -161,7 +161,10 @@ class Qgis(CMakePackage):
                     self.spec['geos'].prefix.bin,
                     '-DGSL_CONFIG_PREFER_PATH=' + self.spec['gsl'].prefix.bin,
                     '-DPOSTGRES_CONFIG_PREFER_PATH=' +
-                    self.spec['postgresql'].prefix.bin
+                    self.spec['postgresql'].prefix.bin,
+                    '-DPROJ_INCLUDE_DIR=' + self.spec['proj'].prefix.include,
+                    '-DSQLITE3_LIBRARY='
+                    + join_path(self.spec['sqlite'].prefix.lib, 'libsqlite3.so')
                     ])
 
         args.extend([
@@ -232,3 +235,7 @@ class Qgis(CMakePackage):
         else:
             args.append('-DWITH_GRASS7=OFF')
         return args
+
+    def check(self):
+        """The tests of fail without access to an X server, cant run on build servers"""
+        pass
