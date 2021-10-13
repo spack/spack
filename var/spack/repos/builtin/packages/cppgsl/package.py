@@ -28,10 +28,7 @@ class Cppgsl(CMakePackage):
     depends_on('cmake@3.1.3:', type='build')
 
     def cmake_args(self):
-        args = [
-            '-DGSL_CXX_STANDARD={0}'.format(self.spec.variants['cxxstd'].value)
+        return [
+            self.define_from_variant('GSL_CXX_STANDARD', 'cxxstd'),
+            self.define('GSL-TEST', self.run_tests)
         ]
-        # test triggers array out of bounds errors on gcc11
-        if self.spec.satisfies('%gcc@11:'):
-            args.append('-DGSL_TEST:BOOL=OFF')
-        return args
