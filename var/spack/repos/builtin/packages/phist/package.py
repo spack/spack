@@ -29,6 +29,7 @@ class Phist(CMakePackage):
 
     version('develop', branch='devel')
     version('master', branch='master')
+    version('1.9.6', sha256='98ed5ccb22bb98d5b6bf9de0c9960105473e5244978853070b9a3c44138db662')
     version('1.9.5', sha256='24faa3373003f185c82a658c510e36cba9acc4110eb60cbfded9de370ae9ea32')
     version('1.9.4', sha256='9dde3ca0480358fa0877ec8424aaee4011c5defc929219a5930388a7cdb4c8a6')
     version('1.9.3', sha256='3ab7157e9f535a4c8537846cb11b516271ef13f82d0f8ebb7f96626fb9ab86cf')
@@ -104,9 +105,9 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
-    # resolve #22758: while SSE instructions are handled correctly, but a compile-time
-    # error will occur unless -DNO_WARN_X86_INTRINSICS is defined.
-    patch('ppc64_sse.patch', when='@1.7.4:1.9.4')
+    # Only applies to 1.9.4: While SSE instructions are handled correctly,
+    # build fails on ppc64le unless -DNO_WARN_X86_INTRINSICS is defined.
+    patch('ppc64_sse.patch', when='@1.9.4')
     patch('update_tpetra_gotypes.patch', when='@:1.8')
     patch('update_tpetra_gotypes.patch', when='@:1.8.99')
     patch('sbang.patch', when='+fortran')
