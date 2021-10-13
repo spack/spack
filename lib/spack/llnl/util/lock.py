@@ -77,7 +77,7 @@ class OpenFileTracker(object):
 
     def __init__(self):
         """Create a new ``OpenFileTracker``."""
-        self._descriptors = {}  # type: Dict[Tuple[int, int], OpenFile]
+        self._descriptors = {}
 
     def get_fh(self, path):
         """Get a filehandle for a lockfile.
