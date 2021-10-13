@@ -38,6 +38,7 @@ distro
 * Homepage: https://pypi.python.org/pypi/distro
 * Usage: Provides a more stable linux distribution detection.
 * Version: 1.0.4 (last version supporting Python 2.6)
+* Note: Patched to disable lsb_release by default to improve Spack's startup time.
 
 functools
 ---------
