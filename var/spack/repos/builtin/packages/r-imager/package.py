@@ -24,7 +24,7 @@ class RImager(RPackage):
     version('0.42.3', sha256='6fc308153df8251cef48f1e13978abd5d29ec85046fbe0b27c428801d05ebbf3')
     version('0.41.2', sha256='9be8bc8b3190d469fcb2883045a404d3b496a0380f887ee3caea11f0a07cd8a5')
 
-    depends_on('libx11')
+    depends_on('r+X')
     depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-rcpp@0.11.5:', type=('build', 'run'))
