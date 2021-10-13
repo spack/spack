@@ -162,7 +162,7 @@ class Qgis(CMakePackage):
                     '-DGSL_CONFIG_PREFER_PATH=' + self.spec['gsl'].prefix.bin,
                     '-DPOSTGRES_CONFIG_PREFER_PATH=' +
                     self.spec['postgresql'].prefix.bin,
-                    '-DPROJ_INCLUDE_DIR=' + self.spec['proj'].headers.directories[0]
+                    '-DPROJ_INCLUDE_DIR=' + self.spec['proj'].headers.directories[0],
                     '-DSQLITE3_LIBRARY='
                     + self.spec['sqlite'].libs[0]
                     ])
