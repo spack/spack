@@ -23,6 +23,8 @@ class PyWarpx(PythonPackage):
 
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
 
+    tags = ['e4s']
+
     # NOTE: if you update the versions here, also see warpx
     version('develop', branch='development')
     version('21.09', sha256='861a65f11846541c803564db133c8678b9e8779e69902ef1637b21399d257eab')

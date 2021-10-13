@@ -15,6 +15,8 @@ class OpenpmdApi(CMakePackage):
 
     maintainers = ['ax3l']
 
+    tags = ['e4s']
+
     # C++14 up until here
     version('develop', branch='dev')
     version('0.14.2', sha256='25c6b4bcd0ae1ba668b633b8514e66c402da54901c26861fc754fca55717c836')

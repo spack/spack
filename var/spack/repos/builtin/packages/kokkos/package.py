@@ -15,6 +15,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/kokkos/kokkos.git"
     url      = "https://github.com/kokkos/kokkos/archive/3.4.01.tar.gz"
 
+    tags = ['e4s']
+
     test_requires_compiler = True
 
     maintainers = ['DavidPoliakoff', 'jciesko']

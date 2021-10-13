@@ -24,6 +24,8 @@ class Hdf5(CMakePackage):
     maintainers = ['lrknox', 'brtnfld', 'byrnHDF', 'ChristopherHogan', 'epourmal',
                    'gheber', 'hyoklee', 'lkurz', 'soumagne']
 
+    tags = ['e4s']
+
     test_requires_compiler = True
 
     # The 'develop' version is renamed so that we could uninstall (or patch) it

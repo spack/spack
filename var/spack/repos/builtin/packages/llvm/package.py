@@ -25,6 +25,8 @@ class Llvm(CMakePackage, CudaPackage):
     git = "https://github.com/llvm/llvm-project"
     maintainers = ['trws', 'naromero77']
 
+    tags = ['e4s']
+
     family = "compiler"  # Used by lmod
 
     # fmt: off

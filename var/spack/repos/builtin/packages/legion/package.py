@@ -24,7 +24,7 @@ class Legion(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/StanfordLegion/legion.git"
 
     maintainers = ['pmccormick', 'streichler']
-
+    tags = ['e4s']
     version('21.09.0', tag='legion-21.09.0')
     version('21.03.0', tag='legion-21.03.0')
     version('stable', branch='stable')

@@ -14,7 +14,7 @@ class FluxCore(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-core"
     url      = "https://github.com/flux-framework/flux-core/releases/download/v0.8.0/flux-core-0.8.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-core.git"
-    tags     = ['radiuss']
+    tags     = ['radiuss', 'e4s']
 
     maintainers = ['SteVwonder']
 

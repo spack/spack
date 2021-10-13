@@ -21,6 +21,7 @@ class Warpx(CMakePackage):
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
+    tags = ['e4s']
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
