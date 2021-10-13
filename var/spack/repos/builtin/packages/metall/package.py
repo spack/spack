@@ -33,9 +33,9 @@ class Metall(CMakePackage):
 
     # googletest is required only for test
     # GCC is also required only for test (Metall is a header-only library)
-    # Memo: type 'spack install --test=root metall' or 'spack install --test=all metall' to run test ('make test' is launched)
-    depends_on('googletest', type=('test'))
-    depends_on('gcc@8.1.0:', type=('test'))
+    # Hint: Use 'spack install --test=root metall' or 'spack install --test=all metall'
+    # to run test (adds a call to 'make test' to the build)
+    depends_on('googletest %gcc@8.1.0:', type=('test'))
 
     def cmake_args(self):
         if self.run_tests:
