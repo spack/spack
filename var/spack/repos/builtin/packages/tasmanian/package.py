@@ -64,7 +64,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cmake@2.8:', type='build')
     depends_on('cmake@3.5:', type='build', when='@6.0:')
-    depends_on('cmake@3.10:', type='build', when='@7.0:')
+    depends_on('cmake@3.10:', type=('build', 'run'), when='@7.0:')
 
     depends_on('python@2.7:', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
@@ -151,3 +151,11 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define_from_variant('Tasmanian_ENABLE_CUBLAS', 'cuda'))
 
         return args
+
+    def test(self):
+        # using the tests installed in <prefix>/share/Tasmanian/testing
+        cmake_dir = join_path(self.prefix, 'share', 'Tasmanian', 'testing')
+        with working_dir(self.install_test_root, create=True):
+            cmake(cmake_dir)
+            make()
+            make('test')
