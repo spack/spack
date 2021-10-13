@@ -23,6 +23,7 @@ class PhotosF(MakefilePackage):
     patch('photos-215.5-update-configure.patch', level=2)
 
     def do_stage(self, mirror_only=False):
+        # Fix directory structure - remove extra "<version>" subdirectory
         super(PhotosF, self).do_stage(mirror_only)
         root = join_path(self.stage.source_path, self.spec.version)
         for fn in os.listdir(root):
