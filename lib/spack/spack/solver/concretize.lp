@@ -171,6 +171,10 @@ virtual_node(Virtual)
 1 { provider(Package, Virtual) : possible_provider(Package, Virtual) } 1
   :- virtual_node(Virtual), error("Virtual packages must be satisfied by a unique provider").
 
+% If a virtual is specified on the command line, we have to use it
+% This ensures appropriate error messages
+provider(Package, Virtual) :- virtual_node(Virtual), possible_provider(Package, Virtual), node(Package).
+
 % virtual roots imply virtual nodes, and that one provider is a root
 virtual_node(Virtual) :- virtual_root(Virtual).
 
