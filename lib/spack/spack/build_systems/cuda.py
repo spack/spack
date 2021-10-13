@@ -88,7 +88,7 @@ class CudaPackage(PackageBase):
 
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
-    with when('~allow-unsupported-compilers'):
+    with when('^cuda~allow-unsupported-compilers'):
         # GCC
         # According to
         # https://github.com/spack/spack/pull/25054#issuecomment-886531664
