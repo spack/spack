@@ -30,5 +30,5 @@ class Cppgsl(CMakePackage):
     def cmake_args(self):
         return [
             self.define_from_variant('GSL_CXX_STANDARD', 'cxxstd'),
-            self.define('GSL-TEST', self.run_tests)
+            self.define('GSL_TEST', self.run_tests)
         ]
