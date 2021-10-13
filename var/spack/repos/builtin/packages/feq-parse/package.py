@@ -21,5 +21,4 @@ class FeqParse(CMakePackage):
     version('1.0.1', sha256='27828d7a79666a8f9da0b83a3262c4503cd397be5d6ed0ed0c055879ca65814f')
     version('1.0.0', sha256='20a87ea8c77d9239d97aa87e4e7f912ee91aecf7c2cd20b7656698bd8dc85fc3')
 
-
     depends_on('cmake@3.0.2:', type='build')
