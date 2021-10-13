@@ -50,9 +50,8 @@ class Vtk(CMakePackage):
     patch('https://gitlab.kitware.com/vtk/vtk/-/commit/e066c3f4fbbfe7470c6207db0fc3f3952db633c.diff',
           when="@9:", sha256='0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d')
 
-    # At the moment, we cannot build with both osmesa and qt, but as of
-    # VTK 8.1, that should change
-    conflicts('+osmesa', when='+qt')
+    # We cannot build with both osmesa and qt prior to VTK 8.1
+    conflicts('+osmesa', when='@:8.0 +qt')
 
     extends('python', when='+python')
 
@@ -224,6 +223,7 @@ class Vtk(CMakePackage):
                 '-DVTK_QT_VERSION:STRING={0}'.format(qt_ver),
                 '-DQT_QMAKE_EXECUTABLE:PATH={0}'.format(qmake_exe),
                 '-DVTK_Group_Qt:BOOL=ON',
+                '-DXCB_INCLUDE_DIR:PATH={0}'.format(spec['libxcb'].prefix),
             ])
             # https://github.com/martijnkoopman/Qt-VTK-viewer/blob/master/doc/Build-VTK.md
             if spec.satisfies('@9.0.0:'):
@@ -270,7 +270,7 @@ class Vtk(CMakePackage):
 
         cmake_args.append('-DVTK_RENDERING_BACKEND:STRING=' + opengl_ver)
 
-        if spec.satisfies('@:8.1.0'):
+        if spec.satisfies('@:8.1.0') and '~osmesa' in spec:
             cmake_args.append('-DVTK_USE_SYSTEM_GLEW:BOOL=ON')
 
         if '+osmesa' in spec:
