@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.directives import variant
-from spack.package import PackageBase
+from spack.package import Package
 
 
-class WindowsPackage(PackageBase):
+class WindowsPackage(Package):
     """Auxiliary class for managing Windows-specific variants of
     packages. This class establishes three major variants for use in
     individual package.py scripts:
