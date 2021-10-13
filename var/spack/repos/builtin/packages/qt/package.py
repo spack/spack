@@ -21,7 +21,7 @@ class Qt(Package):
     # Supported releases: 'https://download.qt.io/official_releases/qt/'
     # Older archives: 'https://download.qt.io/new_archive/qt/'
     url      = 'https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz'
-    list_url = 'http://download.qt.io/archive/qt/'
+    list_url = 'https://download.qt.io/archive/qt/'
     list_depth = 3
     maintainers = ['sethrj']
 
@@ -164,7 +164,7 @@ class Qt(Package):
     depends_on("libsm", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0.999", when='@4:5.9+ssl')
+    depends_on("openssl@:1.0", when='@4:5.9+ssl')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
@@ -190,7 +190,7 @@ class Qt(Package):
         depends_on("flex", type='build')
         depends_on("bison", type='build')
         depends_on("gperf")
-        depends_on("python@2.7.5:2.999", type='build')
+        depends_on("python@2.7.5:2", type='build')
 
         with when('@5.7:'):
             depends_on("nss")
@@ -205,7 +205,7 @@ class Qt(Package):
 
     # gcc@4 is not supported as of Qt@5.14
     # https://doc.qt.io/qt-5.14/supported-platforms.html
-    conflicts('%gcc@:4.99', when='@5.14:')
+    conflicts('%gcc@:4', when='@5.14:')
 
     # Non-macOS dependencies and special macOS constraints
     if MACOS_VERSION is None:
@@ -459,7 +459,7 @@ class Qt(Package):
         spec = self.spec
         version = self.version
 
-        # incomplete list is here http://doc.qt.io/qt-5/configure-options.html
+        # incomplete list is here https://doc.qt.io/qt-5/configure-options.html
         config_args = [
             '-prefix', self.prefix,
             '-v',
