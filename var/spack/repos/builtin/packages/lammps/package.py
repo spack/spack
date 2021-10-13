@@ -220,11 +220,11 @@ class Lammps(CMakePackage, CudaPackage):
             if '^amdfftw' in spec:
                 # If FFTW3 is selected, then CMake will try to detect, if threaded
                 # FFTW libraries are available and enable them by default.
-                args.append('-DFFT=FFTW3')
+                args.append(self.define('FFT', 'FFTW3'))
                 # Using the -DFFT_SINGLE setting trades off a little accuracy
                 # for reduced memory use and parallel communication costs
                 # for transposing 3d FFT data.
-                args.append('-DFFT_SINGLE=ON')
+                args.append(self.define('FFT_SINGLE', True))
 
         if '+kokkos' in spec:
             args.append('-DEXTERNAL_KOKKOS=ON')
