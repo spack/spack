@@ -508,11 +508,11 @@ class SpackSolverSetup(object):
             "A node must have exactly one platform",
             "Each node must have exactly one OS",
             "Each node must have exactly one target",
-            "No satisfying compiler is compatible with a satisfying target",
+            "No satisfying compiler available is compatible with a satisfying target",
             "Each node must have exactly one compiler",
             "Internal error: mismatch between selected compiler and compiler version",
             "Internal error: node compiler version mismatch",
-            "No satisfying compiler is compatible with a satisfying os",
+            "No satisfying compiler available is compatible with a satisfying os",
         ]
         for message in error_messages:
             self.gen.fact(fn.error(message), assumption=True)

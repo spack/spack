@@ -572,7 +572,7 @@ target_weight(Target, Package, Weight)
    not compiler_supports_target(Compiler, Version, Target),
    node_compiler(Package, Compiler),
    node_compiler_version(Package, Compiler, Version),
-   error("No satisfying compiler is compatible with a satisfying target").
+   error("No satisfying compiler available is compatible with a satisfying target").
 
 % if a target is set explicitly, respect it
 node_target(Package, Target)
@@ -642,7 +642,7 @@ node_compiler_version(Package, Compiler, Version) :- node_compiler_version_set(P
 :- node_compiler_version(Package, Compiler, Version), node_os(Package, OS),
    not compiler_supports_os(Compiler, Version, OS),
    not allow_compiler(Compiler, Version),
-   error("No satisfying compiler is compatible with a satisfying os").
+   error("No satisfying compiler available is compatible with a satisfying os").
 
 % If a package and one of its dependencies don't have the
 % same compiler there's a mismatch.
