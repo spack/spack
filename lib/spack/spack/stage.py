@@ -824,9 +824,7 @@ def purge():
                 remove_linked_tree(stage_path)
 
 
-def get_checksums_for_versions(
-        url_dict, name, first_stage_function=None, keep_stage=False,
-        fetch_options=None, batch=False, latest=False):
+def get_checksums_for_versions(url_dict, name, **kwargs):
     """Fetches and checksums archives from URLs.
 
     This function is called by both ``spack checksum`` and ``spack
@@ -850,6 +848,12 @@ def get_checksums_for_versions(
         (str): A multi-line string containing versions and corresponding hashes
 
     """
+    batch = kwargs.get('batch', False)
+    fetch_options = kwargs.get('fetch_options', None)
+    first_stage_function = kwargs.get('first_stage_function', None)
+    keep_stage = kwargs.get('keep_stage', False)
+    latest = kwargs.get('latest', False)
+
     sorted_versions = sorted(url_dict.keys(), reverse=True)
     if latest:
         sorted_versions = sorted_versions[:1]

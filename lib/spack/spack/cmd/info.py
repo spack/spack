@@ -17,7 +17,6 @@ import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
-
 from spack.package import preferred_version
 
 description = 'get detailed information on a particular package'
