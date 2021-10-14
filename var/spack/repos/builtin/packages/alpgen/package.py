@@ -13,7 +13,7 @@ class Alpgen(MakefilePackage):
        multi-parton processes in hadronic collisions."""
 
     homepage = "http://mlm.home.cern.ch/mlm/alpgen/"
-    url      = "https://mlm.home.cern.ch/mlm/alpgen/V2.1/v214.tgz"
+    url      = "http://mlm.home.cern.ch/mlm/alpgen/V2.1/v214.tgz"
 
     patch('alpgen-214.patch', when='recipe=cms')
     patch('alpgen-214-Darwin-x86_84-gfortran.patch', when='platform=darwin recipe=cms')
