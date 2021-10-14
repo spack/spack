@@ -50,8 +50,12 @@ class RubyPackage(PackageBase):
 
         gems = glob.glob('*.gem')
         if gems:
+            # if --install-dir is not used, GEM_PATH is deleted from the
+            # environement, and Gems required to build native extensions will
+            # not be found. Those extensions are built during `gem install`.
             inspect.getmodule(self).gem(
-                'install', '--norc', '--ignore-dependencies', gems[0])
+                'install', '--norc', '--ignore-dependencies',
+                '--install-dir', prefix, gems[0])
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
