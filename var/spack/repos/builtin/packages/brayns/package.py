@@ -36,7 +36,8 @@ class Brayns(CMakePackage):
     depends_on('ispc', type='build')
     depends_on('ninja', type='build')
 
-    depends_on('assimp', when='+assimp')
+    depends_on('assimp@5.0.1', when='@1.1.1: +assimp')
+    depends_on('assimp@4.1.0', when='@:1.1.0 +assimp')
     depends_on('bbptestdata', type='test', when='+test')
     depends_on('brion', when='+brion')
     depends_on('deflect ~deflect-qt', when='+deflect')
