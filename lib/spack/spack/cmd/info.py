@@ -18,6 +18,8 @@ import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
 
+from spack.package import preferred_version
+
 description = 'get detailed information on a particular package'
 section = 'basic'
 level = 'short'
@@ -35,16 +37,6 @@ def padder(str_list, extra=0):
         padding = max(0, length - len(string))
         return string + (padding * ' ')
     return pad
-
-
-def preferred_version(pkg):
-    # Here we sort first on the fact that a version is marked
-    # as preferred in the package, then on the fact that the
-    # version is not develop, then lexicographically
-    key_fn = lambda v: (pkg.versions[v].get('preferred', False),
-                        not v.isdevelop(),
-                        v)
-    return sorted(pkg.versions, key=key_fn).pop()
 
 
 def setup_parser(subparser):

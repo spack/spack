@@ -14,7 +14,7 @@ import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
 import spack.util.crypto
-from spack.cmd.info import preferred_version
+from spack.package import preferred_version
 from spack.util.naming import valid_fully_qualified_module_name
 from spack.version import Version, ver
 
