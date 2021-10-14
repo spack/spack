@@ -40,18 +40,18 @@ class Pgplot(MakefilePackage):
     def edit(self, spec, prefix):
 
         if spec.satisfies('%gcc'):
-            substitutions = [
-                ('@CCOMPL@', self.compiler.cc),
-                ('@CFLAGC@', ("-Wall -fPIC -DPG_PPU -O -std=c89 " +
-                              "-Wno-error=implicit-function-declaration")),
-                ('@FCOMPL@', self.compiler.f77),
-                ('@FFLAGC@', "-Wall -fPIC -O -ffixed-line-length-none" +
-                    (" -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else "")),
-                ('@FFLAGD@', "-Wall -fPIC -O -ffixed-line-length-none" +
-                    (" -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else "")),
-                ('@LIBS@', "-lgfortran"),
-                ('@SHARED_LD@', self.compiler.cc + " -shared -o $SHARED_LIB -lgfortran"),
-            ]
+            substitutions = {
+                '@CCOMPL@': self.compiler.cc,
+                '@CFLAGC@': "-Wall -fPIC -DPG_PPU -O -std=c89 " +
+                              "-Wno-error=implicit-function-declaration",
+                '@CFLAGD@': "-O2",
+                '@FCOMPL@': self.compiler.f77,
+                '@FFLAGC@': "-Wall -fPIC -O -ffixed-line-length-none" +
+                    (" -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else ""),
+                '@FFLAGD@': "-fno-backslash",
+                '@LIBS@': "-lgfortran",
+                '@SHARED_LD@': self.compiler.cc + " -shared -o $SHARED_LIB -lgfortran"
+            }
         elif spec.satisfies('%intel'):
             substitutions = {
                 '@CCOMPL@': self.compiler.cc,
