@@ -32,17 +32,38 @@ class Pgplot(MakefilePackage):
 
     parallel = False
 
+    variant('X2DRIV', default=True,
+            description='Build with X-windows support.')
+
+    depends_on('libx11', when='+X2DRIV')
+
     def edit(self, spec, prefix):
-        substitutions = [
-            ('@CCOMPL@', self.compiler.cc),
-            ('@CFLAGC@', ("-Wall -fPIC -DPG_PPU -O -std=c89 " +
-                          "-Wno-error=implicit-function-declaration")),
-            ('@FCOMPL@', self.compiler.f77),
-            ('@FFLAGC@', "-Wall -fPIC -O -ffixed-line-length-none" +
-                (" -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else "")),
-            ('@LIBS@', "-lgfortran"),
-            ('@SHARED_LD@', self.compiler.cc + " -shared -o $SHARED_LIB -lgfortran"),
-        ]
+
+        if spec.satisfies('%gcc'):
+            substitutions = [
+                ('@CCOMPL@', self.compiler.cc),
+                ('@CFLAGC@', ("-Wall -fPIC -DPG_PPU -O -std=c89 " +
+                              "-Wno-error=implicit-function-declaration")),
+                ('@FCOMPL@', self.compiler.f77),
+                ('@FFLAGC@', "-Wall -fPIC -O -ffixed-line-length-none" +
+                    (" -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else "")),
+                ('@FFLAGD@', "-Wall -fPIC -O -ffixed-line-length-none" +
+                    (" -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else "")),
+                ('@LIBS@', "-lgfortran"),
+                ('@SHARED_LD@', self.compiler.cc + " -shared -o $SHARED_LIB -lgfortran"),
+            ]
+        elif spec.satisfies('%intel'):
+            substitutions = {
+                '@CCOMPL@': self.compiler.cc,
+                '@CFLAGC@': "-O2 -fPIC -DPG_PPU",
+                '@CFLAGD@': "-O2 -lifcore -lifport",
+                '@FCOMPL@': self.compiler.f77,
+                '@FFLAGC@': "-fPIC",
+                '@FFLAGD@': "-nofor-main",
+                '@LIBS@': "-nofor-main -lifcore -lifport",
+                '@SHARED_LD@': self.compiler.cc + " -shared -o $SHARED_LIB"
+            }
+
         conf = join_path(
             self.stage.source_path, 'sys_linux/g77_gcc.conf'
         )
