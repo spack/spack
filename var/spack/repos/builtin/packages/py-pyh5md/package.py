@@ -14,4 +14,6 @@ class PyPyh5md(PythonPackage):
 
     version('1.0.0', sha256='424cb9737464db5f49996b3be2371e718bf2a27dec0440870bc89591817015d2')
 
-    depends_on('py-h5py',        type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-h5py',       type=('build', 'run'))
+    depends_on('py-numpy',      type=('build', 'run'))
