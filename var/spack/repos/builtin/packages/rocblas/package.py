@@ -118,9 +118,11 @@ class Rocblas(CMakePackage):
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
         if self.spec.satisfies('@:4.2.0'):
-            args.append(self.define('Tensile_ARCHITECTURE', self.get_gpulist_for_tensile_support()))
+            args.append(self.define('Tensile_ARCHITECTURE',
+                        self.get_gpulist_for_tensile_support()))
         else:
-            args.append(self.define('AMDGPU_TARGETS', self.get_gpulist_for_tensile_support()))
+            args.append(self.define('AMDGPU_TARGETS',
+                        self.get_gpulist_for_tensile_support()))
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
