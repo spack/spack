@@ -20,6 +20,8 @@ class Edm4hep(CMakePackage):
     version('0.3.1', sha256='eeec38fe7d72d2a72f07a63dca0a34ca7203727f67869c0abf6bef014b8b319b')
     version('0.3', sha256='d0ad8a486c3ed1659ea97d47b268fe56718fdb389b5935f23ba93804e4d5fbc5')
 
+    patch('test-deps.patch', when='@:0.3.2')
+
     variant('cxxstd',
             default='17',
             values=('17',),
