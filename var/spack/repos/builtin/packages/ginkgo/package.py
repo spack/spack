@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import os
 
 from spack import *
 
@@ -31,6 +32,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('full_optimizations', default=False, description='Compile with all optimizations')
     variant('openmp', default=sys.platform != 'darwin',  description='Build with OpenMP')
+    variant('oneapi', default=False, description='Build with oneAPI support')
     variant('develtools', default=False, description='Compile with develtools enabled')
     variant('hwloc', default=False, description='Enable HWLOC support')
     variant('build_type', default='Release',
@@ -63,6 +65,12 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     patch('1.4.0_skip_invalid_smoke_tests.patch', when='@master')
     patch('1.4.0_skip_invalid_smoke_tests.patch', when='@1.4.0')
 
+    # Newer DPC++ compilers use the updated SYCL 2020 standard which change
+    # kernel attribute propagation rules. This doesn't work well with the
+    # initial Ginkgo oneAPI support.
+    patch('1.4.0_dpcpp_use_old_standard.patch', when='+oneapi @master')
+    patch('1.4.0_dpcpp_use_old_standard.patch', when='+oneapi @1.4.0')
+
     def cmake_args(self):
         # Check that the have the correct C++ standard is available
         if self.spec.satisfies('@:1.2.0'):
@@ -76,6 +84,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             except UnsupportedCompilerFlag:
                 InstallError('Ginkgo requires a C++14-compliant C++ compiler')
 
+        if self.spec.satisfies('+oneapi') and os.path.basename(self.compiler.cxx) != "dpcpp":
+            InstallError("Ginkgo's oneAPI backend requires the DPC++ compiler as main CXX compiler.")
+
         spec = self.spec
         from_variant = self.define_from_variant
         args = [
@@ -85,6 +96,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             from_variant('BUILD_SHARED_LIBS', 'shared'),
             from_variant('GINKGO_JACOBI_FULL_OPTIMIZATIONS', 'full_optimizations'),
             from_variant('GINKGO_BUILD_HWLOC', 'hwloc'),
+            from_variant('GINKGO_BUILD_DPCPP', 'oneapi'),
             from_variant('GINKGO_DEVEL_TOOLS', 'develtools'),
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.
