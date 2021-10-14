@@ -12,6 +12,8 @@ class Exampm(CMakePackage):
     homepage = "https://github.com/ECP-copa/ExaMPM"
     git      = "https://github.com/ECP-copa/ExaMPM.git"
 
+    maintainers = ["junghans", "streeve", "sslattery"]
+
     tags = ['proxy-app', 'ecp-proxy-app']
 
     version('master', branch='master')
