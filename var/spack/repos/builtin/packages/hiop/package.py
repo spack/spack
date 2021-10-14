@@ -18,6 +18,7 @@ class Hiop(CMakePackage, CudaPackage):
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version('0.5.0', commit='a39da8025037c7c8ae2eb31234eb80cc73bec2af')
     version('0.4.6', commit='b72d163d52c9225c3196ceb2baebdc7cf09a69de')
     version('0.4.5', commit='c353580456c4776c50811b97cf8ff802dc27b90c')
     version('0.4.4', commit='e858eefa6b914f5c87c3717bbce811931ea69386')
@@ -66,12 +67,13 @@ class Hiop(CMakePackage, CudaPackage):
     depends_on('magma@2.5.4:', when='@0.4:+cuda')
     depends_on('magma@2.6.1:', when='@0.4.6:+cuda')
 
-    depends_on('raja', when='+raja')
-    depends_on('umpire', when='+raja')
+    depends_on('raja+openmp', when='+raja')
+    depends_on('raja+cuda', when='+raja+cuda')
+    depends_on('umpire+cuda', when='+raja+cuda')
 
     depends_on('suite-sparse', when='+kron')
 
-    depends_on('coinhsl', when='+sparse')
+    depends_on('coinhsl+blas', when='+sparse')
     depends_on('metis', when='+sparse')
 
     flag_handler = build_system_flags
