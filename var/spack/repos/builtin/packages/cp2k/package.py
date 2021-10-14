@@ -77,6 +77,12 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('lapack')
     depends_on('fftw-api@3')
 
+    # Force openmp propagation on some providers of blas / fftw-api
+    with when('+openmp'):
+        depends_on('fftw+openmp', when='^fftw')
+        depends_on('amdfftw+openmp', when='^amdfftw')
+        depends_on('openblas threads=openmp', when='^openblas')
+
     with when('smm=libxsmm'):
         # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
         depends_on('libxsmm@1.11:~header-only')
@@ -173,11 +179,6 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%nag')
-
-    conflicts('^fftw~openmp', when='+openmp')
-    conflicts('^amdfftw~openmp', when='+openmp')
-    conflicts('^openblas threads=none', when='+openmp')
-    conflicts('^openblas threads=pthreads', when='+openmp')
 
     conflicts('~openmp', when='@8:', msg='Building without OpenMP is not supported in CP2K 8+')
 
