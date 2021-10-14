@@ -28,6 +28,9 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 1 { version(Package, Version) : version_declared(Package, Version) } 1
  :- node(Package).
 
+% A virtual package may have or not a version, but never has more than one
+:- virtual_node(Package), 2 { version(Package, _) }.
+
 % If we select a deprecated version, mark the package as deprecated
 deprecated(Package, Version) :- version(Package, Version), deprecated_version(Package, Version).
 
