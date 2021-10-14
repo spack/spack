@@ -12,6 +12,7 @@ class PyGevent(PythonPackage):
     homepage = "https://www.gevent.org"
     pypi = "gevent/gevent-1.3a2.tar.gz"
 
+    version('1.5.0', sha256='b2814258e3b3fb32786bb73af271ad31f51e1ac01f33b37426b66cb8491b4c29')
     version('1.3a2', sha256='f7ab82697111ea233c7beeadf5240f669dfad9c4bbc89a3ec80a49e2c48a65bd')
 
     depends_on('py-setuptools@24.2:',   type='build')
