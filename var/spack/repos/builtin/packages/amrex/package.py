@@ -14,6 +14,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://amrex-codes.github.io/amrex/"
     url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.10/amrex-21.10.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
+    
+    test_requires_compiler = True
 
     tags = ['ecp', 'e4s']
 
@@ -60,17 +62,17 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     variant('precision',  default='double',
             description='Real precision (double/single)',
             values=('single', 'double'))
-    variant('eb',  default=False,
+    variant('eb',  default=True,
             description='Build Embedded Boundary classes')
-    variant('fortran',  default=False,
+    variant('fortran',  default=True,
             description='Build Fortran API')
     variant('linear_solvers', default=True,
             description='Build linear solvers')
     variant('amrdata',    default=False,
             description='Build data services')
-    variant('particles',  default=False,
+    variant('particles',  default=True,
             description='Build particle classes')
-    variant('plotfile_tools', default=False,
+    variant('plotfile_tools', default=True,
             description='Build plotfile_tools like fcompare')
     variant('hdf5',  default=False,
             description='Enable HDF5-based I/O')
@@ -167,6 +169,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = [
             '-DUSE_XSDK_DEFAULTS=ON',
+            self.define('AMReX_ENABLE_TESTS', True),
             self.define_from_variant('AMReX_SPACEDIM', 'dimensions'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('AMReX_MPI', 'mpi'),
@@ -213,6 +216,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = [
             '-DUSE_XSDK_DEFAULTS=ON',
+            self.define('AMReX_ENABLE_TESTS', True),
             self.define_from_variant('DIM', 'dimensions'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('ENABLE_MPI', 'mpi'),
@@ -241,3 +245,31 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
 
         return args
+
+
+
+
+    @run_after('install')
+    def setup_smoke_test(self):
+        print("--- After Install Actions ---")
+        self.cache_extra_test_sources(['.'])
+        #self.cache_extra_test_sources(['Tests', 'CTestTestfile.cmake', 'CMakeCache.txt', 'Makefile', 'cmake_install.cmake'])
+
+    def test(self):
+        """Perform smoke tests on installed package."""
+        print("--- AMReX Smoke Test ---")
+        #import os
+        join_path(self.test_suite.current_test_cache_dir, '.')
+        #join_path(self.test_suite.current_test_cache_dir, './Tests/Amr/Advection_AmrLevel')
+        #join_path(self.test_suite.current_test_cache_dir, './Tests/Amr/Advection_AmrLevel/Exec/SingleVortex')
+        #print("avail files", work_dir)
+        cmake('-S ./cache/amrex/', '-DAMReX_ENABLE_TESTS=True')
+        make()
+        #cmake('--build .')
+        ctest('--test-dir ./cache/amrex/','-R AmrLevel')
+        #self.run_test(exe)
+        #self.run_test(exe,
+        #              cli_args,
+        #              [], installed=True, purpose='Smoke test for AMReX',
+        #              skip_missing=False)
+        pass
