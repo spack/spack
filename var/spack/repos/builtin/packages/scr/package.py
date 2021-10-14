@@ -25,9 +25,7 @@ class Scr(CMakePackage):
     homepage = "https://computing.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
     url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
     git      = "https://github.com/llnl/scr.git"
-    tags     = ['radiuss']
-
-    tags = ['e4s']
+    tags     = ['e4s', 'radiuss']
 
     version('develop', branch='develop')
     version('legacy', branch='legacy', deprecated=True)
