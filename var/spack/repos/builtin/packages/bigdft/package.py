@@ -37,9 +37,9 @@ class Bigdft(Package):
     depends_on('scalapack', when='+scalapack')
     depends_on('cuda',      when='+cuda')
 
-    conflicts('%gcc@8.4.0:', when='@:1.8.3',
+    conflicts('%gcc@6.6.0:', when='@:1.8.3',
               msg='Compatibility issues when Bigdft < v1.9.0'
-                  ' is compiled with GCC > v8.3.0')
+                  ' is compiled with GCC > v6.5.0')
 
     phases = ['build', 'install']
 
