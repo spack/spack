@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 import spack.hooks.sbang as sbang
 from spack import *
 
@@ -21,7 +19,7 @@ class Phist(CMakePackage):
     """
 
     homepage = "https://bitbucket.org/essex/phist/"
-    url      = "https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz"
+    url      = "https://bitbucket.org/essex/phist/get/phist-1.9.6.tar.gz"
     git      = "https://bitbucket.org/essex/phist.git"
 
     maintainers = ['jthies']
@@ -108,8 +106,7 @@ class Phist(CMakePackage):
     # Only applies to 1.9.4: While SSE instructions are handled correctly,
     # build fails on ppc64le unless -DNO_WARN_X86_INTRINSICS is defined.
     patch('ppc64_sse.patch', when='@1.9.4')
-    patch('update_tpetra_gotypes.patch', when='@:1.8')
-    patch('update_tpetra_gotypes.patch', when='@:1.8.99')
+    patch('update_tpetra_gotypes.patch', when='@1.6:1.8')
     patch('sbang.patch', when='+fortran')
 
     # ###################### Dependencies ##########################
@@ -134,6 +131,10 @@ class Phist(CMakePackage):
     depends_on('trilinos+anasazi+belos', when='+trilinos')
     depends_on('parmetis+int64', when='+parmetis+int64')
     depends_on('parmetis~int64', when='+parmetis~int64')
+    depends_on('py-pytest', type='test')
+    depends_on('py-numpy',  type='test', when='+mpi')
+    # The test_install compiles the examples and needs pkgconfig for it
+    depends_on('pkgconfig', type='test')
 
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package
@@ -142,12 +143,20 @@ class Phist(CMakePackage):
     # older gcc's may produce incorrect SIMD code and fail
     # to compile some OpenMP statements
     conflicts('%gcc@:4.9.1')
+    # gcc@10: Error: Rank mismatch between actual argument at (1)
+    # and actual argument at (2) (scalar and rank-1)
+    conflicts('%gcc@10:', when='@:1.9.0')
 
     # the phist repo came with it's own FindMPI.cmake before, which may cause some other
     # MPI installation to be used than the one spack wants.
-    @when('@:1.9.6')
     def patch(self):
-        os.unlink('cmake/FindMPI.cmake')
+        if self.spec.satisfies('@:1.9.5'):
+            force_remove('cmake/FindMPI.cmake')
+        # mpiexec -n12 puts a lot of stress on a pod and gets stuck in a loop very often
+        test = FileFilter('CMakeLists.txt')
+        test.filter('1 2 3 12', '1 2 3')
+        test.filter('12/', '6/')
+        test.filter('TEST_DRIVERS_NUM_THREADS 6', 'TEST_DRIVERS_NUM_THREADS 3')
 
     def setup_build_environment(self, env):
         env.set('SPACK_SBANG', sbang.sbang_install_path())
@@ -155,6 +164,9 @@ class Phist(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         define = CMakePackage.define
+
+        if spec.satisfies('kernel_lib=builtin') and spec.satisfies('~mpi'):
+            raise InstallError('~mpi not possible with kernel_lib=builtin!')
 
         kernel_lib = spec.variants['kernel_lib'].value
         outlev = spec.variants['outlev'].value
@@ -195,8 +207,7 @@ class Phist(CMakePackage):
 
         return args
 
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
+    # removing @run_after('build') fixes it from getting called twice
     def check(self):
         with working_dir(self.build_directory):
             make("check")
@@ -204,5 +215,8 @@ class Phist(CMakePackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def test_install(self):
+        # The build script of test_install expects the sources to be copied here:
+        install_tree(join_path(self.stage.source_path, 'exampleProjects'),
+                     join_path(self.stage.path, 'exampleProjects'))
         with working_dir(self.build_directory):
             make("test_install")
