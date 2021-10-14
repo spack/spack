@@ -1212,3 +1212,19 @@ def test_spec_dict_hashless_dep():
                 }
             }
         )
+
+
+@pytest.mark.parametrize('specs,expected', [
+    # Anonymous specs without dependencies
+    (['+baz', '+bar'], '+baz+bar'),
+    (['@2.0:', '@:5.1', '+bar'], '@2.0:5.1 +bar'),
+    # Anonymous specs with dependencies
+    (['^mpich@3.2', '^mpich@:4.0+foo'], '^mpich@3.2 +foo'),
+    # Mix a real package with a virtual one. This test
+    # should fail if we start using the repository
+    (['^mpich@3.2', '^mpi+foo'], '^mpich@3.2 ^mpi+foo'),
+])
+def test_merge_abstract_anonymous_specs(specs, expected):
+    specs = [Spec(x) for x in specs]
+    result = spack.spec.merge_abstract_anonymous_specs(*specs)
+    assert result == Spec(expected)

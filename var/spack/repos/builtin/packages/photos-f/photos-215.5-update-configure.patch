@@ -1,0 +1,73 @@
+diff --git a/215.5/Makefile b/215.5/Makefile
+index 648424f..73b5dce 100644
+--- a/215.5/Makefile
++++ b/215.5/Makefile
+@@ -11,6 +11,8 @@ SHELL = /bin/sh
+ #
+ FFLAGSSHARED = -fPIC
+ CFLAGSSHARED = -fPIC
++FFLAGS = -fPIC
++CFLAGS = -fPIC
+ #
+ LDFLAGSSHARED = $(CXXFLAGS) -pthread -fPIC
+ 
+diff --git a/215.5/Makeshared.subdir b/215.5/Makeshared.subdir
+index f167145..0a8f232 100644
+--- a/215.5/Makeshared.subdir
++++ b/215.5/Makeshared.subdir
+@@ -42,7 +42,14 @@ objects += $(patsubst $(DIRNAME)/%.c,$(TMPDIR)/%.o,$(wildcard $(DIRNAME)/*.c))
+ $(LIBNAME): $(objects)
+ 	@mkdir -p $(LIBDIR)
+ 	@echo creating the shared library $@
+-	$(CXX) $(LDFLAGSSHARED) $(objects) -o $@ -shared -Wl,-soname,$(notdir $@)
++	case ${ARCH} in \
++	  Linux-*) \
++	    $(CXX) $(LDFLAGSSHARED) $(objects) -o $@ -shared -Wl,-soname,$(notdir $@) \
++	  ;;\
++	  Darwin-*) \
++	    $(CXX) $(LDFLAGSSHARED) $(objects) -Wl,-commons,use_dylibs -o $@ -shared -L$(dir $(shell gfortran --print-file-name=libgfortran.a)) $(FLIBS) -dynamic \
++	  ;; \
++	esac
+ 
+ deps := $(patsubst $(DIRNAME)/%.F,$(TMPDIR)/%.d,$(wildcard $(DIRNAME)/*.F))
+ 
+diff --git a/215.5/configure b/215.5/configure
+index c8382cc..105950e 100755
+--- a/215.5/configure
++++ b/215.5/configure
+@@ -74,10 +74,6 @@ export CXXFLAGS_DBG="-g -ansi -pedantic -W -Wall"
+ # Find platform.
+ #
+ export ARCH="`uname`"
+-export theGcc=`g++ --version | head -n 1 | awk '{print$3}' | awk -F . '{print $1}'`
+-if [ ${theGcc} = 4 ]; then
+-  export ARCH=${ARCH}-gcc4
+-fi
+ echo Platform is $ARCH
+ 
+ #default platform settings:
+@@ -98,24 +94,6 @@ if [ ${COMPMODE} = DBG ]; then
+   export CXXFLAGS="${CXXFLAGS_DBG}"
+ fi
+ if [ $ARCH = Linux ]; then
+-  export FC=g77
+-  export FFLAGS="${FFLAGS_OPT} -Wno-globals"
+-  export CFLAGS="${CFLAGS_OPT}"
+-  export CXXFLAGS="${CXXFLAGS_OPT}"
+-  export FLIBS="-lfrtbegin -lg2c"
+-  if [ ${COMPMODE} = OPT ]; then
+-    export FFLAGS="${FFLAGS_OPT}"
+-    export CFLAGS="${CFLAGS_OPT}"
+-    export CXXFLAGS="${CXXFLAGS_OPT}"
+-  fi
+-  if [ ${COMPMODE} = DBG ]; then
+-    export FFLAGS="${FFLAGS_DBG} -Wno-globals"
+-    export CFLAGS="${CFLAGS_DBG}"
+-    export CXXFLAGS="${CXXFLAGS_DBG}"
+-  fi
+-fi
+-# Linux platform with gcc4: new Fortran90 compiler.
+-if [ $ARCH = Linux-gcc4 ]; then
+   export FC=gfortran
+   export FFLAGS="${FFLAGS_OPT}"
+   export CFLAGS="${CFLAGS_OPT}"

@@ -28,7 +28,7 @@ class Cppgsl(CMakePackage):
     depends_on('cmake@3.1.3:', type='build')
 
     def cmake_args(self):
-        args = [
-            '-DGSL_CXX_STANDARD={0}'.format(self.spec.variants['cxxstd'].value)
+        return [
+            self.define_from_variant('GSL_CXX_STANDARD', 'cxxstd'),
+            self.define('GSL_TEST', self.run_tests)
         ]
-        return args

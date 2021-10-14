@@ -235,7 +235,7 @@ class Qt(Package):
                         'apple-clang': ('clang-libc++', 'clang'),
                         'clang': ('clang-libc++', 'clang'),
                         'gcc': ('g++',)}
-    platform_mapping = {'darwin': 'macx'}
+    platform_mapping = {'darwin': ('macx'), 'cray': ('linux')}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
@@ -627,6 +627,9 @@ class Qt(Package):
         elif version < Version('5.15') and '+gui' in spec:
             # Linux-only QT5 dependencies
             config_args.append('-system-xcb')
+            if '+opengl' in spec:
+                config_args.append('-I{0}/include'.format(spec['libx11'].prefix))
+                config_args.append('-I{0}/include'.format(spec['xproto'].prefix))
 
         if '~webkit' in spec:
             config_args.extend([

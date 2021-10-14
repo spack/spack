@@ -2824,7 +2824,7 @@ is equivalent to:
 
    depends_on('elpa+openmp', when='+openmp+elpa')
 
-Constraints from nested context managers are also added together, but they are rarely
+Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
 
 .. _install-method:

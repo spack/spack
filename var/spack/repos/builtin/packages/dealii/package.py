@@ -140,6 +140,8 @@ class Dealii(CMakePackage, CudaPackage):
                               when='@1.68.0'),
                         ],
                when='+python')
+    # boost@1.77.0 triggers build errors in dealii@9.3.1
+    depends_on('boost@:1.76', when='@:9.3')
     # The std::auto_ptr is removed in the C++ 17 standard.
     # See https://github.com/dealii/dealii/issues/4662
     # and related topics discussed for other software libraries.
