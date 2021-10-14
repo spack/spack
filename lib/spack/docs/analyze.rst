@@ -59,7 +59,7 @@ are available:
     install_files            : install file listing read from install_manifest.json
     environment_variables    : environment variables parsed from spack-build-env.txt
     config_args              : config args loaded from spack-configure-args.txt
-    abigail                  : Application Binary Interface (ABI) features for objects
+    libabigail                  : Application Binary Interface (ABI) features for objects
 
 
 In the above, the first three are fairly simple - parsing metadata files from
@@ -107,7 +107,20 @@ spack analyze on libabigail (already installed) _using_ libabigail1
 
 .. code-block:: console
 
-    $ spack analyze run --analyzer abigail libabigail
+    $ spack analyze run --analyzer libabigail libabigail
+
+
+------------------------
+Analyzing a Package Tree
+------------------------
+
+If you install a particular package and then want to analyze all the direct
+dependencies, meaning binaries generated (and likely linked) you can add the ``--recursive``
+argument:
+
+.. code-block:: console
+
+    $ spack analyze run --analyzer libabigail --recursive perl
 
 
 .. _analyze_monitoring:

@@ -26,3 +26,8 @@ class Libabigail(AutotoolsPackage):
     # Documentation dependencies
     depends_on('doxygen', type="build", when="+docs")
     depends_on('py-sphinx', type='build', when="+docs")
+    
+    def autoreconf(self, spec, prefix):
+        bash = which('bash')
+        bash('autoreconf -fi')
+

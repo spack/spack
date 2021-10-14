@@ -40,6 +40,9 @@ def setup_parser(subparser):
         '--overwrite', action='store_true',
         help="re-analyze even if the output file already exists.")
     run_parser.add_argument(
+        '-r', '--recursive', action='store_true',
+        help="Analyze a spec tree (recursively).")
+    run_parser.add_argument(
         '-p', '--path', default=None,
         dest='path',
         help="write output to a different directory than ~/.spack/analyzers")
@@ -50,7 +53,8 @@ def setup_parser(subparser):
     arguments.add_common_arguments(run_parser, ['spec'])
 
 
-def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=False):
+def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=False,
+                 recursive=False):
     """
     Do an analysis for a spec, optionally adding monitoring.
 
@@ -62,6 +66,7 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=Fals
         analyzers (list): list of analyzer (keys) to run
         monitor (spack.monitor.SpackMonitorClient): a monitor client
         overwrite (bool): overwrite result if already exists
+        recursive (bool): analyze spec and all direct dependency binaries.
     """
     analyzers = analyzers or list(spack.analyzers.analyzer_types.keys())
 
@@ -71,20 +76,26 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=Fals
         monitor.load_build_environment(spec)
         monitor.new_configuration([spec])
 
-    for name in analyzers:
+    specs = [spec]
+    if recursive:
+        specs = [spec] + spec.dependencies()
 
-        # Instantiate the analyzer with the spec and outdir
-        analyzer = spack.analyzers.get_analyzer(name)(spec, outdir)
+    tty.info("Preparing to analyze N=%s specs..." % len(specs))
+    for spec in specs:
+        for name in analyzers:
 
-        # Run the analyzer to get a json result - results are returned as
-        # a dictionary with a key corresponding to the analyzer type, so
-        # we can just update the data
-        result = analyzer.run()
+            # Instantiate the analyzer with the spec and outdir
+            analyzer = spack.analyzers.get_analyzer(name)(spec, outdir)
 
-        # Send the result. We do them separately because:
-        # 1. each analyzer might have differently organized output
-        # 2. the size of a result can be large
-        analyzer.save_result(result, overwrite)
+            # Run the analyzer to get a json result - results are returned as
+            # a dictionary with a key corresponding to the analyzer type, so
+            # we can just update the data
+            result = analyzer.run()
+
+            # Send the result. We do them separately because:
+            # 1. each analyzer might have differently organized output
+            # 2. the size of a result can be large
+            analyzer.save_result(result, overwrite)
 
 
 def analyze(parser, args, **kwargs):
@@ -114,4 +125,5 @@ def analyze(parser, args, **kwargs):
         )
 
     # Run the analysis
-    analyze_spec(spec, args.analyzers, args.path, monitor, args.overwrite)
+    analyze_spec(spec, args.analyzers, args.path, monitor,
+                 args.overwrite, args.recursive)
