@@ -7,10 +7,10 @@ class VirtualWithVersions(AutotoolsPackage):
     homepage = "http://www.spack.org"
     url = "http://www.spack.org/downloads/aml-1.0.tar.gz"
 
-    version('17.0.1', sha256='abcde')
-    version('16.0.1', sha256='abcde')
-    version('11.0.1', sha256='abcde')
-    version('1.8.0', sha256='abcde')
+    version('17.0.1', '0123456789abcdef0123456789abcdef')
+    version('16.0.1', '0123456789abcdef0123456789abcdef')
+    version('11.0.1', '0123456789abcdef0123456789abcdef')
+    version('1.8.0', '0123456789abcdef0123456789abcdef')
 
     provides('java@17', when='@17.0:17.9')
     provides('java@16', when='@16.0:16.9')
