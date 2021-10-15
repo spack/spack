@@ -12,7 +12,7 @@ class Brainbuilder(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/brainbuilder/"
     git      = "git@bbpgitlab.epfl.ch:nse/brainbuilder.git"
 
-    version('develop', branch='master')
+    version('develop')
     version('0.16.1', tag='brainbuilder-v0.16.1')
 
     variant('reindex', default=True, description='Install requirements for reindex')
