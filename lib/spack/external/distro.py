@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Spack managed modifications: use include_lsb=False by default.
-
 """
 The ``distro`` package (``distro`` stands for Linux Distribution) provides
 information about the Linux distribution it runs on, such as a reliable
@@ -1074,7 +1072,7 @@ class LinuxDistribution(object):
         return distro_info
 
 
-_distro = LinuxDistribution(include_lsb=False)
+_distro = LinuxDistribution()
 
 
 def main():
