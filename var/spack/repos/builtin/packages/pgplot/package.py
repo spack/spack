@@ -31,17 +31,19 @@ class Pgplot(MakefilePackage):
     patch('g77_gcc.conf.patch')
 
     # https://research.iac.es/sieinvens/siepedia/pmwiki.php?n=HOWTOs.PGPLOTMacOSX
-    patch('pndriv.c.patch', when='%intel')
+    patch('pndriv.c.patch')
 
     # Read font from spack generated directory
     patch('grsy00.f.patch')
 
     parallel = False
 
+    # enable drivers
     variant('X', default=True,
             description='Build with X-windows support.')
+    variant('ps', default=True,
+            description='Enable driver for PostScript files.')
 
-    # enable drivers
     depends_on('libx11', when='+X')
     depends_on('libpng', when='+png', type=('build', 'run'))
     depends_on('zlib', when='+png')
@@ -81,12 +83,29 @@ class Pgplot(MakefilePackage):
         drivers_list = join_path(
                 self.stage.source_path, 'drivers.list')
 
+        # eg. change contents of drivers_list file like '! XWDRIV 1 /XWINDOW' ->  'XWDRIV 1 /XWINDOW'
+        enable_driver = lambda s: filter_file(s, s[2:] , drivers_list)
+
         if '+X' in spec:
-            filter_file('! XWDRIV 1 /XWINDOW', 'XWDRIV 1 /XWINDOW', drivers_list)
-            filter_file('! XWDRIV 2 /XSERVE', 'XWDRIV 2 /XSERVE', drivers_list)
+            substitutions['@XINCL@'] = '-I{0}'.format(self.spec['libx11'].prefix.include)
+            enable_driver('! XWDRIV 1 /XWINDOW')
+            enable_driver('! XWDRIV 2 /XSERVE')
 
             substitutions['@FFLAGD@'] += ' -L{} -lX11'.format(self.spec['libx11'].prefix.lib)
             substitutions['@LIBS@'] += ' -L{} -lX11'.format(self.spec['libx11'].prefix.lib)
+
+
+
+        # Alwasy enable PS and LATEX since they are not depending on other libraries.
+        enable_driver('! PSDRIV 1 /PS')
+        enable_driver('! PSDRIV 2 /VPS')
+        enable_driver('! PSDRIV 3 /CPS')
+        enable_driver('! PSDRIV 4 /VCPS')
+        enable_driver('! LXDRIV 0 /LATEX')
+
+        # GIF is not working. Maybe it is a bug in the gidriv.f.
+        # enable_driver('! GIDRIV 1 /GIF')
+        # enable_driver('! GIDRIV 2 /VGIF')
 
         for key, value in substitutions.items():
             filter_file(key, value, conf)
