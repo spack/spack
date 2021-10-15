@@ -40,7 +40,7 @@ class Pgplot(MakefilePackage):
 
     # enable drivers
     variant('X', default=True,
-            description='Build with X-windows support.')
+            description='Build with X11 support.')
     variant('png', default=True,
             description='Enable driver for Portable Network Graphics file.')
     variant('ps', default=True,
