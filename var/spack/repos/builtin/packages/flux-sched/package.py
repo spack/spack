@@ -19,6 +19,7 @@ class FluxSched(AutotoolsPackage):
     maintainers = ['grondo']
 
     version('master', branch='master')
+    version('0.19.0', sha256='8dffa8eaec95a81286f621639ef851c52dc4c562d365971233bbd91100c31ed2')
     version('0.18.0', sha256='a4d8a6444fdb7b857b26f47fdea57992b486c9522f4ff92d5a6f547d95b586ae')
     version('0.17.0', sha256='5acfcb757e2294a92eaa91be58ba9b42736b88b42d2937de4a78f4642b1c4933')
     version('0.16.0', sha256='08313976161c141b9b34e2d44d5a08d1b11302e22d60aeaf878eef84d4bd2884')
@@ -52,6 +53,8 @@ class FluxSched(AutotoolsPackage):
     depends_on("flux-core@0.23.0:0.25", when='@0.15.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.26.0:", when='@0.16.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.28.0:", when='@0.17.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.29.0:", when='@0.18.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.30.0:", when='@0.19.0', type=('build', 'run', 'link'))
     depends_on("flux-core@master", when='@master', type=('build', 'run', 'link'))
 
     # Need autotools when building on master:
