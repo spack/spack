@@ -10,6 +10,8 @@ class Ruby(AutotoolsPackage):
     """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
+    maintainers = ['Kerilk']
+
     homepage = "https://www.ruby-lang.org/"
     url      = "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
     list_url = "https://cache.ruby-lang.org/pub/ruby/"

@@ -18,6 +18,9 @@ class RubyPackage(PackageBase):
     #. :py:meth:`~.RubyPackage.build`
     #. :py:meth:`~.RubyPackage.install`
     """
+
+    maintainers = ['Kerilk']
+
     #: Phases of a Ruby package
     phases = ['build', 'install']
 
