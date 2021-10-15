@@ -269,7 +269,7 @@ def get_uninstall_list(args, specs, env):
                      format='*r')
 
             dependents = active_dpts.get(spec)
-            if dependents:
+            if dependents and not args.dependents:
                 print('The following packages depend on it:')
                 spack.cmd.display_specs(dependents, **display_args)
 
@@ -284,7 +284,7 @@ def get_uninstall_list(args, specs, env):
                 colify([e.name for e in envs], indent=4)
 
         msgs = []
-        if active_dpts:
+        if active_dpts and not args.dependents:
             msgs.append(
                 'use `spack uninstall --dependents` to remove dependents too')
         if spec_envs:
