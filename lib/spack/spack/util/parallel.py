@@ -7,7 +7,6 @@ from __future__ import print_function
 import contextlib
 import multiprocessing
 import os
-import sys
 import traceback
 
 import six
@@ -15,7 +14,7 @@ import six
 
 class ErrorFromWorker(object):
     """Wrapper class to report an error from a worker process"""
-    def __init__(self):
+    def __init__(self, exc_cls, exc, tb):
         """Create an error object from an exception raised from
         the worker process.
 
@@ -26,17 +25,10 @@ class ErrorFromWorker(object):
             exc: exception raised from the worker process
         """
         self.pid = os.getpid()
-        exc_cls, exc, tb = sys.exc_info()
-        self.error_message = "{0.__name__}: {1!s}".format(exc_cls, exc)
-        buffer = six.StringIO()
-        traceback.print_tb(tb, file=buffer)
-        self.exc_stacktrace = buffer.getvalue()
-        buffer.close()
+        self.error_message = ''.join(traceback.format_exception(exc_cls, exc, tb))
 
     def __str__(self):
-        msg = ("[PID={0.pid}] {0.error_message}\n"
-               "TASK STACKTRACE:\n"
-               "{0.exc_stacktrace}")
+        msg = "[PID={0.pid}] {0.error_message}"
         return msg.format(self)
 
 

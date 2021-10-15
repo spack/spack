@@ -2012,7 +2012,7 @@ def _concretize_task(packed_arguments):
         with tty.SuppressOutput(msg_enabled=False):
             value = _concretize_from_constraints(spec_constraints, tests)
     except Exception:
-        value = spack.util.parallel.ErrorFromWorker()
+        value = spack.util.parallel.ErrorFromWorker(*sys.exc_info())
     return value
 
 
