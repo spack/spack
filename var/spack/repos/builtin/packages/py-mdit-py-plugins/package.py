@@ -17,3 +17,5 @@ class PyMditPyPlugins(PythonPackage):
     version('0.2.8', sha256='5991cef645502e80a5388ec4fc20885d2313d4871e8b8e320ca2de14ac0c015f')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-markdown-it-py@1.0:', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
