@@ -17,7 +17,7 @@ class PyMarkdownItPy(PythonPackage):
 
     version('1.1.0', sha256='36be6bb3ad987bfdb839f5ba78ddf094552ca38ccbd784ae4f74a4e1419fc6e3')
 
-    depends_on('python@3.6:',   type=('build', 'run'))
+    depends_on('python@3.6:3',   type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-attrs@19:22', type=('build', 'run'))
-    depends_on('py-typing-extensions@3.7.4:', type=('build', 'run'), when='^python@:3.8')
+    depends_on('py-attrs@19:21', type=('build', 'run'))
+    depends_on('py-typing-extensions@3.7.4:', type=('build', 'run'), when='^python@:3.7')
