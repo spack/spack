@@ -5,7 +5,7 @@
  # The arguments needed by the C compiler to locate X-window include files.
   
 -   XINCL="-I/usr/X11R6/include"
-+   XINCL="@XINCL@"
++   XINCL=""
  
  # Optional: Needed by XMDRIV (/xmotif).
  # The arguments needed by the C compiler to locate Motif, Xt and

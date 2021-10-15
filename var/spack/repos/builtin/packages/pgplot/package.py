@@ -30,12 +30,22 @@ class Pgplot(MakefilePackage):
     # edit the file more easily
     patch('g77_gcc.conf.patch')
 
+    # https://research.iac.es/sieinvens/siepedia/pmwiki.php?n=HOWTOs.PGPLOTMacOSX
+    patch('pndriv.c.patch', when='%intel')
+
+    # Read font from spack generated directory
+    patch('grsy00.f.patch')
+
     parallel = False
 
-    variant('X2DRIV', default=True,
+    variant('X', default=True,
             description='Build with X-windows support.')
 
-    depends_on('libx11', when='+X2DRIV')
+    # enable drivers
+    depends_on('libx11', when='+X')
+    depends_on('libpng', when='+png', type=('build', 'run'))
+    depends_on('zlib', when='+png')
+    depends_on('libx11', when='+png')
 
     def edit(self, spec, prefix):
 
@@ -67,7 +77,18 @@ class Pgplot(MakefilePackage):
         conf = join_path(
             self.stage.source_path, 'sys_linux/g77_gcc.conf'
         )
-        for key, value in substitutions:
+
+        drivers_list = join_path(
+                self.stage.source_path, 'drivers.list')
+
+        if '+X' in spec:
+            filter_file('! XWDRIV 1 /XWINDOW', 'XWDRIV 1 /XWINDOW', drivers_list)
+            filter_file('! XWDRIV 2 /XSERVE', 'XWDRIV 2 /XSERVE', drivers_list)
+
+            substitutions['@FFLAGD@'] += ' -L{} -lX11'.format(self.spec['libx11'].prefix.lib)
+            substitutions['@LIBS@'] += ' -L{} -lX11'.format(self.spec['libx11'].prefix.lib)
+
+        for key, value in substitutions.items():
             filter_file(key, value, conf)
 
     def build(self, spec, prefix):
@@ -98,12 +119,15 @@ class Pgplot(MakefilePackage):
         install('pgdemo15', prefix.bin)
         install('pgdemo16', prefix.bin)
         install('pgdemo17', prefix.bin)
+        if '+X' in spec:
+            install('pgxwin_server', prefix.bin)
         mkdirp(prefix.include)
         install('cpgplot.h', prefix.include)
         mkdirp(prefix.lib)
         install('libcpgplot.a', prefix.lib)
         install('libpgplot.a', prefix.lib)
         install('libpgplot.so', prefix.lib)
+        install('grfont.dat', prefix.include)
 
     @property
     def libs(self):
@@ -111,3 +135,7 @@ class Pgplot(MakefilePackage):
         return find_libraries(
             "lib*pgplot", root=self.prefix, shared=shared, recursive=True
         )
+
+    def setup_run_environment(self, env):
+        env.set('PGPLOT_FONT', self.prefix.include+'/grfont.dat')
+        env.set('PGPLOT_DIR', self.prefix)
