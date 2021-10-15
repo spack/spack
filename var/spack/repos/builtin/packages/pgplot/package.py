@@ -87,7 +87,6 @@ class Pgplot(MakefilePackage):
         enable_driver = lambda s: filter_file(s, s[2:] , drivers_list)
 
         if '+X' in spec:
-            substitutions['@XINCL@'] = '-I{0}'.format(self.spec['libx11'].prefix.include)
             enable_driver('! XWDRIV 1 /XWINDOW')
             enable_driver('! XWDRIV 2 /XSERVE')
 
