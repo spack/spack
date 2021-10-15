@@ -14,7 +14,7 @@ class Silo(AutotoolsPackage):
     homepage = "https://wci.llnl.gov/simulation/computer-codes/silo"
     url      = "https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2.tgz"
 
-    version('4.11', sha256='6d0a85a079d48fcdcc0084ecb5fc4cfdcc64852edee780c60cb244d16f4bc4ec',
+    version('4.11', sha256='ab936c1f4fc158d9fdc4415965f7d9def7f4abeca596fe5a25bd8485654898ac',
             url='https://wci.llnl.gov/sites/wci/files/2021-09/silo-4.11.tgz')
     version('4.11-bsd', sha256='6d0a85a079d48fcdcc0084ecb5fc4cfdcc64852edee780c60cb244d16f4bc4ec',
             url='https://wci.llnl.gov/sites/wci/files/2021-09/silo-4.11-bsd.tgz')
