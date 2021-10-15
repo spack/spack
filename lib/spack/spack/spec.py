@@ -1570,8 +1570,8 @@ class Spec(object):
     def process_hash(self, length=None):
         """Hash used to store specs in environments.
 
-        This hash includes build dependencies, and we need to preserve
-        them to be able to rebuild an entire environment for a user.
+        This hash includes build and test dependencies and is only used to
+        serialize a spec and pass it around among processes.
         """
         return self._cached_hash(ht.process_hash, length)
 
