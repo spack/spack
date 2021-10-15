@@ -12,10 +12,9 @@ class Silo(AutotoolsPackage):
        data to binary, disk files."""
 
     homepage = "https://wci.llnl.gov/simulation/computer-codes/silo"
-    url      = "https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2.tgz"
+    url      = "https://github.com/LLNL/Silo/releases/download/v4.11/silo-4.11.tar.gz"
 
-    version('4.11', sha256='ab936c1f4fc158d9fdc4415965f7d9def7f4abeca596fe5a25bd8485654898ac',
-            url="https://github.com/LLNL/Silo/releases/download/v4.11/silo-4.11.tar.gz")
+    version('4.11', sha256='ab936c1f4fc158d9fdc4415965f7d9def7f4abeca596fe5a25bd8485654898ac')
     version('4.11-bsd', sha256='6d0a85a079d48fcdcc0084ecb5fc4cfdcc64852edee780c60cb244d16f4bc4ec',
             url="https://github.com/LLNL/Silo/releases/download/v4.11/silo-4.11-bsd.tar.gz")
     version('4.10.2', sha256='3af87e5f0608a69849c00eb7c73b11f8422fa36903dd14610584506e7f68e638', preferred=True)
