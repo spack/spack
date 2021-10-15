@@ -54,20 +54,21 @@ class Pgplot(MakefilePackage):
     def edit(self, spec, prefix):
 
         if spec.satisfies('%gcc'):
-            substitutions = {
+            fib = " -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else ""
+
+            sub = {
                 '@CCOMPL@': self.compiler.cc,
                 '@CFLAGC@': "-Wall -fPIC -DPG_PPU -O -std=c89 " +
-                              "-Wno-error=implicit-function-declaration",
+                            "-Wno-error=implicit-function-declaration",
                 '@CFLAGD@': "-O2",
                 '@FCOMPL@': self.compiler.f77,
-                '@FFLAGC@': "-Wall -fPIC -O -ffixed-line-length-none" +
-                    (" -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else ""),
+                '@FFLAGC@': "-Wall -fPIC -O -ffixed-line-length-none" + fib,
                 '@FFLAGD@': "-fno-backslash",
                 '@LIBS@': "-lgfortran",
                 '@SHARED_LD@': self.compiler.cc + " -shared -o $SHARED_LIB -lgfortran"
             }
         elif spec.satisfies('%intel'):
-            substitutions = {
+            sub = {
                 '@CCOMPL@': self.compiler.cc,
                 '@CFLAGC@': "-O2 -fPIC -DPG_PPU",
                 '@CFLAGD@': "-O2 -lifcore -lifport",
@@ -82,32 +83,29 @@ class Pgplot(MakefilePackage):
             self.stage.source_path, 'sys_linux/g77_gcc.conf'
         )
 
-        drivers_list = join_path(
-                self.stage.source_path, 'drivers.list')
+        drivers_list = join_path(self.stage.source_path, 'drivers.list')
 
-        # eg. change contents of drivers_list file like '! XWDRIV 1 /XWINDOW' ->  'XWDRIV 1 /XWINDOW'
-        enable_driver = lambda s: filter_file(s, s[2:] , drivers_list)
+        # eg. change contents of drivers_list file like:
+        # '! XWDRIV 1 /XWINDOW' ->  'XWDRIV 1 /XWINDOW'
+        enable_driver = lambda s: filter_file(s, s[2:], drivers_list)
 
         if '+X' in spec:
             enable_driver('! XWDRIV 1 /XWINDOW')
             enable_driver('! XWDRIV 2 /XSERVE')
 
-            substitutions['@FFLAGD@'] += ' -L{} -lX11'.format(self.spec['libx11'].prefix.lib)
-            substitutions['@LIBS@'] += ' -L{} -lX11'.format(self.spec['libx11'].prefix.lib)
+            sub['@FFLAGD@'] += ' -L{0} -lX11'.format(self.spec['libx11'].prefix.lib)
+            sub['@LIBS@'] += ' -L{0} -lX11'.format(self.spec['libx11'].prefix.lib)
 
         if '+png' in spec:
             enable_driver('! PNDRIV 1 /PNG')
-            substitutions['@CCOMPL@'] += ' -I{0}'.format(self.spec['libpng'].prefix.include)
-            substitutions['@FFLAGD@'] += ' -L{0} -lpng -L{1} -lz'.format(
-                    self.spec['libpng'].prefix.lib,
-                    self.spec['zlib'].prefix.lib)
+            sub['@CCOMPL@'] += ' -I{0}'.format(self.spec['libpng'].prefix.include)
+            sub['@FFLAGD@'] += ' -L{0} -lpng'.format(self.spec['libpng'].prefix.lib)
 
-            filter_file('pndriv.o : ./png.h ./pngconf.h ./zlib.h ./zconf.h', 
-                    'pndriv.o : {0}/png.h {0}/pngconf.h {1}/zlib.h {1}/zconf.h'.format(
-                        self.spec['libpng'].prefix.include,
-                        self.spec['zlib'].prefix.include), 'makemake')
+            filter_file('pndriv.o : ./png.h ./pngconf.h ./zlib.h ./zconf.h',
+                        'pndriv.o : {0}/png.h {0}/pngconf.h {1}/zlib.h {1}/zconf.h'.
+                        format(self.spec['libpng'].prefix.include,
+                               self.spec['zlib'].prefix.include), 'makemake')
             self.rpath.append(self.spec['libpng'].prefix)
-
 
         # Alwasy enable PS and LATEX since they are not depending on other libraries.
         enable_driver('! PSDRIV 1 /PS')
@@ -120,7 +118,7 @@ class Pgplot(MakefilePackage):
         # enable_driver('! GIDRIV 1 /GIF')
         # enable_driver('! GIDRIV 2 /VGIF')
 
-        for key, value in substitutions.items():
+        for key, value in sub.items():
             filter_file(key, value, conf)
 
     def build(self, spec, prefix):
@@ -169,5 +167,5 @@ class Pgplot(MakefilePackage):
         )
 
     def setup_run_environment(self, env):
-        env.set('PGPLOT_FONT', self.prefix.include+'/grfont.dat')
+        env.set('PGPLOT_FONT', self.prefix.include + '/grfont.dat')
         env.set('PGPLOT_DIR', self.prefix)
