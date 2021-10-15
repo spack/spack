@@ -189,16 +189,6 @@ def inactive_dependent_environments(spec_envs):
     return spec_inactive_envs
 
 
-def _remove_from_env(spec, env):
-    """Remove a spec from an environment if it is a root."""
-    try:
-        # try removing the spec from the current active
-        # environment. this will fail if the spec is not a root
-        env.remove(spec, force=True)
-    except ev.SpackEnvironmentError:
-        pass  # ignore non-root specs
-
-
 def do_uninstall(env, specs, force):
     """Uninstalls all the specs in a list.
 
@@ -254,15 +244,20 @@ def get_uninstall_list(args, specs, env):
 
     # Process spec_dependents and update uninstall_list
     has_error = not args.force and (
-        (active_dpts and not args.dependents)  # dependents in the current env
-        or (not env and spec_envs)  # there are environments that need specs
+        # There are dependents in the current env and we didn't ask to remove
+        # dependents
+        (active_dpts and not args.dependents)
+        # An environment different than the current env (if any) depends on
+        # one or more of the specs to be uninstalled. There may also be
+        # packages in those envs which depend on the base set of packages
+        # to uninstall, but this covers that scenario.
+        or spec_envs
     )
 
     # say why each problem spec is needed
     if has_error:
         specs = set(active_dpts)
-        if not env:
-            specs.update(set(spec_envs))  # environments depend on this
+        specs.update(set(spec_envs))  # environments depend on this
 
         for i, spec in enumerate(sorted(specs)):
             # space out blocks of reasons
@@ -278,11 +273,15 @@ def get_uninstall_list(args, specs, env):
                 print('The following packages depend on it:')
                 spack.cmd.display_specs(dependents, **display_args)
 
-            if not env:
-                envs = spec_envs.get(spec)
-                if envs:
-                    print('It is used by the following environments:')
-                    colify([e.name for e in envs], indent=4)
+            envs = spec_envs.get(spec)
+            if envs:
+                if env:
+                    env_context_qualifier = ' other'
+                else:
+                    env_context_qualifier = ''
+                print('It is used by the following{0} environments:'
+                      .format(env_context_qualifier))
+                colify([e.name for e in envs], indent=4)
 
         msgs = []
         if active_dpts:
@@ -296,40 +295,24 @@ def get_uninstall_list(args, specs, env):
     elif args.dependents:
         for spec, lst in active_dpts.items():
             uninstall_list.extend(lst)
+        for spec, lst in inactive_dpts.items():
+            uninstall_list.extend(lst)
         uninstall_list = list(set(uninstall_list))
 
-    # only force-remove (don't completely uninstall) specs that still
-    # have external dependent envs or pkgs
-    removes = set(inactive_dpts)
-    if env:
-        removes.update(spec_envs)
-
-    # remove anything in removes from the uninstall list
-    uninstall_list = set(uninstall_list) - removes
-
-    return uninstall_list, removes
+    return uninstall_list
 
 
 def uninstall_specs(args, specs):
     env = ev.active_environment()
 
-    uninstall_list, remove_list = get_uninstall_list(args, specs, env)
-    anything_to_do = set(uninstall_list).union(set(remove_list))
+    uninstall_list = get_uninstall_list(args, specs, env)
 
-    if not anything_to_do:
+    if not uninstall_list:
         tty.warn('There are no package to uninstall.')
         return
 
     if not args.yes_to_all:
-        confirm_removal(anything_to_do)
-
-    if env:
-        # Remove all the specs that are supposed to be uninstalled or just
-        # removed.
-        with env.write_transaction():
-            for spec in itertools.chain(remove_list, uninstall_list):
-                _remove_from_env(spec, env)
-            env.write()
+        confirm_removal(uninstall_list)
 
     # Uninstall everything on the list
     do_uninstall(env, uninstall_list, args.force)
