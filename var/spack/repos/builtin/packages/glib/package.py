@@ -95,7 +95,7 @@ class Glib(Package):
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
 
     def patch(self):
-        """A few glib tests have external dependices / try to access the X server"""
+        """A few glib tests have external dependencies / try to access the X server"""
         # Surgically disable tests which we cannot make pass in a spack build
         gio_tests = FileFilter('gio/tests/meson.build')
         gio_tests.filter('if not glib_have_cocoa', 'if false')
