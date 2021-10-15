@@ -316,6 +316,9 @@ def uninstall_specs(args, specs):
     # Uninstall everything on the list
     do_uninstall(env, uninstall_list, args.force)
 
+    if env:
+        env.regenerate_views()
+
 
 def confirm_removal(specs):
     """Display the list of specs to be removed and ask for confirmation.
