@@ -940,7 +940,7 @@ def test_roots_display_with_variants():
     assert "boost +shared" in out
 
 
-def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
+def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
         add('mpileaks')
@@ -950,14 +950,20 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     test = ev.read('test')
     assert any(s.name == 'mpileaks' for s in test.specs_by_hash.values())
     assert any(s.name == 'libelf' for s in test.specs_by_hash.values())
+    # Save this spec to check later if it is still in the env
+    mpileaks_hash, = list(x for x, y in test.specs_by_hash.items()
+                          if y.name == 'mpileaks')
+    orig_user_specs = test.user_specs
+    orig_concretized_specs = test.concretized_order
 
     with ev.read('test'):
         uninstall('-ya')
 
     test = ev.read('test')
-    assert not test.specs_by_hash
-    assert not test.concretized_order
-    assert not test.user_specs
+    assert test.concretized_order == orig_concretized_specs
+    assert test.user_specs.specs == orig_user_specs.specs
+    assert mpileaks_hash in test.specs_by_hash
+    assert not test.specs_by_hash[mpileaks_hash].package.installed
 
 
 def create_v1_lockfile_dict(roots, all_specs):
