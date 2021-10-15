@@ -41,6 +41,8 @@ class Pgplot(MakefilePackage):
     # enable drivers
     variant('X', default=True,
             description='Build with X-windows support.')
+    variant('png', default=True,
+            description='Enable driver for Portable Network Graphics file.')
     variant('ps', default=True,
             description='Enable driver for PostScript files.')
 
@@ -93,6 +95,18 @@ class Pgplot(MakefilePackage):
             substitutions['@FFLAGD@'] += ' -L{} -lX11'.format(self.spec['libx11'].prefix.lib)
             substitutions['@LIBS@'] += ' -L{} -lX11'.format(self.spec['libx11'].prefix.lib)
 
+        if '+png' in spec:
+            enable_driver('! PNDRIV 1 /PNG')
+            substitutions['@CCOMPL@'] += ' -I{0}'.format(self.spec['libpng'].prefix.include)
+            substitutions['@FFLAGD@'] += ' -L{0} -lpng -L{1} -lz'.format(
+                    self.spec['libpng'].prefix.lib,
+                    self.spec['zlib'].prefix.lib)
+
+            filter_file('pndriv.o : ./png.h ./pngconf.h ./zlib.h ./zconf.h', 
+                    'pndriv.o : {0}/png.h {0}/pngconf.h {1}/zlib.h {1}/zconf.h'.format(
+                        self.spec['libpng'].prefix.include,
+                        self.spec['zlib'].prefix.include), 'makemake')
+            self.rpath.append(self.spec['libpng'].prefix)
 
 
         # Alwasy enable PS and LATEX since they are not depending on other libraries.
