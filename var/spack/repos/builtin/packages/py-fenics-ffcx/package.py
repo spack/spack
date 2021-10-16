@@ -22,7 +22,7 @@ class PyFenicsFfcx(PythonPackage):
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-setuptools@58:', type='build', when="@0.4:")
     depends_on('py-setuptools', type='build')
-    depends_on('py-wheel:', type='build', when="@0.4:")
+    depends_on('py-wheel', type='build', when="@0.4:")
 
     depends_on('py-cffi', type='run')
 
