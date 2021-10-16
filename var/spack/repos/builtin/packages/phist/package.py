@@ -58,7 +58,6 @@ class Phist(CMakePackage):
         sha256='24faa3373003f185c82a658c510e36cba9acc4110eb60cbfded9de370ae9ea32',
         preferred=True,
     )
-    version('1.9.5', sha256='24faa3373003f185c82a658c510e36cba9acc4110eb60cbfded9de370ae9ea32')
     version('1.9.4', sha256='9dde3ca0480358fa0877ec8424aaee4011c5defc929219a5930388a7cdb4c8a6')
     version('1.9.3', sha256='3ab7157e9f535a4c8537846cb11b516271ef13f82d0f8ebb7f96626fb9ab86cf')
     version('1.9.2', sha256='289678fa7172708f5d32d6bd924c8fdfe72b413bba5bbb8ce6373c85c5ec5ae5')
@@ -183,6 +182,16 @@ class Phist(CMakePackage):
         if self.spec.satisfies('@1.9.6'):
             filter_file('USE mpi', 'use mpi_f08',
                         'src/kernels/builtin/crsmat_module.F90')
+            # filter_file('use mpi', 'use mpi_f08', -> Needs more fixes
+            #            'fortran_bindings/phist_testing.F90')
+            # These are not needed for the build but as a reminder to be consistent:
+            filter_file('use mpi', 'use mpi_f08',
+                        'fortran_bindings/test/core.F90')
+            filter_file('use mpi', 'use mpi_f08',
+                        'fortran_bindings/test/jada.F90')
+            filter_file('use mpi', 'use mpi_f08',
+                        'fortran_bindings/test/kernels.F90')
+
             if '^mpich' in self.spec and self.spec.satisfies('%gcc@:9'):
                 raise InstallError("PR 26773: gcc<10 can't build phist>1.9.5 w/ ^mpich")
         if self.spec.satisfies('@:1.9.5'):
