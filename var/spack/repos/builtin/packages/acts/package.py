@@ -133,9 +133,12 @@ class Acts(CMakePackage, CudaPackage):
     variant('hepmc3', default=False, description='Build the HepMC3-based examples')
     variant('pythia8', default=False, description='Build the Pythia8-based examples')
     variant('python', default=False, description='Build python bindings for the examples')
+    variant('analysis', default=False, description='Build analysis applications in the examples')
 
     # Build dependencies
     # FIXME: Use spack's autodiff package once there is one
+    # FIXME: Use spack's vecmem package once there is one
+    # (https://github.com/acts-project/acts/pull/998)
     depends_on('boost @1.62:1.69 +program_options +test', when='@:0.10.3')
     depends_on('boost @1.71: +filesystem +program_options +test', when='@0.10.4:')
     depends_on('cmake @3.14:', type='build')
@@ -150,6 +153,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on('nlohmann-json @3.9.1:', when='@0.14: +json')
     depends_on('pythia8', when='+pythia8')
     depends_on('python', when='+python')
+    depends_on('py-pytest', when='+python +unit_test')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
     depends_on('root @6.20: cxxstd=17', when='+tgeo @0.8.1:')
 
@@ -170,7 +174,7 @@ class Acts(CMakePackage, CudaPackage):
     conflicts('+hepmc3', when='-examples')
     conflicts('+pythia8', when='@:0.22')
     conflicts('+pythia8', when='-examples')
-    conflicts('+python', when='@:13.0.0')
+    conflicts('+python', when='@:13')
     conflicts('+python', when='-examples')
     conflicts('+tgeo', when='-identification')
     conflicts('+alignment', when='@:12')
@@ -217,6 +221,7 @@ class Acts(CMakePackage, CudaPackage):
             example_cmake_variant("HEPMC3", "hepmc3"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
+            cmake_variant("ANALYSIS_APPS", "analysis"),
             cmake_variant("FATRAS", "fatras"),
             cmake_variant("FATRAS_GEANT4", "fatras_geant4"),
             plugin_cmake_variant("IDENTIFICATION", "identification"),
