@@ -60,6 +60,7 @@ class Gaudi(CMakePackage):
     depends_on('range-v3')
     depends_on('root +python +root7 +ssl +tbb +threads')
     depends_on('zlib')
+    depends_on('py-pytest', when='@36.9:', type=('build', 'run'))
 
     # todo: this should be a test dependency only,
     depends_on('py-nose', when="@35.0", type=('build', 'run'))
