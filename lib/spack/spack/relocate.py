@@ -1052,10 +1052,23 @@ def fixup_macos_rpath(root, filename):
                 add_rpaths.add(dirname.rstrip('/'))
 
     # Check for nonexistent rpaths (often added by spack linker overzealousness
-    # with both lib/ and lib64/)
-    for rpath in rpaths:
-        if not _exists_dir(rpath):
+    # with both lib/ and lib64/) and duplicate rpaths
+    for (rpath, count) in rpaths.items():
+        if (rpath.startswith('@loader_path')
+                or rpath.startswith('@executable_path')):
+            # Allowable relative paths
+            pass
+        elif not _exists_dir(rpath):
             tty.debug("Nonexistent rpath in {0}: {1}".format(abspath, rpath))
+            del_rpaths.add(rpath)
+        elif count > 1:
+            # Rpath should only be there once, but it can sometimes be
+            # duplicated between Spack's compiler and libtool. If there are
+            # more copies of the same one, something is very odd....
+            tty_debug = tty.debug if count == 2 else tty.warn
+            tty_debug("Rpath appears {0} times in {1}: {2}".format(
+                count, abspath, rpath
+            ))
             del_rpaths.add(rpath)
 
     # Check for relocatable ID
@@ -1070,26 +1083,12 @@ def fixup_macos_rpath(root, filename):
             tty.debug("Allowing hardcoded dylib ID because its rpath "
                       "is *not* in the library already")
 
-    for (rpath, count) in rpaths.items():
-        if count > 1:
-            # Rpath should only be there once, but it can sometimes be
-            # duplicated between Spack's compiler and libtool. If there are
-            # more copies of the same one, something is very odd....
-            tty_debug = tty.debug if count == 2 else tty.warn
-            tty_debug("Rpath appears {0} times in {1}: {2}".format(
-                count, abspath, rpath
-            ))
-            del_rpaths.add(rpath)
-
-    # Make sure no duplicate or invalid rpaths are being added
-    add_rpaths -= del_rpaths
-
     # Delete bad rpaths
     for rpath in del_rpaths:
         args += ['-delete_rpath', rpath]
 
-    # Add missing rpaths
-    for rpath in add_rpaths - set(rpaths):
+    # Add missing rpaths that are not set for deletion
+    for rpath in add_rpaths - del_rpaths - set(rpaths):
         args += ['-add_rpath', rpath]
 
     if not args:

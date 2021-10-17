@@ -487,6 +487,11 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     (root, filename) = make_dylib("abs", no_rpath)
     assert not fixup_rpath(root, filename)
 
+    # Relocatable with executable paths and loader paths
+    (root, filename) = make_dylib("rpath", ['@executable_path/../lib',
+                                            '@loader_path'])
+    assert not fixup_rpath(root, filename)
+
     # Non-relocatable library id but nonexistent rpath
     (root, filename) = make_dylib("abs", bad_rpath)
     assert fixup_rpath(root, filename)
