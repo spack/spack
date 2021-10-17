@@ -215,8 +215,6 @@ class Acts(CMakePackage, CudaPackage):
     variant("analysis", default=False, description="Build analysis applications in the examples")
 
     # Build dependencies
-    # FIXME: Use spack's vecmem package once there is one
-    # (https://github.com/acts-project/acts/pull/998)
     depends_on("acts-dd4hep", when="@19.1: +dd4hep")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
@@ -242,6 +240,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("py-pytest", when="+python +unit_tests")
     depends_on("root @6.10: cxxstd=14", when="+tgeo @:0.8.0")
     depends_on("root @6.20: cxxstd=17", when="+tgeo @0.8.1:")
+    depends_on("vecmem")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")
