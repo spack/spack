@@ -19,7 +19,6 @@ class PyJupytext(PythonPackage):
     version('1.13.0', sha256='fb220af65d2bd32d01c779b0e935c4c2b71e3f5f2f01bf1bab10d5f23fe121d4')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-jupyterlab', type=('build', 'run'))
     depends_on('py-nbformat', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-toml', type=('build', 'run'))
