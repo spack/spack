@@ -240,7 +240,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("py-pytest", when="+python +unit_tests")
     depends_on("root @6.10: cxxstd=14", when="+tgeo @:0.8.0")
     depends_on("root @6.20: cxxstd=17", when="+tgeo @0.8.1:")
-    depends_on("vecmem")
+    depends_on("vecmem@0.4: +sycl", when="+sycl")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")
