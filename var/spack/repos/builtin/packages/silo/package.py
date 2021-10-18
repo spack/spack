@@ -72,7 +72,7 @@ class Silo(AutotoolsPackage):
             elif name == 'fcflags':
                 flags.append(self.compiler.fc_pic_flag)
         if name == 'cflags':
-            if spec.satisfies('%apple-clang'):
+            if spec.compiler.name in ['clang', 'apple-clang']:
                 flags.append('-Wno-implicit-function-declaration')
         return (flags, None, None)
 
