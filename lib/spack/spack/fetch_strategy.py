@@ -1014,11 +1014,13 @@ class GitFetchStrategy(VCSFetchStrategy):
             submodules = self.package.submodules() or submodules
         if submodules:
             with working_dir(dest):
-                args = ['submodule', 'update', '--init']
+                args = ['submodule', 'init']
                 if isinstance(submodules, (list, tuple)):
                     args += ["--"] + list(submodules)
-                else:
-                    args.append('--recursive')
+                if not spack.config.get('config:debug'):
+                    args.insert(1, '--quiet')
+                git(*args)
+                args = ['submodule', 'update', '--recursive']
                 if not spack.config.get('config:debug'):
                     args.insert(1, '--quiet')
                 git(*args)
