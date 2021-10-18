@@ -28,6 +28,7 @@ class Vecmem(CMakePackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('cuda', when='+cuda')
     depends_on('hip', when='+hip')
+    depends_on('sycl', when='+sycl')
 
     def cmake_args(self):
         args = [
