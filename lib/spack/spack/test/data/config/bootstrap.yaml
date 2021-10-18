@@ -1,6 +1,6 @@
 bootstrap:
   sources:
-  - name: 'github-actions'
+  - name: 'official-spack-binaries'
     type: buildcache
     description: |
       Buildcache generated from a public workflow using Github Actions.

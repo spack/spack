@@ -52,7 +52,7 @@ WORKDIR /root
 SHELL ["docker-shell"]
 
 # Disable bootstrapping from sources
-RUN ${SPACK_ROOT}/bin/spack bootstrap untrust spack-install
+RUN ${SPACK_ROOT}/bin/spack bootstrap untrust build-from-sources
 
 # TODO: add a command to Spack that (re)creates the package cache
 RUN ${SPACK_ROOT}/bin/spack spec hdf5+mpi

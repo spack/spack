@@ -105,7 +105,7 @@ def test_list_sources(capsys):
     # Get the merged list and ensure we get our defaults
     with capsys.disabled():
         output = _bootstrap('list')
-    assert "github-actions" in output
+    assert "official-spack-binaries" in output
 
     # Ask for a specific scope and check that the list of sources is empty
     with capsys.disabled():
@@ -118,11 +118,11 @@ def test_list_sources(capsys):
     ('untrust', False)
 ])
 def test_trust_or_untrust_sources(mutable_config, command, value):
-    key = 'bootstrap:trusted:github-actions'
+    key = 'bootstrap:trusted:official-spack-binaries'
     trusted = spack.config.get(key, default=None)
     assert trusted is None
 
-    _bootstrap(command, 'github-actions')
+    _bootstrap(command, 'official-spack-binaries')
     trusted = spack.config.get(key, default=None)
     assert trusted is value
 
@@ -134,14 +134,14 @@ def test_trust_or_untrust_fails_with_no_method(mutable_config):
 
 def test_trust_or_untrust_fails_with_more_than_one_method(mutable_config):
     wrong_config = {'sources': [
-        {'name': 'github-actions',
+        {'name': 'official-spack-binaries',
          'type': 'buildcache',
          'description': ''},
-        {'name': 'github-actions',
+        {'name': 'official-spack-binaries',
          'type': 'buildcache',
          'description': 'Another entry'}],
         'trusted': {}
     }
     with spack.config.override('bootstrap', wrong_config):
         with pytest.raises(RuntimeError, match='more than one'):
-            _bootstrap('trust', 'github-actions')
+            _bootstrap('trust', 'official-spack-binaries')

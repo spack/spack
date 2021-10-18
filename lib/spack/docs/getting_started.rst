@@ -149,15 +149,15 @@ Spack fall back to bootstrapping from sources:
 
 .. code-block:: console
 
-   $ spack bootstrap untrust github-actions
-   ==> "github-actions" is now untrusted and will not be used for bootstrapping
+   $ spack bootstrap untrust official-spack-binaries
+   ==> "official-spack-binaries" is now untrusted and will not be used for bootstrapping
 
 You can verify that the new settings are effective with:
 
 .. code-block:: console
 
    $ spack bootstrap list
-   Name: github-actions UNTRUSTED
+   Name: official-spack-binaries UNTRUSTED
 
      Type: buildcache
 
@@ -171,7 +171,7 @@ You can verify that the new settings are effective with:
        The sha256 checksum of binaries is checked before installation.
 
 
-   Name: spack-install TRUSTED
+   Name: build-from-sources TRUSTED
 
      Type: install
 

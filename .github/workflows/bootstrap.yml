@@ -41,7 +41,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions
+          spack bootstrap untrust official-spack-binaries
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -71,7 +71,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions
+          spack bootstrap untrust official-spack-binaries
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -96,7 +96,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust github-actions
+          spack bootstrap untrust official-spack-binaries
           spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -112,7 +112,7 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           export PATH=/usr/local/opt/bison@2.7/bin:$PATH
-          spack bootstrap untrust github-actions
+          spack bootstrap untrust official-spack-binaries
           spack external find --not-buildable cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
@@ -133,7 +133,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust spack-install
+          spack bootstrap untrust build-from-sources
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
@@ -156,6 +156,6 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
-          spack bootstrap untrust spack-install
+          spack bootstrap untrust build-from-sources
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/

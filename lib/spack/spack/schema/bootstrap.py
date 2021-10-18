@@ -45,3 +45,32 @@ schema = {
     'additionalProperties': False,
     'properties': properties,
 }
+
+
+def update(data):
+    """Update the data in place to update deprecated properties.
+
+    Args:
+        data (dict): dictionary to be updated
+
+    Returns:
+        True if data was changed, False otherwise
+    """
+    # renamed: "trusted:github-actions" -> "trusted:official-spack-binaries"
+    # renamed: "trusted:spack-install" -> "trusted:build-from-sources"
+    changed = False
+
+    trusted = data.get('trusted', None)
+
+    if trusted:
+        if 'github-actions' in trusted:
+            trusted['official-spack-binaries'] = trusted['github-actions']
+            del trusted['github-actions']
+            changed = True
+
+        if 'spack-install' in trusted:
+            trusted['build-from-sources'] = trusted['spack-install']
+            del trusted['spack-install']
+            changed = True
+
+    return changed

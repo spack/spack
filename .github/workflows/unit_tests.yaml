@@ -151,7 +151,7 @@ jobs:
           SPACK_PYTHON: python
       run: |
           . share/spack/setup-env.sh
-          spack bootstrap untrust spack-install
+          spack bootstrap untrust build-from-sources
           spack -v solve zlib
     - name: Run unit tests (full suite with coverage)
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
@@ -346,7 +346,7 @@ jobs:
         git --version
         . .github/workflows/setup_git.sh
         . share/spack/setup-env.sh
-        $(which spack) bootstrap untrust spack-install
+        $(which spack) bootstrap untrust build-from-sources
         $(which spack) solve zlib
         if [ "${{ needs.changes.outputs.with_coverage }}" == "true" ]
         then
