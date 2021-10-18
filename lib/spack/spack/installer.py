@@ -1495,7 +1495,6 @@ class PackageInstaller(object):
         fail_fast_err = 'Terminating after first install failure'
         single_explicit_spec = len(self.build_requests) == 1
         failed_explicits = []
-        exists_errors = []
 
         term_title = TermTitle(len(self.build_pq))
 
@@ -1711,10 +1710,7 @@ class PackageInstaller(object):
         missing = [request.pkg_id for request in self.build_requests if
                    request.install_args.get('install_package') and
                    request.pkg_id not in self.installed]
-        if exists_errors or failed_explicits or missing:
-            for pkg_id, err in exists_errors:
-                tty.error('{0}: {1}'.format(pkg_id, err))
-
+        if failed_explicits or missing:
             for pkg_id, err in failed_explicits:
                 tty.error('{0}: {1}'.format(pkg_id, err))
 
