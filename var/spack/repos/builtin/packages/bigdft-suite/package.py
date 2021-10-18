@@ -44,9 +44,6 @@ class BigdftSuite(Package):
     depends_on('bigdft-chess@1.8.1',     when='@1.8.1')
     depends_on('py-bigdft@1.9.1', 		 when='@1.9.1')
     depends_on('py-bigdft@1.9.0', 		 when='@1.9.0')
-    depends_on('py-bigdft@1.8.3', 		 when='@1.8.3')
-    depends_on('py-bigdft@1.8.2', 		 when='@1.8.2')
-    depends_on('py-bigdft@1.8.1', 		 when='@1.8.1')
     depends_on('bigdft-core@1.9.1',      when='@1.9.1')
     depends_on('bigdft-core@1.9.0',      when='@1.9.0')
     depends_on('bigdft-core@1.8.3',      when='@1.8.3')
@@ -65,8 +62,9 @@ class BigdftSuite(Package):
         install_tree(spec['bigdft-psolver'].prefix,   prefix)
         install_tree(spec['bigdft-libabinit'].prefix, prefix)
         install_tree(spec['bigdft-chess'].prefix,     prefix)
-        install_tree(spec['py-bigdft'].prefix,        prefix)
         install_tree(spec['bigdft-core'].prefix,      prefix)
         install_tree(spec['bigdft-spred'].prefix,     prefix)
         if spec.satisfies('@1.8.3:'):
             install_tree(spec['bigdft-atlab'].prefix, prefix)
+        if spec.satisfies('@1.9.0:'):
+            install_tree(spec['py-bigdft'].prefix,    prefix)
