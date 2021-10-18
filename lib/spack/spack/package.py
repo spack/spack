@@ -957,6 +957,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return spack.url.substitute_version(
             default_url, self.url_version(version))
 
+    def submodules(self):
+        """Source code submodules (git version control)"""
+        return None
+
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
         mirror_paths = spack.mirror.mirror_archive_paths(
@@ -1128,6 +1132,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # associated with the package, append their fetcher to the
         # composite.
         root_fetcher = fs.for_package_version(self, self.version)
+        root_fetcher.package = self
         fetcher = fs.FetchStrategyComposite()  # Composite fetcher
         fetcher.append(root_fetcher)  # Root fetcher is always present
         resources = self._get_needed_resources()
@@ -1147,6 +1152,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @fetcher.setter
     def fetcher(self, f):
         self._fetcher = f
+        if isinstance(f, StageComposite):
+            self._fetcher[0].package = self
+        else:
+            self._fetcher.package = self
 
     def dependencies_of_type(self, *deptypes):
         """Get dependencies that can possibly have these deptypes.
