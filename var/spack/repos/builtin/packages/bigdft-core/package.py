@@ -37,8 +37,8 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     depends_on('bigdft-libabinit')
     depends_on('py-pyyaml')
     depends_on('libgain')
-    depends_on('libarchive')
     depends_on('libxc@:2.2.2')
+    depends_on('libarchive', when='+archive')
     depends_on('scalapack', when='+scalapack')
     depends_on('pexsi', when="+pexsi")
 
@@ -80,8 +80,6 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
             "--with-libgain-incs=%s" % spec['libgain'].headers.include_flags,
             "--with-libxc-libs=%s %s" % (spec['libxc'].libs.ld_flags, spec['libxc'].libs.ld_flags + "f90"),
             "--with-libxc-incs=%s" % spec['libxc'].headers.include_flags,
-            "--with-archives",
-            "--with-archives-path=%s" % spec['libarchive'].prefix,
             "--without-etsf-io",
             "--with-moduledir=%s" % prefix.include,
             "--prefix=%s" % prefix,
@@ -100,6 +98,10 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
             args.append("--with-openmp")
         else:
             args.append("--without-openmp")
+
+        if '+archive' in spec:
+            args.append("--with-archives")
+            args.append("--with-archives-path=%s" % spec['libarchive'].prefix)
 
         if '+pexsi' in spec:
             args.append("--with-pexsi")
