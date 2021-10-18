@@ -15,7 +15,6 @@ spack:
         - darshan-runtime
         - darshan-util
         - doxygen
-        - emacs
         - environment-modules
         - flex
         - ffmpeg
@@ -77,7 +76,6 @@ spack:
     - darshan-runtime
     - darshan-util
     - doxygen
-    - emacs
     - environment-modules@4.5.1
     - ffmpeg
     - flex
