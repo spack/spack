@@ -43,6 +43,9 @@ def setup_parser(subparser):
         '-r', '--recursive', action='store_true',
         help="Analyze a spec tree (recursively).")
     run_parser.add_argument(
+        '-k', '--kwarg', action="append",
+        help="Add a known argument, e.g., libabigail_version=libabigail@master")
+    run_parser.add_argument(
         '-p', '--path', default=None,
         dest='path',
         help="write output to a different directory than ~/.spack/analyzers")
@@ -54,7 +57,7 @@ def setup_parser(subparser):
 
 
 def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=False,
-                 recursive=False):
+                 recursive=False, kwargs=None):
     """
     Do an analysis for a spec, optionally adding monitoring.
 
@@ -69,6 +72,7 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=Fals
         recursive (bool): analyze spec and all direct dependency binaries.
     """
     analyzers = analyzers or list(spack.analyzers.analyzer_types.keys())
+    kwargs = kwargs or {}
 
     # Load the build environment from the spec install directory, and send
     # the spec to the monitor if it's not known
@@ -85,7 +89,7 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=Fals
         for name in analyzers:
 
             # Instantiate the analyzer with the spec and outdir
-            analyzer = spack.analyzers.get_analyzer(name)(spec, outdir)
+            analyzer = spack.analyzers.get_analyzer(name)(spec, outdir, **kwargs)
 
             # Run the analyzer to get a json result - results are returned as
             # a dictionary with a key corresponding to the analyzer type, so
@@ -96,6 +100,21 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=Fals
             # 1. each analyzer might have differently organized output
             # 2. the size of a result can be large
             analyzer.save_result(result, overwrite)
+
+
+def prepare_kwargs(arglist):
+    """
+    Convert a list of key value pairs into a dictionary
+    """
+    kwargs = {}
+    for arg in arglist:
+        if "=" not in arg:
+            tty.die("kwarg %s is missing a value, please provide arg=value", arg)
+        key, value = arg.split('=')
+        if not key or not value:
+            tty.die("kwarg %s is missing a key or a value.", arg)
+        kwargs[key] = value
+    return kwargs
 
 
 def analyze(parser, args, **kwargs):
@@ -114,6 +133,9 @@ def analyze(parser, args, **kwargs):
         tty.die("You must provide one or more specs to analyze.")
     spec = spack.cmd.disambiguate_spec(specs[0], env)
 
+    # Convert list of key=value to kwargs dictionary
+    kwargs = prepare_kwargs(args.kwarg or {})
+
     # The user wants to monitor builds using github.com/spack/spack-monitor
     # It is instantianted once here, and then available at spack.monitor.cli
     monitor = None
@@ -126,4 +148,4 @@ def analyze(parser, args, **kwargs):
 
     # Run the analysis
     analyze_spec(spec, args.analyzers, args.path, monitor,
-                 args.overwrite, args.recursive)
+                 args.overwrite, args.recursive, kwargs)

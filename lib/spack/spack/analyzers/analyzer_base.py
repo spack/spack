@@ -43,7 +43,7 @@ def get_analyzer_dir(spec, analyzer_dir=None):
 
 class AnalyzerBase(object):
 
-    def __init__(self, spec, dirname=None):
+    def __init__(self, spec, dirname=None, **kwargs):
         """
         Verify that the analyzer has correct metadata.
 

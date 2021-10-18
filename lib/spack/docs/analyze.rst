@@ -65,6 +65,29 @@ are available:
 In the above, the first three are fairly simple - parsing metadata files from
 a package install directory to save
 
+------------------
+Analyzer Arguments
+------------------
+
+Each analyzer can optionally be customized with arguments. Currently we have support
+for the following:
+
+
+^^^^^^^^^^
+libabigail
+^^^^^^^^^^
+
+By default, Libabigail will run the analysis using ``libabigail``. However,
+imagine that you want to use your development install ``libabigail@master``
+you can do:
+
+.. code-block:: console
+
+    $ spack analyze run --analyzer libabigail -k libabigail_version=libabigail@master perl
+
+
+Where ``-k`` stands for kwarg, or keyword argument.
+
 -------------------
 Analyzing a Package
 -------------------

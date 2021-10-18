@@ -26,7 +26,7 @@ class Libabigail(AnalyzerBase):
     outfile = "spack-analyzer-libabigail.json"
     description = "Application Binary Interface (ABI) features for objects"
 
-    def __init__(self, spec, dirname=None):
+    def __init__(self, spec, dirname=None, **kwargs):
         """
         init for an analyzer ensures we have all needed dependencies.
 
@@ -39,10 +39,13 @@ class Libabigail(AnalyzerBase):
         # This doesn't seem to work to import on the module level
         tty.debug("Preparing to use Libabigail, will install if missing.")
 
+        # The version of libabigail to use (must have docs)
+        version = kwargs.get("libabigail_version", "libabigail") + "+docs"
+
         with spack.bootstrap.ensure_bootstrap_configuration():
 
             # libabigail won't install lib/bin/share without docs
-            spec = spack.spec.Spec("libabigail+docs")
+            spec = spack.spec.Spec(version)
             spec.concretize()
 
             self.abidw = spack.bootstrap.get_executable(
