@@ -4,11 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-
 from spack import *
 
 
-class Faiss(AutotoolsPackage, CudaPackage):
+class Faiss(CMakePackage, CudaPackage):
     """Faiss is a library for efficient similarity search and clustering of
        dense vectors.
 
@@ -24,6 +23,7 @@ class Faiss(AutotoolsPackage, CudaPackage):
 
     maintainers = ['bhatiaharsh']
 
+    version('1.7.1', sha256='277add2226fad40544cea5776817a0202ef67e2e80d2c289ebdb0135216d60a5')
     version('1.6.3', sha256='e1a41c159f0b896975fbb133e0240a233af5c9286c09a28fde6aefff5336e542')
     version('1.5.3', sha256='b24d347b0285d01c2ed663ccc7596cd0ea95071f3dd5ebb573ccfc28f15f043b')
 
@@ -54,11 +54,33 @@ class Faiss(AutotoolsPackage, CudaPackage):
     # also, some include paths in gpu/tests/Makefile are missing
     patch('fixes-in-v1.6.3.patch', when='@1.6.3')
 
-    def configure_args(self):
+    def cmake_args(self):
+        spec = self.spec
+
         args = []
-        args.extend(self.with_or_without('cuda', activation_value='prefix'))
+
+        if spec.version >= Version('1.7.1'):
+            args.append('-DBUILD_SHARED_LIBS=ON')
+            args.append('-DFAISS_ENABLE_GPU={0}'.format(
+                'ON' if '+cuda' in spec else 'OFF'))
+            args.append('-DFAISS_ENABLE_PYTHON={0}'.format(
+                'ON' if '+python' in spec else 'OFF'))
+            args.append('-DBUILD_TESTING={0}'.format(
+                'ON' if '+tests' in spec else 'OFF'))
+
+        if spec.version < Version('1.7.1'):
+            if '+cuda' in self.spec:
+                args.append('--with-cuda=' + spec['cuda'].prefix)
+            else:
+                args.append('--without-cuda')
+
         return args
 
+    @when("@:1.6.3")
+    def cmake(self, spec, prefix):
+        configure("--prefix=" + prefix, *self.cmake_args())
+
+    @when("@:1.6.3")
     def build(self, spec, prefix):
 
         make()
@@ -79,6 +101,7 @@ class Faiss(AutotoolsPackage, CudaPackage):
                 make('build')                       # target added by the patch
                 make('demo_ivfpq_indexing_gpu')
 
+    @when("@:1.6.3")
     def install(self, spec, prefix):
 
         make('install')
@@ -115,13 +138,23 @@ class Faiss(AutotoolsPackage, CudaPackage):
                 _prefix_and_install('TestGpuSelect')
                 _prefix_and_install('demo_ivfpq_indexing_gpu')
 
-    @run_after('configure')
+    @when("@:1.6.3")
+    @run_after('cmake')
     def _fix_makefile(self):
 
         # spack injects its own optimization flags
         makefile = FileFilter('makefile.inc')
         makefile.filter('CPUFLAGS     = -mavx2 -mf16c',
                         '#CPUFLAGS     = -mavx2 -mf16c')
+
+    @when("@1.7.1:")
+    @run_after('install')
+    def _python_install(self):
+
+        if '+python' in self.spec:
+            with working_dir(os.path.join(self.build_directory, 'faiss', 'python')):
+                setup_py('install', '--prefix=' + prefix,
+                         '--single-version-externally-managed', '--root=/')
 
     def setup_run_environment(self, env):
         if '+python' in self.spec:
