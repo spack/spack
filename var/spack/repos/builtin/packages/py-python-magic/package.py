@@ -20,4 +20,4 @@ class PyPythonMagic(PythonPackage):
     version('0.4.15', sha256='f3765c0f582d2dfc72c15f3b5a82aecfae9498bd29ca840d72f37d7bd38bfcd5')
 
     depends_on('py-setuptools', type='build')
-    depends_on('libmagic', type='run')
+    depends_on('file', type='run')
