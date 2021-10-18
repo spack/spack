@@ -1143,19 +1143,23 @@ class Environment(object):
 
         # Solve the environment in parallel on Linux
         start = time.time()
-        _concretize_task = _ConcretizeTask()
+        max_processes = min(
+            max(len(arguments), 1),  # Number of specs
+            16  # Cap on 16 cores
+        )
+
+        # TODO: revisit this print as soon as darwin is parallel too
+        msg = 'Starting concretization'
         if sys.platform != 'darwin':
-            max_processes = min(spack.util.cpus.cpus_available(), 16)
-            nspecs = max(len(arguments), 1)
-            nprocesses = min(nspecs, max_processes)
-            msg = 'Starting concretization pool with {0} processes'
-            tty.msg(msg.format(nprocesses))
-            with spack.util.parallel.pool(processes=nprocesses) as pool:
-                concretized_root_specs = pool.map(_concretize_task, arguments)
-        else:
-            tty.msg('Starting concretization')
-            concretized_root_specs = list(map(_concretize_task, arguments))
-        spack.util.parallel.raise_if_errors(*concretized_root_specs)
+            msg = msg + ' pool with {0} processes'.format(
+                spack.util.parallel.num_processes(max_processes=max_processes)
+            )
+        tty.msg(msg)
+
+        concretized_root_specs = spack.util.parallel.parallel_map(
+            _ConcretizeTask(), arguments, max_processes=max_processes
+        )
+
         finish = time.time()
         tty.msg('Environment concretized in {0} sec.'.format(finish - start))
         results = []

@@ -12,6 +12,8 @@ import traceback
 
 import six
 
+from .cpus import cpus_available
+
 
 class ErrorFromWorker(object):
     """Wrapper class to report an error from a worker process"""
@@ -92,3 +94,35 @@ def pool(*args, **kwargs):
     finally:
         p.terminate()
         p.join()
+
+
+def num_processes(max_processes=None):
+    """Return the number of processes in a pool.
+
+    Currently the function return the minimum between the maximum number
+    of processes and the cpus available.
+
+    When a maximum number of processes is not specified return the cpus available.
+
+    Args:
+        max_processes (int or None): maximum number of processes allowed
+    """
+    max_processes or cpus_available()
+    return min(cpus_available(), max_processes)
+
+
+def parallel_map(task_obj, arguments, max_processes=None):
+    """Map a task object to the list of arguments, return the list of results.
+
+    Args:
+        task_obj (Task): user defined task object
+        arguments (list): list of arguments for the task
+        max_processes (int or None): maximum number of processes allowed
+    """
+    if sys.platform != 'darwin':
+        with pool(processes=num_processes(max_processes=max_processes)) as p:
+            results = p.map(task_obj, arguments)
+    else:
+        results = list(map(task_obj, arguments))
+    raise_if_errors(*results)
+    return results
