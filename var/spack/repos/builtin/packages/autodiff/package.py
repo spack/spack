@@ -29,20 +29,15 @@ class Autodiff(CMakePackage):
 
     variant('python', default='False', description='Enable the compilation of the python bindings.')
     variant('examples', default='False', description='Enable the compilation of the example files.')
-    variant('docs', default='False', description='Enable the build of the documentation and website.')
 
     depends_on('cmake@3.0:', type='build')
     depends_on('eigen')
     depends_on('py-pybind11', type=('build', 'run'))
-    # FIXME no py-mkdocs yet in spack
-    #depends_on('py-mkdocs', when='+docs')
-    conflicts('+docs', msg='No support yet for py-mkdocs in spack')
 
     def cmake_args(self):
         args = [
-            self.define('AUTODIFF_BUILD_TESTS',self.run_tests),
+            self.define('AUTODIFF_BUILD_TESTS', self.run_tests),
             self.define_from_variant('AUTODIFF_BUILD_PYTHON', 'python'),
-            self.define_from_variant('AUTODIFF_BUILD_EXAMPLES', 'examples',),
-            self.define_from_variant('AUTODIFF_BUILD_DOCS', 'docs')
+            self.define_from_variant('AUTODIFF_BUILD_EXAMPLES', 'examples',)
         ]
         return args
