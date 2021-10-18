@@ -83,13 +83,17 @@ class Hdf5(CMakePackage):
 
     depends_on('cmake@3.12:', type='build')
 
-    depends_on('mpi', when='+mpi')
+    if sys.platform != 'windows':
+        depends_on('mpi', when='+mpi')
     depends_on('java', type=('build', 'run'), when='+java')
-    depends_on('szip', when='+szip')
+    # numactl does not currently build on darwin
+    if sys.platform != 'darwin' and sys.platform != 'windows':
+        depends_on('numactl', when='+mpi+fortran')
+        depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
-    depends_on('pkgconfig', type='run')
+    
 
     conflicts('api=v114', when='@1.6:1.12',
               msg='v114 is not compatible with this release')
