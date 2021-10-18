@@ -1143,6 +1143,7 @@ class Environment(object):
 
         # Solve the environment in parallel on Linux
         start = time.time()
+        _concretize_task = _ConcretizeTask()
         if sys.platform != 'darwin':
             max_processes = min(spack.util.cpus.cpus_available(), 16)
             nspecs = max(len(arguments), 1)
@@ -2006,14 +2007,11 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             invalid_constraints.extend(inv_variant_constraints)
 
 
-def _concretize_task(packed_arguments):
-    spec_constraints, tests = packed_arguments
-    try:
+class _ConcretizeTask(spack.util.parallel.Task):
+    def execute(self, packed_arguments):
+        spec_constraints, tests = packed_arguments
         with tty.SuppressOutput(msg_enabled=False):
-            value = _concretize_from_constraints(spec_constraints, tests)
-    except Exception:
-        value = spack.util.parallel.ErrorFromWorker(*sys.exc_info())
-    return value
+            return _concretize_from_constraints(spec_constraints, tests)
 
 
 def make_repo_path(root):

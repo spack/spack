@@ -7,6 +7,7 @@ from __future__ import print_function
 import contextlib
 import multiprocessing
 import os
+import sys
 import traceback
 
 import six
@@ -30,6 +31,27 @@ class ErrorFromWorker(object):
     def __str__(self):
         msg = "[PID={0.pid}] {0.error_message}"
         return msg.format(self)
+
+
+class Task(object):
+    """Wrapped task that trap every Exception and return it as an
+    ErrorFromWorker object.
+
+    Clients must derive this class and implement an "execute" method to perform
+    the required action.
+
+    We are using a wrapper class instead of a decorator since the class is pickleable,
+    while a decorator with an inner closure is not.
+    """
+    def execute(self):
+        raise NotImplementedError('derived classes must implement this method')
+
+    def __call__(self, *args, **kwargs):
+        try:
+            value = self.execute(*args, **kwargs)
+        except Exception:
+            value = ErrorFromWorker(*sys.exc_info())
+        return value
 
 
 def raise_if_errors(*results):
