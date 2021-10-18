@@ -13,17 +13,17 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
-    version('develop', branch='develop')
     version('1.9.1',   sha256='3c334da26d2a201b572579fc1a7f8caad1cbf971e848a3e10d83bc4dc8c82e41')
     version('1.9.0',   sha256='4500e505f5a29d213f678a91d00a10fef9dc00860ea4b3edf9280f33ed0d1ac8')
-    #version('1.8.3',   sha256='f112bb08833da4d11dd0f14f7ab10d740b62bc924806d77c985eb04ae0629909')
-    #version('1.8.2',   sha256='042e5a3b478b1a4c050c450a9b1be7bcf8e13eacbce4759b7f2d79268b298d61')
-    #version('1.8.1',   sha256='e09ff0ba381f6ffbe6a3c0cb71db5b73117874beb41f22a982a7e5ba32d018b3')
+    version('1.8.3',   sha256='f112bb08833da4d11dd0f14f7ab10d740b62bc924806d77c985eb04ae0629909')
+    version('1.8.2',   sha256='042e5a3b478b1a4c050c450a9b1be7bcf8e13eacbce4759b7f2d79268b298d61')
+    version('1.8.1',   sha256='e09ff0ba381f6ffbe6a3c0cb71db5b73117874beb41f22a982a7e5ba32d018b3')
 
     variant('scalapack', default=True,  description='Enable SCALAPACK support')
     variant('openmp',    default=True,  description='Enable OpenMP support')
     variant('pexsi',     default=False, description='Give the link-line for PEXSI')
     variant('archive',   default=False, description='Add support of archives for output files.')
+    variant('openbabel', default=False, description='Enable detection of openbabel compilation')
 
     depends_on('python@:2.8', type='build', when="@:1.9.0")
     depends_on('python@3.0:', type='build', when="@1.9.1:")
@@ -31,16 +31,33 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('bigdft-futile')
-    depends_on('bigdft-chess')
-    depends_on('bigdft-psolver')
-    depends_on('bigdft-libabinit')
+    depends_on('bigdft-futile@1.9.1',    when='@1.9.1')
+    depends_on('bigdft-futile@1.9.0',    when='@1.9.0')
+    depends_on('bigdft-futile@1.8.3',    when='@1.8.3')
+    depends_on('bigdft-futile@1.8.2',    when='@1.8.2')
+    depends_on('bigdft-futile@1.8.1',    when='@1.8.1')
+    depends_on('bigdft-chess@1.9.1',     when='@1.9.1')
+    depends_on('bigdft-chess@1.9.0',     when='@1.9.0')
+    depends_on('bigdft-chess@1.8.3',     when='@1.8.3')
+    depends_on('bigdft-chess@1.8.2',     when='@1.8.2')
+    depends_on('bigdft-chess@1.8.1',     when='@1.8.1')
+    depends_on('bigdft-psolver@1.9.1',   when='@1.9.1')
+    depends_on('bigdft-psolver@1.9.0',   when='@1.9.0')
+    depends_on('bigdft-psolver@1.8.3',   when='@1.8.3')
+    depends_on('bigdft-psolver@1.8.2',   when='@1.8.2')
+    depends_on('bigdft-psolver@1.8.1',   when='@1.8.1')
+    depends_on('bigdft-libabinit@1.9.1', when='@1.9.1')
+    depends_on('bigdft-libabinit@1.9.0', when='@1.9.0')
+    depends_on('bigdft-libabinit@1.8.3', when='@1.8.3')
+    depends_on('bigdft-libabinit@1.8.2', when='@1.8.2')
+    depends_on('bigdft-libabinit@1.8.1', when='@1.8.1')
     depends_on('py-pyyaml')
     depends_on('libgain')
     depends_on('libxc@:2.2.2')
     depends_on('libarchive', when='+archive')
     depends_on('scalapack', when='+scalapack')
-    depends_on('pexsi', when="+pexsi")
+    depends_on('pexsi+fortran', when="+pexsi")
+    depends_on('openbabel', when='+openbabel')
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
@@ -90,7 +107,9 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
             args.append("--with-scalapack-path=%s" % spec['scalapack'].libs.ld_flags)
 
         if '+cuda' in spec:
+            args.append("--enable-opencl")
             args.append("--with-ocl-path=%s" % spec['cuda'].prefix)
+            args.append("--enable-cuda-gpu")
             args.append("--with-cuda-path=%s" % spec['cuda'].prefix)
             args.append("--with-cuda-libs=%s" % spec['cuda'].libs.link_flags)
 
@@ -105,6 +124,11 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
 
         if '+pexsi' in spec:
             args.append("--with-pexsi")
+
+        if '+openbabel' in spec:
+            args.append("--enable-openbabel")
+            args.append("--with-openbabel-libs=%s" % spec['openbabel'].prefix.lib)
+            args.append("--with-openbabel-incs=%s" % spec['openbabel'].prefix.include)
 
         with working_dir('bigdft'):
             configure(*args)
