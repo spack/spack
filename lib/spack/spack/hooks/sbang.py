@@ -54,16 +54,15 @@ def sbang_shebang_itself_too_long():
 
 def shebang_too_long(path):
     """Detects whether a file has a shebang line that is too long."""
-    if not os.path.isfile(path):
+    try:
+        with open(path, 'rb') as script:
+            bytes = script.read(2)
+            if bytes != b'#!':
+                return False
+
+            return len(bytes) + len(script.readline()) > shebang_limit
+    except (OSError, IOError):
         return False
-
-    with open(path, 'rb') as script:
-        bytes = script.read(2)
-        if bytes != b'#!':
-            return False
-
-        line = bytes + script.readline()
-        return len(line) > shebang_limit
 
 
 def filter_shebang(path, use_sbang_in_PATH):
@@ -129,20 +128,12 @@ def filter_shebangs_in_directory(directory):
         for file in filenames:
             path = os.path.join(root, file)
 
-            # only handle files
-            if not os.path.isfile(path):
+            # skip over files that don't need to be patched.
+            if os.path.islink(path) or not shebang_too_long(path):
                 continue
 
-            # only handle links that resolve within THIS package's prefix.
-            if os.path.islink(path):
-                real_path = os.path.realpath(path)
-                if not real_path.startswith(root + os.sep):
-                    continue
-
-            # test the file for a long shebang, and filter
-            if shebang_too_long(path):
-                filter_shebang(path, use_sbang_in_PATH)
-                patched_files.append(file)
+            filter_shebang(path, use_sbang_in_PATH)
+            patched_files.append(file)
 
     return patched_files
 
