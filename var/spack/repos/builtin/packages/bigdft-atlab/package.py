@@ -18,7 +18,7 @@ class BigdftAtlab(AutotoolsPackage):
     version('1.9.0',   sha256='4500e505f5a29d213f678a91d00a10fef9dc00860ea4b3edf9280f33ed0d1ac8')
     version('1.8.3',   sha256='f112bb08833da4d11dd0f14f7ab10d740b62bc924806d77c985eb04ae0629909')
 
-    variant('openbabel', default=True,  description='Enable detection of openbabel compilation')
+    variant('openbabel', default=False,  description='Enable detection of openbabel compilation')
     variant('openmp',    default=True,  description='Enable OpenMP support')
 
     depends_on('python@:2.8', type='build', when="@:1.9.0")
