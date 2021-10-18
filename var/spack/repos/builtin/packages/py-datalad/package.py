@@ -20,6 +20,7 @@ class PyDatalad(PythonPackage):
     homepage = "https://datalad.org/"
     pypi     = "datalad/datalad-0.14.6.tar.gz"
 
+    version('0.15.2', sha256='1a878cf521270f089ee1f50339e71cfd7eed41e708d895a12d5c483a9b59991b')
     version('0.15.1', sha256='0a905b3c3419786ae85b61a7aee34b0fc9eecd814f38408f2767ae7122b57a8b')
     version('0.14.6', sha256='149b25a00da133a81be3cbdc041a1985418f0918fa5961ba979e23b5b3c08c63')
 
@@ -56,7 +57,7 @@ class PyDatalad(PythonPackage):
     depends_on('py-msgpack', type=('build', 'run'))
     depends_on('py-requests@1.2:', type=('build', 'run'))
 
-    # puplish
+    # publish
     depends_on('py-pygithub', type=('build', 'run'))
     depends_on('py-python-gitlab', type=('build', 'run'), when='@0.14.7:')
     depends_on('py-jsmin', type=('build', 'run'), when='@:0.14')

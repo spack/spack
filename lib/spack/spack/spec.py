@@ -4433,6 +4433,34 @@ class Spec(object):
         return _spec_from_dict, (self.to_dict(hash=ht.build_hash),)
 
 
+def merge_abstract_anonymous_specs(*abstract_specs):
+    """Merge the abstracts specs passed as input and return the result.
+
+    The root specs must be anonymous, and it's duty of the caller to ensure that.
+
+    This function merge the abstract specs based on package names. In particular
+    it doesn't try to resolve virtual dependencies.
+
+    Args:
+        *abstract_specs (list of Specs): abstract specs to be merged
+    """
+    merged_spec = spack.spec.Spec()
+    for current_spec_constraint in abstract_specs:
+        merged_spec.constrain(current_spec_constraint, deps=False)
+
+        for name in merged_spec.common_dependencies(current_spec_constraint):
+            merged_spec[name].constrain(
+                current_spec_constraint[name], deps=False
+            )
+
+        # Update with additional constraints from other spec
+        for name in current_spec_constraint.dep_difference(merged_spec):
+            edge = current_spec_constraint.get_dependency(name)
+            merged_spec._add_dependency(edge.spec.copy(), edge.deptypes)
+
+    return merged_spec
+
+
 def _spec_from_old_dict(data):
     """Construct a spec from JSON/YAML using the format version 1.
     Note: Version 1 format has no notion of a build_spec, and names are

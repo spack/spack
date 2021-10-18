@@ -1267,3 +1267,10 @@ class TestConcretize(object):
         s = spack.spec.Spec('root-adds-virtual').concretized()
         assert s['leaf-adds-virtual'].satisfies('@2.0')
         assert 'blas' in s
+
+    @pytest.mark.regression('26718')
+    def test_versions_in_virtual_dependencies(self):
+        # Ensure that a package that needs a given version of a virtual
+        # package doesn't end up using a later implementation
+        s = spack.spec.Spec('hpcviewer@2019.02').concretized()
+        assert s['java'].satisfies('virtual-with-versions@1.8.0')

@@ -147,6 +147,10 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         env.set('SLEPC_DIR', self.prefix)
         env.set('PETSC_DIR', self.spec['petsc'].prefix)
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # Set up SLEPC_DIR for dependent packages built with SLEPc
+        env.set('SLEPC_DIR', self.prefix)
+
     def run_hello_test(self):
         """Run stand alone test: hello"""
         test_dir = self.test_suite.current_test_data_dir

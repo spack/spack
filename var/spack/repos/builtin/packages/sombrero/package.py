@@ -16,6 +16,8 @@ class Sombrero(MakefilePackage):
     homepage = "https://github.com/sa2c/sombrero"
     url = "https://github.com/sa2c/sombrero/archive/refs/tags/1.0.tar.gz"
 
+    version('2021-08-16',
+            sha256='f62aa1934fef6a025449a9e037345043072be6198f92087853c58c67f1342f73')
     version('2021-07-31',
             sha256='9c59693f330904b1f444187d1974a179c61d801f063581acb94a7a77955151e0')
     version('2021-07-14',

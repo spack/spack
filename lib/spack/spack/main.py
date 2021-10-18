@@ -43,6 +43,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.debug
+import spack.util.environment
 import spack.util.executable as exe
 import spack.util.path
 from spack.error import SpackError
@@ -478,6 +479,7 @@ def setup_main_options(args):
         spack.error.debug = True
         spack.util.debug.register_interrupt_handler()
         spack.config.set('config:debug', True, scope='command_line')
+        spack.util.environment.tracing_enabled = True
 
     if args.timestamp:
         tty.set_timestamp(True)
