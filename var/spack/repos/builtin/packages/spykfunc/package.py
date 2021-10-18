@@ -16,6 +16,7 @@ class Spykfunc(PythonPackage):
     git      = "git@bbpgitlab.epfl.ch:hpc/circuit-building/spykfunc.git"
 
     version('develop', submodules=True, get_full_repo=True)
+    version('0.17.1', tag='v0.17.1', submodules=True, get_full_repo=True)
     version('0.17.0', tag='v0.17.0', submodules=True, get_full_repo=True)
     version('0.16.99', tag='v0.16.99', submodules=True, get_full_repo=True)
     version('0.16.1', tag='v0.16.1', submodules=True, get_full_repo=True)
