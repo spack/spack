@@ -298,21 +298,25 @@ def get_uninstall_list(args, specs, env):
         print()
         tty.die('There are still dependents.', *msgs)
 
+    # If we are in an environment, this will track specs in this environment
+    # which should only be removed from the environment rather than uninstalled
+    remove_only = set()
+
     if args.dependents:
         for spec, lst in active_dpts.items():
             uninstall_specs.update(lst)
 
-    remove_only = set()
-    if args.remove:
-        if args.dependents:
-            if args.force:
-                for spec, lst in inactive_dpts.items():
-                    uninstall_specs.update(lst)
-            else:
-                for spec, lst in inactive_dpts.items():
-                    remove_only.update(lst)
-        if not args.force:
-            remove_only.update(spec_envs)
+        if args.force:
+            for spec, lst in inactive_dpts.items():
+                uninstall_specs.update(lst)
+        elif args.remove:
+            for spec, lst in inactive_dpts.items():
+                remove_only.update(lst)
+        # In this case, force=False, so inactive_dpts must be empty if we
+        # made it here (spec_envs would also be nonempty)
+
+    if args.remove and not args.force:
+        remove_only.update(spec_envs)
 
     # Compute the set of specs that should be removed from the current env.
     remove_specs = uninstall_specs & remove_only
