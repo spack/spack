@@ -19,7 +19,7 @@ class PyZipp(PythonPackage):
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('python@3.6:', type=('build', 'run'), when='@2.0.0:')
     depends_on('py-setuptools@34.4:', type='build', when='@0.3.3:')
-    depends_on('py-setuptools@56:', type='build', when='@3.5.1:'
+    depends_on('py-setuptools@56:', type='build', when='@3.5.1:')
     depends_on('py-setuptools-scm@1.15.0:', type='build')
     depends_on('py-setuptools-scm@3.4.1: +toml', type='build', when='@2.0.1:')
     depends_on('py-more-itertools', type=('build', 'run'), when='@0.6.0:2.1.0')
