@@ -3,6 +3,7 @@ spack:
   concretization: separately
 
   config:
+    concretizer: clingo
     install_tree:
       root: /home/software/spack
       padded_length: 512
