@@ -1155,9 +1155,9 @@ class Environment(object):
         # TODO: revisit this print as soon as darwin is parallel too
         msg = 'Starting concretization'
         if sys.platform != 'darwin':
-            msg = msg + ' pool with {0} processes'.format(
-                spack.util.parallel.num_processes(max_processes=max_processes)
-            )
+            pool_size = spack.util.parallel.num_processes(max_processes=max_processes)
+            if pool_size > 1:
+                msg = msg + ' pool with {0} processes'.format(pool_size)
         tty.msg(msg)
 
         concretized_root_specs = spack.util.parallel.parallel_map(
