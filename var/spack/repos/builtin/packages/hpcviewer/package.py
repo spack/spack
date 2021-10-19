@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import os.path
 import platform
 
@@ -38,17 +39,15 @@ def darwin_url(ver, mach):
 class Hpcviewer(Package):
     """Binary distribution of hpcviewer and integrated hpctraceviewer for
     the Rice HPCToolkit (Linux x86_64, ppc64le and aarch64, and MacOSX
-    x86_64 and M1).  Note: hpctoolkit databases are platform independent,
-    so you don't need to install hpctoolkit to run the viewers and it's
+    x86_64).  Note: hpctoolkit databases are platform independent, so
+    you don't need to install hpctoolkit to run the viewers and it's
     common to run hpcrun and hpcviewer on different machines."""
 
     homepage = "http://hpctoolkit.org"
     maintainers = ['mwkrentel']
 
     darwin_sha = {
-        ('2021.10', 'aarch64'): '260a359d64fc579cc6b5756d4a800ca8c4fe5300fdf17acbfa8419482f2c6a2b',
         ('2021.10', 'x86_64'):  '0b71f2d63d99eb00fbaf9c03cf8632c198627c80e4372eeec5f20864509cbbe8',
-        ('2021.05', 'aarch64'): '033a9c772a53b861dcce5174ae971c5feb57401590ff4a46b604c72a361751f3',
         ('2021.05', 'x86_64'):  '4643567b41dddbbf9272cb56b0720f4eddfb144ca05aaad7d08c878ffaf8f2fa',
     }
 
@@ -165,7 +164,7 @@ class Hpcviewer(Package):
                              sha256=trace_sha[key], placement='TRACE',
                              when='@{0}'.format(key[0]))
 
-    depends_on('java@11:14', type=('build', 'run'), when='@2021.0:')
+    depends_on('java@11:', type=('build', 'run'), when='@2021.0:')
     depends_on('java@8', type=('build', 'run'), when='@:2020')
 
     # Install for MacOSX / Darwin
@@ -177,11 +176,18 @@ class Hpcviewer(Package):
         filter_file('(-startup)', '-vm\n' + java_binary + '\n' + r'\1',
                     ini_file, backup=False)
 
-        # Copy files into prefix/hpcviewer.app, symlink bin directory.
+        # Copy files into prefix/hpcviewer.app.
         app_dir = join_path(prefix, 'hpcviewer.app')
         mkdirp(app_dir)
         install_tree('.', app_dir)
-        os.symlink(join_path('hpcviewer.app', 'Contents', 'MacOS'), prefix.bin)
+
+        # Add launch script to call 'open' on app directory.
+        mkdirp(prefix.bin)
+        viewer_file = join_path(prefix.bin, 'hpcviewer')
+        with open(viewer_file, 'w') as file:
+            file.write('#!/bin/sh\n')
+            file.write('open ' + app_dir + '\n')
+        os.chmod(viewer_file, 0o755)
 
     # Install for Cray front-end is the same as Linux.
     @when('platform=cray')
