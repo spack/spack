@@ -1422,6 +1422,7 @@ class GCSFetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
+        import spack.util.web as web_util
         if self.archive_file:
             tty.debug('Already downloaded {0}'.format(self.archive_file))
             return

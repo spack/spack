@@ -7,17 +7,17 @@ import os
 
 import pytest
 
-import spack.config as spack_config
-import spack.fetch_strategy as spack_fs
-import spack.stage as spack_stage
+import spack.config
+import spack.fetch_strategy
+import spack.stage
 
 
 @pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
-def test_gcsfetchstrategy_sans_url(_fetch_method):
+def test_gcsfetchstrategy_without_url(_fetch_method):
     """Ensure constructor with no URL fails."""
-    with spack_config.override('config:url_fetch_method', _fetch_method):
+    with spack.config.override('config:url_fetch_method', _fetch_method):
         with pytest.raises(ValueError):
-            spack_fs.GCSFetchStrategy(None)
+            spack.fetch_strategy.GCSFetchStrategy(None)
 
 
 @pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
@@ -25,14 +25,14 @@ def test_gcsfetchstrategy_bad_url(tmpdir, _fetch_method):
     """Ensure fetch with bad URL fails as expected."""
     testpath = str(tmpdir)
 
-    with spack_config.override('config:url_fetch_method', _fetch_method):
-        fetcher = spack_fs.GCSFetchStrategy(url='file:///does-not-exist')
+    with spack.config.override('config:url_fetch_method', _fetch_method):
+        fetcher = spack.fetch_strategy.GCSFetchStrategy(url='file:///does-not-exist')
         assert fetcher is not None
 
-        with spack_stage.Stage(fetcher, path=testpath) as stage:
+        with spack.stage.Stage(fetcher, path=testpath) as stage:
             assert stage is not None
             assert fetcher.archive_file is None
-            with pytest.raises(spack_fs.FetchError):
+            with pytest.raises(spack.fetch_strategy.FetchError):
                 fetcher.fetch()
 
 
@@ -42,13 +42,13 @@ def test_gcsfetchstrategy_downloaded(tmpdir, _fetch_method):
     testpath = str(tmpdir)
     archive = os.path.join(testpath, 'gcs.tar.gz')
 
-    with spack_config.override('config:url_fetch_method', _fetch_method):
-        class Archived_GCSFS(spack_fs.GCSFetchStrategy):
+    with spack.config.override('config:url_fetch_method', _fetch_method):
+        class Archived_GCSFS(spack.fetch_strategy.GCSFetchStrategy):
             @property
             def archive_file(self):
                 return archive
 
         url = 'gcs:///{0}'.format(archive)
         fetcher = Archived_GCSFS(url=url)
-        with spack_stage.Stage(fetcher, path=testpath):
+        with spack.stage.Stage(fetcher, path=testpath):
             fetcher.fetch()

@@ -40,11 +40,16 @@ class GCSBucket(object):
     """
     def __init__(self, url, client=None):
         """Constructor for GCSBucket objects
+
+           Args:
+             url (str): The url pointing to the GCS bucket to build an object out of
+             client (google.cloud.storage.client.Client): A pre-defined storage
+                    client that will be used to access the GCS bucket.
         """
         if url.scheme != 'gs':
             raise ValueError('Can not create GCS bucket connection with scheme {SCHEME}'
                              .format(SCHEME=url.scheme))
-        self. url = url
+        self.url = url
         self.name = self.url.netloc
         if self.url.path[0] == '/':
             self.prefix = self.url.path[1:]
@@ -69,7 +74,7 @@ class GCSBucket(object):
             except NotFound as ex:
                 tty.error("{0}, Failed check for bucket existence".format(ex))
                 sys.exit(1)
-        return (self.bucket is not None)
+        return self.bucket is not None
 
     def create(self):
         if not self.bucket:
@@ -98,10 +103,9 @@ class GCSBucket(object):
         tty.debug('Getting GCS blobs... Recurse {0} -- Rel: {1}'.format(
             recursive, relative))
 
+        converter = str
         if relative:
             converter = self._relative_blob_name
-        else:
-            converter = str
 
         if self.exists():
             all_blobs = self.bucket.list_blobs(prefix=self.prefix)
@@ -159,10 +163,7 @@ class GCSBlob(object):
             raise ValueError('Can not create GCS blob connection with scheme: {SCHEME}'
                              .format(SCHEME=url.scheme))
 
-        if not client:
-            self.client = gcs_client()
-        else:
-            self.client = client
+        self.client = client or gcs_client()
 
         self.bucket = GCSBucket(url)
 
@@ -207,10 +208,11 @@ class GCSBlob(object):
     def get_blob_headers(self):
         blob = self.bucket.get_blob(self.blob_path)
 
-        headers = {}
-        headers['Content-type'] = blob.content_type
-        headers['Content-encoding'] = blob.content_encoding
-        headers['Content-language'] = blob.content_language
-        headers['MD5Hash'] = blob.md5_hash
+        headers = {
+            'Content-type': blob.content_type,
+            'Content-encoding': blob.content_encoding,
+            'Content-language': blob.content_language,
+            'MD5Hash': blob.md5_hash
+        }
 
         return headers
