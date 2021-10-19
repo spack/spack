@@ -173,4 +173,4 @@ def test_configargs_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config)
     install('libdwarf')
     analyzer_dir = tmpdir.join('analyzers')
     out = analyze('run', '-a', 'config_args', '-p', str(analyzer_dir), 'libdwarf')
-    assert out == ''
+    assert '==> Preparing to analyze N=1 specs...' in out
