@@ -12,7 +12,7 @@ class Wordnet(AutotoolsPackage):
     expressing a distinct concept. """
 
     homepage = "https://wordnet.princeton.edu/"
-    url      = "http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
+    url      = "https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
 
     version('3.0', sha256='640db279c949a88f61f851dd54ebbb22d003f8b90b85267042ef85a3781d3a52')
 

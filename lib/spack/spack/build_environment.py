@@ -49,7 +49,6 @@ from llnl.util.lang import dedupe
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
 
-import spack.architecture as arch
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.config
@@ -57,6 +56,7 @@ import spack.install_test
 import spack.main
 import spack.package
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.schema.environment
 import spack.store
@@ -72,7 +72,6 @@ from spack.util.environment import (
     get_path,
     inspect_path,
     is_system_path,
-    preserve_environment,
     system_dirs,
     validate,
 )
@@ -148,6 +147,14 @@ class MakeExecutable(Executable):
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
+def _on_cray():
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system('default_os')
+    on_cray = str(host_platform) == 'cray'
+    using_cnl = re.match(r'cnl\d+', str(host_os))
+    return on_cray, using_cnl
+
+
 def clean_environment():
     # Stuff in here sanitizes the build environment to eliminate
     # anything the user has set that may interfere. We apply it immediately
@@ -171,6 +178,9 @@ def clean_environment():
 
     env.unset('CMAKE_PREFIX_PATH')
 
+    # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
+    env.unset('MAKEFLAGS')
+
     # Avoid that libraries of build dependencies get hijacked.
     env.unset('LD_PRELOAD')
     env.unset('DYLD_INSERT_LIBRARIES')
@@ -179,9 +189,7 @@ def clean_environment():
     # interference with Spack dependencies.
     # CNL requires these variables to be set (or at least some of them,
     # depending on the CNL version).
-    hostarch = arch.Arch(arch.platform(), 'default_os', 'default_target')
-    on_cray = str(hostarch.platform) == 'cray'
-    using_cnl = re.match(r'cnl\d+', str(hostarch.os))
+    on_cray, using_cnl = _on_cray()
     if on_cray and not using_cnl:
         env.unset('CRAY_LD_LIBRARY_PATH')
         for varname in os.environ.keys():
@@ -224,7 +232,7 @@ def clean_environment():
         if '/macports/' in p:
             env.remove_path('PATH', p)
 
-    env.apply_modifications()
+    return env
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -757,79 +765,77 @@ def setup_package(pkg, dirty, context='build'):
 
     set_module_variables_for_package(pkg)
 
-    env = EnvironmentModifications()
-
-    if not dirty:
-        clean_environment()
+    # Keep track of env changes from packages separately, since we want to
+    # issue warnings when packages make "suspicious" modifications.
+    env_base = EnvironmentModifications() if dirty else clean_environment()
+    env_mods = EnvironmentModifications()
 
     # setup compilers for build contexts
     need_compiler = context == 'build' or (context == 'test' and
                                            pkg.test_requires_compiler)
     if need_compiler:
-        set_compiler_environment_variables(pkg, env)
-        set_wrapper_variables(pkg, env)
+        set_compiler_environment_variables(pkg, env_mods)
+        set_wrapper_variables(pkg, env_mods)
 
-    env.extend(modifications_from_dependencies(
+    env_mods.extend(modifications_from_dependencies(
         pkg.spec, context, custom_mods_only=False))
 
     # architecture specific setup
-    pkg.architecture.platform.setup_platform_environment(pkg, env)
+    platform = spack.platforms.by_name(pkg.spec.architecture.platform)
+    target = platform.target(pkg.spec.architecture.target)
+    platform.setup_platform_environment(pkg, env_mods)
 
     if context == 'build':
-        pkg.setup_build_environment(env)
+        pkg.setup_build_environment(env_mods)
 
-        if (not dirty) and (not env.is_unset('CPATH')):
+        if (not dirty) and (not env_mods.is_unset('CPATH')):
             tty.debug("A dependency has updated CPATH, this may lead pkg-"
                       "config to assume that the package is part of the system"
                       " includes and omit it when invoked with '--cflags'.")
     elif context == 'test':
-        env.extend(
+        env_mods.extend(
             inspect_path(
                 pkg.spec.prefix,
                 spack.user_environment.prefix_inspections(pkg.spec.platform),
                 exclude=is_system_path
             )
         )
-        pkg.setup_run_environment(env)
-        env.prepend_path('PATH', '.')
+        pkg.setup_run_environment(env_mods)
+        env_mods.prepend_path('PATH', '.')
 
-    # Loading modules, in particular if they are meant to be used outside
-    # of Spack, can change environment variables that are relevant to the
-    # build of packages. To avoid a polluted environment, preserve the
-    # value of a few, selected, environment variables
-    # With the current ordering of environment modifications, this is strictly
-    # unnecessary. Modules affecting these variables will be overwritten anyway
-    with preserve_environment('CC', 'CXX', 'FC', 'F77'):
-        # All module loads that otherwise would belong in previous
-        # functions have to occur after the env object has its
-        # modifications applied. Otherwise the environment modifications
-        # could undo module changes, such as unsetting LD_LIBRARY_PATH
-        # after a module changes it.
-        if need_compiler:
-            for mod in pkg.compiler.modules:
-                # Fixes issue https://github.com/spack/spack/issues/3153
-                if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                    load_module("cce")
-                load_module(mod)
+    # First apply the clean environment changes
+    env_base.apply_modifications()
 
-        # kludge to handle cray libsci being automatically loaded by PrgEnv
-        # modules on cray platform. Module unload does no damage when
-        # unnecessary
+    # Load modules on an already clean environment, just before applying Spack's
+    # own environment modifications. This ensures Spack controls CC/CXX/... variables.
+    if need_compiler:
+        for mod in pkg.compiler.modules:
+            load_module(mod)
+
+    # kludge to handle cray libsci being automatically loaded by PrgEnv
+    # modules on cray platform. Module unload does no damage when
+    # unnecessary
+    on_cray, _ = _on_cray()
+    if on_cray:
         module('unload', 'cray-libsci')
 
-        if pkg.architecture.target.module_name:
-            load_module(pkg.architecture.target.module_name)
+    if target.module_name:
+        load_module(target.module_name)
 
-        load_external_modules(pkg)
+    load_external_modules(pkg)
 
     implicit_rpaths = pkg.compiler.implicit_rpaths()
     if implicit_rpaths:
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
-                ':'.join(implicit_rpaths))
+        env_mods.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                     ':'.join(implicit_rpaths))
 
     # Make sure nothing's strange about the Spack environment.
-    validate(env, tty.warn)
-    env.apply_modifications()
+    validate(env_mods, tty.warn)
+    env_mods.apply_modifications()
+
+    # Return all env modifications we controlled (excluding module related ones)
+    env_base.extend(env_mods)
+    return env_base
 
 
 def _make_runnable(pkg, env):
@@ -1017,8 +1023,8 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
 
         if not kwargs.get('fake', False):
             kwargs['unmodified_env'] = os.environ.copy()
-            setup_package(pkg, dirty=kwargs.get('dirty', False),
-                          context=context)
+            kwargs['env_modifications'] = setup_package(
+                pkg, dirty=kwargs.get('dirty', False), context=context)
         return_value = function(pkg, kwargs)
         child_pipe.send(return_value)
 

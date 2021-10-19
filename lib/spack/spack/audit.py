@@ -37,11 +37,15 @@ as input.
 """
 import collections
 import itertools
+import re
+
+from six.moves.urllib.request import urlopen
 
 try:
     from collections.abc import Sequence  # novm
 except ImportError:
     from collections import Sequence
+
 
 #: Map an audit tag to a list of callables implementing checks
 CALLBACKS = {}
@@ -260,6 +264,45 @@ package_directives = AuditClass(
     description='Sanity checks on specs used in directives',
     kwargs=('pkgs',)
 )
+
+#: Sanity checks on linting
+# This can take some time, so it's run separately from packages
+package_https_directives = AuditClass(
+    group='packages-https',
+    tag='PKG-HTTPS-DIRECTIVES',
+    description='Sanity checks on https checks of package urls, etc.',
+    kwargs=('pkgs',)
+)
+
+
+@package_https_directives
+def _linting_package_file(pkgs, error_cls):
+    """Check for correctness of links
+    """
+    import llnl.util.lang
+
+    import spack.repo
+    import spack.spec
+
+    errors = []
+    for pkg_name in pkgs:
+        pkg = spack.repo.get(pkg_name)
+
+        # Does the homepage have http, and if so, does https work?
+        if pkg.homepage.startswith('http://'):
+            https = re.sub("http", "https", pkg.homepage, 1)
+            try:
+                response = urlopen(https)
+            except Exception as e:
+                msg = 'Error with attempting https for "{0}": '
+                errors.append(error_cls(msg.format(pkg.name), [str(e)]))
+                continue
+
+            if response.getcode() == 200:
+                msg = 'Package "{0}" uses http but has a valid https endpoint.'
+                errors.append(msg.format(pkg.name))
+
+    return llnl.util.lang.dedupe(errors)
 
 
 @package_directives

@@ -26,11 +26,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     homepage = "https://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
-    url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
+    url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
 
     executables = [r'^perl(-?\d+.*)?$']
 
-    # see http://www.cpan.org/src/README.html for
+    # see https://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)
@@ -63,15 +63,28 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     extendable = True
 
-    depends_on('gdbm')
+    # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
+    depends_on('gdbm@:1.19')
+    # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
+    depends_on('gdbm@:1.14.1', when='@:5.28.0')
     depends_on('berkeley-db')
-    depends_on('bzip2+shared')
-    depends_on('zlib+shared')
+    depends_on('bzip2')
+    depends_on('zlib')
+    # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
+    depends_on('zlib@:1.2.8', when='@5.20.3:5.24.1')
 
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch('protect-quotes-in-ccflags.patch', when='@5.22.0')
+
+    # Fix the Time-Local testase http://blogs.perl.org/users/tom_wyant/2020/01/my-y2020-bug.html
+    patch('https://rt.cpan.org/Public/Ticket/Attachment/1776857/956088/0001-Fix-Time-Local-tests.patch',
+          when='@5.26.0:5.28.9',
+          sha256='8cf4302ca8b480c60ccdcaa29ec53d9d50a71d4baf469ac8c6fca00ca31e58a2')
+    patch('https://raw.githubusercontent.com/costabel/fink-distributions/master/10.9-libcxx/stable/main/finkinfo/languages/perl5162-timelocal-y2020.patch',
+          when='@:5.24.1',
+          sha256='3bbd7d6f9933d80b9571533867b444c6f8f5a1ba0575bfba1fba4db9d885a71a')
 
     # Fix build on Fedora 28
     # https://bugzilla.redhat.com/show_bug.cgi?id=1536752
@@ -84,10 +97,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # Enable builds with the NVIDIA compiler
     # The Configure script assumes some gcc specific behavior, and use
     # the mini Perl environment to bootstrap installation.
-    patch('nvhpc-5.30.patch', when='@5.30.0:5.30.99 %nvhpc')
-    patch('nvhpc-5.32.patch', when='@5.32.0:5.32.99 %nvhpc')
+    patch('nvhpc-5.30.patch', when='@5.30.0:5.30 %nvhpc')
+    patch('nvhpc-5.32.patch', when='@5.32.0:5.32 %nvhpc')
     conflicts('@5.32.0:', when='%nvhpc@:20.11',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
+
+    # Make sure we don't get "recompile with -fPIC" linker errors when using static libs
+    conflicts('^zlib~shared~pic', msg='Needs position independent code when using static zlib')
+    conflicts('^bzip2~shared~pic', msg='Needs position independent code when using static bzip2')
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
@@ -111,6 +128,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     )
 
     phases = ['configure', 'build', 'install']
+
+    def patch(self):
+        # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
+        os.chmod('lib/perlbug.t', 0o644)
+        filter_file('!/$B/', '! (/(?:$B|PATH)/)', 'lib/perlbug.t')
 
     @classmethod
     def determine_version(cls, exe):

@@ -15,6 +15,10 @@ class Dnstop(AutotoolsPackage):
     version('master', branch='master')
 
     depends_on('libpcap')
+    depends_on('ncurses')
+
+    def configure_args(self):
+        return ['LIBS=-ltinfo']
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

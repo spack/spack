@@ -143,7 +143,7 @@ spack:
       variants: threads=openmp
     openssl:
       version:
-        - 1.1.1k
+        - 1.1.1l
     perl:
       version:
       - 5.34.0 # 5.34.0
@@ -181,7 +181,7 @@ spack:
   - cuda_specs:
     - amrex +cuda cuda_arch=70
     - caliper +cuda cuda_arch=70
-    - chai +cuda ~benchmarks ~tests cuda_arch=70 ^umpire@4.1.2 ~shared
+    - chai +cuda ~benchmarks ~tests cuda_arch=70 ^umpire~shared+cuda
     - ginkgo +cuda cuda_arch=70
     - hpx +cuda cuda_arch=70
     - kokkos +cuda +wrapper cuda_arch=70
@@ -209,11 +209,11 @@ spack:
     - archer
     - argobots
     - ascent
-    - axom ^umpire@4.1.2
+    - axom ^umpire@5.0.1 ^raja@0.13.0
     - bolt
     - cabana
     - caliper
-    - chai ~benchmarks ~tests ^umpire@4.1.2
+    - chai ~benchmarks ~tests
     - charliecloud
     - conduit
     - darshan-runtime
@@ -303,7 +303,7 @@ spack:
     #- variorum
 
   - arch:
-    - '%gcc@9.3.0 arch=linux-ubuntu20.04-ppc64le'
+    - '%gcc target=ppc64le'
 
 
   specs:
@@ -345,11 +345,11 @@ spack:
         - vtk-m
         - warpx
         runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "xlarge", "ppc64le"]
       - match: ['os=ubuntu20.04']
         runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "large", "ppc64le"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
@@ -357,9 +357,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_pipelines/stacks/e4s-on-power
-        - spack env activate --without-view .
-      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "ppc64le"]
 
   cdash:
@@ -367,5 +365,3 @@ spack:
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
-
-

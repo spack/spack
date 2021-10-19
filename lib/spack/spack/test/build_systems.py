@@ -10,8 +10,9 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.environment
 import spack.repo
-from spack.build_environment import get_std_cmake_args, setup_package
+from spack.build_environment import ChildError, get_std_cmake_args, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
 
@@ -169,6 +170,9 @@ class TestAutotoolsPackage(object):
         options = pkg.with_or_without('bvv')
         assert '--with-bvv' in options
 
+        options = pkg.with_or_without('lorem-ipsum', variant='lorem_ipsum')
+        assert '--without-lorem-ipsum' in options
+
     def test_none_is_allowed(self):
         s = Spec('a foo=none')
         s.concretize()
@@ -187,7 +191,7 @@ class TestAutotoolsPackage(object):
             self, mutable_database
     ):
         # Install a package that creates a mock libtool archive
-        s = spack.spec.Spec('libtool-deletion')
+        s = Spec('libtool-deletion')
         s.concretize()
         s.package.do_install(explicit=True)
 
@@ -205,13 +209,96 @@ class TestAutotoolsPackage(object):
     ):
         # Install a package that creates a mock libtool archive,
         # patch its package to preserve the installation
-        s = spack.spec.Spec('libtool-deletion')
+        s = Spec('libtool-deletion')
         s.concretize()
         monkeypatch.setattr(s.package, 'install_libtool_archives', True)
         s.package.do_install(explicit=True)
 
         # Assert libtool archives are installed
         assert os.path.exists(s.package.libtool_archive_file)
+
+    def test_autotools_gnuconfig_replacement(self, mutable_database):
+        """
+        Tests whether only broken config.sub and config.guess are replaced with
+        files from working alternatives from the gnuconfig package.
+        """
+        s = Spec('autotools-config-replacement +patch_config_files +gnuconfig')
+        s.concretize()
+        s.package.do_install()
+
+        with open(os.path.join(s.prefix.broken, 'config.sub')) as f:
+            assert "gnuconfig version of config.sub" in f.read()
+
+        with open(os.path.join(s.prefix.broken, 'config.guess')) as f:
+            assert "gnuconfig version of config.guess" in f.read()
+
+        with open(os.path.join(s.prefix.working, 'config.sub')) as f:
+            assert "gnuconfig version of config.sub" not in f.read()
+
+        with open(os.path.join(s.prefix.working, 'config.guess')) as f:
+            assert "gnuconfig version of config.guess" not in f.read()
+
+    def test_autotools_gnuconfig_replacement_disabled(self, mutable_database):
+        """
+        Tests whether disabling patch_config_files
+        """
+        s = Spec('autotools-config-replacement ~patch_config_files +gnuconfig')
+        s.concretize()
+        s.package.do_install()
+
+        with open(os.path.join(s.prefix.broken, 'config.sub')) as f:
+            assert "gnuconfig version of config.sub" not in f.read()
+
+        with open(os.path.join(s.prefix.broken, 'config.guess')) as f:
+            assert "gnuconfig version of config.guess" not in f.read()
+
+        with open(os.path.join(s.prefix.working, 'config.sub')) as f:
+            assert "gnuconfig version of config.sub" not in f.read()
+
+        with open(os.path.join(s.prefix.working, 'config.guess')) as f:
+            assert "gnuconfig version of config.guess" not in f.read()
+
+    @pytest.mark.disable_clean_stage_check
+    def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database):
+        """
+        Tests whether a useful error message is shown when patch_config_files is
+        enabled, but gnuconfig is not listed as a direct build dependency.
+        """
+        s = Spec('autotools-config-replacement +patch_config_files ~gnuconfig')
+        s.concretize()
+
+        msg = "Cannot patch config files: missing dependencies: gnuconfig"
+        with pytest.raises(ChildError, match=msg):
+            s.package.do_install()
+
+    @pytest.mark.disable_clean_stage_check
+    def test_broken_external_gnuconfig(self, mutable_database, tmpdir):
+        """
+        Tests whether we get a useful error message when gnuconfig is marked
+        external, but the install prefix is misconfigured and no config.guess
+        and config.sub substitute files are found in the provided prefix.
+        """
+        env_dir = str(tmpdir.ensure('env', dir=True))
+        gnuconfig_dir = str(tmpdir.ensure('gnuconfig', dir=True))  # empty dir
+        with open(os.path.join(env_dir, 'spack.yaml'), 'w') as f:
+            f.write("""\
+spack:
+  specs:
+  - 'autotools-config-replacement +patch_config_files +gnuconfig'
+  packages:
+    gnuconfig:
+      buildable: false
+      externals:
+      - spec: gnuconfig@1.0.0
+        prefix: {0}
+""".format(gnuconfig_dir))
+
+        msg = ("Spack could not find `config.guess`.*misconfigured as an "
+               "external package")
+        with spack.environment.Environment(env_dir) as e:
+            e.concretize()
+            with pytest.raises(ChildError, match=msg):
+                e.install_all()
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')

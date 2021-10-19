@@ -20,7 +20,7 @@ class PyProv(PythonPackage):
 
     variant('dot', default=False, description='Graphical visualisation support for prov.model')
 
-    depends_on('python@3.6:3.999', type=('build', 'run'))
+    depends_on('python@3.6:3', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
     depends_on('py-lxml@3.3.5:', type=('build', 'run'))

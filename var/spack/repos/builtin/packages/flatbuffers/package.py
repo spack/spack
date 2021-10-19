@@ -10,7 +10,7 @@ class Flatbuffers(CMakePackage):
     """Memory Efficient Serialization Library
     """
 
-    homepage = "http://google.github.io/flatbuffers/"
+    homepage = "https://google.github.io/flatbuffers/"
     url      = "https://github.com/google/flatbuffers/archive/v1.9.0.tar.gz"
 
     version('1.12.0', sha256='62f2223fb9181d1d6338451375628975775f7522185266cd5296571ac152bc45')

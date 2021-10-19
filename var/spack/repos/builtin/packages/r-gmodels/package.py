@@ -9,7 +9,7 @@ from spack import *
 class RGmodels(RPackage):
     """Various R programming tools for model fitting."""
 
-    homepage = "http://www.sf.net/projects/r-gregmisc"
+    homepage = "https://www.sf.net/projects/r-gregmisc"
     url      = "https://cloud.r-project.org/src/contrib/gmodels_2.16.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gmodels"
 

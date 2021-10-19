@@ -69,7 +69,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     depends_on('py-cffi@1.4.0:',        type=('build', 'run'),         when='frameworks=pytorch')
     depends_on('mxnet@1.4.1:+python',   type=('build', 'link', 'run'), when='frameworks=mxnet')
     depends_on('py-keras@2.0.8,2.1.2:', type=('build', 'run'),         when='frameworks=keras')
-    depends_on('py-h5py@:2.999',        type=('build', 'run'),         when='frameworks=spark')
+    depends_on('py-h5py@:2',        type=('build', 'run'),         when='frameworks=spark')
     depends_on('py-numpy',              type=('build', 'run'),         when='frameworks=spark')
     depends_on('py-petastorm@0.8.2',    type=('build', 'run'),         when='frameworks=spark @:0.19.1')
     depends_on('py-petastorm@0.9.0:',   type=('build', 'run'),         when='frameworks=spark @0.19.2:0.21.0')

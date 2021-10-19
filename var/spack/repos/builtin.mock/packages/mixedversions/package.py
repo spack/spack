@@ -9,6 +9,6 @@ from spack import *
 class Mixedversions(Package):
     url = "http://www.fake-mixedversions.org/downloads/mixedversions-1.0.tar.gz"
 
-    version('2.0.1', 'hashc')
-    version('2.0', 'hashb')
-    version('1.0.1', 'hasha')
+    version('2.0.1', '0000000000000000000000000000000c')
+    version('2.0', '0000000000000000000000000000000b')
+    version('1.0.1', '0000000000000000000000000000000a')

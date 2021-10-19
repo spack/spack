@@ -21,9 +21,11 @@ class Pumi(CMakePackage):
 
     maintainers = ['cwsmith']
 
+    tags = ['e4s']
+
     # We will use the scorec/core master branch as the 'nightly' version
     # of pumi in spack.  The master branch is more stable than the
-    # scorec/core develop branch and we perfer not to expose spack users
+    # scorec/core develop branch and we prefer not to expose spack users
     # to the added instability.
     version('master', submodules=True, branch='master')
     version('2.2.6', commit='4dd330e960b1921ae0d8d4039b8de8680a20d993')  # tag 2.2.6

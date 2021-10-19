@@ -13,7 +13,7 @@ class Ganglia(AutotoolsPackage):
     nodes in size."""
 
     homepage = "http://ganglia.sourceforge.net/"
-    url      = "http://jaist.dl.sourceforge.net/project/ganglia/ganglia%20monitoring%20core/3.7.2/ganglia-3.7.2.tar.gz"
+    url      = "https://jaist.dl.sourceforge.net/project/ganglia/ganglia%20monitoring%20core/3.7.2/ganglia-3.7.2.tar.gz"
     list_url = "http://jaist.dl.sourceforge.net/project/ganglia/ganglia%20monitoring%20core"
     list_depth = 1
 
@@ -25,7 +25,7 @@ class Ganglia(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('apr')
     depends_on('libconfuse')
-    depends_on('python@:2.7.999')
+    depends_on('python@:2.7')
     depends_on('pcre')
     depends_on('libtirpc')
     depends_on('expat')

@@ -344,7 +344,7 @@ def _gpgconf():
 
     # ensure that the gpgconf we found can run "gpgconf --create-socketdir"
     try:
-        exe('--dry-run', '--create-socketdir')
+        exe('--dry-run', '--create-socketdir', output=os.devnull, error=os.devnull)
     except spack.util.executable.ProcessError:
         # no dice
         exe = None

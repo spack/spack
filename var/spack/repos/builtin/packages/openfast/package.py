@@ -9,7 +9,7 @@ from spack import *
 class Openfast(CMakePackage):
     """Wind turbine simulation package from NREL"""
 
-    homepage = "http://openfast.readthedocs.io/en/latest/"
+    homepage = "https://openfast.readthedocs.io/en/latest/"
     git      = "https://github.com/OpenFAST/openfast.git"
 
     maintainers = ['jrood-nrel']

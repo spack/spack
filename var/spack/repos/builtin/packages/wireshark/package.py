@@ -32,12 +32,17 @@ class Wireshark(CMakePackage):
     depends_on('libmaxminddb')
     depends_on('libtool@2.2.2:', type='build')
     depends_on('libpcap')
-    depends_on('lua@5.0.0:5.2.99')
+    depends_on('lua@5.0.0:5.2')
     depends_on('krb5')
     depends_on('pkgconfig', type='build')
     depends_on('libssh',    when='+libssh')
     depends_on('nghttp2',   when='+nghttp2')
     depends_on('qt@4.8:',   when='+qt')
+
+    def patch(self):
+        # These try to capture from the network and run not compiled programs
+        filter_file('suite_capture',   '', 'CMakeLists.txt')
+        filter_file('suite_unittests', '', 'CMakeLists.txt')
 
     def cmake_args(self):
         args = [
@@ -96,5 +101,6 @@ class Wireshark(CMakePackage):
             folders = ['.', 'epan/crypt', 'epan/dfilter', 'epan/dissectors',
                        'epan/ftypes', 'epan/wmem', 'wiretap', 'wsutil']
             for folder in folders:
+                mkdirp(join_path(prefix.include.wireshark, folder))
                 install(join_path(folder, '*.h'),
                         join_path(prefix.include.wireshark, folder))

@@ -9,12 +9,15 @@ from spack import *
 class PyStorm(PythonPackage):
     """Storm is an object-relational mapper (ORM) for Python"""
     homepage = "https://storm.canonical.com/"
-    url      = "https://launchpad.net/storm/trunk/0.20/+download/storm-0.20.tar.bz2"
+    pypi     = 'storm/storm-0.25.tar.gz'
 
-    version('0.23', sha256='01c59f1c898fb9891333abd65519ba2dd5f68623ac8e67b54932e99ce52593d3')
-    version('0.20', sha256='1fe016c9ec40520eafc3cf359f1ec2b7fa86be91e45c9279bfb0ea3b06390a82')
+    version('0.25', sha256='ec7cc8897638f94f6b75c6a2af74aa9b31f5492d7a2f9482c08a8dd7b46adb14')
+    version('0.23', sha256='01c59f1c898fb9891333abd65519ba2dd5f68623ac8e67b54932e99ce52593d3',
+            url='https://files.pythonhosted.org/packages/source/s/storm/storm-0.23.tar.bz2')
+    version('0.20', sha256='35f5883e93a262002ca59dbb39645c67434a182d758543c4a2467ff690ac23a5')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-six', when='@0.23:')
-    depends_on('python@2.7:2.8', when='@:0.20')
-    depends_on('python@2.7:2.8,3.5:', when='@0.21:')
+    depends_on('py-six',               type=('build', 'run'),  when='@0.23:')
+    depends_on('py-zope-interface@4:', type=('build', 'run'))
+    depends_on('python@2.7:2.8',       type=('build', 'run'),  when='@:0.20')
+    depends_on('python@2.7:2.8,3.5:',  type=('build', 'run'),  when='@0.21:')

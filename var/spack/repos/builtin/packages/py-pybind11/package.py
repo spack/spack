@@ -8,7 +8,7 @@ import os
 from spack import *
 
 
-class PyPybind11(CMakePackage):
+class PyPybind11(CMakePackage, PythonPackage):
     """pybind11 -- Seamless operability between C++11 and Python.
 
     pybind11 is a lightweight header-only library that exposes C++ types in
@@ -43,12 +43,12 @@ class PyPybind11(CMakePackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-pytest', type='test')
 
-    extends('python')
-
     # compiler support
     conflicts('%gcc@:4.7')
     conflicts('%clang@:3.2')
     conflicts('%intel@:16')
+
+    build_directory = '.'
 
     def cmake_args(self):
         args = []
@@ -63,7 +63,7 @@ class PyPybind11(CMakePackage):
         env.set('PYBIND11_USE_CMAKE', 1)
 
     # https://github.com/pybind/pybind11/pull/1995
-    @when('@:2.4.99')
+    @when('@:2.4')
     def patch(self):
         """ see https://github.com/spack/spack/issues/13559 """
         filter_file('import sys',
@@ -72,9 +72,8 @@ class PyPybind11(CMakePackage):
                     string=True)
 
     def install(self, spec, prefix):
-        super(PyPybind11, self).install(spec, prefix)
-        setup_py('install', '--single-version-externally-managed', '--root=/',
-                 '--prefix={0}'.format(prefix))
+        CMakePackage.install(self, spec, prefix)
+        PythonPackage.install(self, spec, prefix)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

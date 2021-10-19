@@ -13,7 +13,7 @@ class Wgrib2(CMakePackage):
     homepage = "https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2"
     url      = "https://github.com/NOAA-EMC/NCEPLIBS-wgrib2/archive/refs/tags/v2.0.8-cmake-v6.tar.gz"
 
-    maintainers = ['t-brown']
+    maintainers = ['t-brown', 'kgerheiser', 'Hang-Lei-NOAA', 'edwardhartnett']
 
     version('2.0.8-cmake-v6', sha256='745cd008b4ce0245ea44247733e57e2b9ec6c5205d171d457e18d0ff8f87172d')
 

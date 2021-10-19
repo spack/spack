@@ -10,7 +10,7 @@ class Pagit(Package):
     """PAGIT addresses the need for software to generate high quality draft
        genomes."""
 
-    homepage = "http://www.sanger.ac.uk/science/tools/pagit"
+    homepage = "https://www.sanger.ac.uk/science/tools/pagit"
     url      = "ftp://ftp.sanger.ac.uk/pub/resources/software/pagit/PAGIT.V1.01.64bit.tgz"
 
     version('1.01', sha256='8069c1d236804cf4ea782495adcc50d18561ef466af06b21946b980b3c37ad55')

@@ -11,7 +11,7 @@ class Caffe(CMakePackage, CudaPackage):
        modularity in mind. It is developed by the Berkeley Vision and Learning
        Center (BVLC) and by community contributors."""
 
-    homepage = "http://caffe.berkeleyvision.org"
+    homepage = "https://caffe.berkeleyvision.org"
     url      = "https://github.com/BVLC/caffe/archive/1.0.tar.gz"
 
     version('1.0', sha256='71d3c9eb8a183150f965a465824d01fe82826c22505f7aa314f700ace03fa77f')

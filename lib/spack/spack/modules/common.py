@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Here we consolidate the logic for creating an abstract description
 of the information that module systems need.
 
@@ -29,6 +28,7 @@ Each of the four classes needs to be sub-classed when implementing a new
 module type.
 """
 import collections
+import contextlib
 import copy
 import datetime
 import inspect
@@ -41,7 +41,8 @@ import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
 import spack.build_environment as build_environment
-import spack.environment as ev
+import spack.config
+import spack.environment
 import spack.error
 import spack.paths
 import spack.projections as proj
@@ -696,12 +697,13 @@ class BaseContext(tengine.Context):
         spec = self.spec.copy()  # defensive copy before setting prefix
         if use_view:
             if use_view is True:
-                use_view = ev.default_view_name
+                use_view = spack.environment.default_view_name
 
-            env = ev.active_environment()
+            env = spack.environment.active_environment()
             if not env:
-                raise ev.SpackEnvironmentViewError("Module generation with views "
-                                                   "requires active environment")
+                raise spack.environment.SpackEnvironmentViewError(
+                    "Module generation with views requires active environment"
+                )
 
             view = env.views[use_view]
 
@@ -903,6 +905,19 @@ class BaseModuleFileWriter(object):
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
+
+
+@contextlib.contextmanager
+def disable_modules():
+    """Disable the generation of modulefiles within the context manager."""
+    data = {
+        'modules:': {
+            'enable': []
+        }
+    }
+    disable_scope = spack.config.InternalConfigScope('disable_modules', data=data)
+    with spack.config.override(disable_scope):
+        yield
 
 
 class ModulesError(spack.error.SpackError):

@@ -20,14 +20,17 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     iterative solvers."""
 
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
-    url      = "https://github.com/pghysels/STRUMPACK/archive/v5.1.0.tar.gz"
+    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.0.0.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
+
+    tags = ['e4s']
 
     maintainers = ['pghysels']
 
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('6.0.0', sha256='fcea150b68172d5a4ec2c02f9cce0b7305919b86871c9cf34a9f65b1567d58b7')
     version('5.1.1', sha256='6cf4eaae5beb9bd377f2abce9e4da9fd3e95bf086ae2f04554fad6dd561c28b9')
     version('5.0.0', sha256='bdfd1620ff7158d96055059be04ee49466ebaca8213a2fdab33e2d4571019a49')
     version('4.0.0', sha256='a3629f1f139865c74916f8f69318f53af6319e7f8ec54e85c16466fd7d256938')
@@ -64,12 +67,13 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('openblas threads=openmp', when='^openblas')
     depends_on('scalapack', when='+mpi')
     depends_on('metis')
     depends_on('parmetis', when='+parmetis')
     depends_on('scotch~metis', when='+scotch')
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
-    depends_on('butterflypack@1.1.0', when='@3.3.0:3.9.999 +butterflypack+mpi')
+    depends_on('butterflypack@1.1.0', when='@3.3.0:3.9 +butterflypack+mpi')
     depends_on('butterflypack@1.2.0:', when='@4.0.0: +butterflypack+mpi')
     depends_on('cuda', when='@4.0.0: +cuda')
     depends_on('zfp', when='+zfp')
@@ -77,20 +81,20 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('rocsolver', when='+rocm')
     depends_on('slate', when='+slate')
     depends_on('slate+cuda', when='+cuda+slate')
+    depends_on('slate+rocm', when='+rocm+slate')
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on('slate amdgpu_target={0}'.format(val),
+                   when='amdgpu_target={0}'.format(val))
 
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')
     conflicts('+butterflypack', when='@:3.2.0')
-    conflicts('+zfp', when='@:3.9.999')
-    conflicts('+cuda', when='@:3.9.999')
-    conflicts('+rocm', when='@:5.0.999')
+    conflicts('+zfp', when='@:3.9')
+    conflicts('+cuda', when='@:3.9')
+    conflicts('+rocm', when='@:5.0')
     conflicts('+rocm', when='+cuda')
     conflicts('+slate', when='@:5.1.1')
     conflicts('+slate', when='~mpi')
-    conflicts('^openblas@0.3.6: threads=none', when='+openmp',
-              msg='STRUMPACK requires openblas with OpenMP threading support')
-    conflicts('^openblas@0.3.6: threads=pthreads', when='+openmp',
-              msg='STRUMPACK requires openblas with OpenMP threading support')
 
     patch('intel-19-compile.patch', when='@3.1.1')
     patch('shared-rocm.patch', when='@5.1.1')
@@ -120,7 +124,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 '-DTPL_SCALAPACK_LIBRARIES=%s' % spec['scalapack'].
                 libs.joined(";"))
 
-        if spec.satisfies('@:3.9.999'):
+        if spec.satisfies('@:3.9'):
             if '+mpi' in spec:
                 args.extend([
                     '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
@@ -148,12 +152,29 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.
                             format(",".join(rocm_archs)))
 
-        if self.spec.satisfies('@:5.1.1'):
-            self.test_data_dir = 'examples/data'
-        else:
-            self.test_data_dir = 'examples/sparse/data'
-        self.test_src_dir = 'test'
         return args
+
+    test_src_dir = 'test'
+
+    @property
+    def test_data_dir(self):
+        """Return the stand-alone test data directory."""
+        add_sparse = not self.spec.satisfies('@:5.1.1')
+        return join_path('examples', 'sparse' if add_sparse else '', 'data')
+
+    # TODO: Replace this method and its 'get' use for cmake path with
+    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
+    #   tests can access build dependencies through self.spec['cmake'].
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path."""
+        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
+        if set:
+            with open(filepath, 'w') as out_file:
+                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                out_file.write('{0}\n'.format(cmake_bin))
+        else:
+            with open(filepath, 'r') as in_file:
+                return in_file.read().strip()
 
     @run_after('install')
     def cache_test_sources(self):
@@ -161,38 +182,48 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.test_data_dir, self.test_src_dir])
 
-    def _test_example(self, test_prog, test_dir, test_cmd, test_args):
-        tmpbld_dir = '{0}/_BUILD'.format(test_dir)
-        with working_dir(tmpbld_dir, create=True):
-            with open('{0}/CMakeLists.txt'.format(tmpbld_dir), 'w') as mkfile:
-                mkfile.write('cmake_minimum_required(VERSION 3.13)\n')
-                mkfile.write('project(StrumpackSmokeTest LANGUAGES CXX)\n')
-                mkfile.write('find_package(STRUMPACK REQUIRED)\n')
-                mkfile.write('add_executable({0} ../{0}.cpp)\n'.
-                             format(test_prog))
-                mkfile.write('target_link_libraries({0} '.format(test_prog) +
-                             'PRIVATE STRUMPACK::strumpack)\n')
+        # TODO: Remove once self.spec['cmake'] is available here
+        self.cmake_bin(set=True)
 
-            opts = self.std_cmake_args
-            opts += self.cmake_args()
-            opts += ['.']
-            self.run_test('cmake', opts, [], installed=False, work_dir='.')
-            self.run_test('make')
-            with set_env(OMP_NUM_THREADS='4'):
-                self.run_test(test_cmd, test_args, installed=False,
-                              purpose='test: strumpack smoke test',
-                              skip_missing=False, work_dir='.')
-        self.run_test('rm', ['-fR', tmpbld_dir])
+    def _test_example(self, test_prog, test_dir, test_cmd, test_args):
+        cmake_filename = join_path(test_dir, 'CMakeLists.txt')
+        with open(cmake_filename, 'w') as mkfile:
+            mkfile.write('cmake_minimum_required(VERSION 3.15)\n')
+            mkfile.write('project(StrumpackSmokeTest LANGUAGES CXX)\n')
+            mkfile.write('find_package(STRUMPACK REQUIRED)\n')
+            mkfile.write('add_executable({0} {0}.cpp)\n'.format(test_prog))
+            mkfile.write('target_link_libraries({0} '.format(test_prog) +
+                         'PRIVATE STRUMPACK::strumpack)\n')
+
+        # TODO: Remove/replace once self.spec['cmake'] is available here
+        cmake_bin = self.cmake_bin(set=False)
+
+        opts = self.std_cmake_args
+        opts += self.cmake_args()
+        opts += ['.']
+
+        self.run_test(cmake_bin, opts, [], installed=False,
+                      purpose='test: generating makefile', work_dir=test_dir)
+        self.run_test('make', test_prog,
+                      purpose='test: building {0}'.format(test_prog),
+                      work_dir=test_dir)
+        with set_env(OMP_NUM_THREADS='1'):
+            self.run_test(test_cmd, test_args, installed=False,
+                          purpose='test: running {0}'.format(test_prog),
+                          skip_missing=False, work_dir=test_dir)
 
     def test(self):
-        test_dir = join_path(self.install_test_root, self.test_src_dir)
+        """Run the stand-alone tests for the installed software."""
+        test_dir = join_path(
+            self.test_suite.current_test_cache_dir, self.test_src_dir
+        )
         test_exe = 'test_sparse_seq'
         test_exe_mpi = 'test_sparse_mpi'
-        exe_arg = [join_path('..', '..', self.test_data_dir, 'pde900.mtx')]
+        exe_arg = [join_path('..', self.test_data_dir, 'pde900.mtx')]
         if '+mpi' in self.spec:
-            test_args = ['-n', '4', test_exe_mpi]
+            test_args = ['-n', '1', test_exe_mpi]
             test_args.extend(exe_arg)
-            mpiexe_list = ['mpirun', 'mpiexec', 'srun']
+            mpiexe_list = ['srun', 'mpirun', 'mpiexec']
             for mpiexe in mpiexe_list:
                 if which(mpiexe) is not None:
                     self._test_example(test_exe_mpi, test_dir,
@@ -200,3 +231,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                     break
         else:
             self._test_example(test_exe, test_dir, test_exe, exe_arg)
+
+    def check(self):
+        """Skip the builtin testsuite, use the stand-alone tests instead."""
+        pass

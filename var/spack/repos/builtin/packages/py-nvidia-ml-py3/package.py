@@ -7,7 +7,7 @@
 class PyNvidiaMlPy3(PythonPackage):
     """Python Bindings for the NVIDIA Management Library."""
 
-    homepage = "http://www.nvidia.com/"
+    homepage = "https://www.nvidia.com/"
     pypi = "nvidia-ml-py3/nvidia-ml-py3-7.352.0.tar.gz"
 
     version('7.352.0', sha256='390f02919ee9d73fe63a98c73101061a6b37fa694a793abf56673320f1f51277')

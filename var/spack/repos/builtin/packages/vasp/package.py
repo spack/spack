@@ -16,7 +16,7 @@ class Vasp(MakefilePackage):
     and quantum-mechanical molecular dynamics, from first principles.
     """
 
-    homepage = "http://vasp.at"
+    homepage = "https://vasp.at"
     url      = "file://{0}/vasp.5.4.4.pl2.tgz".format(os.getcwd())
     manual_download = True
 

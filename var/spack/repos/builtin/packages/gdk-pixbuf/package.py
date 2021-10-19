@@ -32,8 +32,8 @@ class GdkPixbuf(Package):
     depends_on('meson@0.46.0:', type='build', when='@2.37.92:')
     depends_on('meson@0.45.0:', type='build', when='@2.37.0:')
     depends_on('ninja', type='build', when='@2.37.0:')
-    depends_on('shared-mime-info', type='build', when='@2.36.8: platform=linux')
-    depends_on('shared-mime-info', type='build', when='@2.36.8: platform=cray')
+    depends_on('shared-mime-info', when='@2.36.8: platform=linux')
+    depends_on('shared-mime-info', when='@2.36.8: platform=cray')
     depends_on('pkgconfig', type='build')
     # Building the man pages requires libxslt and the Docbook stylesheets
     depends_on('libxslt', type='build', when='+man')

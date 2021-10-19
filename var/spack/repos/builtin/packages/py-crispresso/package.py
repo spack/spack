@@ -16,7 +16,7 @@ class PyCrispresso(PythonPackage):
     version('1.0.8', sha256='b04ac8781ff8ed56d018c357e741f146b72ad7e0d23c9e5bc1e1bcd1a873ebc3')
 
     depends_on('py-setuptools', type='build')
-    depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
+    depends_on('python@2.7.0:2.7', type=('build', 'run'))
     depends_on('py-biopython@1.6.5:', type=('build', 'run'))
     depends_on('py-matplotlib@1.3.1:', type=('build', 'run'))
     depends_on('py-numpy@1.9:', type=('build', 'run'))

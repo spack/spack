@@ -23,7 +23,7 @@ class Mmg(CMakePackage):
       libmmg3d libraries.
     """
 
-    homepage = "http://www.mmgtools.org/"
+    homepage = "https://www.mmgtools.org/"
     url      = "https://github.com/MmgTools/mmg/archive/v5.3.13.tar.gz"
 
     version('5.5.2',  sha256='58e3b866101e6f0686758e16bcf9fb5fb06c85184533fc5054ef1c8adfd4be73')

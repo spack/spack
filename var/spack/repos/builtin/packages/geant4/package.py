@@ -19,6 +19,7 @@ class Geant4(CMakePackage):
 
     maintainers = ['drbenmorgan']
 
+    version('10.7.2', sha256='593fc85883a361487b17548ba00553501f66a811b0a79039276bb75ad59528cf')
     version('10.7.1', sha256='2aa7cb4b231081e0a35d84c707be8f35e4edc4e97aad2b233943515476955293')
     version('10.7.0', sha256='c991a139210c7f194720c900b149405090058c00beb5a0d2fac5c40c42a262d4')
     version('10.6.3', sha256='bf96d6d38e6a0deabb6fb6232eb00e46153134da645715d636b9b7b4490193d3')
@@ -48,6 +49,7 @@ class Geant4(CMakePackage):
     depends_on('cmake@3.5:', type='build')
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
 
+    depends_on('geant4-data@10.7.2', when='@10.7.2')
     depends_on('geant4-data@10.7.1', when='@10.7.1')
     depends_on('geant4-data@10.7.0', when='@10.7.0')
     depends_on('geant4-data@10.6.3', when='@10.6.3')
@@ -74,7 +76,7 @@ class Geant4(CMakePackage):
                    when='@10.7.0: cxxstd=' + std)
 
         depends_on('clhep@2.3.3.0: cxxstd=' + std,
-                   when='@10.3.3:10.6.99 cxxstd=' + std)
+                   when='@10.3.3:10.6 cxxstd=' + std)
 
         # Spack only supports Xerces-c 3 and above, so no version req
         depends_on('xerces-c netaccessor=curl cxxstd=' + std, when='cxxstd=' + std)
@@ -83,13 +85,13 @@ class Geant4(CMakePackage):
         depends_on('vecgeom@1.1.8 cxxstd=' + std,
                    when='@10.7.0: +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.5 cxxstd=' + std,
-                   when='@10.6.0:10.6.99 +vecgeom cxxstd=' + std)
+                   when='@10.6.0:10.6 +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.0 cxxstd=' + std,
-                   when='@10.5.0:10.5.99 +vecgeom cxxstd=' + std)
+                   when='@10.5.0:10.5 +vecgeom cxxstd=' + std)
         depends_on('vecgeom@0.5.2 cxxstd=' + std,
-                   when='@10.4.0:10.4.99 +vecgeom cxxstd=' + std)
+                   when='@10.4.0:10.4 +vecgeom cxxstd=' + std)
         depends_on('vecgeom@0.3rc cxxstd=' + std,
-                   when='@10.3.0:10.3.99 +vecgeom cxxstd=' + std)
+                   when='@10.3.0:10.3 +vecgeom cxxstd=' + std)
 
         # Boost.python, conflict handled earlier
         depends_on('boost@1.70: +python cxxstd=' + std,
@@ -108,7 +110,7 @@ class Geant4(CMakePackage):
     # CLHEP.
     patch('CLHEP-10.03.03.patch', level=1, when='@10.3.3')
     # These patches can be applied independent of the cxxstd value?
-    patch('cxx17.patch', when='@:10.3.99 cxxstd=17')
+    patch('cxx17.patch', when='@:10.3 cxxstd=17')
     patch('cxx17_geant4_10_0.patch', level=1, when='@10.4.0 cxxstd=17')
     patch('geant4-10.4.3-cxx17-removed-features.patch',
           level=1, when='@10.4.3 cxxstd=17')
@@ -129,7 +131,7 @@ class Geant4(CMakePackage):
 
         # Don't install the package cache file as Spack will set
         # up CMAKE_PREFIX_PATH etc for the dependencies
-        if spec.version > Version('10.5.99'):
+        if spec.version >= Version('10.6'):
             options.append('-DGEANT4_INSTALL_PACKAGE_CACHE=OFF')
 
         # Multithreading

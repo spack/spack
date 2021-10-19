@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 class Libuv(AutotoolsPackage):
     """Multi-platform library with a focus on asynchronous IO"""
-    homepage = "http://libuv.org"
+    homepage = "https://libuv.org"
     url = "https://github.com/libuv/libuv/archive/v1.9.0.tar.gz"
 
     version('1.42.0', sha256='371e5419708f6aaeb8656671f89400b92a9bba6443369af1bb70bcd6e4b3c764')

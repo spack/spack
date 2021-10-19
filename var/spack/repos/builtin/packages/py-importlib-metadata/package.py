@@ -12,6 +12,7 @@ class PyImportlibMetadata(PythonPackage):
     homepage = "https://importlib-metadata.readthedocs.io/"
     pypi = "importlib_metadata/importlib_metadata-1.2.0.tar.gz"
 
+    version('4.8.1', sha256='f284b3e11256ad1e5d03ab86bb2ccd6f5339688ff17a4d797a0fe7df326f23b1')
     version('4.6.1', sha256='079ada16b7fc30dfbb5d13399a5113110dab1aa7c2bc62f66af75f0b717c8cac')
     version('3.10.1', sha256='c9356b657de65c53744046fa8f7358afe0714a1af7d570c00c3835c2d724a7c1')
     version('3.10.0', sha256='c9db46394197244adf2f0b08ec5bc3cf16757e9590b02af1fca085c16c0d600a')
@@ -24,10 +25,11 @@ class PyImportlibMetadata(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'), when='@3:')
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@56:', type='build', when='@4.6.4:')
     depends_on('py-setuptools-scm', type='build')
     depends_on('py-setuptools-scm@3.4.1:+toml', type='build', when='@3:')
     depends_on('py-zipp@0.5:', type=('build', 'run'))
     depends_on('py-pathlib2', when='^python@:2', type=('build', 'run'))
     depends_on('py-contextlib2', when='^python@:2', type=('build', 'run'))
     depends_on('py-configparser@3.5:', when='^python@:2', type=('build', 'run'))
-    depends_on('py-typing-extensions@3.6.4:', type=('build', 'run'), when='@3: ^python@:3.7.999')
+    depends_on('py-typing-extensions@3.6.4:', type=('build', 'run'), when='@3: ^python@:3.7')

@@ -257,7 +257,7 @@ class Openfoam(Package):
     """
 
     maintainers = ['olesenm']
-    homepage = "http://www.openfoam.com/"
+    homepage = "https://www.openfoam.com/"
     url      = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
     git      = "https://develop.openfoam.com/Development/openfoam.git"
     list_url = "https://sourceforge.net/projects/openfoam/files/"
@@ -319,7 +319,7 @@ class Openfoam(Package):
     depends_on('fftw-api')
     depends_on('boost')
     # OpenFOAM does not play nice with CGAL 5.X
-    depends_on('cgal@:4.99')
+    depends_on('cgal@:4')
     # The flex restriction is ONLY to deal with a spec resolution clash
     # introduced by the restriction within scotch!
     depends_on('flex@:2.6.1,2.6.4:')

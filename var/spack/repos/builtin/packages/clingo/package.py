@@ -35,6 +35,8 @@ class Clingo(CMakePackage):
     variant("docs", default=False, description="build documentation with Doxygen")
     variant("python", default=True, description="build with python bindings")
 
+    depends_on('cmake@3.1:', type='build')
+
     depends_on('doxygen', type="build", when="+docs")
     depends_on('re2c@0.13:', type="build")
     depends_on('bison@2.5:', type="build")

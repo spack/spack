@@ -16,7 +16,7 @@ class Changa(AutotoolsPackage):
     Ewald summation for periodic forces. Timestepping is done with a leapfrog
     integrator with individual timesteps for each particle."""
 
-    homepage = "http://faculty.washington.edu/trq/hpcc/tools/changa.html"
+    homepage = "https://faculty.washington.edu/trq/hpcc/tools/changa.html"
     url      = "https://github.com/N-BodyShop/changa/archive/v3.4.tar.gz"
     git      = "https://github.com/N-BodyShop/changa.git"
 

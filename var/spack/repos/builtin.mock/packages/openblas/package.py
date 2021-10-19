@@ -16,6 +16,6 @@ class Openblas(Package):
     version('0.2.13', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
     # See #20019 for this conflict
-    conflicts('%gcc@:4.4.99', when='@0.2.14:')
+    conflicts('%gcc@:4.4', when='@0.2.14:')
 
     provides('blas')
