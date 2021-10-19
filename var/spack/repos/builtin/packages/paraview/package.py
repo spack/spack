@@ -64,7 +64,6 @@ class Paraview(CMakePackage, CudaPackage):
     # Python 2 support dropped with 5.9.0
     conflicts('+python', when='@5.9:')
     conflicts('+python3', when='@:5.5')
-    conflicts('+shared', when='+cuda')
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
     conflicts('~opengl2', when='@5.5:')
