@@ -192,6 +192,16 @@ def inactive_dependent_environments(spec_envs):
     return spec_inactive_envs
 
 
+def _remove_from_env(spec, env):
+    """Remove a spec from an environment if it is a root."""
+    try:
+        # try removing the spec from the current active
+        # environment. this will fail if the spec is not a root
+        env.remove(spec, force=True)
+    except ev.SpackEnvironmentError:
+        pass  # ignore non-root specs
+
+
 def do_uninstall(env, specs, force):
     """Uninstalls all the specs in a list.
 

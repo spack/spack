@@ -941,6 +941,8 @@ def test_roots_display_with_variants():
 
 
 def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
+    # 'spack uninstall' without --remove should not change the environment
+    # spack.yaml file, just uninstall specs
     env('create', 'test')
     with ev.read('test'):
         add('mpileaks')
@@ -948,8 +950,6 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
         install('--fake')
 
     test = ev.read('test')
-    assert any(s.name == 'mpileaks' for s in test.specs_by_hash.values())
-    assert any(s.name == 'libelf' for s in test.specs_by_hash.values())
     # Save this spec to check later if it is still in the env
     mpileaks_hash, = list(x for x, y in test.specs_by_hash.items()
                           if y.name == 'mpileaks')
@@ -964,6 +964,23 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
     assert test.user_specs.specs == orig_user_specs.specs
     assert mpileaks_hash in test.specs_by_hash
     assert not test.specs_by_hash[mpileaks_hash].package.installed
+
+
+def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
+    # 'spack uninstall --remove' should update the environment
+    env('create', 'test')
+    with ev.read('test'):
+        add('mpileaks')
+        add('libelf')
+        install('--fake')
+
+    with ev.read('test'):
+        uninstall('-y', '-a', '--remove')
+
+    test = ev.read('test')
+    assert not test.specs_by_hash
+    assert not test.concretized_order
+    assert not test.user_specs
 
 
 def create_v1_lockfile_dict(roots, all_specs):
