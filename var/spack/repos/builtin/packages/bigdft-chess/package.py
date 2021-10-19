@@ -32,7 +32,6 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('py-pyyaml')
-    depends_on('etsf-io')
     depends_on('bigdft-futile@1.9.1', when='@1.9.1')
     depends_on('bigdft-futile@1.9.0', when='@1.9.0')
     depends_on('bigdft-futile@1.8.3', when='@1.8.3')
