@@ -1617,6 +1617,8 @@ def test_ci_generate_read_broken_specs_url(tmpdir, mutable_mock_env_path,
     with open(broken_spec_a_path, 'w') as bsf:
         bsf.write('')
 
+    broken_specs_url = 'file://{0}'.format(tmpdir.strpath)
+
     # Test that `spack ci generate` notices this broken spec and fails.
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -1639,7 +1641,7 @@ spack:
           tags:
             - donotcare
           image: donotcare
-""".format(tmpdir.strpath))
+""".format(broken_specs_url))
 
     with tmpdir.as_cwd():
         env_cmd('create', 'test', './spack.yaml')
