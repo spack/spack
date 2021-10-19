@@ -16,7 +16,7 @@ class FluxSched(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-sched.git"
     tags     = ['radiuss', 'e4s']
 
-    maintainers = ['SteVwonder']
+    maintainers = ['grondo']
 
     version('master', branch='master')
     version('0.18.0', sha256='a4d8a6444fdb7b857b26f47fdea57992b486c9522f4ff92d5a6f547d95b586ae')

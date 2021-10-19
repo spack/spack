@@ -16,7 +16,7 @@ class FluxCore(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-core.git"
     tags     = ['radiuss', 'e4s']
 
-    maintainers = ['SteVwonder']
+    maintainers = ['grondo']
 
     version('master', branch='master')
     version('0.29.0', sha256='c13b40e82d66356e75208a689a495ca01f0a013e2e45ac8ea202ed8224987323')
