@@ -312,23 +312,27 @@ def get_uninstall_list(args, specs, env):
         elif args.remove:
             for spec, lst in inactive_dpts.items():
                 remove_only.update(lst)
-        # In this case, force=False, so inactive_dpts must be empty if we
-        # made it here (spec_envs would also be nonempty)
+        # No else: In this case, force=False, so inactive_dpts must be empty
+        # if we made it here (spec_envs would also be nonempty)
 
     if args.remove and not args.force:
         remove_only.update(spec_envs)
 
     # Compute the set of specs that should be removed from the current env.
-    remove_specs = uninstall_specs & remove_only
+    if args.remove:
+        remove_specs = set(uninstall_specs)
+    else:
+        remove_specs = set()
+
     uninstall_specs -= remove_only
 
-    return list(uninstall_specs)
+    return list(uninstall_specs), list(remove_specs)
 
 
 def uninstall_specs(args, specs):
     env = ev.active_environment()
 
-    uninstall_list = get_uninstall_list(args, specs, env)
+    uninstall_list, remove_list = get_uninstall_list(args, specs, env)
 
     if not uninstall_list:
         tty.warn('There are no package to uninstall.')
@@ -341,6 +345,11 @@ def uninstall_specs(args, specs):
     do_uninstall(env, uninstall_list, args.force)
 
     if env:
+        with env.write_transaction():
+            for spec in remove_list:
+                _remove_from_env(spec, env)
+            env.write()
+
         env.regenerate_views()
 
 
