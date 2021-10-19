@@ -170,7 +170,10 @@ class Cray(Platform):
             targets = []
             for mod in modules:
                 if 'craype-' in mod:
-                    name = mod[7:]
+                    if 'target' in mod:
+                        name = mod[7:]
+                    else:
+                        name = mod
                     name = name.split()[0]
                     _n = name.replace('-', '_')  # test for mic-knl/mic_knl
                     is_target_name = (name in archspec.cpu.TARGETS or
