@@ -64,7 +64,7 @@ class BigdftSuite(Package):
         install_tree(spec['bigdft-chess'].prefix,     prefix)
         install_tree(spec['bigdft-core'].prefix,      prefix)
         install_tree(spec['bigdft-spred'].prefix,     prefix)
-        if spec.satisfies('@1.8.3:'):
-            install_tree(spec['bigdft-atlab'].prefix, prefix)
         if spec.satisfies('@1.9.0:'):
             install_tree(spec['py-bigdft'].prefix,    prefix)
+        if spec.satisfies('@1.8.3:'):
+            install_tree(spec['bigdft-atlab'].prefix, prefix)

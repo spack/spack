@@ -19,10 +19,12 @@ class BigdftLibabinit(AutotoolsPackage):
     version('1.8.2',   sha256='042e5a3b478b1a4c050c450a9b1be7bcf8e13eacbce4759b7f2d79268b298d61')
     version('1.8.1',   sha256='e09ff0ba381f6ffbe6a3c0cb71db5b73117874beb41f22a982a7e5ba32d018b3')
 
+    variant('mpi', default=True,  description='Enable MPI support')
+
     depends_on('python@:2.8', type='build', when="@:1.9.0")
     depends_on('python@3.0:', type='build', when="@1.9.1:")
 
-    depends_on('mpi')
+    depends_on('mpi',                 when='+mpi')
     depends_on('bigdft-futile@1.9.1', when='@1.9.1')
     depends_on('bigdft-futile@1.9.0', when='@1.9.0')
     depends_on('bigdft-futile@1.8.3', when='@1.8.3')
@@ -48,11 +50,6 @@ class BigdftLibabinit(AutotoolsPackage):
         cflags = []
 
         args = [
-            "CC=%s" % spec['mpi'].mpicc,
-            "CXX=%s" % spec['mpi'].mpicxx,
-            "FC=%s" % spec['mpi'].mpifc,
-            "F90=%s" % spec['mpi'].mpifc,
-            "F77=%s" % spec['mpi'].mpif77,
             "FCFLAGS=%s" % " ".join(fcflags),
             "CFLAGS=%s" % " ".join(cflags),
             "--with-libxc-libs=%s %s" % (spec['libxc'].libs.ld_flags, spec['libxc'].libs.ld_flags + "f90"),
@@ -62,6 +59,15 @@ class BigdftLibabinit(AutotoolsPackage):
             "--with-moduledir=%s" % prefix.include,
             "--prefix=%s" % prefix,
         ]
+
+        if '+mpi' in spec:
+            args.append("CC=%s" % spec['mpi'].mpicc)
+            args.append("CXX=%s" % spec['mpi'].mpicxx)
+            args.append("FC=%s" % spec['mpi'].mpifc)
+            args.append("F90=%s" % spec['mpi'].mpifc)
+            args.append("F77=%s" % spec['mpi'].mpif77)
+        else:
+            args.append("--disable-mpi")
 
         with working_dir('libABINIT'):
             configure(*args)

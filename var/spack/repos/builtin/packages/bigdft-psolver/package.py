@@ -19,16 +19,17 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
     version('1.8.2',   sha256='042e5a3b478b1a4c050c450a9b1be7bcf8e13eacbce4759b7f2d79268b298d61')
     version('1.8.1',   sha256='e09ff0ba381f6ffbe6a3c0cb71db5b73117874beb41f22a982a7e5ba32d018b3')
 
-    variant('scalapack', default=True,  description='Enable SCALAPACK support')
+    variant('mpi',       default=True,  description='Enable MPI support')
     variant('openmp',    default=True,  description='Enable OpenMP support')
+    variant('scalapack', default=True,  description='Enable SCALAPACK support')
 
     depends_on('python@:2.8', type='build', when="@:1.9.0")
     depends_on('python@3.0:', type='build', when="@1.9.1:")
 
-    depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
     depends_on('py-pyyaml')
+    depends_on('mpi',                 when='+mpi')
     depends_on('bigdft-futile@1.9.1', when='@1.9.1')
     depends_on('bigdft-futile@1.9.0', when='@1.9.0')
     depends_on('bigdft-futile@1.8.3', when='@1.8.3')
@@ -56,11 +57,6 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
                                 'python{0}'.format(python_version))
 
         args = [
-            "CC=%s" % spec['mpi'].mpicc,
-            "CXX=%s" % spec['mpi'].mpicxx,
-            "FC=%s" % spec['mpi'].mpifc,
-            "F90=%s" % spec['mpi'].mpifc,
-            "F77=%s" % spec['mpi'].mpif77,
             "FCFLAGS=%s" % " ".join(fcflags),
             "CFLAGS=%s" % " ".join(cflags),
             "--with-ext-linalg=%s %s" % (spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags),
@@ -71,6 +67,20 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
             "--with-moduledir=%s" % prefix.include	,
             "--prefix=%s" % prefix,
         ]
+
+        if '+mpi' in spec:
+            args.append("CC=%s" % spec['mpi'].mpicc)
+            args.append("CXX=%s" % spec['mpi'].mpicxx)
+            args.append("FC=%s" % spec['mpi'].mpifc)
+            args.append("F90=%s" % spec['mpi'].mpifc)
+            args.append("F77=%s" % spec['mpi'].mpif77)
+        else:
+            args.append("--disable-mpi")
+
+        if '+openmp' in spec:
+            args.append("--with-openmp")
+        else:
+            args.append("--without-openmp")
 
         if spec.satisfies('@1.8.3:'):
             args.append("--with-atlab-libs=%s" % spec['bigdft-atlab'].prefix.lib)
@@ -83,11 +93,6 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
             args.append("--enable-cuda-gpu")
             args.append("--with-cuda-path=%s" % spec['cuda'].prefix)
             args.append("--with-cuda-libs=%s" % spec['cuda'].libs.link_flags)
-
-        if '+openmp' in spec:
-            args.append("--with-openmp")
-        else:
-            args.append("--without-openmp")
 
         with working_dir('psolver'):
             configure(*args)
