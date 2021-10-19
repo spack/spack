@@ -730,8 +730,8 @@ def _concretize_specs_together_new(*abstract_specs, **kwargs):
     result = spack.solver.asp.solve(abstract_specs)
 
     if not result.satisfiable:
-        result.minimize_and_print_cores()
-        tty.die("Unsatisfiable spec.")
+        conflicts = result.format_minimal_cores()
+        tty.die("Unsatisfiable spec generated the following core(s):", *conflicts)
 
     return [s.copy() for s in result.specs]
 

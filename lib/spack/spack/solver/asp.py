@@ -221,7 +221,9 @@ class Result(object):
         # Concrete specs
         self._concrete_specs = None
 
-    def print_core(self, core, debug=False):
+    def format_core(self, core):
+        assert self.control
+
         symbols = dict(
             (a.literal, a.symbol)
             for a in self.control.symbolic_atoms
@@ -234,19 +236,7 @@ class Result(object):
                 sym = sym.arguments[0].string
             core_symbols.append(sym)
 
-        out_list = sorted(str(symbol) for symbol in core_symbols)
-        if debug:
-            tty.debug("The following core was generated:", *out_list, level=debug)
-        else:
-            tty.msg("The input spec(s) break the following rules:", *out_list)
-
-    def minimize_and_print_cores(self):
-        assert self.control
-
-        for core in self.cores:
-            self.print_core(core, debug=3)
-            min_core = self.minimize_core(core)
-            self.print_core(min_core)
+        return sorted(str(symbol) for symbol in core_symbols)
 
     def minimize_core(self, core):
         assert self.control
@@ -259,6 +249,21 @@ class Result(object):
             if not ret.unsatisfiable:
                 min_core.append(fact)
         return min_core
+
+    def minimal_cores(self):
+        return [self.minimize_core(core) for core in self.cores]
+
+    def format_minimal_cores(self):
+        """List of facts for each core
+
+        Separate cores are separated by an empty line
+        """
+        string_list = []
+        for core in self.minimal_cores():
+            if string_list:
+                string_list.append('\n')
+            string_list.extend(self.format_core(core))
+        return string_list
 
     @property
     def specs(self):
