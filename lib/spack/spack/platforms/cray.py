@@ -153,11 +153,12 @@ class Cray(Platform):
                 front_end = archspec.cpu.host()
                 # Look for the frontend architecture or closest ancestor
                 # available in cray target modules
+                avail = [
+                    _target_name_from_craype_target_name(x)
+                    for x in self._avail_targets()
+                ]
                 for front_end_possibility in [front_end] + front_end.ancestors:
-                    if front_end_possibility.name in list(
-                            map(lambda x: _target_name_from_craype_target_name(x),
-                                self._avail_targets())
-                    ):
+                    if front_end_possibility.name in avail:
                         tty.debug("using front-end architecture or available ancestor")
                         return front_end_possibility.name
                 else:
