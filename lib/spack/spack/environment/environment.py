@@ -1141,10 +1141,14 @@ class Environment(object):
         # processes try to write the config file in parallel
         _ = spack.compilers.get_compiler_config()
 
+        # Early return if there is nothing to do
+        if len(arguments) == 0:
+            return []
+
         # Solve the environment in parallel on Linux
         start = time.time()
         max_processes = min(
-            max(len(arguments), 1),  # Number of specs
+            len(arguments),  # Number of specs
             16  # Cap on 16 cores
         )
 
@@ -1161,7 +1165,7 @@ class Environment(object):
         )
 
         finish = time.time()
-        tty.msg('Environment concretized in {0} sec.'.format(finish - start))
+        tty.msg('Environment concretized in %.2f seconds.' % (finish - start))
         results = []
         for abstract, concrete in zip(root_specs, concretized_root_specs):
             self._add_concrete_spec(abstract, concrete)
