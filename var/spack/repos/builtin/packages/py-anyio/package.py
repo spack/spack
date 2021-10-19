@@ -13,6 +13,7 @@ class PyAnyio(PythonPackage):
     homepage = "https://github.com/agronholm/anyio"
     pypi     = "anyio/anyio-3.2.1.tar.gz"
 
+    version('3.3.4', sha256='67da67b5b21f96b9d3d65daa6ea99f5d5282cb09f50eb4456f8fb51dffefc3ff')
     version('3.2.1', sha256='07968db9fa7c1ca5435a133dc62f988d84ef78e1d9b22814a59d1c62618afbc5')
 
     depends_on('python@3.6.2:', type=('build', 'run'))
