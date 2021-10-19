@@ -371,7 +371,7 @@ _spack_analyze_list_analyzers() {
 _spack_analyze_run() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --overwrite -p --path -a --analyzers"
+        SPACK_COMPREPLY="-h --help --overwrite -r --recursive -k --kwarg -p --path -a --analyzers"
     else
         _all_packages
     fi
