@@ -55,6 +55,10 @@ def setup_parser(subparser):
         '-f', '--force', action='store_true', dest='force',
         help="remove regardless of whether other packages or environments "
         "depend on this one")
+    subparser.add_argument(
+        '--remove', action='store_true', dest='remove',
+        help="if in an environment, then the spec should also be removed from "
+        "the environment description")
     arguments.add_common_arguments(
         subparser, ['recurse_dependents', 'yes_to_all', 'installed_specs'])
     subparser.add_argument(
@@ -227,21 +231,24 @@ def do_uninstall(env, specs, force):
 
 
 def get_uninstall_list(args, specs, env):
+    if args.remove and not env:
+        raise ValueError("Can only use --remove when in an environment")
+
     # Gets the list of installed specs that match the ones give via cli
     # args.all takes care of the case where '-a' is given in the cli
-    uninstall_list = find_matching_specs(env, specs, args.all, args.force)
+    uninstall_specs = set(
+        find_matching_specs(env, specs, args.all, args.force))
 
     # Takes care of '-R'
-    active_dpts, inactive_dpts = installed_dependents(uninstall_list, env)
+    active_dpts, inactive_dpts = installed_dependents(uninstall_specs, env)
 
     # if we are in the global scope, we complain if you try to remove a
     # spec that's in an environment.  If we're in an environment, we'll
     # just *remove* it from the environment, so we ignore this
     # error when *in* an environment
-    spec_envs = dependent_environments(uninstall_list)
+    spec_envs = dependent_environments(uninstall_specs)
     spec_envs = inactive_dependent_environments(spec_envs)
 
-    # Process spec_dependents and update uninstall_list
     has_error = not args.force and (
         # There are dependents in the current env and we didn't ask to remove
         # dependents
@@ -250,11 +257,11 @@ def get_uninstall_list(args, specs, env):
         # one or more of the specs to be uninstalled. There may also be
         # packages in those envs which depend on the base set of packages
         # to uninstall, but this covers that scenario.
-        or spec_envs
+        or (not args.remove and spec_envs)
     )
 
-    # say why each problem spec is needed
     if has_error:
+        # say why each problem spec is needed
         specs = set(active_dpts)
         specs.update(set(spec_envs))  # environments depend on this
 
@@ -291,14 +298,27 @@ def get_uninstall_list(args, specs, env):
         print()
         tty.die('There are still dependents.', *msgs)
 
-    elif args.dependents:
+    if args.dependents:
         for spec, lst in active_dpts.items():
-            uninstall_list.extend(lst)
-        for spec, lst in inactive_dpts.items():
-            uninstall_list.extend(lst)
-        uninstall_list = list(set(uninstall_list))
+            uninstall_specs.update(lst)
 
-    return uninstall_list
+    remove_only = set()
+    if args.remove:
+        if args.dependents:
+            if args.force:
+                for spec, lst in inactive_dpts.items():
+                    uninstall_specs.update(lst)
+            else:
+                for spec, lst in inactive_dpts.items():
+                    remove_only.update(lst)
+        if not args.force:
+            remove_only.update(spec_envs)
+
+    # Compute the set of specs that should be removed from the current env.
+    remove_specs = uninstall_specs & remove_only
+    uninstall_specs -= remove_only
+
+    return list(uninstall_specs)
 
 
 def uninstall_specs(args, specs):
