@@ -21,9 +21,6 @@ class BigdftAtlab(AutotoolsPackage):
     variant('openmp',    default=True,  description='Enable OpenMP support')
     variant('openbabel', default=False, description='Enable detection of openbabel compilation')
 
-    depends_on('python@:2.8', type='build', when="@:1.9.0")
-    depends_on('python@3.0:', type='build', when="@1.9.1:")
-
     depends_on('mpi',                 when='+mpi')
     depends_on('bigdft-futile@1.9.1', when='@1.9.1')
     depends_on('bigdft-futile@1.9.0', when='@1.9.0')
@@ -43,10 +40,6 @@ class BigdftAtlab(AutotoolsPackage):
     def configure(self, spec, prefix):
         fcflags = [spec['mpi'].libs.ld_flags]
         cflags = [spec['mpi'].libs.ld_flags]
-
-        python_version = spec['python'].version.up_to(2)
-        pyyaml = join_path(spec['py-pyyaml'].prefix.lib, 
-                                'python{0}'.format(python_version))
 
         args = [
             "FCFLAGS=%s" % " ".join(fcflags),

@@ -73,13 +73,14 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
         cflags = []
 
         python_version = spec['python'].version.up_to(2)
-        pyyaml = join_path(spec['py-pyyaml'].prefix.lib, 
-                                'python{0}'.format(python_version))
+        pyyaml = join_path(spec['py-pyyaml'].prefix.lib,
+                           'python{0}'.format(python_version))
 
         args = [
             "FCFLAGS=%s" % " ".join(fcflags),
             "CFLAGS=%s" % " ".join(cflags),
-            "--with-ext-linalg=%s %s" % (spec['blas'].libs.link_flags, spec['lapack'].libs.link_flags),
+            "--with-ext-linalg=%s %s" % (spec['blas'].libs.link_flags,
+                                         spec['lapack'].libs.link_flags),
             "--with-pyyaml-path=%s" % pyyaml,
             "--with-futile-libs=%s" % spec['bigdft-futile'].prefix.lib,
             "--with-futile-incs=%s" % spec['bigdft-futile'].headers.include_flags,
@@ -91,7 +92,8 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
             "--with-libABINIT-incs=%s" % spec['bigdft-libabinit'].headers.include_flags,
             "--with-libgain-libs=%s" % spec['libgain'].libs.ld_flags,
             "--with-libgain-incs=%s" % spec['libgain'].headers.include_flags,
-            "--with-libxc-libs=%s %s" % (spec['libxc'].libs.ld_flags, spec['libxc'].libs.ld_flags + "f90"),
+            "--with-libxc-libs=%s %s" % (spec['libxc'].libs.ld_flags,
+                                         spec['libxc'].libs.ld_flags + "f90"),
             "--with-libxc-incs=%s" % spec['libxc'].headers.include_flags,
             "--without-etsf-io",
             "--with-moduledir=%s" % prefix.include,

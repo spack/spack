@@ -24,7 +24,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     variant('scalapack', default=True,  description='Enable SCALAPACK support')
     variant('pexsi',     default=False, description='Give the link-line for PEXSI')
     variant('ntpoly',    default=False, description='Option to use NTPoly')
-    #variant('minpack',   default=False,  description='Give the link-line for MINPACK')
+    # variant('minpack',   default=False,  description='Give the link-line for MINPACK')
 
     depends_on('python@:2.8', type='build', when="@:1.9.0")
     depends_on('python@3.0:', type='build', when="@1.9.1:")
@@ -41,9 +41,9 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     depends_on('bigdft-atlab@1.9.1',  when='@1.9.1')
     depends_on('bigdft-atlab@1.9.0',  when='@1.9.0')
     depends_on('bigdft-atlab@1.8.3',  when='@1.8.3')
-    #depends_on('netlib-minpack', when='+minpack')
-    depends_on('pexsi', when="+pexsi")
-    depends_on('scalapack', when='+scalapack')
+    # depends_on('netlib-minpack', when='+minpack')
+    depends_on('pexsi',               when="+pexsi")
+    depends_on('scalapack',           when='+scalapack')
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
@@ -58,13 +58,14 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         cflags = []
 
         python_version = spec['python'].version.up_to(2)
-        pyyaml = join_path(spec['py-pyyaml'].prefix.lib, 
-                                'python{0}'.format(python_version))
+        pyyaml = join_path(spec['py-pyyaml'].prefix.lib,
+                           'python{0}'.format(python_version))
 
         args = [
             "FCFLAGS=%s" % " ".join(fcflags),
             "CFLAGS=%s" % " ".join(cflags),
-            "--with-ext-linalg=%s %s" % (spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags),
+            "--with-ext-linalg=%s %s" % (spec['blas'].libs.ld_flags,
+                                         spec['lapack'].libs.ld_flags),
             "--with-pyyaml-path=%s" % pyyaml,
             "--with-futile-libs=%s" % spec['bigdft-futile'].prefix.lib,
             "--with-futile-incs=%s" % spec['bigdft-futile'].headers.include_flags,
@@ -88,7 +89,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
 
         if spec.satisfies('@1.8.3:'):
             args.append("--with-atlab-libs=%s" % spec['bigdft-atlab'].prefix.lib)
-            
+
         if '+scalapack' in spec:
             args.append("--with-scalapack")
             args.append("--with-scalapack-path=%s" % spec['scalapack'].prefix.lib)

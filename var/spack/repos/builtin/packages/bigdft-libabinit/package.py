@@ -19,7 +19,7 @@ class BigdftLibabinit(AutotoolsPackage):
     version('1.8.2',   sha256='042e5a3b478b1a4c050c450a9b1be7bcf8e13eacbce4759b7f2d79268b298d61')
     version('1.8.1',   sha256='e09ff0ba381f6ffbe6a3c0cb71db5b73117874beb41f22a982a7e5ba32d018b3')
 
-    variant('mpi', default=True,  description='Enable MPI support')
+    variant('mpi', default=True, description='Enable MPI support')
 
     depends_on('python@:2.8', type='build', when="@:1.9.0")
     depends_on('python@3.0:', type='build', when="@1.9.1:")
@@ -52,7 +52,8 @@ class BigdftLibabinit(AutotoolsPackage):
         args = [
             "FCFLAGS=%s" % " ".join(fcflags),
             "CFLAGS=%s" % " ".join(cflags),
-            "--with-libxc-libs=%s %s" % (spec['libxc'].libs.ld_flags, spec['libxc'].libs.ld_flags + "f90"),
+            "--with-libxc-libs=%s %s" % (spec['libxc'].libs.ld_flags,
+                                         spec['libxc'].libs.ld_flags + "f90"),
             "--with-libxc-incs=%s" % spec['libxc'].headers.include_flags,
             "--with-futile-libs=%s" % spec['bigdft-futile'].prefix.lib,
             "--with-futile-incs=%s" % spec['bigdft-futile'].headers.include_flags,

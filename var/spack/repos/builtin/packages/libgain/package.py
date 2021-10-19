@@ -8,7 +8,7 @@ from spack import *
 
 class Libgain(AutotoolsPackage):
     """GaIn is intended to provide routines with a relatively simple interface
-       for calculation of overlap, kinetic and 2,3 and 4 center Coulomb integrals 
+       for calculation of overlap, kinetic and 2,3 and 4 center Coulomb integrals
        over either Solid or Cubic Harmonics Gaussian basis sets."""
 
     homepage = "https://bigdft.org/"

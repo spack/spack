@@ -25,11 +25,11 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
     depends_on('python@:2.8', type='build', when="@:1.9.0")
     depends_on('python@3.0:', type='build', when="@1.9.1:")
 
-    depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('lapack')
     depends_on('libyaml')
     depends_on('py-pyyaml')
+    depends_on('mpi', when='+mpi')
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
@@ -44,13 +44,14 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
         cflags = []
 
         python_version = spec['python'].version.up_to(2)
-        pyyaml = join_path(spec['py-pyyaml'].prefix.lib, 
-                                'python{0}'.format(python_version))
+        pyyaml = join_path(spec['py-pyyaml'].prefix.lib,
+                           'python{0}'.format(python_version))
 
         args = [
             "FCFLAGS=%s" % " ".join(fcflags),
             "CFLAGS=%s" % " ".join(cflags),
-            "--with-ext-linalg=%s %s" % (spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags),
+            "--with-ext-linalg=%s %s" % (spec['blas'].libs.ld_flags,
+                                         spec['lapack'].libs.ld_flags),
             "--with-yaml-path=%s" % spec['libyaml'].prefix,
             "--with-pyyaml-path=%s" % pyyaml,
             "--prefix=%s" % prefix,

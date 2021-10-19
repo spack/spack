@@ -45,7 +45,7 @@ class BigdftSpred(AutotoolsPackage):
     depends_on('bigdft-core@1.8.3',    when='@1.8.3')
     depends_on('bigdft-core@1.8.2',    when='@1.8.2')
     depends_on('bigdft-core@1.8.1',    when='@1.8.1')
-    depends_on('scalapack', 		   when='+scalapack')
+    depends_on('scalapack',            when='+scalapack')
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
@@ -60,13 +60,14 @@ class BigdftSpred(AutotoolsPackage):
         cflags = []
 
         python_version = spec['python'].version.up_to(2)
-        pyyaml = join_path(spec['py-pyyaml'].prefix.lib, 
-                                'python{0}'.format(python_version))
+        pyyaml = join_path(spec['py-pyyaml'].prefix.lib,
+                           'python{0}'.format(python_version))
 
         args = [
             "FCFLAGS=%s" % " ".join(fcflags),
             "CFLAGS=%s" % " ".join(cflags),
-            "--with-ext-linalg=%s %s" % (spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags),
+            "--with-ext-linalg=%s %s" % (spec['blas'].libs.ld_flags,
+                                         spec['lapack'].libs.ld_flags),
             "--with-pyyaml-path=%s" % pyyaml,
             "--with-futile-libs=%s" % spec['bigdft-futile'].prefix.lib,
             "--with-futile-incs=%s" % spec['bigdft-futile'].headers.include_flags,
