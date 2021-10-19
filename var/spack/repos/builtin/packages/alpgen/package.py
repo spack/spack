@@ -15,6 +15,9 @@ class Alpgen(MakefilePackage):
     homepage = "http://mlm.home.cern.ch/mlm/alpgen/"
     url      = "http://mlm.home.cern.ch/mlm/alpgen/V2.1/v214.tgz"
 
+    maintainers = ['iarspider']
+    tags = ['hep']
+
     patch('alpgen-214.patch', when='recipe=cms')
     patch('alpgen-214-Darwin-x86_84-gfortran.patch', when='platform=darwin recipe=cms')
     patch('alpgen-2.1.4-sft.patch', when='recipe=sft', level=0)
