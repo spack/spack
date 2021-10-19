@@ -102,6 +102,8 @@ class Alpgen(MakefilePackage):
 
     @when('recipe=cms')
     def build(self, spec, prefix):
+        copy(join_path(os.path.dirname(__file__), 'cms_build.sh'), 'cms_build.sh')
+        copy(join_path(os.path.dirname(__file__), 'cms_install.sh'), 'cms_install.sh')
         bash = which('bash')
         bash('./cms_build.sh')
 
@@ -113,7 +115,7 @@ class Alpgen(MakefilePackage):
         for root, dirs, files in os.walk(prefix):
             set_install_permissions(root)
             for file in files:
-                set_install_permissions(file)
+                set_install_permissions(join_path(root, file))
 
     @when('recipe=sft')
     def cmake(self, spec, prefix):
