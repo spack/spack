@@ -39,18 +39,15 @@ class Task(object):
     """Wrapped task that trap every Exception and return it as an
     ErrorFromWorker object.
 
-    Clients must derive this class and implement an "execute" method to perform
-    the required action.
-
-    We are using a wrapper class instead of a decorator since the class is pickleable,
-    while a decorator with an inner closure is not.
+    We are using a wrapper class instead of a decorator since the class
+    is pickleable, while a decorator with an inner closure is not.
     """
-    def execute(self):
-        raise NotImplementedError('derived classes must implement this method')
+    def __init__(self, func):
+        self.func = func
 
     def __call__(self, *args, **kwargs):
         try:
-            value = self.execute(*args, **kwargs)
+            value = self.func(*args, **kwargs)
         except Exception:
             value = ErrorFromWorker(*sys.exc_info())
         return value
@@ -111,18 +108,22 @@ def num_processes(max_processes=None):
     return min(cpus_available(), max_processes)
 
 
-def parallel_map(task_obj, arguments, max_processes=None):
+def parallel_map(func, arguments, max_processes=None):
     """Map a task object to the list of arguments, return the list of results.
 
     Args:
-        task_obj (Task): user defined task object
+        func (Task): user defined task object
         arguments (list): list of arguments for the task
         max_processes (int or None): maximum number of processes allowed
+
+    Raises:
+        RuntimeError: if any error occurred in the worker processes
     """
+    task_wrapper = Task(func)
     if sys.platform != 'darwin':
         with pool(processes=num_processes(max_processes=max_processes)) as p:
-            results = p.map(task_obj, arguments)
+            results = p.map(task_wrapper, arguments)
     else:
-        results = list(map(task_obj, arguments))
+        results = list(map(task_wrapper, arguments))
     raise_if_errors(*results)
     return results

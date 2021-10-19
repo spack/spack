@@ -1157,7 +1157,7 @@ class Environment(object):
         tty.msg(msg)
 
         concretized_root_specs = spack.util.parallel.parallel_map(
-            _ConcretizeTask(), arguments, max_processes=max_processes
+            _concretize_task, arguments, max_processes=max_processes
         )
 
         finish = time.time()
@@ -2011,11 +2011,10 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             invalid_constraints.extend(inv_variant_constraints)
 
 
-class _ConcretizeTask(spack.util.parallel.Task):
-    def execute(self, packed_arguments):
-        spec_constraints, tests = packed_arguments
-        with tty.SuppressOutput(msg_enabled=False):
-            return _concretize_from_constraints(spec_constraints, tests)
+def _concretize_task(packed_arguments):
+    spec_constraints, tests = packed_arguments
+    with tty.SuppressOutput(msg_enabled=False):
+        return _concretize_from_constraints(spec_constraints, tests)
 
 
 def make_repo_path(root):
