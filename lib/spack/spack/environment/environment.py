@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import sys
+import time
 
 import ruamel.yaml as yaml
 import six
@@ -17,6 +18,8 @@ from ordereddict_backport import OrderedDict
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.bootstrap
+import spack.compilers
 import spack.concretize
 import spack.config
 import spack.error
@@ -28,10 +31,13 @@ import spack.schema.env
 import spack.spec
 import spack.stage
 import spack.store
+import spack.subprocess_context
 import spack.user_environment as uenv
+import spack.util.cpus
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
+import spack.util.parallel
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -1111,14 +1117,57 @@ class Environment(object):
                 self._add_concrete_spec(s, concrete, new=False)
 
         # Concretize any new user specs that we haven't concretized yet
-        concretized_specs = []
+        arguments, root_specs = [], []
         for uspec, uspec_constraints in zip(
-                self.user_specs, self.user_specs.specs_as_constraints):
+                self.user_specs, self.user_specs.specs_as_constraints
+        ):
             if uspec not in old_concretized_user_specs:
-                concrete = _concretize_from_constraints(uspec_constraints, tests=tests)
-                self._add_concrete_spec(uspec, concrete)
-                concretized_specs.append((uspec, concrete))
-        return concretized_specs
+                root_specs.append(uspec)
+                arguments.append((uspec_constraints, tests))
+
+        # Ensure we don't try to bootstrap clingo in parallel
+        if spack.config.get('config:concretizer') == 'clingo':
+            with spack.bootstrap.ensure_bootstrap_configuration():
+                spack.bootstrap.ensure_clingo_importable_or_raise()
+
+        # Ensure all the indexes have been built or updated, since
+        # otherwise the processes in the pool may timeout on waiting
+        # for a write lock. We do this indirectly by retrieving the
+        # provider index, which should in turn trigger the update of
+        # all the indexes if there's any need for that.
+        _ = spack.repo.path.provider_index
+
+        # Ensure we have compilers in compilers.yaml to avoid that
+        # processes try to write the config file in parallel
+        _ = spack.compilers.get_compiler_config()
+
+        # Solve the environment in parallel on Linux
+        start = time.time()
+        max_processes = min(
+            max(len(arguments), 1),  # Number of specs
+            16  # Cap on 16 cores
+        )
+
+        # TODO: revisit this print as soon as darwin is parallel too
+        msg = 'Starting concretization'
+        if sys.platform != 'darwin':
+            msg = msg + ' pool with {0} processes'.format(
+                spack.util.parallel.num_processes(max_processes=max_processes)
+            )
+        tty.msg(msg)
+
+        concretized_root_specs = spack.util.parallel.parallel_map(
+            _concretize_task, arguments, max_processes=max_processes
+        )
+
+        finish = time.time()
+        tty.msg('Environment concretized in {0} sec.'.format(finish - start))
+        results = []
+        for abstract, concrete in zip(root_specs, concretized_root_specs):
+            self._add_concrete_spec(abstract, concrete)
+            results.append((abstract, concrete))
+
+        return results
 
     def concretize_and_add(self, user_spec, concrete_spec=None, tests=False):
         """Concretize and add a single spec to the environment.
@@ -1960,6 +2009,12 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             if len(inv_variant_constraints) != len(invalid_variants):
                 raise e
             invalid_constraints.extend(inv_variant_constraints)
+
+
+def _concretize_task(packed_arguments):
+    spec_constraints, tests = packed_arguments
+    with tty.SuppressOutput(msg_enabled=False):
+        return _concretize_from_constraints(spec_constraints, tests)
 
 
 def make_repo_path(root):

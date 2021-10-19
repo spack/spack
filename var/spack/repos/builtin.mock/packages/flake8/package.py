@@ -39,7 +39,7 @@ class Flake8(Package):
     variant('super-awesome-feature',    default=True,  description='Enable super awesome feature')
     variant('somewhat-awesome-feature', default=False, description='Enable somewhat awesome feature')
 
-    provides('lapack', when='@2.0+super-awesome-feature+somewhat-awesome-feature')
+    provides('somevirt', when='@2.0+super-awesome-feature+somewhat-awesome-feature')
 
     extends('python', ignore='bin/(why|does|every|package|that|depends|on|numpy|need|to|copy|f2py3?)')
 
