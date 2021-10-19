@@ -29,14 +29,10 @@ class Er(CMakePackage):
     depends_on('zlib', type='link')
 
     variant('shared', default=True, description='Build with shared libraries')
-    depends_on('kvtree+shared',   when='@0.1: +shared')
-    depends_on('kvtree~shared',   when='@0.1: ~shared')
-    depends_on('rankstr+shared',  when='@0.1: +shared')
-    depends_on('rankstr~shared',  when='@0.1: ~shared')
-    depends_on('redset+shared',   when='@0.1: +shared')
-    depends_on('redset~shared',   when='@0.1: ~shared')
-    depends_on('shuffile+shared', when='@0.1: +shared')
-    depends_on('shuffile~shared', when='@0.1: ~shared')
+    deps = ['kvtree', 'rankstr', 'redset', 'shuffile']
+    for dep in deps:
+        depends_on(dep + '+shared', when='@0.1: +shared')
+        depends_on(dep + '~shared', when='@0.1: ~shared')
 
     def cmake_args(self):
         spec = self.spec
