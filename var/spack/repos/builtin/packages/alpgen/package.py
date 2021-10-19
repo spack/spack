@@ -99,7 +99,8 @@ class Alpgen(MakefilePackage):
         if self.spec.satisfies('recipe=cms'):
             filter_file('-fno-automatic', '-fno-automatic -std=legacy', 'compile.mk')
             copy(join_path(os.path.dirname(__file__), 'cms_build.sh'), 'cms_build.sh')
-            copy(join_path(os.path.dirname(__file__), 'cms_install.sh'), 'cms_install.sh')
+            copy(join_path(os.path.dirname(__file__), 'cms_install.sh'), 
+                 'cms_install.sh')
 
     @when('recipe=cms')
     def cmake(self, spec, prefix):
