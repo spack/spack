@@ -78,7 +78,7 @@ def test_location_env_exists(mutable_mock_env_path):
     assert location('--env', "example").strip() == e.path
 
 
-def test_location_with_active_env():
+def test_location_with_active_env(mutable_mock_env_path):
     """Tests spack location --env with active env"""
     e = ev.create("example")
     e.write()
@@ -113,12 +113,6 @@ def test_location_env_missing():
     error = "==> Error: no such environment: '%s'" % missing_env_name
     out = location('--env', missing_env_name, fail_on_error=False).strip()
     assert out == error
-
-
-def test_location_multiple_envs_fails():
-    """Don't allow location --env a b"""
-    out = location('--env', 'a', 'b', fail_on_error=False).strip()
-    assert "provide a single environment name" in out
 
 
 @pytest.mark.db
