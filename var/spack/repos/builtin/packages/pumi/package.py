@@ -41,7 +41,7 @@ class Pumi(CMakePackage):
     variant('shared', default=False, description='Build shared libraries')
     variant('zoltan', default=False, description='Enable Zoltan Features')
     variant('fortran', default=False, description='Enable FORTRAN interface')
-    variant('testing', default=False, description='Enable tests')
+    variant('testing', default=False, description='Enable all tests')
     variant('simmodsuite', default='none',
             values=('none', 'base', 'kernels', 'full'),
             description="Enable Simmetrix SimModSuite Support: 'base' enables "
@@ -96,11 +96,3 @@ class Pumi(CMakePackage):
             mpi_id = spec['mpi'].name + spec['mpi'].version.string
             args.append('-DSIM_MPI=' + mpi_id)
         return args
-
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
-    def check(self):
-        """Run ctest after building project."""
-
-        with working_dir(self.build_directory):
-            ctest(parallel=False)
