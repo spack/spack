@@ -345,11 +345,11 @@ spack:
         - vtk-m
         - warpx
         runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "xlarge", "ppc64le"]
       - match: ['os=ubuntu20.04']
         runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "large", "ppc64le"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
@@ -357,7 +357,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "ppc64le"]
 
   cdash:
@@ -365,5 +365,3 @@ spack:
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
-
-
