@@ -20,6 +20,7 @@ class Cli11(CMakePackage):
 
     def cmake_args(self):
         args = [
+            '-DCLI11_BUILD_EXAMPLES=OFF',
             '-DCLI11_BUILD_DOCS=OFF',
             '-DCLI11_BUILD_TESTS=OFF',
         ]
