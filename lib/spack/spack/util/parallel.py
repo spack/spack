@@ -75,17 +75,15 @@ def raise_if_errors(*results, **kwargs):
     if not errors:
         return
 
-    # Report the errors and then raise
-    if debug:
-        for error in errors:
-            print(error.stacktrace, file=err_stream)
+    for error in errors:
+        print(
+            error.stacktrace if debug else error,
+            file=err_stream
+        )
 
-        print('[PARENT PROCESS]:', file=err_stream)
-        traceback.print_stack(file=err_stream)
-    else:
-        for error in errors:
-            print(error, file=err_stream)
-    error_msg = 'errors occurred during concretization of the environment:\n{0}'
+    error_msg = '{0}'
+    if len(errors) > 1 and not debug:
+        error_msg = 'errors occurred during concretization of the environment:\n{0}'
 
     raise RuntimeError(error_msg.format(err_stream.getvalue()))
 
@@ -127,8 +125,8 @@ def parallel_map(func, arguments, max_processes=None, debug=False):
         func (Task): user defined task object
         arguments (list): list of arguments for the task
         max_processes (int or None): maximum number of processes allowed
-        debug (bool): if False, just show error messages. If True show complete
-            stacktraces
+        debug (bool): if False, raise an exception containing just the error messages
+            from workers, if True an exception with complete stacktraces
 
     Raises:
         RuntimeError: if any error occurred in the worker processes
