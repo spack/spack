@@ -14,6 +14,8 @@ class Sz(CMakePackage):
     git      = "https://github.com/szcompressor/sz"
     maintainers = ['disheng222', 'robertu94']
 
+    tags = ['e4s']
+
     version('master', branch='master')
     version('2.1.12', sha256='3712b2cd7170d1511569e48a208f02dfb72ecd7ad053c321e2880b9083e150de')
     version('2.1.11.1', sha256='e6fa5c969b012782b1e5e9fbd1cd7d1c0ace908d9ec982e78b2910ec5c2161ac')
@@ -156,20 +158,24 @@ class Sz(CMakePackage):
         filename = 'testfloat_8_8_128.dat'
         orifile = test_data_dir.join(filename)
 
-        exe='sz'
+        exe = 'sz'
         reason = 'testing 2D compression of {0}'.format(exe)
-        options = ['-z', '-f', '-i', orifile, '-M', 'REL', '-R', '1E-3', '-2', '8', '1024']
-        
-        self.run_test(exe, options, [], installed=True, purpose=reason, skip_missing=True, work_dir=test_data_dir)
+        options = ['-z', '-f', '-i', orifile, '-M', 
+                'REL', '-R', '1E-3', '-2', '8', '1024']
+
+        self.run_test(exe, options, [], installed=True,
+                purpose=reason, skip_missing=True, work_dir=test_data_dir)
 
         filename = 'testfloat_8_8_128.dat.sz'
         decfile = test_data_dir.join(filename)
 
         reason = 'testing 2D decompression of {0}'.format(exe)
-        options = ['-x', '-f', '-i', orifile, '-s', decfile, '-2', '8', '1024', '-a']
+        options = ['-x', '-f', '-i', orifile, '-s', decfile, 
+                '-2', '8', '1024', '-a']
 
-        self.run_test(exe, options, [], installed=True, purpose=reason, skip_missing=True, work_dir=test_data_dir)
-    
+        self.run_test(exe, options, [], installed=True, purpose=reason,
+                skip_missing=True, work_dir=test_data_dir)
+
 
     def _test_3d_float(self):
         """This test performs simple 3D compression/decompression (float)"""
@@ -179,19 +185,23 @@ class Sz(CMakePackage):
         filename = 'testfloat_8_8_128.dat'
         orifile = test_data_dir.join(filename)
 
-        exe='sz'
+        exe = 'sz'
         reason = 'testing 3D compression of {0}'.format(exe)
-        options = ['-z', '-f', '-i', orifile, '-M', 'REL', '-R', '1E-3', '-3', '8', '8', '128']
+        options = ['-z', '-f', '-i', orifile, '-M', 'REL',
+                '-R', '1E-3', '-3', '8', '8', '128']
         
-        self.run_test(exe, options, [], installed=True, purpose=reason, skip_missing=True, work_dir=test_data_dir)
+        self.run_test(exe, options, [], installed=True, purpose=reason,
+                skip_missing=True, work_dir=test_data_dir)
 
         filename = 'testfloat_8_8_128.dat.sz'
         decfile = test_data_dir.join(filename)
 
         reason = 'testing 3D decompression of {0}'.format(exe)
-        options = ['-x', '-f', '-i', orifile, '-s', decfile, '-3', '8', '8', '128', '-a']
+        options = ['-x', '-f', '-i', orifile, '-s', decfile,
+                '-3', '8', '8', '128', '-a']
 
-        self.run_test(exe, options, [], installed=True, purpose=reason, skip_missing=True, work_dir=test_data_dir)
+        self.run_test(exe, options, [], installed=True, purpose=reason, 
+                skip_missing=True, work_dir=test_data_dir)
 
 
     def test(self):
