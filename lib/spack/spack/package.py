@@ -85,7 +85,7 @@ _spack_configure_argsfile = 'spack-configure-args.txt'
 
 def preferred_version(pkg):
     """
-    Returns a sorted list of the preferredvresions of the package.
+    Returns a sorted list of the preferred versions of the package.
 
     Arguments:
         pkg (Package): The package whose versions are to be assessed.
