@@ -15,6 +15,8 @@ class OpenpmdApi(CMakePackage):
 
     maintainers = ['ax3l']
 
+    tags = ['e4s']
+
     # C++14 up until here
     version('develop', branch='dev')
     version('0.14.2', sha256='25c6b4bcd0ae1ba668b633b8514e66c402da54901c26861fc754fca55717c836')
@@ -72,7 +74,7 @@ class OpenpmdApi(CMakePackage):
 
     # Fix breaking HDF5 1.12.0 API when build with legacy api options
     # https://github.com/openPMD/openPMD-api/pull/1012
-    patch('hdf5-1.12.0.patch', when='@:0.13.99 +hdf5')
+    patch('hdf5-1.12.0.patch', when='@:0.13 +hdf5')
 
     extends('python', when='+python')
 

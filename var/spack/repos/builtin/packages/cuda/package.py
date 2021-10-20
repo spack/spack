@@ -122,8 +122,6 @@ class Cuda(Package):
     conflicts('arch=darwin-mojave-x86_64')
 
     variant('dev', default=False, description='Enable development dependencies, i.e to use cuda-gdb')
-    variant('allow-unsupported-compilers', default=False,
-            description='Allow unsupported host compiler and CUDA version combinations')
 
     depends_on('libxml2', when='@10.1.243:')
     # cuda-gdb needs libncurses.so.5

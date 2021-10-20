@@ -37,6 +37,13 @@ class Motif(AutotoolsPackage):
 
     patch('add_xbitmaps_dependency.patch')
 
+    def patch(self):
+        # fix linking the simple_app demo program
+        # https://bugs.launchpad.net/ubuntu/+source/openmotif/+bug/705294
+        filter_file('../../../lib/Exm/libExm.a',
+                    '../../../lib/Exm/libExm.a -lX11',
+                    'demos/programs/Exm/simple_app/Makefile.am')
+
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
         with working_dir(self.configure_directory):

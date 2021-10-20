@@ -1,20 +1,20 @@
-FROM opensuse/leap:15.2
+FROM opensuse/leap:15.3
 MAINTAINER Christian Goll <cgoll@suse.com>
 
 ENV DOCKERFILE_BASE=opensuse          \
     DOCKERFILE_DISTRO=opensuse_leap   \
-    DOCKERFILE_DISTRO_VERSION=15.2    \
+    DOCKERFILE_DISTRO_VERSION=15.3    \
     SPACK_ROOT=/opt/spack      \
     DEBIAN_FRONTEND=noninteractive    \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
     container=docker
 
-RUN 	zypper ref && \
-	zypper up -y && \
-	zypper in -y python3-base python3-boto3\
-	xz gzip tar bzip2 curl patch \
-	gcc-c++ gcc-fortran make cmake automake &&\
-  zypper clean
+RUN zypper ref && \
+    zypper up -y && \
+    zypper in -y python3-base python3-boto3 \
+    xz gzip tar bzip2 curl patch patchelf file \
+    gcc-c++ gcc-fortran make cmake automake && \
+    zypper clean
 
 # clean up manpages
 RUN	rm -rf /var/cache/zypp/*  \
@@ -51,8 +51,8 @@ RUN [ -f ~/.profile ]                                               \
 WORKDIR /root
 SHELL ["docker-shell"]
 
-# Find tools which are in distro
-RUN ${SPACK_ROOT}/bin/spack external find  --scope system
+# Disable bootstrapping from sources
+RUN ${SPACK_ROOT}/bin/spack bootstrap untrust spack-install
 
 # TODO: add a command to Spack that (re)creates the package cache
 RUN ${SPACK_ROOT}/bin/spack spec hdf5+mpi

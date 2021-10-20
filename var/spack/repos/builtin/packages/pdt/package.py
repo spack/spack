@@ -21,6 +21,8 @@ class Pdt(AutotoolsPackage):
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
     url      = "https://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.25.1.tar.gz"
 
+    tags = ['e4s']
+
     version('3.25.1', sha256='0b6f8a6b8769c181b2ae6cae7298f04b8e3e3d68066f598ed24574e19500bc97')
     version('3.25', sha256='1037628d854edfeded3d847150d3e8fbd3774e8146407ce32f5021c80f6299be')
     version('3.24', sha256='4a2bb31f3f7f2e52ed49d9b7189ade05170a4386ef76771280a06e8b3ca97ab2')

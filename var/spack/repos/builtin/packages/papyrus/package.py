@@ -15,6 +15,8 @@ class Papyrus(CMakePackage):
     url      = "https://code.ornl.gov/eck/papyrus/repository/archive.tar.bz2?ref=v1.0.2"
     git      = "https://code.ornl.gov/eck/papyrus.git"
 
+    tags = ['e4s']
+
     version('master', branch='master')
     version('1.0.2', sha256='b6cfcff99f73ded8e4ca4b165bc182cd5cac60f0c0cf4f93649b77d074445645')
     version('1.0.1', sha256='3772fd6f2c301faf78f18c5e4dc3dbac57eb361861b091579609b3fff9e0bb17')

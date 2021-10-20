@@ -196,6 +196,10 @@ class Lammps(CMakePackage, CudaPackage):
         if spec.satisfies('@20180629:+lib'):
             args.append('-DBUILD_LIB=ON')
 
+        if spec.satisfies('%aocc'):
+            cxx_flags = '-Ofast -mfma -fvectorize -funroll-loops'
+            args.append(self.define('CMAKE_CXX_FLAGS_RELEASE', cxx_flags))
+
         args.append(self.define_from_variant('WITH_JPEG', 'jpeg'))
         args.append(self.define_from_variant('WITH_PNG', 'png'))
         args.append(self.define_from_variant('WITH_FFMPEG', 'ffmpeg'))
@@ -214,11 +218,14 @@ class Lammps(CMakePackage, CudaPackage):
             if '^mkl' in spec:
                 args.append('-DFFT=MKL')
             if '^amdfftw' in spec:
-                fftw_prefix = spec['amdfftw'].prefix
-                args.append('-DFFTW_HOME={0}'.format(fftw_prefix))
-                args.append('-DFFTW_INCLUDE_DIRS={0}'
-                            .format(fftw_prefix.include))
-                args.append('-DFFTW_LIBRARY_DIRS={0}'.format(fftw_prefix.lib))
+                # If FFTW3 is selected, then CMake will try to detect, if threaded
+                # FFTW libraries are available and enable them by default.
+                args.append(self.define('FFT', 'FFTW3'))
+                # Using the -DFFT_SINGLE setting trades off a little accuracy
+                # for reduced memory use and parallel communication costs
+                # for transposing 3d FFT data.
+                args.append(self.define('FFT_SINGLE', True))
+
         if '+kokkos' in spec:
             args.append('-DEXTERNAL_KOKKOS=ON')
         if '+user-adios' in spec:

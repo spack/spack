@@ -13,6 +13,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/CARE"
     git      = "https://github.com/LLNL/CARE.git"
+    tags     = ['radiuss']
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='main', submodules='True')

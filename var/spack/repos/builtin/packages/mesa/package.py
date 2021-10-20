@@ -19,6 +19,7 @@ class Mesa(MesonPackage):
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
     version('master', tag='master')
+    version('21.2.3', sha256='7245284a159d2484770e1835a673e79e4322a9ddf43b17859668244946db7174')
     version('21.2.1', sha256='2c65e6710b419b67456a48beefd0be827b32db416772e0e363d5f7d54dc01787')
     version('21.0.3', sha256='565c6f4bd2d5747b919454fc1d439963024fc78ca56fd05158c3b2cde2f6912b')
     version('21.0.0', sha256='e6204e98e6a8d77cf9dc5d34f99dd8e3ef7144f3601c808ca0dd26ba522e0d84')
@@ -39,11 +40,15 @@ class Mesa(MesonPackage):
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
-    variant('swr', default='auto',
-            values=('auto', 'none', 'avx', 'avx2', 'knl', 'skx'),
+    _SWR_AUTO_VALUE = 'auto'
+    _SWR_ENABLED_VALUES = (_SWR_AUTO_VALUE, 'avx', 'avx2', 'knl', 'skx')
+    _SWR_DISABLED_VALUES = ('none',)
+    variant('swr', default=_SWR_AUTO_VALUE,
+            values=_SWR_DISABLED_VALUES + _SWR_ENABLED_VALUES,
             multi=True,
             description="Enable the SWR driver.")
-    # conflicts('~llvm', when='~swr=none')
+    for swr_enabled_value in _SWR_ENABLED_VALUES:
+        conflicts('~llvm', when='swr={0}'.format(swr_enabled_value))
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
@@ -70,7 +75,7 @@ class Mesa(MesonPackage):
     provides('osmesa', when='+osmesa')
 
     # Variant dependencies
-    depends_on('llvm@6:', when='+llvm')
+    depends_on('llvm@6:12', when='+llvm')
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
@@ -192,8 +197,6 @@ class Mesa(MesonPackage):
                 args_swr_arches.append('skx')
 
         if args_swr_arches:
-            if '+llvm' not in spec:
-                raise SpecError('Variant swr requires +llvm')
             args_gallium_drivers.append('swr')
             args.append('-Dswr-arches=' + ','.join(args_swr_arches))
 

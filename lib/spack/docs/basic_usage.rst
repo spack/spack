@@ -31,13 +31,13 @@ colorized output with a flag
 
 .. code-block:: console
 
-    $ spack --color always | less -R
+    $ spack --color always find | less -R
 
 or an environment variable
 
 .. code-block:: console
 
-   $ SPACK_COLOR=always spack | less -R
+   $ SPACK_COLOR=always spack find | less -R
 
 --------------------------
 Listing available packages

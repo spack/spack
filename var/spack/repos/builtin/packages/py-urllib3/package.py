@@ -35,6 +35,6 @@ class PyUrllib3(PythonPackage):
     depends_on('py-certifi', when='+secure')
     depends_on('py-ipaddress', when='+secure ^python@2.7:2.8')
 
-    depends_on('py-pysocks@1.5.6,1.5.8:1.999', when='+socks')
+    depends_on('py-pysocks@1.5.6,1.5.8:1', when='+socks')
 
     depends_on('py-brotlipy@0.6:', when='+brotli')

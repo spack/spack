@@ -22,7 +22,7 @@ class PyMpi4py(PythonPackage):
     version('2.0.0', sha256='6543a05851a7aa1e6d165e673d422ba24e45c41e4221f0993fe1e5924a00cb81')
     version('1.3.1', sha256='e7bd2044aaac5a6ea87a87b2ecc73b310bb6efe5026031e33067ea3c2efc3507')
 
-    depends_on('python@2.6:2.7.99,3.2:')
+    depends_on('python@2.6:2.7,3.2:')
     depends_on('py-setuptools', type='build')
     depends_on('mpi')
     depends_on('py-cython@0.22.0:', when='@develop', type='build')

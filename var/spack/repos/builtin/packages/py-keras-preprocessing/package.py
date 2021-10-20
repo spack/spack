@@ -22,3 +22,5 @@ class PyKerasPreprocessing(PythonPackage):
     version('1.0.1', sha256='8649ba6377ecc06ea10e0a8a954df5600d115b4b626861e33c79b41ec03c5194')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-six@1.9.0:', type=('build', 'run'))
+    depends_on('py-numpy@1.9.1:', type=('build', 'run'))

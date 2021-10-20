@@ -71,7 +71,7 @@ class Libbson(Package):
         # 1.6.1 tarball is broken
         return self.spec.satisfies('@1.6.1')
 
-    @when('@:1.9.99')
+    @when('@:1.9')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
         make()

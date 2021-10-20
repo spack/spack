@@ -23,6 +23,9 @@ class Ddd(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on('gdb@4.16:')
     depends_on('lesstif@0.89:')
+    depends_on('libelf')
+    depends_on('readline')
+    depends_on('termcap')
 
     # Patch to fix hangs due to injection of bogus GDB init settings:
     #     https://savannah.gnu.org/bugs/index.php?58191

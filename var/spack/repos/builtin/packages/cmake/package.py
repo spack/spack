@@ -22,6 +22,7 @@ class Cmake(Package):
     executables = ['^cmake$']
 
     version('master',  branch='master')
+    version('3.21.3',   sha256='d14d06df4265134ee42c4d50f5a60cb8b471b7b6a47da8e5d914d49dd783794f')
     version('3.21.2',   sha256='94275e0b61c84bb42710f5320a23c6dcb2c6ee032ae7d2a616f53f68b3d21659')
     version('3.21.1',   sha256='fac3915171d4dff25913975d712f76e69aef44bf738ba7b976793a458b4cfed4')
     version('3.21.0',   sha256='4a42d56449a51f4d3809ab4d3b61fd4a96a469e56266e896ce1009b5768bd2ab')
@@ -166,15 +167,15 @@ class Cmake(Package):
     depends_on('xz',             when='~ownlibs')
     depends_on('libarchive@3.1.0:', when='~ownlibs')
     depends_on('libarchive@3.3.3:',     when='@3.15.0:~ownlibs')
-    depends_on('libuv@1.0.0:1.10.99',   when='@3.7.0:3.10.3~ownlibs')
-    depends_on('libuv@1.10.0:1.10.99',  when='@3.11.0:3.11.99~ownlibs')
+    depends_on('libuv@1.0.0:1.10',   when='@3.7.0:3.10.3~ownlibs')
+    depends_on('libuv@1.10.0:1.10',  when='@3.11.0:3.11~ownlibs')
     depends_on('libuv@1.10.0:',  when='@3.12.0:~ownlibs')
     depends_on('rhash',          when='@3.8.0:~ownlibs')
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx',      when='+doc', type='build')
     depends_on('openssl', when='+openssl+ownlibs')
-    depends_on('openssl@:1.0.99', when='@:3.6.9+openssl+ownlibs')
+    depends_on('openssl@:1.0', when='@:3.6.9+openssl+ownlibs')
     depends_on('ncurses',        when='+ncurses')
 
     # Cannot build with Intel, should be fixed in 3.6.2
@@ -200,14 +201,14 @@ class Cmake(Package):
     # Remove -A from the C++ flags we use when CXX_EXTENSIONS is OFF
     # Should be fixed in 3.19.
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5025
-    patch('pgi-cxx-ansi.patch', when='@3.15:3.18.99')
+    patch('pgi-cxx-ansi.patch', when='@3.15:3.18')
 
     # Adds CCE v11+ fortran preprocessing definition.
     # requires Cmake 3.19+
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5882
     patch('5882-enable-cce-fortran-preprocessing.patch',
           sha256='b48396c0e4f61756248156b6cebe9bc0d7a22228639b47b5aa77c9330588ce88',
-          when='@3.19.0:3.19.99')
+          when='@3.19.0:3.19')
 
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 

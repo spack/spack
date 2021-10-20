@@ -99,15 +99,15 @@ class Catch2(CMakePackage):
             args.append(self.define('BUILD_TESTING', self.run_tests))
         return args
 
-    @when('@:1.6.99')
+    @when('@:1.6')
     def cmake(self, spec, prefix):
         pass
 
-    @when('@:1.6.99')
+    @when('@:1.6')
     def build(self, spec, prefix):
         pass
 
-    @when('@:1.6.99')
+    @when('@:1.6')
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         install(join_path('single_include', 'catch.hpp'), prefix.include)

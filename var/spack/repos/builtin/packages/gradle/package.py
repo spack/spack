@@ -17,6 +17,18 @@ class Gradle(Package):
     homepage = "https://gradle.org"
     url      = "https://services.gradle.org/distributions/gradle-3.4-all.zip"
 
+    version('7.2',    sha256='a8da5b02437a60819cad23e10fc7e9cf32bcb57029d9cb277e26eeff76ce014b')
+    version('7.1.1',  sha256='9bb8bc05f562f2d42bdf1ba8db62f6b6fa1c3bf6c392228802cc7cb0578fe7e0')
+    version('7.1',    sha256='a9e356a21595348b6f04b024ed0b08ac8aea6b2ac37e6c0ef58e51549cd7b9cb')
+    version('7.0.2',  sha256='13bf8d3cf8eeeb5770d19741a59bde9bd966dd78d17f1bbad787a05ef19d1c2d')
+    version('7.0.1',  sha256='ca42877db3519b667cd531c414be517b294b0467059d401e7133f0e55b9bf265')
+    version('7.0',    sha256='81003f83b0056d20eedf48cddd4f52a9813163d4ba185bcf8abd34b8eeea4cbd')
+    version('6.9.1',  sha256='b13f5d97f08000996bf12d9dd70af3f2c6b694c2c663ab1b545e9695562ad1ee')
+    version('6.9',    sha256='5d234488d2cac2ed556dc3c47096e189ad76a63cf304ebf124f756498922cf16')
+    version('6.8.3',  sha256='9af5c8e7e2cd1a3b0f694a4ac262b9f38c75262e74a9e8b5101af302a6beadd7')
+    version('6.8.2',  sha256='1433372d903ffba27496f8d5af24265310d2da0d78bf6b4e5138831d4fe066e9')
+    version('6.8.1',  sha256='3db89524a3981819ff28c3f979236c1274a726e146ced0c8a2020417f9bc0782')
+    version('6.8',    sha256='a7ca23b3ccf265680f2bfd35f1f00b1424f4466292c7337c85d46c9641b3f053')
     version('6.7.1',  sha256='22449f5231796abd892c98b2a07c9ceebe4688d192cd2d6763f8e3bf8acbedeb')
     version('6.7',    sha256='0080de8491f0918e4f529a6db6820fa0b9e818ee2386117f4394f95feb1d5583')
     version('6.6.1',  sha256='11657af6356b7587bfb37287b5992e94a9686d5c8a0a1b60b87b9928a2decde5')

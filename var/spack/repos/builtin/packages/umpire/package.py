@@ -17,6 +17,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     homepage = 'https://github.com/LLNL/Umpire'
     git      = 'https://github.com/LLNL/Umpire.git'
+    tags     = ['radiuss', 'e4s']
 
     maintainers = ['davidbeckingsale']
 
@@ -100,6 +101,12 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     # device allocator exports device code, which requires static libs
     # currently only available for cuda.
     conflicts('+shared', when='+cuda')
+
+    # https://github.com/LLNL/Umpire/issues/653
+    # This range looks weird, but it ensures the concretizer looks at it as a
+    # range, not as a concrete version, so that it also matches compilers
+    # specified as `gcc@10.3.0-identifier`. See #8957.
+    conflicts('%gcc@10.3.0:10.3.0.0', when='+cuda')
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture

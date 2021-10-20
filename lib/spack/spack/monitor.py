@@ -278,6 +278,22 @@ class SpackMonitorClient:
                     )
                     return self.issue_request(request, False)
 
+            # Handle permanent re-directs!
+            elif hasattr(e, "code") and e.code == 308:
+                location = e.headers.get('Location')
+
+                request_data = None
+                if request.data:
+                    request_data = sjson.load(request.data.decode('utf-8'))[0]
+
+                if location:
+                    request = self.prepare_request(
+                        location,
+                        request_data,
+                        self.headers
+                    )
+                    return self.issue_request(request, True)
+
             # Otherwise, relay the message and exit on error
             msg = ""
             if hasattr(e, 'reason'):

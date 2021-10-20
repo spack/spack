@@ -175,7 +175,7 @@ def symlink_license(pkg):
             mkdirp(license_dir)
 
         # If example file already exists, overwrite it with a symlink
-        if os.path.exists(link_name):
+        if os.path.lexists(link_name):
             os.remove(link_name)
 
         if os.path.exists(target):

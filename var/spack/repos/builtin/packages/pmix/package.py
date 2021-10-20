@@ -64,7 +64,7 @@ class Pmix(AutotoolsPackage):
             description='Build manpages')
 
     depends_on('libevent@2.0.20:2.0.22,2.1.8')
-    depends_on('hwloc@1.11.0:1.11.99,2.0.1:', when='@3.0.0:')
+    depends_on('hwloc@1.11.0:1.11,2.0.1:', when='@3.0.0:')
     depends_on("m4", type=("build"), when="@master")
     depends_on("autoconf", type=("build"), when="@master")
     depends_on("automake", type=("build"), when="@master")

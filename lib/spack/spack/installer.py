@@ -55,7 +55,7 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.store
 import spack.util.executable
-from spack.util.environment import dump_environment
+from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 from spack.util.timer import Timer
 
@@ -83,6 +83,15 @@ STATUS_DEQUEUED = 'dequeued'
 #: Build status indicating task has been removed (to maintain priority
 #: queue invariants).
 STATUS_REMOVED = 'removed'
+
+
+class InstallAction(object):
+    #: Don't perform an install
+    NONE = 0
+    #: Do a standard install
+    INSTALL = 1
+    #: Do an overwrite install
+    OVERWRITE = 2
 
 
 def _check_last_phase(pkg):
@@ -547,8 +556,8 @@ def log(pkg):
         log_file = os.path.join(os.path.dirname(packages_dir), log_file)
         fs.install(phase_log, log_file)
 
-    # Archive the environment used for the build
-    fs.install(pkg.env_path, pkg.install_env_path)
+    # Archive the environment modifications for the build.
+    fs.install(pkg.env_mods_path, pkg.install_env_path)
 
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
@@ -616,6 +625,27 @@ def package_id(pkg):
                          "the spec is not concretized.")
 
     return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
+
+
+class TermTitle(object):
+    def __init__(self, pkg_count):
+        # Counters used for showing status information in the terminal title
+        self.pkg_num = 0
+        self.pkg_count = pkg_count
+
+    def next_pkg(self):
+        self.pkg_num += 1
+
+    def set(self, text):
+        if not spack.config.get('config:terminal_title', False):
+            return
+
+        if not sys.stdout.isatty():
+            return
+
+        status = '{0} [{1}/{2}]'.format(text, self.pkg_num, self.pkg_count)
+        sys.stdout.write('\033]0;Spack: {0}\007'.format(status))
+        sys.stdout.flush()
 
 
 class PackageInstaller(object):
@@ -1418,6 +1448,42 @@ class PackageInstaller(object):
                 for dependent_id in dependents.difference(task.dependents):
                     task.add_dependent(dependent_id)
 
+    def _install_action(self, task):
+        """
+        Determine whether the installation should be overwritten (if it already
+        exists) or skipped (if has been handled by another process).
+
+        If the package has not been installed yet, this will indicate that the
+        installation should proceed as normal (i.e. no need to transactionally
+        preserve the old prefix).
+        """
+        # If we don't have to overwrite, do a normal install
+        if task.pkg.spec.dag_hash() not in task.request.overwrite:
+            return InstallAction.INSTALL
+
+        # If it's not installed, do a normal install as well
+        rec, installed = self._check_db(task.pkg.spec)
+        if not installed:
+            return InstallAction.INSTALL
+
+        # Ensure install_tree projections have not changed.
+        assert task.pkg.prefix == rec.path
+
+        # If another process has overwritten this, we shouldn't install at all
+        if rec.installation_time >= task.request.overwrite_time:
+            return InstallAction.NONE
+
+        # If the install prefix is missing, warn about it, and proceed with
+        # normal install.
+        if not os.path.exists(task.pkg.prefix):
+            tty.debug("Missing installation to overwrite")
+            return InstallAction.INSTALL
+
+        # Otherwise, do an actual overwrite install. We backup the original
+        # install directory, put the old prefix
+        # back on failure
+        return InstallAction.OVERWRITE
+
     def install(self):
         """
         Install the requested package(s) and or associated dependencies.
@@ -1429,9 +1495,12 @@ class PackageInstaller(object):
         fail_fast_err = 'Terminating after first install failure'
         single_explicit_spec = len(self.build_requests) == 1
         failed_explicits = []
-        exists_errors = []
+
+        term_title = TermTitle(len(self.build_pq))
 
         while self.build_pq:
+            term_title.next_pkg()
+
             task = self._pop_task()
             if task is None:
                 continue
@@ -1441,6 +1510,7 @@ class PackageInstaller(object):
             keep_prefix = install_args.get('keep_prefix')
 
             pkg, pkg_id, spec = task.pkg, task.pkg_id, task.pkg.spec
+            term_title.set('Processing {0}'.format(pkg.name))
             tty.verbose('Processing {0}: task={1}'.format(pkg_id, task))
             # Ensure that the current spec has NO uninstalled dependencies,
             # which is assumed to be reflected directly in its priority.
@@ -1496,6 +1566,7 @@ class PackageInstaller(object):
             # another process is likely (un)installing the spec or has
             # determined the spec has already been installed (though the
             # other process may be hung).
+            term_title.set('Acquiring lock for {0}'.format(pkg.name))
             ltype, lock = self._ensure_locked('write', pkg)
             if lock is None:
                 # Attempt to get a read lock instead.  If this fails then
@@ -1516,6 +1587,7 @@ class PackageInstaller(object):
                 task.request.overwrite_time = time.time()
 
             # Determine state of installation artifacts and adjust accordingly.
+            term_title.set('Preparing {0}'.format(pkg.name))
             self._prepare_for_install(task)
 
             # Flag an already installed package
@@ -1560,27 +1632,14 @@ class PackageInstaller(object):
 
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
+            term_title.set('Installing {0}'.format(pkg.name))
             try:
-                if pkg.spec.dag_hash() in task.request.overwrite:
-                    rec, _ = self._check_db(pkg.spec)
-                    if rec and rec.installed:
-                        if rec.installation_time < task.request.overwrite_time:
-                            # If it's actually overwriting, do a fs transaction
-                            if os.path.exists(rec.path):
-                                with fs.replace_directory_transaction(
-                                        rec.path):
-                                    # fs transaction will put the old prefix
-                                    # back on failure, so make sure to keep it.
-                                    keep_prefix = True
-                                    self._install_task(task)
-                            else:
-                                tty.debug("Missing installation to overwrite")
-                                self._install_task(task)
-                    else:
-                        # overwriting nothing
-                        self._install_task(task)
-                else:
+                action = self._install_action(task)
+
+                if action == InstallAction.INSTALL:
                     self._install_task(task)
+                elif action == InstallAction.OVERWRITE:
+                    OverwriteInstall(self, spack.store.db, task).install()
 
                 self._update_installed(task)
 
@@ -1631,7 +1690,7 @@ class PackageInstaller(object):
             finally:
                 # Remove the install prefix if anything went wrong during
                 # install.
-                if not keep_prefix:
+                if not keep_prefix and not action == InstallAction.OVERWRITE:
                     pkg.remove_prefix()
 
                 # The subprocess *may* have removed the build stage. Mark it
@@ -1651,10 +1710,7 @@ class PackageInstaller(object):
         missing = [request.pkg_id for request in self.build_requests if
                    request.install_args.get('install_package') and
                    request.pkg_id not in self.installed]
-        if exists_errors or failed_explicits or missing:
-            for pkg_id, err in exists_errors:
-                tty.error('{0}: {1}'.format(pkg_id, err))
-
+        if failed_explicits or missing:
             for pkg_id, err in failed_explicits:
                 tty.error('{0}: {1}'.format(pkg_id, err))
 
@@ -1698,6 +1754,10 @@ class BuildProcessInstaller(object):
 
         # env before starting installation
         self.unmodified_env = install_args.get('unmodified_env', {})
+
+        # env modifications by Spack
+        self.env_mods = install_args.get(
+            'env_modifications', EnvironmentModifications())
 
         # timer for build phases
         self.timer = Timer()
@@ -1787,6 +1847,15 @@ class BuildProcessInstaller(object):
         with fs.working_dir(pkg.stage.source_path):
             # Save the build environment in a file before building.
             dump_environment(pkg.env_path)
+
+            # Save just the changes to the environment.  This file can be
+            # safely installed, since it does not contain secret variables.
+            with open(pkg.env_mods_path, 'w') as env_mods_file:
+                mods = self.env_mods.shell_modifications(
+                    explicit=True,
+                    env=self.unmodified_env
+                )
+                env_mods_file.write(mods)
 
             for attr in ('configure_args', 'cmake_args'):
                 try:
@@ -1881,6 +1950,35 @@ def build_process(pkg, install_args):
     # don't print long padded paths in executable debug output.
     with spack.util.path.filter_padding():
         return installer.run()
+
+
+class OverwriteInstall(object):
+    def __init__(self, installer, database, task, tmp_root=None):
+        self.installer = installer
+        self.database = database
+        self.task = task
+        self.tmp_root = tmp_root
+
+    def install(self):
+        """
+        Try to run the install task overwriting the package prefix.
+        If this fails, try to recover the original install prefix. If that fails
+        too, mark the spec as uninstalled. This function always the original
+        install error if installation fails.
+        """
+        try:
+            with fs.replace_directory_transaction(self.task.pkg.prefix, self.tmp_root):
+                self.installer._install_task(self.task)
+        except fs.CouldNotRestoreDirectoryBackup as e:
+            self.database.remove(self.task.pkg.spec)
+            tty.error('Recovery of install dir of {0} failed due to '
+                      '{1}: {2}. The spec is now uninstalled.'.format(
+                          self.task.pkg.name,
+                          e.outer_exception.__class__.__name__,
+                          str(e.outer_exception)))
+
+            # Unwrap the actual installation exception.
+            raise e.inner_exception
 
 
 class BuildTask(object):

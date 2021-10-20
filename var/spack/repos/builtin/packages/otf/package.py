@@ -21,7 +21,9 @@ class Otf(AutotoolsPackage):
     def configure_args(self):
         args = []
 
+        args.append('--without-mpi')
         args.append('--without-vtf3')
         args.append('--with-zlib')
         args.append('--with-zlibsymbols')
+        args.append('--without-zoidfs')
         return args

@@ -36,7 +36,7 @@ class Xeus(CMakePackage):
     depends_on('openssl@1.0.1:', when='@1.0.4:')
 
     depends_on('xtl@0.4.0:', when='@:0.15.0')
-    depends_on('xtl@0.7.0:0.7.999', when='@1.0.4:')
+    depends_on('xtl@0.7.0:0.7', when='@1.0.4:')
 
     depends_on('nlohmann-json@3.4.0:', when='@1.0.4:')
     depends_on('nlohmann-json@3.2.0', when='@0.15.0')
