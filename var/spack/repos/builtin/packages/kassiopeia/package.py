@@ -56,7 +56,7 @@ class Kassiopeia(CMakePackage):
     depends_on('log4cxx', when='+log4cxx')
     depends_on('boost', when='+boost')
 
-    @when('@3.8.0')
+    @when('@:3.8.0')
     def patch(self):
         filter_file('LANGUAGES CXX',
                     'LANGUAGES CXX C',
