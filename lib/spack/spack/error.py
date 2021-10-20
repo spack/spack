@@ -126,7 +126,7 @@ class UnsatisfiableSpecError(SpecError):
     def __init__(self, provided, required=None, constraint_type=None, conflicts=None):
         # required is only set by the original concretizer.
         # clingo concretizer handles error messages differently.
-        if required:
+        if required is not None:
             assert not conflicts  # can't mix formats
             super(UnsatisfiableSpecError, self).__init__(
                 "%s does not satisfy %s" % (provided, required))
