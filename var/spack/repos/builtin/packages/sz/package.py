@@ -138,13 +138,9 @@ class Sz(CMakePackage):
         else:
             args.append("-DBUILD_STATS=OFF")
 
-        if self.run_tests:
-            args.append("-DBUILD_TESTS=ON")
-            args.append("-DINTEGRATION_TESTS=ON")
-        else:
-            args.append("-DBUILD_TESTS=OFF")
-            args.append("-DINTEGRATION_TESTS=OFF")
-        return args
+        args.append(self.define("BUILD_TESTS", self.run_tests))
+
+        args.append(self.define("INTEGRATION_TESTS", self.run_tests))
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
