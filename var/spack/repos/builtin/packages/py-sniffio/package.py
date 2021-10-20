@@ -18,6 +18,4 @@ class PySniffio(PythonPackage):
 
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('py-certifi')
-    depends_on('py-contextvars@2.1:', when='^python@:3.6')
+    depends_on('py-contextvars@2.1:', when='^python@:3.6', type=('build', 'run'))
