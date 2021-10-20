@@ -8,9 +8,10 @@ from spack import *
 
 class BigdftFutile(AutotoolsPackage, CudaPackage):
     """BigDFT-futile: a library handling most common FORTRAN low-level operations,
-       like memory managment, profiling routines, I/O operations. It also supports yaml output
-       and parsing for fortran programs. It also provides wrappers routines to MPI and
-       linear algebra operations. This library is intensively used in BigDFT packages."""
+       like memory managment, profiling routines, I/O operations.
+       It also supports yaml output and parsing for fortran programs.
+       It also provides wrappers routines to MPI and linear algebra operations.
+       This library is intensively used in BigDFT packages."""
 
     homepage = "https://bigdft.org/"
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"

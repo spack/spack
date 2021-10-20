@@ -7,7 +7,7 @@ from spack import *
 
 
 class BigdftCore(AutotoolsPackage, CudaPackage):
-    """BigDFT-core: the core components of BigDFT, an electronic structure calculation 
+    """BigDFT-core: the core components of BigDFT, an electronic structure calculation
        based on Daubechies wavelets."""
 
     homepage = "https://bigdft.org/"
