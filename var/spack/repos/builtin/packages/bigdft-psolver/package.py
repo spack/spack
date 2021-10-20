@@ -7,7 +7,9 @@ from spack import *
 
 
 class BigdftPsolver(AutotoolsPackage, CudaPackage):
-    """BigDFT: electronic structure calculation based on Daubechies wavelets."""
+    """BigDFT-Psolver: a flexible real-space Poisson Solver based on Interpolating Scaling Functions.
+       It constitutes a fundamental building block of BigDFT code, and it can also be used 
+       separately and linked to other codes."""
 
     homepage = "https://bigdft.org/"
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"

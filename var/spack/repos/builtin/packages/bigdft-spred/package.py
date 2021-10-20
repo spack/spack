@@ -7,7 +7,7 @@ from spack import *
 
 
 class BigdftSpred(AutotoolsPackage):
-    """BigDFT: electronic structure calculation based on Daubechies wavelets."""
+    """BigDFT-spred: a library for structure prediction tools, that is compiled on top of BigDFT routines."""
 
     homepage = "https://bigdft.org/"
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"

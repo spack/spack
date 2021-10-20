@@ -7,7 +7,7 @@ from spack import *
 
 
 class BigdftAtlab(AutotoolsPackage):
-    """BigDFT: electronic structure calculation based on Daubechies wavelets."""
+    """BigDFT-atlab: library for ATomic related operations."""
 
     homepage = "https://bigdft.org/"
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"

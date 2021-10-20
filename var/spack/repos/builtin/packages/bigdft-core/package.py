@@ -7,7 +7,8 @@ from spack import *
 
 
 class BigdftCore(AutotoolsPackage, CudaPackage):
-    """BigDFT: electronic structure calculation based on Daubechies wavelets."""
+    """BigDFT-core: the core components of BigDFT, an electronic structure calculation 
+       based on Daubechies wavelets."""
 
     homepage = "https://bigdft.org/"
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"

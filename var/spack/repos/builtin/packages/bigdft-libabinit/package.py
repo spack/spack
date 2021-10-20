@@ -7,7 +7,10 @@ from spack import *
 
 
 class BigdftLibabinit(AutotoolsPackage):
-    """BigDFT: electronic structure calculation based on Daubechies wavelets."""
+    """BigDFT-libABINIT: this is a subsection of files coming from ABINIT software package,
+       to which BigDFT has been coupled since the early days. It handles different parts
+       like symmetries, ewald corrections, PAW routines, density and potential mixing
+       routines and some MD minimizers."""
 
     homepage = "https://bigdft.org/"
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"

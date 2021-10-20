@@ -7,7 +7,7 @@ from spack import *
 
 
 class BigdftChess(AutotoolsPackage, CudaPackage):
-    """BigDFT: electronic structure calculation based on Daubechies wavelets."""
+    """BigDFT-CheSS: A module for performing Fermi Operator Expansions via Chebyshev Polynomials."""
 
     homepage = "https://bigdft.org/"
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"

@@ -7,7 +7,8 @@ from spack import *
 
 
 class BigdftSuite(Package):
-    """BigDFT: electronic structure calculation based on Daubechies wavelets."""
+    """BigDFT-suite: the complete suite of BigDFT for electronic structure calculation
+       based on Daubechies wavelets."""
 
     homepage = "https://bigdft.org/"
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
