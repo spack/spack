@@ -31,6 +31,8 @@ class Rdc(CMakePackage):
     version('3.9.0', sha256='bc6339e7f41850a4a049d085a880cfafd3fd8e1610fb94c572d79753d01aa298')
     version('3.8.0', sha256='d0d0a0e68a848b7a8fa2d88c1d0352ce68e1e142debf32c31d941904f03c4b2f')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3.15:3.19.7', type='build')
     depends_on('grpc@1.28.1+shared', type='build')
     depends_on('protobuf', type=('build', 'link'))
