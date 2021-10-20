@@ -117,7 +117,10 @@ class Silo(AutotoolsPackage):
     def force_autoreconf(self):
         # Update autoconf's tests whether libtool supports shared libraries.
         # (Otherwise, shared libraries are always disabled on Darwin.)
-        return self.spec.satisfies('+shared')
+        if self.spec.satisfies('@4.11-bsd') or self.spec.satisfies('@4.10.2-bsd'):
+            return False
+        else:
+            return self.spec.satisfies('+shared')
 
     def configure_args(self):
         spec = self.spec
