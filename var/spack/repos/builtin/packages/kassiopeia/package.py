@@ -58,12 +58,14 @@ class Kassiopeia(CMakePackage):
 
     @when('@:3.8.0')
     def patch(self):
-        filter_file('LANGUAGES CXX',
-                    'LANGUAGES CXX C',
-                    'CMakeLists.txt')
-        filter_file('#include "vtkXMLPolyDataWriter.h"',
-                    '#include "vtkXMLPolyDataWriter.h"\n#include "vtkUnsignedCharArray.h"',
-                    'KGeoBag/Source/Visualization/Vtk/Source/KGVTKGeometryPainter.cc')
+        filter_file(
+            'LANGUAGES CXX',
+            'LANGUAGES CXX C',
+            'CMakeLists.txt')
+        filter_file(
+            '#include "vtkXMLPolyDataWriter.h"',
+            '#include "vtkXMLPolyDataWriter.h"\n#include "vtkUnsignedCharArray.h"',
+            'KGeoBag/Source/Visualization/Vtk/Source/KGVTKGeometryPainter.cc')
 
     def cmake_args(self):
         if '+root' in self.spec:
