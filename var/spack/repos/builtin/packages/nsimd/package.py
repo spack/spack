@@ -90,10 +90,10 @@ class Nsimd(CMakePackage):
             if 'avx512' in self.spec.target:
                 simd = 'AVX512_SKYLAKE'
             elif ('avx512f' in self.spec.target and
-                 'avx512pf' in self.spec.target and
-                 'avx512er' in self.spec.target and
-                 'avx512cd' in self.spec.target and
-                 'avx512vl' in self.spec.target):
+                  'avx512pf' in self.spec.target and
+                  'avx512er' in self.spec.target and
+                  'avx512cd' in self.spec.target and
+                  'avx512vl' in self.spec.target):
                 simd = 'AVX512_KNL'
             elif 'avx2' in self.spec.target:
                 simd = 'AVX2'
@@ -105,7 +105,8 @@ class Nsimd(CMakePackage):
                 simd = 'SSE2'
             # ARM
             elif 'sve' in self.spec.target:
-                simd = 'SVE' # need explicit choice for particluar bit widths
+                # We require an explicit choice for particluar bit widths
+                simd = 'SVE'
             elif self.spec.target.microarchitecture == 'aarch64':
                 simd = 'AARCH64'
             elif 'neon' in self.spec.target:
