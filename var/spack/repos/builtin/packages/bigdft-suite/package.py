@@ -19,6 +19,9 @@ class BigdftSuite(Package):
     version('1.8.2', sha256='042e5a3b478b1a4c050c450a9b1be7bcf8e13eacbce4759b7f2d79268b298d61')
     version('1.8.1', sha256='e09ff0ba381f6ffbe6a3c0cb71db5b73117874beb41f22a982a7e5ba32d018b3')
 
+    depends_on('python@:2.8', type=('run'), when="@:1.8.3")
+    depends_on('python@3.0:', type=('run'), when="@1.9.0:")
+
     depends_on('bigdft-futile@develop',    when='@develop')
     depends_on('bigdft-futile@1.9.1',      when='@1.9.1')
     depends_on('bigdft-futile@1.9.0',      when='@1.9.0')

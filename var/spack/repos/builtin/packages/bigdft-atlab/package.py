@@ -45,19 +45,19 @@ class BigdftAtlab(AutotoolsPackage):
             fcflags.append(self.compiler.openmp_flag)
 
         args = [
-            "FCFLAGS=%s" % " ".join(fcflags),
-            "CFLAGS=%s" % " ".join(cflags),
+            "FCFLAGS=%s"            % " ".join(fcflags),
+            "CFLAGS=%s"             % " ".join(cflags),
             "--with-futile-libs=%s" % spec['bigdft-futile'].prefix.lib,
             "--with-futile-incs=%s" % spec['bigdft-futile'].prefix.include,
+            "--with-moduledir=%s"   % prefix.include,
+            "--prefix=%s"           % prefix,
             "--without-etsf-io",
-            "--with-moduledir=%s" % prefix.include,
-            "--prefix=%s" % prefix,
         ]
 
         if '+mpi' in spec:
-            args.append("CC=%s" % spec['mpi'].mpicc)
+            args.append("CC=%s"  % spec['mpi'].mpicc)
             args.append("CXX=%s" % spec['mpi'].mpicxx)
-            args.append("FC=%s" % spec['mpi'].mpifc)
+            args.append("FC=%s"  % spec['mpi'].mpifc)
             args.append("F90=%s" % spec['mpi'].mpifc)
             args.append("F77=%s" % spec['mpi'].mpif77)
         else:

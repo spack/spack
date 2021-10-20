@@ -22,8 +22,8 @@ class BigdftLibabinit(AutotoolsPackage):
 
     variant('mpi', default=True, description='Enable MPI support')
 
-    depends_on('python@:2.8', type='build', when="@:1.9.0")
-    depends_on('python@3.0:', type='build', when="@1.9.1:")
+    depends_on('python@:2.8', type=('build', 'run'), when="@:1.8.3")
+    depends_on('python@3.0:', type=('build', 'run'), when="@1.9.0:")
 
     depends_on('mpi',                   when='+mpi')
     depends_on('bigdft-futile@develop', when='@develop')
@@ -58,17 +58,17 @@ class BigdftLibabinit(AutotoolsPackage):
             "CFLAGS=%s" % " ".join(cflags),
             "--with-libxc-libs=%s %s" % (spec['libxc'].libs.ld_flags,
                                          spec['libxc'].libs.ld_flags + "f90"),
-            "--with-libxc-incs=%s" % spec['libxc'].headers.include_flags,
-            "--with-futile-libs=%s" % spec['bigdft-futile'].prefix.lib,
-            "--with-futile-incs=%s" % spec['bigdft-futile'].headers.include_flags,
-            "--with-moduledir=%s" % prefix.include,
+            "--with-libxc-incs=%s"    % spec['libxc'].headers.include_flags,
+            "--with-futile-libs=%s"   % spec['bigdft-futile'].prefix.lib,
+            "--with-futile-incs=%s"   % spec['bigdft-futile'].headers.include_flags,
+            "--with-moduledir=%s"     % prefix.include,
             "--prefix=%s" % prefix,
         ]
 
         if '+mpi' in spec:
-            args.append("CC=%s" % spec['mpi'].mpicc)
+            args.append("CC=%s"  % spec['mpi'].mpicc)
             args.append("CXX=%s" % spec['mpi'].mpicxx)
-            args.append("FC=%s" % spec['mpi'].mpifc)
+            args.append("FC=%s"  % spec['mpi'].mpifc)
             args.append("F90=%s" % spec['mpi'].mpifc)
             args.append("F77=%s" % spec['mpi'].mpif77)
         else:

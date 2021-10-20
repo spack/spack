@@ -26,8 +26,8 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     variant('ntpoly',    default=False, description='Option to use NTPoly')
     # variant('minpack', default=False,  description='Give the link-line for MINPACK')
 
-    depends_on('python@:2.8', type='build', when="@:1.9.0")
-    depends_on('python@3.0:', type='build', when="@1.9.1:")
+    depends_on('python@:2.8', type=('build', 'run'), when="@:1.8.3")
+    depends_on('python@3.0:', type=('build', 'run'), when="@1.9.0:")
 
     depends_on('blas')
     depends_on('lapack')
@@ -72,20 +72,21 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
 
         args = [
-            "FCFLAGS=%s" % " ".join(fcflags),
-            "CFLAGS=%s" % " ".join(cflags),
-            "--with-ext-linalg=%s" % " ".join(linalg),
+            "FCFLAGS=%s"            % " ".join(fcflags),
+            "CFLAGS=%s"             % " ".join(cflags),
+            "--with-ext-linalg=%s"  % " ".join(linalg),
             "--with-pyyaml-path=%s" % pyyaml,
             "--with-futile-libs=%s" % spec['bigdft-futile'].prefix.lib,
             "--with-futile-incs=%s" % spec['bigdft-futile'].headers.include_flags,
-            "--with-moduledir=%s" % prefix.include,
-            "--prefix=%s" % prefix,
+            "--with-moduledir=%s"   % prefix.include,
+            "--prefix=%s"           % prefix,
+            "--without-etsf-io",
         ]
 
         if '+mpi' in spec:
-            args.append("CC=%s" % spec['mpi'].mpicc)
+            args.append("CC=%s"  % spec['mpi'].mpicc)
             args.append("CXX=%s" % spec['mpi'].mpicxx)
-            args.append("FC=%s" % spec['mpi'].mpifc)
+            args.append("FC=%s"  % spec['mpi'].mpifc)
             args.append("F90=%s" % spec['mpi'].mpifc)
             args.append("F77=%s" % spec['mpi'].mpif77)
         else:

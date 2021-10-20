@@ -24,8 +24,8 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     variant('scalapack', default=True,  description='Enable SCALAPACK support')
     variant('openbabel', default=False, description='Enable detection of openbabel compilation')
 
-    depends_on('python@:2.8', type='build', when="@:1.9.0")
-    depends_on('python@3.0:', type='build', when="@1.9.1:")
+    depends_on('python@:2.8', type=('build', 'run'), when="@:1.8.3")
+    depends_on('python@3.0:', type=('build', 'run'), when="@1.9.0:")
 
     depends_on('blas')
     depends_on('lapack')
@@ -86,32 +86,32 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
         linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
 
         args = [
-            "FCFLAGS=%s" % " ".join(fcflags),
-            "CFLAGS=%s" % " ".join(cflags),
-            "--with-ext-linalg=%s" % " ".join(linalg),
-            "--with-pyyaml-path=%s" % pyyaml,
-            "--with-futile-libs=%s" % spec['bigdft-futile'].prefix.lib,
-            "--with-futile-incs=%s" % spec['bigdft-futile'].headers.include_flags,
-            "--with-chess-libs=%s" % spec['bigdft-chess'].prefix.lib,
-            "--with-chess-incs=%s" % spec['bigdft-chess'].headers.include_flags,
-            "--with-psolver-libs=%s" % spec['bigdft-psolver'].prefix.lib,
-            "--with-psolver-incs=%s" % spec['bigdft-psolver'].headers.include_flags,
+            "FCFLAGS=%s"               % " ".join(fcflags),
+            "CFLAGS=%s"                % " ".join(cflags),
+            "--with-ext-linalg=%s"     % " ".join(linalg),
+            "--with-pyyaml-path=%s"    % pyyaml,
+            "--with-futile-libs=%s"    % spec['bigdft-futile'].prefix.lib,
+            "--with-futile-incs=%s"    % spec['bigdft-futile'].headers.include_flags,
+            "--with-chess-libs=%s"     % spec['bigdft-chess'].prefix.lib,
+            "--with-chess-incs=%s"     % spec['bigdft-chess'].headers.include_flags,
+            "--with-psolver-libs=%s"   % spec['bigdft-psolver'].prefix.lib,
+            "--with-psolver-incs=%s"   % spec['bigdft-psolver'].headers.include_flags,
             "--with-libABINIT-libs=%s" % spec['bigdft-libabinit'].prefix.lib,
             "--with-libABINIT-incs=%s" % spec['bigdft-libabinit'].headers.include_flags,
-            "--with-libgain-libs=%s" % spec['libgain'].libs.ld_flags,
-            "--with-libgain-incs=%s" % spec['libgain'].headers.include_flags,
-            "--with-libxc-libs=%s %s" % (spec['libxc'].libs.ld_flags,
-                                         spec['libxc'].libs.ld_flags + "f90"),
-            "--with-libxc-incs=%s" % spec['libxc'].headers.include_flags,
-            "--without-etsf-io",
+            "--with-libgain-libs=%s"   % spec['libgain'].libs.ld_flags,
+            "--with-libgain-incs=%s"   % spec['libgain'].headers.include_flags,
+            "--with-libxc-libs=%s %s"  % (spec['libxc'].libs.ld_flags,
+                                          spec['libxc'].libs.ld_flags + "f90"),
+            "--with-libxc-incs=%s"     % spec['libxc'].headers.include_flags,
             "--with-moduledir=%s" % prefix.include,
             "--prefix=%s" % prefix,
+            "--without-etsf-io",
         ]
 
         if '+mpi' in spec:
-            args.append("CC=%s" % spec['mpi'].mpicc)
+            args.append("CC=%s"  % spec['mpi'].mpicc)
             args.append("CXX=%s" % spec['mpi'].mpicxx)
-            args.append("FC=%s" % spec['mpi'].mpifc)
+            args.append("FC=%s"  % spec['mpi'].mpifc)
             args.append("F90=%s" % spec['mpi'].mpifc)
             args.append("F77=%s" % spec['mpi'].mpif77)
         else:
@@ -124,7 +124,7 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
 
         if '+cuda' in spec:
             args.append("--enable-opencl")
-            args.append("--with-ocl-path=%s" % spec['cuda'].prefix)
+            args.append("--with-ocl-path=%s"  % spec['cuda'].prefix)
             args.append("--enable-cuda-gpu")
             args.append("--with-cuda-path=%s" % spec['cuda'].prefix)
             args.append("--with-cuda-libs=%s" % spec['cuda'].libs.link_flags)
