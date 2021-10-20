@@ -965,7 +965,7 @@ spack:
             with open(json_path, 'w') as ypfd:
                 ypfd.write(spec_json)
 
-            install_cmd('--keep-stage', json_path)
+            install_cmd('--add', '--keep-stage', json_path)
 
             # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(
