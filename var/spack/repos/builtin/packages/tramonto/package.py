@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack import *
+
 
 class Tramonto(CMakePackage):
     """Tramonto: Software for Nanostructured Fluids in Materials and Biology"""
