@@ -58,7 +58,7 @@ class Task(object):
         return value
 
 
-def raise_if_errors(*results, debug=False):
+def raise_if_errors(*results, **kwargs):
     """Analyze results from worker Processes to search for ErrorFromWorker
     objects. If found print all of them and raise an exception.
 
@@ -69,6 +69,7 @@ def raise_if_errors(*results, debug=False):
     Raise:
         RuntimeError: if ErrorFromWorker objects are in the results
     """
+    debug = kwargs.get('debug', False)  # This can be a keyword only arg in Python 3
     err_stream = six.StringIO()
     errors = [x for x in results if isinstance(x, ErrorFromWorker)]
     if not errors:
