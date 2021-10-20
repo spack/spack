@@ -173,7 +173,7 @@ virtual_node(Virtual)
 
 % If a virtual is specified on the command line, we have to use it
 % This ensures appropriate error messages
-provider(Package, Virtual) :- virtual_node(Virtual), possible_provider(Package, Virtual), node(Package).
+provider(Package, Virtual) :- virtual_node(Virtual), provides_virtual(Package, Virtual), node(Package).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 virtual_node(Virtual) :- virtual_root(Virtual).
