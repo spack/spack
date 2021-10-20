@@ -8,9 +8,9 @@ from spack import *
 
 
 class Vacuumms(CMakePackage):
-    """VACUUMMS: (Void Analysis Codes and Unix Utilities for Molecular Modeling and 
-    Simulation) is a collection of research codes for the compuational analysis of 
-    free volume in molecular structures, including the generation of code for the 
+    """VACUUMMS: (Void Analysis Codes and Unix Utilities for Molecular Modeling and
+    Simulation) is a collection of research codes for the compuational analysis of
+    free volume in molecular structures, including the generation of code for the
     production of high quality ray-traced images and videos."""
 
     homepage = "https://github.com/frankwillmore/VACUUMMS"
