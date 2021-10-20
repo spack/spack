@@ -727,7 +727,7 @@ def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
         dep = Spec('dependency-install').concretized()
         root = Spec('dependent-install').concretized()
 
-        install('-v', '--only', 'dependencies', 'dependent-install')
+        install('-v', '--only', 'dependencies', '--add', 'dependent-install')
 
         assert os.path.exists(dep.prefix)
         assert not os.path.exists(root.prefix)
@@ -802,7 +802,7 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
     # Activate the environment
     with e:
         inst_out = install(
-            'boost', fail_on_error=False, output=str)
+            '--add', 'boost', fail_on_error=False, output=str)
 
         assert('no such spec exists in environment' in inst_out)
 

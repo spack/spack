@@ -165,7 +165,7 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
 
     e = ev.read('test')
     with e:
-        install('cmake-client')
+        install('--add', 'cmake-client')
 
     e = ev.read('test')
     assert e.user_specs[0].name == 'cmake-client'
@@ -236,7 +236,7 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch):
     e = ev.read('test')
     with e:
         # The first installation outputs the package prefix, updates the view
-        out = install('cmake-client')
+        out = install('--add', 'cmake-client')
         assert 'Updating view at' in out
 
         # The second installation reports all packages already installed
@@ -1221,7 +1221,7 @@ def test_env_updates_view_install_package(
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
-        install('--fake', 'mpileaks')
+        install('--fake', '--add', 'mpileaks')
 
     assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
 
@@ -1243,7 +1243,7 @@ def test_env_updates_view_uninstall(
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
-        install('--fake', 'mpileaks')
+        install('--fake', '--add', 'mpileaks')
 
     check_mpileaks_and_deps_in_view(view_dir)
 
