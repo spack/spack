@@ -10,8 +10,6 @@ import os
 import sys
 import traceback
 
-import six
-
 from .cpus import cpus_available
 
 
@@ -70,22 +68,19 @@ def raise_if_errors(*results, **kwargs):
         RuntimeError: if ErrorFromWorker objects are in the results
     """
     debug = kwargs.get('debug', False)  # This can be a keyword only arg in Python 3
-    err_stream = six.StringIO()
     errors = [x for x in results if isinstance(x, ErrorFromWorker)]
     if not errors:
         return
 
-    for error in errors:
-        print(
-            error.stacktrace if debug else error,
-            file=err_stream
-        )
+    msg = '\n'.join([
+        error.stacktrace if debug else str(error) for error in errors
+    ])
 
-    error_msg = '{0}'
+    error_fmt = '{0}'
     if len(errors) > 1 and not debug:
-        error_msg = 'errors occurred during concretization of the environment:\n{0}'
+        error_fmt = 'errors occurred during concretization of the environment:\n{0}'
 
-    raise RuntimeError(error_msg.format(err_stream.getvalue()))
+    raise RuntimeError(error_fmt.format(msg))
 
 
 @contextlib.contextmanager
