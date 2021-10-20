@@ -28,11 +28,16 @@ class ErrorFromWorker(object):
             exc: exception raised from the worker process
         """
         self.pid = os.getpid()
-        self.error_message = ''.join(traceback.format_exception(exc_cls, exc, tb))
+        self.error_message = str(exc)
+        self.stacktrace_message = ''.join(traceback.format_exception(exc_cls, exc, tb))
+
+    @property
+    def stacktrace(self):
+        msg = "[PID={0.pid}] {0.stacktrace_message}"
+        return msg.format(self)
 
     def __str__(self):
-        msg = "[PID={0.pid}] {0.error_message}"
-        return msg.format(self)
+        return self.error_message
 
 
 class Task(object):
@@ -53,28 +58,34 @@ class Task(object):
         return value
 
 
-def raise_if_errors(*results):
+def raise_if_errors(*results, debug=False):
     """Analyze results from worker Processes to search for ErrorFromWorker
     objects. If found print all of them and raise an exception.
 
     Args:
         *results: results from worker processes
+        debug: if True show complete stacktraces
 
     Raise:
         RuntimeError: if ErrorFromWorker objects are in the results
     """
-    err_stream = six.StringIO()  # sys.stderr
+    err_stream = six.StringIO()
     errors = [x for x in results if isinstance(x, ErrorFromWorker)]
     if not errors:
         return
 
     # Report the errors and then raise
-    for error in errors:
-        print(error, file=err_stream)
+    if debug:
+        for error in errors:
+            print(error.stacktrace, file=err_stream)
 
-    print('[PARENT PROCESS]:', file=err_stream)
-    traceback.print_stack(file=err_stream)
-    error_msg = 'errors occurred in worker processes:\n{0}'
+        print('[PARENT PROCESS]:', file=err_stream)
+        traceback.print_stack(file=err_stream)
+    else:
+        for error in errors:
+            print(error, file=err_stream)
+    error_msg = 'errors occurred during concretization of the environment:\n{0}'
+
     raise RuntimeError(error_msg.format(err_stream.getvalue()))
 
 
@@ -108,13 +119,15 @@ def num_processes(max_processes=None):
     return min(cpus_available(), max_processes)
 
 
-def parallel_map(func, arguments, max_processes=None):
+def parallel_map(func, arguments, max_processes=None, debug=False):
     """Map a task object to the list of arguments, return the list of results.
 
     Args:
         func (Task): user defined task object
         arguments (list): list of arguments for the task
         max_processes (int or None): maximum number of processes allowed
+        debug (bool): if False, just show error messages. If True show complete
+            stacktraces
 
     Raises:
         RuntimeError: if any error occurred in the worker processes
@@ -125,5 +138,5 @@ def parallel_map(func, arguments, max_processes=None):
             results = p.map(task_wrapper, arguments)
     else:
         results = list(map(task_wrapper, arguments))
-    raise_if_errors(*results)
+    raise_if_errors(*results, debug=debug)
     return results
