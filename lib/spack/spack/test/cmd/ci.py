@@ -822,7 +822,6 @@ spack:
         assert('--keep-stage' in install_parts)
         assert('--require-full-hash-match' in install_parts)
         assert('--no-check-signature' not in install_parts)
-        assert('--no-add' in install_parts)
         assert('-f' in install_parts)
         flag_index = install_parts.index('-f')
         assert('archive-files.yaml' in install_parts[flag_index + 1])

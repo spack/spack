@@ -449,12 +449,6 @@ def ci_rebuild(args):
                 spec_map, cdash_base_url, cdash_build_id, cdash_project,
                 [pipeline_mirror_url, pr_mirror_url, remote_mirror_url])
 
-    # A compiler action of 'FIND_ANY' means we are building a bootstrap
-    # compiler or one of its deps.
-    # TODO: when compilers are dependencies, we should include --no-add
-    if compiler_action != 'FIND_ANY':
-        install_args.append('--no-add')
-
     # TODO: once we have the concrete spec registry, use the DAG hash
     # to identify the spec to install, rather than the concrete spec
     # yaml file.

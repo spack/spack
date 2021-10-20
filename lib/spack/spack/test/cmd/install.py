@@ -755,7 +755,7 @@ def test_install_only_dependencies_of_all_in_env(
 
 def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
                                mutable_mock_env_path):
-    # To test behavior of --no-add option, we create the following environment:
+    # To test behavior of --add option, we create the following environment:
     #
     #     mpileaks
     #         ^callpath
@@ -801,23 +801,22 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
 
     # Activate the environment
     with e:
-        # Assert using --no-add with a spec not in the env fails
         inst_out = install(
-            '--no-add', 'boost', fail_on_error=False, output=str)
+            'boost', fail_on_error=False, output=str)
 
         assert('no such spec exists in environment' in inst_out)
 
-        # Ensure using --no-add with an ambiguous spec fails
+        # Without --add, ensure that install fails if the spec matches more
+        # than one root
         with pytest.raises(ev.SpackEnvironmentError) as err:
-            inst_out = install(
-                '--no-add', 'a', output=str)
+            inst_out = install('a', output=str)
 
         assert('a matches multiple specs in the env' in str(err))
 
-        # With "--no-add", install an unambiguous dependency spec (that already
-        # exists as a dep in the environment) using --no-add and make sure it
-        # gets installed (w/ deps), but is not added to the environment.
-        install('--no-add', 'dyninst')
+        # Install an unambiguous dependency spec (that already exists as a dep
+        # in the environment) and make sure it gets installed (w/ deps),
+        # but is not added to the environment.
+        install('dyninst')
 
         find_output = find('-l', output=str)
         assert('dyninst' in find_output)
@@ -829,31 +828,30 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
         assert all([s in env_specs for s in post_install_specs])
 
         # Make sure we can install a concrete dependency spec from a spec.yaml
-        # file on disk, using the ``--no-add` option, and the spec is installed
-        # but not added as a root
+        # file on disk, and the spec is installed but not added as a root
         mpi_spec_yaml_path = tmpdir.join('{0}.yaml'.format(mpi_spec.name))
         with open(mpi_spec_yaml_path.strpath, 'w') as fd:
             fd.write(mpi_spec.to_yaml(hash=ht.full_hash))
 
-        install('--no-add', '-f', mpi_spec_yaml_path.strpath)
+        install('-f', mpi_spec_yaml_path.strpath)
         assert(mpi_spec not in e.roots())
 
         find_output = find('-l', output=str)
         assert(mpi_spec.name in find_output)
 
-        # Without "--no-add", install an unambiguous depependency spec (that
-        # already exists as a dep in the environment) without --no-add and make
-        # sure it is added as a root of the environment as well as installed.
+        # Install an unambiguous depependency spec (that already exists as a
+        # dep in the environment) with --add and make sure it is added as a
+        # root of the environment as well as installed.
         assert(b_spec not in e.roots())
 
-        install('b')
+        install('--add', 'b')
 
         assert(b_spec in e.roots())
         assert(b_spec not in e.uninstalled_specs())
 
-        # Without "--no-add", install a novel spec and make sure it is added
-        # as a root and installed.
-        install('bowtie')
+        # Install a novel spec with --add and make sure it is added  as a root
+        # and installed.
+        install('--add', 'bowtie')
 
         assert(any([s.name == 'bowtie' for s in e.roots()]))
         assert(not any([s.name == 'bowtie' for s in e.uninstalled_specs()]))
