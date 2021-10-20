@@ -22,8 +22,6 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     variant('mpi',       default=True,  description='Enable MPI support')
     variant('openmp',    default=True,  description='Enable OpenMP support')
     variant('scalapack', default=True,  description='Enable SCALAPACK support')
-    variant('pexsi',     default=False, description='Give the link-line for PEXSI')
-    variant('archive',   default=False, description='Add support of archives for output files.')
     variant('openbabel', default=False, description='Enable detection of openbabel compilation')
 
     depends_on('python@:2.8', type='build', when="@:1.9.0")
@@ -31,34 +29,37 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('mpi',                    when='+mpi')
-    depends_on('bigdft-futile@1.9.1',    when='@1.9.1')
-    depends_on('bigdft-futile@1.9.0',    when='@1.9.0')
-    depends_on('bigdft-futile@1.8.3',    when='@1.8.3')
-    depends_on('bigdft-futile@1.8.2',    when='@1.8.2')
-    depends_on('bigdft-futile@1.8.1',    when='@1.8.1')
-    depends_on('bigdft-chess@1.9.1',     when='@1.9.1')
-    depends_on('bigdft-chess@1.9.0',     when='@1.9.0')
-    depends_on('bigdft-chess@1.8.3',     when='@1.8.3')
-    depends_on('bigdft-chess@1.8.2',     when='@1.8.2')
-    depends_on('bigdft-chess@1.8.1',     when='@1.8.1')
-    depends_on('bigdft-psolver@1.9.1',   when='@1.9.1')
-    depends_on('bigdft-psolver@1.9.0',   when='@1.9.0')
-    depends_on('bigdft-psolver@1.8.3',   when='@1.8.3')
-    depends_on('bigdft-psolver@1.8.2',   when='@1.8.2')
-    depends_on('bigdft-psolver@1.8.1',   when='@1.8.1')
-    depends_on('bigdft-libabinit@1.9.1', when='@1.9.1')
-    depends_on('bigdft-libabinit@1.9.0', when='@1.9.0')
-    depends_on('bigdft-libabinit@1.8.3', when='@1.8.3')
-    depends_on('bigdft-libabinit@1.8.2', when='@1.8.2')
-    depends_on('bigdft-libabinit@1.8.1', when='@1.8.1')
     depends_on('py-pyyaml')
     depends_on('libgain')
-    depends_on('libxc@:2.2.2')
-    depends_on('libarchive', when='+archive')
-    depends_on('scalapack', when='+scalapack')
-    depends_on('pexsi+fortran', when="+pexsi")
-    depends_on('openbabel', when='+openbabel')
+    depends_on('mpi',                      when='+mpi')
+    depends_on('bigdft-futile@develop',    when='@develop')
+    depends_on('bigdft-futile@1.9.1',      when='@1.9.1')
+    depends_on('bigdft-futile@1.9.0',      when='@1.9.0')
+    depends_on('bigdft-futile@1.8.3',      when='@1.8.3')
+    depends_on('bigdft-futile@1.8.2',      when='@1.8.2')
+    depends_on('bigdft-futile@1.8.1',      when='@1.8.1')
+    depends_on('bigdft-chess@develop',     when='@develop')
+    depends_on('bigdft-chess@1.9.1',       when='@1.9.1')
+    depends_on('bigdft-chess@1.9.0',       when='@1.9.0')
+    depends_on('bigdft-chess@1.8.3',       when='@1.8.3')
+    depends_on('bigdft-chess@1.8.2',       when='@1.8.2')
+    depends_on('bigdft-chess@1.8.1',       when='@1.8.1')
+    depends_on('bigdft-psolver@develop',   when='@develop')
+    depends_on('bigdft-psolver@1.9.1',     when='@1.9.1')
+    depends_on('bigdft-psolver@1.9.0',     when='@1.9.0')
+    depends_on('bigdft-psolver@1.8.3',     when='@1.8.3')
+    depends_on('bigdft-psolver@1.8.2',     when='@1.8.2')
+    depends_on('bigdft-psolver@1.8.1',     when='@1.8.1')
+    depends_on('bigdft-libabinit@develop', when='@develop')
+    depends_on('bigdft-libabinit@1.9.1',   when='@1.9.1')
+    depends_on('bigdft-libabinit@1.9.0',   when='@1.9.0')
+    depends_on('bigdft-libabinit@1.8.3',   when='@1.8.3')
+    depends_on('bigdft-libabinit@1.8.2',   when='@1.8.2')
+    depends_on('bigdft-libabinit@1.8.1',   when='@1.8.1')
+    depends_on('libxc@:2.2.2',             when='@:1.9.1')
+    depends_on('libxc@:4.3.4',             when='@develop')
+    depends_on('scalapack',                when='+scalapack')
+    depends_on('openbabel',                when='+openbabel')
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
@@ -69,6 +70,7 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
             autoreconf('-fi')
 
     def configure(self, spec, prefix):
+        linalg = []
         fcflags = []
         cflags = []
 
@@ -76,11 +78,17 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
         pyyaml = join_path(spec['py-pyyaml'].prefix.lib,
                            'python{0}'.format(python_version))
 
+        if '+openmp' in spec:
+            fcflags.append(self.compiler.openmp_flag)
+
+        if '+scalapack' in spec:
+            linalg.append(spec['scalapack'].libs.ld_flags)
+        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
+
         args = [
             "FCFLAGS=%s" % " ".join(fcflags),
             "CFLAGS=%s" % " ".join(cflags),
-            "--with-ext-linalg=%s %s" % (spec['blas'].libs.link_flags,
-                                         spec['lapack'].libs.link_flags),
+            "--with-ext-linalg=%s" % " ".join(linalg),
             "--with-pyyaml-path=%s" % pyyaml,
             "--with-futile-libs=%s" % spec['bigdft-futile'].prefix.lib,
             "--with-futile-incs=%s" % spec['bigdft-futile'].headers.include_flags,
@@ -114,23 +122,12 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
         else:
             args.append("--without-openmp")
 
-        if '+scalapack' in spec:
-            args.append("--with-scalapack")
-            args.append("--with-scalapack-path=%s" % spec['scalapack'].libs.ld_flags)
-
         if '+cuda' in spec:
             args.append("--enable-opencl")
             args.append("--with-ocl-path=%s" % spec['cuda'].prefix)
             args.append("--enable-cuda-gpu")
             args.append("--with-cuda-path=%s" % spec['cuda'].prefix)
             args.append("--with-cuda-libs=%s" % spec['cuda'].libs.link_flags)
-
-        if '+archive' in spec:
-            args.append("--with-archives")
-            args.append("--with-archives-path=%s" % spec['libarchive'].prefix)
-
-        if '+pexsi' in spec:
-            args.append("--with-pexsi")
 
         if '+openbabel' in spec:
             args.append("--enable-openbabel")

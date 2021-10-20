@@ -20,6 +20,9 @@ class PyBigdft(PythonPackage):
     depends_on('python@3.7:')
     depends_on('py-setuptools')
 
+    depends_on('bigdft-futile@1.9.1', type='run', when='@1.9.1')
+    depends_on('bigdft-futile@1.9.0', type='run', when='@1.9.0')
+
     phases = ['build', 'install']
 
     def build(self, spec, prefix):

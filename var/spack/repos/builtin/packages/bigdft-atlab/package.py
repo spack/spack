@@ -27,7 +27,7 @@ class BigdftAtlab(AutotoolsPackage):
     depends_on('bigdft-futile@1.8.3', when='@1.8.3')
     depends_on('bigdft-futile@1.8.2', when='@1.8.2')
     depends_on('bigdft-futile@1.8.1', when='@1.8.1')
-    depends_on('openbabel', when='+openbabel')
+    depends_on('openbabel',           when='+openbabel')
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
@@ -40,6 +40,9 @@ class BigdftAtlab(AutotoolsPackage):
     def configure(self, spec, prefix):
         fcflags = [spec['mpi'].libs.ld_flags]
         cflags = [spec['mpi'].libs.ld_flags]
+
+        if '+openmp' in spec:
+            fcflags.append(self.compiler.openmp_flag)
 
         args = [
             "FCFLAGS=%s" % " ".join(fcflags),
