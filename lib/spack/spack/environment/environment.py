@@ -1161,7 +1161,8 @@ class Environment(object):
         tty.msg(msg)
 
         concretized_root_specs = spack.util.parallel.parallel_map(
-            _concretize_task, arguments, max_processes=max_processes
+            _concretize_task, arguments, max_processes=max_processes,
+            debug=tty.is_debug()
         )
 
         finish = time.time()

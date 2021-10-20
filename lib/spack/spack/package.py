@@ -83,6 +83,22 @@ _spack_times_log = 'install_times.json'
 _spack_configure_argsfile = 'spack-configure-args.txt'
 
 
+def preferred_version(pkg):
+    """
+    Returns a sorted list of the preferred versions of the package.
+
+    Arguments:
+        pkg (Package): The package whose versions are to be assessed.
+    """
+    # Here we sort first on the fact that a version is marked
+    # as preferred in the package, then on the fact that the
+    # version is not develop, then lexicographically
+    key_fn = lambda v: (pkg.versions[v].get('preferred', False),
+                        not v.isdevelop(),
+                        v)
+    return sorted(pkg.versions, key=key_fn).pop()
+
+
 class InstallPhase(object):
     """Manages a single phase of the installation.
 
