@@ -20,6 +20,6 @@ class Vacuumms(CMakePackage):
     maintainers = ['frankwillmore']
 
     version('master', branch='master')
-    version('1.0.0', '8b7d16b78d6c935dcc29e540090453a9')
+    version('1.0.0', 'c18fe52f5041880da7f50d3808d37afb3e9c936a56f80f67838d045bf7af372f')
 
     depends_on('libtiff')
