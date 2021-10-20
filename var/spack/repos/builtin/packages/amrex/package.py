@@ -55,14 +55,14 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Dimensionality', values=('2', '3'))
     variant('shared',  default=False,
             description='Build shared library')
-    variant('mpi',          default=True,
+    variant('mpi',          default=False,
             description='Build with MPI support')
-    variant('openmp',       default=False,
+    variant('openmp',       default=True,
             description='Build with OpenMP support')
     variant('precision',  default='double',
             description='Real precision (double/single)',
             values=('single', 'double'))
-    variant('eb',  default=True,
+    variant('eb',  default=False,
             description='Build Embedded Boundary classes')
     variant('fortran',  default=True,
             description='Build Fortran API')
@@ -72,7 +72,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Build data services')
     variant('particles',  default=True,
             description='Build particle classes')
-    variant('plotfile_tools', default=True,
+    variant('plotfile_tools', default=False,
             description='Build plotfile_tools like fcompare')
     variant('hdf5',  default=False,
             description='Enable HDF5-based I/O')
@@ -168,8 +168,9 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     @when('@20.12:,develop')
     def cmake_args(self):
         args = [
-            '-DUSE_XSDK_DEFAULTS=ON',
+            #'-DUSE_XSDK_DEFAULTS=ON',
             self.define('AMReX_ENABLE_TESTS', True),
+            self.define('AMReX_INSTALL', True),
             self.define_from_variant('AMReX_SPACEDIM', 'dimensions'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('AMReX_MPI', 'mpi'),
@@ -212,64 +213,83 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     #
     # For versions <= 20.11
     #
-    @when('@:20.11')
-    def cmake_args(self):
-        args = [
-            '-DUSE_XSDK_DEFAULTS=ON',
-            self.define('AMReX_ENABLE_TESTS', True),
-            self.define_from_variant('DIM', 'dimensions'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('ENABLE_MPI', 'mpi'),
-            self.define_from_variant('ENABLE_OMP', 'openmp'),
-            '-DXSDK_PRECISION:STRING=%s' %
-            self.spec.variants['precision'].value.upper(),
-            self.define_from_variant('XSDK_ENABLE_Fortran', 'fortran'),
-            self.define_from_variant('ENABLE_FORTRAN_INTERFACES', 'fortran'),
-            self.define_from_variant('ENABLE_EB', 'eb'),
-            self.define_from_variant('ENABLE_LINEAR_SOLVERS',
-                                     'linear_solvers'),
-            self.define_from_variant('ENABLE_AMRDATA', 'amrdata'),
-            self.define_from_variant('ENABLE_PARTICLES', 'particles'),
-            self.define_from_variant('ENABLE_SUNDIALS', 'sundials'),
-            self.define_from_variant('ENABLE_HDF5', 'hdf5'),
-            self.define_from_variant('ENABLE_HYPRE', 'hypre'),
-            self.define_from_variant('ENABLE_PETSC', 'petsc'),
-            self.define_from_variant('ENABLE_CUDA', 'cuda'),
-        ]
+    #@when('@:20.11')
+    #def cmake_args(self):
+    #    args = [
+    #        '-DUSE_XSDK_DEFAULTS=ON',
+    #        self.define('AMReX_ENABLE_TESTS', True),
+    #        self.define_from_variant('DIM', 'dimensions'),
+    #        self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+    #        self.define_from_variant('ENABLE_MPI', 'mpi'),
+    #        self.define_from_variant('ENABLE_OMP', 'openmp'),
+    #        '-DXSDK_PRECISION:STRING=%s' %
+    #        self.spec.variants['precision'].value.upper(),
+    #        self.define_from_variant('XSDK_ENABLE_Fortran', 'fortran'),
+    #        self.define_from_variant('ENABLE_FORTRAN_INTERFACES', 'fortran'),
+    #        self.define_from_variant('ENABLE_EB', 'eb'),
+    #        self.define_from_variant('ENABLE_LINEAR_SOLVERS',
+    #                                 'linear_solvers'),
+    #        self.define_from_variant('ENABLE_AMRDATA', 'amrdata'),
+    #        self.define_from_variant('ENABLE_PARTICLES', 'particles'),
+    #        self.define_from_variant('ENABLE_SUNDIALS', 'sundials'),
+    #        self.define_from_variant('ENABLE_HDF5', 'hdf5'),
+    #        self.define_from_variant('ENABLE_HYPRE', 'hypre'),
+    #        self.define_from_variant('ENABLE_PETSC', 'petsc'),
+    #        self.define_from_variant('ENABLE_CUDA', 'cuda'),
+    #    ]
 
-        if self.spec.satisfies('%fj'):
-            args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+    #    if self.spec.satisfies('%fj'):
+    #        args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
 
-        if '+cuda' in self.spec:
-            cuda_arch = self.spec.variants['cuda_arch'].value
-            args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
+    #    if '+cuda' in self.spec:
+    #        cuda_arch = self.spec.variants['cuda_arch'].value
+    #        args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
 
-        return args
-
-
+    #    return args
 
 
-    @run_after('install')
+
+
+    @run_after('build')
     def setup_smoke_test(self):
-        print("--- After Install Actions ---")
-        self.cache_extra_test_sources(['.'])
-        #self.cache_extra_test_sources(['Tests', 'CTestTestfile.cmake', 'CMakeCache.txt', 'Makefile', 'cmake_install.cmake'])
+    #    print("--- After Install Actions ---")
+    #    self.cache_extra_test_sources(['.'])
+        self.cache_extra_test_sources(['Tests'])
+    #    self.cache_extra_test_sources(['Tests', 'CTestTestfile.cmake', 'CMakeCache.txt', 'Makefile', 'cmake_install.cmake', 'CMakeLists.txt'])
+    #    self.cache_extra_test_sources(['../spack-build*'])
 
     def test(self):
         """Perform smoke tests on installed package."""
         print("--- AMReX Smoke Test ---")
-        #import os
-        join_path(self.test_suite.current_test_cache_dir, '.')
-        #join_path(self.test_suite.current_test_cache_dir, './Tests/Amr/Advection_AmrLevel')
+        import os
+        #join_path(self.test_suite.current_test_cache_dir, '.')
+        #join_path(self.test_suite.current_test_cache_dir, '.')
         #join_path(self.test_suite.current_test_cache_dir, './Tests/Amr/Advection_AmrLevel/Exec/SingleVortex')
-        #print("avail files", work_dir)
-        cmake('-S ./cache/amrex/', '-DAMReX_ENABLE_TESTS=True')
-        make()
+
+        #join_path(self.test_suite.current_test_data_dir, 'hello_world')
+        join_path(self.test_suite.current_test_cache_dir, './Tests/CMakeTestInstall')
+
+        print("Current Directory:", os.getcwd())
+        print("avail files", os.listdir('./cache/amrex'))
+        print("avail files", os.listdir('./data/amrex'))
+        print("Test files", os.listdir('./cache/amrex/Tests/Amr/Advection_AmrLevel/Exec/SingleVortex'))
+        print("Test files", os.listdir('./cache/amrex/Tests/Amr/Advection_AmrLevel/Exec/SingleVortex'))
+
+        #cmake('-S ./cache/amrex/', '-DAMReX_ENABLE_TESTS=True')
+        #make()
         #cmake('--build .')
-        ctest('--test-dir ./cache/amrex/','-R AmrLevel')
-        #self.run_test(exe)
-        #self.run_test(exe,
-        #              cli_args,
-        #              [], installed=True, purpose='Smoke test for AMReX',
+        #ctest('--test-dir ./cache/amrex/','-R AmrLevel')
+        #self.run_test('./hello_world')
+        
+        
+        cmake('--version')
+        cmake('-S ./cache/amrex/Tests/CMakeTestInstall', '-DAMReX_ROOT='+self.prefix)
+        make()
+        self.run_test('install_test', ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs','max_step=1'],[],
+                      installed=False, purpose='Smoke test for AMReX',
+                      skip_missing=False)
+
+        #self.run_test('find', ['./', 'type', '-print'],[],
+        #              installed=False, purpose='Smoke test for AMReX',
         #              skip_missing=False)
         pass
