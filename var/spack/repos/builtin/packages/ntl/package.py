@@ -62,16 +62,13 @@ class Ntl(Package):
 
     phases = ['configure', 'build', 'install']
 
-    def setup_environment(self, spack_env, run_env):
-        spec = self.spec
-
     def configure_args(self):
         spec = self.spec
         prefix = self.prefix
 
         config_args = [
             'DEF_PREFIX={0}'.format(prefix),
-            'GMP_PREFIX={0}'.format(spec['gmp'].prefix) # gmp dependency
+            'GMP_PREFIX={0}'.format(spec['gmp'].prefix)  # gmp dependency
         ]
         if '+shared' in spec:
             config_args.append('SHARED=on')
@@ -86,7 +83,7 @@ class Ntl(Package):
     def build(self, spec, prefix):
         with working_dir('src'):
             make()
-            #make('check')
+            # make('check')
 
     def install(self, spec, prefix):
         with working_dir('src'):
