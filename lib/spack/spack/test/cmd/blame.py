@@ -48,6 +48,7 @@ def test_blame_file(mock_packages):
     assert 'AUTHOR' in out
     assert 'EMAIL' in out
 
+
 def test_blame_json(mock_packages):
     """Ensure that we can output json as a blame."""
     with working_dir(spack.paths.prefix):
