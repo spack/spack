@@ -149,6 +149,7 @@ class TestInstall:
                 fs.install('source/a/*/*', 'dest/1')
 
 
+@pytest.mark.skipif(os.name == 'nt', reason="Skip test on Windows")
 class TestCopyTree:
     """Tests for ``filesystem.copy_tree``"""
 
@@ -237,6 +238,7 @@ class TestCopyTree:
                 fs.copy_tree('source', 'source/sub/directory')
 
 
+@pytest.mark.skipif(os.name == 'nt', reason="Skip test on Windows")
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
 

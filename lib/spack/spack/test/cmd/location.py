@@ -5,6 +5,7 @@
 
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -37,12 +38,14 @@ def mock_spec():
     shutil.rmtree(pkg.stage.path)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_location_build_dir(mock_spec):
     """Tests spack location --build-dir."""
     spec, pkg = mock_spec
     assert location('--build-dir', spec.name).strip() == pkg.stage.source_path
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.regression('22738')
 def test_location_source_dir(mock_spec):
     """Tests spack location --source-dir."""
@@ -51,6 +54,7 @@ def test_location_source_dir(mock_spec):
     assert location(spec.name).strip() == pkg.stage.source_path
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_location_source_dir_missing():
     """Tests spack location --source-dir with a missing source directory."""
     spec = 'mpileaks'
@@ -61,6 +65,7 @@ def test_location_source_dir_missing():
     assert out == expected
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('options', [([]),
                                      (['--source-dir', 'mpileaks']),
                                      (['--env', 'missing-env']),
@@ -71,6 +76,7 @@ def test_location_cmd_error(options):
         location(*options)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_location_env_exists(mutable_mock_env_path):
     """Tests spack location --env <name> for an existing environment."""
     e = ev.create("example")
@@ -78,6 +84,7 @@ def test_location_env_exists(mutable_mock_env_path):
     assert location('--env', "example").strip() == e.path
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_location_with_active_env(mutable_mock_env_path):
     """Tests spack location --env with active env"""
     e = ev.create("example")
@@ -86,6 +93,7 @@ def test_location_with_active_env(mutable_mock_env_path):
         assert location('--env').strip() == e.path
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_location_env_flag_interference(mutable_mock_env_path, tmpdir):
     """
     Tests that specifying an active environment using `spack -e x location ...`
@@ -107,6 +115,7 @@ def test_location_env_flag_interference(mutable_mock_env_path, tmpdir):
     assert 'first_env' not in location('--packages', global_args=global_args)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_location_env_missing():
     """Tests spack location --env."""
     missing_env_name = 'missing-env'
@@ -115,6 +124,7 @@ def test_location_env_missing():
     assert out == error
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.db
 def test_location_install_dir(mock_spec):
     """Tests spack location --install-dir."""
@@ -122,6 +132,7 @@ def test_location_install_dir(mock_spec):
     assert location('--install-dir', spec.name).strip() == spec.prefix
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.db
 def test_location_package_dir(mock_spec):
     """Tests spack location --package-dir."""
@@ -129,6 +140,7 @@ def test_location_package_dir(mock_spec):
     assert location('--package-dir', spec.name).strip() == pkg.package_dir
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.db
 @pytest.mark.parametrize('option,expected', [
     ('--module-dir', spack.paths.module_path),
@@ -139,6 +151,7 @@ def test_location_paths_options(option, expected):
     assert location(option).strip() == expected
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.parametrize('specs,expected', [
     ([], "You must supply a spec."),
     (['spec1', 'spec2'], "Too many specs.  Supply only one.")])
@@ -148,6 +161,7 @@ def test_location_spec_errors(specs, expected):
     assert location(*specs, fail_on_error=False).strip() == error
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.db
 def test_location_stage_dir(mock_spec):
     """Tests spack location --stage-dir."""
@@ -155,6 +169,7 @@ def test_location_stage_dir(mock_spec):
     assert location('--stage-dir', spec.name).strip() == pkg.stage.path
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.db
 def test_location_stages(mock_spec):
     """Tests spack location --stages."""

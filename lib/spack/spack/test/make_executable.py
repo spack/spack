@@ -10,13 +10,18 @@ This just tests whether the right args are getting passed to make.
 """
 import os
 import shutil
+import sys
 import tempfile
 import unittest
+
+import pytest
 
 from spack.build_environment import MakeExecutable
 from spack.util.environment import path_put_first
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 class MakeExecutableTest(unittest.TestCase):
 
     def setUp(self):
