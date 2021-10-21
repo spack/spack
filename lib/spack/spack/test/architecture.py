@@ -25,6 +25,8 @@ def current_host_platform():
         current_platform = spack.platforms.Linux()
     elif 'Darwin' in platform.system():
         current_platform = spack.platforms.Darwin()
+    elif 'Windows' in platform.system():
+        current_platform = spack.platforms.Windows()
     return current_platform
 
 

@@ -42,6 +42,11 @@ stage      = SpackCommand('stage')
 uninstall  = SpackCommand('uninstall')
 find       = SpackCommand('find')
 
+if sys.platform == 'win32':
+    sep = 'C:\\'
+else:
+    sep = os.sep
+
 
 def check_mpileaks_and_deps_in_view(viewdir):
     """Check that the expected install directories exist."""
@@ -671,7 +676,7 @@ spack:
 
     assert 'missing include' in err
     assert '/no/such/directory' in err
-    assert 'no/such/file.yaml' in err
+    assert os.path.join('no', 'such', 'file.yaml') in err
     assert ev.active_environment() is None
 
 
@@ -2577,7 +2582,8 @@ def test_rewrite_rel_dev_path_new_dir(tmpdir):
     env('create', '-d', str(dest_env), str(spack_yaml))
     with ev.Environment(str(dest_env)) as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
-        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+        assert e.dev_specs['mypkg2']['path'] == sep + os.path.join('some',
+                                                                   'other', 'path')
 
 
 def test_rewrite_rel_dev_path_named_env(tmpdir):
@@ -2587,7 +2593,8 @@ def test_rewrite_rel_dev_path_named_env(tmpdir):
     env('create', 'named_env', str(spack_yaml))
     with ev.read('named_env') as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
-        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+        assert e.dev_specs['mypkg2']['path'] == sep + os.path.join('some',
+                                                                   'other', 'path')
 
 
 def test_rewrite_rel_dev_path_original_dir(tmpdir):
@@ -2772,10 +2779,14 @@ spack:
     install_tree:
       root: /tmp/store
 """)
+    if os.name == 'nt':
+        sep = '\\'
+    else:
+        sep = '/'
     current_store_root = str(spack.store.root)
-    assert str(current_store_root) != '/tmp/store'
+    assert str(current_store_root) != sep + os.path.join('tmp', 'store')
     with spack.environment.Environment(str(tmpdir)):
-        assert str(spack.store.root) == '/tmp/store'
+        assert str(spack.store.root) == sep + os.path.join('tmp', 'store')
     assert str(spack.store.root) == current_store_root
 
 

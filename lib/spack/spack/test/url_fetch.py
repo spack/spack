@@ -111,12 +111,16 @@ def test_archive_file_errors(tmpdir, mock_archive, _fetch_method):
                 fetcher._fetch_from_url('file:///does-not-exist')
 
 
+files = [('.tar.gz', 'z'), ('.tgz', 'z')]
+if sys.platform != "win32":
+    files += [('.tar.bz2', 'j'), ('.tbz2', 'j'),
+              ('.tar.xz', 'J'), ('.txz', 'J')]
+
+
 @pytest.mark.parametrize('secure', [True, False])
 @pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
 @pytest.mark.parametrize('mock_archive',
-                         [('.tar.gz', 'z'), ('.tgz', 'z'),
-                          ('.tar.bz2', 'j'), ('.tbz2', 'j'),
-                          ('.tar.xz', 'J'), ('.txz', 'J')],
+                         files,
                          indirect=True)
 def test_fetch(
         mock_archive,

@@ -51,7 +51,7 @@ last_line  = "last!\n"
 
 @pytest.fixture  # type: ignore[no-redef]
 def sbang_line():
-    yield '#!/bin/sh %s/bin/sbang\n' % spack.store.layout.root
+    yield '#!/bin/sh {0}{1}bin{1}sbang\n'.format(spack.store.layout.root, os.sep)
 
 
 class ScriptDirectory(object):

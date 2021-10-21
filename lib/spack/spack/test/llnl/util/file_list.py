@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import fnmatch
-import os
+import posixpath
 
 import pytest
 import six
@@ -198,7 +198,7 @@ class TestHeaderList(object):
 
 
 #: Directory where the data for the test below is stored
-search_dir = os.path.join(spack.paths.test_path, 'data', 'directory_search')
+search_dir = posixpath.join(spack.paths.test_path, 'data', 'directory_search')
 
 
 @pytest.mark.parametrize('search_fn,search_list,root,kwargs', [
@@ -229,12 +229,12 @@ search_dir = os.path.join(spack.paths.test_path, 'data', 'directory_search')
     (find_headers, ['a', 'c'], search_dir, {'recursive': True}),
     (find_libraries,
      ['liba', 'libd'],
-     os.path.join(search_dir, 'b'),
+     posixpath.join(search_dir, 'b'),
      {'recursive': False}
      ),
     (find_headers,
      ['b', 'd'],
-     os.path.join(search_dir, 'b'),
+     posixpath.join(search_dir, 'b'),
      {'recursive': False}
      ),
 ])
@@ -270,14 +270,14 @@ def test_searching_order(search_fn, search_list, root, kwargs):
 
 @pytest.mark.parametrize('root,search_list,kwargs,expected', [
     (search_dir, '*/*bar.tx?', {'recursive': False}, [
-        os.path.join(search_dir, 'a/foobar.txt'),
-        os.path.join(search_dir, 'b/bar.txp'),
-        os.path.join(search_dir, 'c/bar.txt'),
+        posixpath.join(search_dir, posixpath.join('a', 'foobar.txt')),
+        posixpath.join(search_dir, posixpath.join('b', 'bar.txp')),
+        posixpath.join(search_dir, posixpath.join('c', 'bar.txt')),
     ]),
     (search_dir, '*/*bar.tx?', {'recursive': True}, [
-        os.path.join(search_dir, 'a/foobar.txt'),
-        os.path.join(search_dir, 'b/bar.txp'),
-        os.path.join(search_dir, 'c/bar.txt'),
+        posixpath.join(search_dir, posixpath.join('a', 'foobar.txt')),
+        posixpath.join(search_dir, posixpath.join('b', 'bar.txp')),
+        posixpath.join(search_dir, posixpath.join('c', 'bar.txt')),
     ])
 ])
 def test_find_with_globbing(root, search_list, kwargs, expected):

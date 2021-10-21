@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import sys
 
 import pytest
 
@@ -38,6 +39,8 @@ def test_root_get_and_set(mutable_config, scope):
 
     _bootstrap('root', path, *scope_args)
     out = _bootstrap('root', *scope_args, output=str)
+    if sys.platform == 'win32':
+        out = out.replace("\\", "/")
     assert out.strip() == path
 
 
