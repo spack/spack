@@ -116,3 +116,8 @@ class Portage(CMakePackage):
             options.append('-DENABLE_APP_TESTS=OFF')
 
         return options
+
+    def check(self):
+        if self.run_tests:
+            with working_dir(self.build_directory):
+                make("test")
