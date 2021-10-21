@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -21,6 +22,7 @@ gpg = SpackCommand('gpg')
 bootstrap = SpackCommand('bootstrap')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 # test gpg command detection
 @pytest.mark.parametrize('cmd_name,version', [
     ('gpg',  'undetectable'),        # undetectable version
@@ -55,6 +57,7 @@ def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
         spack.util.gpg.init(force=True)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 @pytest.mark.maybeslow
 def test_gpg(tmpdir, mock_gnupghome):
     # Verify a file with an empty keyring.

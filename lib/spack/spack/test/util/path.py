@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 import pytest
 
 import llnl.util.tty as tty
@@ -26,18 +28,24 @@ fixed_lines = [
 ]
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("padded,fixed", zip(padded_lines, fixed_lines))
 def test_padding_substitution(padded, fixed):
     """Ensure that all padded lines are unpadded correctly."""
     assert fixed == sup.padding_filter(padded)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_no_substitution():
     """Ensure that a line not containing one full path placeholder is not modified."""
     partial = "--prefix=/Users/gamblin2/padding-log-test/opt/__spack_path_pla/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
     assert sup.padding_filter(partial) == partial
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_short_substitution():
     """Ensure that a single placeholder path component is replaced"""
     short = "--prefix=/Users/gamblin2/padding-log-test/opt/__spack_path_placeholder__/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
@@ -45,6 +53,8 @@ def test_short_substitution():
     assert short_subst == sup.padding_filter(short)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_partial_substitution():
     """Ensure that a single placeholder path component is replaced"""
     short = "--prefix=/Users/gamblin2/padding-log-test/opt/__spack_path_placeholder__/__spack_p/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
@@ -62,6 +72,8 @@ def test_longest_prefix_re():
     )
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_output_filtering(capfd, install_mockery, mutable_config):
     """Test filtering padding out of tty messages."""
     long_path = "/" + "/".join([sup.SPACK_PATH_PADDING_CHARS] * 200)

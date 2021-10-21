@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import sys
+
 import pytest
 
 import spack.store
@@ -15,6 +18,7 @@ find = SpackCommand('find')
 activate = SpackCommand('activate')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_deprecate(mock_packages, mock_archive, mock_fetch, install_mockery):
     install('libelf@0.8.13')
     install('libelf@0.8.10')
@@ -30,6 +34,7 @@ def test_deprecate(mock_packages, mock_archive, mock_fetch, install_mockery):
     assert non_deprecated == spack.store.db.query('libelf@0.8.13')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_deprecate_fails_no_such_package(mock_packages, mock_archive,
                                          mock_fetch, install_mockery):
     """Tests that deprecating a spec that is not installed fails.
@@ -47,6 +52,7 @@ def test_deprecate_fails_no_such_package(mock_packages, mock_archive,
     assert "Spec 'libelf@0.8.13' matches no installed packages" in output
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_deprecate_install(mock_packages, mock_archive, mock_fetch,
                            install_mockery):
     """Tests that the ```-i`` option allows us to deprecate in favor of a spec
@@ -65,6 +71,7 @@ def test_deprecate_install(mock_packages, mock_archive, mock_fetch,
     assert non_deprecated[0].satisfies('libelf@0.8.13')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_deprecate_deps(mock_packages, mock_archive, mock_fetch,
                         install_mockery):
     """Test that the deprecate command deprecates all dependencies properly."""
@@ -89,6 +96,7 @@ def test_deprecate_deps(mock_packages, mock_archive, mock_fetch,
     assert sorted(deprecated) == sorted(list(old_spec.traverse()))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_deprecate_fails_active_extensions(mock_packages, mock_archive,
                                            mock_fetch, install_mockery):
     """Tests that active extensions and their extendees cannot be
@@ -108,6 +116,7 @@ def test_deprecate_fails_active_extensions(mock_packages, mock_archive,
     assert 'is an active extension of' in output
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_uninstall_deprecated(mock_packages, mock_archive, mock_fetch,
                               install_mockery):
     """Tests that we can still uninstall deprecated packages."""
@@ -124,6 +133,7 @@ def test_uninstall_deprecated(mock_packages, mock_archive, mock_fetch,
     assert spack.store.db.query() == non_deprecated
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_deprecate_already_deprecated(mock_packages, mock_archive, mock_fetch,
                                       install_mockery):
     """Tests that we can re-deprecate a spec to change its deprecator."""
@@ -149,6 +159,7 @@ def test_deprecate_already_deprecated(mock_packages, mock_archive, mock_fetch,
     assert deprecator == spack.spec.Spec('libelf@0.8.13').concretized()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_deprecate_deprecator(mock_packages, mock_archive, mock_fetch,
                               install_mockery):
     """Tests that when a deprecator spec is deprecated, its deprecatee specs
@@ -179,6 +190,7 @@ def test_deprecate_deprecator(mock_packages, mock_archive, mock_fetch,
     assert second_deprecator == final_deprecator
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_concretize_deprecated(mock_packages, mock_archive, mock_fetch,
                                install_mockery):
     """Tests that the concretizer throws an error if we concretize to a

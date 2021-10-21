@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 
 import pytest
 
@@ -51,6 +52,8 @@ def url_and_build_system(request, tmpdir):
     orig_dir.chdir()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_build_systems(url_and_build_system):
     url, build_system = url_and_build_system
     with spack.stage.Stage(url) as stage:

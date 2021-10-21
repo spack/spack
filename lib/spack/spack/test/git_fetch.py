@@ -6,6 +6,7 @@
 import copy
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -82,6 +83,8 @@ def test_bad_git(tmpdir, mock_bad_git):
             fetcher.fetch()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("type_of_test", ['master', 'branch', 'tag', 'commit'])
 @pytest.mark.parametrize("secure", [True, False])
 def test_fetch(type_of_test,
@@ -136,6 +139,8 @@ def test_fetch(type_of_test,
             assert h('HEAD') == h(t.revision)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("type_of_test", ['branch', 'commit'])
 def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config):
     """Fetch the repo with debug enabled."""
@@ -174,6 +179,8 @@ def test_needs_stage():
         fetcher.fetch()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("get_full_repo", [True, False])
 def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
                        config, mutable_mock_repo):
@@ -219,6 +226,8 @@ def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
             assert(ncommits == 1)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize("submodules", [True, False])
 def test_gitsubmodule(submodules, mock_git_repository, config,
@@ -248,6 +257,8 @@ def test_gitsubmodule(submodules, mock_git_repository, config,
                 assert not os.path.isfile(file_path)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.disable_clean_stage_check
 def test_gitsubmodules_delete(mock_git_repository, config, mutable_mock_repo):
     """
