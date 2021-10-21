@@ -51,9 +51,13 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('googletest', type="test")
     depends_on('numactl',    type="test", when="+hwloc")
 
+    depends_on('intel-oneapi-mkl', when="+oneapi")
+    depends_on('intel-oneapi-dpl', when="+oneapi")
+
     conflicts('%gcc@:5.2.9')
     conflicts("+rocm", when="@:1.1.1")
     conflicts("+cuda", when="+rocm")
+    conflicts("+openmp", when="+oneapi")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
@@ -71,21 +75,31 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     patch('1.4.0_dpcpp_use_old_standard.patch', when='+oneapi @master')
     patch('1.4.0_dpcpp_use_old_standard.patch', when='+oneapi @1.4.0')
 
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+oneapi' in spec:
+            env.set('MKLROOT',
+                    join_path(spec['intel-oneapi-mkl'].prefix,
+                              'mkl', 'latest'))
+            env.set('DPL_ROOT',
+                    join_path(spec['intel-oneapi-dpl'].prefix,
+                              'dpl', 'latest'))
+
     def cmake_args(self):
         # Check that the have the correct C++ standard is available
         if self.spec.satisfies('@:1.2.0'):
             try:
                 self.compiler.cxx11_flag
             except UnsupportedCompilerFlag:
-                InstallError('Ginkgo requires a C++11-compliant C++ compiler')
+                raise InstallError('Ginkgo requires a C++11-compliant C++ compiler')
         else:
             try:
                 self.compiler.cxx14_flag
             except UnsupportedCompilerFlag:
-                InstallError('Ginkgo requires a C++14-compliant C++ compiler')
+                raise InstallError('Ginkgo requires a C++14-compliant C++ compiler')
 
         if self.spec.satisfies('+oneapi') and os.path.basename(self.compiler.cxx) != "dpcpp":
-            InstallError("Ginkgo's oneAPI backend requires the DPC++ compiler as main CXX compiler.")
+            raise InstallError("Ginkgo's oneAPI backend requires the DPC++ compiler as main CXX compiler.")
 
         spec = self.spec
         from_variant = self.define_from_variant
