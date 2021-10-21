@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 import os
+import sys
 
 from spack import *
 
@@ -98,8 +98,10 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             except UnsupportedCompilerFlag:
                 raise InstallError('Ginkgo requires a C++14-compliant C++ compiler')
 
-        if self.spec.satisfies('+oneapi') and os.path.basename(self.compiler.cxx) != "dpcpp":
-            raise InstallError("Ginkgo's oneAPI backend requires the DPC++ compiler as main CXX compiler.")
+        cxx_is_dpcpp = os.path.basename(self.compiler.cxx) == "dpcpp"
+        if self.spec.satisfies('+oneapi') and not cxx_is_dpcpp:
+            raise InstallError("Ginkgo's oneAPI backend requires the" +
+                               "DPC++ compiler as main CXX compiler.")
 
         spec = self.spec
         from_variant = self.define_from_variant
