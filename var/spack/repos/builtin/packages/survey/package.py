@@ -20,12 +20,13 @@ class Survey(CMakePackage):
        MPICH, MVAPICH, MPT, and OpenMPI. It also supports multiple
        architectures and has been tested on machines based on Intel,
        AMD, ARM, and IBM P8/9 processors and integrated GPUs.
+
+       Survey is a licensed product – source not openly available.
+       To access the survey source and build with spack please contact:
+       Trenza Inc. via: dmont@trenzasynergy.com or
+                        jeg@trenzasynergy.com
     """
 
-    # survey is a licensed product – source not openly available.
-    # To access the survey source and build with spack please contact:
-    # Trenza Inc. via: dmont@trenzasynergy.com or
-    #                  jeg@trenzasynergy.com
     homepage = "http://www.trenzasynergy.com"
     git      = "git@gitlab.com:trenza/survey.git"
 
