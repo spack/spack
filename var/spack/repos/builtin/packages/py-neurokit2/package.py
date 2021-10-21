@@ -22,7 +22,7 @@ class PyNeurokit2(PythonPackage):
     version('0.1.4.1', sha256='226bb04bb369d8bb87d99831f0a93cd8d0ed96fdc500f63de0b3550082876f6e')
     version('0.1.2', sha256='5ef40037c2d7078ecb713ab0b77b850267babf133856b59595de9613f29787bc')
 
-    depends_on('py-setuptools@040.6.0:', type='build')
+    depends_on('py-setuptools@40.6.0:', type='build')
     depends_on('py-pytest-runner', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
