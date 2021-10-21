@@ -201,7 +201,7 @@ def test_env_modifications_error_on_activate(
 
     e = ev.read('test')
     with e:
-        install('cmake-client')
+        install('--add', 'cmake-client')
 
     def setup_error(pkg, env):
         raise RuntimeError("cmake-client had issues!")
@@ -223,7 +223,7 @@ def test_activate_adds_transitive_run_deps_to_path(
 
     e = ev.read('test')
     with e:
-        install('depends-on-run-env')
+        install('--add', 'depends-on-run-env')
 
     env_variables = {}
     spack.environment.shell.activate(e).apply_modifications(env_variables)
@@ -389,7 +389,7 @@ def test_env_status_broken_view(
     install_mockery
 ):
     with ev.create('test'):
-        install('trivial-install-test-package')
+        install('--add', 'trivial-install-test-package')
 
         # switch to a new repo that doesn't include the installed package
         # test that Spack detects the missing package and warns the user
@@ -410,7 +410,7 @@ def test_env_activate_broken_view(
     install_mockery
 ):
     with ev.create('test'):
-        install('trivial-install-test-package')
+        install('--add', 'trivial-install-test-package')
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
@@ -1293,7 +1293,7 @@ def test_env_updates_view_force_remove(
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
-        install('--fake', 'mpileaks')
+        install('--add', '--fake', 'mpileaks')
 
     check_mpileaks_and_deps_in_view(view_dir)
 
