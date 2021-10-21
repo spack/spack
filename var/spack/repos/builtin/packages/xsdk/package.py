@@ -12,9 +12,10 @@ from copy import deepcopy
 
 def depends_on_cuda(cuda_var, *args, **kwargs):
     # require ~cuda when xsdk~cuda
+    args_new = list(deepcopy(args))
     if not isinstance(cuda_var, list):
         cuda_var = [cuda_var]
-    args_new = list(deepcopy(args))
+    usedep = 1
     for idx, var in enumerate(cuda_var):
         # skip variants starting with '?' so that
         # that that they are left unspecified by xsdk
@@ -22,12 +23,15 @@ def depends_on_cuda(cuda_var, *args, **kwargs):
             args_new[0] += ' ~%s' % var
         else:
             cuda_var[idx] = var.replace('?', '')
+        # if '?cuda' skip adding '~cuda' dep
+        if var == '?cuda': usedep = 0
     kwargs_new = deepcopy(kwargs)
     if 'when' in kwargs_new:
         kwargs_new['when'] += ' ~cuda'
     else:
         kwargs_new['when'] = '~cuda'
-    depends_on(*args_new, **kwargs_new)
+    if usedep:
+      depends_on(*args_new, **kwargs_new)
 
     # require +cuda when xsdk+cuda, and match the arch
     for arch in CudaPackage.cuda_arch_values:
@@ -46,6 +50,7 @@ def depends_on_rocm(rocm_var, *args, **kwargs):
     args_new = list(deepcopy(args))
     if not isinstance(rocm_var, list):
         rocm_var = [rocm_var]
+    usedep = 1
     for idx, var in enumerate(rocm_var):
         # skip variants starting with '?' so that
         # that that they are left unspecified by xsdk
@@ -53,12 +58,15 @@ def depends_on_rocm(rocm_var, *args, **kwargs):
             args_new[0] += ' ~%s' % var
         else:
             rocm_var[idx] = var.replace('?', '')
+        # if '?rocm' skip adding '~rocm' dep
+        if var == '?rocm': usedep = 0
     kwargs_new = deepcopy(kwargs)
     if 'when' in kwargs_new:
         kwargs_new['when'] += ' ~rocm'
     else:
         kwargs_new['when'] = '~rocm'
-    depends_on(*args_new, **kwargs_new)
+    if usedep:
+      depends_on(*args_new, **kwargs_new)
 
     # require +rocm when xsdk+rocm, and match the target
     for tgt in ROCmPackage.amdgpu_targets:
@@ -100,7 +108,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
             depends_on_cuda(cuda_var, *args, **kwargs)
         if bool(rocm_var):
             depends_on_rocm(rocm_var, *args, **kwargs)
-        else:
+        if not bool(cuda_var) and not bool(rocm_var):
             depends_on(*args, **kwargs)
 
     version('develop')
@@ -217,12 +225,12 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     xsdk_depends_on('plasma@19.8.1:', when='@0.5.0 %gcc@6.0:')
     xsdk_depends_on('plasma@18.11.1:', when='@0.4.0 %gcc@6.0:')
 
-    xsdk_depends_on('magma@master', when='@develop', cuda_var='cuda', rocm_var='rocm')
-    xsdk_depends_on('magma@2.6.1', when='@0.7.0', cuda_var='cuda', rocm_var='rocm')
-    xsdk_depends_on('magma@2.5.4', when='@0.6.0', cuda_var='cuda')
-    xsdk_depends_on('magma@2.5.1', when='@0.5.0', cuda_var='cuda')
-    xsdk_depends_on('magma@2.4.0', when='@0.4.0', cuda_var='cuda')
-    xsdk_depends_on('magma@2.2.0', when='@0.3.0', cuda_var='cuda')
+    xsdk_depends_on('magma@master', when='@develop', cuda_var='?cuda', rocm_var='?rocm')
+    xsdk_depends_on('magma@2.6.1', when='@0.7.0', cuda_var='?cuda', rocm_var='?rocm')
+    xsdk_depends_on('magma@2.5.4', when='@0.6.0', cuda_var='?cuda')
+    xsdk_depends_on('magma@2.5.1', when='@0.5.0', cuda_var='?cuda')
+    xsdk_depends_on('magma@2.4.0', when='@0.4.0', cuda_var='?cuda')
+    xsdk_depends_on('magma@2.2.0', when='@0.3.0', cuda_var='?cuda')
 
     xsdk_depends_on('amrex@develop+sundials', when='@develop %intel', cuda_var='cuda', rocm_var='rocm')
     xsdk_depends_on('amrex@develop+sundials', when='@develop %gcc', cuda_var='cuda', rocm_var='rocm')
