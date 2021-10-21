@@ -22,6 +22,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('2021.10.15', commit='38a0d8907cc5d4f9dfd711592f35b92a6900c170')
     version('2021.05.15', commit='004ea0c2aea6a261e7d5d216c24f8a703fc6c408')
     version('2021.03.01', commit='68a051044c952f0f4dac459d9941875c700039e7')
     version('2020.08.03', commit='d9d13c705d81e5de38e624254cf0875cce6add9a')
