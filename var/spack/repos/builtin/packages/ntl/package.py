@@ -17,18 +17,11 @@ class Ntl(Package):
     Documentation is available in the file doc/tour.html, which can be viewed
     with a web browser.
 
-    For a detailed guide to installation, please see the appropriate
-    documentation:
-    * doc/tour-unix.html for unix systems
-    * doc/tour-win.html for Windows systems
-
-    The latest version of NTL is available at http://www.shoup.net.
     """
 
     homepage = "https://libntl.org"
     url      = "https://github.com/libntl/ntl/archive/refs/tags/v11.5.1.tar.gz"
 
-    # notify when the package is updated.
     maintainers = ['wohlbier']
 
     version('11.5.1', sha256='ef578fa8b6c0c64edd1183c4c303b534468b58dd3eb8df8c9a5633f984888de5')
