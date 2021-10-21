@@ -28,7 +28,6 @@ class Ntl(Package):
     homepage = "https://libntl.org"
     url      = "https://github.com/libntl/ntl/archive/refs/tags/v11.5.1.tar.gz"
 
-    # notify when the package is updated.
     maintainers = ['wohlbier']
 
     version('11.5.1', sha256='ef578fa8b6c0c64edd1183c4c303b534468b58dd3eb8df8c9a5633f984888de5')
