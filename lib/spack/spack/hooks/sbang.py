@@ -11,6 +11,7 @@ import sys
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.lang import elide_list
 
 import spack.paths
 import spack.store
@@ -27,17 +28,10 @@ else:
 def sbang_install_path():
     """Location sbang should be installed within Spack's ``install_tree``."""
     sbang_root = str(spack.store.unpadded_root)
-    install_path = os.path.join(sbang_root, "bin", "sbang")
-    path_length = len(install_path)
-    if path_length > shebang_limit:
-        msg = ('Install tree root is too long. Spack cannot patch shebang lines'
-               ' when script path length ({0}) exceeds limit ({1}).\n  {2}')
-        msg = msg.format(path_length, shebang_limit, install_path)
-        raise SbangPathError(msg)
-    return install_path
+    return os.path.join(sbang_root, "bin", "sbang")
 
 
-def sbang_shebang_line():
+def sbang_shebang_line(use_sbang_in_PATH=False):
     """Full shebang line that should be prepended to files to use sbang.
 
     The line returned does not have a final newline (caller should add it
@@ -46,24 +40,32 @@ def sbang_shebang_line():
     This should be the only place in Spack that knows about what
     interpreter we use for ``sbang``.
     """
-    return '#!/bin/sh %s' % sbang_install_path()
+    if use_sbang_in_PATH:
+        return '#!/usr/bin/env sbang'
+    else:
+        return '#!/bin/sh %s' % sbang_install_path()
+
+
+def sbang_shebang_itself_too_long():
+    """When sbang itself is installed in a very long path, we can't use its absolute
+    path to shorten shebang lines. This function tests if that is the case."""
+    return len(sbang_shebang_line()) > shebang_limit
 
 
 def shebang_too_long(path):
     """Detects whether a file has a shebang line that is too long."""
-    if not os.path.isfile(path):
+    try:
+        with open(path, 'rb') as script:
+            bytes = script.read(2)
+            if bytes != b'#!':
+                return False
+
+            return len(bytes) + len(script.readline()) > shebang_limit
+    except (OSError, IOError):
         return False
 
-    with open(path, 'rb') as script:
-        bytes = script.read(2)
-        if bytes != b'#!':
-            return False
 
-        line = bytes + script.readline()
-        return len(line) > shebang_limit
-
-
-def filter_shebang(path):
+def filter_shebang(path, use_sbang_in_PATH):
     """Adds a second shebang line, using sbang, at the beginning of a file."""
     with open(path, 'rb') as original_file:
         original = original_file.read()
@@ -73,7 +75,7 @@ def filter_shebang(path):
             original = original.decode('UTF-8')
 
     # This line will be prepended to file
-    new_sbang_line = '%s\n' % sbang_shebang_line()
+    new_sbang_line = '%s\n' % sbang_shebang_line(use_sbang_in_PATH)
 
     # Skip files that are already using sbang.
     if original.startswith(new_sbang_line):
@@ -116,25 +118,24 @@ def filter_shebang(path):
     tty.debug("Patched overlong shebang in %s" % path)
 
 
-def filter_shebangs_in_directory(directory, filenames=None):
-    if filenames is None:
-        filenames = os.listdir(directory)
-    for file in filenames:
-        path = os.path.join(directory, file)
+def filter_shebangs_in_directory(directory):
+    patched_files = []
 
-        # only handle files
-        if not os.path.isfile(path):
-            continue
+    # Switch to /usr/bin/env sbang when sbang is installed in a long path itself.
+    use_sbang_in_PATH = sbang_shebang_itself_too_long()
 
-        # only handle links that resolve within THIS package's prefix.
-        if os.path.islink(path):
-            real_path = os.path.realpath(path)
-            if not real_path.startswith(directory + os.sep):
+    for (root, _, filenames) in os.walk(directory):
+        for file in filenames:
+            path = os.path.join(root, file)
+
+            # skip over files that don't need to be patched.
+            if os.path.islink(path) or not shebang_too_long(path):
                 continue
 
-        # test the file for a long shebang, and filter
-        if shebang_too_long(path):
-            filter_shebang(path)
+            filter_shebang(path, use_sbang_in_PATH)
+            patched_files.append(file)
+
+    return patched_files
 
 
 def install_sbang():
@@ -157,6 +158,21 @@ def install_sbang():
     fs.set_install_permissions(sbang_bin_dir)
 
 
+def filter_shebangs_in_directory_and_warn(directory):
+    paths = filter_shebangs_in_directory(directory)
+
+    if not (paths and sbang_shebang_itself_too_long()):
+        return
+
+    short_list = elide_list(paths, 4)
+    sbang_bin = os.path.dirname(sbang_install_path())
+    tty.warn("Failed to shorten shebang lines of {0} files {1}, because sbang's "
+             "install path ({2}) is too long. For the installation to work, it is "
+             "required to have sbang in your PATH. Alternatively, you can shorten the "
+             "install root (config:install_tree:root).".format(
+                 len(paths), short_list, sbang_bin))
+
+
 def post_install(spec):
     """This hook edits scripts so that they call /bin/bash
     $spack_prefix/bin/sbang instead of something longer than the
@@ -167,10 +183,15 @@ def post_install(spec):
         return
 
     install_sbang()
-
-    for directory, _, filenames in os.walk(spec.prefix):
-        filter_shebangs_in_directory(directory, filenames)
+    filter_shebangs_in_directory_and_warn(spec.prefix)
 
 
 class SbangPathError(spack.error.SpackError):
     """Raised when the install tree root is too long for sbang to work."""
+
+    def __init__(self):
+        shebang_len = len(sbang_shebang_line())
+        fmt = ('Install tree root is too long. Spack cannot patch shebang lines'
+               ' when script path length ({0}) exceeds limit ({1}).')
+        msg = fmt.format(shebang_len, shebang_limit)
+        super(SbangPathError, self).__init__(msg)

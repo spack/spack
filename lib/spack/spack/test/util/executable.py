@@ -33,7 +33,7 @@ print(u'\\xc3')
 
         # make it executable
         fs.set_executable(script_name)
-        filter_shebangs_in_directory('.', [script_name])
+        filter_shebangs_in_directory('.')
 
         # read the unicode back in and see whether things work
         script = ex.Executable('./%s' % script_name)

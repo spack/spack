@@ -9,6 +9,8 @@ import os.path
 import pytest
 
 import spack.binary_distribution
+import spack.hooks.sbang
+import spack.main
 import spack.spec
 
 install = spack.main.SpackCommand('install')
@@ -39,3 +41,19 @@ def test_build_tarball_overwrite(
 
         with pytest.raises(spack.binary_distribution.NoOverwriteException):
             spack.binary_distribution.build_tarball(spec, '.', unsigned=True)
+
+
+def test_sbang_too_long_makes_create_tarball_error(
+    monkeypatch, tmpdir, install_mockery
+):
+    # When sbang is installed in a path that's too long to be exec'd by shebang,
+    # spack *may* be using #!/usr/bin/env sbang, which we currently don't allow in a
+    # binary cache.
+
+    monkeypatch.setattr(
+        spack.hooks.sbang, 'sbang_shebang_itself_too_long', lambda: True)
+
+    spec = spack.spec.Spec('trivial-install-test-package').concretized()
+
+    with pytest.raises(spack.hooks.sbang.SbangPathError):
+        spack.binary_distribution.build_tarball(spec, str(tmpdir), unsigned=True)

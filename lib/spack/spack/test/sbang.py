@@ -227,19 +227,19 @@ def test_install_sbang(install_mockery):
     check_sbang_installation()
 
 
-def test_install_sbang_too_long(tmpdir):
+def test_install_sbang_too_long(tmpdir, monkeypatch, capfd):
     root = str(tmpdir)
-    num_extend = sbang.shebang_limit - len(root) - len('/bin/sbang')
-    long_path = root
-    while num_extend > 1:
-        add = min(num_extend, 255)
-        long_path = os.path.join(long_path, 'e' * add)
-        num_extend -= add
-    with spack.store.use_store(spack.store.Store(long_path)):
-        with pytest.raises(sbang.SbangPathError) as exc_info:
-            sbang.sbang_install_path()
 
-    err = str(exc_info.value)
-    assert 'root is too long' in err
-    assert 'exceeds limit' in err
-    assert 'cannot patch' in err
+    monkeypatch.setattr(sbang, 'sbang_shebang_itself_too_long', lambda: True)
+
+    # Create a long path exceeding the shebang limit.
+    interpreter = os.path.join(os.sep + ("x" * sbang.shebang_limit), "interpreter")
+
+    # Create a file that should be patched.
+    with open(os.path.join(root, 'script.sh'), 'w') as f:
+        f.write("#!{0}".format(interpreter))
+
+    sbang.filter_shebangs_in_directory_and_warn(root)
+    _, err = capfd.readouterr()
+    assert "Warning: Failed to shorten shebang lines" in err
+    assert "script.sh" in err
