@@ -45,6 +45,7 @@ class SuperluDist(CMakePackage, CudaPackage):
     depends_on('lapack')
     depends_on('parmetis')
     depends_on('metis@5:')
+    depends_on('cmake@3.18.1:', type='build', when='@7.1.0:')
 
     conflicts('+cuda', when='@:6.3')
 
