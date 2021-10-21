@@ -4797,7 +4797,9 @@ class SpecParser(spack.parse.Parser):
         self.expect(ID)
 
         dag_hash = self.token.value
-        matches = spack.store.db.get_by_hash(dag_hash)
+        matches = spack.store.db.get_by_hash(dag_hash) or list()
+        matches.extend(
+            spack.binary_distribution.binary_index.find_hash_prefix(dag_hash))
         if not matches:
             raise NoSuchHashError(dag_hash)
 

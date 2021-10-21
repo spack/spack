@@ -171,10 +171,18 @@ class BinaryCacheIndex(object):
 
             self._index_file_cache.init_entry(cache_key)
             cache_path = self._index_file_cache.cache_path(cache_key)
+
+            import time
+            t0 = time.time()
+
             with self._index_file_cache.read_transaction(cache_key):
                 db._read_from_file(cache_path)
+            t1 = time.time()
+            tty.msg("Read DB: " + str(t1 - t0))
 
             spec_list = db.query_local(installed=False, in_buildcache=True)
+            t2 = time.time()
+            tty.msg("Query DB: " + str(t2 - t1))
 
             for indexed_spec in spec_list:
                 dag_hash = indexed_spec.dag_hash()
@@ -247,6 +255,13 @@ class BinaryCacheIndex(object):
             return None
 
         return self._mirrors_for_spec[find_hash]
+
+    def find_hash_prefix(self, hash_prefix):
+        results = []
+        for dag_hash, info in self._mirrors_for_spec.items():
+            if dag_hash.startswith(hash_prefix):
+                results.append(info[0]['spec'])
+        return results
 
     def update_spec(self, spec, found_list):
         """

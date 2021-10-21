@@ -1518,7 +1518,7 @@ class Database(object):
     def query_local(self, *args, **kwargs):
         """Query only the local Spack database."""
         with self.read_transaction():
-            return sorted(self._query(*args, **kwargs))
+            return self._query(*args, **kwargs)
 
     if query_local.__doc__ is None:
         query_local.__doc__ = ""
