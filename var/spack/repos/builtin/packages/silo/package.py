@@ -56,6 +56,11 @@ class Silo(AutotoolsPackage):
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
     patch('H5FD_class_t-terminate.patch', when='@:4.10.2 ^hdf5@1.10.0:')
 
+    conflicts('+hzip', when="@4.11-bsd")
+    conflicts('+fpzip', when="@4.11-bsd")
+    conflicts('+hzip', when="@4.10.2-bsd")
+    conflicts('+fpzip', when="@4.10.2-bsd")
+
     def flag_handler(self, name, flags):
         spec = self.spec
         if name == 'ldflags':
