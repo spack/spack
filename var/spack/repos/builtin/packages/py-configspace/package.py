@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyConfigSpace(PythonPackage):
+class PyConfigspace(PythonPackage):
     """Creation and manipulation of parameter configuration spaces for
        automated algorithm configuration and hyperparameter tuning."""
 
