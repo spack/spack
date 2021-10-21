@@ -16,7 +16,7 @@ popd
 :: Check if Python is on the PATH
 if not defined python_pf_ver (
 (for /f "delims=" %%F in ('where python.exe') do (
-                                                    set python_pf_ver=%%F
+                                                    set "python_pf_ver=%%F"
                                                     goto :found_python
                                                   ) ) 2> NUL
 )
@@ -25,19 +25,19 @@ if not defined python_pf_ver (
     :: If not, look for Python from the Spack installer
     :get_builtin
     (for /f "tokens=*" %%g in ('dir /b /a:d "!spackinstdir!\Python*"') do (
-        set python_ver=%%g)) 2> NUL
+        set "python_ver=%%g")) 2> NUL
 
     if not defined python_ver (
         echo Python was not found on your system.
         echo Please install Python or add Python to your PATH.
     ) else (
-        set py_path=!spackinstdir!\!python_ver!
-        set py_exe=!py_path!\python.exe
+        set "py_path=!spackinstdir!\!python_ver!"
+        set "py_exe=!py_path!\python.exe"
     )
     goto :exitpoint
 ) else (
     :: Python is already on the path
-    set py_exe=!python_pf_ver!
+    set "py_exe=!python_pf_ver!"
     (for /F "tokens=* USEBACKQ" %%F in (
         `"!py_exe!" --version`) do (set "output=%%F")) 2>NUL
     if not "!output:Microsoft Store=!"=="!output!" goto :get_builtin

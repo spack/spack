@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 import pytest
 
 import spack.installer as inst
@@ -19,6 +21,8 @@ def test_build_request_errors(install_mockery):
         inst.BuildRequest(pkg, {})
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_build_request_basics(install_mockery):
     spec = spack.spec.Spec('dependent-install')
     spec.concretize()
@@ -35,6 +39,8 @@ def test_build_request_basics(install_mockery):
     assert 'install_deps' in request.install_args
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_build_request_strings(install_mockery):
     """Tests of BuildRequest repr and str for coverage purposes."""
     # Using a package with one dependency

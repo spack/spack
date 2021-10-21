@@ -149,6 +149,7 @@ class TestInstall:
                 fs.install('source/a/*/*', 'dest/1')
 
 
+@pytest.mark.skipif(os.name == 'nt', reason="Skip test on Windows")
 class TestCopyTree:
     """Tests for ``filesystem.copy_tree``"""
 
@@ -237,6 +238,7 @@ class TestCopyTree:
                 fs.copy_tree('source', 'source/sub/directory')
 
 
+@pytest.mark.skipif(os.name == 'nt', reason="Skip test on Windows")
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
 
@@ -365,6 +367,12 @@ def test_recursive_search_of_headers_from_prefix(
     prefix = str(installation_dir_with_headers)
     header_list = fs.find_all_headers(prefix)
 
+    include_dirs = header_list.directories
+
+    if sys.platform == "win32":
+        header_list = [header.replace("/", "\\") for header in header_list]
+        include_dirs = [dir.replace("/", "\\") for dir in include_dirs]
+
     # Check that the header files we expect are all listed
     assert os.path.join(prefix, 'include', 'ex3.h') in header_list
     assert os.path.join(prefix, 'include', 'boost', 'ex3.h') in header_list
@@ -372,20 +380,32 @@ def test_recursive_search_of_headers_from_prefix(
     assert os.path.join(prefix, 'path', 'to', 'subdir', 'ex2.h') in header_list
 
     # Check that when computing directories we exclude <prefix>/include/boost
-    include_dirs = header_list.directories
     assert os.path.join(prefix, 'include') in include_dirs
     assert os.path.join(prefix, 'include', 'boost') not in include_dirs
     assert os.path.join(prefix, 'path', 'to') in include_dirs
     assert os.path.join(prefix, 'path', 'to', 'subdir') in include_dirs
 
 
-@pytest.mark.parametrize('list_of_headers,expected_directories', [
-    (['/pfx/include/foo.h', '/pfx/include/subdir/foo.h'], ['/pfx/include']),
-    (['/pfx/include/foo.h', '/pfx/subdir/foo.h'],
-     ['/pfx/include', '/pfx/subdir']),
-    (['/pfx/include/subdir/foo.h', '/pfx/subdir/foo.h'],
-     ['/pfx/include', '/pfx/subdir'])
-])
+if sys.platform == "win32":
+    # TODO: Test \\s
+    dir_list = [
+        (['C:/pfx/include/foo.h', 'C:/pfx/include/subdir/foo.h'], ['C:/pfx/include']),
+        (['C:/pfx/include/foo.h', 'C:/pfx/subdir/foo.h'],
+         ['C:/pfx/include', 'C:/pfx/subdir']),
+        (['C:/pfx/include/subdir/foo.h', 'C:/pfx/subdir/foo.h'],
+         ['C:/pfx/include', 'C:/pfx/subdir'])
+    ]
+else:
+    dir_list = [
+        (['/pfx/include/foo.h', '/pfx/include/subdir/foo.h'], ['/pfx/include']),
+        (['/pfx/include/foo.h', '/pfx/subdir/foo.h'],
+         ['/pfx/include', '/pfx/subdir']),
+        (['/pfx/include/subdir/foo.h', '/pfx/subdir/foo.h'],
+         ['/pfx/include', '/pfx/subdir'])
+    ]
+
+
+@pytest.mark.parametrize('list_of_headers,expected_directories', dir_list)
 def test_computation_of_header_directories(
         list_of_headers, expected_directories
 ):
@@ -394,23 +414,32 @@ def test_computation_of_header_directories(
 
 
 def test_headers_directory_setter():
+    if sys.platform == "win32":
+        # TODO: Test with \\'s
+        root = "C:/pfx/include/subdir"
+    else:
+        root = "/pfx/include/subdir"
     hl = fs.HeaderList(
-        ['/pfx/include/subdir/foo.h', '/pfx/include/subdir/bar.h']
+        [root + '/foo.h', root + '/bar.h']
     )
 
     # Set directories using a list
-    hl.directories = ['/pfx/include/subdir']
-    assert hl.directories == ['/pfx/include/subdir']
+    hl.directories = [root]
+    assert hl.directories == [root]
 
     # If it's a single directory it's fine to not wrap it into a list
     # when setting the property
-    hl.directories = '/pfx/include/subdir'
-    assert hl.directories == ['/pfx/include/subdir']
+    hl.directories = root
+    assert hl.directories == [root]
 
     # Paths are normalized, so it doesn't matter how many backslashes etc.
     # are present in the original directory being used
-    hl.directories = '/pfx/include//subdir/'
-    assert hl.directories == ['/pfx/include/subdir']
+    if sys.platform == "win32":
+        # TODO: Test with \\'s
+        hl.directories = "C:/pfx/include//subdir"
+    else:
+        hl.directories = '/pfx/include//subdir/'
+    assert hl.directories == [root]
 
     # Setting an empty list is allowed and returns an empty list
     hl.directories = []
@@ -421,26 +450,53 @@ def test_headers_directory_setter():
     assert hl.directories == []
 
 
-@pytest.mark.parametrize('path,entry,expected', [
-    ('/tmp/user/root', None,
-     (['/tmp', '/tmp/user', '/tmp/user/root'], '', [])),
-    ('/tmp/user/root', 'tmp', ([], '/tmp', ['/tmp/user', '/tmp/user/root'])),
-    ('/tmp/user/root', 'user', (['/tmp'], '/tmp/user', ['/tmp/user/root'])),
-    ('/tmp/user/root', 'root', (['/tmp', '/tmp/user'], '/tmp/user/root', [])),
-    ('relative/path', None, (['relative', 'relative/path'], '', [])),
-    ('relative/path', 'relative', ([], 'relative', ['relative/path'])),
-    ('relative/path', 'path', (['relative'], 'relative/path', []))
-])
+if sys.platform == "win32":
+    # TODO: Test \\s
+    paths = [
+        ('C:/user/root', None,
+         (['C:/', 'C:/user', 'C:/user/root'], '', [])),
+        ('C:/user/root', 'C:/', ([], 'C:/', ['C:/user', 'C:/user/root'])),
+        ('C:/user/root', 'user', (['C:/'], 'C:/user', ['C:/user/root'])),
+        ('C:/user/root', 'root', (['C:/', 'C:/user'], 'C:/user/root', [])),
+        ('relative/path', None, (['relative', 'relative/path'], '', [])),
+        ('relative/path', 'relative', ([], 'relative', ['relative/path'])),
+        ('relative/path', 'path', (['relative'], 'relative/path', []))
+    ]
+else:
+    paths = [
+        ('/tmp/user/root', None,
+         (['/tmp', '/tmp/user', '/tmp/user/root'], '', [])),
+        ('/tmp/user/root', 'tmp', ([], '/tmp', ['/tmp/user', '/tmp/user/root'])),
+        ('/tmp/user/root', 'user', (['/tmp'], '/tmp/user', ['/tmp/user/root'])),
+        ('/tmp/user/root', 'root', (['/tmp', '/tmp/user'], '/tmp/user/root', [])),
+        ('relative/path', None, (['relative', 'relative/path'], '', [])),
+        ('relative/path', 'relative', ([], 'relative', ['relative/path'])),
+        ('relative/path', 'path', (['relative'], 'relative/path', []))
+    ]
+
+
+@pytest.mark.parametrize('path,entry,expected', paths)
 def test_partition_path(path, entry, expected):
     assert fs.partition_path(path, entry) == expected
 
 
-@pytest.mark.parametrize('path,expected', [
-    ('', []),
-    ('/tmp/user/dir', ['/tmp', '/tmp/user', '/tmp/user/dir']),
-    ('./some/sub/dir', ['./some', './some/sub', './some/sub/dir']),
-    ('another/sub/dir', ['another', 'another/sub', 'another/sub/dir'])
-])
+if sys.platform == "win32":
+    path_list = [
+        ('', []),
+        ('C:\\user\\dir', ['C:/', 'C:/user', 'C:/user/dir']),
+        ('./some/sub/dir', ['./some', './some/sub', './some/sub/dir']),
+        ('another/sub/dir', ['another', 'another/sub', 'another/sub/dir'])
+    ]
+else:
+    path_list = [
+        ('', []),
+        ('/tmp/user/dir', ['/tmp', '/tmp/user', '/tmp/user/dir']),
+        ('./some/sub/dir', ['./some', './some/sub', './some/sub/dir']),
+        ('another/sub/dir', ['another', 'another/sub', 'another/sub/dir'])
+    ]
+
+
+@pytest.mark.parametrize('path,expected', path_list)
 def test_prefixes(path, expected):
     assert fs.prefixes(path) == expected
 

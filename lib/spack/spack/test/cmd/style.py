@@ -5,6 +5,7 @@
 
 import filecmp
 import os
+import posixpath
 import shutil
 import sys
 
@@ -86,7 +87,13 @@ def flake8_package_with_errors(scope="function"):
 def test_changed_files(flake8_package):
     # changed_files returns file paths relative to the root
     # directory of Spack. Convert to absolute file paths.
-    files = [os.path.join(spack.paths.prefix, path) for path in changed_files()]
+    files = [
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
+        for path in changed_files()
+    ]
+
+    if sys.platform == "win32":
+        files = [f.replace("\\", "/") for f in files]
 
     # There will likely be other files that have changed
     # when these tests are run
@@ -114,9 +121,12 @@ def test_changed_no_base(tmpdir, capfd):
 def test_changed_files_all_files(flake8_package):
     # it's hard to guarantee "all files", so do some sanity checks.
     files = set([
-        os.path.join(spack.paths.prefix, path)
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
         for path in changed_files(all_files=True)
     ])
+
+    if sys.platform == "win32":
+        files = [f.replace("\\", "/") for f in files]
 
     # spack has a lot of files -- check that we're in the right ballpark
     assert len(files) > 6000
@@ -126,13 +136,13 @@ def test_changed_files_all_files(flake8_package):
     assert zlib.module.__file__ in files
 
     # a core spack file
-    assert os.path.join(spack.paths.module_path, "spec.py") in files
+    assert posixpath.join(spack.paths.module_path, "spec.py") in files
 
     # a mock package
     assert flake8_package in files
 
     # this test
-    assert __file__ in files
+    assert __file__.replace("\\", "/") in files
 
     # ensure externals are excluded
     assert not any(f.startswith(spack.paths.external_path) for f in files)

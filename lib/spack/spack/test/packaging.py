@@ -12,6 +12,7 @@ import platform
 import re
 import shutil
 import stat
+import sys
 
 import pytest
 
@@ -47,6 +48,8 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
@@ -189,6 +192,8 @@ echo $PATH"""
     bindist._cached_specs = set()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('install_mockery')
 def test_relocate_text(tmpdir):
     spec = Spec('trivial-install-test-package')
@@ -212,6 +217,8 @@ def test_relocate_text(tmpdir):
     bindist._cached_specs = set()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_relocate_links(tmpdir):
     with tmpdir.as_cwd():
         old_layout_root = os.path.join(
@@ -253,6 +260,8 @@ def test_needs_relocation():
     assert needs_binary_relocation('application', 'x-mach-binary')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_replace_paths(tmpdir):
     with tmpdir.as_cwd():
         suffix = 'dylib' if platform.system().lower() == 'darwin' else 'so'
@@ -462,6 +471,8 @@ def test_replace_paths(tmpdir):
                             }
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_macho_make_paths():
     out = macho_make_paths_relative('/Users/Shared/spack/pkgC/lib/libC.dylib',
                                     '/Users/Shared/spack',

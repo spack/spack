@@ -8,7 +8,8 @@ Utility functions for parsing, formatting, and manipulating URLs.
 """
 
 import itertools
-import os.path
+import ntpath
+import posixpath
 import re
 
 import six.moves.urllib.parse as urllib_parse
@@ -20,16 +21,16 @@ import spack.util.path
 def _split_all(path):
     """Split path into its atomic components.
 
-    Returns the shortest list, L, of strings such that os.path.join(*L) == path
-    and os.path.split(element) == ('', element) for every element in L except
-    possibly the first.  This first element may possibly have the value of '/',
-    or some other OS-dependent path root.
+    Returns the shortest list, L, of strings such that posixpath.join(*L) ==
+    path and posixpath.split(element) == ('', element) for every element in L
+    except possibly the first.  This first element may possibly have the value
+    of '/'.
     """
     result = []
     a = path
     old_a = None
     while a != old_a:
-        (old_a, (a, b)) = a, os.path.split(a)
+        (old_a, (a, b)) = a, posixpath.split(a)
 
         if a or b:
             result.insert(0, b or '/')
@@ -47,7 +48,15 @@ def local_file_path(url):
         url = parse(url)
 
     if url.scheme == 'file':
+        is_windows_path = (len(url.netloc) == 2 and
+                           url.netloc[1] == ':' and
+                           'A' <= url.netloc[0] and
+                           url.netloc[0] <= 'Z')
+        if is_windows_path:
+            return ntpath.abspath(ntpath.join(url.netloc, '\\', url.path))
+
         return url.path
+
     return None
 
 
@@ -68,10 +77,48 @@ def parse(url, scheme='file'):
     (scheme, netloc, path, params, query, _) = url_obj
     scheme = (scheme or 'file').lower()
 
+    # This is the first way that a windows path can be parsed.
+    # (The user leaves out the file:// scheme.)
+    #   examples:
+    #     C:\\a\\b\\c
+    #     X:/a/b/c
+    is_windows_path = (len(scheme) == 1 and 'a' <= scheme and scheme <= 'z')
+    if is_windows_path:
+        netloc = scheme.upper() + ':'
+        scheme = 'file'
+
     if scheme == 'file':
+        # If the above windows path case did not hold, check the second case.
+        if not is_windows_path:
+            # This is the other way that a windows path can be parsed.
+            # (The user explicitly provides the file:// scheme.)
+            #   examples:
+            #     file://C:\\a\\b\\c
+            #     file://X:/a/b/c
+            is_windows_path = (len(netloc) == 2 and
+                               netloc[1] == ':' and
+                               (('A' <= netloc[0] and netloc[0] <= 'Z') or
+                                ('a' <= netloc[0] and netloc[0] <= 'z')))
+            if is_windows_path:
+                netloc = netloc[0].upper() + ':'
+
         path = spack.util.path.canonicalize_path(netloc + path)
+        path = re.sub(r'\\', '/', path)
         path = re.sub(r'^/+', '/', path)
-        netloc = ''
+
+        if not is_windows_path:
+            netloc = ''
+
+        # If canonicalize_path() returns a path with a drive letter (e.g.: on
+        # windows), we need to pop that part off from the head of the string.
+        # We also need to set netloc == that part to handle the case of a local
+        # file path being passed. (e.g.: file://../a/b/c)
+        update_netloc = (len(path) >= 2 and
+                         path[1] == ':' and
+                         (('A' <= path[0] and path[0] <= 'Z') or
+                          ('a' <= path[0] and path[0] <= 'z')))
+        if update_netloc:
+            netloc, path = path[:2], path[2:]
 
     return urllib_parse.ParseResult(scheme=scheme,
                                     netloc=netloc,
@@ -97,13 +144,13 @@ def join(base_url, path, *extra, **kwargs):
 
     If resolve_href is True, treat the base URL as though it where the locator
     of a web page, and the remaining URL path components as though they formed
-    a relative URL to be resolved against it (i.e.: as in os.path.join(...)).
+    a relative URL to be resolved against it (i.e.: as in posixpath.join(...)).
     The result is an absolute URL to the resource to which a user's browser
     would navigate if they clicked on a link with an "href" attribute equal to
     the relative URL.
 
     If resolve_href is False (default), then the URL path components are joined
-    as in os.path.join().
+    as in posixpath.join().
 
     Note: file:// URL path components are not canonicalized as part of this
     operation.  To canonicalize, pass the joined url to format().
@@ -192,7 +239,7 @@ def join(base_url, path, *extra, **kwargs):
                 result = urllib_parse.ParseResult(
                     scheme=result.scheme,
                     netloc='',
-                    path=os.path.abspath(result.netloc + result.path),
+                    path=posixpath.abspath(result.netloc + result.path),
                     params=result.params,
                     query=result.query,
                     fragment=None)
@@ -227,11 +274,11 @@ def _join(base_url, path, *extra, **kwargs):
     base_path_args.append(base_path)
 
     if resolve_href:
-        new_base_path, _ = os.path.split(os.path.join(*base_path_args))
+        new_base_path, _ = posixpath.split(posixpath.join(*base_path_args))
         base_path_args = [new_base_path]
 
     base_path_args.extend(path_tokens)
-    base_path = os.path.relpath(os.path.join(*base_path_args), '/fake-root')
+    base_path = posixpath.relpath(posixpath.join(*base_path_args), '/fake-root')
 
     if scheme == 's3':
         path_tokens = [
@@ -240,7 +287,7 @@ def _join(base_url, path, *extra, **kwargs):
 
         if path_tokens:
             netloc = path_tokens.pop(0)
-            base_path = os.path.join('', *path_tokens)
+            base_path = posixpath.join('', *path_tokens)
 
     return format(urllib_parse.ParseResult(scheme=scheme,
                                            netloc=netloc,

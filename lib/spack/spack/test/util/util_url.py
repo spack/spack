@@ -6,6 +6,7 @@
 """Test Spack's URL handling utility functions."""
 import os
 import os.path
+import sys
 
 import pytest
 
@@ -34,11 +35,11 @@ def test_url_parse():
     assert(parsed.netloc == '')
     assert(parsed.path == '/path/to/resource')
 
-    parsed = url_util.parse('file://path/to/resource')
-    assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
-    expected = os.path.abspath(os.path.join('path', 'to', 'resource'))
-    assert(parsed.path == expected)
+    if sys.platform != 'win32':
+        parsed = url_util.parse('file://path/to/resource')
+        assert(parsed.scheme == 'file')
+        expected = os.path.abspath(os.path.join('path', 'to', 'resource'))
+        assert(parsed.path == expected)
 
     parsed = url_util.parse('https://path/to/resource')
     assert(parsed.scheme == 'https')
@@ -48,15 +49,23 @@ def test_url_parse():
     spack_root = spack.paths.spack_root
     parsed = url_util.parse('$spack')
     assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
-    assert(parsed.path == spack_root)
+    if sys.platform != 'win32':
+        assert(parsed.netloc == '')
 
-    parsed = url_util.parse('/a/b/c/$spack')
-    assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
-    expected = os.path.abspath(os.path.join(
-        '/', 'a', 'b', 'c', './' + spack_root))
-    assert(parsed.path == expected)
+    if sys.platform == "win32":
+        spack_root = spack_root.replace('\\', '/')
+
+    assert(parsed.netloc + parsed.path == spack_root)
+
+    # Test that sticking the spack root at the end of a posix path resolves
+    # correctly.
+    if sys.platform != "win32":
+        parsed = url_util.parse('/a/b/c/$spack')
+        assert(parsed.scheme == 'file')
+        assert(parsed.netloc == '')
+        expected = os.path.abspath(os.path.join(
+            '/', 'a', 'b', 'c', './' + spack_root))
+        assert(parsed.path == expected)
 
 
 def test_url_local_file_path():
@@ -68,17 +77,19 @@ def test_url_local_file_path():
     lfp = url_util.local_file_path('file:///a/b/c.txt')
     assert(lfp == '/a/b/c.txt')
 
-    lfp = url_util.local_file_path('file://a/b/c.txt')
-    expected = os.path.abspath(os.path.join('a', 'b', 'c.txt'))
-    assert(lfp == expected)
+    if sys.platform != "win32":
+        lfp = url_util.local_file_path('file://a/b/c.txt')
+        expected = os.path.abspath(os.path.join('a', 'b', 'c.txt'))
+        assert(lfp == expected)
 
     lfp = url_util.local_file_path('$spack/a/b/c.txt')
     expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
     assert(lfp == expected)
 
-    lfp = url_util.local_file_path('file:///$spack/a/b/c.txt')
-    expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
-    assert(lfp == expected)
+    if sys.platform != "win32":
+        lfp = url_util.local_file_path('file:///$spack/a/b/c.txt')
+        expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
+        assert(lfp == expected)
 
     lfp = url_util.local_file_path('file://$spack/a/b/c.txt')
     expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
@@ -177,20 +188,21 @@ def test_url_join_local_paths():
     # file:// URL path components are *NOT* canonicalized
     spack_root = spack.paths.spack_root
 
-    join_result = url_util.join('/a/b/c', '$spack')
-    assert(join_result == 'file:///a/b/c/$spack')  # not canonicalized
-    format_result = url_util.format(join_result)
-    # canoncalize by hand
-    expected = url_util.format(os.path.abspath(os.path.join(
-        '/', 'a', 'b', 'c', '.' + spack_root)))
-    assert(format_result == expected)
+    if sys.platform != 'win32':
+        join_result = url_util.join('/a/b/c', '$spack')
+        assert(join_result == 'file:///a/b/c/$spack')  # not canonicalized
+        format_result = url_util.format(join_result)
+        # canoncalize by hand
+        expected = url_util.format(os.path.abspath(os.path.join(
+            '/', 'a', 'b', 'c', '.' + spack_root)))
+        assert(format_result == expected)
 
-    # see test_url_join_absolute_paths() for more on absolute path components
-    join_result = url_util.join('/a/b/c', '/$spack')
-    assert(join_result == 'file:///$spack')  # not canonicalized
-    format_result = url_util.format(join_result)
-    expected = url_util.format(spack_root)
-    assert(format_result == expected)
+        # see test_url_join_absolute_paths() for more on absolute path components
+        join_result = url_util.join('/a/b/c', '/$spack')
+        assert(join_result == 'file:///$spack')  # not canonicalized
+        format_result = url_util.format(join_result)
+        expected = url_util.format(spack_root)
+        assert(format_result == expected)
 
     # For s3:// URLs, the "netloc" (bucket) is considered part of the path.
     # Make sure join() can cross bucket boundaries in this case.
@@ -270,6 +282,10 @@ def test_url_join_absolute_paths():
     # (We just need...
     cwd = os.getcwd()
     # ...to work out what resource it points to)
+
+    if sys.platform == "win32":
+        cwd.replace('\\', '/')
+        cwd = '/' + cwd
 
     # So, even though parse() assumes "file://" URL, the scheme is still
     # significant in URL path components passed to join(), even if the base

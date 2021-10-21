@@ -111,9 +111,14 @@ def read_from_url(url, accept_content_type=None):
             if not __UNABLE_TO_VERIFY_SSL:
                 context = ssl._create_unverified_context()
 
-    req = Request(url_util.format(url))
+    url_scheme = url.scheme
+    url = url_util.format(url)
+    if sys.platform == "win32" and url_scheme == "file":
+        url = url.replace("\\", "/")
+    req = Request(url)
+
     content_type = None
-    is_web_url = url.scheme in ('http', 'https')
+    is_web_url = url_scheme in ('http', 'https')
     if accept_content_type and is_web_url:
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
@@ -144,7 +149,7 @@ def read_from_url(url, accept_content_type=None):
 
     if reject_content_type:
         tty.debug("ignoring page {0}{1}{2}".format(
-            url_util.format(url),
+            url,
             " with content type " if content_type is not None else "",
             content_type or ""))
 
