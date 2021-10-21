@@ -89,11 +89,7 @@ class Nsimd(CMakePackage):
             # x86
             if 'avx512' in self.spec.target:
                 simd = 'AVX512_SKYLAKE'
-            elif ('avx512f' in self.spec.target and
-                  'avx512pf' in self.spec.target and
-                  'avx512er' in self.spec.target and
-                  'avx512cd' in self.spec.target and
-                  'avx512vl' in self.spec.target):
+            elif self.spec.satisfies('target=mic_knl'):
                 simd = 'AVX512_KNL'
             elif 'avx2' in self.spec.target:
                 simd = 'AVX2'
@@ -107,14 +103,14 @@ class Nsimd(CMakePackage):
             elif 'sve' in self.spec.target:
                 # We require an explicit choice for particluar bit widths
                 simd = 'SVE'
-            elif self.spec.target.microarchitecture == 'aarch64':
+            elif self.spec.satisfies('target=aarch64'):
                 simd = 'AARCH64'
             elif 'neon' in self.spec.target:
                 simd = 'NEON128'
             # POWER
             elif 'vsx' in self.spec.target:
                 simd = 'VSX'
-            elif self.spec.target.microarchitecture in ['ppc64', 'ppc64le']:
+            elif self.spec.satisfies('target=ppc64') or self.spec.satisfies('target=ppc64le'):
                 simd = 'VMX'
             # Unknown CPU architecture
             else:
