@@ -10,6 +10,8 @@ class PyPyaml(PythonPackage):
     """PyYAML-based python module to produce pretty and readable
        YAML-serialized data."""
 
+    maintainers = ['Kerilk']
+
     homepage = "https://github.com/mk-fg/pretty-yaml"
     pypi     = "pyaml/pyaml-21.8.3.tar.gz"
 

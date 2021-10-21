@@ -14,6 +14,8 @@ class PyDhScikitOptimize(PythonPackage):
 
        The library is built on top of NumPy, SciPy and Scikit-Learn."""
 
+    maintainers = ['Kerilk']
+
     homepage = "https://github.com/deephyper/scikit-optimize"
     url      = "https://github.com/deephyper/scikit-optimize/archive/refs/tags/0.9.0.tar.gz"
 

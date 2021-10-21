@@ -10,6 +10,8 @@ class PyConfigSpace(PythonPackage):
     """Creation and manipulation of parameter configuration spaces for
        automated algorithm configuration and hyperparameter tuning."""
 
+    maintainers = ['Kerilk']
+
     homepage = "https://automl.github.io/ConfigSpace/master/"
     pypi     = "ConfigSpace/ConfigSpace-0.4.20.tar.gz"
 
