@@ -1135,7 +1135,7 @@ def start_build_process(pkg, function, kwargs):
 
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
-        if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
+        if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
 
