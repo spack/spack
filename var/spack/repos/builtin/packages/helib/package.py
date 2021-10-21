@@ -8,8 +8,10 @@ from spack import *
 
 class Helib(CMakePackage):
     """HElib is an open-source (Apache License v2.0) software library that
-    implements homomorphic encryption (HE). Currently available schemes are
-    the implementations of the Brakerski-Gentry-Vaikuntanathan (BGV) scheme
+    implements homomorphic encryption (HE). 
+    
+    Currently available schemes are the implementations of the 
+    Brakerski-Gentry-Vaikuntanathan (BGV) scheme
     with bootstrapping and the Approximate Number scheme of Cheon-Kim-Kim-Song
     (CKKS), along with many optimizations to make homomorphic evaluation run
     faster, focusing mostly on effective use of the Smart-Vercauteren
