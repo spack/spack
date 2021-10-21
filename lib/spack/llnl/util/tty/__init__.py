@@ -6,11 +6,9 @@
 from __future__ import unicode_literals
 
 import contextlib
-import fcntl
 import os
 import struct
 import sys
-import termios
 import textwrap
 import traceback
 from datetime import datetime
@@ -18,6 +16,11 @@ from datetime import datetime
 import six
 from six import StringIO
 from six.moves import input
+from sys import platform as _platform
+
+if _platform != "win32":
+    import fcntl
+    import termios
 
 from llnl.util.tty.color import cescape, clen, cprint, cwrite
 
@@ -370,22 +373,28 @@ def hline(label=None, **kwargs):
 
 def terminal_size():
     """Gets the dimensions of the console: (rows, cols)."""
-    def ioctl_gwinsz(fd):
-        try:
-            rc = struct.unpack('hh', fcntl.ioctl(
-                fd, termios.TIOCGWINSZ, '1234'))
-        except BaseException:
-            return
-        return rc
-    rc = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
-    if not rc:
-        try:
-            fd = os.open(os.ctermid(), os.O_RDONLY)
-            rc = ioctl_gwinsz(fd)
-            os.close(fd)
-        except BaseException:
-            pass
-    if not rc:
-        rc = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
+    if _platform != "win32":
+        def ioctl_gwinsz(fd):
+            try:
+                rc = struct.unpack('hh', fcntl.ioctl(
+                    fd, termios.TIOCGWINSZ, '1234'))
+            except BaseException:
+                return
+            return rc
+        rc = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
+        if not rc:
+            try:
+                fd = os.open(os.ctermid(), os.O_RDONLY)
+                rc = ioctl_gwinsz(fd)
+                os.close(fd)
+            except BaseException:
+                pass
+        if not rc:
+            rc = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
 
-    return int(rc[0]), int(rc[1])
+        return int(rc[0]), int(rc[1])
+    else:
+        # return shutil.get_terminal_size()
+        # TODO: find python 2 compatible module to get terminal size
+        rc = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
+        return int(rc[0]), int(rc[1])
