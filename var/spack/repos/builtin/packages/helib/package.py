@@ -8,16 +8,15 @@ from spack import *
 
 class Helib(CMakePackage):
     """HElib is an open-source (Apache License v2.0) software library that
-    implements homomorphic encryption (HE). 
-    
-    Currently available schemes are the implementations of the 
+    implements homomorphic encryption (HE).
+
+    Currently available schemes are the implementations of the
     Brakerski-Gentry-Vaikuntanathan (BGV) scheme
     with bootstrapping and the Approximate Number scheme of Cheon-Kim-Kim-Song
     (CKKS), along with many optimizations to make homomorphic evaluation run
     faster, focusing mostly on effective use of the Smart-Vercauteren
     ciphertext packing techniques and the Gentry-Halevi-Smart optimizations.
-    See this report for a description of a few of the algorithms using in this
-    library."""
+    """
 
     homepage = "https://github.com/homenc/HElib"
     url      = "https://github.com/homenc/HElib/archive/refs/tags/v2.2.1.tar.gz"
