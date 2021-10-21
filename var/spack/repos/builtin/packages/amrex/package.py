@@ -263,9 +263,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
                 return in_file.read().strip()
 
 
-
-
-
     @run_after('build')
     def setup_smoke_test(self):
         self.cache_extra_test_sources(['Tests'])
@@ -278,12 +275,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         """Perform smoke tests on installed package."""
         join_path(self.test_suite.current_test_cache_dir, './Tests/CMakeTestInstall')
 
-
-        #cmake('--version')
-        #self.setup_build_environment(self.prefix+'/.spack/install_environment.json')
-        #self.setup_build_environment('/.spack/junk_environment.json')
-        #cmake('--version')
-
         # TODO: Remove/replace once self.spec['cmake'] is available here
         cmake_bin = self.cmake_bin(set=False)
 
@@ -291,16 +282,12 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         args.append('-S ./cache/amrex/Tests/CMakeTestInstall')
         args.append('-DAMReX_ROOT='+self.prefix)
         args.extend(self.cmake_args())
-        #print(args)
-        #cmake('-S ./cache/amrex/Tests/CMakeTestInstall', args)
         self.run_test(cmake_bin, args,
                      purpose='Build with same CMake version')
 
-        #cmake('-S ./cache/amrex/Tests/CMakeTestInstall', 
-        #      '-DAMReX_ROOT='+self.prefix,
-        #      '-DAMReX_FORTRAN=ON')
         make()
+
         self.run_test('install_test', ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs','max_step=1'],
                       ['finalized'],
-                      installed=False, purpose='AMReX Basic Smoke Test',
+                      installed=False, purpose='AMReX Stand-Alone Smoke Test',
                       skip_missing=False)
