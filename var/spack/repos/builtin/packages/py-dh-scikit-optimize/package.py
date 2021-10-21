@@ -33,6 +33,6 @@ class PyDhScikitOptimize(PythonPackage):
     depends_on('py-numpy@1.13.3:', type=('build', 'run'))
     depends_on('py-scipy@0.19.1:', type=('build', 'run'))
     depends_on('py-scikit-learn@0.20.0:', type=('build', 'run'))
-    depends_on('py-config-space@0.4.20:', type=('build', 'run'))
+    depends_on('py-configspace@0.4.20:', type=('build', 'run'))
 
     depends_on('py-matplotlib@2.0.0:',   when='+plots', type='run')
