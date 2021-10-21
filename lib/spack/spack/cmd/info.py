@@ -5,7 +5,9 @@
 
 from __future__ import print_function
 
+import argparse
 import textwrap
+from datetime import date
 
 from six.moves import zip_longest
 
@@ -13,7 +15,7 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
-import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
@@ -39,7 +41,15 @@ def padder(str_list, extra=0):
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['package'])
+    subparser.add_argument(
+        'pkg_spec',
+        nargs=argparse.REMAINDER,
+        help='Package name or, with --installed, spec')
+
+    subparser.add_argument(
+        '-i', '--installed',
+        action='store_true',
+        help='Show installation details for the provided spec')
 
 
 def section_title(s):
@@ -283,6 +293,86 @@ def print_text_info(pkg):
     color.cprint('')
 
 
+def print_deps(title, name, dep_dict, filter_name=False):
+    deps = dep_dict.items()
+    if not deps:
+        return
+
+    color.cprint('')
+    color.cprint(section_title('Recorded {0}:'.format(title)))
+    for _, value in deps:
+        dep_str = str(value).replace(name, '') if filter_name else str(value)
+        dep_str = dep_str.replace('-->', ' dependencies on')
+        color.cprint("    {0}".format(dep_str.strip()))
+
+
+def print_installed_info(args):
+    # Provide installation details for the installed spec
+    env = ev.active_environment()
+    specs = [spack.cmd.disambiguate_spec(spec, env)
+             for spec in spack.cmd.parse_specs(args.pkg_spec)]
+    if len(specs) != 1:
+        # Make sure to terminate if disambiguate doesn't do so
+        tty.die("Can only support one spec")
+
+    spec = specs[0]
+    dag = spec.dag_hash()
+    _, record = spack.store.db.query_by_spec_hash(dag)
+
+    pkg_vers = version('{0}@@{1}'.format(spec.name, spec.versions[0]))
+    header = section_title(
+        '{0}:   '
+    ).format(spec.package.build_system_class) + pkg_vers
+    color.cprint(header)
+
+    color.cprint('')
+    color.cprint(section_title('Hashes:'))
+    color.cprint("    DAG  = {0}".format(dag))
+    color.cprint("    full = {0}".format(spec.full_hash()))
+
+    color.cprint('')
+    how = 'Explicitly' if record.explicit else 'as Dependency'
+    installation = 'Installed {0}:   '.format(how)
+    when = date.fromtimestamp(record.installation_time).strftime("%A %d %B %Y")
+    color.cprint(section_title(installation) + when)
+    color.cprint("    architecture = {0}".format(spec.architecture))
+    color.cprint("    prefix       = {0}".format(record.path))
+
+    if spec.external:
+        color.cprint('')
+        color.cprint(section_title('External:'))
+        color.cprint("    path             = {0}".format(spec.external_path))
+        color.cprint("    module           = {0}".format(spec.external_modules))
+        color.cprint("    extra_attributes = {0}".format(spec.extra_attributes))
+
+    color.cprint('')
+    compiler = '{0}@@{1}'.format(spec.compiler.name, spec.compiler.versions[0])
+    color.cprint(section_title('Compiler:   ') + version(compiler))
+    for flag, value in spec.compiler_flags.items():
+        color.cprint("    {0} = {1}".format(flag, value))
+
+    color.cprint('')
+    color.cprint(section_title('Variant Settings:'))
+    variants = spec.variants.items()
+    if len(variants) > 1:
+        for _, value in variants:
+            color.cprint("    {0}".format(value))
+    else:
+        color.cprint("    None")
+
+    print_deps('Dependencies', spec.name, spec.dependencies_dict(), True)
+    print_deps('Dependents', spec.name, spec.dependents_dict(), False)
+
+
 def info(parser, args):
-    pkg = spack.repo.get(args.package)
+    if len(args.pkg_spec) != 1:
+        parser.subparsers.choices['info'].print_help()
+        tty.die("Only one package or spec is allowed")
+
+    if args.installed:
+        print_installed_info(args)
+        return
+
+    # Print the static package info
+    pkg = spack.repo.get(args.pkg_spec[0])
     print_text_info(pkg)
