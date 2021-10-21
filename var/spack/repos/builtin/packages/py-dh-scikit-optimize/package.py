@@ -19,9 +19,9 @@ class PyDhScikitOptimize(PythonPackage):
     maintainers = ['Kerilk']
 
     homepage = "https://github.com/deephyper/scikit-optimize"
-    url      = "https://github.com/deephyper/scikit-optimize/archive/refs/tags/0.9.0.tar.gz"
+    pypi     = "dh-scikit-optimize/dh-scikit-optimize-0.9.0.tar.gz"
 
-    version('0.9.0', sha256='d592db43bdaba300cd2433c08536119fa56d09b8be81922b0347d95dbd3f6250')
+    version('0.9.0', sha256='fe70aa57ec5150a3d356b2184f0dda1ecc4ecb7e82d35edac3980094d409d676')
 
     variant('plots', default=True,
             description='Build with plot support from py-matplotlib')
