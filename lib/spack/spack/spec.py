@@ -4803,8 +4803,8 @@ class SpecParser(spack.parse.Parser):
             # time, but if a hash prefix matches local installations and
             # remote installations, this will not inform the user that there
             # are possibly other matches.
-            matches = (spack.binary_distribution
-                       .binary_index.find_hash_prefix(dag_hash))
+            matches = set(spack.binary_distribution
+                          .binary_index.find_hash_prefix(dag_hash))
         else:
             tty.debug("Local matches found for hash ({0}) skip checking "
                       "binary indices.".format(dag_hash))
@@ -4817,7 +4817,7 @@ class SpecParser(spack.parse.Parser):
                 "Multiple packages specify hash beginning '%s'."
                 % dag_hash, *matches)
 
-        return matches[0]
+        return next(iter(matches))
 
     def spec(self, name):
         """Parse a spec out of the input. If a spec is supplied, initialize
