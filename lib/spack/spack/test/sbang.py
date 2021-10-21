@@ -275,3 +275,20 @@ def test_install_sbang_too_long(tmpdir):
     assert 'root is too long' in err
     assert 'exceeds limit' in err
     assert 'cannot patch' in err
+
+
+def test_sbang_hook_skips_nonexecutable_blobs(tmpdir):
+    # Write a binary blob to non-executable.sh, with a long interpreter "path"
+    # consisting of invalid UTF-8. The latter is technically not really necessary for
+    # the test, but binary blobs accidentally starting with b'#!' usually do not contain
+    # valid UTF-8, so we also ensure that Spack does not attempt to decode as UTF-8.
+    contents = b'#!' + b'\x80' * sbang.shebang_limit
+    file = str(tmpdir.join('non-executable.sh'))
+    with open(file, 'wb') as f:
+        f.write(contents)
+
+    sbang.filter_shebangs_in_directory(str(tmpdir))
+
+    # Make sure there is no sbang shebang.
+    with open(file, 'rb') as f:
+        assert b'sbang' not in f.readline()
