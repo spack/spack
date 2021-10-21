@@ -56,10 +56,7 @@ class GCSBucket(object):
         else:
             self.prefix = self.url.path
 
-        if not client:
-            self.client = gcs_client()
-        else:
-            self.client = client
+        self.client = client or gcs_client()
 
         self.bucket = None
         tty.debug('New GCS bucket:')
