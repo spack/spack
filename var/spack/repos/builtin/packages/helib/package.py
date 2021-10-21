@@ -43,11 +43,10 @@ class Helib(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            '-DENABLE_TEST=ON',
-            '-DGMP_DIR={0}'.format(spec['gmp'].prefix),
-            '-DNTL_DIR={0}'.format(spec['ntl'].prefix)
+            self.define('ENABLE_TEST', 'ON'),
+            self.define('GMP_DIR', spec['gmp'].prefix),
+            self.define('NTL_DIR', spec['ntl'].prefix),
+            self.define_from_variant('BUILD_SHARED', 'shared')
         ]
-        if '+shared' in spec:
-            args.append('-DBUILD_SHARED=ON')
 
         return args
