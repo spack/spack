@@ -27,7 +27,8 @@ import spack.platforms
 import spack.repo
 import spack.store
 
-_serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
+_serialize = sys.platform == 'win32' or (sys.version_info >= (3, 8)
+                                         and sys.platform == 'darwin')
 
 
 patches = None
