@@ -35,4 +35,4 @@ class PyDhScikitOptimize(PythonPackage):
     depends_on('py-scikit-learn@0.20.0:', type=('build', 'run'))
     depends_on('py-config-space@0.4.20:', type=('build', 'run'))
 
-    depends_on('py-matplotlib@2.0.0:',   when='+plots')
+    depends_on('py-matplotlib@2.0.0:',   when='+plots', type='run')
