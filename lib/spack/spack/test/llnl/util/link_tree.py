@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -52,6 +53,8 @@ def check_dir(filename):
     assert os.path.isdir(filename)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_merge_to_new_directory(stage, link_tree):
     with working_dir(stage.path):
         link_tree.merge('dest')
@@ -77,6 +80,8 @@ def test_merge_to_new_directory(stage, link_tree):
         assert not os.path.exists('dest')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_merge_to_new_directory_relative(stage, link_tree):
     with working_dir(stage.path):
         link_tree.merge('dest', relative=True)
@@ -102,6 +107,8 @@ def test_merge_to_new_directory_relative(stage, link_tree):
         assert not os.path.exists('dest')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_merge_to_existing_directory(stage, link_tree):
     with working_dir(stage.path):
 
@@ -135,6 +142,8 @@ def test_merge_to_existing_directory(stage, link_tree):
         assert not os.path.isfile('dest/c/d/e/7')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_merge_with_empty_directories(stage, link_tree):
     with working_dir(stage.path):
         mkdirp('dest/f/g')
@@ -155,6 +164,8 @@ def test_merge_with_empty_directories(stage, link_tree):
         assert os.path.isdir('dest/f/g')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_ignore(stage, link_tree):
     with working_dir(stage.path):
         touchp('source/.spec')

@@ -36,6 +36,7 @@ def nullcontext():
     yield
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="echo not implemented on windows")
 def test_log_python_output_with_echo(capfd, tmpdir):
     with tmpdir.as_cwd():
         with log_output('foo.txt', echo=True):
@@ -49,6 +50,7 @@ def test_log_python_output_with_echo(capfd, tmpdir):
         assert capfd.readouterr()[0] == 'logged\n'
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="echo not implemented on windows")
 def test_log_python_output_without_echo(capfd, tmpdir):
     with tmpdir.as_cwd():
         with log_output('foo.txt'):
@@ -62,6 +64,7 @@ def test_log_python_output_without_echo(capfd, tmpdir):
         assert capfd.readouterr()[0] == ''
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="echo not implemented on windows")
 def test_log_python_output_with_invalid_utf8(capfd, tmpdir):
     with tmpdir.as_cwd():
         with log_output('foo.txt'):
@@ -80,6 +83,7 @@ def test_log_python_output_with_invalid_utf8(capfd, tmpdir):
         assert capfd.readouterr()[0] == ''
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="echo not implemented on windows")
 def test_log_python_output_and_echo_output(capfd, tmpdir):
     with tmpdir.as_cwd():
         # echo two lines
@@ -100,6 +104,8 @@ def _log_filter_fn(string):
     return string.replace("foo", "bar")
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_log_output_with_filter(capfd, tmpdir):
     with tmpdir.as_cwd():
         with log_output('foo.txt', filter_fn=_log_filter_fn):
@@ -129,7 +135,7 @@ def test_log_output_with_filter(capfd, tmpdir):
     assert capfd.readouterr()[0] == 'bar blah\nblah bar\nbar bar\n'
 
 
-@pytest.mark.skipif(not which('echo'), reason="needs echo command")
+@pytest.mark.skipif(not which('echo') or os.name == 'nt', reason="needs echo command")
 def test_log_subproc_and_echo_output_no_capfd(capfd, tmpdir):
     echo = which('echo')
 
@@ -147,7 +153,7 @@ def test_log_subproc_and_echo_output_no_capfd(capfd, tmpdir):
                 assert f.read() == 'echo\nlogged\n'
 
 
-@pytest.mark.skipif(not which('echo'), reason="needs echo command")
+@pytest.mark.skipif(not which('echo') or os.name == 'nt', reason="needs echo command")
 def test_log_subproc_and_echo_output_capfd(capfd, tmpdir):
     echo = which('echo')
 

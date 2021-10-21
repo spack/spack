@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
+
+import pytest
 
 import llnl.util.filesystem as fs
 
@@ -23,6 +26,8 @@ echo v0.13.3
     assert spack.spack_version == get_version()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_get_version_match_git(tmpdir, working_env):
     git = str(tmpdir.join("git"))
     with open(git, "w") as f:

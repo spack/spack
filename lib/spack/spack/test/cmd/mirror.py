@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -41,6 +42,8 @@ def tmp_scope():
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.regression('8083')
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="MirrorCaches only work with file:// URLs")
 def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
     with capfd.disabled():
         output = mirror('create', '-d', str(tmpdir), 'externaltool')
@@ -48,6 +51,8 @@ def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
     assert 'as it is an external spec' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="MirrorCaches only work with file:// URLs")
 @pytest.mark.regression('12345')
 def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config,
                          mutable_mock_env_path):
@@ -81,6 +86,8 @@ def source_for_pkg_with_hash(mock_packages, tmpdir):
     pkg.versions[spack.version.Version('1.0')]['url'] = local_url
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="MirrorCaches only work with file:// URLs")
 def test_mirror_skip_unstable(tmpdir_factory, mock_packages, config,
                               source_for_pkg_with_hash):
     mirror_dir = str(tmpdir_factory.mktemp('mirror-dir'))
@@ -106,6 +113,7 @@ class MockMirrorArgs(object):
         self.exclude_specs = exclude_specs
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_exclude_specs(mock_packages, config):
     args = MockMirrorArgs(
         specs=['mpich'],
@@ -121,6 +129,7 @@ def test_exclude_specs(mock_packages, config):
     assert (not expected_exclude & set(mirror_specs))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_exclude_file(mock_packages, tmpdir, config):
     exclude_path = os.path.join(str(tmpdir), 'test-exclude.txt')
     with open(exclude_path, 'w') as exclude_file:
@@ -143,6 +152,7 @@ mpich@1.0
     assert (not expected_exclude & set(mirror_specs))
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_mirror_crud(tmp_scope, capsys):
     with capsys.disabled():
         mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')
@@ -198,6 +208,7 @@ def test_mirror_crud(tmp_scope, capsys):
         assert 'No mirrors configured' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_mirror_nonexisting(tmp_scope):
     with pytest.raises(SpackCommandError):
         mirror('remove', '--scope', tmp_scope, 'not-a-mirror')
@@ -207,6 +218,7 @@ def test_mirror_nonexisting(tmp_scope):
                'not-a-mirror', 'http://spack.io')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_mirror_name_collision(tmp_scope):
     mirror('add', '--scope', tmp_scope, 'first', '1')
 
@@ -214,6 +226,7 @@ def test_mirror_name_collision(tmp_scope):
         mirror('add', '--scope', tmp_scope, 'first', '1')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="hangs on windows")
 def test_mirror_destroy(install_mockery_mutable_config,
                         mock_packages, mock_fetch, mock_archive,
                         mutable_config, monkeypatch, tmpdir):

@@ -10,6 +10,7 @@ import filecmp
 import os
 import shutil
 import stat
+import sys
 import tempfile
 
 import pytest
@@ -176,6 +177,8 @@ def script_dir(sbang_line):
     sdir.destroy()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('shebang,interpreter', [
     (b'#!/path/to/interpreter argument\n', b'/path/to/interpreter'),
     (b'#!  /path/to/interpreter truncated-argum', b'/path/to/interpreter'),
@@ -189,6 +192,14 @@ def script_dir(sbang_line):
 ])
 def test_shebang_interpreter_regex(shebang, interpreter):
     sbang.get_interpreter(shebang) == interpreter
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+def test_shebang_handling(script_dir, sbang_line):
+    assert sbang.shebang_too_long(script_dir.lua_shebang)
+    assert sbang.shebang_too_long(script_dir.long_shebang)
+    assert sbang.shebang_too_long(script_dir.nonexec_long_shebang)
 
 
 def test_shebang_handling(script_dir, sbang_line):
@@ -244,6 +255,8 @@ def test_shebang_handling(script_dir, sbang_line):
         assert f.readline() == last_line
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_shebang_handles_non_writable_files(script_dir, sbang_line):
     # make a file non-writable
     st = os.stat(script_dir.long_shebang)
@@ -271,6 +284,8 @@ def check_sbang_installation():
     assert (status.st_mode & 0o777) == 0o755
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_sbang(install_mockery):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
