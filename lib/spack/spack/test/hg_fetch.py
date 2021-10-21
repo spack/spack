@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -21,6 +22,8 @@ pytestmark = pytest.mark.skipif(
     not which('hg'), reason='requires mercurial to be installed')
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
 @pytest.mark.parametrize("secure", [True, False])
 def test_fetch(

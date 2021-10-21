@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import sys
 
 import pytest
 
@@ -40,6 +41,8 @@ def test_checksum(arguments, expected, mock_packages, mock_stage):
     assert 'version(' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_checksum_interactive(
         mock_packages, mock_fetch, mock_stage, monkeypatch):
     def _get_number(*args, **kwargs):

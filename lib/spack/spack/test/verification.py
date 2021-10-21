@@ -6,6 +6,9 @@
 """Tests for the `spack.verify` module"""
 import os
 import shutil
+import sys
+
+import pytest
 
 import llnl.util.filesystem as fs
 from llnl.util.symlink import symlink
@@ -16,6 +19,8 @@ import spack.util.spack_json as sjson
 import spack.verify
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_link_manifest_entry(tmpdir):
     # Test that symlinks are properly checked against the manifest.
     # Test that the appropriate errors are generated when the check fails.
@@ -115,6 +120,8 @@ def test_file_manifest_entry(tmpdir):
     assert sorted(results.errors[file]) == sorted(expected)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_check_chmod_manifest_entry(tmpdir):
     # Check that the verification properly identifies errors for files whose
     # permissions have been modified.
@@ -188,6 +195,8 @@ def test_check_prefix_manifest(tmpdir):
     assert results.errors[spec.prefix] == ['manifest corrupted']
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_single_file_verification(tmpdir):
     # Test the API to verify a single file, including finding the package
     # to which it belongs

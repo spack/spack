@@ -134,6 +134,10 @@ def test_url_summary(mock_packages):
 
 
 @skip_python_26
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="Unsupported on Windows for now"
+)
 def test_url_stats(capfd, mock_packages):
     with capfd.disabled():
         output = url('stats')

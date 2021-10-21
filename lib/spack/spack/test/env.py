@@ -11,6 +11,8 @@ import spack.environment as ev
 import spack.spec
 
 
+@pytest.mark.skipif(str(spack.platforms.host()) == 'windows',
+                    reason='Not supported on Windows (yet)')
 def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     # create an environment
     env_path = tmpdir.mkdir('env_dir').strpath

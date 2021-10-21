@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -43,11 +44,13 @@ def vim_exe(tmpdir_factory):
     return _make_exe(tmpdir_factory, 'vim', 'exit 0')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="editor not implemented on windows")
 def test_find_exe_from_env_var(good_exe):
     os.environ['EDITOR'] = good_exe
     assert ed._find_exe_from_env_var('EDITOR') == (good_exe, [good_exe])
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="editor not implemented on windows")
 def test_find_exe_from_env_var_with_args(good_exe):
     os.environ['EDITOR'] = good_exe + ' a b c'
     assert ed._find_exe_from_env_var('EDITOR') == (
@@ -65,6 +68,7 @@ def test_find_exe_from_env_var_no_editor():
     assert ed._find_exe_from_env_var('FOO') == (None, [])
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="editor not implemented on windows")
 def test_editor_visual(good_exe):
     os.environ['VISUAL'] = good_exe
 
@@ -75,6 +79,7 @@ def test_editor_visual(good_exe):
     ed.editor('/path/to/file', _exec_func=assert_exec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="editor not implemented on windows")
 def test_editor_visual_bad(good_exe, bad_exe):
     os.environ['VISUAL'] = bad_exe
     os.environ['EDITOR'] = good_exe
@@ -89,6 +94,7 @@ def test_editor_visual_bad(good_exe, bad_exe):
     ed.editor('/path/to/file', _exec_func=assert_exec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="editor not implemented on windows")
 def test_editor_no_visual(good_exe):
     if 'VISUAL' in os.environ:
         del os.environ['VISUAL']
@@ -101,6 +107,7 @@ def test_editor_no_visual(good_exe):
     ed.editor('/path/to/file', _exec_func=assert_exec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="editor not implemented on windows")
 def test_editor_no_visual_with_args(good_exe):
     if 'VISUAL' in os.environ:
         del os.environ['VISUAL']
@@ -115,6 +122,7 @@ def test_editor_no_visual_with_args(good_exe):
     ed.editor('/path/to/file', _exec_func=assert_exec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="editor not implemented on windows")
 def test_editor_both_bad(nosuch_exe, vim_exe):
     os.environ['VISUAL'] = nosuch_exe
     os.environ['EDITOR'] = nosuch_exe

@@ -377,6 +377,8 @@ def test_write_lock_timeout_on_write_ranges(lock_path):
         TimeoutWrite(lock_path, 0, 1))
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_on_write_ranges_2(lock_path):
     multiproc_test(
         AcquireWrite(lock_path, 0, 64),
@@ -385,6 +387,8 @@ def test_write_lock_timeout_on_write_ranges_2(lock_path):
         TimeoutWrite(lock_path, 63, 1))
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_on_write_ranges_3(lock_path):
     multiproc_test(
         AcquireWrite(lock_path, 0, 1),
@@ -394,6 +398,8 @@ def test_write_lock_timeout_on_write_ranges_3(lock_path):
         TimeoutWrite(lock_path))
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_on_write_ranges_4(lock_path):
     multiproc_test(
         AcquireWrite(lock_path, 0, 1),
@@ -444,6 +450,8 @@ def test_read_lock_timeout_on_write_ranges_2(lock_path):
         TimeoutRead(lock_path, 0, 1))
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_read_lock_timeout_on_write_ranges_3(lock_path):
     """two write locks, overlapping read locks"""
     multiproc_test(
@@ -489,6 +497,8 @@ def test_write_lock_timeout_on_read_ranges_2(lock_path):
         TimeoutWrite(lock_path, 0, 1))
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_on_read_ranges_3(lock_path):
     multiproc_test(
         AcquireRead(lock_path, 0, 1),
@@ -547,6 +557,8 @@ def test_write_lock_timeout_with_multiple_readers_3_2(lock_path):
         TimeoutWrite(lock_path))
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_with_multiple_readers_2_1_ranges(lock_path):
     multiproc_test(
         AcquireRead(lock_path, 0, 10),
@@ -554,6 +566,8 @@ def test_write_lock_timeout_with_multiple_readers_2_1_ranges(lock_path):
         TimeoutWrite(lock_path, 5, 5))
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_with_multiple_readers_2_3_ranges(lock_path):
     multiproc_test(
         AcquireRead(lock_path, 0, 10),
@@ -608,7 +622,7 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
-@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+@pytest.mark.skipif(_platform == 'win32' or getuid() == 0, reason='user is root')
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
     with read_only(lock_dir):
@@ -623,6 +637,8 @@ def test_read_lock_no_lockfile(lock_dir, lock_path):
                 pass
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason='not supported on windows')
 def test_upgrade_read_to_write(private_lock_path):
     """Test that a read lock can be upgraded to a write lock.
 
@@ -1254,6 +1270,8 @@ class LockDebugOutput(object):
         barrier.wait()  # ---------------------------------------- 4
 
 
+@pytest.mark.skipif(_platform == 'win32',
+                    reason='debug output not supported on windows')
 def test_lock_debug_output(lock_path):
     test_debug = LockDebugOutput(lock_path)
     q1, q2 = Queue(), Queue()
@@ -1326,6 +1344,8 @@ def test_downgrade_write_fails(tmpdir):
                          [(errno.EACCES, "Fake EACCES error"),
                           (errno.EAGAIN, "Fake EAGAIN error"),
                           (errno.ENOENT, "Fake ENOENT error")])
+@pytest.mark.skipif(_platform == 'win32',
+                    reason='not supported on windows')
 def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
     """Test poll lock exception handling."""
     def _lockf(fd, cmd, len, start, whence):

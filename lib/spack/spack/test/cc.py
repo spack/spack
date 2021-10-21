@@ -8,6 +8,7 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
+import sys
 
 import pytest
 
@@ -170,12 +171,14 @@ def dump_mode(cc, args):
         return cc(*args, output=str).strip()
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_no_wrapper_environment():
     with pytest.raises(ProcessError):
         output = cc(output=str)
         assert "Spack compiler must be run from Spack" in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_vcheck_mode(wrapper_environment):
     assert dump_mode(cc, ['-I/include', '--version']) == 'vcheck'
     assert dump_mode(cc, ['-I/include', '-V']) == 'vcheck'
@@ -185,16 +188,19 @@ def test_vcheck_mode(wrapper_environment):
     assert dump_mode(cc, ['-I/include', '-V', '-o', 'output']) == 'vcheck'
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_cpp_mode(wrapper_environment):
     assert dump_mode(cc, ['-E']) == 'cpp'
     assert dump_mode(cxx, ['-E']) == 'cpp'
     assert dump_mode(cpp, []) == 'cpp'
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_as_mode(wrapper_environment):
     assert dump_mode(cc, ['-S']) == 'as'
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ccld_mode(wrapper_environment):
     assert dump_mode(cc, []) == 'ccld'
     assert dump_mode(cc, ['foo.c', '-o', 'foo']) == 'ccld'
@@ -203,12 +209,14 @@ def test_ccld_mode(wrapper_environment):
         'foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo']) == 'ccld'
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ld_mode(wrapper_environment):
     assert dump_mode(ld, []) == 'ld'
     assert dump_mode(ld, [
         'foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo']) == 'ld'
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ld_flags(wrapper_environment, wrapper_flags):
     check_args(
         ld, test_args,
@@ -222,6 +230,7 @@ def test_ld_flags(wrapper_environment, wrapper_flags):
         spack_ldlibs)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_cpp_flags(wrapper_environment, wrapper_flags):
     check_args(
         cpp, test_args,
@@ -232,6 +241,7 @@ def test_cpp_flags(wrapper_environment, wrapper_flags):
         test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_cc_flags(wrapper_environment, wrapper_flags):
     check_args(
         cc, test_args,
@@ -244,6 +254,7 @@ def test_cc_flags(wrapper_environment, wrapper_flags):
         spack_ldlibs)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_cxx_flags(wrapper_environment, wrapper_flags):
     check_args(
         cxx, test_args,
@@ -256,6 +267,7 @@ def test_cxx_flags(wrapper_environment, wrapper_flags):
         spack_ldlibs)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_fc_flags(wrapper_environment, wrapper_flags):
     check_args(
         fc, test_args,
@@ -268,6 +280,7 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         spack_ldlibs)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_dep_rpath(wrapper_environment):
     """Ensure RPATHs for root package are added."""
     check_args(
@@ -277,6 +290,7 @@ def test_dep_rpath(wrapper_environment):
         common_compile_args)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_dep_include(wrapper_environment):
     """Ensure a single dependency include directory is added."""
     with set_env(SPACK_INCLUDE_DIRS='x'):
@@ -292,6 +306,7 @@ def test_dep_include(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_system_path_cleanup(wrapper_environment):
     """Ensure SPACK_ENV_PATH is removed from PATH, even with trailing /
 
@@ -312,6 +327,7 @@ def test_system_path_cleanup(wrapper_environment):
             check_env_var(cc, 'PATH', system_path)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_dep_lib(wrapper_environment):
     """Ensure a single dependency RPATH is added."""
     with set_env(SPACK_LINK_DIRS='x',
@@ -329,6 +345,7 @@ def test_dep_lib(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_dep_lib_no_rpath(wrapper_environment):
     """Ensure a single dependency link flag is added with no dep RPATH."""
     with set_env(SPACK_LINK_DIRS='x'):
@@ -344,6 +361,7 @@ def test_dep_lib_no_rpath(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_dep_lib_no_lib(wrapper_environment):
     """Ensure a single dependency RPATH is added with no -L."""
     with set_env(SPACK_RPATH_DIRS='x'):
@@ -359,6 +377,7 @@ def test_dep_lib_no_lib(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ccld_deps(wrapper_environment):
     """Ensure all flags are added in ccld mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
@@ -384,6 +403,7 @@ def test_ccld_deps(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ccld_deps_isystem(wrapper_environment):
     """Ensure all flags are added in ccld mode.
        When a build uses -isystem, Spack should inject it's
@@ -415,6 +435,7 @@ def test_ccld_deps_isystem(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_cc_deps(wrapper_environment):
     """Ensure -L and RPATHs are not added in cc mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
@@ -433,6 +454,7 @@ def test_cc_deps(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ccld_with_system_dirs(wrapper_environment):
     """Ensure all flags are added in ccld mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
@@ -469,6 +491,7 @@ def test_ccld_with_system_dirs(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ccld_with_system_dirs_isystem(wrapper_environment):
     """Ensure all flags are added in ccld mode.
        Ensure that includes are in the proper
@@ -508,6 +531,7 @@ def test_ccld_with_system_dirs_isystem(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ld_deps(wrapper_environment):
     """Ensure no (extra) -I args or -Wl, are passed in ld mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
@@ -529,6 +553,7 @@ def test_ld_deps(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ld_deps_no_rpath(wrapper_environment):
     """Ensure SPACK_LINK_DEPS controls -L for ld."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
@@ -546,6 +571,7 @@ def test_ld_deps_no_rpath(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ld_deps_no_link(wrapper_environment):
     """Ensure SPACK_RPATH_DEPS controls -rpath for ld."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
@@ -563,6 +589,7 @@ def test_ld_deps_no_link(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ld_deps_partial(wrapper_environment):
     """Make sure ld -r (partial link) is handled correctly on OS's where it
        doesn't accept rpaths.
@@ -601,6 +628,7 @@ def test_ld_deps_partial(wrapper_environment):
             test_args_without_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_ccache_prepend_for_cc(wrapper_environment):
     with set_env(SPACK_CCACHE_BINARY='ccache'):
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
@@ -620,6 +648,7 @@ def test_ccache_prepend_for_cc(wrapper_environment):
             common_compile_args)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_no_ccache_prepend_for_fc(wrapper_environment):
     os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
     check_args(
@@ -638,6 +667,8 @@ def test_no_ccache_prepend_for_fc(wrapper_environment):
         common_compile_args)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('9160')
 def test_disable_new_dtags(wrapper_environment, wrapper_flags):
     with set_env(SPACK_TEST_COMMAND='dump-args'):
@@ -647,6 +678,8 @@ def test_disable_new_dtags(wrapper_environment, wrapper_flags):
         assert '-Wl,--disable-new-dtags' in result
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('9160')
 def test_filter_enable_new_dtags(wrapper_environment, wrapper_flags):
     with set_env(SPACK_TEST_COMMAND='dump-args'):
@@ -659,6 +692,8 @@ def test_filter_enable_new_dtags(wrapper_environment, wrapper_flags):
         assert '-Wl,--enable-new-dtags' not in result
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('22643')
 def test_linker_strips_loopopt(wrapper_environment, wrapper_flags):
     with set_env(SPACK_TEST_COMMAND='dump-args'):

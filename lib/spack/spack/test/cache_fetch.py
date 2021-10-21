@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -25,6 +26,8 @@ def test_fetch_missing_cache(tmpdir, _fetch_method):
                 fetcher.fetch()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
 def test_fetch(tmpdir, _fetch_method):
     """Ensure a fetch after expanding is effectively a no-op."""
