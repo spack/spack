@@ -137,11 +137,8 @@ class Hpcviewer(Package):
         ('2019.02', 'ppc64le'): '01a159306e7810efe07157ec823ac6ca7570ec2014c95db599a3f90eee33355c',
     }
 
-    # On Apple M1, python machine() returns 'arm64', but we use 'aarch64'.
     system = platform.system().lower()
     machine = platform.machine().lower()
-    if machine == 'arm64':
-        machine = 'aarch64'
 
     # Versions for MacOSX / Darwin
     if system == 'darwin':
