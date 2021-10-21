@@ -1316,7 +1316,7 @@ spack:
             with open(yaml_path, 'w') as ypfd:
                 ypfd.write(spec_yaml)
 
-            install_cmd('--keep-stage', '-f', yaml_path)
+            install_cmd('--add', '--keep-stage', '-f', yaml_path)
             buildcache_cmd('create', '-u', '-a', '-f', '--mirror-url',
                            mirror_url, 'callpath')
             ci_cmd('rebuild-index')
