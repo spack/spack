@@ -250,19 +250,16 @@ def get_uninstall_list(args, specs, env):
     if args.remove and not env:
         raise ValueError("Can only use --remove when in an environment")
 
-    # Gets the list of installed specs that match the ones give via cli
+    # Gets the list of installed specs that match the ones given via cli
     # args.all takes care of the case where '-a' is given in the cli
     uninstall_specs = set(
         find_matching_specs(env, specs, args.all, args.force))
 
-    # Takes care of '-R'
     active_dpts, inactive_dpts = installed_dependents(uninstall_specs, env)
 
-    # if we are in the global scope, we complain if you try to remove a
-    # spec that's in an environment.  If we're in an environment, we'll
-    # just *remove* it from the environment, so we ignore this
-    # error when *in* an environment
     spec_envs = dependent_environments(uninstall_specs)
+    # The set of matched specs from the cli that are needed by other
+    # environments (either as a root or dependency).
     spec_envs = inactive_dependent_environments(spec_envs)
 
     has_error = not args.force and (
