@@ -344,7 +344,7 @@ class TestLmod(object):
     ):
         with ev.Environment(str(tmpdir), with_view=True) as e:
             module_configuration('with_view')
-            install('cmake')
+            install('--add', 'cmake')
 
             spec = spack.spec.Spec('cmake').concretized()
 
