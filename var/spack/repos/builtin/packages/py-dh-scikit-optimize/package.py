@@ -21,7 +21,6 @@ class PyDhScikitOptimize(PythonPackage):
     homepage = "https://github.com/deephyper/scikit-optimize"
     pypi     = "dh-scikit-optimize/dh-scikit-optimize-0.9.0.tar.gz"
 
-    version('0.9.4', sha256='9acfba4077fe45f3854a4af255763a3e8a396c05bd2a7c761a969171366b3840')
     version('0.9.0', sha256='fe70aa57ec5150a3d356b2184f0dda1ecc4ecb7e82d35edac3980094d409d676')
 
     variant('plots', default=False,
