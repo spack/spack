@@ -104,12 +104,14 @@ class Pumi(CMakePackage):
         options = ['../testdata/pipe.dmg', '../testdata/pipe.smb', 'pipe_unif.smb']
         expected = 'mesh pipe_unif.smb written'
         description = 'testing pumi uniform mesh refinement'
-        self.run_test(exe,options,expected,purpose=description,work_dir=self.prefix.bin)
+        self.run_test(exe, options, expected, purpose=description,
+                      work_dir=self.prefix.bin)
 
-        mpiexec = Executable(join_path(self.spec['mpi'].prefix.bin,'mpiexec')).command
+        mpiexec = Executable(join_path(self.spec['mpi'].prefix.bin, 'mpiexec')).command
         mpiopt = ['-n', '2']
         exe = ['split']
         options = ['../testdata/pipe.dmg', '../testdata/pipe.smb', 'pipe_2_.smb', '2']
         expected = 'mesh pipe_2_.smb written'
         description = 'testing pumi mesh partitioning'
-        self.run_test(mpiexec,mpiopt+exe+options,expected,purpose=description,work_dir=self.prefix.bin)
+        self.run_test(mpiexec, mpiopt + exe + options, expected,
+                      purpose=description, work_dir=self.prefix.bin)
