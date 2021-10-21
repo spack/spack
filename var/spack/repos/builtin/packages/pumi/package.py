@@ -98,6 +98,8 @@ class Pumi(CMakePackage):
         return args
 
     def test(self):
+        if self.spec.version <= Version('2.2.6'):
+            return
         exe = 'uniform'
         options = ['../testdata/pipe.dmg', '../testdata/pipe.smb', 'pipe_unif.smb']
         expected = 'mesh pipe_unif.smb written'
