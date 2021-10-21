@@ -190,6 +190,11 @@ provides_virtual(Provider, Virtual) :-
 % fulfill the conditions to provide that virtual
 :- provider(Package, Virtual), not provides_virtual(Package, Virtual).
 
+% If a package meets the condition to be a provider, it needs to be a provider
+:- not provider(Package, Virtual),
+   provides_virtual(Package, Virtual),
+   virtual_node(Virtual).
+
 % If a package is selected as a provider, it is provider of all
 % the virtuals it provides
 :- provides_virtual(Package, V1), provides_virtual(Package, V2), V1 != V2,
