@@ -22,7 +22,6 @@ class Helib(CMakePackage):
     homepage = "https://github.com/homenc/HElib"
     url      = "https://github.com/homenc/HElib/archive/refs/tags/v2.2.1.tar.gz"
 
-    # notify when the package is updated.
     maintainers = ['wohlbier']
 
     version('2.2.1',        sha256='cbe030c752c915f1ece09681cadfbe4f140f6752414ab000b4cf076b6c3019e4')
