@@ -22,7 +22,7 @@ class Tangram(CMakePackage):
     version('1.0.1', sha256='8f2f8c01bb2d726b0f64e5a5bc3aa2bd8057ccaee7a29c68f1439d16e39aaa90')
     version('master', branch='master', submodules=True)
 
-    variant('mpi', default=True,
+    variant('mpi', default=False,
             description='Enable interface reconstruction with MPI')
     variant('thrust', default=False,
             description='Enable on-node parallelism with NVidia Thrust')
@@ -47,14 +47,19 @@ class Tangram(CMakePackage):
 
     depends_on('mpi', when='+mpi')
 
-    depends_on('wonton')
-    depends_on('wonton+jali', when='+jali')
-    depends_on('wonton~mpi', when='~mpi')
-    depends_on('wonton+mpi', when='+mpi')
-    depends_on('wonton+thrust', when='+thrust')
-    depends_on('wonton+kokkos', when='+kokkos')
-    depends_on('wonton+cuda', when='+cuda')
-    depends_on('wonton+openmp', when='+openmp')
+    depends_on('wonton@master')
+    depends_on('wonton@master+jali', when='+jali')
+    depends_on('wonton@master~jali', when='~jali')
+    depends_on('wonton@master+mpi', when='+mpi')
+    depends_on('wonton@master~mpi', when='~mpi')
+    depends_on('wonton@master+thrust', when='+thrust')
+    depends_on('wonton@master~thrust', when='~thrust')
+    depends_on('wonton@master+kokkos', when='+kokkos')
+    depends_on('wonton@master~kokkos', when='~kokkos')
+    depends_on('wonton@master+cuda', when='+cuda')
+    depends_on('wonton@master~cuda', when='~cuda')
+    depends_on('wonton@master+openmp', when='+openmp')
+    depends_on('wonton@master~openmp', when='~openmp')
 
     def cmake_args(self):
         options = []
@@ -77,7 +82,7 @@ class Tangram(CMakePackage):
             options.append('-DTANGRAM_ENABLE_Kokkos=ON')
         else:
             options.append('-DTANGRAM_ENABLE_Kokkos=OFF')
-
+            
         # Unit test variant
         if self.run_tests:
             options.append('-DENABLE_UNIT_TESTS=ON')
@@ -87,3 +92,9 @@ class Tangram(CMakePackage):
             options.append('-DENABLE_APP_TESTS=OFF')
 
         return options
+    
+    def check(self):
+        if self.run_tests:
+            with working_dir(self.build_directory):
+                make("test")
+
