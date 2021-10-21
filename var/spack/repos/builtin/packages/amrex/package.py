@@ -169,8 +169,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = [
             '-DUSE_XSDK_DEFAULTS=ON',
-            #self.define('AMReX_ENABLE_TESTS', True),
-            self.define('AMReX_INSTALL', True),
             self.define_from_variant('AMReX_SPACEDIM', 'dimensions'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('AMReX_MPI', 'mpi'),
@@ -217,7 +215,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = [
             '-DUSE_XSDK_DEFAULTS=ON',
-            self.define('AMReX_ENABLE_TESTS', True),
             self.define_from_variant('DIM', 'dimensions'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('ENABLE_MPI', 'mpi'),
@@ -283,7 +280,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         args.append('-DAMReX_ROOT='+self.prefix)
         args.extend(self.cmake_args())
         self.run_test(cmake_bin, args,
-                     purpose='Build with same CMake version')
+                     purpose='Build with same CMake version as install')
 
         make()
 
