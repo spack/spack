@@ -28,10 +28,10 @@ class PyDhScikitOptimize(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-scikit-learn', type=('build', 'run'))
-    depends_on('py-pyaml', type=('build', 'run'))
-    depends_on('py-config-space', type=('build', 'run'))
+    depends_on('py-numpy@1.13.3:', type=('build', 'run'))
+    depends_on('py-scipy@0.19.1:', type=('build', 'run'))
+    depends_on('py-scikit-learn@0.20.0:', type=('build', 'run'))
+    depends_on('py-pyaml@16.9:', type=('build', 'run'))
+    depends_on('py-config-space@0.4.20:', type=('build', 'run'))
 
-    depends_on('py-matplotlib',   when='+plots')
+    depends_on('py-matplotlib@2.0.0:',   when='+plots')
