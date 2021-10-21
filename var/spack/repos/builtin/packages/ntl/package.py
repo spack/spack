@@ -55,7 +55,6 @@ class Ntl(Package):
     def build(self, spec, prefix):
         with working_dir('src'):
             make()
-            # make('check')
 
     def install(self, spec, prefix):
         with working_dir('src'):
