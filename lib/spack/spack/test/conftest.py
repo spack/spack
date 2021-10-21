@@ -374,7 +374,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         stage_files = os.listdir(stage_path)
         files_in_stage = set(stage_files) - ignore_stage_files
     except OSError as err:
-        if err.errno == errno.ENOENT:
+        if err.errno == errno.ENOENT or err.errno == errno.EINVAL:
             pass
         else:
             raise
@@ -590,7 +590,11 @@ def configuration_dir(tmpdir_factory, linux_os):
     tmpdir.ensure('user', dir=True)
 
     # Slightly modify config.yaml and compilers.yaml
-    solver = os.environ.get('SPACK_TEST_SOLVER', 'clingo')
+    if os.name == 'nt':
+        solver = 'original'
+    else:
+        solver = os.environ.get('SPACK_TEST_SOLVER', 'clingo')
+
     config_yaml = test_config.join('config.yaml')
     modules_root = tmpdir_factory.mktemp('share')
     tcl_root = modules_root.ensure('modules', dir=True)

@@ -12,7 +12,7 @@ import tempfile
 import pytest
 from six import StringIO
 
-from llnl.util.filesystem import mkdirp, touch
+from llnl.util.filesystem import getuid, mkdirp, touch
 
 import spack.config
 import spack.environment as ev
@@ -836,9 +836,9 @@ def test_bad_config_section(mock_low_high_config):
         spack.config.get('foobar')
 
 
-@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Not supported on Windows (yet)")
+@pytest.mark.skipif(getuid() == 0, reason='user is root')
 def test_bad_command_line_scopes(tmpdir, mock_low_high_config):
     cfg = spack.config.Configuration()
 

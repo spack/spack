@@ -5,6 +5,8 @@
 
 from __future__ import print_function
 
+import os
+
 import pytest
 
 from llnl.util.filesystem import mkdirp
@@ -42,7 +44,13 @@ def git_tmp_worktree(tmpdir):
     """Create new worktree in a temporary folder and monkeypatch
     spack.paths.prefix to point to it.
     """
-    worktree_root = str(tmpdir.join("tmp_worktree"))
+    if os.name == 'nt':
+        long_pth = str(tmpdir).split(os.path.sep)
+        tmp_worktree = os.path.sep.join(long_pth[:-1])
+    else:
+        tmp_worktree = str(tmpdir)
+    worktree_root = os.path.sep.join([tmp_worktree, "wrktree"])
+
     mkdirp(worktree_root)
 
     git("worktree", "add", "--detach", worktree_root, "HEAD")
