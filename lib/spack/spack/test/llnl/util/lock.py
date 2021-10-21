@@ -44,22 +44,34 @@ actually on a shared filesystem.
 """
 import collections
 import errno
-import fcntl
 import getpass
 import glob
 import os
 import shutil
 import socket
+import stat
 import tempfile
 import traceback
 from contextlib import contextmanager
 from multiprocessing import Process, Queue
+from sys import platform as _platform
 
 import pytest
 
 import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import getuid, touch
+
+if _platform == "win32":
+    import pywintypes
+    import win32con
+    import win32file
+    LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK
+    LOCK_SH = 0
+    LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY
+    __overlapped = pywintypes.OVERLAPPED()
+else:
+    import fcntl
 
 #
 # This test can be run with MPI.  MPI is "enabled" if we can import
@@ -112,14 +124,25 @@ lock_fail_timeout = 0.1
 
 
 def make_readable(*paths):
+    # TODO: From os.chmod doc:
+    # "Note Although Windows supports chmod(), you can only
+    # set the file's read-only flag with it (via the stat.S_IWRITE and
+    # stat.S_IREAD constants or a corresponding integer value). All other
+    # bits are ignored."
     for path in paths:
-        mode = 0o555 if os.path.isdir(path) else 0o444
+        if (_platform != 'win32'):
+            mode = 0o555 if os.path.isdir(path) else 0o444
+        else:
+            mode = stat.S_IREAD
         os.chmod(path, mode)
 
 
 def make_writable(*paths):
     for path in paths:
-        mode = 0o755 if os.path.isdir(path) else 0o744
+        if (_platform != 'win32'):
+            mode = 0o755 if os.path.isdir(path) else 0o744
+        else:
+            mode = stat.S_IWRITE
         os.chmod(path, mode)
 
 
@@ -607,6 +630,15 @@ def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
         with pytest.raises(lk.LockROFileError):
             with lk.WriteTransaction(lock):
                 pass
+        # On windows, each seperate FD acts as a unique
+        # attempt to lock/unlock/access a file, so while
+        # the lock class stil holds an fd to this file
+        # which is not cleared in the above case where there's an error
+        # obtaining a write lock, and the context manager is not given a
+        # chance to clean up the lock, we need to use that fd to free
+        # the reference to the file
+        if lock._file:
+            lock._file.close()
 
 
 def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
@@ -658,17 +690,17 @@ def test_upgrade_read_to_write(private_lock_path):
     lock.acquire_read()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock._file.mode == 'r+'
+    assert lock._file_mode == 'r+'
 
     lock.acquire_write()
     assert lock._reads == 1
     assert lock._writes == 1
-    assert lock._file.mode == 'r+'
+    assert lock._file_mode == 'r+'
 
     lock.release_write()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock._file.mode == 'r+'
+    assert lock._file_mode == 'r+'
 
     lock.release_read()
     assert lock._reads == 0
@@ -686,15 +718,18 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         lock = lk.Lock(private_lock_path)
         assert lock._reads == 0
         assert lock._writes == 0
+        assert lock._current_lock is None
 
         lock.acquire_read()
         assert lock._reads == 1
         assert lock._writes == 0
         assert lock._file.mode == 'r'
+        assert lock._current_lock == lock.LOCK_SH
 
-        # upgrade to writ here
+        # upgrade to write here
         with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
+        lk.file_tracker.release_fh(lock.path)
 
 
 class ComplexAcquireAndRelease(object):
@@ -1356,14 +1391,23 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
         lock = lk.Lock(lockfile)
 
         touch(lockfile)
+        if _platform == 'win32':
+            monkeypatch.setattr(win32file, 'LockFileEx', _lockf)
 
-        monkeypatch.setattr(fcntl, 'lockf', _lockf)
+            if err_num in [errno.EAGAIN, errno.EACCES]:
+                assert not lock._poll_lock(win32con.LOCKFILE_EXCLUSIVE_LOCK)
+            else:
+                with pytest.raises(IOError, match=err_msg):
+                    lock._poll_lock(win32con.LOCKFILE_EXCLUSIVE_LOCK)
 
-        if err_num in [errno.EAGAIN, errno.EACCES]:
-            assert not lock._poll_lock(fcntl.LOCK_EX)
         else:
-            with pytest.raises(IOError, match=err_msg):
-                lock._poll_lock(fcntl.LOCK_EX)
+            monkeypatch.setattr(fcntl, 'lockf', _lockf)
+
+            if err_num in [errno.EAGAIN, errno.EACCES]:
+                assert not lock._poll_lock(fcntl.LOCK_EX)
+            else:
+                with pytest.raises(IOError, match=err_msg):
+                    lock._poll_lock(fcntl.LOCK_EX)
 
 
 def test_upgrade_read_okay(tmpdir):

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import os
+import posixpath
 import sys
 
 import pytest
@@ -18,8 +19,8 @@ from spack.version import ver
 
 
 def _create_url(relative_url):
-    web_data_path = os.path.join(spack.paths.test_path, 'data', 'web')
-    return 'file://' + os.path.join(web_data_path, relative_url)
+    web_data_path = posixpath.join(spack.paths.test_path, 'data', 'web')
+    return 'file://' + posixpath.join(web_data_path, relative_url)
 
 
 root = _create_url('index.html')
