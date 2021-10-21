@@ -96,3 +96,10 @@ class Pumi(CMakePackage):
             mpi_id = spec['mpi'].name + spec['mpi'].version.string
             args.append('-DSIM_MPI=' + mpi_id)
         return args
+
+    def test(self):
+        exe = 'uniform'
+        options = ['../testdata/pipe.dmg', '../testdata/pipe.smb', 'pipe_unif.smb']
+        expected = 'mesh pipe_unif.smb written'
+        description = 'testing pumi uniform mesh refinement'
+        self.run_test(exe,options,expected,purpose=description,work_dir=self.prefix.bin)
