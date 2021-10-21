@@ -11,7 +11,7 @@ import sys
 from spack import *
 
 
-class VtkM(CMakePackage, CudaPackage):
+class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     """VTK-m is a toolkit of scientific visualization algorithms for emerging
     processor architectures. VTK-m supports the fine-grained concurrency for
     data analysis and visualization algorithms required to drive extreme scale
@@ -60,19 +60,9 @@ class VtkM(CMakePackage, CudaPackage):
     variant("cuda", default=False, description="build cuda support")
     variant("openmp", default=(sys.platform != 'darwin'), description="build openmp support")
     variant("tbb", default=(sys.platform == 'darwin'), description="build TBB support")
-    variant("hip", default=False, description="build hip support")
-
-    # it doesn't look like spack has an amd gpu abstraction
-    # Going to have to restrict our set to ones that Kokkos supports
-    amdgpu_targets = (
-        'gfx900', 'gfx906', 'gfx908'
-    )
-
-    variant('amdgpu_target', default='none', multi=True, values=('none',) + amdgpu_targets)
-    conflicts("+hip", when="amdgpu_target=none")
 
     depends_on("cmake@3.12:", type="build")               # CMake >= 3.12
-    depends_on("cmake@3.18:", when="+hip", type="build")  # CMake >= 3.18
+    depends_on("cmake@3.18:", when="+rocm", type="build")  # CMake >= 3.18
 
     conflicts('%gcc@:4.10',
               msg='vtk-m requires gcc >= 5. Please install a newer version')
@@ -81,13 +71,14 @@ class VtkM(CMakePackage, CudaPackage):
     depends_on("tbb", when="+tbb")
     depends_on("mpi", when="+mpi")
 
-    for amdgpu_value in amdgpu_targets:
+    # Propagate AMD GPU target to kokkos for +rocm
+    for amdgpu_value in ROCmPackage.amdgpu_targets:
         depends_on("kokkos@develop +rocm amdgpu_target=%s" % amdgpu_value, when="amdgpu_target=%s" % amdgpu_value)
 
-    depends_on("rocm-cmake@3.7:", when="+hip")
-    depends_on("hip@3.7:", when="+hip")
+    depends_on("rocm-cmake@3.7:", when="+rocm")
+    depends_on("hip@3.7:", when="+rocm")
 
-    conflicts("+hip", when="+cuda")
+    conflicts("+rocm", when="+cuda")
 
     conflicts("+cuda", when="cuda_arch=none",
               msg="vtk-m +cuda requires that cuda_arch be set")
@@ -185,7 +176,7 @@ class VtkM(CMakePackage, CudaPackage):
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=OFF")
 
             # hip support
-            if "+hip" in spec:
+            if "+rocm" in spec:
                 options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON")
                 options.append("-DVTKm_ENABLE_HIP:BOOL=ON")
 
@@ -343,7 +334,7 @@ vtkm_add_target_information(VTKmSmokeTest
                 except ProcessError:
                     output = ""
                 print(output)
-                if "+hip" in spec:
+                if "+rocm" in spec:
                     expected_device = 'Kokkos'
                 elif "+cuda" in spec:
                     expected_device = 'Cuda'
