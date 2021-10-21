@@ -123,6 +123,10 @@ def test_url_summary(mock_packages):
     assert out_correct_versions == correct_versions
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="Unsupported on Windows for now"
+)
 def test_url_stats(capfd, mock_packages):
     with capfd.disabled():
         output = url('stats')

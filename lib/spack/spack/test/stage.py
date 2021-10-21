@@ -10,6 +10,8 @@ import getpass
 import os
 import shutil
 import stat
+import sys
+import tempfile
 
 import pytest
 
@@ -657,7 +659,9 @@ class TestStage(object):
         assert source_path.endswith(spack.stage._source_path_subdir)
         assert not os.path.exists(source_path)
 
-    @pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
+    @pytest.mark.skipif(getuid() == 0, reason='user is root')
     def test_first_accessible_path(self, tmpdir):
         """Test _first_accessible_path names."""
         spack_dir = tmpdir.join('paths')
@@ -688,6 +692,8 @@ class TestStage(object):
         # Cleanup
         shutil.rmtree(str(name))
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     def test_create_stage_root(self, tmpdir, no_path_access):
         """Test create_stage_root permissions."""
         test_dir = tmpdir.join('path')
@@ -788,7 +794,9 @@ class TestStage(object):
 
         assert spack.stage._resolve_paths(paths) == res_paths
 
-    @pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
+    @pytest.mark.skipif(getuid() == 0, reason='user is root')
     def test_get_stage_root_bad_path(self, clear_stage_root):
         """Ensure an invalid stage path root raises a StageError."""
         with spack.config.override('config:build_stage', '/no/such/path'):
@@ -893,6 +901,8 @@ class TestStage(object):
             _file.read() == _readme_contents
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_stage_create_replace_path(tmp_build_stage_dir):
     """Ensure stage creation replaces a non-directory path."""
     _, test_stage_path = tmp_build_stage_dir
@@ -909,6 +919,8 @@ def test_stage_create_replace_path(tmp_build_stage_dir):
     assert os.path.isdir(stage.path)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_cannot_access(capsys):
     """Ensure can_access dies with the expected error."""
     with pytest.raises(SystemExit):

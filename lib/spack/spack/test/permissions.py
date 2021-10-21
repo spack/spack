@@ -5,6 +5,7 @@
 
 import os
 import stat
+import sys
 
 import pytest
 
@@ -13,6 +14,8 @@ import llnl.util.filesystem as fs
 from spack.util.file_permissions import InvalidPermissionsError, set_permissions
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_chmod_real_entries_ignores_suid_sgid(tmpdir):
     path = str(tmpdir.join('file').ensure())
     mode = stat.S_ISUID | stat.S_ISGID | stat.S_ISVTX
@@ -25,6 +28,8 @@ def test_chmod_real_entries_ignores_suid_sgid(tmpdir):
     assert os.stat(path).st_mode == mode | perms & ~stat.S_IXUSR
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_chmod_rejects_group_writable_suid(tmpdir):
     path = str(tmpdir.join('file').ensure())
     mode = stat.S_ISUID
@@ -35,6 +40,8 @@ def test_chmod_rejects_group_writable_suid(tmpdir):
         set_permissions(path, perms)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_chmod_rejects_world_writable_suid(tmpdir):
     path = str(tmpdir.join('file').ensure())
     mode = stat.S_ISUID
@@ -45,6 +52,8 @@ def test_chmod_rejects_world_writable_suid(tmpdir):
         set_permissions(path, perms)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_chmod_rejects_world_writable_sgid(tmpdir):
     path = str(tmpdir.join('file').ensure())
     mode = stat.S_ISGID
