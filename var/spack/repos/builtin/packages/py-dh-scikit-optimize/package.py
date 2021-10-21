@@ -7,7 +7,9 @@ from spack import *
 
 
 class PyDhScikitOptimize(PythonPackage):
-    """Scikit-Optimize, or skopt, is a simple and efficient library to
+    """A Modified version of scikit-optimize a Sequential model-based
+       optimization toolbox for DeepHyper.
+       Scikit-Optimize, or skopt, is a simple and efficient library to
        minimize (very) expensive and noisy black-box functions. It implements
        several methods for sequential model-based optimization. skopt aims to
        be accessible and easy to use in many contexts.
