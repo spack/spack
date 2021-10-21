@@ -184,3 +184,14 @@ def post_install(spec):
 
     install_sbang()
     filter_shebangs_in_directory_and_warn(spec.prefix)
+
+
+class SbangPathError(spack.error.SpackError):
+    """Raised when the install tree root is too long for sbang to work."""
+
+    def __init__(self):
+        shebang_len = len(sbang_shebang_line())
+        fmt = ('Install tree root is too long. Spack cannot patch shebang lines'
+               ' when script path length ({0}) exceeds limit ({1}).')
+        msg = fmt.format(shebang_len, shebang_limit)
+        super(SbangPathError, self).__init__(msg)

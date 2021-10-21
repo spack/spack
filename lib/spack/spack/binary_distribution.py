@@ -969,6 +969,12 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     if not spec.concrete:
         raise ValueError('spec must be concrete to build tarball')
 
+    # Avoid creating a tarball that may include `#!/usr/bin/env sbang` shebang lines
+    # for sbang. TODO: be less strict, we can allow this shebang and change it upon
+    # install to an absolute path if the target system has a short path to sbang.
+    if spack.hooks.sbang.sbang_shebang_itself_too_long():
+        raise spack.hooks.sbang.SbangPathError()
+
     # set up some paths
     tmpdir = tempfile.mkdtemp()
     cache_prefix = build_cache_prefix(tmpdir)
@@ -1229,6 +1235,12 @@ def relocate_package(spec, allow_root):
     """
     Relocate the given package
     """
+    # Error early if we cannot use the new sbang.
+    # TODO: use #!/usr/bin/env sbang and inform the user sbang works, but needs to be
+    # put in PATH.
+    if spack.hooks.sbang.sbang_shebang_itself_too_long():
+        raise spack.hooks.sbang.SbangPathError()
+
     workdir = str(spec.prefix)
     buildinfo = read_buildinfo_file(workdir)
     new_layout_root = str(spack.store.layout.root)

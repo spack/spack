@@ -19,6 +19,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.hooks.sbang
 import spack.repo
 import spack.store
 import spack.util.gpg
@@ -598,3 +599,16 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual,
     expected = pkg.download_instr if manual else 'All fetchers failed'
     with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
         pkg.do_fetch()
+
+
+def test_sbang_too_long_makes_relocation_error(monkeypatch, install_mockery):
+    """We currently can't guarantee that packages installed from binary cache work
+    if the local sbang path is too deep, since all we do is text replacement. So
+    here we test that we error out in that case upon an attempt to relocate."""
+    monkeypatch.setattr(
+        spack.hooks.sbang, 'sbang_shebang_itself_too_long', lambda: True)
+
+    spec = Spec('trivial-install-test-package').concretized()
+
+    with pytest.raises(spack.hooks.sbang.SbangPathError):
+        bindist.relocate_package(spec, allow_root=False)
