@@ -3,6 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
+import pytest
+
 import spack.environment as ev
 import spack.spec
 from spack.main import SpackCommand
@@ -12,6 +16,8 @@ env = SpackCommand('env')
 concretize = SpackCommand('concretize')
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_undevelop(tmpdir, config, mock_packages, mutable_mock_env_path):
     # setup environment
     envdir = tmpdir.mkdir('env')
@@ -39,6 +45,8 @@ env:
     assert not after.satisfies('dev_path=*')
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_undevelop_nonexistent(tmpdir, config, mock_packages, mutable_mock_env_path):
     # setup environment
     envdir = tmpdir.mkdir('env')

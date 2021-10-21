@@ -3,17 +3,23 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
+import pytest
+
 from spack.main import SpackCommand
 
 list = SpackCommand('list')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_list():
     output = list()
     assert 'cloverleaf3d' in output
     assert 'hdf5' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_list_filter(mock_packages):
     output = list('py-*')
     assert 'py-extension1' in output
@@ -30,17 +36,20 @@ def test_list_filter(mock_packages):
     assert 'mpich' not in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_list_search_description(mock_packages):
     output = list('--search-description', 'one build dependency')
     assert 'depb' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_list_format_name_only(mock_packages):
     output = list('--format', 'name_only')
     assert 'zmpi' in output
     assert 'hdf5' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_list_format_version_json(mock_packages):
     output = list('--format', 'version_json')
     assert '{"name": "zmpi",' in output
@@ -49,6 +58,7 @@ def test_list_format_version_json(mock_packages):
     json.loads(output)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_list_format_html(mock_packages):
     output = list('--format', 'html')
     assert '<div class="section" id="zmpi">' in output

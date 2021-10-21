@@ -166,6 +166,8 @@ class Changing(Package):
     return _changing_pkg
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 # This must use the mutable_config fixture because the test
 # adjusting_default_target_based_on_compiler uses the current_host fixture,
 # which changes the config.
@@ -363,6 +365,8 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
@@ -418,6 +422,8 @@ class TestConcretize(object):
         assert spec['libdwarf'].compiler.satisfies(compiler_str)
         assert spec['libelf'].compiler.satisfies(compiler_str)
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     def test_external_package(self):
         spec = Spec('externaltool%gcc')
         spec.concretize()
@@ -425,6 +431,8 @@ class TestConcretize(object):
         assert 'externalprereq' not in spec
         assert spec['externaltool'].compiler.satisfies('gcc')
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
         # TODO: improved way to check for this.
@@ -446,6 +454,8 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpecError):
             spec.concretize()
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     def test_external_and_virtual(self):
         spec = Spec('externaltest')
         spec.concretize()
@@ -693,6 +703,8 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             Spec(spec).concretized()
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
         ('mpileaks%gcc@4.4.7 ^dyninst@10.2.1 target=x86_64:', 'core2'),
@@ -711,6 +723,8 @@ class TestConcretize(object):
             s = Spec(spec).concretized()
             assert str(s.architecture.target) == str(expected)
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     @pytest.mark.regression('8735,14730')
     def test_compiler_version_matches_any_entry_in_compilers_yaml(self):
         # Ensure that a concrete compiler with different compiler version
@@ -1101,6 +1115,8 @@ class TestConcretize(object):
         s = Spec('a %gcc@foo os=redhat6').concretized()
         assert '%gcc@foo' in s
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     def test_all_patches_applied(self):
         uuidpatch = 'a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea'
         localpatch = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
@@ -1138,6 +1154,8 @@ class TestConcretize(object):
         assert s.external == is_external
         assert s.satisfies(expected)
 
+    @pytest.mark.skipif(sys.platform == "win32",
+                        reason='Not supported on Windows (yet)')
     @pytest.mark.regression('20292')
     @pytest.mark.parametrize('context', [
         {'add_variant': True, 'delete_variant': False},

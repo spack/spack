@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import os.path
+import sys
 
 import pytest
 
@@ -24,6 +25,7 @@ def executables_found(monkeypatch):
     return _factory
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_find_external_single_package(mock_executable, executables_found):
     pkgs_to_check = [spack.repo.get('cmake')]
     executables_found({
@@ -38,6 +40,7 @@ def test_find_external_single_package(mock_executable, executables_found):
     assert single_entry.spec == Spec('cmake@1.foo')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Not yet implemented on windows")
 def test_find_external_two_instances_same_package(mock_executable, executables_found):
     pkgs_to_check = [spack.repo.get('cmake')]
 
@@ -92,6 +95,7 @@ def test_get_executables(working_env, mock_executable):
 external = SpackCommand('external')
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_find_external_cmd(mutable_config, working_env, mock_executable):
     """Test invoking 'spack external find' with additional package arguments,
     which restricts the set of packages that Spack looks for.
@@ -109,6 +113,7 @@ def test_find_external_cmd(mutable_config, working_env, mock_executable):
     assert {'spec': 'cmake@1.foo', 'prefix': prefix} in cmake_externals
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_find_external_cmd_not_buildable(
         mutable_config, working_env, mock_executable):
     """When the user invokes 'spack external find --not-buildable', the config
@@ -122,6 +127,7 @@ def test_find_external_cmd_not_buildable(
     assert not pkgs_cfg['cmake']['buildable']
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_find_external_cmd_full_repo(
         mutable_config, working_env, mock_executable, mutable_mock_repo):
     """Test invoking 'spack external find' with no additional arguments, which
@@ -180,11 +186,13 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
             'prefix': '/x/y2/'} in pkg_externals
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     external("list")
     assert external.returncode == 0
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Error on Win")
 def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable('gcc', output="echo 4.2.1")
@@ -209,6 +217,7 @@ def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch):
     assert extra_attributes['compilers']['c'] == gcc_exe
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake gcc that
     # override its external prefix
@@ -238,6 +247,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     assert externals[0]['prefix'] == '/opt/gcc/bin'
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_new_entries_are_reported_correctly(
         mock_executable, mutable_config, monkeypatch
 ):
@@ -256,6 +266,7 @@ def test_new_entries_are_reported_correctly(
     assert 'No new external packages detected' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 @pytest.mark.parametrize('command_args', [
     ('-t', 'build-tools'),
     ('-t', 'build-tools', 'cmake'),
