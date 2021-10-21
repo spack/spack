@@ -9,74 +9,44 @@ import sys
 from spack import *
 from copy import deepcopy
 
-
-def depends_on_cuda(cuda_var, *args, **kwargs):
-    # require ~cuda when xsdk~cuda
-    args_new = list(deepcopy(args))
-    if not isinstance(cuda_var, list):
-        cuda_var = [cuda_var]
+def depends_on_accl(accl_name, accl_var, *args, **kwargs):
+    if accl_name == 'cuda':
+        accl_arch_name = 'cuda_arch'
+        accl_arch_values = list(deepcopy(CudaPackage.cuda_arch_values))
+    elif accl_name == 'rocm':
+        accl_arch_name = 'amdgpu_target'
+        accl_arch_values = list(deepcopy(ROCmPackage.amdgpu_targets))
+    # require ~cuda when xsdk~cuda (and '?cuda' not used)
     usedep = 1
-    for idx, var in enumerate(cuda_var):
+    args_new = list(deepcopy(args))
+    if not isinstance(accl_var, list):
+        accl_var = [accl_var]
+    for idx, var in enumerate(accl_var):
         # skip variants starting with '?' so that
         # that that they are left unspecified by xsdk
         if not var.startswith('?'):
             args_new[0] += ' ~%s' % var
         else:
-            cuda_var[idx] = var.replace('?', '')
+            accl_var[idx] = var.replace('?', '')
         # if '?cuda' skip adding '~cuda' dep
-        if var == '?cuda': usedep = 0
+        if var == '?'+accl_name: usedep = 0
     kwargs_new = deepcopy(kwargs)
     if 'when' in kwargs_new:
-        kwargs_new['when'] += ' ~cuda'
+        kwargs_new['when'] += ' ~'+accl_name
     else:
-        kwargs_new['when'] = '~cuda'
+        kwargs_new['when'] = '~'+accl_name
     if usedep:
       depends_on(*args_new, **kwargs_new)
 
     # require +cuda when xsdk+cuda, and match the arch
-    for arch in CudaPackage.cuda_arch_values:
+    for arch in accl_arch_values:
         args_new = list(deepcopy(args))
         kwargs_new = deepcopy(kwargs)
-        args_new[0] += '+%s cuda_arch=%s' % ('+'.join(cuda_var), arch)
+        args_new[0] += '+%s %s=%s' % ('+'.join(accl_var), accl_arch_name, str(arch))
         if 'when' in kwargs_new:
-            kwargs_new['when'] += ' +cuda cuda_arch=%s' % arch
+            kwargs_new['when'] += ' +%s %s=%s' % (accl_name, accl_arch_name, str(arch))
         else:
-            kwargs_new['when'] = '+cuda cuda_arch=%s' % arch
-        depends_on(*args_new, **kwargs_new)
-
-
-def depends_on_rocm(rocm_var, *args, **kwargs):
-    # require ~rocm when xsdk~rocm
-    args_new = list(deepcopy(args))
-    if not isinstance(rocm_var, list):
-        rocm_var = [rocm_var]
-    usedep = 1
-    for idx, var in enumerate(rocm_var):
-        # skip variants starting with '?' so that
-        # that that they are left unspecified by xsdk
-        if not var.startswith('?'):
-            args_new[0] += ' ~%s' % var
-        else:
-            rocm_var[idx] = var.replace('?', '')
-        # if '?rocm' skip adding '~rocm' dep
-        if var == '?rocm': usedep = 0
-    kwargs_new = deepcopy(kwargs)
-    if 'when' in kwargs_new:
-        kwargs_new['when'] += ' ~rocm'
-    else:
-        kwargs_new['when'] = '~rocm'
-    if usedep:
-      depends_on(*args_new, **kwargs_new)
-
-    # require +rocm when xsdk+rocm, and match the target
-    for tgt in ROCmPackage.amdgpu_targets:
-        args_new = list(deepcopy(args))
-        kwargs_new = deepcopy(kwargs)
-        args_new[0] += ' +%s amdgpu_target=%s' % ('+'.join(rocm_var), tgt)
-        if 'when' in kwargs_new:
-            kwargs_new['when'] += ' +rocm amdgpu_target=%s' % tgt
-        else:
-            kwargs_new['when'] = '+rocm amdgpu_target=%s' % tgt
+            kwargs_new['when'] = '+%s %s=%s' % (accl_name, accl_arch_name, str(arch))
         depends_on(*args_new, **kwargs_new)
 
 
@@ -105,9 +75,9 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
         in the strings.
         """
         if bool(cuda_var):
-            depends_on_cuda(cuda_var, *args, **kwargs)
+            depends_on_accl('cuda', cuda_var, *args, **kwargs)
         if bool(rocm_var):
-            depends_on_rocm(rocm_var, *args, **kwargs)
+            depends_on_accl('rocm', rocm_var, *args, **kwargs)
         if not bool(cuda_var) and not bool(rocm_var):
             depends_on(*args, **kwargs)
 
