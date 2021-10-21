@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+
 import pytest
 
 import spack.bootstrap
@@ -133,6 +135,10 @@ spack:
     install_tree:
       root: /tmp/store
 """)
+    if os.name == 'nt':
+        sep = '\\'
+    else:
+        sep = '/'
     with spack.environment.Environment(str(tmpdir)):
         assert spack.environment.active_environment()
         assert spack.config.get('config:install_tree:root') == '/tmp/store'

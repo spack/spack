@@ -90,7 +90,8 @@ def test_env_flag(prepare_environment_for_tests):
 
 def test_path_set(prepare_environment_for_tests):
     envutil.path_set('TEST_ENV_VAR', ['/a', '/a/b', '/a/a'])
-    assert(os.environ['TEST_ENV_VAR'] == '/a:/a/b:/a/a')
+    assert(os.environ['TEST_ENV_VAR'] == '/a' + os.pathsep
+           + '/a/b' + os.pathsep + '/a/a')
 
 
 def test_path_put_first(prepare_environment_for_tests):
@@ -113,8 +114,8 @@ def test_dump_environment(prepare_environment_for_tests, tmpdir):
 
 def test_reverse_environment_modifications(working_env):
     start_env = {
-        'PREPEND_PATH': '/path/to/prepend/to',
-        'APPEND_PATH': '/path/to/append/to',
+        'PREPEND_PATH': os.sep + os.path.join('path', 'to', 'prepend', 'to'),
+        'APPEND_PATH': os.sep + os.path.join('path', 'to', 'append', 'to'),
         'UNSET': 'var_to_unset',
         'APPEND_FLAGS': 'flags to append to',
     }
