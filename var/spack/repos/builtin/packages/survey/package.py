@@ -22,15 +22,16 @@ class Survey(CMakePackage):
        AMD, ARM, and IBM P8/9 processors and integrated GPUs.
     """
 
-    # To access the survey source and build with
-    # spack please contact: Trenza Inc. via:
-    # dmont@trenzasynergy.com
+    # survey is a licensed product – source not openly available.
+    # To access the survey source and build with spack please contact:
+    # Trenza Inc. via: dmont@trenzasynergy.com or
+    #                  jeg@trenzasynergy.com
     homepage = "http://www.trenzasynergy.com"
     git      = "git@gitlab.com:trenza/survey.git"
 
     maintainers = ['jgalarowicz']
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('1.0.1', branch='1.0.1')
     version('1.0.0', branch='1.0.0')
 
@@ -38,7 +39,7 @@ class Survey(CMakePackage):
             description="Enable mpi, build MPI data collector")
 
     # must have cmake at 3.12 or greater to find python3
-    depends_on('cmake@3.12:')
+    depends_on('cmake@3.12:', type='build')
 
     # for collectors
     depends_on("libmonitor@2021.04.27+commrank", type=('build', 'link', 'run'))
@@ -51,14 +52,14 @@ class Survey(CMakePackage):
     depends_on("mpi", when="+mpi")
 
     depends_on("python@3:", type=('build', 'link', 'run'))
-    depends_on("py-setuptools", type=('run'))
-    depends_on("py-pip", type=('run'))
-    depends_on("py-python-dateutil", type=('run'))
-    depends_on("py-pandas", type=('run'))
-    depends_on("py-psutil", type=('run'))
-    depends_on("py-sqlalchemy", type=('run'))
+    depends_on("py-setuptools", type='run')
+    depends_on("py-pip", type='build')
+    depends_on("py-python-dateutil", type='run')
+    depends_on("py-pandas", type='run')
+    depends_on("py-psutil", type='run')
+    depends_on("py-sqlalchemy", type='run')
     depends_on("py-pbr", type=('build', 'run'))
-    depends_on("py-pyyaml", type=('run'))
+    depends_on("py-pyyaml", type='run')
 
     extends('python')
 
@@ -90,22 +91,11 @@ class Survey(CMakePackage):
         cmake_args.extend(mpi_options)
         return cmake_args
 
-    @property
-    def python_lib_dir(self):
-        python_vers_phrase = 'python{0}'.format(
-                             self.spec['python'].version.up_to(2))
-        return join_path('lib', python_vers_phrase)
-
-    @property
-    def site_packages_dir(self):
-        return join_path(self.python_lib_dir, 'site-packages')
-
     def setup_run_environment(self, env):
         """Set up the compile and runtime environments for a package."""
 
         # Set SURVEY_MPI_IMPLEMENTATON to the appropriate mpi implementation
         # This is needed by survey to deploy the correct mpi runtimes.
         env.set('SURVEY_MPI_IMPLEMENTATION', self.spec['mpi'].name.lower())
+        # For compatibility reasons we need
         env.prepend_path('PATH', self.spec['python'].prefix.bin)
-        env.prepend_path('PYTHONPATH',
-                         join_path(self.prefix, self.site_packages_dir))
