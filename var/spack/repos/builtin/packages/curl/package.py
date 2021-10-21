@@ -87,7 +87,8 @@ class Curl(AutotoolsPackage):
     conflicts('tls=mbedtls', when='@:7.45')
 
     depends_on('gnutls', when='tls=gnutls')
-    depends_on('mbedtls', when='tls=mbedtls')
+    depends_on('mbedtls@3:', when='@7.79: tls=mbedtls')
+    depends_on('mbedtls@:2.999', when='@:7.78 tls=mbedtls')
     depends_on('nss', when='tls=nss')
     depends_on('openssl', when='tls=openssl')
     depends_on('libidn2', when='+libidn2')
@@ -134,6 +135,10 @@ class Curl(AutotoolsPackage):
         args += self.with_or_without('libssh2')
         args += self.with_or_without('libssh')
         args += self.enable_or_disable('ldap')
+
+        if '--without-openssl' in args or '--without-ssl' in args:
+            args.remove('--with-ca-fallback')
+
         return args
 
     def with_or_without_gnutls(self, activated):
