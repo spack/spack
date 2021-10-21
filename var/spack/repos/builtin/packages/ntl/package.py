@@ -35,8 +35,7 @@ class Ntl(Package):
     version('11.5.0', sha256='9e1e6488b177c3e5d772fdd6279c890937a9d1c3b694a904ac1cfbe9cab836db')
     version('11.4.4', sha256='2ce7a10fadbed6c3859d72c859612a4ca0dbdf6a9db99db4261422b7f0804bfa')
 
-    variant('shared', values=bool, default=False,
-            description='Build shared library.')
+    variant('shared', default=False, description='Build shared library.')
 
     depends_on('gmp')
 
