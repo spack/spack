@@ -52,7 +52,7 @@ class ArmForge(Package):
     license_url = "https://developer.arm.com/tools-and-software/server-and-hpc/help/help-and-tutorials/system-administration/licensing/arm-licence-server"
 
     def url_for_version(self, version):
-        return "http://content.allinea.com/downloads/arm-forge-%s-linux-%s.tar" % (version, platform.machine())
+        return "https://content.allinea.com/downloads/arm-forge-%s-linux-%s.tar" % (version, platform.machine())
 
     def install(self, spec, prefix):
         subprocess.call(["./textinstall.sh", "--accept-licence", prefix])
