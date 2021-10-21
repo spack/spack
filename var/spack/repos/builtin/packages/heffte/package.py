@@ -62,7 +62,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('rocfft@3.8.0:', when='+rocm')
     depends_on('magma@2.5.3:', when="+cuda+magma", type=('build', 'run'))
     depends_on('magma+rocm@2.6.1:',
-                when='+magma+rocm @2.1:', type=('build', 'run'))
+               when='+magma+rocm @2.1:', type=('build', 'run'))
     depends_on('hipblas@3.8:', when='+magma+rocm', type=('build', 'run'))
     depends_on('hipsparse@3.8:', when='+magma+rocm', type=('build', 'run'))
 
