@@ -802,9 +802,9 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
     # Activate the environment
     with e:
         inst_out = install(
-            '--add', 'boost', fail_on_error=False, output=str)
+            'boost', fail_on_error=False, output=str)
 
-        assert('no such spec exists in environment' in inst_out)
+        assert('did not also specify --add' in inst_out)
 
         # Without --add, ensure that install fails if the spec matches more
         # than one root
