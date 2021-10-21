@@ -6,6 +6,7 @@ import os
 import os.path
 import re
 import shutil
+import sys
 
 import pytest
 
@@ -224,6 +225,8 @@ def test_file_is_relocatable_errors(tmpdir):
         assert 'is not an absolute path' in str(exc_info.value)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('patchelf_behavior,expected', [
     ('echo ', []),
     ('echo /opt/foo/lib:/opt/foo/lib64', ['/opt/foo/lib', '/opt/foo/lib64']),
@@ -241,7 +244,8 @@ def test_existing_rpaths(patchelf_behavior, expected, mock_patchelf):
 
 @pytest.mark.parametrize('start_path,path_root,paths,expected', [
     ('/usr/bin/test', '/usr', ['/usr/lib', '/usr/lib64', '/opt/local/lib'],
-     ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'])
+     [os.path.join('$ORIGIN', '..', 'lib'), os.path.join('$ORIGIN', '..', 'lib64'),
+     '/opt/local/lib'])
 ])
 def test_make_relative_paths(start_path, path_root, paths, expected):
     relatives = spack.relocate._make_relative(start_path, path_root, paths)
@@ -253,7 +257,8 @@ def test_make_relative_paths(start_path, path_root, paths, expected):
     # and then normalized
     ('/usr/bin/test',
      ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'],
-     ['/usr/lib', '/usr/lib64', '/opt/local/lib']),
+     [os.sep + os.path.join('usr', 'lib'), os.sep + os.path.join('usr', 'lib64'),
+      '/opt/local/lib']),
     # Relative path without $ORIGIN
     ('/usr/bin/test', ['../local/lib'], ['../local/lib']),
 ])
@@ -264,6 +269,8 @@ def test_normalize_relative_paths(start_path, relative_paths, expected):
     assert normalized == expected
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_set_elf_rpaths(mock_patchelf):
     # Try to relocate a mock version of patchelf and check
     # the call made to patchelf itself
@@ -277,6 +284,8 @@ def test_set_elf_rpaths(mock_patchelf):
     assert patchelf in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_set_elf_rpaths_warning(mock_patchelf):
     # Mock a failing patchelf command and ensure it warns users
     patchelf = mock_patchelf('exit 1')

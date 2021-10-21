@@ -13,6 +13,7 @@ import os
 import os.path
 import re
 import shutil
+import sys
 import tempfile
 import xml.etree.ElementTree
 from typing import Dict  # novm
@@ -375,7 +376,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         stage_files = os.listdir(stage_path)
         files_in_stage = set(stage_files) - ignore_stage_files
     except OSError as err:
-        if err.errno == errno.ENOENT:
+        if err.errno == errno.ENOENT or err.errno == errno.EINVAL:
             pass
         else:
             raise
@@ -591,7 +592,11 @@ def configuration_dir(tmpdir_factory, linux_os):
     tmpdir.ensure('user', dir=True)
 
     # Slightly modify config.yaml and compilers.yaml
-    solver = os.environ.get('SPACK_TEST_SOLVER', 'clingo')
+    if os.name == 'nt':
+        solver = 'original'
+    else:
+        solver = os.environ.get('SPACK_TEST_SOLVER', 'clingo')
+
     config_yaml = test_config.join('config.yaml')
     modules_root = tmpdir_factory.mktemp('share')
     tcl_root = modules_root.ensure('modules', dir=True)
@@ -1032,10 +1037,14 @@ def mock_archive(request, tmpdir_factory):
                                      ['url', 'path', 'archive_file',
                                       'expanded_archive_basedir'])
     archive_file = str(tmpdir.join(archive_name))
+    if sys.platform == 'win32':
+        url = ('file:///' + archive_file)
+    else:
+        url = ('file://' + archive_file)
 
     # Return the url
     yield Archive(
-        url=('file://' + archive_file),
+        url=url,
         archive_file=archive_file,
         path=str(repodir),
         expanded_archive_basedir=spack.stage._source_path_subdir)

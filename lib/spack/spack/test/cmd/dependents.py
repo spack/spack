@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import sys
 
 import pytest
 
@@ -15,6 +16,7 @@ from spack.main import SpackCommand
 dependents = SpackCommand('dependents')
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_immediate_dependents(mock_packages):
     out = dependents('libelf')
     actual = set(re.split(r'\s+', out.strip()))
@@ -28,6 +30,7 @@ def test_immediate_dependents(mock_packages):
     ])
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_transitive_dependents(mock_packages):
     out = dependents('--transitive', 'libelf')
     actual = set(re.split(r'\s+', out.strip()))
@@ -44,6 +47,7 @@ def test_transitive_dependents(mock_packages):
     ])
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.db
 def test_immediate_installed_dependents(mock_packages, database):
     with color_when(False):
@@ -61,6 +65,7 @@ def test_immediate_installed_dependents(mock_packages, database):
     assert expected == hashes
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.db
 def test_transitive_installed_dependents(mock_packages, database):
     with color_when(False):

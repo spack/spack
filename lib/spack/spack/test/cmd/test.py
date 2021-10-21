@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import sys
 
 import pytest
 
@@ -18,6 +19,8 @@ install = SpackCommand('install')
 spack_test = SpackCommand('test')
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_test_package_not_installed(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery_mutable_config, mock_test_stage):
@@ -39,6 +42,8 @@ def test_test_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_test_dup_alias(
         mock_test_stage, mock_packages, mock_archive, mock_fetch,
         install_mockery_mutable_config, capfd):
@@ -57,6 +62,8 @@ def test_test_dup_alias(
     assert "already exists" in out
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
                      install_mockery_mutable_config):
     """Ensure output printed from pkgs is captured by output redirection."""
@@ -82,6 +89,8 @@ def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
     assert "FAILED" not in output
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_test_output_on_error(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
     capfd, mock_test_stage
@@ -95,6 +104,8 @@ def test_test_output_on_error(
     assert "Command exited with status 1" in out
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_test_output_on_failure(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
     capfd, mock_test_stage
@@ -107,6 +118,8 @@ def test_test_output_on_failure(
     assert "TestFailure" in out
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_show_log_on_error(
     mock_packages, mock_archive, mock_fetch,
     install_mockery_mutable_config, capfd, mock_test_stage
@@ -120,6 +133,8 @@ def test_show_log_on_error(
     assert mock_test_stage in out
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 @pytest.mark.usefixtures(
     'mock_packages', 'mock_archive', 'mock_fetch',
     'install_mockery_mutable_config'
@@ -153,6 +168,8 @@ def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
         assert msg in content
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_cdash_output_test_error(
         tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
         mock_archive, mock_test_stage, capfd):
@@ -172,6 +189,8 @@ def test_cdash_output_test_error(
         assert 'FAILED: Command exited with status 1' in content
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_cdash_upload_clean_test(
         tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
         mock_archive, mock_test_stage):
@@ -217,6 +236,8 @@ def test_test_list_all(mock_packages):
     ])
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='FetchError: All fetchers failed')
 def test_test_list(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config
 ):
@@ -226,6 +247,18 @@ def test_test_list(
     assert pkg_with_tests in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+def test_has_test_method_fails(capsys):
+    with pytest.raises(SystemExit):
+        has_test_method('printing-package')
+
+    captured = capsys.readouterr()[1]
+    assert 'is not a class' in captured
+
+
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,
                      install_mockery_mutable_config):
     """Ensure output printed from pkgs is captured by output redirection."""

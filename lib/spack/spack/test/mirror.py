@@ -5,6 +5,7 @@
 
 import filecmp
 import os
+import sys
 
 import pytest
 
@@ -103,12 +104,16 @@ def check_mirror():
                         assert all(left in exclude for left in dcmp.left_only)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_url_mirror(mock_archive):
     set_up_package('trivial-install-test-package', mock_archive, 'url')
     check_mirror()
     repos.clear()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(
     not which('git'), reason='requires git to be installed')
 def test_git_mirror(mock_git_repository):
@@ -117,6 +122,8 @@ def test_git_mirror(mock_git_repository):
     repos.clear()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(
     not which('svn') or not which('svnadmin'),
     reason='requires subversion to be installed')
@@ -126,6 +133,8 @@ def test_svn_mirror(mock_svn_repository):
     repos.clear()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(
     not which('hg'), reason='requires mercurial to be installed')
 def test_hg_mirror(mock_hg_repository):
@@ -134,6 +143,8 @@ def test_hg_mirror(mock_hg_repository):
     repos.clear()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(
     not all([which('svn'), which('hg'), which('git')]),
     reason='requires subversion, git, and mercurial to be installed')
@@ -151,6 +162,8 @@ def test_all_mirror(
     repos.clear()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "mirror",
     [
@@ -167,6 +180,8 @@ def test_roundtrip_mirror(mirror):
     assert spack.mirror.Mirror.from_json(mirror_json) == mirror
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "invalid_yaml",
     [
@@ -181,6 +196,8 @@ def test_invalid_yaml_mirror(invalid_yaml):
     assert invalid_yaml in exc_msg
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "invalid_json, error_message",
     [
@@ -195,6 +212,8 @@ def test_invalid_json_mirror(invalid_json, error_message):
     assert error_message in exc_msg
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "mirror_collection",
     [
@@ -217,6 +236,8 @@ def test_roundtrip_mirror_collection(mirror_collection):
             mirror_collection)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "invalid_yaml",
     [
@@ -231,6 +252,8 @@ def test_invalid_yaml_mirror_collection(invalid_yaml):
     assert invalid_yaml in exc_msg
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "invalid_json, error_message",
     [
@@ -245,12 +268,16 @@ def test_invalid_json_mirror_collection(invalid_json, error_message):
     assert error_message in exc_msg
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
     spec = Spec('trivial-install-test-package@nonexistingversion')
     fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, 'per-package-ref', spec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
     spec = Spec('patch-several-dependencies')
     spec.concretize()
@@ -303,6 +330,8 @@ class MockFetcher(object):
             pass
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.regression('14067')
 def test_mirror_cache_symlinks(tmpdir):
     """Confirm that the cosmetic symlink created in the mirror cache (which may

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -23,6 +24,8 @@ test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
                      'prepend-path PATH /path/to/bin']
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_module_function_change_env(tmpdir, working_env):
     src_file = str(tmpdir.join('src_me'))
     with open(src_file, 'w') as f:
@@ -35,6 +38,8 @@ def test_module_function_change_env(tmpdir, working_env):
     assert os.environ['NOT_AFFECTED'] == "NOT_AFFECTED"
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_module_function_no_change(tmpdir):
     src_file = str(tmpdir.join('src_me'))
     with open(src_file, 'w') as f:

@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import stat
+import sys
 
 import pytest
 
@@ -70,6 +72,8 @@ def assert_variant_values(spec, **variants):
         assert concrete.variants[variant].value == value
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('concretize_scope', 'mock_packages')
 class TestConcretizePreferences(object):
     @pytest.mark.parametrize('package_name,variant_value,expected_results', [
@@ -230,7 +234,7 @@ mpich:
         # ensure that once config is in place, external is used
         spec = Spec('mpi')
         spec.concretize()
-        assert spec['mpich'].external_path == '/dummy/path'
+        assert spec['mpich'].external_path == os.sep + os.path.join('dummy', 'path')
 
     def test_external_module(self, monkeypatch):
         """Test that packages can find externals specified by module

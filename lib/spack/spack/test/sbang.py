@@ -55,7 +55,7 @@ last_line  = "last!\n"
 
 @pytest.fixture  # type: ignore[no-redef]
 def sbang_line():
-    yield '#!/bin/sh %s/bin/sbang\n' % spack.store.layout.root
+    yield '#!/bin/sh {0}{1}bin{1}sbang\n'.format(spack.store.layout.root, os.sep)
 
 
 class ScriptDirectory(object):
@@ -181,6 +181,8 @@ def script_dir(sbang_line):
     sdir.destroy()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('shebang,interpreter', [
     (b'#!/path/to/interpreter argument\n', b'/path/to/interpreter'),
     (b'#!  /path/to/interpreter truncated-argum', b'/path/to/interpreter'),
@@ -251,6 +253,8 @@ def test_shebang_handling(script_dir, sbang_line):
         assert f.readline() == last_line
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_shebang_handles_non_writable_files(script_dir, sbang_line):
     # make a file non-writable
     st = os.stat(script_dir.long_shebang)
@@ -336,10 +340,14 @@ def run_test_install_sbang(group):
     check_sbang_installation(group)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_group_sbang(install_mockery, configure_group_perms):
     run_test_install_sbang(True)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_user_sbang(install_mockery, configure_user_perms):
     run_test_install_sbang(False)
 

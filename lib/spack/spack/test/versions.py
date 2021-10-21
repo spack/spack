@@ -8,6 +8,7 @@ We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
 import os
+import sys
 
 import pytest
 
@@ -585,6 +586,8 @@ def test_invalid_versions(version_str):
         Version(version_str)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(spack.package.PackageBase, 'git', 'file://%s' % repo_path,
