@@ -11,9 +11,9 @@ class OmegaH(CMakePackage):
     hardware including GPUs.
     """
 
-    homepage = "https://github.com/SNLComputation/omega_h"
-    url      = "https://github.com/SNLComputation/omega_h/archive/v9.34.1.tar.gz"
-    git      = "https://github.com/SNLComputation/omega_h.git"
+    homepage = "https://github.com/sandialabs/omega_h"
+    url      = "https://github.com/sandialabs/omega_h/archive/v9.34.1.tar.gz"
+    git      = "https://github.com/sandialabs/omega_h.git"
 
     maintainers = ['ibaned']
     tags = ['e4s']
