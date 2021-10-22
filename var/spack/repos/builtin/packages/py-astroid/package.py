@@ -41,8 +41,8 @@ class PyAstroid(PythonPackage):
     # to a given minor version, c.f. commit e1b4e11.
     depends_on('py-lazy-object-proxy@1.4.0:1.4', when='@2.3.1:', type=('build', 'run'))
     depends_on('py-lazy-object-proxy@1.4.0:', when='@2.7.3:', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
-    depends_on('py-six@1.12:1', when='@2.3.3:', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'), when='@:2.7.2')
+    depends_on('py-six@1.12:1', when='@2.3.3:2.7.2', type=('build', 'run'))
     depends_on('py-wrapt', when='@:2.2', type=('build', 'run'))
     depends_on('py-wrapt@1.11:1.12', when='@2.3.3:', type=('build', 'run'))
     depends_on('py-wrapt@1.11:1.13', when='@2.8.3:', type=('build', 'run'))
