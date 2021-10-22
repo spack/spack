@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class PalisadeDevelopmentGit(CMakePackage):
     """
     PALISADE is a general lattice cryptography library that currently
