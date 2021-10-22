@@ -435,6 +435,8 @@ class CDash(Reporter):
                     if match:
                         buildid = match.group(1)
                         self.buildIds[self.current_package_name] = buildid
+                    else:
+                        pass
             except Exception as e:
                 print("Upload to CDash failed: {0}".format(e))
 
