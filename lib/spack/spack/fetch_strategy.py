@@ -43,6 +43,7 @@ from llnl.util.filesystem import (
     temp_rename,
     working_dir,
 )
+from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
@@ -640,7 +641,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             os.remove(filename)
 
         # Symlink to local cached archive.
-        os.symlink(path, filename)
+        symlink(path, filename)
 
         # Remove link if checksum fails, or subsequent fetchers
         # will assume they don't need to download.

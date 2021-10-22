@@ -17,6 +17,7 @@ import six
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
+from llnl.util.symlink import islink, symlink
 
 import spack.bootstrap
 import spack.compilers
@@ -1461,7 +1462,7 @@ class Environment(object):
                     log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
                 if os.path.lexists(build_log_link):
                     os.remove(build_log_link)
-                os.symlink(spec.package.build_log_path, build_log_link)
+                symlink(spec.package.build_log_path, build_log_link)
 
     def uninstalled_specs(self):
         """Return a list of all uninstalled (and non-dev) specs."""
