@@ -160,6 +160,9 @@ def warn_no_ssl_cert_checking():
 
 def push_to_url(
         local_file_path, remote_path, keep_original=True, extra_args=None):
+    if sys.platform == "win32":
+        if remote_path[1] == ':':
+            remote_path = "file:///" + remote_path
     remote_url = url_util.parse(remote_path)
     verify_ssl = spack.config.get('config:verify_ssl')
 
@@ -639,6 +642,7 @@ def find_versions_of_archive(
     # Any conflicting versions will be overwritten by the list_url links.
     versions = {}
     for url in archive_urls + sorted(links):
+        url = url.replace("\\", "/")
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)
