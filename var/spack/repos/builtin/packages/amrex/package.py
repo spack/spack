@@ -11,9 +11,13 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     for building massively parallel block- structured adaptive
     mesh refinement (AMR) applications."""
 
+    #homepage = "https://amrex-codes.github.io/amrex/"
+    #url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.10/amrex-21.10.tar.gz"
+    #git      = "https://github.com/AMReX-Codes/amrex.git"
+
     homepage = "https://amrex-codes.github.io/amrex/"
-    url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.10/amrex-21.10.tar.gz"
-    git      = "https://github.com/AMReX-Codes/amrex.git"
+    url      = "https://github.com/etpalmer63/amrex"
+    git      = "https://github.com/etpalmer63/amrex.git"
     
     test_requires_compiler = True
 
@@ -21,7 +25,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['WeiqunZhang', 'asalmgren']
 
-    version('develop', branch='development')
+    version('develop', branch='spack_smoke_test')
     version('21.10', sha256='a11954c03b1ec26c26b676460dc5de5195469e813b70fbcea6dfdefeafaf5407')
     version('21.09', sha256='983b41d93bf9417c032080fd2ec7c04d0d2b820e613a076bd07566aa5a8aa4bd')
     version('21.08', sha256='34fb6c72735c74820b27db1138e5bc9fe698ffbd8344aae10a5fbdace479b57f')
@@ -57,7 +61,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Build shared library')
     variant('mpi',          default=False,
             description='Build with MPI support')
-    variant('openmp',       default=True,
+    variant('openmp',       default=False,
             description='Build with OpenMP support')
     variant('precision',  default='double',
             description='Real precision (double/single)',
@@ -66,11 +70,11 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Build Embedded Boundary classes')
     variant('fortran',  default=False,
             description='Build Fortran API')
-    variant('linear_solvers', default=True,
+    variant('linear_solvers', default=False,
             description='Build linear solvers')
     variant('amrdata',    default=False,
             description='Build data services')
-    variant('particles',  default=True,
+    variant('particles',  default=False,
             description='Build particle classes')
     variant('plotfile_tools', default=False,
             description='Build plotfile_tools like fcompare')
@@ -169,6 +173,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = [
             '-DUSE_XSDK_DEFAULTS=ON',
+            #self.define('AMReX_FORTRAN', True),
+            #self.define('AMReX_FORTRAN_INTERFACES', True),
             self.define_from_variant('AMReX_SPACEDIM', 'dimensions'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('AMReX_MPI', 'mpi'),
@@ -270,13 +276,14 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
     def test(self):
         """Perform smoke tests on installed package."""
-        join_path(self.test_suite.current_test_cache_dir, './Tests/CMakeTestInstall')
+        #join_path(self.test_suite.current_test_cache_dir, './Tests/CMakeTestInstall')
+        join_path(self.test_suite.current_test_cache_dir, './Tests/SpackSmokeTest')
 
         # TODO: Remove/replace once self.spec['cmake'] is available here
         cmake_bin = self.cmake_bin(set=False)
 
         args = []
-        args.append('-S ./cache/amrex/Tests/CMakeTestInstall')
+        args.append('-S ./cache/amrex/Tests/SpackSmokeTest')
         args.append('-DAMReX_ROOT='+self.prefix)
         args.extend(self.cmake_args())
         self.run_test(cmake_bin, args,
@@ -284,7 +291,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
         make()
 
-        self.run_test('install_test', ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs','max_step=1'],
+        #self.run_test('install_test', ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs','max_step=1'],
+        self.run_test('SingleVortex', ['./cache/amrex/Tests/Amr/Advection_AmrLevel/Exec/SingleVortex/inputs-ci'],
                       ['finalized'],
                       installed=False, purpose='AMReX Stand-Alone Smoke Test',
                       skip_missing=False)
