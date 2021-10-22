@@ -99,3 +99,26 @@ class OmegaH(CMakePackage):
                 flags.append("-Wno-final-dtor-non-final-class")
 
         return (None, None, flags)
+
+    def test(self):
+        if self.spec.version <= Version('9.34.1'):
+            return
+
+        exe = 'osh_box'
+        options = ['1', '1', '1', '2', '2', '2', 'box.osh']
+        description = 'testing mesh construction'
+        self.run_test(exe, options, purpose=description,
+                      work_dir=self.prefix.bin)
+
+        exe = 'osh_scale'
+        options = ['box.osh', '100', 'box_100.osh']
+        expected='adapting took'
+        description = 'testing mesh adaptation'
+        self.run_test(exe, options, expected, purpose=description,
+                      work_dir=self.prefix.bin)
+
+        exe = 'osh2vtk'
+        options = ['box_100.osh', 'box_100_vtk']
+        description = 'testing mesh to vtu conversion'
+        self.run_test(exe, options, purpose=description,
+                      work_dir=self.prefix.bin)
