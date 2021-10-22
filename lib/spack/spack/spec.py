@@ -3052,6 +3052,10 @@ class Spec(object):
         Raises:
             spack.variant.UnknownVariantError: on the first unknown variant found
         """
+        # concrete variants are always valid
+        if spec.concrete:
+            return
+
         pkg_cls = spec.package_class
         pkg_variants = pkg_cls.variants
         # reserved names are variants that may be set on any package
