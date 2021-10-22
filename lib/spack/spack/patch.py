@@ -20,7 +20,7 @@ import spack.stage
 import spack.util.spack_json as sjson
 from spack.util.compression import allowed_archive
 from spack.util.crypto import Checker, checksum
-from spack.util.executable import which
+from spack.util.executable import which, which_string
 
 
 def apply_patch(stage, patch_path, level=1, working_dir='.'):
@@ -39,7 +39,14 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
         working_dir (str): relative path *within* the stage to change to
             (default '.')
     """
-    patch = which("patch", required=True)
+    git_utils_path = os.environ.get('PATH', '')
+    if os.name == 'nt':
+        git = which_string('git', required=True)
+        git_root = os.path.dirname(git).split('/')[:-1]
+        git_root.extend(['usr', 'bin'])
+        git_utils_path = os.sep.join(git_root)
+
+    patch = which("patch", required=True, path=git_utils_path)
     with llnl.util.filesystem.working_dir(stage.source_path):
         output = patch(
             '-N',               # don't reject already-applied patches
