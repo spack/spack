@@ -61,7 +61,6 @@ def setdefault(module_type, specs, args):
         writer = spack.modules.module_types['lmod'](spec, args.module_set_name)
         writer.update_module_defaults()
 
-
     module_folder = os.path.dirname(writer.layout.filename)
     module_basename = os.path.basename(writer.layout.filename)
     with llnl.util.filesystem.working_dir(module_folder):
