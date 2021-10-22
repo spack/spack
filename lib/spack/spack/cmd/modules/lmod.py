@@ -7,6 +7,7 @@ import functools
 import os
 
 import llnl.util.filesystem
+from llnl.util.symlink import symlink
 
 import spack.cmd.common.arguments
 import spack.cmd.modules
@@ -49,4 +50,4 @@ def setdefault(module_type, specs, args):
     with llnl.util.filesystem.working_dir(module_folder):
         if os.path.exists('default') and os.path.islink('default'):
             os.remove('default')
-        os.symlink(module_basename, 'default')
+        symlink(module_basename, 'default')

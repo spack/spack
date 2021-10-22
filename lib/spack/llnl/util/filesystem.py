@@ -23,6 +23,7 @@ import six
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
+from llnl.util.symlink import symlink
 
 from spack.util.executable import Executable
 
@@ -512,7 +513,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
                                       .format(target, new_target))
                             target = new_target
 
-                    os.symlink(target, d)
+                    symlink(target, d)
                 elif os.path.isdir(link_target):
                     mkdirp(d)
                 else:
@@ -810,10 +811,10 @@ def touchp(path):
 
 def force_symlink(src, dest):
     try:
-        os.symlink(src, dest)
+        symlink(src, dest)
     except OSError:
         os.remove(dest)
-        os.symlink(src, dest)
+        symlink(src, dest)
 
 
 def join_path(prefix, *args):
