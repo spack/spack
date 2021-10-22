@@ -680,9 +680,13 @@ class Python(AutotoolsPackage):
         # in that order if using python@3.6.5, for example.
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), '']:
-            path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+            if sys.platform != "win32":
+                path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+            else:
+                path = os.path.join(self.prefix, 'python{0}.exe'.format(ver))
             if os.path.exists(path):
                 return Executable(path)
+
         else:
             msg = 'Unable to locate {0} command in {1}'
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
