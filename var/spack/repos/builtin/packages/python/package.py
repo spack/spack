@@ -4,10 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
+import inspect
 import json
 import os
 import re
+import subprocess
 import sys
+from distutils.dir_util import copy_tree
+from shutil import copy
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import get_filetype, path_contains_subdirectory
@@ -18,8 +22,12 @@ from spack.build_environment import dso_suffix
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
+arch_map = {"AMD64": "x64", "x86": "Win32",
+            "IA64": "Win32", "EM64T": "Win32"}
+is_windows = os.name == 'nt'
 
-class Python(AutotoolsPackage):
+
+class Python(Package):
     """The Python programming language."""
 
     homepage = "https://www.python.org/"
@@ -29,10 +37,18 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart', 'skosukhin', 'scheibelp', 'varioustoxins']
 
+
+    phases = ['configure', 'build', 'install']
+
+    #: phase
+    install_targets = ['install']
+    build_targets = []
+
     version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
     version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e', preferred=True)
+    version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
     version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
     version('3.9.8',  sha256='7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283')
     version('3.9.7',  sha256='a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1')
@@ -146,12 +162,12 @@ class Python(AutotoolsPackage):
         description='Enable expensive build-time optimizations, if available'
     )
     # See https://legacy.python.org/dev/peps/pep-0394/
-    variant('pythoncmd', default=True,
+    variant('pythoncmd', default=not is_windows,
             description="Symlink 'python3' executable to 'python' "
             "(not PEP 394 compliant)")
 
     # Optional Python modules
-    variant('readline', default=True,  description='Build readline module')
+    variant('readline', default=not is_windows,  description='Build readline module')
     variant('ssl',      default=True,  description='Build ssl module')
     variant('sqlite3',  default=True,  description='Build sqlite3 module')
     variant('dbm',      default=True,  description='Build dbm module')
@@ -166,33 +182,34 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
     variant('ensurepip', default=True, description='Build ensurepip module', when='@2.7.9:2,3.4:')
 
-    depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('gettext +libxml2', when='+libxml2')
-    depends_on('gettext ~libxml2', when='~libxml2')
+    if os.name != 'nt':
+        depends_on('pkgconfig@0.9.0:', type='build')
+        depends_on('gettext +libxml2', when='+libxml2')
+        depends_on('gettext ~libxml2', when='~libxml2')
 
-    # Optional dependencies
-    # See detect_modules() in setup.py for details
-    depends_on('readline', when='+readline')
-    depends_on('ncurses', when='+readline')
-    depends_on('openssl', when='+ssl')
-    # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
-    # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
-    depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
-    depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
-    depends_on('openssl@1.1.1:', when='@3.10:+ssl')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
-    depends_on('sqlite@3.0.8:', when='@:3.9+sqlite3')
-    depends_on('sqlite@3.7.15:', when='@3.10:+sqlite3')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
-    depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
-    depends_on('libnsl', when='+nis')
-    depends_on('zlib@1.1.3:', when='+zlib')
-    depends_on('bzip2', when='+bz2')
-    depends_on('xz', when='@3.3:+lzma')
-    depends_on('expat', when='+pyexpat')
-    depends_on('libffi', when='+ctypes')
-    depends_on('tk', when='+tkinter')
-    depends_on('tcl', when='+tkinter')
-    depends_on('uuid', when='+uuid')
-    depends_on('tix', when='+tix')
+        # Optional dependencies
+        # See detect_modules() in setup.py for details
+        depends_on('readline', when='+readline')
+        depends_on('ncurses', when='+readline')
+        depends_on('openssl', when='+ssl')
+        # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
+        # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
+        depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
+        depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+        depends_on('openssl@1.1.1:', when='@3.10:+ssl')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+        depends_on('sqlite@3.0.8:', when='@:3.9+sqlite3')
+        depends_on('sqlite@3.7.15:', when='@3.10:+sqlite3')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+        depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
+        depends_on('libnsl', when='+nis')
+        depends_on('zlib@1.1.3:', when='+zlib')
+        depends_on('bzip2', when='+bz2')
+        depends_on('xz', when='@3.3:+lzma')
+        depends_on('expat', when='+pyexpat')
+        depends_on('libffi', when='+ctypes')
+        depends_on('tk', when='+tkinter')
+        depends_on('tcl', when='+tkinter')
+        depends_on('uuid', when='+uuid')
+        depends_on('tix', when='+tix')
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
@@ -211,6 +228,7 @@ class Python(AutotoolsPackage):
     patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
     patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:')
     patch('python-3.7.4+-distutils-C++-testsuite.patch', when='@3.7.4:')
+    patch('cpython-windows-externals.patch', when='@:3.9.6 platform=windows')
 
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
     # Patch the setup script to deny that tcl/x11 exists rather than allowing
@@ -438,6 +456,70 @@ class Python(AutotoolsPackage):
         # allow flags to be passed through compiler wrapper
         return (flags, None, None)
 
+    @property
+    def configure_directory(self):
+        """Returns the directory where 'configure' resides.
+        :return: directory where to find configure
+        """
+        return self.stage.source_path
+
+    @property
+    def build_directory(self):
+        """Override to provide another place to build the package"""
+        return self.configure_directory
+
+    @property
+    def plat_arch(self):
+        arch = platform.machine()
+        if arch in arch_map:
+            arch = arch_map[arch]
+        return arch
+
+    @property
+    def win_build_params(self):
+        args = []
+        args.append("-p %s" % self.plat_arch)
+        if self.spec.satisfies('+debug'):
+            args.append('-d')
+        if self.spec.satisfies('~ctypes'):
+            args.append('--no-ctypes')
+        if self.spec.satisfies('~ssl'):
+            args.append('--no-ssl')
+        if self.spec.satisfies('~tkinter'):
+            args.append('--no-tkinter')
+        return args
+
+    def win_installer(self, prefix):
+        proj_root = self.stage.source_path
+        pcbuild_root = os.path.join(proj_root, "PCbuild")
+        build_root = os.path.join(pcbuild_root, platform.machine().lower())
+        include_dir = os.path.join(proj_root, "Include")
+        copy_tree(include_dir, prefix.include)
+        doc_dir = os.path.join(proj_root, "Doc")
+        copy_tree(doc_dir, prefix.Doc)
+        tools_dir = os.path.join(proj_root, "Tools")
+        copy_tree(tools_dir, prefix.Tools)
+        lib_dir = os.path.join(proj_root, "Lib")
+        copy_tree(lib_dir, prefix.Lib)
+        pyconfig = os.path.join(proj_root, "PC", "pyconfig.h")
+        copy(pyconfig, prefix.include)
+        shared_libraries = []
+        shared_libraries.extend(glob.glob("%s\\*.exe" % build_root))
+        shared_libraries.extend(glob.glob("%s\\*.dll" % build_root))
+        shared_libraries.extend(glob.glob("%s\\*.pyd" % build_root))
+        os.makedirs(prefix.DLLs)
+        for lib in shared_libraries:
+            file_name = os.path.basename(lib)
+            if file_name.endswith(".exe") or\
+                (file_name.endswith(".dll") and "python" in file_name)\
+                or "vcruntime" in file_name:
+                copy(lib, prefix)
+            else:
+                copy(lib, prefix.DLLs)
+        static_libraries = glob.glob("%s\\*.lib")
+        for lib in static_libraries:
+            copy(lib, prefix.libs)
+
     def configure_args(self):
         spec = self.spec
         config_args = []
@@ -549,6 +631,54 @@ class Python(AutotoolsPackage):
 
         return config_args
 
+    def configure(self, spec, prefix):
+        """Runs configure with the arguments specified in
+        :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`
+        and an appropriately set prefix.
+        """
+        with working_dir(self.build_directory, create=True):
+            if is_windows:
+                pass
+            else:
+                options = getattr(self, 'configure_flag_args', [])
+                options += ['--prefix={0}'.format(prefix)]
+                options += self.configure_args()
+                configure(*options)
+
+    def build(self, spec, prefix):
+        """Makes the build targets specified by
+        :py:attr:``~.AutotoolsPackage.build_targets``
+        """
+        # Windows builds use a batch script to drive
+        # configure and build in one step
+        with working_dir(self.build_directory):
+            if is_windows:
+                pcbuild_root = os.path.join(self.stage.source_path, "PCbuild")
+                builder_cmd = os.path.join(pcbuild_root, 'build.bat')
+                try:
+                    subprocess.check_output(  # novermin
+                        " ".join([builder_cmd] + self.win_build_params),
+                        stderr=subprocess.STDOUT
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise ProcessError("Process exited with status %d" % e.returncode,
+                                       long_message=e.output.decode('utf-8'))
+            else:
+                # See https://autotools.io/automake/silent.html
+                params = ['V=1']
+                params += self.build_targets
+                inspect.getmodule(self).make(*params)
+
+    def install(self, spec, prefix):
+        """Makes the install targets specified by
+        :py:attr:``~.AutotoolsPackage.install_targets``
+        """
+        with working_dir(self.build_directory):
+            if is_windows:
+                self.win_installer(prefix)
+            else:
+                inspect.getmodule(self).make(*self.install_targets)
+
     @run_after('install')
     def filter_compilers(self):
         """Run after install to tell the configuration files and Makefiles
@@ -557,7 +687,8 @@ class Python(AutotoolsPackage):
         If this isn't done, they'll have CC and CXX set to Spack's generic
         cc and c++. We want them to be bound to whatever compiler
         they were built with."""
-
+        if is_windows:
+            return
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
         filenames = [
@@ -570,6 +701,8 @@ class Python(AutotoolsPackage):
 
     @run_after('install')
     def symlink(self):
+        if is_windows:
+            return
         spec = self.spec
         prefix = self.prefix
 
@@ -759,6 +892,26 @@ class Python(AutotoolsPackage):
         Returns:
             dict: variable definitions
         """
+        # Some values set by sysconfig may not always exist on Windows, so
+        # compute Windows alternatives
+        def repair_win_sysconf(conf):
+            if is_windows:
+                conf["LIBDIR"] = os.path.join(conf["LIBDEST"], "..", "libs")
+                conf["LIBPL"] = conf["LIBDIR"]
+                conf["PYTHONFRAMEWORKPREFIX"] = ""
+                conf["LDLIBRARY"] = "python" + conf["VERSION"] + ".dll"
+                conf["LIBRARY"] = "python" + conf["VERSION"] + ".lib"
+                conf["CC"] = ""
+                conf["CXX"] = ""
+                conf["LDSHARED"] = ""
+                conf["LDCXXSHARED"] = ""
+
+            return conf
+
+        # TODO: distutils is deprecated in Python 3.10 and will be removed in
+        # Python 3.12, find a different way to access this information.
+        # Also, calling the python executable disallows us from cross-compiling,
+        # so we want to try to avoid that if possible.
         cmd = """
 import json
 from sysconfig import (
@@ -823,7 +976,7 @@ config.update(get_paths())
                 config.update(json.loads(self.command('-c', cmd, output=str)))
             except (ProcessError, RuntimeError):
                 pass
-            self._config_vars[dag_hash] = config
+            self._config_vars[dag_hash] = repair_win_sysconf(config)
         return self._config_vars[dag_hash]
 
     def get_sysconfigdata_name(self):
@@ -865,6 +1018,9 @@ config.update(get_paths())
         # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
         # in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
+        # LIBPL does not exist in Windows, avoid uneccesary KeyError while allowing
+        # later failures.
+        # Return empty string rather than none so os.path doesn't complain
         libpl = self.config_vars['LIBPL']
 
         # The system Python installation on macOS and Homebrew installations
@@ -881,7 +1037,7 @@ config.update(get_paths())
 
         if '+shared' in self.spec:
             ldlibrary = self.config_vars['LDLIBRARY']
-
+            win_bin_dir = self.config_vars['BINDIR']
             if os.path.exists(os.path.join(libdir, ldlibrary)):
                 return LibraryList(os.path.join(libdir, ldlibrary))
             elif os.path.exists(os.path.join(libpl, ldlibrary)):
@@ -891,6 +1047,9 @@ config.update(get_paths())
             elif macos_developerdir and \
                     os.path.exists(os.path.join(macos_developerdir, ldlibrary)):
                 return LibraryList(os.path.join(macos_developerdir, ldlibrary))
+            elif is_windows and \
+                    os.path.exists(os.path.join(win_bin_dir, ldlibrary)):
+                return LibraryList(os.path.join(win_bin_dir, ldlibrary))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
                 raise RuntimeError(msg.format(ldlibrary, libdir))
@@ -1075,7 +1234,7 @@ config.update(get_paths())
             # fact that LDSHARED is set in the environment, therefore we export
             # the variable only if the new value is different from what we got
             # from the sysconfigdata file:
-            if config_link != new_link:
+            if config_link != new_link and not is_windows:
                 env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
@@ -1211,7 +1370,8 @@ config.update(get_paths())
                                         ))
 
     def add_files_to_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin
+        bin_dir = self.spec.prefix.bin if os.name != 'nt'\
+            else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst, spec=self.spec)
@@ -1243,7 +1403,8 @@ config.update(get_paths())
                 view.link(new_link_target, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin
+        bin_dir = self.spec.prefix.bin if os.name != 'nt'\
+            else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.remove_file(src, dst)
