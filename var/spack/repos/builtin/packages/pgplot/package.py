@@ -39,7 +39,7 @@ class Pgplot(MakefilePackage):
     parallel = False
 
     # enable drivers
-    variant('X', default=True,
+    variant('X', default=False,
             description='Build with X11 support.')
     variant('png', default=True,
             description='Enable driver for Portable Network Graphics file.')
@@ -49,7 +49,6 @@ class Pgplot(MakefilePackage):
     depends_on('libx11', when='+X')
     depends_on('libpng', when='+png', type=('build', 'run'))
     depends_on('zlib', when='+png')
-    depends_on('libx11', when='+png')
 
     def edit(self, spec, prefix):
 
