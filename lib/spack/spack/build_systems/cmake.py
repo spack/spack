@@ -8,6 +8,7 @@ import inspect
 import os
 import platform
 import re
+import sys
 from typing import List  # novm
 
 import six
@@ -17,7 +18,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.build_environment
 from spack.directives import conflicts, depends_on, variant
-from spack.package import InstallError, PackageBase, run_after
+from spack.package import PackageBase, run_after
 
 # Regex to extract the primary generator from the CMake generator
 # string.
@@ -91,7 +92,16 @@ class CMakePackage(PackageBase):
     #:
     #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
     #: for more information.
-    generator = 'Unix Makefiles'
+
+    variant('generator',
+            default='Make' if sys.platform != 'win32' else 'Ninja',
+            description='Build system to generate',
+            values=('Make', 'Ninja'))
+
+    depends_on('ninja', when='generator=Ninja')
+
+    generatorMap = {'Make': 'Unix Makefiles',
+                    'Ninja': 'Ninja'}
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',
@@ -138,20 +148,12 @@ class CMakePackage(PackageBase):
     @staticmethod
     def _std_args(pkg):
         """Computes the standard cmake arguments for a generic package"""
-        try:
-            generator = pkg.generator
-        except AttributeError:
-            generator = 'Unix Makefiles'
 
-        # Make sure a valid generator was chosen
-        valid_primary_generators = ['Unix Makefiles', 'Ninja']
-        primary_generator = _extract_primary_generator(generator)
-        if primary_generator not in valid_primary_generators:
-            msg  = "Invalid CMake generator: '{0}'\n".format(generator)
-            msg += "CMakePackage currently supports the following "
-            msg += "primary generators: '{0}'".\
-                   format("', '".join(valid_primary_generators))
-            raise InstallError(msg)
+        try:
+            pkg.generator = pkg.spec.variants['generator'].value
+        except KeyError:
+            pkg.generator = 'Make' if sys.platform != 'win32' else 'Ninja'
+        primary_generator = CMakePackage.generatorMap[pkg.generator]
 
         try:
             build_type = pkg.spec.variants['build_type'].value
@@ -165,9 +167,11 @@ class CMakePackage(PackageBase):
 
         define = CMakePackage.define
         args = [
-            '-G', generator,
-            define('CMAKE_INSTALL_PREFIX', pkg.prefix),
+            '-G', primary_generator,
+            define('CMAKE_INSTALL_PREFIX', pkg.prefix.replace('\\', '/')),
             define('CMAKE_BUILD_TYPE', build_type),
+            define('CMAKE_C_COMPILER:FILEPATH', pkg.compiler.cc.replace('\\', '/')),
+            define('CMAKE_CXX_COMPILER:FILEPATH', pkg.compiler.cxx.replace('\\', '/'))
         ]
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
