@@ -19,6 +19,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('develop', branch='master')
+    version('2.2.0', sha256='aff4f5111d3d05b269a1378bb201271c40b39e9c960c05c4ef247a31a039be58')
     version('2.1.0', sha256='527a3e21115231715a0342afdfaf6a8878d2dd0f02f03c92b53692340fd940b9')
     version('2.0.0', sha256='12f2b49a1a36c416eac174cf0cc50e729d56d68a9f68886d8c34bd45a0be26b6')
     version('1.0', sha256='0902479fb5b1bad01438ca0a72efd577a3529c3d8bad0028f3c18d3a4935ca74')
@@ -46,7 +47,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~fftw', when='@:2.1.0~mkl~cuda')  # requires at least one backend
     conflicts('+fftw', when='+mkl@:1.0')  # old API supports at most one CPU backend
     conflicts('^openmpi~cuda', when='+cuda')  # +cuda requires CUDA enabled OpenMPI
-    conflicts('~cuda', when='+magma')  # magma requires CUDA or HIP
+    conflicts('~cuda~rocm', when='+magma')  # magma requires CUDA or HIP
     conflicts('+rocm', when='@:2.1.0')  # heffte+rocm is in in development in spack
     conflicts('+python', when="@:1.0")  # python support was added post v1.0
     conflicts('+fortran', when="@:1.0")  # fortran support was added post v1.0
@@ -60,6 +61,10 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hip@3.8.0:', when='+rocm')
     depends_on('rocfft@3.8.0:', when='+rocm')
     depends_on('magma@2.5.3:', when="+cuda+magma", type=('build', 'run'))
+    depends_on('magma+rocm@2.6.1:',
+               when='+magma+rocm @2.1:', type=('build', 'run'))
+    depends_on('hipblas@3.8:', when='+magma+rocm', type=('build', 'run'))
+    depends_on('hipsparse@3.8:', when='+magma+rocm', type=('build', 'run'))
 
     examples_src_dir = 'examples'
 
