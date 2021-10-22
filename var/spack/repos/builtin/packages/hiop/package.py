@@ -78,7 +78,7 @@ class Hiop(CMakePackage, CudaPackage):
     conflicts(
         '+shared',
         when='+cuda+raja',
-        msg='Umpire exports device code when cuda is enabled, which requires static libs',
+        msg='umpire+cuda exports device code and requires static libs',
     )
 
     flag_handler = build_system_flags
