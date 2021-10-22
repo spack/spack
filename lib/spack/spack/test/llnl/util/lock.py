@@ -630,15 +630,6 @@ def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
         with pytest.raises(lk.LockROFileError):
             with lk.WriteTransaction(lock):
                 pass
-        # On windows, each seperate FD acts as a unique
-        # attempt to lock/unlock/access a file, so while
-        # the lock class stil holds an fd to this file
-        # which is not cleared in the above case where there's an error
-        # obtaining a write lock, and the context manager is not given a
-        # chance to clean up the lock, we need to use that fd to free
-        # the reference to the file
-        if lock._file:
-            lock._file.close()
 
 
 def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
@@ -690,17 +681,17 @@ def test_upgrade_read_to_write(private_lock_path):
     lock.acquire_read()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock._file_mode == 'r+'
+    assert lock._file.mode == 'r+'
 
     lock.acquire_write()
     assert lock._reads == 1
     assert lock._writes == 1
-    assert lock._file_mode == 'r+'
+    assert lock._file.mode == 'r+'
 
     lock.release_write()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock._file_mode == 'r+'
+    assert lock._file.mode == 'r+'
 
     lock.release_read()
     assert lock._reads == 0
