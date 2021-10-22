@@ -12,6 +12,7 @@ import sys
 import pytest
 
 import llnl.util.filesystem as fs
+from llnl.util.symlink import symlink
 
 import spack.paths
 
@@ -36,9 +37,9 @@ def stage(tmpdir_factory):
         fs.touchp('source/g/i/j/10')
 
         # Create symlinks
-        os.symlink(os.path.abspath('source/1'), 'source/2')
-        os.symlink('b/2', 'source/a/b2')
-        os.symlink('a/b', 'source/f')
+        symlink(os.path.abspath('source/1'), 'source/2')
+        symlink('b/2', 'source/a/b2')
+        symlink('a/b', 'source/f')
 
         # Create destination directory
         fs.mkdirp('dest')
@@ -174,15 +175,21 @@ class TestCopyTree:
             fs.copy_tree('source', 'dest', symlinks=True)
 
             assert os.path.exists('dest/2')
-            assert os.path.islink('dest/2')
+            if sys.platform != "win32":
+                # TODO: islink will return false for junctions
+                assert os.path.islink('dest/2')
 
             assert os.path.exists('dest/a/b2')
-            with fs.working_dir('dest/a'):
-                assert os.path.exists(os.readlink('b2'))
+            if sys.platform != "win32":
+                # TODO: Not supported for junctions ?
+                with fs.working_dir('dest/a'):
+                    assert os.path.exists(os.readlink('b2'))
 
-            assert (os.path.realpath('dest/f/2') ==
-                    os.path.abspath('dest/a/b/2'))
-            assert os.path.realpath('dest/2') == os.path.abspath('dest/1')
+            if sys.platform != "win32":
+                # TODO: Not supported on Windows ?
+                assert (os.path.realpath('dest/f/2') ==
+                        os.path.abspath('dest/a/b/2'))
+                assert os.path.realpath('dest/2') == os.path.abspath('dest/1')
 
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored
@@ -201,7 +208,8 @@ class TestCopyTree:
             fs.copy_tree('source', 'dest', symlinks=False)
 
             assert os.path.exists('dest/2')
-            assert not os.path.islink('dest/2')
+            if sys.platform != "win32":
+                assert not os.path.islink('dest/2')
 
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
@@ -258,7 +266,8 @@ class TestInstallTree:
             fs.install_tree('source', 'dest', symlinks=True)
 
             assert os.path.exists('dest/2')
-            assert os.path.islink('dest/2')
+            if sys.platform != "win32":
+                assert os.path.islink('dest/2')
             check_added_exe_permissions('source/2', 'dest/2')
 
     def test_symlinks_false(self, stage):
@@ -268,7 +277,8 @@ class TestInstallTree:
             fs.install_tree('source', 'dest', symlinks=False)
 
             assert os.path.exists('dest/2')
-            assert not os.path.islink('dest/2')
+            if sys.platform != "win32":
+                assert not os.path.islink('dest/2')
             check_added_exe_permissions('source/2', 'dest/2')
 
     def test_glob_src(self, stage):

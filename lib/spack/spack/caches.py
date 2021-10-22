@@ -8,6 +8,7 @@ import os
 
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
+from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
@@ -85,7 +86,7 @@ class MirrorCache(object):
                 # to https://github.com/spack/spack/pull/13908)
                 os.unlink(cosmetic_path)
             mkdirp(os.path.dirname(cosmetic_path))
-            os.symlink(relative_dst, cosmetic_path)
+            symlink(relative_dst, cosmetic_path)
 
 
 #: Spack's local cache for downloaded source archives

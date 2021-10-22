@@ -291,6 +291,7 @@ class SingleFileScope(ConfigScope):
                 syaml.dump_config(data_to_write, stream=f,
                                   default_flow_style=False)
             rename(tmp, self.path)
+
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
                 "Error writing to config file: '%s'" % str(e))

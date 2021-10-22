@@ -14,6 +14,7 @@ from ordereddict_backport import OrderedDict
 
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.symlink import symlink
 
 import spack.platforms
 import spack.repo
@@ -699,7 +700,7 @@ def make_link_relative(new_links, orig_links):
         target = os.readlink(orig_link)
         relative_target = os.path.relpath(target, os.path.dirname(orig_link))
         os.unlink(new_link)
-        os.symlink(relative_target, new_link)
+        symlink(relative_target, new_link)
 
 
 def make_macho_binaries_relative(cur_path_names, orig_path_names,
@@ -780,7 +781,7 @@ def relocate_links(links, orig_layout_root,
                 orig_install_prefix, new_install_prefix, link_target
             )
             os.unlink(abs_link)
-            os.symlink(link_target, abs_link)
+            symlink(link_target, abs_link)
 
         # If the link is absolute and has not been relocated then
         # warn the user about that
