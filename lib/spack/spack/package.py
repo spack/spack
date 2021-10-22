@@ -724,7 +724,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def installed_upstream(self):
         if not hasattr(self, '_installed_upstream'):
             upstream, record = spack.store.db.query_by_spec_hash(
-                self.spec.dag_hash())
+                self.spec._cached_hash(hash=spack.store.db.key_hash_type))
             self._installed_upstream = upstream
 
         return self._installed_upstream

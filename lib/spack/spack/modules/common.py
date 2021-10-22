@@ -381,7 +381,8 @@ def get_module(
     try:
         upstream = spec.package.installed_upstream
     except spack.repo.UnknownPackageError:
-        upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+        upstream, record = spack.store.db.query_by_spec_hash(
+            spec._cached_hash(hash=spack.store.db.key_hash_type))
     if upstream:
         module = (spack.modules.common.upstream_module_index
                   .upstream_module(spec, module_type))

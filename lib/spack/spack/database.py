@@ -95,9 +95,6 @@ _db_lock_timeout = 120
 # ensure a failed install is properly tracked).
 _pkg_lock_timeout = None
 
-# Types of dependencies tracked by the database
-_tracked_deps = ('link', 'run')
-
 # Default list of fields written for each install record
 default_install_record_fields = [
     'spec',
@@ -211,12 +208,15 @@ class InstallRecord(object):
         else:
             return InstallStatuses.MISSING in installed
 
-    def to_dict(self, include_fields=default_install_record_fields):
+    def to_dict(self, include_fields=default_install_record_fields,
+                hash=ht.dag_hash):
         rec_dict = {}
 
         for field_name in include_fields:
             if field_name == 'spec':
-                rec_dict.update({'spec': self.spec.node_dict_with_hashes()})
+                rec_dict.update({
+                    'spec': self.spec.node_dict_with_hashes(hash=hash)
+                })
             elif field_name == 'deprecated_for' and self.deprecated_for:
                 rec_dict.update({'deprecated_for': self.deprecated_for})
             else:
@@ -306,9 +306,9 @@ class Database(object):
     """Per-process failure (lock) objects for each install prefix."""
     _prefix_failures = {}  # type: Dict[str, lk.Lock]
 
-    def __init__(self, root, db_dir=None, upstream_dbs=None,
+    def __init__(self, root, upstream_dbs=None, db_key_hash_type=ht.dag_hash,
                  is_upstream=False, enable_transaction_locking=True,
-                 record_fields=default_install_record_fields):
+                 db_dir=None, record_fields=default_install_record_fields):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -331,7 +331,10 @@ class Database(object):
         certain fields are not needed in each install record, and no
         transaction locking is required.  To use this feature, provide
         ``enable_transaction_locking=False``, and specify a list of needed
-        fields in ``record_fields``.
+        fields in ``record_fields``.  Also for this use case the caller can
+        supply a custom hash type to use as the key.  While the default is
+        to use the dag_hash as the database key, buildcache indices now use
+        full_hash as the key.
         """
         self.root = root
 
@@ -408,6 +411,15 @@ class Database(object):
             self._read_transaction_impl = nullcontext
 
         self._record_fields = record_fields
+        self._key_hash_type = db_key_hash_type
+
+    @property
+    def key_hash_type(self):
+        return self._key_hash_type
+
+    @property
+    def tracked_deps(self):
+        return self.key_hash_type.deptype
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
@@ -493,7 +505,7 @@ class Database(object):
 
         The failure lock file, ``spack.store.db.prefix_failures``, lives
         alongside the install DB. ``n`` is the sys.maxsize-bit prefix of the
-        associated DAG hash to make the likelihood of collision very low with
+        associated hash to make the likelihood of collision very low with
         no cleanup required.
         """
         # Dump the spec to the failure file for (manual) debugging purposes
@@ -509,7 +521,8 @@ class Database(object):
         if prefix not in self._prefix_failures:
             mark = lk.Lock(
                 self.prefix_fail_path,
-                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                start=spec.hash_bit_prefix(
+                    bit_length(sys.maxsize), hash=self.key_hash_type),
                 length=1,
                 default_timeout=self.package_lock_timeout, desc=spec.name)
 
@@ -547,7 +560,8 @@ class Database(object):
         """Return True if a process has a failure lock on the spec."""
         check = lk.Lock(
             self.prefix_fail_path,
-            start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+            start=spec.hash_bit_prefix(
+                bit_length(sys.maxsize), hash=self.key_hash_type),
             length=1,
             default_timeout=self.package_lock_timeout, desc=spec.name)
 
@@ -567,7 +581,7 @@ class Database(object):
         The lock file is ``spack.store.db.prefix_lock`` -- the DB
         tells us what to call it and it lives alongside the install DB.
 
-        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
+        n is the sys.maxsize-bit prefix of the hash.  This makes
         likelihood of collision is very low AND it gives us
         readers-writer lock semantics with just a single lockfile, so no
         cleanup required.
@@ -577,7 +591,8 @@ class Database(object):
         if prefix not in self._prefix_locks:
             self._prefix_locks[prefix] = lk.Lock(
                 self.prefix_lock_path,
-                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                start=spec.hash_bit_prefix(
+                    bit_length(sys.maxsize), hash=self.key_hash_type),
                 length=1,
                 default_timeout=timeout, desc=spec.name)
         elif timeout != self._prefix_locks[prefix].default_timeout:
@@ -626,7 +641,8 @@ class Database(object):
         This function does not do any locking or transactions.
         """
         # map from per-spec hash code to installation record.
-        installs = dict((k, v.to_dict(include_fields=self._record_fields))
+        installs = dict((k, v.to_dict(include_fields=self._record_fields,
+                                      hash=self.key_hash_type))
                         for k, v in self._data.items())
 
         # database includes installation list and version.
@@ -638,7 +654,8 @@ class Database(object):
         database = {
             'database': {
                 'installs': installs,
-                'version': str(_db_version)
+                'version': str(_db_version),
+                'key_hash_type': self.key_hash_type.attr
             }
         }
 
@@ -647,12 +664,13 @@ class Database(object):
         except (TypeError, ValueError) as e:
             raise sjson.SpackJSONError("error writing JSON database:", str(e))
 
-    def _read_spec_from_dict(self, hash_key, installs, hash=ht.dag_hash):
+    def _read_spec_from_dict(self, hash_key, installs, hash=None):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
         """
         spec_dict = installs[hash_key]['spec']
+        hash = hash or self.key_hash_type
 
         # Install records don't include hash with spec, so we add it in here
         # to ensure it is read properly.
@@ -751,6 +769,18 @@ class Database(object):
         check('installs' in db, "no 'installs' in JSON DB.")
         check('version' in db, "no 'version' in JSON DB.")
 
+        key_hash_type = ht.dag_hash.attr
+        if 'key_hash_type' in db:
+            key_hash_type = db['key_hash_type']
+
+        for h_type in ht.hashes:
+            if h_type.attr == key_hash_type:
+                key_hash_type = h_type
+
+        if self.key_hash_type != key_hash_type:
+            raise KeyHashTypeMismatchError(self.key_hash_type.attr,
+                                           key_hash_type.attr)
+
         installs = db['installs']
 
         # TODO: better version checking semantics.
@@ -769,7 +799,8 @@ class Database(object):
 
                 self.reindex(spack.store.layout)
                 installs = dict(
-                    (k, v.to_dict(include_fields=self._record_fields))
+                    (k, v.to_dict(include_fields=self._record_fields,
+                                  hash=self.key_hash_type))
                     for k, v in self._data.items()
                 )
 
@@ -882,7 +913,7 @@ class Database(object):
         explicit = True
         inst_time = os.stat(spec.prefix).st_ctime
         if old_data is not None:
-            old_info = old_data.get(spec.dag_hash())
+            old_info = old_data.get(spec._cached_hash(hash=self.key_hash_type))
             if old_info is not None:
                 explicit = old_info.explicit
                 inst_time = old_info.installation_time
@@ -970,8 +1001,8 @@ class Database(object):
         counts = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            for dep in rec.spec.dependencies(_tracked_deps):
-                dep_key = dep.dag_hash()
+            for dep in rec.spec.dependencies(self.tracked_deps):
+                dep_key = dep._cached_hash(hash=self.key_hash_type)
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
 
@@ -980,7 +1011,7 @@ class Database(object):
                 counts[rec.deprecated_for] += 1
 
         for rec in self._data.values():
-            key = rec.spec.dag_hash()
+            key = rec.spec._cached_hash(hash=self.key_hash_type)
             expected = counts[key]
             found = rec.ref_count
             if not expected == found:
@@ -1079,7 +1110,7 @@ class Database(object):
             raise NonConcreteSpecAddError(
                 "Specs added to DB must be concrete.")
 
-        key = spec.dag_hash()
+        key = spec._cached_hash(hash=self.key_hash_type)
         upstream, record = self.query_by_spec_hash(key)
         if upstream:
             return
@@ -1087,8 +1118,8 @@ class Database(object):
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
-        for dep in spec.dependencies(_tracked_deps):
-            dkey = dep.dag_hash()
+        for dep in spec.dependencies(self.tracked_deps):
+            dkey = dep._cached_hash(hash=self.key_hash_type)
             if dkey not in self._data:
                 extra_args = {
                     'explicit': False,
@@ -1126,9 +1157,9 @@ class Database(object):
 
             # Connect dependencies from the DB to the new copy.
             for name, dep in six.iteritems(
-                    spec.dependencies_dict(_tracked_deps)
+                    spec.dependencies_dict(self.tracked_deps)
             ):
-                dkey = dep.spec.dag_hash()
+                dkey = dep.spec._cached_hash(hash=self.key_hash_type)
                 upstream, record = self.query_by_spec_hash(dkey)
                 new_spec._add_dependency(record.spec, dep.deptypes)
                 if not upstream:
@@ -1137,7 +1168,7 @@ class Database(object):
             # Mark concrete once everything is built, and preserve
             # the original hash of concrete specs.
             new_spec._mark_concrete()
-            new_spec._hash = key
+            new_spec._hash = spec._hash
             new_spec._full_hash = spec._full_hash
 
         else:
@@ -1162,12 +1193,12 @@ class Database(object):
 
     def _get_matching_spec_key(self, spec, **kwargs):
         """Get the exact spec OR get a single spec that matches."""
-        key = spec.dag_hash()
+        key = spec._cached_hash(hash=self.key_hash_type)
         upstream, record = self.query_by_spec_hash(key)
         if not record:
             match = self.query_one(spec, **kwargs)
             if match:
-                return match.dag_hash()
+                return match._cached_hash(hash=self.key_hash_type)
             raise KeyError("No such spec in database! %s" % spec)
         return key
 
@@ -1178,7 +1209,7 @@ class Database(object):
         return record
 
     def _decrement_ref_count(self, spec):
-        key = spec.dag_hash()
+        key = spec._cached_hash(hash=self.key_hash_type)
 
         if key not in self._data:
             # TODO: print something here?  DB is corrupt, but
@@ -1191,11 +1222,11 @@ class Database(object):
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
 
-            for dep in spec.dependencies(_tracked_deps):
+            for dep in spec.dependencies(self.tracked_deps):
                 self._decrement_ref_count(dep)
 
     def _increment_ref_count(self, spec):
-        key = spec.dag_hash()
+        key = spec._cached_hash(hash=self.key_hash_type)
 
         if key not in self._data:
             return
@@ -1219,7 +1250,7 @@ class Database(object):
 
         del self._data[key]
 
-        for dep in rec.spec.dependencies(_tracked_deps):
+        for dep in rec.spec.dependencies(self.tracked_deps):
             # FIXME: the two lines below needs to be updated once #11983 is
             # FIXME: fixed. The "if" statement should be deleted and specs are
             # FIXME: to be removed from dependents by hash and not by name.
@@ -1267,7 +1298,7 @@ class Database(object):
         """Return all specs deprecated in favor of the given spec"""
         with self.read_transaction():
             return [rec.spec for rec in self._data.values()
-                    if rec.deprecated_for == spec.dag_hash()]
+                    if rec.deprecated_for == spec._cached_hash(hash=self.key_hash_type)]
 
     def _deprecate(self, spec, deprecator):
         spec_key = self._get_matching_spec_key(spec)
@@ -1320,13 +1351,14 @@ class Database(object):
                 to_add = spec.dependencies(deptype=deptype)
 
             for relative in to_add:
-                hash_key = relative.dag_hash()
+                hash_key = relative._cached_hash(hash=self.key_hash_type)
                 upstream, record = self.query_by_spec_hash(hash_key)
                 if not record:
                     reltype = ('Dependent' if direction == 'parents'
                                else 'Dependency')
-                    msg = ("Inconsistent state! %s %s of %s not in DB"
-                           % (reltype, hash_key, spec.dag_hash()))
+                    msg = ("Inconsistent state! %s %s of %s not in DB" % (
+                        reltype, hash_key, spec._cached_hash(hash=self.key_hash_type)
+                    ))
                     if self._fail_when_missing_deps:
                         raise MissingDependenciesError(msg)
                     tty.warn(msg)
@@ -1365,10 +1397,10 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def _get_by_hash_local(self, dag_hash, default=None, installed=any):
+    def _get_by_hash_local(self, hash_key, default=None, installed=any):
         # hash is a full hash and is in the data somewhere
-        if dag_hash in self._data:
-            rec = self._data[dag_hash]
+        if hash_key in self._data:
+            rec = self._data[hash_key]
             if rec.install_type_matches(installed):
                 return [rec.spec]
             else:
@@ -1377,7 +1409,7 @@ class Database(object):
         # check if hash is a prefix of some installed (or previously
         # installed) spec.
         matches = [record.spec for h, record in self._data.items()
-                   if h.startswith(dag_hash) and
+                   if h.startswith(hash_key) and
                    record.install_type_matches(installed)]
         if matches:
             return matches
@@ -1386,11 +1418,11 @@ class Database(object):
         return default
 
     def get_by_hash_local(self, *args, **kwargs):
-        """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
+        """Look up a spec in *this DB* by hash, or by a hash prefix.
 
         Arguments:
-            dag_hash (str): hash (or hash prefix) to look up
-            default (object or None): default value to return if dag_hash is
+            hash_key (str): hash (or hash prefix) to look up
+            default (object or None): default value to return if hash_key is
                 not in the DB (default: None)
             installed (bool or InstallStatus or typing.Iterable or None):
                 if ``True``, includes only installed
@@ -1411,12 +1443,12 @@ class Database(object):
         with self.read_transaction():
             return self._get_by_hash_local(*args, **kwargs)
 
-    def get_by_hash(self, dag_hash, default=None, installed=any):
-        """Look up a spec by DAG hash, or by a DAG hash prefix.
+    def get_by_hash(self, hash_key, default=None, installed=any):
+        """Look up a spec by hash, or by a hash prefix.
 
         Arguments:
-            dag_hash (str): hash (or hash prefix) to look up
-            default (object or None): default value to return if dag_hash is
+            hash_key (str): hash (or hash prefix) to look up
+            default (object or None): default value to return if hash_key is
                 not in the DB (default: None)
             installed (bool or InstallStatus or typing.Iterable or None):
                 if ``True``, includes only installed specs in the search; if ``False``
@@ -1435,13 +1467,13 @@ class Database(object):
         """
 
         spec = self.get_by_hash_local(
-            dag_hash, default=default, installed=installed)
+            hash_key, default=default, installed=installed)
         if spec is not None:
             return spec
 
         for upstream_db in self.upstream_dbs:
             spec = upstream_db._get_by_hash_local(
-                dag_hash, default=default, installed=installed)
+                hash_key, default=default, installed=installed)
             if spec is not None:
                 return spec
 
@@ -1468,7 +1500,7 @@ class Database(object):
         # Just look up concrete specs with hashes; no fancy search.
         if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
             # TODO: handling of hashes restriction is not particularly elegant.
-            hash_key = query_spec.dag_hash()
+            hash_key = query_spec._cached_hash(hash=self.key_hash_type)
             if (hash_key in self._data and
                     (not hashes or hash_key in hashes)):
                 return [self._data[hash_key].spec]
@@ -1482,7 +1514,8 @@ class Database(object):
         end_date = end_date or datetime.datetime.max
 
         for key, rec in self._data.items():
-            if hashes is not None and rec.spec.dag_hash() not in hashes:
+            if (hashes is not None and
+                    rec.spec._cached_hash(hash=self.key_hash_type) not in hashes):
                 continue
 
             if not rec.install_type_matches(installed):
@@ -1557,7 +1590,7 @@ class Database(object):
         return concrete_specs[0] if concrete_specs else None
 
     def missing(self, spec):
-        key = spec.dag_hash()
+        key = spec._cached_hash(hash=self.key_hash_type)
         upstream, record = self.query_by_spec_hash(key)
         return record and not record.installed
 
@@ -1582,7 +1615,7 @@ class Database(object):
                     # recycle `visited` across calls to avoid
                     # redundantly traversing
                     for spec in rec.spec.traverse(visited=visited):
-                        needed.add(spec.dag_hash())
+                        needed.add(spec._cached_hash(hash=self.key_hash_type))
 
             unused = [rec.spec for key, rec in self._data.items()
                       if key not in needed and rec.installed]
@@ -1632,3 +1665,12 @@ class InvalidDatabaseVersionError(SpackError):
             % (expected, found),
             "`spack reindex` may fix this, or you may need a newer "
             "Spack version.")
+
+
+class KeyHashTypeMismatchError(SpackError):
+    def __init__(self, expected, found):
+        super(KeyHashTypeMismatchError, self).__init__(
+            "Expected database index keyed by %s but found key %s instead.  "
+            % (expected, found),
+            "Spack can no longer use older database index files where the DAG "
+            "hash was used to identify built specs.")

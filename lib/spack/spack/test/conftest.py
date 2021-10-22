@@ -32,6 +32,7 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.hash_types as ht
 import spack.package
 import spack.package_prefs
 import spack.paths
@@ -842,10 +843,15 @@ def install_mockery(temporary_store, config, mock_packages):
 
 
 @pytest.fixture(scope='function')
-def temporary_store(tmpdir):
+def temporary_store(tmpdir, request):
     """Hooks a temporary empty store for the test function."""
+    hash_type = ht.dag_hash
+    if request and hasattr(request, 'param'):
+        hash_type = request.param
+
     temporary_store_path = tmpdir.join('opt')
-    with spack.store.use_store(str(temporary_store_path)) as s:
+    store = spack.store.Store(str(temporary_store_path), db_key_hash_type=hash_type)
+    with spack.store.use_store(store) as s:
         yield s
     temporary_store_path.remove()
 
