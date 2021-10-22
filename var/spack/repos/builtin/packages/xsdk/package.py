@@ -105,8 +105,8 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     variant('slate', default=True, description='Enable slate package build')
     variant('arborx', default=True, description='Enable ArborX build')
 
-    xsdk_depends_on('hypre@develop+superlu-dist+shared', when='@develop')
-    xsdk_depends_on('hypre@2.23.0+superlu-dist+shared', when='@0.7.0')
+    xsdk_depends_on('hypre@develop+superlu-dist+shared', when='@develop', cuda_var='cuda')
+    xsdk_depends_on('hypre@2.23.0+superlu-dist+shared', when='@0.7.0', cuda_var='cuda')
     xsdk_depends_on('hypre@2.20.0+superlu-dist+shared', when='@0.6.0')
     xsdk_depends_on('hypre@2.18.2+superlu-dist+shared', when='@0.5.0')
     xsdk_depends_on('hypre@2.15.1~internal-superlu', when='@0.4.0')
