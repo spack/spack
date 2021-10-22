@@ -13,7 +13,13 @@ def is_swaxs_version(version):
 
 
 def filter_versions(versions):
-    return { key: version for key, version in versions.items() if is_swaxs_version(version) }
+    filtered = {}
+
+    for key, version in versions.items():
+        if is_swaxs_version(version):
+            filtered[key] = version
+
+    return filtered
 
 
 class GromacsSwaxs(Gromacs):
