@@ -37,8 +37,12 @@ def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
         version_arg (str): the argument used to extract version information
     """
     compiler = spack.util.executable.Executable(compiler_path)
-    output = compiler(
-        version_arg, output=str, error=str, ignore_errors=ignore_errors)
+    if version_arg:
+        output = compiler(
+            version_arg, output=str, error=str, ignore_errors=ignore_errors)
+    else:
+        output = compiler(
+            output=str, error=str, ignore_errors=ignore_errors)
     return output
 
 
