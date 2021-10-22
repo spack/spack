@@ -31,6 +31,7 @@ class Acts(CMakePackage, CudaPackage):
 
     homepage = "https://acts.web.cern.ch/ACTS/"
     git      = "https://github.com/acts-project/acts.git"
+    list_url = "https://github.com/acts-project/acts/releases/"
     maintainers = ['HadrienG2']
 
     tags = ['hep']
@@ -38,6 +39,8 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version('main', branch='main')
     version('master', branch='main', deprecated=True)  # For compatibility
+    version('14.1.0', commit='e883ab6acfe5033509ad1c27e8e2ba980dfa59f6', submodules=True)
+    version('14.0.0', commit='f902bef81b60133994315c13f7d32d60048c79d8', submodules=True)
     version('13.0.0', commit='ad05672e48b693fd37156f1ad62ed57aa82f858c', submodules=True)
     version('12.0.1', commit='a80d1ef995d8cdd4190cc09cb249276a3e0161f4', submodules=True)
     version('12.0.0', commit='e0aa4e7dcb70df025576e050b6e652a2f736454a', submodules=True)
@@ -131,9 +134,13 @@ class Acts(CMakePackage, CudaPackage):
     variant('geant4', default=False, description='Build the Geant4-based examples')
     variant('hepmc3', default=False, description='Build the HepMC3-based examples')
     variant('pythia8', default=False, description='Build the Pythia8-based examples')
+    variant('python', default=False, description='Build python bindings for the examples')
+    variant('analysis', default=False, description='Build analysis applications in the examples')
 
     # Build dependencies
     # FIXME: Use spack's autodiff package once there is one
+    # FIXME: Use spack's vecmem package once there is one
+    # (https://github.com/acts-project/acts/pull/998)
     depends_on('boost @1.62:1.69 +program_options +test', when='@:0.10.3')
     depends_on('boost @1.71: +filesystem +program_options +test', when='@0.10.4:')
     depends_on('cmake @3.14:', type='build')
@@ -147,6 +154,8 @@ class Acts(CMakePackage, CudaPackage):
     depends_on('intel-tbb @2020.1:', when='+examples')
     depends_on('nlohmann-json @3.9.1:', when='@0.14: +json')
     depends_on('pythia8', when='+pythia8')
+    depends_on('python', when='+python')
+    depends_on('py-pytest', when='+python +unit_test')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
     depends_on('root @6.20: cxxstd=17', when='+tgeo @0.8.1:')
 
@@ -167,6 +176,8 @@ class Acts(CMakePackage, CudaPackage):
     conflicts('+hepmc3', when='-examples')
     conflicts('+pythia8', when='@:0.22')
     conflicts('+pythia8', when='-examples')
+    conflicts('+python', when='@:13')
+    conflicts('+python', when='-examples')
     conflicts('+tgeo', when='-identification')
     conflicts('+alignment', when='@:12')
     conflicts('%gcc@:7', when='@0.23:')
@@ -211,6 +222,8 @@ class Acts(CMakePackage, CudaPackage):
             example_cmake_variant("GEANT4", "geant4"),
             example_cmake_variant("HEPMC3", "hepmc3"),
             example_cmake_variant("PYTHIA8", "pythia8"),
+            example_cmake_variant("PYTHON_BINDINGS", "python"),
+            cmake_variant("ANALYSIS_APPS", "analysis"),
             cmake_variant("FATRAS", "fatras"),
             cmake_variant("FATRAS_GEANT4", "fatras_geant4"),
             plugin_cmake_variant("IDENTIFICATION", "identification"),
