@@ -59,8 +59,8 @@ spack:
       variants: +mpi~cuda~cupti+caliper~gperftools~python
   specs:
     - llvm@12.0.0 +cuda cuda_arch=70 +omp_tsan +python ^cuda@11.0.2
-    - nvhpc@20.9 install_type=network
     - nvhpc@21.2 install_type=network
+    - nvhpc@21.9
     - arm-forge@20.2.0-Redhat-7.0-x86_64
     - bison
     - blender

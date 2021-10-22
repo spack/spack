@@ -335,24 +335,21 @@ configure_compilers() {
                 fi
             done
         elif [[ ${line} = *"pgi"* || ${line} = *"nvhpc"* ]]; then
-            #update pgi modules for network installation
-            PGI_DIR=$(dirname $(which makelocalrc))
-            PGI_TMPDIR=$(mktemp -d -p .)
-            makelocalrc ${PGI_DIR} -d "${PGI_TMPDIR}" -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x -net
-            #configure pgi network license
-            template=$(ls -rt "${PGI_TMPDIR}"/localrc* | tail -n 1)
-            echo "set PREOPTIONS=-D__GCC_ATOMIC_TEST_AND_SET_TRUEVAL=1;" >> "${template}"
+            # Configure NVHPC compilers to use an up to date version of the C++
+            # standard library from the deployed version of GCC.
+            NVHPC_DIR=$(dirname $(which makelocalrc))
+            NVHPC_TMPDIR=$(mktemp -d -p .)
+            makelocalrc ${NVHPC_DIR} -d "${NVHPC_TMPDIR}" -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x
+            # olupton 2021-10-15: is this still needed? Not sure.
+            echo "set PREOPTIONS=-D__GCC_ATOMIC_TEST_AND_SET_TRUEVAL=1;" >> "${NVHPC_TMPDIR}/localrc"
             log "NVIDIA localrc template"
-            cat "${template}"
-            compute_nodes=$(sinfo -h -N -o %n | sort -u)
-            if [[ "${PGI_DIR}" != "${SPACK_INSTALL_PREFIX}"* ]]; then
+            cat "${NVHPC_TMPDIR}/localrc"
+            if [[ "${NVHPC_DIR}" != "${SPACK_INSTALL_PREFIX}"* ]]; then
                 log "...installation does not match install prefix, skipping modification of files"
             else
-                for node in bbpv1 bbpv2 bbptadm tds03 tds04 ${compute_nodes}; do
-                    cp $template $PGI_DIR/localrc.$node || true
-                done
+                cp -v "${NVHPC_TMPDIR}/localrc" "${NVHPC_DIR}/localrc"
             fi
-            rm -rf "${PGI_TMPDIR}"
+            rm -rf "${NVHPC_TMPDIR}"
         fi
         cmd=${cmd/load/unload}
         echo "${cmd}"
