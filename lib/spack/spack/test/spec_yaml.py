@@ -15,7 +15,6 @@ import sys
 
 import pytest
 
-import spack.architecture
 import spack.hash_types as ht
 import spack.spec
 import spack.util.spack_json as sjson
@@ -226,7 +225,6 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
 
 @pytest.mark.parametrize("module", [
     spack.spec,
-    spack.architecture,
     spack.version,
 ])
 def test_hashes_use_no_python_dicts(module):

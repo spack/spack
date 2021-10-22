@@ -66,7 +66,7 @@ class Converge(Package):
     #     $ spack spec converge@2.4.10 +mpi ^openmpi@:1.10
     #
     # TODO: Add version ranges for other MPI libraries
-    depends_on('openmpi@1.10.0:1.10.999', when='@2.4.0:2.4.999+mpi^openmpi')
+    depends_on('openmpi@1.10.0:1.10', when='@2.4.0:2.4+mpi^openmpi')
     depends_on('openmpi@1.5:1.8',         when='@2.2:2.3+mpi^openmpi')
     depends_on('openmpi@:1.4',            when='@:2.1+mpi^openmpi')
 

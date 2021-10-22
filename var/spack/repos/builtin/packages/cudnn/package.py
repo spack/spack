@@ -9,6 +9,12 @@ import platform
 from spack import *
 
 _versions = {
+    # cuDNN 8.2.4
+    '8.2.4.15-11.4': {
+        'Linux-x86_64': '0e5d2df890b9967efa6619da421310d97323565a79f05a1a8cb9b7165baad0d7',
+        'Linux-ppc64le': 'af8749ca83fd6bba117c8bee31b787b7f204946e864294030ee0091eb7d3577e',
+        'Linux-aarch64': '48b11f19e9cd3414ec3c6c357ad228aebbd43282aae372d42cab2af67c32a08b'},
+
     # cuDNN 8.2.0
     '8.2.0.53-11.3': {
         'Linux-x86_64': '7a195dc93a7cda2bdd4d9b73958d259c784be422cd941a9a625aab75309f19dc',
@@ -199,7 +205,7 @@ class Cudnn(Package):
         if pkg:
             version(long_ver, sha256=pkg)
             # Add constraints matching CUDA version to cuDNN version
-            cuda_req = 'cuda@{0}.0:{0}.999'.format(cuda_ver)
+            cuda_req = 'cuda@{0}.0:{0}'.format(cuda_ver)
             cudnn_ver_req = '@{0}'.format(long_ver)
             depends_on(cuda_req, when=cudnn_ver_req)
 

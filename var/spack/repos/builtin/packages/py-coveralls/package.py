@@ -21,6 +21,6 @@ class PyCoveralls(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-pyyaml@3.10:', type=('build', 'run'), when='+pyyaml')
-    depends_on('py-coverage@4.1:5.999', type=('build', 'run'))
+    depends_on('py-coverage@4.1:5', type=('build', 'run'))
     depends_on('py-docopt@0.6.1:', type=('build', 'run'))
     depends_on('py-pyyaml@1.0.0:', type=('build', 'run'))

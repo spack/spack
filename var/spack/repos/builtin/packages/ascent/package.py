@@ -36,7 +36,7 @@ class Ascent(CMakePackage, CudaPackage):
     homepage = "https://github.com/Alpine-DAV/ascent"
     git      = "https://github.com/Alpine-DAV/ascent.git"
     url      = "https://github.com/Alpine-DAV/ascent/releases/download/v0.5.1/ascent-v0.5.1-src-with-blt.tar.gz"
-    tags     = ['radiuss']
+    tags     = ['radiuss', 'e4s']
 
     maintainers = ['cyrush']
 
@@ -94,7 +94,7 @@ class Ascent(CMakePackage, CudaPackage):
     ###########################################################################
 
     # Certain CMake versions have been found to break for our use cases
-    depends_on("cmake@3.14.1:3.14.99,3.18.2:", type='build')
+    depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
     depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python")
     depends_on("conduit+mpi", when="+mpi")

@@ -41,7 +41,7 @@ class VotcaTools(CMakePackage):
     patch("https://github.com/votca/tools/commit/6bb7e35ba7d1a31247eafb323be2777ec0439cfe.patch", sha256="3c9fa5ac9cf45c54ac475bcb22350793efaccd6b5154e3d30c24b8aa754fe47b", when="@2021:2021.0")
 
     variant('mkl', default=False, description='Build with MKL support')
-    conflicts('+mkl', when='@1.4:1.5.9999')
+    conflicts('+mkl', when='@1.4:1.5')
 
     depends_on("cmake@2.8:", type='build')
     depends_on("expat")
@@ -49,7 +49,7 @@ class VotcaTools(CMakePackage):
     depends_on("gsl", when="@1.4:1.4.9999")
     depends_on("eigen@3.3:", when="@stable,1.5:")
     depends_on("boost")
-    depends_on("sqlite", when="@1.4:1.5.9999")
+    depends_on("sqlite", when="@1.4:1.5")
     depends_on('mkl', when='+mkl')
 
     def cmake_args(self):

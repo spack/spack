@@ -116,9 +116,9 @@ class IntelPackage(PackageBase):
     # that satisfies self.spec will be used.
     version_years = {
         # intel-daal is versioned 2016 and later, no divining is needed
-        'intel-ipp@9.0:9.99':         2016,
-        'intel-mkl@11.3.0:11.3.999':  2016,
-        'intel-mpi@5.1:5.99':         2016,
+        'intel-ipp@9.0:9':         2016,
+        'intel-mkl@11.3.0:11.3':   2016,
+        'intel-mpi@5.1:5':         2016,
     }
 
     # Below is the list of possible values for setting auto dispatch functions

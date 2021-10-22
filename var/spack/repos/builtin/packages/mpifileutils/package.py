@@ -20,6 +20,8 @@ class Mpifileutils(Package):
     url      = "https://github.com/hpc/mpifileutils/archive/v0.9.tar.gz"
     git      = "https://github.com/hpc/mpifileutils.git"
 
+    tags = ['e4s']
+
     version('develop', branch='master')
     version('0.11',   sha256='f5dc1b39077b3c04f79b2c335c4fd80306f8c57ecfbcacbb82cf532caf02b5fd')
     version('0.10.1', sha256='4c8409ef4140f6f557d0e93f0c1267baf5d893c203b29fb7a33d9bc3c5a5d25c')

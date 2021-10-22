@@ -13,6 +13,7 @@ class Lwgrp(AutotoolsPackage):
     homepage = "https://github.com/hpc/lwgrp"
     url      = "https://github.com/hpc/lwgrp/releases/download/v1.0.2/lwgrp-1.0.2.tar.gz"
 
+    version('1.0.4', sha256='0c933df7658660a0225f8e3a940eb2621efa4421397859417c8d90d906d4e90a')
     version('1.0.3', sha256='20b2fc3908bfdf04d1c177f86e227a147214cd155c548b3dd75e54c78e1c1c47')
     version('1.0.2', sha256='c9d4233946e40f01efd0b4644fd9224becec51b9b5f8cbf45f5bac3129b5b536')
 

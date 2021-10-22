@@ -14,9 +14,9 @@ from glob import glob
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
-import spack.architecture as architecture
 import spack.config
 import spack.paths
+import spack.platforms
 from spack.main import get_version
 from spack.util.executable import which
 
@@ -87,10 +87,15 @@ def create_db_tarball(args):
 
 
 def report(args):
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system('frontend')
+    host_target = host_platform.target('frontend')
+    architecture = spack.spec.ArchSpec(
+        (str(host_platform), str(host_os), str(host_target))
+    )
     print('* **Spack:**', get_version())
     print('* **Python:**', platform.python_version())
-    print('* **Platform:**', architecture.Arch(
-        architecture.platform(), 'frontend', 'frontend'))
+    print('* **Platform:**', architecture)
     print('* **Concretizer:**', spack.config.get('config:concretizer'))
 
 

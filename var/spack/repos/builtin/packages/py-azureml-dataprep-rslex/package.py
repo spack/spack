@@ -64,11 +64,11 @@ class PyAzuremlDataprepRslex(Package):
     extends('python')
     depends_on('py-pip', type='build')
 
-    depends_on('python@3.9.0:3.9.999', when='@1.9.0-py3.9,1.8.0-py3.9', type=('build', 'run'))
-    depends_on('python@3.8.0:3.8.999', when='@1.9.0-py3.8,1.8.0-py3.8', type=('build', 'run'))
-    depends_on('python@3.7.0:3.7.999', when='@1.9.0-py3.7,1.8.0-py3.7', type=('build', 'run'))
-    depends_on('python@3.6.0:3.6.999', when='@1.9.0-py3.6,1.8.0-py3.6', type=('build', 'run'))
-    depends_on('python@3.5.0:3.5.999', when='@1.9.0-py3.5,1.8.0-py3.5', type=('build', 'run'))
+    depends_on('python@3.9.0:3.9', when='@1.9.0-py3.9,1.8.0-py3.9', type=('build', 'run'))
+    depends_on('python@3.8.0:3.8', when='@1.9.0-py3.8,1.8.0-py3.8', type=('build', 'run'))
+    depends_on('python@3.7.0:3.7', when='@1.9.0-py3.7,1.8.0-py3.7', type=('build', 'run'))
+    depends_on('python@3.6.0:3.6', when='@1.9.0-py3.6,1.8.0-py3.6', type=('build', 'run'))
+    depends_on('python@3.5.0:3.5', when='@1.9.0-py3.5,1.8.0-py3.5', type=('build', 'run'))
 
     for t in set([str(x.family) for x in archspec.cpu.TARGETS.values()
                  if str(x.family) != 'x86_64']):

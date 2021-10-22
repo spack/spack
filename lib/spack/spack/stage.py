@@ -504,7 +504,8 @@ class Stage(object):
             print_errors(errors)
 
             self.fetcher = self.default_fetcher
-            raise fs.FetchError(err_msg or 'All fetchers failed', None)
+            default_msg = 'All fetchers failed for {0}'.format(self.name)
+            raise fs.FetchError(err_msg or default_msg, None)
 
         print_errors(errors)
 
@@ -823,9 +824,7 @@ def purge():
                 remove_linked_tree(stage_path)
 
 
-def get_checksums_for_versions(
-        url_dict, name, first_stage_function=None, keep_stage=False,
-        fetch_options=None, batch=False):
+def get_checksums_for_versions(url_dict, name, **kwargs):
     """Fetches and checksums archives from URLs.
 
     This function is called by both ``spack checksum`` and ``spack
@@ -841,6 +840,7 @@ def get_checksums_for_versions(
         keep_stage (bool): whether to keep staging area when command completes
         batch (bool): whether to ask user how many versions to fetch (false)
             or fetch all versions (true)
+        latest (bool): whether to take the latest version (true) or all (false)
         fetch_options (dict): Options used for the fetcher (such as timeout
             or cookies)
 
@@ -848,7 +848,15 @@ def get_checksums_for_versions(
         (str): A multi-line string containing versions and corresponding hashes
 
     """
+    batch = kwargs.get('batch', False)
+    fetch_options = kwargs.get('fetch_options', None)
+    first_stage_function = kwargs.get('first_stage_function', None)
+    keep_stage = kwargs.get('keep_stage', False)
+    latest = kwargs.get('latest', False)
+
     sorted_versions = sorted(url_dict.keys(), reverse=True)
+    if latest:
+        sorted_versions = sorted_versions[:1]
 
     # Find length of longest string in the list for padding
     max_len = max(len(str(v)) for v in sorted_versions)
@@ -862,7 +870,7 @@ def get_checksums_for_versions(
                  for v in sorted_versions]))
     print()
 
-    if batch:
+    if batch or latest:
         archives_to_fetch = len(sorted_versions)
     else:
         archives_to_fetch = tty.get_number(

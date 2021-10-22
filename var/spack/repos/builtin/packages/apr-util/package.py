@@ -73,12 +73,12 @@ class AprUtil(AutotoolsPackage):
             args.append('--without-pgsql')
 
         if '+sqlite' in spec:
-            if spec.satisfies('^sqlite@3.0:3.999'):
+            if spec.satisfies('^sqlite@3.0:3'):
                 args.extend([
                     '--with-sqlite3={0}'.format(spec['sqlite'].prefix),
                     '--without-sqlite2',
                 ])
-            elif spec.satisfies('^sqlite@2.0:2.999'):
+            elif spec.satisfies('^sqlite@2.0:2'):
                 args.extend([
                     '--with-sqlite2={0}'.format(spec['sqlite'].prefix),
                     '--without-sqlite3',

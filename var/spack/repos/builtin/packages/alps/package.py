@@ -28,14 +28,14 @@ class Alps(CMakePackage):
     depends_on('hdf5 ~mpi+hl')
     depends_on('lapack')
     # build fails for latest python@3.7
-    depends_on('python@:3.6.99', type=('build', 'link', 'run'))
+    depends_on('python@:3.6', type=('build', 'link', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
 
     # use depends_on to help with dependency resolution
-    depends_on('py-numpy@:1.19', when='^python@:3.6.99')
-    depends_on('py-scipy@:1.5', when='^python@:3.6.99')
+    depends_on('py-numpy@:1.19', when='^python@:3.6')
+    depends_on('py-scipy@:1.5', when='^python@:3.6')
 
     # fix for gcc@7:
     patch('alps_newgcc.patch', when='%gcc@7:')

@@ -21,6 +21,8 @@ class ParallelNetcdf(AutotoolsPackage):
 
     maintainers = ['skosukhin']
 
+    tags = ['e4s']
+
     test_requires_compiler = True
 
     def url_for_version(self, version):

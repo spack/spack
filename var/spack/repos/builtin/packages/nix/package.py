@@ -56,7 +56,7 @@ class Nix(AutotoolsPackage):
     depends_on('xz')
 
     # gcc 4.9+ and higher supported with c++14
-    conflicts('%gcc@:4.8.99')
+    conflicts('%gcc@:4.8')
 
     def configure_args(self):
         args = []

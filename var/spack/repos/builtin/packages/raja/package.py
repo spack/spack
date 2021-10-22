@@ -13,7 +13,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://software.llnl.gov/RAJA/"
     git      = "https://github.com/LLNL/RAJA.git"
-    tags     = ['radiuss']
+    tags     = ['radiuss', 'e4s']
 
     maintainers = ['davidbeckingsale']
 

@@ -10,6 +10,8 @@ class Ruby(AutotoolsPackage):
     """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
+    maintainers = ['Kerilk']
+
     homepage = "https://www.ruby-lang.org/"
     url      = "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
     list_url = "https://cache.ruby-lang.org/pub/ruby/"
@@ -35,16 +37,18 @@ class Ruby(AutotoolsPackage):
     depends_on('libx11', when='@:2.3')
     depends_on('tcl', when='@:2.3')
     depends_on('tk', when='@:2.3')
-    depends_on('openssl@:1.0', when='@:2.3+openssl')
-    depends_on('openssl', when='+openssl')
     depends_on('readline', when='+readline')
+
+    with when('+openssl'):
+        depends_on('openssl@:1')
+        depends_on('openssl@:1.0', when='@:2.3')
 
     # Known build issues when Avira antivirus software is running:
     # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379
     # TODO: add check for this and warn user
 
     # gcc-7-based build requires patches (cf. https://bugs.ruby-lang.org/issues/13150)
-    patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2.999 %gcc@7:')
+    patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2 %gcc@7:')
     patch('ruby_23_gcc7.patch', level=0, when='@2.3.0:2.3.4 %gcc@7:')
     patch('ruby_24_gcc7.patch', level=1, when='@2.4.0 %gcc@7:')
 
@@ -86,15 +90,17 @@ class Ruby(AutotoolsPackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
-        ruby_paths = []
-        for d in dependent_spec.traverse():
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test'), root=True):
             if d.package.extends(self.spec):
-                ruby_paths.append(d.prefix)
-
-        env.set_path('GEM_PATH', ruby_paths)
+                env.prepend_path('GEM_PATH', d.prefix)
 
         # The actual installation path for this gem
         env.set('GEM_HOME', dependent_spec.prefix)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        for d in dependent_spec.traverse(deptype=('run'), root=True):
+            if d.package.extends(self.spec):
+                env.prepend_path('GEM_PATH', d.prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME

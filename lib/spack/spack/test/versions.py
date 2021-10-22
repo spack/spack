@@ -16,7 +16,7 @@ from llnl.util.filesystem import working_dir
 import spack.package
 import spack.spec
 from spack.util.executable import which
-from spack.version import Version, VersionList, ver
+from spack.version import Version, VersionList, VersionRange, ver
 
 
 def assert_ver_lt(a, b):
@@ -602,3 +602,29 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
             expected = f.read()
 
         assert str(comparator) == expected
+
+
+def test_version_range_nonempty():
+    assert Version('1.2.9') in VersionRange('1.2.0', '1.2')
+    assert Version('1.1.1') in ver('1.0:1')
+
+
+def test_empty_version_range_raises():
+    with pytest.raises(ValueError):
+        assert VersionRange('2', '1.0')
+    with pytest.raises(ValueError):
+        assert ver('2:1.0')
+
+
+def test_version_empty_slice():
+    """Check an empty slice to confirm get "empty" version instead of
+       an IndexError (#25953).
+    """
+    assert Version('1.')[1:] == Version('')
+
+
+def test_version_wrong_idx_type():
+    """Ensure exception raised if attempt to use non-integer index."""
+    v = Version('1.1')
+    with pytest.raises(TypeError):
+        v['0:']

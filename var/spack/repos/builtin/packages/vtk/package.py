@@ -50,9 +50,8 @@ class Vtk(CMakePackage):
     patch('https://gitlab.kitware.com/vtk/vtk/-/commit/e066c3f4fbbfe7470c6207db0fc3f3952db633c.diff',
           when="@9:", sha256='0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d')
 
-    # At the moment, we cannot build with both osmesa and qt, but as of
-    # VTK 8.1, that should change
-    conflicts('+osmesa', when='+qt')
+    # We cannot build with both osmesa and qt prior to VTK 8.1
+    conflicts('+osmesa', when='@:8.0 +qt')
 
     extends('python', when='+python')
 
@@ -60,7 +59,7 @@ class Vtk(CMakePackage):
     # We need vtk at least 8.0.1 for python@3,
     # and at least 9.0 for python@3.8
     depends_on('python@2.7:2.9', when='@:8.0 +python', type=('build', 'run'))
-    depends_on('python@2.7:3.7.99', when='@8.0.1:8.9 +python',
+    depends_on('python@2.7:3.7', when='@8.0.1:8.9 +python',
                type=('build', 'run'))
     depends_on('python@2.7:', when='@9.0: +python', type=('build', 'run'))
 
@@ -144,6 +143,10 @@ class Vtk(CMakePackage):
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
 
+            # prevents installation into lib64 which might not be in the path
+            # (solves #26314)
+            '-DCMAKE_INSTALL_LIBDIR:PATH=lib',
+
             # In general, we disable use of VTK "ThirdParty" libs, preferring
             # spack-built versions whenever possible
             '-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON',
@@ -221,6 +224,12 @@ class Vtk(CMakePackage):
                 '-DQT_QMAKE_EXECUTABLE:PATH={0}'.format(qmake_exe),
                 '-DVTK_Group_Qt:BOOL=ON',
             ])
+            # https://github.com/martijnkoopman/Qt-VTK-viewer/blob/master/doc/Build-VTK.md
+            if spec.satisfies('@9.0.0:'):
+                cmake_args.extend([
+                    '-DVTK_GROUP_ENABLE_Qt:STRING=YES',
+                    '-DVTK_MODULE_ENABLE_VTK_GUISupportQt:STRING=YES',
+                ])
 
             # NOTE: The following definitions are required in order to allow
             # VTK to build with qt~webkit versions (see the documentation for
@@ -260,7 +269,7 @@ class Vtk(CMakePackage):
 
         cmake_args.append('-DVTK_RENDERING_BACKEND:STRING=' + opengl_ver)
 
-        if spec.satisfies('@:8.1.0'):
+        if spec.satisfies('@:8.1.0') and '+osmesa' not in spec:
             cmake_args.append('-DVTK_USE_SYSTEM_GLEW:BOOL=ON')
 
         if '+osmesa' in spec:

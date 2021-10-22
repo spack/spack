@@ -37,12 +37,17 @@ class Zstd(MakefilePackage):
     depends_on('lzma', when='+programs')
     depends_on('lz4', when='+programs')
 
+    def _make(self, *args, **kwargs):
+        # PREFIX must be defined on macOS even when building the library, since
+        # it gets hardcoded into the library's install_path
+        make('VERBOSE=1', 'PREFIX=' + self.prefix, '-C', *args, **kwargs)
+
     def build(self, spec, prefix):
-        make('-C', 'lib')
+        self._make('lib')
         if spec.variants['programs'].value:
-            make('-C', 'programs')
+            self._make('programs')
 
     def install(self, spec, prefix):
-        make('-C', 'lib', 'install', 'PREFIX={0}'.format(prefix))
+        self._make('lib', 'install', parallel=False)
         if spec.variants['programs'].value:
-            make('-C', 'programs', 'install', 'PREFIX={0}'.format(prefix))
+            self._make('programs', 'install')

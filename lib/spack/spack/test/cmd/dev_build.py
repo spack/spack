@@ -245,7 +245,7 @@ env:
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            with pytest.raises(spack.spec.UnsatisfiableVersionSpecError):
+            with pytest.raises(RuntimeError):
                 install()
 
 

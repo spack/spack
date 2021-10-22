@@ -25,6 +25,8 @@ class Tau(Package):
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.30.tar.gz"
     git      = "https://github.com/UO-OACISS/tau2"
 
+    tags = ['e4s']
+
     version('master', branch='master')
     version('2.30.1', sha256='9c20ca1b4f4e80d885f24491cee598068871f0e9dd67906a5e47e4b4147d08fc')
     version('2.30', sha256='e581c33e21488d69839a00d97fd4451ea579f47249b2750d5c36bea773041eaf')

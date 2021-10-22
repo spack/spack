@@ -575,7 +575,7 @@ _spack_cd() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage -b --batch"
+        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred"
     else
         _all_packages
     fi
@@ -911,7 +911,7 @@ _spack_env() {
 _spack_env_activate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish -v --with-view -V --without-view -d --dir -p --prompt"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish -v --with-view -V --without-view -p --prompt --temp -d --dir"
     else
         _environments
     fi
@@ -1211,7 +1211,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --fish --first --only"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --first --only"
     else
         _installed_packages
     fi

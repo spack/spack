@@ -11,7 +11,7 @@ archspec
 
 * Homepage: https://pypi.python.org/pypi/archspec
 * Usage: Labeling, comparison and detection of microarchitectures
-* Version: 0.1.2 (commit 4dbf253daf37e4a008e4beb6489f347b4a35aed4)
+* Version: 0.1.2 (commit 85757b6666422fca86aa882a769bf78b0f992f54)
 
 argparse
 --------
@@ -88,6 +88,8 @@ py
 * Usage: Needed by pytest. Library with cross-python path,
   ini-parsing, io, code, and log facilities.
 * Version: 1.4.34 (last version supporting Python 2.6)
+* Note: This packages has been modified:
+  * https://github.com/pytest-dev/py/pull/186 was backported
 
 pytest
 ------

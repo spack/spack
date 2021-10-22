@@ -543,6 +543,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
     with fs.working_dir(log_dir):
         fs.touch(log_path)
         fs.touch(spec.package.env_path)
+        fs.touch(spec.package.env_mods_path)
         fs.touch(spec.package.configure_args_path)
 
     install_path = os.path.dirname(spec.package.install_log_path)

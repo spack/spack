@@ -17,6 +17,8 @@ class Globalarrays(AutotoolsPackage):
     homepage = "https://hpc.pnl.gov/globalarrays/"
     url = "https://github.com/GlobalArrays/ga/releases/download/v5.7/ga-5.7.tar.gz"
 
+    tags = ['e4s']
+
     version('5.8',   sha256='64df7d1ea4053d24d84ca361e67a6f51c7b17ed7d626cb18a9fbc759f4a078ac')
     version('5.7.2', sha256='8cd0fcfd85bc7f9c168c831616f66f1e8b9b2ca31dc7dd93cc55b27cc7fe7069')
     version('5.7.1', sha256='aa4c6038d792cabf1766e264320da58a555da81a3a36be32b7c4d3e71c08ffa9')

@@ -15,6 +15,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     url      = 'https://github.com/ORNL/TASMANIAN/archive/v7.5.tar.gz'
     git      = 'https://github.com/ORNL/TASMANIAN.git'
 
+    tags = ['e4s']
     maintainers = ['mkstoyanov']
 
     version('develop', branch='master')
@@ -63,7 +64,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cmake@2.8:', type='build')
     depends_on('cmake@3.5:', type='build', when='@6.0:')
-    depends_on('cmake@3.10:', type='build', when='@7.0:')
+    depends_on('cmake@3.10:', type=('build', 'run'), when='@7.0:')
 
     depends_on('python@2.7:', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
@@ -140,9 +141,21 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
                 self.spec['python'].command.path))
 
+        # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+        if self.spec.satisfies('+rocm') and self.spec.satisfies('^cmake@3.21:'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
         # _CUBLAS and _CUDA were separate options prior to 6.0
         # skipping _CUBLAS leads to peformance regression
         if spec.satisfies('@:5.1'):
             args.append(self.define_from_variant('Tasmanian_ENABLE_CUBLAS', 'cuda'))
 
         return args
+
+    def test(self):
+        # using the tests installed in <prefix>/share/Tasmanian/testing
+        cmake_dir = join_path(self.prefix, 'share', 'Tasmanian', 'testing')
+        with working_dir(self.install_test_root, create=True):
+            cmake(cmake_dir)
+            make()
+            make('test')

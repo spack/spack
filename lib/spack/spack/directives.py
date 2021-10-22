@@ -89,6 +89,9 @@ def make_when_spec(value):
            value indicating when a directive should be applied.
 
     """
+    if isinstance(value, spack.spec.Spec):
+        return value
+
     # Unsatisfiable conditions are discarded by the caller, and never
     # added to the package class
     if value is False:
@@ -248,10 +251,16 @@ class DirectiveMeta(type):
                         msg = msg.format(decorated_function.__name__)
                         raise DirectiveError(msg)
 
-                    when_spec_from_context = ' '.join(
+                    when_constraints = [
+                        spack.spec.Spec(x) for x in
                         DirectiveMeta._when_constraints_from_context
+                    ]
+                    if kwargs.get('when'):
+                        when_constraints.append(spack.spec.Spec(kwargs['when']))
+                    when_spec = spack.spec.merge_abstract_anonymous_specs(
+                        *when_constraints
                     )
-                    when_spec = kwargs.get('when', '') + ' ' + when_spec_from_context
+
                     kwargs['when'] = when_spec
 
                 # If any of the arguments are executors returned by a

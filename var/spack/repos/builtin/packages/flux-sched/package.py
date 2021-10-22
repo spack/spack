@@ -14,11 +14,12 @@ class FluxSched(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-sched"
     url      = "https://github.com/flux-framework/flux-sched/releases/download/v0.5.0/flux-sched-0.5.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-sched.git"
-    tags     = ['radiuss']
+    tags     = ['radiuss', 'e4s']
 
-    maintainers = ['SteVwonder']
+    maintainers = ['grondo']
 
     version('master', branch='master')
+    version('0.18.0', sha256='a4d8a6444fdb7b857b26f47fdea57992b486c9522f4ff92d5a6f547d95b586ae')
     version('0.17.0', sha256='5acfcb757e2294a92eaa91be58ba9b42736b88b42d2937de4a78f4642b1c4933')
     version('0.16.0', sha256='08313976161c141b9b34e2d44d5a08d1b11302e22d60aeaf878eef84d4bd2884')
     version('0.15.0', sha256='ff24d26997f91af415f98734b8117291f5a5001e86dac865b56b3d72980c80c8')
@@ -46,9 +47,9 @@ class FluxSched(AutotoolsPackage):
 
     depends_on("flux-core", type=('build', 'link', 'run'))
     depends_on("flux-core+cuda", when='+cuda', type=('build', 'run', 'link'))
-    depends_on("flux-core@0.16.0:0.16.99", when='@0.8.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.16.0:0.16", when='@0.8.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.22.0", when='@0.14.0', type=('build', 'run', 'link'))
-    depends_on("flux-core@0.23.0:0.25.99", when='@0.15.0', type=('build', 'run', 'link'))
+    depends_on("flux-core@0.23.0:0.25", when='@0.15.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.26.0:", when='@0.16.0', type=('build', 'run', 'link'))
     depends_on("flux-core@0.28.0:", when='@0.17.0', type=('build', 'run', 'link'))
     depends_on("flux-core@master", when='@master', type=('build', 'run', 'link'))
