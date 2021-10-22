@@ -10,6 +10,7 @@ from .cray import Cray
 from .darwin import Darwin
 from .linux import Linux
 from .test import Test
+from .windows import Windows
 
 __all__ = [
     'Platform',
@@ -19,7 +20,8 @@ __all__ = [
     'Test',
     'platforms',
     'host',
-    'by_name'
+    'by_name',
+    'Windows'
 ]
 
 #: The "real" platform of the host running Spack. This should not be changed
