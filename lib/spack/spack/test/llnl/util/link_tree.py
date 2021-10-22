@@ -9,6 +9,7 @@ import pytest
 
 from llnl.util.filesystem import mkdirp, touchp, working_dir
 from llnl.util.link_tree import LinkTree
+from llnl.util.symlink import islink
 
 from spack.stage import Stage
 
@@ -42,7 +43,7 @@ def link_tree(stage):
 
 def check_file_link(filename, expected_target):
     assert os.path.isfile(filename)
-    assert os.path.islink(filename)
+    assert islink(filename)
     assert (os.path.abspath(os.path.realpath(filename)) ==
             os.path.abspath(expected_target))
 

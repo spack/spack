@@ -6,6 +6,8 @@ import sys
 
 from macholib import mach_o
 
+from llnl.util.symlink import symlink
+
 MAGIC = [
     struct.pack("!L", getattr(mach_o, "MH_" + _))
     for _ in ["MAGIC", "CIGAM", "MAGIC_64", "CIGAM_64"]
@@ -140,7 +142,7 @@ def mergetree(src, dst, condition=None, copyfn=mergecopy, srcbase=None):
         try:
             if os.path.islink(srcname):
                 realsrc = os.readlink(srcname)
-                os.symlink(realsrc, dstname)
+                symlink(realsrc, dstname)
             elif os.path.isdir(srcname):
                 mergetree(
                     srcname,
