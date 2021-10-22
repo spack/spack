@@ -110,7 +110,8 @@ class Nsimd(CMakePackage):
             # POWER
             elif 'vsx' in self.spec.target:
                 simd = 'VSX'
-            elif self.spec.satisfies('target=ppc64') or self.spec.satisfies('target=ppc64le'):
+            elif (self.spec.satisfies('target=ppc64') or
+                  self.spec.satisfies('target=ppc64le')):
                 simd = 'VMX'
             # Unknown CPU architecture
             else:
