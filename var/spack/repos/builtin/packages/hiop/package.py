@@ -18,6 +18,7 @@ class Hiop(CMakePackage, CudaPackage):
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version('0.5.1', commit='6789bbb55824e68e428c2df1009d647af81f9cf1')
     version('0.5.0', commit='a39da8025037c7c8ae2eb31234eb80cc73bec2af')
     version('0.4.6', commit='b72d163d52c9225c3196ceb2baebdc7cf09a69de')
     version('0.4.5', commit='c353580456c4776c50811b97cf8ff802dc27b90c')
