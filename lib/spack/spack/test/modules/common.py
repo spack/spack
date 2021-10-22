@@ -93,6 +93,8 @@ def test_modules_written_with_proper_permissions(mock_module_filename,
         mock_module_filename).st_mode == mock_package_perms
 
 
+@pytest.mark.skipif(str(spack.platforms.host()) == "windows",
+                    reason="test unsupported on Windows")
 @pytest.mark.parametrize('module_type', ['tcl', 'lmod'])
 def test_modules_default_symlink(
         module_type, mock_packages, mock_module_filename, mock_module_defaults, config
