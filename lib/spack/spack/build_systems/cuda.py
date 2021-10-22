@@ -105,8 +105,8 @@ class CudaPackage(PackageBase):
     # each release of a new cuda minor version.
     conflicts('%gcc@10:', when='+cuda ^cuda@:11.0')
     conflicts('%gcc@11:', when='+cuda ^cuda@:11.4.0')
-    conflicts('%clang@12:', when='+cuda ^cuda@:11.4.2')
     conflicts('%gcc@12:', when='+cuda ^cuda@:11.5.0')
+    conflicts('%clang@12:', when='+cuda ^cuda@:11.4.0')
     conflicts('%clang@13:', when='+cuda ^cuda@:11.5.0')
 
     # https://gist.github.com/ax3l/9489132#gistcomment-3860114
