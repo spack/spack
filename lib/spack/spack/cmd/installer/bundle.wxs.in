@@ -15,9 +15,9 @@
         <ExePackage 
           SourceFile="Git-2.31.1-64-bit.exe"
           DetectCondition="ExeDetectedVariable"
-          InstallCommand="/q /ACTION=Install"
-          RepairCommand="/q ACTION=Repair /hideconsole"
-          UninstallCommand="/q ACTION=Uninstall /hideconsole" />
+          InstallCommand="@SPACK_GIT_VERBOSITY@ /SUPPRESSMSGBOXES"
+          RepairCommand="/VERYSILENT"
+          UninstallCommand="/VERYSILENT" />
     </Chain>
   </Bundle>
 </Wix>
