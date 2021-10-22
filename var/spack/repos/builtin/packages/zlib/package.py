@@ -6,7 +6,11 @@
 
 # Although zlib comes with a configure script, it does not use Autotools
 # The AutotoolsPackage causes zlib to fail to build with PGI
-class Zlib(CMakePackage):
+import glob
+import os
+
+
+class Zlib(Package):
     """A free, general-purpose, legally unencumbered lossless
     data-compression library.
     """
@@ -37,16 +41,29 @@ class Zlib(CMakePackage):
             ['libz'], root=self.prefix, recursive=True, shared=shared
         )
 
-    def cmake_args(self):
-        args = ['-DBUILD_SHARED_LIBS:BOOL=' +
-                ('ON' if self._building_shared else 'OFF')]
-        return args
+    def win_install(self):
+        build_dir = self.stage.source_path
+        install_tree = {}
+        install_tree["bin"] = glob.glob(os.path.join(build_dir, "*.dll"))
+        install_tree["lib"] = glob.glob(os.path.join(build_dir, "*.lib"))
+        compose_src_path = lambda x: os.path.join(build_dir, x)
+        install_tree["include"] = [compose_src_path("zlib.h"),
+                                   compose_src_path("zconf.h")]
+        install_tree["share"] = {"man": {"man3": [compose_src_path("zlib.3")]}}
 
-    @property
-    def build_directory(self):
-        return join_path(self.stage.source_path,
-                         'spack-build-shared' if self._building_shared
-                         else 'spack-build-static')
+        def installtree(dst, tree):
+            for inst_dir in tree:
+                if type(tree[inst_dir]) is list:
+                    install_dst = getattr(dst, inst_dir)
+                    try:
+                        os.makedirs(install_dst)
+                    except OSError:
+                        pass
+                    for file in tree[inst_dir]:
+                        copy(file, install_dst)
+                else:
+                    installtree(getattr(dst, inst_dir), tree[inst_dir])
+        installtree(self.prefix, install_tree)
 
     def setup_build_environment(self, env):
         if '+pic' in self.spec:
@@ -54,27 +71,10 @@ class Zlib(CMakePackage):
         if '+optimize' in self.spec:
             env.append_flags('CFLAGS', '-O2')
 
-    # Build, install, and check both static and shared versions of the
-    # libraries when +shared
-    @when('+shared platform=windows')
-    def cmake(self, spec, prefix):
-        for self._building_shared in (False, True):
-            super(Zlib, self).cmake(spec, prefix)
-
-    @when('+shared platform=windows')
-    def build(self, spec, prefix):
-        for self._building_shared in (False, True):
-            super(Zlib, self).build(spec, prefix)
-
-    @when('+shared platform=windows')
-    def check(self):
-        for self._building_shared in (False, True):
-            super(Zlib, self).check()
-
     def install(self, spec, prefix):
-        if 'platform=windows' in self.spec and '+shared' in self.spec:
-            for self._building_shared in (False, True):
-                super(Zlib, self).install(spec, prefix)
+        if 'platform=windows' in self.spec:
+            nmake('-f' 'win32\\Makefile.msc')
+            self.win_install()
         else:
             config_args = []
             if '~shared' in spec:
