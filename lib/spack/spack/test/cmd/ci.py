@@ -11,6 +11,8 @@ import shutil
 import pytest
 from jsonschema import ValidationError, validate
 
+import llnl.util.tty as tty
+
 import spack
 import spack.ci as ci
 import spack.cmd.buildcache as buildcache
@@ -681,6 +683,7 @@ def test_ci_rebuild(tmpdir, mutable_mock_env_path,
                     install_mockery, mock_packages, monkeypatch,
                     mock_gnupghome, mock_fetch, project_dir_env,
                     mock_binary_index):
+    tty.set_debug(1)
     project_dir_env(tmpdir.strpath)
     working_dir = tmpdir.join('working_dir')
 
@@ -793,7 +796,8 @@ spack:
         set_env_var('CI_JOB_URL', ci_job_url)
         set_env_var('CI_PIPELINE_URL', ci_pipeline_url)
 
-        ci_cmd('rebuild', fail_on_error=False)
+        out = ci_cmd('rebuild', fail_on_error=False)
+        raise Exception(out)
 
         expected_repro_files = [
             'install.sh',
