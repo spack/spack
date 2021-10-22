@@ -10,7 +10,6 @@ import shutil
 import sys
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 
 import spack.error
 import spack.paths
@@ -292,6 +291,7 @@ class TestSuite(object):
                 test_suite._hash = content_hash
                 return test_suite
         except Exception as e:
+            import llnl.util.tty as tty
             tty.debug(e)
             raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e))
 
