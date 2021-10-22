@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+
 import spack.paths
 import spack.store
 from spack import *
@@ -28,8 +30,11 @@ class OldSbang(Package):
 
 {1}
 '''.format(spack.store.unpadded_root, prefix.bin)
-        with open('%s/sbang-style-1.sh' % self.prefix.bin, 'w') as f:
+        style_1 = '%s/sbang-style-1.sh' % self.prefix.bin
+        style_2 = '%s/sbang-style-2.sh' % self.prefix.bin
+        with open(style_1, 'w') as f:
             f.write(sbang_style_1)
-
-        with open('%s/sbang-style-2.sh' % self.prefix.bin, 'w') as f:
+        with open(style_2, 'w') as f:
             f.write(sbang_style_2)
+        os.chmod(style_1, 0o775)
+        os.chmod(style_2, 0o775)
