@@ -103,10 +103,18 @@ class FluxSched(AutotoolsPackage):
             bash = which('bash')
             bash('./autogen.sh')
 
+    @when('@:0.19')
+    def patch(self):
+        """Fix build with clang@13 and gcc@11"""
+        filter_file('NULL', 'nullptr', 'resource/schema/sched_data.hpp')
+        filter_file('size_t', 'std::size_t', 'resource/planner/planner.h')
+
     def configure_args(self):
         args = []
         if self.spec.satisfies('@0.9.0:'):
-            args.append('CXXFLAGS=-Wno-maybe-uninitialized')
+            args.append('CXXFLAGS=-Wno-uninitialized')
+        if self.spec.satisfies('%clang@12:'):
+            args.append('CXXFLAGS=-Wno-defaulted-function-deleted')
         # flux-sched's ax_boost is sometimes weird about non-system locations
         # explicitly setting the path guarantees success
         args.append('--with-boost={0}'.format(self.spec['boost'].prefix))
