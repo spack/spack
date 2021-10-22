@@ -11,6 +11,7 @@ class PyAtlasBuildingTools(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/atlas-building-tools"
     git      = "git@bbpgitlab.epfl.ch:nse/atlas-building-tools.git"
 
+    version('0.1.5', tag='atlas-building-tools-v0.1.5')
     version('0.1.4', tag='atlas-building-tools-v0.1.4')
     version('0.1.3', tag='atlas-building-tools-v0.1.3')
     version('0.1.2', tag='atlas-building-tools-v0.1.2')
@@ -38,7 +39,7 @@ class PyAtlasBuildingTools(PythonPackage):
     depends_on('py-scikit-image@0.17.2:', type=('build', 'run'))
     depends_on('py-tqdm@4.44.1:', type=('build', 'run'))
     depends_on('py-trimesh@2.38.10:', type=('build', 'run'))
-    depends_on('py-voxcell@3.0.0', type=('run', 'build'))
+    depends_on('py-voxcell@3.0.0:', type=('build', 'run'))
     depends_on('py-xlrd@1.0.0:', type=('build', 'run'))
     depends_on('regiodesics@0.1.0:', type='run')
     depends_on('ultraliser@0.2.0:', type='run')
