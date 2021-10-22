@@ -68,13 +68,14 @@ class PyLibensemble(PythonPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(join_path('examples', 'tutorials'))
+        self.cache_extra_test_sources(join_path('examples', 'calling_scripts',
+                                                'regression_tests'))
 
     def run_tutorial_tests(self, exe):
-        """Run tutorials stand alone test"""
+        """Run example stand alone test"""
 
         test_dir = join_path(self.test_suite.current_test_cache_dir,
-                             'examples', 'tutorials')
+                             'examples', 'calling_scripts', 'regression_tests')
 
         if not os.path.exists(test_dir):
             print('Skipping {0} test'.format(exe))
@@ -86,4 +87,4 @@ class PyLibensemble(PythonPackage):
                       work_dir=test_dir)
 
     def test(self):
-        self.run_tutorial_tests('tutorial_calling.py')
+        self.run_tutorial_tests('test_uniform_sampling.py')
