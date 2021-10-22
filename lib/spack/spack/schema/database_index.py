@@ -52,6 +52,7 @@ schema = {
                     },
                 },
                 'version': {'type': 'string'},
+                'key_hash_type': {'type': 'string'}
             }
         },
     },

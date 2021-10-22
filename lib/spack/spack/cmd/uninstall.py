@@ -225,7 +225,8 @@ def do_uninstall(env, specs, force):
         is_ready = lambda x: True
 
     while packages:
-        ready = [x for x in packages if is_ready(x.spec.dag_hash())]
+        ready = [x for x in packages if is_ready(
+            x.spec._cached_hash(hash=spack.store.db.key_hash_type))]
         if not ready:
             msg = 'unexpected error [cannot proceed uninstalling specs with' \
                   ' remaining dependents {0}]'

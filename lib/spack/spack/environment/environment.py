@@ -1423,7 +1423,8 @@ class Environment(object):
 
         # if it is a direct dev build, check whether the code changed
         # we already know it is installed
-        _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+        _, record = spack.store.db.query_by_spec_hash(
+            spec._cached_hash(hash=spack.store.db.key_hash_type))
         mtime = fs.last_modification_time_recursive(dev_path_var.value)
         return mtime > record.installation_time
 

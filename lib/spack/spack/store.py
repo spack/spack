@@ -29,6 +29,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.database
 import spack.directory_layout
+import spack.hash_types as ht
 import spack.paths
 import spack.util.path
 
@@ -146,16 +147,17 @@ class Store(object):
             a package prefix in this store
         hash_length (int): length of the hashes used in the directory
             layout; spec hash suffixes will be truncated to this length
+        db_key_hash_type (object): A SpecHashDescriptor indicating the
+            type of hash to use for the database key
     """
-    def __init__(
-            self, root, unpadded_root=None, projections=None, hash_length=None
-    ):
+    def __init__(self, root, unpadded_root=None, projections=None,
+                 hash_length=None, db_key_hash_type=ht.dag_hash):
         self.root = root
         self.unpadded_root = unpadded_root or root
         self.projections = projections
         self.hash_length = hash_length
-        self.db = spack.database.Database(
-            root, upstream_dbs=retrieve_upstream_dbs())
+        self.db = spack.database.Database(root, upstream_dbs=retrieve_upstream_dbs(),
+                                          db_key_hash_type=db_key_hash_type)
         self.layout = spack.directory_layout.DirectoryLayout(
             root, projections=projections, hash_length=hash_length)
 
@@ -271,12 +273,13 @@ def retrieve_upstream_dbs():
 
 
 def _construct_upstream_dbs_from_install_roots(
-        install_roots, _test=False):
+        install_roots, _test=False, _db_key_hash_type=ht.dag_hash):
     accumulated_upstream_dbs = []
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            install_root, is_upstream=True, upstream_dbs=upstream_dbs)
+            install_root, is_upstream=True, upstream_dbs=upstream_dbs,
+            db_key_hash_type=_db_key_hash_type)
         next_db._fail_when_missing_deps = _test
         next_db._read()
         accumulated_upstream_dbs.insert(0, next_db)

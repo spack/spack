@@ -27,6 +27,7 @@ import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
 
 import spack.database
+import spack.hash_types as ht
 import spack.package
 import spack.repo
 import spack.spec
@@ -39,10 +40,12 @@ pytestmark = pytest.mark.db
 
 
 @pytest.fixture()
-def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
+def upstream_and_downstream_db(request, tmpdir_factory, gen_mock_layout):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
-    upstream_write_db = spack.database.Database(mock_db_root)
-    upstream_db = spack.database.Database(mock_db_root, is_upstream=True)
+    upstream_write_db = spack.database.Database(
+        mock_db_root, db_key_hash_type=request.param)
+    upstream_db = spack.database.Database(
+        mock_db_root, is_upstream=True, db_key_hash_type=request.param)
     # Generate initial DB file to avoid reindex
     with open(upstream_write_db._index_path, 'w') as db_file:
         upstream_write_db._write_to_file(db_file)
@@ -51,7 +54,7 @@ def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
     downstream_db_root = str(
         tmpdir_factory.mktemp('mock_downstream_db_root'))
     downstream_db = spack.database.Database(
-        downstream_db_root, upstream_dbs=[upstream_db])
+        downstream_db_root, upstream_dbs=[upstream_db], db_key_hash_type=request.param)
     with open(downstream_db._index_path, 'w') as db_file:
         downstream_db._write_to_file(db_file)
     downstream_layout = gen_mock_layout('/b/')
@@ -61,6 +64,9 @@ def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
 
 
 @pytest.mark.usefixtures('config')
+@pytest.mark.parametrize('upstream_and_downstream_db',
+                         [ht.dag_hash, ht.full_hash],
+                         indirect=True)
 def test_installed_upstream(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
         downstream_db, downstream_layout = (upstream_and_downstream_db)
@@ -81,21 +87,23 @@ def test_installed_upstream(upstream_and_downstream_db):
         upstream_db._read()
 
         for dep in spec.traverse(root=False):
-            record = downstream_db.get_by_hash(dep.dag_hash())
+            record = downstream_db.get_by_hash(
+                dep._cached_hash(downstream_db.key_hash_type))
             assert record is not None
             with pytest.raises(spack.database.ForbiddenLockError):
-                record = upstream_db.get_by_hash(dep.dag_hash())
+                record = upstream_db.get_by_hash(
+                    dep._cached_hash(upstream_db.key_hash_type))
 
         new_spec = spack.spec.Spec('w')
         new_spec.concretize()
         downstream_db.add(new_spec, downstream_layout)
         for dep in new_spec.traverse(root=False):
             upstream, record = downstream_db.query_by_spec_hash(
-                dep.dag_hash())
+                dep._cached_hash(downstream_db.key_hash_type))
             assert upstream
             assert record.path == upstream_layout.path_for_spec(dep)
         upstream, record = downstream_db.query_by_spec_hash(
-            new_spec.dag_hash())
+            new_spec._cached_hash(downstream_db.key_hash_type))
         assert not upstream
         assert record.installed
 
@@ -104,6 +112,9 @@ def test_installed_upstream(upstream_and_downstream_db):
 
 
 @pytest.mark.usefixtures('config')
+@pytest.mark.parametrize('upstream_and_downstream_db',
+                         [ht.dag_hash, ht.full_hash],
+                         indirect=True)
 def test_removed_upstream_dep(upstream_and_downstream_db):
     upstream_write_db, upstream_db, upstream_layout,\
         downstream_db, downstream_layout = (upstream_and_downstream_db)
@@ -128,13 +139,17 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
         upstream_db._read()
 
         new_downstream = spack.database.Database(
-            downstream_db.root, upstream_dbs=[upstream_db])
+            downstream_db.root, upstream_dbs=[upstream_db],
+            db_key_hash_type=downstream_db.key_hash_type)
         new_downstream._fail_when_missing_deps = True
         with pytest.raises(spack.database.MissingDependenciesError):
             new_downstream._read()
 
 
 @pytest.mark.usefixtures('config')
+@pytest.mark.parametrize('upstream_and_downstream_db',
+                         [ht.dag_hash, ht.full_hash],
+                         indirect=True)
 def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
     """An upstream DB can add a package after it is installed in the downstream
     DB. When a package is recorded as installed in both, the results should
@@ -155,7 +170,8 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
         upstream_write_db.add(spec, upstream_layout)
         upstream_db._read()
 
-        upstream, record = downstream_db.query_by_spec_hash(spec.dag_hash())
+        upstream, record = downstream_db.query_by_spec_hash(
+            spec._cached_hash(downstream_db.key_hash_type))
         # Even though the package is recorded as installed in the upstream DB,
         # we prefer the locally-installed instance
         assert not upstream
@@ -196,8 +212,15 @@ def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
             upstream_dbs[0].add(spec, layouts[1])
 
 
-@pytest.mark.usefixtures('config', 'temporary_store')
-def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
+@pytest.mark.usefixtures('config')
+@pytest.mark.parametrize('hash_type,temporary_store',
+                         [
+                             (ht.full_hash, ht.full_hash),
+                             (ht.dag_hash, ht.dag_hash)
+                         ],
+                         indirect=['temporary_store'])
+def test_recursive_upstream_dbs(
+        hash_type, temporary_store, tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/', '/rc/']]
 
@@ -210,26 +233,31 @@ def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
     with spack.repo.use_repositories(mock_repo):
         spec = spack.spec.Spec('x')
         spec.concretize()
-        db_c = spack.database.Database(roots[2])
+        db_c = spack.database.Database(roots[2], db_key_hash_type=hash_type)
         db_c.add(spec['z'], layouts[2])
 
-        db_b = spack.database.Database(roots[1], upstream_dbs=[db_c])
+        db_b = spack.database.Database(roots[1], upstream_dbs=[db_c],
+                                       db_key_hash_type=hash_type)
         db_b.add(spec['y'], layouts[1])
 
-        db_a = spack.database.Database(roots[0], upstream_dbs=[db_b, db_c])
+        db_a = spack.database.Database(roots[0], upstream_dbs=[db_b, db_c],
+                                       db_key_hash_type=hash_type)
         db_a.add(spec['x'], layouts[0])
 
         upstream_dbs_from_scratch = (
             spack.store._construct_upstream_dbs_from_install_roots(
-                [roots[1], roots[2]], _test=True))
+                [roots[1], roots[2]], _test=True, _db_key_hash_type=hash_type))
         db_a_from_scratch = spack.database.Database(
-            roots[0], upstream_dbs=upstream_dbs_from_scratch)
+            roots[0], upstream_dbs=upstream_dbs_from_scratch,
+            db_key_hash_type=hash_type)
 
-        assert db_a_from_scratch.db_for_spec_hash(spec.dag_hash()) == (
-            db_a_from_scratch)
-        assert db_a_from_scratch.db_for_spec_hash(spec['y'].dag_hash()) == (
+        assert (db_a_from_scratch.db_for_spec_hash(
+            spec._cached_hash(db_a_from_scratch.key_hash_type)) == db_a_from_scratch)
+        assert (db_a_from_scratch.db_for_spec_hash(
+            spec['y']._cached_hash(db_a_from_scratch.key_hash_type)) ==
             upstream_dbs_from_scratch[0])
-        assert db_a_from_scratch.db_for_spec_hash(spec['z'].dag_hash()) == (
+        assert (db_a_from_scratch.db_for_spec_hash(
+            spec['z']._cached_hash(db_a_from_scratch.key_hash_type)) ==
             upstream_dbs_from_scratch[1])
 
         db_a_from_scratch._check_ref_counts()
