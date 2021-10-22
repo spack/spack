@@ -12,7 +12,6 @@ import re
 import sys
 import warnings
 
-
 import llnl.util.filesystem
 import llnl.util.tty
 

@@ -353,8 +353,9 @@ class URLFetchStrategy(FetchStrategy):
             # Telling urllib to check if url is accessible
             try:
                 url, headers, response = spack.util.web.read_from_url(url)
-            except spack.util.web.SpackWebError:
-                msg = "Urllib fetch failed to verify url {0}".format(url)
+            except spack.util.web.SpackWebError as werr:
+                msg = "Urllib fetch failed to verify url\
+                      {0}\n with error {1}".format(url, werr)
                 raise FailedDownloadError(url, msg)
             return (response.getcode() is None or response.getcode() == 200)
 

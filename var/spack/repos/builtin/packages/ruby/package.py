@@ -5,8 +5,12 @@
 
 import re
 
+from spack import *
 
-class Ruby(AutotoolsPackage):
+is_windows = str(spack.platforms.host()) == 'windows'
+
+
+class Ruby(Package):
     """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
@@ -27,23 +31,22 @@ class Ruby(AutotoolsPackage):
     version('2.5.3', sha256='9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c')
     version('2.2.0', sha256='7671e394abfb5d262fbcd3b27a71bf78737c7e9347fa21c39e58b0bb9c4840fc')
 
-    variant('openssl', default=True, description="Enable OpenSSL support")
-    variant('readline', default=False, description="Enable Readline support")
+    if not is_windows:
+        variant('openssl', default=True, description="Enable OpenSSL support")
+        variant('readline', default=False, description="Enable Readline support")
+        depends_on('pkgconfig', type=('build'))
+        depends_on('libffi')
+        depends_on('libx11', when='@:2.3')
+        depends_on('tcl', when='@:2.3')
+        depends_on('tk', when='@:2.3')
+        depends_on('readline', when='+readline')
+        depends_on('zlib')
+        with when('+openssl'):
+            depends_on('openssl@:1')
+            depends_on('openssl@:1.0', when='@:2.3')
 
     extendable = True
-
-    depends_on('pkgconfig', type=('build'))
-    depends_on('libffi')
-    depends_on('zlib')
-    depends_on('libx11', when='@:2.3')
-    depends_on('tcl', when='@:2.3')
-    depends_on('tk', when='@:2.3')
-    depends_on('readline', when='+readline')
-
-    with when('+openssl'):
-        depends_on('openssl@:1')
-        depends_on('openssl@:1.0', when='@:2.3')
-
+    phases = ['autoreconf', 'configure', 'build', 'install']
     # Known build issues when Avira antivirus software is running:
     # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379
     # TODO: add check for this and warn user
@@ -115,6 +118,32 @@ class Ruby(AutotoolsPackage):
         module.ruby = Executable(self.prefix.bin.ruby)
         module.gem  = Executable(self.prefix.bin.gem)
         module.rake = Executable(self.prefix.bin.rake)
+
+    def configure(self, spec, prefix):
+        with working_dir(self.build_directory, create=True):
+            if is_windows:
+                Executable("win32\\configure.bat", "--prefix=%s" % self.prefix)
+            else:
+                options = getattr(self, 'configure_flag_args', [])
+                options += ['--prefix={0}'.format(prefix)]
+                options += self.configure_args()
+                configure(*options)
+
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory):
+            if is_windows:
+                nmake()
+            else:
+                params = ['V=1']
+                params += self.build_targets
+                make(*params)
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+            if is_windows:
+                nmake('install')
+            else:
+                make(*self.install_targets)
 
     @run_after('install')
     def post_install(self):

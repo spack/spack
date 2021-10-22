@@ -93,15 +93,11 @@ class CMakePackage(PackageBase):
     #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
     #: for more information.
 
-    variant('generator',
-            default='Make' if sys.platform != 'win32' else 'Ninja',
-            description='Build system to generate',
-            values=('Make', 'Ninja'))
+    generator = "Unix Makefiles"
 
-    depends_on('ninja', when='generator=Ninja')
-
-    generatorMap = {'Make': 'Unix Makefiles',
-                    'Ninja': 'Ninja'}
+    if sys.platform == 'win32':
+        generator = "Ninja"
+        depends_on('ninja')
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',
@@ -150,10 +146,10 @@ class CMakePackage(PackageBase):
         """Computes the standard cmake arguments for a generic package"""
 
         try:
-            pkg.generator = pkg.spec.variants['generator'].value
-        except KeyError:
-            pkg.generator = 'Make' if sys.platform != 'win32' else 'Ninja'
-        primary_generator = CMakePackage.generatorMap[pkg.generator]
+            if not pkg.generator:
+                raise AttributeError
+        except AttributeError:
+            pkg.generator = CMakePackage.generator
 
         try:
             build_type = pkg.spec.variants['build_type'].value
@@ -167,22 +163,16 @@ class CMakePackage(PackageBase):
 
         define = CMakePackage.define
         args = [
-            '-G', primary_generator,
+            '-G', pkg.generator,
             define('CMAKE_INSTALL_PREFIX', pkg.prefix.replace('\\', '/')),
             define('CMAKE_BUILD_TYPE', build_type),
-            define('CMAKE_C_COMPILER:FILEPATH', pkg.compiler.cc.replace('\\', '/')),
-            define('CMAKE_CXX_COMPILER:FILEPATH', pkg.compiler.cxx.replace('\\', '/'))
         ]
-
-        if pkg.compiler.fc is not None:
-            args.append(define('CMAKE_Fortran_COMPILER:FILEPATH',
-                               pkg.compiler.fc.replace('\\', '/')))
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
         if pkg.spec.satisfies('^cmake@3.9:'):
             args.append(define('CMAKE_INTERPROCEDURAL_OPTIMIZATION', ipo))
 
-        if primary_generator == 'Unix Makefiles':
+        if pkg.generator == 'Unix Makefiles':
             args.append(define('CMAKE_VERBOSE_MAKEFILE', True))
 
         if platform.mac_ver()[0]:

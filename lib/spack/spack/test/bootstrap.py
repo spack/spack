@@ -131,7 +131,7 @@ spack:
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
-        assert str(spack.store.root) == '/tmp/store'
+        assert str(spack.store.root) == sep + os.path.join('tmp', 'store')
 
 
 def test_nested_use_of_context_manager(mutable_config):
