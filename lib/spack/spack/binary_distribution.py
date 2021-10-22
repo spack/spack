@@ -257,6 +257,7 @@ class BinaryCacheIndex(object):
         return self._mirrors_for_spec[find_hash]
 
     def find_hash_prefix(self, hash_prefix):
+        self.regenerate_spec_cache()
         results = []
         for dag_hash, info in self._mirrors_for_spec.items():
             if dag_hash.startswith(hash_prefix):
