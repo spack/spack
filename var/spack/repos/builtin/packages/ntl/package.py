@@ -39,6 +39,7 @@ class Ntl(Package):
         prefix = self.prefix
 
         config_args = [
+            'CXX={0}'.format(self.compiler.cxx),
             'DEF_PREFIX={0}'.format(prefix),
             'GMP_PREFIX={0}'.format(spec['gmp'].prefix)  # gmp dependency
         ]
