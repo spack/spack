@@ -8,6 +8,7 @@ import os
 import shutil
 
 import llnl.util.filesystem as fs
+from llnl.util.symlink import symlink
 
 import spack.spec
 import spack.store
@@ -21,7 +22,7 @@ def test_link_manifest_entry(tmpdir):
     file = str(tmpdir.join('file'))
     open(file, 'a').close()
     link = str(tmpdir.join('link'))
-    os.symlink(file, link)
+    symlink(file, link)
 
     data = spack.verify.create_manifest_entry(link)
     assert data['type'] == 'link'
@@ -43,7 +44,7 @@ def test_link_manifest_entry(tmpdir):
     file2 = str(tmpdir.join('file2'))
     open(file2, 'a').close()
     os.remove(link)
-    os.symlink(file2, link)
+    symlink(file2, link)
 
     results = spack.verify.check_entry(link, data)
     assert results.has_errors()
@@ -157,7 +158,7 @@ def test_check_prefix_manifest(tmpdir):
         f.write("I'm a little file short and stout")
 
     link = os.path.join(bin_dir, 'run')
-    os.symlink(file, link)
+    symlink(file, link)
 
     spack.verify.write_manifest(spec)
     results = spack.verify.check_spec_manifest(spec)
