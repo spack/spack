@@ -30,6 +30,8 @@ def test_checksum_args(arguments, expected):
     assert check == expected
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('arguments,expected', [
     (['--batch', 'preferred-test'], 'version of preferred-test'),
     (['--latest', 'preferred-test'], 'Found 1 version'),
