@@ -12,6 +12,8 @@ from stat import S_ISLNK, S_ISDIR, S_ISREG
 
 from os.path import abspath, normpath, isabs, exists, isdir, isfile, islink, dirname
 
+from llnl.util.symlink import symlink
+
 if sys.version_info > (3,0):
     def map_as_list(func, iter):
         return list(map(func, iter))
@@ -79,7 +81,7 @@ class PosixPath(common.PathBase):
     def mksymlinkto(self, value, absolute=1):
         """ create a symbolic link with the given value (pointing to another name). """
         if absolute:
-            py.error.checked_call(os.symlink, str(value), self.strpath)
+            py.error.checked_call(symlink, str(value), self.strpath)
         else:
             base = self.common(value)
             # with posix local paths '/' is always a common base
@@ -87,7 +89,7 @@ class PosixPath(common.PathBase):
             reldest = self.relto(base)
             n = reldest.count(self.sep)
             target = self.sep.join(('..', )*n + (relsource, ))
-            py.error.checked_call(os.symlink, target, self.strpath)
+            py.error.checked_call(symlink, target, self.strpath)
 
 def getuserid(user):
     import pwd
@@ -892,7 +894,7 @@ class LocalPath(FSBase):
         except OSError:
             pass
         try:
-            os.symlink(src, dest)
+            symlink(src, dest)
         except (OSError, AttributeError, NotImplementedError):
             pass
 
