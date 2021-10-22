@@ -49,9 +49,6 @@ class Hicops(CMakePackage):
     variant('cxx_std', default='14',
             description='C++ standard.')
 
-    depends_on('git', type='build', when='@release')
-    depends_on('git', type='build', when='@develop')
-    depends_on('boost')
     depends_on('py-numpy')
     depends_on('py-python-dateutil')
     depends_on('py-setuptools')
@@ -59,14 +56,11 @@ class Hicops(CMakePackage):
     depends_on('py-pyparsing')
     depends_on('py-subprocess32')
     depends_on('py-six')
-    depends_on('cmake@3.11:3.21.2', type='build')
     depends_on('py-setuptools-scm')
-    depends_on('pkgconf', type='build')
     depends_on('py-et-xmlfile')
     depends_on('py-argparse')
     depends_on('py-cython')
     depends_on('py-cycler')
-    depends_on('mpich')
     depends_on('py-pytz')
     depends_on('py-kiwisolver')
     depends_on('py-numexpr')
@@ -75,6 +69,12 @@ class Hicops(CMakePackage):
     depends_on('py-pandas')
     depends_on('py-openpyxl')
     depends_on('python@3.7:3.9')
+    depends_on('boost')
+    depends_on('mpich')
+    depends_on('git', type='build', when='@release')
+    depends_on('git', type='build', when='@develop')
+    depends_on('cmake@3.11:', type='build')
+    depends_on('pkgconf', type='build')
     # TODO: Add timemory and mpip depends_on()
 
     conflicts('+timemory')
@@ -84,14 +84,12 @@ class Hicops(CMakePackage):
     conflicts('+mpip -mpi')
 
     def setup_run_environment(self, env):
-        env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
-        env.prepend_path('PATH', self.prefix.bin)
         env.prepend_path('PATH', self.prefix.tools)
         env.prepend_path('PATH', self.prefix.bin.tools)
         env.set('HICOPS_INSTALL', self.prefix)
         env.prepend_path('INCLUDE', self.prefix.include)
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
         args = [
             self.define('USE_MPI', True),
             self.define('CMAKE_INSTALL_PREFIX', self.prefix),
