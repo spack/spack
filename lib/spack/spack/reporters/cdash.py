@@ -9,8 +9,8 @@ import hashlib
 import os.path
 import platform
 import re
-import socket
 import time
+import socket
 import xml.sax.saxutils
 
 from ordereddict_backport import OrderedDict
