@@ -14,6 +14,7 @@ from llnl.util import tty
 from llnl.util.filesystem import mkdirp, remove_dead_links, remove_empty_directories
 from llnl.util.lang import index_by, match_predicate
 from llnl.util.link_tree import LinkTree, MergeConflictError
+from llnl.util.symlink import symlink
 from llnl.util.tty.color import colorize
 
 import spack.config
@@ -44,7 +45,7 @@ _projections_path = '.spack/projections.yaml'
 def view_symlink(src, dst, **kwargs):
     # keyword arguments are irrelevant
     # here to fit required call signature
-    os.symlink(src, dst)
+    symlink(src, dst)
 
 
 def view_hardlink(src, dst, **kwargs):
@@ -146,7 +147,7 @@ class FilesystemView(object):
             Initialize a filesystem view under the given `root` directory with
             corresponding directory `layout`.
 
-            Files are linked by method `link` (os.symlink by default).
+            Files are linked by method `link` (llnl.util.symlink by default).
         """
         self._root = root
         self.layout = layout
