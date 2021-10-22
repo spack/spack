@@ -155,7 +155,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on('nlohmann-json @3.9.1:', when='@0.14: +json')
     depends_on('pythia8', when='+pythia8')
     depends_on('python', when='+python')
-    depends_on('py-pytest', when='+python +unit_test')
+    depends_on('py-pytest', when='+python +unit_tests')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
     depends_on('root @6.20: cxxstd=17', when='+tgeo @0.8.1:')
 
