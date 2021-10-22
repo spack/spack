@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import filecmp
-import grp
 import os
 import re
 import shutil
@@ -15,6 +14,7 @@ import tempfile
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.error
 import spack.package_prefs
 import spack.paths
 import spack.spec
@@ -27,6 +27,12 @@ if sys.platform == 'darwin':
     system_shebang_limit = 511
 else:
     system_shebang_limit = 127
+
+#: Groupdb does not exist on Windows, prevent imports
+#: on supported systems
+is_windows = str(spack.platforms.host()) == 'windows'
+if not is_windows:
+    import grp
 
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.
 spack_shebang_limit = 4096
