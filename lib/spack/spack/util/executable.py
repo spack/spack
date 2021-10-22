@@ -76,7 +76,10 @@ class Executable(object):
         Returns:
             str: The path to the executable
         """
-        return self.exe[0]
+        if sys.platform == "win32":
+            return self.exe[0].replace('/', '\\')
+        else:
+            return self.exe[0]
 
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
@@ -206,12 +209,18 @@ class Executable(object):
             if output in (str, str.split) or error in (str, str.split):
                 result = ''
                 if output in (str, str.split):
-                    outstr = text_type(out.decode('utf-8'))
+                    if sys.platform == 'win32':
+                        outstr = text_type(out.decode('ISO-8859-1'))
+                    else:
+                        outstr = text_type(out.decode('utf-8'))
                     result += outstr
                     if output is str.split:
                         sys.stdout.write(outstr)
                 if error in (str, str.split):
-                    errstr = text_type(err.decode('utf-8'))
+                    if sys.platform == 'win32':
+                        errstr = text_type(err.decode('ISO-8859-1'))
+                    else:
+                        errstr = text_type(err.decode('utf-8'))
                     result += errstr
                     if error is str.split:
                         sys.stderr.write(errstr)
@@ -282,15 +291,22 @@ def which_string(*args, **kwargs):
         path = path.split(os.pathsep)
 
     for name in args:
-        if os.path.sep in name:
-            exe = os.path.abspath(name)
-            if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                return exe
-        else:
-            for directory in path:
-                exe = os.path.join(directory, name)
+        win_candidates = []
+        if sys.platform == "win32" and (not name.endswith(".exe")
+           and not name.endswith(".bat")):
+            win_candidates = [name + ext for ext in ['.exe', '.bat']]
+        candidate_names = [name] if not win_candidates else win_candidates
+
+        for candidate_name in candidate_names:
+            if os.path.sep in candidate_name:
+                exe = os.path.abspath(candidate_name)
                 if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                    return exe
+                    return exe.replace('\\', '/')
+            else:
+                for directory in path:
+                    exe = os.path.join(directory, candidate_name)
+                    if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                        return exe.replace('\\', '/')
 
     if required:
         raise CommandNotFoundError(

@@ -5,19 +5,17 @@
 import collections
 import errno
 import glob
-import grp
-import ctypes
 import hashlib
 import itertools
 import numbers
 import os
-import pwd
 import re
 import shutil
 import stat
 import sys
 import tempfile
 from contextlib import contextmanager
+from sys import platform as _platform
 
 import six
 
@@ -26,6 +24,12 @@ from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import symlink
 
 from spack.util.executable import Executable
+
+is_windows  = _platform == 'win32'
+
+if not is_windows:
+    import grp
+    import pwd
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm
@@ -80,7 +84,8 @@ __all__ = [
 
 
 def getuid():
-    if _platform == "win32":
+    if is_windows:
+        import ctypes
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return 1
         return 0
@@ -317,6 +322,10 @@ def group_ids(uid=None):
     Returns:
         (list of int): gids of groups the user is a member of
     """
+    if is_windows:
+        tty.warn("Function is not supported on Windows")
+        return []
+
     if uid is None:
         uid = getuid()
     user = pwd.getpwuid(uid).pw_name
@@ -325,6 +334,10 @@ def group_ids(uid=None):
 
 def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
+    if is_windows:
+        tty.warn("Function is not supported on Windows")
+        return
+
     if isinstance(group, six.string_types):
         gid = grp.getgrnam(group).gr_gid
     else:
@@ -792,7 +805,10 @@ def open_if_filename(str_or_file, mode='r'):
 
 def touch(path):
     """Creates an empty file at the specified path."""
-    perms = (os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY)
+    if is_windows:
+        perms = (os.O_WRONLY | os.O_CREAT)
+    else:
+        perms = (os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY)
     fd = None
     try:
         fd = os.open(path, perms)
@@ -829,7 +845,7 @@ def ancestor(dir, n=1):
     parent = os.path.abspath(dir)
     for i in range(n):
         parent = os.path.dirname(parent)
-    return parent
+    return parent.replace("\\", "/")
 
 
 def get_single_file(directory):
@@ -925,6 +941,10 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         source_child = os.path.join(source_path, f)
         dest_child = os.path.join(dest_path, f)
         rel_child = os.path.join(rel_path, f)
+        if is_windows:
+            source_child = source_child.replace("\\", "/")
+            dest_child = dest_child.replace("\\", "/")
+            rel_child = rel_child.replace("\\", "/")
 
         # Treat as a directory
         # TODO: for symlinks, os.path.isdir looks for the link target. If the
@@ -1167,11 +1187,16 @@ def _find_recursive(root, search_files):
 
     # Make the path absolute to have os.walk also return an absolute path
     root = os.path.abspath(root)
-
+    if is_windows:
+        root = root.replace("\\", "/")
     for path, _, list_files in os.walk(root):
+        if is_windows:
+            path = path.replace("\\", "/")
         for search_file in search_files:
             matches = glob.glob(os.path.join(path, search_file))
             matches = [os.path.join(path, x) for x in matches]
+            if is_windows:
+                matches = [x.replace("\\", "/") for x in matches]
             found_files[search_file].extend(matches)
 
     answer = []
@@ -1188,10 +1213,14 @@ def _find_non_recursive(root, search_files):
 
     # Make the path absolute to have absolute path returned
     root = os.path.abspath(root)
+    if is_windows:
+        root = root.replace("\\", "/")
 
     for search_file in search_files:
         matches = glob.glob(os.path.join(root, search_file))
         matches = [os.path.join(root, x) for x in matches]
+        if is_windows:
+            matches = [x.replace("\\", "/") for x in matches]
         found_files[search_file].extend(matches)
 
     answer = []
@@ -1313,6 +1342,8 @@ class HeaderList(FileList):
             value = [value]
 
         self._directories = [os.path.normpath(x) for x in value]
+        if is_windows:
+            self._directories = [d.replace("\\", "/") for d in self._directories]
 
     def _default_directories(self):
         """Default computation of directories based on the list of
@@ -1325,6 +1356,8 @@ class HeaderList(FileList):
             # there and don't add anything else to the path.
             m = self.include_regex.match(d)
             value = os.path.join(*m.group(1, 2)) if m else d
+            if is_windows:
+                value = value.replace("\\", "/")
             values.append(value)
         return values
 
@@ -1781,7 +1814,14 @@ def partition_path(path, entry=None):
         # Derive the index of entry within paths, which will correspond to
         # the location of the entry in within the path.
         try:
-            entries = path.split(os.sep)
+            if is_windows:
+                sep = "/"
+            else:
+                sep = os.sep
+            entries = path.split(sep)
+            if entries[0].endswith(":"):
+                # Handle drive letters e.g. C:/ on Windows
+                entries[0] = entries[0] + sep
             i = entries.index(entry)
             if '' in entries:
                 i -= 1
@@ -1805,6 +1845,9 @@ def prefixes(path):
     For example, path ``./hi/jkl/mn`` results in a list with the following
     paths, in order: ``./hi``, ``./hi/jkl``, and ``./hi/jkl/mn``.
 
+    On Windows, paths will be normalized to use ``/`` and ``/`` will always
+    be used as the separator instead of ``os.sep``.
+
     Parameters:
         path (str): the string used to derive ancestor paths
 
@@ -1814,13 +1857,27 @@ def prefixes(path):
     if not path:
         return []
 
-    parts = path.strip(os.sep).split(os.sep)
-    if path.startswith(os.sep):
-        parts.insert(0, os.sep)
+    if is_windows:
+        sep = "/"
+    else:
+        sep = os.sep
+
+    if is_windows:
+        path = path.replace("\\", "/")
+
+    parts = path.strip(sep).split(sep)
+    if path.startswith(sep):
+        parts.insert(0, sep)
+    elif parts[0].endswith(":"):
+        # Handle drive letters e.g. C:/ on Windows
+        parts[0] = parts[0] + sep
     paths = [os.path.join(*parts[:i + 1]) for i in range(len(parts))]
 
+    if is_windows:
+        paths = [path.replace("\\", "/") for path in paths]
+
     try:
-        paths.remove(os.sep)
+        paths.remove(sep)
     except ValueError:
         pass
 
