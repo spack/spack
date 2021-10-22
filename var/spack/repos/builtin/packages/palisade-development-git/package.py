@@ -44,7 +44,6 @@ class PalisadeDevelopmentGit(CMakePackage):
     depends_on('ntl+shared', when='+with_ntl +shared')
 
     def cmake_args(self):
-        spec = self.spec
         args = [
             self.define_from_variant('BUILD_SHARED', 'shared'),
             self.define_from_variant('BUILD_STATIC', 'static'),
