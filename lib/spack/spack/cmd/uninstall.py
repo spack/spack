@@ -125,13 +125,18 @@ def installed_dependents(specs, env):
         env (spack.environment.Environment or None): the active environment, or None
 
     Returns:
-        tuple: two mappings: one from specs to their dependent environments in the
-        active environment (or global scope if there is no environment), and one from
-        specs to their dependents in *inactive* environments (empty if there is no
-        environment
+        tuple: two mappings: one from specs to their dependent installs in the
+        active environment, and one from specs to dependent installs outside of
+        the active environment.
+
+        Any of the input specs may appear in both mappings (if there are
+        dependents both inside and outside the current environment).
+
+        If a dependent spec is used both by the active environment and by
+        an inactive environment, it will only appear in the first mapping.
     """
     active_dpts = {}
-    inactive_dpts = {}
+    outside_dpts = {}
 
     env_hashes = set(env.all_hashes()) if env else set()
 
@@ -144,12 +149,12 @@ def installed_dependents(specs, env):
         # dpts that are outside this environment
         for dpt in installed:
             if dpt not in specs:
-                if not env or dpt.dag_hash() in env_hashes:
+                if dpt.dag_hash() in env_hashes:
                     active_dpts.setdefault(spec, set()).add(dpt)
                 else:
-                    inactive_dpts.setdefault(spec, set()).add(dpt)
+                    outside_dpts.setdefault(spec, set()).add(dpt)
 
-    return active_dpts, inactive_dpts
+    return active_dpts, outside_dpts
 
 
 def dependent_environments(specs):
@@ -252,15 +257,25 @@ def get_uninstall_list(args, specs, env):
 
     # Gets the list of installed specs that match the ones given via cli
     # args.all takes care of the case where '-a' is given in the cli
-    uninstall_specs = set(
+    base_uninstall_specs = set(
         find_matching_specs(env, specs, args.all, args.force))
 
-    active_dpts, inactive_dpts = installed_dependents(uninstall_specs, env)
+    active_dpts, outside_dpts = installed_dependents(base_uninstall_specs, env)
 
-    spec_envs = dependent_environments(uninstall_specs)
-    # The set of matched specs from the cli that are needed by other
-    # environments (either as a root or dependency).
-    spec_envs = inactive_dependent_environments(spec_envs)
+    all_uninstall_specs = set(base_uninstall_specs)
+    if args.dependents:
+        for spec, lst in active_dpts.items():
+            all_uninstall_specs.update(lst)
+        for spec, lst in outside_dpts.items():
+            all_uninstall_specs.update(lst)
+
+    # For each spec that we intend to uninstall, this tracks the set of
+    # environments outside the current active environment which depend on the
+    # spec. There may be environments not managed directly with Spack: such
+    # environments would not be included here.
+    spec_to_other_envs = inactive_dependent_environments(
+        dependent_environments(all_uninstall_specs)
+    )
 
     has_error = not args.force and (
         # There are dependents in the current env and we didn't ask to remove
@@ -270,7 +285,7 @@ def get_uninstall_list(args, specs, env):
         # one or more of the specs to be uninstalled. There may also be
         # packages in those envs which depend on the base set of packages
         # to uninstall, but this covers that scenario.
-        or (not args.remove and spec_envs)
+        or (not args.remove and spec_to_other_envs)
     )
 
     if has_error:
@@ -317,15 +332,15 @@ def get_uninstall_list(args, specs, env):
 
     if args.dependents:
         for spec, lst in active_dpts.items():
-            uninstall_specs.update(lst)
+            all_uninstall_specs.update(lst)
 
         if args.force:
-            for spec, lst in inactive_dpts.items():
-                uninstall_specs.update(lst)
+            for spec, lst in outside_dpts.items():
+                all_uninstall_specs.update(lst)
         elif args.remove:
-            for spec, lst in inactive_dpts.items():
+            for spec, lst in outside_dpts.items():
                 remove_only.update(lst)
-        # No else: In this case, force=False, so inactive_dpts must be empty
+        # No else: In this case, force=False, so outside_dpts must be empty
         # if we made it here (spec_envs would also be nonempty)
 
     if args.remove and not args.force:
@@ -333,13 +348,13 @@ def get_uninstall_list(args, specs, env):
 
     # Compute the set of specs that should be removed from the current env.
     if args.remove:
-        remove_specs = set(uninstall_specs)
+        remove_specs = set(all_uninstall_specs)
     else:
         remove_specs = set()
 
-    uninstall_specs -= remove_only
+    all_uninstall_specs -= remove_only
 
-    return list(uninstall_specs), list(remove_specs)
+    return list(all_uninstall_specs), list(remove_specs)
 
 
 def uninstall_specs(args, specs):
