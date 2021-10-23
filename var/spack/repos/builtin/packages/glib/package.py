@@ -100,9 +100,11 @@ class Glib(Package):
         gio_tests = FileFilter('gio/tests/meson.build')
         gio_tests.filter('if not glib_have_cocoa', 'if false')
         gio_tests.filter("'contenttype' : {},", '')
+        gio_tests.filter("'file' : {},", '')
+        gio_tests.filter("'gdbus-peer'", "'file'")
         gio_tests.filter("'gdbus-address-get-session' : {},", '')
-        gio_tests.filter("host_machine.system() != 'windows'", 'false')
         filter_file("'mkenums.py',*", '', 'gobject/tests/meson.build')
+        filter_file("'fileutils' : {},", '', 'glib/tests/meson.build')
 
     @property
     def libs(self):
