@@ -47,7 +47,7 @@ class Pgplot(MakefilePackage):
             description='Enable driver for PostScript files.')
 
     depends_on('libx11', when='+X')
-    depends_on('libpng', when='+png', type=('build', 'run'))
+    depends_on('libpng', when='+png')
     depends_on('zlib', when='+png')
 
     def edit(self, spec, prefix):
@@ -99,6 +99,7 @@ class Pgplot(MakefilePackage):
             enable_driver('! PNDRIV 1 /PNG')
             sub['@CCOMPL@'] += ' -I{0}'.format(self.spec['libpng'].prefix.include)
             sub['@FFLAGD@'] += ' -L{0} -lpng'.format(self.spec['libpng'].prefix.lib)
+            sub['@FFLAGD@'] += ' -L{0} -lz'.format(self.spec['zlib'].prefix.lib)
 
             filter_file('pndriv.o : ./png.h ./pngconf.h ./zlib.h ./zconf.h',
                         'pndriv.o : {0}/png.h {0}/pngconf.h {1}/zlib.h {1}/zconf.h'.
