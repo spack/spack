@@ -164,7 +164,7 @@ virtual_node(Virtual)
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
 1 { provider(Package, Virtual) : possible_provider(Package, Virtual) } 1
- :- virtual_node(Virtual).
+  :- virtual_node(Virtual).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 virtual_node(Virtual) :- virtual_root(Virtual).
@@ -178,28 +178,17 @@ root(Package) :- virtual_root(Virtual), provider(Package, Virtual).
 % for environments that are concretized together (e.g. where we
 % asks to install "mpich" and "hdf5+mpi" and we want "mpich" to
 % be the mpi provider)
-provider(Package, Virtual) :- root(Package), provides_virtual(Package, Virtual).
+provider(Package, Virtual) :- node(Package), virtual_condition_holds(Package, Virtual).
 
 % The provider provides the virtual if some provider condition holds.
-provides_virtual(Provider, Virtual) :-
+virtual_condition_holds(Provider, Virtual) :-
    provider_condition(ID, Provider, Virtual),
    condition_holds(ID),
    virtual(Virtual).
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
-:- provider(Package, Virtual), not provides_virtual(Package, Virtual).
-
-% If a package meets the condition to be a provider, it needs to be a provider
-:- not provider(Package, Virtual),
-   provides_virtual(Package, Virtual),
-   virtual_node(Virtual).
-
-% If a package is selected as a provider, it is provider of all
-% the virtuals it provides
-:- provides_virtual(Package, V1), provides_virtual(Package, V2), V1 != V2,
-   provider(Package, V1), not provider(Package, V2),
-   virtual_node(V1), virtual_node(V2).
+:- provider(Package, Virtual), not virtual_condition_holds(Package, Virtual).
 
 #defined possible_provider/2.
 
@@ -292,7 +281,7 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 #defined virtual/1.
 #defined virtual_node/1.
 #defined virtual_root/1.
-#defined provides_virtual/2.
+#defined virtual_condition_holds/2.
 #defined external/1.
 #defined external_spec/2.
 #defined external_version_declared/4.
