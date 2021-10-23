@@ -1,0 +1,43 @@
+diff --git a/skopt/space/space.py b/skopt/space/space.py
+index 329b0c1..5f49437 100644
+--- a/skopt/space/space.py
++++ b/skopt/space/space.py
+@@ -244,13 +244,13 @@ class Real(Dimension):
+     name : str or None
+         Name associated with the dimension, e.g., "learning rate".
+ 
+-    dtype : str or dtype, default=float
++    dtype : str or dtype, default=np.float
+         float type which will be used in inverse_transform,
+         can be float.
+ 
+     """
+     def __init__(self, low, high, prior="uniform", base=10, transform=None,
+-                 name=None, dtype=float):
++                 name=None, dtype=np.float):
+         if high <= low:
+             raise ValueError("the lower bound {} has to be less than the"
+                              " upper bound {}".format(low, high))
+@@ -272,9 +272,9 @@ class Real(Dimension):
+             raise ValueError("dtype must be 'float', 'float16', 'float32'"
+                              "or 'float64'"
+                              " got {}".format(self.dtype))
+-        elif isinstance(self.dtype, type) and \
+-                not np.issubdtype(self.dtype, np.floating):
+-            raise ValueError("dtype must be a np.floating subtype;"
++        elif isinstance(self.dtype, type) and self.dtype\
++                not in [float, np.float, np.float16, np.float32, np.float64]:
++            raise ValueError("dtype must be float, np.float"
+                              " got {}".format(self.dtype))
+ 
+         if transform is None:
+@@ -346,7 +346,8 @@ class Real(Dimension):
+                                 self.low, self.high).astype(self.dtype)
+         if self.dtype == float or self.dtype == 'float':
+             # necessary, otherwise the type is converted to a numpy type
+-            return getattr(inv_transform, "tolist", lambda: value)()
++            inv_transform = getattr(inv_transform, "tolist", lambda: value)()
++            return [round(val, 6) for val in inv_transform]
+         else:
+             return inv_transform
+ 

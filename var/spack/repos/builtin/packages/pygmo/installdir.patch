@@ -1,0 +1,15 @@
+diff --git a/pygmo/CMakeLists.txt b/pygmo/CMakeLists.txt
+index 4c9cfbc..4a81744 100644
+--- a/pygmo/CMakeLists.txt
++++ b/pygmo/CMakeLists.txt
+@@ -125,6 +125,10 @@ install(TARGETS core
+     RUNTIME DESTINATION ${_PYGMO_INSTALL_DIR}
+     LIBRARY DESTINATION ${_PYGMO_INSTALL_DIR}
+ )
++install(TARGETS core
++    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
++    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
++)
+ 
+ # Install the Python files.
+ install(FILES ${PYGMO_PYTHON_FILES} "${CMAKE_CURRENT_BINARY_DIR}/_version.py"

@@ -1,0 +1,35 @@
+diff --git a/autotune/problem.py b/autotune/problem.py
+index 0c990f6..359ba4f 100644
+--- a/autotune/problem.py
++++ b/autotune/problem.py
+@@ -13,6 +13,7 @@ class TuningProblem:
+         constraints (str, Callable, optional): if str then it is ... if a Callable then it is .... Defaults to None.
+         models (...): analytical models. Defaults to None.
+         name (str, optional): A name corresponding to the TuningProblem. Defaults to None.
++        constants (Dict): A dictionary defining global constants. Defaults to None. 
+ 
+     >>> from autotune import TuningProblem
+     >>> from autotune.space import *
+@@ -34,7 +35,8 @@ class TuningProblem:
+     ...     from numpy import log
+     ...     return log(point['m']) + log(point['n'] + point['m']*point['n'])
+     >>> models = {'model1': model1}
+-    >>> problem = TuningProblem(input_space, parameter_space, output_space, myobj, csts, models)
++    >>> constants = {'const1': const1}
++    >>> problem = TuningProblem(input_space, parameter_space, output_space, myobj, csts, models, constants)
+     """
+ 
+     def __init__(self,
+@@ -45,6 +47,7 @@ class TuningProblem:
+         constraints=None,
+         models=None,
+         name=None,
++        constants=None,
+         **kwargs):
+ 
+         self.name = name
+@@ -54,3 +57,4 @@ class TuningProblem:
+         self.objective = objective
+         self.constraints = constraints
+         self.models = models
++        self.constants = constants
