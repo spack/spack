@@ -184,7 +184,12 @@ class Acts(CMakePackage, CudaPackage):
         description="Enable memory profiling using gperftools",
         when="@19.3:",
     )
-    # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
+    variant(
+        "sycl",
+        default=False,
+        description="Build the SyCL plugin",
+        when="@1:",
+    )
     variant("tgeo", default=False, description="Build the TGeo plugin", when="+identification")
 
     # Variants that only affect Acts examples for now
@@ -301,6 +306,7 @@ class Acts(CMakePackage, CudaPackage):
             enable_cmake_variant("MEMORY_PROFILING", "profilemem"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
+            plugin_cmake_variant("SYCL", "sycl"),
             plugin_cmake_variant("TGEO", "tgeo"),
             cmake_variant(unit_tests_label, "unit_tests"),
         ]
