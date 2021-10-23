@@ -88,7 +88,7 @@ class ScriptDirectory(object):
             f.write(last_line)
         self.make_executable(self.lua_shebang)
 
-        # Lua script with long shebang
+        # Lua occurring in text, not in shebang
         self.lua_textbang = os.path.join(self.tempdir, 'lua_in_text')
         with open(self.lua_textbang, 'w') as f:
             f.write(short_line)
@@ -118,7 +118,7 @@ class ScriptDirectory(object):
             f.write(last_line)
         self.make_executable(self.node_shebang)
 
-        # Node script with long shebang
+        # Node occuring in text, not in shebang
         self.node_textbang = os.path.join(self.tempdir, 'node_in_text')
         with open(self.node_textbang, 'w') as f:
             f.write(short_line)
@@ -133,7 +133,7 @@ class ScriptDirectory(object):
             f.write(last_line)
         self.make_executable(self.php_shebang)
 
-        # php script with long shebang
+        # php occuring in text, not in shebang
         self.php_textbang = os.path.join(self.tempdir, 'php_in_text')
         with open(self.php_textbang, 'w') as f:
             f.write(short_line)
@@ -234,6 +234,8 @@ def test_shebang_handling(script_dir, sbang_line):
                        os.path.join(script_dir.tempdir, 'luajit_in_text'))
     assert filecmp.cmp(script_dir.node_textbang,
                        os.path.join(script_dir.tempdir, 'node_in_text'))
+    assert filecmp.cmp(script_dir.php_textbang,
+                       os.path.join(script_dir.tempdir, 'php_in_text'))
 
     # Make sure this is untouched
     with open(script_dir.has_sbang, 'r') as f:
