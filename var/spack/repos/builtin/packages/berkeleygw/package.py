@@ -14,6 +14,8 @@ class Berkeleygw(MakefilePackage):
 
     homepage = "https://berkeleygw.org"
 
+    maintainers = ['migueldiascosta']
+
     version('3.0.1',
             '7d8c2cc1ee679afb48efbdd676689d4d537226b50e13a049dbcb052aaaf3654f',
             url='https://berkeley.box.com/shared/static/m1dgnhiemo47lhxczrn6si71bwxoxor8.gz',
