@@ -19,9 +19,7 @@ class Caliper(CMakePackage, CudaPackage):
     homepage = "https://github.com/LLNL/Caliper"
     git      = "https://github.com/LLNL/Caliper.git"
     url      = "https://github.com/LLNL/Caliper/archive/v2.6.0.tar.gz"
-    tags     = ['radiuss']
-
-    tags = ['e4s']
+    tags     = ['e4s', 'radiuss']
 
     maintainers = ["daboehme"]
 

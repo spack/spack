@@ -83,6 +83,22 @@ _spack_times_log = 'install_times.json'
 _spack_configure_argsfile = 'spack-configure-args.txt'
 
 
+def preferred_version(pkg):
+    """
+    Returns a sorted list of the preferred versions of the package.
+
+    Arguments:
+        pkg (Package): The package whose versions are to be assessed.
+    """
+    # Here we sort first on the fact that a version is marked
+    # as preferred in the package, then on the fact that the
+    # version is not develop, then lexicographically
+    key_fn = lambda v: (pkg.versions[v].get('preferred', False),
+                        not v.isdevelop(),
+                        v)
+    return sorted(pkg.versions, key=key_fn).pop()
+
+
 class InstallPhase(object):
     """Manages a single phase of the installation.
 
@@ -286,34 +302,27 @@ class PackageMeta(
 
         def _flush_callbacks(check_name):
             # Name of the attribute I am going to check it exists
-            attr_name = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(cls, attr_name)
+            check_attr = PackageMeta.phase_fmt.format(check_name)
+            checks = getattr(cls, check_attr)
             if checks:
                 for phase_name, funcs in checks.items():
+                    phase_attr = PackageMeta.phase_fmt.format(phase_name)
                     try:
                         # Search for the phase in the attribute dictionary
-                        phase = attr_dict[
-                            PackageMeta.phase_fmt.format(phase_name)]
+                        phase = attr_dict[phase_attr]
                     except KeyError:
                         # If it is not there it's in the bases
                         # and we added a check. We need to copy
                         # and extend
                         for base in bases:
-                            phase = getattr(
-                                base,
-                                PackageMeta.phase_fmt.format(phase_name),
-                                None
-                            )
+                            phase = getattr(base, phase_attr, None)
                             if phase is not None:
                                 break
 
-                        attr_dict[PackageMeta.phase_fmt.format(
-                            phase_name)] = phase.copy()
-                        phase = attr_dict[
-                            PackageMeta.phase_fmt.format(phase_name)]
+                        phase = attr_dict[phase_attr] = phase.copy()
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
-                setattr(cls, attr_name, {})
+                setattr(cls, check_attr, {})
 
         _flush_callbacks('run_before')
         _flush_callbacks('run_after')
@@ -1962,6 +1971,25 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
 
+    def apply_macos_rpath_fixups(self):
+        """On Darwin, make installed libraries more easily relocatable.
+
+        Some build systems (handrolled, autotools, makefiles) can set their own
+        rpaths that are duplicated by spack's compiler wrapper. Additionally,
+        many simpler build systems do not link using ``-install_name
+        @rpath/foo.dylib``, which propagates the library's hardcoded
+        absolute path into downstream dependencies. This fixup interrogates,
+        and postprocesses if necessary, all libraries installed by the code.
+
+        It should be added as a @run_after to packaging systems (or individual
+        packages) that do not install relocatable libraries by default.
+        """
+        if 'platform=darwin' not in self.spec:
+            return
+
+        from spack.relocate import fixup_macos_rpaths
+        fixup_macos_rpaths(self.spec)
+
     @property
     def build_log_path(self):
         """
@@ -2702,6 +2730,8 @@ class Package(PackageBase):
     # This will be used as a registration decorator in user
     # packages, if need be
     run_after('install')(PackageBase.sanity_check_prefix)
+    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
+    run_after('install')(PackageBase.apply_macos_rpath_fixups)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):

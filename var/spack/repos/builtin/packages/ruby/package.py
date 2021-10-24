@@ -10,6 +10,8 @@ class Ruby(AutotoolsPackage):
     """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
+    maintainers = ['Kerilk']
+
     homepage = "https://www.ruby-lang.org/"
     url      = "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
     list_url = "https://cache.ruby-lang.org/pub/ruby/"
@@ -88,15 +90,17 @@ class Ruby(AutotoolsPackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
-        ruby_paths = []
-        for d in dependent_spec.traverse():
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test'), root=True):
             if d.package.extends(self.spec):
-                ruby_paths.append(d.prefix)
-
-        env.set_path('GEM_PATH', ruby_paths)
+                env.prepend_path('GEM_PATH', d.prefix)
 
         # The actual installation path for this gem
         env.set('GEM_HOME', dependent_spec.prefix)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        for d in dependent_spec.traverse(deptype=('run'), root=True):
+            if d.package.extends(self.spec):
+                env.prepend_path('GEM_PATH', d.prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME

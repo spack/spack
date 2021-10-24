@@ -39,11 +39,29 @@ def test_test_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
+def test_test_dup_alias(
+        mock_test_stage, mock_packages, mock_archive, mock_fetch,
+        install_mockery_mutable_config, capfd):
+    """Ensure re-using an alias fails with suggestion to change."""
+    install('libdwarf')
+
+    # Run the tests with the alias once
+    out = spack_test('run', '--alias', 'libdwarf', 'libdwarf')
+    assert "Spack test libdwarf" in out
+
+    # Try again with the alias but don't let it fail on the error
+    with capfd.disabled():
+        out = spack_test(
+            'run', '--alias', 'libdwarf', 'libdwarf', fail_on_error=False)
+
+    assert "already exists" in out
+
+
 def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
                      install_mockery_mutable_config):
     """Ensure output printed from pkgs is captured by output redirection."""
     install('printing-package')
-    spack_test('run', 'printing-package')
+    spack_test('run', '--alias', 'printpkg', 'printing-package')
 
     stage_files = os.listdir(mock_test_stage)
     assert len(stage_files) == 1

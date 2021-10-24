@@ -645,3 +645,6 @@ To resolve this problem, please try the following:
             fs.mkdirp(os.path.dirname(self._removed_la_files_log))
             with open(self._removed_la_files_log, mode='w') as f:
                 f.write('\n'.join(libtool_files))
+
+    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
+    run_after('install')(PackageBase.apply_macos_rpath_fixups)

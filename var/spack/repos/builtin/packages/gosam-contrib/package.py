@@ -40,3 +40,7 @@ class GosamContrib(AutotoolsPackage):
         args += self.enable_or_disable('libs')
 
         return args
+
+    @property
+    def parallel(self):
+        return False

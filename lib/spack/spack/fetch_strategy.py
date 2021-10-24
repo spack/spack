@@ -48,7 +48,7 @@ import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
-import spack.util.web as web_util
+import spack.util.web
 import spack.version
 from spack.util.compression import decompressor_for, extension
 from spack.util.executable import CommandNotFoundError, which
@@ -350,8 +350,8 @@ class URLFetchStrategy(FetchStrategy):
         else:
             # Telling urllib to check if url is accessible
             try:
-                url, headers, response = web_util.read_from_url(url)
-            except web_util.SpackWebError:
+                url, headers, response = spack.util.web.read_from_url(url)
+            except spack.util.web.SpackWebError:
                 msg = "Urllib fetch failed to verify url {0}".format(url)
                 raise FailedDownloadError(url, msg)
             return (response.getcode() is None or response.getcode() == 200)
@@ -380,8 +380,8 @@ class URLFetchStrategy(FetchStrategy):
 
         # Run urllib but grab the mime type from the http headers
         try:
-            url, headers, response = web_util.read_from_url(url)
-        except web_util.SpackWebError as e:
+            url, headers, response = spack.util.web.read_from_url(url)
+        except spack.util.web.SpackWebError as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
@@ -571,7 +571,7 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        web_util.push_to_url(
+        spack.util.web.push_to_url(
             self.archive_file,
             destination,
             keep_original=True)
@@ -1382,6 +1382,55 @@ class S3FetchStrategy(URLFetchStrategy):
         if parsed_url.scheme != 's3':
             raise FetchError(
                 'S3FetchStrategy can only fetch from s3:// urls.')
+
+        tty.debug('Fetching {0}'.format(self.url))
+
+        basename = os.path.basename(parsed_url.path)
+
+        with working_dir(self.stage.path):
+            _, headers, stream = spack.util.web.read_from_url(self.url)
+
+            with open(basename, 'wb') as f:
+                shutil.copyfileobj(stream, f)
+
+            content_type = spack.util.web.get_header(headers, 'Content-type')
+
+        if content_type == 'text/html':
+            warn_content_type_mismatch(self.archive_file or "the archive")
+
+        if self.stage.save_filename:
+            os.rename(
+                os.path.join(self.stage.path, basename),
+                self.stage.save_filename)
+
+        if not self.archive_file:
+            raise FailedDownloadError(self.url)
+
+
+@fetcher
+class GCSFetchStrategy(URLFetchStrategy):
+    """FetchStrategy that pulls from a GCS bucket."""
+    url_attr = 'gs'
+
+    def __init__(self, *args, **kwargs):
+        try:
+            super(GCSFetchStrategy, self).__init__(*args, **kwargs)
+        except ValueError:
+            if not kwargs.get('url'):
+                raise ValueError(
+                    "GCSFetchStrategy requires a url for fetching.")
+
+    @_needs_stage
+    def fetch(self):
+        import spack.util.web as web_util
+        if self.archive_file:
+            tty.debug('Already downloaded {0}'.format(self.archive_file))
+            return
+
+        parsed_url = url_util.parse(self.url)
+        if parsed_url.scheme != 'gs':
+            raise FetchError(
+                'GCSFetchStrategy can only fetch from gs:// urls.')
 
         tty.debug('Fetching {0}'.format(self.url))
 

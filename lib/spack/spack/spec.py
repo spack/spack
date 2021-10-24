@@ -1567,6 +1567,14 @@ class Spec(object):
         """
         return self._cached_hash(ht.build_hash, length)
 
+    def process_hash(self, length=None):
+        """Hash used to store specs in environments.
+
+        This hash includes build and test dependencies and is only used to
+        serialize a spec and pass it around among processes.
+        """
+        return self._cached_hash(ht.process_hash, length)
+
     def full_hash(self, length=None):
         """Hash  to determine when to rebuild packages in the build pipeline.
 
@@ -1832,6 +1840,7 @@ class Spec(object):
                 not self._hashes_final)                     # lazily compute
             if write_full_hash:
                 node[ht.full_hash.name] = self.full_hash()
+
             write_build_hash = 'build' in hash.deptype and (
                 self._hashes_final and self._build_hash or  # cached and final
                 not self._hashes_final)                     # lazily compute
@@ -1839,8 +1848,12 @@ class Spec(object):
                 node[ht.build_hash.name] = self.build_hash()
         else:
             node['concrete'] = False
+
         if hash.name == 'build_hash':
             node[hash.name] = self.build_hash()
+        elif hash.name == 'process_hash':
+            node[hash.name] = self.process_hash()
+
         return node
 
     def to_yaml(self, stream=None, hash=ht.dag_hash):
@@ -1974,7 +1987,8 @@ class Spec(object):
                 # new format: elements of dependency spec are keyed.
                 for key in (ht.full_hash.name,
                             ht.build_hash.name,
-                            ht.dag_hash.name):
+                            ht.dag_hash.name,
+                            ht.process_hash.name):
                     if key in elt:
                         dep_hash, deptypes = elt[key], elt['type']
                         hash_type = key
@@ -4430,7 +4444,35 @@ class Spec(object):
         return hash(lang.tuplify(self._cmp_iter))
 
     def __reduce__(self):
-        return _spec_from_dict, (self.to_dict(hash=ht.build_hash),)
+        return _spec_from_dict, (self.to_dict(hash=ht.process_hash),)
+
+
+def merge_abstract_anonymous_specs(*abstract_specs):
+    """Merge the abstracts specs passed as input and return the result.
+
+    The root specs must be anonymous, and it's duty of the caller to ensure that.
+
+    This function merge the abstract specs based on package names. In particular
+    it doesn't try to resolve virtual dependencies.
+
+    Args:
+        *abstract_specs (list of Specs): abstract specs to be merged
+    """
+    merged_spec = spack.spec.Spec()
+    for current_spec_constraint in abstract_specs:
+        merged_spec.constrain(current_spec_constraint, deps=False)
+
+        for name in merged_spec.common_dependencies(current_spec_constraint):
+            merged_spec[name].constrain(
+                current_spec_constraint[name], deps=False
+            )
+
+        # Update with additional constraints from other spec
+        for name in current_spec_constraint.dep_difference(merged_spec):
+            edge = current_spec_constraint.get_dependency(name)
+            merged_spec._add_dependency(edge.spec.copy(), edge.deptypes)
+
+    return merged_spec
 
 
 def _spec_from_old_dict(data):

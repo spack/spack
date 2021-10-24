@@ -575,7 +575,7 @@ _spack_cd() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage -b --batch"
+        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred"
     else
         _all_packages
     fi
