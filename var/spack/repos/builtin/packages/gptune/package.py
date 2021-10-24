@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack import *
 
 
@@ -26,6 +28,7 @@ class Gptune(CMakePackage):
     depends_on('scalapack')
     depends_on('py-setuptools')
     depends_on('py-ipyparallel')
+    depends_on('py-pip')
     depends_on('py-numpy')
     depends_on('py-pandas')
     depends_on('py-joblib')
@@ -105,12 +108,25 @@ class Gptune(CMakePackage):
                               work_dir='./superlu_dist/build')
                 self.run_test('cp', options=op, work_dir='./superlu_dist/build/EXAMPLE')
 
+        setupenv = '. $PWD/../../../../../../../share/spack/setup-env.sh\n'
         with working_dir(self.install_test_root, create=False):
             cdir = join_path(self.prefix, 'gptuneclcm')
             self.run_test('cp', options=['-r', cdir, '.'], work_dir='.')
             self.run_test('rm', options=['-rf', 'build'], work_dir='.')
             self.run_test('mv', options=['gptuneclcm', 'build'], work_dir='.')
+
             with open('{0}/run_env.sh'.format(self.install_test_root), 'w') as envfile:
+                if sys.platform == "darwin":
+                    envfile.write(setupenv)
+                    envfile.write('spack load --only dependencies gptune\n')
+                    envfile.write('spack load python\n')
+                    envfile.write('spack load py-pip\n')
+                    envfile.write('pip install urllib3\n')
+                    envfile.write('pip install openturns\n')
+                    envfile.write('pip install cloudpickle\n')
+                    envfile.write('pip install configspace\n')
+                    envfile.write('pip install Pyro4\n')
+                    envfile.write('pip install statsmodels\n')
                 envfile.write('if [[ $(hostname -s) = "tr4-workstation" ]]; then\n')
                 envfile.write('    export machine=tr4-workstation\n')
                 envfile.write('elif [[ $NERSC_HOST = "cori" ]]; then\n')
