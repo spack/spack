@@ -27,6 +27,9 @@ class Eospac(Package):
     version('6.5.0beta',
             sha256='42e6d491aaf296e4d6ab946481aaafd64b0a4e9801fc2ff098cc16aa118f54c8',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.0beta_859ce5b1b8c4106057ca61d03a6c9c713a7f0328.tgz")
+    version('6.5.0alpha.1',
+            sha256='c7334342dd2e071e17c60d8fabb11d2908c9d48c9b49ea83c3609a10b7b8877b',
+            url="http://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.5.0alpha.1_62053188b9842842e41508c54196c533e0b91e51.tgz")
     version('6.4.2',
             sha256='13627a5c94d3a456659d1bba0f3cec157380933fbd401e13e25906166150a252',
             url="https://laws.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.2_e2f7906a0863932e3d65d329f789c4b90c6be58d.tgz")
@@ -58,6 +61,10 @@ class Eospac(Package):
     # compilers are specified using absolute pathnames.
     patch('cpuinfo_comp_flags_key.patch', when='@:6.4.1,6.4.2beta')
 
+    # GPU offload is only available for version 6.5+
+    variant("offload", default=False, description="Build GPU offload library instead of standard")
+    conflicts('+offload', when="@:6.4.99")
+
     def install(self, spec, prefix):
         with working_dir('Source'):
             compilerArgs = []
@@ -65,6 +72,11 @@ class Eospac(Package):
             compilerArgs.append('CXX={0}'.format(spack_cxx))
             compilerArgs.append('F77={0}'.format(spack_f77))
             compilerArgs.append('F90={0}'.format(spack_fc))
+            # This looks goofy because eospac does not actually respect the
+            # value of DO_OFFLOAD and instead only attempts to check for its
+            # existence; a quirk of eospac.
+            if "+offload" in spec:
+                compilerArgs.append('DO_OFFLOAD=1')
             # Eospac depends on fcommon behavior
             #   but gcc@10 flipped to default fno-common
             if "%gcc@10:" in spec:
