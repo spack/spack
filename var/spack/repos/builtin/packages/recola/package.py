@@ -31,10 +31,10 @@ class Recola(CMakePackage):
 
     def cmake_args(self):
         args = [
-             '-Dstatic=ON',
-            '-DCMAKE_VERBOSE_MAKEFILE=ON',
-             '-Dcollier_path=%s' % self.spec['collier'].prefix.lib.cmake,
-             '-Dmodelfile_path=%s' % self.spec['recola-sm'].prefix.lib.cmake,
+            self.define(static, True),
+            self.define(CMAKE_VERBOSE_MAKEFILE, True),
+            self.define(collier_path, self.spec['collier'].prefix.lib.cmake),
+            self.define(self.spec['recola-sm'].prefix.lib.cmake),
             self.define_from_variant("with_python3", 'python'),
         ]
         return args
