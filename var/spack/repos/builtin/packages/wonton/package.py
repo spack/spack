@@ -113,7 +113,7 @@ class Wonton(CMakePackage):
             options.append('-DWONTON_ENABLE_Jali=ON')
         else:
             options.append('-DWONTON_ENABLE_Jali=OFF')
-        
+
         # BROKEN DEPENDENCY!!!!!!
         # if '+flecsi' in self.spec:
         #     options.append('-DWONTON_ENABLE_FleCSI=ON')
