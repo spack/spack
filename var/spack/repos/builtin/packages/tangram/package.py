@@ -82,7 +82,7 @@ class Tangram(CMakePackage):
             options.append('-DTANGRAM_ENABLE_Kokkos=ON')
         else:
             options.append('-DTANGRAM_ENABLE_Kokkos=OFF')
-            
+
         # Unit test variant
         if self.run_tests:
             options.append('-DENABLE_UNIT_TESTS=ON')
@@ -92,9 +92,8 @@ class Tangram(CMakePackage):
             options.append('-DENABLE_APP_TESTS=OFF')
 
         return options
-    
+
     def check(self):
         if self.run_tests:
             with working_dir(self.build_directory):
                 make("test")
-
