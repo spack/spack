@@ -15,7 +15,7 @@ class OmegaH(CMakePackage):
     url      = "https://github.com/sandialabs/omega_h/archive/v9.34.1.tar.gz"
     git      = "https://github.com/sandialabs/omega_h.git"
 
-    maintainers = ['ibaned']
+    maintainers = ['cwsmith']
     tags = ['e4s']
     version('main', branch='main')
     version('9.34.1', sha256='3a812da3b8df3e0e5d78055e91ad23333761bcd9ed9b2c8c13ee1ba3d702e46c')
