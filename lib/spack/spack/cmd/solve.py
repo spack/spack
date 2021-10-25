@@ -122,13 +122,21 @@ def solve(parser, args):
             tty.msg("Best of %d considered solutions." % result.nmodels)
             tty.msg("Optimization Criteria:")
 
-            maxlen = max(len(s) for s in result.criteria)
+            maxlen = max(len(s[2]) for s in result.criteria)
             color.cprint(
-                "@*{  Priority  Criterion %sValue}" % ((maxlen - 10) * " ")
+                "@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " ")
             )
-            for i, (name, val) in enumerate(zip(result.criteria, opt)):
-                fmt = "  @K{%%-8d}  %%-%ds%%5d" % maxlen
-                color.cprint(fmt % (i + 1, name, val))
+
+            fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
+            for i, (idx, build_idx, name) in enumerate(result.criteria, 1):
+                color.cprint(
+                    fmt % (
+                        i,
+                        name,
+                        "-" if build_idx is None else opt[idx],
+                        opt[idx] if build_idx is None else opt[build_idx],
+                    )
+                )
             print()
 
         for spec in result.specs:
