@@ -11,8 +11,10 @@ class PyPycodestyle(PythonPackage):
     style conventions in PEP 8. Note: formerly called pep8."""
 
     homepage = "https://github.com/PyCQA/pycodestyle"
-    url      = "https://github.com/PyCQA/pycodestyle/archive/2.0.0.tar.gz"
+    pypi     = "pycodestyle/pycodestyle-2.8.0.tar.gz"
 
+    version('2.8.0', sha256='eddd5847ef438ea1c7870ca7eb78a9d47ce0cdb4851a5523949f2601d0cbbe7f')
+    version('2.7.0', sha256='c389c1d06bf7904078ca03399a4816f974a1d590090fecea0c63ec26ebaf1cef')
     version('2.6.0', sha256='08347fbc48cc92afd33117c1e8af9b99b292a4e5889f6b776f402e062fc39c97')
     version('2.5.0', sha256='a603453c07e8d8e15a43cf062aa7174741b74b4a27b110f9ad03d74d519173b5')
     version('2.3.1', sha256='e9fc1ca3fd85648f45c0d2e33591b608a17d8b9b78e22c5f898e831351bacb03')
@@ -32,3 +34,6 @@ class PyPycodestyle(PythonPackage):
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-pycodestyle requires py-setuptools during runtime as well.
     depends_on('py-setuptools', type=('build', 'run'))
+
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@2.7.0:')
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@2.8.0:')
