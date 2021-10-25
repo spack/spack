@@ -83,11 +83,11 @@ class Hdf5(CMakePackage):
 
     depends_on('cmake@3.12:', type='build')
 
-    if sys.platform != 'windows':
+    if sys.platform != 'win32':
         depends_on('mpi', when='+mpi')
     depends_on('java', type=('build', 'run'), when='+java')
     # numactl does not currently build on darwin
-    if sys.platform != 'darwin' and sys.platform != 'windows':
+    if sys.platform != 'darwin' and sys.platform != 'win32':
         depends_on('numactl', when='+mpi+fortran')
         depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
@@ -382,7 +382,7 @@ class Hdf5(CMakePackage):
         if api != 'default':
             args.append(self.define('DEFAULT_API_VERSION', api))
 
-        if '+mpi' in spec:
+        if '+mpi' in spec and sys.platform != 'win32':
             args.append(self.define('CMAKE_C_COMPILER', spec['mpi'].mpicc))
 
             if '+cxx' in self.spec:
