@@ -60,8 +60,6 @@ class PyLibensemble(PythonPackage):
     depends_on('py-deap', type=('build', 'run'), when='+deap')
     depends_on('tasmanian+python', type=('build', 'run'), when='+tasmanian')
     depends_on('py-pyyaml', type=('build', 'run'), when='+pyyaml')
-    # TODO: Take run off when test is fixed
-    depends_on('py-matplotlib', type=('run', 'test'))
     conflicts('~mpi', when='@:0.4.1')
 
     @run_after('install')
