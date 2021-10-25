@@ -23,6 +23,6 @@ class PyHpbandster(PythonPackage):
     version('0.6.0', sha256='26e69a2f84c8d41bea2fd703f489453a3e9301dcb62f15271b16a3db4ccf225d')
     version('0.5.6', sha256='bc8a93638adda5cc0838c836402f18b456631363aefbfdf52942e9f8c7251893')
 
-    # depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@3:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
