@@ -113,8 +113,8 @@ class Wonton(CMakePackage):
             options.append('-DWONTON_ENABLE_Jali=ON')
         else:
             options.append('-DWONTON_ENABLE_Jali=OFF')
-
-       # BROKEN DEPENDENCY!!!!!!
+        
+        # BROKEN DEPENDENCY!!!!!!
         # if '+flecsi' in self.spec:
         #     options.append('-DWONTON_ENABLE_FleCSI=ON')
         # else:
@@ -130,7 +130,7 @@ class Wonton(CMakePackage):
             options.append('-DENABLE_APP_TESTS=OFF')
 
         return options
-        
+    
     def check(self):
         if self.run_tests:
             with working_dir(self.build_directory):
