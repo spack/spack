@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 from spack import *
 
@@ -15,6 +14,7 @@ class Gptune(CMakePackage):
 
     homepage = "https://gptune.lbl.gov/"
     git      = "https://github.com/gptune/GPTune.git"
+    maintainers = ['liuyangzhuan']
 
     version('master', branch='master')
 
