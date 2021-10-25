@@ -37,7 +37,7 @@ class PySonataNetworkReduction(PythonPackage):
     depends_on('py-morphio@3.0.0:3.999', type='run', when='@0.1.2:')
     depends_on('py-morphio@2.3.9:2.999', type='run', when='@:0.1.2')
     depends_on('py-neurom@1.4.18:1.5.99', type='run', when='@:0.1.2')
-    depends_on('py-morph-tool@0.2.7:2.99', type='run')
+    depends_on('py-morph-tool@0.2.7:2.99^py-dask@2.30.0', type='run')
     depends_on('py-click@6.7:7.99', type='run')
     depends_on('py-aibs-circuit-converter@0.0.3:0.99', type='run')
     depends_on('py-pyyaml@5.3:5.99', type='run')
