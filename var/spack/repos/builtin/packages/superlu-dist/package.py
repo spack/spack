@@ -49,6 +49,7 @@ class SuperluDist(CMakePackage, CudaPackage):
     depends_on('cmake@3.18.1:', type='build', when='@7.1.0:')
 
     conflicts('+cuda', when='@:6.3')
+    conflicts('^cuda@11.5.0:', when='@7.1.0:')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
