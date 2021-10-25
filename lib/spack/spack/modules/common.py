@@ -210,6 +210,10 @@ def merge_config_rules(configuration, spec):
     verbose = module_specific_configuration.get('verbose', False)
     spec_configuration['verbose'] = verbose
 
+    # module defaults per-package
+    defaults = module_specific_configuration.get('defaults', [])
+    spec_configuration['defaults'] = defaults
+
     return spec_configuration
 
 
