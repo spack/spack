@@ -76,10 +76,6 @@ def fetch(parser, args):
                 if args.missing and package.installed:
                     continue
 
-                # Do not attempt to fetch externals (they're local)
-                if package.spec.external:
-                    continue
-
                 package.do_fetch()
 
         package = spack.repo.get(spec)
