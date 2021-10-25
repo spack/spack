@@ -112,7 +112,7 @@ class OmegaH(CMakePackage):
 
         exe = 'osh_scale'
         options = ['box.osh', '100', 'box_100.osh']
-        expected='adapting took'
+        expected = 'adapting took'
         description = 'testing mesh adaptation'
         self.run_test(exe, options, expected, purpose=description,
                       work_dir=self.prefix.bin)
