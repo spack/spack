@@ -20,9 +20,3 @@ class PyLhsmdu(PythonPackage):
     # depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
-
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
