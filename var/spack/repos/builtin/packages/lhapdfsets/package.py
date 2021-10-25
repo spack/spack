@@ -27,8 +27,8 @@ class Lhapdfsets(BundlePackage):
     executables = [r'^lhapdf$']
 
     # parse set names from index file
-    all_sets = [l.split()[1] for l in open(join_path(os.path.dirname(__file__),
-                                           'pdfsets.index')).readlines()]
+    all_sets = [_line.split()[1] for _line in open(join_path(os.path.dirname(__file__),
+                                                   'pdfsets.index')).readlines()]
     default_sets = ["MMHT2014lo68cl", "MMHT2014nlo68cl", "CT14lo", "CT14nlo"]
 
     variant('sets', description="Individiual lhapdf sets to install", values=disjoint_sets(('all',), ('default',), all_sets).with_default('default'))
