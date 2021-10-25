@@ -7,11 +7,11 @@ from spack import *
 
 
 class Hiop(CMakePackage, CudaPackage):
-    '''HiOp is an optimization solver for solving certain mathematical
+    """HiOp is an optimization solver for solving certain mathematical
     optimization problems expressed as nonlinear programming problems.
-    HiOp is a lightweight HPC solver that leverages application's existing
+    HiOp is a lightweight HPC solver that leverages application"s existing
     data parallelism to parallelize the optimization iterations by using
-    specialized linear algebra kernels.'''
+    specialized linear algebra kernels."""
 
     homepage = 'https://github.com/LLNL/hiop'
     git = 'https://github.com/LLNL/hiop.git'
@@ -87,53 +87,53 @@ class Hiop(CMakePackage, CudaPackage):
         args = []
         spec = self.spec
 
-        lapack_blas_libs = (spec['lapack'].libs + spec['blas'].libs).joined(';')
-        args.extend(
-            ['-DLAPACK_FOUND=TRUE', '-DLAPACK_LIBRARIES={0}'.format(lapack_blas_libs)]
-        )
-
-        args.append('-DHIOP_BUILD_STATIC=ON')
-        args.append(self.define_from_variant('HIOP_BUILD_SHARED', 'shared'))
-        args.append(self.define_from_variant('HIOP_USE_MPI', 'mpi'))
-        args.append(self.define_from_variant('HIOP_DEEPCHECKS', 'deepchecking'))
-        args.append(self.define_from_variant('HIOP_USE_GPU', 'cuda'))
-        args.append(self.define_from_variant('HIOP_USE_CUDA', 'cuda'))
-        args.append(self.define_from_variant('HIOP_USE_MAGMA', 'cuda'))
-        args.append(self.define_from_variant('HIOP_USE_RAJA', 'raja'))
-        args.append(self.define_from_variant('HIOP_USE_UMPIRE', 'raja'))
-        args.append(self.define_from_variant('HIOP_WITH_KRON_REDUCTION', 'kron'))
-        args.append(self.define_from_variant('HIOP_SPARSE', 'sparse'))
-        args.append(self.define_from_variant('HIOP_USE_COINHSL', 'sparse'))
-        args.append(self.define_from_variant('HIOP_TEST_WITH_BSUB', 'jsrun'))
+        args.extend([
+            self.define('HIOP_BUILD_STATIC', True),
+            self.define('LAPACK_FOUND', True),
+            self.define('LAPACK_LIBRARIES', spec['lapack'].libs + spec['blas'].libs),
+            self.define('HIOP_USE_HIP', False),
+            self.define_from_variant('HIOP_BUILD_SHARED', 'shared'),
+            self.define_from_variant('HIOP_USE_MPI', 'mpi'),
+            self.define_from_variant('HIOP_DEEPCHECKS', 'deepchecking'),
+            self.define_from_variant('HIOP_USE_GPU', 'cuda'),
+            self.define_from_variant('HIOP_USE_CUDA', 'cuda'),
+            self.define_from_variant('HIOP_USE_MAGMA', 'cuda'),
+            self.define_from_variant('HIOP_USE_RAJA', 'raja'),
+            self.define_from_variant('HIOP_USE_UMPIRE', 'raja'),
+            self.define_from_variant('HIOP_WITH_KRON_REDUCTION', 'kron'),
+            self.define_from_variant('HIOP_SPARSE', 'sparse'),
+            self.define_from_variant('HIOP_USE_COINHSL', 'sparse'),
+            self.define_from_variant('HIOP_TEST_WITH_BSUB', 'jsrun'),
+        ])
 
         if '+mpi' in spec:
-            args.append('-DMPI_HOME={0}'.format(spec['mpi'].prefix))
-            args.append('-DMPI_C_COMPILER={0}'.format(spec['mpi'].mpicc))
-            args.append('-DMPI_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
-            args.append('-DMPI_Fortran_COMPILER={0}'.format(spec['mpi'].mpifc))
-
-        # HIP flags are a part of the buildsystem, but full support is not
-        # yet ready for public release
-        args.append('-DHIOP_USE_HIP=OFF')
+            args.extend([
+                self.define('MPI_HOME', spec['mpi'].prefix),
+                self.define('MPI_C_COMPILER', spec['mpi'].mpicc),
+                self.define('MPI_CXX_COMPILER', spec['mpi'].mpicxx),
+                self.define('MPI_Fortran_COMPILER', spec['mpi'].mpifc),
+            ])
 
         if '+cuda' in spec:
             cuda_arch_list = spec.variants['cuda_arch'].value
             cuda_arch = cuda_arch_list[0]
             if cuda_arch != 'none':
-                args.append('-DHIOP_NVCC_ARCH=sm_{0}'.format(cuda_arch))
-                args.append('-DCMAKE_CUDA_ARCHITECTURES={0}'.format(cuda_arch))
+                args.extend([
+                    self.define('HIOP_NVCC_ARCH', 'sm_{0}'.format(cuda_arch)),
+                    self.define('CMAKE_CUDA_ARCHITECTURES', cuda_arch),
+                ])
             if '+magma' in spec:
-                args.append('-DHIOP_MAGMA_DIR={0}'.format(spec['magma'].prefix))
+                args.append(self.define('HIOP_MAGMA_DIR', spec['magma'].prefix))
 
         if '+kron' in spec:
-            args.append('-DHIOP_UMFPACK_DIR={0}'.format(spec['suite-sparse'].prefix))
+            args.append(self.define('HIOP_UMFPACK_DIR', spec['suite-sparse'].prefix))
 
         # Unconditionally disable strumpack, even when +sparse. This may be
         # used in place of COINHSL for sparse interface, however this is not
         # fully supported in spack at the moment.
-        args.append('-DHIOP_USE_STRUMPACK=OFF')
+        args.append(self.define('HIOP_USE_STRUMPACK', False))
 
         if '+sparse' in spec:
-            args.append('-DHIOP_COINHSL_DIR={0}'.format(spec['coinhsl'].prefix))
+            args.append(self.define('HIOP_COINHSL_DIR', spec['coinhsl'].prefix))
 
         return args
