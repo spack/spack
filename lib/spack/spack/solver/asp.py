@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from __future__ import print_function
+from __future__ import division, print_function
 
 import collections
 import copy
@@ -91,6 +91,67 @@ version_origin_str = {
 DeclaredVersion = collections.namedtuple(
     'DeclaredVersion', ['version', 'idx', 'origin']
 )
+
+# Below numbers are used to map names of criteria to the order
+# they appear in the solution. See concretize.lp
+
+#: Priority offset for "build" criteria (regular criterio shifted to
+#: higher priority for specs we have to build)
+build_priority_offset = 200
+
+#: Priority offset of "fixed" criteria (those w/o build criteria)
+fixed_priority_offset = 100
+
+
+def build_criteria_names(costs, tuples):
+    """Construct an ordered mapping from criteria names to indices in the cost list."""
+    # pull optimization criteria names out of the solution
+    priorities_names = []
+
+    num_fixed = 0
+    for pred, args in tuples:
+        if pred != "opt_criterion":
+            continue
+
+        priority, name = args[:2]
+        priority = int(priority)
+
+        # add the priority of this opt criterion and its name
+        priorities_names.append((priority, name))
+
+        # if the priority is less than fixed_priority_offset, then it
+        # has an associated build priority -- the same criterion but for
+        # nodes that we have to build.
+        if priority < fixed_priority_offset:
+            build_priority = priority + build_priority_offset
+            priorities_names.append((build_priority, name))
+        else:
+            num_fixed += 1
+
+    # sort the criteria by priority
+    priorities_names = sorted(priorities_names, reverse=True)
+
+    assert len(priorities_names) == len(costs), "Wrong number of optimization criteria!"
+
+    # split list into three parts: build criteria, fixed criteria, non-build criteria
+    num_criteria = len(priorities_names)
+    num_build = (num_criteria - num_fixed) // 2
+
+    build = priorities_names[:num_build]
+    fixed = priorities_names[num_build:num_build + num_fixed]
+    installed = priorities_names[num_build + num_fixed:]
+
+    # mapping from priority to index in cost list
+    indices = dict((p, i) for i, (p, n) in enumerate(priorities_names))
+
+    # make a list that has each name with its build and non-build priority
+    criteria = [
+        (p - fixed_priority_offset + num_build, None, name) for p, name in fixed
+    ]
+    for (i, name), (b, _) in zip(installed, build):
+        criteria.append((indices[i], indices[b], name))
+
+    return criteria
 
 
 def issequence(obj):
@@ -531,13 +592,7 @@ class PyclingoDriver(object):
 
             # add best spec to the results
             result.answers.append((list(min_cost), 0, answers))
-
-            # pull optimization criteria names out of the solution
-            criteria = [
-                (int(args[0]), args[1]) for name, args in tuples
-                if name == "opt_criterion"
-            ]
-            result.criteria = [t[1] for t in sorted(criteria, reverse=True)]
+            result.criteria = build_criteria_names(min_cost, tuples)
 
             # record the number of models the solver considered
             result.nmodels = len(models)
@@ -1635,6 +1690,9 @@ class SpackSolverSetup(object):
 
 class SpecBuilder(object):
     """Class with actions to rebuild a spec from ASP results."""
+    #: Attributes that don't need actions
+    ignored_attributes = ["opt_criterion"]
+
     def __init__(self, specs):
         self._result = None
         self._command_line_specs = specs
@@ -1797,6 +1855,9 @@ class SpecBuilder(object):
 
         self._specs = {}
         for name, args in function_tuples:
+            if name in SpecBuilder.ignored_attributes:
+                continue
+
             action = getattr(self, name, None)
 
             # print out unknown actions so we can display them for debugging
