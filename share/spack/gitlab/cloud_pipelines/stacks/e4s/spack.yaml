@@ -145,6 +145,7 @@ spack:
     - papi
     - papyrus@1.0.1
     - parallel-netcdf
+    - parsec ~cuda
     - pdt
     - petsc
     - phist

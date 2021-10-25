@@ -323,7 +323,7 @@ class FileWrapper(object):
                 if sys.version_info < (3,):
                     self.file = open(self.file_like, 'w')
                 else:
-                    self.file = open(self.file_like, 'w', encoding='utf-8')
+                    self.file = open(self.file_like, 'w', encoding='utf-8')  # novm
             else:
                 self.file = StringIO()
             return self.file

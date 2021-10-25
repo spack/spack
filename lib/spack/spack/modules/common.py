@@ -836,9 +836,7 @@ class BaseModuleFileWriter(object):
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)
         if not overwrite and os.path.exists(self.layout.filename):
-            message = 'Module file already exists : skipping creation\n'
-            message += 'file : {0.filename}\n'
-            message += 'spec : {0.spec}'
+            message = 'Module file {0.filename} exists and will not be overwritten'
             tty.warn(message.format(self.layout))
             return
 

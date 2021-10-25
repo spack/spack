@@ -31,7 +31,7 @@ class Uftrace(AutotoolsPackage):
     depends_on('capstone')
     depends_on('elfutils')
     depends_on('lsof', type='test')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libunwind')
     depends_on('ncurses')
     depends_on('python@2.7:', when='+python2')

@@ -20,6 +20,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('7.1.1', sha256='558053b3d4a56eb661c4f04d4fcab6604018ce5db97115394c161b56c9c278ff')
     version('7.1.0', sha256='edbea877562be95fb22c7de1ff484f18685bec4baa8e4f703c414d3c035d4a66')
     version('6.4.0', sha256='cb9c0b2ba4c28e5ed5817718ba19ae1dd63ccd30bc44c8b8252b54f5f04a44cc')
     version('6.4.0-amd', sha256='e5ffbdc4647473fc606d7c78e3207df40dce61cba1a2f8953ba3ffe88c9eacf4')
@@ -52,8 +53,9 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hipblas', when='+rocm')
     depends_on('rocsolver', when='+rocm')
 
-    # conflicts('+cuda', when='@:6.3.999')
     conflicts('+rocm', when='+cuda')
+    conflicts('+cuda', when='@:6.3')
+    conflicts('^cuda@11.5.0:', when='@7.1.0:')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
