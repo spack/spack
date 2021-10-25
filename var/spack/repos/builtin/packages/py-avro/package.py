@@ -16,3 +16,4 @@ class PyAvro(PythonPackage):
     version('1.8.2', sha256='8f9ee40830b70b5fb52a419711c9c4ad0336443a6fba7335060805f961b04b59')
 
     depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:', type=('build', 'run'))
