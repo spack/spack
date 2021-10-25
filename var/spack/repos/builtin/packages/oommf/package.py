@@ -116,17 +116,17 @@ class Oommf(Package):
         """
         if "oommf.tcl" in os.listdir():
             print(
-                f"Found 'oommf.tcl' in {os.getcwd()} " "(looks like source from NIST)"
+                "Found 'oommf.tcl' in " + os.getcwd() + " (looks like source from NIST)"
             )
             return "."
         elif "oommf.tcl" in os.listdir("oommf"):
             print(
-                f"Found 'oommf.tcl' in {os.getcwd()}/oommf "
+                "Found 'oommf.tcl' in " + os.getcwd() + "/oommf " +
                 "(looks like source from Github)"
             )
             return "oommf"
         else:
-            raise ValueError(f"Cannot find 'oommf.tcl' in {os.getcwd()}")
+            raise ValueError("Cannot find 'oommf.tcl' in " + os.getcwd())
 
     def get_oommf_path(self, prefix):
         """Given the prefix, return the full path of the OOMMF installation
@@ -201,7 +201,7 @@ class Oommf(Package):
             oommf_tcl_path, "+version", output=str.split, error=str.split, env=test_env
         )
 
-        print("output received fromm oommf is '{}".format(output))
+        print("output received fromm oommf is %s" % output)
 
     @run_after("install")
     def check_install_platform(self):
@@ -228,7 +228,7 @@ class Oommf(Package):
             oommf_tcl_path, "+platform", output=str.split, error=str.split, env=test_env
         )
 
-        print("output received fromm oommf is '{}".format(output))
+        print("output received fromm oommf is %s" % output)
 
     @run_after("install")
     def check_install_stdprob3(self):
@@ -264,7 +264,7 @@ class Oommf(Package):
             error=str.split,
             env=test_env,
         )
-        print("output received fromm oommf is '{}".format(output))
+        print("output received fromm oommf is %s" % output)
 
     def test(self):
         """Run these smoke tests when requested explicitly"""
