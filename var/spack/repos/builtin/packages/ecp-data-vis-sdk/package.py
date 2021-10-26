@@ -92,7 +92,7 @@ class EcpDataVisSdk(BundlePackage):
 
     dav_sdk_depends_on('parallel-netcdf+shared+fortran', when='+pnetcdf')
 
-    dav_sdk_depends_on('unifyfs', when='+unifyfs ', propagate=['hdf5'])
+    dav_sdk_depends_on('unifyfs', when='+unifyfs ')
 
     dav_sdk_depends_on('veloc', when='+veloc')
 
