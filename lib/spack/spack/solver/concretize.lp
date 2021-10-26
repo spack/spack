@@ -352,7 +352,7 @@ external_conditions_hold(Package, LocalIndex) :-
 %-----------------------------------------------------------------------------
 % a variant is a variant of a package if it is a variant under some condition
 % and that condition holds
-variant(Package, Variant) :- variant_condition(Package, Variant, ID),
+variant(Package, Variant) :- variant_condition(ID, Package, Variant),
                              condition_holds(ID).
 
 % a variant cannot be set if it is not a variant on the package
