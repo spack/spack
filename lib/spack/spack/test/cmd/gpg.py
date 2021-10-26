@@ -18,6 +18,7 @@ from spack.util.executable import ProcessError
 
 #: spack command used by tests below
 gpg = SpackCommand('gpg')
+bootstrap = SpackCommand('bootstrap')
 
 
 # test gpg command detection
@@ -47,12 +48,10 @@ def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
         assert spack.util.gpg.GPGCONF is not None
 
 
-def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch):
+def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
     monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
-    monkeypatch.setattr(
-        spack.bootstrap, 'ensure_gpg_in_path_or_raise', lambda: None
-    )
-    with pytest.raises(spack.util.gpg.SpackGPGError):
+    bootstrap('disable')
+    with pytest.raises(RuntimeError):
         spack.util.gpg.init(force=True)
 
 
