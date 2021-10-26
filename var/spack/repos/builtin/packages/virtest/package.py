@@ -17,6 +17,11 @@ class Virtest(CMakePackage):
 
     version('master', branch='master')
 
+    def patch(self):
+        script = FileFilter('tests/CMakeLists.txt')
+        script.filter(r' *\${CMAKE_CTEST_COMMAND} -V -R \${target}',
+                      '${CMAKE_CTEST_COMMAND} -V -R "^${target}$"')
+
     def setup_run_environment(self, env):
         env.prepend_path('CPATH', self.prefix.include.vir)
 
