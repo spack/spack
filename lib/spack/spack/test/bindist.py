@@ -249,7 +249,7 @@ def test_default_rpaths_install_nondefault_layout(mirror_dir):
     into the non-default directory layout scheme.
     """
     cspec = Spec('corge').concretized()
-    # This guy tests for symlink relocation 
+    # This guy tests for symlink relocation
     sy_spec = Spec('symly').concretized()
 
     # Install some packages with dependent packages
