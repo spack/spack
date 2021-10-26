@@ -209,6 +209,10 @@ def merge_config_rules(configuration, spec):
     verbose = module_specific_configuration.get('verbose', False)
     spec_configuration['verbose'] = verbose
 
+    # module defaults per-package
+    defaults = module_specific_configuration.get('defaults', [])
+    spec_configuration['defaults'] = defaults
+
     return spec_configuration
 
 
@@ -452,6 +456,11 @@ class BaseConfiguration(object):
         or None if not specified in the configuration.
         """
         return self.conf.get('template', None)
+
+    @property
+    def defaults(self):
+        """Returns the specs configured as defaults or []."""
+        return self.conf.get('defaults', [])
 
     @property
     def env(self):
@@ -890,6 +899,18 @@ class BaseModuleFileWriter(object):
         # Set the file permissions of the module to match that of the package
         if os.path.exists(self.layout.filename):
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
+
+        # Symlink defaults if needed
+        if any(self.spec.satisfies(default) for default in self.conf.defaults):
+            # This spec matches a default, it needs to be symlinked to default
+            # Symlink to a tmp location first and move, so that existing
+            # symlinks do not cause an error.
+            default_path = os.path.join(os.path.dirname(self.layout.filename),
+                                        'default')
+            default_tmp = os.path.join(os.path.dirname(self.layout.filename),
+                                       '.tmp_spack_default')
+            os.symlink(self.layout.filename, default_tmp)
+            os.rename(default_tmp, default_path)
 
     def remove(self):
         """Deletes the module file."""
