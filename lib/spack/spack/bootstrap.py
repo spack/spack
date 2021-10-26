@@ -34,6 +34,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+import spack.user_environment
 import spack.util.executable
 import spack.util.path
 from spack.util.environment import EnvironmentModifications
@@ -605,8 +606,6 @@ def get_executable(exe, spec=None, install=False):
     install quickly (when using external python) or are guaranteed by Spack
     organization to be in a binary mirror (clingo).
     """
-    import spack.user_environment as uenv
-
     # Search the system first
     runner = spack.util.executable.which(exe)
     if runner:
@@ -623,7 +622,9 @@ def get_executable(exe, spec=None, install=False):
             ret = spack.util.executable.Executable(exe_path[0])
             envmod = EnvironmentModifications()
             for dep in ispec.traverse(root=True, order='post'):
-                envmod.extend(uenv.environment_modifications_for_spec(dep))
+                envmod.extend(
+                    spack.user_environment.environment_modifications_for_spec(dep)
+                )
             ret.add_default_envmod(envmod)
             return ret
         else:
@@ -652,7 +653,9 @@ def get_executable(exe, spec=None, install=False):
         ret = spack.util.executable.Executable(exe_path[0])
         envmod = EnvironmentModifications()
         for dep in spec.traverse(root=True, order='post'):
-            envmod.extend(uenv.environment_modifications_for_spec(dep))
+            envmod.extend(
+                spack.user_environment.environment_modifications_for_spec(dep)
+            )
         ret.add_default_envmod(envmod)
         return ret
 
