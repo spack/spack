@@ -11,4 +11,4 @@
 #   ~/.spack/repos.yaml
 # -------------------------------------------------------------------------
 repos:
-  - $spack/var/spack/repos/builtin.mock
+  - $spack/var/spack/repos/builtin
