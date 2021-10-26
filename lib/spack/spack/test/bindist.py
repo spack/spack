@@ -249,31 +249,15 @@ def test_default_rpaths_install_nondefault_layout(mirror_dir):
     into the non-default directory layout scheme.
     """
     cspec = Spec('corge').concretized()
-
-    # Install some packages with dependent packages
-    # test install in non-default install path scheme
-    buildcache_cmd('install', '-au', cspec.name)
-
-    # Test force install in non-default install path scheme
-    buildcache_cmd('install', '-auf', cspec.name)
-
-@pytest.mark.requires_executables(*args)
-@pytest.mark.maybeslow
-@pytest.mark.nomockstage
-@pytest.mark.usefixtures(
-    'default_config', 'cache_directory', 'install_dir_non_default_layout',
-    'test_mirror'
-)
-def test_default_symlink_paths_install_nondefault_layout(mirror_dir):
-    """
-    Test the creation and installation of buildcaches with default rpaths
-    into the non-default directory layout scheme.
-    """
+    # This guy tests for symlink relocation 
     sy_spec = Spec('symly').concretized()
 
     # Install some packages with dependent packages
     # test install in non-default install path scheme
-    buildcache_cmd('install', '-au', sy_spec.name)    
+    buildcache_cmd('install', '-au', cspec.name, sy_spec.name)
+
+    # Test force install in non-default install path scheme
+    buildcache_cmd('install', '-auf', cspec.name)
 
 
 @pytest.mark.requires_executables(*args)
