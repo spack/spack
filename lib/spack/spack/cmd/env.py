@@ -135,8 +135,7 @@ def env_activate(args):
 
     env_prompt = '[%s]' % short_name
 
-    # Deactivate the current environment first.  We don't properly support
-    # stacked environments at the moment.
+    # We only support one active environment at a time, so deactivate the current one.
     if ev.active_environment() is None:
         cmds = ''
         env_mods = EnvironmentModifications()
