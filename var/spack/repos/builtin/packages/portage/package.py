@@ -37,7 +37,7 @@ class Portage(CMakePackage):
     depends_on('kokkos', when='+kokkos')
     depends_on('thrust', when='+thrust')
     depends_on('jali', when='+jali')
-    
+
     depends_on('lanl_ristra.tangram@master', when='+tangram')
 
     Tangram = ['mpi', 'jali', 'flecsisp', 'thrust', 'kokkos', 'cuda']
