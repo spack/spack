@@ -38,34 +38,51 @@ class Portage(CMakePackage):
     depends_on('thrust', when='+thrust')
     depends_on('jali', when='+jali')
 
+
     depends_on('lanl_ristra.tangram@master', when='+tangram')
-    depends_on('lanl_ristra.tangram@master+mpi', when='+tangram+mpi')
-    depends_on('lanl_ristra.tangram@master~mpi', when='+tangram~mpi')
-    depends_on('lanl_ristra.tangram@master+jali', when='+tangram+jali')
-    depends_on('lanl_ristra.tangram@master~jali', when='+tangram~jali')
-    depends_on('lanl_ristra.tangram@master+thrust', when='+tangram+thrust')
-    depends_on('lanl_ristra.tangram@master~thrust', when='+tangram~thrust')
-    depends_on('lanl_ristra.tangram@master+kokkos', when='+tangram+kokkos')
-    depends_on('lanl_ristra.tangram@master~kokkos', when='+tangram~kokkos')
-    depends_on('lanl_ristra.tangram@master+openmp', when='+tangram+openmp')
-    depends_on('lanl_ristra.tangram@master~openmp', when='+tangram~openmp')
-    depends_on('lanl_ristra.tangram@master+cuda', when='+tangram+cuda')
-    depends_on('lanl_ristra.tangram@master~cuda', when='+tangram~cuda')
+    #tangram depends array
+    Tangram = ['mpi','jali','flecsisp','thrust','kokkos','cuda']
 
-    depends_on('lanl_ristra.wonton@master')
-    depends_on('lanl_ristra.wonton@master+mpi', when='+mpi')
-    depends_on('lanl_ristra.wonton@master~mpi', when='~mpi')
-    depends_on('lanl_ristra.wonton@master+jali', when='+jali')
-    depends_on('lanl_ristra.wonton@master~jali', when='~jali')
-    depends_on('lanl_ristra.wonton@master+thrust', when='+thrust')
-    depends_on('lanl_ristra.wonton@master~thrust', when='~thrust')
-    depends_on('lanl_ristra.wonton@master+kokkos', when='+kokkos')
-    depends_on('lanl_ristra.wonton@master~kokkos', when='~kokkos')
-    depends_on('lanl_ristra.wonton@master+openmp', when='+openmp')
-    depends_on('lanl_ristra.wonton@master~openmp', when='~openmp')
-    depends_on('lanl_ristra.wonton@master+cuda', when='+cuda')
-    depends_on('lanl_ristra.wonton@master~cuda', when='~cuda')
+    #tangram depends on loop 
+    for i in Tangram:
+        depends_on('lanl_ristra.tangram@master+'+i, when='+tangram+'+i)
+        depends_on('lanl_ristra.tangram@master~'+i, when='+tangram~'+i)
 
+#    depends_on('tangram~mpi', when='+tangram~mpi')
+#    depends_on('tangram+mpi', when='+tangram+mpi')
+#    depends_on('tangram~jali', when='+tangram~jali')
+#    depends_on('tangram+jali', when='+tangram+jali')
+#    depends_on('tangram~flecsisp', when='+tangram~flecsisp')
+#    depends_on('tangram+flecsisp', when='+tangram+flecsisp')
+#    depends_on('tangram~thrust', when='+tangram~thrust')
+#    depends_on('tangram+thrust', when='+tangram+thrust')
+#    depends_on('tangram~kokkos', when='+tangram~kokkos')
+#    depends_on('tangram+kokkos', when='+tangram+kokkos')
+#    depends_on('tangram~cuda', when='+tangram~cuda')
+#    depends_on('tangram+cuda', when='+tangram+cuda')
+
+    depends_on('lanl_ristra.wonton@master', when='+tangram')
+    #tangram depends array
+    Wonton = ['mpi','jali','openmp','thrust','kokkos','cuda']
+
+    #tangram depends on loop 
+    for i in Wonton:
+        depends_on('lanl_ristra.wonton@master+'+i, when='+'+i)
+        depends_on('lanl_ristra.wonton@master~'+i, when='~'+i)
+
+#    depends_on('lanl_ristra.wonton@master')
+#    depends_on('lanl_ristra.wonton@master+mpi', when='+mpi')
+#    depends_on('lanl_ristra.wonton@master~mpi', when='~mpi')
+#    depends_on('lanl_ristra.wonton@master+jali', when='+jali')
+#    depends_on('lanl_ristra.wonton@master~jali', when='~jali')
+#    depends_on('lanl_ristra.wonton@master+thrust', when='+thrust')
+#    depends_on('lanl_ristra.wonton@master~thrust', when='~thrust')
+#    depends_on('lanl_ristra.wonton@master+kokkos', when='+kokkos')
+#    depends_on('lanl_ristra.wonton@master~kokkos', when='~kokkos')
+#    depends_on('lanl_ristra.wonton@master+openmp', when='+openmp')
+#    depends_on('lanl_ristra.wonton@master~openmp', when='~openmp')
+#    depends_on('lanl_ristra.wonton@master+cuda', when='+cuda')
+#    depends_on('lanl_ristra.wonton@master~cuda', when='~cuda')
     # Jali needs MPI
     conflicts('+jali ~mpi')
 
