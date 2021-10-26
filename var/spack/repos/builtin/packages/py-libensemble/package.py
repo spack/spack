@@ -75,7 +75,7 @@ class PyLibensemble(PythonPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir,
                              'examples', 'calling_scripts', 'regression_tests')
 
-        if not os.path.exists(test_dir):
+        if not os.path.isfile(join_path(test_dir, exe)):
             print('Skipping {0} test'.format(exe))
             return
 
