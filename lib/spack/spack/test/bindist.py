@@ -200,12 +200,14 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     into the default directory layout scheme.
     """
     gspec, cspec = Spec('garply').concretized(), Spec('corge').concretized()
+    sy_spec = Spec('symly').concretized()
 
     # Install 'corge' without using a cache
     install_cmd('--no-cache', cspec.name)
+    install_cmd('--no-cache', sy_spec.name)
 
     # Create a buildache
-    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec.name)
+    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec.name, sy_spec.name)
     # Test force overwrite create buildcache (-f option)
     buildcache_cmd('create', '-auf', '-d', mirror_dir, cspec.name)
 
@@ -219,7 +221,7 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     uninstall_cmd('-y', '--dependents', gspec.name)
 
     # Test installing from build caches
-    buildcache_cmd('install', '-au', cspec.name)
+    buildcache_cmd('install', '-au', cspec.name, sy_spec.name)
 
     # This gives warning that spec is already installed
     buildcache_cmd('install', '-au', cspec.name)
@@ -254,6 +256,24 @@ def test_default_rpaths_install_nondefault_layout(mirror_dir):
 
     # Test force install in non-default install path scheme
     buildcache_cmd('install', '-auf', cspec.name)
+
+@pytest.mark.requires_executables(*args)
+@pytest.mark.maybeslow
+@pytest.mark.nomockstage
+@pytest.mark.usefixtures(
+    'default_config', 'cache_directory', 'install_dir_non_default_layout',
+    'test_mirror'
+)
+def test_default_symlink_paths_install_nondefault_layout(mirror_dir):
+    """
+    Test the creation and installation of buildcaches with default rpaths
+    into the non-default directory layout scheme.
+    """
+    sy_spec = Spec('symly').concretized()
+
+    # Install some packages with dependent packages
+    # test install in non-default install path scheme
+    buildcache_cmd('install', '-au', sy_spec.name)    
 
 
 @pytest.mark.requires_executables(*args)
