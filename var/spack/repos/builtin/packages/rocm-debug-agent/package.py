@@ -35,7 +35,7 @@ class RocmDebugAgent(CMakePackage):
 
         return url
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
     depends_on('elfutils@:0.168', type='link')
