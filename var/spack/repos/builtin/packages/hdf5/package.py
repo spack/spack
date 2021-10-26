@@ -7,11 +7,12 @@ import os
 import shutil
 
 import llnl.util.tty as tty
+from spack.build_systems.windows_variants import WindowsPackage
 
 from spack.package import *
 
 
-class Hdf5(CMakePackage):
+class Hdf5(CMakePackage, WindowsPackage):
     """HDF5 is a data model, library, and file format for storing and managing
     data. It supports an unlimited variety of datatypes, and is designed for
     flexible and efficient I/O and for high volume and complex data.
@@ -498,9 +499,13 @@ class Hdf5(CMakePackage):
             self.define_from_variant("HDF5_BUILD_TOOLS", "tools"),
         ]
 
-        api = spec.variants["api"].value
-        if api != "default":
-            args.append(self.define("DEFAULT_API_VERSION", api))
+        api = spec.variants['api'].value
+        if sys.platform == 'win32' and self.spec.satisfies('+staticmt'):
+            args.append(self.define('CMAKE_POLICY_DEFAULT_CMP0091', 'NEW'))
+            args.append(self.define('CMAKE_MSVC_RUNTIME_LIBRARY', "MultiThreaded$<$<CONFIG:Debug>:Debug>"))
+
+        if api != 'default':
+            args.append(self.define('DEFAULT_API_VERSION', api))
 
         if '+mpi' in spec and sys.platform != 'win32':
             args.append(self.define('CMAKE_C_COMPILER', spec['mpi'].mpicc))
