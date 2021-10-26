@@ -620,9 +620,14 @@ class BaseFileLayout(object):
         if self.extension:
             filename = '{0}.{1}'.format(self.use_name, self.extension)
         # Architecture sub-folder
-        arch_folder = str(self.spec.architecture)
+        arch_folder_conf = spack.config.get(
+            'modules:%s:arch_folder' % self.conf.name, True)
+        if arch_folder_conf:
+            # include an arch specific folder between root and filename
+            arch_folder = str(self.spec.architecture)
+            filename = os.path.join(arch_folder, filename)
         # Return the absolute path
-        return os.path.join(self.dirname(), arch_folder, filename)
+        return os.path.join(self.dirname(), filename)
 
 
 class BaseContext(tengine.Context):

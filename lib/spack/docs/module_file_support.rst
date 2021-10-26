@@ -213,6 +213,18 @@ location). The set ``my_custom_lmod_modules`` will install its lmod
 modules to ``/path/to/install/custom/lmod/modules`` (and still install
 its tcl modules, if any, to the default location).
 
+By default, an architecture-specific directory is added to the root
+directory. A module set may override that behavior by setting the
+``arch_folder`` config value to ``False``.
+
+.. code-block:: yaml
+
+   modules:
+     default:
+       roots:
+         tcl: /path/to/install/tcl/modules
+       arch_folder: false
+
 Obviously, having multiple module sets install modules to the default
 location could be confusing to users of your modules. In the next
 section, we will discuss enabling and disabling module types (module
