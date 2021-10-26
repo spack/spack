@@ -768,37 +768,12 @@ def _config_path():
     )
 
 
-def clingo_root_spec():
-    # Construct the root spec that will be used to bootstrap clingo
-    spec_str = 'clingo-bootstrap@spack+python'
+def _root_spec(spec_str):
+    """Add a proper compiler and target to a spec used during bootstrapping.
 
-    # Add a proper compiler hint to the root spec. We use GCC for
-    # everything but MacOS.
-    if str(spack.platforms.host()) == 'darwin':
-        spec_str += ' %apple-clang'
-    else:
-        spec_str += ' %gcc'
-
-    # Add the generic target
-    generic_target = archspec.cpu.host().family
-    spec_str += ' target={0}'.format(str(generic_target))
-
-    tty.debug('[BOOTSTRAP ROOT SPEC] clingo: {0}'.format(spec_str))
-
-    return spec_str
-
-
-def ensure_clingo_importable_or_raise():
-    """Ensure that the clingo module is available for import."""
-    ensure_module_importable_or_raise(
-        module='clingo', abstract_spec=clingo_root_spec()
-    )
-
-
-def gnupg_root_spec():
-    # Construct the root spec that will be used to bootstrap clingo
-    spec_str = 'gnupg@2.3:'
-
+    Args:
+        spec_str (str): spec to be bootstrapped. Must be without compiler and target.
+    """
     # Add a proper compiler hint to the root spec. We use GCC for
     # everything but MacOS.
     if str(spack.platforms.host()) == 'darwin':
@@ -809,8 +784,25 @@ def gnupg_root_spec():
     target = archspec.cpu.host().family
     spec_str += ' target={0}'.format(target)
 
-    tty.debug('[BOOTSTRAP ROOT SPEC] gnupg: {0}'.format(spec_str))
+    tty.debug('[BOOTSTRAP ROOT SPEC] {0}'.format(spec_str))
     return spec_str
+
+
+def clingo_root_spec():
+    """Return the root spec used to bootstrap clingo"""
+    return _root_spec('clingo-bootstrap@spack+python')
+
+
+def ensure_clingo_importable_or_raise():
+    """Ensure that the clingo module is available for import."""
+    ensure_module_importable_or_raise(
+        module='clingo', abstract_spec=clingo_root_spec()
+    )
+
+
+def gnupg_root_spec():
+    """Return the root spec used to bootstrap GnuPG"""
+    return _root_spec('gnupg@2.3:')
 
 
 def ensure_gpg_in_path_or_raise():
