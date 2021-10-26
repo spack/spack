@@ -143,6 +143,7 @@ class Qt(Package):
           working_dir='qtwebsockets',
           when='@5.14: %gcc@11:')
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
+    conflicts('%gcc@11:', when='@5.9:5.13')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
