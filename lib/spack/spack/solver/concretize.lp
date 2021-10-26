@@ -171,10 +171,6 @@ virtual_node(Virtual)
 1 { provider(Package, Virtual) : possible_provider(Package, Virtual) } 1
   :- virtual_node(Virtual), error("Virtual packages must be satisfied by a unique provider").
 
-% If a virtual is specified on the command line, we have to use it
-% This ensures appropriate error messages
-provider(Package, Virtual) :- virtual_node(Virtual), provides_virtual(Package, Virtual), node(Package).
-
 % virtual roots imply virtual nodes, and that one provider is a root
 virtual_node(Virtual) :- virtual_root(Virtual).
 
@@ -199,14 +195,6 @@ virtual_condition_holds(Provider, Virtual) :-
 % fulfill the conditions to provide that virtual
 :- provider(Package, Virtual), not virtual_condition_holds(Package, Virtual),
    error("Internal error: virtual when provides not respected").
-
-% If a package is selected as a provider, it is provider of all
-% the virtuals it provides
-% TODO: May be obsolete now
-:- provides_virtual(Package, V1), provides_virtual(Package, V2), V1 != V2,
-   provider(Package, V1), not provider(Package, V2),
-   virtual_node(V1), virtual_node(V2),
-   error("Virtual packages must provide all of their virtuals").
 
 #defined possible_provider/2.
 
