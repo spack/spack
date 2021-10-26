@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import contextlib
 import fnmatch
+import functools
 import json
 import os
 import os.path
@@ -290,6 +291,40 @@ class _BuildcacheBootstrapper(object):
                 ]
                 _buildcache_cmd(*install_args, fail_on_error=False)
 
+    def _install_and_test(
+            self, abstract_spec, bincache_platform, bincache_data, test_fn
+    ):
+        # Ensure we see only the buildcache being used to bootstrap
+        with spack.config.override(self.mirror_scope):
+            # This index is currently needed to get the compiler used to build some
+            # specs that wwe know by dag hash.
+            spack.binary_distribution.binary_index.regenerate_spec_cache()
+            index = spack.binary_distribution.update_cache_and_get_specs()
+
+            if not index:
+                raise RuntimeError("The binary index is empty")
+
+            for item in bincache_data['verified']:
+                candidate_spec = item['spec']
+                # This will be None for things that don't depend on python
+                python_spec = item.get('python', None)
+                # Skip specs which are not compatible
+                if not abstract_spec.satisfies(candidate_spec):
+                    continue
+
+                if python_spec is not None and python_spec not in abstract_spec:
+                    continue
+
+                for pkg_name, pkg_hash, pkg_sha256 in item['binaries']:
+                    # TODO: undo installations that didn't complete?
+                    self._install_by_hash(
+                        pkg_hash, pkg_sha256, index, bincache_platform
+                    )
+
+                if test_fn():
+                    return True
+        return False
+
     @property
     def mirror_scope(self):
         return spack.config.InternalConfigScope(
@@ -297,86 +332,34 @@ class _BuildcacheBootstrapper(object):
         )
 
     def try_import(self, module, abstract_spec_str):
-        if _try_import_from_store(module, abstract_spec_str):
+        test_fn = functools.partial(_try_import_from_store, module, abstract_spec_str)
+        if test_fn():
             return True
 
         tty.info("Bootstrapping {0} from pre-built binaries".format(module))
-
         abstract_spec, bincache_platform = self._spec_and_platform(
             abstract_spec_str + ' ^' + spec_for_current_python()
         )
         data = self._read_metadata(module)
-
-        # Ensure we see only the buildcache being used to bootstrap
-        with spack.config.override(self.mirror_scope):
-            # This index is currently needed to get the compiler used to build some
-            # specs that wwe know by dag hash.
-            spack.binary_distribution.binary_index.regenerate_spec_cache()
-            index = spack.binary_distribution.update_cache_and_get_specs()
-
-            if not index:
-                raise RuntimeError("The binary index is empty")
-
-            for item in data['verified']:
-                candidate_spec = item['spec']
-                python_spec = item['python']
-                # Skip specs which are not compatible
-                if not abstract_spec.satisfies(candidate_spec):
-                    continue
-
-                if python_spec not in abstract_spec:
-                    continue
-
-                for pkg_name, pkg_hash, pkg_sha256 in item['binaries']:
-                    msg = ('[BOOTSTRAP MODULE {0}] Try installing "{1}" from binary '
-                           'cache at "{2}"')
-                    tty.debug(msg.format(module, pkg_name, self.url))
-                    # TODO: undo installations that didn't complete?
-                    self._install_by_hash(
-                        pkg_hash, pkg_sha256, index, bincache_platform
-                    )
-
-                if _try_import_from_store(module, abstract_spec_str):
-                    return True
-        return False
+        return self._install_and_test(
+            abstract_spec, bincache_platform, data, test_fn
+        )
 
     def try_search_path(self, executables, abstract_spec_str):
-        if _executables_in_store(executables, abstract_spec_str):
+        test_fn = functools.partial(
+            _executables_in_store, executables, abstract_spec_str
+        )
+        if test_fn():
             return True
 
         abstract_spec, bincache_platform = self._spec_and_platform(
             abstract_spec_str
         )
+        tty.info("Bootstrapping {0} from pre-built binaries".format(abstract_spec.name))
         data = self._read_metadata(abstract_spec.name)
-
-        executables_str = ', '.join(executables)
-        # Ensure we see only the buildcache being used to bootstrap
-        with spack.config.override(self.mirror_scope):
-            # This index is currently needed to get the compiler used to build some
-            # specs that wwe know by dag hash.
-            spack.binary_distribution.binary_index.regenerate_spec_cache()
-            index = spack.binary_distribution.update_cache_and_get_specs()
-            if not index:
-                raise RuntimeError("The binary index is empty")
-
-            for item in data['verified']:
-                candidate_spec = item['spec']
-                # Skip specs which are not compatible
-                if not abstract_spec.satisfies(candidate_spec):
-                    continue
-
-                for pkg_name, pkg_hash, pkg_sha256 in item['binaries']:
-                    msg = ('[BOOTSTRAP EXECUTABLES {0}] Try installing '
-                           '"{1}" from binary cache at "{2}"')
-                    tty.debug(msg.format(executables_str, pkg_name, self.url))
-                    # TODO: undo installations that didn't complete?
-                    self._install_by_hash(
-                        pkg_hash, pkg_sha256, index, bincache_platform
-                    )
-
-                if _executables_in_store(executables, abstract_spec_str):
-                    return True
-        return False
+        return self._install_and_test(
+            abstract_spec, bincache_platform, data, test_fn
+        )
 
 
 @_bootstrapper(type='install')
