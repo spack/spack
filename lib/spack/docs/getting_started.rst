@@ -35,7 +35,7 @@ Getting Spack is easy.  You can clone it from the `github repository
 
 .. code-block:: console
 
-   $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
+   $ git -c feature.manyFiles=true clone https://github.com/spack/spack.git
 
 This will create a directory called ``spack``.
 
