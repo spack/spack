@@ -44,7 +44,13 @@ class Freetype(AutotoolsPackage):
         return headers
 
     def configure_args(self):
-        args = ['--with-harfbuzz=no']
+        args = [
+            '--with-brotli=no',
+            '--with-bzip2=yes',
+            '--with-harfbuzz=no',
+            '--with-png=no',
+            '--with-zlib=no',
+        ]
         if self.spec.satisfies('@2.9.1:'):
             args.append('--enable-freetype-config')
         return args
