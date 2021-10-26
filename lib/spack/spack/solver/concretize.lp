@@ -359,6 +359,9 @@ variant(Package, Variant) :- variant_condition(Package, Variant, ID),
 :- variant_set(Package, Variant),
    not variant(Package, Variant).
 
+% a variant cannot take on a value if it is not a variant of the package
+:- variant_value(Package, Variant, _), not variant(Package, Variant).
+
 % one variant value for single-valued variants.
 1 {
   variant_value(Package, Variant, Value)
