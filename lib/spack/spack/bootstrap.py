@@ -208,7 +208,7 @@ def _executables_in_store(executables, abstract_spec_str):
     installed_specs = spack.store.db.query(abstract_spec_str, installed=True)
     if installed_specs:
         for concrete_spec in installed_specs:
-            bin_dir = str(concrete_spec.prefix.bin)
+            bin_dir = concrete_spec.prefix.bin
             if os.path.exists(bin_dir) and os.path.isdir(bin_dir):
                 current_path = os.environ['PATH']
 
