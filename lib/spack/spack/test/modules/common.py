@@ -94,7 +94,7 @@ def test_modules_written_with_proper_permissions(mock_module_filename,
 
 @pytest.mark.parametrize('module_type', ['tcl', 'lmod'])
 def test_modules_default_symlink(
-        module_type, mock_packages, mock_module_filename, mock_module_defaults
+        module_type, mock_packages, mock_module_filename, mock_module_defaults, config
 ):
     spec = spack.spec.Spec('mpileaks@2.3').concretized()
     mock_module_defaults(spec.format('{name}{@version}'))
