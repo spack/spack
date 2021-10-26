@@ -9,6 +9,7 @@ import subprocess
 
 from spack import *
 
+
 class IntelMpi(IntelPackage):
     """Intel MPI"""
 
