@@ -175,21 +175,6 @@ def _fix_ext_suffix(candidate_spec):
         os.symlink(abs_path, link_name)
 
 
-def _executables_in_path(executables):
-    """Return True if at least one of the executables is in PATH,
-    False otherwise.
-    """
-    msg = "[BOOTSTRAP EXECUTABLES {0}] Look if the executables are in the path"
-    executables_str = ', '.join(executables)
-    tty.debug(msg.format(executables_str))
-    found = spack.util.executable.which_string(*executables)
-    if found:
-        msg = "[BOOTSTRAP EXECUTABLES {0}] {1} executable found in PATH"
-        tty.debug(msg.format(executables_str, found))
-        return True
-    return False
-
-
 def _executables_in_store(executables, abstract_spec_str):
     """Return True if at least one of the executables can be retrieved from
     a spec in store, False otherwise.
@@ -209,14 +194,12 @@ def _executables_in_store(executables, abstract_spec_str):
     if installed_specs:
         for concrete_spec in installed_specs:
             bin_dir = concrete_spec.prefix.bin
-            if os.path.exists(bin_dir) and os.path.isdir(bin_dir):
-                current_path = os.environ['PATH']
-
-                os.environ['PATH'] = ':'.join([bin_dir, current_path])
-                if _executables_in_path(executables):
-                    return True
-                os.environ['PATH'] = current_path
-
+            # IF we have a "bin" directory and it contains
+            # the executables we are looking for
+            if (os.path.exists(bin_dir) and os.path.isdir(bin_dir) and
+                    spack.util.executable.which_string(*executables, path=bin_dir)):
+                spack.util.environment.path_put_first('PATH', [bin_dir])
+                return True
     return False
 
 
@@ -297,7 +280,7 @@ class _BuildcacheBootstrapper(object):
         # Ensure we see only the buildcache being used to bootstrap
         with spack.config.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
-            # specs that wwe know by dag hash.
+            # specs that we know by dag hash.
             spack.binary_distribution.binary_index.regenerate_spec_cache()
             index = spack.binary_distribution.update_cache_and_get_specs()
 
@@ -541,7 +524,7 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
     Raises:
         RuntimeError: if the executables cannot be ensured to be in PATH
     """
-    if _executables_in_path(executables):
+    if spack.util.executable.which_string(*executables):
         return
 
     executables_str = ', '.join(executables)
