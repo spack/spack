@@ -42,16 +42,16 @@ class Portage(CMakePackage):
 
     Tangram = ['mpi', 'jali', 'flecsisp', 'thrust', 'kokkos', 'cuda']
 
-#   tangram depends on loop
+    # tangram depends on loop
     for i in Tangram:
         depends_on('lanl_ristra.tangram@master+' + i, when='+tangram+' + i)
         depends_on('lanl_ristra.tangram@master~' + i, when='+tangram~' + i)
 
     depends_on('lanl_ristra.wonton@master')
-#   Wonton depends array
+    # Wonton depends array
     Wonton = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
 
-#   Wonton depends on loop
+    # Wonton depends on loop
     for i in Wonton:
         depends_on('lanl_ristra.wonton@master+' + i, when='+' + i)
         depends_on('lanl_ristra.wonton@master~' + i, when='~' + i)
