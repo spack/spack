@@ -15,8 +15,7 @@ class RLme4(RPackage):
     numerical linear algebra and 'RcppEigen' "glue"."""
 
     homepage = "https://github.com/lme4/lme4/"
-    url      = "https://cloud.r-project.org/src/contrib/lme4_1.1-12.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/lme4"
+    cran = "lme4"
 
     version('1.1-27.1', sha256='25fa873e39b8192e48c15eec93db8c8bf6f03baf3bd8d5ca9188482ce8442ec5')
     version('1.1-27', sha256='fe0391c76c78188ac1eefb18014d0607212c909b55474d985a919b55efe5a15f')
