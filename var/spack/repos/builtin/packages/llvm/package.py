@@ -465,7 +465,7 @@ class Llvm(CMakePackage, CudaPackage):
             define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
         ]
 
-        if python.version >= Version("3.0.0"):
+        if python.version >= Version("3"):
             cmake_args.append(define("Python3_EXECUTABLE", python.command.path))
         else:
             cmake_args.append(define("Python2_EXECUTABLE", python.command.path))
@@ -499,14 +499,14 @@ class Llvm(CMakePackage, CudaPackage):
 
         cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "omp_debug"))
 
-        if spec.satisfies("@5.0.0:"):
-            cmake_args.append(define("LLDB_USE_SYSTEM_SIX",
-                                     "+python" in spec and "+lldb" in spec))
-
-        if "+lldb" in spec and spec.satisfies("@:9.9.9"):
-            cmake_args.append(define("LLDB_DISABLE_PYTHON", '~python' in spec))
-        if "+lldb" in spec and spec.satisfies("@10.0.0:"):
-            cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", 'python'))
+        if "+lldb" in spec:
+            if spec.version >= Version('10'):
+                cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", 'python'))
+            else:
+                cmake_args.append(define("LLDB_DISABLE_PYTHON",
+                                         '~python' in spec))
+            if spec.satisfies("@5.0.0: +python"):
+                cmake_args.append(define("LLDB_USE_SYSTEM_SIX", True))
 
         if "+gold" in spec:
             cmake_args.append(
@@ -539,12 +539,6 @@ class Llvm(CMakePackage, CudaPackage):
         if "+polly" in spec:
             projects.append("polly")
             cmake_args.append(define("LINK_POLLY_INTO_TOOLS", True))
-            cmake_args.append("-DLINK_POLLY_INTO_TOOLS:Bool=ON")
-
-        if "+shared_libs" in spec:
-            cmake_args.append("-DBUILD_SHARED_LIBS:Bool=ON")
-        if "+llvm_dylib" in spec:
-            cmake_args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
 
         cmake_args.append(from_variant("BUILD_SHARED_LIBS", "shared_libs"))
         cmake_args.append(from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"))
