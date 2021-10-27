@@ -80,4 +80,3 @@ def test_rewire_bin(mock_fetch, install_mockery):
                                           spack.store.layout.manifest_file_name)
         assert os.path.exists(manifest_file_path)
         # monkeypatch the modulefile_generation hook to an accumulator
-        # Make sure it's called with expected arguments
