@@ -186,8 +186,9 @@ def clean_environment():
 
     # Avoid <packagename>_ROOT user variables overriding spack dependencies
     # https://cmake.org/cmake/help/latest/variable/PackageName_ROOT.html
+    # Spack needs SPACK_ROOT though, so we need to exclude that
     for varname in os.environ.keys():
-        if varname.endswith('_ROOT'):
+        if varname.endswith('_ROOT') and varname != 'SPACK_ROOT':
             env.unset(varname)
 
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
