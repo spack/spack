@@ -18,6 +18,7 @@ class GdkPixbuf(Package):
     list_url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
     list_depth = 1
 
+    version('2.42.6', sha256='c4a6b75b7ed8f58ca48da830b9fa00ed96d668d3ab4b1f723dcf902f78bde77f')
     version('2.42.2', sha256='83c66a1cfd591d7680c144d2922c5955d38b4db336d7cd3ee109f7bcf9afef15')
     version('2.40.0', sha256='1582595099537ca8ff3b99c6804350b4c058bb8ad67411bbaae024ee7cead4e6')
     version('2.38.2', sha256='73fa651ec0d89d73dd3070b129ce2203a66171dfc0bd2caa3570a9c93d2d0781')
@@ -25,6 +26,7 @@ class GdkPixbuf(Package):
     version('2.31.2', sha256='9e467ed09894c802499fb2399cd9a89ed21c81700ce8f27f970a833efb1e47aa', deprecated=True)
 
     variant('x11', default=False, description="Enable X11 support")
+    variant('tiff', default=True, description="Enable TIFF support")
     # Man page creation was getting docbook errors, see issue #18853
     variant('man', default=False, description="Enable man page creation")
 
@@ -43,7 +45,7 @@ class GdkPixbuf(Package):
     depends_on('jpeg')
     depends_on('libpng')
     depends_on('zlib')
-    depends_on('libtiff')
+    depends_on('libtiff@:3.9.7', when='+tiff')
     depends_on('gobject-introspection')
     depends_on('libx11', when='+x11')
 
@@ -73,11 +75,9 @@ class GdkPixbuf(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
-            meson_args = std_meson_args
-            meson_args += [
-                '-Dx11={0}'.format('+x11' in spec),
-                '-Dman={0}'.format('+man' in spec),
-            ]
+            meson_args = std_meson_args + ['-Dman={0}'.format('+man' in spec)]
+            if spec.satisfies('@:2.40'):
+                meson_args += ['-Dx11={0}'.format('+x11' in spec)]
             meson('..', *meson_args)
             ninja('-v')
             if self.run_tests:
