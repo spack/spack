@@ -101,7 +101,7 @@ class OmegaH(CMakePackage):
         return (None, None, flags)
 
     def test(self):
-        if self.spec.version <= Version('9.34.1'):
+        if self.spec.version < Version('9.34.1'):
             print('Skipping tests since only relevant for versions > 9.34.1')
             return
 
