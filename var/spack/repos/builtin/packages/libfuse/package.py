@@ -21,9 +21,18 @@ class Libfuse(MesonPackage):
     version('3.9.3',  sha256='0f8f7ad9cc6667c6751efa425dd0a665dcc9d75f0b7fc0cb5b85141a514110e9')
     version('3.9.2',  sha256='b4409255cbda6f6975ca330f5b04cb335b823a95ddd8c812c3d224ec53478fc0')
 
-    variant('useroot', default=False)
+    variant('useroot', default=False, description="Use root privileges to make fusermount a setuid binary after installation")
+    variant('system_install', default=False, description=(
+        "Do not run the post-install script "
+        "which typically sets up udev rules and "
+        "and init script in /etc/init.d"))
 
-    executables = ['^fusermount$']
+    conflicts("+useroot", when='~system_install', msg="useroot requires system_install")
+
+    # Drops the install script which does system configuration
+    patch('0001-Do-not-run-install-script.patch', when='~system_install')
+
+    executables = ['^fusermount3?$']
 
     @classmethod
     def determine_version(cls, exe):

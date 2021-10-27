@@ -47,6 +47,13 @@ class Claw(CMakePackage):
 
     filter_compiler_wrappers('claw_f.conf', relative_root='etc')
 
+    def flag_handler(self, name, flags):
+        # https://gcc.gnu.org/gcc-10/porting_to.html
+        if name == 'cflags' and self.spec.satisfies('%gcc@10:'):
+            flags.append('-fcommon')
+
+        return flags, None, None
+
     def cmake_args(self):
         args = [
             '-DOMNI_CONF_OPTION=--with-libxml2=%s' %

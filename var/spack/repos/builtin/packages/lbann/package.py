@@ -182,7 +182,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99: +pfe')
     extends("python", when='+pfe')
     depends_on('py-setuptools', type='build', when='+pfe')
-    depends_on('py-argparse', type='run', when='@:0.90,0.99: ^python@:2.6 +pfe')
+    depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6')
     depends_on('py-configparser', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')
@@ -229,15 +229,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             args.append(
                 '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
             )
-        # Use a high performance linker
-        if self.spec.satisfies('%clang'):
-            args.extend([
-                '-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld',
-                '-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld'])
-        elif self.spec.satisfies('%gcc'):
-            args.extend([
-                '-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold',
-                '-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold'])
 
         return args
 
@@ -358,9 +349,11 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
+                cxxflags_str = " ".join(self.spec.compiler_flags['cxxflags'])
                 args.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
-                    ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
+                    ' -g -fsized-deallocation -fPIC -std=c++17 {1}'.format(
+                        arch_str, cxxflags_str)
                 )
 
         return args

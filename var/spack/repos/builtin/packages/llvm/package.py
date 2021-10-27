@@ -67,8 +67,9 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "flang",
-        default=True,
-        description="Build the LLVM Fortran compiler frontend",
+        default=False,
+        description="Build the LLVM Fortran compiler frontend "
+        "(experimental - parser only, needs GCC)",
     )
     variant(
         "omp_debug",

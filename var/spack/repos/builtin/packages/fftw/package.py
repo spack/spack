@@ -226,7 +226,8 @@ class Fftw(FftwBase):
     provides('fftw-api@2', when='@2.1.5')
     provides('fftw-api@3', when='@3:')
 
-    patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
+    patch('pfft-3.3.9.patch', when="@3.3.9:+pfft_patches", level=0)
+    patch('pfft-3.3.5.patch', when="@3.3.5:3.3.8+pfft_patches", level=0)
     patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
     patch('pgi-3.3.6-pl2.patch', when="@3.3.6-pl2%pgi", level=0)
     patch('intel-configure.patch', when="@3:3.3.8%intel", level=0)
