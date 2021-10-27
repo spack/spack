@@ -473,7 +473,6 @@ class RepoPath(object):
         self.repos = []
         self.by_namespace = nm.NamespaceTrie()
 
-        self._all_package_names = None
         self._provider_index = None
         self._patch_index = None
 
@@ -544,15 +543,17 @@ class RepoPath(object):
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    def all_package_names(self, include_virtuals=False):
+    @llnl.util.lang.memoized
+    def _all_package_names(self, include_virtuals):
         """Return all unique package names in all repositories."""
-        if self._all_package_names is None:
-            all_pkgs = set()
-            for repo in self.repos:
-                for name in repo.all_package_names(include_virtuals):
-                    all_pkgs.add(name)
-            self._all_package_names = sorted(all_pkgs, key=lambda n: n.lower())
-        return self._all_package_names
+        all_pkgs = set()
+        for repo in self.repos:
+            for name in repo.all_package_names(include_virtuals):
+                all_pkgs.add(name)
+        return sorted(all_pkgs, key=lambda n: n.lower())
+
+    def all_package_names(self, include_virtuals=False):
+        return self._all_package_names(include_virtuals)
 
     def packages_with_tags(self, *tags):
         r = set()
