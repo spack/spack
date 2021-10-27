@@ -145,6 +145,11 @@ class Llvm(CMakePackage, CudaPackage):
         default=False,
         description="Build with OpenMP capable thread sanitizer",
     )
+    variant(
+        "omp_as_runtime",
+        default=True,
+        description="Build OpenMP runtime via ENABLE_RUNTIME by just-built Clang",
+    )
     variant('code_signing', default=False,
             description="Enable code-signing on macOS")
     variant("python", default=False, description="Install python bindings")
@@ -209,6 +214,10 @@ class Llvm(CMakePackage, CudaPackage):
 
     # OMP TSAN exists in > 5.x
     conflicts("+omp_tsan", when="@:5")
+
+    # OpenMP via ENABLE_RUNTIME restrictions
+    conflicts("+omp_as_runtime", when="~clang", msg="omp_as_runtime requires clang being built.")
+    conflicts("+omp_as_runtime", when="@:11.1", msg="omp_as_runtime works since LLVM 12.")
 
     # cuda_arch value must be specified
     conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
@@ -461,6 +470,7 @@ class Llvm(CMakePackage, CudaPackage):
                               python.command.path))
 
         projects = []
+        runtimes = []
 
         if "+cuda" in spec:
             cmake_args.extend(
@@ -474,6 +484,17 @@ class Llvm(CMakePackage, CudaPackage):
                     ),
                 ]
             )
+            if "+omp_as_runtime" in spec:
+                cmake_args.append(
+                    "-DLIBOMPTARGET_NVPTX_ENABLE_BCLIB:BOOL=TRUE"
+                )
+
+                # work around bad libelf detection in libomptarget
+                cmake_args.append(
+                    "-DLIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR:String={0}".format(
+                        spec["libelf"].prefix.include
+                    )
+                )
         else:
             # still build libomptarget but disable cuda
             cmake_args.extend(
@@ -506,7 +527,11 @@ class Llvm(CMakePackage, CudaPackage):
         if "+clang" in spec:
             projects.append("clang")
             projects.append("clang-tools-extra")
-            projects.append("openmp")
+            if "+omp_as_runtime" in spec:
+                runtimes.append("openmp")
+            else:
+                projects.append("openmp")
+
         if "+flang" in spec:
             projects.append("flang")
         if "+lldb" in spec:
@@ -530,8 +555,6 @@ class Llvm(CMakePackage, CudaPackage):
             cmake_args.append("-DBUILD_SHARED_LIBS:Bool=ON")
         if "+llvm_dylib" in spec:
             cmake_args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
-        if "+omp_debug" in spec:
-            cmake_args.append("-DLIBOMPTARGET_ENABLE_DEBUG:Bool=ON")
 
         if "+split_dwarf" in spec:
             cmake_args.append("-DLLVM_USE_SPLIT_DWARF:Bool=ON")
@@ -598,6 +621,12 @@ class Llvm(CMakePackage, CudaPackage):
             "-DLLVM_ENABLE_PROJECTS:STRING={0}".format(";".join(projects))
         )
 
+        # Semicolon seperated list of runtimes to enable
+        if runtimes:
+            cmake_args.append(
+                "-DLLVM_ENABLE_RUNTIMES:STRING={0}".format(";".join(runtimes))
+            )
+
         return cmake_args
 
     @run_before("build")
@@ -614,8 +643,8 @@ class Llvm(CMakePackage, CudaPackage):
     def post_install(self):
         spec = self.spec
 
-        # unnecessary if we get bootstrap builds in here
-        if "+cuda" in self.spec:
+        # unnecessary if we build openmp via LLVM_ENABLE_RUNTIMES
+        if "+cuda" in self.spec and "+omp_as_runtime" not in self.spec:
             ompdir = "build-bootstrapped-omp"
             # rebuild libomptarget to get bytecode runtime library files
             with working_dir(ompdir, create=True):

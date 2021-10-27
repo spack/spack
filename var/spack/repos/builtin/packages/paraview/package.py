@@ -56,6 +56,7 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
+    variant('adios2', default=False, description='Enable ADIOS2 support')
 
     variant('advanced_debug', default=False, description="Enable all other debug flags beside build_type, such as VTK_DEBUG_LEAK")
 
@@ -129,6 +130,7 @@ class Paraview(CMakePackage, CudaPackage):
     # depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
+    depends_on('adios2', when='+adios2')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libogg')
@@ -335,6 +337,11 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DVTK_USE_SYSTEM_UTF8:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_XDMF2:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_XDMF3:BOOL=OFF'])
+
+        if '+adios2' in spec:
+            cmake_args.extend([
+                '-DPARAVIEW_ENABLE_ADIOS2:BOOL=ON'
+            ])
 
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used

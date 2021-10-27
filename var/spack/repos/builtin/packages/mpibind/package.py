@@ -35,7 +35,7 @@ class Mpibind(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
-    depends_on('pkgconf',  type='build')
+    depends_on('pkgconfig', type='build')
 
     depends_on('hwloc@2:+libxml2', type='link')
     depends_on('hwloc@2:+pci', when=(sys.platform != 'darwin'), type='link')

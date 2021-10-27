@@ -37,6 +37,8 @@ class HipRocclr(CMakePackage):
     version('3.7.0', sha256='a49f464bb2eab6317e87e3cc249aba3b2517a34fbdfe50175f0437f69a219adc')
     version('3.5.0', sha256='87c1ee9f02b8aa487b628c543f058198767c474cec3d21700596a73c028959e1')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3:', type='build')
     depends_on('mesa18~llvm@18.3: swr=none', type='link')
     depends_on('libelf', type='link', when="@3.7.0:3.8.0")

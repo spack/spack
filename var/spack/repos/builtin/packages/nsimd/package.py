@@ -12,6 +12,7 @@ class Nsimd(CMakePackage):
 
     maintainers = ['eschnett']
 
+    version('3.0', sha256='5cab09020ce3a6819ddb3b3b8cafa6bc1377821b596c0f2954f52c852d092d5c')
     version('2.2', sha256='7916bec6c8ea9ddc690a5bfc80fb1b9402f9e1b2a4b4bb6b6bb8eb5a07eb018e')
     version('2.1', sha256='3274f1061d1fac170130b8c75378a6b94580629b3dc1d53db244b51500ee4695')
     # Version 2.0 is disabled since it does not support cmake
@@ -27,6 +28,7 @@ class Nsimd(CMakePackage):
                 'SSE2', 'SSE42', 'AVX', 'AVX2', 'AVX512_KNL', 'AVX512_SKYLAKE',
                 'NEON128', 'AARCH64',
                 'SVE', 'SVE128', 'SVE256', 'SVE512', 'SVE1024', 'SVE2048',
+                'VMX', 'VSX',
                 'CUDA', 'ROCM',
             ),
             multi=False)
@@ -44,6 +46,10 @@ class Nsimd(CMakePackage):
               msg="SIMD extension not available in version @:1")
     conflicts('simd=SVE2048', when=('@:1'),
               msg="SIMD extension not available in version @:1")
+    conflicts('simd=VMX', when=('@:2'),
+              msg="SIMD extension not available in version @:2")
+    conflicts('simd=VSX', when=('@:2'),
+              msg="SIMD extension not available in version @:2")
     conflicts('simd=CUDA', when=('@:1'),
               msg="SIMD extension not available in version @:1")
     conflicts('simd=ROCM', when=('@:1'),
@@ -60,6 +66,7 @@ class Nsimd(CMakePackage):
     depends_on('cmake@2.8.7:', type='build')
     depends_on('cmake@3.0.2:', type='build', when='@2:')
     depends_on('python@3:', type='build')
+    depends_on('py-requests', type='build', when='@3:')
 
     # Add a 'generate_code' phase in the beginning
     phases = ['generate_code'] + CMakePackage.phases

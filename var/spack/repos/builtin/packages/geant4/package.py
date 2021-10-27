@@ -82,7 +82,7 @@ class Geant4(CMakePackage):
         depends_on('xerces-c netaccessor=curl cxxstd=' + std, when='cxxstd=' + std)
 
         # Vecgeom specific versions for each Geant4 version
-        depends_on('vecgeom@1.1.8 cxxstd=' + std,
+        depends_on('vecgeom@1.1.8:1.1 cxxstd=' + std,
                    when='@10.7.0: +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.5 cxxstd=' + std,
                    when='@10.6.0:10.6 +vecgeom cxxstd=' + std)

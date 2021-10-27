@@ -582,7 +582,7 @@ def store_path():
 def _root_path():
     """Root of all the bootstrap related folders"""
     return spack.config.get(
-        'bootstrap:root', spack.paths.user_bootstrap_path
+        'bootstrap:root', spack.paths.default_user_bootstrap_path
     )
 
 

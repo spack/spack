@@ -38,7 +38,6 @@ distro
 * Homepage: https://pypi.python.org/pypi/distro
 * Usage: Provides a more stable linux distribution detection.
 * Version: 1.0.4 (last version supporting Python 2.6)
-* Note: Patched to disable lsb_release by default to improve Spack's startup time.
 
 functools
 ---------
@@ -89,6 +88,8 @@ py
 * Usage: Needed by pytest. Library with cross-python path,
   ini-parsing, io, code, and log facilities.
 * Version: 1.4.34 (last version supporting Python 2.6)
+* Note: This packages has been modified:
+  * https://github.com/pytest-dev/py/pull/186 was backported
 
 pytest
 ------

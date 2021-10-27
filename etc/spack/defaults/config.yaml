@@ -42,8 +42,8 @@ config:
   # (i.e., ``$TMP` or ``$TMPDIR``).
   #
   # Another option that prevents conflicts and potential permission issues is
-  # to specify `~/.spack/stage`, which ensures each user builds in their home
-  # directory.
+  # to specify `$user_cache_path/stage`, which ensures each user builds in their
+  # home directory.
   #
   # A more traditional path uses the value of `$spack/var/spack/stage`, which
   # builds directly inside Spack's instance without staging them in a
@@ -60,13 +60,13 @@ config:
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/$user/spack-stage
-    - ~/.spack/stage
+    - $user_cache_path/stage
   # - $spack/var/spack/stage
 
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
   # name/hash.
-  test_stage: ~/.spack/test
+  test_stage: $user_cache_path/test
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
@@ -75,7 +75,7 @@ config:
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: ~/.spack/cache
+  misc_cache: $user_cache_path/cache
 
 
   # Timeout in seconds used for downloading sources etc. This only applies

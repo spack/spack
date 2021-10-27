@@ -137,6 +137,12 @@ def test_run(args):
     If no specs are listed, run tests for all packages in the current
     environment or all installed packages if there is no active environment.
     """
+    if args.alias:
+        suites = spack.install_test.get_named_test_suites(args.alias)
+        if suites:
+            tty.die('Test suite "{0}" already exists. Try another alias.'
+                    .format(args.alias))
+
     # cdash help option
     if args.help_cdash:
         parser = argparse.ArgumentParser(
