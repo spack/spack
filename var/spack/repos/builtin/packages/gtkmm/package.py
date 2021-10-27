@@ -26,6 +26,7 @@ class Gtkmm(AutotoolsPackage):
     depends_on('gtkplus')
     depends_on('pangomm')
     depends_on('cairomm')
+    depends_on('pkgconfig', type='build')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
