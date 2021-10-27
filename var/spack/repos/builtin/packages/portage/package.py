@@ -49,7 +49,7 @@ class Portage(CMakePackage):
 
     depends_on('lanl_ristra.wonton@master')
     # Wonton depends array
-    wonton_variant= ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
+    wonton_variant = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
 
     # Wonton depends on loop
     for i in wonton_variant:
