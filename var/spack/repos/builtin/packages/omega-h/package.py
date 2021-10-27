@@ -105,21 +105,18 @@ class OmegaH(CMakePackage):
             print('Skipping tests since only relevant for versions > 9.34.1')
             return
 
-        exe = 'osh_box'
+        exe = join_path(self.prefix.bin, 'osh_box')
         options = ['1', '1', '1', '2', '2', '2', 'box.osh']
         description = 'testing mesh construction'
-        self.run_test(exe, options, purpose=description,
-                      work_dir=self.prefix.bin)
+        self.run_test(exe, options, purpose=description)
 
-        exe = 'osh_scale'
+        exe = join_path(self.prefix.bin, 'osh_scale')
         options = ['box.osh', '100', 'box_100.osh']
         expected = 'adapting took'
         description = 'testing mesh adaptation'
-        self.run_test(exe, options, expected, purpose=description,
-                      work_dir=self.prefix.bin)
+        self.run_test(exe, options, expected, purpose=description)
 
-        exe = 'osh2vtk'
+        exe = join_path(self.prefix.bin, 'osh2vtk')
         options = ['box_100.osh', 'box_100_vtk']
         description = 'testing mesh to vtu conversion'
-        self.run_test(exe, options, purpose=description,
-                      work_dir=self.prefix.bin)
+        self.run_test(exe, options, purpose=description)
