@@ -39,9 +39,12 @@ def darwin_url(ver, mach):
 class Hpcviewer(Package):
     """Binary distribution of hpcviewer and integrated hpctraceviewer for
     the Rice HPCToolkit (Linux x86_64, ppc64le and aarch64, and MacOSX
-    x86_64).  Note: hpctoolkit databases are platform independent, so
-    you don't need to install hpctoolkit to run the viewers and it's
-    common to run hpcrun and hpcviewer on different machines."""
+    x86_64).
+
+    Note: hpctoolkit databases are platform independent, so you don't
+    need to install hpctoolkit to run the viewers and it's common to
+    run hpcrun and hpcviewer on different machines.
+    """
 
     homepage = "http://hpctoolkit.org"
     maintainers = ['mwkrentel']
