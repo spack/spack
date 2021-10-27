@@ -48,26 +48,6 @@ jobs:
     - name: Run style tests
       run: |
           share/spack/qa/run-style-tests
-  # Build the documentation
-  documentation:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    - name: Install System packages
-      run: |
-        sudo apt-get -y update
-        sudo apt-get install -y coreutils ninja-build graphviz
-    - name: Install Python packages
-      run: |
-        pip install --upgrade pip six setuptools
-        pip install --upgrade -r lib/spack/docs/requirements.txt
-    - name: Build documentation
-      run: |
-          share/spack/qa/run-doc-tests
-
   # Check which files have been updated by the PR
   changes:
     runs-on: ubuntu-latest
@@ -112,7 +92,7 @@ jobs:
 
   # Run unit tests with different configurations on linux
   unittests:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -177,7 +157,7 @@ jobs:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
   shell:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -215,7 +195,7 @@ jobs:
         flags: shelltests,linux
   # Test for Python2.6 run on Centos 6
   centos6:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     container: spack/github-actions:centos6
     steps:
@@ -248,7 +228,7 @@ jobs:
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack
   rhel8-platform-python:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     if: ${{ needs.changes.outputs.with_coverage == 'true' }}
     container: registry.access.redhat.com/ubi8/ubi
@@ -274,7 +254,7 @@ jobs:
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -320,7 +300,7 @@ jobs:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
   build:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: macos-latest
     strategy:
       matrix:
