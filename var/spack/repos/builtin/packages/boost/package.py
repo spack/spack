@@ -7,9 +7,10 @@ import os
 import sys
 
 from spack import *
+from spack.build_systems.windows_variants import WindowsPackage
 
 
-class Boost(Package):
+class Boost(Package, WindowsPackage):
     """Boost provides free peer-reviewed portable C++ source
        libraries, emphasizing libraries that work well with the C++
        Standard Library.
