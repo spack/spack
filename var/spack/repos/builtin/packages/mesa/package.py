@@ -5,6 +5,7 @@
 
 import itertools
 import sys
+import os
 
 from spack import *
 
@@ -183,11 +184,12 @@ class Mesa(MesonPackage):
             args_platforms.append('x11')
         else:
             args.append('-Dglx=disabled')
-
+        
+        print(spec)
         if '+egl' in spec:
             num_frontends += 1
             args.extend(['-Degl=enabled', '-Dgbm=enabled'])
-            args.append('-Degl-native-platform=`surfaceless')
+            args.append('-Degl-native-platform=surfaceless')
         else:
             args.extend(
                 ['-Degl=disabled', '-Dgbm=disabled'])
@@ -313,7 +315,7 @@ class Mesa(MesonPackage):
         if '+glx +glvnd' in self.spec:
             env.set('__GLX_VENDOR_LIBRARY_NAME', 'mesa')
 
-        if '+glx +glvnd' in self.spec:
-            env.set('__EGL_VENDOR_LIBRARY_FILENAMES', ':'.join((
+        if '+egl +glvnd' in self.spec:
+            env.set('__EGL_VENDOR_LIBRARY_FILENAMES', ''.join((
                 os.path.join(self.spec.prefix, 'share', 'glvnd',
                              'egl_vendor.d', '50_mesa.json'))))
