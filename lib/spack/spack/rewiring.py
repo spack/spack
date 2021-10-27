@@ -18,9 +18,22 @@ import spack.stage
 import spack.store
 
 
+def _relocate_spliced_links(links, orig_prefix, new_prefix):
+    """Re-linking function which differs from `relocate.relocate_links` by
+    reading the old link rather than the new link, since the latter wasn't moved
+    in our case. This still needs to be called after the copy to destination
+    because it expects the new directory structure to be in place."""
+    for link in links:
+        link_target = os.readlink(os.path.join(orig_prefix, link))
+        new_link_path = os.path.join(new_prefix, link)
+        link_target = re.sub(orig_prefix, new_prefix, link_target)
+        os.unlink(new_link_path)
+        os.symlink(link_target, new_link_path)
+
+
 def rewire(spliced_spec):
-    """Will be the main, externally-facing function that simply takes a spliced
-    spec and does all rewiring."""
+    """Given a spliced spec, this function conducts all the rewiring on all
+    nodes in the DAG of that spec."""
     assert spliced_spec.spliced
     for spec in spliced_spec.traverse(order='post', root=True):
         if not spec.build_spec.package.installed:
@@ -31,7 +44,9 @@ def rewire(spliced_spec):
 
 
 def rewire_node(spec, explicit):
-    """Will be the mostly-internal function that gets called iteratively."""
+    """This function rewires a single node, worrying only about references to
+    its subgraph. Binaries, text, and links are all changed in accordance with
+    the splice. The resulting package is then 'installed.'"""
     tempdir = tempfile.mkdtemp()
     # copy anything installed to a temporary directory
     shutil.copytree(spec.build_spec.prefix,
@@ -42,56 +57,42 @@ def rewire_node(spec, explicit):
     prefix_to_prefix = OrderedDict({spec.build_spec.prefix: spec.prefix})
     for build_dep in spec.build_spec.traverse(root=False):
         prefix_to_prefix[build_dep.prefix] = spec[build_dep.name].prefix
-    # determine files that need to be relocated as in write_buildinfo_file
+
     manifest = bindist.get_buildfile_manifest(spec.build_spec)
-    print(manifest)
-    # determine elf or macho
     platform = spack.platforms.by_name(spec.platform)
-    if manifest.get('binary_to_relocate'):
-        bins_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
-                            for rel_path in manifest.get('binary_to_relocate')
-                            ]
     if manifest.get('text_to_relocate'):
         text_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
                             for rel_path in manifest.get('text_to_relocate')]
-    if 'macho' in platform.binary_formats and manifest.get('binary_to_relocate'):
-        relocate.relocate_macho_binaries(bins_to_relocate,
-                                         str(spack.store.layout.root),
-                                         str(spack.store.layout.root),
-                                         prefix_to_prefix,
-                                         False,
-                                         spec.build_spec.prefix,
-                                         spec.prefix
-                                         )
-    if ('elf' in platform.binary_formats and
-        manifest.get('binary_to_relocate')):
-        relocate.relocate_elf_binaries(bins_to_relocate,
-                                       str(spack.store.layout.root),
-                                       str(spack.store.layout.root),
-                                       prefix_to_prefix,
-                                       False,
-                                       spec.build_spec.prefix,
-                                       spec.prefix
-                                       )
-    if manifest.get('text_to_relocate'):
         relocate.relocate_text(files=text_to_relocate,
                                prefixes=prefix_to_prefix)
     if manifest.get('binary_to_relocate'):
+        bins_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
+                            for rel_path in manifest.get('binary_to_relocate')]
+        if 'macho' in platform.binary_formats:
+            relocate.relocate_macho_binaries(bins_to_relocate,
+                                             str(spack.store.layout.root),
+                                             str(spack.store.layout.root),
+                                             prefix_to_prefix,
+                                             False,
+                                             spec.build_spec.prefix,
+                                             spec.prefix)
+        if 'elf' in platform.binary_formats:
+            relocate.relocate_elf_binaries(bins_to_relocate,
+                                           str(spack.store.layout.root),
+                                           str(spack.store.layout.root),
+                                           prefix_to_prefix,
+                                           False,
+                                           spec.build_spec.prefix,
+                                           spec.prefix)
         relocate.relocate_text_bin(binaries=bins_to_relocate,
                                    prefixes=prefix_to_prefix)
-    # print(spec.prefix.bin, ':', os.listdir(spec.prefix.bin))
     # copy package into place (shutil.copytree)
     shutil.copytree(os.path.join(tempdir, spec.dag_hash()), spec.prefix,
                     ignore=shutil.ignore_patterns('.spack/spec.json'))
     if manifest.get('link_to_relocate'):
-        for link in manifest.get('link_to_relocate'):
-            link_target = os.readlink(os.path.join(spec.build_spec.prefix,
-                                                   link))
-            link_target = re.sub(spec.build_spec.prefix,
-                                 spec.prefix,
-                                 link_target)
-            os.unlink(os.path.join(spec.prefix, link))
-            os.symlink(link_target, os.path.join(spec.prefix, link))
+        _relocate_spliced_links(manifest.get('link_to_relocate'),
+                                spec.build_spec.prefix,
+                                spec.prefix)
 
     # handle all metadata changes; don't copy over spec.json file in .spack/
     spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
