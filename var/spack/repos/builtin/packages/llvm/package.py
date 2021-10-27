@@ -451,77 +451,66 @@ class Llvm(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
+        define = CMakePackage.define
+        from_variant = self.define_from_variant
+
         python = spec['python']
         cmake_args = [
-            "-DLLVM_REQUIRES_RTTI:BOOL=ON",
-            "-DLLVM_ENABLE_RTTI:BOOL=ON",
-            "-DLLVM_ENABLE_EH:BOOL=ON",
-            "-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp",
-            "-DPYTHON_EXECUTABLE:PATH={0}".format(python.command.path),
-            "-DLIBOMP_USE_HWLOC:BOOL=ON",
-            "-DLIBOMP_HWLOC_INSTALL_DIR={0}".format(spec["hwloc"].prefix),
+            define("LLVM_REQUIRES_RTTI", True),
+            define("LLVM_ENABLE_RTTI", True),
+            define("LLVM_ENABLE_EH", True),
+            define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
+            define("PYTHON_EXECUTABLE", python.command.path),
+            define("LIBOMP_USE_HWLOC", True),
+            define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
         ]
 
-        if python.version >= Version("3.0.0"):
-            cmake_args.append("-DPython3_EXECUTABLE={0}".format(
-                              python.command.path))
+        if python.version >= Version("3"):
+            cmake_args.append(define("Python3_EXECUTABLE", python.command.path))
         else:
-            cmake_args.append("-DPython2_EXECUTABLE={0}".format(
-                              python.command.path))
+            cmake_args.append(define("Python2_EXECUTABLE", python.command.path))
 
         projects = []
         runtimes = []
 
         if "+cuda" in spec:
-            cmake_args.extend(
-                [
-                    "-DCUDA_TOOLKIT_ROOT_DIR:PATH=" + spec["cuda"].prefix,
-                    "-DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES={0}".format(
-                        ",".join(spec.variants["cuda_arch"].value)
-                    ),
-                    "-DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_{0}".format(
-                        spec.variants["cuda_arch"].value[-1]
-                    ),
-                ]
-            )
+            cmake_args.extend([
+                define("CUDA_TOOLKIT_ROOT_DIR", spec["cuda"].prefix),
+                define("LIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES",
+                       ",".join(spec.variants["cuda_arch"].value)),
+                define("CLANG_OPENMP_NVPTX_DEFAULT_ARCH",
+                       "sm_{0}".format(spec.variants["cuda_arch"].value[-1])),
+            ])
             if "+omp_as_runtime" in spec:
-                cmake_args.append(
-                    "-DLIBOMPTARGET_NVPTX_ENABLE_BCLIB:BOOL=TRUE"
-                )
-
-                # work around bad libelf detection in libomptarget
-                cmake_args.append(
-                    "-DLIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR:String={0}".format(
-                        spec["libelf"].prefix.include
-                    )
-                )
+                cmake_args.extend([
+                    define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
+                    # work around bad libelf detection in libomptarget
+                    define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR",
+                           spec["libelf"].prefix.include),
+                ])
         else:
             # still build libomptarget but disable cuda
-            cmake_args.extend(
-                [
-                    "-DCUDA_TOOLKIT_ROOT_DIR:PATH=IGNORE",
-                    "-DCUDA_SDK_ROOT_DIR:PATH=IGNORE",
-                    "-DCUDA_NVCC_EXECUTABLE:FILEPATH=IGNORE",
-                    "-DLIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES:STRING=IGNORE",
-                ]
-            )
+            cmake_args.extend([
+                define("CUDA_TOOLKIT_ROOT_DIR", "IGNORE"),
+                define("CUDA_SDK_ROOT_DIR", "IGNORE"),
+                define("CUDA_NVCC_EXECUTABLE", "IGNORE"),
+                define("LIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES", "IGNORE"),
+            ])
 
-        if "+omp_debug" in spec:
-            cmake_args.append("-DLIBOMPTARGET_ENABLE_DEBUG:Bool=ON")
+        cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "omp_debug"))
 
-        if "+python" in spec and "+lldb" in spec and spec.satisfies("@5.0.0:"):
-            cmake_args.append("-DLLDB_USE_SYSTEM_SIX:Bool=TRUE")
-
-        if "+lldb" in spec and spec.satisfies("@:9.9.9"):
-            cmake_args.append("-DLLDB_DISABLE_PYTHON:Bool={0}".format(
-                'ON' if '~python' in spec else 'OFF'))
-        if "+lldb" in spec and spec.satisfies("@10.0.0:"):
-            cmake_args.append("-DLLDB_ENABLE_PYTHON:Bool={0}".format(
-                'ON' if '+python' in spec else 'OFF'))
+        if "+lldb" in spec:
+            if spec.version >= Version('10'):
+                cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", 'python'))
+            else:
+                cmake_args.append(define("LLDB_DISABLE_PYTHON",
+                                         '~python' in spec))
+            if spec.satisfies("@5.0.0: +python"):
+                cmake_args.append(define("LLDB_USE_SYSTEM_SIX", True))
 
         if "+gold" in spec:
             cmake_args.append(
-                "-DLLVM_BINUTILS_INCDIR=" + spec["binutils"].prefix.include
+                define("LLVM_BINUTILS_INCDIR", spec["binutils"].prefix.include)
             )
 
         if "+clang" in spec:
@@ -549,15 +538,11 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("libunwind")
         if "+polly" in spec:
             projects.append("polly")
-            cmake_args.append("-DLINK_POLLY_INTO_TOOLS:Bool=ON")
+            cmake_args.append(define("LINK_POLLY_INTO_TOOLS", True))
 
-        if "+shared_libs" in spec:
-            cmake_args.append("-DBUILD_SHARED_LIBS:Bool=ON")
-        if "+llvm_dylib" in spec:
-            cmake_args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
-
-        if "+split_dwarf" in spec:
-            cmake_args.append("-DLLVM_USE_SPLIT_DWARF:Bool=ON")
+        cmake_args.append(from_variant("BUILD_SHARED_LIBS", "shared_libs"))
+        cmake_args.append(from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"))
+        cmake_args.append(from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"))
 
         if "+all_targets" not in spec:  # all is default on cmake
 
@@ -568,31 +553,20 @@ class Llvm(CMakePackage, CudaPackage):
                 # the complete list of targets)
                 targets.append("CppBackend")
 
-            if spec.target.family == "x86" or spec.target.family == "x86_64":
+            if spec.target.family in ("x86", "x86_64"):
                 targets.append("X86")
             elif spec.target.family == "arm":
                 targets.append("ARM")
             elif spec.target.family == "aarch64":
                 targets.append("AArch64")
-            elif (
-                spec.target.family == "sparc"
-                or spec.target.family == "sparc64"
-            ):
+            elif spec.target.family in ("sparc", "sparc64"):
                 targets.append("Sparc")
-            elif (
-                spec.target.family == "ppc64"
-                or spec.target.family == "ppc64le"
-                or spec.target.family == "ppc"
-                or spec.target.family == "ppcle"
-            ):
+            elif spec.target.family in ("ppc64", "ppc64le", "ppc", "ppcle"):
                 targets.append("PowerPC")
 
-            cmake_args.append(
-                "-DLLVM_TARGETS_TO_BUILD:STRING=" + ";".join(targets)
-            )
+            cmake_args.append(define("LLVM_TARGETS_TO_BUILD", targets))
 
-        if "+omp_tsan" in spec:
-            cmake_args.append("-DLIBOMP_TSAN_SUPPORT=ON")
+        cmake_args.append(from_variant("LIBOMP_TSAN_SUPPORT", "omp_tsan"))
 
         if self.compiler.name == "gcc":
             compiler = Executable(self.compiler.cc)
@@ -605,27 +579,23 @@ class Llvm(CMakePackage, CudaPackage):
                     gcc_prefix = line.split(":")[1].strip()
                     gcc_prefix = ancestor(gcc_prefix, 4)
                     break
-            cmake_args.append("-DGCC_INSTALL_PREFIX=" + gcc_prefix)
+            cmake_args.append(define("GCC_INSTALL_PREFIX", gcc_prefix))
 
         if spec.satisfies("@4.0.0:"):
             if spec.satisfies("platform=cray") or spec.satisfies(
                 "platform=linux"
             ):
-                cmake_args.append("-DCMAKE_BUILD_WITH_INSTALL_RPATH=1")
+                cmake_args.append(define("CMAKE_BUILD_WITH_INSTALL_RPATH", "1"))
 
         if self.spec.satisfies("~code_signing platform=darwin"):
-            cmake_args.append('-DLLDB_USE_SYSTEM_DEBUGSERVER=ON')
+            cmake_args.append(define('LLDB_USE_SYSTEM_DEBUGSERVER', True))
 
         # Semicolon seperated list of projects to enable
-        cmake_args.append(
-            "-DLLVM_ENABLE_PROJECTS:STRING={0}".format(";".join(projects))
-        )
+        cmake_args.append(define("LLVM_ENABLE_PROJECTS", projects))
 
         # Semicolon seperated list of runtimes to enable
         if runtimes:
-            cmake_args.append(
-                "-DLLVM_ENABLE_RUNTIMES:STRING={0}".format(";".join(runtimes))
-            )
+            cmake_args.append(define("LLVM_ENABLE_RUNTIMES", runtimes))
 
         return cmake_args
 
@@ -642,6 +612,7 @@ class Llvm(CMakePackage, CudaPackage):
     @run_after("install")
     def post_install(self):
         spec = self.spec
+        define = CMakePackage.define
 
         # unnecessary if we build openmp via LLVM_ENABLE_RUNTIMES
         if "+cuda" in self.spec and "+omp_as_runtime" not in self.spec:
@@ -650,25 +621,17 @@ class Llvm(CMakePackage, CudaPackage):
             with working_dir(ompdir, create=True):
                 cmake_args = [
                     self.stage.source_path + "/openmp",
-                    "-DCMAKE_C_COMPILER:PATH={0}".format(
-                        spec.prefix.bin + "/clang"
-                    ),
-                    "-DCMAKE_CXX_COMPILER:PATH={0}".format(
-                        spec.prefix.bin + "/clang++"
-                    ),
-                    "-DCMAKE_INSTALL_PREFIX:PATH={0}".format(spec.prefix),
+                    define("CMAKE_C_COMPILER", spec.prefix.bin + "/clang"),
+                    define("CMAKE_CXX_COMPILER", spec.prefix.bin + "/clang++"),
+                    define("CMAKE_INSTALL_PREFIX", spec.prefix),
                 ]
                 cmake_args.extend(self.cmake_args())
-                cmake_args.append(
-                    "-DLIBOMPTARGET_NVPTX_ENABLE_BCLIB:BOOL=TRUE"
-                )
+                cmake_args.append(define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB",
+                                         True))
 
                 # work around bad libelf detection in libomptarget
-                cmake_args.append(
-                    "-DLIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR:String={0}".format(
-                        spec["libelf"].prefix.include
-                    )
-                )
+                cmake_args.append(define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR",
+                                         spec["libelf"].prefix.include))
 
                 cmake(*cmake_args)
                 make()
