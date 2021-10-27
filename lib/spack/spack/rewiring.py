@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 import shutil
 import tempfile
-from pprint import pprint
 
 from ordereddict_backport import OrderedDict
 
@@ -16,8 +16,6 @@ import spack.paths
 import spack.relocate as relocate
 import spack.stage
 import spack.store
-from spack.installer import PackageInstaller
-from spack.spec import Spec
 
 
 def rewire(spliced_spec):
@@ -46,21 +44,18 @@ def rewire_node(spec, explicit):
         prefix_to_prefix[build_dep.prefix] = spec[build_dep.name].prefix
     # determine files that need to be relocated as in write_buildinfo_file
     manifest = bindist.get_buildfile_manifest(spec.build_spec)
-    pprint(manifest)
+    print(manifest)
     # determine elf or macho
     platform = spack.platforms.by_name(spec.platform)
-    if manifest.get('relocate_binaries'):
-        binaries_to_relocate = [os.path.join(tempdir, spec.dag_hash(), filename)
-                                for filename in manifest.get('relocate_binaries')
-                                ]
+    if manifest.get('binary_to_relocate'):
+        bins_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
+                            for rel_path in manifest.get('binary_to_relocate')
+                            ]
     if manifest.get('text_to_relocate'):
-        text_to_relocate = [os.path.join(tempdir, spec.dag_hash(), filename)
-                            for filename in manifest.get('text_to_relocate')]
-    if manifest.get('link_to_relocate'):
-        link_to_relocate = [os.path.join(tempdir, spec.dag_hash(), filename)
-                            for filename in manifest.get('link_to_relocate')]
-    if 'macho' in platform.binary_formats and manifest.get('relocate_binaries'):
-        relocate.relocate_macho_binaries(binaries_to_relocate,
+        text_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
+                            for rel_path in manifest.get('text_to_relocate')]
+    if 'macho' in platform.binary_formats and manifest.get('binary_to_relocate'):
+        relocate.relocate_macho_binaries(bins_to_relocate,
                                          str(spack.store.layout.root),
                                          str(spack.store.layout.root),
                                          prefix_to_prefix,
@@ -69,9 +64,8 @@ def rewire_node(spec, explicit):
                                          spec.prefix
                                          )
     if ('elf' in platform.binary_formats and
-        manifest.get('relocate_binaries') and
-        manifest.get('link_to_relocate')):
-        relocate.relocate_elf_binaries(binaries_to_relocate,
+        manifest.get('binary_to_relocate')):
+        relocate.relocate_elf_binaries(bins_to_relocate,
                                        str(spack.store.layout.root),
                                        str(spack.store.layout.root),
                                        prefix_to_prefix,
@@ -79,16 +73,26 @@ def rewire_node(spec, explicit):
                                        spec.build_spec.prefix,
                                        spec.prefix
                                        )
-        relocate.relocate_links(link_to_relocate,
-                                str(spack.store.layout.root),
-                                spec.build_spec.prefix,
-                                spec.prefix)
     if manifest.get('text_to_relocate'):
         relocate.relocate_text(files=text_to_relocate,
                                prefixes=prefix_to_prefix)
+    if manifest.get('binary_to_relocate'):
+        relocate.relocate_text_bin(binaries=bins_to_relocate,
+                                   prefixes=prefix_to_prefix)
+    # print(spec.prefix.bin, ':', os.listdir(spec.prefix.bin))
     # copy package into place (shutil.copytree)
     shutil.copytree(os.path.join(tempdir, spec.dag_hash()), spec.prefix,
                     ignore=shutil.ignore_patterns('.spack/spec.json'))
+    if manifest.get('link_to_relocate'):
+        for link in manifest.get('link_to_relocate'):
+            link_target = os.readlink(os.path.join(spec.build_spec.prefix,
+                                                   link))
+            link_target = re.sub(spec.build_spec.prefix,
+                                 spec.prefix,
+                                 link_target)
+            os.unlink(os.path.join(spec.prefix, link))
+            os.symlink(link_target, os.path.join(spec.prefix, link))
+
     # handle all metadata changes; don't copy over spec.json file in .spack/
     spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
     # add to database, not sure about explicit
