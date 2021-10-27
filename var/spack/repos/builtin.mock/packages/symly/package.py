@@ -39,8 +39,7 @@ int main() {
         print("prefix.bin", prefix.bin)
         copy('symly.bin', '%s/symly' % prefix.bin)
         # create a symlinked file.
-        os.symlink(
-                   '%s/symly' % prefix.bin,
+        os.symlink('%s/symly' % prefix.bin,
                    '%s/symly' % prefix.lib64)
         # Create a symlinked directory.
         os.symlink(prefix.bin, prefix.include)
