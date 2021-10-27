@@ -26,7 +26,6 @@ class PyCffi(PythonPackage):
     depends_on('pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-pycparser', type=('build', 'run'))
-    depends_on('py-pycparser@2.19:', when='^python@:2.6', type=('build', 'run'))
     depends_on('libffi')
 
     def setup_build_environment(self, env):
