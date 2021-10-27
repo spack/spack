@@ -11,7 +11,7 @@ class RLibcoin(RPackage):
 
     Basic infrastructure for linear test statistics and permutation
     inference in the framework of Strasser and Weber (1999)
-    <http://epub.wu.ac.at/102/>. This package must not be used by end-users.
+    <https://epub.wu.ac.at/102/>. This package must not be used by end-users.
     CRAN package 'coin' implements all user interfaces and is ready to be used
     by anyone."""
 

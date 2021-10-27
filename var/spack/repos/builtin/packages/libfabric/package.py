@@ -14,7 +14,10 @@ class Libfabric(AutotoolsPackage):
     url      = "https://github.com/ofiwg/libfabric/releases/download/v1.8.0/libfabric-1.8.0.tar.bz2"
     git      = "https://github.com/ofiwg/libfabric.git"
 
+    maintainers = ['rajachan']
+
     version('master', branch='master')
+    version('1.13.1', sha256='8e6eed38c4a39aa4cbf7d5d3734f0eecbfc030182f1f9b3be470702f2586d30e')
     version('1.12.1', sha256='db3c8e0a495e6e9da6a7436adab905468aedfbd4579ee3da5232a5c111ba642c')
     version('1.12.0', sha256='ca98785fe25e68a26c61e272be64a1efeea37e61b0dcebd34ccfd381bda7d9cc')
     version('1.11.2', sha256='ff2ba821b55a54855d327e6f6fb8a14312c9c9ca7c873525b6a246d8f974d7da')
@@ -35,21 +38,22 @@ class Libfabric(AutotoolsPackage):
     version('1.5.0', sha256='88a8ad6772f11d83e5b6f7152a908ffcb237af273a74a1bd1cb4202f577f1f23')
     version('1.4.2', sha256='5d027d7e4e34cb62508803e51d6bd2f477932ad68948996429df2bfff37ca2a5')
 
-    fabrics = ('psm',
-               'psm2',
-               'sockets',
-               'verbs',
-               'usnic',
+    fabrics = ('efa',
                'gni',
-               'xpmem',
-               'udp',
+               'mlx',
+               'mrail',
+               'psm',
+               'psm2',
+               'psm3',
                'rxm',
                'rxd',
-               'mlx',
+               'shm',
+               'sockets',
                'tcp',
-               'efa',
-               'mrail',
-               'shm')
+               'udp',
+               'usnic',
+               'verbs',
+               'xpmem')
 
     variant('fabrics',
             default='sockets,tcp,udp',
@@ -63,6 +67,9 @@ class Libfabric(AutotoolsPackage):
     #   frequently conflicts with MPI.
     variant('kdreg', default=False,
             description='Enable kdreg on supported Cray platforms')
+
+    variant('debug', default=False,
+            description='Enable debugging')
 
     # For version 1.9.0:
     # headers: fix forward-declaration of enum fi_collective_op with C++
@@ -94,6 +101,8 @@ class Libfabric(AutotoolsPackage):
 
     def configure_args(self):
         args = []
+
+        args.extend(self.enable_or_disable('debug'))
 
         if '+kdreg' in self.spec:
             args.append('--with-kdreg=yes')

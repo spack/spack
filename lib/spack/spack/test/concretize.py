@@ -4,24 +4,22 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-import pytest
 import jinja2
+import pytest
 
 import archspec.cpu
 
 import llnl.util.lang
 
-import spack.architecture
+import spack.compilers
 import spack.concretize
 import spack.error
+import spack.platforms
 import spack.repo
-
 from spack.concretize import find_spec
 from spack.spec import Spec
-from spack.version import ver
 from spack.util.mock_package import MockPackageMultiRepo
-import spack.compilers
-import spack.platforms.test
+from spack.version import ver
 
 
 def check_spec(abstract, concrete):
@@ -99,20 +97,14 @@ def current_host(request, monkeypatch):
     cpu, _, is_preference = request.param.partition('-')
     target = archspec.cpu.TARGETS[cpu]
 
-    # this function is memoized, so clear its state for testing
-    spack.architecture.get_platform.cache.clear()
-
-    monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
-    monkeypatch.setattr(spack.platforms.test.Test, 'front_end', cpu)
+    monkeypatch.setattr(spack.platforms.Test, 'default', cpu)
+    monkeypatch.setattr(spack.platforms.Test, 'front_end', cpu)
     if not is_preference:
         monkeypatch.setattr(archspec.cpu, 'host', lambda: target)
         yield target
     else:
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
-
-    # clear any test values fetched
-    spack.architecture.get_platform.cache.clear()
 
 
 @pytest.fixture()
@@ -435,7 +427,7 @@ class TestConcretize(object):
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
         # TODO: improved way to check for this.
-        platform = spack.architecture.real_platform().name
+        platform = spack.platforms.real_host().name
         if platform == 'darwin' or platform == 'linux':
             return
 
@@ -689,7 +681,7 @@ class TestConcretize(object):
 
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
-        ('mpileaks%gcc@4.4.7 target=x86_64:', 'core2'),
+        ('mpileaks%gcc@4.4.7 ^dyninst@10.2.1 target=x86_64:', 'core2'),
         ('mpileaks%gcc@4.8 target=x86_64:', 'haswell'),
         ('mpileaks%gcc@5.3.0 target=x86_64:', 'broadwell'),
         ('mpileaks%apple-clang@5.1.0 target=x86_64:', 'x86_64')
@@ -1183,3 +1175,116 @@ class TestConcretize(object):
         assert '~foo' in s['external-non-default-variant']
         assert '~bar' in s['external-non-default-variant']
         assert s['external-non-default-variant'].external
+
+    @pytest.mark.regression('22871')
+    @pytest.mark.parametrize('spec_str,expected_os', [
+        ('mpileaks', 'os=debian6'),
+        # To trigger the bug in 22871 we need to have the same compiler
+        # spec available on both operating systems
+        ('mpileaks%gcc@4.5.0 platform=test os=debian6', 'os=debian6'),
+        ('mpileaks%gcc@4.5.0 platform=test os=redhat6', 'os=redhat6')
+    ])
+    def test_os_selection_when_multiple_choices_are_possible(
+            self, spec_str, expected_os
+    ):
+        s = Spec(spec_str).concretized()
+
+        for node in s.traverse():
+            assert node.satisfies(expected_os)
+
+    @pytest.mark.regression('22718')
+    @pytest.mark.parametrize('spec_str,expected_compiler', [
+        ('mpileaks', '%gcc@4.5.0'),
+        ('mpileaks ^mpich%clang@3.3', '%clang@3.3')
+    ])
+    def test_compiler_is_unique(self, spec_str, expected_compiler):
+        s = Spec(spec_str).concretized()
+
+        for node in s.traverse():
+            assert node.satisfies(expected_compiler)
+
+    @pytest.mark.parametrize('spec_str,expected_dict', [
+        # Check the defaults from the package (libs=shared)
+        ('multivalue-variant', {
+            'libs=shared': True,
+            'libs=static': False
+        }),
+        # Check that libs=static doesn't extend the default
+        ('multivalue-variant libs=static', {
+            'libs=shared': False,
+            'libs=static': True
+        }),
+    ])
+    def test_multivalued_variants_from_cli(self, spec_str, expected_dict):
+        s = Spec(spec_str).concretized()
+
+        for constraint, value in expected_dict.items():
+            assert s.satisfies(constraint) == value
+
+    @pytest.mark.regression('22351')
+    @pytest.mark.parametrize('spec_str,expected', [
+        # Version 1.1.0 is deprecated and should not be selected, unless we
+        # explicitly asked for that
+        ('deprecated-versions', ['deprecated-versions@1.0.0']),
+        ('deprecated-versions@1.1.0', ['deprecated-versions@1.1.0']),
+    ])
+    def test_deprecated_versions_not_selected(self, spec_str, expected):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec(spec_str).concretized()
+
+        for abstract_spec in expected:
+            assert abstract_spec in s
+
+    @pytest.mark.regression('24196')
+    def test_version_badness_more_important_than_default_mv_variants(self):
+        # If a dependency had an old version that for some reason pulls in
+        # a transitive dependency with a multi-valued variant, that old
+        # version was preferred because of the order of our optimization
+        # criteria.
+        s = spack.spec.Spec('root').concretized()
+        assert s['gmt'].satisfies('@2.0')
+
+    @pytest.mark.regression('24205')
+    def test_provider_must_meet_requirements(self):
+        # A package can be a provider of a virtual only if the underlying
+        # requirements are met.
+        s = spack.spec.Spec('unsat-virtual-dependency')
+        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+            s.concretize()
+
+    @pytest.mark.regression('23951')
+    def test_newer_dependency_adds_a_transitive_virtual(self):
+        # Ensure that a package doesn't concretize any of its transitive
+        # dependencies to an old version because newer versions pull in
+        # a new virtual dependency. The possible concretizations here are:
+        #
+        # root@1.0 <- middle@1.0 <- leaf@2.0 <- blas
+        # root@1.0 <- middle@1.0 <- leaf@1.0
+        #
+        # and "blas" is pulled in only by newer versions of "leaf"
+        s = spack.spec.Spec('root-adds-virtual').concretized()
+        assert s['leaf-adds-virtual'].satisfies('@2.0')
+        assert 'blas' in s
+
+    @pytest.mark.regression('26718')
+    def test_versions_in_virtual_dependencies(self):
+        # Ensure that a package that needs a given version of a virtual
+        # package doesn't end up using a later implementation
+        s = spack.spec.Spec('hpcviewer@2019.02').concretized()
+        assert s['java'].satisfies('virtual-with-versions@1.8.0')
+
+    @pytest.mark.regression('26866')
+    def test_non_default_provider_of_multiple_virtuals(self):
+        s = spack.spec.Spec(
+            'many-virtual-consumer ^low-priority-provider'
+        ).concretized()
+        assert s['mpi'].name == 'low-priority-provider'
+        assert s['lapack'].name == 'low-priority-provider'
+
+        for virtual_pkg in ('mpi', 'lapack'):
+            for pkg in spack.repo.path.providers_for(virtual_pkg):
+                if pkg.name == 'low-priority-provider':
+                    continue
+                assert pkg not in s

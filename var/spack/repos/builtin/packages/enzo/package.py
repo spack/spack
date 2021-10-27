@@ -13,12 +13,21 @@ class Enzo(MakefilePackage):
     url      = "https://github.com/enzo-project/enzo-dev/archive/enzo-2.6.1.tar.gz"
     git      = "https://github.com/enzo-project/enzo-dev.git"
 
-    version('master', branch='master')
+    version('main', branch='main')
+    version('master', branch='main', deprecated=True)
     version('2.6.1', sha256='280270accfc1ddb60e92cc98ca538a3e5787e8cc93ed58fb5c3ab75db8c4b048')
 
     depends_on('mpi')
     depends_on('hdf5~mpi')
     depends_on('sse2neon', when='target=aarch64:')
+
+    variant(
+        'opt', default='high',
+        description='Optimization, some compilers do not ' +
+                    'produce stable code with high+ optimizations',
+        values=('warn', 'debug', 'cudadebug', 'high', 'aggressive'),
+        multi=False
+    )
 
     patch('for_aarch64.patch', when='target=aarch64:')
 
@@ -40,6 +49,7 @@ class Enzo(MakefilePackage):
 
         with working_dir('src/enzo'):
             copy('Make.mach.linux-gnu', 'Make.mach.spack')
+
             filter_file('^MACH_FILE.*',
                         'MACH_FILE = Make.mach.spack',
                         'Make.mach.spack')
@@ -56,8 +66,12 @@ class Enzo(MakefilePackage):
     def build(self, spec, prefix):
         with working_dir('src/enzo'):
             make('machine-spack')
-            make('opt-high')
+            make('opt-' + self.spec.variants['opt'].value)
             make('show-config')
+            make()
+        with working_dir('src/inits'):
+            make()
+        with working_dir('src/ring'):
             make()
 
     def install(self, spec, prefix):
@@ -65,3 +79,4 @@ class Enzo(MakefilePackage):
         install_tree('doc', prefix.doc)
         install_tree('input', prefix.input)
         install_tree('run', prefix.run)
+        install(join_path('src', 'ring', 'ring.exe'), join_path(prefix.bin, 'ring'))

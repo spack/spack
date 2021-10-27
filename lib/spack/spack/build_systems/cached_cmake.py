@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from llnl.util.filesystem import install, mkdirp
 import llnl.util.tty as tty
+from llnl.util.filesystem import install, mkdirp
 
 from spack.build_systems.cmake import CMakePackage
 from spack.package import run_after
@@ -108,27 +108,12 @@ class CachedCMakePackage(CMakePackage):
         if fflags:
             entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
 
-        # Override XL compiler family
-        familymsg = ("Override to proper compiler family for XL")
-        if "xlf" in (self.compiler.fc or ''):  # noqa: F821
-            entries.append(cmake_cache_string(
-                "CMAKE_Fortran_COMPILER_ID", "XL",
-                familymsg))
-        if "xlc" in self.compiler.cc:  # noqa: F821
-            entries.append(cmake_cache_string(
-                "CMAKE_C_COMPILER_ID", "XL",
-                familymsg))
-        if "xlC" in self.compiler.cxx:  # noqa: F821
-            entries.append(cmake_cache_string(
-                "CMAKE_CXX_COMPILER_ID", "XL",
-                familymsg))
-
         return entries
 
     def initconfig_mpi_entries(self):
         spec = self.spec
 
-        if "+mpi" not in spec:
+        if not spec.satisfies('^mpi'):
             return []
 
         entries = [
@@ -194,7 +179,7 @@ class CachedCMakePackage(CMakePackage):
             "#------------------{0}\n".format("-" * 60),
         ]
 
-        if '+cuda' in spec:
+        if spec.satisfies('^cuda'):
             entries.append("#------------------{0}".format("-" * 30))
             entries.append("# Cuda")
             entries.append("#------------------{0}\n".format("-" * 30))
@@ -206,7 +191,7 @@ class CachedCMakePackage(CMakePackage):
             entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER",
                                             cudacompiler))
 
-            if "+mpi" in spec:
+            if spec.satisfies('^mpi'):
                 entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER",
                                                 "${MPI_CXX_COMPILER}"))
             else:

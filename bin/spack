@@ -11,7 +11,8 @@
 # See https://stackoverflow.com/a/47886254
 """:"
 # prefer SPACK_PYTHON environment variable, python3, python, then python2
-for cmd in "${SPACK_PYTHON:-}" python3 python python2; do
+SPACK_PREFERRED_PYTHONS="python3 python python2 /usr/libexec/platform-python"
+for cmd in "${SPACK_PYTHON:-}" ${SPACK_PREFERRED_PYTHONS}; do
     if command -v > /dev/null "$cmd"; then
         export SPACK_PYTHON="$(command -v "$cmd")"
         exec "${SPACK_PYTHON}" "$0" "$@"
@@ -27,6 +28,7 @@ exit 1
 from __future__ import print_function
 
 import os
+import os.path
 import sys
 
 min_python3 = (3, 5)
@@ -68,6 +70,28 @@ if "ruamel.yaml" in sys.modules:
 
 if "ruamel" in sys.modules:
     del sys.modules["ruamel"]
+
+# The following code is here to avoid failures when updating
+# the develop version, due to spurious argparse.pyc files remaining
+# in the libs/spack/external directory, see:
+# https://github.com/spack/spack/pull/25376
+# TODO: Remove in v0.18.0 or later
+try:
+    import argparse
+except ImportError:
+    argparse_pyc = os.path.join(spack_external_libs, 'argparse.pyc')
+    if not os.path.exists(argparse_pyc):
+        raise
+    try:
+        os.remove(argparse_pyc)
+        import argparse  # noqa
+    except Exception:
+        msg = ('The file\n\n\t{0}\n\nis corrupted and cannot be deleted by Spack. '
+               'Either delete it manually or ask some administrator to '
+               'delete it for you.')
+        print(msg.format(argparse_pyc))
+        sys.exit(1)
+
 
 import spack.main  # noqa
 

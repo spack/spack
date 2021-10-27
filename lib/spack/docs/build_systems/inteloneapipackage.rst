@@ -25,7 +25,7 @@ use Spack to build packages with the tools.
 The Spack Python class ``IntelOneapiPackage`` is a base class that is
 used by ``IntelOneapiCompilers``, ``IntelOneapiMkl``,
 ``IntelOneapiTbb`` and other classes to implement the oneAPI
-packages. See the :ref:<package-list> for the full list of available
+packages. See the :ref:`package-list` for the full list of available
 oneAPI packages or use::
 
   spack list -d oneAPI
@@ -35,7 +35,7 @@ For more information on a specific package, do::
   spack info <package-name>
 
 Intel no longer releases new versions of Parallel Studio, which can be
-used in Spack via the :ref:<intelpackage>. All of its components can
+used in Spack via the :ref:`intelpackage`. All of its components can
 now be found in oneAPI. 
 
 Examples
@@ -145,11 +145,11 @@ More information
 ================
 
 This section describes basic use of oneAPI, especially if it has
-changed compared to Parallel Studio. See :ref:<intelpackage> for more
-information on :ref:<intel-virtual-packages>,
-:ref:<intel-unrelated-packages>,
-:ref:<intel-integrating-external-libraries>, and
-:ref:<using-mkl-tips>.
+changed compared to Parallel Studio. See :ref:`intelpackage` for more
+information on :ref:`intel-virtual-packages`,
+:ref:`intel-unrelated-packages`,
+:ref:`intel-integrating-external-libraries`, and
+:ref:`using-mkl-tips`.
 
 
 .. _`Intel installers`: https://software.intel.com/content/www/us/en/develop/documentation/installation-guide-for-intel-oneapi-toolkits-linux/top.html

@@ -8,17 +8,20 @@ from spack import *
 
 class Debugedit(AutotoolsPackage):
     """
-    Debugedit was originally part of the rpm project, and is currently
-    being refactored to be provided outside of it. This source will
-    eventually be moved to sourceware or similar, as it is being maintained
-    by RedHat.
+    Debugedit is a set of libraries and programs for creating and editing
+    debuginfo. It allows you to get build-ids and rewrite DWARF source paths.
+    Debugedit was originally part of the rpm project, and now exists
+    as its own separate project and is maintained by RedHat.
     """
 
-    homepage = "https://code.wildebeest.org/git/user/mjw/debugedit"
-    git      = "git://code.wildebeest.org/user/mjw/debugedit"
+    homepage = "https://www.sourceware.org/debugedit/"
+    git      = "git://sourceware.org/git/debugedit.git"
+    url      = "https://sourceware.org/ftp/debugedit/0.2/debugedit-0.2.tar.xz"
 
     version('develop', branch='main')
+    version('0.2', sha256="b78258240bb7ec5bbff109495092dcc111aa0393f135f2d2a4b43887ba26a942")
 
+    depends_on('help2man', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

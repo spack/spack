@@ -306,11 +306,6 @@ _spack_fn_exists() {
     LANG= type $1 2>&1 | grep -q 'function'
 }
 
-need_module="no"
-if ! _spack_fn_exists use && ! _spack_fn_exists module; then
-    need_module="yes"
-fi;
-
 # Define the spack shell function with some informative no-ops, so when users
 # run `which spack`, they see the path to spack and where the function is from.
 eval "spack() {
@@ -334,48 +329,55 @@ for cmd in "${SPACK_PYTHON:-}" python3 python python2; do
     fi
 done
 
-#
-# make available environment-modules
-#
-if [ "${need_module}" = "yes" ]; then
-    eval `spack --print-shell-vars sh,modules`
-
-    # _sp_module_prefix is set by spack --print-sh-vars
-    if [ "${_sp_module_prefix}" != "not_installed" ]; then
-        # activate it!
-        # environment-modules@4: has a bin directory inside its prefix
-        _sp_module_bin="${_sp_module_prefix}/bin"
-        if [ ! -d "${_sp_module_bin}" ]; then
-            # environment-modules@3 has a nested bin directory
-            _sp_module_bin="${_sp_module_prefix}/Modules/bin"
-        fi
-
-        # _sp_module_bin and _sp_shell are evaluated here; the quoted
-        # eval statement and $* are deferred.
-        _sp_cmd="module() { eval \`${_sp_module_bin}/modulecmd ${_sp_shell} \$*\`; }"
-        eval "$_sp_cmd"
-        _spack_pathadd PATH "${_sp_module_bin}"
+if [ -z "${SPACK_SKIP_MODULES+x}" ]; then
+    need_module="no"
+    if ! _spack_fn_exists use && ! _spack_fn_exists module; then
+        need_module="yes"
     fi;
-else
-    eval `spack --print-shell-vars sh`
-fi;
+
+    #
+    # make available environment-modules
+    #
+    if [ "${need_module}" = "yes" ]; then
+        eval `spack --print-shell-vars sh,modules`
+
+        # _sp_module_prefix is set by spack --print-sh-vars
+        if [ "${_sp_module_prefix}" != "not_installed" ]; then
+            # activate it!
+            # environment-modules@4: has a bin directory inside its prefix
+            _sp_module_bin="${_sp_module_prefix}/bin"
+            if [ ! -d "${_sp_module_bin}" ]; then
+                # environment-modules@3 has a nested bin directory
+                _sp_module_bin="${_sp_module_prefix}/Modules/bin"
+            fi
+
+            # _sp_module_bin and _sp_shell are evaluated here; the quoted
+            # eval statement and $* are deferred.
+            _sp_cmd="module() { eval \`${_sp_module_bin}/modulecmd ${_sp_shell} \$*\`; }"
+            eval "$_sp_cmd"
+            _spack_pathadd PATH "${_sp_module_bin}"
+        fi;
+    else
+        eval `spack --print-shell-vars sh`
+    fi;
 
 
-#
-# set module system roots
-#
-_sp_multi_pathadd() {
-    local IFS=':'
-    if [ "$_sp_shell" = zsh ]; then
-        emulate -L sh
-    fi
-    for pth in $2; do
-        for systype in ${_sp_compatible_sys_types}; do
-            _spack_pathadd "$1" "${pth}/${systype}"
+    #
+    # set module system roots
+    #
+    _sp_multi_pathadd() {
+        local IFS=':'
+        if [ "$_sp_shell" = zsh ]; then
+            emulate -L sh
+        fi
+        for pth in $2; do
+            for systype in ${_sp_compatible_sys_types}; do
+                _spack_pathadd "$1" "${pth}/${systype}"
+            done
         done
-    done
-}
-_sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
+    }
+    _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
+fi
 
 # Add programmable tab completion for Bash
 #

@@ -22,8 +22,9 @@ class Xyce(CMakePackage):
     url      = 'https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz'
     maintainers = ['kuberry']
 
-    version('master',  branch='master')
-    version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5', preferred=True)
+    version('github.master',  branch='master', preferred=True)
+    version('7.3.0', '43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446')
+    version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5')
 
     depends_on('cmake@3.13:', type='build')
     depends_on('flex')
@@ -42,17 +43,17 @@ class Xyce(CMakePackage):
     depends_on('py-pybind11@2.6.1:', when='+pymi')
 
     # Xyce is built against an older version of Trilinos unlikely to be
-    # used for any other purpose. The default settings for various
-    # Trilinos variants would require the installation of many more
-    # packages than are needed for Xyce, hence the ~variant for many
-    # packages.
-    # The default variants in Trilinos have been set for several
-    # applications, namely xSDK, deal.ii, and DTK. Future changes to the
-    # Trilinos recipe will disable all packages by default. At that
-    # point, these ~variants can be removed from the following recipes.
+    # used for any other purpose.
+    depends_on('trilinos@12.12.1 +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=all')
 
-    depends_on('trilinos@12.12.1~adios2~alloptpkgs+amesos+amesos2+anasazi+aztec+belos~boost~cgns~chaco+complex~cuda~cuda_rdc~debug~dtk+epetra+epetraext~exodus+explicit_template_instantiation~float+fortran~glm~gtest+hdf5~hwloc~hypre+ifpack~ifpack2~intrepid~intrepid2~ipo+isorropia+kokkos~matio~mesquite~metis~minitensor~ml+mpi~muelu~mumps~netcdf+nox~openmp~phalanx~piro~pnetcdf~python~rol~rythmos+sacado~shards~shared~shylu~stk~stratimikos~strumpack+suite-sparse~superlu~superlu-dist~teko~tempus+teuchos+tpetra+trilinoscouplings~wrapper~x11~xsdkflags~zlib+zoltan~zoltan2+stokhos+amesos2basker+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=\'none\'', when="+mpi")
-    depends_on('trilinos@12.12.1~adios2~alloptpkgs+amesos+amesos2+anasazi+aztec+belos~boost~cgns~chaco+complex~cuda~cuda_rdc~debug~dtk+epetra+epetraext~exodus+explicit_template_instantiation~float+fortran~glm~gtest+hdf5~hwloc~hypre+ifpack~ifpack2~intrepid~intrepid2~ipo+isorropia+kokkos~matio~mesquite~metis~minitensor~ml~mpi~muelu~mumps~netcdf+nox~openmp~phalanx~piro~pnetcdf~python~rol~rythmos+sacado~shards~shared~shylu~stk~stratimikos~strumpack+suite-sparse~superlu~superlu-dist~teko~tempus+teuchos+tpetra+trilinoscouplings~wrapper~x11~xsdkflags~zlib+zoltan~zoltan2+stokhos+amesos2basker+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=\'none\'', when="~mpi")
+    # Propagate variants to trilinos:
+    for _variant in ('mpi',):
+        depends_on('trilinos~' + _variant, when='~' + _variant)
+        depends_on('trilinos+' + _variant, when='+' + _variant)
+
+    # The default settings for various Trilinos variants would require the
+    # installation of many more packages than are needed for Xyce.
+    depends_on('trilinos~float~ifpack2~ml~muelu~zoltan2')
 
     def cmake_args(self):
         spec = self.spec

@@ -16,33 +16,33 @@ TODO: make this customizable and allow users to configure
 """
 from __future__ import print_function
 
-import platform
 import os.path
+import platform
 import tempfile
+from contextlib import contextmanager
+from itertools import chain
+
+from functools_backport import reverse_order
 
 import archspec.cpu
 
 import llnl.util.filesystem as fs
+import llnl.util.lang
 import llnl.util.tty as tty
 
-from itertools import chain
-from functools_backport import reverse_order
-from contextlib import contextmanager
-
-import llnl.util.lang
-
-import spack.repo
 import spack.abi
-import spack.spec
 import spack.compilers
-import spack.architecture
+import spack.environment
 import spack.error
+import spack.platforms
+import spack.repo
+import spack.spec
+import spack.target
 import spack.tengine
 import spack.variant as vt
 from spack.config import config
-from spack.version import ver, Version, VersionList, VersionRange
-from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
-
+from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
+from spack.version import Version, VersionList, VersionRange, ver
 
 #: impements rudimentary logic for ABI compatibility
 _abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
@@ -68,7 +68,7 @@ class Concretizer(object):
         """
         Add ``dev_path=*`` variant to packages built from local source.
         """
-        env = spack.environment.get_env(None, None)
+        env = spack.environment.active_environment()
         dev_info = env.dev_specs.get(spec.name, {}) if env else {}
         if not dev_info:
             return False
@@ -257,8 +257,7 @@ class Concretizer(object):
         # Get platform of nearest spec with a platform, including spec
         # If spec has a platform, easy
         if spec.architecture.platform:
-            new_plat = spack.architecture.get_platform(
-                spec.architecture.platform)
+            new_plat = spack.platforms.by_name(spec.architecture.platform)
         else:
             # Else if anyone else has a platform, take the closest one
             # Search up, then down, along build/link deps first
@@ -267,11 +266,10 @@ class Concretizer(object):
                 spec, lambda x: x.architecture and x.architecture.platform
             )
             if platform_spec:
-                new_plat = spack.architecture.get_platform(
-                    platform_spec.architecture.platform)
+                new_plat = spack.platforms.by_name(platform_spec.architecture.platform)
             else:
                 # If no platform anywhere in this spec, grab the default
-                new_plat = spack.architecture.platform()
+                new_plat = spack.platforms.host()
 
         # Get nearest spec with relevant platform and an os
         # Generally, same algorithm as finding platform, except we only
@@ -613,9 +611,7 @@ class Concretizer(object):
         # Try to adjust the target only if it is the default
         # target for this platform
         current_target = spec.architecture.target
-        current_platform = spack.architecture.get_platform(
-            spec.architecture.platform
-        )
+        current_platform = spack.platforms.by_name(spec.architecture.platform)
 
         default_target = current_platform.target('default_target')
         if PackagePrefs.has_preferred_targets(spec.name):
@@ -634,7 +630,7 @@ class Concretizer(object):
             for ancestor in microarchitecture.ancestors:
                 candidate = None
                 try:
-                    candidate = spack.architecture.Target(ancestor)
+                    candidate = spack.target.Target(ancestor)
                     candidate.optimization_flags(spec.compiler)
                 except archspec.cpu.UnsupportedMicroarchitecture:
                     continue
@@ -724,6 +720,23 @@ def concretize_specs_together(*abstract_specs, **kwargs):
     Returns:
         List of concretized specs
     """
+    if spack.config.get('config:concretizer') == 'original':
+        return _concretize_specs_together_original(*abstract_specs, **kwargs)
+    return _concretize_specs_together_new(*abstract_specs, **kwargs)
+
+
+def _concretize_specs_together_new(*abstract_specs, **kwargs):
+    import spack.solver.asp
+    result = spack.solver.asp.solve(abstract_specs)
+
+    if not result.satisfiable:
+        result.print_cores()
+        tty.die("Unsatisfiable spec.")
+
+    return [s.copy() for s in result.specs]
+
+
+def _concretize_specs_together_original(*abstract_specs, **kwargs):
     def make_concretization_repository(abstract_specs):
         """Returns the path to a temporary repository created to contain
         a fake package that depends on all of the abstract specs.

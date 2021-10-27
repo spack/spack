@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import llnl.util.tty as tty
+
+from spack import *
 
 
 class Qmcpack(CMakePackage, CudaPackage):
@@ -12,7 +13,7 @@ class Qmcpack(CMakePackage, CudaPackage):
        Carlo (QMC) simulation code."""
 
     # Package information
-    homepage = "http://www.qmcpack.org/"
+    homepage = "https://www.qmcpack.org/"
     git      = "https://github.com/QMCPACK/qmcpack.git"
     maintainers = ['naromero77']
     tags = ['ecp', 'ecp-apps']
@@ -22,6 +23,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.11.0', tag='v3.11.0')
     version('3.10.0', tag='v3.10.0')
     version('3.9.2', tag='v3.9.2')
     version('3.9.1', tag='v3.9.1')
@@ -41,7 +43,7 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
     variant('mpi', default=True, description='Build with MPI support')
-    variant('phdf5', default=True, description='Build with parallel collective I/O')
+    variant('phdf5', default=False, description='Build with parallel collective I/O')
     variant('complex', default=False,
             description='Build the complex (general twist/k-point) version')
     variant('mixed', default=False,
@@ -145,8 +147,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('cmake@3.4.3:', when='@:3.5.0', type='build')
     depends_on('cmake@3.6.0:', when='@3.6.0:', type='build')
     depends_on('cmake@3.14.0:', when='@3.10.0:', type='build')
-    depends_on('boost')
-    depends_on('boost@1.61.0:', when='@3.6.0:')
+    depends_on('boost', type='build')
+    depends_on('boost@1.61.0:', when='@3.6.0:', type='build')
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
     depends_on('python@3:', when='@3.9:')

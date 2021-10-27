@@ -17,16 +17,14 @@ import re
 import sys
 from typing import List  # novm
 
-from ordereddict_backport import OrderedDict
-from six import string_types, StringIO
-
 import ruamel.yaml as yaml
-from ruamel.yaml import RoundTripLoader, RoundTripDumper
+from ordereddict_backport import OrderedDict
+from ruamel.yaml import RoundTripDumper, RoundTripLoader
+from six import StringIO, string_types
 
-from llnl.util.tty.color import colorize, clen, cextra
+from llnl.util.tty.color import cextra, clen, colorize
 
 import spack.error
-
 
 if sys.version_info >= (3, 3):
     from collections.abc import Mapping  # novm

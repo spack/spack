@@ -23,6 +23,8 @@ class R(AutotoolsPackage):
 
     maintainers = ['glennpj']
 
+    version('4.1.1', sha256='515e03265752257d0b7036f380f82e42b46ed8473f54f25c7b67ed25bbbdd364')
+    version('4.1.0', sha256='e8e68959d7282ca147360fc9644ada9bd161bab781bab14d33b8999a95182781')
     version('4.0.5', sha256='0a3ee079aa772e131fe5435311ab627fcbccb5a50cabc54292e6f62046f1ffef')
     version('4.0.4', sha256='523f27d69744a08c8f0bd5e1e6c3d89a4db29ed983388ba70963a3cd3a4a802e')
     version('4.0.3', sha256='09983a8a78d5fb6bc45d27b1c55f9ba5265f78fa54a55c13ae691f87c5bb9e0d')
@@ -108,17 +110,12 @@ class R(AutotoolsPackage):
     def etcdir(self):
         return join_path(prefix, 'rlib', 'R', 'etc')
 
-    @run_after('build')
-    def build_rmath(self):
-        if '+rmath' in self.spec:
-            with working_dir('src/nmath/standalone'):
-                make()
-
     @run_after('install')
     def install_rmath(self):
         if '+rmath' in self.spec:
             with working_dir('src/nmath/standalone'):
-                make('install')
+                make()
+                make('install', parallel=False)
 
     def configure_args(self):
         spec   = self.spec
@@ -224,12 +221,14 @@ class R(AutotoolsPackage):
                 dependent_spec.prefix, self.r_lib_dir))
 
     def setup_run_environment(self, env):
-        env.prepend_path('LIBRARY_PATH',
-                         join_path(self.prefix, 'rlib', 'R', 'lib'))
         env.prepend_path('LD_LIBRARY_PATH',
                          join_path(self.prefix, 'rlib', 'R', 'lib'))
-        env.prepend_path('CPATH',
-                         join_path(self.prefix, 'rlib', 'R', 'include'))
+        env.prepend_path('PKG_CONFIG_PATH',
+                         join_path(self.prefix, 'rlib', 'pkgconfig'))
+
+        if '+rmath' in self.spec:
+            env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'rlib'))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before R modules' install() methods. In most cases,

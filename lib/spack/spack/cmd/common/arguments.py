@@ -69,7 +69,7 @@ class ConstraintAction(argparse.Action):
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
-        env = ev._active_environment
+        env = ev.active_environment()
         if env:
             kwargs['hashes'] = set(env.all_hashes())
 
@@ -254,6 +254,7 @@ def install_status():
         '-I', '--install-status', action='store_true', default=False,
         help='show install status of packages. packages can be: '
         'installed [+], missing and needed by an installed package [-], '
+        'installed in and upstream instance [^], '
         'or not installed (no annotation)')
 
 

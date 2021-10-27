@@ -3,17 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import os
 import stat
-import pytest
-import collections
 
-import spack.spec
-import spack.modules.tcl
-from spack.modules.common import UpstreamModuleIndex
-from spack.spec import Spec
+import pytest
 
 import spack.error
+import spack.modules.tcl
+import spack.spec
+from spack.modules.common import UpstreamModuleIndex
+from spack.spec import Spec
 
 
 def test_update_dictionary_extending_list():
@@ -46,11 +46,26 @@ def test_update_dictionary_extending_list():
 @pytest.fixture()
 def mock_module_filename(monkeypatch, tmpdir):
     filename = str(tmpdir.join('module'))
-    monkeypatch.setattr(spack.modules.common.BaseFileLayout,
+    # Set for both module types so we can test both
+    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout,
+                        'filename',
+                        filename)
+    monkeypatch.setattr(spack.modules.tcl.TclFileLayout,
                         'filename',
                         filename)
 
     yield filename
+
+
+@pytest.fixture()
+def mock_module_defaults(monkeypatch):
+    def impl(*args):
+        # No need to patch both types because neither override base
+        monkeypatch.setattr(spack.modules.common.BaseConfiguration,
+                            'defaults',
+                            [arg for arg in args])
+
+    return impl
 
 
 @pytest.fixture()
@@ -70,11 +85,27 @@ def test_modules_written_with_proper_permissions(mock_module_filename,
 
     # The code tested is common to all module types, but has to be tested from
     # one. TCL picked at random
-    generator = spack.modules.tcl.TclModulefileWriter(spec)
+    generator = spack.modules.tcl.TclModulefileWriter(spec, 'default')
     generator.write()
 
     assert mock_package_perms & os.stat(
         mock_module_filename).st_mode == mock_package_perms
+
+
+@pytest.mark.parametrize('module_type', ['tcl', 'lmod'])
+def test_modules_default_symlink(
+        module_type, mock_packages, mock_module_filename, mock_module_defaults, config
+):
+    spec = spack.spec.Spec('mpileaks@2.3').concretized()
+    mock_module_defaults(spec.format('{name}{@version}'))
+
+    generator_cls = spack.modules.module_types[module_type]
+    generator = generator_cls(spec, 'default')
+    generator.write()
+
+    link_path = os.path.join(os.path.dirname(mock_module_filename), 'default')
+    assert os.path.islink(link_path)
+    assert os.readlink(link_path) == mock_module_filename
 
 
 class MockDb(object):

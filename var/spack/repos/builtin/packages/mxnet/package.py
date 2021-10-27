@@ -35,8 +35,9 @@ class Mxnet(CMakePackage, CudaPackage):
         'mxnet._ffi._cy3', 'mxnet._ffi._ctypes'
     ]
 
-    version('master', branch='master')
-    version('1.master', branch='v1.x')
+    version('master', branch='master', submodules=True)
+    version('1.master', branch='v1.x', submodules=True)
+    version('1.8.0', sha256='95aff985895aba409c08d5514510ae38b88490cfb6281ab3a5ff0f5826c8db54')
     version('1.7.0', sha256='1d20c9be7d16ccb4e830e9ee3406796efaf96b0d93414d676337b64bc59ced18')
     version('1.6.0', sha256='01eb06069c90f33469c7354946261b0a94824bbaf819fd5d5a7318e8ee596def')
     version('1.3.0', sha256='c00d6fbb2947144ce36c835308e603f002c1eb90a9f4c5a62f4d398154eed4d2', deprecated=True)
@@ -58,6 +59,8 @@ class Mxnet(CMakePackage, CudaPackage):
     depends_on('ninja', type='build')
     depends_on('pkgconfig', when='@1.6.0', type='build')
     depends_on('blas')
+    depends_on('cuda@:10.2', when='@:1.8.0 +cuda')
+    depends_on('cuda@:11.3', when='@2.0.0: +cuda')
     depends_on('cudnn', when='+cudnn')
     depends_on('nccl', when='+nccl')
     depends_on('opencv+core+highgui+imgproc+imgcodecs', when='+opencv')
@@ -66,14 +69,17 @@ class Mxnet(CMakePackage, CudaPackage):
 
     # python/setup.py
     extends('python', when='+python')
-    depends_on('python@2.7:2.8,3.4:', when='+python', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when='@:1.8.0+python', type=('build', 'run'))
+    depends_on('python@3.6:', when='@2.0.0:+python', type=('build', 'run'))
+    depends_on('py-contextvars', when='@2.0.0:+python ^python@3.6.0:3.6', type=('build', 'run'))
     depends_on('py-setuptools', when='+python', type='build')
     depends_on('py-cython', when='+python', type='build')
-    depends_on('py-numpy@1.16.1:1.999', when='@1.6:+python', type=('build', 'run'))
+    depends_on('py-numpy@1.17:', when='@2.0.0:+python', type=('build', 'run'))
+    depends_on('py-numpy@1.16.1:1', when='@1.6:1.8.0+python', type=('build', 'run'))
     depends_on('py-numpy@1.8.2:1.15.0', when='@1.3.0+python', type=('build', 'run'))
-    depends_on('py-requests@2.20.0:2.999', when='@1.6:+python', type=('build', 'run'))
-    depends_on('py-requests@2.18.4:2.18.999', when='@1.3.0+python', type=('build', 'run'))
-    depends_on('py-graphviz@0.8.1:0.8.999', when='+python', type=('build', 'run'))
+    depends_on('py-requests@2.20.0:2', when='@1.6:+python', type=('build', 'run'))
+    depends_on('py-requests@2.18.4:2.18', when='@1.3.0+python', type=('build', 'run'))
+    depends_on('py-graphviz@0.8.1:0.8', when='+python', type=('build', 'run'))
 
     conflicts('+cudnn', when='~cuda')
     conflicts('+nccl', when='~cuda')
@@ -101,8 +107,12 @@ class Mxnet(CMakePackage, CudaPackage):
             self.define_from_variant('USE_OPENCV', 'opencv'),
             self.define_from_variant('USE_OPENMP', 'openmp'),
             self.define_from_variant('USE_LAPACK', 'lapack'),
-            self.define_from_variant('USE_MKLDNN', 'mkldnn'),
         ]
+        if self.spec.satisfies('@:1.8.0'):
+            args.append(self.define_from_variant('USE_MKLDNN', 'mkldnn'))
+        if self.spec.satisfies('@2.0.0:'):
+            args.append(self.define_from_variant('USE_ONEDNN', 'mkldnn'))
+            args.append(self.define('USE_CUTENSOR', False))
 
         if '+cuda' in self.spec:
             if 'cuda_arch=none' not in self.spec:

@@ -14,9 +14,9 @@ class Xz(AutotoolsPackage, SourceforgePackage):
     but also work on some not-so-POSIX systems. XZ Utils are the successor
     to LZMA Utils."""
 
-    homepage = "http://tukaani.org/xz/"
+    homepage = "https://tukaani.org/xz/"
     sourceforge_mirror_path = "lzmautils/files/xz-5.2.5.tar.bz2"
-    list_url = "http://tukaani.org/xz/old.html"
+    list_url = "https://tukaani.org/xz/old.html"
 
     executables = [r'^xz$']
 
@@ -28,6 +28,12 @@ class Xz(AutotoolsPackage, SourceforgePackage):
 
     variant('pic', default=False,
             description='Compile with position independent code.')
+
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+
+    def configure_args(self):
+        return self.enable_or_disable('libs')
 
     def flag_handler(self, name, flags):
         if name == 'cflags' and '+pic' in self.spec:

@@ -9,10 +9,10 @@ import shutil
 
 import llnl.util.filesystem as fs
 
-import spack.util.spack_json as sjson
-import spack.verify
 import spack.spec
 import spack.store
+import spack.util.spack_json as sjson
+import spack.verify
 
 
 def test_link_manifest_entry(tmpdir):

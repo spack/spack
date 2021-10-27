@@ -12,7 +12,7 @@ class RRjava(RPackage):
     Low-level interface to Java VM very much like .C/.Call and friends.
     Allows creation of objects, calling methods and accessing fields."""
 
-    homepage = "http://www.rforge.net/rJava/"
+    homepage = "https://www.rforge.net/rJava/"
     url      = "https://cloud.r-project.org/src/contrib/rJava_0.9-8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rJava"
 
@@ -30,3 +30,8 @@ class RRjava(RPackage):
     depends_on('libiconv')
     depends_on('pcre2')
     depends_on('xz')
+
+    def setup_build_environment(self, env):
+        spec = self.spec
+        env.append_flags('JAVAH', '{0}/javah'.format(
+            join_path(spec['java'].prefix.bin)))

@@ -12,10 +12,10 @@ class RRmarkdown(RPackage):
 
     Convert R Markdown documents into a variety of formats."""
 
-    homepage = "http://rmarkdown.rstudio.com/"
-    url      = "https://cloud.r-project.org/src/contrib/rmarkdown_1.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rmarkdown"
+    homepage = "https://rmarkdown.rstudio.com/"
+    cran     = "rmarkdown"
 
+    version('2.9', sha256='6ce5af8b9a7c282619f74d3999d27ec4de12d3f93cde8fd12cc4c19f02ea8668')
     version('2.6', sha256='e6e799c472de11e079bc752cca4b4dbd6803650649457bb6ae836cb1edcdf6b0')
     version('1.14', sha256='f636b1048c5be56e06aa0b2b4342ad5c8192734f1e9b27468fef62be672edc61')
     version('1.13', sha256='96fb6b08d27bbb8054145e0a55721f905341941d4f6691480a2a234e2d5a63ef')
@@ -30,8 +30,10 @@ class RRmarkdown(RPackage):
     depends_on('r-evaluate@0.13:', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-tinytex@0.11:', when='@1.10:', type=('build', 'run'))
+    depends_on('r-tinytex@0.31:', when='@2.8:', type=('build', 'run'))
     depends_on('r-xfun', when='@1.13:', type=('build', 'run'))
     depends_on('r-xfun@0.15:', when='@2.6:', type=('build', 'run'))
+    depends_on('r-xfun@0.21:', when='@2.8:', type=('build', 'run'))
     depends_on('r-stringr@1.2.0:', when='@1.6:', type=('build', 'run'))
     depends_on('r-rprojroot', when='@1.3:1.7', type=('build', 'run'))
     depends_on('r-mime', when='@1.8:1.14', type=('build', 'run'))

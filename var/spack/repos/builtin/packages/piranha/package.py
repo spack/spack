@@ -37,6 +37,6 @@ class Piranha(CMakePackage):
 
     def cmake_args(self):
         return [
-            '-DBUILD_PYRANHA=%s' % ('ON' if '+python' in self.spec else 'OFF'),
+            self.define_from_variant('BUILD_PYRANHA', 'python'),
             '-DBUILD_TESTS:BOOL=ON',
         ]

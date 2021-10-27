@@ -13,10 +13,12 @@ class PySphinxcontribSerializinghtml(PythonPackage):
     homepage = "http://sphinx-doc.org/"
     pypi = "sphinxcontrib-serializinghtml/sphinxcontrib-serializinghtml-1.1.3.tar.gz"
 
-    # Sphinx requires sphinxcontrib-serializinghtml at build-time, but
-    # sphinxcontrib-serializinghtml requires sphinx at run-time
+    # 'sphinx' requires 'sphinxcontrib-serializinghtml' at build-time, but
+    # 'sphinxcontrib-serializinghtml' requires 'sphinx' at run-time. Don't bother trying
+    # to import any modules.
     import_modules = []
 
+    version('1.1.5', sha256='aa5f6de5dfdf809ef505c4895e51ef5c9eac17d0f287933eb49ec495280b6952')
     version('1.1.3', sha256='c0efb33f8052c04fd7a26c0a07f1678e8512e0faec19f4aa8f2473a8b81d5227')
 
     depends_on('python@3.5:', type=('build', 'run'))

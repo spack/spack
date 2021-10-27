@@ -14,9 +14,11 @@ class PyHieroglyph(PythonPackage):
     homepage = "https://github.com/nyergler/hieroglyph"
     pypi = "hieroglyph/hieroglyph-1.0.0.tar.gz"
 
+    version('2.1.0', sha256='b4b5db13a9d387438e610c2ca1d81386ccd206944d9a9dd273f21874486cddaf')
     version('1.0.0', sha256='8e137f0b1cd60c47b870011089790d3c8ddb74fcf409a75ddf2c7f2516ff337c')
-    version('master')
 
-    depends_on('py-setuptools')
-    depends_on('py-sphinx@1.2:')
-    depends_on('py-six')
+    depends_on('python@3:', when='@2:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-sphinx@1.2:', when='@1.0.0:1.9', type=('build', 'run'))
+    depends_on('py-sphinx@2.0:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('py-six', when='@1.0.0:1.9', type=('build', 'run'))

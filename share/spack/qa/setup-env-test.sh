@@ -104,11 +104,11 @@ contains "usage: spack module " spack -m module --help
 contains "usage: spack module " spack -m module
 
 title 'Testing `spack load`'
-contains "export LD_LIBRARY_PATH=$(spack -m location -i b)/lib" spack -m load --only package --sh b
+contains "export PATH=$(spack -m location -i b)/bin" spack -m load --only package --sh b
 succeeds spack -m load b
 fails spack -m load -l
 # test a variable MacOS clears and one it doesn't for recursive loads
-contains "export LD_LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh a
+contains "export PATH=$(spack -m location -i a)/bin:$(spack -m location -i b)/bin" spack -m load --sh a
 succeeds spack -m load --only dependencies a
 succeeds spack -m load --only package a
 fails spack -m load d
@@ -137,7 +137,7 @@ contains " spack env list " spack env list --help
 
 title 'Testing `spack env activate`'
 contains "No such environment:" spack env activate no_such_environment
-contains "usage: spack env activate " spack env activate
+contains "env activate requires an environment " spack env activate
 contains "usage: spack env activate " spack env activate -h
 contains "usage: spack env activate " spack env activate --help
 
@@ -173,3 +173,9 @@ echo "Testing 'despacktivate'"
 despacktivate
 is_not_set SPACK_ENV
 is_not_set SPACK_OLD_PS1
+
+echo "Testing 'spack env activate --temp'"
+spack env activate --temp
+is_set SPACK_ENV
+spack env deactivate
+is_not_set SPACK_ENV

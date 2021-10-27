@@ -7,14 +7,16 @@
 
 """
 
-from sys import platform
+import getpass
+import platform
+import shutil
 from os.path import basename, dirname, isdir
+
+from llnl.util.filesystem import find_headers, find_libraries, join_path
 
 from spack.package import Package
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
-
-from llnl.util.filesystem import find_headers, find_libraries, join_path
 
 
 class IntelOneApiPackage(Package):
@@ -46,16 +48,38 @@ class IntelOneApiPackage(Package):
         if installer_path is None:
             installer_path = basename(self.url_for_version(spec.version))
 
-        if platform == 'linux':
+        if platform.system() == 'Linux':
+            # Intel installer assumes and enforces that all components
+            # are installed into a single prefix. Spack wants to
+            # install each component in a separate prefix. The
+            # installer mechanism is implemented by saving install
+            # information in a directory called installercache for
+            # future runs. The location of the installercache depends
+            # on the userid. For root it is always in /var/intel. For
+            # non-root it is in $HOME/intel.
+            #
+            # The method for preventing this install from interfering
+            # with other install depends on the userid. For root, we
+            # delete the installercache before and after install. For
+            # non root we redefine the HOME environment variable.
+            if getpass.getuser() == 'root':
+                shutil.rmtree('/var/intel/installercache', ignore_errors=True)
+
             bash = Executable('bash')
 
             # Installer writes files in ~/intel set HOME so it goes to prefix
             bash.add_default_env('HOME', prefix)
+            # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
+            bash.add_default_env('XDG_RUNTIME_DIR',
+                                 join_path(self.stage.path, 'runtime'))
 
             bash(installer_path,
                  '-s', '-a', '-s', '--action', 'install',
                  '--eula', 'accept',
                  '--install-dir', prefix)
+
+            if getpass.getuser() == 'root':
+                shutil.rmtree('/var/intel/installercache', ignore_errors=True)
 
         # Some installers have a bug and do not return an error code when failing
         if not isdir(join_path(prefix, self.component_dir)):

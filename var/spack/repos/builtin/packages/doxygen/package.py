@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import re
+
+from spack import *
 
 
 class Doxygen(CMakePackage):
@@ -18,9 +19,11 @@ class Doxygen(CMakePackage):
     git       = "https://github.com/doxygen/doxygen.git"
 
     # Doxygen versions on GitHub
+    version('1.9.2',  commit='caa4e3de211fbbef2c3adf58a6bd4c86d0eb7cb8')
     version('1.9.1',  commit='ef9b20ac7f8a8621fcfc299f8bd0b80422390f4b')
     version('1.9.0',  commit='71777ff3973331bd9453870593a762e184ba9f78')
     version('1.8.20', commit='f246dd2f1c58eea39ea3f50c108019e4d4137bd5')
+    version('1.8.18', commit='a1b07ad0e92e4526c9ba1711d39f06b58c2a7459')
     version('1.8.17', commit='b5fa3cd1c6e6240e20d3b80a70e3f04040b32021')
     version('1.8.16', commit='cfd73d5c4d1a66c620a3b7c08b72a3f3c3f94255')
     version('1.8.15', commit='dc89ac01407c24142698c1374610f2cee1fbf200')
@@ -77,6 +80,10 @@ class Doxygen(CMakePackage):
     # https://github.com/Sleepyowl/doxygen/commit/6c380ba91ae41c6d5c409a5163119318932ae2a3?diff=unified
     # Also - https://github.com/doxygen/doxygen/pull/6588
     patch('shared_ptr.patch', when='@1.8.14')
+
+    # Support C++17's nested namespaces a::b::c. For details about this patch, see
+    # https://github.com/doxygen/doxygen/pull/6977/commits/788440279e0f0fdc7dce27ec266d7d5c11bcda1c
+    patch('cpp17_namespaces.patch', when='@1.8.15')
 
     # Workaround for gcc getting stuck in an infinite loop
     patch('gcc-partial-inlining-bug.patch', when='@1.8.20: %gcc@7')

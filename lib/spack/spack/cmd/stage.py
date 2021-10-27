@@ -3,12 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 import llnl.util.tty as tty
 
-import spack.environment as ev
-import spack.repo
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.repo
+import spack.stage
 
 description = "expand downloaded archive in preparation for install"
 section = "build"
@@ -24,13 +27,21 @@ def setup_parser(subparser):
 
 
 def stage(parser, args):
+    # We temporarily modify the working directory when setting up a stage, so we need to
+    # convert this to an absolute path here in order for it to remain valid later.
+    custom_path = os.path.abspath(args.path) if args.path else None
+    if custom_path:
+        spack.stage.create_stage_root(custom_path)
+
     if not args.specs:
-        env = ev.get_env(args, 'stage')
+        env = ev.active_environment()
         if env:
             tty.msg("Staging specs from environment %s" % env.name)
             for spec in env.specs_by_hash.values():
                 for dep in spec.traverse():
                     dep.package.do_stage()
+                    tty.msg("Staged {0} in {1}".format(dep.package.name,
+                                                       dep.package.stage.path))
             return
         else:
             tty.die("`spack stage` requires a spec or an active environment")
@@ -44,12 +55,13 @@ def stage(parser, args):
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
 
     # prevent multiple specs from extracting in the same folder
-    if len(specs) > 1 and args.path:
+    if len(specs) > 1 and custom_path:
         tty.die("`--path` requires a single spec, but multiple were provided")
 
     for spec in specs:
         spec = spack.cmd.matching_spec_from_env(spec)
         package = spack.repo.get(spec)
-        if args.path:
-            package.path = args.path
+        if custom_path:
+            package.path = custom_path
         package.do_stage()
+        tty.msg("Staged {0} in {1}".format(package.name, package.stage.path))

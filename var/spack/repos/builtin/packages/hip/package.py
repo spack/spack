@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.util.prefix import Prefix
-from spack.hooks.sbang import filter_shebang
 import os
+
+from spack.hooks.sbang import filter_shebang
+from spack.util.prefix import Prefix
 
 
 class Hip(CMakePackage):
@@ -15,10 +16,13 @@ class Hip(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/HIP"
     git      = "https://github.com/ROCm-Developer-Tools/HIP.git"
-    url      = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-4.1.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-4.3.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
-
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    version('master', branch='master')
+    version('4.3.1', sha256='955311193819f487f9a2d64bffe07c4b8c3a0dc644dc3ad984f7c66a325bdd6f')
+    version('4.3.0', sha256='293b5025b5e153f2f25e465a2e0006a2b4606db7b7ec2ae449f8a4c0b52d491b')
+    version('4.2.0', sha256='ecb929e0fc2eaaf7bbd16a1446a876a15baf72419c723734f456ee62e70b4c24')
     version('4.1.0', sha256='e21c10b62868ece7aa3c8413ec0921245612d16d86d81fe61797bf9a64bc37eb')
     version('4.0.0', sha256='d7b78d96cec67c55b74ea3811ce861b16d300410bc687d0629e82392e8d7c857')
     version('3.10.0', sha256='0082c402f890391023acdfd546760f41cb276dffc0ffeddc325999fd2331d4e8')
@@ -27,18 +31,21 @@ class Hip(CMakePackage):
     version('3.7.0', sha256='757b392c3beb29beea27640832fbad86681dbd585284c19a4c2053891673babd')
     version('3.5.0', sha256='ae8384362986b392288181bcfbe5e3a0ec91af4320c189bd83c844ed384161b3')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3:', type='build')
     depends_on('perl@5.10:', type=('build', 'run'))
     depends_on('mesa18~llvm@18.3:')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
-        depends_on('hip-rocclr@' + ver,  type=('build', 'run'), when='@' + ver)
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
-        depends_on('comgr@' + ver, type=('build', 'link', 'run'), when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type=('build', 'link', 'run'), when='@' + ver)
-        depends_on('rocminfo@' + ver, type=('build', 'run'), when='@' + ver)
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0', '4.3.0', '4.3.1']:
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
+        depends_on('hsakmt-roct@' + ver, when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
+        depends_on('comgr@' + ver, when='@' + ver)
+        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), when='@' + ver)
+        depends_on('rocminfo@' + ver, when='@' + ver)
+        depends_on('roctracer-dev-api@' + ver, when='@' + ver)
 
     # hipcc likes to add `-lnuma` by default :(
     # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
@@ -59,10 +66,20 @@ class Hip(CMakePackage):
     patch('0003-Improve-compilation-without-git-repo.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0003-Improve-compilation-without-git-repo.3.10.0.patch', when='@3.10.0:4.0.0')
     patch('0003-Improve-compilation-without-git-repo.4.1.0.patch', when='@4.1.0')
+    patch('0003-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.4.2.0.patch', when='@4.2.0:')
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.10.0.patch', when='@3.10.0:4.1.0')
+
+    # Tests are broken when using cmake 3.21
+    with when('^cmake@3.21.0:'):
+        patch('0005-Disable-tests-3.5.0.patch', when='@3.5.0')
+        patch('0005-Disable-tests-3.6.0.patch', when='@3.6.0:3.8.0')
+        patch('0005-Disable-tests-3.9.0.patch', when='@3.9.0:4.0.0')
+        patch('0005-Disable-tests-4.1.0.patch', when='@4.1.0:')
+
+    patch('Add_missing_open_cl_header_file_for_4.3.0.patch', when='@4.3.0:')
 
     def get_paths(self):
         if self.spec.external:
@@ -85,7 +102,7 @@ class Hip(CMakePackage):
                 'llvm-amdgpu': rocm_prefix.llvm,
                 'hsa-rocr-dev': rocm_prefix.hsa,
                 'rocminfo': rocm_prefix,
-                'rocm-device-libs': rocm_prefix,
+                'rocm-device-libs': rocm_prefix
             }
         else:
             paths = {
@@ -93,14 +110,13 @@ class Hip(CMakePackage):
                 'llvm-amdgpu': self.spec['llvm-amdgpu'].prefix,
                 'hsa-rocr-dev': self.spec['hsa-rocr-dev'].prefix,
                 'rocminfo': self.spec['rocminfo'].prefix,
-                'rocm-device-libs': self.spec['rocm-device-libs'].prefix,
+                'rocm-device-libs': self.spec['llvm-amdgpu'].prefix
             }
 
-        # `device_lib_path` is the path to the bitcode directory
         if '@:3.8.0' in self.spec:
-            paths['device_lib_path'] = paths['rocm-device-libs'].lib
+            paths['bitcode'] = paths['rocm-device-libs'].lib
         else:
-            paths['device_lib_path'] = paths['rocm-device-libs'].amdgcn.bitcode
+            paths['bitcode'] = paths['rocm-device-libs'].amdgcn.bitcode
 
         return paths
 
@@ -134,12 +150,12 @@ class Hip(CMakePackage):
         # https://github.com/ROCm-Developer-Tools/HIP/pull/2138
         env.set('ROCMINFO_PATH', paths['rocminfo'])
 
-        # This one is used in hipcc to run `hipcc --hip-device-lib-path=...`
-        env.set('DEVICE_LIB_PATH', paths['device_lib_path'])
+        # This one is used in hipcc to run `clang --hip-device-lib-path=...`
+        env.set('DEVICE_LIB_PATH', paths['bitcode'])
 
         # And this is used in clang whenever the --hip-device-lib-path is not
         # used (e.g. when clang is invoked directly)
-        env.set('HIP_DEVICE_LIB_PATH', paths['device_lib_path'])
+        env.set('HIP_DEVICE_LIB_PATH', paths['bitcode'])
 
         # Just the prefix of hip (used in hipcc)
         env.set('HIP_PATH', paths['rocm-path'])
@@ -162,6 +178,9 @@ class Hip(CMakePackage):
             env.append_path('HIPCC_COMPILE_FLAGS_APPEND',
                             '--rocm-path={0}'.format(paths['rocm-path']),
                             separator=' ')
+
+    def setup_build_environment(self, env):
+        self.set_variables(env)
 
     def setup_run_environment(self, env):
         self.set_variables(env)
@@ -230,6 +249,8 @@ class Hip(CMakePackage):
 
     def cmake_args(self):
         args = [
+            self.define('PROF_API_HEADER_PATH', join_path(
+                self.spec['roctracer-dev-api'].prefix, 'roctracer', 'inc', 'ext')),
             self.define('HIP_COMPILER', 'clang'),
             self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         ]

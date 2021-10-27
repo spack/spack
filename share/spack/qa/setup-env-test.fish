@@ -24,7 +24,7 @@ function allocate_testing_global -d "allocate global variables used for testing"
 end
 
 
-function delete_testing_global -d "deallocate global varialbes used for testing"
+function delete_testing_global -d "deallocate global variables used for testing"
 
     set -e __spt_red
     set -e __spt_cyan
@@ -90,9 +90,12 @@ function spt_succeeds
 
     set -l output (eval $argv 2>&1)
 
-    if test $status -ne 0
+    # Save the command result
+    set cmd_status $status
+
+    if test $cmd_status -ne 0
         fail
-        echo_red "Command failed with error $status"
+        echo_red "Command failed with error $cmd_status"
         if test -n "$output"
             echo_msg "Output:"
             echo "$output"
@@ -116,7 +119,7 @@ function spt_fails
 
     if test $status -eq 0
         fail
-        echo_red "Command failed with error $status"
+        echo_red "Command succeeded, but should fail"
         if test -n "$output"
             echo_msg "Output:"
             echo "$output"
@@ -142,9 +145,14 @@ function spt_contains
 
     set -l output (eval $remaining_args 2>&1)
 
+    # Save the command result
+    set cmd_status $status
+
     if not echo "$output" | string match -q -r ".*$target_string.*"
         fail
-        echo_red "Command exited with error $status"
+        if test $cmd_status -ne 0
+            echo_red "Command exited with error $cmd_status"
+        end
         echo_red "'$target_string' was not in output."
         if test -n "$output"
             echo_msg "Output:"
@@ -249,13 +257,7 @@ echo "Creating a mock environment"
 spack env create spack_test_env
 
 # ensure that we uninstall b on exit
-function spt_cleanup
-
-    set trapped_error false
-    if test $status -ne 0
-        set trapped_error true
-    end
-
+function spt_cleanup -p %self
     echo "Removing test environment before exiting."
     spack env deactivate 2>&1 > /dev/null
     spack env rm -y spack_test_env
@@ -268,29 +270,8 @@ function spt_cleanup
     echo "$__spt_success tests succeeded."
     echo "$__spt_errors tests failed."
 
-    if test "$trapped_error" = false
-        echo "Exited due to an error."
-    end
-
-    if test "$__spt_errors" -eq 0
-        if test "$trapped_error" = false
-            pass
-            exit 0
-        else
-            fail
-            exit 1
-        end
-    else
-        fail
-        exit 1
-    end
-
     delete_testing_global
 end
-
-trap spt_cleanup EXIT
-
-
 
 # -----------------------------------------------------------------------
 # Test all spack commands with special env support
@@ -322,7 +303,6 @@ spt_contains "set -gx LD_LIBRARY_PATH $_b_ld" spack -m load --only package --fis
 spt_succeeds spack -m load b
 # test a variable MacOS clears and one it doesn't for recursive loads
 spt_contains "set -gx LD_LIBRARY_PATH $_a_ld:$_b_ld" spack -m load --fish a
-spt_contains "set -gx LIBRARY_PATH $_a_ld:$_b_ld" spack -m load --fish a
 spt_succeeds spack -m load --only dependencies a
 spt_succeeds spack -m load --only package a
 spt_fails spack -m load d
@@ -353,7 +333,7 @@ spt_contains " spack env list " spack env list --help
 
 title 'Testing `spack env activate`'
 spt_contains "No such environment:" spack env activate no_such_environment
-spt_contains "usage: spack env activate " spack env activate
+spt_contains "env activate requires an environment " spack env activate
 spt_contains "usage: spack env activate " spack env activate -h
 spt_contains "usage: spack env activate " spack env activate --help
 
@@ -380,6 +360,12 @@ echo "Testing 'despacktivate'"
 despacktivate
 is_not_set SPACK_ENV
 
+echo "Testing 'spack env activate --temp'"
+spack env activate --temp
+is_set SPACK_ENV
+spack env deactivate
+is_not_set SPACK_ENV
+
 #
 # NOTE: `--prompt` on fish does nothing => currently not implemented.
 #
@@ -393,3 +379,5 @@ is_not_set SPACK_ENV
 # despacktivate
 # is_not_set SPACK_ENV
 # is_not_set SPACK_OLD_PS1
+
+test "$__spt_errors" -eq 0

@@ -18,6 +18,10 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.18', sha256='1632c1e8cca62d8bed064b37747e331a1796fc46f688626337362bf0d16aeadb')
+    version('0.3.17', sha256='df2934fa33d04fd84d839ca698280df55c690c86a5a1133b3f7266fce1de279f')
+    version('0.3.16', sha256='fa19263c5732af46d40d3adeec0b2c77951b67687e670fb6ba52ea3950460d79')
+    version('0.3.15', sha256='30a99dec977594b387a17f49904523e6bc8dd88bd247266e83485803759e4bbe')
     version('0.3.14', sha256='d381935d26f9cae8e4bbd7d7f278435adf8e3a90920edf284bb9ad789ee9ad60')
     version('0.3.13', sha256='79197543b17cc314b7e43f7a33148c308b0807cd6381ee77f77e15acf3e6459e')
     version('0.3.12', sha256='65a7d3a4010a4e3bd5c0baa41a234797cd3a1735449a4a5902129152601dc57b')
@@ -65,8 +69,8 @@ class Openblas(MakefilePackage):
     #  UPD: the patch has been merged starting version 0.2.20
     patch('openblas_icc.patch', when='@:0.2.19%intel')
     patch('openblas_icc_openmp.patch', when='@:0.2.20%intel@16.0:')
-    patch('openblas_icc_fortran.patch', when='%intel@16.0:')
-    patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
+    patch('openblas_icc_fortran.patch', when='@:0.3.14%intel@16.0:')
+    patch('openblas_icc_fortran2.patch', when='@:0.3.14%intel@18.0:')
     # See https://github.com/spack/spack/issues/15385
     patch('lapack-0.3.9-xerbl.patch', when='@0.3.8:0.3.9 %intel')
 
@@ -122,10 +126,10 @@ class Openblas(MakefilePackage):
     patch('0001-use-usr-bin-env-perl.patch', when='@:0.3.13')
 
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
-    conflicts('%gcc@7.0.0:7.3.99,8.0.0:8.2.99', when='@0.3.11:')
+    conflicts('%gcc@7.0.0:7.3,8.0.0:8.2', when='@0.3.11:')
 
     # See https://github.com/xianyi/OpenBLAS/issues/3074
-    conflicts('%gcc@:10.1.99', when='@0.3.13 target=ppc64le:')
+    conflicts('%gcc@:10.1', when='@0.3.13 target=ppc64le:')
 
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
@@ -187,7 +191,7 @@ class Openblas(MakefilePackage):
 
         # List of available architectures, and possible aliases
         openblas_arch = set(['alpha', 'arm', 'ia64', 'mips', 'mips64',
-                             'power', 'sparc', 'zarch'])
+                             'power', 'riscv64', 'sparc', 'zarch'])
         openblas_arch_map = {
             'amd64': 'x86_64',
             'powerpc64': 'power',
@@ -216,7 +220,7 @@ class Openblas(MakefilePackage):
                 arch_name = openblas_arch_map.get(arch_name, arch_name)
                 args.append('ARCH=' + arch_name)
 
-        if microarch.vendor == 'generic':
+        if microarch.vendor == 'generic' and microarch.name != 'riscv64':
             # User requested a generic platform, or we couldn't find a good
             # match for the requested one. Allow OpenBLAS to determine
             # an optimized kernel at run time, including older CPUs, while
@@ -234,6 +238,14 @@ class Openblas(MakefilePackage):
             if microarch.name == "skylake":
                 # Special case for disabling avx512 instructions
                 args.append('NO_AVX512=1')
+
+        elif microarch.name == 'riscv64':
+            # Special case for renaming the generic riscv64 uarch to the
+            # corresponding OpenBLAS target. riscv64 does not yet support
+            # DYNAMIC_ARCH or TARGET=GENERIC. Once it does, this special
+            # case can go away.
+            args.append('TARGET=' + "RISCV64_GENERIC")
+
         else:
             args.append('TARGET=' + microarch.name.upper())
 

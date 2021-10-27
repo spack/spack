@@ -13,15 +13,14 @@ import multiprocessing
 import os
 import re
 import select
+import signal
 import sys
 import traceback
-import signal
 from contextlib import contextmanager
-from six import string_types
-from six import StringIO
-
-from typing import Optional  # novm
 from types import ModuleType  # novm
+from typing import Optional  # novm
+
+from six import StringIO, string_types
 
 import llnl.util.tty as tty
 
@@ -34,7 +33,7 @@ except ImportError:
 
 
 # Use this to strip escape sequences
-_escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
+_escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h|\x1b\][0-9]+;[^\x07]*\x07')
 
 # control characters for enabling/disabling echo
 #
@@ -321,7 +320,10 @@ class FileWrapper(object):
     def unwrap(self):
         if self.open:
             if self.file_like:
-                self.file = open(self.file_like, 'w')
+                if sys.version_info < (3,):
+                    self.file = open(self.file_like, 'w')
+                else:
+                    self.file = open(self.file_like, 'w', encoding='utf-8')  # novm
             else:
                 self.file = StringIO()
             return self.file
@@ -434,7 +436,7 @@ class log_output(object):
     """
 
     def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
-                 env=None):
+                 env=None, filter_fn=None):
         """Create a new output log context manager.
 
         Args:
@@ -444,6 +446,8 @@ class log_output(object):
             debug (int): positive to enable tty debug mode during logging
             buffer (bool): pass buffer=True to skip unbuffering output; note
                 this doesn't set up any *new* buffering
+            filter_fn (callable, optional): Callable[str] -> str to filter each
+                line of output
 
         log_output can take either a file object or a filename. If a
         filename is passed, the file will be opened and closed entirely
@@ -463,6 +467,7 @@ class log_output(object):
         self.debug = debug
         self.buffer = buffer
         self.env = env  # the environment to use for _writer_daemon
+        self.filter_fn = filter_fn
 
         self._active = False  # used to prevent re-entry
 
@@ -528,20 +533,22 @@ class log_output(object):
         # Sets a daemon that writes to file what it reads from a pipe
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
+            input_multiprocess_fd = None
             try:
-                input_multiprocess_fd = MultiProcessFd(
-                    os.dup(sys.stdin.fileno())
-                )
+                if sys.stdin.isatty():
+                    input_multiprocess_fd = MultiProcessFd(
+                        os.dup(sys.stdin.fileno())
+                    )
             except BaseException:
                 # just don't forward input if this fails
-                input_multiprocess_fd = None
+                pass
 
             with replace_environment(self.env):
                 self.process = multiprocessing.Process(
                     target=_writer_daemon,
                     args=(
                         input_multiprocess_fd, read_multiprocess_fd, write_fd,
-                        self.echo, self.log_file, child_pipe
+                        self.echo, self.log_file, child_pipe, self.filter_fn
                     )
                 )
                 self.process.daemon = True  # must set before start()
@@ -665,7 +672,7 @@ class log_output(object):
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
-                   log_file_wrapper, control_pipe):
+                   log_file_wrapper, control_pipe, filter_fn):
     """Daemon used by ``log_output`` to write to a log file and to ``stdout``.
 
     The daemon receives output from the parent process and writes it both
@@ -710,6 +717,7 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
         log_file_wrapper (FileWrapper): file to log all output
         control_pipe (Pipe): multiprocessing pipe on which to send control
             information to the parent
+        filter_fn (callable, optional): function to filter each line of output
 
     """
     # If this process was forked, then it will inherit file descriptors from
@@ -722,7 +730,11 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
 
     # Use line buffering (3rd param = 1) since Python 3 has a bug
     # that prevents unbuffered text I/O.
-    in_pipe = os.fdopen(read_multiprocess_fd.fd, 'r', 1)
+    if sys.version_info < (3,):
+        in_pipe = os.fdopen(read_multiprocess_fd.fd, 'r', 1)
+    else:
+        # Python 3.x before 3.7 does not open with UTF-8 encoding by default
+        in_pipe = os.fdopen(read_multiprocess_fd.fd, 'r', 1, encoding='utf-8')
 
     if stdin_multiprocess_fd:
         stdin = os.fdopen(stdin_multiprocess_fd.fd)
@@ -764,28 +776,42 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                                 raise
 
                 if in_pipe in rlist:
-                    # Handle output from the calling process.
-                    line = _retry(in_pipe.readline)()
-                    if not line:
-                        break
+                    line_count = 0
+                    try:
+                        while line_count < 100:
+                            # Handle output from the calling process.
+                            line = _retry(in_pipe.readline)()
+                            if not line:
+                                return
+                            line_count += 1
 
-                    # find control characters and strip them.
-                    controls = control.findall(line)
-                    line = control.sub('', line)
+                            # find control characters and strip them.
+                            clean_line, num_controls = control.subn('', line)
 
-                    # Echo to stdout if requested or forced.
-                    if echo or force_echo:
-                        sys.stdout.write(line)
-                        sys.stdout.flush()
+                            # Echo to stdout if requested or forced.
+                            if echo or force_echo:
+                                output_line = clean_line
+                                if filter_fn:
+                                    output_line = filter_fn(clean_line)
+                                sys.stdout.write(output_line)
 
-                    # Stripped output to log file.
-                    log_file.write(_strip(line))
-                    log_file.flush()
+                            # Stripped output to log file.
+                            log_file.write(_strip(clean_line))
 
-                    if xon in controls:
-                        force_echo = True
-                    if xoff in controls:
-                        force_echo = False
+                            if num_controls > 0:
+                                controls = control.findall(line)
+                                if xon in controls:
+                                    force_echo = True
+                                if xoff in controls:
+                                    force_echo = False
+
+                            if not _input_available(in_pipe):
+                                break
+                    finally:
+                        if line_count > 0:
+                            if echo or force_echo:
+                                sys.stdout.flush()
+                            log_file.flush()
 
     except BaseException:
         tty.error("Exception occurred in writer daemon!")
@@ -837,3 +863,7 @@ def _retry(function):
                     continue
                 raise
     return wrapped
+
+
+def _input_available(f):
+    return f in select.select([f], [], [], 0)[0]

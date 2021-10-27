@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class PySip(Package):
@@ -29,8 +30,8 @@ class PySip(Package):
 
     extends('python')
 
-    depends_on('flex', type='build', when='@develop')
-    depends_on('bison', type='build', when='@develop')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
 
     # https://www.riverbankcomputing.com/static/Docs/sip/installation.html
     phases = ['configure', 'build', 'install']

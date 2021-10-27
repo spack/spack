@@ -9,7 +9,7 @@ from spack import *
 class PerlIoHtml(PerlPackage):
     """Open an HTML file with automatic charset detection."""
 
-    homepage = "http://search.cpan.org/~cjm/IO-HTML-1.001/lib/IO/HTML.pm"
+    homepage = "https://metacpan.org/pod/IO::HTML"
     url      = "http://search.cpan.org/CPAN/authors/id/C/CJ/CJM/IO-HTML-1.001.tar.gz"
 
     version('1.001', sha256='ea78d2d743794adc028bc9589538eb867174b4e165d7d8b5f63486e6b828e7e0')

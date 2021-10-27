@@ -20,10 +20,11 @@ class RPbkrtest(RPackage):
     paper by Halehoh and Hojsgaard, (2012, <doi:10.18637/jss.v059.i09>).
     Please see 'citation("pbkrtest")' for citation details."""
 
-    homepage = "http://people.math.aau.dk/~sorenh/software/pbkrtest/"
+    homepage = "https://cran.r-project.org/web/packages/pbkrtest/index.html"
     url      = "https://cloud.r-project.org/src/contrib/pbkrtest_0.4-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pbkrtest"
 
+    version('0.5.1', sha256='b2a3452003d93890f122423b3f2487dcb6925440f5b8a05578509e98b6aec7c5')
     version('0.5-0.1', sha256='f56525488c6efe4a5cbf849bf9a82747041478605b166c29bad54e464e46f469')
     version('0.4-7', sha256='5cbb03ad2b2468720a5a610a0ebda48ac08119a34fca77810a85f554225c23ea')
     version('0.4-6', sha256='9d28b8916fea3ffec8d5958bb8c531279b1e273f21fdbeb2fcad6d7e300a9c01')
@@ -32,7 +33,7 @@ class RPbkrtest(RPackage):
     depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.2.3:', when='@0.4-6:', type=('build', 'run'))
     depends_on('r@3.5.0:', when='@0.5-0.1:', type=('build', 'run'))
-    depends_on('r-lme4@1.1.10:', type=('build', 'run'))
+    depends_on('r-lme4@1.1-10:', type=('build', 'run'))
     depends_on('r-broom', when='@0.5-0.1:', type=('build', 'run'))
     depends_on('r-dplyr', when='@0.5-0.1:', type=('build', 'run'))
     depends_on('r-magrittr', when='@0.5-0.1:', type=('build', 'run'))

@@ -2,13 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 import os
+import sys
 
+import spack.build_environment
 import spack.config
-import spack.util.prefix as prefix
 import spack.util.environment as environment
-import spack.build_environment as build_env
+import spack.util.prefix as prefix
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = 'SPACK_LOADED_HASHES'
@@ -18,7 +18,7 @@ def prefix_inspections(platform):
     """Get list of prefix inspections for platform
 
     Arguments:
-        platform (string): the name of the platform to consider. The platform
+        platform (str): the name of the platform to consider. The platform
             determines what environment variables Spack will use for some
             inspections.
 
@@ -26,8 +26,8 @@ def prefix_inspections(platform):
         A dictionary mapping subdirectory names to lists of environment
             variables to modify with that directory if it exists.
     """
-    inspections = spack.config.get('modules:prefix_inspections', None)
-    if inspections is not None:
+    inspections = spack.config.get('modules:prefix_inspections', {})
+    if inspections:
         return inspections
 
     inspections = {
@@ -72,7 +72,7 @@ def environment_modifications_for_spec(spec, view=None):
     the view."""
     spec = spec.copy()
     if view and not spec.external:
-        spec.prefix = prefix.Prefix(view.view().get_projection_for_spec(spec))
+        spec.prefix = prefix.Prefix(view.get_projection_for_spec(spec))
 
     # generic environment modifications determined by inspecting the spec
     # prefix
@@ -85,13 +85,13 @@ def environment_modifications_for_spec(spec, view=None):
     # Let the extendee/dependency modify their extensions/dependents
     # before asking for package-specific modifications
     env.extend(
-        build_env.modifications_from_dependencies(
+        spack.build_environment.modifications_from_dependencies(
             spec, context='run'
         )
     )
 
     # Package specific modifications
-    build_env.set_module_variables_for_package(spec.package)
+    spack.build_environment.set_module_variables_for_package(spec.package)
     spec.package.setup_run_environment(env)
 
     return env

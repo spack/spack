@@ -14,10 +14,11 @@ class RMatrix(RPackage):
     numeric entries.   Numerous methods for and operations on these matrices,
     using 'LAPACK' and 'SuiteSparse' libraries."""
 
-    homepage = "http://matrix.r-forge.r-project.org/"
+    homepage = "https://matrix.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/Matrix_1.2-14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Matrix"
 
+    version('1.3-3', sha256='f77ec8de43ae7bfa19dfdc7e76bfefbb21b3223dbc174423fcde70b44cf36a3b')
     version('1.3-2', sha256='950ba5d91018e711fd2743b3486a50dc47ae9c271389fce587792f0a9aab9531')
     version('1.2-17', sha256='db43e6f0196fd5dfd05a7e88cac193877352c60d771d4ec8772763e645723fcc')
     version('1.2-14', sha256='49a6403547b66675cb44c1afb04bb87130c054510cb2b94971435a826ab41396')

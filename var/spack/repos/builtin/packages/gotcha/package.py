@@ -10,8 +10,10 @@ class Gotcha(CMakePackage):
     """C software library for shared library function wrapping,
     enables tools to intercept calls into shared libraries"""
 
-    homepage = "http://github.com/LLNL/gotcha"
+    homepage = "https://github.com/LLNL/gotcha"
     git      = "https://github.com/LLNL/gotcha.git"
+
+    tags = ['e4s']
 
     version('develop', branch='develop')
     version('master', branch='master')
@@ -26,7 +28,6 @@ class Gotcha(CMakePackage):
         when='@0.0.2:1.0.2')
 
     def configure_args(self):
-        spec = self.spec
         return [
-            '-DGOTCHA_ENABLE_TESTS=%s' % ('ON' if '+test' in spec else 'OFF')
+            self.define_from_variant('GOTCHA_ENABLE_TESTS', 'test')
         ]

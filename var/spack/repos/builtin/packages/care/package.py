@@ -13,6 +13,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/CARE"
     git      = "https://github.com/LLNL/CARE.git"
+    tags     = ['radiuss']
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='main', submodules='True')
@@ -28,8 +29,8 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     variant('tests', default=False, description='Build tests')
     variant('loop_fuser', default=False, description='Enable loop fusion capability')
 
-    depends_on('blt', type='build')
-    depends_on('blt@0.3.7:', type='build', when='+rocm')
+    depends_on('blt@0.4.0:', type='build', when='@0.3.1:')
+    depends_on('blt@:0.3.6', type='build', when='@:0.3.0')
 
     depends_on('camp')
     depends_on('umpire@develop')
@@ -41,9 +42,10 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     # package that uses cub. TODO: have all packages point to the same external
     # cub package.
     depends_on('camp+cuda', when='+cuda')
-    depends_on('umpire+cuda', when='+cuda')
+    depends_on('umpire+cuda~shared', when='+cuda')
+    depends_on('cub', when='+cuda')
     depends_on('raja+cuda~openmp', when='+cuda')
-    depends_on('chai+cuda', when='+cuda')
+    depends_on('chai+cuda~shared', when='+cuda')
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
@@ -62,6 +64,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
 
         options = []
         options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
@@ -69,13 +72,17 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         if '+cuda' in spec:
             options.extend([
                 '-DENABLE_CUDA=ON',
-                '-DCUDA_TOOLKIT_ROOT_DIR=' + spec['cuda'].prefix])
+                '-DCUDA_TOOLKIT_ROOT_DIR=' + spec['cuda'].prefix,
+                '-DNVTOOLSEXT_DIR=' + spec['cuda'].prefix,
+                '-DCUB_DIR=' + spec['cub'].prefix])
 
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
+                # Please note that within care, CUDA_ARCH is assigned to -code
+                # and likewise CUDA_CODE is assigned to -arch, so these are
+                # intentionally flipped here.
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
-                flag = '-arch sm_{0}'.format(cuda_arch[0])
-                options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
+                options.append('-DCUDA_CODE=compute_{0}'.format(cuda_arch[0]))
         else:
             options.append('-DENABLE_CUDA=OFF')
 
@@ -93,46 +100,33 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         else:
             options.append('-DENABLE_HIP=OFF')
 
-        options.append('-DCARE_ENABLE_IMPLICIT_CONVERSIONS={0}'.format(
-            'ON' if '+implicit_conversions' in spec else 'OFF'))
+        options.extend([
+            from_variant('CARE_ENABLE_IMPLICIT_CONVERSIONS',
+                         'implicit_conversions'),
+            from_variant('CARE_ENABLE_LOOP_FUSER', 'loop_fuser'),
+            self.define('CAMP_DIR', spec['camp'].prefix.share.camp.cmake),
+            self.define('UMPIRE_DIR', spec['umpire'].prefix.share.umpire.cmake),
+            self.define('RAJA_DIR', spec['raja'].prefix.share.raja.cmake),
+            self.define('CHAI_DIR', spec['chai'].prefix.share.chai.cmake),
+            from_variant('CARE_ENABLE_TESTS', 'tests'),
+        ])
 
-        options.append('-DCARE_ENABLE_LOOP_FUSER={0}'.format(
-            'ON' if '+loop_fuser' in spec else 'OFF'))
-
-        options.append('-DCAMP_DIR:PATH='
-                       + spec['camp'].prefix.share.camp.cmake)
-        options.append('-DUMPIRE_DIR:PATH='
-                       + spec['umpire'].prefix.share.umpire.cmake)
-        options.append('-DRAJA_DIR:PATH='
-                       + spec['raja'].prefix.share.raja.cmake)
-        options.append('-DCHAI_DIR:PATH='
-                       + spec['chai'].prefix.share.chai.cmake)
-
-        options.append('-DCARE_ENABLE_TESTS={0}'.format(
-            'ON' if '+tests' in spec else 'OFF'))
         # For tests to work, we also need BLT_ENABLE_TESTS to be on.
         # This will take care of the gtest dependency. CARE developers should
         # consider consolidating these flags in the future.
-        options.append('-DBLT_ENABLE_TESTS={0}'.format(
-            'ON' if '+tests' in spec else 'OFF'))
+        options.append(from_variant('BLT_ENABLE_TESTS', 'tests'))
 
         # There are both CARE_ENABLE_* and ENABLE_* variables in here because
         # one controls the BLT infrastructure and the other controls the CARE
         # infrastructure. The goal is to just be able to use the CARE_ENABLE_*
         # variables, but CARE isn't set up correctly for that yet.
-        options.append('-DENABLE_BENCHMARKS={0}'.format(
-            'ON' if '+benchmarks' in spec else 'OFF'))
-        options.append('-DCARE_ENABLE_BENCHMARKS={0}'.format(
-            'ON' if '+benchmarks' in spec else 'OFF'))
+        options.append(from_variant('ENABLE_BENCHMARKS', 'benchmarks'))
+        options.append(from_variant('CARE_ENABLE_BENCHMARKS', 'benchmarks'))
 
-        options.append('-DENABLE_EXAMPLES={0}'.format(
-            'ON' if '+examples' in spec else 'OFF'))
-        options.append('-DCARE_ENABLE_EXAMPLES={0}'.format(
-            'ON' if '+examples' in spec else 'OFF'))
+        options.append(from_variant('ENABLE_EXAMPLES', 'examples'))
+        options.append(from_variant('CARE_ENABLE_EXAMPLES', 'examples'))
 
-        options.append('-DENABLE_DOCS={0}'.format(
-            'ON' if '+docs' in spec else 'OFF'))
-        options.append('-DCARE_ENABLE_DOCS={0}'.format(
-            'ON' if '+docs' in spec else 'OFF'))
+        options.append(from_variant('ENABLE_DOCS', 'docs'))
+        options.append(from_variant('CARE_ENABLE_DOCS', 'docs'))
 
         return options

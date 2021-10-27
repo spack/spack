@@ -9,8 +9,8 @@ from spack import *
 
 class Sympol(CMakePackage):
     """SymPol is a C++ tool to work with symmetric polyhedra"""
-    homepage = "http://www.math.uni-rostock.de/~rehn/software/sympol.html"
-    url      = "http://www.math.uni-rostock.de/~rehn/software/sympol-0.1.8.tar.gz"
+    homepage = "https://www.math.uni-rostock.de/~rehn/software/sympol.html"
+    url      = "https://www.math.uni-rostock.de/~rehn/software/sympol-0.1.8.tar.gz"
 
     version('0.1.8', sha256='8f4c013fa563e696fc8c27c408fd1f3d47783639815e8141e3a99826f1f3d54f')
 

@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import os
+
+from spack import *
 
 
 class Likwid(Package):
@@ -21,6 +22,7 @@ class Likwid(Package):
     git      = "https://github.com/RRZE-HPC/likwid.git"
     maintainers = ['TomTheBear']
 
+    version('5.2.0', sha256='aa6dccacfca59e52d8f3be187ffcf292b2a2fa1f51a81bf8912b9d48e5a257e0')
     version('5.1.1', sha256='faec7c62987967232f476a6ff0ee85af686fd24b5a360126896b7f435d1f943f')
     version('5.1.0', sha256='5a180702a1656c6315b861a85031ab4cb090424aec42cbbb326b849e29f55571')
     version('5.0.2', sha256='0a1c8984e4b43ea8b99d09456ef05035eb934594af1669432117585c638a2da4')
@@ -32,9 +34,18 @@ class Likwid(Package):
     version('4.3.1', sha256='4b40a96717da54514274d166f9b71928545468091c939c1d74109733279eaeb1')
     version('4.3.0', sha256='86fc5f82c80fcff1a643394627839ec79f1ca2bcfad30000eb7018da592588b4')
 
-    patch('https://github.com/RRZE-HPC/likwid/commit/e0332ace8fe8ca7dcd4b4477a25e37944f173a5c.patch', sha256='c3b8f939a46b425665577ce764d4fba080a23cab5999c53db71655fd54d7e0b1', when='@5.0.1')
-    patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch', sha256='636cbf40669261fdb36379d67253be2b731cfa7b6d610d232767d72fbdf08bc0', when='@4.3.4')
-    patch('https://github.com/RRZE-HPC/likwid/files/5341379/likwid-lua5.1.patch.txt', sha256='bc56253c1e3436b5ba7bf4c5533d0391206900c8663c008f771a16376975e416', when='@5.0.2^lua@5.1')
+    patch('https://github.com/RRZE-HPC/likwid/commit/e0332ace8fe8ca7dcd4b4477a25e37944f173a5c.patch',
+          when='@5.0.1',
+          sha256='c3b8f939a46b425665577ce764d4fba080a23cab5999c53db71655fd54d7e0b1')
+    patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch',
+          when='@4.3.4',
+          sha256='636cbf40669261fdb36379d67253be2b731cfa7b6d610d232767d72fbdf08bc0')
+    patch('https://github.com/RRZE-HPC/likwid/files/5341379/likwid-lua5.1.patch.txt',
+          when='@5.0.2^lua@5.1',
+          sha256='bc56253c1e3436b5ba7bf4c5533d0391206900c8663c008f771a16376975e416')
+    patch('https://github.com/RRZE-HPC/likwid/releases/download/v5.1.0/likwid-mpirun-5.1.0.patch',
+          when='@5.1.0',
+          sha256='62da145da0a09de21020f9726290e1daf7437691bab8a92d7254bc192d5f3061')
     variant('fortran', default=True, description='with fortran interface')
     variant('cuda', default=False, description='with Nvidia GPU profiling support')
 
@@ -47,6 +58,7 @@ class Likwid(Package):
     depends_on('lua@5.2:', when='@5:5.0.1')
     depends_on('lua', when='@5.0.2:')
     depends_on('cuda', when='@5: +cuda')
+    depends_on('hwloc', when='@5.2.0:')
 
     # TODO: check
     # depends_on('gnuplot', type='run')
@@ -162,6 +174,19 @@ class Likwid(Package):
             filter_file('^#LUA_BIN.*',
                         'LUA_BIN = {0}'.format(
                             spec['lua'].prefix.bin),
+                        'config.mk')
+
+        if spec.satisfies('^hwloc'):
+            filter_file('^#HWLOC_INCLUDE_DIR.*',
+                        'HWLOC_INCLUDE_DIR = {0}'.format(
+                            spec['hwloc'].prefix.include),
+                        'config.mk')
+            filter_file('^#HWLOC_LIB_DIR.*',
+                        'HWLOC_LIB_DIR = {0}'.format(
+                            spec['hwloc'].prefix.lib),
+                        'config.mk')
+            filter_file('^#HWLOC_LIB_NAME.*',
+                        'HWLOC_LIB_NAME = hwloc',
                         'config.mk')
 
         # https://github.com/RRZE-HPC/likwid/issues/287

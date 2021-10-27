@@ -24,9 +24,17 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     version('6.3', sha256='56ba6071b9462f980c5a72ab0023893b65ba6debb4eeb475d7a563dc65cafd43')
 
     depends_on('ncurses')
-    # from url=http://www.linuxfromscratch.org/patches/downloads/readline/readline-6.3-upstream_fixes-1.patch
+    # from url=https://www.linuxfromscratch.org/patches/downloads/readline/readline-6.3-upstream_fixes-1.patch
     # this fixes a bug that could lead to seg faults in ipython
     patch('readline-6.3-upstream_fixes-1.patch', when='@6.3')
 
     def build(self, spec, prefix):
         make('SHLIB_LIBS=' + spec['ncurses'].libs.ld_flags)
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('${GCC+-Wno-parentheses}', '', 'configure',
+                        string=True)
+            filter_file('${GCC+-Wno-format-security}', '', 'configure',
+                        string=True)

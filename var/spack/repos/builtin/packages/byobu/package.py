@@ -10,7 +10,7 @@ from spack import *
 class Byobu(AutotoolsPackage):
     """Byobu: Text-based window manager and terminal multiplexer."""
 
-    homepage = "http://www.byobu.co"
+    homepage = "https://www.byobu.co/"
     url      = "https://launchpad.net/byobu/trunk/5.123/+download/byobu_5.123.orig.tar.gz"
 
     maintainers = ['matthiasdiener']

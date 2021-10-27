@@ -3,16 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import sys
+
+from spack import *
 
 
 class Mesa18(AutotoolsPackage):
     """Mesa is an open-source implementation of the OpenGL specification
      - a system for rendering interactive 3D graphics."""
 
-    homepage = "http://www.mesa3d.org"
+    homepage = "https://www.mesa3d.org"
     maintainers = ['v-dobrev', 'chuckatkins', 'ChristianTackeGSI']
 
     # Note that we always want to build from the git repo instead of a
@@ -28,7 +28,7 @@ class Mesa18(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
+    depends_on('binutils+plugins', when=(sys.platform != 'darwin'), type='build')
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('gettext', type='build')

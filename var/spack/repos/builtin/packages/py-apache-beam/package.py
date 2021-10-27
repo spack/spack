@@ -18,7 +18,6 @@ class PyApacheBeam(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-pip@7.0.0:', type=('build', 'run'))
     depends_on('py-cython@0.28.1:', type=('build', 'run'))
-    depends_on('py-avro@1.8.1:1.10.8', type=('build', 'run'), when='^python@:2.9')
     depends_on('py-avro-python3@1.8.1:1.10.0', type=('build', 'run'), when='^python@3.0:')
     depends_on('py-crcmod@1.7:', type=('build', 'run'))
     depends_on('py-dill@0.3.1:0.3.2', type=('build', 'run'))
@@ -42,5 +41,3 @@ class PyApacheBeam(PythonPackage):
     depends_on('py-requests@2.24.0:3.0.0', type=('build', 'run'))
     depends_on('py-typing@3.7.0:3.8.0', type=('build', 'run'), when='^python@:3.5')
     depends_on('py-typing-extensions@3.7.0:3.8.0', type=('build', 'run'))
-
-    conflicts('+py-avro-python3', when='@1.9.2')

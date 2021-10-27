@@ -15,3 +15,5 @@ class PyTwisted(PythonPackage):
     version('15.3.0', sha256='025729751cf898842262375a40f70ae1d246daea88369eab9f6bb96e528bf285')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-zope-interface@3.6.0:', type=('build', 'run'), when='^python@:2')
+    depends_on('py-zope-interface@4.0.2:', type=('build', 'run'), when='^python@3:')

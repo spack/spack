@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,7 +55,8 @@ class Exago(CMakePackage, CudaPackage):
     depends_on('hiop~mpi', when='+hiop~mpi')
     depends_on('hiop+mpi', when='+hiop+mpi')
 
-    depends_on('petsc', when='+petsc')
+    # Require PETSc < 3.15 per ExaGO issue #199
+    depends_on('petsc@3.13:3.14', when='+petsc')
     depends_on('petsc~mpi', when='+petsc~mpi')
     depends_on('ipopt', when='+ipopt')
 

@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class AoclSparse(CMakePackage):
@@ -22,7 +23,7 @@ class AoclSparse(CMakePackage):
     version('3.0',  sha256='1d04ba16e04c065051af916b1ed9afce50296edfa9b1513211a7378e1d6b952e')
     version('2.2',  sha256='33c2ed6622cda61d2613ee63ff12c116a6cd209c62e54307b8fde986cd65f664')
 
-    conflicts("%gcc@:9.1.999", msg="Minimum required GCC version is 9.2.0")
+    conflicts("%gcc@:9.1", msg="Minimum required GCC version is 9.2.0")
 
     variant('build_type', default='Release',
             description='CMake build type',
@@ -66,8 +67,7 @@ class AoclSparse(CMakePackage):
             args.append("-DCMAKE_BUILD_TYPE=Release")
 
         args.extend([
-            "-DBUILD_SHARED_LIBS:BOOL=%s" % (
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
 
             "-DBUILD_CLIENTS_BENCHMARKS:BOOL=%s" % (
                 'ON' if self.run_tests else 'OFF')
@@ -75,8 +75,7 @@ class AoclSparse(CMakePackage):
 
         if spec.satisfies('@3.0:'):
             args.extend([
-                "-DBUILD_ILP64:BOOL=%s" % (
-                    'ON' if '+ilp64' in spec else 'OFF')
+                self.define_from_variant('BUILD_ILP64', 'ilp64')
             ])
 
         return args

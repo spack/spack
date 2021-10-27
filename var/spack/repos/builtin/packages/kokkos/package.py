@@ -2,8 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
 import os.path
+
+from spack import *
 
 
 class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
@@ -12,14 +13,18 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/kokkos/kokkos"
     git = "https://github.com/kokkos/kokkos.git"
-    url = "https://github.com/kokkos/kokkos/archive/3.3.01.tar.gz"
+    url      = "https://github.com/kokkos/kokkos/archive/3.4.01.tar.gz"
+
+    tags = ['e4s']
 
     test_requires_compiler = True
 
-    maintainers = ['jjwilke', 'jciesko']
+    maintainers = ['DavidPoliakoff', 'jciesko']
 
     version('master',  branch='master')
     version('develop', branch='develop')
+    version('3.4.01', sha256='146d5e233228e75ef59ca497e8f5872d9b272cb93e8e9cdfe05ad34a23f483d1')
+    version('3.4.00', sha256='2e4438f9e4767442d8a55e65d000cc9cde92277d415ab4913a96cd3ad901d317')
     version('3.3.01', sha256='4919b00bb7b6eb80f6c335a32f98ebe262229d82e72d3bae6dd91aaf3d234c37')
     version('3.2.00', sha256='05e1b4dd1ef383ca56fe577913e1ff31614764e65de6d6f2a163b2bddb60b3e9')
     version('3.1.01', sha256='ff5024ebe8570887d00246e2793667e0d796b08c77a8227fe271127d36eec9dd')
@@ -34,8 +39,10 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'pthread': [False, 'Whether to build Pthread backend'],
         'serial': [True,  'Whether to build serial backend'],
         'rocm': [False, 'Whether to build HIP backend'],
+        'sycl': [False, 'Whether to build the SYCL backend'],
     }
     conflicts("+rocm", when="@:3.0")
+    conflicts("+sycl", when="@:3.3")
 
     tpls_variants = {
         'hpx': [False, 'Whether to enable the HPX library'],
@@ -49,6 +56,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                                      'Aggressively vectorize loops'],
         'compiler_warnings': [False,
                               'Print all compiler warnings'],
+        'cuda_constexpr': [False,
+                           'Activate experimental constexpr features'],
         'cuda_lambda': [False,
                         'Activate experimental lambda features'],
         'cuda_ldg_intrinsic': [False,
@@ -79,46 +88,22 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     }
 
     spack_micro_arch_map = {
-        "graviton": "",
-        "graviton2": "",
-        "aarch64": "",
-        "arm": "",
-        "ppc": "",
-        "ppc64": "",
-        "ppc64le": "",
-        "ppcle": "",
-        "sparc": None,
-        "sparc64": None,
-        "x86": "",
-        "x86_64": "",
         "thunderx2": "THUNDERX2",
-        "k10": None,
         "zen": "ZEN",
-        "bulldozer": "",
-        "piledriver": "",
         "zen2": "ZEN2",
         "steamroller": "KAVERI",
         "excavator": "CARIZO",
-        "a64fx": "",
         "power7": "POWER7",
         "power8": "POWER8",
         "power9": "POWER9",
         "power8le": "POWER8",
         "power9le": "POWER9",
-        "i686": None,
-        "pentium2": None,
-        "pentium3": None,
-        "pentium4": None,
-        "prescott": None,
-        "nocona": None,
-        "nehalem": None,
         "sandybridge": "SNB",
         "haswell": "HSW",
         "mic_knl": "KNL",
         "cannonlake": "SKX",
         "cascadelake": "SKX",
         "westmere": "WSM",
-        "core2": None,
         "ivybridge": "SNB",
         "broadwell": "BDW",
         # @AndrewGaspar: Kokkos does not have an arch for plain-skylake - only
@@ -189,14 +174,36 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos-nvcc-wrapper@master", when="@master+wrapper")
     conflicts("+wrapper", when="~cuda")
 
-    variant("std", default="14", values=["11", "14", "17", "20"], multi=False)
+    stds = ["11", "14", "17", "20"]
+    variant("std", default="14", values=stds, multi=False)
     variant("pic", default=False, description="Build position independent code")
 
     # nvcc does not currently work with C++17 or C++20
-    conflicts("+cuda", when="std=17")
+    conflicts("+cuda", when="std=17 ^cuda@:10")
     conflicts("+cuda", when="std=20")
 
+    # HPX should use the same C++ standard
+    for std in stds:
+        depends_on('hpx cxxstd={0}'.format(std), when='+hpx std={0}'.format(std))
+
     variant('shared', default=True, description='Build shared libraries')
+
+    @classmethod
+    def get_microarch(cls, target):
+        """Get the Kokkos microarch name for a Spack target (spec.target).
+        """
+        smam = cls.spack_micro_arch_map
+
+        # Find closest ancestor that has a known microarch optimization
+        if target.name not in smam:
+            for target in target.ancestors:
+                if target.name in smam:
+                    break
+            else:
+                # No known microarch optimizatinos
+                return None
+
+        return smam[target.name]
 
     def append_args(self, cmake_prefix, cmake_options, spack_options):
         variant_to_cmake_option = {'rocm': 'hip'}
@@ -225,7 +232,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
 
-        if spec.satisfies('~wrapper+cuda') and not spec.satisfies('%clang'):
+        if spec.satisfies("~wrapper+cuda") and not (
+            spec.satisfies("%clang") or spec.satisfies("%cce")
+        ):
             raise InstallError("Kokkos requires +wrapper when using +cuda"
                                "without clang")
 
@@ -246,7 +255,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                     kokkos_arch_name = self.spack_cuda_arch_map[cuda_arch]
                     spack_microarches.append(kokkos_arch_name)
 
-        kokkos_microarch_name = self.spack_micro_arch_map[spec.target.name]
+        kokkos_microarch_name = self.get_microarch(spec.target)
         if kokkos_microarch_name:
             spack_microarches.append(kokkos_microarch_name)
 

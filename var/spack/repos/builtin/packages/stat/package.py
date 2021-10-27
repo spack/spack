@@ -9,7 +9,7 @@ from spack import *
 class Stat(AutotoolsPackage):
     """Library to create, manipulate, and export graphs Graphlib."""
 
-    homepage = "http://paradyn.org/STAT/STAT.html"
+    homepage = "https://paradyn.org/STAT/STAT.html"
     url      = "https://github.com/LLNL/STAT/archive/v2.0.0.tar.gz"
     git      = "https://github.com/llnl/stat.git"
     maintainers = ['lee218llnl']
@@ -46,7 +46,7 @@ class Stat(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('dyninst', when='~dysect')
-    depends_on('dyninst@:9.99', when='@:4.0.1')
+    depends_on('dyninst@:9', when='@:4.0.1')
     depends_on('dyninst@8.2.1+stat_dysect', when='+dysect')
     # we depend on fgfs@master to avoid seg faults with fgfs 1.1
     depends_on('fast-global-file-status@master', when='+fgfs')
@@ -66,6 +66,9 @@ class Stat(AutotoolsPackage):
     depends_on('boost')
 
     patch('configure_mpicxx.patch', when='@2.1.0')
+
+    # No Mac support due to dependencies like dyninst, elf etc.
+    conflicts('platform=darwin', msg='macOS is not supported')
 
     def configure_args(self):
         spec = self.spec

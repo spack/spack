@@ -25,6 +25,9 @@ class Aocc(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['flang']
 
+    PrgEnv = 'PrgEnv-aocc'
+    PrgEnv_compiler = 'aocc'
+
     version_argument = '--version'
 
     @property
@@ -95,15 +98,12 @@ class Aocc(Compiler):
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
-        loc_ver = 'unknown'
-
         match = re.search(
-            r'AMD clang version ([^ )]+)',
+            r'AOCC_(\d+)[._](\d+)[._](\d+)',
             output
         )
         if match:
-            loc_ver = output.split('AOCC_')[1].split('-')[0]
-        return loc_ver
+            return '.'.join(match.groups())
 
     @classmethod
     def fc_version(cls, fortran_compiler):

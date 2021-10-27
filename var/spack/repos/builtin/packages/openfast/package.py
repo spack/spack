@@ -9,13 +9,21 @@ from spack import *
 class Openfast(CMakePackage):
     """Wind turbine simulation package from NREL"""
 
-    homepage = "http://openfast.readthedocs.io/en/latest/"
+    homepage = "https://openfast.readthedocs.io/en/latest/"
     git      = "https://github.com/OpenFAST/openfast.git"
 
     maintainers = ['jrood-nrel']
 
     version('develop', branch='dev')
-    version('master', branch='master')
+    version('master', branch='main')
+    version('2.6.0', tag='v2.6.0')
+    version('2.5.0', tag='v2.5.0')
+    version('2.4.0', tag='v2.4.0')
+    version('2.3.0', tag='v2.3.0')
+    version('2.2.0', tag='v2.2.0')
+    version('2.1.0', tag='v2.1.0')
+    version('2.0.0', tag='v2.0.0')
+    version('1.0.0', tag='v1.0.0')
 
     variant('shared', default=True,
             description="Build shared libraries")
@@ -47,16 +55,11 @@ class Openfast(CMakePackage):
         options.extend([
             '-DBUILD_DOCUMENTATION:BOOL=OFF',
             '-DBUILD_TESTING:BOOL=OFF',
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DDOUBLE_PRECISION:BOOL=%s' % (
-                'ON' if '+double-precision' in spec else 'OFF'),
-            '-DUSE_DLL_INTERFACE:BOOL=%s' % (
-                'ON' if '+dll-interface' in spec else 'OFF'),
-            '-DBUILD_OPENFAST_CPP_API:BOOL=%s' % (
-                'ON' if '+cxx' in spec else 'OFF'),
-            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
-                'ON' if '+pic' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('DOUBLE_PRECISION', 'double-precision'),
+            self.define_from_variant('USE_DLL_INTERFACE', 'dll-interface'),
+            self.define_from_variant('BUILD_OPENFAST_CPP_API', 'cxx'),
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'),
         ])
 
         # Make sure we use Spack's blas/lapack:

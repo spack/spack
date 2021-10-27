@@ -43,7 +43,7 @@ class Openldap(AutotoolsPackage):
     # depends_on('Pth', when='~client_only') # not avail. in spack yet
     depends_on('perl', when='~client_only+perl')  # for slapd
 
-    # Ref: http://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
+    # Ref: https://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
     @when('+client_only')
     def configure_args(self):
         return ['CPPFLAGS=-D_GNU_SOURCE',

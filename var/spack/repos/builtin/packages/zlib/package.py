@@ -11,9 +11,9 @@ class Zlib(Package):
     data-compression library.
     """
 
-    homepage = "http://zlib.net"
+    homepage = "https://zlib.net"
     # URL must remain http:// so Spack can bootstrap curl
-    url = "http://zlib.net/fossils/zlib-1.2.11.tar.gz"
+    url = "https://zlib.net/fossils/zlib-1.2.11.tar.gz"
 
     version('1.2.11', sha256='c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1')
     # Due to the bug fixes, any installations of 1.2.9 or 1.2.10 should be
