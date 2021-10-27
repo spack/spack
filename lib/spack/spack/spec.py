@@ -4754,8 +4754,12 @@ class SpecParser(spack.parse.Parser):
         # Generate lookups for git-commit-based versions
         for spec in specs:
             # Cannot do lookups for versions in anonymous specs
-            # Only allow concrete versions using git for now
-            if spec.name and spec.versions.concrete and spec.version.is_commit:
+            # Only allow Version objects to use git for now
+            # Note: VersionRange(x, x) is currently concrete, hence isinstance(...).
+            if (
+                spec.name and spec.versions.concrete and
+                isinstance(spec.version, vn.Version) and spec.version.is_commit
+            ):
                 pkg = spec.package
                 if hasattr(pkg, 'git'):
                     spec.version.generate_commit_lookup(pkg)
