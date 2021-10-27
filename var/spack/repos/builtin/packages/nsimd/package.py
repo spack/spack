@@ -103,15 +103,15 @@ class Nsimd(CMakePackage):
             elif 'sve' in self.spec.target:
                 # We require an explicit choice for particluar bit widths
                 simd = 'SVE'
-            elif self.spec.satisfies('target=aarch64'):
+            elif self.spec.satisfies('target=aarch64:'):
                 simd = 'AARCH64'
             elif 'neon' in self.spec.target:
                 simd = 'NEON128'
             # POWER
             elif 'vsx' in self.spec.target:
                 simd = 'VSX'
-            elif (self.spec.satisfies('target=ppc64') or
-                  self.spec.satisfies('target=ppc64le')):
+            elif (self.spec.satisfies('target=ppc64:') or
+                  self.spec.satisfies('target=ppc64le:')):
                 simd = 'VMX'
             # Unknown CPU architecture
             else:
