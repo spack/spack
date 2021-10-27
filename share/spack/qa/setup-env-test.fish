@@ -167,8 +167,8 @@ end
 
 
 #
-# Ensure that a string is not in the output of a command.
-# Suppresses output on success.
+# Ensure that a string is not in the output of a command. The command must have a 0 exit
+# status to guard against false positives. Suppresses output on success.
 # On failure, echo the exit code and output.
 #
 function spt_does_not_contain
@@ -179,17 +179,24 @@ function spt_does_not_contain
 
     set -l output ($remaining_args 2>&1)
 
-    if not echo "$output" | string match -q -r ".*$target_string.*"
+    # Save the command result
+    set cmd_status $status
+
+    if test $cmd_status -ne 0
+        fail
+        echo_red "Command exited with error $cmd_status."
+    else if not echo "$output" | string match -q -r ".*$target_string.*"
         pass
+        return
     else
         fail
         echo_red "'$target_string' was in the output."
-        if test -n "$output"
-            echo_msg "Output:"
-            echo "$output"
-        else
-            echo_msg "No output."
-        end
+    end
+    if test -n "$output"
+        echo_msg "Output:"
+        echo "$output"
+    else
+        echo_msg "No output."
     end
 end
 

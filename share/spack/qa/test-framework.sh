@@ -133,8 +133,8 @@ contains() {
 }
 
 #
-# Ensure that a string is not in the output of a command.
-# Suppresses output on success.
+# Ensure that a string is not in the output of a command. The command must have a 0 exit
+# status to guard against false positives. Suppresses output on success.
 # On failure, echo the exit code and output.
 #
 does_not_contain() {
@@ -145,17 +145,20 @@ does_not_contain() {
     output=$("$@" 2>&1)
     err="$?"
 
-    if [ "${output#*$string}" = "${output}" ]; then
+    if [ "$err" != 0 ]; then
+        fail
+    elif [ "${output#*$string}" = "${output}" ]; then
         pass
+        return
     else
         fail
         echo_red "'$string' was in the output."
-        if [ -n "$output" ]; then
-            echo_msg "Output:"
-            echo "$output"
-        else
-            echo_msg "No output."
-        fi
+    fi
+    if [ -n "$output" ]; then
+        echo_msg "Output:"
+        echo "$output"
+    else
+        echo_msg "No output."
     fi
 }
 
