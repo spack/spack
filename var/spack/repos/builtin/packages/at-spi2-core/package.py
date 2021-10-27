@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -16,6 +18,7 @@ class AtSpi2Core(MesonPackage):
     list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core"
     list_depth = 1
 
+    version('2.42.0', sha256='4b5da10e94fa3c6195f95222438f63a0234b99ef9df772c7640e82baeaa6e386')
     version('2.40.1', sha256='9f66e3a4ee42db897af478a826b1366d7011a6d55ddb7e9d4bfeb3300ab23856')
     version('2.38.0', sha256='84e36c3fe66862133f5fe229772b76aa2526e10de5014a3778f2fa46ce550da5')
     version('2.36.0', sha256='88da57de0a7e3c60bc341a974a80fdba091612db3547c410d6deab039ca5c05a')
@@ -28,17 +31,19 @@ class AtSpi2Core(MesonPackage):
     depends_on('libx11')
     depends_on('libxi')
     depends_on('libxtst')
-    depends_on('recordproto')
-    depends_on('inputproto')
-    depends_on('fixesproto')
     depends_on('pkgconfig', type='build')
-    depends_on('python', type='build')
     depends_on('gobject-introspection')
 
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/at-spi2-core'
         return url + '/%s/at-spi2-core-%s.tar.xz' % (version.up_to(2), version)
+
+    def patch(self):
+        """Skip test functions requiring running DBUS service if DBUS is not present"""
+        if not os.environ.get('DBUS_SESSION_BUS_ADDRESS'):
+            filter_file('   test_teamspaces', '// test_teamspaces', 'dbind/dbtest.c')
+            filter_file(r"test\('memory", "# test('memory", 'test/meson.build')
 
     def setup_run_environment(self, env):
         env.prepend_path("GI_TYPELIB_PATH",
@@ -51,7 +56,3 @@ class AtSpi2Core(MesonPackage):
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.prepend_path("GI_TYPELIB_PATH",
                          join_path(self.prefix.lib, 'girepository-1.0'))
-
-    def setup_build_environment(self, env):
-        # this avoids an "import site" error in the build
-        env.unset('PYTHONHOME')

@@ -29,7 +29,6 @@ class Atk(Package):
     depends_on('gettext')
     depends_on('pkgconfig', type='build')
     depends_on('gobject-introspection')
-    depends_on('libffi')
 
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""
