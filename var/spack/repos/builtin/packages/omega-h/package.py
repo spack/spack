@@ -16,11 +16,13 @@ class OmegaH(CMakePackage):
     git      = "https://github.com/BlueBrain/omega_h.git"
 
     version('develop', branch='master')
+    version('9.34.5', sha256='1fa67122d2b6d2b3d0d05fa0c5ed1fa24234d072292b29cb334879ffb5adcc92')
     version('9.33.2', sha256='02ddea3aca36170edb1a63c6e2af419004727d2346d759ab224c70bbfa3455da')
     version('9.33.0.dev1', sha256='984831746222317b9701a58042cb3da1754845a50cb17d865e3e8210beb5dd6b')
     version('9.32.5.dev3', sha256='83381f728688ad9d786f02946fe101bf577c7c3268a40e46264935e7cd1a5d97')
     version('9.31.3.dev2', sha256='8ff448a5185e916068dc41e25a0e7a262d12543426c3888ae145ed90a7afa0de')
     version('9.30.0', sha256='7160045ea12718269f345c7be93a386533ebb76788504df413f22fbcb072f158')
+    version('9.29.2.dev1', sha256='d180c8b32768464e6e3e909f06ed9c8dbb21bd6443e88687409434dd307fe150')
     version('9.29.2', sha256='8eea6da0ebde44176a6d19fb858f89f872611cbad08cad65700757e096058465')
     version('9.28.0', sha256='681588974116025c6c1c535972386c23fe354502319fcbbbdc5b9d373429c08e')
     version('9.27.3', sha256='7c0b0c9c00cda97763be1287d3bf8b931bcdd07bf4971fc7258a3892d628cf20')
