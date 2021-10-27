@@ -20,4 +20,4 @@ class PyCachetools(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools@46.4.0:', type='build', when='@4.2.2:')
-    depends_on('py-wheel', type='build', when='@4.2.2:')
+    depends_on('python@3.5:3', type=('build', 'run'), when='@4.2.2:')
