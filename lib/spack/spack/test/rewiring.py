@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from glob import glob
 
 import spack.rewiring
 from spack.spec import Spec
