@@ -21,7 +21,7 @@ import spack.paths
 import spack.store
 from spack.util.executable import which
 
-too_long = sbang.shebang_limit + 1
+too_long = sbang.system_shebang_limit + 1
 
 
 short_line        = "#!/this/is/short/bin/bash\n"
@@ -30,6 +30,10 @@ long_line         = "#!/this/" + ('x' * too_long) + "/is/long\n"
 lua_line          = "#!/this/" + ('x' * too_long) + "/is/lua\n"
 lua_in_text       = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
 lua_line_patched  = "--!/this/" + ('x' * too_long) + "/is/lua\n"
+
+luajit_line          = "#!/this/" + ('x' * too_long) + "/is/luajit\n"
+luajit_in_text       = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
+luajit_line_patched  = "--!/this/" + ('x' * too_long) + "/is/luajit\n"
 
 node_line         = "#!/this/" + ('x' * too_long) + "/is/node\n"
 node_in_text      = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
@@ -84,13 +88,28 @@ class ScriptDirectory(object):
             f.write(last_line)
         self.make_executable(self.lua_shebang)
 
-        # Lua script with long shebang
+        # Lua occurring in text, not in shebang
         self.lua_textbang = os.path.join(self.tempdir, 'lua_in_text')
         with open(self.lua_textbang, 'w') as f:
             f.write(short_line)
             f.write(lua_in_text)
             f.write(last_line)
         self.make_executable(self.lua_textbang)
+
+        # Luajit script with long shebang
+        self.luajit_shebang = os.path.join(self.tempdir, 'luajit')
+        with open(self.luajit_shebang, 'w') as f:
+            f.write(luajit_line)
+            f.write(last_line)
+        self.make_executable(self.luajit_shebang)
+
+        # Luajit occuring in text, not in shebang
+        self.luajit_textbang = os.path.join(self.tempdir, 'luajit_in_text')
+        with open(self.luajit_textbang, 'w') as f:
+            f.write(short_line)
+            f.write(luajit_in_text)
+            f.write(last_line)
+        self.make_executable(self.luajit_textbang)
 
         # Node script with long shebang
         self.node_shebang = os.path.join(self.tempdir, 'node')
@@ -99,7 +118,7 @@ class ScriptDirectory(object):
             f.write(last_line)
         self.make_executable(self.node_shebang)
 
-        # Node script with long shebang
+        # Node occuring in text, not in shebang
         self.node_textbang = os.path.join(self.tempdir, 'node_in_text')
         with open(self.node_textbang, 'w') as f:
             f.write(short_line)
@@ -114,7 +133,7 @@ class ScriptDirectory(object):
             f.write(last_line)
         self.make_executable(self.php_shebang)
 
-        # php script with long shebang
+        # php occuring in text, not in shebang
         self.php_textbang = os.path.join(self.tempdir, 'php_in_text')
         with open(self.php_textbang, 'w') as f:
             f.write(short_line)
@@ -157,16 +176,22 @@ def script_dir(sbang_line):
     sdir.destroy()
 
 
+@pytest.mark.parametrize('shebang,interpreter', [
+    (b'#!/path/to/interpreter argument\n', b'/path/to/interpreter'),
+    (b'#!  /path/to/interpreter truncated-argum', b'/path/to/interpreter'),
+    (b'#! \t  \t/path/to/interpreter\t  \targument', b'/path/to/interpreter'),
+    (b'#! \t \t /path/to/interpreter', b'/path/to/interpreter'),
+    (b'#!/path/to/interpreter\0', b'/path/to/interpreter'),
+    (b'#!/path/to/interpreter multiple args\n', b'/path/to/interpreter'),
+    (b'#!\0/path/to/interpreter arg\n', None),
+    (b'#!\n/path/to/interpreter arg\n', None),
+    (b'#!', None)
+])
+def test_shebang_interpreter_regex(shebang, interpreter):
+    sbang.get_interpreter(shebang) == interpreter
+
+
 def test_shebang_handling(script_dir, sbang_line):
-    assert sbang.shebang_too_long(script_dir.lua_shebang)
-    assert sbang.shebang_too_long(script_dir.long_shebang)
-    assert sbang.shebang_too_long(script_dir.nonexec_long_shebang)
-
-    assert not sbang.shebang_too_long(script_dir.short_shebang)
-    assert not sbang.shebang_too_long(script_dir.has_sbang)
-    assert not sbang.shebang_too_long(script_dir.binary)
-    assert not sbang.shebang_too_long(script_dir.directory)
-
     sbang.filter_shebangs_in_directory(script_dir.tempdir)
 
     # Make sure this is untouched
@@ -192,6 +217,12 @@ def test_shebang_handling(script_dir, sbang_line):
         assert f.readline() == last_line
 
     # Make sure this got patched.
+    with open(script_dir.luajit_shebang, 'r') as f:
+        assert f.readline() == sbang_line
+        assert f.readline() == luajit_line_patched
+        assert f.readline() == last_line
+
+    # Make sure this got patched.
     with open(script_dir.node_shebang, 'r') as f:
         assert f.readline() == sbang_line
         assert f.readline() == node_line_patched
@@ -199,8 +230,12 @@ def test_shebang_handling(script_dir, sbang_line):
 
     assert filecmp.cmp(script_dir.lua_textbang,
                        os.path.join(script_dir.tempdir, 'lua_in_text'))
+    assert filecmp.cmp(script_dir.luajit_textbang,
+                       os.path.join(script_dir.tempdir, 'luajit_in_text'))
     assert filecmp.cmp(script_dir.node_textbang,
                        os.path.join(script_dir.tempdir, 'node_in_text'))
+    assert filecmp.cmp(script_dir.php_textbang,
+                       os.path.join(script_dir.tempdir, 'php_in_text'))
 
     # Make sure this is untouched
     with open(script_dir.has_sbang, 'r') as f:
@@ -261,7 +296,7 @@ def test_install_sbang(install_mockery):
 
 def test_install_sbang_too_long(tmpdir):
     root = str(tmpdir)
-    num_extend = sbang.shebang_limit - len(root) - len('/bin/sbang')
+    num_extend = sbang.system_shebang_limit - len(root) - len('/bin/sbang')
     long_path = root
     while num_extend > 1:
         add = min(num_extend, 255)
@@ -282,7 +317,7 @@ def test_sbang_hook_skips_nonexecutable_blobs(tmpdir):
     # consisting of invalid UTF-8. The latter is technically not really necessary for
     # the test, but binary blobs accidentally starting with b'#!' usually do not contain
     # valid UTF-8, so we also ensure that Spack does not attempt to decode as UTF-8.
-    contents = b'#!' + b'\x80' * sbang.shebang_limit
+    contents = b'#!' + b'\x80' * sbang.system_shebang_limit
     file = str(tmpdir.join('non-executable.sh'))
     with open(file, 'wb') as f:
         f.write(contents)
@@ -292,3 +327,50 @@ def test_sbang_hook_skips_nonexecutable_blobs(tmpdir):
     # Make sure there is no sbang shebang.
     with open(file, 'rb') as f:
         assert b'sbang' not in f.readline()
+
+
+def test_sbang_handles_non_utf8_files(tmpdir):
+    # We have an executable with a copyright sign as filename
+    contents = (b'#!' + b'\xa9' * sbang.system_shebang_limit +
+                b'\nand another symbol: \xa9')
+
+    # Make sure it's indeed valid latin1 but invalid utf-8.
+    assert contents.decode('latin1')
+    with pytest.raises(UnicodeDecodeError):
+        contents.decode('utf-8')
+
+    # Put it in an executable file
+    file = str(tmpdir.join('latin1.sh'))
+    with open(file, 'wb') as f:
+        f.write(contents)
+
+    # Run sbang
+    assert sbang.filter_shebang(file)
+
+    with open(file, 'rb') as f:
+        new_contents = f.read()
+
+    assert contents in new_contents
+    assert b'sbang' in new_contents
+
+
+@pytest.fixture
+def shebang_limits_system_8_spack_16():
+    system_limit, sbang.system_shebang_limit = sbang.system_shebang_limit, 8
+    spack_limit, sbang.spack_shebang_limit = sbang.spack_shebang_limit, 16
+    yield
+    sbang.system_shebang_limit = system_limit
+    sbang.spack_shebang_limit = spack_limit
+
+
+def test_shebang_exceeds_spack_shebang_limit(shebang_limits_system_8_spack_16, tmpdir):
+    """Tests whether shebangs longer than Spack's limit are skipped"""
+    file = str(tmpdir.join('longer_than_spack_limit.sh'))
+    with open(file, 'wb') as f:
+        f.write(b'#!' + b'x' * sbang.spack_shebang_limit)
+
+    # Then Spack shouldn't try to add a shebang
+    assert not sbang.filter_shebang(file)
+
+    with open(file, 'rb') as f:
+        assert b'sbang' not in f.read()
