@@ -7,6 +7,7 @@ import os
 import shutil
 
 import llnl.util.tty as tty
+
 from spack.build_systems.windows_variants import WindowsPackage
 
 
@@ -94,7 +95,6 @@ class Hdf5(CMakePackage, WindowsPackage):
     depends_on('zlib@1.1.2:')
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
-    
 
     conflicts('api=v114', when='@1.6:1.12',
               msg='v114 is not compatible with this release')
@@ -382,7 +382,8 @@ class Hdf5(CMakePackage, WindowsPackage):
         api = spec.variants['api'].value
         if sys.platform == 'win32' and self.spec.satisfies('+staticmt'):
             args.append(self.define('CMAKE_POLICY_DEFAULT_CMP0091', 'NEW'))
-            args.append(self.define('CMAKE_MSVC_RUNTIME_LIBRARY', "MultiThreaded$<$<CONFIG:Debug>:Debug>"))
+            args.append(self.define('CMAKE_MSVC_RUNTIME_LIBRARY',
+                                    "MultiThreaded$<$<CONFIG:Debug>:Debug>"))
 
         if api != 'default':
             args.append(self.define('DEFAULT_API_VERSION', api))
