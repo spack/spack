@@ -605,7 +605,7 @@ class Python(Package):
                 options = getattr(self, 'configure_flag_args', [])
                 options += ['--prefix={0}'.format(prefix)]
                 options += self.configure_args()
-                inspect.getmodule(self).configure(*options)
+                configure(*options)
 
     def build(self, spec, prefix):
         """Makes the build targets specified by
@@ -849,6 +849,22 @@ class Python(Package):
         Returns:
             dict: variable definitions
         """
+        # Some values set by sysconfig may not always exist on Windows, so
+        # compute Windows alternatives
+        def repair_win_sysconf(conf):
+            if is_windows:
+                conf["LIBDIR"] = os.path.join(conf["LIBDEST"], "..", "libs")
+                conf["LIBPL"] = conf["LIBDIR"]
+                conf["PYTHONFRAMEWORKPREFIX"] = ""
+                conf["LDLIBRARY"] = "python" + conf["VERSION"] + ".dll"
+                conf["LIBRARY"] = "python" + conf["VERSION"] + ".lib"
+                conf["CC"] = ""
+                conf["CXX"] = ""
+                conf["LDSHARED"] = ""
+                conf["LDCXXSHARED"] = ""
+
+            return conf
+
         # TODO: distutils is deprecated in Python 3.10 and will be removed in
         # Python 3.12, find a different way to access this information.
         # Also, calling the python executable disallows us from cross-compiling,
@@ -888,7 +904,7 @@ for plat_specific in [True, False]:
                 config = json.loads(self.command('-c', cmd, output=str))
             except (ProcessError, RuntimeError):
                 config = {}
-            self._config_vars[dag_hash] = config
+            self._config_vars[dag_hash] = repair_win_sysconf(config)
         return self._config_vars[dag_hash]
 
     def get_sysconfigdata_name(self):
@@ -935,6 +951,9 @@ for plat_specific in [True, False]:
         # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
         # in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
+        # LIBPL does not exist in Windows, avoid uneccesary KeyError while allowing
+        # later failures.
+        # Return empty string rather than none so os.path doesn't complain
         libpl = self.config_vars['LIBPL']
 
         # The system Python installation on macOS and Homebrew installations
@@ -951,7 +970,7 @@ for plat_specific in [True, False]:
 
         if '+shared' in self.spec:
             ldlibrary = self.config_vars['LDLIBRARY']
-
+            win_bin_dir = self.config_vars['BINDIR']
             if os.path.exists(os.path.join(libdir, ldlibrary)):
                 return LibraryList(os.path.join(libdir, ldlibrary))
             elif os.path.exists(os.path.join(libpl, ldlibrary)):
@@ -961,6 +980,9 @@ for plat_specific in [True, False]:
             elif macos_developerdir and \
                     os.path.exists(os.path.join(macos_developerdir, ldlibrary)):
                 return LibraryList(os.path.join(macos_developerdir, ldlibrary))
+            elif is_windows and \
+                    os.path.exists(os.path.join(win_bin_dir, ldlibrary)):
+                return LibraryList(os.path.join(win_bin_dir, ldlibrary))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
                 raise RuntimeError(msg.format(ldlibrary, libdir))
@@ -1144,7 +1166,7 @@ for plat_specific in [True, False]:
             # fact that LDSHARED is set in the environment, therefore we export
             # the variable only if the new value is different from what we got
             # from the sysconfigdata file:
-            if config_link != new_link:
+            if config_link != new_link and not is_windows:
                 env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
