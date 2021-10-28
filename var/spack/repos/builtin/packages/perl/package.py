@@ -13,7 +13,6 @@
 #
 
 import os
-import platform
 import re
 from contextlib import contextmanager
 
@@ -23,7 +22,8 @@ from llnl.util.symlink import symlink
 
 from spack import *
 
-is_windows = str(spack.platforms.host()) == 'windows'
+host = spack.platforms.host()
+is_windows = str(host) == 'windows'
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -187,23 +187,20 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         perm = os.stat(filename).st_mode
         os.chmod(filename, perm | 0o200)
 
-    def host_is_64bit(self):
-        return platform.machine().endswith('64')
-
     @property
     def nmake_arguments(self):
         args = []
         if self.spec.satisfies('%msvc'):
-            args.append("CCTYPE=%s" % self.compiler.msvc_version)
+            args.append('CCTYPE=%s' % self.compiler.msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
-        args.append("INST_TOP=%s" % self.prefix.replace('/', '\\'))
+        args.append('INST_TOP="%s"' % self.prefix.replace('/', '\\'))
         args.append("INST_ARCH=\\$(ARCHNAME)")
         if self.spec.satisfies('~shared'):
             args.append("ALL_STATIC=%s" % "define")
         if self.spec.satisfies('~threads'):
             args.extend(["USE_MULTI=undef", "USE_ITHREADS=undef", "USE_IMP_SYS=undef"])
-        if not self.host_is_64bit():
+        if not host.is_64bit():
             args.append("WIN64=undef")
         return args
 
@@ -272,7 +269,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if is_windows:
             win32_dir = os.path.join(self.stage.source_path, "win32")
             with working_dir(win32_dir):
-                nmake('test')
+                nmake('test', ignore_quotes=True)
         else:
             make('test')
 
@@ -280,7 +277,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if is_windows:
             win32_dir = os.path.join(self.stage.source_path, "win32")
             with working_dir(win32_dir):
-                nmake('install', *self.nmake_arguments)
+                nmake('install', *self.nmake_arguments,  ignore_quotes=True)
         else:
             make('install')
 
@@ -289,7 +286,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if not is_windows:
             return
         win_install_path = os.path.join(self.prefix.bin, "MSWin32")
-        if self.host_is_64bit():
+        if host.is_64bit():
             win_install_path += "-x64"
         else:
             win_install_path += "-x86"

@@ -146,7 +146,7 @@ def process_stacktrace(countback):
     file_list = []
     for frame in st:
         # Check that the file is a spack file
-        if frame[0].find("/spack") >= 0:
+        if frame[0].find(os.path.sep + "spack") >= 0:
             file_list.append(frame[0])
     # We use commonprefix to find what the spack 'root' directory is.
     root_dir = os.path.commonprefix(file_list)
