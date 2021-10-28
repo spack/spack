@@ -22,10 +22,10 @@ class Portage(CMakePackage):
     version('3.0.0', sha256='7a5a21ffbc35fa54a5136d937cfda6f836c7496ff2b5adf54deb4107501333da')
     version('master', branch='master', submodules=True)
 
-    variant('mpi', default=False, description='Support MPI')
+    variant('mpi', default=True, description='Support MPI')
     variant('tangram', default=False, description='Use Tangram interface reconstruction package')
     variant('jali', default=False, description='Include support for Jali mesh framework')
-    variant('flecsisp', default=False, description='Include support for FleCSI mesh framework')
+    # variant('flecsisp', default=False, description='Include support for FleCSI mesh framework')
     variant('thrust', default=False, description='Enable on-node parallelism using NVidia Thrust library')
     variant('kokkos', default=False, description='Enable on-node or device parallelism with Kokkos')
     variant('openmp', default=False, description="Enable on-node parallelism using OpenMP")
@@ -38,23 +38,23 @@ class Portage(CMakePackage):
     depends_on('thrust', when='+thrust')
     depends_on('jali', when='+jali')
 
-    depends_on('lanl_ristra.tangram@master', when='+tangram')
+    depends_on('tangram', when='+tangram')
 
     tangram_variant = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
 
     # tangram depends on loop
     for i in tangram_variant:
-        depends_on('lanl_ristra.tangram@master+' + i, when='+tangram+' + i)
-        depends_on('lanl_ristra.tangram@master~' + i, when='+tangram~' + i)
+        depends_on('tangram+' + i, when='+tangram+' + i)
+        depends_on('tangram~' + i, when='+tangram~' + i)
 
-    depends_on('lanl_ristra.wonton@master')
+    depends_on('wonton@master')
     # Wonton depends array
     wonton_variant = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
 
     # Wonton depends on loop
     for i in wonton_variant:
-        depends_on('lanl_ristra.wonton@master+' + i, when='+' + i)
-        depends_on('lanl_ristra.wonton@master~' + i, when='~' + i)
+        depends_on('wonton+' + i, when='+' + i)
+        depends_on('wonton~' + i, when='~' + i)
 
     # Jali needs MPI
     conflicts('+jali ~mpi')
