@@ -24,11 +24,15 @@ class Mgis(CMakePackage):
 
     # development branches
     version("master", branch="master")
+    version("rliv-2.0", branch="rliv-2.0")
     version("rliv-1.2", branch="rliv-1.2")
     version("rliv-1.1", branch="rliv-1.1")
     version("rliv-1.0", branch="rliv-1.0")
 
     # released version
+    version('2.0',   sha256='cb427d77f2c79423e969815b948a8b44da33a4370d1760e8c1e22a569f3585e2')
+    version('1.2.2', sha256='dc24e85cc90ec656ed707eef3d511317ad800915014d9e4e9cf8818b406586d5')
+    version('1.2.1', sha256='a2d7cae3a24546adcf1d1bf7f13f012170d359370f5b6b2c1730b19eb507601d')
     version('1.2',   sha256='ed82ab91cbe17c00ef36578dbfcb4d1817d4c956619b7cccbea3e3f1a3b31940')
     version('1.1',   sha256='06593d7a052678deaee87ef60b2213db7545c5be9823f261d3388b3978a0b7a5')
     version('1.0.1', sha256='6102621455bc5d9b1591cd33e93b2e15a9572d2ce59ca6dfa30ba57ae1265c08')
@@ -46,6 +50,9 @@ class Mgis(CMakePackage):
             values=('Debug', 'Release'))
 
     # dependencies
+    depends_on('tfel@4.0.0', when="@2.0")
+    depends_on('tfel@3.4.3', when="@1.2.2")
+    depends_on('tfel@3.4.1', when="@1.2.1")
     depends_on('tfel@3.4.0', when="@1.2")
     depends_on('tfel@3.3.0', when="@1.1")
     depends_on('tfel@3.2.1', when="@1.0.1")
