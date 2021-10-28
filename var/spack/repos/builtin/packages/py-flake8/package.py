@@ -54,7 +54,7 @@ class PyFlake8(PythonPackage):
     depends_on('py-entrypoints@0.3',           when='@3.7.0:3.8', type=('build', 'run'))
     depends_on('py-pyflakes@2.1.0:2.1',    when='@3.7.0:3.7', type=('build', 'run'))
     depends_on('py-pycodestyle@2.5.0:2.5', when='@3.7.0:3.7', type=('build', 'run'))
-    depends_on('py-mccabe@0.6.0:0.6',      when='@3.7.0:3.8', type=('build', 'run'))
+    depends_on('py-mccabe@0.6.0:0.6',      when='@3.7.0:', type=('build', 'run'))
 
     # Flake8 3.5.X
     depends_on('py-pyflakes@1.5:1.6',     when='@3.5.0:3.5', type=('build', 'run'))
@@ -72,7 +72,8 @@ class PyFlake8(PythonPackage):
     depends_on('py-mccabe@0.2.1:0.4',                 when='@2.5.0:2.5', type=('build', 'run'))
 
     # Python version-specific backports
-    depends_on('py-importlib-metadata', when='@3.8.0: ^python@:3.7', type=('build', 'run'))
+    depends_on('py-importlib-metadata', when='@3.8.0:3.9.2 ^python@:3.7', type=('build', 'run'))
+    depends_on('py-importlib-metadata@:4.2', when='@4.0.0: ^python@:3.7', type=('build', 'run'))
     depends_on('py-enum34',             when='@3.0.0: ^python@:3.3', type=('build', 'run'))
     depends_on('py-typing',             when='@3.7.0: ^python@:3.4', type=('build', 'run'))
     depends_on('py-configparser',       when='@3.0.0: ^python@:3.1', type=('build', 'run'))
