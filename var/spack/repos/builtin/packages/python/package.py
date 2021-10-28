@@ -797,6 +797,14 @@ for plat_specific in [True, False]:
         # install libraries into a Frameworks directory
         frameworkprefix = self.config_vars['PYTHONFRAMEWORKPREFIX']
 
+        # Get the active Xcode environment's Framework location.
+        macos_developerdir = os.environ.get('DEVELOPER_DIR')
+        if macos_developerdir and os.path.exists(macos_developerdir):
+            macos_developerdir = os.path.join(
+                macos_developerdir, 'Library', 'Frameworks')
+        else:
+            macos_developerdir = ''
+
         if '+shared' in self.spec:
             ldlibrary = self.config_vars['LDLIBRARY']
 
@@ -806,6 +814,9 @@ for plat_specific in [True, False]:
                 return LibraryList(os.path.join(libpl, ldlibrary))
             elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
                 return LibraryList(os.path.join(frameworkprefix, ldlibrary))
+            elif macos_developerdir and \
+                    os.path.exists(os.path.join(macos_developerdir, ldlibrary)):
+                return LibraryList(os.path.join(macos_developerdir, ldlibrary))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
                 raise RuntimeError(msg.format(ldlibrary, libdir))
