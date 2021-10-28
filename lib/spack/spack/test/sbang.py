@@ -197,12 +197,6 @@ def test_shebang_interpreter_regex(shebang, interpreter):
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Not supported on Windows (yet)")
 def test_shebang_handling(script_dir, sbang_line):
-    assert sbang.shebang_too_long(script_dir.lua_shebang)
-    assert sbang.shebang_too_long(script_dir.long_shebang)
-    assert sbang.shebang_too_long(script_dir.nonexec_long_shebang)
-
-
-def test_shebang_handling(script_dir, sbang_line):
     sbang.filter_shebangs_in_directory(script_dir.tempdir)
 
     # Make sure this is untouched
