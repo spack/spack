@@ -432,13 +432,6 @@ def test_substitute_user(mock_low_high_config):
     )
 
 
-def test_substitute_user_config(mock_low_high_config):
-    user_config_path = spack.paths.user_config_path
-    assert user_config_path + '/baz' == spack_path.canonicalize_path(
-        '$user_cache_path/baz'
-    )
-
-
 def test_substitute_user_cache(mock_low_high_config):
     user_cache_path = spack.paths.user_cache_path
     assert user_cache_path + '/baz' == spack_path.canonicalize_path(

@@ -30,7 +30,6 @@ replacements = {
     'spack': spack.paths.prefix,
     'user': getpass.getuser(),
     'tempdir': tempfile.gettempdir(),
-    'user_config_path': spack.paths.user_config_path,
     'user_cache_path': spack.paths.user_cache_path,
 }
 
@@ -80,7 +79,6 @@ def substitute_config_variables(path):
     - $spack             The Spack instance's prefix
     - $tempdir           Default temporary directory returned by tempfile.gettempdir()
     - $user              The current user's username
-    - $user_config_path  The user configuration directory (~/.spack, unless overridden)
     - $user_cache_path   The user cache directory (~/.spack, unless overridden)
 
     These are substituted case-insensitively into the path, and users can
