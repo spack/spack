@@ -433,6 +433,22 @@ class PyclingoDriver(object):
         # read in the main ASP program and display logic -- these are
         # handwritten, not generated, so we load them as resources
         parent_dir = os.path.dirname(__file__)
+
+        # read in the error messages from the file
+        from clingo.ast import ASTType, parse_string
+        with self.backend:
+            def visit(node):
+                if node.ast_type == ASTType.Rule:
+                    for term in node.body:
+                        if term.ast_type == ASTType.Literal:
+                            if term.atom.ast_type == ASTType.SymbolicAtom:
+                                if term.atom.symbol.name == "error":
+                                    string = term.atom.symbol.arguments[0].symbol.string
+                                    self.fact(fn.error(string), assumption=True)
+            path = os.path.join(parent_dir, 'concretize.lp')
+            parse_string(open(path).read(), visit)
+
+        # Load the file itself
         self.control.load(os.path.join(parent_dir, 'concretize.lp'))
         self.control.load(os.path.join(parent_dir, "display.lp"))
         timer.phase("load")
@@ -532,39 +548,6 @@ class SpackSolverSetup(object):
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
-
-    def error_messages(self):
-        error_messages = [
-            "Internal error: two versions with identical weights",
-            "Each node must have exactly one version",
-            "Internal error: Package version must have a unique weight",
-            "Internal error: package version weight mismatch",
-            "All dependencies must be reachable from root",
-            "Cyclic dependencies are not allowed",
-            "A conflict was triggered",
-            "Virtual packages must be satisfied by a unique provider",
-            "Internal error: virtual when provides not respected",
-            "Virtual packages must provide all of their virtuals",
-            "Internal error: package provider weights must be unique",
-            "External package version does not satisfy external spec",
-            "Internal error: external weight used for internal spec",
-            "External package does not satisfy external spec",
-            "Single valued variants must have a single value",
-            "Internal error: All variants must have a value",
-            "Variant set to invalid value",
-            "Variant values selected from multiple disjoint sets",
-            "Variant value 'none' cannot be combined with any other value",
-            "A node must have exactly one platform",
-            "Each node must have exactly one OS",
-            "Each node must have exactly one target",
-            "No satisfying compiler available is compatible with a satisfying target",
-            "Each node must have exactly one compiler",
-            "Internal error: mismatch between selected compiler and compiler version",
-            "Internal error: node compiler version mismatch",
-            "No satisfying compiler available is compatible with a satisfying os",
-        ]
-        for message in error_messages:
-            self.gen.fact(fn.error(message), assumption=True)
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1559,9 +1542,6 @@ class SpackSolverSetup(object):
 
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
-
-        self.gen.h1("Rule explanations")
-        self.error_messages()
 
 
 class SpecBuilder(object):
