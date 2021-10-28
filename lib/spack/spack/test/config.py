@@ -293,6 +293,7 @@ def test_add_config_path(mutable_config):
     assert "gcc" in compilers
 
 
+@pytest.mark.regression('17543,23259')
 def test_add_config_path_with_enumerated_type(mutable_config):
     spack.config.add("config:concretizer:clingo")
     assert spack.config.get('config')['concretizer'] == "clingo"
