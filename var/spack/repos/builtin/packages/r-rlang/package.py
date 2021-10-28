@@ -13,9 +13,9 @@ class RRlang(RPackage):
     system, and core 'Tidyverse' features like tidy evaluation."""
 
     homepage = "https://cloud.r-project.org/package=rlang"
-    url      = "https://cloud.r-project.org/src/contrib/rlang_0.2.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rlang"
+    cran = "rlang"
 
+    version('0.4.12', sha256='2a26915738be120a56ec93e781bcb50ffa1031e11904544198b4a15c35029915')
     version('0.4.10', sha256='07530270c4c199f2b7efc5d57a476d99babd9d0c3388a02bb7d57fe312da3576')
     version('0.4.6', sha256='3a81b107765fd6ac0ad716c428d01878775ded9208ba125d43c890c73d2533ca')
     version('0.4.0', sha256='9748a4a217548bbe5631c18fd88c94811950446f798ff21fb327703aebaa150d')
