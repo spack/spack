@@ -47,26 +47,12 @@ class Tangram(CMakePackage):
 
     depends_on('mpi', when='+mpi')
 #   Wonton depends array
-    Wonton = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
+    wonton_depends = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
 
 #   Wonton depends on loop
-    for i in Wonton:
-        depends_on('wonton@master+' + i, when='+' + i)
-        depends_on('wonton@master~' + i, when='~' + i)
-
-#    depends_on('wonton@master')
-#    depends_on('wonton@master+jali', when='+jali')
-#    depends_on('wonton@master~jali', when='~jali')
-#    depends_on('wonton@master+mpi', when='+mpi')
-#    depends_on('wonton@master~mpi', when='~mpi')
-#    depends_on('wonton@master+thrust', when='+thrust')
-#    depends_on('wonton@master~thrust', when='~thrust')
-#    depends_on('wonton@master+kokkos', when='+kokkos')
-#    depends_on('wonton@master~kokkos', when='~kokkos')
-#    depends_on('wonton@master+cuda', when='+cuda')
-#    depends_on('wonton@master~cuda', when='~cuda')
-#    depends_on('wonton@master+openmp', when='+openmp')
-#    depends_on('wonton@master~openmp', when='~openmp')
+    for i in wonton_depends:
+        depends_on('wonton+' + i, when='+' + i)
+        depends_on('wonton~' + i, when='~' + i)
 
     def cmake_args(self):
         options = []
