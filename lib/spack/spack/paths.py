@@ -89,8 +89,11 @@ user_cache_path = _get_user_cache_path()
 #: junit, cdash, etc. reports about builds
 reports_path = os.path.join(user_cache_path, "reports")
 
+#: installation test (spack test) output
+default_test_path = os.path.join(user_cache_path, "test")
+
 #: spack monitor analysis directories
-monitor_path = os.path.join(reports_path, "monitor")
+default_monitor_path = os.path.join(reports_path, "monitor")
 
 #: git repositories fetched to compare commits to versions
 user_repos_cache_path = os.path.join(user_cache_path, 'git_repos')
