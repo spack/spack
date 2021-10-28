@@ -14,12 +14,17 @@ class Shtools(MakefilePackage):
 
     maintainers = ['eschnett']
 
+    version('4.9.1', sha256='5c22064f9daf6e9aa08cace182146993aa6b25a6ea593d92572c59f4013d53c2')
     version('4.8', sha256='c36fc86810017e544abbfb12f8ddf6f101a1ac8b89856a76d7d9801ffc8dac44')
     version('4.5', sha256='1975a2a2bcef8c527d321be08c13c2bc479e0d6b81c468a3203f95df59be4f89')
 
     # Note: This package also provides Python wrappers. We do not
     # install these properly yet, only the Fortran library is
     # installed.
+
+    # The Makefile expects the "other" libtool, not the GNU libtool we have in
+    # Spack
+    patch('nolibtool.patch')
 
     variant('openmp', default=True, description="Enable OpenMP support")
 
