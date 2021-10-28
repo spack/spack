@@ -216,3 +216,36 @@ jobs:
           spack bootstrap untrust github-actions
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
+
+  macos-gnupg-binaries:
+    runs-on: macos-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install tree
+          # Remove GnuPG since we want to bootstrap it
+          sudo rm -rf /usr/local/bin/gpg
+      - uses: actions/checkout@v2
+      - name: Bootstrap GnuPG
+        run: |
+          source share/spack/setup-env.sh
+          spack bootstrap untrust spack-install
+          spack -d gpg list
+          tree ~/.spack/bootstrap/store/
+
+  macos-gnupg-sources:
+    runs-on: macos-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install gawk tree
+          # Remove GnuPG since we want to bootstrap it
+          sudo rm -rf /usr/local/bin/gpg
+      - uses: actions/checkout@v2
+      - name: Bootstrap GnuPG
+        run: |
+          source share/spack/setup-env.sh
+          spack solve zlib
+          spack bootstrap untrust github-actions
+          spack -d gpg list
+          tree ~/.spack/bootstrap/store/
