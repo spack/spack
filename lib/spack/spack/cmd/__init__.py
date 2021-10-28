@@ -153,12 +153,23 @@ def parse_specs(args, **kwargs):
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
     tests = kwargs.get('tests', False)
+    all_versions = kwargs.get('all_versions', False)
 
     try:
         sargs = args
         if not isinstance(args, six.string_types):
             sargs = ' '.join(spack.util.string.quote(args))
         specs = spack.spec.parse(sargs)
+
+        new = []
+        if all_versions:
+            for spec in specs:
+                for version, _ in spec.package.versions.items():
+                    new_spec = spack.spec.parse("%s@%s" % (spec.name, version))
+                    if new_spec[0] not in specs:
+                        new.append(new_spec[0])
+
+        specs = specs + new
         for spec in specs:
             if concretize:
                 spec.concretize(tests=tests)  # implies normalize

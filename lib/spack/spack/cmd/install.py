@@ -86,6 +86,9 @@ the dependencies"""
         '--fail-fast', action='store_true',
         help="stop all builds if any build fails (default is best effort)")
     subparser.add_argument(
+        '--all', action='store_true',
+        help="install all versions of a package")
+    subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="don't remove the install prefix if installation fails")
     subparser.add_argument(
@@ -333,6 +336,8 @@ environment variables:
         # then install the packages from it.
         env = ev.active_environment()
         if env:
+            if args.all:
+                tty.die("--all flag does not work in environments.")
             tests = get_tests(env.user_specs)
             kwargs['tests'] = tests
 
@@ -386,13 +391,14 @@ environment variables:
         spack.config.set('config:deprecated', True, scope='command_line')
 
     # 1. Abstract specs from cli
-    abstract_specs = spack.cmd.parse_specs(args.spec)
+    abstract_specs = spack.cmd.parse_specs(args.spec, all_versions=args.all)
     tests = get_tests(abstract_specs)
     kwargs['tests'] = tests
 
     try:
         specs = spack.cmd.parse_specs(
-            args.spec, concretize=True, tests=tests)
+            args.spec, concretize=True, tests=tests,
+            all_versions=args.all)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)
