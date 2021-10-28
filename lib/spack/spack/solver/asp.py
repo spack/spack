@@ -391,7 +391,13 @@ class PyclingoDriver(object):
         self.out.write('\n')
 
     def fact(self, head, assumption=False):
-        """ASP fact (a rule without a body)."""
+        """ASP fact (a rule without a body).
+
+        Arguments:
+            head (AspFunction): ASP function to generate as fact
+            assumption (bool): If True and using cores, use this fact as a
+                choice point in ASP and include it in unsatisfiable cores
+        """
         symbol = head.symbol() if hasattr(head, 'symbol') else head
 
         self.out.write("%s.\n" % str(symbol))
