@@ -110,6 +110,10 @@ def filter_shebang(path):
         # Store the file permissions, the patched version needs the same.
         saved_mode = os.stat(path).st_mode
 
+        # Change non-writable files to be writable if needed.
+        if not os.access(path, os.W_OK):
+            os.chmod(path, saved_mode | stat.S_IWUSR)
+
         # No need to delete since we'll move it and overwrite the original.
         patched = tempfile.NamedTemporaryFile('wb', delete=False)
         patched.write(new_sbang_line)
