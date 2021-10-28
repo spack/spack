@@ -550,10 +550,15 @@ def _set_variables_for_single_module(pkg, module):
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
-    m.configure = Executable("./configure")
+    m.configure = Executable('./configure')
 
-    if sys.platform == "win32":
-        m.nmake = Executable("nmake")
+    m.meson = Executable('meson')
+    m.cmake = Executable('cmake')
+    m.ctest = MakeExecutable('ctest', jobs)
+
+    if sys.platform == 'win32':
+        m.nmake = Executable('nmake')
+        m.msbuild = Executable('msbuild')
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
