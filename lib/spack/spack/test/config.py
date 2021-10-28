@@ -1205,29 +1205,6 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     assert os.path.expanduser("~/.spack") == spack.paths._get_user_config_path()
 
 
-def test_local_config_can_be_disabled(working_env):
-    os.environ['SPACK_DISABLE_LOCAL_CONFIG'] = 'true'
-    cfg = spack.config._config()
-    assert "defaults" in cfg.scopes
-    assert "system" not in cfg.scopes
-    assert "site" in cfg.scopes
-    assert "user" not in cfg.scopes
-
-    os.environ['SPACK_DISABLE_LOCAL_CONFIG'] = ''
-    cfg = spack.config._config()
-    assert "defaults" in cfg.scopes
-    assert "system" not in cfg.scopes
-    assert "site" in cfg.scopes
-    assert "user" not in cfg.scopes
-
-    del os.environ['SPACK_DISABLE_LOCAL_CONFIG']
-    cfg = spack.config._config()
-    assert "defaults" in cfg.scopes
-    assert "system" in cfg.scopes
-    assert "site" in cfg.scopes
-    assert "user" in cfg.scopes
-
-
 def test_user_cache_path_is_overridable(working_env):
     p = "/some/path"
     os.environ['SPACK_USER_CACHE_PATH'] = p

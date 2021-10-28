@@ -108,7 +108,6 @@ default_misc_cache_path = os.path.join(user_cache_path, 'cache')
 # the host environment:
 # - `SPACK_USER_CONFIG_PATH`: override `~/.spack` location (for config and caches)
 # - `SPACK_SYSTEM_CONFIG_PATH`: override `/etc/spack` configuration scope.
-# - `SPACK_DISABLE_LOCAL_CONFIG`: disable both of these locations.
 
 
 # User configuration and caches in $HOME/.spack

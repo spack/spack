@@ -583,23 +583,21 @@ settings when running in a continuous integration environment.
 Spack also, by default, keeps various caches and user data in ``~/.spack``, but
 users may want to override these locations.
 
-Spack provides three environment variables that allow you to override or opt out of
-configuration locations:
+Spack provides two environment variables that allow you to override configuration
+locations:
 
 * ``SPACK_USER_CONFIG_PATH``: Override the path to use for the
   ``user`` (``~/.spack``) scope.
 * ``SPACK_SYSTEM_CONFIG_PATH``: Override the path to use for the ``system``
   (``/etc/spack``) scope.
-* ``SPACK_DISABLE_LOCAL_CONFIG``: set this environment variable to completely disable
-  **both** the system and user configuration directories. Spack will only consider its
-  own defaults and ``site`` configuration locations.
 
 And one that allows you to move the default cache location:
 
 * ``SPACK_USER_CACHE_PATH``: Override the default path to use for user data
   (misc_cache, tests, reports, etc.)
 
-With these settings, if you want to isolate Spack in a CI environment, you can do this::
+With these settings, if you want to isolate Spack in a CI environment, you can do this:
 
-  export SPACK_DISABLE_LOCAL_CONFIG=true
-  export SPACK_USER_CACHE_PATH=/tmp/spack
+  export SPACK_USER_CONFIG_PATH="$WORKSPACE/.spack"
+  export SPACK_USER_CACHE_PATH="$WORKSPACE/.spack"
+  export SPACK_SYSTEM_CONFIG_PATH=/dev/null
