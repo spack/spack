@@ -469,8 +469,7 @@ class PackageViewMixin(object):
         example if two packages include the same file, it should only be
         removed when both packages are removed.
         """
-        for src, dst in merge_map.items():
-            view.remove_file(src, dst)
+        view.remove_files(merge_map.values())
 
 
 def test_log_pathname(test_stage, spec):

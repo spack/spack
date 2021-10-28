@@ -393,11 +393,15 @@ class PythonPackage(PackageBase):
                 self.spec
             )
         )
+
+        to_remove = []
         for src, dst in merge_map.items():
             if ignore_namespace and namespace_init(dst):
                 continue
 
             if global_view or not path_contains_subdirectory(src, bin_dir):
-                view.remove_file(src, dst)
+                to_remove.append(dst)
             else:
                 os.remove(dst)
+
+        view.remove_files(to_remove)
