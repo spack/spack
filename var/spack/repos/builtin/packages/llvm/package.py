@@ -249,7 +249,7 @@ class Llvm(CMakePackage, CudaPackage):
     # https://github.com/spack/spack/issues/24270
     patch('https://src.fedoraproject.org/rpms/llvm10/raw/7ce7ebd066955ea95ba2b491c41fbc6e4ee0643a/f/llvm10-gcc11.patch',
           sha256='958c64838c9d469be514eef195eca0f8c3ab069bc4b64a48fad59991c626bab8',
-          when='@8:10 %gcc@11:')
+          when='@8:11 %gcc@11:')
 
     # Backport from llvm master + additional fix
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
