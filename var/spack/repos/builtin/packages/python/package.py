@@ -924,12 +924,16 @@ for plat_specific in [True, False]:
         # installs them into lib64. If the user is using an externally
         # installed package, it may be in either lib or lib64, so we need
         # to ask Python where its LIBDIR is.
-        libdir = self.config_vars['LIBDIR']
+        # Some values set by sysconfig may not always exist on Windows, so
+        # check for Windows alternative and KeyError if that is also not found
+        libdir = self.config_vars.get("LIBDIR", self.config_vars["LIBDEST"])
 
         # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
         # in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
-        libpl = self.config_vars['LIBPL']
+        # LIBPL does not exist in Windows, avoid uneccesary KeyError while allowing
+        # later failures. Return empty string rather than none so os.path doesn't complain
+        libpl = self.config_vars.get("LIBPL", "")
 
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
