@@ -5,17 +5,20 @@
 
 import os
 
+import pytest
+
 import spack.rewiring
 from spack.spec import Spec
 from spack.test.relocate import text_in_bin
 
 
-def test_rewire(mock_fetch, install_mockery):
+@pytest.mark.parametrize('transitive', [True, False])
+def test_rewire(mock_fetch, install_mockery, transitive):
     spec = Spec('splice-t^splice-h~foo').concretized()
     dep = Spec('splice-h+foo').concretized()
     spec.package.do_install(force=True)
     dep.package.do_install(force=True)
-    spliced_spec = spec.splice(dep, transitive=False)
+    spliced_spec = spec.splice(dep, transitive=transitive)
     assert spec is not spliced_spec
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
@@ -46,12 +49,13 @@ def test_rewire(mock_fetch, install_mockery):
         # monkeypatch the modulefile_generation hook to an accumulator
 
 
-def test_rewire_bin(mock_fetch, install_mockery):
+@pytest.mark.parametrize('transitive', [True, False])
+def test_rewire_bin(mock_fetch, install_mockery, transitive):
     spec = Spec('quux').concretized()
     dep = Spec('garply cflags=-g').concretized()
     spec.package.do_install(force=True)
     dep.package.do_install(force=True)
-    spliced_spec = spec.splice(dep, transitive=False)
+    spliced_spec = spec.splice(dep, transitive=transitive)
     assert spec is not spliced_spec
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
