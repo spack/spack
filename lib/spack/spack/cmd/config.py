@@ -170,12 +170,19 @@ def config_edit(args):
     With no arguments and an active environment, edit the spack.yaml for
     the active environment.
     """
-    scope, section = _get_scope_and_section(args)
-    if not scope and not section:
-        tty.die('`spack config edit` requires a section argument '
-                'or an active environment.')
+    spack_env = os.environ.get(ev.spack_env_var)
+    if spack_env and not args.scope:
+        # Don't use the scope object for envs, as `config edit` can be called
+        # for a malformed environment. Use SPACK_ENV to find spack.yaml.
+        config_file = ev.manifest_file(spack_env)
+    else:
+        # If we aren't editing a spack.yaml file, get config path from scope.
+        scope, section = _get_scope_and_section(args)
+        if not scope and not section:
+            tty.die('`spack config edit` requires a section argument '
+                    'or an active environment.')
+        config_file = spack.config.config.get_config_filename(scope, section)
 
-    config_file = spack.config.config.get_config_filename(scope, section)
     if args.print_file:
         print(config_file)
     else:
