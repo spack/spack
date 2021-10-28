@@ -25,7 +25,6 @@ class Portage(CMakePackage):
     variant('mpi', default=True, description='Support MPI')
     variant('tangram', default=False, description='Use Tangram interface reconstruction package')
     variant('jali', default=False, description='Include support for Jali mesh framework')
-    # variant('flecsisp', default=False, description='Include support for FleCSI mesh framework')
     variant('thrust', default=False, description='Enable on-node parallelism using NVidia Thrust library')
     variant('kokkos', default=False, description='Enable on-node or device parallelism with Kokkos')
     variant('openmp', default=False, description="Enable on-node parallelism using OpenMP")
