@@ -390,6 +390,10 @@ class _SourceBootstrapper(object):
         if _executables_in_store(executables, abstract_spec_str):
             return True
 
+        # If we compile code from sources detecting a few build tools
+        # might reduce compilation time by a fair amount
+        _add_externals_if_missing()
+
         # Add hint to use frontend operating system on Cray
         if str(spack.platforms.host()) == 'cray':
             abstract_spec_str += ' os=fe'
@@ -660,8 +664,11 @@ def _add_compilers_if_missing():
 
 def _add_externals_if_missing():
     search_list = [
+        # clingo
         spack.repo.path.get('cmake'),
-        spack.repo.path.get('bison')
+        spack.repo.path.get('bison'),
+        # GnuPG
+        spack.repo.path.get('gawk')
     ]
     detected_packages = spack.detection.by_executable(search_list)
     spack.detection.update_configuration(detected_packages, scope='bootstrap')

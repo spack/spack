@@ -186,3 +186,33 @@ jobs:
           spack bootstrap untrust spack-install
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
+
+  ubuntu-gnupg-sources:
+    runs-on: ubuntu-latest
+    container: "ubuntu:latest"
+    steps:
+      - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -y && apt-get upgrade -y
+          apt-get install -y \
+              bzip2 curl file g++ gcc patchelf gfortran git gzip \
+              make patch unzip xz-utils python3 python3-dev tree \
+              gawk
+      - uses: actions/checkout@v2
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd -m spack-test
+          chown -R spack-test .
+      - name: Bootstrap GnuPG
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          source share/spack/setup-env.sh
+          spack solve zlib
+          spack bootstrap untrust github-actions
+          spack -d gpg list
+          tree ~/.spack/bootstrap/store/
