@@ -17,4 +17,5 @@ class W3emc(CMakePackage):
 
     maintainers = ['t-brown', 'kgerheiser', 'Hang-Lei-NOAA', 'edwardhartnett']
 
+    version('2.9.1', sha256='d3e705615bdd0b76a40751337d943d5a1ea415636f4e5368aed058f074b85df4')
     version('2.9.0', sha256='994f59635ab91e34e96cab5fbaf8de54389d09461c7bac33b3104a1187e6c98a')

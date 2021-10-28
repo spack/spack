@@ -17,6 +17,7 @@ import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
+from spack.package import preferred_version
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -197,13 +198,7 @@ def print_text_info(pkg):
     else:
         pad = padder(pkg.versions, 4)
 
-        # Here we sort first on the fact that a version is marked
-        # as preferred in the package, then on the fact that the
-        # version is not develop, then lexicographically
-        key_fn = lambda v: (pkg.versions[v].get('preferred', False),
-                            not v.isdevelop(),
-                            v)
-        preferred = sorted(pkg.versions, key=key_fn).pop()
+        preferred = preferred_version(pkg)
         url = ''
         if pkg.has_code:
             url = fs.for_package_version(pkg, preferred)

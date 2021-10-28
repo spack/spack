@@ -125,6 +125,10 @@ class Adios2(CMakePackage):
     # See https://github.com/ornladios/ADIOS2/pull/2596
     patch('2.7-fix-python-test-deps.patch', when='@2.5.0:2.7.0')
 
+    # Fix unresolved symbols when built with gcc10.
+    # See https://github.com/ornladios/ADIOS2/pull/2714
+    patch('2.6-fix-gcc10-symbols.patch', when='@2.6.0')
+
     @when('%fj')
     def patch(self):
         """ add fujitsu mpi commands #16864 """

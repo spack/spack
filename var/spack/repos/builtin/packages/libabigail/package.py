@@ -30,7 +30,7 @@ class Libabigail(AutotoolsPackage):
     depends_on('python@3.8:')
 
     # Will not find libxml without this
-    depends_on('pkgconf')
+    depends_on('pkgconfig', type='build')
 
     # Documentation dependencies
     depends_on('doxygen', type="build", when="+docs")
@@ -47,5 +47,5 @@ class Libabigail(AutotoolsPackage):
         autoreconf = which('autoreconf')
         with working_dir(self.configure_directory):
 
-            # We need force (f) because without it, looks for ReadHat library
+            # We need force (f) because without it, looks for RedHat library
             autoreconf('-ivf')

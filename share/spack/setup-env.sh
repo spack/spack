@@ -276,8 +276,13 @@ fi
 #
 # We send cd output to /dev/null to avoid because a lot of users set up
 # their shell so that cd prints things out to the tty.
-_sp_share_dir="$(cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
-_sp_prefix="$(cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
+if [ "$_sp_shell" = zsh ]; then
+    _sp_share_dir="${_sp_source_file:A:h}"
+    _sp_prefix="${_sp_share_dir:h:h}"
+else
+    _sp_share_dir="$(cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
+    _sp_prefix="$(cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
+fi
 if [ -x "$_sp_prefix/bin/spack" ]; then
     export SPACK_ROOT="${_sp_prefix}"
 else

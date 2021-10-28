@@ -14,6 +14,7 @@ class PyPandas(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('1.3.4',  sha256='a2aa18d3f0b7d538e21932f637fbfe8518d085238b429e4790a35e1e44a96ffc')
     version('1.3.3',  sha256='272c8cb14aa9793eada6b1ebe81994616e647b5892a370c7135efb2924b701df')
     version('1.3.2',  sha256='cbcb84d63867af3411fa063af3de64902665bb5b3d40b25b2059e40603594e87')
     version('1.3.1',  sha256='341935a594db24f3ff07d1b34d1d231786aa9adfa84b76eab10bf42907c8aed3')
@@ -60,6 +61,7 @@ class PyPandas(PythonPackage):
     depends_on('py-cython@0.29.13:2', type='build', when='@1:')
     depends_on('py-cython@0.29.16:2', type='build', when='@1.1:')
     depends_on('py-cython@0.29.21:2', type='build', when='@1.1.3:')
+    depends_on('py-cython@0.29.24:2', type='build', when='@1.3.4:')
     depends_on('py-setuptools@24.2.0:', type='build')
     depends_on('py-setuptools@38.6.0:', type='build', when='@1.3:')
     depends_on('py-numpy', type=('build', 'run'))

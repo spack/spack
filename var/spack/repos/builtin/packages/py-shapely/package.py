@@ -18,18 +18,20 @@ class PyShapely(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.8.0', sha256='f5307ee14ba4199f8bbcf6532ca33064661c1433960c432c84f0daa73b47ef9c')
     version('1.7.1', sha256='1641724c1055459a7e2b8bbe47ba25bdc89554582e62aec23cb3f3ca25f9b129')
     version('1.7.0', sha256='e21a9fe1a416463ff11ae037766fe410526c95700b9e545372475d2361cc951e')
     version('1.6.4', sha256='b10bc4199cfefcf1c0e5d932eac89369550320ca4bdf40559328d85f1ca4f655')
 
-    depends_on('python@3.5:', when='@1.8:', type=('build', 'link', 'run'))
+    depends_on('python@3.6:', when='@1.8:', type=('build', 'link', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@1.7:', type=('build', 'link', 'run'))
     depends_on('python@2.6:', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
     depends_on('py-numpy', type=('build', 'link', 'run'))
     depends_on('geos')
-    depends_on('geos@3.3:', when='@1.3:')
+    depends_on('geos@3.3:', when='@1.3:1.7')
+    depends_on('geos@3.6:3.10', when='@1.8:')
     depends_on('py-pytest', type='test')
     depends_on('py-pytest-cov', type='test')
 

@@ -1,7 +1,7 @@
 stages: [ "generate", "build" ]
 
 default:
-  image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
 
 ########################################
 # Job templates

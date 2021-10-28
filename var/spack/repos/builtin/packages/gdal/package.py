@@ -58,7 +58,6 @@ class Gdal(AutotoolsPackage):
     variant('libz',      default=True,  description='Include libz support')
     variant('libiconv',  default=False, description='Include libiconv support')
     variant('liblzma',   default=True,  description='Include liblzma support')
-    variant('zstd',      default=False, description='Include zstd support')
     variant('pg',        default=False, description='Include PostgreSQL support')
     variant('cfitsio',   default=False, description='Include FITS support')
     variant('png',       default=False, description='Include PNG support')
@@ -117,7 +116,6 @@ class Gdal(AutotoolsPackage):
     depends_on('zlib', when='+libz')
     depends_on('iconv', when='+libiconv')
     depends_on('xz', when='+liblzma')
-    depends_on('zstd', when='+zstd @2.3:')
     depends_on('postgresql', when='+pg')
     depends_on('cfitsio', when='+cfitsio')
     depends_on('libpng', when='+png')
@@ -265,11 +263,6 @@ class Gdal(AutotoolsPackage):
                 args.append('--with-mrf=no')
 
         if spec.satisfies('@2.3:'):
-            if '+zstd' in spec:
-                args.append('--with-zstd={0}'.format(spec['zstd'].prefix))
-            else:
-                args.append('--with-zstd=no')
-
             if '+proj' in spec:
                 args.append('--with-proj={0}'.format(spec['proj'].prefix))
             else:

@@ -334,7 +334,7 @@ class PyclingoDriver(object):
         self.control.configuration.asp.trans_ext = 'all'
         self.control.configuration.asp.eq = '5'
         self.control.configuration.configuration = 'tweety'
-        self.control.configuration.solve.parallel_mode = '2'
+        self.control.configuration.solve.parallel_mode = '1'
         self.control.configuration.solver.opt_strategy = "usc,one"
 
         # set up the problem -- this generates facts and rules

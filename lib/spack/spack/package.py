@@ -83,6 +83,22 @@ _spack_times_log = 'install_times.json'
 _spack_configure_argsfile = 'spack-configure-args.txt'
 
 
+def preferred_version(pkg):
+    """
+    Returns a sorted list of the preferred versions of the package.
+
+    Arguments:
+        pkg (Package): The package whose versions are to be assessed.
+    """
+    # Here we sort first on the fact that a version is marked
+    # as preferred in the package, then on the fact that the
+    # version is not develop, then lexicographically
+    key_fn = lambda v: (pkg.versions[v].get('preferred', False),
+                        not v.isdevelop(),
+                        v)
+    return sorted(pkg.versions, key=key_fn).pop()
+
+
 class InstallPhase(object):
     """Manages a single phase of the installation.
 
@@ -453,8 +469,7 @@ class PackageViewMixin(object):
         example if two packages include the same file, it should only be
         removed when both packages are removed.
         """
-        for src, dst in merge_map.items():
-            view.remove_file(src, dst)
+        view.remove_files(merge_map.values())
 
 
 def test_log_pathname(test_stage, spec):
@@ -1317,9 +1332,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Creates a stage directory and downloads the tarball for this package.
         Working directory will be set to the stage directory.
         """
-        if not self.has_code:
-            tty.debug('No fetch required for {0}: package has no code.'
-                      .format(self.name))
+        if not self.has_code or self.spec.external:
+            tty.debug('No fetch required for {0}'.format(self.name))
+            return
 
         checksum = spack.config.get('config:checksum')
         fetch = self.stage.managed_by_spack

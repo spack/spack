@@ -269,7 +269,7 @@ class Vtk(CMakePackage):
 
         cmake_args.append('-DVTK_RENDERING_BACKEND:STRING=' + opengl_ver)
 
-        if spec.satisfies('@:8.1.0'):
+        if spec.satisfies('@:8.1.0') and '+osmesa' not in spec:
             cmake_args.append('-DVTK_USE_SYSTEM_GLEW:BOOL=ON')
 
         if '+osmesa' in spec:
