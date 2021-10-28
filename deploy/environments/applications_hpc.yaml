@@ -28,6 +28,7 @@ spack:
         all: '{name}/{version}'
         ^coreneuron+knl: '{name}-knl/{version}'
         +common: '{name}/{version}-commonmods'
+        +plasticity: '{name}-plasticity/{version}'
   specs:
     - asciitoh5@1.0
     - model-neocortex%intel
@@ -40,6 +41,7 @@ spack:
     - neurodamus-mousify+coreneuron%intel^coreneuron+caliper
     - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper
     - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper+knl
+    - neurodamus-neocortex+coreneuron+plasticity%intel^coreneuron+caliper
     - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper
     - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper+knl
     - parquet-converters
