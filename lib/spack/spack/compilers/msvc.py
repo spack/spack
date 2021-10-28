@@ -113,12 +113,9 @@ class Msvc(Compiler):
             if sys.version_info[0] >= 3:
                 out = out.decode('utf-16le', errors='replace')  # novermin
 
-            int_env = {  # novermin
-                key.lower(): value
-                for key, _, value in
-                (line.partition('=') for line in out.splitlines())
-                if key and value
-            }
+            int_env = dict((key.lower(), value) for key, _, value in
+                           (line.partition('=') for line in out.splitlines())
+                           if key and value)
 
             if 'path' in int_env:
                 env.set_path('PATH', int_env['path'].split(';'))
