@@ -1,0 +1,20 @@
+diff -c a/Rendering/OpenGL2/CMakeLists.txt b/Rendering/OpenGL2/CMakeLists.txt
+*** a/Rendering/OpenGL2/CMakeLists.txt
+--- b/Rendering/OpenGL2/CMakeLists.txt
+***************
+*** 194,200 ****
+    if(NOT X11_Xt_FOUND)
+      message(FATAL_ERROR "X11_Xt_LIB could not be found. Required for VTK X lib.")
+    endif()
+!   include_directories(${X11_INCLUDE_DIR} ${X11_Xt_INCLUDE_PATH})
+  endif()
+  
+  # setup factory overrides
+--- 194,200 ----
+    if(NOT X11_Xt_FOUND)
+      message(FATAL_ERROR "X11_Xt_LIB could not be found. Required for VTK X lib.")
+    endif()
+!   include_directories(${X11_INCLUDE_DIR} ${X11_SM_INCLUDE_PATH} ${X11_ICE_INCLUDE_PATH} ${X11_Xt_INCLUDE_PATH})
+  endif()
+  
+  # setup factory overrides
