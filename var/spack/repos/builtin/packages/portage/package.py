@@ -46,7 +46,7 @@ class Portage(CMakePackage):
         depends_on('tangram+' + i, when='+tangram+' + i)
         depends_on('tangram~' + i, when='+tangram~' + i)
 
-    depends_on('wonton@master')
+    depends_on('wonton')
     # Wonton depends array
     wonton_variant = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
 
