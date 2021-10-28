@@ -197,12 +197,6 @@ def test_shebang_interpreter_regex(shebang, interpreter):
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Not supported on Windows (yet)")
 def test_shebang_handling(script_dir, sbang_line):
-    assert sbang.shebang_too_long(script_dir.lua_shebang)
-    assert sbang.shebang_too_long(script_dir.long_shebang)
-    assert sbang.shebang_too_long(script_dir.nonexec_long_shebang)
-
-
-def test_shebang_handling(script_dir, sbang_line):
     sbang.filter_shebangs_in_directory(script_dir.tempdir)
 
     # Make sure this is untouched
@@ -309,6 +303,8 @@ def test_install_sbang(install_mockery):
     check_sbang_installation()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_install_sbang_too_long(tmpdir):
     root = str(tmpdir)
     num_extend = sbang.system_shebang_limit - len(root) - len('/bin/sbang')
@@ -327,6 +323,8 @@ def test_install_sbang_too_long(tmpdir):
     assert 'cannot patch' in err
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_sbang_hook_skips_nonexecutable_blobs(tmpdir):
     # Write a binary blob to non-executable.sh, with a long interpreter "path"
     # consisting of invalid UTF-8. The latter is technically not really necessary for
@@ -344,6 +342,8 @@ def test_sbang_hook_skips_nonexecutable_blobs(tmpdir):
         assert b'sbang' not in f.readline()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_sbang_handles_non_utf8_files(tmpdir):
     # We have an executable with a copyright sign as filename
     contents = (b'#!' + b'\xa9' * sbang.system_shebang_limit +
@@ -378,6 +378,8 @@ def shebang_limits_system_8_spack_16():
     sbang.spack_shebang_limit = spack_limit
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_shebang_exceeds_spack_shebang_limit(shebang_limits_system_8_spack_16, tmpdir):
     """Tests whether shebangs longer than Spack's limit are skipped"""
     file = str(tmpdir.join('longer_than_spack_limit.sh'))
@@ -391,6 +393,8 @@ def test_shebang_exceeds_spack_shebang_limit(shebang_limits_system_8_spack_16, t
         assert b'sbang' not in f.read()
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_sbang_hook_handles_non_writable_files_preserving_permissions(tmpdir):
     path = str(tmpdir.join('file.sh'))
     with open(path, 'w') as f:

@@ -601,7 +601,7 @@ class Python(Package):
                 options = getattr(self, 'configure_flag_args', [])
                 options += ['--prefix={0}'.format(prefix)]
                 options += self.configure_args()
-                inspect.getmodule(self).configure(*options)
+                configure(*options)
 
     def build(self, spec, prefix):
         """Makes the build targets specified by
