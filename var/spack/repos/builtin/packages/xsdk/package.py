@@ -231,7 +231,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
 
     xsdk_depends_on('strumpack ~cuda', when='~cuda @0.6.0: +strumpack')
     xsdk_depends_on('strumpack@master~slate~openmp', when='@develop +strumpack')
-    xsdk_depends_on('strumpack@6.0.0~slate~openmp', when='@0.7.0 +strumpack')
+    xsdk_depends_on('strumpack@6.1.0~slate~openmp', when='@0.7.0 +strumpack')
     xsdk_depends_on('strumpack@5.0.0~slate~openmp', when='@0.6.0 +strumpack')
     xsdk_depends_on('strumpack@3.3.0~slate~openmp', when='@0.5.0 +strumpack')
     xsdk_depends_on('strumpack@3.1.1~slate~openmp', when='@0.4.0 +strumpack')
