@@ -75,7 +75,7 @@ spack env create spack_test_2_env
 # Ensure that we uninstall b on exit
 cleanup() {
     echo "Removing test environment before exiting."
-    spack env deactivate 2>&1 > /dev/null
+    spack env deactivate > /dev/null 2>&1
     spack env rm -y spack_test_env spack_test_2_env
 
     title "Cleanup"
