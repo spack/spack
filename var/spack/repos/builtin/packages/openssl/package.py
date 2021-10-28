@@ -5,6 +5,7 @@
 
 import os
 import re
+import sys
 
 import llnl.util.tty as tty
 
@@ -92,6 +93,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     depends_on('perl@5.14.0:', type=('build', 'test'))
     depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
 
+    conflicts('+dynamic', when=sys.platform != 'win32')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('version', output=str, error=str)
@@ -147,7 +150,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                    'CC=\"%s\"' % os.environ.get('SPACK_CC'),
                    'CXX=\"%s\"' % os.environ.get('SPACK_CXX'),
                    '%s' % shared_flag,
-                   'VC-WIN64A')
+                   'VC-WIN64A', ignore_quotes=True)
         else:
             config = Executable('./config')
             config('--prefix=%s' % prefix,

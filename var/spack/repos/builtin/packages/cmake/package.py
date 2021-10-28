@@ -144,11 +144,11 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
     patch('fix-xlf-ninja-mr-4075.patch', sha256="42d8b2163a2f37a745800ec13a96c08a3a20d5e67af51031e51f63313d0dedd1", when="@3.15.5")
 
-    variant('generator',
-            default='Unix Makefiles' if sys.platform != 'win32' else 'Ninja',
-            description='Build system to generate',
-            values=('Unix Makefiles', 'Ninja'))
-    depends_on('ninja', when='generator=Ninja')
+    generator = "Unix Makefiles"
+
+    if sys.platform == 'win32':
+        generator = "Ninja"
+        depends_on('ninja')
 
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
@@ -320,18 +320,20 @@ class Cmake(Package):
     def winbootcmake(self, spec):
         from spack import fetch_strategy, stage
         urls = {
-            '3': 'https://cmake.org/files/v3.21/cmake-3.21.2-windows-x86_64.zip',
-            '2': 'https://cmake.org/files/v2.8/cmake-2.8.4-win32-x86.zip'
+            '3': ('https://cmake.org/files/v3.21/cmake-3.21.2-windows-x86_64.zip', "f21e72ede9d15070602b60b2c14dc779"),
+            '2': ('https://cmake.org/files/v2.8/cmake-2.8.4-win32-x86.zip', "a2525342e495518101381203bf4484c4")
         }
         if spec.satisfies('@3.0.2:'):
             bootstrap_url = urls['3']
         else:
             bootstrap_url = urls['2']
-        remote = fetch_strategy.URLFetchStrategy(url=bootstrap_url)
+        remote = fetch_strategy.URLFetchStrategy(url=bootstrap_url[0],
+                                                 checksum=bootstrap_url[1])
         bootstrap_stage_path = os.path.join(self.stage.path, "cmake-bootstraper")
         with stage.Stage(remote, path=bootstrap_stage_path) as bootstrap_stage:
             remote.stage = bootstrap_stage
             remote.fetch()
+            remote.check()
             remote.expand()
             shutil.move(bootstrap_stage.source_path, self.stage.source_path)
 
@@ -351,7 +353,7 @@ class Cmake(Package):
         bootstrap(*bootstrap_args)
 
     def build(self, spec, prefix):
-        if self.spec.satisfies("generator=Ninja"):
+        if self.generator == "Ninja":
             ninja()
         else:
             make()
@@ -360,13 +362,13 @@ class Cmake(Package):
     @on_package_attributes(run_tests=True)
     def build_test(self):
         # Some tests fail, takes forever
-        if self.spec.satisfies('generator=Ninja'):
+        if self.generator == "Ninja":
             ninja('test')
         else:
             make('test')
 
     def install(self, spec, prefix):
-        if self.spec.satisfies("generator=Ninja"):
+        if self.generator == "Ninja":
             ninja('install')
         else:
             make('install')

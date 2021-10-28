@@ -90,15 +90,11 @@ class CMakePackage(PackageBase):
     #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
     #: for more information.
 
-    variant('generator',
-            default='Unix Makefiles' if sys.platform != 'win32' else 'Ninja',
-            description='Build system to generate',
-            values=('Unix Makefiles', 'Ninja'))
+    generator = "Unix Makefiles"
 
-    depends_on('ninja', when='generator=Ninja')
-
-    generatorMap = {'Make': 'Unix Makefiles',
-                    'Ninja': 'Ninja'}
+    if sys.platform == 'win32':
+        generator = "Ninja"
+        depends_on('ninja')
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',
@@ -147,9 +143,10 @@ class CMakePackage(PackageBase):
         """Computes the standard cmake arguments for a generic package"""
 
         try:
-            pkg.generator = pkg.spec.variants['generator'].value
-        except KeyError:
-            pkg.generator = 'Unix Makefiles' if sys.platform != 'win32' else 'Ninja'
+            if not pkg.generator:
+                raise AttributeError
+        except AttributeError:
+            pkg.generator = CMakePackage.generator
 
         try:
             build_type = pkg.spec.variants['build_type'].value
