@@ -316,7 +316,8 @@ class PyTorch(PythonPackage, CudaPackage):
             enable_or_disable('kineto')
         enable_or_disable('magma')
         enable_or_disable('metal')
-        enable_or_disable('breakpad')
+        if self.spec.satisfies('@1.10:'):
+            enable_or_disable('breakpad')
 
         enable_or_disable('nccl')
         if '+nccl' in self.spec:
