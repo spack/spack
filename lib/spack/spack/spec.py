@@ -2608,9 +2608,7 @@ class Spec(object):
             return
 
         result = spack.solver.asp.solve([self], tests=tests)
-        if not result.satisfiable:
-            conflicts = result.format_minimal_cores()
-            raise spack.error.UnsatisfiableSpecError(self, conflicts=conflicts)
+        result.raise_if_unsat()
 
         # take the best answer
         opt, i, answer = min(result.answers)

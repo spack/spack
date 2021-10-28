@@ -222,6 +222,14 @@ class Result(object):
         self._concrete_specs = None
 
     def format_core(self, core):
+        """
+        Format an unsatisfiable core for human readability
+
+        Returns a list of strings, where each string is the human readable
+        representation of a single fact in the core, including a newline.
+
+        Modeled after traceback.format_stack.
+        """
         assert self.control
 
         symbols = dict(
@@ -239,6 +247,13 @@ class Result(object):
         return sorted(str(symbol) for symbol in core_symbols)
 
     def minimize_core(self, core):
+        """
+        Return a subset-minimal subset of the core.
+
+        Clingo cores may be thousands of lines when two facts are sufficient to
+        ensure unsatisfiability. This algorithm reduces the core to only those
+        essential facts.
+        """
         assert self.control
 
         min_core = core[:]
@@ -251,6 +266,9 @@ class Result(object):
         return min_core
 
     def minimal_cores(self):
+        """
+        Return a list of subset-minimal unsatisfiable cores.
+        """
         return [self.minimize_core(core) for core in self.cores]
 
     def format_minimal_cores(self):
@@ -264,6 +282,26 @@ class Result(object):
                 string_list.append('\n')
             string_list.extend(self.format_core(core))
         return string_list
+
+    def raise_if_unsat(self):
+        """
+        Raise an appropriate error if the result is unsatisfiable.
+
+        The error is a UnsatisfiableSpecError, and includes the minimized cores
+        resulting from the solve, formatted to be human readable.
+        """
+        if self.satisfiable:
+            return
+
+        tty.error("Unsatisfiable spec.",
+                  "Analyzing conflicts. This may take some time...")
+
+        constraints = self.abstract_specs
+        if len(constraints) == 1:
+            constraints = constraints[0]
+        conflicts = self.format_minimal_cores()
+
+        raise spack.error.UnsatisfiableSpecError(constraints, conflicts=conflicts)
 
     @property
     def specs(self):
