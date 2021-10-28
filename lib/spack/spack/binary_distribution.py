@@ -608,6 +608,16 @@ def get_buildfile_manifest(spec):
     # Used by make_package_relative to determine binaries to change.
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in blacklist]
+
+        # Directories may need to be relocated too.
+        for directory in dirs:
+            dir_path_name = os.path.join(root, directory)
+            rel_path_name = os.path.relpath(dir_path_name, spec.prefix)
+            if os.path.islink(dir_path_name):
+                link = os.readlink(dir_path_name)
+                if os.path.isabs(link) and link.startswith(spack.store.layout.root):
+                    data['link_to_relocate'].append(rel_path_name)
+
         for filename in files:
             path_name = os.path.join(root, filename)
             m_type, m_subtype = relocate.mime_type(path_name)

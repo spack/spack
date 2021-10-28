@@ -88,6 +88,8 @@ py
 * Usage: Needed by pytest. Library with cross-python path,
   ini-parsing, io, code, and log facilities.
 * Version: 1.4.34 (last version supporting Python 2.6)
+* Note: This packages has been modified:
+  * https://github.com/pytest-dev/py/pull/186 was backported
 
 pytest
 ------

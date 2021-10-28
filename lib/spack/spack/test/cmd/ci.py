@@ -677,6 +677,7 @@ spack:
         assert not any('externaltool' in key for key in yaml_contents)
 
 
+@pytest.mark.xfail(reason='fails intermittently and covered by gitlab ci')
 def test_ci_rebuild(tmpdir, mutable_mock_env_path,
                     install_mockery, mock_packages, monkeypatch,
                     mock_gnupghome, mock_fetch, project_dir_env,
