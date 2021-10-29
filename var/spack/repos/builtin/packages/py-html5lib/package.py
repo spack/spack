@@ -10,7 +10,7 @@ class PyHtml5lib(PythonPackage):
     """HTML parser based on the WHATWG HTML specification."""
 
     homepage = "https://github.com/html5lib/html5lib-python"
-    pypi = "html5lib/html5lib-099.tar.gz"
+    pypi = "html5lib/html5lib-1.1.tar.gz"
 
     version('1.1', sha256='b2e5b40261e20f354d198eae92afc10d750afb487ed5e50f9c4eaf07c184146f')
     version('1.0.1', sha256='66cb0dcfdbbc4f9c3ba1a63fdb511ffdbd4f513b2b6d81b80cd26ce6b3fb3736')
