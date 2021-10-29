@@ -42,6 +42,7 @@ class PyGitpython(PythonPackage):
     depends_on('python@3.4:',   type=('build', 'run'))
     depends_on('python@3.5:',   type=('build', 'run'), when='@3.1.15:')
     depends_on('python@3.6:',   type=('build', 'run'), when='@3.1.18:')
+    depends_on('python@3.7:',   type=('build', 'run'), when='@3.1.22:')
     depends_on('py-setuptools', type='build')
     depends_on('py-gitdb@4.0.1:4', type=('build', 'run'))
     depends_on('py-typing-extensions@3.7.4.0:', type=('build', 'run'), when='@3.1.16: ^python@:3.7')
