@@ -17,3 +17,4 @@ class PyImmutables(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'), when='@0.16:')
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools@42:', type='build', when='@0.16:')
+    depends_on('py-typing-extensions@3.7.4.3:', when='@0.16: ^python@:3.7', type=('build', 'run'))
