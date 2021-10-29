@@ -428,7 +428,7 @@ variant_value(Package, Variant, Value)
 % The rules below allow us to prefer default values for variants
 % whenever possible. If a variant is set in a spec, or if it is
 % specified in an external, we score it as if it was a default value.
-variant_not_default(Package, Variant, Value, 1)
+variant_not_default(Package, Variant, Actual, 1)
  :- variant_value(Package, Variant, Actual),
     not variant_value(Package, Variant, Value),
     variant_default_value(Package, Variant, Value),
