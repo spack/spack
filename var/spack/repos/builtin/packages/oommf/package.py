@@ -45,7 +45,6 @@ class Oommf(Package):
     version(
         "20a3_20210930",
         sha256="880242afdf4c84de7f2a3c42ab0ad8c354028a7d2d3c3160980cf3e08e285691",
-        preferred=True,
     )
 
     version(
@@ -166,10 +165,6 @@ class Oommf(Package):
             mkdirp(prefix.bin)
             for f in install_files:
                 install(os.path.join(oommfdir, f), prefix.bin)
-
-    def setup_build_environment(self, env):
-        # Seems we don't need to do anything here
-        pass
 
     def setup_run_environment(self, env):
         # Set OOMMF_ROOT so that oommf.tcl can find its files.
