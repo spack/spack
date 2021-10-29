@@ -572,6 +572,9 @@ os_compatible(OS, OS) :- os(OS).
 % catalina binaries can be used on bigsur. Direction is package -> dependency.
 os_compatible("bigsur", "catalina").
 
+% If an OS is set explicitly respect the value
+node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
+
 #defined node_os_set/2.
 #defined os_compatible/2.
 
