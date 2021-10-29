@@ -92,6 +92,7 @@ def tags(parser, args):
 
     tags = args.tag if args.tag else available_tags
     tag_pkgs = spack.tag.packages_with_tags(tags, args.installed, False)
+    missing = 'No installed packages' if args.installed else 'None'
     for tag in sorted(tag_pkgs):
         # TODO: Remove the sorting once we're sure noone has an old
         # TODO: tag cache since it can accumulate duplicates.
@@ -102,6 +103,6 @@ def tags(parser, args):
         if packages:
             colify.colify(packages, output=buffer, tty=isatty, indent=4)
         else:
-            buffer.write("    None\n")
+            buffer.write("    {0}\n".format(missing))
         buffer.write("\n")
     print(buffer.getvalue())

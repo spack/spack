@@ -61,4 +61,4 @@ def test_tags_installed(install_mockery, mock_fetch):
     assert 'mpich' in out
 
     out = tags('-i', 'tag3')
-    assert 'None' in out
+    assert 'No installed' in out
