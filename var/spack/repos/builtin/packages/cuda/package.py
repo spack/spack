@@ -164,6 +164,7 @@ class Cuda(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('CUDAHOSTCXX', dependent_spec.package.compiler.cxx)
+        env.set('CUDA_HOME', self.prefix)
 
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)
