@@ -23,7 +23,7 @@
 from spack import *
 
 
-class PyMeldmd(PythonPackage):
+class PyMeldmd(PythonPackage, CudaPackage):
     """FIXME: Put a proper description of your package here."""
 
     # FIXME: Add a proper url for your package's homepage here.
@@ -36,11 +36,19 @@ class PyMeldmd(PythonPackage):
 
     version('0.4.20', sha256='8c8d2b713f8dc0ecc137d19945b3957e12063c8dda569696e47c8820eeac6c92')
 
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
+    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('amber')
+    depends_on('openmm')
+    depends_on('py-netcdf4', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-scikit-learn' , type=('build', 'run'))
+    depends_on('py-parmed', type=('build', 'run'))
+    depends_on('py-tqdm', type=('build', 'run'))
+    depends_on('py-mpi4py', type=('build', 'run'))
+
+
     # depends_on('py-foo',        type=('build', 'run'))
 
     def build_args(self, spec, prefix):
