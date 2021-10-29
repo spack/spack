@@ -299,7 +299,7 @@ class TestConcretize(object):
 
         with spack.repo.use_repositories(mock_repo):
             spec = Spec('foopkg %gcc@4.5.0 os=CNL target=nocona' +
-                        ' ^barpkg os=SuSE11 ^bazpkg os=be')
+                        ' ^barpkg os=CNL ^bazpkg os=CNL')
             spec.concretize()
 
             for s in spec.traverse(root=False):
