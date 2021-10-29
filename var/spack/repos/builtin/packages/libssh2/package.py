@@ -34,6 +34,6 @@ class Libssh2(CMakePackage):
             fix_darwin_install_name(self.prefix.lib)
 
     def check(self):
-        docker = which('docker')
-        if docker:
+        # Docker is required to run tests
+        if which('docker'):
             make('test')
