@@ -44,8 +44,6 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     provides('mpi@:3.1')
 
-    depends_on('patchelf', type='build')
-
     @property
     def component_dir(self):
         return 'mpi'
@@ -90,20 +88,19 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         libs += find_libraries(['libmpicxx', 'libmpifort'], lib_dir)
         libs += find_libraries('libmpi', release_lib_dir)
         libs += find_system_libraries(['libdl', 'librt', 'libpthread'])
-        return libs
 
-    def install(self, spec, prefix):
-        super(IntelOneapiMpi, self).install(spec, prefix)
-
-        # Patch libmpi.so rpath so it can find libfabric
+        # Find libfabric for libmpi.so
         libfabric_rpath = join_path(self.component_path, 'libfabric', 'lib')
         if '+external-libfabric' in self.spec:
             libfabric_rpath = os.path.dirname(
                 [s for s in spec['libfabric'].libs if s.endswith('libfabric.so')][0]
             )
-        for libmpi in glob.glob(join_path(self.component_path,
-                                          'lib', '**', 'libmpi*.so')):
-            subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, libmpi])
+        libs += libfabric_rpath
+
+        return libs
+
+    def install(self, spec, prefix):
+        super(IntelOneapiMpi, self).install(spec, prefix)
 
         # When spack builds from source
         # fix I_MPI_SUBSTITUTE_INSTALLDIR and

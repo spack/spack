@@ -994,6 +994,18 @@ class IntelPackage(PackageBase):
                 libnames,
                 root=self.component_lib_dir('mpi'),
                 shared=True, recursive=True) + result
+            # Intel MPI since 2019 depends on libfabric which is not in the
+            # lib directory but in a directory of its own which should be
+            # included in the rpath
+            if self.version_yearlike >= ver('2019'):
+                # Patch libmpi.so rpath so it can find libfabric
+                d = ancestor(self.component_lib_dir('mpi'))
+                libfabric_rpath = os.path.join(d, 'libfabric', 'lib')
+                if '+external-libfabric' in self.spec:
+                    libfabric_rpath = os.path.dirname(
+                    [s for s in spec['libfabric'].libs if s.endswith('libfabric.so')][0]
+                    )
+                result = libfabric_rpath + result
 
         if '^mpi' in self.spec.root and ('+mkl' in self.spec or
                                          self.provides('scalapack')):

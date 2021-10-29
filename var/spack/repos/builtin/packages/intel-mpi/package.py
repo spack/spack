@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
-import os
 import subprocess
 
 from spack import *
@@ -64,8 +63,6 @@ class IntelMpi(IntelPackage):
     variant('external-libfabric', default=False, description='Enable external libfabric dependency')
     depends_on('libfabric', when='+external-libfabric', type=('build', 'link', 'run'))
 
-    depends_on('patchelf', type='build')
-
     def setup_dependent_build_environment(self, *args):
         # Handle in callback, conveying client's compilers in additional arg.
         # CAUTION - DUP code in:
@@ -84,21 +81,3 @@ class IntelMpi(IntelPackage):
 
         for name, value in self.mpi_compiler_wrappers.items():
             env.set(name, value)
-
-    def install(self, spec, prefix):
-        super(IntelMpi, self).install(spec, prefix)
-
-        # Intel MPI since 2019 depends on libfabric which is not in the
-        # lib directory but in a directory of its own which should be
-        # included in the rpath
-        if self.version_yearlike >= ver('2019'):
-            # Patch libmpi.so rpath so it can find libfabric
-            d = ancestor(self.component_lib_dir('mpi'))
-            libfabric_rpath = os.path.join(d, 'libfabric', 'lib')
-            if '+external-libfabric' in self.spec:
-                libfabric_rpath = os.path.dirname(
-                    [s for s in spec['libfabric'].libs if s.endswith('libfabric.so')][0]
-                )
-            for libmpi in glob.glob(join_path(self.component_lib_dir('mpi'),
-                                              '**', 'libmpi*.so')):
-                subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, libmpi])
