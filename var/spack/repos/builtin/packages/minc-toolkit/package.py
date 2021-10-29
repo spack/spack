@@ -21,6 +21,7 @@ class MincToolkit(CMakePackage):
             description="Build visual tools (Display, register, etc.)")
 
     depends_on('perl')
+    depends_on('perl-text-format')  # vendored Text::Format not added to Perl @INC path
     depends_on('flex', type='build')
     depends_on('bison', type='build')
     depends_on('zlib', type='link')
