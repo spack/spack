@@ -143,7 +143,8 @@ class Qt(Package):
           working_dir='qtwebsockets',
           when='@5.14: %gcc@11:')
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
-    conflicts('%gcc@11:', when='@5.9:5.13')
+    # Error: 'numeric_limits' is not a class template
+    conflicts('%gcc@11:', when='@5.8:5.14')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
@@ -523,10 +524,10 @@ class Qt(Package):
             use_spack_dep('jpeg', 'libjpeg')
             use_spack_dep('zlib')
 
-        if '@:5.7.0' in spec:
+        if '@:5.5' in spec:
             config_args.extend([
                 # NIS is deprecated in more recent glibc,
-                # but qt-5.7.1 does not recognize this option
+                # but qt-5.6.3 does not recognize this option
                 '-no-nis',
             ])
 
@@ -635,7 +636,7 @@ class Qt(Package):
         if '~webkit' in spec:
             config_args.extend([
                 '-skip',
-                'webengine' if version >= Version('5.7') else 'qtwebkit',
+                'webengine' if version >= Version('5.6') else 'qtwebkit',
             ])
 
         if spec.satisfies('@5.7'):
