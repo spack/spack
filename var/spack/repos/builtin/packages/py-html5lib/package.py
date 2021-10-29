@@ -19,7 +19,7 @@ class PyHtml5lib(PythonPackage):
     version('099', sha256='2612a191a8d5842bfa057e41ba50bbb9dcb722419d2408c78cff4758d0754868',
             deprecated=True)
 
-    depends_on('python@2.6:2.8,3.2:', when='@099', type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.2:', when='@0.99', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.3:', when='@1.0.1:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', when='@1.1:', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
