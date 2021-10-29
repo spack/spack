@@ -17,7 +17,8 @@ class PyGoogleAuth(PythonPackage):
     version('1.6.3', sha256='0f7c6a64927d34c1a474da92cfc59e552a5d3b940d3266606c6a28b72888b9e4')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('python@3.6:', type=('build', 'run'), when='@2.3.2:')
+    depends_on('python@3.6:', type=('build', 'run'), when='@1.35:')
+    depends_on('python@2.7:2.8,3.6:', type=('build', 'run'), when='@1.24:')
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools@40.3.0', type='build', when='@2.3.2:')
     depends_on('py-pyasn1-modules@0.2.1:', type=('build', 'run'))
