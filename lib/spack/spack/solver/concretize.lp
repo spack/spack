@@ -107,7 +107,8 @@ dependency_holds(Package, Dependency, Type) :-
   dependency_condition(ID, Package, Dependency),
   dependency_type(ID, Type),
   condition_holds(ID),
-  build(Package).
+  build(Package),
+  not external(Package).
 
 % We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
