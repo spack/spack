@@ -171,6 +171,11 @@ class Conduit(CMakePackage):
     # Cmake will support fj compiler and this patch will be removed
     patch('fj_flags.patch', when='%fj')
 
+    # Add missing include for numeric_limits
+    # https://github.com/LLNL/conduit/pull/773
+    patch('https://github.com/LLNL/conduit/pull/773.patch', when='@:0.7.2',
+          sha256='89d1829ad52f503f6179e43efddf998c239a95c14ca1f248463a3f61ad7d5cf7')
+
     ###################################
     # build phases used by this package
     ###################################
