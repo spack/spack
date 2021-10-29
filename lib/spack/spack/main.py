@@ -873,7 +873,7 @@ def main(argv=None):
 
     """
     try:
-        _main(argv)
+        return _main(argv)
 
     except SpackError as e:
         tty.debug(e)
