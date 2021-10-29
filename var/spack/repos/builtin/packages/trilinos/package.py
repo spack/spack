@@ -394,6 +394,8 @@ class Trilinos(CMakePackage, CudaPackage):
         if '+cuda' in spec and '+wrapper' in spec:
             if '+mpi' in spec:
                 env.set('OMPI_CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+                env.set('MPICH_CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+                env.set('MPICXX_CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             else:
                 env.set('CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
 
