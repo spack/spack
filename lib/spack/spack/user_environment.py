@@ -5,7 +5,7 @@
 import os
 import sys
 
-import spack.build_environment as build_env
+import spack.build_environment
 import spack.config
 import spack.util.environment as environment
 import spack.util.prefix as prefix
@@ -85,13 +85,13 @@ def environment_modifications_for_spec(spec, view=None):
     # Let the extendee/dependency modify their extensions/dependents
     # before asking for package-specific modifications
     env.extend(
-        build_env.modifications_from_dependencies(
+        spack.build_environment.modifications_from_dependencies(
             spec, context='run'
         )
     )
 
     # Package specific modifications
-    build_env.set_module_variables_for_package(spec.package)
+    spack.build_environment.set_module_variables_for_package(spec.package)
     spec.package.setup_run_environment(env)
 
     return env

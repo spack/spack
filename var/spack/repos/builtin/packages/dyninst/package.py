@@ -16,6 +16,8 @@ class Dyninst(CMakePackage):
     git      = "https://github.com/dyninst/dyninst.git"
     maintainers = ['hainest']
 
+    tags = ['e4s']
+
     version('master', branch='master')
     version('11.0.1', tag='v11.0.1')
     version('11.0.0', tag='v11.0.0')
@@ -42,7 +44,7 @@ class Dyninst(CMakePackage):
     boost_libs = '+atomic+chrono+date_time+filesystem+system+thread+timer'
 
     depends_on('boost@1.61.0:' + boost_libs, when='@10.1.0:')
-    depends_on('boost@1.61.0:1.69.99' + boost_libs, when='@:10.0.99')
+    depends_on('boost@1.61.0:1.69' + boost_libs, when='@:10.0')
     depends_on('boost@1.67.0:' + boost_libs, when='@11.0.0:')
 
     depends_on('libiberty+pic')
@@ -52,22 +54,22 @@ class Dyninst(CMakePackage):
     # NB: Parallel DWARF parsing in Dyninst 10.2.0 requires a thread-
     #     safe libdw
     depends_on('elfutils@0.178:', type='link', when='@10.2.0:')
-    depends_on('elfutils', type='link', when='@9.3.0:10.1.99')
-    depends_on('libelf', type='link', when='@:9.2.99')
+    depends_on('elfutils', type='link', when='@9.3.0:10.1')
+    depends_on('libelf', type='link', when='@:9.2')
 
     # Dyninst uses libdw from elfutils starting with 10.0, and used
     # libdwarf before that.
-    depends_on('libdwarf', when='@:9.99.99')
+    depends_on('libdwarf', when='@:9')
 
     depends_on('tbb@2018.6:', when='@10.0.0:')
 
     depends_on('cmake@3.4.0:', type='build', when='@10.1.0:')
-    depends_on('cmake@3.0.0:', type='build', when='@10.0.0:10.0.99')
-    depends_on('cmake@2.8:', type='build', when='@:9.99.99')
+    depends_on('cmake@3.0.0:', type='build', when='@10.0.0:10.0')
+    depends_on('cmake@2.8:', type='build', when='@:9')
 
     patch('stat_dysect.patch', when='+stat_dysect')
     patch('stackanalysis_h.patch', when='@9.2.0')
-    patch('v9.3.2-auto.patch', when='@9.3.2 %gcc@:4.7.99')
+    patch('v9.3.2-auto.patch', when='@9.3.2 %gcc@:4.7')
     patch('tribool.patch', when='@9.3.0:10.0.0 ^boost@1.69:')
 
     # No Mac support (including apple-clang)
@@ -84,12 +86,12 @@ class Dyninst(CMakePackage):
     conflicts('%xl_r')
 
     # Version 11.0 requires a C++11-compliant ABI
-    conflicts('%gcc@:5.99.99', when='@11.0.0:')
+    conflicts('%gcc@:5', when='@11.0.0:')
 
     # Versions 9.3.x used cotire, but have no knob to turn it off.
     # Cotire has no real use for one-time builds and can break
     # parallel builds with both static and shared libs.
-    @when('@9.3.0:9.3.99')
+    @when('@9.3.0:9.3')
     def patch(self):
         filter_file('USE_COTIRE true', 'USE_COTIRE false',
                     'cmake/shared.cmake')
@@ -124,7 +126,7 @@ class Dyninst(CMakePackage):
         return args
 
     # Old style cmake args, up through 10.0.
-    @when('@:10.0.99')
+    @when('@:10.0')
     def cmake_args(self):
         spec = self.spec
 

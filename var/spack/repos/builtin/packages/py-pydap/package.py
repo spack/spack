@@ -21,4 +21,4 @@ class PyPydap(PythonPackage):
     depends_on('py-docopt', type=('build', 'run'))
     depends_on('py-six@1.4.0:', type=('build', 'run'))
     depends_on('py-beautifulsoup4', type=('build', 'run'))
-    depends_on('py-singledispatch', when='^python@:3.4.999', type=('build', 'run'))
+    depends_on('py-singledispatch', when='^python@:3.4', type=('build', 'run'))

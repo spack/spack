@@ -19,6 +19,8 @@ class Rocsparse(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     version('4.3.1', sha256='fa5ea64f71e1cfbebe41618cc183f501b387824a6dc58486ab1214d7af5cbef2')
     version('4.3.0', sha256='1a8109bdc8863b3acfe991449360c9361cae7cabdbe753c553bc57872cd0ad5e')
     version('4.2.0', sha256='8a86ed49d278e234c82e406a1430dc28f50d416f8f1065cf5bdf25cc5721129c')
@@ -47,7 +49,7 @@ class Rocsparse(CMakePackage):
             self.define('BUILD_CLIENTS_TESTS', 'OFF'),
             self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF')
         ]
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

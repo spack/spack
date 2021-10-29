@@ -35,7 +35,7 @@ class _3dtk(CMakePackage):
     generator = 'Ninja'
 
     depends_on('cmake@3.5:', when='@trunk', type='build')
-    depends_on('cmake@2.6.1:2.999', when='@1.2', type='build')
+    depends_on('cmake@2.6.1:2', when='@1.2', type='build')
     depends_on('ninja', type='build')
     depends_on('boost+serialization+graph+regex+filesystem+system+thread+date_time+program_options')
     depends_on('suite-sparse')

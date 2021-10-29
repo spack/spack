@@ -29,6 +29,8 @@ class Rccl(CMakePackage):
     version('3.7.0', sha256='8273878ff71aac2e7adf5cc8562d2933034c6c6b3652f88fbe3cd4f2691036e3')
     version('3.5.0', sha256='290b57a66758dce47d0bfff3f5f8317df24764e858af67f60ddcdcadb9337253')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     patch('0001-Fix-numactl-path-issue.patch', when='@3.7.0:')
 
     depends_on('cmake@3:', type='build')
@@ -54,7 +56,7 @@ class Rccl(CMakePackage):
                 self.spec['numactl'].prefix
             ))
 
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

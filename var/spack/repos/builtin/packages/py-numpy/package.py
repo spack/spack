@@ -24,6 +24,7 @@ class PyNumpy(PythonPackage):
 
     version('main', branch='main')
     version('master', branch='main', deprecated=True)
+    version('1.21.3', sha256='63571bb7897a584ca3249c86dd01c10bcb5fe4296e3568b2e9c1a55356b6410e')
     version('1.21.2', sha256='423216d8afc5923b15df86037c6053bf030d15cc9e3224206ef868c2d63dd6dc')
     version('1.21.1', sha256='dff4af63638afcc57a3dfb9e4b26d434a7a602d225b42d746ea7fe2edf1342fd')
     version('1.21.0', sha256='e80fe25cba41c124d04c662f33f6364909b985f2eb5998aaa5ae4b9587242cce')
@@ -129,7 +130,7 @@ class PyNumpy(PythonPackage):
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
 
     # NVHPC support added in https://github.com/numpy/numpy/pull/17344
-    conflicts('%nvhpc', when='@:1.19.999')
+    conflicts('%nvhpc', when='@:1.19')
 
     def flag_handler(self, name, flags):
         # -std=c99 at least required, old versions of GCC default to -std=c90

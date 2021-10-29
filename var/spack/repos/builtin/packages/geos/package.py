@@ -45,7 +45,7 @@ class Geos(CMakePackage):
 
     patch('https://patch-diff.githubusercontent.com/raw/libgeos/geos/pull/461.patch',
           sha256='58795ae79f168851f27aa488a589796f9a7563d368ffa32e1fe315eb71699877',
-          when='@3.7:')
+          when='@3.8:')
 
     def cmake_args(self):
         args = []

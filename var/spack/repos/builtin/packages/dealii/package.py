@@ -140,13 +140,15 @@ class Dealii(CMakePackage, CudaPackage):
                               when='@1.68.0'),
                         ],
                when='+python')
+    # boost@1.77.0 triggers build errors in dealii@9.3.1
+    depends_on('boost@:1.76', when='@:9.3')
     # The std::auto_ptr is removed in the C++ 17 standard.
     # See https://github.com/dealii/dealii/issues/4662
     # and related topics discussed for other software libraries.
     depends_on('boost cxxstd=11', when='cxxstd=11')
     depends_on('boost cxxstd=14', when='cxxstd=14')
     depends_on('boost cxxstd=17', when='cxxstd=17')
-    depends_on('bzip2',           when='@:8.99')
+    depends_on('bzip2',           when='@:8')
     depends_on('lapack')
     depends_on('ninja',           type='build')
     depends_on('suite-sparse')
@@ -157,7 +159,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('cmake@3.9:',       when='+cuda', type='build')
     # Older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9.99',    when='@:8.99', type='build')
+    depends_on('cmake@:3.9',    when='@:8', type='build')
     depends_on('mpi',              when='+mpi')
     depends_on('python',           when='@8.5.0:+python')
 
@@ -347,7 +349,7 @@ class Dealii(CMakePackage, CudaPackage):
             self.define('DEAL_II_ALLOW_BUNDLED', False)
         ])
 
-        if spec.satisfies('@:8.99'):
+        if spec.satisfies('@:8'):
             options.extend([
                 # Cmake may still pick up system's bzip2, fix this:
                 self.define('BZIP2_FOUND', True),
@@ -458,9 +460,14 @@ class Dealii(CMakePackage, CudaPackage):
         ))
 
         # Threading
-        options.append(self.define_from_variant(
-            'DEAL_II_WITH_THREADS', 'threads'
-        ))
+        if spec.satisfies('@9.3.0:'):
+            options.append(self.define_from_variant(
+                'DEAL_II_WITH_TBB', 'threads'
+            ))
+        else:
+            options.append(self.define_from_variant(
+                'DEAL_II_WITH_THREADS', 'threads'
+            ))
         if '+threads' in spec:
             if (spec.satisfies('^intel-parallel-studio+tbb')):
                 # deal.II/cmake will have hard time picking up TBB from Intel.

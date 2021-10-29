@@ -35,7 +35,7 @@ class Mivisionx(CMakePackage):
     version('3.7.0', sha256='3ce13c6449739c653139fc121411d94eaa9d764d3d339c4c78fab4b8aa199965')
     version('1.7', sha256='ff77142fd4d4a93136fd0ac17348861f10e8f5d5f656fa9dacee08d8fcd2b1d8')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     def patch(self):
         if '@4.2.0' in self.spec:

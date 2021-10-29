@@ -10,6 +10,8 @@ an index of key, value pairs for environment variables."""
 
 import os
 
+import llnl.util.tty as tty
+
 from spack.util.environment import EnvironmentModifications
 
 from .analyzer_base import AnalyzerBase
@@ -43,6 +45,7 @@ class EnvironmentVariables(AnalyzerBase):
         to remove path prefixes specific to user systems.
         """
         if not os.path.exists(filename):
+            tty.warn("No environment file available")
             return
 
         mods = EnvironmentModifications.from_sourcing_file(filename)

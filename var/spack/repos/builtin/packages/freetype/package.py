@@ -27,8 +27,8 @@ class Freetype(AutotoolsPackage):
     version('2.7',    sha256='7b657d5f872b0ab56461f3bd310bd1c5ec64619bd15f0d8e08282d494d9cfea4')
     version('2.5.3',  sha256='41217f800d3f40d78ef4eb99d6a35fd85235b64f81bc56e4812d7672fca7b806')
 
-    depends_on('libpng')
     depends_on('bzip2')
+    depends_on('libpng')
     depends_on('pkgconfig', type='build')
 
     conflicts('%intel', when='@2.8:',
@@ -44,7 +44,13 @@ class Freetype(AutotoolsPackage):
         return headers
 
     def configure_args(self):
-        args = ['--with-harfbuzz=no']
+        args = [
+            '--with-brotli=no',
+            '--with-bzip2=yes',
+            '--with-harfbuzz=no',
+            '--with-png=yes',
+            '--with-zlib=no',
+        ]
         if self.spec.satisfies('@2.9.1:'):
             args.append('--enable-freetype-config')
         return args

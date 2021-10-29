@@ -33,7 +33,7 @@ except ImportError:
 
 
 # Use this to strip escape sequences
-_escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
+_escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h|\x1b\][0-9]+;[^\x07]*\x07')
 
 # control characters for enabling/disabling echo
 #
@@ -323,7 +323,7 @@ class FileWrapper(object):
                 if sys.version_info < (3,):
                     self.file = open(self.file_like, 'w')
                 else:
-                    self.file = open(self.file_like, 'w', encoding='utf-8')
+                    self.file = open(self.file_like, 'w', encoding='utf-8')  # novm
             else:
                 self.file = StringIO()
             return self.file

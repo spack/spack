@@ -10,7 +10,6 @@ import tempfile
 
 import llnl.util.tty as tty
 
-import spack.architecture
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -335,9 +334,13 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     specs_from_cli = []
     has_errors = False
 
-    specs = bindist.update_cache_and_get_specs()
+    try:
+        specs = bindist.update_cache_and_get_specs()
+    except bindist.FetchCacheError as e:
+        tty.error(e)
+
     if not other_arch:
-        arch = spack.architecture.default_arch().to_spec()
+        arch = spack.spec.Spec.default_arch()
         specs = [s for s in specs if s.satisfies(arch)]
 
     for pkg in pkgs:
@@ -561,9 +564,13 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     """list binary packages available from mirrors"""
-    specs = bindist.update_cache_and_get_specs()
+    try:
+        specs = bindist.update_cache_and_get_specs()
+    except bindist.FetchCacheError as e:
+        tty.error(e)
+
     if not args.allarch:
-        arch = spack.architecture.default_arch().to_spec()
+        arch = spack.spec.Spec.default_arch()
         specs = [s for s in specs if s.satisfies(arch)]
 
     if args.specs:

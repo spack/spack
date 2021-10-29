@@ -31,9 +31,13 @@ class CaCertificatesMozilla(Package):
     def url_for_version(self, version):
         return "https://curl.se/ca/cacert-{0}.pem".format(version)
 
+    def setup_dependent_package(self, module, dep_spec):
+        """Returns the absolute path to the bundled certificates"""
+        self.spec.pem_path = join_path(self.prefix.share, 'cacert.pem')
+
     # Install the the pem file as share/cacert.pem
     def install(self, spec, prefix):
-        share = join_path(self.prefix, 'share')
+        share = join_path(prefix, 'share')
         mkdir(share)
         install("cacert-{0}.pem".format(spec.version),
                 join_path(share, "cacert.pem"))

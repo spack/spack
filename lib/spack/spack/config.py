@@ -47,9 +47,9 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack.architecture
 import spack.compilers
 import spack.paths
+import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.compilers
@@ -84,22 +84,9 @@ all_schemas = copy.deepcopy(section_schemas)
 all_schemas.update(dict((key, spack.schema.env.schema)
                         for key in spack.schema.env.keys))
 
-#: Builtin paths to configuration files in Spack
-configuration_paths = (
-    # Default configuration scope is the lowest-level scope. These are
-    # versioned with Spack and can be overridden by systems, sites or users
-    ('defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')),
-
-    # System configuration is per machine.
-    # No system-level configs should be checked into spack by default
-    ('system', os.path.join(spack.paths.system_etc_path, 'spack')),
-
-    # Site configuration is per spack instance, for sites or projects
-    # No site-level configs should be checked into spack by default.
-    ('site', os.path.join(spack.paths.etc_path, 'spack')),
-
-    # User configuration can override both spack defaults and site config
-    ('user', spack.paths.user_config_path)
+#: Path to the default configuration
+configuration_defaults_path = (
+    'defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')
 )
 
 #: Hard-coded default values for some key configuration options.
@@ -764,7 +751,7 @@ command_line_scopes = []  # type: List[str]
 
 def _add_platform_scope(cfg, scope_type, name, path):
     """Add a platform-specific subdirectory for the current platform."""
-    platform = spack.architecture.platform().name
+    platform = spack.platforms.host().name
     plat_name = '%s/%s' % (name, platform)
     plat_path = os.path.join(path, platform)
     cfg.push_scope(scope_type(plat_name, plat_path))
@@ -803,8 +790,37 @@ def _config():
     cfg = Configuration()
 
     # first do the builtin, hardcoded defaults
-    defaults = InternalConfigScope('_builtin', config_defaults)
-    cfg.push_scope(defaults)
+    builtin = InternalConfigScope('_builtin', config_defaults)
+    cfg.push_scope(builtin)
+
+    # Builtin paths to configuration files in Spack
+    configuration_paths = [
+        # Default configuration scope is the lowest-level scope. These are
+        # versioned with Spack and can be overridden by systems, sites or users
+        configuration_defaults_path,
+    ]
+
+    disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ
+
+    # System configuration is per machine.
+    # This is disabled if user asks for no local configuration.
+    if not disable_local_config:
+        configuration_paths.append(
+            ('system', spack.paths.system_config_path),
+        )
+
+    # Site configuration is per spack instance, for sites or projects
+    # No site-level configs should be checked into spack by default.
+    configuration_paths.append(
+        ('site', os.path.join(spack.paths.etc_path, 'spack')),
+    )
+
+    # User configuration can override both spack defaults and site config
+    # This is disabled if user asks for no local configuration.
+    if not disable_local_config:
+        configuration_paths.append(
+            ('user', spack.paths.user_config_path)
+        )
 
     # add each scope and its platform-specific directory
     for name, path in configuration_paths:

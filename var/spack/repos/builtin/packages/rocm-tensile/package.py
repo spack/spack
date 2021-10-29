@@ -29,6 +29,7 @@ class RocmTensile(CMakePackage):
 
     tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906', 'gfx908')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=False)
     variant('openmp', default=True, description='Enable OpenMP')
 
@@ -84,7 +85,7 @@ class RocmTensile(CMakePackage):
                 arch = arch + ':xnack-'
         args.append(self.define('Tensile_ARCHITECTURE', arch))
 
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

@@ -39,10 +39,14 @@
 
 if test -n "${ZSH_VERSION:-}" ; then
   if [[ "$(emulate)" = zsh ]] ; then
-    # ensure base completion support is enabled, ignore insecure directories
-    autoload -U +X compinit && compinit -i
-    # ensure bash compatible completion support is enabled
-    autoload -U +X bashcompinit && bashcompinit
+    if ! typeset -f compdef >& /dev/null ; then
+        # ensure base completion support is enabled, ignore insecure directories
+        autoload -U +X compinit && compinit -i
+    fi
+    if ! typeset -f complete >& /dev/null ; then
+        # ensure bash compatible completion support is enabled
+        autoload -U +X bashcompinit && bashcompinit
+    fi
     emulate sh -c "source '$0:A'"
     return # stop interpreting file
   fi
@@ -575,7 +579,7 @@ _spack_cd() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage -b --batch"
+        SPACK_COMPREPLY="-h --help --keep-stage -b --batch -l --latest -p --preferred"
     else
         _all_packages
     fi
@@ -794,7 +798,7 @@ _spack_config_revert() {
 }
 
 _spack_containerize() {
-    SPACK_COMPREPLY="-h --help --monitor --monitor-save-local --monitor-no-auth --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix"
+    SPACK_COMPREPLY="-h --help --monitor --monitor-save-local --monitor-no-auth --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix --list-os --last-stage"
 }
 
 _spack_create() {
@@ -911,7 +915,7 @@ _spack_env() {
 _spack_env_activate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish -v --with-view -V --without-view -d --dir -p --prompt"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish -v --with-view -V --without-view -p --prompt --temp -d --dir"
     else
         _environments
     fi
@@ -1211,7 +1215,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --fish --first --only"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --first --only"
     else
         _installed_packages
     fi

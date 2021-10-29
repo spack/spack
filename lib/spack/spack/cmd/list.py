@@ -221,9 +221,13 @@ def html(pkg_names, out):
 
         out.write('<dt>Homepage:</dt>\n')
         out.write('<dd><ul class="first last simple">\n')
-        out.write(('<li>'
-                   '<a class="reference external" href="%s">%s</a>'
-                   '</li>\n') % (pkg.homepage, escape(pkg.homepage, True)))
+
+        if pkg.homepage:
+            out.write(('<li>'
+                       '<a class="reference external" href="%s">%s</a>'
+                       '</li>\n') % (pkg.homepage, escape(pkg.homepage, True)))
+        else:
+            out.write('No homepage\n')
         out.write('</ul></dd>\n')
 
         out.write('<dt>Spack package:</dt>\n')

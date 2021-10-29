@@ -19,7 +19,8 @@ class PyPyprecice(PythonPackage):
 
     # Always prefer final version of release candidate
     version("develop", branch="develop")
-    version('2.2.1.1', sha256='d96674f1ff91761c29efce34f8e09e2ec29a4862227b7204439e865dbe755a86')
+    version('2.3.0.1', sha256='ed4e48729b662680beaa4ee2a9aff724a79e760534c6c58181be739988da2789')
+    version('2.2.1.1', sha256='139bac5077c3807e1b7b83d8d0da5ca0fc8c17393fd0df4bc5999cd63a351b78')
     version('2.2.0.2', sha256='2287185f9ad7500dced53459543d27bb66bd2438c2e4bf81ee3317e6a00513d5')
     version('2.2.0.1', sha256='229625e2e6df03987ababce5abe2021b0974cbe5a588b936a9cba653f4908d4b')
     version('2.1.1.2', sha256='363eb3eeccf964fd5ee87012c1032353dd1518662868f2b51f04a6d8a7154045')
@@ -31,13 +32,14 @@ class PyPyprecice(PythonPackage):
     version("2.0.0.1", sha256="96eafdf421ec61ad6fcf0ab1d3cf210831a815272984c470b2aea57d4d0c9e0e")
 
     depends_on("precice@develop", when="@develop")
-    depends_on("precice@2.2.1", when="@2.2.1.1:2.2.1.99")
-    depends_on("precice@2.2.0", when="@2.2.0.1:2.2.0.99")
-    depends_on("precice@2.1.1", when="@2.1.1.1:2.1.1.99")
-    depends_on("precice@2.1.0", when="@2.1.0.1:2.1.0.99")
-    depends_on("precice@2.0.2", when="@2.0.2.1:2.0.2.99")
-    depends_on("precice@2.0.1", when="@2.0.1.1:2.0.1.99")
-    depends_on("precice@2.0.0", when="@2.0.0.1:2.0.0.99")
+    depends_on("precice@2.3.0", when="@2.3.0.1:2.3.1")
+    depends_on("precice@2.2.1", when="@2.2.1.1:2.2.1")
+    depends_on("precice@2.2.0", when="@2.2.0.1:2.2.0")
+    depends_on("precice@2.1.1", when="@2.1.1.1:2.1.1")
+    depends_on("precice@2.1.0", when="@2.1.0.1:2.1.0")
+    depends_on("precice@2.0.2", when="@2.0.2.1:2.0.2")
+    depends_on("precice@2.0.1", when="@2.0.1.1:2.0.1")
+    depends_on("precice@2.0.0", when="@2.0.0.1:2.0.0")
 
     depends_on("python@3:", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")

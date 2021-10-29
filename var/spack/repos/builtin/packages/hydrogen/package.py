@@ -94,9 +94,9 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cray-libsci +openmp', when='blas=libsci +openmp_blas')
 
     # Specify the correct version of Aluminum
-    depends_on('aluminum@:0.3.99', when='@:1.3.99 +al')
-    depends_on('aluminum@0.4:0.4.99', when='@1.4:1.4.99 +al')
-    depends_on('aluminum@0.6.0:0.6.99', when='@1.5.0:1.5.1 +al')
+    depends_on('aluminum@:0.3', when='@:1.3 +al')
+    depends_on('aluminum@0.4.0:0.4', when='@1.4.0:1.4 +al')
+    depends_on('aluminum@0.6.0:0.6', when='@1.5.0:1.5.1 +al')
     depends_on('aluminum@0.7.0:', when='@:1.0,1.5.2: +al')
 
     # Add Aluminum variants
@@ -120,7 +120,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpfr', when='+mpfr')
 
     depends_on('cuda', when='+cuda')
-    depends_on('cub', when='^cuda@:10.99')
+    depends_on('cub', when='^cuda@:10')
     depends_on('hipcub', when='+rocm')
     depends_on('half', when='+half')
 
@@ -146,6 +146,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         args = [
             '-DCMAKE_CXX_STANDARD=14',
+            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+openmp' in spec),

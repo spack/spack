@@ -13,7 +13,9 @@ class PySetuptools(PythonPackage):
     homepage = "https://github.com/pypa/setuptools"
     pypi = "setuptools/setuptools-57.4.0.tar.gz"
 
+    version('58.2.0', sha256='2c55bdb85d5bb460bd2e3b12052b677879cffcf46c0c688f2e5bf51d36001145')
     version('57.4.0', sha256='6bac238ffdf24e8806c61440e755192470352850f3419a52f26ffe0a1a64f465')
+    version('57.1.0', sha256='cfca9c97e7eebbc8abe18d5e5e962a08dcad55bb63afddd82d681de4d22a597b')
     version('51.0.0', sha256='029c49fd713e9230f6a41c0298e6e1f5839f2cde7104c0ad5e053a37777e7688')
     version('50.3.2', sha256='ed0519d27a243843b05d82a5e9d01b0b083d9934eaa3d02779a23da18077bd3c')
     version('50.1.0', sha256='4a7708dafd2d360ce5e2ac7577374da9fb65fc867bc4cdaf461f9f834dfa6ac3')

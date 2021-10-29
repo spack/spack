@@ -28,6 +28,7 @@ import spack
 import spack.config
 import spack.hash_types as ht
 import spack.main
+import spack.paths
 import spack.store
 import spack.util.path
 import spack.util.spack_json as sjson
@@ -143,7 +144,8 @@ class SpackMonitorClient:
             return
 
         save_dir = spack.util.path.canonicalize_path(
-            spack.config.get('config:monitor_dir', '~/.spack/reports/monitor'))
+            spack.config.get('config:monitor_dir', spack.paths.default_monitor_path)
+        )
 
         # Name based on timestamp
         now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%s')
@@ -277,6 +279,22 @@ class SpackMonitorClient:
                         self.headers
                     )
                     return self.issue_request(request, False)
+
+            # Handle permanent re-directs!
+            elif hasattr(e, "code") and e.code == 308:
+                location = e.headers.get('Location')
+
+                request_data = None
+                if request.data:
+                    request_data = sjson.load(request.data.decode('utf-8'))[0]
+
+                if location:
+                    request = self.prepare_request(
+                        location,
+                        request_data,
+                        self.headers
+                    )
+                    return self.issue_request(request, True)
 
             # Otherwise, relay the message and exit on error
             msg = ""

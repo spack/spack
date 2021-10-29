@@ -25,7 +25,10 @@ class Tau(Package):
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.30.tar.gz"
     git      = "https://github.com/UO-OACISS/tau2"
 
+    tags = ['e4s']
+
     version('master', branch='master')
+    version('2.30.2', sha256='43f84a15b71a226f8a64d966f0cb46022bcfbaefb341295ecc6fa80bb82bbfb4')
     version('2.30.1', sha256='9c20ca1b4f4e80d885f24491cee598068871f0e9dd67906a5e47e4b4147d08fc')
     version('2.30', sha256='e581c33e21488d69839a00d97fd4451ea579f47249b2750d5c36bea773041eaf')
     version('2.29.1', sha256='4195a0a236bba510ab50a93e13c7f00d9472e8bc46c91de3f0696112a34e34e2')
@@ -74,6 +77,7 @@ class Tau(Package):
     variant('rocm', default=False, description='Activates ROCm support')
     variant('level_zero', default=False, description='Activates Intel OneAPI Level Zero support')
     variant('rocprofiler', default=False, description='Activates ROCm rocprofiler support')
+    variant('roctracer', default=False, description='Activates ROCm roctracer support')
     variant('opencl', default=False, description='Activates OpenCL support')
     variant('fortran', default=darwin_default, description='Activates Fortran support')
     variant('io', default=True, description='Activates POSIX I/O support')
@@ -106,6 +110,9 @@ class Tau(Package):
     depends_on('adios2', when='+adios2')
     depends_on('sqlite', when='+sqlite')
     depends_on('hwloc')
+    depends_on('rocprofiler-dev', when='+rocprofiler')
+    depends_on('roctracer-dev', when='+roctracer')
+    depends_on('hsa-rocr-dev', when='+rocm')
 
     # Elf only required from 2.28.1 on
     conflicts('+elf', when='@:2.28.0')
@@ -258,10 +265,13 @@ class Tau(Package):
             options.append("-opencl")
 
         if '+rocm' in spec:
-            options.append("-rocm")
+            options.append("-rocm=%s" % spec['hsa-rocr-dev'].prefix)
 
         if '+rocprofiler' in spec:
-            options.append("-rocprofiler=%s" % spec['rocprofiler'].prefix)
+            options.append("-rocprofiler=%s" % spec['rocprofiler-dev'].prefix)
+
+        if '+roctracer' in spec:
+            options.append("-roctracer=%s" % spec['roctracer-dev'].prefix)
 
         if '+adios2' in spec:
             options.append("-adios=%s" % spec['adios2'].prefix)

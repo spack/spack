@@ -14,4 +14,4 @@ class PyOpencensus(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-opencensus-context@0.1.1', type=('build', 'run'))
-    depends_on('py-google-api-core@1.0:1.999', type=('build', 'run'))
+    depends_on('py-google-api-core@1.0:1', type=('build', 'run'))

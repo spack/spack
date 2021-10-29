@@ -197,8 +197,8 @@ class Wrf(Package):
         if "Please select from among the following" in outputbuf:
             options = collect_platform_options(outputbuf)
             comp_pair = "%s/%s" % (
-                basename(self.compiler.fc),
-                basename(self.compiler.cc),
+                basename(self.compiler.fc).split("-")[0],
+                basename(self.compiler.cc).split("-")[0],
             )
             compiler_matches = dict(
                 (x, y) for x, y in options.items() if comp_pair in x.lower()

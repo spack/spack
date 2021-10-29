@@ -6,6 +6,7 @@
 import errno
 import glob
 import os
+import re
 import shutil
 import tempfile
 from contextlib import contextmanager
@@ -88,8 +89,8 @@ class DirectoryLayout(object):
         self.manifest_file_name  = 'install_manifest.json'
 
     @property
-    def hidden_file_paths(self):
-        return (self.metadata_dir,)
+    def hidden_file_regexes(self):
+        return (re.escape(self.metadata_dir),)
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)

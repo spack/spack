@@ -22,4 +22,4 @@ class PyConfigargparse(PythonPackage):
 
     version('1.2.3', sha256='0f1144a204e3b896d6ac900e151c1d13bde3103d6b7d541e3bb57514a94083bf')
 
-    depends_on('python@2.2:2.999,3.5:', type=('build', 'run'))
+    depends_on('python@2.2:2,3.5:', type=('build', 'run'))

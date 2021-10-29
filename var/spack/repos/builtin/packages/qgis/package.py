@@ -124,9 +124,9 @@ class Qgis(CMakePackage):
     depends_on('pkgconfig', type='build')
 
     # Take care of conflicts using depends_on
-    depends_on('qt@5.9.0:5.12.99', when='@3.8')
+    depends_on('qt@5.9.0:5.12', when='@3.8')
     depends_on('qt@5.9.0:', when='@3.10.0:')
-    depends_on('qtkeychain@:1.5.99', when='^qt@4')
+    depends_on('qtkeychain@:1.5', when='^qt@4')
     depends_on('qt@:4', when='@2')
     # Help concretizer
     # +qsci_api is implied by qscintilla+python dependency
@@ -161,7 +161,10 @@ class Qgis(CMakePackage):
                     self.spec['geos'].prefix.bin,
                     '-DGSL_CONFIG_PREFER_PATH=' + self.spec['gsl'].prefix.bin,
                     '-DPOSTGRES_CONFIG_PREFER_PATH=' +
-                    self.spec['postgresql'].prefix.bin
+                    self.spec['postgresql'].prefix.bin,
+                    '-DPROJ_INCLUDE_DIR=' + self.spec['proj'].headers.directories[0],
+                    '-DSQLITE3_LIBRARY='
+                    + self.spec['sqlite'].libs[0]
                     ])
 
         args.extend([
@@ -232,3 +235,7 @@ class Qgis(CMakePackage):
         else:
             args.append('-DWITH_GRASS7=OFF')
         return args
+
+    def check(self):
+        """The tests of fail without access to an X server, cant run on build servers"""
+        pass

@@ -2103,7 +2103,7 @@ correct way to specify this would be:
 
 .. code-block:: python
 
-   depends_on('python@2.6.0:2.6.999')
+   depends_on('python@2.6.0:2.6')
 
 A spec can contain multiple version ranges separated by commas.
 For example, if you need Boost 1.59.0 or newer, but there are known
@@ -2824,7 +2824,7 @@ is equivalent to:
 
    depends_on('elpa+openmp', when='+openmp+elpa')
 
-Constraints from nested context managers are also added together, but they are rarely
+Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
 
 .. _install-method:
