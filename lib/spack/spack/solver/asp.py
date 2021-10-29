@@ -53,6 +53,11 @@ else:
     from collections import Sequence
 
 
+# these are from clingo.ast and bootstrapped later
+ASTType = None
+parse_files = None
+
+
 #: Enumeration like object to mark version provenance
 version_provenance = collections.namedtuple(  # type: ignore
     'VersionProvenance', ['external', 'packages_yaml', 'package_py', 'spec']
@@ -355,6 +360,26 @@ def _normalize_packages_yaml(packages_yaml):
     return normalized_yaml
 
 
+def bootstrap_clingo():
+    global clingo, ASTType, parse_files
+
+    if not clingo:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            spack.bootstrap.ensure_clingo_importable_or_raise()
+            import clingo
+
+    try:
+        from clingo.ast import ASTType, parse_files
+    except ImportError:
+        # older versions of clingo just have parse_string
+        from clingo.ast import ASTType, parse_string
+
+        def parse_files(files, visit):  # type: ignore
+            for filename in files:
+                with open(filename, 'r') as f:
+                    parse_string(f.read(), visit)
+
+
 class PyclingoDriver(object):
     def __init__(self, cores=True, asp=None):
         """Driver for the Python clingo interface.
@@ -365,11 +390,8 @@ class PyclingoDriver(object):
             asp (file-like): optional stream to write a text-based ASP program
                 for debugging or verification.
         """
-        global clingo
-        if not clingo:
-            with spack.bootstrap.ensure_bootstrap_configuration():
-                spack.bootstrap.ensure_clingo_importable_or_raise()
-                import clingo
+        bootstrap_clingo()
+
         self.out = asp or llnl.util.lang.Devnull()
         self.cores = cores
 
@@ -435,7 +457,6 @@ class PyclingoDriver(object):
         parent_dir = os.path.dirname(__file__)
 
         # read in the error messages from the file
-        from clingo.ast import ASTType, parse_files
         with self.backend:
             def visit(node):
                 if node.ast_type == ASTType.Rule:
