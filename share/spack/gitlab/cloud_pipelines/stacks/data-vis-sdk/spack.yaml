@@ -39,7 +39,10 @@ spack:
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - spack -d ci rebuild
     mappings:
-      - match: [vtk-h, vtk-m, paraview, llvm, vtk]
+      - match: [llvm]
+        runner-attributes:
+          tags: ["spack", "public", "huge", "x86_64"]
+      - match: [vtk-h, vtk-m, paraview, vtk]
         runner-attributes:
           tags: ["spack", "public", "xlarge", "x86_64"]
       - match: ['@:']
