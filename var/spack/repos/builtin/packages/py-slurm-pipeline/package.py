@@ -20,6 +20,5 @@ class PySlurmPipeline(PythonPackage):
     depends_on('py-setuptools', type='build')
     # listed in install_requires:
     depends_on('py-pytest@6.2.2:', type='build')
-    # test dependencies are omitted as we don't run unit tests, see #7681
     # Before 4.0.0, slurm_pipeline/base.py has: from six import string_types
     depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:3')
