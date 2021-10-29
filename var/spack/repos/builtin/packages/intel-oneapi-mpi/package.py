@@ -93,7 +93,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         libfabric_rpath = join_path(self.component_path, 'libfabric', 'lib')
         if '+external-libfabric' in self.spec:
             libfabric_rpath = os.path.dirname(
-                [s for s in spec['libfabric'].libs if s.endswith('libfabric.so')][0]
+                [s for s in self.spec['libfabric'].libs if s.endswith('libfabric.so')][0]
             )
         libs += libfabric_rpath
 
