@@ -435,7 +435,7 @@ class PyclingoDriver(object):
         parent_dir = os.path.dirname(__file__)
 
         # read in the error messages from the file
-        from clingo.ast import ASTType, parse_string
+        from clingo.ast import ASTType, parse_files
         with self.backend:
             def visit(node):
                 if node.ast_type == ASTType.Rule:
@@ -446,7 +446,7 @@ class PyclingoDriver(object):
                                     string = term.atom.symbol.arguments[0].symbol.string
                                     self.fact(fn.error(string), assumption=True)
             path = os.path.join(parent_dir, 'concretize.lp')
-            parse_string(open(path).read(), visit)
+            parse_files([path], visit)
 
         # Load the file itself
         self.control.load(os.path.join(parent_dir, 'concretize.lp'))
