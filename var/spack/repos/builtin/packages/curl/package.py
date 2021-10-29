@@ -112,10 +112,16 @@ class Curl(AutotoolsPackage):
             '--without-libgsasl',
             '--without-libpsl',
             '--without-zstd',
-            '--without-ca-bundle',
-            '--without-ca-path',
-            '--with-ca-fallback',
         ]
+
+        # Make gnutls / openssl decide what certs are trusted.
+        # TODO: certs for other tls options.
+        if spec.satisfies('tls=gnutls') or spec.satisfies('tls=openssl'):
+            args.extend([
+                '--without-ca-bundle',
+                '--without-ca-path',
+                '--with-ca-fallback',
+            ])
 
         # https://daniel.haxx.se/blog/2021/06/07/bye-bye-metalink-in-curl/
         # We always disable it explicitly, but the flag is gone in newer
@@ -135,9 +141,6 @@ class Curl(AutotoolsPackage):
         args += self.with_or_without('libssh2')
         args += self.with_or_without('libssh')
         args += self.enable_or_disable('ldap')
-
-        if '--without-openssl' in args or '--without-ssl' in args:
-            args.remove('--with-ca-fallback')
 
         return args
 
