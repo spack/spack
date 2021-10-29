@@ -18,8 +18,8 @@ class PyHtml5lib(PythonPackage):
             url='https://files.pythonhosted.org/packages/source/h/html5lib/html5lib-099.tar.gz')
 
     depends_on('python@2.6:2.8,3.2:', when='@099', type=('build', 'run'))
-    depends_on('python@2.6:2.8,3.3:', when='@1.0.1:', type=('build', 'run'))
-    depends_on('python@2.6:2.8,3.5:', when='@1.1:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.3:', when='@1.0.1:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', when='@1.1:', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-six@1.9:', type=('build', 'run'), when='@1.0.1:')
     depends_on('py-setuptools', type='build', when='@1.0.1:')
