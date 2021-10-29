@@ -14,6 +14,7 @@ import llnl.util.lang
 
 import spack.config
 import spack.error
+import spack.util.path
 
 _extension_regexp = re.compile(r'spack-(\w[-\w]*)$')
 
@@ -112,6 +113,7 @@ def get_command_paths():
     extension_paths = spack.config.get('config:extensions') or []
 
     for path in extension_paths:
+        path = spack.util.path.canonicalize_path(path)
         extension = _python_name(extension_name(path))
         command_paths.append(os.path.join(path, extension, 'cmd'))
 
