@@ -11,6 +11,7 @@ class Exaworks(Package):
     '''
 
     homepage = 'https://exaworks.org/'
+    maintainers = ['andre-merzky']
     has_code = False
 
     version('0.1.0')
