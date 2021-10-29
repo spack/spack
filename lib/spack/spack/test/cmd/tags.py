@@ -3,59 +3,62 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
 import pytest
 
+import spack.main
 import spack.repo
+import spack.spec
 
-from spack.main import SpackCommand
-from spack.spec import Spec
+tags = spack.main.SpackCommand('tags')
 
-tags = SpackCommand('tags')
+
+def test_tags_bad_options():
+    out = tags('-a', 'tag1', fail_on_error=False)
+    assert "option OR provide" in out
 
 
 def test_tags_no_installed(install_mockery, mock_fetch):
     out = tags('-i')
+    assert 'No installed' in out
+
+
+def test_tags_invalid_tag(mock_packages):
+    out = tags('nosuchtag')
     assert 'None' in out
 
 
-@pytest.mark.parametrize('args,packages', [
-    (('tag1',), ['mpich', 'mpich2']),
-    (('tag2',), ['mpich']),
-    (('tag3',), ['mpich2']),
-    (('nosuchpackage',), ['None']),
-    (('-s',), ['mpich2']),               # show available packages
-    (('-i', 'tag2',), ['No installed'])  #
-])
-def test_tags_packages(install_mockery, mock_fetch, args, packages):
-    out = tags(*args)
-    for pkg in packages:
+def test_tags_all_mock_tags(mock_packages):
+    out = tags()
+    for tag in ['tag1', 'tag2', 'tag3']:
+        assert tag in out
+
+
+def test_tags_all_mock_tag_packages(mock_packages):
+    out = tags('-a')
+    for pkg in ['mpich\n', 'mpich2\n']:
         assert pkg in out
 
 
-@pytest.mark.parametrize('package,options,outputs', [
-    # Process available tags, so packages if showing or tags if not
-    ('mpich', [], ['tag1', 'tag2']),                 # relevant tags
-    ('mpich2', [], ['tag1', 'tag3']),                # relevant tags
-    ('mpich', ['-s'], ['mpich', 'No installed']),    # installed or No installed
+def test_tags_no_tags(monkeypatch):
+    class tag_path():
+        tag_index = dict()
 
-    # Process provided tags, so show installed package or No installed
-    ('mpich', ['tag1', 'tag2'], ['mpich']) ,
-    ('mpich', ['tag3'], ['No installed']),
-    ('mpich2', ['tag1', 'tag3'], ['mpich2']) ,
-    ('mpich2', ['tag2'], ['No installed']),
-])
-def test_tags_installed(
-    install_mockery, mock_fetch, package, options, outputs
-):
-    spec = Spec(package).concretized()
+    monkeypatch.setattr(spack.repo, 'path', tag_path)
+    out = tags()
+    assert "No tagged" in out
+
+
+def test_tags_installed(install_mockery, mock_fetch):
+    spec = spack.spec.Spec('mpich').concretized()
     pkg = spack.repo.get(spec)
     pkg.do_install()
 
-    args = ['-i'] + options
-    out = tags(*args)
-    for item in outputs:
-        assert item in out
+    out = tags('-i')
+    for tag in ['tag1', 'tag2']:
+        assert tag in out
 
-    if package == outputs[-1]:
-        assert 'No installed' not in outputs
+    out = tags('-i', 'tag1')
+    assert 'mpich' in out
+
+    out = tags('-i', 'tag3')
+    assert 'None' in out

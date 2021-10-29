@@ -1671,7 +1671,7 @@ _spack_style() {
 _spack_tags() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -i --installed -s --show-packages"
+        SPACK_COMPREPLY="-h --help -i --installed -a --all"
     else
         SPACK_COMPREPLY=""
     fi

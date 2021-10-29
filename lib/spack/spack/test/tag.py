@@ -9,7 +9,6 @@ from six import StringIO
 
 import spack.cmd.install
 import spack.tag
-
 from spack.main import SpackCommand
 
 install = SpackCommand('install')
@@ -51,40 +50,46 @@ def test_tag_copy(mock_packages):
 
 def test_tag_get_all_available(mock_packages):
     for skip in [False, True]:
-        all_pkgs = spack.tag.get_tag_packages([], False, skip)
+        all_pkgs = spack.tag.packages_with_tags(None, False, skip)
         assert sorted(all_pkgs['tag1']) == ['mpich', 'mpich2']
         assert all_pkgs['tag2'] == ['mpich']
         assert all_pkgs['tag3'] == ['mpich2']
 
 
-@pytest.mark.parametrize('tags,packages', [
-    (['tag1'], ['mpich', 'mpich2']),
-    (['tag2'], ['mpich']),
-    (['tag3'], ['mpich2']),
-    (['nosuchpackage'], []),
-])
-def test_tag_get_available(tags, packages, mock_packages):
-    all_tag_pkgs = spack.tag.get_tag_packages(tags, False, False)
-    assert sorted(all_tag_pkgs.keys()) == tags
-    for tag in tags:
-        assert all_tag_pkgs[tag] == packages
+def ensure_tags_results_equal(results, expected):
+    if expected:
+        assert sorted(results.keys()) == sorted(expected.keys())
+        for tag in results:
+            assert sorted(results[tag]) == sorted(expected[tag])
+    else:
+        assert results == expected
 
-    only_pkgs = spack.tag.get_tag_packages(tags, False, True)
-    if packages:
-        assert sorted(only_pkgs.keys()) == tags
-        for tag in tags:
-            assert only_pkgs[tag] == packages
+
+@pytest.mark.parametrize('tags,expected', [
+    (['tag1'], {'tag1': ['mpich', 'mpich2']}),
+    (['tag2'], {'tag2': ['mpich']}),
+    (['tag3'], {'tag3': ['mpich2']}),
+    (['nosuchpackage'], {'nosuchpackage': {}}),
+])
+def test_tag_get_available(tags, expected, mock_packages):
+    # Ensure results for all tags
+    all_tag_pkgs = spack.tag.packages_with_tags(tags, False, False)
+    ensure_tags_results_equal(all_tag_pkgs, expected)
+
+    # Ensure results for tags expecting results since skipping otherwise
+    only_pkgs = spack.tag.packages_with_tags(tags, False, True)
+    if expected[tags[0]]:
+        ensure_tags_results_equal(only_pkgs, expected)
     else:
         assert not only_pkgs
 
 
 def test_tag_get_installed_packages(
-        mock_packages, mock_archive, mock_fetch, install_mockery
-    ):
+        mock_packages, mock_archive, mock_fetch, install_mockery):
     install('mpich')
 
     for skip in [False, True]:
-        all_pkgs = spack.tag.get_tag_packages([], True, skip)
+        all_pkgs = spack.tag.packages_with_tags(None, True, skip)
         assert sorted(all_pkgs['tag1']) == ['mpich']
         assert all_pkgs['tag2'] == ['mpich']
         assert skip or all_pkgs['tag3'] == []
@@ -152,5 +157,4 @@ def test_tag_update_package(mock_packages):
     for name in spack.repo.all_package_names():
         index.update_package(name)
 
-    assert mock_index.tags == index.tags
-    assert mock_index == index
+    ensure_tags_results_equal(mock_index.tags, index.tags)

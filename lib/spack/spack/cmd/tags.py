@@ -3,15 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
 import sys
 
 import six
 
+import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 
 import spack.repo
+import spack.store
 import spack.tag
+
+description = "Show package tags and associated packages"
+section = "basic"
+level = "long"
 
 
 def report_tags(category, tags):
@@ -19,7 +24,9 @@ def report_tags(category, tags):
     isatty = sys.stdout.isatty()
 
     if isatty:
-        buffer.write("{0} package tags:\n".format(category))
+        num = len(tags)
+        fmt = '{0} package tag'.format(category)
+        buffer.write( "{0}:\n".format(spack.util.string.plural(num, fmt)))
 
     if tags:
         colify.colify(tags, output=buffer, tty=isatty, indent=4)
@@ -29,40 +36,54 @@ def report_tags(category, tags):
 
 
 def setup_parser(subparser):
-    subparser.epilog = "Processes available tags when called without tags."
-    subparser.add_argument(
-        '-i', '--installed', action='store_true', default=False,
-        help="limit tags to those of installed packages"
+    subparser.epilog = (
+        "Tags from known packages will be used if no tags are provided on "
+        "the command\nline. If tags are provided, packages with at least one "
+        "will be reported.\n\nYou are not allowed to provide tags and use "
+        "'--all' at the same time."
     )
     subparser.add_argument(
-        '-s', '--show-packages', action='store_true', default=False,
-        help="show packages for available tags when no tags are provided"
+        '-i', '--installed', action='store_true', default=False,
+        help="show information for installed packages only"
+    )
+    subparser.add_argument(
+        '-a', '--all', action='store_true', default=False,
+        help="show packages for all available tags"
     )
     subparser.add_argument(
         'tag',
         nargs='*',
-        help="find packages that provide this tag"
+        help="show packages with the specified tag"
     )
 
 
 def tags(parser, args):
+    # Disallow combining all option with (positional) tags to avoid confusion
+    if args.all and args.tag:
+        tty.die("Use the '--all' option OR provide tag(s) on the command line"
+                .format(args.tag))
+
+    # Provide a nice, simple message if database is empty
+    if args.installed and not spack.tag.has_installed_packages():
+        tty.msg("No installed packages")
+        return
+
     # unique list of available tags
     available_tags = sorted(spack.repo.path.tag_index.keys())
     if not available_tags:
-        print("There are no known tagged packages")
+        tty.msg("No tagged packages")
         return
 
-    # Always show packages when tags are provided
-    show_packages = args.tag or args.show_packages
+    show_packages = args.tag or args.all
 
     # Only report relevant, available tags if no packages are to be shown
     if not show_packages:
         if not args.installed:
-            report_tags("Available", available_tags)
+            report_tags("available", available_tags)
         else:
-            tag_pkgs = spack.tag.get_tag_packages(available_tags, True, True)
+            tag_pkgs = spack.tag.packages_with_tags(available_tags, True, True)
             tags = tag_pkgs.keys() if tag_pkgs else []
-            report_tags("Installed", tags)
+            report_tags("installed", tags)
         return
 
     # Report packages associated with tags
@@ -70,8 +91,7 @@ def tags(parser, args):
     isatty = sys.stdout.isatty()
 
     tags = args.tag if args.tag else available_tags
-    tag_pkgs = spack.tag.get_tag_packages(tags, args.installed, False)
-    missing = "No installed packages" if args.installed else "None"
+    tag_pkgs = spack.tag.packages_with_tags(tags, args.installed, False)
     for tag in sorted(tag_pkgs):
         # TODO: Remove the sorting once we're sure noone has an old
         # TODO: tag cache since it can accumulate duplicates.
@@ -82,6 +102,6 @@ def tags(parser, args):
         if packages:
             colify.colify(packages, output=buffer, tty=isatty, indent=4)
         else:
-            buffer.write("    {0}\n".format(missing))
+            buffer.write("    None\n")
         buffer.write("\n")
     print(buffer.getvalue())
