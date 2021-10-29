@@ -289,13 +289,13 @@ spack -m install --fake a
 
 # create a test environment for testing environment commands
 echo "Creating a mock environment"
-spack env create spack_test_env
-spack env create spack_test_2_env
+spt_succeeds spack env create spack_test_env
+spt_succeeds spack env create spack_test_2_env
 
 # ensure that we uninstall b on exit
 function spt_cleanup -p %self
     echo "Removing test environment before exiting."
-    spack env deactivate 2>&1 > /dev/null
+    spack env deactivate > /dev/null 2>&1
     spack env rm -y spack_test_env spack_test_2_env
 
     title "Cleanup"
@@ -381,14 +381,17 @@ spt_contains "usage: spack env deactivate " spack env deactivate --help
 
 title 'Testing activate and deactivate together'
 echo "Testing 'spack env activate spack_test_env'"
+spt_succeeds spack env activate spack_test_env
 spack env activate spack_test_env
 is_set SPACK_ENV
 
 echo "Testing 'spack env deactivate'"
+spt_succeeds spack env deactivate
 spack env deactivate
 is_not_set SPACK_ENV
 
 echo "Testing 'spack env activate spack_test_env'"
+spt_succeeds spack env activate spack_test_env
 spack env activate spack_test_env
 is_set SPACK_ENV
 
@@ -397,6 +400,7 @@ despacktivate
 is_not_set SPACK_ENV
 
 echo "Testing 'spack env activate --temp'"
+spt_succeeds spack env activate --temp
 spack env activate --temp
 is_set SPACK_ENV
 spack env deactivate
@@ -407,6 +411,12 @@ spack env activate spack_test_env
 spack env activate spack_test_2_env
 spt_contains 'spack_test_2_env' 'fish' '-c' 'echo $PATH'
 spt_does_not_contain 'spack_test_env' 'fish' '-c' 'echo $PATH'
+despacktivate
+
+echo "Correct error exit codes for activate and deactivate"
+spt_fails spack env activate nonexisiting_environment
+spt_fails spack env deactivate
+
 
 #
 # NOTE: `--prompt` on fish does nothing => currently not implemented.
