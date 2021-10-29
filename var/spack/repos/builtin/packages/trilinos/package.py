@@ -356,6 +356,10 @@ class Trilinos(CMakePackage, CudaPackage):
     def flag_handler(self, name, flags):
         is_cce = self.spec.satisfies('%cce')
 
+        # Workaround for Intel compiler segfaults with STK and IPO
+        if '+stk%intel' in self.spec and name != 'ldflags':
+            flags.append('-no-ipo')
+
         if name == 'cxxflags':
             spec = self.spec
             if '+mumps' in spec:
