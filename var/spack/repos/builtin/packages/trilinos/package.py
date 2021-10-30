@@ -363,6 +363,9 @@ class Trilinos(CMakePackage, CudaPackage):
                 flags.append('-DMUMPS_5_0')
             if '+stk platform=darwin' in spec:
                 flags.append('-DSTK_NO_BOOST_STACKTRACE')
+            if '+stk%intel' in spec:
+                # Workaround for Intel compiler segfaults with STK and IPO
+                flags.append('-no-ipo')
             if '+wrapper' in spec:
                 flags.append('--expt-extended-lambda')
         elif name == 'ldflags' and is_cce:
