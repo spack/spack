@@ -17,9 +17,11 @@ class Qgis(CMakePackage):
 
     maintainers = ['adamjstewart', 'Sinan81']
 
+    version('3.22.0',   sha256='cf0c169863f332aab67d8c4943e14b73a564f0254bf54015f5826c6427e6785b')
     version('3.18.2',   sha256='1913e4d5596bbc8b7d143f3defb18bf376f750a71f334f69d76af5deca7ecc5d')
     # Prefer latest long term release
-    version('3.16.5',   sha256='525f469ad6e40dd7a8f09ebab5eb6a2dffc45939b99b7d937750cc04ed78d61c', preferred=True)
+    version('3.16.12',  sha256='65e9634b5c885c98f3555cf77bc2e3fae5e19279aa17e3f6626ff5d7455fd2b9', preferred=True)
+    version('3.16.5',   sha256='525f469ad6e40dd7a8f09ebab5eb6a2dffc45939b99b7d937750cc04ed78d61c')
     version('3.14.16',  sha256='c9915c2e577f1812a2b35b678b123c58407e07824d73e5ec0dda13db7ca75c04')
     version('3.14.0',   sha256='1b76c5278def0c447c3d354149a2afe2562ac26cf0bcbe69b9e0528356d407b8')
     version('3.12.3',   sha256='c2b53815f9b994e1662995d1f25f90628156b996758f5471bffb74ab29a95220')
@@ -133,6 +135,10 @@ class Qgis(CMakePackage):
     depends_on('py-pyqt4 +qsci_api', when='@2')
     depends_on('py-pyqt5@5.3: +qsci_api', when='@3')
 
+    # newer Python yields runtime error
+    # ref: https://github.com/spack/spack/issues/26803
+    conflicts('python@3.8.7:')
+
     patch('pyqt5.patch', when='@:3.14 ^qt@5')
     patch('pyqt5_3165x.patch', when='@3.16.5: ^qt@5')
 
@@ -151,6 +157,8 @@ class Qgis(CMakePackage):
                     self.spec['qscintilla'].prefix.include,
                     '-DQSCINTILLA_LIBRARY=' + self.spec['qscintilla'].prefix +
                     '/lib/libqscintilla2_qt5.so',
+                    '-DQSCI_SIP_DIR=' +
+                    self.spec['qscintilla'].prefix.share.sip.PyQt5,
                     '-DLIBZIP_INCLUDE_DIR=' +
                     self.spec['libzip'].prefix.include,
                     '-DLIBZIP_CONF_INCLUDE_DIR=' +
