@@ -20,7 +20,7 @@ class Nemsio(CMakePackage):
 
     variant('mpi', default=True, description='Build Nemsio with MPI')
     # Nemsio 2.5.3 and below require MPI
-    conflicts('-mpi', when='@:2.5.3')
+    conflicts('~mpi', when='@:2.5.3')
 
     version('2.5.4', sha256='186a5f37d509d280c0237d4917db86ad676c5dd12d8a892df0333a10e751e481')
     version('2.5.3', sha256='3fe8a781fc96197803d369cafe0138f3a5cbbca9816a7f8fd57567a1719a4d49')
