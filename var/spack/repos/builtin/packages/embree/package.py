@@ -13,6 +13,8 @@ class Embree(CMakePackage):
     url      = "https://github.com/embree/embree/archive/v3.7.0.tar.gz"
     maintainers = ['aumuell']
 
+    version('3.13.3', sha256='74ec785afb8f14d28ea5e0773544572c8df2e899caccdfc88509f1bfff58716f')
+    version('3.13.2', sha256='dcda827e5b7a606c29d00c1339f1ef00f7fa6867346bc46a2318e8f0a601c6f9')
     version('3.13.1', sha256='00dbd852f19ae2b95f5106dd055ca4b304486436ced0ccf842aec4e38a4df425')
     version('3.13.0', sha256='4d86a69508a7e2eb8710d571096ad024b5174834b84454a8020d3a910af46f4f')
     version('3.12.2', sha256='22a527622497e07970e733f753cc9c10b2bd82c3b17964e4f71a5fd2cdfca210')
