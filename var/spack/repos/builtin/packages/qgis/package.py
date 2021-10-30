@@ -130,14 +130,13 @@ class Qgis(CMakePackage):
     depends_on('qt@5.9.0:', when='@3.10.0:')
     depends_on('qtkeychain@:1.5', when='^qt@4')
     depends_on('qt@:4', when='@2')
+    # newer Python yields runtime error
+    # ref: https://github.com/spack/spack/issues/26803
+    depends_on('python@:3.8.6')
     # Help concretizer
     # +qsci_api is implied by qscintilla+python dependency
     depends_on('py-pyqt4 +qsci_api', when='@2')
     depends_on('py-pyqt5@5.3: +qsci_api', when='@3')
-
-    # newer Python yields runtime error
-    # ref: https://github.com/spack/spack/issues/26803
-    conflicts('python@3.8.7:')
 
     patch('pyqt5.patch', when='@:3.14 ^qt@5')
     patch('pyqt5_3165x.patch', when='@3.16.5: ^qt@5')
