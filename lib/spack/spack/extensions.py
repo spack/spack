@@ -133,7 +133,7 @@ def path_for_extension(target_name, *paths):
     for path in paths:
         name = extension_name(path)
         if name == target_name:
-            return path
+            return spack.util.path.substitute_path_variables(path)
     else:
         raise IOError('extension "{0}" not found'.format(target_name))
 
@@ -150,6 +150,7 @@ def get_module(cmd_name):
     # directories in order
     extensions = spack.config.get('config:extensions') or []
     for folder in extensions:
+        folder = spack.util.path.substitute_path_variables(folder)
         module = load_command_extension(cmd_name, folder)
         if module:
             return module
@@ -162,7 +163,10 @@ def get_template_dirs():
     in extensions.
     """
     extension_dirs = spack.config.get('config:extensions') or []
-    extensions = [os.path.join(x, 'templates') for x in extension_dirs]
+    extensions = []
+    for dir in extension_dirs:
+        dir = spack.util.path.substitute_path_variables(dir)
+        extensions.append(os.path.join(dir, 'templates'))
     return extensions
 
 
