@@ -113,7 +113,7 @@ def get_command_paths():
     extension_paths = spack.config.get('config:extensions') or []
 
     for path in extension_paths:
-        path = spack.util.path.canonicalize_path(path)
+        path = spack.util.path.substitute_path_variables(path)
         extension = _python_name(extension_name(path))
         command_paths.append(os.path.join(path, extension, 'cmd'))
 
