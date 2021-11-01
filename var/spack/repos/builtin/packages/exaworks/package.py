@@ -30,4 +30,3 @@ class Exaworks(BundlePackage):
     depends_on('py-radical-saga',         type=('build', 'run'))
     depends_on('py-radical-pilot',        type=('build', 'run'))
     depends_on('py-radical-entk',         type=('build', 'run'))
-
