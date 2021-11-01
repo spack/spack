@@ -81,6 +81,7 @@ class Hdf5(CMakePackage):
             multi=False)
 
     depends_on('cmake@3.12:', type='build')
+    depends_on('gmake', type='build')     # the CMakeFile calls `make`
 
     depends_on('mpi', when='+mpi')
     depends_on('java', type=('build', 'run'), when='+java')
@@ -158,6 +159,8 @@ class Hdf5(CMakePackage):
     # The issue is described here: https://github.com/spack/spack/issues/18625
     patch('hdf5_1.8_gcc10.patch', when='@:1.8.21',
           sha256='0e20187cda3980a4fdff410da92358b63de7ebef2df1d7a425371af78e50f666')
+
+    patch('fortran-kinds.patch')
 
     # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
     # declared as intent(in) though it is modified by the invocation. As a
