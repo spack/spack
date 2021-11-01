@@ -64,7 +64,7 @@ def tags(parser, args):
                 .format(args.tag))
 
     # Provide a nice, simple message if database is empty
-    if args.installed and not spack.tag.has_installed_packages():
+    if args.installed and not spack.environment.installed_specs():
         tty.msg("No installed packages")
         return
 

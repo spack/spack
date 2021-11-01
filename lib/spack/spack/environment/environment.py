@@ -102,7 +102,7 @@ default_view_name = 'default'
 default_view_link = 'all'
 
 
-def get_installed_package_specs():
+def installed_specs():
     """
     Returns the specs of packages installed in the active environment or None
     if no packages are installed.
