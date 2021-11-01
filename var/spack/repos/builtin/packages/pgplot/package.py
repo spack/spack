@@ -48,7 +48,6 @@ class Pgplot(MakefilePackage):
 
     depends_on('libx11', when='+X')
     depends_on('libpng', when='+png')
-    depends_on('zlib', when='+png')
 
     def edit(self, spec, prefix):
 
@@ -56,26 +55,26 @@ class Pgplot(MakefilePackage):
             fib = " -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else ""
 
             sub = {
-                '@CCOMPL@': self.compiler.cc,
+                '@CCOMPL@': spack_cc,
                 '@CFLAGC@': "-Wall -fPIC -DPG_PPU -O -std=c89 " +
                             "-Wno-error=implicit-function-declaration",
                 '@CFLAGD@': "-O2",
-                '@FCOMPL@': self.compiler.f77,
+                '@FCOMPL@': spack_fc,
                 '@FFLAGC@': "-Wall -fPIC -O -ffixed-line-length-none" + fib,
                 '@FFLAGD@': "-fno-backslash",
                 '@LIBS@': "-lgfortran",
-                '@SHARED_LD@': self.compiler.cc + " -shared -o $SHARED_LIB -lgfortran"
+                '@SHARED_LD@': spack_cc + " -shared -o $SHARED_LIB -lgfortran"
             }
         elif spec.satisfies('%intel'):
             sub = {
-                '@CCOMPL@': self.compiler.cc,
+                '@CCOMPL@': spack_cc,
                 '@CFLAGC@': "-O2 -fPIC -DPG_PPU",
                 '@CFLAGD@': "-O2 -lifcore -lifport",
-                '@FCOMPL@': self.compiler.f77,
+                '@FCOMPL@': spack_fc,
                 '@FFLAGC@': "-fPIC",
                 '@FFLAGD@': "-nofor-main",
                 '@LIBS@': "-nofor-main -lifcore -lifport",
-                '@SHARED_LD@': self.compiler.cc + " -shared -o $SHARED_LIB"
+                '@SHARED_LD@': spack_cc + " -shared -o $SHARED_LIB"
             }
 
         conf = join_path(
@@ -97,15 +96,9 @@ class Pgplot(MakefilePackage):
 
         if '+png' in spec:
             enable_driver('! PNDRIV 1 /PNG')
-            sub['@CCOMPL@'] += ' -I{0}'.format(self.spec['libpng'].prefix.include)
-            sub['@FFLAGD@'] += ' -L{0} -lpng'.format(self.spec['libpng'].prefix.lib)
-            sub['@FFLAGD@'] += ' -L{0} -lz'.format(self.spec['zlib'].prefix.lib)
 
             filter_file('pndriv.o : ./png.h ./pngconf.h ./zlib.h ./zconf.h',
-                        'pndriv.o : {0}/png.h {0}/pngconf.h {1}/zlib.h {1}/zconf.h'.
-                        format(self.spec['libpng'].prefix.include,
-                               self.spec['zlib'].prefix.include), 'makemake')
-            self.rpath.append(self.spec['libpng'].prefix)
+                        'pndriv.o :', 'makemake')
 
         # Alwasy enable PS and LATEX since they are not depending on other libraries.
         enable_driver('! PSDRIV 1 /PS')
@@ -120,6 +113,10 @@ class Pgplot(MakefilePackage):
 
         for key, value in sub.items():
             filter_file(key, value, conf)
+
+    def setup_build_environment(self, env):
+        if '+png' in self.spec:
+            env.set('LIBS', self.spec['libpng'].libs.ld_flags)
 
     def build(self, spec, prefix):
         makemake = which('./makemake')
