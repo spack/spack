@@ -5,14 +5,13 @@
 
 from spack import *
 
-class Exaworks(Package):
+class Exaworks(BundlePackage):
     '''
     Virtual package for the Exaworks SDK packages.
     '''
 
     homepage = 'https://exaworks.org/'
     maintainers = ['andre-merzky']
-    has_code = False
 
     version('0.1.0')
 
