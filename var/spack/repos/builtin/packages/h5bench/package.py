@@ -18,8 +18,8 @@ class H5bench(CMakePackage):
     version('master', branch='master')
     version('develop', branch='develop')
 
-    version('1.0', sha256='c9151d0c138990f7fc684501f7a7e99d8727317b5169809ddbb63d8e84c9fa3f', deprecated=True)
-    version('1.1', sha256='8d7ba7d835a9a08d88b1a9c6289eafbf67e3a1ea87435799f276809db9df3d77')
+    version('1.1', sha256='69f40e9bb0547235efe2114ab807825a513288b21ecfd9ce568443fe43bd9389')
+    version('1.0', sha256='c9151d0c138990f7fc684501f7a7e99d8727317b5169809ddbb63d8e84c9fa3f')
 
     depends_on('cmake@3.10:', type='build')
     depends_on('mpi')
