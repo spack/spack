@@ -843,6 +843,13 @@ class Python(Package):
         Returns:
             dict: variable definitions
         """
+        # Some values set by sysconfig may not always exist on Windows, so
+        # compute Windows alternatives
+        def repair_win_sysconf(conf):
+            if not conf["LIBDIR"]:
+                conf["LIBDIR"] = os.path.join(conf["LIBDEST"], "..", "libs")
+            return conf
+
         # TODO: distutils is deprecated in Python 3.10 and will be removed in
         # Python 3.12, find a different way to access this information.
         # Also, calling the python executable disallows us from cross-compiling,
@@ -882,7 +889,7 @@ for plat_specific in [True, False]:
                 config = json.loads(self.command('-c', cmd, output=str))
             except (ProcessError, RuntimeError):
                 config = {}
-            self._config_vars[dag_hash] = config
+            self._config_vars[dag_hash] = repair_win_sysconf(config)
         return self._config_vars[dag_hash]
 
     def get_sysconfigdata_name(self):
@@ -924,16 +931,14 @@ for plat_specific in [True, False]:
         # installs them into lib64. If the user is using an externally
         # installed package, it may be in either lib or lib64, so we need
         # to ask Python where its LIBDIR is.
-        # Some values set by sysconfig may not always exist on Windows, so
-        # check for Windows alternative and KeyError if that is also not found
-        libdir = self.config_vars.get("LIBDIR", self.config_vars["LIBDEST"])
+        libdir = self.config_vars["LIBDIR"]
 
         # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
         # in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
         # LIBPL does not exist in Windows, avoid uneccesary KeyError while allowing
         # later failures. Return empty string rather than none so os.path doesn't complain
-        libpl = self.config_vars.get("LIBPL", "")
+        libpl = self.config_vars["LIBPL"]
 
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
