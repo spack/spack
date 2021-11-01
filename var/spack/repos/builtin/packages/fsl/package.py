@@ -36,7 +36,7 @@ class Fsl(Package, CudaPackage):
     depends_on('vtk@:8')
 
     conflicts('cuda_arch=none', when='+cuda',
-             msg='must select a CUDA architecture')
+              msg='must select a CUDA architecture')
     conflicts('platform=darwin',
               msg='currently only packaged for linux')
 
@@ -50,7 +50,7 @@ class Fsl(Package, CudaPackage):
     # Allow fsl to use newer versions of cuda
     patch('https://aur.archlinux.org/cgit/aur.git/plain/005-fix_cuda_thrust_include.patch?h=fsl',
           sha256='9471addfc2f880350eedadcb99cb8b350abf42be1c0652ccddf49e34e5e48734',
-         level=2)
+          level=2)
 
     # allow newer compilers
     patch('libxmlpp_bool.patch')
@@ -172,8 +172,8 @@ class Fsl(Package, CudaPackage):
 
         filter_file(r'(configure_opts=".*)"',
                     r'\1 --x-includes={0} --x-libraries={1}"'.format(
-                    self.spec['libx11'].prefix.include,
-                    self.spec['libx11'].prefix.lib),
+                        self.spec['libx11'].prefix.include,
+                        self.spec['libx11'].prefix.lib),
                     join_path('extras', 'src', 'tk', 'unix', 'fslconfigure'))
         filter_file(r' -L/lib64',
                     r'',
