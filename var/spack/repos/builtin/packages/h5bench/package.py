@@ -11,7 +11,7 @@ class H5bench(CMakePackage):
 
     homepage = 'https://github.com/hpc-io/h5bench'
     git      = 'https://github.com/hpc-io/h5bench.git'
-    url      = 'https://github.com/hpc-io/h5bench/archive/refs/tags/1.0.tar.gz'
+    url      = 'https://github.com/hpc-io/h5bench/archive/refs/tags/1.1.tar.gz'
 
     maintainers = ['jeanbez', 'sbyna']
 
