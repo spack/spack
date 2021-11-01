@@ -180,6 +180,7 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('+epetraext')
         conflicts('+ifpack')
         conflicts('+isorropia')
+        conflicts('+ml', when='@13.2.0:')
     with when('~epetraext'):
         conflicts('+isorropia')
         conflicts('+teko')
