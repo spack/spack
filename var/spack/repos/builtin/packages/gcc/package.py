@@ -258,6 +258,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # (otherwise __OSX_AVAILABLE_STARTING ends up undefined)
             patch('https://raw.githubusercontent.com/Homebrew/formula-patches/b8b8e65e/gcc/9.2.0-catalina.patch',
                   sha256='0b8d14a7f3c6a2f0d2498526e86e088926671b5da50a554ffa6b7f73ac4f132b', when='@9.2.0')
+        if macos_version() >= Version('12'):
+            patch('darwin/patch-darwin21-support.diff', when='@11:')
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
         # This is needed because `gcc` avoids the superenv shim.

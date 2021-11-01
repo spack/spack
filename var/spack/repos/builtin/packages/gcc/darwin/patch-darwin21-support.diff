@@ -1,0 +1,94 @@
+As seen in commit https://github.com/iains/gcc-darwin-arm64/commit/20f61faaed3b335d792e38892d826054d2ac9f15
+this patch adds Darwin 21 support to GCC 11
+
+This patch is taken from MacPorts.
+
+diff --git gcc/config.gcc gcc/config.gcc
+index fb1f06f3da8..b447ec4c8e2 100644
+--- a/gcc/config.gcc
++++ b/gcc/config.gcc
+@@ -686,6 +686,11 @@ case ${target} in
+         macos_maj=11
+         def_ld64=609.0
+         ;;
++      *-*-darwin21*)
++        # Darwin 21 corresponds to macOS 12.
++        macos_maj=12
++        def_ld64=609.0
++        ;;
+       *-*-darwin)
+         case ${cpu_type} in
+           aarch64) macos_maj=11 ;;
+diff --git gcc/config/darwin-c.c gcc/config/darwin-c.c
+index 951a998775f..62d28fcea50 100644
+--- a/gcc/config/darwin-c.c
++++ b/gcc/config/darwin-c.c
+@@ -691,7 +691,7 @@ macosx_version_as_macro (void)
+   if (!version_array)
+     goto fail;
+ 
+-  if (version_array[MAJOR] < 10 || version_array[MAJOR] > 11)
++  if (version_array[MAJOR] < 10 || version_array[MAJOR] > 12)
+     goto fail;
+ 
+   if (version_array[MAJOR] == 10 && version_array[MINOR] < 10)
+diff --git gcc/config/darwin-driver.c gcc/config/darwin-driver.c
+index a036e091c48..bca71983674 100644
+--- a/gcc/config/darwin-driver.c
++++ b/gcc/config/darwin-driver.c
+@@ -64,17 +64,17 @@ validate_macosx_version_min (const char *version_str)
+ 
+   major = strtoul (version_str, &end, 10);
+ 
+-  if (major < 10 || major > 11 ) /* MacOS 10 and 11 are known. */
++  if (major < 10 || major > 12 ) /* MacOS 10, 11 and 12 are known. */
+     return NULL;
+ 
+   /* Skip a separating period, if there's one.  */
+   version_str = end + ((*end == '.') ? 1 : 0);
+ 
+-  if (major == 11 && *end != '\0' && !ISDIGIT (version_str[0]))
+-     /* For MacOS 11, we allow just the major number, but if the minor is
++  if (major >= 11 && *end != '\0' && !ISDIGIT (version_str[0]))
++     /* For MacOS 11 and newer, we allow just the major number, but if the minor is
+ 	there it must be numeric.  */
+     return NULL;
+-  else if (major == 11 && *end == '\0')
++  else if (major >= 11 && *end == '\0')
+     /* We will rewrite 11 =>  11.0.0.  */
+     need_rewrite = true;
+   else if (major == 10 && (*end == '\0' || !ISDIGIT (version_str[0])))
+@@ -160,10 +160,10 @@ darwin_find_version_from_kernel (void)
+ 
+   /* Darwin20 sees a transition to macOS 11.  In this, it seems that the
+      mapping to macOS minor version is now shifted to the kernel minor
+-     version - 1 (at least for the initial releases).  At this stage, we
+-     don't know what macOS version will correspond to Darwin21.  */
++     version - 1 (at least for the initial releases).  */
+   if (major_vers >= 20)
+     {
++      int macos_vers = major_vers - 9;
+       int minor_vers = *version_p++ - '0';
+       if (ISDIGIT (*version_p))
+ 	minor_vers = minor_vers * 10 + (*version_p++ - '0');
+@@ -172,7 +172,7 @@ darwin_find_version_from_kernel (void)
+       if (minor_vers > 0)
+ 	minor_vers -= 1; /* Kernel 20.3 => macOS 11.2.  */
+       /* It's not yet clear whether patch level will be considered.  */
+-      asprintf (&new_flag, "11.%02d.00", minor_vers);
++      asprintf (&new_flag, "%d.%02d.00", macos_vers, minor_vers);
+     }
+   else if (major_vers - 4 <= 4)
+     /* On 10.4 and earlier, the old linker is used which does not
+diff --git gcc/testsuite/gcc.dg/darwin-minversion-link.c gcc/testsuite/gcc.dg/darwin-minversion-link.c
+index 765fb799a91..e142a5830a4 100644
+--- a/gcc/testsuite/gcc.dg/darwin-minversion-link.c
++++ b/gcc/testsuite/gcc.dg/darwin-minversion-link.c
+@@ -16,6 +16,7 @@
+ /* { dg-additional-options "-mmacosx-version-min=010.014.05 -DCHECK=101405" { target *-*-darwin18* } } */
+ /* { dg-additional-options "-mmacosx-version-min=010.015.06 -DCHECK=101506" { target *-*-darwin19* } } */
+ /* { dg-additional-options "-mmacosx-version-min=011.000.00 -DCHECK=110000" { target *-*-darwin20 } } */
++/* { dg-additional-options "-mmacosx-version-min=012.000.00 -DCHECK=120000" { target *-*-darwin21 } } */
+ 
+ int
+ main ()
