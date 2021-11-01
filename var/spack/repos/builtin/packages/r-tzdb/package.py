@@ -25,4 +25,4 @@ class RTzdb(RPackage):
     version('0.2.0', sha256='c335905d452b400af7ed54b916b5246cb3f47ede0602911a2bcb25a1cf56d5a9')
 
     depends_on('r@3.3:', type=('build', 'run'))
-    depends_on('r-cpp11@0.4:', type=('build', 'run'))
+    depends_on('r-cpp11@0.4.0:', type=('build', 'run'))
