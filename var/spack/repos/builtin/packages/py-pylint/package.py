@@ -39,7 +39,7 @@ class PyPylint(PythonPackage):
     depends_on('py-isort@4.2.5:5', when='@2.3.1:', type=('build', 'run'))
     depends_on('py-mccabe', type=('build', 'run'))
     depends_on('py-mccabe@0.6.0:0.6', when='@2.3.1:', type=('build', 'run'))
-    depends_on('py-pip', type=('build')) # see https://github.com/spack/spack/issues/27075
+    depends_on('py-pip', type=('build'))  # see https://github.com/spack/spack/issues/27075
     # depends_on('py-setuptools-scm@1.15.0:', type='build')
     depends_on('py-setuptools-scm', type='build', when='@2.8.2:')
     depends_on('py-setuptools@17.1:', type='build')
