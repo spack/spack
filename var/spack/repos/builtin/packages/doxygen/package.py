@@ -19,9 +19,11 @@ class Doxygen(CMakePackage):
     git       = "https://github.com/doxygen/doxygen.git"
 
     # Doxygen versions on GitHub
+    version('1.9.2',  commit='caa4e3de211fbbef2c3adf58a6bd4c86d0eb7cb8')
     version('1.9.1',  commit='ef9b20ac7f8a8621fcfc299f8bd0b80422390f4b')
     version('1.9.0',  commit='71777ff3973331bd9453870593a762e184ba9f78')
     version('1.8.20', commit='f246dd2f1c58eea39ea3f50c108019e4d4137bd5')
+    version('1.8.18', commit='a1b07ad0e92e4526c9ba1711d39f06b58c2a7459')
     version('1.8.17', commit='b5fa3cd1c6e6240e20d3b80a70e3f04040b32021')
     version('1.8.16', commit='cfd73d5c4d1a66c620a3b7c08b72a3f3c3f94255')
     version('1.8.15', commit='dc89ac01407c24142698c1374610f2cee1fbf200')
@@ -85,6 +87,9 @@ class Doxygen(CMakePackage):
 
     # Workaround for gcc getting stuck in an infinite loop
     patch('gcc-partial-inlining-bug.patch', when='@1.8.20: %gcc@7')
+
+    # Some GCC 7.x get stuck in an infinite loop
+    conflicts('%gcc@7.0:7.9', when='@1.9:')
 
     def patch(self):
         if self.spec['iconv'].name == 'libc':

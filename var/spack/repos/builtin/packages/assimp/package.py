@@ -21,6 +21,7 @@ class Assimp(CMakePackage):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
 
+    depends_on('zlib')
     depends_on('boost')
 
     def cmake_args(self):

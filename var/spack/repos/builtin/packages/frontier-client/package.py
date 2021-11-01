@@ -22,6 +22,7 @@ class FrontierClient(MakefilePackage):
 
     depends_on('pacparser')
     depends_on('expat')
+    depends_on('openssl')
 
     patch('frontier-client.patch', level=0)
 

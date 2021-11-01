@@ -11,7 +11,6 @@ import archspec.cpu
 
 import llnl.util.lang
 
-import spack.architecture
 import spack.compilers
 import spack.concretize
 import spack.error
@@ -428,7 +427,7 @@ class TestConcretize(object):
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
         # TODO: improved way to check for this.
-        platform = spack.architecture.real_platform().name
+        platform = spack.platforms.real_host().name
         if platform == 'darwin' or platform == 'linux':
             return
 
@@ -1268,3 +1267,24 @@ class TestConcretize(object):
         s = spack.spec.Spec('root-adds-virtual').concretized()
         assert s['leaf-adds-virtual'].satisfies('@2.0')
         assert 'blas' in s
+
+    @pytest.mark.regression('26718')
+    def test_versions_in_virtual_dependencies(self):
+        # Ensure that a package that needs a given version of a virtual
+        # package doesn't end up using a later implementation
+        s = spack.spec.Spec('hpcviewer@2019.02').concretized()
+        assert s['java'].satisfies('virtual-with-versions@1.8.0')
+
+    @pytest.mark.regression('26866')
+    def test_non_default_provider_of_multiple_virtuals(self):
+        s = spack.spec.Spec(
+            'many-virtual-consumer ^low-priority-provider'
+        ).concretized()
+        assert s['mpi'].name == 'low-priority-provider'
+        assert s['lapack'].name == 'low-priority-provider'
+
+        for virtual_pkg in ('mpi', 'lapack'):
+            for pkg in spack.repo.path.providers_for(virtual_pkg):
+                if pkg.name == 'low-priority-provider':
+                    continue
+                assert pkg not in s

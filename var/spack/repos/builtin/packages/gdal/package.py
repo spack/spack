@@ -24,6 +24,7 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.3.3',  sha256='1e8fc8b19c77238c7f4c27857d04857b65d8b7e8050d3aac256d70fa48a21e76')
     version('3.3.2',  sha256='630e34141cf398c3078d7d8f08bb44e804c65bbf09807b3610dcbfbc37115cc3')
     version('3.3.1',  sha256='48ab00b77d49f08cf66c60ccce55abb6455c3079f545e60c90ee7ce857bccb70')
     version('3.3.0',  sha256='190c8f4b56afc767f43836b2a5cd53cc52ee7fdc25eb78c6079c5a244e28efa7')
@@ -58,7 +59,6 @@ class Gdal(AutotoolsPackage):
     variant('libz',      default=True,  description='Include libz support')
     variant('libiconv',  default=False, description='Include libiconv support')
     variant('liblzma',   default=True,  description='Include liblzma support')
-    variant('zstd',      default=False, description='Include zstd support')
     variant('pg',        default=False, description='Include PostgreSQL support')
     variant('cfitsio',   default=False, description='Include FITS support')
     variant('png',       default=False, description='Include PNG support')
@@ -107,7 +107,7 @@ class Gdal(AutotoolsPackage):
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
     depends_on('libgeotiff@1.2.1:1.4', when='@:2.4.0')
-    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4.99')
+    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4')
     depends_on('libgeotiff@1.5:', when='@3.0.0:')
     depends_on('json-c')
     depends_on('json-c@0.12.1', when='@:2.2')
@@ -117,7 +117,6 @@ class Gdal(AutotoolsPackage):
     depends_on('zlib', when='+libz')
     depends_on('iconv', when='+libiconv')
     depends_on('xz', when='+liblzma')
-    depends_on('zstd', when='+zstd @2.3:')
     depends_on('postgresql', when='+pg')
     depends_on('cfitsio', when='+cfitsio')
     depends_on('libpng', when='+png')
@@ -145,9 +144,9 @@ class Gdal(AutotoolsPackage):
     depends_on('poppler@:0.63', when='@:2.3 +poppler')
     depends_on('poppler@:0.71', when='@:2.4 +poppler')
     depends_on('poppler@0.24:', when='@3: +poppler')
-    depends_on('proj@:4', when='+proj @2.3.0:2.3.999')
-    depends_on('proj@:5', when='+proj @2.4.0:2.4.999')
-    depends_on('proj@:6', when='+proj @2.5:2.999')
+    depends_on('proj@:4', when='+proj @2.3.0:2.3')
+    depends_on('proj@:5', when='+proj @2.4.0:2.4')
+    depends_on('proj@:6', when='+proj @2.5:2')
     depends_on('proj@6:', when='+proj @3:')
     depends_on('perl', type=('build', 'run'), when='+perl')
     # see gdal_version_and_min_supported_python_version
@@ -158,10 +157,13 @@ class Gdal(AutotoolsPackage):
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
-    depends_on('java@4:8', type=('build', 'link', 'run'), when='+java')
+    depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
+    depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')
+    depends_on('java@5:', type=('build', 'link', 'run'), when='@2.1:+java')
+    depends_on('java@4:', type=('build', 'link', 'run'), when='@:2.0+java')
     depends_on('ant', type='build', when='+java')
     depends_on('swig', type='build', when='+java')
-    depends_on('jackcess@1.2.0:1.2.999', type='run', when='+mdb')
+    depends_on('jackcess@1.2.0:1.2', type='run', when='+mdb')
     depends_on('armadillo', when='+armadillo')
     depends_on('cryptopp', when='+cryptopp @2.1:')
     depends_on('openssl', when='+crypto @2.3:')
@@ -262,11 +264,6 @@ class Gdal(AutotoolsPackage):
                 args.append('--with-mrf=no')
 
         if spec.satisfies('@2.3:'):
-            if '+zstd' in spec:
-                args.append('--with-zstd={0}'.format(spec['zstd'].prefix))
-            else:
-                args.append('--with-zstd=no')
-
             if '+proj' in spec:
                 args.append('--with-proj={0}'.format(spec['proj'].prefix))
             else:
@@ -562,7 +559,6 @@ class Gdal(AutotoolsPackage):
         if spec.satisfies('@2.1:'):
             args.extend([
                 '--with-mongocxx=no',
-                '--with-gnm=no',
                 '--with-pdfium=no',
             ])
 

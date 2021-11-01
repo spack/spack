@@ -30,7 +30,6 @@ import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack
-import spack.architecture
 import spack.bootstrap
 import spack.cmd
 import spack.compilers
@@ -41,6 +40,7 @@ import spack.environment as ev
 import spack.error
 import spack.package
 import spack.package_prefs
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.util.timer
@@ -334,7 +334,7 @@ class PyclingoDriver(object):
         self.control.configuration.asp.trans_ext = 'all'
         self.control.configuration.asp.eq = '5'
         self.control.configuration.configuration = 'tweety'
-        self.control.configuration.solve.parallel_mode = '2'
+        self.control.configuration.solve.parallel_mode = '1'
         self.control.configuration.solver.opt_strategy = "usc,one"
 
         # set up the problem -- this generates facts and rules
@@ -1086,12 +1086,12 @@ class SpackSolverSetup(object):
 
     def platform_defaults(self):
         self.gen.h2('Default platform')
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         self.gen.fact(fn.node_platform_default(platform))
 
     def os_defaults(self, specs):
         self.gen.h2('Possible operating systems')
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
 
         # create set of OS's to consider
         possible = set([
@@ -1111,7 +1111,7 @@ class SpackSolverSetup(object):
         """Add facts about targets and target compatibility."""
         self.gen.h2('Default target')
 
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         uarch = archspec.cpu.TARGETS.get(platform.default)
 
         self.gen.h2('Target compatibility')

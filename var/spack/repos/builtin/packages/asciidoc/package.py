@@ -28,8 +28,8 @@ class Asciidoc(AutotoolsPackage):
     depends_on('libxslt',     type=('build', 'run'))
     depends_on('docbook-xml', type=('build', 'run'))
     depends_on('docbook-xsl', type=('build', 'run'))
-    depends_on('python@2.3.0:2.7.99', when='@:8.6.9', type=('build', 'run'))
-    depends_on('python@3.5:',         when='@9.0.2:', type=('build', 'run'))
+    depends_on('python@2.3.0:2.7', when='@:8.6.9', type=('build', 'run'))
+    depends_on('python@3.5:',      when='@9.0.2:', type=('build', 'run'))
 
     @when('@:8.6.9')
     def install(self, spec, prefix):

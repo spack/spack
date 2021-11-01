@@ -81,7 +81,7 @@ class Graphviz(AutotoolsPackage):
                   msg="Graphviz can only be build with Quartz on macOS.")
     elif MACOS_VERSION >= Version('10.9'):
         # Doesn't detect newer mac os systems as being new
-        patch('fix-quartz-darwin.patch')
+        patch('fix-quartz-darwin.patch', when='@:2.47.2')
 
     # Language dependencies
     for lang in language_bindings:

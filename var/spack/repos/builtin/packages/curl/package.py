@@ -16,6 +16,7 @@ class Curl(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url      = "http://curl.haxx.se/download/curl-7.78.0.tar.bz2"
 
+    version('7.79.0', sha256='d607a677f473f79f96c964100327125a6204a39d835dc00dab7fc0129b959f42')
     version('7.78.0', sha256='98530b317dc95ccb324bbe4f834f07bb642fbc393b794ddf3434f246a71ea44a')
     version('7.77.0', sha256='6c0c28868cb82593859fc43b9c8fdb769314c855c05cf1b56b023acf855df8ea')
     version('7.76.1', sha256='7a8e184d7d31312c4ebf6a8cb59cd757e61b2b2833a9ed4f9bf708066e7695e9')
@@ -73,7 +74,7 @@ class Curl(AutotoolsPackage):
     variant('ldap',       default=False, description='enable ldap support')
     variant('libidn2',    default=False,  description='enable libidn2 support')
 
-    conflicts('+libssh', when='@:7.57.99')
+    conflicts('+libssh', when='@:7.57')
     # on OSX and --with-ssh the configure steps fails with
     # one or more libs available at link-time are not available run-time
     # unless the libssh are installed externally (e.g. via homebrew), even
@@ -86,7 +87,8 @@ class Curl(AutotoolsPackage):
     conflicts('tls=mbedtls', when='@:7.45')
 
     depends_on('gnutls', when='tls=gnutls')
-    depends_on('mbedtls', when='tls=mbedtls')
+    depends_on('mbedtls@3:', when='@7.79: tls=mbedtls')
+    depends_on('mbedtls@:2', when='@:7.78 tls=mbedtls')
     depends_on('nss', when='tls=nss')
     depends_on('openssl', when='tls=openssl')
     depends_on('libidn2', when='+libidn2')
@@ -95,6 +97,9 @@ class Curl(AutotoolsPackage):
     depends_on('libssh2', when='+libssh2')
     depends_on('libssh', when='+libssh')
     depends_on('krb5', when='+gssapi')
+
+    # curl queries pkgconfig for openssl compilation flags
+    depends_on('pkgconfig', type='build')
 
     def configure_args(self):
         spec = self.spec
@@ -108,6 +113,15 @@ class Curl(AutotoolsPackage):
             '--without-libpsl',
             '--without-zstd',
         ]
+
+        # Make gnutls / openssl decide what certs are trusted.
+        # TODO: certs for other tls options.
+        if spec.satisfies('tls=gnutls') or spec.satisfies('tls=openssl'):
+            args.extend([
+                '--without-ca-bundle',
+                '--without-ca-path',
+                '--with-ca-fallback',
+            ])
 
         # https://daniel.haxx.se/blog/2021/06/07/bye-bye-metalink-in-curl/
         # We always disable it explicitly, but the flag is gone in newer
@@ -127,6 +141,7 @@ class Curl(AutotoolsPackage):
         args += self.with_or_without('libssh2')
         args += self.with_or_without('libssh')
         args += self.enable_or_disable('ldap')
+
         return args
 
     def with_or_without_gnutls(self, activated):

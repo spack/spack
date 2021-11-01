@@ -29,9 +29,8 @@ class Rocthrust(CMakePackage):
     version('3.7.0', sha256='4cb923dde5eec150a566cb10d23ee5c7ce3aa892c4dea94886a89d95b90f3bdd')
     version('3.5.0', sha256='0d1bac1129d17bb1259fd06f5c9cb4c1620d1790b5c295b866fb3442d18923cb')
 
-    variant('build_type', default='Release', values=("Release", "Debug"),
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"),
             description='CMake build type')
-
     depends_on('cmake@3:', type='build')
     depends_on('numactl', when='@3.7.0:')
 
@@ -52,7 +51,7 @@ class Rocthrust(CMakePackage):
             )
         ]
 
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

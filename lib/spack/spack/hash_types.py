@@ -44,6 +44,13 @@ build_hash = SpecHashDescriptor(
     deptype=('build', 'link', 'run'), package_hash=False, name='build_hash')
 
 
+#: Hash descriptor used only to transfer a DAG, as is, across processes
+process_hash = SpecHashDescriptor(
+    deptype=('build', 'link', 'run', 'test'),
+    package_hash=False,
+    name='process_hash'
+)
+
 #: Full hash used in build pipelines to determine when to rebuild packages.
 full_hash = SpecHashDescriptor(
     deptype=('build', 'link', 'run'), package_hash=True, name='full_hash')

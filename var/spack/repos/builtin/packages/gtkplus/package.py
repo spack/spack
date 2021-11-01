@@ -49,7 +49,7 @@ class Gtkplus(MesonPackage):
     depends_on('gettext', when='@3:')
     depends_on('cups', when='+cups')
 
-    patch('no-demos.patch', when='@2:2.99')
+    patch('no-demos.patch', when='@2.0:2')
 
     def url_for_version(self, version):
         url = 'https://download.gnome.org/sources/gtk+/{0}/gtk+-{1}.tar.xz'

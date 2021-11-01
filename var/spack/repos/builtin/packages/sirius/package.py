@@ -127,7 +127,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     extends('python', when='+python')
 
-    conflicts('+shared', when='@6.3.0:6.4.999')
+    conflicts('+shared', when='@6.3.0:6.4')
     conflicts('+boost_filesystem', when='~apps')
     conflicts('^libxc@5.0.0')  # known to produce incorrect results
     conflicts('+single_precision', when='@:7.2.4')
@@ -147,6 +147,7 @@ class Sirius(CMakePackage, CudaPackage):
     patch("strip-spglib-include-subfolder.patch", when='@6.1.5')
     patch("link-libraries-fortran.patch", when='@6.1.5')
     patch("cmake-fix-shared-library-installation.patch", when='@6.1.5')
+    patch("mpi_datatypes.patch", when="@:7.2.6")
 
     @property
     def libs(self):

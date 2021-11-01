@@ -28,6 +28,9 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 1 { version(Package, Version) : version_declared(Package, Version) } 1
  :- node(Package).
 
+% A virtual package may have or not a version, but never has more than one
+:- virtual_node(Package), 2 { version(Package, _) }.
+
 % If we select a deprecated version, mark the package as deprecated
 deprecated(Package, Version) :- version(Package, Version), deprecated_version(Package, Version).
 
@@ -161,7 +164,7 @@ virtual_node(Virtual)
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
 1 { provider(Package, Virtual) : possible_provider(Package, Virtual) } 1
- :- virtual_node(Virtual).
+  :- virtual_node(Virtual).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 virtual_node(Virtual) :- virtual_root(Virtual).
@@ -175,23 +178,17 @@ root(Package) :- virtual_root(Virtual), provider(Package, Virtual).
 % for environments that are concretized together (e.g. where we
 % asks to install "mpich" and "hdf5+mpi" and we want "mpich" to
 % be the mpi provider)
-provider(Package, Virtual) :- root(Package), provides_virtual(Package, Virtual).
+provider(Package, Virtual) :- node(Package), virtual_condition_holds(Package, Virtual).
 
 % The provider provides the virtual if some provider condition holds.
-provides_virtual(Provider, Virtual) :-
+virtual_condition_holds(Provider, Virtual) :-
    provider_condition(ID, Provider, Virtual),
    condition_holds(ID),
    virtual(Virtual).
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
-:- provider(Package, Virtual), not provides_virtual(Package, Virtual).
-
-% If a package is selected as a provider, it is provider of all
-% the virtuals it provides
-:- provides_virtual(Package, V1), provides_virtual(Package, V2), V1 != V2,
-   provider(Package, V1), not provider(Package, V2),
-   virtual_node(V1), virtual_node(V2).
+:- provider(Package, Virtual), not virtual_condition_holds(Package, Virtual).
 
 #defined possible_provider/2.
 
@@ -284,7 +281,7 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 #defined virtual/1.
 #defined virtual_node/1.
 #defined virtual_root/1.
-#defined provides_virtual/2.
+#defined virtual_condition_holds/2.
 #defined external/1.
 #defined external_spec/2.
 #defined external_version_declared/4.
@@ -732,22 +729,23 @@ opt_criterion(14, "number of non-default variants (roots)").
     : variant_not_default(Package, Variant, Value, Weight), root(Package)
 }.
 
+opt_criterion(13, "preferred providers for roots").
+#minimize{ 0@13 : #true }.
+#minimize{
+    Weight@13,Provider,Virtual
+    : provider_weight(Provider, Virtual, Weight), root(Provider)
+}.
+
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
-opt_criterion(13, "multi-valued variants").
-#minimize{ 0@13 : #true }.
+opt_criterion(12, "number of values in multi valued variants (root)").
+#minimize{ 0@12 : #true }.
 #maximize {
-    1@13,Package,Variant,Value
+    1@12,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight),
     not variant_single_value(Package, Variant),
     root(Package)
-}.
-opt_criterion(12, "preferred providers for roots").
-#minimize{ 0@12 : #true }.
-#minimize{
-    Weight@12,Provider,Virtual
-    : provider_weight(Provider, Virtual, Weight), root(Provider)
 }.
 
 % Try to use default variants or variants that have been set
@@ -782,7 +780,7 @@ opt_criterion(7, "version badness").
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
-opt_criterion(6, "count of non-root multi-valued variants").
+opt_criterion(6, "number of values in multi valued variants (non-root)").
 #minimize{ 0@6 : #true }.
 #maximize {
     1@6,Package,Variant,Value

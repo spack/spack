@@ -25,7 +25,7 @@ class Ganglia(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('apr')
     depends_on('libconfuse')
-    depends_on('python@:2.7.999')
+    depends_on('python@:2.7')
     depends_on('pcre')
     depends_on('libtirpc')
     depends_on('expat')

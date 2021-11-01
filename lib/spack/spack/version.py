@@ -177,7 +177,7 @@ class Version(object):
         string = string.strip()
         self.string = string
 
-        if not VALID_VERSION.match(string):
+        if string and not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
         # An object that can lookup git commits to compare them to versions
@@ -347,9 +347,12 @@ class Version(object):
                 string_arg.append(str(token))
                 string_arg.append(str(sep))
 
-            string_arg.pop()  # We don't need the last separator
-            string_arg = ''.join(string_arg)
-            return cls(string_arg)
+            if string_arg:
+                string_arg.pop()  # We don't need the last separator
+                string_arg = ''.join(string_arg)
+                return cls(string_arg)
+            else:
+                return Version('')
 
         message = '{cls.__name__} indices must be integers'
         raise TypeError(message.format(cls=cls))
@@ -500,7 +503,16 @@ class VersionRange(object):
 
         self.start = start
         self.end = end
-        if start and end and end < start:
+
+        # Unbounded ranges are not empty
+        if not start or not end:
+            return
+
+        # Do not allow empty ranges. We have to be careful about lexicographical
+        # ordering of versions here: 1.2 < 1.2.3 lexicographically, but 1.2.3:1.2
+        # means the range [1.2.3, 1.3), which is non-empty.
+        min_len = min(len(start), len(end))
+        if end.up_to(min_len) < start.up_to(min_len):
             raise ValueError("Invalid Version range: %s" % self)
 
     def lowest(self):

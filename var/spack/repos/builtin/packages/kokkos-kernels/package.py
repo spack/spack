@@ -11,10 +11,21 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/kokkos/kokkos-kernels"
     git = "https://github.com/kokkos/kokkos-kernels.git"
-    url = "https://github.com/kokkos/kokkos-kernels/archive/3.1.00.tar.gz"
+    url = "https://github.com/kokkos/kokkos-kernels/archive/3.4.01.tar.gz"
+
+    tags = ['e4s']
+
+    test_requires_compiler = True
+
+    maintainers = ['lucbv', 'srajama1', 'brian-kelley']
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('3.4.01', sha256="f504aa4afbffb58fa7c4430d0fdb8fd5690a268823fa15eb0b7d58dab9d351e6")
+    version('3.4.00', sha256="07ba11869e686cb0d47272d1ef494ccfbcdef3f93ff1c8b64ab9e136a53a227a")
+    version('3.3.01', sha256="0f21fe6b5a8b6ae7738290e293aa990719aefe88b32f84617436bfd6074a8f77")
+    version('3.3.00', sha256="8d7f78815301afb90ddba7914dce5b718cea792ac0c7350d2f8d00bd2ef1cece")
+    version('3.2.01', sha256="c486e5cac19e354a517498c362838619435734d64b44f44ce909b0531c21d95c")
     version('3.2.00', sha256="8ac20ee28ae7813ce1bda461918800ad57fdbac2af86ef5d1ba74e83e10956de")
     version('3.1.00', sha256="27fea241ae92f41bd5b070b1a590ba3a56a06aca750207a98bea2f64a4a40c89")
     version('3.0.00', sha256="e4b832aed3f8e785de24298f312af71217a26067aea2de51531e8c1e597ef0e6")
@@ -80,6 +91,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
         variant(tpl, default=deflt, description=descr)
         depends_on(spackname, when="+%s" % tpl)
 
+    variant('shared', default=True, description='Build shared libraries')
+
     def cmake_args(self):
         spec = self.spec
         options = []
@@ -140,5 +153,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
                     options.append("-DKokkosKernels_INST_%s=ON" % eti.upper())
                 elif off_flag in self.spec:
                     options.append("-DKokkosKernels_INST_%s=OFF" % eti.upper())
+
+        options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
 
         return options

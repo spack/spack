@@ -143,6 +143,8 @@ class Qt(Package):
           working_dir='qtwebsockets',
           when='@5.14: %gcc@11:')
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
+    # Error: 'numeric_limits' is not a class template
+    conflicts('%gcc@11:', when='@5.8:5.14')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
@@ -164,7 +166,7 @@ class Qt(Package):
     depends_on("libsm", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0.999", when='@4:5.9+ssl')
+    depends_on("openssl@:1.0", when='@4:5.9+ssl')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
@@ -190,7 +192,7 @@ class Qt(Package):
         depends_on("flex", type='build')
         depends_on("bison", type='build')
         depends_on("gperf")
-        depends_on("python@2.7.5:2.999", type='build')
+        depends_on("python@2.7.5:2", type='build')
 
         with when('@5.7:'):
             depends_on("nss")
@@ -205,7 +207,7 @@ class Qt(Package):
 
     # gcc@4 is not supported as of Qt@5.14
     # https://doc.qt.io/qt-5.14/supported-platforms.html
-    conflicts('%gcc@:4.99', when='@5.14:')
+    conflicts('%gcc@:4', when='@5.14:')
 
     # Non-macOS dependencies and special macOS constraints
     if MACOS_VERSION is None:
@@ -235,7 +237,7 @@ class Qt(Package):
                         'apple-clang': ('clang-libc++', 'clang'),
                         'clang': ('clang-libc++', 'clang'),
                         'gcc': ('g++',)}
-    platform_mapping = {'darwin': 'macx'}
+    platform_mapping = {'darwin': ('macx'), 'cray': ('linux')}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
@@ -522,10 +524,10 @@ class Qt(Package):
             use_spack_dep('jpeg', 'libjpeg')
             use_spack_dep('zlib')
 
-        if '@:5.7.0' in spec:
+        if '@:5.5' in spec:
             config_args.extend([
                 # NIS is deprecated in more recent glibc,
-                # but qt-5.7.1 does not recognize this option
+                # but qt-5.6.3 does not recognize this option
                 '-no-nis',
             ])
 
@@ -627,11 +629,14 @@ class Qt(Package):
         elif version < Version('5.15') and '+gui' in spec:
             # Linux-only QT5 dependencies
             config_args.append('-system-xcb')
+            if '+opengl' in spec:
+                config_args.append('-I{0}/include'.format(spec['libx11'].prefix))
+                config_args.append('-I{0}/include'.format(spec['xproto'].prefix))
 
         if '~webkit' in spec:
             config_args.extend([
                 '-skip',
-                'webengine' if version >= Version('5.7') else 'qtwebkit',
+                'webengine' if version >= Version('5.6') else 'qtwebkit',
             ])
 
         if spec.satisfies('@5.7'):

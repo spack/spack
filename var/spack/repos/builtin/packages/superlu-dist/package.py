@@ -14,9 +14,13 @@ class SuperluDist(CMakePackage, CudaPackage):
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
+    tags = ['e4s']
+
     maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels']
 
     version('develop', branch='master')
+    version('7.1.1', sha256='558053b3d4a56eb661c4f04d4fcab6604018ce5db97115394c161b56c9c278ff')
+    version('7.1.0', sha256='edbea877562be95fb22c7de1ff484f18685bec4baa8e4f703c414d3c035d4a66')
     version('6.4.0', sha256='cb9c0b2ba4c28e5ed5817718ba19ae1dd63ccd30bc44c8b8252b54f5f04a44cc')
     version('6.3.1', sha256='3787c2755acd6aadbb4d9029138c293a7570a2ed228806676edcc7e1d3f5a1d3')
     version('6.3.0', sha256='daf3264706caccae2b8fd5a572e40275f1e128fa235cb7c21ee2f8051c11af95')
@@ -42,8 +46,10 @@ class SuperluDist(CMakePackage, CudaPackage):
     depends_on('lapack')
     depends_on('parmetis')
     depends_on('metis@5:')
+    depends_on('cmake@3.18.1:', type='build', when='@7.1.0:')
 
-    conflicts('+cuda', when='@:6.3.999')
+    conflicts('+cuda', when='@:6.3')
+    conflicts('^cuda@11.5.0:', when='@7.1.0:')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')

@@ -41,6 +41,7 @@ class Apex(CMakePackage):
 
     # Disable by default
     variant('cuda', default=False, description='Enables CUDA support')
+    variant('hip', default=False, description='Enables ROCm/HIP support')
     variant('boost', default=False, description='Enables Boost support')
     variant('jemalloc', default=False, description='Enables JEMalloc support')
     variant('lmsensors', default=False, description='Enables LM-Sensors support')
@@ -49,6 +50,7 @@ class Apex(CMakePackage):
     variant('examples', default=False, description='Build Examples')
 
     # Dependencies
+    depends_on('zlib')
     depends_on('cmake@3.10.0:', type='build')
     depends_on('binutils@2.33:+libiberty+headers', when='+binutils')
     depends_on('activeharmony@4.6:', when='+activeharmony')
@@ -57,8 +59,12 @@ class Apex(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('gperftools', when='+gperftools')
     depends_on('jemalloc', when='+jemalloc')
+    depends_on('lm-sensors', when='+lmsensors')
     depends_on('papi@5.7.0:', when='+papi')
     depends_on('cuda', when='+cuda')
+    depends_on('hip', when='+hip')
+    depends_on('roctracer-dev', when='+hip')
+    depends_on('rocm-smi-lib', when='+hip')
     depends_on('boost@1.54:', when='+boost')
 
     # Conflicts
@@ -79,6 +85,7 @@ class Apex(CMakePackage):
                                              'activeharmony'))
         args.append(self.define_from_variant(prefix + '_BFD', 'binutils'))
         args.append(self.define_from_variant('APEX_WITH_CUDA', 'cuda'))
+        args.append(self.define_from_variant('APEX_WITH_HIP', 'hip'))
         args.append(self.define_from_variant(prefix + '_MPI', 'mpi'))
         args.append(self.define_from_variant(prefix + '_OMPT', 'openmp'))
         args.append(self.define_from_variant(prefix + '_OTF2', 'otf2'))
@@ -113,5 +120,11 @@ class Apex(CMakePackage):
 
         if '+boost' in spec:
             args.append('-DBOOST_ROOT={0}'.format(spec['boost'].prefix))
+
+        if '+hip' in spec:
+            args.append('-DROCM_ROOT={0}'.format(spec['hip'].prefix))
+            args.append('-DROCTRACER_ROOT={0}'.format(spec['roctracer-dev'].prefix))
+            args.append('-DROCTX_ROOT={0}'.format(spec['roctracer-dev'].prefix))
+            args.append('-DRSMI_ROOT={0}'.format(spec['rocm-smi-lib'].prefix))
 
         return args

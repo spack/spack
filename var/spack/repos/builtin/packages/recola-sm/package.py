@@ -22,5 +22,6 @@ class RecolaSm(CMakePackage):
     depends_on('collier')
 
     def cmake_args(self):
-        args = ['-Dstatic=ON']
+        args = [self.define('static', True),
+                self.define('collier_path', self.spec['collier'].prefix.lib.cmake)]
         return args

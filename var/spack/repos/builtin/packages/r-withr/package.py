@@ -15,9 +15,9 @@ class RWithr(RPackage):
     dependencies to provide access to these functions."""
 
     homepage = "https://github.com/jimhester/withr"
-    url      = "https://cloud.r-project.org/src/contrib/withr_1.0.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/withr"
+    cran = "withr"
 
+    version('2.4.2', sha256='48f96a4cb780cf6fd5fbbea1f1eb04ea3102d7a4a644cae1ed1e91139dcbbac8')
     version('2.4.0', sha256='ede4cdc7e4d17e0ad24afc9fb940cba46fac4421d3a39281e9918377d73714f8')
     version('2.2.0', sha256='4c21e51cf48f8c281ddd5f5ec358ac446df3c982104fd00bfe62d9259d73b582')
     version('2.1.2', sha256='41366f777d8adb83d0bdbac1392a1ab118b36217ca648d3bb9db763aa7ff4686')

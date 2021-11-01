@@ -31,6 +31,8 @@ class Hip(CMakePackage):
     version('3.7.0', sha256='757b392c3beb29beea27640832fbad86681dbd585284c19a4c2053891673babd')
     version('3.5.0', sha256='ae8384362986b392288181bcfbe5e3a0ec91af4320c189bd83c844ed384161b3')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3:', type='build')
     depends_on('perl@5.10:', type=('build', 'run'))
     depends_on('mesa18~llvm@18.3:')
@@ -71,7 +73,7 @@ class Hip(CMakePackage):
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.10.0.patch', when='@3.10.0:4.1.0')
 
     # Tests are broken when using cmake 3.21
-    with when('^cmake@3.21:'):
+    with when('^cmake@3.21.0:'):
         patch('0005-Disable-tests-3.5.0.patch', when='@3.5.0')
         patch('0005-Disable-tests-3.6.0.patch', when='@3.6.0:3.8.0')
         patch('0005-Disable-tests-3.9.0.patch', when='@3.9.0:4.0.0')

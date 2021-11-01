@@ -8,10 +8,12 @@ class PyVermin(PythonPackage):
     """Concurrently detect the minimum Python versions needed to run code."""
 
     homepage = "https://github.com/netromdk/vermin"
-    url      = "https://github.com/netromdk/vermin/archive/v1.2.2.tar.gz"
+    url      = "https://github.com/netromdk/vermin/archive/v1.3.1.tar.gz"
 
     maintainers = ['netromdk']
 
+    version('1.3.1', sha256='ddcdaad5a708a483af192075f5d2eaaaf3aa4661b5101ddafa40d7837eeb5368')
+    version('1.3.0', sha256='adf2b6ea34c01c3a81fc4fa78c2e5fa6c8dd6d35327a8e5a4caeeaef7ec21668')
     version('1.2.2', sha256='d0343b2a78d7e4de67dfd2d882eeaf8b241db724f7e67f83bdd4111edb97f1e2')
     version('1.2.1', sha256='b7b2c77cf67a27a432371cbc7f184151b6f3dd22bd9ccf3a7a10b7ae3532ac81')
     version('1.2.0', sha256='a3ab6dc6608b859f301b9a77d5cc0d03335aae10c49d47a91b82be5be48c4f1f')

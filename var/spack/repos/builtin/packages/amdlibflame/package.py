@@ -39,10 +39,12 @@ class Amdlibflame(LibflameBase):
     version('3.0', sha256='d94e08b688539748571e6d4c1ec1ce42732eac18bd75de989234983c33f01ced')
     version('2.2', sha256='12b9c1f92d2c2fa637305aaa15cf706652406f210eaa5cbc17aaea9fcfa576dc')
 
-    patch('aocc-2.2.0.patch', when="@:2.999", level=1)
+    patch('aocc-2.2.0.patch', when="@:2", level=1)
     patch('cray-compiler-wrapper.patch')
 
     provides('flame@5.2', when='@2:')
+
+    depends_on('python+pythoncmd', type='build')
 
     @property
     def lapack_libs(self):

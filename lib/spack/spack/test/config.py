@@ -279,19 +279,30 @@ repos_high = {'repos': ["/some/other/path"]}
 # Test setting config values via path in filename
 
 
-def test_add_config_path():
-
+def test_add_config_path(mutable_config):
     # Try setting a new install tree root
     path = "config:install_tree:root:/path/to/config.yaml"
-    spack.config.add(path, scope="command_line")
+    spack.config.add(path)
     set_value = spack.config.get('config')['install_tree']['root']
     assert set_value == '/path/to/config.yaml'
 
     # Now a package:all setting
     path = "packages:all:compiler:[gcc]"
-    spack.config.add(path, scope="command_line")
+    spack.config.add(path)
     compilers = spack.config.get('packages')['all']['compiler']
     assert "gcc" in compilers
+
+
+@pytest.mark.regression('17543,23259')
+def test_add_config_path_with_enumerated_type(mutable_config):
+    spack.config.add("config:concretizer:clingo")
+    assert spack.config.get('config')['concretizer'] == "clingo"
+
+    spack.config.add("config:concretizer:original")
+    assert spack.config.get('config')['concretizer'] == "original"
+
+    with pytest.raises(spack.config.ConfigError):
+        spack.config.add("config:concretizer:foo")
 
 
 def test_add_config_filename(mock_low_high_config, tmpdir):
@@ -429,6 +440,13 @@ def test_substitute_user(mock_low_high_config):
     user = getpass.getuser()
     assert '/foo/bar/' + user + '/baz' == spack_path.canonicalize_path(
         '/foo/bar/$user/baz'
+    )
+
+
+def test_substitute_user_cache(mock_low_high_config):
+    user_cache_path = spack.paths.user_cache_path
+    assert user_cache_path + '/baz' == spack_path.canonicalize_path(
+        '$user_cache_path/baz'
     )
 
 
@@ -1167,3 +1185,59 @@ def test_internal_config_scope_cache_clearing():
     internal_scope.clear()
     # Check that this didn't affect the scope object
     assert internal_scope.sections['config'] == data
+
+
+def test_system_config_path_is_overridable(working_env):
+    p = "/some/path"
+    os.environ['SPACK_SYSTEM_CONFIG_PATH'] = p
+    assert spack.paths._get_system_config_path() == p
+
+
+def test_system_config_path_is_default_when_env_var_is_empty(working_env):
+    os.environ['SPACK_SYSTEM_CONFIG_PATH'] = ''
+    assert "/etc/spack" == spack.paths._get_system_config_path()
+
+
+def test_user_config_path_is_overridable(working_env):
+    p = "/some/path"
+    os.environ['SPACK_USER_CONFIG_PATH'] = p
+    assert p == spack.paths._get_user_config_path()
+
+
+def test_user_config_path_is_default_when_env_var_is_empty(working_env):
+    os.environ['SPACK_USER_CONFIG_PATH'] = ''
+    assert os.path.expanduser("~/.spack") == spack.paths._get_user_config_path()
+
+
+def test_local_config_can_be_disabled(working_env):
+    os.environ['SPACK_DISABLE_LOCAL_CONFIG'] = 'true'
+    cfg = spack.config._config()
+    assert "defaults" in cfg.scopes
+    assert "system" not in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" not in cfg.scopes
+
+    os.environ['SPACK_DISABLE_LOCAL_CONFIG'] = ''
+    cfg = spack.config._config()
+    assert "defaults" in cfg.scopes
+    assert "system" not in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" not in cfg.scopes
+
+    del os.environ['SPACK_DISABLE_LOCAL_CONFIG']
+    cfg = spack.config._config()
+    assert "defaults" in cfg.scopes
+    assert "system" in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" in cfg.scopes
+
+
+def test_user_cache_path_is_overridable(working_env):
+    p = "/some/path"
+    os.environ['SPACK_USER_CACHE_PATH'] = p
+    assert spack.paths._get_user_cache_path() == p
+
+
+def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
+    os.environ['SPACK_USER_CACHE_PATH'] = ''
+    assert os.path.expanduser("~/.spack") == spack.paths._get_user_cache_path()

@@ -6,6 +6,7 @@
 import os
 import shutil
 import sys
+import tempfile
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -19,8 +20,10 @@ import spack.cmd.modules
 import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
+import spack.environment.shell
 import spack.schema.env
 import spack.util.string as string
+from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
 section = "environments"
@@ -69,22 +72,37 @@ def env_activate_setup_parser(subparser):
         help="do not update PATH etc. with associated view")
 
     subparser.add_argument(
-        '-d', '--dir', action='store_true', default=False,
-        help="force spack to treat env as a directory, not a name")
-    subparser.add_argument(
         '-p', '--prompt', action='store_true', default=False,
         help="decorate the command line prompt when activating")
-    subparser.add_argument(
-        metavar='env', dest='activate_env',
+
+    env_options = subparser.add_mutually_exclusive_group()
+    env_options.add_argument(
+        '--temp', action='store_true', default=False,
+        help='create and activate an environment in a temporary directory')
+    env_options.add_argument(
+        '-d', '--dir', default=None,
+        help="activate the environment in this directory")
+    env_options.add_argument(
+        metavar='env', dest='activate_env', nargs='?', default=None,
         help='name of environment to activate')
 
 
+def create_temp_env_directory():
+    """
+    Returns the path of a temporary directory in which to
+    create an environment
+    """
+    return tempfile.mkdtemp(prefix="spack-")
+
+
 def env_activate(args):
-    env = args.activate_env
+    if not args.activate_env and not args.dir and not args.temp:
+        tty.die('spack env activate requires an environment name, directory, or --temp')
+
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
             "spack env activate",
-            "    eval `spack env activate {sh_arg} %s`" % env,
+            "    eval `spack env activate {sh_arg} [...]`",
         )
         return 1
 
@@ -93,27 +111,50 @@ def env_activate(args):
         tty.die('Calling spack env activate with --env, --env-dir and --no-env '
                 'is ambiguous')
 
-    if ev.exists(env) and not args.dir:
-        spack_env = ev.root(env)
-        short_name = env
-        env_prompt = '[%s]' % env
+    env_name_or_dir = args.activate_env or args.dir
 
-    elif ev.is_env_dir(env):
-        spack_env = os.path.abspath(env)
-        short_name = os.path.basename(os.path.abspath(env))
-        env_prompt = '[%s]' % short_name
+    # Temporary environment
+    if args.temp:
+        env = create_temp_env_directory()
+        env_path = os.path.abspath(env)
+        short_name = os.path.basename(env_path)
+        ev.Environment(env).write(regenerate=False)
+
+    # Named environment
+    elif ev.exists(env_name_or_dir) and not args.dir:
+        env_path = ev.root(env_name_or_dir)
+        short_name = env_name_or_dir
+
+    # Environment directory
+    elif ev.is_env_dir(env_name_or_dir):
+        env_path = os.path.abspath(env_name_or_dir)
+        short_name = os.path.basename(env_path)
 
     else:
-        tty.die("No such environment: '%s'" % env)
+        tty.die("No such environment: '%s'" % env_name_or_dir)
 
-    if spack_env == os.environ.get('SPACK_ENV'):
-        tty.debug("Environment %s is already active" % args.activate_env)
-        return
+    env_prompt = '[%s]' % short_name
 
-    cmds = ev.activate(
-        ev.Environment(spack_env), add_view=args.with_view, shell=args.shell,
+    # We only support one active environment at a time, so deactivate the current one.
+    if ev.active_environment() is None:
+        cmds = ''
+        env_mods = EnvironmentModifications()
+    else:
+        cmds = spack.environment.shell.deactivate_header(shell=args.shell)
+        env_mods = spack.environment.shell.deactivate()
+
+    # Activate new environment
+    active_env = ev.Environment(env_path)
+    cmds += spack.environment.shell.activate_header(
+        env=active_env,
+        shell=args.shell,
         prompt=env_prompt if args.prompt else None
     )
+    env_mods.extend(spack.environment.shell.activate(
+        env=active_env,
+        add_view=args.with_view
+    ))
+    cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
 
@@ -147,10 +188,12 @@ def env_deactivate(args):
         tty.die('Calling spack env deactivate with --env, --env-dir and --no-env '
                 'is ambiguous')
 
-    if 'SPACK_ENV' not in os.environ:
+    if ev.active_environment() is None:
         tty.die('No environment is currently active.')
 
-    cmds = ev.deactivate(shell=args.shell)
+    cmds = spack.environment.shell.deactivate_header(args.shell)
+    env_mods = spack.environment.shell.deactivate()
+    cmds += env_mods.shell_modifications(args.shell)
     sys.stdout.write(cmds)
 
 

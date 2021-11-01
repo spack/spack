@@ -18,6 +18,15 @@ class Graph500(MakefilePackage):
 
     build_directory = 'src'
 
+    def flag_handler(self, name, flags):
+        wrapper_flags = None
+
+        if name == 'cflags':
+            if self.spec.satisfies('%gcc@10:'):
+                wrapper_flags = ['-fcommon']
+
+        return (wrapper_flags, None, flags)
+
     def edit(self, spec, prefix):
         makefile = FileFilter(join_path(self.build_directory, 'Makefile'))
         makefile.filter(r'^MPICC\s*=.*', 'MPICC={0}'.format(spec['mpi'].mpicc))

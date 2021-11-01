@@ -17,8 +17,8 @@ import spack.schema.projections
 #: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
 spec_regex = r'(?!hierarchy|core_specs|verbose|hash_length|whitelist|' \
-             r'blacklist|projections|naming_scheme|core_compilers|all)' \
-             r'(^\w[\w-]*)'
+             r'blacklist|projections|naming_scheme|core_compilers|all|' \
+             r'defaults)(^\w[\w-]*)'
 
 #: Matches a valid name for a module set
 # Banned names are valid entries at that level in the previous schema
@@ -99,6 +99,7 @@ module_type_configuration = {
                 'type': 'boolean',
                 'default': False
             },
+            'defaults': array_of_strings,
             'naming_scheme': {
                 'type': 'string'  # Can we be more specific here?
             },
@@ -125,6 +126,7 @@ module_config_properties = {
         {'type': 'string'},
         {'type': 'boolean'}
     ]},
+    'arch_folder': {'type': 'boolean'},
     'prefix_inspections': {
         'type': 'object',
         'additionalProperties': False,

@@ -25,5 +25,5 @@ class PyJupyterlabServer(PythonPackage):
     depends_on('py-jinja2@2.10:', type=('build', 'run'))
     depends_on('py-babel', when='@2.5.1:', type=('build', 'run'))
     depends_on('py-packaging', when='@2.5.1:', type=('build', 'run'))
-    depends_on('py-jupyter-server@1.4:1.99', when='@2.5.1:', type=('build', 'run'))
+    depends_on('py-jupyter-server@1.4:1', when='@2.5.1:', type=('build', 'run'))
     depends_on('py-notebook@4.2.0:', when='@:2.5.0', type=('build', 'run'))

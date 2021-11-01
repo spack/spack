@@ -26,9 +26,12 @@ class Rocblas(CMakePackage):
     version('3.7.0', sha256='9425db5f8e8b6f7fb172d09e2a360025b63a4e54414607709efc5acb28819642')
     version('3.5.0', sha256='8560fabef7f13e8d67da997de2295399f6ec595edfd77e452978c140d5f936f0')
 
-    tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906', 'gfx908')
+    tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
+                            'gfx90a:xnack+', 'gfx90a:xnack-', 'gfx1010', 'gfx1011',
+                            'gfx1012', 'gfx1030')
 
-    variant('tensile_architecture', default='all', values=tensile_architecture, multi=False)
+    variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
 
@@ -80,14 +83,21 @@ class Rocblas(CMakePackage):
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
-    def cmake_args(self):
+    def get_gpulist_for_tensile_support(self):
         arch = self.spec.variants['tensile_architecture'].value
-        if self.spec.satisfies('@4.1.0:'):
-            if arch == 'gfx906' or arch == 'gfx908':
-                arch = arch + ':xnack-'
+        if arch[0] == 'all':
+            if self.spec.satisfies('@:4.0.0'):
+                arch_value = self.tensile_architecture[1:2] + 'gfx906,gfx908'
+            elif self.spec.satisfies('@4.1.0:4.2.0'):
+                arch_value = self.tensile_architecture[1:4]
+            elif self.spec.satisfies('@4.3.0:'):
+                arch_value = self.tensile_architecture[1:]
+            return arch_value
+        else:
+            return arch
 
+    def cmake_args(self):
         tensile = join_path(self.stage.source_path, 'Tensile')
-
         args = [
             self.define('BUILD_CLIENTS_TESTS', 'OFF'),
             self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF'),
@@ -109,12 +119,14 @@ class Rocblas(CMakePackage):
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
         if self.spec.satisfies('@:4.2.0'):
-            args.append(self.define('Tensile_ARCHITECTURE', arch))
+            args.append(self.define('Tensile_ARCHITECTURE',
+                        self.get_gpulist_for_tensile_support()))
         else:
-            args.append(self.define('AMDGPU_TARGETS', arch))
+            args.append(self.define('AMDGPU_TARGETS',
+                        self.get_gpulist_for_tensile_support()))
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

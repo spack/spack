@@ -3,6 +3,7 @@ spack:
   concretization: separately
 
   config:
+    concretizer: clingo
     install_tree:
       root: /home/software/spack
       padded_length: 512
@@ -21,170 +22,42 @@ spack:
       target:
         - x86_64
       variants: +mpi
-    autoconf:
-      version:
-        - '2.69'
-    automake:
-      version:
-        - 1.16.3
-    berkeley-db:
-      version:
-        - 18.1.40
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
       version:
         - 2.36.1
-    boost:
-      version:
-        - 1.76.0
-    bzip2:
-      version:
-        - 1.0.8
-    c-blosc:
-      version:
-        - 1.21.0
-    cmake:
-      version:
-        - 3.20.5
-    curl:
-      version:
-        - 7.76.1
-    diffutils:
-      version:
-        - 3.7
     doxygen:
       version:
         - 1.8.20
     elfutils:
-      version:
-        - 0.185
       variants: +bzip2 ~nls +xz
-    expat:
-      version:
-        - 2.4.1
-    findutils:
-      version:
-        - 4.8.0
-    gdbm:
-      version:
-        - 1.19
-    gettext:
-      version:
-        - 0.21
-    git:
-      version:
-        - 2.31.1
-    glib:
-      version:
-        - 2.68.2
     hdf5:
       variants: +fortran +hl +shared
       version:
         - 1.10.7
-    help2man:
-      version:
-        - 1.47.16
-    hwloc:
-      version:
-        - 2.4.1
-    json-c:
-      version:
-        - 0.15
-    libbsd:
-      version:
-        - 0.11.3
     libfabric:
-      version:
-        - 1.12.1
       variants: fabrics=sockets,tcp,udp,rxm
-    libiconv:
-      version:
-        - 1.16
-    libsigsegv:
-      version:
-        - 2.13
-    libpciaccess:
-      version:
-        - 0.16
-    libtool:
-      version:
-        - 2.4.6
     libunwind:
-      version:
-        - 1.5.0
       variants: +pic +xz
-    libxml2:
-      version:
-        - 2.9.10
-    lz4:
-      version:
-        - 1.9.3
-    m4:
-      version:
-        - 1.4.19
     mesa:
       variants: ~llvm
     mesa18:
       variants: ~llvm
     mpich:
       variants: ~wrapperrpath
-      version:
-        - 3.4.2
     ncurses:
-      version:
-        - 6.2
       variants: +termlib
-    numactl:
-      version:
-        - 2.0.14
     openblas:
-      version:
-        - 0.3.17
       variants: threads=openmp
-    openssl:
-      version:
-        - 1.1.1l
-    perl:
-      version:
-        - 5.34.0
-    pkgconf:
-      version:
-        - 1.7.4
-    python:
-      version:
-        - 3.8.10
-    readline:
-      version:
-        - 8.1
-    sqlite:
-      version:
-        - 3.35.5
-    tar:
-      version:
-        - 1.34
-    texinfo:
-      version:
-        - 6.5
     trilinos:
-      version:
-        - 13.0.1
       variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
-      version:
-        - 5.2.5
       variants: +pic
-    zlib:
-      version:
-        - 1.2.11
-    zstd:
-      version:
-        - 1.5.0
 
   definitions:
 
   - cuda_specs:
     - amrex +cuda cuda_arch=70
-    # - axom +cuda cuda_arch=70 ^umpire@4.1.2 ~shared
     - caliper +cuda cuda_arch=70
     - chai +cuda ~benchmarks ~tests cuda_arch=70 ^umpire~shared+cuda
     - ginkgo +cuda cuda_arch=70
@@ -200,18 +73,19 @@ spack:
     - tasmanian +cuda cuda_arch=70
     - zfp +cuda cuda_arch=70
     #- ascent +cuda ~shared cuda_arch=70
+    #- axom +cuda cuda_arch=70 ^umpire@4.1.2 ~shared
     #- hypre +cuda cuda_arch=70
     #- mfem +cuda cuda_arch=70
     #- umpire +cuda ~shared cuda_arch=70 # unsatisfiable concretization conflict w/ blt
 
   - rocm_specs:
     - kokkos +rocm amdgpu_target=gfx906
-    - strumpack +rocm ~slate amdgpu_target=gfx906
     #- amrex +rocm amdgpu_target=gfx906
     #- chai +rocm ~benchmarks amdgpu_target=gfx906
     #- ginkgo +rocm amdgpu_target=gfx906 # needs hip<4.1
     #- raja +rocm ~openmp amdgpu_target=gfx906 # blt 0.3.6 issue with rocm
     #- slate +rocm amdgpu_target=gfx906
+    #- strumpack +rocm ~slate amdgpu_target=gfx906
     #- sundials +rocm amdgpu_target=gfx906
     #- tasmanian +rocm amdgpu_target=gfx906
     #- umpire+rocm amdgpu_target=gfx906 # blt 0.3.6 issue with rocm
@@ -238,6 +112,7 @@ spack:
     - faodel
     - flecsi@1.4.2 +external_cinch
     - flit
+    - flux-core
     - fortrilinos
     - gasnet
     - ginkgo
@@ -255,6 +130,7 @@ spack:
     - libnrm
     - libquo
     - libunwind
+    - llvm +all_targets +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
     - loki
     - mercury
     - metall
@@ -269,6 +145,7 @@ spack:
     - papi
     - papyrus@1.0.1
     - parallel-netcdf
+    - parsec ~cuda
     - pdt
     - petsc
     - phist
@@ -297,7 +174,7 @@ spack:
     - sz
     - tasmanian
     - tau
-    - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     - turbine
     - umap
     - unifyfs@0.9.1
@@ -306,14 +183,13 @@ spack:
     - zfp
     #- dealii
     #- geopm
-    #- llvm-doe@doe +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang
     #- qt
     #- qwt
     #- umpire # unsatisfiable concretization conflict w/ blt
     #- variorum # root fails
 
   - arch:
-    - '%gcc@7.5.0 arch=linux-ubuntu18.04-x86_64'
+    - '%gcc target=x86_64'
 
 
   specs:
@@ -325,10 +201,6 @@ spack:
   - matrix:
     - - $cuda_specs
     - - $arch
-
-  # - matrix:
-  #   - - $rocm_specs
-  #   - - $arch
 
   mirrors: { "mirror": "s3://spack-binaries-develop/e4s" }
 
@@ -345,12 +217,16 @@ spack:
 
     mappings:
       - match:
+        - llvm
+        - llvm-amdgpu
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+          tags: ["spack", "public", "huge", "x86_64"]
+      - match:
         - cuda
         - dyninst
         - hpx
         - kokkos-kernels
-        - llvm
-        - llvm-amdgpu
         - precice
         - rocblas
         - rocsolver
@@ -361,11 +237,11 @@ spack:
         - vtk-m
         - warpx
         runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "xlarge", "x86_64"]
       - match: ['os=ubuntu18.04']
         runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "large", "x86_64"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
@@ -373,9 +249,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_pipelines/stacks/e4s
-        - spack env activate --without-view .
-      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "x86_64"]
 
   cdash:

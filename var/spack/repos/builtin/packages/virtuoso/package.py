@@ -35,7 +35,7 @@ class Virtuoso(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('gperf')
     depends_on('readline')
-    depends_on('openssl@0.9.8:1.1.99')
+    depends_on('openssl@0.9.8:1.1')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

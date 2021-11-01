@@ -14,9 +14,13 @@ class FluxCore(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-core"
     url      = "https://github.com/flux-framework/flux-core/releases/download/v0.8.0/flux-core-0.8.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-core.git"
-    maintainers = ['SteVwonder']
+    tags     = ['radiuss', 'e4s']
+
+    maintainers = ['grondo']
 
     version('master', branch='master')
+    version('0.30.0', sha256='e51fde4464140367ae4bc1b44f960675ea0a6f58eede3a561cacd8a11ca3e776')
+    version('0.29.0', sha256='c13b40e82d66356e75208a689a495ca01f0a013e2e45ac8ea202ed8224987323')
     version('0.28.0', sha256='9a784def7186b0036091bd8d6d8fe5bc3425ab2927e1465e1c9ad266631c285d')
     version('0.27.0', sha256='abd46d38081ba6b501adb1c111374b39d6ae72ac1aec9fbbf31943a856541d3a')
     version('0.26.0', sha256='58bfd4742c59364b13cd83214e8f70735952d01793800b149cae056fddfeeff1')
@@ -41,14 +45,14 @@ class FluxCore(AutotoolsPackage):
 
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")
-    depends_on("hwloc@1.11.1:1.99", when="@:0.17.0")
+    depends_on("hwloc@1.11.1:1", when="@:0.17.0")
     depends_on("hwloc@1.11.1:", when="@0.17.0:")
     depends_on("hwloc +cuda", when='+cuda')
     # Provide version hints for lua so that the concretizer succeeds when no
     # explicit flux-core version is given. See issue #10000 for details
     depends_on("lua", type=('build', 'run', 'link'))
-    depends_on("lua@5.1:5.2.99", when="@:0.17.0")
-    depends_on("lua@5.1:5.3.99", when="@0.18.0:,master")
+    depends_on("lua@5.1:5.2", when="@:0.17.0")
+    depends_on("lua@5.1:5.3", when="@0.18.0:,master")
     depends_on("lua-luaposix")
     # `link` dependency on python due to Flux's `pymod` module
     depends_on("python@3.6:", type=('build', 'run', 'link'))
@@ -73,6 +77,10 @@ class FluxCore(AutotoolsPackage):
     depends_on("mpich pmi=pmi", type="test")
     depends_on("valgrind", type="test")
     depends_on("jq", type="test")
+
+    # Patch 0.27-0.30 for build errors when czmq built with "draft APIs":
+    patch('0001-build-fix-build-errors-with-side-installed-0MQ.patch',
+          when='@0.27.0:0.30.0')
 
     def url_for_version(self, version):
         '''
@@ -146,27 +154,14 @@ class FluxCore(AutotoolsPackage):
         )
         env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
         env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
-        env.prepend_path('FLUX_RC_PATH', self.prefix.etc.flux)
-        env.prepend_path('FLUX_RC1_PATH', self.prefix.etc.flux.rc1)
-        env.prepend_path('FLUX_RC3_PATH', self.prefix.etc.flux.rc3)
         env.prepend_path(
             'FLUX_CONNECTOR_PATH',
             self.prefix.lib.flux.connectors
         )
-        env.prepend_path(
+        env.set_path(
             'FLUX_PMI_LIBRARY_PATH',
             os.path.join(self.prefix.lib.flux, "libpmi.so")
         )
-        # Wreck was removed in 0.12
-        if self.version < Version("0.12.0"):
-            env.prepend_path(
-                'FLUX_WREXECD_PATH',
-                self.prefix.libexec.flux.wrexecd
-            )
-            env.prepend_path(
-                'FLUX_WRECK_LUA_PATTERN',
-                os.path.join(self.prefix.etc.wreck, "lua.d", "*.lua")
-            )
 
     def configure_args(self):
         args = ['--enable-pylint=no']
@@ -178,7 +173,7 @@ class FluxCore(AutotoolsPackage):
         if name == 'cflags':
             # https://github.com/flux-framework/flux-core/issues/3482
             if self.spec.satisfies('%gcc@10:') and \
-               self.spec.satisfies('@0.23.0:0.23.99'):
+               self.spec.satisfies('@0.23.0:0.23'):
                 if flags is None:
                     flags = []
                 flags.append('-Wno-error=stringop-truncation')

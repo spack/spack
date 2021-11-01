@@ -21,6 +21,7 @@ class DarshanRuntime(AutotoolsPackage):
 
     maintainers = ['shanedsnyder', 'carns']
 
+    tags = ['e4s']
     test_requires_compiler = True
 
     version('main', branch='main', submodules=True)
