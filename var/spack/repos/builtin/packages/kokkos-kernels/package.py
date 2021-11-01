@@ -154,6 +154,6 @@ class KokkosKernels(CMakePackage, CudaPackage):
                 elif off_flag in self.spec:
                     options.append("-DKokkosKernels_INST_%s=OFF" % eti.upper())
 
-        options.append('-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec))
+        options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
 
         return options
