@@ -24,8 +24,8 @@ jobs:
     name: gcc with clang
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # @v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
         python-version: 3.9
     - name: spack install
@@ -39,8 +39,8 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 700
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # @v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
         python-version: 3.9
     - name: spack install
@@ -52,8 +52,8 @@ jobs:
     name: scipy, mpl, pd
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # @v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
         python-version: 3.9
     - name: spack install
