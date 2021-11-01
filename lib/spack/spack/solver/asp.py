@@ -1522,6 +1522,7 @@ class SpecBuilder(object):
         self._specs[pkg].external_modules = (
             spack.spec.Spec._format_module_list(spec_info.get('modules', None))
         )
+        spack.spec.Spec.ensure_external_path_if_external(self._specs[pkg])
         self._specs[pkg].extra_attributes = spec_info.get(
             'extra_attributes', {}
         )
