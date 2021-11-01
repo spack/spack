@@ -82,6 +82,18 @@ class LinkTree(object):
     def merge_directories(self, dest_root, ignore):
         for src, dest in traverse_tree(self._root, dest_root, ignore=ignore):
             if os.path.isdir(src):
+                if os.path.islink(src):
+                    # Make a relative link in dest that mirrors the link in src.
+                    # Create a resolved src path except for the final component
+                    # This avoids unnecessary fs backtracking
+                    src_parent = os.path.realpath(os.path.dirname(src))
+                    clean_src = os.path.join(src_parent, os.path.basename(src))
+                    link_dest = os.path.realpath(src)
+                    # Find the relative path between src and it's target.
+                    link_rel = os.path.relpath(link_dest, clean_src)
+                    # Create link from dest to that relative location.
+                    os.symlink(link_rel, dest)
+
                 if not os.path.exists(dest):
                     mkdirp(dest)
                     continue

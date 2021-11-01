@@ -879,7 +879,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         follow_links (bool): Whether to descend into symlinks in ``src``
     """
     follow_nonexisting = kwargs.get('follow_nonexisting', True)
-    follow_links = kwargs.get('follow_link', False)
+    follow_links = kwargs.get('follow_links', False)
 
     # Yield in pre or post order?
     order = kwargs.get('order', 'pre')
