@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Exaworks(BundlePackage):
     '''
     Virtual package for the Exaworks SDK packages.
