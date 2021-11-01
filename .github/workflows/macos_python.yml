@@ -62,17 +62,3 @@ jobs:
         spack install -v --fail-fast py-scipy %apple-clang
         spack install -v --fail-fast py-matplotlib %apple-clang
         spack install -v --fail-fast py-pandas %apple-clang
-
-  install_mpi4py_clang:
-    name: mpi4py, petsc4py
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    - name: spack install
-      run: |
-        . .github/workflows/install_spack.sh
-        spack install -v --fail-fast py-mpi4py %apple-clang
-        spack install -v --fail-fast py-petsc4py %apple-clang

@@ -48,9 +48,9 @@ or Amazon Elastic Kubernetes Service (`EKS <https://aws.amazon.com/eks>`_), thou
 topics are outside the scope of this document.
 
 Spack's pipelines are now making use of the
-`trigger <https://docs.gitlab.com/12.9/ee/ci/yaml/README.html#trigger>`_ syntax to run
+`trigger <https://docs.gitlab.com/ee/ci/yaml/#trigger>`_ syntax to run
 dynamically generated
-`child pipelines <https://docs.gitlab.com/12.9/ee/ci/parent_child_pipelines.html>`_.
+`child pipelines <https://docs.gitlab.com/ee/ci/pipelines/parent_child_pipelines.html>`_.
 Note that the use of dynamic child pipelines requires running Gitlab version
 ``>= 12.9``.
 
@@ -169,11 +169,28 @@ have disabled it (using ``rebuild-index: False``) because the index would only b
 generated in the artifacts mirror anyway, and consequently would not be available
 during subesequent pipeline runs.
 
+.. note::
+   With the addition of reproducible builds (#22887) a previously working
+   pipeline will require some changes:
+
+   * In the build jobs (``runner-attributes``), the environment location changed.
+     This will typically show as a ``KeyError`` in the failing job. Be sure to
+     point to ``${SPACK_CONCRETE_ENV_DIR}``.
+
+   * When using ``include`` in your environment, be sure to make the included
+     files available in the build jobs. This means adding those files to the
+     artifact directory. Those files will also be missing in the reproducibility
+     artifact.
+
+   * Because the location of the environment changed, including files with
+     relative path may have to be adapted to work both in the project context
+     (generation job) and in the concrete env dir context (build job).
+
 -----------------------------------
 Spack commands supporting pipelines
 -----------------------------------
 
-Spack provides a command ``ci`` command with a few sub-commands supporting spack
+Spack provides a ``ci`` command with a few sub-commands supporting spack
 ci pipelines.  These commands are covered in more detail in this section.
 
 .. _cmd-spack-ci:

@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class ParallelNetcdf(AutotoolsPackage):
@@ -19,6 +20,8 @@ class ParallelNetcdf(AutotoolsPackage):
     list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
 
     maintainers = ['skosukhin']
+
+    tags = ['e4s']
 
     test_requires_compiler = True
 

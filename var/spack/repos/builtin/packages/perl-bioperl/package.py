@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import inspect
+
+from spack import *
 
 
 class PerlBioperl(PerlPackage):
@@ -27,7 +28,7 @@ class PerlBioperl(PerlPackage):
     The intent of the BioPerl development effort is to make reusable tools that
     aid people in creating their own sites or job-specific applications.
 
-    The BioPerl website at http://bioperl.org also attempts to maintain links
+    The BioPerl website at https://bioperl.org/ also attempts to maintain links
     and archives of standalone bio-related Perl tools that are not affiliated
     or related to the core BioPerl effort. Check the site for useful code ideas
     and contribute your own if possible."""

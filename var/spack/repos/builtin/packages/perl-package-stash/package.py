@@ -9,7 +9,7 @@ from spack import *
 class PerlPackageStash(PerlPackage):
     """Routines for manipulating stashes"""
 
-    homepage = "http://search.cpan.org/~doy/Package-Stash-0.37/lib/Package/Stash.pm"
+    homepage = "https://metacpan.org/pod/Package::Stash"
     url      = "http://search.cpan.org/CPAN/authors/id/D/DO/DOY/Package-Stash-0.37.tar.gz"
 
     version('0.37', sha256='06ab05388f9130cd377c0e1d3e3bafeed6ef6a1e22104571a9e1d7bfac787b2c')

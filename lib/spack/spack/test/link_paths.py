@@ -2,8 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import pytest
 import os
+
+import pytest
 
 import spack.paths
 from spack.compiler import _parse_non_system_link_dirs

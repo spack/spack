@@ -32,3 +32,8 @@ class Libssh2(CMakePackage):
         # The shared library is not installed correctly on Darwin; fix this
         if self.spec.satisfies('platform=darwin'):
             fix_darwin_install_name(self.prefix.lib)
+
+    def check(self):
+        # Docker is required to run tests
+        if which('docker'):
+            make('test')

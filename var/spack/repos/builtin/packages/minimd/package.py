@@ -11,8 +11,8 @@ class Minimd(MakefilePackage):
        in a typical molecular dynamics applications.
     """
 
-    homepage = "http://mantevo.org"
-    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/MiniMD/miniMD_1.2.tgz"
+    homepage = "https://mantevo.org"
+    url      = "https://downloads.mantevo.org/releaseTarballs/miniapps/MiniMD/miniMD_1.2.tgz"
 
     tags = ['proxy-app']
 

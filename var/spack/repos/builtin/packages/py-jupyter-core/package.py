@@ -9,9 +9,10 @@ from spack import *
 class PyJupyterCore(PythonPackage):
     """Core Jupyter functionality"""
 
-    homepage = "http://jupyter-core.readthedocs.io/"
+    homepage = "https://jupyter-core.readthedocs.io/"
     pypi = "jupyter-core/jupyter_core-4.6.0.tar.gz"
 
+    version('4.7.1', sha256='79025cb3225efcd36847d0840f3fc672c0abd7afd0de83ba8a1d3837619122b4')
     version('4.6.3', sha256='394fd5dd787e7c8861741880bdf8a00ce39f95de5d18e579c74b882522219e7e')
     version('4.6.1', sha256='a183e0ec2e8f6adddf62b0a3fc6a2237e3e0056d381e536d3e7c7ecc3067e244')
     version('4.6.0', sha256='85103cee6548992780912c1a0a9ec2583a4a18f1ef79a248ec0db4446500bce3')
@@ -27,7 +28,9 @@ class PyJupyterCore(PythonPackage):
     version('4.0.1', sha256='7c165f7de7a063596f8be1bcfc86e9ba6897e38baf24e8510514690963600122')
     version('4.0.0', sha256='9025208cdfc40718c7e3ab62b5e17aacf68e3fc66e34ff21fe032d553620122a')
 
+    depends_on('python@3.6:', when='@4.7:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', when='@4.6.2:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@4.6.2:')
     depends_on('py-setuptools', when='@4.5.0:', type=('build', 'run'))
     depends_on('py-traitlets', type=('build', 'run'))
+    # additional pywin32>=1.0 dependency for windows

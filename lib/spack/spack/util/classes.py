@@ -5,11 +5,13 @@
 
 # Need this because of spack.util.string
 from __future__ import absolute_import
-from spack.util.naming import mod_to_class
-from llnl.util.lang import memoized, list_modules
-import llnl.util.tty as tty
 
 import inspect
+
+import llnl.util.tty as tty
+from llnl.util.lang import list_modules, memoized
+
+from spack.util.naming import mod_to_class
 
 __all__ = [
     'list_classes'

@@ -5,9 +5,8 @@
 
 from six import string_types
 
+import spack.platforms
 from spack import *
-import spack.architecture
-
 from spack.pkg.builtin.mock.multimethod_base import MultimethodBase
 
 
@@ -84,7 +83,7 @@ class Multimethod(MultimethodBase):
     #
     # Make sure we can switch methods on different target
     #
-    platform = spack.architecture.platform()
+    platform = spack.platforms.host()
     targets = list(platform.targets.values())
     if len(targets) > 1:
         targets = targets[:-1]

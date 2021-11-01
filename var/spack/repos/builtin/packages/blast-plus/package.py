@@ -20,9 +20,12 @@ from spack import *
 class BlastPlus(AutotoolsPackage):
     """Basic Local Alignment Search Tool."""
 
-    homepage = "http://blast.ncbi.nlm.nih.gov/"
-    url      = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.11.0/ncbi-blast-2.11.0+-src.tar.gz"
+    homepage = "https://blast.ncbi.nlm.nih.gov/"
+    url      = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-src.tar.gz"
 
+    maintainers = ['weijianwen']
+
+    version('2.12.0', sha256='fda3c9c9d488cad6c1880a98a236d842bcf3610e3e702af61f7a48cf0a714b88')
     version('2.11.0', sha256='d88e1858ae7ce553545a795a2120e657a799a6d334f2a07ef0330cc3e74e1954')
     version('2.9.0', sha256='a390cc2d7a09422759fc178db84de9def822cbe485916bbb2ec0d215dacdc257')
     version('2.8.1', sha256='e03dd1a30e37cb8a859d3788a452c5d70ee1f9102d1ee0f93b2fbd145925118f')

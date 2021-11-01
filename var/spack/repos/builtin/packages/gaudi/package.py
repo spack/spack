@@ -9,13 +9,14 @@ from spack import *
 class Gaudi(CMakePackage):
     """An experiment-independent HEP event data processing framework"""
 
-    homepage = "http://gaudi.web.cern.ch/gaudi/"
+    homepage = "https://gaudi.web.cern.ch/gaudi/"
     git      = "https://gitlab.cern.ch/gaudi/Gaudi.git"
     url      = "https://gitlab.cern.ch/gaudi/Gaudi/-/archive/v33r1/Gaudi-v33r1.tar.gz"
 
     tags = ['hep']
 
     version('master', branch='master')
+    version('36.0', sha256='8a0458cef5b616532f9db7cca9fa0e892e602b64c9e93dc0cc6d972e03034830')
     version('35.0', sha256='c01b822f9592a7bf875b9997cbeb3c94dea97cb13d523c12649dbbf5d69b5fa6')
     version('34.0', sha256='28fc4abb5a6b08da5a6b1300451c7e8487f918b055939877219d454abf7668ae')
     version('33.2', sha256='26aaf9c4ff237a60ec79af9bd18ad249fc91c16e297ba77e28e4a256123db6e5')
@@ -35,9 +36,9 @@ class Gaudi(CMakePackage):
             description='Build with Intel VTune profiler support')
 
     # only build subdirectory GaudiExamples when +optional
-    patch("build_testing.patch", when="@:34.99")
+    patch("build_testing.patch", when="@:34")
     # fixes for the cmake config which could not find newer boost versions
-    patch("link_target_fixes.patch", when="@33.0:34.99")
+    patch("link_target_fixes.patch", when="@33.0:34")
     patch("link_target_fixes32.patch", when="@:32.2")
 
     # These dependencies are needed for a minimal Gaudi build
@@ -51,11 +52,11 @@ class Gaudi(CMakePackage):
     depends_on('uuid')
     depends_on('nlohmann-json', when="@35.0:")
     depends_on('python', type=('build', 'run'))
-    depends_on('python@:3.7.99', when='@32.2:34.99', type=('build', 'run'))
-    depends_on('python@:2.99.99', when='@:32.1', type=('build', 'run'))
-    depends_on('py-setuptools@:45.99.99', when='^python@:2.7.99', type='build')
+    depends_on('python@:3.7', when='@32.2:34', type=('build', 'run'))
+    depends_on('python@:2', when='@:32.1', type=('build', 'run'))
+    depends_on('py-setuptools@:45', when='^python@:2.7', type='build')
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-xenv@1:', type=('build', 'run'))
+    depends_on('py-xenv@1:', when='@:34.9', type=('build', 'run'))
     depends_on('range-v3')
     depends_on('root +python +root7 +ssl +tbb +threads')
     depends_on('zlib')
@@ -70,15 +71,15 @@ class Gaudi(CMakePackage):
     depends_on('gperftools', when='+optional')
     depends_on('gdb', when='+optional')
     depends_on('gsl', when='+optional')
-    depends_on('heppdt@:2.99.99', when='+optional')
+    depends_on('heppdt@:2', when='+optional')
     depends_on('jemalloc', when='+optional')
     depends_on('libpng', when='+optional')
     depends_on('libunwind', when='+optional')
-    depends_on('py-networkx@:2.2', when='+optional ^python@:2.7.99')
+    depends_on('py-networkx@:2.2', when='+optional ^python@:2.7')
     depends_on('py-networkx', when='+optional ^python@3.0.0:')
     depends_on('py-setuptools', when='+optional')
     depends_on('py-nose', when='+optional')
-    depends_on('relax', when='@:33.99 +optional')
+    depends_on('relax', when='@:33 +optional')
     depends_on('xerces-c', when='+optional')
     # NOTE: pocl cannot be added as a minimal OpenCL implementation because
     #       ROOT does not like being exposed to LLVM symbols.
@@ -104,7 +105,7 @@ class Gaudi(CMakePackage):
             self.define("GAUDI_USE_INTELAMPLIFIER",  False),
             self.define("GAUDI_USE_GPERFTOOLS",      False), ]
         # this is not really used in spack builds, but needs to be set
-        if self.spec.version < Version('34.99'):
+        if self.spec.version < Version('34'):
             args.append("-DHOST_BINARY_TAG=x86_64-linux-gcc9-opt")
         return args
 
@@ -112,7 +113,6 @@ class Gaudi(CMakePackage):
         # environment as in Gaudi.xenv
         env.prepend_path('PATH', self.prefix.scripts)
         env.prepend_path('PYTHONPATH', self.prefix.python)
-        env.prepend_path('ROOT_INCLUDE_PATH', self.prefix.include)
 
     def url_for_version(self, version):
         major = str(version[0])

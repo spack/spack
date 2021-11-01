@@ -4,10 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
 import shutil
 import sys
+
+from spack import *
 
 
 class VtkM(CMakePackage, CudaPackage):
@@ -23,6 +24,7 @@ class VtkM(CMakePackage, CudaPackage):
 
     url      = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.1/vtk-m-v1.5.1.tar.gz"
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
+    tags     = ['e4s']
 
     version('master', branch='master')
     version('release', branch='release')
@@ -70,6 +72,9 @@ class VtkM(CMakePackage, CudaPackage):
 
     depends_on("cmake@3.12:", type="build")               # CMake >= 3.12
     depends_on("cmake@3.18:", when="+hip", type="build")  # CMake >= 3.18
+
+    conflicts('%gcc@:4.10',
+              msg='vtk-m requires gcc >= 5. Please install a newer version')
 
     depends_on('cuda@10.1.0:', when='+cuda')
     depends_on("tbb", when="+tbb")

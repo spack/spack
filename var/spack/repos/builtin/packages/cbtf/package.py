@@ -13,7 +13,7 @@ class Cbtf(CMakePackage):
        network tools.
 
     """
-    homepage = "http://sourceforge.net/p/cbtf/wiki/Home"
+    homepage = "https://sourceforge.net/p/cbtf/wiki/Home"
     git      = "https://github.com/OpenSpeedShop/cbtf.git"
 
     version('develop', branch='master')

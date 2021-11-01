@@ -29,6 +29,6 @@ class PyGeeup(PythonPackage):
     depends_on('py-pysmartdl', type=('build', 'run'))
     depends_on('py-pysmartdl@1.2.5', type=('build', 'run'), when='^python@:3.3')
     depends_on('py-pysmartdl@1.3.1:', type=('build', 'run'), when='^python@3.4:')
-    depends_on('py-pathlib@1.0.1:', type=('build', 'run'))
+    depends_on('py-pathlib@1.0.1:', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-lxml@4.1.1:', type=('build', 'run'))
     depends_on('py-oauth2client@4.1.3:', type=('build', 'run'))

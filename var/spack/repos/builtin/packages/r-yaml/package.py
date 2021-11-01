@@ -10,7 +10,7 @@ class RYaml(RPackage):
     """Methods to Convert R Data to YAML and Back
 
     Implements the 'libyaml' 'YAML' 1.1 parser and emitter
-    (<http://pyyaml.org/wiki/LibYAML>) for R."""
+    (<https://pyyaml.org/wiki/LibYAML>) for R."""
 
     homepage = "https://cloud.r-project.org/package=yaml"
     url      = "https://cloud.r-project.org/src/contrib/yaml_2.1.13.tar.gz"

@@ -15,9 +15,9 @@ class RLme4(RPackage):
     numerical linear algebra and 'RcppEigen' "glue"."""
 
     homepage = "https://github.com/lme4/lme4/"
-    url      = "https://cloud.r-project.org/src/contrib/lme4_1.1-12.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/lme4"
+    cran = "lme4"
 
+    version('1.1-27.1', sha256='25fa873e39b8192e48c15eec93db8c8bf6f03baf3bd8d5ca9188482ce8442ec5')
     version('1.1-27', sha256='fe0391c76c78188ac1eefb18014d0607212c909b55474d985a919b55efe5a15f')
     version('1.1-26', sha256='364b6d6fb0a574dfed2d75cfdc79411aa53e2c1dd625b70bb1d25d026f9e4253')
     version('1.1-21', sha256='7f5554b69ff8ce9bac21e8842131ea940fb7a7dfa2de03684f236d3e3114b20c')
@@ -33,6 +33,6 @@ class RLme4(RPackage):
     depends_on('r-nlme@3.1-123:', type=('build', 'run'))
     depends_on('r-minqa@1.1.15:', type=('build', 'run'))
     depends_on('r-nloptr@1.0.4:', type=('build', 'run'))
-    depends_on('r-statmod', when='@1.1-26:', type=('build', 'run'))
+    depends_on('r-statmod', when='@1.1-26', type=('build', 'run'))
     depends_on('r-rcpp@0.10.5:', type=('build', 'run'))
     depends_on('r-rcppeigen', type=('build', 'run'))

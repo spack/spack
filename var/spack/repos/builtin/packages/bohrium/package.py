@@ -3,17 +3,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+import llnl.util.tty as tty
+
 from spack import *
 from spack.package_test import compare_output
 from spack.util.executable import Executable
-import llnl.util.tty as tty
-import os
 
 
 class Bohrium(CMakePackage, CudaPackage):
     """Library for automatic acceleration of array operations"""
 
-    homepage = "http://bh107.org"
+    homepage = "https://github.com/bh107/bohrium"
     url      = "https://github.com/bh107/bohrium/archive/v0.9.0.tar.gz"
     git      = "https://github.com/bh107/bohrium.git"
 

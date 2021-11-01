@@ -13,7 +13,7 @@ class Ldc(CMakePackage):
     LDC is fully Open Source; the parts of the code not taken/adapted from
     other projects are BSD-licensed (see the LICENSE file for details).
 
-    Consult the D wiki for further information: http://wiki.dlang.org/LDC
+    Consult the D wiki for further information: https://wiki.dlang.org/LDC
     """
 
     homepage = "https://dlang.org/"

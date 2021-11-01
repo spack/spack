@@ -33,6 +33,6 @@ class RSf(RPackage):
     depends_on('r-rcpp@0.12.18:', type=('build', 'run'))
     depends_on('gdal@2.0.1:')
     depends_on('geos@3.4.0:')
-    depends_on('proj@4.8.0:5.999', when='@:0.7-3')
-    depends_on('proj@4.8.0:6.999', when='@0.7-4:')
+    depends_on('proj@4.8.0:5', when='@:0.7-3')
+    depends_on('proj@4.8.0:6', when='@0.7-4:')
     depends_on('sqlite', when='@0.9-7')

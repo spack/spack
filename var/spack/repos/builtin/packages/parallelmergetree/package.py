@@ -17,6 +17,11 @@ class Parallelmergetree(CMakePackage):
 
     maintainers = ['spetruzza']
 
+    version('1.1.0',
+            git='https://bitbucket.org/cedmav/parallelmergetree.git',
+            tag='v1.1.0',
+            submodules=True)
+
     version('1.0.2',
             git='https://bitbucket.org/cedmav/parallelmergetree.git',
             tag='v1.0.2',
@@ -27,9 +32,15 @@ class Parallelmergetree(CMakePackage):
             tag='v1.0.0',
             submodules=True)
 
-    depends_on('babelflow')
+    depends_on('babelflow@1.1.0', when='@1.1.0')
+    depends_on('babelflow@1.0.1', when='@1.0.2')
 
     variant("shared", default=True, description="Build ParallelMergeTree as shared libs")
+
+    # The C++ headers of gcc-11 don't provide <algorithm> as side effect of others
+    @when('%gcc@11:')
+    def setup_build_environment(self, env):
+        env.append_flags('CXXFLAGS', '-include algorithm')
 
     def cmake_args(self):
         args = []

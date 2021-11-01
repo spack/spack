@@ -10,7 +10,7 @@ class Vesta(Package):
     """VESTA is a 3D visualization program for structural models, volumetric data
        such as electron/nuclear densities, and crystal morphologies."""
 
-    homepage = "http://jp-minerals.org/vesta"
+    homepage = "https://jp-minerals.org/vesta"
     url      = "https://jp-minerals.org/vesta/archives/3.4.6/VESTA-x86_64.tar.bz2"
 
     version('3.4.6', sha256='fb00ac9a7bf46a3d9a1d745859c5e8757ba30f017a46470eb2c123b9afcf66ee')

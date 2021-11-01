@@ -12,7 +12,7 @@ class RExpm(RPackage):
     Computation of the matrix exponential, logarithm, sqrt, and related
     quantities."""
 
-    homepage = "http://r-forge.r-project.org/projects/expm"
+    homepage = "https://r-forge.r-project.org/projects/expm"
     url      = "https://cloud.r-project.org/src/contrib/expm_0.999-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/expm"
 

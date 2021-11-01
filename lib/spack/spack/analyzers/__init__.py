@@ -10,11 +10,10 @@ existing metadata.
 
 from __future__ import absolute_import
 
-import spack.util.classes
-import spack.paths
-
 import llnl.util.tty as tty
 
+import spack.paths
+import spack.util.classes
 
 mod_path = spack.paths.analyzers_path
 analyzers = spack.util.classes.list_classes("spack.analyzers", mod_path)

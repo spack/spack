@@ -4,16 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
 import os
+
 import pytest
 
 import llnl.util.filesystem as fs
+
 import spack.config
+import spack.database
 import spack.environment as ev
 import spack.main
-import spack.util.spack_yaml as syaml
 import spack.spec
-import spack.database
 import spack.store
+import spack.util.spack_yaml as syaml
 
 config = spack.main.SpackCommand('config')
 env = spack.main.SpackCommand('env')
@@ -223,7 +225,7 @@ def test_config_with_c_argument(mutable_empty_config):
     # Add the path to the config
     config("add", args.config_vars[0], scope='command_line')
     output = config("get", 'config')
-    assert "config:\n  install_root:\n  - root: /path/to/config.yaml" in output
+    assert "config:\n  install_root:\n    root: /path/to/config.yaml" in output
 
 
 def test_config_add_ordered_dict(mutable_empty_config):

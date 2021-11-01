@@ -19,14 +19,65 @@ class Reditools(PythonPackage):
     homepage = "https://github.com/BioinfoUNIBA/REDItools"
     git      = "https://github.com/BioinfoUNIBA/REDItools.git"
 
+    maintainers = ['glennpj']
+
+    version('1.3_2020-08-03', commit='2dc71277a25e667797c363d1fca22726249774a3')
     version('1.3_2020-03-20', commit='cf47f3d54f324aeb9650bcf8bfacf5a967762a55')
 
-    depends_on('py-pysam', type=('build', 'run'))
-    depends_on('py-fisher', type=('build', 'run'))
+    variant('nature_protocol', default=False,
+            description='Install the Nature Protocol scripts and files')
+
+    depends_on('py-reindent', type='build', when='^python@3:')
     depends_on('blat', type='run')
+    depends_on('py-fisher', type='run')
+    depends_on('py-numpy', type='run')
+    depends_on('py-pandas', type='run')
+    depends_on('py-pysam', type='run')
+    depends_on('py-scipy', type='run')
     depends_on('tabix', type='run')
 
-    patch('REDItoolDenovo.py.patch')
+    # Nature Protocol
+    depends_on('bcftools', type='run', when='+nature_protocol')
+    depends_on('bedtools2', type='run', when='+nature_protocol')
+    depends_on('bwa', type='run', when='+nature_protocol')
+    depends_on('bzip2', type='run', when='+nature_protocol')
+    depends_on('fastp', type='run', when='+nature_protocol')
+    depends_on('fastqc', type='run', when='+nature_protocol')
+    depends_on('git', type='run', when='+nature_protocol')
+    depends_on('gmap-gsnap', type='run', when='+nature_protocol')
+    depends_on('htslib', type='run', when='+nature_protocol')
+    depends_on('libdeflate', type='run', when='+nature_protocol')
+    depends_on('py-bx-python', type='run', when='+nature_protocol')
+    depends_on('py-rseqc', type='run', when='+nature_protocol')
+    depends_on('samtools', type='run', when='+nature_protocol')
+    depends_on('star', type='run', when='+nature_protocol')
+    depends_on('wget', type='run', when='+nature_protocol')
+
     patch('interpreter.patch')
     patch('setup.py.patch')
-    patch('python2to3.patch', when='^python@3:')
+    patch('batch_sort.patch', when='^python@3:')
+
+    @run_before('build')
+    def p2_to_p3(self):
+        if '^python@3:' in self.spec:
+            # clean up space/tab mixing
+            reindent = which('reindent')
+            reindent('--nobackup', '--recurse', '.')
+
+            # convert to be python3 compatible
+            p2_to_p3 = which('2to3')
+            p2_to_p3('--nobackups', '--write', '.')
+
+    @run_after('install')
+    def nature_protocol(self):
+        if '+nature_protocol' in self.spec:
+            mkdirp(prefix.NPfiles)
+            install_tree('NPfiles', prefix.NPfiles)
+
+            ignore_files = [
+                'conda_pckg_installer_docker.py',
+                'conda_pckgs_installer.py',
+                'download-prepare-data-NP_docker.py',
+            ]
+            docker_conda = lambda p: p in ignore_files
+            install_tree('NPscripts', prefix.bin, ignore=docker_conda)

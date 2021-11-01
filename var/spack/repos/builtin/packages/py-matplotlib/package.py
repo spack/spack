@@ -24,6 +24,7 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units', 'pylab'
     ]
 
+    version('3.4.3', sha256='fc4f526dfdb31c9bd6b8ca06bf9fab663ca12f3ec9cdf4496fb44bc680140318')
     version('3.4.2', sha256='d8d994cefdff9aaba45166eb3de4f5211adb4accac85cbf97137e98f26ea0219')
     version('3.4.1', sha256='84d4c4f650f356678a5d658a43ca21a41fca13f9b8b00169c0b76e6a6a948908')
     version('3.4.0', sha256='424ddb3422c65b284a38a97eb48f5cb64b66a44a773e0c71281a347f1738f146')
@@ -91,7 +92,10 @@ class PyMatplotlib(PythonPackage):
     depends_on('python@3.6:', when='@3.1:', type=('build', 'link', 'run'))
     depends_on('python@3.7:', when='@3.4:', type=('build', 'link', 'run'))
     depends_on('freetype@2.3:')  # freetype 2.6.1 needed for tests to pass
-    depends_on('qhull@2015.2:', when='@3.3:')
+    depends_on('qhull@2020.2:', when='@3.4:')
+    # starting from qhull 2020.2 libqhull.so on which py-matplotlib@3.3 versions
+    # rely on does not exist anymore, only libqhull_r.so
+    depends_on('qhull@2015.2:2020.1', when='@3.3.0:3.3')
     depends_on('libpng@1.2:')
     depends_on('py-setuptools', type=('build', 'run'))  # See #3813
     depends_on('py-certifi@2020.6.20:', when='@3.3.1:', type='build')
@@ -107,10 +111,10 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-python-dateutil@2.7:', when='@3.4:', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'), when='@:2')
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
-    depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@:2.7')
+    depends_on('py-functools32', type=('build', 'run'), when='@:2.0 ^python@:2.7')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
-               when='@2.1.0:2.999.999 ^python@:2')
-    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@2.0:2.999')
+               when='@2.1.0:2 ^python@:2')
+    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@2.0:2')
     depends_on('py-six@1.9.0:',  type=('build', 'run'), when='@:1')
 
     # Optional backend dependencies
@@ -148,7 +152,7 @@ class PyMatplotlib(PythonPackage):
     # https://matplotlib.org/devel/testing.html#requirements
     depends_on('py-pytest@3.6:', type='test')
     depends_on('ghostscript@9.0:', type='test')
-    # depends_on('inkscape@:0.999', type='test')
+    # depends_on('inkscape@:0', type='test')
 
     msg = 'MacOSX backend requires the Cocoa headers included with XCode'
     conflicts('platform=linux', when='backend=macosx', msg=msg)

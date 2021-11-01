@@ -16,7 +16,7 @@ class PyBrotlipy(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-cffi@1.0.0:', type=('build', 'run'))
-    depends_on('py-enum34@1.0.4:1.999', when='^python@:3.3', type=('build', 'run'))
+    depends_on('py-enum34@1.0.4:1', when='^python@:3.3', type=('build', 'run'))
 
     # TODO: Builds against internal copy of headers, doesn't seem to be a way
     # to use external brotli installation

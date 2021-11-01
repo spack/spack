@@ -136,7 +136,7 @@ class Sollve(CMakePackage):
     conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')
 
-    conflicts('%gcc@:5.0.999')
+    conflicts('%gcc@:5.0')
     conflicts('+omp_tsan')
 
     patch('disable_unused_lock.patch', when='@1.0a2', working_dir='projects/openmp')

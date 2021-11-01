@@ -11,6 +11,15 @@
 % Version semantics
 %-----------------------------------------------------------------------------
 
+% Versions are declared with a weight and an origin, which indicates where the
+% version was declared (e.g. "package_py" or "external").
+version_declared(Package, Version, Weight) :- version_declared(Package, Version, Weight, _).
+
+% We can't emit the same version **with the same weight** from two different sources
+:- version_declared(Package, Version, Weight, Origin1),
+   version_declared(Package, Version, Weight, Origin2),
+   Origin1 != Origin2.
+
 % versions are declared w/priority -- declared with priority implies declared
 version_declared(Package, Version) :- version_declared(Package, Version, _).
 
@@ -19,15 +28,15 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 1 { version(Package, Version) : version_declared(Package, Version) } 1
  :- node(Package).
 
+% A virtual package may have or not a version, but never has more than one
+:- virtual_node(Package), 2 { version(Package, _) }.
+
 % If we select a deprecated version, mark the package as deprecated
 deprecated(Package, Version) :- version(Package, Version), deprecated_version(Package, Version).
 
 possible_version_weight(Package, Weight)
- :- version(Package, Version), version_declared(Package, Version, Weight),
-    not preferred_version_declared(Package, Version, _).
-
-possible_version_weight(Package, Weight)
-  :- version(Package, Version), preferred_version_declared(Package, Version, Weight).
+ :- version(Package, Version),
+    version_declared(Package, Version, Weight).
 
 1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package).
 
@@ -38,7 +47,6 @@ possible_version_weight(Package, Weight)
 version_satisfies(Package, Constraint)
   :- version(Package, Version), version_satisfies(Package, Constraint, Version).
 
-#defined preferred_version_declared/3.
 #defined version_satisfies/3.
 #defined deprecated_version/2.
 
@@ -145,7 +153,7 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 % provider for that virtual then it depends on the provider
 depends_on(Package, Provider, Type)
   :- dependency_holds(Package, Virtual, Type),
-     provides_virtual(Provider, Virtual),
+     provider(Provider, Virtual),
      not external(Package).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
@@ -153,72 +161,71 @@ virtual_node(Virtual)
   :- dependency_holds(Package, Virtual, Type),
      virtual(Virtual), not external(Package).
 
-% if there's a virtual node, we must select one provider
-1 { provides_virtual(Package, Virtual) : possible_provider(Package, Virtual) } 1
- :- virtual_node(Virtual).
+% If there's a virtual node, we must select one and only one provider.
+% The provider must be selected among the possible providers.
+1 { provider(Package, Virtual) : possible_provider(Package, Virtual) } 1
+  :- virtual_node(Virtual).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 virtual_node(Virtual) :- virtual_root(Virtual).
-1 { root(Package) : provides_virtual(Package, Virtual) } 1
-  :- virtual_root(Virtual).
+
+% If we asked for a virtual root and we have a provider for that,
+% then the provider is the root package.
+root(Package) :- virtual_root(Virtual), provider(Package, Virtual).
+
+% If we asked for a root package and that root provides a virtual,
+% the root is a provider for that virtual. This rule is mostly relevant
+% for environments that are concretized together (e.g. where we
+% asks to install "mpich" and "hdf5+mpi" and we want "mpich" to
+% be the mpi provider)
+provider(Package, Virtual) :- node(Package), virtual_condition_holds(Package, Virtual).
 
 % The provider provides the virtual if some provider condition holds.
-provides_virtual(Provider, Virtual) :-
+virtual_condition_holds(Provider, Virtual) :-
    provider_condition(ID, Provider, Virtual),
    condition_holds(ID),
    virtual(Virtual).
 
-% a node that provides a virtual is a provider
-provider(Package, Virtual)
-  :- node(Package), provides_virtual(Package, Virtual).
-
-% for any virtual, there can be at most one provider in the DAG
-0 { node(Package) : provides_virtual(Package, Virtual) } 1 :- virtual(Virtual).
+% A package cannot be the actual provider for a virtual if it does not
+% fulfill the conditions to provide that virtual
+:- provider(Package, Virtual), not virtual_condition_holds(Package, Virtual).
 
 #defined possible_provider/2.
 
 %-----------------------------------------------------------------------------
 % Virtual dependency weights
 %-----------------------------------------------------------------------------
-% give dependents the virtuals they want
-provider_weight(Dependency, 0)
- :- virtual(Virtual), depends_on(Package, Dependency),
-    provider(Dependency, Virtual),
-    external(Dependency).
 
-provider_weight(Dependency, Weight)
- :- virtual(Virtual), depends_on(Package, Dependency),
-    provider(Dependency, Virtual),
-    pkg_provider_preference(Package, Virtual, Dependency, Weight),
-    not external(Dependency).
+% A provider may have different possible weights depending on whether it's an external
+% or not, or on preferences expressed in packages.yaml etc. This rule ensures that
+% we select the weight, among the possible ones, that minimizes the overall objective function.
+1 { provider_weight(Dependency, Virtual, Weight, Reason) :
+    possible_provider_weight(Dependency, Virtual, Weight, Reason) } 1
+ :- provider(Dependency, Virtual).
 
-provider_weight(Dependency, Weight)
- :- virtual(Virtual), depends_on(Package, Dependency),
-    provider(Dependency, Virtual),
-    not pkg_provider_preference(Package, Virtual, Dependency, _),
-    not external(Dependency),
-    default_provider_preference(Virtual, Dependency, Weight).
+% Get rid or the reason for enabling the possible weight (useful for debugging)
+provider_weight(Dependency, Virtual, Weight) :- provider_weight(Dependency, Virtual, Weight, _).
 
-% if there's no preference for something, it costs 100 to discourage its
-% use with minimization
-provider_weight(Dependency, 100)
- :- virtual(Virtual),
-    provider(Dependency, Virtual),
-    depends_on(Package, Dependency),
-    not external(Dependency),
-    not pkg_provider_preference(Package, Virtual, Dependency, _),
-    not default_provider_preference(Virtual, Dependency, _).
+% A provider that is an external can use a weight of 0
+possible_provider_weight(Dependency, Virtual, 0, "external")
+  :- provider(Dependency, Virtual),
+     external(Dependency).
 
-% Do the same for virtual roots
-provider_weight(Package, Weight)
- :- virtual_root(Virtual),
-    provider(Package, Virtual),
-    default_provider_preference(Virtual, Package, Weight).
+% A provider mentioned in packages.yaml can use a weight
+% according to its priority in the list of providers
+possible_provider_weight(Dependency, Virtual, Weight, "packages_yaml")
+  :- provider(Dependency, Virtual),
+     depends_on(Package, Dependency),
+     pkg_provider_preference(Package, Virtual, Dependency, Weight).
 
-provider_weight(Package, 100)
- :- virtual_root(Virtual),
-    provider(Package, Virtual),
-    not default_provider_preference(Virtual, Package, _).
+% A provider mentioned in the default configuration can use a weight
+% according to its priority in the list of providers
+possible_provider_weight(Dependency, Virtual, Weight, "default")
+  :- provider(Dependency, Virtual),
+     default_provider_preference(Virtual, Dependency, Weight).
+
+% Any provider can use 100 as a weight, which is very high and discourage its use
+possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Dependency, Virtual).
 
 #defined possible_provider/2.
 #defined provider_condition/3.
@@ -274,7 +281,7 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 #defined virtual/1.
 #defined virtual_node/1.
 #defined virtual_root/1.
-#defined provides_virtual/2.
+#defined virtual_condition_holds/2.
 #defined external/1.
 #defined external_spec/2.
 #defined external_version_declared/4.
@@ -289,11 +296,13 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 % External semantics
 %-----------------------------------------------------------------------------
 
-% if an external version is declared, it is also declared globally
-version_declared(Package, Version, Weight) :- external_version_declared(Package, Version, Weight, _).
-
 % if a package is external its version must be one of the external versions
-1 { version(Package, Version): external_version_declared(Package, Version, _, _) } 1 :- external(Package).
+1 { external_version(Package, Version, Weight):
+    version_declared(Package, Version, Weight, "external") } 1
+    :- external(Package).
+
+version_weight(Package, Weight) :- external_version(Package, Version, Weight).
+version(Package, Version) :- external_version(Package, Version, Weight).
 
 % if a package is not buildable (external_only), only externals are allowed
 external(Package) :- external_only(Package), node(Package).
@@ -308,7 +317,7 @@ external(Package) :- external_spec_selected(Package, _).
 % corresponding external spec.
 :- version(Package, Version),
    version_weight(Package, Weight),
-   external_version_declared(Package, Version, Weight, ID),
+   version_declared(Package, Version, Weight, "external"),
    not external(Package).
 
 % determine if an external spec has been selected
@@ -720,22 +729,23 @@ opt_criterion(14, "number of non-default variants (roots)").
     : variant_not_default(Package, Variant, Value, Weight), root(Package)
 }.
 
+opt_criterion(13, "preferred providers for roots").
+#minimize{ 0@13 : #true }.
+#minimize{
+    Weight@13,Provider,Virtual
+    : provider_weight(Provider, Virtual, Weight), root(Provider)
+}.
+
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
-opt_criterion(13, "multi-valued variants").
-#minimize{ 0@13 : #true }.
+opt_criterion(12, "number of values in multi valued variants (root)").
+#minimize{ 0@12 : #true }.
 #maximize {
-    1@13,Package,Variant,Value
+    1@12,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight),
     not variant_single_value(Package, Variant),
     root(Package)
-}.
-opt_criterion(12, "preferred providers for roots").
-#minimize{ 0@12 : #true }.
-#minimize{
-    Weight@12,Provider
-    : provider_weight(Provider, Weight), root(Provider)
 }.
 
 % Try to use default variants or variants that have been set
@@ -748,35 +758,35 @@ opt_criterion(11, "number of non-default variants (non-roots)").
 
 % Minimize the weights of the providers, i.e. use as much as
 % possible the most preferred providers
-opt_criterion(9, "number of non-default providers (non-roots)").
+opt_criterion(9, "preferred providers (non-roots)").
 #minimize{ 0@9 : #true }.
 #minimize{
-    Weight@9,Provider
-    : provider_weight(Provider, Weight), not root(Provider)
+    Weight@9,Provider,Virtual
+    : provider_weight(Provider, Virtual, Weight), not root(Provider)
+}.
+
+% Try to minimize the number of compiler mismatches in the DAG.
+opt_criterion(8, "compiler mismatches").
+#minimize{ 0@8 : #true }.
+#minimize{ 1@8,Package,Dependency : compiler_mismatch(Package, Dependency) }.
+
+% Choose more recent versions for nodes
+opt_criterion(7, "version badness").
+#minimize{ 0@7 : #true }.
+#minimize{
+    Weight@7,Package : version_weight(Package, Weight)
 }.
 
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
-opt_criterion(8, "count of non-root multi-valued variants").
-#minimize{ 0@8 : #true }.
+opt_criterion(6, "number of values in multi valued variants (non-root)").
+#minimize{ 0@6 : #true }.
 #maximize {
-    1@8,Package,Variant,Value
+    1@6,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, _),
     not variant_single_value(Package, Variant),
     not root(Package)
-}.
-
-% Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(7, "compiler mismatches").
-#minimize{ 0@7 : #true }.
-#minimize{ 1@7,Package,Dependency : compiler_mismatch(Package, Dependency) }.
-
-% Choose more recent versions for nodes
-opt_criterion(6, "version badness").
-#minimize{ 0@6 : #true }.
-#minimize{
-    Weight@6,Package : version_weight(Package, Weight)
 }.
 
 % Try to use preferred compilers

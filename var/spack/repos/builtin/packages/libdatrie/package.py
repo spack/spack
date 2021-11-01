@@ -10,7 +10,7 @@ class Libdatrie(AutotoolsPackage):
     """datrie is an implementation of double-array structure for representing
     trie."""
 
-    homepage = "http://linux.thai.net/projects/datrie"
+    homepage = "https://linux.thai.net/projects/datrie"
     url      = "https://github.com/tlwg/libdatrie/releases/download/v0.2.12/libdatrie-0.2.12.tar.xz"
 
     version('0.2.12', sha256='452dcc4d3a96c01f80f7c291b42be11863cd1554ff78b93e110becce6e00b149')

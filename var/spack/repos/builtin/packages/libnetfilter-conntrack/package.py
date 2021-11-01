@@ -10,7 +10,7 @@ class LibnetfilterConntrack(AutotoolsPackage):
     """libnetfilter_conntrack is a userspace library providing a programming
     interface (API) to the in-kernel connection tracking state table."""
 
-    homepage = "http://netfilter.org"
+    homepage = "https://netfilter.org"
     url      = "https://github.com/Distrotech/libnetfilter_conntrack/archive/libnetfilter_conntrack-1.0.4.tar.gz"
 
     version('1.0.4', sha256='68168697b9d6430b7797ddd579e13a2cef06ea15c154dfd14e18be64e035ea6e')

@@ -20,4 +20,7 @@ class PyKeyring(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm@3.4.1:+toml', type='build')
     depends_on('py-importlib-metadata@3.6:', type=('build', 'run'))
-    # TODO: additional dependencies required for Windows/Linux
+    depends_on('py-secretstorage@3.2:', type=('build', 'run'), when='platform=linux')
+    depends_on('py-jeepney@0.4.2:', type=('build', 'run'), when='platform=linux')
+
+    # TODO: additional dependency on pywin32-ctypes required for Windows

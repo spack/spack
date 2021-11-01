@@ -9,7 +9,7 @@ from spack import *
 class Openexr(AutotoolsPackage):
     """OpenEXR Graphics Tools (high dynamic-range image file format)"""
 
-    homepage = "http://www.openexr.com/"
+    homepage = "https://www.openexr.com/"
     url = "https://github.com/openexr/openexr/releases/download/v2.3.0/openexr-2.3.0.tar.gz"
 
     # New versions should come from github now

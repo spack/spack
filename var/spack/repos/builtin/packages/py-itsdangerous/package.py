@@ -9,7 +9,7 @@ from spack import *
 class PyItsdangerous(PythonPackage):
     """Various helpers to pass trusted data to untrusted environments."""
 
-    homepage = "http://github.com/mitsuhiko/itsdangerous"
+    homepage = "https://github.com/mitsuhiko/itsdangerous"
     pypi = "itsdangerous/itsdangerous-1.1.0.tar.gz"
 
     version('1.1.0', sha256='321b033d07f2a4136d3ec762eac9f16a10ccd60f53c0c91af90217ace7ba1f19')

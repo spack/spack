@@ -12,7 +12,7 @@ class Transdecoder(MakefilePackage):
        assembly using Trinity, or constructed based on RNA-Seq alignments to
        the genome using Tophat and Cufflinks."""
 
-    homepage = "http://transdecoder.github.io/"
+    homepage = "https://transdecoder.github.io/"
     url      = "https://github.com/TransDecoder/TransDecoder/archive/TransDecoder-v5.5.0.tar.gz"
 
     version('5.5.0', sha256='c800d9226350817471e9f51267c91f7cab99dbc9b26c980527fc1019e7d90a76')

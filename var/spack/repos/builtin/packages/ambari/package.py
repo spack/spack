@@ -19,7 +19,7 @@ class Ambari(PythonPackage):
     version('2.7.3', sha256='30fe72e60fa6b62fe032bd193ebd0cef20b65c54b57cad92f6f44daabd3771cf')
     version('2.7.1', sha256='ea4eb28f377ce9d0b9b7648f2020dda4be974c6d9a22ebaafbf1bc97890e4e42')
 
-    depends_on('python@:2.7.999', type=('build', 'run'))
-    depends_on('py-setuptools@:44.99.99', type='build')
+    depends_on('python@:2.7', type=('build', 'run'))
+    depends_on('py-setuptools@:44', type='build')
     depends_on('py-mock', type='test')
     depends_on('py-coilmq', type=('build', 'run'))

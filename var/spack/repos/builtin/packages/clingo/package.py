@@ -35,6 +35,8 @@ class Clingo(CMakePackage):
     variant("docs", default=False, description="build documentation with Doxygen")
     variant("python", default=True, description="build with python bindings")
 
+    depends_on('cmake@3.1:', type='build')
+
     depends_on('doxygen', type="build", when="+docs")
     depends_on('re2c@0.13:', type="build")
     depends_on('bison@2.5:', type="build")
@@ -66,7 +68,8 @@ class Clingo(CMakePackage):
         current spec is the one found by CMake find_package(Python, ...)
         """
         python_spec = self.spec['python']
-        include_dir = python_spec.package.get_python_inc()
+        include_dir = join_path(
+            python_spec.prefix, python_spec.package.config_vars['python_inc']['false'])
         return [
             self.define('Python_EXECUTABLE', str(python_spec.command)),
             self.define('Python_INCLUDE_DIR', include_dir)

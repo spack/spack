@@ -18,10 +18,10 @@ class Mvapich2x(AutotoolsPackage):
     http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2x/
     """
 
-    homepage = "http://mvapich.cse.ohio-state.edu"
+    homepage = "https://mvapich.cse.ohio-state.edu"
     url      = "http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2x/mvapich2x-2.3.tar.gz"
 
-    maintainers = ['nithintsk', 'harisubramoni']
+    maintainers = ['natshineman', 'harisubramoni', 'ndcontini']
 
     version('2.3', sha256='fc47070e2e9fac09b97022be2320200d732a0a4a820a2b51532b88f8ded14536', preferred=True)
     version('2.3rc3', sha256='85a9f1ea1a837d487e356f021ef6f3a4661ad270a0c5f54777b362ee4d45166f')

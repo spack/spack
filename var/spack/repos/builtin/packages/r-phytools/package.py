@@ -28,7 +28,7 @@ class RPhytools(RPackage):
     range of models, and for a wide variety of other manipulations and analyses
     that phylogenetic biologists might find useful in their research."""
 
-    homepage = "http://github.com/liamrevell/phytools"
+    homepage = "https://github.com/liamrevell/phytools"
     url      = "https://cloud.r-project.org/src/contrib/phytools_0.6-60.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/phytools/"
 

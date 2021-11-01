@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import spack
 import spack.store
+from spack import *
 
 
 class CbtfKrell(CMakePackage):
@@ -14,7 +14,7 @@ class CbtfKrell(CMakePackage):
        data collectors and support libraries as well as some example tools
        that drive the data collection at HPC levels of scale.
     """
-    homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
+    homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git      = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
     version('develop', branch='master')

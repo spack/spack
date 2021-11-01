@@ -11,16 +11,14 @@ the main server for a particular package is down.  Or, if the computer
 where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
-import sys
-import os
-import traceback
-import os.path
 import operator
-
-import six
+import os
+import os.path
+import sys
+import traceback
 
 import ruamel.yaml.error as yaml_error
-
+import six
 from ordereddict_backport import OrderedDict
 
 if sys.version_info >= (3, 5):
@@ -33,14 +31,14 @@ from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.error
-import spack.url as url
 import spack.fetch_strategy as fs
+import spack.spec
+import spack.url as url
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-import spack.spec
-from spack.version import VersionList
 from spack.util.spack_yaml import syaml_dict
+from spack.version import VersionList
 
 
 def _display_mirror_entry(size, name, url, type_=None):

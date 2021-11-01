@@ -4,24 +4,22 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-import pytest
 import jinja2
+import pytest
 
 import archspec.cpu
 
 import llnl.util.lang
 
-import spack.architecture
+import spack.compilers
 import spack.concretize
 import spack.error
+import spack.platforms
 import spack.repo
-
 from spack.concretize import find_spec
 from spack.spec import Spec
-from spack.version import ver
 from spack.util.mock_package import MockPackageMultiRepo
-import spack.compilers
-import spack.platforms.test
+from spack.version import ver
 
 
 def check_spec(abstract, concrete):
@@ -99,20 +97,14 @@ def current_host(request, monkeypatch):
     cpu, _, is_preference = request.param.partition('-')
     target = archspec.cpu.TARGETS[cpu]
 
-    # this function is memoized, so clear its state for testing
-    spack.architecture.get_platform.cache.clear()
-
-    monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
-    monkeypatch.setattr(spack.platforms.test.Test, 'front_end', cpu)
+    monkeypatch.setattr(spack.platforms.Test, 'default', cpu)
+    monkeypatch.setattr(spack.platforms.Test, 'front_end', cpu)
     if not is_preference:
         monkeypatch.setattr(archspec.cpu, 'host', lambda: target)
         yield target
     else:
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
-
-    # clear any test values fetched
-    spack.architecture.get_platform.cache.clear()
 
 
 @pytest.fixture()
@@ -435,7 +427,7 @@ class TestConcretize(object):
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
         # TODO: improved way to check for this.
-        platform = spack.architecture.real_platform().name
+        platform = spack.platforms.real_host().name
         if platform == 'darwin' or platform == 'linux':
             return
 
@@ -1244,3 +1236,55 @@ class TestConcretize(object):
 
         for abstract_spec in expected:
             assert abstract_spec in s
+
+    @pytest.mark.regression('24196')
+    def test_version_badness_more_important_than_default_mv_variants(self):
+        # If a dependency had an old version that for some reason pulls in
+        # a transitive dependency with a multi-valued variant, that old
+        # version was preferred because of the order of our optimization
+        # criteria.
+        s = spack.spec.Spec('root').concretized()
+        assert s['gmt'].satisfies('@2.0')
+
+    @pytest.mark.regression('24205')
+    def test_provider_must_meet_requirements(self):
+        # A package can be a provider of a virtual only if the underlying
+        # requirements are met.
+        s = spack.spec.Spec('unsat-virtual-dependency')
+        with pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError)):
+            s.concretize()
+
+    @pytest.mark.regression('23951')
+    def test_newer_dependency_adds_a_transitive_virtual(self):
+        # Ensure that a package doesn't concretize any of its transitive
+        # dependencies to an old version because newer versions pull in
+        # a new virtual dependency. The possible concretizations here are:
+        #
+        # root@1.0 <- middle@1.0 <- leaf@2.0 <- blas
+        # root@1.0 <- middle@1.0 <- leaf@1.0
+        #
+        # and "blas" is pulled in only by newer versions of "leaf"
+        s = spack.spec.Spec('root-adds-virtual').concretized()
+        assert s['leaf-adds-virtual'].satisfies('@2.0')
+        assert 'blas' in s
+
+    @pytest.mark.regression('26718')
+    def test_versions_in_virtual_dependencies(self):
+        # Ensure that a package that needs a given version of a virtual
+        # package doesn't end up using a later implementation
+        s = spack.spec.Spec('hpcviewer@2019.02').concretized()
+        assert s['java'].satisfies('virtual-with-versions@1.8.0')
+
+    @pytest.mark.regression('26866')
+    def test_non_default_provider_of_multiple_virtuals(self):
+        s = spack.spec.Spec(
+            'many-virtual-consumer ^low-priority-provider'
+        ).concretized()
+        assert s['mpi'].name == 'low-priority-provider'
+        assert s['lapack'].name == 'low-priority-provider'
+
+        for virtual_pkg in ('mpi', 'lapack'):
+            for pkg in spack.repo.path.providers_for(virtual_pkg):
+                if pkg.name == 'low-priority-provider':
+                    continue
+                assert pkg not in s

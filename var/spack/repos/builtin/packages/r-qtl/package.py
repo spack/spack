@@ -13,7 +13,7 @@ class RQtl(RPackage):
     trait loci, QTLs) contributing to variation in quantitative traits. Broman
     et al. (2003) <doi:10.1093/bioinformatics/btg112>."""
 
-    homepage = "http://rqtl.org"
+    homepage = "https://rqtl.org"
     url      = "https://cloud.r-project.org/src/contrib/qtl_1.44-9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/qtl"
 

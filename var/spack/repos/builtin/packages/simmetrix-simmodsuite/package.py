@@ -3,12 +3,49 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 def simmodsuite_releases():
     releases = [
+        {
+            'version': '16.0-210623',
+            'components': {
+                'gmadv': ['c40dac44695db6e97c4d4c06d1eb6eac93518c93d7860c77a69f3ea30fea3b90', 'advmodel'],
+                'msparallelmesh': ['57d710b74887731ea0e664a154489747033af433852809181c11e8065752eaf4', 'parallelmesh'],
+                'gmcore': ['5bd04f175fdf5a088140af5ca3fa03934251c097044b47fdf3ea2cd0afc28547', 'base'],
+                'pskrnl': ['87957818b20839d3835a343894c396f7c591d1f0bfd728d33ad21b1adb4e887c', 'parasolid'],
+                'msadapt': ['5ba66819bb2c56eb1e07e6c2659afc8c971005b08ed059f8c62a185236e45dac', 'base'],
+                'gmvoxel': ['15dfc389665086ea37b9835fecd6b46070572878308796afa960077cc2bf7e0a', 'voxel'],
+                'msparalleladapt': ['1db2c34a398c5965a2a675006c96a3603e0124188b52159776b7c616efa48457', 'paralleladapt'],
+                'mscore': ['7029871c52d6c3bb782ae2acb7360130105649cd9cf63815ae95cf4089cb786d', 'base'],
+                'psint': ['c8a3dbacafa70b13bc9fb8322699a1cfc812b2cfd3ea05cba9135623eae761d8', 'parasolid'],
+                'fdcore': ['75f9bcd7cb9ab9dedb73166539c08b53bd8e91c5619d3dce605ba19c63d1ee5c', 'base'],
+                'msadv': ['0018e0a6b9d7724867f7379bc619269481c318ee4dfd0724511c032534ae04a1', 'adv'],
+                'aciskrnl': ['2a9b9da9b0c09857de7fef0dea0e96222bd30e297bd37bea962751dab6762500', 'acis'],
+                'discrete': ['f17cd198f8749c763cc8e200cfd6734604e1d316a48d7d0e537a9a890d884904', 'discrete'],
+                'gmabstract': ['068d0309d5ff9668fc0474edf7f4e20503827400e34492e2ed55b46a0c9e1858', 'abstract'],
+            },
+            'docs': {
+                'GeomSimAdvanced': ['02e4566042ae4de10c4acb577142e82d15f32caa296fe1b578c62a38da707066', 'advmodel'],
+                'MeshSim': ['cc1dc77cece7aac6ded003c872c651ad8321bc9ce931ad141b17d2de7bf513c5', 'base'],
+                'GeomSimVoxel': ['49b8f85f59acc8c973bf46c1f999a0ae64cdf129371587879de056c0ac3500d8', 'voxel'],
+                'MeshSimAdvanced': ['2d2689979104414d91d804ca3c34a69104e572b8f231c4e324b09e57675b61cc', 'adv'],
+                'GeomSimGranite': ['17f18831a12b06c0e085486d94d3a4275d7ed94ad53fec689e8877217856c750', 'granite'],
+                'GeomSimParasolid': ['492bd311cc42dadd1f76064c57d35e886b9a7da4c48576ec4d34844fcdaddb8d', 'parasolid'],
+                'GeomSimAcis': ['341c6aeda7f9189f4e886cb75c5989cb9ece6ecba1b1c9d5273b94f74a3dd40b', 'acis'],
+                'GeomSimDiscrete': ['e9d42da613a3acadbcdee5d8d6fc3b093f58b51d158f2a392b7da0e5f74e0388', 'discrete'],
+                'MeshSimAdapt': ['e27510e588105bdb0ca62c2629dfd41dfca6039b7b2ff0298ef83d3a48d7dd23', 'base'],
+                'GeomSimAbstract': ['398c1a15efcddd3b86a7b0334af6f8b529710f815f73f5655d3c7271e92b194e', 'abstract'],
+                'GeomSimDiscreteModeling': ['f444aed59569731f65eea920322adcc224c67b715ecba85a1898cf418de58237', 'discrete'],
+                'FieldSim': ['bac947998d4de1c4edba271645310d4784290bec30bf0cf41d00ae6ea8b27c97', 'base'],
+                'GeomSim': ['95cb24165d47701daa8da7131ca1173d38f4dab80c1ca0d75843b464fed92097', 'base'],
+                'ParallelMeshSim': ['fb1e3ac0ab7208d771057880c693e529e7c821772265b89125d371a1b34fa651', 'parallelmesh'],
+                'ParallelMeshSimAdapt': ['246c5c8b30194239f41a79f2ffd205fd9ae69bcb8127d19a94f12c278a27f106', 'paralleladapt'],
+            }
+        },
         {
             'version': '14.0-191122',
             'components': {
@@ -137,6 +174,7 @@ class SimmetrixSimmodsuite(Package):
     of sources
     """
 
+    maintainers = ['cwsmith']
     homepage = "http://www.simmetrix.com/products/SimulationModelingSuite/main.html"
     manual_download = True
 

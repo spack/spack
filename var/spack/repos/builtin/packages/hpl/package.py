@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import platform
+
+from spack import *
 
 
 class Hpl(AutotoolsPackage):
@@ -14,8 +15,8 @@ class Hpl(AutotoolsPackage):
     It can thus be regarded as a portable as well as freely available
     implementation of the High Performance Computing Linpack Benchmark."""
 
-    homepage = "http://www.netlib.org/benchmark/hpl/"
-    url      = "http://www.netlib.org/benchmark/hpl/hpl-2.2.tar.gz"
+    homepage = "https://www.netlib.org/benchmark/hpl/"
+    url      = "https://www.netlib.org/benchmark/hpl/hpl-2.2.tar.gz"
 
     # Note: HPL uses autotools starting with 2.3
 

@@ -29,6 +29,7 @@ class Fortrilinos(CMakePackage):
 
     maintainers = ['sethrj', 'aprokop']
 
+    tags = ['e4s']
     test_requires_compiler = True
 
     version('2.0.0', sha256='9af3b3eea9934e44d74654a5fa822de08bd0efa43e06e4a4e35a777781f542d6')
@@ -55,7 +56,7 @@ class Fortrilinos(CMakePackage):
     depends_on('trilinos@12.17.1', when='@2.0.dev1')
 
     # Baseline trilinos dependencies
-    depends_on('trilinos+teuchos gotype=long_long')
+    depends_on('trilinos gotype=long_long')
     # Full trilinos dependencies
     depends_on('trilinos+amesos2+anasazi+belos+kokkos+ifpack2+muelu+nox+tpetra'
                '+stratimikos', when='+hl')
@@ -77,6 +78,12 @@ class Fortrilinos(CMakePackage):
 
     examples_src_dir = 'example/test-installation'
 
+    @property
+    def cached_tests_work_dir(self):
+        """The working directory for cached test sources."""
+        return join_path(self.test_suite.current_test_cache_dir,
+                         self.examples_src_dir)
+
     @run_after('install')
     def setup_smoke_tests(self):
         """Copy the example source files after the package is installed to an
@@ -84,17 +91,22 @@ class Fortrilinos(CMakePackage):
         self.cache_extra_test_sources([self.examples_src_dir])
 
     def test(self):
-        example_src_dir = join_path(self.install_test_root,
-                                    self.examples_src_dir)
-        test_build_dir = join_path(self.test_suite.stage,
-                                   'build_example')
-        with working_dir(test_build_dir, create=True):
-            cmake(
-                self.define('CMAKE_PREFIX_PATH', self.prefix),
-                self.define('CMAKE_CXX_COMPILER', self.compiler.cxx),
-                self.define('CMAKE_Fortran_COMPILER', self.compiler.fc),
-                example_src_dir
-            )
-            make()
-            self.run_test('ctest', ['-V'], [], installed=False,
-                          purpose='test: installation')
+        """Perform stand-alone/smoke tests using installed package."""
+        cmake_args = [
+            self.define('CMAKE_PREFIX_PATH', self.prefix),
+            self.define('CMAKE_CXX_COMPILER', self.compiler.cxx),
+            self.define('CMAKE_Fortran_COMPILER', self.compiler.fc),
+            self.cached_tests_work_dir
+        ]
+        self.run_test("cmake", cmake_args,
+                      purpose="test: calling cmake",
+                      work_dir=self.cached_tests_work_dir)
+
+        self.run_test("make", [],
+                      purpose="test: calling make",
+                      work_dir=self.cached_tests_work_dir)
+
+        self.run_test('ctest', ['-V'],
+                      ['100% tests passed'], installed=False,
+                      purpose='test: testing the installation',
+                      work_dir=self.cached_tests_work_dir)

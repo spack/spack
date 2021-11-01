@@ -13,9 +13,9 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.hash_types as ht
 import spack.spec
 import spack.store
-import spack.hash_types as ht
 
 description = "show what would be installed, given a spec"
 section = "build"

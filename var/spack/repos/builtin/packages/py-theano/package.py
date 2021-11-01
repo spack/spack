@@ -10,7 +10,7 @@ class PyTheano(PythonPackage, CudaPackage):
     """Optimizing compiler for evaluating mathematical expressions on CPUs
     and GPUs."""
 
-    homepage = "http://deeplearning.net/software/theano/"
+    homepage = "https://theano-pymc.readthedocs.io/en/latest/"
     pypi = "Theano/Theano-0.8.2.tar.gz"
     git      = "https://github.com/Theano/Theano.git"
 

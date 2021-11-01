@@ -90,11 +90,11 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
     # ceed-3.0 and ceed-4.0
-    depends_on('nek5000@19.0', when='@3.0.0:4.99+nek')
-    depends_on('nektools@19.0%gcc', when='@3.0.0:4.99+nek')
-    depends_on('gslib@1.0.6', when='@3.0.0:4.99+nek')
-    depends_on('nekbone@17.0', when='@3.0.0:4.99+nek')
-    depends_on('nekcem@c8db04b', when='@3.0.0:4.99+nek')
+    depends_on('nek5000@19.0', when='@3.0.0:4+nek')
+    depends_on('nektools@19.0%gcc', when='@3.0.0:4+nek')
+    depends_on('gslib@1.0.6', when='@3.0.0:4+nek')
+    depends_on('nekbone@17.0', when='@3.0.0:4+nek')
+    depends_on('nekcem@c8db04b', when='@3.0.0:4+nek')
     # ceed-2.0
     depends_on('nek5000@17.0', when='@2.0.0+nek')
     depends_on('nektools@17.0%gcc', when='@2.0.0+nek')
@@ -110,28 +110,28 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
 
     # PETSc
     # ceed 4.0
-    depends_on('petsc@3.15.0:3.15.99', when='@4.0.0:4.99.99+petsc')
+    depends_on('petsc@3.15.0:3.15', when='@4.0.0:4+petsc')
     for arch in CudaPackage.cuda_arch_values:
         depends_on('petsc+cuda cuda_arch={0}'.format(arch),
                    when='@4.0.0+petsc+cuda cuda_arch={0}'.format(arch))
     for target in ROCmPackage.amdgpu_targets:
-        depends_on('petsc@3.15.0:3.15.99+rocm amdgpu_target={0}'.format(target),
-                   when='@4.0.0:4.99.99+petsc+rocm amdgpu_target={0}'.format(target))
-    depends_on('petsc@3.15.0:3.15.99~hdf5~superlu-dist',
+        depends_on('petsc@3.15.0:3.15+rocm amdgpu_target={0}'.format(target),
+                   when='@4.0.0:4+petsc+rocm amdgpu_target={0}'.format(target))
+    depends_on('petsc@3.15.0:3.15~hdf5~superlu-dist',
                when='@4.0.0+petsc+quickbuild')
-    depends_on('petsc@3.15.0:3.15.99+mpi+double~int64', when='@4.0.0:4.99.99+petsc~mfem')
+    depends_on('petsc@3.15.0:3.15+mpi+double~int64', when='@4.0.0:4+petsc~mfem')
     # ceed-3.0
     depends_on('petsc+cuda', when='@3.0.0+petsc+cuda')
     # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
-    depends_on('petsc@3.13.0:3.13.99~hdf5~superlu-dist',
+    depends_on('petsc@3.13.0:3.13~hdf5~superlu-dist',
                when='@3.0.0+petsc+quickbuild')
-    depends_on('petsc@3.13.0:3.13.99+mpi+double~int64', when='@3.0.0+petsc~mfem')
+    depends_on('petsc@3.13.0:3.13+mpi+double~int64', when='@3.0.0+petsc~mfem')
     # Coax concretizer to use version of hypre required by transitive
     # dependencies (mfem, petsc)
     depends_on('hypre@:2.18.2', when='@3.0.0+mfem')
     # The mfem petsc examples need the petsc variants +hypre, +suite-sparse,
     # and +mumps:
-    depends_on('petsc@3.13.0:3.13.99+mpi+hypre+suite-sparse+mumps+double~int64',
+    depends_on('petsc@3.13.0:3.13+mpi+hypre+suite-sparse+mumps+double~int64',
                when='@3.0.0+petsc+mfem')
     # ceed-2.0
     # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
