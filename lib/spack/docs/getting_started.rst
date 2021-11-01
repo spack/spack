@@ -1586,14 +1586,6 @@ command line and also from 3rd-party software`` option. This will automatically
 update your ``PATH`` variable to include the ``git`` command.
 
 """"
-Perl
-""""
-
-Perl is a flexible and feature-rich programming language that comes built-in
-on Unix boxes but needs to be installed externally for Windows users. Fortunately,
-you can find the most recent release at https://www.perl.org/get.html.
-
-""""
 NASM
 """"
 
