@@ -102,6 +102,16 @@ default_view_name = 'default'
 default_view_link = 'all'
 
 
+def installed_specs():
+    """
+    Returns the specs of packages installed in the active environment or None
+    if no packages are installed.
+    """
+    env = spack.environment.active_environment()
+    hashes = env.all_hashes() if env else None
+    return spack.store.db.query(hashes=hashes)
+
+
 def valid_env_name(name):
     return re.match(valid_environment_name_re, name)
 
