@@ -880,8 +880,8 @@ your path:
    $ spack find --loaded
    ==> 9 installed packages
    -- linux-rhel7-broadwell / gcc@4.4.7 ----------------------------
-   hwloc@2.5.0       libiconv@1.16      libxml2@2.9.12  ncurses@6.2  zlib@1.2.11
-   libfabric@1.13.1  libpciaccess@0.16  mpich@3.0.4     xz@5.2.5
+   libiconv@1.16  libpciaccess@0.16  libxml2@2.9.12  mpich@3.0.4  xz@5.2.5
+   zlib@1.2.11
 
 These commands will add appropriate directories to your ``PATH``,
 ``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH`` according to the
