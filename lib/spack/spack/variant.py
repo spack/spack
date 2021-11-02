@@ -187,7 +187,7 @@ class Variant(object):
                 self.values == other.values and
                 self.multi == other.multi and
                 self.single_value_validator == other.single_value_validator and
-                self.group_validator, other.group_validator)
+                self.group_validator == other.group_validator)
 
     def __ne__(self, other):
         return not self == other
