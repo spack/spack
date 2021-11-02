@@ -244,7 +244,7 @@ class DirectiveMeta(type):
                 if DirectiveMeta._when_constraints_from_context:
                     # Check that directives not yet supporting the when= argument
                     # are not used inside the context manager
-                    if decorated_function.__name__ in ('version', 'variant'):
+                    if decorated_function.__name__ == 'version':
                         msg = ('directive "{0}" cannot be used within a "when"'
                                ' context since it does not support a "when=" '
                                'argument')
