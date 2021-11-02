@@ -85,6 +85,7 @@ class Qgis(CMakePackage):
     depends_on('libzip')
     depends_on('libtasn1')
     depends_on('proj@4.4.0:')
+    depends_on('proj@4.9.3:', when='@3.8.2:')
     depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
     depends_on('py-pyqt4', when='@2')
     depends_on('py-pyqt5@5.3:', when='@3')
@@ -95,6 +96,7 @@ class Qgis(CMakePackage):
     depends_on('qjson')
     depends_on('qscintilla +python')
     depends_on('qt+dbus')
+    depends_on('qt+dbus@5.12.0:', when='@3.20:')
     depends_on('qtkeychain@0.5:', when='@3:')
     depends_on('qwt@5:')
     depends_on('qwtpolar')
@@ -121,6 +123,7 @@ class Qgis(CMakePackage):
 
     # build
     depends_on('cmake@3.0.0:', type='build')
+    depends_on('cmake@3.10.0:', type='build', when='@3.16:')
     depends_on('flex@2.5.6:', type='build')
     depends_on('bison@2.4:', type='build')
     depends_on('pkgconfig', type='build')
