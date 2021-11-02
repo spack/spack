@@ -846,8 +846,18 @@ class Python(Package):
         # Some values set by sysconfig may not always exist on Windows, so
         # compute Windows alternatives
         def repair_win_sysconf(conf):
-            if not conf["LIBDIR"]:
+            if not is_windows:
+                pass
+            else:
                 conf["LIBDIR"] = os.path.join(conf["LIBDEST"], "..", "libs")
+                conf["LIBPL"] = conf["LIBDIR"]
+                conf["PYTHONFRAMEWORKPREFIX"] = ""
+                conf["LDLIBRARY"] = "python"+conf["VERSION"]+".dll"
+                conf["LIBRARY"] = "python"+conf["VERSION"]+".lib"
+                conf["CC"] = ""
+                conf["CXX"] = ""
+                conf["LDSHARED"] = ""
+                conf["LDCXXSHARED"] = ""
             return conf
 
         # TODO: distutils is deprecated in Python 3.10 and will be removed in
@@ -1147,7 +1157,7 @@ for plat_specific in [True, False]:
             # fact that LDSHARED is set in the environment, therefore we export
             # the variable only if the new value is different from what we got
             # from the sysconfigdata file:
-            if config_link != new_link:
+            if config_link != new_link and not is_windows:
                 env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
