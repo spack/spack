@@ -591,6 +591,19 @@ with the 'debug' compile-time option enabled.
 
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
 
+""""""""""""""""""""""""""""""""
+Seeing loaded packages
+""""""""""""""""""""""""""""""""
+To see the packages that you have installed and loaded to your enviornment
+you would use ``spack find --loaded``.
+
+.. code-block:: console
+
+    $ spack load libelf@0.8.12
+    $ spack find --loaded
+    ==> 1 installed package
+    -- linux-debian7-x86_64 / gcc@4.4.7 ----------------------------
+    libelf@0.8.12
 
 """"""""""""""""""""""""""""""""
 Machine-readable output
@@ -864,6 +877,11 @@ your path:
    $ spack load mpich %gcc@4.4.7
    $ which mpicc
    ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
+   $ spack find --loaded
+   ==> 9 installed packages
+   -- linux-rhel7-broadwell / gcc@4.4.7 ----------------------------
+   hwloc@2.5.0       libiconv@1.16      libxml2@2.9.12  ncurses@6.2  zlib@1.2.11
+   libfabric@1.13.1  libpciaccess@0.16  mpich@3.0.4     xz@5.2.5
 
 These commands will add appropriate directories to your ``PATH``,
 ``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH`` according to the
