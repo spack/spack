@@ -75,6 +75,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on('sed', when=sys.platform == 'darwin', type='build')
     depends_on('pcre')
     depends_on('pkgconfig', type='build')
+    depends_on('texinfo',   type='build')
 
     # Strongly recommended dependencies
     depends_on('readline',     when='+readline')
