@@ -1974,11 +1974,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """On Darwin, make installed libraries more easily relocatable.
 
         Some build systems (handrolled, autotools, makefiles) can set their own
-        rpaths that are duplicated by spack's compiler wrapper. Additionally,
-        many simpler build systems do not link using ``-install_name
-        @rpath/foo.dylib``, which propagates the library's hardcoded
-        absolute path into downstream dependencies. This fixup interrogates,
-        and postprocesses if necessary, all libraries installed by the code.
+        rpaths that are duplicated by spack's compiler wrapper. This fixup
+        interrogates, and postprocesses if necessary, all libraries installed
+        by the code.
 
         It should be added as a @run_after to packaging systems (or individual
         packages) that do not install relocatable libraries by default.
