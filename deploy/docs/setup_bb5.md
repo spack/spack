@@ -3,7 +3,8 @@
 On BlueBrain5, clone this repository to get started using Spack.
 The following commands are a good way to get started:
 
-    $ git clone https://github.com/BlueBrain/spack.git
+    $ module load unstable git
+    $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
     $ . spack/share/spack/setup-env.sh
     $ ln -s /gpfs/bbp.cscs.ch/apps/hpc/jenkins/config/*.yaml ${SPACK_ROOT}/etc/spack
 

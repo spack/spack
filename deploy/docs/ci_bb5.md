@@ -3,7 +3,8 @@
 When building Spack packages with Jenkins, please use the `bb5` executors.
 Then you will be able to install software with:
 
-    $ git clone https://github.com/BlueBrain/spack.git
+    $ module load unstable git
+    $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
     $ . spack/share/spack/setup-env.sh
     $ mkdir fake_home
     $ export HOME=${PWD}/fake_home

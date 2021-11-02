@@ -13,7 +13,7 @@ Before starting, please install brew and the required packages.
 If you require Python please install a version dowloaded from
 Python.org, as several issues have been found with Homebrew's Python
 
-    $ git clone https://github.com/BlueBrain/spack.git
+    $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
     $ mkdir ~/.spack
     $ cp spack/sysconfig/mac_osx/*.yaml ~/.spack
     $ . spack/share/spack/setup-env.sh
@@ -28,7 +28,7 @@ Use Spack on the workstations provided by the project.
 We build Docker images based on Ubuntu 18.04, and the same settings can be
 used to set Spack up on the desktops:
 
-    $ git clone https://github.com/BlueBrain/spack.git
+    $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
     $ mkdir ~/.spack
     $ cp spack/sysconfig/ubuntu-18.04/*.yaml ~/.spack
     $ sed -e 's/#.*//g' spack/sysconfig/ubuntu-18.04/packages|xargs -r sudo apt-get install --assume-yes
@@ -37,7 +37,7 @@ used to set Spack up on the desktops:
 
 ### Ubuntu 20.04
 
-    $ git clone https://github.com/BlueBrain/spack.git
+    $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
     $ mkdir ~/.spack
     $ cp spack/sysconfig/ubuntu-20.04/*.yaml ~/.spack
     $ sed -e 's/#.*//g' spack/sysconfig/ubuntu-20.04/packages|xargs -r sudo apt-get install --assume-yes
