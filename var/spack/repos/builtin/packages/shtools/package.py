@@ -31,6 +31,11 @@ class Shtools(MakefilePackage):
     depends_on('blas')
     depends_on('fftw')
     depends_on('lapack')
+    depends_on('py-flake8', type='test')
+
+    def patch(self):
+        """make check fix: Silence "do not use bare 'except'" in number of files"""
+        filter_file('ignore=', 'ignore=E722,', 'Makefile')
 
     # Options for the Makefile
     def makeopts(self, spec, prefix):
