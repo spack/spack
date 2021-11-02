@@ -239,8 +239,6 @@ class Python(AutotoolsPackage):
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
 
-    conflicts('%nvhpc')
-
     # Used to cache various attributes that are expensive to compute
     _config_vars = {}
 
