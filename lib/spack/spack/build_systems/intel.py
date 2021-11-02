@@ -1002,9 +1002,7 @@ class IntelPackage(PackageBase):
                 d = ancestor(self.component_lib_dir('mpi'))
                 libfabric_rpath = os.path.join(d, 'libfabric', 'lib')
                 if '+external-libfabric' in self.spec:
-                    libfabric_rpath = os.path.dirname(
-                    [s for s in self.spec['libfabric'].libs if s.endswith('libfabric.so')][0]
-                    )
+                    libfabric_rpath = self.spec['libfabric'].libs
                 result = libfabric_rpath + result
 
         if '^mpi' in self.spec.root and ('+mkl' in self.spec or
