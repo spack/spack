@@ -154,7 +154,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.5: ^python@:3.3')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.4.0:1.4.1')
     depends_on('py-gast@0.4.0', type=('build', 'run'), when='@2.5:')
-    depends_on('py-gast@0.3.3', type=('build', 'run'), when='@2.2:2.4.999')
+    depends_on('py-gast@0.3.3', type=('build', 'run'), when='@2.2:2.4')
     depends_on('py-gast@0.2.2', type=('build', 'run'), when='@1.15:2.1')
     depends_on('py-gast@0.2.0:', type=('build', 'run'), when='@1.6:1.14')
     depends_on('py-google-pasta@0.2:0', type=('build', 'run'), when='@2.4.0:')
