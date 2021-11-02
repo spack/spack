@@ -51,7 +51,7 @@ class Mgis(CMakePackage):
 
     # dependencies
     # https://thelfer.github.io/mgis/web/release-notes-2.0.html
-    depends_on('tfel@3.4.3:4.0.0', when="@2.0")
+    depends_on('tfel@4.0.0', when="@2.0")
     depends_on('tfel@3.4.3', when="@1.2.2")
     depends_on('tfel@3.4.1', when="@1.2.1")
     depends_on('tfel@3.4.0', when="@1.2")
