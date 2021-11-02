@@ -314,7 +314,7 @@ class PyTensorflow(Package, CudaPackage):
     # needed for protobuf-3.16 and greater
     patch('example_parsing.patch', when='^protobuf@3.16:')
 
-    # allow linker to befound in PATH
+    # allow linker to be found in PATH
     # https://github.com/tensorflow/tensorflow/issues/39263
     patch('null_linker_bin_path.patch')
 
