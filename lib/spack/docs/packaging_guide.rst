@@ -2066,7 +2066,7 @@ Version ranges
 ^^^^^^^^^^^^^^
 
 Although some packages require a specific version for their dependencies,
-most can be built with a range of version. For example, if you are
+most can be built with a range of versions. For example, if you are
 writing a package for a legacy Python module that only works with Python
 2.4 through 2.6, this would look like:
 
@@ -2093,16 +2093,17 @@ requires Python 2, you can similarly leave out the lower bound:
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
 ``@:3`` means "up to and including any 3.x version".
 
-What if a package can only be built with Python 2.6? You might be
+What if a package can only be built with Python 2.7? You might be
 inclined to use:
 
 .. code-block:: python
 
-   depends_on('python@2.6')
+   depends_on('python@2.7')
 
 However, this would be wrong. Spack assumes that all version constraints
-are exact, so it would try to install Python at exactly ``2.6``. The
-correct way to specify this would be:
+are exact, so it would try to install Python not at ``2.7.18``, but
+exactly at ``2.7``, which is a non-existent version. The correct way to
+specify this would be:
 
 .. code-block:: python
 
