@@ -48,7 +48,6 @@ class Exago(CMakePackage, CudaPackage):
     depends_on('cmake@3.18:', type='build')
 
     # HiOp dependency logic
-    depends_on('hiop+shared', when='+hiop')
     depends_on('hiop+raja', when='+hiop+raja')
     depends_on('hiop@0.3.99:', when='@0.99:+hiop')
     depends_on('hiop+cuda', when='+hiop+cuda')
