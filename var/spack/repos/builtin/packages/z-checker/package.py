@@ -32,3 +32,25 @@ class ZChecker(AutotoolsPackage):
         else:
             args += ['--disable-mpi']
         return args
+
+    def _test_data_property(self):
+        """This test performs a test for data property analysis"""
+        test_data_dir = self.test_suite.current_test_data_dir
+
+        filename = 'testfloat_8_8_128.dat'
+        orifile = test_data_dir.join(filename)
+
+        zcconffile = 'zc.config'
+        configfile = test_data_dir.join(zcconffile)
+
+        exe = 'analyzeDataProperty'
+        reason = 'testing data property of the command {0}'.format(exe)
+        options = ['var1', '-f', configfile, orifile, '8', '8', '128']
+
+        self.run_test(exe, options, [], installed=True, purpose=reason,
+                      skip_missing=True, work_dir=test_data_dir)
+
+    def test(self):
+        """Perform smoke tests on the installed package"""
+        # test data property
+        self._test_data_property()
