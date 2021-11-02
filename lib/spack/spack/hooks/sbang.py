@@ -223,7 +223,7 @@ def install_sbang():
             os.stat(sbang_tmp_path).st_uid,
             grp.getgrnam(group_name).gr_gid
         )
-    
+
     # Finally, move the new `sbang` into place atomically
     os.rename(sbang_tmp_path, sbang_path)
 
