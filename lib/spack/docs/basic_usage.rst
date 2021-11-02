@@ -864,11 +864,6 @@ your path:
    $ spack load mpich %gcc@4.4.7
    $ which mpicc
    ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
-   $ spack find --loaded
-   ==> 9 installed packages
-   -- linux-debian7-x86_64 / gcc@4.4.7 ----------------------------
-   libiconv@1.16  libpciaccess@0.16  libxml2@2.9.12  mpich@3.0.4  xz@5.2.5
-   zlib@1.2.11
 
 These commands will add appropriate directories to your ``PATH``,
 ``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH`` according to the
@@ -916,8 +911,8 @@ first ``libelf`` above, you would run:
 
    $ spack load /qmm4kso
 
-To see which packages that you have installed and loaded to your enviornment
-you would use ``spack find --loaded``.
+To see which packages that you have loaded to your enviornment you would
+use ``spack find --loaded``.
 
 .. code-block:: console
 
@@ -1668,6 +1663,7 @@ and it will be added to the ``PYTHONPATH`` in your current shell:
 
 Now ``import numpy`` will succeed for as long as you keep your current
 session open.
+The loaded packages can be checked using ``spack find --loaded``
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Loading Extensions via Modules
