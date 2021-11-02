@@ -245,7 +245,8 @@ class Result(object):
         core_symbols = []
         for atom in core:
             sym = symbols[atom]
-            if sym.name == "rule":
+            if sym.name in ("rule", "error"):
+                # these are special symbols we use to get messages in the core
                 sym = sym.arguments[0].string
             core_symbols.append(sym)
 

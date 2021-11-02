@@ -44,7 +44,8 @@ possible_version_weight(Package, Weight)
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
 1 { version(Package, Version) : version_satisfies(Package, Constraint, Version) } 1
-  :- version_satisfies(Package, Constraint), error("Internal error: package version weight mismatch").
+  :- version_satisfies(Package, Constraint),
+     error("no version satisfies the given constraints").
 version_satisfies(Package, Constraint)
   :- version(Package, Version), version_satisfies(Package, Constraint, Version).
 
