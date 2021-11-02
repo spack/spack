@@ -320,7 +320,7 @@ class PythonPackage(PackageBase):
         # not the ones in the source directory
         for module in self.import_modules:
             self.run_test(inspect.getmodule(self).python.path,
-                          ['-c', 'import {0}'.format(module)],
+                          ['-c', '__import__("{0}")'.format(module)],
                           purpose='checking import of {0}'.format(module),
                           work_dir='spack-test')
 
