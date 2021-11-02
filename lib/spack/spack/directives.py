@@ -582,7 +582,7 @@ def variant(
             logic. It receives the package name, the variant name and a tuple
             of values and should raise an instance of SpackError if the group
             doesn't meet the additional constraints
-        when (spack.spec.Spec, bool, or list): optional condition on which the
+        when (spack.spec.Spec, bool): optional condition on which the
             variant applies
 
     Raises:

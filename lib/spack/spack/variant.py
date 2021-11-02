@@ -895,7 +895,7 @@ class InvalidVariantForSpecError(error.SpecError):
     """Raised when an invalid conditional variant is specified."""
     def __init__(self, variant, when, spec):
         msg = "Invalid variant {0} for spec {1}.\n"
-        msg += "{0} is only available for {1.name} when satisfying {2}."
+        msg += "{0} is only available for {1.name} when satisfying one of {2}."
         super(InvalidVariantForSpecError, self).__init__(
             msg.format(variant, spec, when)
         )
