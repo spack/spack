@@ -156,49 +156,47 @@ class Sz(CMakePackage):
 
         exe = 'sz'
         reason = 'testing 2D compression of {0}'.format(exe)
-        options = ['-z', '-f', '-i', orifile, '-M', 
-                'REL', '-R', '1E-3', '-2', '8', '1024']
+        options = ['-z', '-f', '-i', orifile, '-M',
+                   'REL', '-R', '1E-3', '-2', '8', '1024']
 
         self.run_test(exe, options, [], installed=True,
-                purpose=reason, skip_missing=True, work_dir=test_data_dir)
+                      purpose=reason, skip_missing=True, work_dir=test_data_dir)
 
         filename = 'testfloat_8_8_128.dat.sz'
         decfile = test_data_dir.join(filename)
 
         reason = 'testing 2D decompression of {0}'.format(exe)
-        options = ['-x', '-f', '-i', orifile, '-s', decfile, 
-                '-2', '8', '1024', '-a']
+        options = ['-x', '-f', '-i', orifile, '-s', decfile,
+                   '-2', '8', '1024', '-a']
 
         self.run_test(exe, options, [], installed=True, purpose=reason,
-                skip_missing=True, work_dir=test_data_dir)
-
+                      skip_missing=True, work_dir=test_data_dir)
 
     def _test_3d_float(self):
         """This test performs simple 3D compression/decompression (float)"""
 
         test_data_dir = self.test_suite.current_test_data_dir
-        
+
         filename = 'testfloat_8_8_128.dat'
         orifile = test_data_dir.join(filename)
 
         exe = 'sz'
         reason = 'testing 3D compression of {0}'.format(exe)
         options = ['-z', '-f', '-i', orifile, '-M', 'REL',
-                '-R', '1E-3', '-3', '8', '8', '128']
-        
+                   '-R', '1E-3', '-3', '8', '8', '128']
+
         self.run_test(exe, options, [], installed=True, purpose=reason,
-                skip_missing=True, work_dir=test_data_dir)
+                      skip_missing=True, work_dir=test_data_dir)
 
         filename = 'testfloat_8_8_128.dat.sz'
         decfile = test_data_dir.join(filename)
 
         reason = 'testing 3D decompression of {0}'.format(exe)
         options = ['-x', '-f', '-i', orifile, '-s', decfile,
-                '-3', '8', '8', '128', '-a']
+                   '-3', '8', '8', '128', '-a']
 
-        self.run_test(exe, options, [], installed=True, purpose=reason, 
-                skip_missing=True, work_dir=test_data_dir)
-
+        self.run_test(exe, options, [], installed=True, purpose=reason,
+                      skip_missing=True, work_dir=test_data_dir)
 
     def test(self):
         """Perform smoke tests on the installed package"""

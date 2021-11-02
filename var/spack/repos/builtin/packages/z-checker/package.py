@@ -43,12 +43,12 @@ class ZChecker(AutotoolsPackage):
         zcconffile = 'zc.config'
         configfile = test_data_dir.join(zcconffile)
 
-        exe='analyzeDataProperty'
+        exe = 'analyzeDataProperty'
         reason = 'testing data property of the command {0}'.format(exe)
         options = ['var1', '-f', configfile, orifile, '8', '8', '128']
 
         self.run_test(exe, options, [], installed=True, purpose=reason,
-                skip_missing=True, work_dir=test_data_dir)
+                      skip_missing=True, work_dir=test_data_dir)
 
     def test(self):
         """Perform smoke tests on the installed package"""
