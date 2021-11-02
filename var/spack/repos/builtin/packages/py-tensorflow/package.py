@@ -224,8 +224,9 @@ class PyTensorflow(Package, CudaPackage):
     if sys.byteorder == 'little':
         # Only builds correctly on little-endian machines
         depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.8:2.3')
-        depends_on('py-grpcio@1.32.0:1.32.999', type=('build', 'run'), when='@2.4:2.4.999')
-        depends_on('py-grpcio@1.34.0:1.34.999', type=('build', 'run'), when='@2.5:')
+        depends_on('py-grpcio@1.32.0:1.32', type=('build', 'run'), when='@2.4.0:2.4')
+        depends_on('py-grpcio@1.34.0:1.34', type=('build', 'run'), when='@2.5.0:2.5')
+        depends_on('py-grpcio@1.37.0:1', type=('build', 'run'), when='@2.6.0:')
 
     # TODO: add packages for some of these dependencies
     depends_on('mkl', when='+mkl')
