@@ -8,8 +8,8 @@ class ConditionalVariantPkg(Package):
     homepage = "http://www.example.com/conditional-variant-pkg"
     url      = "http://www.unit-test-should-replace-this-url/conditional-variant-1.0.tar.gz"
 
-    version('1.0', 'foobarbaz')
-    version('2.0', 'bazbarfoo')
+    version('1.0', '0123456789abcdef0123456789abcdef')
+    version('2.0', 'abcdef0123456789abcdef0123456789')
 
     variant('version_based', default=True, when='@2.0:',
             description="Check that version constraints work")
