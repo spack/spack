@@ -190,10 +190,6 @@ def install_sbang():
             spack.paths.sbang_script, sbang_path):
         return
 
-    # remove outdated sbang if it exists
-    if os.path.exists(sbang_path):
-        os.remove(sbang_path)
-
     # make $install_tree/bin
     sbang_bin_dir = os.path.dirname(sbang_path)
     fs.mkdirp(sbang_bin_dir)
