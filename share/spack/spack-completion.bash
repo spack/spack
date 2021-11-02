@@ -1696,7 +1696,12 @@ _spack_test_run() {
 }
 
 _spack_test_list() {
-    SPACK_COMPREPLY="-h --help -a --all"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -a --all"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_test_find() {
