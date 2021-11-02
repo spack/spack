@@ -213,16 +213,23 @@ def install_sbang():
         )
 
     # copy over the fresh copy of `sbang`
-    shutil.copy(spack.paths.sbang_script, sbang_path)
+    sbang_tmp_path = os.path.join(
+        os.path.dirname(sbang_path),
+        ".%s.tmp" % os.path.basename(sbang_path),
+    )
+    shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 
     # set permissions on `sbang` (including group if set in configuration)
-    os.chmod(sbang_path, config_mode)
+    os.chmod(sbang_tmp_path, config_mode)
     if group_name:
         os.chown(
-            sbang_path,
-            os.stat(sbang_path).st_uid,
+            sbang_tmp_path,
+            os.stat(sbang_tmp_path).st_uid,
             grp.getgrnam(group_name).gr_gid
         )
+    
+    # Finally, move the new `sbang` into place atomically
+    os.rename(sbang_tmp_path, sbang_path)
 
 
 def post_install(spec):
