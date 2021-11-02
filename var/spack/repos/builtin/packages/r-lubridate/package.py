@@ -16,7 +16,7 @@ class RLubridate(RPackage):
     a consistent and memorable syntax that makes working with dates easy and
     fun."""
 
-    homepage = "https://cloud.r-project.org/package=lubridate"
+    homepage = "https://haven.tidyverse.org/"
     cran = "lubridate"
 
     version('1.8.0', sha256='87d66efdb1f3d680db381d7e40a202d35645865a0542e2f270ef008a19002ba5')
