@@ -52,10 +52,24 @@ if sys.version_info >= (3, 3):
 else:
     from collections import Sequence
 
-
 # these are from clingo.ast and bootstrapped later
 ASTType = None
 parse_files = None
+
+
+# backward compatibility functions for clingo ASTs
+def ast_getter(*names):
+    def getter(node):
+        for name in names:
+            result = getattr(node, name, None)
+            if result:
+                return result
+        raise KeyError("node has no such keys: %s" % names)
+    return getter
+
+
+ast_type = ast_getter("ast_type", "type")
+ast_sym = ast_getter("symbol", "term")
 
 
 #: Enumeration like object to mark version provenance
@@ -366,16 +380,12 @@ def bootstrap_clingo():
             spack.bootstrap.ensure_clingo_importable_or_raise()
             import clingo
 
+    from clingo.ast import ASTType
     try:
-        from clingo.ast import ASTType, parse_files
+        from clingo.ast import parse_files
     except ImportError:
-        # older versions of clingo just have parse_string
-        from clingo.ast import ASTType, parse_string
-
-        def parse_files(files, visit):  # type: ignore
-            for filename in files:
-                with open(filename, 'r') as f:
-                    parse_string(f.read(), visit)
+        # older versions of clingo have this one namespace up
+        from clingo import parse_files
 
 
 class PyclingoDriver(object):
@@ -454,16 +464,17 @@ class PyclingoDriver(object):
         # handwritten, not generated, so we load them as resources
         parent_dir = os.path.dirname(__file__)
 
-        # read in the error messages from the file
+        # extract error messages from concretize.lp by inspecting its AST
         with self.backend:
             def visit(node):
-                if node.ast_type == ASTType.Rule:
+                if ast_type(node) == ASTType.Rule:
                     for term in node.body:
-                        if term.ast_type == ASTType.Literal:
-                            if term.atom.ast_type == ASTType.SymbolicAtom:
-                                if term.atom.symbol.name == "error":
-                                    string = term.atom.symbol.arguments[0].symbol.string
-                                    self.fact(fn.error(string), assumption=True)
+                        if ast_type(term) == ASTType.Literal:
+                            if ast_type(term.atom) == ASTType.SymbolicAtom:
+                                if ast_sym(term.atom).name == "error":
+                                    arg = ast_sym(ast_sym(term.atom).arguments[0])
+                                    self.fact(fn.error(arg.string), assumption=True)
+
             path = os.path.join(parent_dir, 'concretize.lp')
             parse_files([path], visit)
 
