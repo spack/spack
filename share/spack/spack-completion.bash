@@ -382,7 +382,7 @@ _spack_analyze_run() {
 }
 
 _spack_arch() {
-    SPACK_COMPREPLY="-h --help --known-targets -p --platform -o --operating-system -t --target -f --frontend -b --backend"
+    SPACK_COMPREPLY="-h --help -g --generic-target --known-targets -p --platform -o --operating-system -t --target -f --frontend -b --backend"
 }
 
 _spack_audit() {
