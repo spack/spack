@@ -45,10 +45,9 @@ class Tfel(CMakePackage):
     version("rliv-1.2", branch="rliv-1.2")
 
     # released version
-    # 4.0.0 fails 10930:crossed2deltachaboche_mtest not matching expected result value:
-    version('4.0.0', sha256='7a0c32c8a9cd2fd65cbcb54fff802f303665d7cba5d46f92ff3d55f057c92845')
-    version('3.4.3', sha256='e58515effe57d473385fe0b592d9e1d1286c0901496c61268d9efd92a2550849',
+    version('4.0.0', sha256='7a0c32c8a9cd2fd65cbcb54fff802f303665d7cba5d46f92ff3d55f057c92845',
             preferred=True)
+    version('3.4.3', sha256='e58515effe57d473385fe0b592d9e1d1286c0901496c61268d9efd92a2550849')
     version('3.4.2', sha256='f39e65b2282fd3b108081388f161ba662407b192fed68fafe324c7528026a202')
     version('3.4.1', sha256='04cd4257e39e1b05e02b12ad941106fff4d439934bdfe6e950c08bab23e2a4ba')
     version('3.4.0', sha256='176feb4c1726d0f21f4c656b20620dce6f99ab7f5f09a66905aeb643a316bbc1')
