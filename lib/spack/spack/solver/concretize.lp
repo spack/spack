@@ -18,7 +18,8 @@ version_declared(Package, Version, Weight) :- version_declared(Package, Version,
 % We can't emit the same version **with the same weight** from two different sources
 :- version_declared(Package, Version, Weight, Origin1),
    version_declared(Package, Version, Weight, Origin2),
-   Origin1 != Origin2.
+   Origin1 != Origin2,
+   error("Internal error: two versions with identical weights").
 
 % versions are declared w/priority -- declared with priority implies declared
 version_declared(Package, Version) :- version_declared(Package, Version, _).
@@ -26,7 +27,7 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 % If something is a package, it has only one version and that must be a
 % declared version.
 1 { version(Package, Version) : version_declared(Package, Version) } 1
- :- node(Package).
+ :- node(Package), error("Each node must have exactly one version").
 
 % A virtual package may have or not a version, but never has more than one
 :- virtual_node(Package), 2 { version(Package, _) }.
@@ -38,12 +39,13 @@ possible_version_weight(Package, Weight)
  :- version(Package, Version),
     version_declared(Package, Version, Weight).
 
-1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package).
+1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package), error("Internal error: Package version must have a unique weight").
 
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
 1 { version(Package, Version) : version_satisfies(Package, Constraint, Version) } 1
-  :- version_satisfies(Package, Constraint).
+  :- version_satisfies(Package, Constraint),
+     error("no version satisfies the given constraints").
 version_satisfies(Package, Constraint)
   :- version(Package, Version), version_satisfies(Package, Constraint, Version).
 
@@ -122,14 +124,17 @@ node(Dependency) :- node(Package), depends_on(Package, Dependency).
 % dependencies) and get a two-node unconnected graph
 needed(Package) :- root(Package).
 needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
-:- node(Package), not needed(Package).
+:- node(Package), not needed(Package),
+   error("All dependencies must be reachable from root").
 
 % Avoid cycles in the DAG
 % some combinations of conditional dependencies can result in cycles;
 % this ensures that we solve around them
 path(Parent, Child) :- depends_on(Parent, Child).
 path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
-:- path(A, B), path(B, A).
+:- path(A, B), path(B, A), error("Cyclic dependencies are not allowed").
+
+#defined error/1.
 
 #defined dependency_type/2.
 #defined dependency_condition/3.
@@ -141,7 +146,8 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
    not external(Package),
    conflict(Package, TriggerID, ConstraintID),
    condition_holds(TriggerID),
-   condition_holds(ConstraintID).
+   condition_holds(ConstraintID),
+   error("A conflict was triggered").
 
 #defined conflict/3.
 
@@ -164,7 +170,7 @@ virtual_node(Virtual)
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
 1 { provider(Package, Virtual) : possible_provider(Package, Virtual) } 1
-  :- virtual_node(Virtual).
+  :- virtual_node(Virtual), error("Virtual packages must be satisfied by a unique provider").
 
 % virtual roots imply virtual nodes, and that one provider is a root
 virtual_node(Virtual) :- virtual_root(Virtual).
@@ -188,7 +194,8 @@ virtual_condition_holds(Provider, Virtual) :-
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
-:- provider(Package, Virtual), not virtual_condition_holds(Package, Virtual).
+:- provider(Package, Virtual), not virtual_condition_holds(Package, Virtual),
+   error("Internal error: virtual when provides not respected").
 
 #defined possible_provider/2.
 
@@ -201,7 +208,7 @@ virtual_condition_holds(Provider, Virtual) :-
 % we select the weight, among the possible ones, that minimizes the overall objective function.
 1 { provider_weight(Dependency, Virtual, Weight, Reason) :
     possible_provider_weight(Dependency, Virtual, Weight, Reason) } 1
- :- provider(Dependency, Virtual).
+ :- provider(Dependency, Virtual), error("Internal error: package provider weights must be unique").
 
 % Get rid or the reason for enabling the possible weight (useful for debugging)
 provider_weight(Dependency, Virtual, Weight) :- provider_weight(Dependency, Virtual, Weight, _).
@@ -299,7 +306,7 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 % if a package is external its version must be one of the external versions
 1 { external_version(Package, Version, Weight):
     version_declared(Package, Version, Weight, "external") } 1
-    :- external(Package).
+    :- external(Package), error("External package version does not satisfy external spec").
 
 version_weight(Package, Weight) :- external_version(Package, Version, Weight).
 version(Package, Version) :- external_version(Package, Version, Weight).
@@ -318,7 +325,8 @@ external(Package) :- external_spec_selected(Package, _).
 :- version(Package, Version),
    version_weight(Package, Weight),
    version_declared(Package, Version, Weight, "external"),
-   not external(Package).
+   not external(Package),
+   error("Internal error: external weight used for internal spec").
 
 % determine if an external spec has been selected
 external_spec_selected(Package, LocalIndex) :-
@@ -330,7 +338,8 @@ external_conditions_hold(Package, LocalIndex) :-
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
-:- external(Package), not external_conditions_hold(Package, _).
+:- external(Package), not external_conditions_hold(Package, _),
+   error("External package does not satisfy external spec").
 
 #defined possible_external/3.
 #defined external_spec_index/3.
@@ -348,7 +357,8 @@ external_conditions_hold(Package, LocalIndex) :-
 } 1
  :- node(Package),
     variant(Package, Variant),
-    variant_single_value(Package, Variant).
+    variant_single_value(Package, Variant),
+    error("Single valued variants must have a single value").
 
 % at least one variant value for multi-valued variants.
 1 {
@@ -357,13 +367,15 @@ external_conditions_hold(Package, LocalIndex) :-
 }
  :- node(Package),
     variant(Package, Variant),
-    not variant_single_value(Package, Variant).
+    not variant_single_value(Package, Variant),
+    error("Internal error: All variants must have a value").
 
 % if a variant is set to anything, it is considered 'set'.
 variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 
 % A variant cannot have a value that is not also a possible value
-:- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value).
+:- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value),
+   error("Variant set to invalid value").
 
 % Some multi valued variants accept multiple values from disjoint sets.
 % Ensure that we respect that constraint and we don't pick values from more
@@ -372,7 +384,8 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
    variant_value(Package, Variant, Value2),
    variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
    variant_value_from_disjoint_sets(Package, Variant, Value2, Set2),
-   Set1 != Set2.
+   Set1 != Set2,
+   error("Variant values selected from multiple disjoint sets").
 
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
@@ -437,7 +450,8 @@ variant_default_value(Package, Variant, Value) :- variant_default_value_from_cli
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
 :- 2 {variant_value(Package, Variant, Value): variant_possible_value(Package, Variant, Value)},
-   variant_value(Package, Variant, "none").
+   variant_value(Package, Variant, "none"),
+   error("Variant value 'none' cannot be combined with any other value").
 
 % patches and dev_path are special variants -- they don't have to be
 % declared in the package, so we just allow them to spring into existence
@@ -467,7 +481,7 @@ variant_single_value(Package, "dev_path")
 %-----------------------------------------------------------------------------
 
 % one platform per node
-:- M = #count { Platform : node_platform(Package, Platform) }, M !=1, node(Package).
+:- M = #count { Platform : node_platform(Package, Platform) }, M !=1, node(Package), error("A node must have exactly one platform").
 
 % if no platform is set, fall back to the default
 node_platform(Package, Platform)
@@ -488,7 +502,7 @@ node_platform_set(Package) :- node_platform_set(Package, _).
 % OS semantics
 %-----------------------------------------------------------------------------
 % one os per node
-1 { node_os(Package, OS) : os(OS) } 1 :- node(Package).
+1 { node_os(Package, OS) : os(OS) } 1 :- node(Package), error("Each node must have exactly one OS").
 
 % node_os_set implies that the node must have that os
 node_os(Package, OS) :- node(Package), node_os_set(Package, OS).
@@ -515,11 +529,11 @@ node_os(Package, OS)
 % Target semantics
 %-----------------------------------------------------------------------------
 % one target per node -- optimization will pick the "best" one
-1 { node_target(Package, Target) : target(Target) } 1 :- node(Package).
+1 { node_target(Package, Target) : target(Target) } 1 :- node(Package), error("Each node must have exactly one target").
 
 % node_target_satisfies semantics
 1 { node_target(Package, Target) : node_target_satisfies(Package, Constraint, Target) } 1
-  :- node_target_satisfies(Package, Constraint).
+  :- node_target_satisfies(Package, Constraint), error("Each node must have exactly one target").
 node_target_satisfies(Package, Constraint)
   :- node_target(Package, Target), node_target_satisfies(Package, Constraint, Target).
 #defined node_target_satisfies/3.
@@ -546,7 +560,8 @@ target_weight(Target, Package, Weight)
 :- node_target(Package, Target),
    not compiler_supports_target(Compiler, Version, Target),
    node_compiler(Package, Compiler),
-   node_compiler_version(Package, Compiler, Version).
+   node_compiler_version(Package, Compiler, Version),
+   error("No satisfying compiler available is compatible with a satisfying target").
 
 % if a target is set explicitly, respect it
 node_target(Package, Target)
@@ -583,7 +598,7 @@ compiler(Compiler) :- compiler_version(Compiler, _).
 % There must be only one compiler set per node. The compiler
 % is chosen among available versions.
 1 { node_compiler_version(Package, Compiler, Version)
-    : compiler_version(Compiler, Version) } 1 :- node(Package).
+    : compiler_version(Compiler, Version) } 1 :- node(Package), error("Each node must have exactly one compiler").
 
 % Sometimes we just need to know the compiler and not the version
 node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
@@ -591,14 +606,15 @@ node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
 % We can't have a compiler be enforced and select the version from another compiler
 :- node_compiler(Package, Compiler1),
    node_compiler_version(Package, Compiler2, _),
-   Compiler1 != Compiler2.
+   Compiler1 != Compiler2,
+   error("Internal error: mismatch between selected compiler and compiler version").
 
 % define node_compiler_version_satisfies/3 from node_compiler_version_satisfies/4
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
 1 { node_compiler_version(Package, Compiler, Version)
     : node_compiler_version_satisfies(Package, Compiler, Constraint, Version) } 1
-  :- node_compiler_version_satisfies(Package, Compiler, Constraint).
+  :- node_compiler_version_satisfies(Package, Compiler, Constraint), error("Internal error: node compiler version mismatch").
 node_compiler_version_satisfies(Package, Compiler, Constraint)
   :- node_compiler_version(Package, Compiler, Version),
      node_compiler_version_satisfies(Package, Compiler, Constraint, Version).
@@ -614,7 +630,8 @@ node_compiler_version(Package, Compiler, Version) :- node_compiler_version_set(P
 % are excluded from this check
 :- node_compiler_version(Package, Compiler, Version), node_os(Package, OS),
    not compiler_supports_os(Compiler, Version, OS),
-   not allow_compiler(Compiler, Version).
+   not allow_compiler(Compiler, Version),
+   error("No satisfying compiler available is compatible with a satisfying os").
 
 % If a package and one of its dependencies don't have the
 % same compiler there's a mismatch.

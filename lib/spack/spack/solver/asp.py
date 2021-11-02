@@ -52,6 +52,25 @@ if sys.version_info >= (3, 3):
 else:
     from collections import Sequence
 
+# these are from clingo.ast and bootstrapped later
+ASTType = None
+parse_files = None
+
+
+# backward compatibility functions for clingo ASTs
+def ast_getter(*names):
+    def getter(node):
+        for name in names:
+            result = getattr(node, name, None)
+            if result:
+                return result
+        raise KeyError("node has no such keys: %s" % names)
+    return getter
+
+
+ast_type = ast_getter("ast_type", "type")
+ast_sym = ast_getter("symbol", "term")
+
 
 #: Enumeration like object to mark version provenance
 version_provenance = collections.namedtuple(  # type: ignore
@@ -205,6 +224,9 @@ class Result(object):
         self.warnings = None
         self.nmodels = 0
 
+        # Saved control object for reruns when necessary
+        self.control = None
+
         # specs ordered by optimization level
         self.answers = []
         self.cores = []
@@ -218,11 +240,85 @@ class Result(object):
         # Concrete specs
         self._concrete_specs = None
 
-    def print_cores(self):
-        for core in self.cores:
-            tty.msg(
-                "The following constraints are unsatisfiable:",
-                *sorted(str(symbol) for symbol in core))
+    def format_core(self, core):
+        """
+        Format an unsatisfiable core for human readability
+
+        Returns a list of strings, where each string is the human readable
+        representation of a single fact in the core, including a newline.
+
+        Modeled after traceback.format_stack.
+        """
+        assert self.control
+
+        symbols = dict(
+            (a.literal, a.symbol)
+            for a in self.control.symbolic_atoms
+        )
+
+        core_symbols = []
+        for atom in core:
+            sym = symbols[atom]
+            if sym.name in ("rule", "error"):
+                # these are special symbols we use to get messages in the core
+                sym = sym.arguments[0].string
+            core_symbols.append(sym)
+
+        return sorted(str(symbol) for symbol in core_symbols)
+
+    def minimize_core(self, core):
+        """
+        Return a subset-minimal subset of the core.
+
+        Clingo cores may be thousands of lines when two facts are sufficient to
+        ensure unsatisfiability. This algorithm reduces the core to only those
+        essential facts.
+        """
+        assert self.control
+
+        min_core = core[:]
+        for fact in core:
+            # Try solving without this fact
+            min_core.remove(fact)
+            ret = self.control.solve(assumptions=min_core)
+            if not ret.unsatisfiable:
+                min_core.append(fact)
+        return min_core
+
+    def minimal_cores(self):
+        """
+        Return a list of subset-minimal unsatisfiable cores.
+        """
+        return [self.minimize_core(core) for core in self.cores]
+
+    def format_minimal_cores(self):
+        """List of facts for each core
+
+        Separate cores are separated by an empty line
+        """
+        string_list = []
+        for core in self.minimal_cores():
+            if string_list:
+                string_list.append('\n')
+            string_list.extend(self.format_core(core))
+        return string_list
+
+    def raise_if_unsat(self):
+        """
+        Raise an appropriate error if the result is unsatisfiable.
+
+        The error is a UnsatisfiableSpecError, and includes the minimized cores
+        resulting from the solve, formatted to be human readable.
+        """
+        if self.satisfiable:
+            return
+
+        constraints = self.abstract_specs
+        if len(constraints) == 1:
+            constraints = constraints[0]
+        conflicts = self.format_minimal_cores()
+
+        raise spack.error.UnsatisfiableSpecError(constraints, conflicts=conflicts)
 
     @property
     def specs(self):
@@ -276,6 +372,22 @@ def _normalize_packages_yaml(packages_yaml):
     return normalized_yaml
 
 
+def bootstrap_clingo():
+    global clingo, ASTType, parse_files
+
+    if not clingo:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            spack.bootstrap.ensure_clingo_importable_or_raise()
+            import clingo
+
+    from clingo.ast import ASTType
+    try:
+        from clingo.ast import parse_files
+    except ImportError:
+        # older versions of clingo have this one namespace up
+        from clingo import parse_files
+
+
 class PyclingoDriver(object):
     def __init__(self, cores=True, asp=None):
         """Driver for the Python clingo interface.
@@ -286,11 +398,8 @@ class PyclingoDriver(object):
             asp (file-like): optional stream to write a text-based ASP program
                 for debugging or verification.
         """
-        global clingo
-        if not clingo:
-            with spack.bootstrap.ensure_bootstrap_configuration():
-                spack.bootstrap.ensure_clingo_importable_or_raise()
-                import clingo
+        bootstrap_clingo()
+
         self.out = asp or llnl.util.lang.Devnull()
         self.cores = cores
 
@@ -311,15 +420,22 @@ class PyclingoDriver(object):
     def newline(self):
         self.out.write('\n')
 
-    def fact(self, head):
-        """ASP fact (a rule without a body)."""
+    def fact(self, head, assumption=False):
+        """ASP fact (a rule without a body).
+
+        Arguments:
+            head (AspFunction): ASP function to generate as fact
+            assumption (bool): If True and using cores, use this fact as a
+                choice point in ASP and include it in unsatisfiable cores
+        """
         symbol = head.symbol() if hasattr(head, 'symbol') else head
 
         self.out.write("%s.\n" % str(symbol))
 
         atom = self.backend.add_atom(symbol)
-        self.backend.add_rule([atom], [], choice=self.cores)
-        if self.cores:
+        choice = self.cores and assumption
+        self.backend.add_rule([atom], [], choice=choice)
+        if choice:
             self.assumptions.append(atom)
 
     def solve(
@@ -347,6 +463,22 @@ class PyclingoDriver(object):
         # read in the main ASP program and display logic -- these are
         # handwritten, not generated, so we load them as resources
         parent_dir = os.path.dirname(__file__)
+
+        # extract error messages from concretize.lp by inspecting its AST
+        with self.backend:
+            def visit(node):
+                if ast_type(node) == ASTType.Rule:
+                    for term in node.body:
+                        if ast_type(term) == ASTType.Literal:
+                            if ast_type(term.atom) == ASTType.SymbolicAtom:
+                                if ast_sym(term.atom).name == "error":
+                                    arg = ast_sym(ast_sym(term.atom).arguments[0])
+                                    self.fact(fn.error(arg.string), assumption=True)
+
+            path = os.path.join(parent_dir, 'concretize.lp')
+            parse_files([path], visit)
+
+        # Load the file itself
         self.control.load(os.path.join(parent_dir, 'concretize.lp'))
         self.control.load(os.path.join(parent_dir, "display.lp"))
         timer.phase("load")
@@ -367,6 +499,7 @@ class PyclingoDriver(object):
         solve_kwargs = {"assumptions": self.assumptions,
                         "on_model": on_model,
                         "on_core": cores.append}
+
         if clingo_cffi:
             solve_kwargs["on_unsat"] = cores.append
         solve_result = self.control.solve(**solve_kwargs)
@@ -409,18 +542,8 @@ class PyclingoDriver(object):
             result.nmodels = len(models)
 
         elif cores:
-            symbols = dict(
-                (a.literal, a.symbol)
-                for a in self.control.symbolic_atoms
-            )
-            for core in cores:
-                core_symbols = []
-                for atom in core:
-                    sym = symbols[atom]
-                    if sym.name == "rule":
-                        sym = sym.arguments[0].string
-                    core_symbols.append(sym)
-                result.cores.append(core_symbols)
+            result.control = self.control
+            result.cores.extend(cores)
 
         if timers:
             timer.write_tty()
@@ -1372,6 +1495,14 @@ class SpackSolverSetup(object):
             virtuals=self.possible_virtuals,
             deptype=spack.dependency.all_deptypes
         )
+
+        # Fail if we already know an unreachable node is requested
+        for spec in specs:
+            missing_deps = [d for d in spec.traverse()
+                            if d.name not in possible and not d.virtual]
+            if missing_deps:
+                raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
+
         pkgs = set(possible)
 
         # driver is used by all the functions below to add facts and
