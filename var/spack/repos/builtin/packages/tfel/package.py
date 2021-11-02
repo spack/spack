@@ -134,6 +134,8 @@ class Tfel(CMakePackage):
 
     extends('python', when='+python_bindings')
 
+    conflicts('%gcc@:7', when='@4:')
+
     def cmake_args(self):
 
         args = []
