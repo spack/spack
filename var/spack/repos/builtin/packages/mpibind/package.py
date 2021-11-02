@@ -23,10 +23,10 @@ class Mpibind(AutotoolsPackage):
     # Furthermore, the package can't be cached because
     # AC_INIT would be missing the version argument,
     # which is derived with git.
-    version('master', branch='master', get_full_repo=True)
-    version('0.8.0',  tag='v0.8.0',    no_cache=True)
-    version('0.7.0',  tag='v0.7.0',    no_cache=True)
-    version('0.5.0',  tag='v0.5.0',    no_cache=True)
+    version('master', branch='master',  get_full_repo=True)
+    version('0.8.0',  commit='ff38b9d', no_cache=True)
+    version('0.7.0',  commit='3c437a9', no_cache=True)
+    version('0.5.0',  commit='8698f07', no_cache=True)
 
     variant('cuda',   default=False,
             description='Build w/support for NVIDIA GPUs.')
