@@ -50,6 +50,7 @@ class Mgis(CMakePackage):
             values=('Debug', 'Release'))
 
     # dependencies
+    # https://thelfer.github.io/mgis/web/release-notes-2.0.html
     depends_on('tfel@4.0.0', when="@2.0")
     depends_on('tfel@3.4.3', when="@1.2.2")
     depends_on('tfel@3.4.1', when="@1.2.1")
@@ -63,6 +64,18 @@ class Mgis(CMakePackage):
     depends_on('tfel@master', when="@master")
     depends_on('boost+python+numpy', when='+python')
     extends('python', when='+python')
+
+    def patch(self):
+        """Fix the test suite to use the PYTHONPATH provided by the spack buildenv"""
+        filter_file('tests/;', 'tests:', 'bindings/python/tests/CMakeLists.txt')
+
+    def check(self):
+        """skip target 'test' which doesn't build the test programs used by tests"""
+        with working_dir(self.build_directory):
+            if self.generator == 'Unix Makefiles':
+                self._if_make_target_execute('check')
+            elif self.generator == 'Ninja':
+                self._if_ninja_target_execute('check')
 
     def cmake_args(self):
 

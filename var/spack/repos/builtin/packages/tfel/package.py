@@ -127,7 +127,9 @@ class Tfel(CMakePackage):
                type=('build', 'link', 'run'))
     depends_on('python', when='+python_bindings',
                type=('build', 'link', 'run'))
-    depends_on('boost+python+numpy', when='+python_bindings')
+    # As boost+py has py runtime dependency, boost+py needs types link and run as well:
+    depends_on('boost+python+numpy', when='+python_bindings',
+               type=('build', 'link', 'run'))
 
     extends('python', when='+python_bindings')
 
@@ -172,3 +174,11 @@ class Tfel(CMakePackage):
             args.append('-DBoost_NO_BOOST_CMAKE=ON')
 
         return args
+
+    def check(self):
+        """Skip the target 'test' which doesn't build all test programs used by tests"""
+        with working_dir(self.build_directory):
+            if self.generator == 'Unix Makefiles':
+                self._if_make_target_execute('check')
+            elif self.generator == 'Ninja':
+                self._if_ninja_target_execute('check')
