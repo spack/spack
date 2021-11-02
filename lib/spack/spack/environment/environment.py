@@ -15,6 +15,7 @@ import ruamel.yaml as yaml
 import six
 
 import llnl.util.filesystem as fs
+import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.bootstrap
@@ -1392,6 +1393,7 @@ class Environment(object):
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
+    @lang.memoized
     def _spec_needs_overwrite(self, spec):
         # Overwrite the install if it's a dev build (non-transitive)
         # and the code has been changed since the last install
@@ -1431,6 +1433,8 @@ class Environment(object):
         return mtime > record.installation_time
 
     def _get_overwrite_specs(self):
+        # TODO: Can the cache even be populated at this point?
+        self._spec_needs_overwrite.cache.clear()
         ret = []
         for dag_hash in self.concretized_order:
             spec = self.specs_by_hash[dag_hash]
