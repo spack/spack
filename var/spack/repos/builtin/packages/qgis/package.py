@@ -90,9 +90,7 @@ class Qgis(CMakePackage):
     depends_on('py-pyqt5@5.3:', when='@3')
     depends_on('py-requests', type=('build', 'run'))  # TODO: is build dependency necessary?
     depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
-    # QGIS failed to build for @3.8.7: or exhibited runtime issues
-    # ref: https://github.com/spack/spack/issues/26803
-    depends_on('python@3.0.0:3.8.6', type=('build', 'run'), when='@3')
+    depends_on('python@3.0.0', type=('build', 'run'), when='@3')
     depends_on('qca@2.2.1')
     depends_on('qjson')
     depends_on('qscintilla +python')
